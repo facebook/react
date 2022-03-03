@@ -20,6 +20,7 @@ export type JSONValue =
 export type RowEncoding =
   | ['J', number, JSONValue]
   | ['M', number, ModuleMetaData]
+  | ['P', Number, string]
   | ['S', number, string]
   | [
       'E',

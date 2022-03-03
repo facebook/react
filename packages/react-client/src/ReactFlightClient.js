@@ -24,12 +24,7 @@ import {
   parseModel,
 } from './ReactFlightClientHostConfig';
 
-import {
-  REACT_LAZY_TYPE,
-  REACT_ELEMENT_TYPE,
-  REACT_PROVIDER_TYPE,
-  REACT_SERVER_CONTEXT_TYPE,
-} from 'shared/ReactSymbols';
+import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 

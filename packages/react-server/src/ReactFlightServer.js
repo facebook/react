@@ -55,7 +55,6 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
-  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
   REACT_SERVER_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -533,14 +532,15 @@ export function resolveModelToJSON(
   }
 
   if (value.$$typeof === REACT_PROVIDER_TYPE) {
-    const key = ((value: any): ReactProviderType<any>)._context._globalName;
+    const providerKey = ((value: any): ReactProviderType<any>)._context
+      ._globalName;
     const writtenProviders = request.writtenProviders;
     let providerId = writtenProviders.get(key);
     if (providerId === undefined) {
       request.pendingChunks++;
       providerId = request.nextChunkId++;
-      writtenProviders.set(key, providerId);
-      emitProviderChunk(request, providerId, key);
+      writtenProviders.set(providerKey, providerId);
+      emitProviderChunk(request, providerId, providerKey);
     }
     return serializeByValueID(providerId);
   }
