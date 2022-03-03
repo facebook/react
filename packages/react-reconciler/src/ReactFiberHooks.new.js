@@ -13,8 +13,6 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
-  ReactServerContext,
-  ServerContextJSONValue,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
@@ -35,7 +33,6 @@ import {
   enableSuspenseLayoutEffectSemantics,
   enableUseMutableSource,
   enableTransitionTracing,
-  enableServerContext,
 } from 'shared/ReactFeatureFlags';
 
 import {

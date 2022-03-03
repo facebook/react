@@ -48,6 +48,8 @@ export const CacheContext: ReactContext<Cache> = enableCache
       _currentValue: (null: any),
       _currentValue2: (null: any),
       _threadCount: 0,
+      _defaultValue: (undefined: any),
+      _globalName: (undefined: any),
     }
   : (null: any);
 

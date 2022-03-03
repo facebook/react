@@ -14,7 +14,6 @@ import type {
   ReactContext,
   ReactProviderType,
   StartTransitionOptions,
-  ServerContextJSONValue,
 } from 'shared/ReactTypes';
 import type {
   Fiber,

@@ -15,7 +15,6 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
-  ReactServerContext,
 } from 'shared/ReactTypes';
 
 import type {ResponseState} from './ReactServerFormatConfig';

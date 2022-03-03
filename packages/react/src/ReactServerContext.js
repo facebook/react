@@ -49,7 +49,6 @@ export function createServerContext<T: ServerContextJSONValue>(
       // Used to track how many concurrent renderers this context currently
       // supports within in a single renderer. Such as parallel server rendering.
       _threadCount: 0,
-      _definitionLoaded: false,
       // These are circular
       Provider: (null: any),
       Consumer: (null: any),

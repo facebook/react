@@ -221,7 +221,7 @@ function attemptResolveElement(
           type._context._globalName,
           key,
           // Rely on __popProvider being serialized last to pop the provider.
-          {...props, __popProvider$$: type._context},
+          {value: props.value, children: props.children, __pop: type._context},
         ];
       }
     }
@@ -510,7 +510,7 @@ export function resolveModelToJSON(
   if (
     value &&
     value.$$typeof === REACT_SERVER_CONTEXT_TYPE &&
-    key === '__popProvider$$'
+    key === '__pop'
   ) {
     popProvider((value: any));
     if (__DEV__) {

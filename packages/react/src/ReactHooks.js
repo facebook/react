@@ -14,8 +14,6 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
-  ReactServerContext,
-  ServerContextJSONValue,
 } from 'shared/ReactTypes';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
