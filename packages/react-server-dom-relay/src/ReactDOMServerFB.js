@@ -93,14 +93,15 @@ function hasFinished(stream: Stream): boolean {
 }
 
 function debug(stream: Stream): any {
-  const request = stream.request;
+  // convert to any to silence flow errors from opaque type
+  const request = (stream.request: any);
   return {
     pendingRootTasks: request.pendingRootTasks,
     clientRenderedBoundaries: request.clientRenderedBoundaries.length,
     completedBoundaries: request.completedBoundaries.length,
     partialBoundaries: request.partialBoundaries.length,
     allPendingTasks: request.allPendingTasks,
-    pingTasks: request.pingedTasks.length,
+    pingedTasks: request.pingedTasks.length,
   };
 }
 
