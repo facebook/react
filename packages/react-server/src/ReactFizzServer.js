@@ -424,6 +424,8 @@ function fatalError(request: Request, error: mixed): void {
   // It's also called if React itself or its host configs errors.
   const onErrorShell = request.onErrorShell;
   onErrorShell(error);
+  const onFatalError = request.onFatalError;
+  onFatalError(error);
   if (request.destination !== null) {
     request.status = CLOSED;
     closeWithError(request.destination, error);
