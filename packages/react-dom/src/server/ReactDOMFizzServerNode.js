@@ -65,6 +65,7 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
     options ? options.onCompleteAll : undefined,
     options ? options.onCompleteShell : undefined,
     options ? options.onErrorShell : undefined,
+    undefined,
   );
 }
 

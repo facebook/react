@@ -83,6 +83,7 @@ function renderToNodeStreamImpl(
     onError,
     onCompleteAll,
     undefined,
+    undefined,
   );
   destination.request = request;
   startWork(request);

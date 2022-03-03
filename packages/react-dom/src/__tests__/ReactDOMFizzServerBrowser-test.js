@@ -105,12 +105,10 @@ describe('ReactDOMFizzServer', () => {
           <Wait />
         </Suspense>
       </div>,
-      {
-        onCompleteAll() {
-          isComplete = true;
-        },
-      },
     );
+
+    stream.allReady.then(() => (isComplete = true));
+
     await jest.runAllTimers();
     expect(isComplete).toBe(false);
     // Resolve the loading.

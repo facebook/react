@@ -204,6 +204,7 @@ export opaque type Request = {
   // onErrorShell is called when the shell didn't complete. That means you probably want to
   // emit a different response to the stream instead.
   onErrorShell: (error: mixed) => void,
+  onFatalError: (error: mixed) => void,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -238,6 +239,7 @@ export function createRequest(
   onCompleteAll: void | (() => void),
   onCompleteShell: void | (() => void),
   onErrorShell: void | ((error: mixed) => void),
+  onFatalError: void | ((error: mixed) => void),
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
@@ -263,6 +265,7 @@ export function createRequest(
     onCompleteAll: onCompleteAll === undefined ? noop : onCompleteAll,
     onCompleteShell: onCompleteShell === undefined ? noop : onCompleteShell,
     onErrorShell: onErrorShell === undefined ? noop : onErrorShell,
+    onFatalError: onFatalError === undefined ? noop : onFatalError,
   };
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(request, 0, null, rootFormatContext);

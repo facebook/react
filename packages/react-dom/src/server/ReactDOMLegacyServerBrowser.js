@@ -67,6 +67,8 @@ function renderToStringImpl(
     onError,
     undefined,
     onCompleteShell,
+    undefined,
+    undefined,
   );
   startWork(request);
   // If anything suspended and is still pending, we'll abort it before writing.
