@@ -16,7 +16,10 @@ import type {
   ModuleKey,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
-import type {ServerContextJSONValue} from 'shared/ReactTypes';
+import type {
+  ReactProviderType,
+  ServerContextJSONValue,
+} from 'shared/ReactTypes';
 
 import {
   scheduleWork,
@@ -28,6 +31,7 @@ import {
   closeWithError,
   processModelChunk,
   processModuleChunk,
+  processProviderChunk,
   processSymbolChunk,
   processErrorChunk,
   resolveModuleMetaData,
@@ -51,6 +55,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
+  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
   REACT_SERVER_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -98,6 +103,7 @@ export type Request = {
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<Symbol, number>,
   writtenModules: Map<ModuleKey, number>,
+  writtenProviders: Map<string, number>,
   onError: (error: mixed) => void,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
@@ -138,6 +144,7 @@ export function createRequest(
     completedErrorChunks: [],
     writtenSymbols: new Map(),
     writtenModules: new Map(),
+    writtenProviders: new Map(),
     onError: onError === undefined ? defaultErrorHandler : onError,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
@@ -217,8 +224,8 @@ function attemptResolveElement(
           }
         }
         return [
-          REACT_PROVIDER_TYPE,
-          type._context._globalName,
+          REACT_ELEMENT_TYPE,
+          type,
           key,
           // Rely on __popProvider being serialized last to pop the provider.
           {value: props.value, children: props.children, __pop: type._context},
@@ -452,7 +459,12 @@ export function resolveModelToJSON(
   }
 
   if (__DEV__) {
-    if (parent[0] === REACT_PROVIDER_TYPE && key === '3') {
+    if (
+      parent[0] === REACT_ELEMENT_TYPE &&
+      parent[1] &&
+      parent[1].$$typeof === REACT_PROVIDER_TYPE &&
+      key === '3'
+    ) {
       insideContextProps = value;
     } else if (insideContextProps === parent && key === 'value') {
       isInsideContextValue = true;
@@ -518,6 +530,19 @@ export function resolveModelToJSON(
       isInsideContextValue = false;
     }
     return (undefined: any);
+  }
+
+  if (value.$$typeof === REACT_PROVIDER_TYPE) {
+    const key = ((value: any): ReactProviderType<any>)._context._globalName;
+    const writtenProviders = request.writtenProviders;
+    let providerId = writtenProviders.get(key);
+    if (providerId === undefined) {
+      request.pendingChunks++;
+      providerId = request.nextChunkId++;
+      writtenProviders.set(key, providerId);
+      emitProviderChunk(request, providerId, key);
+    }
+    return serializeByValueID(providerId);
   }
 
   if (typeof value === 'object') {
@@ -739,6 +764,15 @@ function emitModuleChunk(
 function emitSymbolChunk(request: Request, id: number, name: string): void {
   const processedChunk = processSymbolChunk(request, id, name);
   request.completedModuleChunks.push(processedChunk);
+}
+
+function emitProviderChunk(
+  request: Request,
+  id: number,
+  contextName: string,
+): void {
+  const processedChunk = processProviderChunk(request, id, contextName);
+  request.completedJSONChunks.push(processedChunk);
 }
 
 function retrySegment(request: Request, segment: Segment): void {

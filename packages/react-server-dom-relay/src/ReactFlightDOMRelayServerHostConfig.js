@@ -125,6 +125,14 @@ export function processModuleChunk(
   return ['M', id, moduleMetaData];
 }
 
+export function processProviderChunk(
+  request: Request,
+  id: number,
+  contextName: string,
+): Chunk {
+  return ['P', id, contextName];
+}
+
 export function processSymbolChunk(
   request: Request,
   id: number,
