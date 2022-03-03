@@ -417,14 +417,6 @@ function describeObjectForErrorMessage(
   }
 }
 
-function isReactElement(value: mixed) {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    (value: any).$$typeof === REACT_ELEMENT_TYPE
-  );
-}
-
 let insideContextProps = null;
 let isInsideContextValue = false;
 
@@ -470,7 +462,11 @@ export function resolveModelToJSON(
   }
 
   // Resolve server components.
-  while (isReactElement(value)) {
+  while (
+    typeof value === 'object' &&
+    value !== null &&
+    (value: any).$$typeof === REACT_ELEMENT_TYPE
+  ) {
     if (__DEV__) {
       if (isInsideContextValue) {
         console.error('React elements are not allowed in ServerContext');
@@ -749,7 +745,11 @@ function retrySegment(request: Request, segment: Segment): void {
   switchContext(segment.context);
   try {
     let value = segment.model;
-    while (isReactElement(value)) {
+    while (
+      typeof value === 'object' &&
+      value !== null &&
+      (value: any).$$typeof === REACT_ELEMENT_TYPE
+    ) {
       // TODO: Concatenate keys of parents onto children.
       const element: React$Element<any> = (value: any);
       // Attempt to render the server component.
