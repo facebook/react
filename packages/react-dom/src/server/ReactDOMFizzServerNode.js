@@ -90,9 +90,7 @@ function renderToPipeableStream(
       hasStartedFlowing = true;
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
-      const abortHandler = createAbortHandler(request);
-      destination.on('end', abortHandler);
-      destination.on('error', abortHandler);
+      destination.on('close', createAbortHandler(request));
       return destination;
     },
     abort() {
