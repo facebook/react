@@ -88,6 +88,7 @@ import {
   createWorkInProgress,
   assignFiberPropertiesInDEV,
 } from './ReactFiber.old';
+import {isRootDehydrated} from './ReactFiberShellHydration';
 import {NoMode, ProfileMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
   HostRoot,
@@ -581,7 +582,7 @@ export function scheduleUpdateOnFiber(
       }
     }
 
-    if (root.isDehydrated && root.tag !== LegacyRoot) {
+    if (isRootDehydrated(root) && root.tag !== LegacyRoot) {
       // This root's shell hasn't hydrated yet. Revert to client rendering.
       if (workInProgressRoot === root) {
         // If this happened during an interleaved event, interrupt the
@@ -1016,7 +1017,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 function recoverFromConcurrentError(root, errorRetryLanes) {
   // If an error occurred during hydration, discard server response and fall
   // back to client side render.
-  if (root.isDehydrated) {
+  if (isRootDehydrated(root)) {
     root.isDehydrated = false;
     if (__DEV__) {
       errorHydratingContainer(root.containerInfo);

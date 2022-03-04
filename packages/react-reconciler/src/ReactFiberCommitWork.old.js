@@ -82,6 +82,7 @@ import {
   Visibility,
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import {isRootDehydrated} from './ReactFiberShellHydration';
 import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
@@ -1878,7 +1879,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       case HostRoot: {
         if (supportsHydration) {
           const root: FiberRoot = finishedWork.stateNode;
-          if (root.isDehydrated) {
+          if (isRootDehydrated(root)) {
             // We've just hydrated. No need to hydrate again.
             root.isDehydrated = false;
             commitHydratedContainer(root.containerInfo);
@@ -1986,7 +1987,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case HostRoot: {
       if (supportsHydration) {
         const root: FiberRoot = finishedWork.stateNode;
-        if (root.isDehydrated) {
+        if (isRootDehydrated(root)) {
           // We've just hydrated. No need to hydrate again.
           root.isDehydrated = false;
           commitHydratedContainer(root.containerInfo);
