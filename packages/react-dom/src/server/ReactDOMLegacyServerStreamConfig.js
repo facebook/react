@@ -22,7 +22,9 @@ export function scheduleWork(callback: () => void) {
 
 export function flushBuffered(destination: Destination) {}
 
-export function beginWriting(destination: Destination) {}
+export function beginWriting(destination: Destination): boolean {
+  return true;
+}
 
 let prevWasCommentSegmenter = false;
 export function writeChunk(

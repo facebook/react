@@ -1839,7 +1839,10 @@ function flushCompletedQueues(
   request: Request,
   destination: Destination,
 ): void {
-  beginWriting(destination);
+  if (!beginWriting(destination)) {
+    request.destination = null;
+    return;
+  }
   try {
     // The structure of this is to go through each queue one by one and write
     // until the sink tells us to stop. When we should stop, we still finish writing
@@ -1891,7 +1894,10 @@ function flushCompletedQueues(
     // Allow anything written so far to flush to the underlying sink before
     // we continue with lower priorities.
     completeWriting(destination);
-    beginWriting(destination);
+    if (!beginWriting(destination)) {
+      request.destination = null;
+      return;
+    }
 
     // TODO: Here we'll emit data used by hydration.
 

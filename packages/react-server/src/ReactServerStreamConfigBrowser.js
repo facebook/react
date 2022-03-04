@@ -21,7 +21,9 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
-export function beginWriting(destination: Destination) {}
+export function beginWriting(destination: Destination): boolean {
+  return destination.desiredSize > 0;
+}
 
 export function writeChunk(
   destination: Destination,
