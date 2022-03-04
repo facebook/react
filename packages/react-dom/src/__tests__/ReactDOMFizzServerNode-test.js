@@ -138,7 +138,7 @@ describe('ReactDOMFizzServer', () => {
       </div>,
 
       {
-        onCompleteAll() {
+        onAllReady() {
           isCompleteCalls++;
         },
       },
@@ -179,7 +179,7 @@ describe('ReactDOMFizzServer', () => {
         onError(x) {
           reportedErrors.push(x);
         },
-        onErrorShell(x) {
+        onShellError(x) {
           reportedShellErrors.push(x);
         },
       },
@@ -213,7 +213,7 @@ describe('ReactDOMFizzServer', () => {
         onError(x) {
           reportedErrors.push(x);
         },
-        onErrorShell(x) {
+        onShellError(x) {
           reportedShellErrors.push(x);
         },
       },
@@ -244,7 +244,7 @@ describe('ReactDOMFizzServer', () => {
         onError(x) {
           reportedErrors.push(x);
         },
-        onErrorShell(x) {
+        onShellError(x) {
           reportedShellErrors.push(x);
         },
       },
@@ -298,7 +298,7 @@ describe('ReactDOMFizzServer', () => {
       </div>,
 
       {
-        onCompleteAll() {
+        onAllReady() {
           isCompleteCalls++;
         },
       },
@@ -333,7 +333,7 @@ describe('ReactDOMFizzServer', () => {
       </div>,
 
       {
-        onCompleteAll() {
+        onAllReady() {
           isCompleteCalls++;
         },
       },
@@ -560,7 +560,7 @@ describe('ReactDOMFizzServer', () => {
         </Suspense>
       </div>,
       {
-        onCompleteAll() {
+        onAllReady() {
           isComplete = true;
         },
       },

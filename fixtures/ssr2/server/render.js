@@ -49,7 +49,7 @@ module.exports = function render(url, res) {
         res.setHeader('Content-type', 'text/html');
         pipe(res);
       },
-      onErrorShell(x) {
+      onShellError(x) {
         // Something errored before we could complete the shell so we emit an alternative shell.
         res.statusCode = 500;
         res.send('<!doctype><p>Error</p>');

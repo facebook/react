@@ -40,9 +40,9 @@ type Options = {|
   bootstrapScripts?: Array<string>,
   bootstrapModules?: Array<string>,
   progressiveChunkSize?: number,
-  onCompleteShell?: () => void,
-  onErrorShell?: () => void,
-  onCompleteAll?: () => void,
+  onShellReady?: () => void,
+  onShellError?: () => void,
+  onAllReady?: () => void,
   onError?: (error: mixed) => void,
 |};
 
@@ -66,9 +66,9 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
-    options ? options.onCompleteAll : undefined,
-    options ? options.onCompleteShell : undefined,
-    options ? options.onErrorShell : undefined,
+    options ? options.onAllReady : undefined,
+    options ? options.onShellReady : undefined,
+    options ? options.onShellError : undefined,
     undefined,
   );
 }

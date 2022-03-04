@@ -46,13 +46,13 @@ function renderToReadableStream(
 ): Promise<ReactDOMServerReadableStream> {
   return new Promise((resolve, reject) => {
     let onFatalError;
-    let onCompleteAll;
+    let onAllReady;
     const allReady = new Promise((res, rej) => {
-      onCompleteAll = res;
+      onAllReady = res;
       onFatalError = rej;
     });
 
-    function onCompleteShell() {
+    function onShellReady() {
       const stream: ReactDOMServerReadableStream = (new ReadableStream({
         type: 'bytes',
         pull(controller) {
@@ -66,7 +66,7 @@ function renderToReadableStream(
       stream.allReady = allReady;
       resolve(stream);
     }
-    function onErrorShell(error: mixed) {
+    function onShellError(error: mixed) {
       reject(error);
     }
     const request = createRequest(
@@ -81,9 +81,9 @@ function renderToReadableStream(
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
       options ? options.onError : undefined,
-      onCompleteAll,
-      onCompleteShell,
-      onErrorShell,
+      onAllReady,
+      onShellReady,
+      onShellError,
       onFatalError,
     );
     if (options && options.signal) {
