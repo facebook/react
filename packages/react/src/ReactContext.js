@@ -32,8 +32,8 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
     Consumer: (null: any),
 
     // Add these to use same hidden class in VM as ServerContext
-    _defaultValue: (undefined: any),
-    _globalName: (undefined: any),
+    _defaultValue: (null: any),
+    _globalName: (null: any),
   };
 
   context.Provider = {

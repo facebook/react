@@ -50,14 +50,14 @@ export type HookType =
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
-  next: ContextDependency<T> | null,
+  next: ContextDependency<mixed> | null,
   memoizedValue: T,
   ...
 };
 
 export type Dependencies = {
   lanes: Lanes,
-  firstContext: ContextDependency<any> | null,
+  firstContext: ContextDependency<mixed> | null,
   ...
 };
 
