@@ -28,6 +28,10 @@ function createDrainHandler(destination, request) {
   return () => startFlowing(request, destination);
 }
 
+function createAbortHandler(request) {
+  return () => abort(request);
+}
+
 type Options = {|
   identifierPrefix?: string,
   namespaceURI?: string,
@@ -86,6 +90,9 @@ function renderToPipeableStream(
       hasStartedFlowing = true;
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
+      const abortHandler = createAbortHandler(request);
+      destination.on('end', abortHandler);
+      destination.on('error', abortHandler);
       return destination;
     },
     abort() {
