@@ -42,12 +42,6 @@ export type ReactProviderType<T> = {
   ...
 };
 
-export type ReactServerProviderType<T: ServerContextJSONValue> = {
-  $$typeof: Symbol | number,
-  _context: ReactServerContext<T>,
-  ...
-};
-
 export type ReactConsumer<T> = {
   $$typeof: Symbol | number,
   type: ReactContext<T>,
@@ -88,7 +82,7 @@ export type ServerContextJSONValue =
   | $ReadOnlyArray<ServerContextJSONValue>
   | {+[key: string]: ServerContextJSONValue};
 
-export type ReactServerContext<T: ServerContextJSONValue> = ReactContext<T>;
+export type ReactServerContext<T: any> = ReactContext<T>;
 
 export type ReactPortal = {
   $$typeof: Symbol | number,

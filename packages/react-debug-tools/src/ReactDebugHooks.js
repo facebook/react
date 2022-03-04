@@ -105,7 +105,7 @@ function getCacheForType<T>(resourceType: () => T): T {
   throw new Error('Not implemented.');
 }
 
-function readContext<T: any>(context: ReactContext<T>): T {
+function readContext<T>(context: ReactContext<T>): T {
   // For now we don't expose readContext usage in the hooks debugging info.
   return context._currentValue;
 }

@@ -20,7 +20,7 @@ if (__DEV__) {
 
 // Used to store the parent path of all context overrides in a shared linked list.
 // Forming a reverse tree.
-type ContextNode<T: any> = {
+type ContextNode<T> = {
   parent: null | ContextNode<any>,
   depth: number, // Short hand to compute the depth of the tree at this node.
   context: ReactContext<T>,
@@ -178,7 +178,7 @@ export function switchContext(newSnapshot: ContextSnapshot): void {
   }
 }
 
-export function pushProvider<T: any>(
+export function pushProvider<T>(
   context: ReactContext<T>,
   nextValue: T,
 ): ContextSnapshot {
@@ -228,7 +228,7 @@ export function pushProvider<T: any>(
   return newNode;
 }
 
-export function popProvider<T: any>(context: ReactContext<T>): ContextSnapshot {
+export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
   const prevSnapshot = currentActiveSnapshot;
 
   if (prevSnapshot === null) {
@@ -296,7 +296,7 @@ export function getActiveContext(): ContextSnapshot {
   return currentActiveSnapshot;
 }
 
-export function readContext<T: any>(context: ReactContext<T>): T {
+export function readContext<T>(context: ReactContext<T>): T {
   const value = isPrimaryRenderer
     ? context._currentValue
     : context._currentValue2;

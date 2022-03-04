@@ -243,7 +243,7 @@ function getCacheForType<T>(resourceType: () => T): T {
   throw new Error('Not implemented.');
 }
 
-function readContext<T: any>(context: ReactContext<T>): T {
+function readContext<T>(context: ReactContext<T>): T {
   if (__DEV__) {
     if (isInHookUserCodeInDev) {
       console.error(

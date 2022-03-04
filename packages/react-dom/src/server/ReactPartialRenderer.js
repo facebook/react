@@ -833,7 +833,7 @@ class ReactDOMServerRenderer {
    * https://github.com/facebook/react/pull/12985#issuecomment-396301248
    */
 
-  pushProvider<T: any>(provider: ReactProvider<T>): void {
+  pushProvider<T>(provider: ReactProvider<T>): void {
     const index = ++this.contextIndex;
     const context: ReactContext<any> = provider.type._context;
     const threadID = this.threadID;

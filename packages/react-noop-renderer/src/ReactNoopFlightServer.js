@@ -19,6 +19,7 @@ import type {ReactModel} from 'react-server/src/ReactFlightServer';
 import {saveModule} from 'react-noop-renderer/flight-modules';
 
 import ReactFlightServer from 'react-server/flight';
+import {ServerContextJSONValue} from 'shared/ReactTypes';
 
 type Destination = Array<string>;
 
@@ -57,13 +58,6 @@ const ReactNoopFlightServer = ReactFlightServer({
     return saveModule(reference.value);
   },
 });
-
-type ServerContextJSONValue =
-  | string
-  | boolean
-  | number
-  | null
-  | $ReadOnlyArray<ServerContextJSONValue>;
 
 type Options = {
   onError?: (error: mixed) => void,

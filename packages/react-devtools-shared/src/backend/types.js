@@ -83,7 +83,7 @@ export type GetFiberIDForNative = (
 ) => number | null;
 export type FindNativeNodesForFiberID = (id: number) => ?Array<NativeType>;
 
-export type ReactProviderType<T: any> = {
+export type ReactProviderType<T> = {
   $$typeof: Symbol | number,
   _context: ReactContext<T>,
   ...

@@ -48,7 +48,7 @@ export type HookType =
   | 'useId'
   | 'useCacheRefresh';
 
-export type ContextDependency<T: any> = {
+export type ContextDependency<T> = {
   context: ReactContext<T>,
   next: ContextDependency<T> | null,
   memoizedValue: T,

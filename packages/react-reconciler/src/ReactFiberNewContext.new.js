@@ -88,7 +88,7 @@ export function exitDisallowedContextReadInDEV(): void {
   }
 }
 
-export function pushProvider<T: any>(
+export function pushProvider<T>(
   providerFiber: Fiber,
   context: ReactContext<T>,
   nextValue: T,
@@ -193,7 +193,7 @@ export function scheduleContextWorkOnParentPath(
   }
 }
 
-export function propagateContextChange<T: any>(
+export function propagateContextChange<T>(
   workInProgress: Fiber,
   context: ReactContext<T>,
   renderLanes: Lanes,
@@ -214,7 +214,7 @@ export function propagateContextChange<T: any>(
   }
 }
 
-function propagateContextChange_eager<T: any>(
+function propagateContextChange_eager<T>(
   workInProgress: Fiber,
   context: ReactContext<T>,
   renderLanes: Lanes,
@@ -354,7 +354,7 @@ function propagateContextChange_eager<T: any>(
   }
 }
 
-function propagateContextChanges<T: any>(
+function propagateContextChanges<T>(
   workInProgress: Fiber,
   contexts: Array<any>,
   renderLanes: Lanes,
@@ -653,7 +653,7 @@ export function prepareToReadContext(
   }
 }
 
-export function readContext<T: any>(context: ReactContext<T>): T {
+export function readContext<T>(context: ReactContext<T>): T {
   if (__DEV__) {
     // This warning would fire if you read context inside a Hook like useMemo.
     // Unlike the class check below, it's not enforced in production for perf.
