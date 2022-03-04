@@ -22,13 +22,13 @@ export default function render(url, res) {
   let didError = false;
   const {pipe, abort} = renderToPipeableStream(<App assets={assets} />, {
     bootstrapScripts: [assets['main.js']],
-    onCompleteShell() {
+    onShellReady() {
       // If something errored before we started streaming, we set the error code appropriately.
       res.statusCode = didError ? 500 : 200;
       res.setHeader('Content-type', 'text/html');
       pipe(res);
     },
-    onErrorShell(x) {
+    onShellError(x) {
       // Something errored before we could complete the shell so we emit an alternative shell.
       res.statusCode = 500;
       res.send('<!doctype><p>Error</p>');

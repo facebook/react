@@ -53,7 +53,7 @@ function renderToStringImpl(
   };
 
   let readyToStream = false;
-  function onCompleteShell() {
+  function onShellReady() {
     readyToStream = true;
   }
   const request = createRequest(
@@ -66,7 +66,7 @@ function renderToStringImpl(
     Infinity,
     onError,
     undefined,
-    onCompleteShell,
+    onShellReady,
     undefined,
     undefined,
   );
