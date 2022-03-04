@@ -223,6 +223,7 @@ import {
   createOffscreenHostContainerFiber,
   isSimpleFunctionComponent,
 } from './ReactFiber.new';
+import {isRootDehydrated} from './ReactFiberShellHydration';
 import {
   retryDehydratedSuspenseBoundary,
   scheduleUpdateOnFiber,
@@ -1351,7 +1352,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     resetHydrationState();
     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
   }
-  if (root.isDehydrated && enterHydrationState(workInProgress)) {
+  if (isRootDehydrated(root) && enterHydrationState(workInProgress)) {
     // If we don't have any current children this might be the first pass.
     // We always try to hydrate. If this isn't a hydration pass there won't
     // be any children to hydrate which is effectively the same thing as

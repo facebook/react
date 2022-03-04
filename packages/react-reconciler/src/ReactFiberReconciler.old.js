@@ -48,6 +48,7 @@ import {
   isContextProvider as isLegacyContextProvider,
 } from './ReactFiberContext.old';
 import {createFiberRoot} from './ReactFiberRoot.old';
+import {isRootDehydrated} from './ReactFiberShellHydration';
 import {
   injectInternals,
   markRenderScheduled,
@@ -411,7 +412,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
   switch (fiber.tag) {
     case HostRoot:
       const root: FiberRoot = fiber.stateNode;
-      if (root.isDehydrated) {
+      if (isRootDehydrated(root)) {
         // Flush the first scheduled "update".
         const lanes = getHighestPriorityPendingLanes(root);
         flushRoot(root, lanes);

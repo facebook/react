@@ -160,6 +160,7 @@ import {
   includesSomeLane,
   mergeLanes,
 } from './ReactFiberLane.new';
+import {isRootDehydrated} from './ReactFiberShellHydration';
 import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
@@ -890,7 +891,7 @@ function completeWork(
           // If we hydrated, then we'll need to schedule an update for
           // the commit side-effects on the root.
           markUpdate(workInProgress);
-        } else if (!fiberRoot.isDehydrated) {
+        } else if (!isRootDehydrated(fiberRoot)) {
           // Schedule an effect to clear this container at the start of the next commit.
           // This handles the case of React rendering into a container with previous children.
           // It's also safe to do for updates too, because current.child would only be null

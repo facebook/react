@@ -53,6 +53,7 @@ import {
   setCurrentUpdatePriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 
 const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -386,7 +387,7 @@ export function findInstanceBlockingEvent(
         targetInst = null;
       } else if (tag === HostRoot) {
         const root: FiberRoot = nearestMounted.stateNode;
-        if (root.isDehydrated) {
+        if (isRootDehydrated(root)) {
           // If this happens during a replay something went wrong and it might block
           // the whole system.
           return getContainerFromFiber(nearestMounted);
