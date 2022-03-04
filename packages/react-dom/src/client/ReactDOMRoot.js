@@ -225,7 +225,6 @@ export function createRoot(
   const root = createContainer(
     container,
     ConcurrentRoot,
-    false,
     null,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
@@ -302,6 +301,7 @@ export function hydrateRoot(
 
   const root = createHydrationContainer(
     initialChildren,
+    null,
     container,
     ConcurrentRoot,
     hydrationCallbacks,

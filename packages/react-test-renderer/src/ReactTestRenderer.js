@@ -473,7 +473,6 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
   let root: FiberRoot | null = createContainer(
     container,
     isConcurrent ? ConcurrentRoot : LegacyRoot,
-    false,
     null,
     isStrictMode,
     concurrentUpdatesByDefault,
