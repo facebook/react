@@ -69,7 +69,6 @@ class Surface extends React.Component {
     this._mountNode = createContainer(
       this._surface,
       LegacyRoot,
-      false,
       null,
       false,
       false,

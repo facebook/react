@@ -253,6 +253,15 @@ describe('ReactDOMRoot', () => {
     );
   });
 
+  it('callback passed to legacy hydrate() API', () => {
+    container.innerHTML = '<div>Hi</div>';
+    ReactDOM.hydrate(<div>Hi</div>, container, () => {
+      Scheduler.unstable_yieldValue('callback');
+    });
+    expect(container.textContent).toEqual('Hi');
+    expect(Scheduler).toHaveYielded(['callback']);
+  });
+
   it('warns when unmounting with legacy API (no previous content)', () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);

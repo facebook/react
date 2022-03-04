@@ -245,9 +245,6 @@ function findHostInstanceWithWarning(
 export function createContainer(
   containerInfo: Container,
   tag: RootTag,
-  // TODO: We can remove hydration-specific stuff from createContainer once
-  // we delete legacy mode. The new root API uses createHydrationContainer.
-  hydrate: boolean,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
@@ -255,6 +252,7 @@ export function createContainer(
   onRecoverableError: (error: mixed) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
+  const hydrate = false;
   return createFiberRoot(
     containerInfo,
     tag,
@@ -270,6 +268,8 @@ export function createContainer(
 
 export function createHydrationContainer(
   initialChildren: ReactNodeList,
+  // TODO: Remove `callback` when we delete legacy mode.
+  callback: ?Function,
   containerInfo: Container,
   tag: RootTag,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
@@ -305,6 +305,8 @@ export function createHydrationContainer(
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element: initialChildren};
+  update.callback =
+    callback !== undefined && callback !== null ? callback : null;
   enqueueUpdate(current, update, lane);
   scheduleInitialHydrationOnRoot(root, lane, eventTime);
 
