@@ -342,7 +342,7 @@ type Dispatch<A> = A => void;
 export type Dispatcher = {|
   getCacheSignal?: () => AbortSignal,
   getCacheForType?: <T>(resourceType: () => T) => T,
-  readContext<T: any>(context: ReactContext<T>): T,
+  readContext<T>(context: ReactContext<T>): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, I, A>(
     reducer: (S, A) => S,

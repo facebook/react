@@ -56,7 +56,7 @@ export const Dispatcher: DispatcherType = {
     }
     return entry;
   },
-  readContext,
+  readContext: (readContext: any),
   useContext: (readContext: any),
   useReducer: (unsupportedHook: any),
   useRef: (unsupportedHook: any),
