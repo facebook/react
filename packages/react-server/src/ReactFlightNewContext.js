@@ -239,8 +239,6 @@ export function getActiveContext(): ContextSnapshot {
   return currentActiveSnapshot;
 }
 
-export function readContext<T: ServerContextJSONValue>(
-  context: ReactServerContext<T>,
-): T {
+export function readContext<T>(context: ReactServerContext<T>): T {
   return context._currentValue;
 }

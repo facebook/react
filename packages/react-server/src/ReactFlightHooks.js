@@ -16,7 +16,7 @@ import type {
 import {REACT_SERVER_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
 
-function readContext<T: ServerContextJSONValue>(context: ReactContext<T>): T {
+function readContext<T>(context: ReactServerContext<T>): T {
   if (__DEV__) {
     if (context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
       console.error('Only ServerContext is supported in Flight');
@@ -30,7 +30,7 @@ function readContext<T: ServerContextJSONValue>(context: ReactContext<T>): T {
       );
     }
   }
-  return readContextImpl(((context: any): ReactServerContext<any>));
+  return readContextImpl(context);
 }
 
 export const Dispatcher: DispatcherType = {
@@ -56,8 +56,8 @@ export const Dispatcher: DispatcherType = {
     }
     return entry;
   },
-  readContext: (readContext: any),
-  useContext: (readContext: any),
+  readContext,
+  useContext: readContext,
   useReducer: (unsupportedHook: any),
   useRef: (unsupportedHook: any),
   useState: (unsupportedHook: any),
