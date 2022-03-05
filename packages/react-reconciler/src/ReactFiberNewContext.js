@@ -49,6 +49,15 @@ import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
+let rendererCursorDEV: StackCursor<Object | null>;
+if (__DEV__) {
+  rendererCursorDEV = createCursor(null);
+}
+let renderer2CursorDEV: StackCursor<Object | null>;
+if (__DEV__) {
+  renderer2CursorDEV = createCursor(null);
+}
+
 let rendererSigil;
 if (__DEV__) {
   // Use this to detect multiple renderers using the same context
@@ -94,6 +103,8 @@ export function pushProvider<T>(
 
     context._currentValue = nextValue;
     if (__DEV__) {
+      push(rendererCursorDEV, context._currentRenderer, providerFiber);
+
       if (
         context._currentRenderer !== undefined &&
         context._currentRenderer !== null &&
@@ -111,6 +122,8 @@ export function pushProvider<T>(
 
     context._currentValue2 = nextValue;
     if (__DEV__) {
+      push(renderer2CursorDEV, context._currentRenderer2, providerFiber);
+
       if (
         context._currentRenderer2 !== undefined &&
         context._currentRenderer2 !== null &&
@@ -131,7 +144,7 @@ export function popProvider(
   providerFiber: Fiber,
 ): void {
   const currentValue = valueCursor.current;
-  pop(valueCursor, providerFiber);
+
   if (isPrimaryRenderer) {
     if (
       enableServerContext &&
@@ -142,7 +155,9 @@ export function popProvider(
       context._currentValue = currentValue;
     }
     if (__DEV__) {
-      context._currentRenderer = null;
+      const currentRenderer = rendererCursorDEV.current;
+      pop(rendererCursorDEV, providerFiber);
+      context._currentRenderer = currentRenderer;
     }
   } else {
     if (
@@ -154,9 +169,13 @@ export function popProvider(
       context._currentValue2 = currentValue;
     }
     if (__DEV__) {
-      context._currentRenderer2 = null;
+      const currentRenderer2 = renderer2CursorDEV.current;
+      pop(renderer2CursorDEV, providerFiber);
+      context._currentRenderer2 = currentRenderer2;
     }
   }
+
+  pop(valueCursor, providerFiber);
 }
 
 export function scheduleContextWorkOnParentPath(
