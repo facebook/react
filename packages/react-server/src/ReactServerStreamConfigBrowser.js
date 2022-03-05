@@ -21,24 +21,64 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
+let currentView = null;
+let writtenBytes = 0;
+
 export function beginWriting(destination: Destination) {}
 
 export function writeChunk(
   destination: Destination,
   chunk: PrecomputedChunk | Chunk,
 ): void {
-  destination.enqueue(chunk);
+  if (currentView === null) {
+    currentView = new Uint8Array(512);
+    writtenBytes = 0;
+  }
+
+  if (chunk.length > currentView.length) {
+    // this chunk is larger than our view which implies it was not
+    // one that is cached by the streaming renderer. We will enqueu
+    // it directly and expect it is not re-used
+    if (writtenBytes > 0) {
+      destination.enqueue(new Uint8Array(currentView.buffer, 0, writtenBytes));
+      currentView = null;
+      writtenBytes = 0;
+    }
+    destination.enqueue(chunk);
+    return;
+  }
+
+  const allowableBytes = currentView.length - writtenBytes;
+  if (allowableBytes < chunk.length) {
+    // this chunk would overflow the current view. We enqueu a full view
+    // and start a new view with the remaining chunk
+    currentView.set(chunk.subarray(0, allowableBytes), writtenBytes);
+    destination.enqueue(currentView);
+    currentView = new Uint8Array(512);
+    currentView.set(chunk.subarray(allowableBytes));
+    writtenBytes = chunk.length - allowableBytes;
+  } else {
+    currentView.set(chunk, writtenBytes);
+    writtenBytes += chunk.length;
+  }
 }
 
 export function writeChunkAndReturn(
   destination: Destination,
   chunk: PrecomputedChunk | Chunk,
 ): boolean {
-  destination.enqueue(chunk);
-  return destination.desiredSize > 0;
+  writeChunk(destination, chunk);
+  // in web streams there is no backpressure so we can alwas write more
+  return true;
 }
 
-export function completeWriting(destination: Destination) {}
+export function completeWriting(destination: Destination) {
+  if (currentView && writtenBytes > 0) {
+    destination.enqueue(new Uint8Array(currentView.buffer, 0, writtenBytes));
+    currentView = null;
+    writtenBytes = 0;
+  }
+}
 
 export function close(destination: Destination) {
   destination.close();
