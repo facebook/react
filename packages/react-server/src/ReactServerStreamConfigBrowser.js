@@ -21,46 +21,66 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
+const VIEW_SIZE = 512;
 let currentView = null;
 let writtenBytes = 0;
 
-export function beginWriting(destination: Destination) {}
+export function beginWriting(destination: Destination) {
+  currentView = new Uint8Array(VIEW_SIZE);
+  writtenBytes = 0;
+}
 
 export function writeChunk(
   destination: Destination,
   chunk: PrecomputedChunk | Chunk,
 ): void {
-  if (currentView === null) {
-    currentView = new Uint8Array(512);
-    writtenBytes = 0;
+  if (chunk.length === 0) {
+    return;
   }
 
-  if (chunk.length > currentView.length) {
-    // this chunk is larger than our view which implies it was not
+  if (chunk.length > VIEW_SIZE) {
+    // this chunk may overflow a single view which implies it was not
     // one that is cached by the streaming renderer. We will enqueu
     // it directly and expect it is not re-used
     if (writtenBytes > 0) {
-      destination.enqueue(new Uint8Array(currentView.buffer, 0, writtenBytes));
-      currentView = null;
+      destination.enqueue(
+        new Uint8Array(
+          ((currentView: any): Uint8Array).buffer,
+          0,
+          writtenBytes,
+        ),
+      );
+      currentView = new Uint8Array(VIEW_SIZE);
       writtenBytes = 0;
     }
     destination.enqueue(chunk);
     return;
   }
 
-  const allowableBytes = currentView.length - writtenBytes;
-  if (allowableBytes < chunk.length) {
-    // this chunk would overflow the current view. We enqueu a full view
+  let bytesToWrite = chunk;
+  const allowableBytes = ((currentView: any): Uint8Array).length - writtenBytes;
+  if (allowableBytes < bytesToWrite.length) {
+    // this chunk would overflow the current view. We enqueue a full view
     // and start a new view with the remaining chunk
-    currentView.set(chunk.subarray(0, allowableBytes), writtenBytes);
-    destination.enqueue(currentView);
-    currentView = new Uint8Array(512);
-    currentView.set(chunk.subarray(allowableBytes));
-    writtenBytes = chunk.length - allowableBytes;
-  } else {
-    currentView.set(chunk, writtenBytes);
-    writtenBytes += chunk.length;
+    if (allowableBytes === 0) {
+      // the current view is already full, send it
+      destination.enqueue(currentView);
+    } else {
+      // fill up the current view and apply the remaining chunk bytes
+      // to a new view.
+      ((currentView: any): Uint8Array).set(
+        bytesToWrite.subarray(0, allowableBytes),
+        writtenBytes,
+      );
+      // writtenBytes += allowableBytes; // this can be skipped because we are going to immediately reset the view
+      destination.enqueue(currentView);
+      bytesToWrite = bytesToWrite.subarray(allowableBytes);
+    }
+    currentView = new Uint8Array(VIEW_SIZE);
+    writtenBytes = 0;
   }
+  ((currentView: any): Uint8Array).set(bytesToWrite, writtenBytes);
+  writtenBytes += bytesToWrite.length;
 }
 
 export function writeChunkAndReturn(
