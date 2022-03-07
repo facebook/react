@@ -914,7 +914,7 @@ describe('ReactDOMFizzServer', () => {
         </Suspense>,
         {
           identifierPrefix: 'A_',
-          onCompleteShell() {
+          onShellReady() {
             writableA.write('<div id="container-A">');
             pipe(writableA);
             writableA.write('</div>');
@@ -933,7 +933,7 @@ describe('ReactDOMFizzServer', () => {
         </Suspense>,
         {
           identifierPrefix: 'B_',
-          onCompleteShell() {
+          onShellReady() {
             writableB.write('<div id="container-B">');
             pipe(writableB);
             writableB.write('</div>');
@@ -1168,7 +1168,7 @@ describe('ReactDOMFizzServer', () => {
 
         {
           namespaceURI: 'http://www.w3.org/2000/svg',
-          onCompleteShell() {
+          onShellReady() {
             writable.write('<svg>');
             pipe(writable);
             writable.write('</svg>');

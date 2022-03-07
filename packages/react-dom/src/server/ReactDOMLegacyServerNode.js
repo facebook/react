@@ -68,7 +68,7 @@ function renderToNodeStreamImpl(
   options: void | ServerOptions,
   generateStaticMarkup: boolean,
 ): Readable {
-  function onCompleteAll() {
+  function onAllReady() {
     // We wait until everything has loaded before starting to write.
     // That way we only end up with fully resolved HTML even if we suspend.
     destination.startedFlowing = true;
@@ -81,7 +81,8 @@ function renderToNodeStreamImpl(
     createRootFormatContext(),
     Infinity,
     onError,
-    onCompleteAll,
+    onAllReady,
+    undefined,
     undefined,
   );
   destination.request = request;
