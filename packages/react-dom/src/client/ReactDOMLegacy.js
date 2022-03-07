@@ -90,13 +90,13 @@ if (__DEV__) {
   };
 }
 
-function getReactRootElementInContainer(container: any) {
+function getReactRootElementInContainer(container: Container): Node | null {
   if (!container) {
     return null;
   }
 
   if (container.nodeType === DOCUMENT_NODE) {
-    return container.documentElement;
+    return (container: Document).documentElement;
   } else {
     return container.firstChild;
   }
