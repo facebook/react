@@ -15,11 +15,11 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ServerContextJSONValue} from 'shared/ReactTypes';
 
 import {saveModule} from 'react-noop-renderer/flight-modules';
 
 import ReactFlightServer from 'react-server/flight';
-import {ServerContextJSONValue} from 'shared/ReactTypes';
 
 type Destination = Array<string>;
 
