@@ -12,6 +12,9 @@ import type {
   ServerContextJSONValue,
 } from 'shared/ReactTypes';
 
+import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
+import {isPrimaryRenderer} from './ReactServerFormatConfig';
+
 let rendererSigil;
 if (__DEV__) {
   // Use this to detect multiple renderers using the same context
@@ -40,11 +43,19 @@ export const rootContextSnapshot: ContextSnapshot = null;
 let currentActiveSnapshot: ContextSnapshot = null;
 
 function popNode(prev: ContextNode<any>): void {
-  prev.context._currentValue = prev.parentValue;
+  if (isPrimaryRenderer) {
+    prev.context._currentValue = prev.parentValue;
+  } else {
+    prev.context._currentValue2 = prev.parentValue;
+  }
 }
 
 function pushNode(next: ContextNode<any>): void {
-  next.context._currentValue = next.value;
+  if (isPrimaryRenderer) {
+    next.context._currentValue = next.value;
+  } else {
+    next.context._currentValue2 = next.value;
+  }
 }
 
 function popToNearestCommonAncestor(
@@ -173,20 +184,39 @@ export function pushProvider<T: ServerContextJSONValue>(
   context: ReactServerContext<T>,
   nextValue: T,
 ): ContextSnapshot {
-  const prevValue = context._currentValue;
-  context._currentValue = nextValue;
-  if (__DEV__) {
-    if (
-      context._currentRenderer !== undefined &&
-      context._currentRenderer !== null &&
-      context._currentRenderer !== rendererSigil
-    ) {
-      console.error(
-        'Detected multiple renderers concurrently rendering the ' +
-          'same context provider. This is currently unsupported.',
-      );
+  let prevValue;
+  if (isPrimaryRenderer) {
+    prevValue = context._currentValue;
+    context._currentValue = nextValue;
+    if (__DEV__) {
+      if (
+        context._currentRenderer !== undefined &&
+        context._currentRenderer !== null &&
+        context._currentRenderer !== rendererSigil
+      ) {
+        console.error(
+          'Detected multiple renderers concurrently rendering the ' +
+            'same context provider. This is currently unsupported.',
+        );
+      }
+      context._currentRenderer = rendererSigil;
     }
-    context._currentRenderer = rendererSigil;
+  } else {
+    prevValue = context._currentValue2;
+    context._currentValue2 = nextValue;
+    if (__DEV__) {
+      if (
+        context._currentRenderer2 !== undefined &&
+        context._currentRenderer2 !== null &&
+        context._currentRenderer2 !== rendererSigil
+      ) {
+        console.error(
+          'Detected multiple renderers concurrently rendering the ' +
+            'same context provider. This is currently unsupported.',
+        );
+      }
+      context._currentRenderer2 = rendererSigil;
+    }
   }
   const prevNode = currentActiveSnapshot;
   const newNode: ContextNode<T> = {
@@ -218,19 +248,50 @@ export function popProvider<T: ServerContextJSONValue>(
       );
     }
   }
-  prevSnapshot.context._currentValue = prevSnapshot.parentValue;
-  if (__DEV__) {
-    if (
-      context._currentRenderer !== undefined &&
-      context._currentRenderer !== null &&
-      context._currentRenderer !== rendererSigil
-    ) {
-      console.error(
-        'Detected multiple renderers concurrently rendering the ' +
-          'same context provider. This is currently unsupported.',
-      );
+  if (isPrimaryRenderer) {
+    const value = prevSnapshot.parentValue;
+    if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
+      prevSnapshot.context._currentValue =
+        // $FlowExpectedError - Effectively refined context to ServerContext
+        (prevSnapshot.context: ReactServerContext<any>)._defaultValue;
+    } else {
+      prevSnapshot.context._currentValue = value;
     }
-    context._currentRenderer = rendererSigil;
+    if (__DEV__) {
+      if (
+        context._currentRenderer !== undefined &&
+        context._currentRenderer !== null &&
+        context._currentRenderer !== rendererSigil
+      ) {
+        console.error(
+          'Detected multiple renderers concurrently rendering the ' +
+            'same context provider. This is currently unsupported.',
+        );
+      }
+      context._currentRenderer = rendererSigil;
+    }
+  } else {
+    const value = prevSnapshot.parentValue;
+    if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
+      prevSnapshot.context._currentValue2 =
+        // $FlowExpectedError - Effectively refined context to ServerContext
+        (prevSnapshot.context: ReactServerContext<any>)._defaultValue;
+    } else {
+      prevSnapshot.context._currentValue2 = value;
+    }
+    if (__DEV__) {
+      if (
+        context._currentRenderer2 !== undefined &&
+        context._currentRenderer2 !== null &&
+        context._currentRenderer2 !== rendererSigil
+      ) {
+        console.error(
+          'Detected multiple renderers concurrently rendering the ' +
+            'same context provider. This is currently unsupported.',
+        );
+      }
+      context._currentRenderer2 = rendererSigil;
+    }
   }
   return (currentActiveSnapshot = prevSnapshot.parent);
 }
@@ -240,5 +301,8 @@ export function getActiveContext(): ContextSnapshot {
 }
 
 export function readContext<T>(context: ReactServerContext<T>): T {
-  return context._currentValue;
+  const value = isPrimaryRenderer
+    ? context._currentValue
+    : context._currentValue2;
+  return value;
 }

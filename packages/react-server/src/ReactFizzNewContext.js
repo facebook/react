@@ -7,9 +7,9 @@
  * @flow
  */
 
-import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
 import type {ReactContext, ReactServerContext} from 'shared/ReactTypes';
 
+import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
 import {isPrimaryRenderer} from './ReactServerFormatConfig';
 
 let rendererSigil;

@@ -34,7 +34,7 @@ export const REACT_LEGACY_HIDDEN_TYPE = Symbol.for('react.legacy_hidden');
 export const REACT_CACHE_TYPE = Symbol.for('react.cache');
 export const REACT_TRACING_MARKER_TYPE = Symbol.for('react.tracing_marker');
 export const REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-  'react.server_context.defaultValue',
+  'react.default_value',
 );
 
 const MAYBE_ITERATOR_SYMBOL = Symbol.iterator;

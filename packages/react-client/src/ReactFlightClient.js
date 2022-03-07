@@ -38,10 +38,9 @@ export type JSONValue =
 
 const PENDING = 0;
 const RESOLVED_MODEL = 1;
-const RESOLVED_PROVIDER = 2;
-const RESOLVED_MODULE = 3;
-const INITIALIZED = 4;
-const ERRORED = 5;
+const RESOLVED_MODULE = 2;
+const INITIALIZED = 3;
+const ERRORED = 4;
 
 type PendingChunk = {
   _status: 0,
@@ -55,26 +54,20 @@ type ResolvedModelChunk = {
   _response: Response,
   then(resolve: () => mixed): void,
 };
-type ResolvedProviderChunk = {
-  _status: 2,
-  _value: string,
-  _response: Response,
-  then(resolve: () => mixed): void,
-};
 type ResolvedModuleChunk<T> = {
-  _status: 3,
+  _status: 2,
   _value: ModuleReference<T>,
   _response: Response,
   then(resolve: () => mixed): void,
 };
 type InitializedChunk<T> = {
-  _status: 4,
+  _status: 3,
   _value: T,
   _response: Response,
   then(resolve: () => mixed): void,
 };
 type ErroredChunk = {
-  _status: 5,
+  _status: 4,
   _value: Error,
   _response: Response,
   then(resolve: () => mixed): void,
@@ -82,7 +75,6 @@ type ErroredChunk = {
 type SomeChunk<T> =
   | PendingChunk
   | ResolvedModelChunk
-  | ResolvedProviderChunk
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
   | ErroredChunk;
@@ -118,8 +110,6 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
       return chunk._value;
     case RESOLVED_MODEL:
       return initializeModelChunk(chunk);
-    case RESOLVED_PROVIDER:
-      return initializeProviderChunk(chunk);
     case RESOLVED_MODULE:
       return initializeModuleChunk(chunk);
     case PENDING:
@@ -179,13 +169,6 @@ function createResolvedModelChunk(
   return new Chunk(RESOLVED_MODEL, value, response);
 }
 
-function createResolvedProviderChunk(
-  response: Response,
-  value: string,
-): ResolvedProviderChunk {
-  return new Chunk(RESOLVED_PROVIDER, value, response);
-}
-
 function createResolvedModuleChunk<T>(
   response: Response,
   value: ModuleReference<T>,
@@ -208,18 +191,6 @@ function resolveModelChunk<T>(
   wakeChunk(listeners);
 }
 
-function resolveProviderChunk<T>(chunk: SomeChunk<T>, value: string): void {
-  if (chunk._status !== PENDING) {
-    // We already resolved. We didn't expect to see this.
-    return;
-  }
-  const listeners = chunk._value;
-  const resolvedChunk: ResolvedProviderChunk = (chunk: any);
-  resolvedChunk._status = RESOLVED_PROVIDER;
-  resolvedChunk._value = value;
-  wakeChunk(listeners);
-}
-
 function resolveModuleChunk<T>(
   chunk: SomeChunk<T>,
   value: ModuleReference<T>,
@@ -237,14 +208,6 @@ function resolveModuleChunk<T>(
 
 function initializeModelChunk<T>(chunk: ResolvedModelChunk): T {
   const value: T = parseModel(chunk._response, chunk._value);
-  const initializedChunk: InitializedChunk<T> = (chunk: any);
-  initializedChunk._status = INITIALIZED;
-  initializedChunk._value = value;
-  return value;
-}
-
-function initializeProviderChunk<T>(chunk: ResolvedProviderChunk): T {
-  const value: T = getOrCreateServerContext(chunk._value).Provider;
   const initializedChunk: InitializedChunk<T> = (chunk: any);
   initializedChunk._status = INITIALIZED;
   initializedChunk._value = value;
@@ -367,11 +330,10 @@ export function parseModelTuple(
 ): any {
   const tuple: [mixed, mixed, mixed, mixed] = (value: any);
 
-  switch (tuple[0]) {
-    case REACT_ELEMENT_TYPE:
-      // TODO: Consider having React just directly accept these arrays as elements.
-      // Or even change the ReactElement type to be an array.
-      return createElement(tuple[1], tuple[2], tuple[3]);
+  if (tuple[0] === REACT_ELEMENT_TYPE) {
+    // TODO: Consider having React just directly accept these arrays as elements.
+    // Or even change the ReactElement type to be an array.
+    return createElement(tuple[1], tuple[2], tuple[3]);
   }
   return value;
 }
@@ -405,12 +367,13 @@ export function resolveProvider(
   contextName: string,
 ): void {
   const chunks = response._chunks;
-  const chunk = chunks.get(id);
-  if (!chunk) {
-    chunks.set(id, createResolvedProviderChunk(response, contextName));
-  } else {
-    resolveProviderChunk(chunk, contextName);
-  }
+  chunks.set(
+    id,
+    createInitializedChunk(
+      response,
+      getOrCreateServerContext(contextName).Provider,
+    ),
+  );
 }
 
 export function resolveModule(

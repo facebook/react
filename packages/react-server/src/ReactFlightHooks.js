@@ -8,11 +8,7 @@
  */
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
-import type {
-  ReactContext,
-  ReactServerContext,
-  ServerContextJSONValue,
-} from 'shared/ReactTypes';
+import type {ReactServerContext} from 'shared/ReactTypes';
 import {REACT_SERVER_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
 
