@@ -7,10 +7,12 @@
  * @flow
  */
 
-import type {ReactContext, ReactServerContext} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/ReactTypes';
 
 import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
-import {isPrimaryRenderer} from './ReactServerFormatConfig';
+// import {isPrimaryRenderer} from './ReactServerFormatConfig';
+
+let isPrimaryRenderer = true;
 
 let rendererSigil;
 if (__DEV__) {
@@ -247,9 +249,7 @@ export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
   if (isPrimaryRenderer) {
     const value = prevSnapshot.parentValue;
     if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
-      prevSnapshot.context._currentValue =
-        // $FlowExpectedError - Effectively refined context to ServerContext
-        (prevSnapshot.context: ReactServerContext<any>)._defaultValue;
+      prevSnapshot.context._currentValue = prevSnapshot.context._defaultValue;
     } else {
       prevSnapshot.context._currentValue = value;
     }
@@ -269,9 +269,7 @@ export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
   } else {
     const value = prevSnapshot.parentValue;
     if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
-      prevSnapshot.context._currentValue2 =
-        // $FlowExpectedError - Effectively refined context to ServerContext
-        (prevSnapshot.context: ReactServerContext<any>)._defaultValue;
+      prevSnapshot.context._currentValue2 = prevSnapshot.context._defaultValue;
     } else {
       prevSnapshot.context._currentValue2 = value;
     }

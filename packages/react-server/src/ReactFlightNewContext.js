@@ -251,9 +251,7 @@ export function popProvider<T: ServerContextJSONValue>(
   if (isPrimaryRenderer) {
     const value = prevSnapshot.parentValue;
     if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
-      prevSnapshot.context._currentValue =
-        // $FlowExpectedError - Effectively refined context to ServerContext
-        (prevSnapshot.context: ReactServerContext<any>)._defaultValue;
+      prevSnapshot.context._currentValue = prevSnapshot.context._defaultValue;
     } else {
       prevSnapshot.context._currentValue = value;
     }
@@ -273,9 +271,7 @@ export function popProvider<T: ServerContextJSONValue>(
   } else {
     const value = prevSnapshot.parentValue;
     if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
-      prevSnapshot.context._currentValue2 =
-        // $FlowExpectedError - Effectively refined context to ServerContext
-        (prevSnapshot.context: ReactServerContext<any>)._defaultValue;
+      prevSnapshot.context._currentValue2 = prevSnapshot.context._defaultValue;
     } else {
       prevSnapshot.context._currentValue2 = value;
     }

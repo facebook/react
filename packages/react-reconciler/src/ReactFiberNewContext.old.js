@@ -7,11 +7,7 @@
  * @flow
  */
 
-import type {
-  ReactContext,
-  ReactServerContext,
-  ReactProviderType,
-} from 'shared/ReactTypes';
+import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 import type {
   Fiber,
   ContextDependency,
@@ -138,13 +134,13 @@ export function popProvider(
   pop(valueCursor, providerFiber);
   if (isPrimaryRenderer) {
     if (currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
-      context._currentValue = ((context: any): ReactServerContext<any>)._defaultValue;
+      context._currentValue = context._defaultValue;
     } else {
       context._currentValue = currentValue;
     }
   } else {
     if (currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
-      context._currentValue2 = ((context: any): ReactServerContext<any>)._defaultValue;
+      context._currentValue2 = context._defaultValue;
     } else {
       context._currentValue2 = currentValue;
     }

@@ -22,7 +22,6 @@ export {
   createElement,
   createFactory,
   createRef,
-  createServerContext,
   forwardRef,
   isValidElement,
   lazy,
