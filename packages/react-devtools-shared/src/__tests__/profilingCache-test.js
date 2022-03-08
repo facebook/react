@@ -1167,4 +1167,215 @@ describe('ProfilingCache', () => {
     expect(updaters.length).toEqual(1);
     expect(updaters[0].displayName).toEqual('App');
   });
+
+  it('should collect data for unsuspended fibers', async () => {
+    let resolveAsync;
+    const Async = React.lazy(() => {
+      return new Promise(resolve => {
+        resolveAsync = () => {
+          resolve({
+            default: function ResolvedAsync() {
+              Scheduler.unstable_advanceTime(2);
+              return null;
+            },
+          });
+        };
+      });
+    });
+    const App = () => {
+      Scheduler.unstable_advanceTime(3);
+      return (
+        <React.Suspense>
+          <Async />
+        </React.Suspense>
+      );
+    };
+
+    const container = document.createElement('div');
+
+    utils.act(() => store.profilerStore.startProfiling());
+    const root = ReactDOMClient.createRoot(container);
+    utils.act(() => root.render(<App />));
+    await utils.actAsync(async () => {
+      Scheduler.unstable_advanceTime(1000);
+      resolveAsync();
+    });
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+    const commitData = store.profilerStore.getDataForRoot(rootID).commitData;
+    expect(commitData).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "changeDescriptions": Map {
+            2 => Object {
+              "context": null,
+              "didHooksChange": false,
+              "isFirstMount": true,
+              "props": null,
+              "state": null,
+            },
+          },
+          "duration": 3,
+          "effectDuration": 0,
+          "fiberActualDurations": Map {
+            1 => 3,
+            2 => 3,
+            3 => 0,
+          },
+          "fiberSelfDurations": Map {
+            1 => 0,
+            2 => 3,
+            3 => 0,
+          },
+          "passiveEffectDuration": 0,
+          "priorityLevel": "Normal",
+          "timestamp": 3,
+          "updaters": Array [
+            Object {
+              "displayName": "createRoot()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
+        },
+        Object {
+          "changeDescriptions": Map {
+            5 => Object {
+              "context": null,
+              "didHooksChange": false,
+              "isFirstMount": true,
+              "props": null,
+              "state": null,
+            },
+          },
+          "duration": 2,
+          "effectDuration": 0,
+          "fiberActualDurations": Map {
+            5 => 2,
+            3 => 2,
+          },
+          "fiberSelfDurations": Map {
+            5 => 2,
+            3 => 0,
+          },
+          "passiveEffectDuration": 0,
+          "priorityLevel": "Normal",
+          "timestamp": 1005,
+          "updaters": Array [],
+        },
+      ]
+    `);
+  });
+
+  it('should collect data for unsuspended fibers in legacy roots', async () => {
+    let resolveAsync;
+    const Async = React.lazy(() => {
+      return new Promise(resolve => {
+        resolveAsync = () => {
+          resolve({
+            default: function ResolvedAsync() {
+              Scheduler.unstable_advanceTime(2);
+              return null;
+            },
+          });
+        };
+      });
+    });
+    const App = () => {
+      Scheduler.unstable_advanceTime(3);
+      return (
+        <React.Suspense>
+          <Async />
+        </React.Suspense>
+      );
+    };
+
+    const container = document.createElement('div');
+
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => legacyRender(<App />, container));
+    await utils.actAsync(async () => {
+      Scheduler.unstable_advanceTime(1000);
+      resolveAsync();
+    });
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+    const commitData = store.profilerStore.getDataForRoot(rootID).commitData;
+    expect(commitData).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "changeDescriptions": Map {
+            2 => Object {
+              "context": null,
+              "didHooksChange": false,
+              "isFirstMount": true,
+              "props": null,
+              "state": null,
+            },
+          },
+          "duration": 3,
+          "effectDuration": 0,
+          "fiberActualDurations": Map {
+            1 => 3,
+            2 => 3,
+            3 => 0,
+          },
+          "fiberSelfDurations": Map {
+            1 => 0,
+            2 => 3,
+            3 => 0,
+          },
+          "passiveEffectDuration": 0,
+          "priorityLevel": "Immediate",
+          "timestamp": 3,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
+        },
+        Object {
+          "changeDescriptions": Map {
+            5 => Object {
+              "context": null,
+              "didHooksChange": false,
+              "isFirstMount": true,
+              "props": null,
+              "state": null,
+            },
+          },
+          "duration": 2,
+          "effectDuration": 0,
+          "fiberActualDurations": Map {
+            5 => 2,
+            3 => 2,
+          },
+          "fiberSelfDurations": Map {
+            5 => 2,
+            3 => 0,
+          },
+          "passiveEffectDuration": 0,
+          "priorityLevel": "Immediate",
+          "timestamp": 1005,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
+        },
+      ]
+    `);
+  });
 });
