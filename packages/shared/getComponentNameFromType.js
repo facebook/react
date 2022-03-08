@@ -112,12 +112,12 @@ export default function getComponentNameFromType(type: mixed): string | null {
           return null;
         }
       }
-      case REACT_SERVER_CONTEXT_TYPE: {
+      case REACT_SERVER_CONTEXT_TYPE:
         if (enableServerContext) {
           const context = ((type: any): ReactContext<any>);
           return (context.displayName || context._globalName) + '.Provider';
         }
-      }
+      // eslint-disable-next-line no-fallthrough
     }
   }
   return null;
