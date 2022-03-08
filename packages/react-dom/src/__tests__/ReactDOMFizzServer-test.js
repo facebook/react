@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
 
-let JSDOM;
 let Stream;
 let Scheduler;
 let React;
@@ -22,11 +22,9 @@ let useSyncExternalStoreWithSelector;
 let use;
 let PropTypes;
 let textCache;
-let window;
-let document;
 let writable;
 let CSPnonce = null;
-let container;
+let container = null;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
@@ -34,7 +32,6 @@ let fatalError = undefined;
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
     jest.resetModules();
-    JSDOM = require('jsdom').JSDOM;
     Scheduler = require('scheduler');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
@@ -64,16 +61,8 @@ describe('ReactDOMFizzServer', () => {
 
     textCache = new Map();
 
-    // Test Environment
-    const jsdom = new JSDOM(
-      '<!DOCTYPE html><html><head></head><body><div id="container">',
-      {
-        runScripts: 'dangerously',
-      },
-    );
-    window = jsdom.window;
-    document = jsdom.window.document;
-    container = document.getElementById('container');
+    container = document.createElement('div');
+    document.body.appendChild(container);
 
     buffer = '';
     hasErrored = false;
@@ -87,6 +76,11 @@ describe('ReactDOMFizzServer', () => {
       hasErrored = true;
       fatalError = error;
     });
+  });
+
+  afterEach(() => {
+    container?.remove();
+    container = null;
   });
 
   function expectErrors(errorsArr, toBeDevArr, toBeProdArr) {

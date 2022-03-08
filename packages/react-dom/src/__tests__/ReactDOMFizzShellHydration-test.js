@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
-let JSDOM;
 let React;
 let startTransition;
 let ReactDOMClient;
@@ -15,9 +15,8 @@ let Scheduler;
 let clientAct;
 let ReactDOMFizzServer;
 let Stream;
-let document;
 let writable;
-let container;
+let container = null;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
@@ -26,7 +25,6 @@ let textCache;
 describe('ReactDOMFizzShellHydration', () => {
   beforeEach(() => {
     jest.resetModules();
-    JSDOM = require('jsdom').JSDOM;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
@@ -38,15 +36,8 @@ describe('ReactDOMFizzShellHydration', () => {
 
     textCache = new Map();
 
-    // Test Environment
-    const jsdom = new JSDOM(
-      '<!DOCTYPE html><html><head></head><body><div id="container">',
-      {
-        runScripts: 'dangerously',
-      },
-    );
-    document = jsdom.window.document;
-    container = document.getElementById('container');
+    container = document.createElement('div');
+    document.body.appendChild(container);
 
     buffer = '';
     hasErrored = false;
@@ -60,6 +51,11 @@ describe('ReactDOMFizzShellHydration', () => {
       hasErrored = true;
       fatalError = error;
     });
+  });
+
+  afterEach(() => {
+    container?.remove();
+    container = null;
   });
 
   async function serverAct(callback) {
