@@ -13,8 +13,14 @@
     "LICENSE",
     "README.md",
     "flight.js",
+    "flight-hooks.js",
     "cjs/"
   ],
+  "exports": {
+    ".": "./flight.js",
+    "./flight": "./flight.js",
+    "./flight-hooks": "./flight-hooks.js"
+  },
   "repository": {
     "type" : "git",
     "url" : "https://github.com/facebook/react.git",

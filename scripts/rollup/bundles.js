@@ -661,6 +661,22 @@ const bundles = [
     ],
   },
 
+  /******* React Noop Flight Client Hooks (used for tests) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-noop-renderer/flight-hooks',
+    global: 'ReactNoopFlightClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: [
+      'react',
+      'scheduler',
+      'expect',
+      'react-noop-renderer/flight-hooks',
+    ],
+  },
+
   /******* React Reconciler *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD, NODE_PROFILING],

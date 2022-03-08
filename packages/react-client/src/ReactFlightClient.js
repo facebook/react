@@ -7,8 +7,12 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable, ReactProviderType} from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
+import type {
+  ReactServerContext,
+  ServerContextJSONValue,
+} from 'shared/ReactTypes';
 
 import type {
   ModuleReference,
@@ -17,7 +21,6 @@ import type {
   Response,
   BundlerConfig,
 } from './ReactFlightClientHostConfig';
-
 import {
   resolveModuleReference,
   preloadModule,
@@ -25,9 +28,14 @@ import {
   parseModel,
 } from './ReactFlightClientHostConfig';
 
-import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
+import {
+  REACT_LAZY_TYPE,
+  REACT_ELEMENT_TYPE,
+  REACT_PROVIDER_TYPE,
+} from 'shared/ReactSymbols';
+
+import {useContext, useMemo, createContext} from 'react';
 
 export type JSONValue =
   | number
@@ -333,6 +341,12 @@ export function parseModelTuple(
   const tuple: [mixed, mixed, mixed, mixed] = (value: any);
 
   if (tuple[0] === REACT_ELEMENT_TYPE) {
+    if ((tuple[1]: any).$$typeof === REACT_PROVIDER_TYPE) {
+      return createElement(ServerContextWrapper, null, {
+        ServerContext: ((tuple[1]: any): ReactProviderType<any>)._context,
+        ...tuple[3],
+      });
+    }
     // TODO: Consider having React just directly accept these arrays as elements.
     // Or even change the ReactElement type to be an array.
     return createElement(tuple[1], tuple[2], tuple[3]);
@@ -439,4 +453,43 @@ export function close(response: Response): void {
   // Ideally we should be able to early bail out if we kept a
   // ref count of pending chunks.
   reportGlobalError(response, new Error('Connection closed.'));
+}
+
+const ServerContextContext = createContext(null);
+
+type ServerContextNodeType = {
+  parent: null | ServerContextNodeType,
+  name: string,
+  value: any,
+};
+
+type Props = {
+  ServerContext: ReactServerContext<any>,
+  value: ServerContextJSONValue,
+  children: any,
+};
+
+function ServerContextWrapper({ServerContext, value, children}: Props) {
+  const parent = useContext(ServerContextContext);
+
+  const context = useMemo(() => {
+    const ctx = {
+      parent: parent,
+      name: ServerContext._globalName,
+      value: value,
+    };
+    if (__DEV__) {
+      return Object.freeze(ctx);
+    }
+    return ctx;
+  }, [parent, value]);
+
+  return createElement(ServerContextContext.Provider, null, {
+    value: context,
+    children: createElement(ServerContext.Provider, null, {value, children}),
+  });
+}
+
+export function useServerContextsForRefetch() {
+  return useContext(ServerContextContext);
 }

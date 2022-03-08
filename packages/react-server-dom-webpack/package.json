@@ -17,6 +17,7 @@
     "writer.browser.server.js",
     "writer.node.server.js",
     "node-register.js",
+    "flight-hooks.js",
     "cjs/",
     "umd/",
     "esm/"
@@ -35,7 +36,8 @@
     "./writer.browser.server": "./writer.browser.server.js",
     "./node-loader": "./esm/react-server-dom-webpack-node-loader.js",
     "./node-register": "./node-register.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./flight-hooks": "./flight-hooks.js"
   },
   "main": "index.js",
   "repository": {

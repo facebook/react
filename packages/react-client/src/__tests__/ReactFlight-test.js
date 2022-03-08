@@ -15,6 +15,7 @@ let React;
 let ReactNoop;
 let ReactNoopFlightServer;
 let ReactNoopFlightClient;
+let ReactNoopFlightHooks;
 let ErrorBoundary;
 let NoErrorExpected;
 let Scheduler;
@@ -27,6 +28,8 @@ describe('ReactFlight', () => {
     ReactNoop = require('react-noop-renderer');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
+    ReactNoopFlightHooks = require('react-noop-renderer/flight-hooks');
+
     act = require('jest-react').act;
     Scheduler = require('scheduler');
 
@@ -957,6 +960,89 @@ describe('ReactFlight', () => {
           <div>default</div>
         </>,
       );
+    });
+
+    // @gate enableServerContext
+    it('supports useServerContextsForRefetch', () => {
+      const ServerContext = React.createServerContext(
+        'ServerContext',
+        'default',
+      );
+
+      function Foo() {
+        return (
+          <>
+            <ServerContext.Provider value="hi this is server outer">
+              <ServerContext.Provider value="hi this is server">
+                <Bar value="" />
+              </ServerContext.Provider>
+              <ServerContext.Provider value="hi this is server2">
+                <Bar value="2" />
+              </ServerContext.Provider>
+              <Bar value="outer" />
+            </ServerContext.Provider>
+            <ServerContext.Provider value="hi this is server outer2">
+              <Bar value="outer2" />
+            </ServerContext.Provider>
+            <Bar value="default" />
+          </>
+        );
+      }
+      const contextsForRefetch = [];
+      function ClientBaz() {
+        const context = React.useContext(ServerContext);
+        contextsForRefetch.push(
+          ReactNoopFlightHooks.useServerContextsForRefetch(),
+        );
+        return <span>{context}</span>;
+      }
+      function ClientBar({value}) {
+        return (
+          <ServerContext.Provider
+            value={'hi this is client' + (value ? ' ' + value : '')}>
+            <ClientBaz />
+          </ServerContext.Provider>
+        );
+      }
+      const Bar = moduleReference(ClientBar);
+
+      const transport = ReactNoopFlightServer.render(<Foo />);
+      act(() => {
+        ServerContext._currentRenderer = null;
+        ServerContext._currentRenderer2 = null;
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <span>hi this is client</span>
+          <span>hi this is client 2</span>
+          <span>hi this is client outer</span>
+          <span>hi this is client outer2</span>
+          <span>hi this is client default</span>
+        </>,
+      );
+      const outer = {
+        parent: null,
+        name: 'ServerContext',
+        value: 'hi this is server outer',
+      };
+      expect(contextsForRefetch[0]).toEqual({
+        parent: outer,
+        name: 'ServerContext',
+        value: 'hi this is server',
+      });
+      expect(contextsForRefetch[1]).toEqual({
+        parent: outer,
+        name: 'ServerContext',
+        value: 'hi this is server2',
+      });
+      expect(contextsForRefetch[2]).toEqual(outer);
+      expect(contextsForRefetch[3]).toEqual({
+        parent: null,
+        name: 'ServerContext',
+        value: 'hi this is server outer2',
+      });
+      expect(contextsForRefetch[4]).toEqual(null);
     });
   });
 });

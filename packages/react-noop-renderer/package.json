@@ -27,6 +27,7 @@
     "flight-client.js",
     "flight-modules.js",
     "flight-server.js",
+    "flight-hooks.js",
     "cjs/"
   ]
 }
