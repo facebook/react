@@ -29,6 +29,7 @@ import {
   enableScopeAPI,
   enableCache,
   enableTransitionTracing,
+  enableDebugTracing,
 } from './ReactFeatureFlags';
 
 const REACT_MODULE_REFERENCE: Symbol = Symbol.for('react.module.reference');
@@ -42,7 +43,7 @@ export default function isValidElementType(type: mixed) {
   if (
     type === REACT_FRAGMENT_TYPE ||
     type === REACT_PROFILER_TYPE ||
-    type === REACT_DEBUG_TRACING_MODE_TYPE ||
+    (enableDebugTracing && type === REACT_DEBUG_TRACING_MODE_TYPE) ||
     type === REACT_STRICT_MODE_TYPE ||
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
