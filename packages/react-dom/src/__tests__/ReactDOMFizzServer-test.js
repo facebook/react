@@ -495,6 +495,10 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+    // Because there is no content inside the Suspense boundary that could've
+    // been written, we expect to not see any additional partial data flushed
+    // yet.
+    expect(container.firstChild.nextSibling).toBe(null);
     await act(async () => {
       resolveElement({default: <Text text="Hello" />});
     });
