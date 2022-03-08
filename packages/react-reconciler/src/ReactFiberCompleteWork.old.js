@@ -32,6 +32,7 @@ import type {Cache} from './ReactFiberCacheComponent.old';
 import {
   enableClientRenderFallbackOnHydrationMismatch,
   enableSuspenseAvoidThisFallback,
+  enableLegacyHidden,
 } from 'shared/ReactFeatureFlags';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
@@ -1499,9 +1500,8 @@ function completeWork(
         const prevIsHidden = prevState !== null;
         if (
           prevIsHidden !== nextIsHidden &&
-          newProps.mode !== 'unstable-defer-without-hiding' &&
           // LegacyHidden doesn't do any hiding — it only pre-renders.
-          workInProgress.tag !== LegacyHiddenComponent
+          (!enableLegacyHidden || workInProgress.tag !== LegacyHiddenComponent)
         ) {
           workInProgress.flags |= Visibility;
         }
@@ -1519,9 +1519,9 @@ function completeWork(
             // If so, we need to hide those nodes in the commit phase, so
             // schedule a visibility effect.
             if (
-              workInProgress.tag !== LegacyHiddenComponent &&
-              workInProgress.subtreeFlags & (Placement | Update) &&
-              newProps.mode !== 'unstable-defer-without-hiding'
+              (!enableLegacyHidden ||
+                workInProgress.tag !== LegacyHiddenComponent) &&
+              workInProgress.subtreeFlags & (Placement | Update)
             ) {
               workInProgress.flags |= Visibility;
             }

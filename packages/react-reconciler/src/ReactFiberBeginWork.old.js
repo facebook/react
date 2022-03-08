@@ -95,6 +95,7 @@ import {
   enableSchedulingProfiler,
   enablePersistentOffscreenHostContainer,
   enableTransitionTracing,
+  enableLegacyHidden,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -637,7 +638,7 @@ function updateOffscreenComponent(
 
   if (
     nextProps.mode === 'hidden' ||
-    nextProps.mode === 'unstable-defer-without-hiding'
+    (enableLegacyHidden && nextProps.mode === 'unstable-defer-without-hiding')
   ) {
     // Rendering a hidden tree.
     if ((workInProgress.mode & ConcurrentMode) === NoMode) {
@@ -771,7 +772,7 @@ function updateOffscreenComponent(
     // or some other infra that expects a HostComponent.
     const isHidden =
       nextProps.mode === 'hidden' &&
-      workInProgress.tag !== LegacyHiddenComponent;
+      (!enableLegacyHidden || workInProgress.tag !== LegacyHiddenComponent);
     const offscreenContainer = reconcileOffscreenHostContainer(
       current,
       workInProgress,
@@ -3942,7 +3943,14 @@ function beginWork(
       return updateOffscreenComponent(current, workInProgress, renderLanes);
     }
     case LegacyHiddenComponent: {
-      return updateLegacyHiddenComponent(current, workInProgress, renderLanes);
+      if (enableLegacyHidden) {
+        return updateLegacyHiddenComponent(
+          current,
+          workInProgress,
+          renderLanes,
+        );
+      }
+      break;
     }
     case CacheComponent: {
       if (enableCache) {

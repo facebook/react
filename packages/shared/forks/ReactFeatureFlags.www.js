@@ -85,6 +85,8 @@ export const enableScopeAPI = true;
 
 export const enableSuspenseCallback = true;
 
+export const enableLegacyHidden = true;
+
 export const enableComponentStackLocations = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;

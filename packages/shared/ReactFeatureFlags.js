@@ -101,6 +101,9 @@ export const enableTransitionTracing = false;
 // No known bugs, but needs performance testing
 export const enableLazyContextPropagation = false;
 
+// FB-only usage. The new API has different semantics.
+export const enableLegacyHidden = false;
+
 // Enables unstable_avoidThisFallback feature in Fiber
 export const enableSuspenseAvoidThisFallback = false;
 // Enables unstable_avoidThisFallback feature in Fizz
