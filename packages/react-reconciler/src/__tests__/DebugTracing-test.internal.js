@@ -98,7 +98,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
-  // @gate experimental && build === 'development' && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense
   it('should log sync render with CPU suspense', () => {
     function Example() {
       console.log('<Example/>');
@@ -178,7 +178,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
-  // @gate experimental && build === 'development' && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense
   it('should log concurrent render with CPU suspense', () => {
     function Example() {
       console.log('<Example/>');

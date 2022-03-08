@@ -106,6 +106,8 @@ export const enableSuspenseAvoidThisFallback = false;
 // Enables unstable_avoidThisFallback feature in Fizz
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
+export const enableCPUSuspense = __EXPERIMENTAL__;
+
 // When a node is unmounted, recurse into the Fiber subtree and clean out
 // references. Each level cleans up more fiber fields than the previous level.
 // As far as we know, React itself doesn't leak, but because the Fiber contains
