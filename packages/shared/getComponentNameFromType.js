@@ -27,6 +27,8 @@ import {
   REACT_SERVER_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
+import {enableServerContext} from 'shared/ReactFeatureFlags';
+
 // Keep in sync with react-reconciler/getComponentNameFromFiber
 function getWrappedName(
   outerType: mixed,
@@ -86,8 +88,6 @@ export default function getComponentNameFromType(type: mixed): string | null {
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {
-      case REACT_SERVER_CONTEXT_TYPE:
-        return ((type: any): ReactContext<any>)._globalName + '.Provider';
       case REACT_CONTEXT_TYPE:
         const context: ReactContext<any> = (type: any);
         return getContextName(context) + '.Consumer';
@@ -110,6 +110,12 @@ export default function getComponentNameFromType(type: mixed): string | null {
           return getComponentNameFromType(init(payload));
         } catch (x) {
           return null;
+        }
+      }
+      case REACT_SERVER_CONTEXT_TYPE: {
+        if (enableServerContext) {
+          const context = ((type: any): ReactContext<any>);
+          return (context.displayName || context._globalName) + '.Provider';
         }
       }
     }
