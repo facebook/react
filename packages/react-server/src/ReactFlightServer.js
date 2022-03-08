@@ -518,33 +518,6 @@ export function resolveModelToJSON(
     return null;
   }
 
-  if (
-    value &&
-    value.$$typeof === REACT_SERVER_CONTEXT_TYPE &&
-    key === '__pop'
-  ) {
-    popProvider((value: any));
-    if (__DEV__) {
-      insideContextProps = null;
-      isInsideContextValue = false;
-    }
-    return (undefined: any);
-  }
-
-  if (value.$$typeof === REACT_PROVIDER_TYPE) {
-    const providerKey = ((value: any): ReactProviderType<any>)._context
-      ._globalName;
-    const writtenProviders = request.writtenProviders;
-    let providerId = writtenProviders.get(key);
-    if (providerId === undefined) {
-      request.pendingChunks++;
-      providerId = request.nextChunkId++;
-      writtenProviders.set(providerKey, providerId);
-      emitProviderChunk(request, providerId, providerKey);
-    }
-    return serializeByValueID(providerId);
-  }
-
   if (typeof value === 'object') {
     if (isModuleReference(value)) {
       const moduleReference: ModuleReference<any> = (value: any);
@@ -585,6 +558,31 @@ export function resolveModelToJSON(
         const errorId = request.nextChunkId++;
         emitErrorChunk(request, errorId, x);
         return serializeByValueID(errorId);
+      }
+    }
+    switch ((value: any).$$typeof) {
+      case REACT_PROVIDER_TYPE: {
+        const providerKey = ((value: any): ReactProviderType<any>)._context
+          ._globalName;
+        const writtenProviders = request.writtenProviders;
+        let providerId = writtenProviders.get(key);
+        if (providerId === undefined) {
+          request.pendingChunks++;
+          providerId = request.nextChunkId++;
+          writtenProviders.set(providerKey, providerId);
+          emitProviderChunk(request, providerId, providerKey);
+        }
+        return serializeByValueID(providerId);
+      }
+      case REACT_SERVER_CONTEXT_TYPE: {
+        if (key === '__pop') {
+          popProvider((value: any));
+          if (__DEV__) {
+            insideContextProps = null;
+            isInsideContextValue = false;
+          }
+          return (undefined: any);
+        }
       }
     }
 

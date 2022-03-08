@@ -24,6 +24,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_SERVER_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
 // Keep in sync with react-reconciler/getComponentNameFromFiber
@@ -85,6 +86,8 @@ export default function getComponentNameFromType(type: mixed): string | null {
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {
+      case REACT_SERVER_CONTEXT_TYPE:
+        return ((type: any): ReactContext<any>)._globalName + '.Provider';
       case REACT_CONTEXT_TYPE:
         const context: ReactContext<any> = (type: any);
         return getContextName(context) + '.Consumer';

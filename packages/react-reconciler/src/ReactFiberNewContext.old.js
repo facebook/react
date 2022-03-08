@@ -44,6 +44,7 @@ import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
 import {
   enableSuspenseServerRenderer,
   enableLazyContextPropagation,
+  enableServerContext,
 } from 'shared/ReactFeatureFlags';
 import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
 
@@ -133,13 +134,19 @@ export function popProvider(
   const currentValue = valueCursor.current;
   pop(valueCursor, providerFiber);
   if (isPrimaryRenderer) {
-    if (currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
+    if (
+      enableServerContext &&
+      currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
+    ) {
       context._currentValue = context._defaultValue;
     } else {
       context._currentValue = currentValue;
     }
   } else {
-    if (currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
+    if (
+      enableServerContext &&
+      currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
+    ) {
       context._currentValue2 = context._defaultValue;
     } else {
       context._currentValue2 = currentValue;
