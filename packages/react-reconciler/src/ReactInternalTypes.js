@@ -16,6 +16,7 @@ import type {
   MutableSourceVersion,
   MutableSource,
   StartTransitionOptions,
+  Wakeable,
 } from 'shared/ReactTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
@@ -24,7 +25,6 @@ import type {Flags} from './ReactFiberFlags';
 import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
-import type {Wakeable} from 'shared/ReactTypes';
 import type {Cache} from './ReactFiberCacheComponent.old';
 import type {Transitions} from './ReactFiberTracingMarkerComponent.new';
 

@@ -41,6 +41,7 @@ export const disableModulePatternComponents = false;
 export const warnAboutSpreadingKeyToJSX = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
+export const enableCPUSuspense = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableComponentStackLocations = false;
@@ -66,6 +67,7 @@ export const enablePersistentOffscreenHostContainer = false;
 export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
+export const enableServerContext = false;
 export const enableUseMutableSource = false;
 
 export const enableTransitionTracing = false;

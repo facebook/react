@@ -29,7 +29,10 @@ import type {
   SpawnedCachePool,
 } from './ReactFiberCacheComponent.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
-import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
+import {
+  enableSuspenseAvoidThisFallback,
+  enableCPUSuspense,
+} from 'shared/ReactFeatureFlags';
 
 import checkPropTypes from 'shared/checkPropTypes';
 import {
@@ -2091,7 +2094,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
       return fallbackFragment;
-    } else if (typeof nextProps.unstable_expectedLoadTime === 'number') {
+    } else if (
+      enableCPUSuspense &&
+      typeof nextProps.unstable_expectedLoadTime === 'number'
+    ) {
       // This is a CPU-bound tree. Skip this tree and show a placeholder to
       // unblock the surrounding content. Then immediately retry after the
       // initial commit.

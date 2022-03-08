@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   Destination,
   Chunk,
@@ -16,6 +15,11 @@ import type {
   ModuleReference,
   ModuleKey,
 } from './ReactFlightServerConfig';
+import type {ContextSnapshot} from './ReactFlightNewContext';
+import type {
+  ReactProviderType,
+  ServerContextJSONValue,
+} from 'shared/ReactTypes';
 
 import {
   scheduleWork,
@@ -27,6 +31,7 @@ import {
   closeWithError,
   processModelChunk,
   processModuleChunk,
+  processProviderChunk,
   processSymbolChunk,
   processErrorChunk,
   resolveModuleMetaData,
@@ -34,14 +39,25 @@ import {
   isModuleReference,
 } from './ReactFlightServerConfig';
 
+import {Dispatcher, getCurrentCache, setCurrentCache} from './ReactFlightHooks';
+import {
+  pushProvider,
+  popProvider,
+  switchContext,
+  getActiveContext,
+  rootContextSnapshot,
+} from './ReactFlightNewContext';
+
 import {
   REACT_ELEMENT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
+  REACT_PROVIDER_TYPE,
 } from 'shared/ReactSymbols';
 
+import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import isArray from 'shared/isArray';
 
@@ -68,6 +84,7 @@ type Segment = {
   id: number,
   model: ReactModel,
   ping: () => void,
+  context: ContextSnapshot,
 };
 
 export type Request = {
@@ -84,8 +101,13 @@ export type Request = {
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<Symbol, number>,
   writtenModules: Map<ModuleKey, number>,
+  writtenProviders: Map<string, number>,
   onError: (error: mixed) => void,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
+};
+
+export type Options = {
+  onError?: (error: mixed) => void,
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
@@ -103,6 +125,7 @@ export function createRequest(
   model: ReactModel,
   bundlerConfig: BundlerConfig,
   onError: void | ((error: mixed) => void),
+  context?: Array<[string, ServerContextJSONValue]>,
 ): Request {
   const pingedSegments = [];
   const request = {
@@ -119,16 +142,26 @@ export function createRequest(
     completedErrorChunks: [],
     writtenSymbols: new Map(),
     writtenModules: new Map(),
+    writtenProviders: new Map(),
     onError: onError === undefined ? defaultErrorHandler : onError,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
     },
   };
   request.pendingChunks++;
-  const rootSegment = createSegment(request, model);
+  const rootContext = createRootContext(context);
+  const rootSegment = createSegment(request, model, rootContext);
   pingedSegments.push(rootSegment);
   return request;
 }
+
+function createRootContext(
+  reqContext?: Array<[string, ServerContextJSONValue]>,
+) {
+  return importServerContexts(reqContext);
+}
+
+const POP = {};
 
 function attemptResolveElement(
   type: any,
@@ -174,6 +207,30 @@ function attemptResolveElement(
       case REACT_MEMO_TYPE: {
         return attemptResolveElement(type.type, key, ref, props);
       }
+      case REACT_PROVIDER_TYPE: {
+        pushProvider(type._context, props.value);
+        if (__DEV__) {
+          const extraKeys = Object.keys(props).filter(value => {
+            if (value === 'children' || value === 'value') {
+              return false;
+            }
+            return true;
+          });
+          if (extraKeys.length !== 0) {
+            console.error(
+              'ServerContext can only have a value prop and children. Found: %s',
+              JSON.stringify(extraKeys),
+            );
+          }
+        }
+        return [
+          REACT_ELEMENT_TYPE,
+          type,
+          key,
+          // Rely on __popProvider being serialized last to pop the provider.
+          {value: props.value, children: props.children, __pop: POP},
+        ];
+      }
     }
   }
   throw new Error(
@@ -189,11 +246,16 @@ function pingSegment(request: Request, segment: Segment): void {
   }
 }
 
-function createSegment(request: Request, model: ReactModel): Segment {
+function createSegment(
+  request: Request,
+  model: ReactModel,
+  context: ContextSnapshot,
+): Segment {
   const id = request.nextChunkId++;
   const segment = {
     id,
     model,
+    context,
     ping: () => pingSegment(request, segment),
   };
   return segment;
@@ -221,7 +283,6 @@ function isObjectPrototype(object): boolean {
   if (!object) {
     return false;
   }
-  // $FlowFixMe
   const ObjectPrototype = Object.prototype;
   if (object === ObjectPrototype) {
     return true;
@@ -311,7 +372,6 @@ function describeObjectForErrorMessage(
 ): string {
   if (isArray(objectOrArray)) {
     let str = '[';
-    // $FlowFixMe: Should be refined by now.
     const array: $ReadOnlyArray<ReactModel> = objectOrArray;
     for (let i = 0; i < array.length; i++) {
       if (i > 0) {
@@ -336,7 +396,6 @@ function describeObjectForErrorMessage(
     return str;
   } else {
     let str = '{';
-    // $FlowFixMe: Should be refined by now.
     const object: {+[key: string | number]: ReactModel} = objectOrArray;
     const names = Object.keys(object);
     for (let i = 0; i < names.length; i++) {
@@ -364,6 +423,9 @@ function describeObjectForErrorMessage(
     return str;
   }
 }
+
+let insideContextProps = null;
+let isInsideContextValue = false;
 
 export function resolveModelToJSON(
   request: Request,
@@ -396,12 +458,32 @@ export function resolveModelToJSON(
       );
   }
 
+  if (__DEV__) {
+    if (
+      parent[0] === REACT_ELEMENT_TYPE &&
+      parent[1] &&
+      parent[1].$$typeof === REACT_PROVIDER_TYPE &&
+      key === '3'
+    ) {
+      insideContextProps = value;
+    } else if (insideContextProps === parent && key === 'value') {
+      isInsideContextValue = true;
+    } else if (insideContextProps === parent && key === 'children') {
+      isInsideContextValue = false;
+    }
+  }
+
   // Resolve server components.
   while (
     typeof value === 'object' &&
     value !== null &&
-    value.$$typeof === REACT_ELEMENT_TYPE
+    (value: any).$$typeof === REACT_ELEMENT_TYPE
   ) {
+    if (__DEV__) {
+      if (isInsideContextValue) {
+        console.error('React elements are not allowed in ServerContext');
+      }
+    }
     // TODO: Concatenate keys of parents onto children.
     const element: React$Element<any> = (value: any);
     try {
@@ -416,7 +498,7 @@ export function resolveModelToJSON(
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
         request.pendingChunks++;
-        const newSegment = createSegment(request, value);
+        const newSegment = createSegment(request, value, getActiveContext());
         const ping = newSegment.ping;
         x.then(ping, ping);
         return serializeByRefID(newSegment.id);
@@ -478,6 +560,25 @@ export function resolveModelToJSON(
         emitErrorChunk(request, errorId, x);
         return serializeByValueID(errorId);
       }
+    } else if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
+      const providerKey = ((value: any): ReactProviderType<any>)._context
+        ._globalName;
+      const writtenProviders = request.writtenProviders;
+      let providerId = writtenProviders.get(key);
+      if (providerId === undefined) {
+        request.pendingChunks++;
+        providerId = request.nextChunkId++;
+        writtenProviders.set(providerKey, providerId);
+        emitProviderChunk(request, providerId, providerKey);
+      }
+      return serializeByValueID(providerId);
+    } else if (value === POP) {
+      popProvider();
+      if (__DEV__) {
+        insideContextProps = null;
+        isInsideContextValue = false;
+      }
+      return (undefined: any);
     }
 
     if (__DEV__) {
@@ -515,6 +616,7 @@ export function resolveModelToJSON(
         }
       }
     }
+
     return value;
   }
 
@@ -657,13 +759,23 @@ function emitSymbolChunk(request: Request, id: number, name: string): void {
   request.completedModuleChunks.push(processedChunk);
 }
 
+function emitProviderChunk(
+  request: Request,
+  id: number,
+  contextName: string,
+): void {
+  const processedChunk = processProviderChunk(request, id, contextName);
+  request.completedJSONChunks.push(processedChunk);
+}
+
 function retrySegment(request: Request, segment: Segment): void {
+  switchContext(segment.context);
   try {
     let value = segment.model;
     while (
       typeof value === 'object' &&
       value !== null &&
-      value.$$typeof === REACT_ELEMENT_TYPE
+      (value: any).$$typeof === REACT_ELEMENT_TYPE
     ) {
       // TODO: Concatenate keys of parents onto children.
       const element: React$Element<any> = (value: any);
@@ -696,9 +808,9 @@ function retrySegment(request: Request, segment: Segment): void {
 
 function performWork(request: Request): void {
   const prevDispatcher = ReactCurrentDispatcher.current;
-  const prevCache = currentCache;
+  const prevCache = getCurrentCache();
   ReactCurrentDispatcher.current = Dispatcher;
-  currentCache = request.cache;
+  setCurrentCache(request.cache);
 
   try {
     const pingedSegments = request.pingedSegments;
@@ -715,7 +827,7 @@ function performWork(request: Request): void {
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
-    currentCache = prevCache;
+    setCurrentCache(prevCache);
   }
 }
 
@@ -806,56 +918,20 @@ export function startFlowing(request: Request, destination: Destination): void {
   }
 }
 
-function unsupportedHook(): void {
-  throw new Error('This Hook is not supported in Server Components.');
-}
-
-function unsupportedRefresh(): void {
-  if (!currentCache) {
-    throw new Error(
-      'Refreshing the cache is not supported in Server Components.',
-    );
+function importServerContexts(
+  contexts?: Array<[string, ServerContextJSONValue]>,
+) {
+  if (contexts) {
+    const prevContext = getActiveContext();
+    switchContext(rootContextSnapshot);
+    for (let i = 0; i < contexts.length; i++) {
+      const [name, value] = contexts[i];
+      const context = getOrCreateServerContext(name);
+      pushProvider(context, value);
+    }
+    const importedContext = getActiveContext();
+    switchContext(prevContext);
+    return importedContext;
   }
+  return rootContextSnapshot;
 }
-
-let currentCache: Map<Function, mixed> | null = null;
-
-const Dispatcher: DispatcherType = {
-  useMemo<T>(nextCreate: () => T): T {
-    return nextCreate();
-  },
-  useCallback<T>(callback: T): T {
-    return callback;
-  },
-  useDebugValue(): void {},
-  useDeferredValue: (unsupportedHook: any),
-  useTransition: (unsupportedHook: any),
-  getCacheForType<T>(resourceType: () => T): T {
-    if (!currentCache) {
-      throw new Error('Reading the cache is only supported while rendering.');
-    }
-
-    let entry: T | void = (currentCache.get(resourceType): any);
-    if (entry === undefined) {
-      entry = resourceType();
-      // TODO: Warn if undefined?
-      currentCache.set(resourceType, entry);
-    }
-    return entry;
-  },
-  readContext: (unsupportedHook: any),
-  useContext: (unsupportedHook: any),
-  useReducer: (unsupportedHook: any),
-  useRef: (unsupportedHook: any),
-  useState: (unsupportedHook: any),
-  useInsertionEffect: (unsupportedHook: any),
-  useLayoutEffect: (unsupportedHook: any),
-  useImperativeHandle: (unsupportedHook: any),
-  useEffect: (unsupportedHook: any),
-  useId: (unsupportedHook: any),
-  useMutableSource: (unsupportedHook: any),
-  useSyncExternalStore: (unsupportedHook: any),
-  useCacheRefresh(): <T>(?() => T, ?T) => void {
-    return unsupportedRefresh;
-  },
-};

@@ -2455,4 +2455,53 @@ describe('ReactDOMFizzServer', () => {
         'Suspense boundary. Switched to client rendering.',
     ]);
   });
+
+  // @gate enableServerContext && experimental
+  it('supports ServerContext', async () => {
+    let ServerContext;
+    function inlineLazyServerContextInitialization() {
+      if (!ServerContext) {
+        ServerContext = React.createServerContext('ServerContext', 'default');
+      }
+      return ServerContext;
+    }
+
+    function Foo() {
+      inlineLazyServerContextInitialization();
+      return (
+        <>
+          <ServerContext.Provider value="hi this is server outer">
+            <ServerContext.Provider value="hi this is server">
+              <Bar />
+            </ServerContext.Provider>
+            <ServerContext.Provider value="hi this is server2">
+              <Bar />
+            </ServerContext.Provider>
+            <Bar />
+          </ServerContext.Provider>
+          <ServerContext.Provider value="hi this is server outer2">
+            <Bar />
+          </ServerContext.Provider>
+          <Bar />
+        </>
+      );
+    }
+    function Bar() {
+      const context = React.useContext(inlineLazyServerContextInitialization());
+      return <span>{context}</span>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual([
+      <span>hi this is server</span>,
+      <span>hi this is server2</span>,
+      <span>hi this is server outer</span>,
+      <span>hi this is server outer2</span>,
+      <span>default</span>,
+    ]);
+  });
 });

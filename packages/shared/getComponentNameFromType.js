@@ -24,7 +24,14 @@ import {
   REACT_LAZY_TYPE,
   REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_SERVER_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
+
+import {
+  enableServerContext,
+  enableTransitionTracing,
+  enableCache,
+} from './ReactFeatureFlags';
 
 // Keep in sync with react-reconciler/getComponentNameFromFiber
 function getWrappedName(
@@ -79,9 +86,14 @@ export default function getComponentNameFromType(type: mixed): string | null {
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
     case REACT_CACHE_TYPE:
-      return 'Cache';
+      if (enableCache) {
+        return 'Cache';
+      }
+    // eslint-disable-next-line no-fallthrough
     case REACT_TRACING_MARKER_TYPE:
-      return 'TracingMarker';
+      if (enableTransitionTracing) {
+        return 'TracingMarker';
+      }
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {
@@ -109,6 +121,12 @@ export default function getComponentNameFromType(type: mixed): string | null {
           return null;
         }
       }
+      case REACT_SERVER_CONTEXT_TYPE:
+        if (enableServerContext) {
+          const context2 = ((type: any): ReactContext<any>);
+          return (context2.displayName || context2._globalName) + '.Provider';
+        }
+      // eslint-disable-next-line no-fallthrough
     }
   }
   return null;

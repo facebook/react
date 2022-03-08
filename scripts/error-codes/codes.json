@@ -405,10 +405,16 @@
   "417": "React currently only supports piping to one writable stream.",
   "418": "Hydration failed because the initial UI does not match what was rendered on the server.",
   "419": "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.",
-  "420": "This Suspense boundary received an update before it finished hydrating. This caused the boundary to switch to client rendering. The usual way to fix this is to wrap the original update in startTransition.",
-  "421": "There was an error while hydrating this Suspense boundary. Switched to client rendering.",
-  "422": "There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.",
-  "423": "This root received an early update, before anything was able hydrate. Switched the entire root to client rendering.",
-  "424": "Text content does not match server-rendered HTML.",
-  "425": "A component suspended while responding to synchronous input. This will cause the UI to be replaced with a loading indicator. To fix, updates that suspend should be wrapped with startTransition."
+  "420": "ServerContext: %s already defined",
+  "421": "This Suspense boundary received an update before it finished hydrating. This caused the boundary to switch to client rendering. The usual way to fix this is to wrap the original update in startTransition.",
+  "422": "There was an error while hydrating this Suspense boundary. Switched to client rendering.",
+  "423": "There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.",
+  "424": "This root received an early update, before anything was able hydrate. Switched the entire root to client rendering.",
+  "425": "Text content does not match server-rendered HTML.",
+  "426": "A component suspended while responding to synchronous input. This will cause the UI to be replaced with a loading indicator. To fix, updates that suspend should be wrapped with startTransition.",
+  "427": "useServerContext expects a context created with React.createServerContext",
+  "428": "useServerContext is only supported while rendering.",
+  "429": "ServerContext: %s already defined",
+  "430": "ServerContext can only have a value prop and children. Found: %s",
+  "431": "React elements are not allowed in ServerContext"
 }
