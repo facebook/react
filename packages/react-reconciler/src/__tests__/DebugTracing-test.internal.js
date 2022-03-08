@@ -45,7 +45,7 @@ describe('DebugTracing', () => {
     });
   });
 
-  // @gate experimental || www
+  // @gate enableDebugTracing
   it('should not log anything for sync render without suspends or state updates', () => {
     ReactTestRenderer.create(
       <React.unstable_DebugTracingMode>
@@ -56,8 +56,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([]);
   });
 
-  // @gate build === 'development'
-  // @gate experimental || www
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should not log anything for concurrent render without suspends or state updates', () => {
     ReactTestRenderer.act(() =>
       ReactTestRenderer.create(
@@ -99,7 +98,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
-  // @gate experimental && build === 'development' && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense
   it('should log sync render with CPU suspense', () => {
     function Example() {
       console.log('<Example/>');
@@ -179,7 +178,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
-  // @gate experimental && build === 'development' && enableDebugTracing
+  // @gate experimental && build === 'development' && enableDebugTracing && enableCPUSuspense
   it('should log concurrent render with CPU suspense', () => {
     function Example() {
       console.log('<Example/>');
@@ -376,8 +375,7 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  // @gate build === 'development'
-  // @gate experimental || www
+  // @gate experimental && build === 'development' && enableDebugTracing
   it('should not log anything outside of a unstable_DebugTracingMode subtree', () => {
     function ExampleThatCascades() {
       const [didMount, setDidMount] = React.useState(false);
