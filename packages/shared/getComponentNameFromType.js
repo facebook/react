@@ -114,8 +114,8 @@ export default function getComponentNameFromType(type: mixed): string | null {
       }
       case REACT_SERVER_CONTEXT_TYPE:
         if (enableServerContext) {
-          const context = ((type: any): ReactContext<any>);
-          return (context.displayName || context._globalName) + '.Provider';
+          const context2 = ((type: any): ReactContext<any>);
+          return (context2.displayName || context2._globalName) + '.Provider';
         }
       // eslint-disable-next-line no-fallthrough
     }
