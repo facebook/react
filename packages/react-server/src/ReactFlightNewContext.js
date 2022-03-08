@@ -230,7 +230,7 @@ export function pushProvider<T: ServerContextJSONValue>(
   return newNode;
 }
 
-export function popProvider<T: ServerContextJSONValue>(): ContextSnapshot {
+export function popProvider(): ContextSnapshot {
   const prevSnapshot = currentActiveSnapshot;
 
   if (prevSnapshot === null) {
