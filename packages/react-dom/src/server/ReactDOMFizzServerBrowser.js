@@ -67,6 +67,10 @@ function renderToReadableStream(
       resolve(stream);
     }
     function onShellError(error: mixed) {
+      // If the shell errors the caller of `renderToReadableStream` won't have access to `allReady`.
+      // However, `allReady` will be rejected by `onFatalError` as well.
+      // So we need to catch the duplicate, uncatchable fatal error in `allReady` to prevent a `UnhandledPromiseRejection`.
+      allReady.catch(() => {});
       reject(error);
     }
     const request = createRequest(
