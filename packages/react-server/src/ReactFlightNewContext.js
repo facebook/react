@@ -230,9 +230,7 @@ export function pushProvider<T: ServerContextJSONValue>(
   return newNode;
 }
 
-export function popProvider<T: ServerContextJSONValue>(
-  context: ReactServerContext<T>,
-): ContextSnapshot {
+export function popProvider<T: ServerContextJSONValue>(): ContextSnapshot {
   const prevSnapshot = currentActiveSnapshot;
 
   if (prevSnapshot === null) {
@@ -241,13 +239,6 @@ export function popProvider<T: ServerContextJSONValue>(
     );
   }
 
-  if (__DEV__) {
-    if (prevSnapshot.context !== context) {
-      console.error(
-        'The parent context is not the expected context. This is probably a bug in React.',
-      );
-    }
-  }
   if (isPrimaryRenderer) {
     const value = prevSnapshot.parentValue;
     if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
@@ -255,38 +246,12 @@ export function popProvider<T: ServerContextJSONValue>(
     } else {
       prevSnapshot.context._currentValue = value;
     }
-    if (__DEV__) {
-      if (
-        context._currentRenderer !== undefined &&
-        context._currentRenderer !== null &&
-        context._currentRenderer !== rendererSigil
-      ) {
-        console.error(
-          'Detected multiple renderers concurrently rendering the ' +
-            'same context provider. This is currently unsupported.',
-        );
-      }
-      context._currentRenderer = rendererSigil;
-    }
   } else {
     const value = prevSnapshot.parentValue;
     if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
       prevSnapshot.context._currentValue2 = prevSnapshot.context._defaultValue;
     } else {
       prevSnapshot.context._currentValue2 = value;
-    }
-    if (__DEV__) {
-      if (
-        context._currentRenderer2 !== undefined &&
-        context._currentRenderer2 !== null &&
-        context._currentRenderer2 !== rendererSigil
-      ) {
-        console.error(
-          'Detected multiple renderers concurrently rendering the ' +
-            'same context provider. This is currently unsupported.',
-        );
-      }
-      context._currentRenderer2 = rendererSigil;
     }
   }
   return (currentActiveSnapshot = prevSnapshot.parent);

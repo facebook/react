@@ -162,6 +162,8 @@ function createRootContext(
   return importServerContexts(reqContext);
 }
 
+const POP = {};
+
 function attemptResolveElement(
   type: any,
   key: null | React$Key,
@@ -227,7 +229,7 @@ function attemptResolveElement(
           type,
           key,
           // Rely on __popProvider being serialized last to pop the provider.
-          {value: props.value, children: props.children, __pop: type._context},
+          {value: props.value, children: props.children, __pop: POP},
         ];
       }
     }
@@ -559,31 +561,25 @@ export function resolveModelToJSON(
         emitErrorChunk(request, errorId, x);
         return serializeByValueID(errorId);
       }
-    }
-    switch ((value: any).$$typeof) {
-      case REACT_PROVIDER_TYPE: {
-        const providerKey = ((value: any): ReactProviderType<any>)._context
-          ._globalName;
-        const writtenProviders = request.writtenProviders;
-        let providerId = writtenProviders.get(key);
-        if (providerId === undefined) {
-          request.pendingChunks++;
-          providerId = request.nextChunkId++;
-          writtenProviders.set(providerKey, providerId);
-          emitProviderChunk(request, providerId, providerKey);
-        }
-        return serializeByValueID(providerId);
+    } else if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
+      const providerKey = ((value: any): ReactProviderType<any>)._context
+        ._globalName;
+      const writtenProviders = request.writtenProviders;
+      let providerId = writtenProviders.get(key);
+      if (providerId === undefined) {
+        request.pendingChunks++;
+        providerId = request.nextChunkId++;
+        writtenProviders.set(providerKey, providerId);
+        emitProviderChunk(request, providerId, providerKey);
       }
-      case REACT_SERVER_CONTEXT_TYPE: {
-        if (key === '__pop') {
-          popProvider((value: any));
-          if (__DEV__) {
-            insideContextProps = null;
-            isInsideContextValue = false;
-          }
-          return (undefined: any);
-        }
+      return serializeByValueID(providerId);
+    } else if (value === POP) {
+      popProvider();
+      if (__DEV__) {
+        insideContextProps = null;
+        isInsideContextValue = false;
       }
+      return (undefined: any);
     }
 
     if (__DEV__) {
