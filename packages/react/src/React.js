@@ -61,6 +61,7 @@ import {
   createFactoryWithValidation,
   cloneElementWithValidation,
 } from './ReactElementValidator';
+import {createServerContext} from './ReactServerContext';
 import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
 import {startTransition} from './ReactStartTransition';
@@ -86,6 +87,7 @@ export {
   Component,
   PureComponent,
   createContext,
+  createServerContext,
   forwardRef,
   lazy,
   memo,

@@ -67,7 +67,7 @@ export const enablePersistentOffscreenHostContainer = false;
 export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
-
+export const enableServerContext = false;
 // Some www surfaces are still using this. Remove once they have been migrated.
 export const enableUseMutableSource = true;
 

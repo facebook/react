@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {
+  ReactServerContext,
+  ServerContextJSONValue,
+} from 'shared/ReactTypes';
 
 import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
 import {isPrimaryRenderer} from './ReactServerFormatConfig';
@@ -20,10 +23,10 @@ if (__DEV__) {
 
 // Used to store the parent path of all context overrides in a shared linked list.
 // Forming a reverse tree.
-type ContextNode<T> = {
+type ContextNode<T: ServerContextJSONValue> = {
   parent: null | ContextNode<any>,
   depth: number, // Short hand to compute the depth of the tree at this node.
-  context: ReactContext<T>,
+  context: ReactServerContext<T>,
   parentValue: T,
   value: T,
 };
@@ -79,10 +82,9 @@ function popToNearestCommonAncestor(
       }
 
       popToNearestCommonAncestor(parentPrev, parentNext);
+      // On the way back, we push the new ones that weren't common.
+      pushNode(next);
     }
-
-    // On the way back, we push the new ones that weren't common.
-    pushNode(next);
   }
 }
 
@@ -178,8 +180,8 @@ export function switchContext(newSnapshot: ContextSnapshot): void {
   }
 }
 
-export function pushProvider<T>(
-  context: ReactContext<T>,
+export function pushProvider<T: ServerContextJSONValue>(
+  context: ReactServerContext<T>,
   nextValue: T,
 ): ContextSnapshot {
   let prevValue;
@@ -228,7 +230,7 @@ export function pushProvider<T>(
   return newNode;
 }
 
-export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
+export function popProvider(): ContextSnapshot {
   const prevSnapshot = currentActiveSnapshot;
 
   if (prevSnapshot === null) {
@@ -237,13 +239,6 @@ export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
     );
   }
 
-  if (__DEV__) {
-    if (prevSnapshot.context !== context) {
-      console.error(
-        'The parent context is not the expected context. This is probably a bug in React.',
-      );
-    }
-  }
   if (isPrimaryRenderer) {
     const value = prevSnapshot.parentValue;
     if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
@@ -251,38 +246,12 @@ export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
     } else {
       prevSnapshot.context._currentValue = value;
     }
-    if (__DEV__) {
-      if (
-        context._currentRenderer !== undefined &&
-        context._currentRenderer !== null &&
-        context._currentRenderer !== rendererSigil
-      ) {
-        console.error(
-          'Detected multiple renderers concurrently rendering the ' +
-            'same context provider. This is currently unsupported.',
-        );
-      }
-      context._currentRenderer = rendererSigil;
-    }
   } else {
     const value = prevSnapshot.parentValue;
     if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
       prevSnapshot.context._currentValue2 = prevSnapshot.context._defaultValue;
     } else {
       prevSnapshot.context._currentValue2 = value;
-    }
-    if (__DEV__) {
-      if (
-        context._currentRenderer2 !== undefined &&
-        context._currentRenderer2 !== null &&
-        context._currentRenderer2 !== rendererSigil
-      ) {
-        console.error(
-          'Detected multiple renderers concurrently rendering the ' +
-            'same context provider. This is currently unsupported.',
-        );
-      }
-      context._currentRenderer2 = rendererSigil;
     }
   }
   return (currentActiveSnapshot = prevSnapshot.parent);
@@ -292,7 +261,7 @@ export function getActiveContext(): ContextSnapshot {
   return currentActiveSnapshot;
 }
 
-export function readContext<T>(context: ReactContext<T>): T {
+export function readContext<T>(context: ReactServerContext<T>): T {
   const value = isPrimaryRenderer
     ? context._currentValue
     : context._currentValue2;

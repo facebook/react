@@ -249,6 +249,7 @@ export const enableUpdaterTracking = __PROFILE__;
 
 // Only enabled in RN, related to enableComponentStackLocations
 export const disableNativeComponentFrames = false;
+export const enableServerContext = __EXPERIMENTAL__;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;

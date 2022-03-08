@@ -37,10 +37,10 @@ export {
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
-  useSyncExternalStore,
   useReducer,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
   version,
 } from './src/React';

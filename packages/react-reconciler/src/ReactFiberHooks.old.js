@@ -2451,7 +2451,6 @@ if (enableCache) {
   (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
 }
-
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
@@ -3264,7 +3263,7 @@ if (__DEV__) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
       currentHookNameInDev = 'useCacheRefresh';
-      updateHookTypesDev();
+      mountHookTypesDev();
       return mountRefresh();
     };
   }

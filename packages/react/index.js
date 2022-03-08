@@ -48,6 +48,7 @@ export {
   createFactory,
   createMutableSource,
   createRef,
+  createServerContext,
   forwardRef,
   isValidElement,
   lazy,

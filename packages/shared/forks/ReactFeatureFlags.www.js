@@ -102,6 +102,7 @@ export const deletedTreeCleanUpLevel = 3;
 export const enablePersistentOffscreenHostContainer = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
+export const enableServerContext = true;
 
 // Some www surfaces are still using this. Remove once they have been migrated.
 export const enableUseMutableSource = true;

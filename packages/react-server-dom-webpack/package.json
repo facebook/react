@@ -48,7 +48,6 @@
   },
   "peerDependencies": {
     "react": "^17.0.0",
-    "react-dom": "^17.0.0",
     "webpack": "^5.59.0"
   },
   "dependencies": {
