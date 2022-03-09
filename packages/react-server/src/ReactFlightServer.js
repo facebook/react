@@ -200,6 +200,12 @@ function attemptResolveElement(
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     switch (type.$$typeof) {
+      case REACT_LAZY_TYPE: {
+        const payload = type._payload;
+        const init = type._init;
+        const wrappedType = init(payload);
+        return attemptResolveElement(wrappedType, key, ref, props);
+      }
       case REACT_FORWARD_REF_TYPE: {
         const render = type.render;
         return render(props, undefined);
@@ -452,10 +458,6 @@ export function resolveModelToJSON(
   switch (value) {
     case REACT_ELEMENT_TYPE:
       return '$';
-    case REACT_LAZY_TYPE:
-      throw new Error(
-        'React Lazy Components are not yet supported on the server.',
-      );
   }
 
   if (__DEV__) {

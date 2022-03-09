@@ -138,6 +138,86 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb Smith</span>);
   });
 
+  it('can render a lazy component as a shared component on the server', async () => {
+    function SharedComponent() {
+      return <div>I am shared</div>;
+    }
+
+    let load = null;
+    const loadSharedComponent = () => {
+      return new Promise(res => {
+        load = () => res({default: SharedComponent});
+      });
+    };
+
+    const LazySharedComponent = React.lazy(loadSharedComponent);
+
+    function ServerComponent() {
+      return (
+        <React.Suspense fallback={'Loading...'}>
+          <LazySharedComponent />
+        </React.Suspense>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />);
+
+    act(() => {
+      const rootModel = ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootModel);
+    });
+    expect(ReactNoop).toMatchRenderedOutput('Loading...');
+    await load();
+
+    act(() => {
+      const rootModel = ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootModel);
+    });
+    expect(ReactNoop).toMatchRenderedOutput(<div>I am shared</div>);
+  });
+
+  it('can render a lazy module reference', async () => {
+    function ClientComponent() {
+      return <div>I am client</div>;
+    }
+
+    const ClientComponentReference = moduleReference(ClientComponent);
+
+    let load = null;
+    const loadClientComponentReference = () => {
+      return new Promise(res => {
+        load = () => res({default: ClientComponentReference});
+      });
+    };
+
+    const LazyClientComponentReference = React.lazy(
+      loadClientComponentReference,
+    );
+
+    function ServerComponent() {
+      return (
+        <React.Suspense fallback={'Loading...'}>
+          <LazyClientComponentReference />
+        </React.Suspense>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />);
+
+    act(() => {
+      const rootModel = ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootModel);
+    });
+    expect(ReactNoop).toMatchRenderedOutput('Loading...');
+    await load();
+
+    act(() => {
+      const rootModel = ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootModel);
+    });
+    expect(ReactNoop).toMatchRenderedOutput(<div>I am client</div>);
+  });
+
   it('should error if a non-serializable value is passed to a host component', () => {
     function EventHandlerProp() {
       return (
