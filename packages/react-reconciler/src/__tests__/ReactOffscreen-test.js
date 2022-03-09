@@ -26,7 +26,7 @@ describe('ReactOffscreen', () => {
     return <span prop={props.text} />;
   }
 
-  // @gate experimental || www
+  // @gate www
   it('unstable-defer-without-hiding should never toggle the visibility of its children', async () => {
     function App({mode}) {
       return (
@@ -85,7 +85,7 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate experimental || www
+  // @gate www
   it('does not defer in legacy mode', async () => {
     let setState;
     function Foo() {
@@ -130,7 +130,7 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate experimental || www
+  // @gate www
   it('does defer in concurrent mode', async () => {
     let setState;
     function Foo() {
@@ -310,7 +310,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
   });
 
-  // @gate experimental || www
+  // @gate www
   it('does not toggle effects for LegacyHidden component', async () => {
     // LegacyHidden is meant to be the same as offscreen except it doesn't
     // do anything to effects. Only used by www, as a temporary migration step.

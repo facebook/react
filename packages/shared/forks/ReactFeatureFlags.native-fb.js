@@ -70,6 +70,7 @@ export const enableUseRefAccessWarning = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
+export const enableLegacyHidden = true;
 export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = true;
 export const enableCustomElementPropertySupport = false;
