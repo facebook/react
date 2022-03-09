@@ -18,7 +18,6 @@ let ReactNoopFlightClient;
 let ErrorBoundary;
 let NoErrorExpected;
 let Scheduler;
-let ContextRegistry;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
@@ -30,9 +29,6 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
-    const ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-    ContextRegistry = ReactSharedInternals.ContextRegistry;
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -429,8 +425,6 @@ describe('ReactFlight', () => {
 
       const transport = ReactNoopFlightServer.render(<Foo />);
       act(() => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         ReactNoop.render(ReactNoopFlightClient.read(transport));
       });
 
@@ -631,13 +625,25 @@ describe('ReactFlight', () => {
       const transport = ReactNoopFlightServer.render(<ServerApp />);
 
       expect(ClientContext).toBe(undefined);
+
+      // Reset all modules, except flight-modules which keeps the registry of client components
+      const flightModules = require('react-noop-renderer/flight-modules');
+      jest.resetModules();
+      jest.mock('react-noop-renderer/flight-modules', () => flightModules);
+
+      React = require('react');
+      ReactNoop = require('react-noop-renderer');
+      ReactNoopFlightServer = require('react-noop-renderer/flight-server');
+      ReactNoopFlightClient = require('react-noop-renderer/flight-client');
+      act = require('jest-react').act;
+      Scheduler = require('scheduler');
+
       act(() => {
-        delete ContextRegistry.ServerContext;
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         const serverModel = ReactNoopFlightClient.read(transport);
         ReactNoop.render(<ClientApp serverModel={serverModel} />);
       });
+
+      expect(ClientContext).not.toBe(ServerContext);
 
       expect(ReactNoop).toMatchRenderedOutput(
         <>
