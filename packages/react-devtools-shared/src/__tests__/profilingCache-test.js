@@ -110,10 +110,7 @@ describe('ProfilingCache', () => {
       });
     }
 
-    // No profiling data gets logged for the 2nd root (container B)
-    // because it doesn't render anything while profiling.
-    // (Technically it unmounts but we don't profile root unmounts.)
-    expect(allProfilingDataForRoots).toHaveLength(2);
+    expect(allProfilingDataForRoots).toHaveLength(3);
 
     utils.exportImportHelper(bridge, store);
 
