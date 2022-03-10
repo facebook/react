@@ -42,6 +42,18 @@ export type ReactProviderType<T> = {
   ...
 };
 
+export type ServerContextNode =
+  | [
+      string, // name
+      ServerContextJSONValue, // value
+      ServerContextNode, // parent
+    ]
+  | null;
+
+export type ServerContextType =
+  | Array<[string, ServerContextJSONValue]>
+  | ServerContextNode;
+
 export type ReactConsumer<T> = {
   $$typeof: Symbol | number,
   type: ReactContext<T>,

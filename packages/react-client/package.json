@@ -19,7 +19,9 @@
   "exports": {
     ".": "./flight.js",
     "./flight": "./flight.js",
-    "./flight-hooks": "./flight-hooks.js"
+    "./flight-hooks": "./flight-hooks.js",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
   },
   "repository": {
     "type" : "git",

@@ -18,7 +18,9 @@ import type {
 import type {ContextSnapshot} from './ReactFlightNewContext';
 import type {
   ReactProviderType,
+  ServerContextType,
   ServerContextJSONValue,
+  ServerContextNode,
 } from 'shared/ReactTypes';
 
 import {
@@ -129,7 +131,7 @@ export function createRequest(
   model: ReactModel,
   bundlerConfig: BundlerConfig,
   onError: void | ((error: mixed) => void),
-  context?: Array<[string, ServerContextJSONValue]>,
+  context?: ServerContextType,
   identifierPrefix?: string,
 ): Request {
   const pingedSegments = [];
@@ -162,9 +164,7 @@ export function createRequest(
   return request;
 }
 
-function createRootContext(
-  reqContext?: Array<[string, ServerContextJSONValue]>,
-) {
+function createRootContext(reqContext?: ServerContextType) {
   return importServerContexts(reqContext);
 }
 
@@ -942,16 +942,27 @@ export function startFlowing(request: Request, destination: Destination): void {
   }
 }
 
-function importServerContexts(
-  contexts?: Array<[string, ServerContextJSONValue]>,
-) {
-  if (contexts) {
+function importServerContexts(contexts?: ServerContextType) {
+  if (contexts && contexts.length) {
     const prevContext = getActiveContext();
     switchContext(rootContextSnapshot);
-    for (let i = 0; i < contexts.length; i++) {
-      const [name, value] = contexts[i];
-      const context = getOrCreateServerContext(name);
-      pushProvider(context, value);
+    if (contexts[0].length === 2) {
+      // $FlowExpectedError - We made sure its an array above
+      const contextsArray = (contexts: Array<[string, ServerContextJSONValue]>);
+      for (let i = 0; i < contextsArray.length; i++) {
+        const [name, value] = contextsArray[i];
+        const context = getOrCreateServerContext(name);
+        pushProvider(context, value);
+      }
+    } else {
+      // $FlowExpectedError - The above `if` makes sure this is a ServerContextNode
+      let node = (contexts: ServerContextNode);
+      while (node) {
+        const [name, value, parent] = node;
+        const context = getOrCreateServerContext(name);
+        pushProvider(context, value);
+        node = parent;
+      }
     }
     const importedContext = getActiveContext();
     switchContext(prevContext);

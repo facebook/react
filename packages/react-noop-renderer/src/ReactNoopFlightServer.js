@@ -15,7 +15,7 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
-import type {ServerContextJSONValue} from 'shared/ReactTypes';
+import type {ServerContextType} from 'shared/ReactTypes';
 
 import {saveModule} from 'react-noop-renderer/flight-modules';
 
@@ -61,7 +61,7 @@ const ReactNoopFlightServer = ReactFlightServer({
 
 type Options = {
   onError?: (error: mixed) => void,
-  context?: Array<[string, ServerContextJSONValue]>,
+  context?: ServerContextType,
   identifierPrefix?: string,
 };
 

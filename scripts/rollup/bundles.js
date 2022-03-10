@@ -424,6 +424,21 @@ const bundles = [
     ],
   },
 
+  /******* React Server DOM Relay Hooks *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-relay/flight-hooks',
+    global: 'ReactFlightDOMRelayClientHooks',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: [
+      'react',
+      'ReactFlightDOMRelayClientIntegration',
+      'JSResourceReference',
+    ],
+  },
+
   /******* React Server Native Relay Writer *******/
   {
     bundleTypes: [RN_FB_DEV, RN_FB_PROD],

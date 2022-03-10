@@ -82,6 +82,21 @@ describe('ReactFlight', () => {
     };
   }
 
+  function resetModulesForClient() {
+    // Reset all modules, except flight-modules which keeps the registry of client components
+    const flightModules = require('react-noop-renderer/flight-modules');
+    jest.resetModules();
+    jest.mock('react-noop-renderer/flight-modules', () => flightModules);
+
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+    ReactNoopFlightServer = require('react-noop-renderer/flight-server');
+    ReactNoopFlightClient = require('react-noop-renderer/flight-client');
+    ReactNoopFlightHooks = require('react-noop-renderer/flight-hooks');
+    act = require('jest-react').act;
+    Scheduler = require('scheduler');
+  }
+
   it('can render a server component', () => {
     function Bar({text}) {
       return text.toUpperCase();
@@ -621,9 +636,10 @@ describe('ReactFlight', () => {
       }
 
       const transport = ReactNoopFlightServer.render(<Foo />);
+
+      resetModulesForClient();
+
       act(() => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         ReactNoop.render(ReactNoopFlightClient.read(transport));
       });
 
@@ -652,9 +668,10 @@ describe('ReactFlight', () => {
       }
 
       const transport = ReactNoopFlightServer.render(<Foo />);
+
+      resetModulesForClient();
+
       act(() => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         ReactNoop.render(ReactNoopFlightClient.read(transport));
       });
 
@@ -791,9 +808,9 @@ describe('ReactFlight', () => {
 
       expect(Scheduler).toHaveYielded(['rendered']);
 
+      resetModulesForClient();
+
       act(() => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         ReactNoop.render(ReactNoopFlightClient.read(transport));
       });
 
@@ -832,8 +849,6 @@ describe('ReactFlight', () => {
       expect(Scheduler).toHaveYielded([]);
 
       act(() => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         const flightModel = ReactNoopFlightClient.read(transport);
         ReactNoop.render(flightModel.foo);
       });
@@ -847,23 +862,80 @@ describe('ReactFlight', () => {
     });
 
     // @gate enableServerContext
-    it('takes ServerContext from client for refetching usecases', async () => {
+    it('takes ServerContext from client as array for refetching usecases', async () => {
       const ServerContext = React.createServerContext(
         'ServerContext',
         'default',
       );
+      const ServerContext2 = React.createServerContext(
+        'ServerContext2',
+        'default',
+      );
       function Bar() {
-        return <span>{React.useContext(ServerContext)}</span>;
+        return (
+          <>
+            <span>{React.useContext(ServerContext)}</span>
+            <span>{React.useContext(ServerContext2)}</span>
+          </>
+        );
       }
       const transport = ReactNoopFlightServer.render(<Bar />, {
-        context: [['ServerContext', 'Override']],
+        context: [
+          ['ServerContext', 'Override'],
+          ['ServerContext2', 'Override2'],
+        ],
       });
 
       act(() => {
         const flightModel = ReactNoopFlightClient.read(transport);
         ReactNoop.render(flightModel);
       });
-      expect(ReactNoop).toMatchRenderedOutput(<span>Override</span>);
+
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <span>Override</span>
+          <span>Override2</span>
+        </>,
+      );
+    });
+
+    // @gate enableServerContext
+    it('takes ServerContext from client as context node for refetching usecases', async () => {
+      const ServerContext = React.createServerContext(
+        'ServerContext',
+        'default',
+      );
+      const ServerContext2 = React.createServerContext(
+        'ServerContext2',
+        'default',
+      );
+      function Bar() {
+        return (
+          <>
+            <span>{React.useContext(ServerContext)}</span>
+            <span>{React.useContext(ServerContext2)}</span>
+          </>
+        );
+      }
+      const transport = ReactNoopFlightServer.render(<Bar />, {
+        context: [
+          'ServerContext',
+          'Override',
+          ['ServerContext2', 'Override2', null],
+        ],
+      });
+
+      act(() => {
+        const flightModel = ReactNoopFlightClient.read(transport);
+        ReactNoop.render(flightModel);
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <span>Override</span>
+          <span>Override2</span>
+        </>,
+      );
     });
 
     // @gate enableServerContext
@@ -928,17 +1000,7 @@ describe('ReactFlight', () => {
 
       expect(ClientContext).toBe(undefined);
 
-      // Reset all modules, except flight-modules which keeps the registry of client components
-      const flightModules = require('react-noop-renderer/flight-modules');
-      jest.resetModules();
-      jest.mock('react-noop-renderer/flight-modules', () => flightModules);
-
-      React = require('react');
-      ReactNoop = require('react-noop-renderer');
-      ReactNoopFlightServer = require('react-noop-renderer/flight-server');
-      ReactNoopFlightClient = require('react-noop-renderer/flight-client');
-      act = require('jest-react').act;
-      Scheduler = require('scheduler');
+      resetModulesForClient();
 
       act(() => {
         const serverModel = ReactNoopFlightClient.read(transport);
@@ -1007,9 +1069,10 @@ describe('ReactFlight', () => {
       const Bar = moduleReference(ClientBar);
 
       const transport = ReactNoopFlightServer.render(<Foo />);
+
+      resetModulesForClient();
+
       act(() => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         ReactNoop.render(ReactNoopFlightClient.read(transport));
       });
       expect(ReactNoop).toMatchRenderedOutput(
@@ -1021,27 +1084,23 @@ describe('ReactFlight', () => {
           <span>hi this is client default</span>
         </>,
       );
-      const outer = {
-        parent: null,
-        name: 'ServerContext',
-        value: 'hi this is server outer',
-      };
-      expect(contextsForRefetch[0]).toEqual({
-        parent: outer,
-        name: 'ServerContext',
-        value: 'hi this is server',
-      });
-      expect(contextsForRefetch[1]).toEqual({
-        parent: outer,
-        name: 'ServerContext',
-        value: 'hi this is server2',
-      });
+      const outer = ['ServerContext', 'hi this is server outer', null];
+      expect(contextsForRefetch[0]).toEqual([
+        'ServerContext',
+        'hi this is server',
+        outer,
+      ]);
+      expect(contextsForRefetch[1]).toEqual([
+        'ServerContext',
+        'hi this is server2',
+        outer,
+      ]);
       expect(contextsForRefetch[2]).toEqual(outer);
-      expect(contextsForRefetch[3]).toEqual({
-        parent: null,
-        name: 'ServerContext',
-        value: 'hi this is server outer2',
-      });
+      expect(contextsForRefetch[3]).toEqual([
+        'ServerContext',
+        'hi this is server outer2',
+        null,
+      ]);
       expect(contextsForRefetch[4]).toEqual(null);
     });
   });

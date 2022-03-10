@@ -8,7 +8,7 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
-import type {ServerContextJSONValue} from 'shared/ReactTypes';
+import type {ServerContextType} from 'shared/ReactTypes';
 import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 
 import {
@@ -19,7 +19,7 @@ import {
 
 type Options = {
   onError?: (error: mixed) => void,
-  context?: Array<[string, ServerContextJSONValue]>,
+  context?: ServerContextType,
   identifierPrefix?: string,
 };
 
