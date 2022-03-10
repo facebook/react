@@ -210,6 +210,11 @@ function attemptResolveElement(
         const render = type.render;
         return render(props, undefined);
       }
+      case REACT_ELEMENT_TYPE: {
+        // this can happen when a lazy component resolves to an element instead of
+        // a Component.
+        return attemptResolveElement(type.type, type.key, type.ref, type.props);
+      }
       case REACT_MEMO_TYPE: {
         return attemptResolveElement(type.type, key, ref, props);
       }
@@ -479,23 +484,34 @@ export function resolveModelToJSON(
   while (
     typeof value === 'object' &&
     value !== null &&
-    (value: any).$$typeof === REACT_ELEMENT_TYPE
+    ((value: any).$$typeof === REACT_ELEMENT_TYPE ||
+      (value: any).$$typeof === REACT_LAZY_TYPE)
   ) {
     if (__DEV__) {
       if (isInsideContextValue) {
         console.error('React elements are not allowed in ServerContext');
       }
     }
-    // TODO: Concatenate keys of parents onto children.
-    const element: React$Element<any> = (value: any);
+
     try {
-      // Attempt to render the server component.
-      value = attemptResolveElement(
-        element.type,
-        element.key,
-        element.ref,
-        element.props,
-      );
+      switch ((value: any).$$typeof) {
+        case REACT_ELEMENT_TYPE: {
+          // TODO: Concatenate keys of parents onto children.
+          const element: React$Element<any> = (value: any);
+          // Attempt to render the server component.
+          value = attemptResolveElement(
+            element.type,
+            element.key,
+            element.ref,
+            element.props,
+          );
+          break;
+        }
+        case REACT_LAZY_TYPE: {
+          value = attemptResolveElement(value, null, null, {});
+          break;
+        }
+      }
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
