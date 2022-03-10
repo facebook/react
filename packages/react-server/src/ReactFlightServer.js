@@ -210,11 +210,6 @@ function attemptResolveElement(
         const render = type.render;
         return render(props, undefined);
       }
-      case REACT_ELEMENT_TYPE: {
-        // this can happen when a lazy component resolves to an element instead of
-        // a Component.
-        return attemptResolveElement(type.type, type.key, type.ref, type.props);
-      }
       case REACT_MEMO_TYPE: {
         return attemptResolveElement(type.type, key, ref, props);
       }
@@ -508,7 +503,9 @@ export function resolveModelToJSON(
           break;
         }
         case REACT_LAZY_TYPE: {
-          value = attemptResolveElement(value, null, null, {});
+          const payload = (value: any)._payload;
+          const init = (value: any)._init;
+          value = init(payload);
           break;
         }
       }

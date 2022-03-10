@@ -184,6 +184,43 @@ describe('ReactFlight', () => {
     );
   });
 
+  it('errors on a Lazy element being used in Component position', async () => {
+    function SharedComponent({text}) {
+      return (
+        <div>
+          shared<span>{text}</span>
+        </div>
+      );
+    }
+
+    let load = null;
+
+    const LazyElementDisguisedAsComponent = React.lazy(() => {
+      return new Promise(res => {
+        load = () => res({default: <SharedComponent text={'a'} />});
+      });
+    });
+
+    function ServerComponent() {
+      return (
+        <React.Suspense fallback={'Loading...'}>
+          <LazyElementDisguisedAsComponent text={'b'} />
+        </React.Suspense>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />);
+
+    act(() => {
+      const rootModel = ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootModel);
+    });
+    expect(ReactNoop).toMatchRenderedOutput('Loading...');
+    spyOnDevAndProd(console, 'error');
+    await load();
+    expect(console.error).toHaveBeenCalledTimes(1);
+  });
+
   it('can render a lazy element', async () => {
     function SharedComponent({text}) {
       return (
@@ -227,6 +264,43 @@ describe('ReactFlight', () => {
         shared<span>a</span>
       </div>,
     );
+  });
+
+  it('errors with lazy value in element position that resolves to Component', async () => {
+    function SharedComponent({text}) {
+      return (
+        <div>
+          shared<span>{text}</span>
+        </div>
+      );
+    }
+
+    let load = null;
+
+    const componentDisguisedAsElement = React.lazy(() => {
+      return new Promise(res => {
+        load = () => res({default: SharedComponent});
+      });
+    });
+
+    function ServerComponent() {
+      return (
+        <React.Suspense fallback={'Loading...'}>
+          {componentDisguisedAsElement}
+        </React.Suspense>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />);
+
+    act(() => {
+      const rootModel = ReactNoopFlightClient.read(transport);
+      ReactNoop.render(rootModel);
+    });
+    expect(ReactNoop).toMatchRenderedOutput('Loading...');
+    spyOnDevAndProd(console, 'error');
+    await load();
+    expect(console.error).toHaveBeenCalledTimes(1);
   });
 
   it('can render a lazy module reference', async () => {
