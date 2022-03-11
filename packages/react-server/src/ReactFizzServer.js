@@ -1911,11 +1911,6 @@ function flushCompletedQueues(
     }
     completedBoundaries.splice(0, i);
 
-    // Allow anything written so far to flush to the underlying sink before
-    // we continue with lower priorities.
-    completeWriting(destination);
-    beginWriting(destination);
-
     // TODO: Here we'll emit data used by hydration.
 
     // Next we emit any segments of any boundaries that are partially complete
