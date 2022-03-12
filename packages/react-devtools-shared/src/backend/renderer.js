@@ -2704,9 +2704,14 @@ export function attach(
       // TODO: relying on this seems a bit fishy.
       const wasMounted =
         alternate.memoizedState != null &&
-        alternate.memoizedState.element != null;
+        alternate.memoizedState.element != null &&
+        // A dehydrated root is not considered mounted
+        alternate.memoizedState.isDehydrated !== true;
       const isMounted =
-        current.memoizedState != null && current.memoizedState.element != null;
+        current.memoizedState != null &&
+        current.memoizedState.element != null &&
+        // A dehydrated root is not considered mounted
+        current.memoizedState.isDehydrated !== true;
       if (!wasMounted && isMounted) {
         // Mount a new root.
         setRootPseudoKey(currentRootID, current);

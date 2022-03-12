@@ -254,10 +254,12 @@ export function createContainer(
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
   const hydrate = false;
+  const initialChildren = null;
   return createFiberRoot(
     containerInfo,
     tag,
     hydrate,
+    initialChildren,
     hydrationCallbacks,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
@@ -285,6 +287,7 @@ export function createHydrationContainer(
     containerInfo,
     tag,
     hydrate,
+    initialChildren,
     hydrationCallbacks,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
@@ -299,13 +302,13 @@ export function createHydrationContainer(
   // Schedule the initial render. In a hydration root, this is different from
   // a regular update because the initial render must match was was rendered
   // on the server.
+  // NOTE: This update intentionally doesn't have a payload. We're only using
+  // the update to schedule work on the root fiber (and, for legacy roots, to
+  // enqueue the callback if one is provided).
   const current = root.current;
   const eventTime = requestEventTime();
   const lane = requestUpdateLane(current);
   const update = createUpdate(eventTime, lane);
-  // Caution: React DevTools currently depends on this property
-  // being called "element".
-  update.payload = {element: initialChildren};
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
   enqueueUpdate(current, update, lane);
