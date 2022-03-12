@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
+import type {
+  ReactProviderType,
+  ReactContext,
+  ReactNodeList,
+} from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -29,6 +33,7 @@ import type {
   SpawnedCachePool,
 } from './ReactFiberCacheComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
+import type {RootState} from './ReactFiberRoot.new';
 import {
   enableSuspenseAvoidThisFallback,
   enableCPUSuspense,
@@ -223,7 +228,6 @@ import {
   createOffscreenHostContainerFiber,
   isSimpleFunctionComponent,
 } from './ReactFiber.new';
-import {isRootDehydrated} from './ReactFiberShellHydration';
 import {
   retryDehydratedSuspenseBoundary,
   scheduleUpdateOnFiber,
@@ -1312,7 +1316,7 @@ function pushHostRootContext(workInProgress) {
 
 function updateHostRoot(current, workInProgress, renderLanes) {
   pushHostRootContext(workInProgress);
-  const updateQueue = workInProgress.updateQueue;
+  const updateQueue: UpdateQueue<RootState> = (workInProgress.updateQueue: any);
 
   if (current === null || updateQueue === null) {
     throw new Error(
@@ -1327,7 +1331,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   const prevChildren = prevState.element;
   cloneUpdateQueue(current, workInProgress);
   processUpdateQueue(workInProgress, nextProps, null, renderLanes);
-  const nextState = workInProgress.memoizedState;
+  const nextState: RootState = workInProgress.memoizedState;
 
   const root: FiberRoot = workInProgress.stateNode;
 
@@ -1342,61 +1346,127 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   }
 
   if (enableTransitionTracing) {
+    // FIXME: Slipped past code review. This is not a safe mutation:
+    // workInProgress.memoizedState is a shared object. Need to fix before
+    // rolling out the Transition Tracing experiment.
     workInProgress.memoizedState.transitions = getWorkInProgressTransitions();
   }
 
   // Caution: React DevTools currently depends on this property
   // being called "element".
   const nextChildren = nextState.element;
-  if (nextChildren === prevChildren) {
-    resetHydrationState();
-    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
-  }
-  if (isRootDehydrated(root) && enterHydrationState(workInProgress)) {
-    // If we don't have any current children this might be the first pass.
-    // We always try to hydrate. If this isn't a hydration pass there won't
-    // be any children to hydrate which is effectively the same thing as
-    // not hydrating.
-
-    if (supportsHydration) {
-      const mutableSourceEagerHydrationData =
-        root.mutableSourceEagerHydrationData;
-      if (mutableSourceEagerHydrationData != null) {
-        for (let i = 0; i < mutableSourceEagerHydrationData.length; i += 2) {
-          const mutableSource = ((mutableSourceEagerHydrationData[
-            i
-          ]: any): MutableSource<any>);
-          const version = mutableSourceEagerHydrationData[i + 1];
-          setWorkInProgressVersion(mutableSource, version);
+  if (supportsHydration && prevState.isDehydrated) {
+    // This is a hydration root whose shell has not yet hydrated. We should
+    // attempt to hydrate.
+    if (workInProgress.flags & ForceClientRender) {
+      // Something errored during a previous attempt to hydrate the shell, so we
+      // forced a client render.
+      const recoverableError = new Error(
+        'There was an error while hydrating. Because the error happened outside ' +
+          'of a Suspense boundary, the entire root will switch to ' +
+          'client rendering.',
+      );
+      return mountHostRootWithoutHydrating(
+        current,
+        workInProgress,
+        updateQueue,
+        nextState,
+        nextChildren,
+        renderLanes,
+        recoverableError,
+      );
+    } else if (nextChildren !== prevChildren) {
+      const recoverableError = new Error(
+        'This root received an early update, before anything was able ' +
+          'hydrate. Switched the entire root to client rendering.',
+      );
+      return mountHostRootWithoutHydrating(
+        current,
+        workInProgress,
+        updateQueue,
+        nextState,
+        nextChildren,
+        renderLanes,
+        recoverableError,
+      );
+    } else {
+      // The outermost shell has not hydrated yet. Start hydrating.
+      enterHydrationState(workInProgress);
+      if (supportsHydration) {
+        const mutableSourceEagerHydrationData =
+          root.mutableSourceEagerHydrationData;
+        if (mutableSourceEagerHydrationData != null) {
+          for (let i = 0; i < mutableSourceEagerHydrationData.length; i += 2) {
+            const mutableSource = ((mutableSourceEagerHydrationData[
+              i
+            ]: any): MutableSource<any>);
+            const version = mutableSourceEagerHydrationData[i + 1];
+            setWorkInProgressVersion(mutableSource, version);
+          }
         }
       }
-    }
 
-    const child = mountChildFibers(
-      workInProgress,
-      null,
-      nextChildren,
-      renderLanes,
-    );
-    workInProgress.child = child;
+      const child = mountChildFibers(
+        workInProgress,
+        null,
+        nextChildren,
+        renderLanes,
+      );
+      workInProgress.child = child;
 
-    let node = child;
-    while (node) {
-      // Mark each child as hydrating. This is a fast path to know whether this
-      // tree is part of a hydrating tree. This is used to determine if a child
-      // node has fully mounted yet, and for scheduling event replaying.
-      // Conceptually this is similar to Placement in that a new subtree is
-      // inserted into the React tree here. It just happens to not need DOM
-      // mutations because it already exists.
-      node.flags = (node.flags & ~Placement) | Hydrating;
-      node = node.sibling;
+      let node = child;
+      while (node) {
+        // Mark each child as hydrating. This is a fast path to know whether this
+        // tree is part of a hydrating tree. This is used to determine if a child
+        // node has fully mounted yet, and for scheduling event replaying.
+        // Conceptually this is similar to Placement in that a new subtree is
+        // inserted into the React tree here. It just happens to not need DOM
+        // mutations because it already exists.
+        node.flags = (node.flags & ~Placement) | Hydrating;
+        node = node.sibling;
+      }
     }
   } else {
-    // Otherwise reset hydration state in case we aborted and resumed another
-    // root.
-    reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+    // Root is not dehydrated. Either this is a client-only root, or it
+    // already hydrated.
     resetHydrationState();
+    if (nextChildren === prevChildren) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
+    }
+    reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   }
+  return workInProgress.child;
+}
+
+function mountHostRootWithoutHydrating(
+  current: Fiber,
+  workInProgress: Fiber,
+  updateQueue: UpdateQueue<RootState>,
+  nextState: RootState,
+  nextChildren: ReactNodeList,
+  renderLanes: Lanes,
+  recoverableError: Error,
+) {
+  // Revert to client rendering.
+  resetHydrationState();
+
+  queueHydrationError(recoverableError);
+
+  workInProgress.flags |= ForceClientRender;
+
+  // Flip isDehydrated to false to indicate that when this render
+  // finishes, the root will no longer be dehydrated.
+  const overrideState: RootState = {
+    element: nextChildren,
+    isDehydrated: false,
+    cache: nextState.cache,
+    transitions: nextState.transitions,
+  };
+  // `baseState` can always be the last state because the root doesn't
+  // have reducer functions so it doesn't need rebasing.
+  updateQueue.baseState = overrideState;
+  workInProgress.memoizedState = overrideState;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
 

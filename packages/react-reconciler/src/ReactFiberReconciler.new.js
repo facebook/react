@@ -254,10 +254,12 @@ export function createContainer(
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
   const hydrate = false;
+  const initialChildren = null;
   return createFiberRoot(
     containerInfo,
     tag,
     hydrate,
+    initialChildren,
     hydrationCallbacks,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
@@ -285,6 +287,7 @@ export function createHydrationContainer(
     containerInfo,
     tag,
     hydrate,
+    initialChildren,
     hydrationCallbacks,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
@@ -303,9 +306,7 @@ export function createHydrationContainer(
   const eventTime = requestEventTime();
   const lane = requestUpdateLane(current);
   const update = createUpdate(eventTime, lane);
-  // Caution: React DevTools currently depends on this property
-  // being called "element".
-  update.payload = {element: initialChildren};
+  update.payload = {isDehydrated: false};
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
   enqueueUpdate(current, update, lane);

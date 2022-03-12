@@ -25,6 +25,7 @@ import type {Wakeable} from 'shared/ReactTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.old';
+import type {RootState} from './ReactFiberRoot.old';
 
 import {
   enableCreateEventHandleAPI,
@@ -82,7 +83,6 @@ import {
   Visibility,
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import {isRootDehydrated} from './ReactFiberShellHydration';
 import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
@@ -1878,11 +1878,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       }
       case HostRoot: {
         if (supportsHydration) {
-          const root: FiberRoot = finishedWork.stateNode;
-          if (isRootDehydrated(root)) {
-            // We've just hydrated. No need to hydrate again.
-            root.isDehydrated = false;
-            commitHydratedContainer(root.containerInfo);
+          if (current !== null) {
+            const prevRootState: RootState = current.memoizedState;
+            if (prevRootState.isDehydrated) {
+              const root: FiberRoot = finishedWork.stateNode;
+              commitHydratedContainer(root.containerInfo);
+            }
           }
         }
         break;
@@ -1986,11 +1987,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     }
     case HostRoot: {
       if (supportsHydration) {
-        const root: FiberRoot = finishedWork.stateNode;
-        if (isRootDehydrated(root)) {
-          // We've just hydrated. No need to hydrate again.
-          root.isDehydrated = false;
-          commitHydratedContainer(root.containerInfo);
+        if (current !== null) {
+          const prevRootState: RootState = current.memoizedState;
+          if (prevRootState.isDehydrated) {
+            const root: FiberRoot = finishedWork.stateNode;
+            commitHydratedContainer(root.containerInfo);
+          }
         }
       }
       return;
