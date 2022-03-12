@@ -211,6 +211,7 @@ function render(
     root = createContainer(
       containerTag,
       LegacyRoot,
+      false,
       null,
       false,
       null,

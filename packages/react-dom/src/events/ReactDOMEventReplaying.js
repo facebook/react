@@ -39,7 +39,6 @@ import {
 } from '../client/ReactDOMComponentTree';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 import {isHigherEventPriority} from 'react-reconciler/src/ReactEventPriorities';
-import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 
 let _attemptSynchronousHydration: (fiber: Object) => void;
 
@@ -415,7 +414,7 @@ function attemptExplicitHydrationTarget(
         }
       } else if (tag === HostRoot) {
         const root: FiberRoot = nearestMounted.stateNode;
-        if (isRootDehydrated(root)) {
+        if (root.isDehydrated) {
           queuedTarget.blockedOn = getContainerFromFiber(nearestMounted);
           // We don't currently have a way to increase the priority of
           // a root other than sync.
