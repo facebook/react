@@ -213,6 +213,8 @@ type BaseFiberRootProperties = {|
   // Top context object, used by renderSubtreeIntoContainer
   context: Object | null,
   pendingContext: Object | null,
+  // Determines if we should attempt to hydrate on the initial mount
+  +isDehydrated: boolean,
 
   // Used by useMutableSource hook to avoid tearing during hydration.
   mutableSourceEagerHydrationData?: Array<

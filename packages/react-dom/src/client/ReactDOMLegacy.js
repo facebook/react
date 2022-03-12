@@ -27,7 +27,6 @@ import {
 
 import {
   createContainer,
-  createHydrationContainer,
   findHostInstanceWithNoPortals,
   updateContainer,
   flushSync,
@@ -110,81 +109,34 @@ function noopOnRecoverableError() {
 
 function legacyCreateRootFromDOMContainer(
   container: Container,
-  initialChildren: ReactNodeList,
-  parentComponent: ?React$Component<any, any>,
-  callback: ?Function,
-  isHydrationContainer: boolean,
+  forceHydrate: boolean,
 ): FiberRoot {
-  if (isHydrationContainer) {
-    if (typeof callback === 'function') {
-      const originalCallback = callback;
-      callback = function() {
-        const instance = getPublicRootInstance(root);
-        originalCallback.call(instance);
-      };
-    }
-
-    const root = createHydrationContainer(
-      initialChildren,
-      callback,
-      container,
-      LegacyRoot,
-      null, // hydrationCallbacks
-      false, // isStrictMode
-      false, // concurrentUpdatesByDefaultOverride,
-      '', // identifierPrefix
-      noopOnRecoverableError,
-      // TODO(luna) Support hydration later
-      null,
-    );
-    container._reactRootContainer = root;
-    markContainerAsRoot(root.current, container);
-
-    const rootContainerElement =
-      container.nodeType === COMMENT_NODE ? container.parentNode : container;
-    listenToAllSupportedEvents(rootContainerElement);
-
-    flushSync();
-    return root;
-  } else {
-    // First clear any existing content.
+  // First clear any existing content.
+  if (!forceHydrate) {
     let rootSibling;
     while ((rootSibling = container.lastChild)) {
       container.removeChild(rootSibling);
     }
-
-    if (typeof callback === 'function') {
-      const originalCallback = callback;
-      callback = function() {
-        const instance = getPublicRootInstance(root);
-        originalCallback.call(instance);
-      };
-    }
-
-    const root = createContainer(
-      container,
-      LegacyRoot,
-      null, // hydrationCallbacks
-      false, // isStrictMode
-      false, // concurrentUpdatesByDefaultOverride,
-      '', // identifierPrefix
-      noopOnRecoverableError, // onRecoverableError
-      null, // transitionCallbacks
-    );
-    container._reactRootContainer = root;
-    markContainerAsRoot(root.current, container);
-
-    const rootContainerElement =
-      container.nodeType === COMMENT_NODE ? container.parentNode : container;
-    listenToAllSupportedEvents(rootContainerElement);
-
-    // Initial mount should not be batched.
-    flushSync(() => {
-      updateContainer(initialChildren, root, parentComponent, callback);
-    });
-
-    return root;
   }
+
+  const root = createContainer(
+    container,
+    LegacyRoot,
+    forceHydrate,
+    null, // hydrationCallbacks
+    false, // isStrictMode
+    false, // concurrentUpdatesByDefaultOverride,
+    '', // identifierPrefix
+    noopOnRecoverableError, // onRecoverableError
+    null, // transitionCallbacks
+  );
+  markContainerAsRoot(root.current, container);
+
+  const rootContainerElement =
+    container.nodeType === COMMENT_NODE ? container.parentNode : container;
+  listenToAllSupportedEvents(rootContainerElement);
+
+  return root;
 }
 
 function warnOnInvalidCallback(callback: mixed, callerName: string): void {
@@ -212,30 +164,39 @@ function legacyRenderSubtreeIntoContainer(
     warnOnInvalidCallback(callback === undefined ? null : callback, 'render');
   }
 
-  const maybeRoot = container._reactRootContainer;
-  let root: FiberRoot;
-  if (!maybeRoot) {
+  let root = container._reactRootContainer;
+  let fiberRoot: FiberRoot;
+  if (!root) {
     // Initial mount
-    root = legacyCreateRootFromDOMContainer(
+    root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
       container,
-      children,
-      parentComponent,
-      callback,
       forceHydrate,
     );
-  } else {
-    root = maybeRoot;
+    fiberRoot = root;
     if (typeof callback === 'function') {
       const originalCallback = callback;
       callback = function() {
-        const instance = getPublicRootInstance(root);
+        const instance = getPublicRootInstance(fiberRoot);
+        originalCallback.call(instance);
+      };
+    }
+    // Initial mount should not be batched.
+    flushSync(() => {
+      updateContainer(children, fiberRoot, parentComponent, callback);
+    });
+  } else {
+    fiberRoot = root;
+    if (typeof callback === 'function') {
+      const originalCallback = callback;
+      callback = function() {
+        const instance = getPublicRootInstance(fiberRoot);
         originalCallback.call(instance);
       };
     }
     // Update
-    updateContainer(children, root, parentComponent, callback);
+    updateContainer(children, fiberRoot, parentComponent, callback);
   }
-  return getPublicRootInstance(root);
+  return getPublicRootInstance(fiberRoot);
 }
 
 export function findDOMNode(

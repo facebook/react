@@ -48,7 +48,6 @@ import {
   isContextProvider as isLegacyContextProvider,
 } from './ReactFiberContext.old';
 import {createFiberRoot} from './ReactFiberRoot.old';
-import {isRootDehydrated} from './ReactFiberShellHydration';
 import {
   injectInternals,
   markRenderScheduled,
@@ -246,6 +245,9 @@ function findHostInstanceWithWarning(
 export function createContainer(
   containerInfo: Container,
   tag: RootTag,
+  // TODO: We can remove hydration-specific stuff from createContainer once
+  // we delete legacy mode. The new root API uses createHydrationContainer.
+  hydrate: boolean,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
@@ -253,13 +255,10 @@ export function createContainer(
   onRecoverableError: (error: mixed) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
-  const hydrate = false;
-  const initialChildren = null;
   return createFiberRoot(
     containerInfo,
     tag,
     hydrate,
-    initialChildren,
     hydrationCallbacks,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
@@ -271,8 +270,6 @@ export function createContainer(
 
 export function createHydrationContainer(
   initialChildren: ReactNodeList,
-  // TODO: Remove `callback` when we delete legacy mode.
-  callback: ?Function,
   containerInfo: Container,
   tag: RootTag,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
@@ -287,7 +284,6 @@ export function createHydrationContainer(
     containerInfo,
     tag,
     hydrate,
-    initialChildren,
     hydrationCallbacks,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
@@ -306,9 +302,9 @@ export function createHydrationContainer(
   const eventTime = requestEventTime();
   const lane = requestUpdateLane(current);
   const update = createUpdate(eventTime, lane);
-  update.payload = {isDehydrated: false};
-  update.callback =
-    callback !== undefined && callback !== null ? callback : null;
+  // Caution: React DevTools currently depends on this property
+  // being called "element".
+  update.payload = {element: initialChildren};
   enqueueUpdate(current, update, lane);
   scheduleInitialHydrationOnRoot(root, lane, eventTime);
 
@@ -413,7 +409,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
   switch (fiber.tag) {
     case HostRoot:
       const root: FiberRoot = fiber.stateNode;
-      if (isRootDehydrated(root)) {
+      if (root.isDehydrated) {
         // Flush the first scheduled "update".
         const lanes = getHighestPriorityPendingLanes(root);
         flushRoot(root, lanes);

@@ -9,7 +9,6 @@
 
 let JSDOM;
 let React;
-let startTransition;
 let ReactDOMClient;
 let Scheduler;
 let clientAct;
@@ -33,8 +32,6 @@ describe('ReactDOMFizzShellHydration', () => {
     clientAct = require('jest-react').act;
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
-
-    startTransition = React.startTransition;
 
     textCache = new Map();
 
@@ -217,36 +214,7 @@ describe('ReactDOMFizzShellHydration', () => {
     expect(container.textContent).toBe('Shell');
   });
 
-  test(
-    'updating the root at lower priority than initial hydration does not ' +
-      'force a client render',
-    async () => {
-      function App() {
-        return <Text text="Initial" />;
-      }
-
-      // Server render
-      await resolveText('Initial');
-      await serverAct(async () => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
-        pipe(writable);
-      });
-      expect(Scheduler).toHaveYielded(['Initial']);
-
-      await clientAct(async () => {
-        const root = ReactDOMClient.hydrateRoot(container, <App />);
-        // This has lower priority than the initial hydration, so the update
-        // won't be processed until after hydration finishes.
-        startTransition(() => {
-          root.render(<Text text="Updated" />);
-        });
-      });
-      expect(Scheduler).toHaveYielded(['Initial', 'Updated']);
-      expect(container.textContent).toBe('Updated');
-    },
-  );
-
-  test('updating the root while the shell is suspended forces a client render', async () => {
+  test('updating the root before the shell hydrates forces a client render', async () => {
     function App() {
       return <AsyncText text="Shell" />;
     }
@@ -277,9 +245,9 @@ describe('ReactDOMFizzShellHydration', () => {
       root.render(<Text text="New screen" />);
     });
     expect(Scheduler).toHaveYielded([
-      'New screen',
       'This root received an early update, before anything was able ' +
         'hydrate. Switched the entire root to client rendering.',
+      'New screen',
     ]);
     expect(container.textContent).toBe('New screen');
   });
