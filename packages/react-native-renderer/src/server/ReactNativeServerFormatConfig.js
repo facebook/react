@@ -197,12 +197,6 @@ export function writeStartCompletedSuspenseBoundary(
   return writeChunkAndReturn(destination, SUSPENSE_COMPLETE);
 }
 
-export function pushStartCompletedSuspenseBoundary(
-  target: Array<Chunk | PrecomputedChunk>,
-): void {
-  target.push(SUSPENSE_COMPLETE);
-}
-
 export function writeStartPendingSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
@@ -222,11 +216,6 @@ export function writeEndCompletedSuspenseBoundary(
   responseState: ResponseState,
 ): boolean {
   return writeChunkAndReturn(destination, END);
-}
-export function pushEndCompletedSuspenseBoundary(
-  target: Array<Chunk | PrecomputedChunk>,
-): void {
-  target.push(END);
 }
 export function writeEndPendingSuspenseBoundary(
   destination: Destination,

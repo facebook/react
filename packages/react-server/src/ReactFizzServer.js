@@ -54,8 +54,6 @@ import {
   pushTextInstance,
   pushStartInstance,
   pushEndInstance,
-  pushStartCompletedSuspenseBoundary,
-  pushEndCompletedSuspenseBoundary,
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
@@ -526,23 +524,6 @@ function renderSuspenseBoundary(
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
   request.pingedTasks.push(suspendedFallbackTask);
-
-  popComponentStackInDEV(task);
-}
-
-function renderBackupSuspenseBoundary(
-  request: Request,
-  task: Task,
-  props: Object,
-) {
-  pushBuiltInComponentStackInDEV(task, 'Suspense');
-
-  const content = props.children;
-  const segment = task.blockedSegment;
-
-  pushStartCompletedSuspenseBoundary(segment.chunks);
-  renderNode(request, task, content);
-  pushEndCompletedSuspenseBoundary(segment.chunks);
 
   popComponentStackInDEV(task);
 }
@@ -1044,7 +1025,8 @@ function renderElement(
         enableSuspenseAvoidThisFallbackFizz &&
         props.unstable_avoidThisFallback === true
       ) {
-        renderBackupSuspenseBoundary(request, task, props);
+        const element = props.children;
+        renderElement(request, task, element.type, element.props, element.ref);
       } else {
         renderSuspenseBoundary(request, task, props);
       }
