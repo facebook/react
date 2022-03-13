@@ -1025,8 +1025,7 @@ function renderElement(
         enableSuspenseAvoidThisFallbackFizz &&
         props.unstable_avoidThisFallback === true
       ) {
-        const element = props.children;
-        renderElement(request, task, element.type, element.props, element.ref);
+        renderNode(request, task, props.children);
       } else {
         renderSuspenseBoundary(request, task, props);
       }
