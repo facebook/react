@@ -220,7 +220,7 @@ export function getInternalReactConstants(
   // Keep it in sync, and add version guards if it changes.
   //
   // TODO Update the gt() check below to be gte() whichever the next version number is.
-  // Currently the version in Git is 17.0.2 (but that version has not been/may not end up being released).
+  // Currently the version in Git is 18.0.0 (but that version has not been/may not end up being released).
   if (gt(version, '17.0.1')) {
     ReactTypeOfWork = {
       CacheComponent: 24, // Experimental
