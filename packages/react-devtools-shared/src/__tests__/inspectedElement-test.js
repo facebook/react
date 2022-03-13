@@ -2099,7 +2099,7 @@ describe('InspectedElement', () => {
     await utils.actAsync(() => {
       const container = document.createElement('div');
       container.innerHTML = '<div></div>';
-      ReactDOMClient.hydrateRoot(container).render(<Example />);
+      ReactDOMClient.hydrateRoot(container, <Example />);
     }, false);
 
     const inspectedElement = await inspectElementAtIndex(0);
