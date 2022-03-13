@@ -12018,7 +12018,7 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
+| `value=(symbol)`| (initial, warning)| `<empty string>` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
 | `value=(null)`| (initial)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
