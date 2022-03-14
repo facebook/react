@@ -29,20 +29,24 @@ function flushCurrentView(destination, lastFlush) {
   if (currentView) {
     const byobRequest = destination.byobRequest;
     if (writtenBytes === 0) {
-      // Do nothing unless this is the last flush and we have an open byobRequest
-      if (lastFlush && byobRequest && byobRequest.view) {
-        // we aren't going to write any more but a byobView needs to be responded to
-        byobRequest.respond(0);
-      }
-    } else if (writtenBytes << 2 < currentView.byteLength && !lastFlush) {
+      // nothing to flush
+      return;
+    } else if (
+      !byobRequest &&
+      writtenBytes << 2 < currentView.byteLength &&
+      !lastFlush
+    ) {
       // the currentView is less than a quarter full, let's copy it to a new view to flush
       // this threshold is arbitrary and we expect to come up with new hueristics on when
       // to copy & write vs send the current buffer.
+      // Note we exclude byobReqeusts because if we enqueue something before them we can
+      // sometimes overwrite memory in unexpected ways correupting the read bytes. Also
+      // the spec requests that byobRequests are responded to in order: https://streams.spec.whatwg.org/#other-specs-rs-create
       destination.enqueue(currentView.slice(0, writtenBytes));
+      writtenBytes = 0;
+      return;
     } else {
       if (byobRequest && byobRequest.view === currentView) {
-        // this request is using a byob reader and we have not yet responded with
-        // the
         byobRequest.respond(writtenBytes);
       } else {
         if (writtenBytes === currentView.byteLength) {
@@ -56,8 +60,8 @@ function flushCurrentView(destination, lastFlush) {
       } else {
         currentView = new Uint8Array(VIEW_SIZE);
       }
+      writtenBytes = 0;
     }
-    writtenBytes = 0;
   } else {
     throw new Error(
       '`flushCurrentView` for streaming server rendering was called but there is no current view. This is a bug in React. Please file an issue',
@@ -113,7 +117,7 @@ export function writeChunk(
       bytesToWrite.subarray(0, allowableBytes),
       writtenBytes,
     );
-    writtenBytes += allowableBytes; // this can be skipped because we are going to immediately reset the view
+    writtenBytes += allowableBytes;
     bytesToWrite = bytesToWrite.subarray(allowableBytes);
     flushCurrentView(destination, false);
   }
@@ -169,9 +173,6 @@ export function close(destination: Destination) {
     // based on how the streams spec is written it is possible for a stream
     // to be closed but for a curernt byobRequest to still be active.
     // when a stream is closed you can respond to the request with 0 bytes written
-    // @TODO determine if the fact that close is not always synchronously executed
-    // can lead to buggy behavior here. If the stream is not yet closed respond(0)
-    // will error because it expects more than zero bytes to be written
     destination.byobRequest.respond(0);
   }
 }

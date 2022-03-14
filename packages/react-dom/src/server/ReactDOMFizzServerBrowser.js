@@ -55,8 +55,9 @@ function renderToReadableStream(
     function onShellReady() {
       const stream: ReactDOMServerReadableStream = (new ReadableStream({
         type: 'bytes',
+        autoAllocateChunkSize: 512,
         pull(controller) {
-          startFlowing(request, controller);
+          startFlowing(request, (controller: any));
         },
         cancel(reason) {
           abort(request);
