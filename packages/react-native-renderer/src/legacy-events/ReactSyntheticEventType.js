@@ -16,6 +16,7 @@ export type DispatchConfig = {|
   phasedRegistrationNames: {|
     bubbled: null | string,
     captured: null | string,
+    skipBubbling?: ?boolean,
   |},
   registrationName?: string,
 |};
@@ -24,6 +25,7 @@ export type CustomDispatchConfig = {|
   phasedRegistrationNames: {|
     bubbled: null,
     captured: null,
+    skipBubbling?: ?boolean,
   |},
   registrationName?: string,
   customEvent: true,
