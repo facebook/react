@@ -39,6 +39,7 @@ const ReactNoopFlightServer = ReactFlightServer({
   close(destination: Destination): void {},
   closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
+  requestFlush(destination: Destination): void {},
   stringToChunk(content: string): string {
     return content;
   },

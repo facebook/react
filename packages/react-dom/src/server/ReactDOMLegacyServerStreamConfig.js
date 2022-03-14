@@ -22,6 +22,11 @@ export function scheduleWork(callback: () => void) {
 
 export function flushBuffered(destination: Destination) {}
 
+export function requestFlush(destination: Destination) {
+  completeWriting(destination);
+  beginWriting(destination);
+}
+
 export function beginWriting(destination: Destination) {}
 
 let prevWasCommentSegmenter = false;

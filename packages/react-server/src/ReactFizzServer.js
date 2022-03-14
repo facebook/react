@@ -34,6 +34,7 @@ import {
   writeChunkAndReturn,
   completeWriting,
   flushBuffered,
+  requestFlush,
   close,
   closeWithError,
 } from './ReactServerStreamConfig';
@@ -1910,6 +1911,10 @@ function flushCompletedQueues(
       }
     }
     completedBoundaries.splice(0, i);
+
+    // Allow anything written so far to flush to the underlying sink before
+    // we continue with lower priorities.
+    requestFlush(destination);
 
     // TODO: Here we'll emit data used by hydration.
 

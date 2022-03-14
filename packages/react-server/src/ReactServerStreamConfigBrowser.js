@@ -21,6 +21,12 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
+export function requestFlush(destination: Destination) {
+  // flushing in Browser environments is controlled by writes and the relative size
+  // and fullness of the streaming view we are writing to. Even if a flush is explicitly
+  // hinted by calling this we do not heed it.
+}
+
 const VIEW_SIZE = 512;
 let currentView = null;
 let writtenBytes = 0;
