@@ -54,6 +54,9 @@ export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
     minNpmVersion: '"<4.11.0"',
     maxNpmVersion: '"<4.11.0"',
   },
+  // Versions 4.11.x – 4.12.x contained the backwards breaking change,
+  // but we didn't add the "fix" of checking the protocol version until 4.13,
+  // so we don't recommend downgrading to 4.11 or 4.12.
   {
     version: 1,
     minNpmVersion: '4.13.0',
