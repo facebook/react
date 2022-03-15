@@ -12,6 +12,7 @@
 // Polyfills for test environment
 global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
+global.TextDecoder = require('util').TextDecoder;
 global.AbortController = require('abort-controller');
 
 let React;
@@ -38,6 +39,7 @@ describe('ReactDOMFizzServer', () => {
   }
 
   async function readResult(stream, options) {
+    let decoder = new TextDecoder();
     let result = '';
     if (options && options.mode === 'byob') {
       let view = new Uint8Array(1024);
@@ -45,19 +47,21 @@ describe('ReactDOMFizzServer', () => {
       while (true) {
         const {done, value} = await reader.read(view);
         if (done) {
+          result += decoder.decode();
           return result;
         }
         view = new Uint8Array(value.buffer);
-        result += Buffer.from(value).toString('utf8');
+        result += decoder.decode(value, {stream: true});
       }
     } else {
       const reader = stream.getReader();
       while (true) {
         const {done, value} = await reader.read();
         if (done) {
+          result += decoder.decode();
           return result;
         }
-        result += Buffer.from(value).toString('utf8');
+        result += decoder.decode(value, {stream: true});
       }
     }
   }
