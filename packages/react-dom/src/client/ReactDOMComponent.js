@@ -72,7 +72,6 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import {
   enableTrustedTypesIntegration,
   enableCustomElementPropertySupport,
-  enableClientRenderFallbackOnHydrationMismatch,
   enableClientRenderFallbackOnTextMismatch,
 } from 'shared/ReactFeatureFlags';
 import {
