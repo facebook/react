@@ -29,33 +29,40 @@ The `config` object may contain:
 
 ## `react-devtools-core/standalone`
 
-Renders the DevTools interface into a DOM node.
-
+Renders DevTools UI into a DOM node:
 ```js
-require("react-devtools-core/standalone")
-  .setContentDOMNode(document.getElementById("container"))
-  .setStatusListener(status => {
-    // This callback is optional...
-  })
-  .startServer(port);
+import DevtoolsUI from "react-devtools-core/standalone";
+
+const { setContentDOMNode, setStatusListener, startServer } = DevtoolsUI;
+
+const container = document.getElementById("container");
+
+setContentDOMNode(container);
+setStatusListener(status => {
+  // This callback is optional...
+});
+startServer(port, host, options);
 ```
 
-Renders DevTools interface into a DOM node over SSL using a custom host name (Default is localhost).
-
+Configures DevTools UI to use SSL with custom host name:
 ```js
+import DevtoolsUI from "react-devtools-core/standalone";
+
+const { setContentDOMNode, setStatusListener, startServer } = DevtoolsUI;
+
 const host = 'dev.server.com';
 const options = {
   key: fs.readFileSync('test/fixtures/keys/agent2-key.pem'),
   cert: fs.readFileSync('test/fixtures/keys/agent2-cert.pem')
 };
 
+const container = document.getElementById("container");
 
-require("react-devtools-core/standalone")
-  .setContentDOMNode(document.getElementById("container"))
-  .setStatusListener(status => {
-    // This callback is optional...
-  })
-  .startServer(port, host, options);
+setContentDOMNode(container);
+setStatusListener(status => {
+  // This callback is optional...
+});
+startServer(port, host, options);
 ```
 
 Reference the `react-devtools` package for a complete integration example.

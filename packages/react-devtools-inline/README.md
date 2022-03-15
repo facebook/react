@@ -4,7 +4,11 @@ React DevTools implementation for embedding within a browser-based IDE (e.g. [Co
 
 This is a low-level package. If you're looking for the standalone DevTools app, **use the `react-devtools` package instead.**
 
-## Usage
+---
+
+**Note** that this package (and the DevTools UI) relies on several _experimental_ APIs that are only available in the [experimental release channel](https://reactjs.org/docs/release-channels.html#experimental-channel).
+
+# Usage
 
 This package exports two entry points: a frontend (to be run in the main `window`) and a backend (to be installed and run within an `iframe`<sup>1</sup>).
 
@@ -16,9 +20,9 @@ The frontend and backend can be initialized in any order, but **the backend must
 
 <sup>1</sup> Sandboxed iframes are supported.
 
-## API
+# API
 
-### `react-devtools-inline/backend`
+## `react-devtools-inline/backend`
 
 * **`initialize(contentWindow)`** -
 Installs the global hook on the window. This hook is how React and DevTools communicate. **This method must be called before React is loaded.**<sup>2</sup>
@@ -43,7 +47,7 @@ activate(contentWindow);
 
 <sup>2</sup> The backend must be initialized before React is loaded. (This means before any `import` or `require` statements or `<script>` tags that include React.)
 
-### `react-devtools-inline/frontend`
+## `react-devtools-inline/frontend`
 
 * **`initialize(contentWindow)`** -
 Configures the DevTools interface to listen to the `window` the backend was injected into. This method returns a React component that can be rendered directly<sup>3</sup>.
@@ -62,9 +66,9 @@ const DevTools = initialize(contentWindow);
 
 <sup>3</sup> Because the DevTools interface makes use of several new React APIs (e.g. suspense, concurrent mode) it should be rendered using `ReactDOMClient.createRoot`. **It should not be rendered with `ReactDOM.render`.**
 
-## Examples
+# Examples
 
-### Supporting named hooks
+## Supporting named hooks
 
 DevTools can display hook "names" for an inspected component, although determining the "names" requires loading the source (and source-maps), parsing the code, and inferring the names based on which variables hook values get assigned to. Because the code for this is non-trivial, it's lazy-loaded only if the feature is enabled.
 
@@ -81,7 +85,7 @@ const hookNamesModuleLoaderFunction = () => import('react-devtools-inline/hookNa
 />;
 ```
 
-### Configuring a same-origin `iframe`
+## Configuring a same-origin `iframe`
 
 The simplest way to use this package is to install the hook from the parent `window`. This is possible if the `iframe` is not sandboxed and there are no cross-origin restrictions.
 
@@ -116,7 +120,7 @@ const DevTools = initializeFrontend(contentWindow);
 activateBackend(contentWindow);
 ```
 
-### Configuring a sandboxed `iframe`
+## Configuring a sandboxed `iframe`
 
 Sandboxed `iframe`s are also supported but require more complex initialization.
 
@@ -169,7 +173,7 @@ iframe.onload = () => {
 };
 ```
 
-### Advanced integration with custom "wall"
+## Advanced: Custom "wall"
 
 Below is an example of an advanced integration with a website like [Replay.io](https://replay.io/) or Code Sandbox's Sandpack (where more than one DevTools instance may be rendered per page).
 
@@ -235,25 +239,116 @@ const wall = {
 };
 ```
 
-## Local development
+## Advanced: Node + browser
+
+Below is an example of an advanced integration that could be used to connect React running in a Node process to React DevTools running in a browser.
+
+#### Sample Node "backend"
+```js
+const {
+  activate,
+  createBridge,
+  initialize,
+} = require('react-devtools-inline/backend');
+const { createServer } = require('http');
+const SocketIO = require('socket.io');
+
+const server = createServer();
+const socket = SocketIO(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: [],
+    credentials: true
+  }
+});
+socket.on('connection', client => {
+  const wall = {
+    listen(listener) {
+      client.on('message', data => {
+        if (data.uid === UID) {
+          listener(data);
+        }
+      });
+    },
+    send(event, payload) {
+      const data = {event, payload, uid: UID};
+      client.emit('message', data);
+    },
+  };
+
+  const bridge = createBridge(global, wall);
+
+  client.on('disconnect', () => {
+    bridge.shutdown();
+  });
+
+  activate(global, { bridge });
+});
+socket.listen(PORT);
+```
+
+#### Sample Web "frontend"
+```js
+import { createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import {
+  createBridge,
+  createStore,
+  initialize as createDevTools,
+} from 'react-devtools-inline/frontend';
+import { io } from "socket.io-client";
+
+let root = null;
+
+const socket = io(`http://${HOST}:${PORT}`);
+socket.on("connect", () => {
+  const wall = {
+    listen(listener) {
+      socket.on("message", (data) => {
+        if (data.uid === UID) {
+          listener(data);
+        }
+      });
+    },
+    send(event, payload) {
+      const data = { event, payload, uid: UID };
+      socket.emit('message', data);
+    },
+  };
+
+  const bridge = createBridge(window, wall);
+  const store = createStore(bridge);
+  const DevTools = createDevTools(window, { bridge, store });
+
+  root = createRoot(document.getElementById('root'));
+  root.render(createElement(DevTools));
+});
+socket.on("disconnect", () => {
+  root.unmount();
+  root = null;
+});
+```
+
+# Local development
 You can also build and test this package from source.
 
-### Prerequisite steps
+## Prerequisite steps
 DevTools depends on local versions of several NPM packages<sup>1</sup> also in this workspace. You'll need to either build or download those packages first.
 
 <sup>1</sup> Note that at this time, an _experimental_ build is required because DevTools depends on the `createRoot` API.
 
-#### Build from source
+### Build from source
 To build dependencies from source, run the following command from the root of the repository:
 ```sh
 yarn build-for-devtools
 ```
-#### Download from CI
+### Download from CI
 To use the latest build from CI, run the following command from the root of the repository:
 ```sh
 ./scripts/release/download-experimental-build.js
 ```
-### Build steps
+## Build steps
 Once the above packages have been built or downloaded, you can watch for changes made to the source code and automatically rebuild by running:
 ```sh
 yarn start

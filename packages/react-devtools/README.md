@@ -32,12 +32,12 @@ Run `react-devtools` from the terminal to launch the standalone DevTools app:
 react-devtools
 ```
 
-If you're not in a simulator then you also need to run the following in a command prompt:
+If you're not using a local simulator, you'll also need to forward ports used by React DevTools:
 ```sh
 adb reverse tcp:8097 tcp:8097
 ```
 
-If you're using React Native 0.43 or higher, it should connect to your simulator within a few seconds.
+If you're using React Native 0.43 or higher, it should connect to your simulator within a few seconds. (If this doesn't happen automatically, try reloading the React Native app.)
 
 ### Integration with React Native Inspector
 
