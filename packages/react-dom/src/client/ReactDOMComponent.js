@@ -73,6 +73,7 @@ import {
   enableTrustedTypesIntegration,
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnHydrationMismatch,
+  enableClientRenderFallbackOnTextMismatch,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -251,7 +252,7 @@ export function checkForUnmatchedText(
     }
   }
 
-  if (isConcurrentMode && enableClientRenderFallbackOnHydrationMismatch) {
+  if (isConcurrentMode && enableClientRenderFallbackOnTextMismatch) {
     // In concurrent roots, we throw when there's a text mismatch and revert to
     // client rendering, up to the nearest Suspense boundary.
     throw new Error('Text content does not match server-rendered HTML.');
