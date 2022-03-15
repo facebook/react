@@ -4,6 +4,13 @@
 
 ---
 
+### 4.24.1
+March 15, 2022
+
+* Disable unsupported Bridge protocol version dialog and add workaround for old protocol operations format ([bvaughn](https://github.com/bvaughn) in [#24093](https://github.com/facebook/react/pull/24093))
+
+---
+
 ### 4.24.0
 March 10, 2022
 
