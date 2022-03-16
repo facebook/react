@@ -9,6 +9,7 @@
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
 import type {Writable} from 'stream';
+import type {ServerContextJSONValue} from 'shared/ReactTypes';
 
 import {
   createRequest,
@@ -31,11 +32,13 @@ type Controls = {|
 function renderToPipeableStream(
   model: ReactModel,
   options?: Options,
+  context?: Array<[string, ServerContextJSONValue]>,
 ): Controls {
   const request = createRequest(
     model,
     {}, // Manifest, not used
     options ? options.onError : undefined,
+    context,
   );
   let hasStartedFlowing = false;
   startWork(request);
