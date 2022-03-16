@@ -24,11 +24,11 @@ type ClientProxy = {
   component: mixed,
 };
 
-function isReactComponent(component: any, name: string) {
+function isReactComponent(component: any, name: string, isNamed: boolean) {
   if (!component) return false;
 
   return (
-    (typeof component === 'function' && /^[A-Z]/.test(name)) ||
+    (typeof component === 'function' && (!isNamed || /^[A-Z]/.test(name))) ||
     typeof component.render === 'function' ||
     component.$$typeof === Symbol.for('react.element')
   );
@@ -38,7 +38,7 @@ function isReactComponent(component: any, name: string) {
 // runtime (RSC) and as a real component for the Fizz runtime (SSR).
 // Note that this is not used in browser environments.
 export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
-  if (!isReactComponent(component, name)) {
+  if (!isReactComponent(component, name, named)) {
     // This is not a React component, do not wrap it.
     return component;
   }
