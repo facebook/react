@@ -1,8 +1,6 @@
 # `react-devtools`
 
-React DevTools is available as a built-in extension for Chrome and Firefox browsers. This package enables you to debug a React app elsewhere (e.g. a mobile browser, an embedded webview, Safari, inside an iframe).
-
-It works both with React DOM and React Native.
+This package can be used to debug non-browser-based React applications (e.g. React Native, mobile browser or embedded webview, Safari).
 
 ![React DevTools screenshot](https://user-images.githubusercontent.com/29597/63811956-bdd9b580-c8dd-11e9-8962-c568e475c425.png)
 
