@@ -127,22 +127,19 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
       - run:
           name: Download artifacts for base revision
+          # TODO: We can't use the normal download-build script here because it
+          # depends on the CircleCI artifacts API, which was recently changed to
+          # require authorization. And we can't pass an authorization token
+          # without possibly leaking it to the public, since we run sizebot on
+          # PRs from external contributors. As a temporary workaround, this job
+          # will pull the artifacts from a public mirror that I set up. But we
+          # should find some other solution so we don't have to maintain
+          # the mirror.
           command: |
-              git fetch origin main
-              cd ./scripts/release && yarn && cd ../../
-              scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main)
-              mv ./build ./base-build
-      - run:
-          # TODO: The `download-experimental-build` script copies the npm
-          # packages into the `node_modules` directory. This is a historical
-          # quirk of how the release script works. Let's pretend they
-          # don't exist.
-          name: Delete extraneous files
-          command: rm -rf ./base-build/node_modules
+            curl -L --retry 60 --retry-delay 10 --retry-max-time 600 https://react-builds.vercel.app/api/commits/$(git merge-base HEAD origin/main)/artifacts/build.tgz | tar -xz
+            mv ./build ./base-build
 
       - persist_to_workspace:
           root: .
