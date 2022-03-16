@@ -14,6 +14,7 @@ import {createEventTarget, setPointerEvent} from 'dom-event-testing-library';
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
+let ReactDOMClient;
 let useFocusWithin;
 let act;
 let Scheduler;
@@ -26,6 +27,7 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableCreateEventHandleAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   Scheduler = require('scheduler');
   act = require('jest-react').act;
 
@@ -504,7 +506,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
         );
       };
 
-      const root = ReactDOM.createRoot(container2);
+      const root = ReactDOMClient.createRoot(container2);
 
       act(() => {
         root.render(<Component />);
@@ -563,7 +565,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
         );
       };
 
-      const root = ReactDOM.createRoot(container2);
+      const root = ReactDOMClient.createRoot(container2);
 
       act(() => {
         root.render(<Component />);

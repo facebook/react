@@ -3,18 +3,13 @@
 // This test harness mounts each test app as a separate root to test multi-root applications.
 
 import {createElement} from 'react';
-import {
-  // $FlowFixMe Flow does not yet know about createRoot()
-  createRoot,
-  render,
-  unmountComponentAtNode,
-} from 'react-dom';
+import {createRoot} from 'react-dom/client';
+import {render, unmountComponentAtNode} from 'react-dom';
 import DeeplyNestedComponents from './DeeplyNestedComponents';
 import Iframe from './Iframe';
 import EditableProps from './EditableProps';
 import ElementTypes from './ElementTypes';
 import Hydration from './Hydration';
-import InlineWarnings from './InlineWarnings';
 import InspectableElements from './InspectableElements';
 import ReactNativeWeb from './ReactNativeWeb';
 import ToDoList from './ToDoList';
@@ -87,7 +82,6 @@ function mountTestApp() {
   mountApp(Hydration);
   mountApp(ElementTypes);
   mountApp(EditableProps);
-  mountApp(InlineWarnings);
   mountApp(ReactNativeWeb);
   mountApp(Toggle);
   mountApp(ErrorBoundaries);

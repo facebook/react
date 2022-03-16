@@ -17,12 +17,12 @@ import {registrationNameModules} from './legacy-events/EventPluginRegistry';
 import {batchedUpdates} from './legacy-events/ReactGenericBatching';
 import {runEventsInBatch} from './legacy-events/EventBatching';
 import {plugins} from './legacy-events/EventPluginRegistry';
-import getListener from './ReactNativeGetListener';
+import getListeners from './ReactNativeGetListeners';
 import accumulateInto from './legacy-events/accumulateInto';
 
 import {getInstanceFromNode} from './ReactNativeComponentTree';
 
-export {getListener, registrationNameModules as registrationNames};
+export {getListeners, registrationNameModules as registrationNames};
 
 /**
  * Version of `ReactBrowserEventEmitter` that works on the receiving side of a

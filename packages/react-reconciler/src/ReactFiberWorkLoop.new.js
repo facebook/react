@@ -35,6 +35,7 @@ import {
   enableSchedulingProfiler,
   disableSchedulerTimeoutInWorkLoop,
   enableStrictEffects,
+  skipUnmountedBoundaries,
   enableUpdaterTracking,
   enableCache,
   enableTransitionTracing,
@@ -2537,7 +2538,13 @@ export function captureCommitPhaseError(
     return;
   }
 
-  let fiber = nearestMountedAncestor;
+  let fiber = null;
+  if (skipUnmountedBoundaries) {
+    fiber = nearestMountedAncestor;
+  } else {
+    fiber = sourceFiber.return;
+  }
+
   while (fiber !== null) {
     if (fiber.tag === HostRoot) {
       captureCommitPhaseErrorOnRoot(fiber, sourceFiber, error);
@@ -2570,9 +2577,14 @@ export function captureCommitPhaseError(
   }
 
   if (__DEV__) {
+    // TODO: Until we re-land skipUnmountedBoundaries (see #20147), this warning
+    // will fire for errors that are thrown by destroy functions inside deleted
+    // trees. What it should instead do is propagate the error to the parent of
+    // the deleted tree. In the meantime, do not add this warning to the
+    // allowlist; this is only for our internal use.
     console.error(
       'Internal React error: Attempted to capture a commit phase error ' +
-        'inside a detached tree. This indicates a bug in React. Potential ' +
+        'inside a detached tree. This indicates a bug in React. Likely ' +
         'causes include deleting the same fiber more than once, committing an ' +
         'already-finished tree, or an inconsistent return pointer.\n\n' +
         'Error message:\n\n%s',

@@ -31,3 +31,5 @@ export type OffscreenState = {|
   baseLanes: Lanes,
   cachePool: SpawnedCachePool | null,
 |};
+
+export type OffscreenInstance = {};

@@ -16,6 +16,7 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 describe('InspectedElement', () => {
   let React;
   let ReactDOM;
+  let ReactDOMClient;
   let PropTypes;
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
@@ -52,6 +53,7 @@ describe('InspectedElement', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     PropTypes = require('prop-types');
     TestUtilsAct = require('jest-react').act;
     TestRenderer = utils.requireTestRenderer();
@@ -457,7 +459,7 @@ describe('InspectedElement', () => {
     const prevInspectedElement = inspectedElement;
 
     // This test causes an intermediate error to be logged but we can ignore it.
-    console.error = () => {};
+    jest.spyOn(console, 'error').mockImplementation(() => {});
 
     // Wait for our check-for-updates poll to get the new data.
     jest.runOnlyPendingTimers();
@@ -506,7 +508,7 @@ describe('InspectedElement', () => {
     });
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     await utils.actAsync(() => root.render(<Target a={1} b="abc" />));
 
     expect(targetRenderCount).toBe(1);
@@ -2091,25 +2093,25 @@ describe('InspectedElement', () => {
     expect(inspectedElement.rootType).toMatchInlineSnapshot(`"render()"`);
   });
 
-  it('should display the root type for ReactDOM.hydrateRoot', async () => {
+  it('should display the root type for ReactDOMClient.hydrateRoot', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => {
       const container = document.createElement('div');
       container.innerHTML = '<div></div>';
-      ReactDOM.hydrateRoot(container).render(<Example />);
+      ReactDOMClient.hydrateRoot(container, <Example />);
     }, false);
 
     const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.rootType).toMatchInlineSnapshot(`"hydrateRoot()"`);
   });
 
-  it('should display the root type for ReactDOM.createRoot', async () => {
+  it('should display the root type for ReactDOMClient.createRoot', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => {
       const container = document.createElement('div');
-      ReactDOM.createRoot(container).render(<Example />);
+      ReactDOMClient.createRoot(container).render(<Example />);
     }, false);
 
     const inspectedElement = await inspectElementAtIndex(0);
@@ -2133,7 +2135,7 @@ describe('InspectedElement', () => {
 
     await utils.actAsync(() => {
       const container = document.createElement('div');
-      ReactDOM.createRoot(container).render(<Example />);
+      ReactDOMClient.createRoot(container).render(<Example />);
     }, false);
 
     shouldThrow = true;
@@ -2802,16 +2804,18 @@ describe('InspectedElement', () => {
       );
 
       // Suppress expected error and warning.
-      const originalError = console.error;
-      const originalWarn = console.warn;
-      console.error = () => {};
-      console.warn = () => {};
+      const consoleErrorMock = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const consoleWarnMock = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
 
       // now force error state on <Example />
       await toggleError(true);
 
-      console.error = originalError;
-      console.warn = originalWarn;
+      consoleErrorMock.mockRestore();
+      consoleWarnMock.mockRestore();
 
       // we are in error state now, <Example /> won't show up
       withErrorsOrWarningsIgnored(['Invalid index'], () => {

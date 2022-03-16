@@ -49,16 +49,16 @@ export default class ErrorBoundary extends Component<Props, State> {
     const errorMessage =
       typeof error === 'object' &&
       error !== null &&
-      error.hasOwnProperty('message')
+      typeof error.message === 'string'
         ? error.message
-        : String(error);
+        : null;
 
     const isTimeout = error instanceof TimeoutError;
 
     const callStack =
       typeof error === 'object' &&
       error !== null &&
-      error.hasOwnProperty('stack')
+      typeof error.stack === 'string'
         ? error.stack
             .split('\n')
             .slice(1)

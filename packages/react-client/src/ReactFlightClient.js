@@ -26,6 +26,8 @@ import {
 
 import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
+import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
+
 export type JSONValue =
   | number
   | null
@@ -327,6 +329,7 @@ export function parseModelTuple(
   value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
 ): any {
   const tuple: [mixed, mixed, mixed, mixed] = (value: any);
+
   if (tuple[0] === REACT_ELEMENT_TYPE) {
     // TODO: Consider having React just directly accept these arrays as elements.
     // Or even change the ReactElement type to be an array.
@@ -356,6 +359,21 @@ export function resolveModel(
   } else {
     resolveModelChunk(chunk, model);
   }
+}
+
+export function resolveProvider(
+  response: Response,
+  id: number,
+  contextName: string,
+): void {
+  const chunks = response._chunks;
+  chunks.set(
+    id,
+    createInitializedChunk(
+      response,
+      getOrCreateServerContext(contextName).Provider,
+    ),
+  );
 }
 
 export function resolveModule(

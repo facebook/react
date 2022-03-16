@@ -32,6 +32,7 @@ import type {Cache} from './ReactFiberCacheComponent.old';
 import {
   enableClientRenderFallbackOnHydrationMismatch,
   enableSuspenseAvoidThisFallback,
+  enableLegacyHidden,
 } from 'shared/ReactFeatureFlags';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
@@ -162,12 +163,9 @@ import {
 import {resetChildFibers} from './ReactChildFiber.old';
 import {createScopeInstance} from './ReactFiberScope.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
-import {
-  popCacheProvider,
-  popRootCachePool,
-  popCachePool,
-} from './ReactFiberCacheComponent.old';
+import {popCacheProvider} from './ReactFiberCacheComponent.old';
 import {popTreeContext} from './ReactFiberTreeContext.old';
+import {popRootTransition, popTransition} from './ReactFiberTransition.old';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -864,7 +862,7 @@ function completeWork(
     case HostRoot: {
       const fiberRoot = (workInProgress.stateNode: FiberRoot);
       if (enableCache) {
-        popRootCachePool(fiberRoot, renderLanes);
+        popRootTransition(fiberRoot, renderLanes);
 
         let previousCache: Cache | null = null;
         if (current !== null) {
@@ -1502,9 +1500,8 @@ function completeWork(
         const prevIsHidden = prevState !== null;
         if (
           prevIsHidden !== nextIsHidden &&
-          newProps.mode !== 'unstable-defer-without-hiding' &&
           // LegacyHidden doesn't do any hiding — it only pre-renders.
-          workInProgress.tag !== LegacyHiddenComponent
+          (!enableLegacyHidden || workInProgress.tag !== LegacyHiddenComponent)
         ) {
           workInProgress.flags |= Visibility;
         }
@@ -1522,9 +1519,9 @@ function completeWork(
             // If so, we need to hide those nodes in the commit phase, so
             // schedule a visibility effect.
             if (
-              workInProgress.tag !== LegacyHiddenComponent &&
-              workInProgress.subtreeFlags & (Placement | Update) &&
-              newProps.mode !== 'unstable-defer-without-hiding'
+              (!enableLegacyHidden ||
+                workInProgress.tag !== LegacyHiddenComponent) &&
+              workInProgress.subtreeFlags & (Placement | Update)
             ) {
               workInProgress.flags |= Visibility;
             }
@@ -1553,7 +1550,7 @@ function completeWork(
           workInProgress.flags |= Passive;
         }
         if (current !== null) {
-          popCachePool(workInProgress);
+          popTransition(workInProgress);
         }
       }
 

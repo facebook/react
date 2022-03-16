@@ -105,12 +105,10 @@ describe('ReactDOMFizzServer', () => {
           <Wait />
         </Suspense>
       </div>,
-      {
-        onCompleteAll() {
-          isComplete = true;
-        },
-      },
     );
+
+    stream.allReady.then(() => (isComplete = true));
+
     await jest.runAllTimers();
     expect(isComplete).toBe(false);
     // Resolve the loading.
@@ -210,5 +208,84 @@ describe('ReactDOMFizzServer', () => {
 
     const result = await readResult(stream);
     expect(result).toContain('Loading');
+  });
+
+  // @gate experimental
+  it('should not continue rendering after the reader cancels', async () => {
+    let hasLoaded = false;
+    let resolve;
+    let isComplete = false;
+    let rendered = false;
+    const promise = new Promise(r => (resolve = r));
+    function Wait() {
+      if (!hasLoaded) {
+        throw promise;
+      }
+      rendered = true;
+      return 'Done';
+    }
+    const stream = await ReactDOMFizzServer.renderToReadableStream(
+      <div>
+        <Suspense fallback={<div>Loading</div>}>
+          <Wait /> />
+        </Suspense>
+      </div>,
+    );
+
+    stream.allReady.then(() => (isComplete = true));
+
+    expect(rendered).toBe(false);
+    expect(isComplete).toBe(false);
+
+    const reader = stream.getReader();
+    reader.cancel();
+
+    hasLoaded = true;
+    resolve();
+
+    await jest.runAllTimers();
+
+    expect(rendered).toBe(false);
+    expect(isComplete).toBe(true);
+  });
+
+  // @gate experimental
+  it('should stream large contents that might overlow individual buffers', async () => {
+    const str492 = `(492) This string is intentionally 492 bytes long because we want to make sure we process chunks that will overflow buffer boundaries. It will repeat to fill out the bytes required (inclusive of this prompt):: foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux q :: total count (492)`;
+    const str2049 = `(2049) This string is intentionally 2049 bytes long because we want to make sure we process chunks that will overflow buffer boundaries. It will repeat to fill out the bytes required (inclusive of this prompt):: foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy  :: total count (2049)`;
+
+    // this specific layout is somewhat contrived to exercise the landing on
+    // an exact view boundary. it's not critical to test this edge case but
+    // since we are setting up a test in general for larger chunks I contrived it
+    // as such for now. I don't think it needs to be maintained if in the future
+    // the view sizes change or become dynamic becasue of the use of byobRequest
+    let stream;
+    stream = await ReactDOMFizzServer.renderToReadableStream(
+      <>
+        <div>
+          <span>{''}</span>
+        </div>
+        <div>{str492}</div>
+        <div>{str492}</div>
+      </>,
+    );
+
+    let result;
+    result = await readResult(stream);
+    expect(result).toMatchInlineSnapshot(
+      `"<div><span></span></div><div>${str492}</div><div>${str492}</div>"`,
+    );
+
+    // this size 2049 was chosen to be a couple base 2 orders larger than the current view
+    // size. if the size changes in the future hopefully this will still exercise
+    // a chunk that is too large for the view size.
+    stream = await ReactDOMFizzServer.renderToReadableStream(
+      <>
+        <div>{str2049}</div>
+      </>,
+    );
+
+    result = await readResult(stream);
+    expect(result).toMatchInlineSnapshot(`"<div>${str2049}</div>"`);
   });
 });

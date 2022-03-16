@@ -15,6 +15,7 @@ describe('ProfilingCache', () => {
   let PropTypes;
   let React;
   let ReactDOM;
+  let ReactDOMClient;
   let Scheduler;
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
@@ -36,6 +37,7 @@ describe('ProfilingCache', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     TestRenderer = utils.requireTestRenderer();
   });
@@ -108,10 +110,7 @@ describe('ProfilingCache', () => {
       });
     }
 
-    // No profiling data gets logged for the 2nd root (container B)
-    // because it doesn't render anything while profiling.
-    // (Technically it unmounts but we don't profile root unmounts.)
-    expect(allProfilingDataForRoots).toHaveLength(2);
+    expect(allProfilingDataForRoots).toHaveLength(3);
 
     utils.exportImportHelper(bridge, store);
 
@@ -771,7 +770,7 @@ describe('ProfilingCache', () => {
       return <>{!childUnmounted && <Child />}</>;
     }
 
-    const root = ReactDOM.createRoot(document.createElement('div'));
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     utils.act(() => root.render(<App />));
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => setChildUnmounted(true));
@@ -805,7 +804,7 @@ describe('ProfilingCache', () => {
       return <>{!childUnmounted && <Child />}</>;
     }
 
-    const root = ReactDOM.createRoot(document.createElement('div'));
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     utils.act(() => root.render(<App />));
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => setChildUnmounted(true));
@@ -834,7 +833,7 @@ describe('ProfilingCache', () => {
       return <>{!childUnmounted && <Child />}</>;
     }
 
-    const root = ReactDOM.createRoot(document.createElement('div'));
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     utils.act(() => root.render(<App />));
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => setChildUnmounted(true));

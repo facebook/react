@@ -23,7 +23,7 @@ global.__webpack_require__ = function(id) {
 
 let act;
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactServerDOMWriter;
 let ReactServerDOMReader;
 
@@ -34,7 +34,7 @@ describe('ReactFlightDOMBrowser', () => {
     webpackMap = {};
     act = require('jest-react').act;
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactServerDOMWriter = require('react-server-dom-webpack/writer.browser.server');
     ReactServerDOMReader = require('react-server-dom-webpack');
   });
@@ -270,7 +270,7 @@ describe('ReactFlightDOMBrowser', () => {
     const response = ReactServerDOMReader.createFromReadableStream(stream);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(
         <Suspense fallback={<p>(loading)</p>}>

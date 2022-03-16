@@ -29,7 +29,10 @@ import type {
   SpawnedCachePool,
 } from './ReactFiberCacheComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
-import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
+import {
+  enableSuspenseAvoidThisFallback,
+  enableCPUSuspense,
+} from 'shared/ReactFeatureFlags';
 
 import checkPropTypes from 'shared/checkPropTypes';
 import {
@@ -95,6 +98,7 @@ import {
   enableSchedulingProfiler,
   enablePersistentOffscreenHostContainer,
   enableTransitionTracing,
+  enableLegacyHidden,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -229,15 +233,7 @@ import {
   getWorkInProgressTransitions,
 } from './ReactFiberWorkLoop.new';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
-import {
-  requestCacheFromPool,
-  pushCacheProvider,
-  pushRootCachePool,
-  CacheContext,
-  getSuspendedCachePool,
-  pushSpawnedCachePool,
-  getOffscreenDeferredCachePool,
-} from './ReactFiberCacheComponent.new';
+import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent.new';
 import {createCapturedValue} from './ReactCapturedValue';
 import {createClassErrorUpdate} from './ReactFiberThrow.new';
 import {completeSuspendedOffscreenHostContainer} from './ReactFiberCompleteWork.new';
@@ -248,6 +244,13 @@ import {
   pushTreeId,
   pushMaterializedTreeId,
 } from './ReactFiberTreeContext.new';
+import {
+  requestCacheFromPool,
+  pushRootTransition,
+  getSuspendedCache,
+  pushTransition,
+  getOffscreenDeferredCache,
+} from './ReactFiberTransition.new';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -638,7 +641,7 @@ function updateOffscreenComponent(
 
   if (
     nextProps.mode === 'hidden' ||
-    nextProps.mode === 'unstable-defer-without-hiding'
+    (enableLegacyHidden && nextProps.mode === 'unstable-defer-without-hiding')
   ) {
     // Rendering a hidden tree.
     if ((workInProgress.mode & ConcurrentMode) === NoMode) {
@@ -652,7 +655,7 @@ function updateOffscreenComponent(
         // push the cache pool even though we're going to bail out
         // because otherwise there'd be a context mismatch
         if (current !== null) {
-          pushSpawnedCachePool(workInProgress, null);
+          pushTransition(workInProgress, null);
         }
       }
       pushRenderLanes(workInProgress, renderLanes);
@@ -666,7 +669,7 @@ function updateOffscreenComponent(
         nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes);
         if (enableCache) {
           // Save the cache pool so we can resume later.
-          spawnedCachePool = getOffscreenDeferredCachePool();
+          spawnedCachePool = getOffscreenDeferredCache();
         }
       } else {
         nextBaseLanes = renderLanes;
@@ -686,7 +689,7 @@ function updateOffscreenComponent(
         // push the cache pool even though we're going to bail out
         // because otherwise there'd be a context mismatch
         if (current !== null) {
-          pushSpawnedCachePool(workInProgress, null);
+          pushTransition(workInProgress, null);
         }
       }
 
@@ -724,7 +727,7 @@ function updateOffscreenComponent(
         // using the same cache. Unless the parent changed, since that means
         // there was a refresh.
         const prevCachePool = prevState !== null ? prevState.cachePool : null;
-        pushSpawnedCachePool(workInProgress, prevCachePool);
+        pushTransition(workInProgress, prevCachePool);
       }
 
       pushRenderLanes(workInProgress, subtreeRenderLanes);
@@ -742,7 +745,7 @@ function updateOffscreenComponent(
         // using the same cache. Unless the parent changed, since that means
         // there was a refresh.
         const prevCachePool = prevState.cachePool;
-        pushSpawnedCachePool(workInProgress, prevCachePool);
+        pushTransition(workInProgress, prevCachePool);
       }
 
       // Since we're not hidden anymore, reset the state
@@ -758,7 +761,7 @@ function updateOffscreenComponent(
         // using the same cache. Unless the parent changed, since that means
         // there was a refresh.
         if (current !== null) {
-          pushSpawnedCachePool(workInProgress, null);
+          pushTransition(workInProgress, null);
         }
       }
     }
@@ -772,7 +775,7 @@ function updateOffscreenComponent(
     // or some other infra that expects a HostComponent.
     const isHidden =
       nextProps.mode === 'hidden' &&
-      workInProgress.tag !== LegacyHiddenComponent;
+      (!enableLegacyHidden || workInProgress.tag !== LegacyHiddenComponent);
     const offscreenContainer = reconcileOffscreenHostContainer(
       current,
       workInProgress,
@@ -1329,7 +1332,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
 
   if (enableCache) {
     const nextCache: Cache = nextState.cache;
-    pushRootCachePool(root);
+    pushRootTransition(root);
     pushCacheProvider(workInProgress, nextCache);
     if (nextCache !== prevState.cache) {
       // The root cache refreshed.
@@ -1910,7 +1913,7 @@ const SUSPENDED_MARKER: SuspenseState = {
 function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
   return {
     baseLanes: renderLanes,
-    cachePool: getSuspendedCachePool(),
+    cachePool: getSuspendedCache(),
   };
 }
 
@@ -1939,7 +1942,7 @@ function updateSuspenseOffscreenState(
       }
     } else {
       // If there's no previous cache pool, grab the current one.
-      cachePool = getSuspendedCachePool();
+      cachePool = getSuspendedCache();
     }
   }
   return {
@@ -2092,7 +2095,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
       return fallbackFragment;
-    } else if (typeof nextProps.unstable_expectedLoadTime === 'number') {
+    } else if (
+      enableCPUSuspense &&
+      typeof nextProps.unstable_expectedLoadTime === 'number'
+    ) {
       // This is a CPU-bound tree. Skip this tree and show a placeholder to
       // unblock the surrounding content. Then immediately retry after the
       // initial commit.
@@ -2628,7 +2634,7 @@ function mountDehydratedSuspenseComponent(
       console.error(
         'Cannot hydrate Suspense in legacy mode. Switch from ' +
           'ReactDOM.hydrate(element, container) to ' +
-          'ReactDOM.hydrateRoot(container, <App />)' +
+          'ReactDOMClient.hydrateRoot(container, <App />)' +
           '.render(element) or remove the Suspense components from ' +
           'the server rendered components.',
       );
@@ -3504,7 +3510,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       if (enableCache) {
         const cache: Cache = current.memoizedState.cache;
         pushCacheProvider(workInProgress, cache);
-        pushRootCachePool(root);
+        pushRootTransition(root);
       }
       if (enableTransitionTracing) {
         workInProgress.memoizedState.transitions = getWorkInProgressTransitions();
@@ -3943,7 +3949,14 @@ function beginWork(
       return updateOffscreenComponent(current, workInProgress, renderLanes);
     }
     case LegacyHiddenComponent: {
-      return updateLegacyHiddenComponent(current, workInProgress, renderLanes);
+      if (enableLegacyHidden) {
+        return updateLegacyHiddenComponent(
+          current,
+          workInProgress,
+          renderLanes,
+        );
+      }
+      break;
     }
     case CacheComponent: {
       if (enableCache) {

@@ -146,17 +146,6 @@ const STYLE = 'style';
 let eventsEnabled: ?boolean = null;
 let selectionInformation: null | SelectionInformation = null;
 
-function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
-  switch (type) {
-    case 'button':
-    case 'input':
-    case 'select':
-    case 'textarea':
-      return !!props.autoFocus;
-  }
-  return false;
-}
-
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 
 export function getRootHostContext(
@@ -307,7 +296,17 @@ export function finalizeInitialChildren(
   hostContext: HostContext,
 ): boolean {
   setInitialProperties(domElement, type, props, rootContainerInstance);
-  return shouldAutoFocusHostComponent(type, props);
+  switch (type) {
+    case 'button':
+    case 'input':
+    case 'select':
+    case 'textarea':
+      return !!props.autoFocus;
+    case 'img':
+      return true;
+    default:
+      return false;
+  }
 }
 
 export function prepareUpdate(
@@ -428,12 +427,25 @@ export function commitMount(
   // does to implement the `autoFocus` attribute on the client). But
   // there are also other cases when this might happen (such as patching
   // up text content during hydration mismatch). So we'll check this again.
-  if (shouldAutoFocusHostComponent(type, newProps)) {
-    ((domElement: any):
-      | HTMLButtonElement
-      | HTMLInputElement
-      | HTMLSelectElement
-      | HTMLTextAreaElement).focus();
+  switch (type) {
+    case 'button':
+    case 'input':
+    case 'select':
+    case 'textarea':
+      if (newProps.autoFocus) {
+        ((domElement: any):
+          | HTMLButtonElement
+          | HTMLInputElement
+          | HTMLSelectElement
+          | HTMLTextAreaElement).focus();
+      }
+      return;
+    case 'img': {
+      if ((newProps: any).src) {
+        ((domElement: any): HTMLImageElement).src = (newProps: any).src;
+      }
+      return;
+    }
   }
 }
 
@@ -786,6 +798,7 @@ export function hydrateInstance(
   rootContainerInstance: Container,
   hostContext: HostContext,
   internalInstanceHandle: Object,
+  shouldWarnDev: boolean,
 ): null | Array<mixed> {
   precacheFiberNode(internalInstanceHandle, instance);
   // TODO: Possibly defer this until the commit phase where all the events
@@ -811,6 +824,7 @@ export function hydrateInstance(
     parentNamespace,
     rootContainerInstance,
     isConcurrentMode,
+    shouldWarnDev,
   );
 }
 
@@ -818,6 +832,7 @@ export function hydrateTextInstance(
   textInstance: TextInstance,
   text: string,
   internalInstanceHandle: Object,
+  shouldWarnDev: boolean,
 ): boolean {
   precacheFiberNode(internalInstanceHandle, textInstance);
 
@@ -924,7 +939,13 @@ export function didNotMatchHydratedContainerTextInstance(
   text: string,
   isConcurrentMode: boolean,
 ) {
-  checkForUnmatchedText(textInstance.nodeValue, text, isConcurrentMode);
+  const shouldWarnDev = true;
+  checkForUnmatchedText(
+    textInstance.nodeValue,
+    text,
+    isConcurrentMode,
+    shouldWarnDev,
+  );
 }
 
 export function didNotMatchHydratedTextInstance(
@@ -936,7 +957,13 @@ export function didNotMatchHydratedTextInstance(
   isConcurrentMode: boolean,
 ) {
   if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    checkForUnmatchedText(textInstance.nodeValue, text, isConcurrentMode);
+    const shouldWarnDev = true;
+    checkForUnmatchedText(
+      textInstance.nodeValue,
+      text,
+      isConcurrentMode,
+      shouldWarnDev,
+    );
   }
 }
 

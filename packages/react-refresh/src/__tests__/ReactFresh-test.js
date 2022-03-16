@@ -13,6 +13,7 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactFreshRuntime;
 let Scheduler;
 let act;
@@ -28,6 +29,7 @@ describe('ReactFresh', () => {
       ReactFreshRuntime = require('react-refresh/runtime');
       ReactFreshRuntime.injectIntoGlobalHook(global);
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
       act = require('jest-react').act;
       createReactClass = require('create-react-class/factory')(
@@ -2409,107 +2411,106 @@ describe('ReactFresh', () => {
     }
   });
 
+  // @gate www && __DEV__
   it('can hot reload offscreen components', async () => {
-    if (__DEV__ && __EXPERIMENTAL__) {
-      const AppV1 = prepare(() => {
-        function Hello() {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('Hello#layout');
-          });
-          const [val, setVal] = React.useState(0);
-          return (
-            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
-              {val}
-            </p>
-          );
-        }
-        $RefreshReg$(Hello, 'Hello');
-
-        return function App({offscreen}) {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('App#layout');
-          });
-          return (
-            <LegacyHiddenDiv mode={offscreen ? 'hidden' : 'visible'}>
-              <Hello />
-            </LegacyHiddenDiv>
-          );
-        };
-      });
-
-      const root = ReactDOM.createRoot(container);
-      root.render(<AppV1 offscreen={true} />);
-      expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
-      const el = container.firstChild;
-      expect(el.hidden).toBe(true);
-      expect(el.firstChild).toBe(null); // Offscreen content not flushed yet.
-
-      // Perform a hot update.
-      patch(() => {
-        function Hello() {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('Hello#layout');
-          });
-          const [val, setVal] = React.useState(0);
-          return (
-            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
-              {val}
-            </p>
-          );
-        }
-        $RefreshReg$(Hello, 'Hello');
-      });
-
-      // It's still offscreen so we don't see anything.
-      expect(container.firstChild).toBe(el);
-      expect(el.hidden).toBe(true);
-      expect(el.firstChild).toBe(null);
-
-      // Process the offscreen updates.
-      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
-      expect(container.firstChild).toBe(el);
-      expect(el.firstChild.textContent).toBe('0');
-      expect(el.firstChild.style.color).toBe('red');
-
-      await act(async () => {
-        el.firstChild.dispatchEvent(
-          new MouseEvent('click', {
-            bubbles: true,
-          }),
+    const AppV1 = prepare(() => {
+      function Hello() {
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('Hello#layout');
+        });
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
         );
-      });
+      }
+      $RefreshReg$(Hello, 'Hello');
 
-      expect(Scheduler).toHaveYielded(['Hello#layout']);
-      expect(el.firstChild.textContent).toBe('1');
-      expect(el.firstChild.style.color).toBe('red');
+      return function App({offscreen}) {
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('App#layout');
+        });
+        return (
+          <LegacyHiddenDiv mode={offscreen ? 'hidden' : 'visible'}>
+            <Hello />
+          </LegacyHiddenDiv>
+        );
+      };
+    });
 
-      // Hot reload while we're offscreen.
-      patch(() => {
-        function Hello() {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('Hello#layout');
-          });
-          const [val, setVal] = React.useState(0);
-          return (
-            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
-              {val}
-            </p>
-          );
-        }
-        $RefreshReg$(Hello, 'Hello');
-      });
+    const root = ReactDOMClient.createRoot(container);
+    root.render(<AppV1 offscreen={true} />);
+    expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
+    const el = container.firstChild;
+    expect(el.hidden).toBe(true);
+    expect(el.firstChild).toBe(null); // Offscreen content not flushed yet.
 
-      // It's still offscreen so we don't see the updates.
-      expect(container.firstChild).toBe(el);
-      expect(el.firstChild.textContent).toBe('1');
-      expect(el.firstChild.style.color).toBe('red');
+    // Perform a hot update.
+    patch(() => {
+      function Hello() {
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('Hello#layout');
+        });
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      $RefreshReg$(Hello, 'Hello');
+    });
 
-      // Process the offscreen updates.
-      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
-      expect(container.firstChild).toBe(el);
-      expect(el.firstChild.textContent).toBe('1');
-      expect(el.firstChild.style.color).toBe('orange');
-    }
+    // It's still offscreen so we don't see anything.
+    expect(container.firstChild).toBe(el);
+    expect(el.hidden).toBe(true);
+    expect(el.firstChild).toBe(null);
+
+    // Process the offscreen updates.
+    expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+    expect(container.firstChild).toBe(el);
+    expect(el.firstChild.textContent).toBe('0');
+    expect(el.firstChild.style.color).toBe('red');
+
+    await act(async () => {
+      el.firstChild.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+        }),
+      );
+    });
+
+    expect(Scheduler).toHaveYielded(['Hello#layout']);
+    expect(el.firstChild.textContent).toBe('1');
+    expect(el.firstChild.style.color).toBe('red');
+
+    // Hot reload while we're offscreen.
+    patch(() => {
+      function Hello() {
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('Hello#layout');
+        });
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      $RefreshReg$(Hello, 'Hello');
+    });
+
+    // It's still offscreen so we don't see the updates.
+    expect(container.firstChild).toBe(el);
+    expect(el.firstChild.textContent).toBe('1');
+    expect(el.firstChild.style.color).toBe('red');
+
+    // Process the offscreen updates.
+    expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+    expect(container.firstChild).toBe(el);
+    expect(el.firstChild.textContent).toBe('1');
+    expect(el.firstChild.style.color).toBe('orange');
   });
 
   it('remounts failed error boundaries (componentDidCatch)', () => {

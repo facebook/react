@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactTestUtils;
 let act;
 let Scheduler;
@@ -20,6 +21,7 @@ describe('ReactUpdates', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
@@ -1300,7 +1302,7 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
 
-  // @gate experimental || www
+  // @gate www
   it('delays sync updates inside hidden subtrees in Concurrent Mode', () => {
     const container = document.createElement('div');
 
@@ -1332,7 +1334,7 @@ describe('ReactUpdates', () => {
       );
     }
 
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     let hiddenDiv;
     act(() => {
       root.render(<Foo />);
@@ -1709,7 +1711,7 @@ describe('ReactUpdates', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     expect(() => {
       ReactDOM.flushSync(() => {
         root.render(<NonTerminating />);

@@ -310,7 +310,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Everything is fine.')]);
   });
 
-  // @gate experimental || www
+  // @gate www
   it('does not include offscreen work when retrying after an error', () => {
     function App(props) {
       if (props.isBroken) {
@@ -1017,6 +1017,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(Scheduler).toFlushAndYield(['Foo']);
   });
 
+  // @gate skipUnmountedBoundaries
   it('should not attempt to recover an unmounting error boundary', () => {
     class Parent extends React.Component {
       componentWillUnmount() {

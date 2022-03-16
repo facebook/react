@@ -13,6 +13,7 @@ let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let Scheduler;
 let act;
 let useState;
@@ -46,6 +47,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     useState = React.useState;
     useEffect = React.useEffect;
@@ -90,7 +92,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       // the correct behavior, despite the fact that the legacy root API
       // triggers a warning in 18), write a test that uses
       // createLegacyRoot directly.
-      return ReactDOM.createRoot(container);
+      return ReactDOMClient.createRoot(container);
     } else {
       ReactDOM.render(null, container);
       return {
@@ -745,7 +747,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       if (gate(flags => !flags.enableUseSyncExternalStoreShim)) {
         act(() => {
-          ReactDOM.hydrateRoot(container, <App />);
+          ReactDOMClient.hydrateRoot(container, <App />);
         });
         expect(Scheduler).toHaveYielded([
           // First it hydrates the server rendered HTML

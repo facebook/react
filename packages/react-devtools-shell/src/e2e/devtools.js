@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import * as ReactDOMClient from 'react-dom/client';
 import {
   activate as activateBackend,
   initialize as initializeBackend,
@@ -33,7 +34,7 @@ function init(appIframe, devtoolsContainer, appSource) {
 
   inject(contentDocument, appSource, () => {
     // $FlowFixMe Flow doesn't know about createRoot() yet.
-    ReactDOM.createRoot(devtoolsContainer).render(
+    ReactDOMClient.createRoot(devtoolsContainer).render(
       <DevTools
         hookNamesModuleLoaderFunction={hookNamesModuleLoaderFunction}
         showTabBar={true}

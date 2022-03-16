@@ -12,6 +12,7 @@
 let React;
 
 let ReactDOM;
+let ReactDOMClient;
 let Scheduler;
 let act;
 
@@ -23,6 +24,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     container = document.createElement('div');
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
 
@@ -65,7 +67,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       );
     }
 
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     await act(() => {
       root.render(<Form />);
     });
@@ -121,7 +123,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       );
     }
 
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     root.render(<Form />);
     // Flush
     Scheduler.unstable_flushAll();
@@ -181,7 +183,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       );
     }
 
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     root.render(<Form />);
     // Flush
     Scheduler.unstable_flushAll();
@@ -212,7 +214,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
   });
 
   it('mouse over should be user-blocking but not discrete', async () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     const target = React.createRef(null);
     function Foo() {
@@ -242,7 +244,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
   });
 
   it('mouse enter should be user-blocking but not discrete', async () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     const target = React.createRef(null);
     function Foo() {
@@ -274,7 +276,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
   });
 
   it('continuous native events flush as expected', async () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     const target = React.createRef(null);
     function Foo({hovered}) {
@@ -313,7 +315,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
   });
 
   it('should batch inside native events', async () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     const target = React.createRef(null);
     function Foo() {
@@ -349,7 +351,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
   });
 
   it('should not flush discrete events at the end of outermost batchedUpdates', async () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     let target;
     function Foo() {

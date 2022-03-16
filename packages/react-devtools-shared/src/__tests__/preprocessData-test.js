@@ -12,6 +12,7 @@
 describe('Timeline profiler', () => {
   let React;
   let ReactDOM;
+  let ReactDOMClient;
   let Scheduler;
   let utils;
 
@@ -76,6 +77,7 @@ describe('Timeline profiler', () => {
 
       React = require('react');
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
 
       setPerformanceMock = require('react-devtools-shared/src/backend/profilingHooks')
@@ -797,7 +799,7 @@ describe('Timeline profiler', () => {
           return true;
         }
 
-        const root = ReactDOM.createRoot(document.createElement('div'));
+        const root = ReactDOMClient.createRoot(document.createElement('div'));
         utils.act(() => root.render(<App />));
 
         const data = await preprocessData([
@@ -1222,7 +1224,7 @@ describe('Timeline profiler', () => {
 
         const testMarks = [creactCpuProfilerSample()];
 
-        const root = ReactDOM.createRoot(document.createElement('div'));
+        const root = ReactDOMClient.createRoot(document.createElement('div'));
         utils.act(() =>
           root.render(
             <React.Suspense fallback="Loading...">
@@ -1342,7 +1344,9 @@ describe('Timeline profiler', () => {
             // Advance the clock by some arbitrary amount.
             startTime += 50000;
 
-            const root = ReactDOM.createRoot(document.createElement('div'));
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
 
             // Temporarily turn off the act environment, since we're intentionally using Scheduler instead.
             global.IS_REACT_ACT_ENVIRONMENT = false;
@@ -1398,7 +1402,9 @@ describe('Timeline profiler', () => {
               return didMount;
             }
 
-            const root = ReactDOM.createRoot(document.createElement('div'));
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
             utils.act(() => {
               root.render(<Component />);
             });
@@ -1434,7 +1440,9 @@ describe('Timeline profiler', () => {
               }
             }
 
-            const root = ReactDOM.createRoot(document.createElement('div'));
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
             utils.act(() => {
               root.render(<Component />);
             });
@@ -1471,7 +1479,9 @@ describe('Timeline profiler', () => {
 
             const cpuProfilerSample = creactCpuProfilerSample();
 
-            const root = ReactDOM.createRoot(document.createElement('div'));
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
             utils.act(() => {
               root.render(<Component />);
             });
@@ -1530,7 +1540,9 @@ describe('Timeline profiler', () => {
 
             const cpuProfilerSample = creactCpuProfilerSample();
 
-            const root = ReactDOM.createRoot(document.createElement('div'));
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
             utils.act(() => {
               root.render(<Component />);
             });
@@ -1599,7 +1611,9 @@ describe('Timeline profiler', () => {
 
             const cpuProfilerSample = creactCpuProfilerSample();
 
-            const root = ReactDOM.createRoot(document.createElement('div'));
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
             utils.act(() => {
               root.render(<Component />);
             });
@@ -1664,7 +1678,9 @@ describe('Timeline profiler', () => {
 
             const cpuProfilerSample = creactCpuProfilerSample();
 
-            const root = ReactDOM.createRoot(document.createElement('div'));
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
             utils.act(() => {
               root.render(<Component />);
             });
@@ -1730,7 +1746,9 @@ describe('Timeline profiler', () => {
             const testMarks = [creactCpuProfilerSample()];
 
             // Mount and commit the app
-            const root = ReactDOM.createRoot(document.createElement('div'));
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
             utils.act(() =>
               root.render(
                 <ErrorBoundary>
@@ -1775,7 +1793,9 @@ describe('Timeline profiler', () => {
             }
 
             // Mount and commit the app
-            const root = ReactDOM.createRoot(document.createElement('div'));
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
             utils.act(() =>
               root.render(
                 <React.Suspense fallback="Loading...">
@@ -1830,7 +1850,9 @@ describe('Timeline profiler', () => {
             }
 
             // Mount and commit the app
-            const root = ReactDOM.createRoot(document.createElement('div'));
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
             utils.act(() =>
               root.render(
                 <React.Suspense fallback="Loading...">
@@ -1881,6 +1903,7 @@ describe('Timeline profiler', () => {
 
       React = require('react');
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
 
       store = global.store;
@@ -2071,7 +2094,7 @@ describe('Timeline profiler', () => {
         return true;
       }
 
-      const root = ReactDOM.createRoot(document.createElement('div'));
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
       utils.act(() => root.render(<App />));
       utils.act(() => store.profilerStore.stopProfiling());
 

@@ -12,6 +12,7 @@ import type {Response} from './ReactFlightClientHostConfigStream';
 import {
   resolveModule,
   resolveModel,
+  resolveProvider,
   resolveSymbol,
   resolveError,
   createResponse as createResponseBase,
@@ -47,6 +48,10 @@ function processFullRow(response: Response, row: string): void {
     }
     case 'M': {
       resolveModule(response, id, text);
+      return;
+    }
+    case 'P': {
+      resolveProvider(response, id, text);
       return;
     }
     case 'S': {

@@ -9,7 +9,7 @@
 
 let act;
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let JSResourceReference;
 let ReactDOMFlightRelayServer;
 let ReactDOMFlightRelayClient;
@@ -21,7 +21,7 @@ describe('ReactFlightDOMRelay', () => {
 
     act = require('jest-react').act;
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMFlightRelayServer = require('react-server-dom-relay/server');
     ReactDOMFlightRelayClient = require('react-server-dom-relay');
     JSResourceReference = require('JSResourceReference');
@@ -100,7 +100,7 @@ describe('ReactFlightDOMRelay', () => {
     const modelClient = readThrough(transport);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     act(() => {
       root.render(modelClient.greeting);
     });

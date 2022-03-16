@@ -27,6 +27,7 @@
     "LICENSE",
     "README.md",
     "index.js",
+    "client.js",
     "profiling.js",
     "server.js",
     "server.browser.js",
@@ -38,6 +39,7 @@
   ],
   "exports": {
     ".": "./index.js",
+    "./client": "./client.js",
     "./server": {
       "deno": "./server.browser.js",
       "worker": "./server.browser.js",

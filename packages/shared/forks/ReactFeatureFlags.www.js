@@ -24,6 +24,7 @@ export const {
   enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
+  skipUnmountedBoundaries,
   createRootStrictEffectsByDefault,
   enableUseRefAccessWarning,
   disableNativeComponentFrames,
@@ -50,6 +51,7 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableSuspenseLayoutEffectSemantics = true;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
+export const enableCPUSuspense = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler =
@@ -84,6 +86,8 @@ export const enableScopeAPI = true;
 
 export const enableSuspenseCallback = true;
 
+export const enableLegacyHidden = true;
+
 export const enableComponentStackLocations = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
@@ -100,6 +104,7 @@ export const deletedTreeCleanUpLevel = 3;
 export const enablePersistentOffscreenHostContainer = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
+export const enableServerContext = true;
 
 // Some www surfaces are still using this. Remove once they have been migrated.
 export const enableUseMutableSource = true;

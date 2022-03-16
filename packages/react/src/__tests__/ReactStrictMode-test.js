@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
 let PropTypes;
@@ -22,6 +23,7 @@ describe('ReactStrictMode', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
   });
 
@@ -361,6 +363,7 @@ describe('Concurrent Mode', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
   });
 
@@ -406,7 +409,7 @@ describe('Concurrent Mode', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     root.render(<StrictRoot />);
     expect(() => Scheduler.unstable_flushAll()).toErrorDev(
       [
@@ -468,7 +471,7 @@ Please update the following components: App`,
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     root.render(<StrictRoot />);
 
     expect(() => {
@@ -544,7 +547,7 @@ Please update the following components: Parent`,
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     root.render(<StrictRoot foo={true} />);
     expect(() =>
       Scheduler.unstable_flushAll(),
@@ -623,6 +626,7 @@ describe('symbol checks', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
   });
 
   it('should switch from StrictMode to a Fragment and reset state', () => {
@@ -735,6 +739,7 @@ describe('string refs', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
   });
 
   it('should warn within a strict tree', () => {
@@ -820,6 +825,7 @@ describe('context legacy', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     PropTypes = require('prop-types');
   });
 
@@ -900,6 +906,7 @@ describe('context legacy', () => {
       jest.resetModules();
       React = require('react');
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
     });
 
     if (ReactFeatureFlags.consoleManagedByDevToolsDuringStrictMode) {

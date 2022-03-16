@@ -9,6 +9,7 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactTestUtils;
 let Scheduler;
 let act;
@@ -31,7 +32,7 @@ describe('ReactTestUtils.act()', () => {
   if (__EXPERIMENTAL__) {
     let concurrentRoot = null;
     const renderConcurrent = (el, dom) => {
-      concurrentRoot = ReactDOM.createRoot(dom);
+      concurrentRoot = ReactDOMClient.createRoot(dom);
       if (__DEV__) {
         act(() => concurrentRoot.render(el));
       } else {
@@ -100,7 +101,7 @@ describe('ReactTestUtils.act()', () => {
 
     // @gate __DEV__
     it('does not warn in concurrent mode', () => {
-      const root = ReactDOM.createRoot(document.createElement('div'));
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
       act(() => root.render(<App />));
       Scheduler.unstable_flushAll();
     });
@@ -113,6 +114,7 @@ function runActTests(label, render, unmount, rerender) {
       jest.resetModules();
       React = require('react');
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
       ReactTestUtils = require('react-dom/test-utils');
       Scheduler = require('scheduler');
       act = ReactTestUtils.act;

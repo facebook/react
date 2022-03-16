@@ -14,6 +14,7 @@ import {createEventTarget} from 'dom-event-testing-library';
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
 let act;
@@ -64,6 +65,7 @@ describe('DOMPluginEventSystem', () => {
 
           React = require('react');
           ReactDOM = require('react-dom');
+          ReactDOMClient = require('react-dom/client');
           Scheduler = require('scheduler');
           ReactDOMServer = require('react-dom/server');
           act = require('jest-react').act;
@@ -616,7 +618,7 @@ describe('DOMPluginEventSystem', () => {
 
           // We're going to use a different root as a parent.
           // This lets us detect whether an event goes through React's event system.
-          const parentRoot = ReactDOM.createRoot(parentContainer);
+          const parentRoot = ReactDOMClient.createRoot(parentContainer);
           parentRoot.render(<Parent />);
           Scheduler.unstable_flushAll();
 
@@ -629,7 +631,7 @@ describe('DOMPluginEventSystem', () => {
           suspend = true;
 
           // Hydrate asynchronously.
-          ReactDOM.hydrateRoot(childContainer, <App />);
+          ReactDOMClient.hydrateRoot(childContainer, <App />);
           jest.runAllTimers();
           Scheduler.unstable_flushAll();
 
@@ -1258,6 +1260,7 @@ describe('DOMPluginEventSystem', () => {
 
             React = require('react');
             ReactDOM = require('react-dom');
+            ReactDOMClient = require('react-dom/client');
             Scheduler = require('scheduler');
             ReactDOMServer = require('react-dom/server');
             act = require('jest-react').act;
@@ -1940,7 +1943,7 @@ describe('DOMPluginEventSystem', () => {
               return <button ref={ref}>Press me</button>;
             }
 
-            const root = ReactDOM.createRoot(container);
+            const root = ReactDOMClient.createRoot(container);
             root.render(<Test counter={0} />);
 
             expect(Scheduler).toFlushAndYield(['Test']);
@@ -2561,7 +2564,7 @@ describe('DOMPluginEventSystem', () => {
             const container2 = document.createElement('div');
             document.body.appendChild(container2);
 
-            const root = ReactDOM.createRoot(container2);
+            const root = ReactDOMClient.createRoot(container2);
 
             act(() => {
               root.render(<Component />);
@@ -2648,7 +2651,7 @@ describe('DOMPluginEventSystem', () => {
             const container2 = document.createElement('div');
             document.body.appendChild(container2);
 
-            const root = ReactDOM.createRoot(container2);
+            const root = ReactDOMClient.createRoot(container2);
 
             act(() => {
               root.render(<Component />);
@@ -2715,7 +2718,7 @@ describe('DOMPluginEventSystem', () => {
             const container2 = document.createElement('div');
             document.body.appendChild(container2);
 
-            const root = ReactDOM.createRoot(container2);
+            const root = ReactDOMClient.createRoot(container2);
             act(() => {
               root.render(<Component />);
             });
@@ -2872,6 +2875,7 @@ describe('DOMPluginEventSystem', () => {
 
               React = require('react');
               ReactDOM = require('react-dom');
+              ReactDOMClient = require('react-dom/client');
               Scheduler = require('scheduler');
               ReactDOMServer = require('react-dom/server');
             });

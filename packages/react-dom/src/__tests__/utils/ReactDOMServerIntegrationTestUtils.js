@@ -155,7 +155,7 @@ module.exports = function(initModules) {
         new Promise((resolve, reject) => {
           const writable = new DrainWritable();
           const s = ReactDOMServer.renderToPipeableStream(reactElement, {
-            onErrorShell(e) {
+            onShellError(e) {
               reject(e);
             },
           });

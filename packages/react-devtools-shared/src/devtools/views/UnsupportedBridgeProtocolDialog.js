@@ -33,20 +33,18 @@ export default function UnsupportedBridgeProtocolDialog(_: {||}) {
   useEffect(() => {
     const updateDialog = () => {
       if (!isVisible) {
-        if (store.unsupportedBridgeProtocol !== null) {
+        if (store.unsupportedBridgeProtocolDetected) {
           dispatch({
             canBeDismissed: false,
             id: MODAL_DIALOG_ID,
             type: 'SHOW',
             content: (
-              <DialogContent
-                unsupportedBridgeProtocol={store.unsupportedBridgeProtocol}
-              />
+              <DialogContent unsupportedBridgeProtocol={store.bridgeProtocol} />
             ),
           });
         }
       } else {
-        if (store.unsupportedBridgeProtocol === null) {
+        if (!store.unsupportedBridgeProtocolDetected) {
           dispatch({
             type: 'HIDE',
             id: MODAL_DIALOG_ID,

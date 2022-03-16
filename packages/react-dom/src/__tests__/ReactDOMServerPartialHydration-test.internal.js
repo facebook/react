@@ -11,6 +11,7 @@
 
 let React = require('react');
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
 let ReactFeatureFlags;
@@ -100,6 +101,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     act = require('jest-react').act;
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
@@ -164,7 +166,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -217,7 +219,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    ReactDOM.hydrateRoot(container, <App />, {
+    ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(error.message);
       },
@@ -310,7 +312,7 @@ describe('ReactDOMServerPartialHydration', () => {
       suspend = true;
       client = true;
 
-      ReactDOM.hydrateRoot(container, <App />, {
+      ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
           Scheduler.unstable_yieldValue(error.message);
         },
@@ -426,7 +428,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     suspend2 = true;
-    const root = ReactDOM.hydrateRoot(container, <App />, {
+    const root = ReactDOMClient.hydrateRoot(container, <App />, {
       onHydrated(node) {
         hydrated.push(node);
       },
@@ -483,7 +485,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
 
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -517,7 +519,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(() => {
       act(() => {
-        ReactDOM.hydrateRoot(container, <App hasB={false} />, {
+        ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
           onRecoverableError(error) {
             Scheduler.unstable_yieldValue(error.message);
           },
@@ -590,7 +592,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
       shouldSuspend = true;
       act(() => {
-        ReactDOM.hydrateRoot(container, <App hasB={false} />);
+        ReactDOMClient.hydrateRoot(container, <App hasB={false} />);
       });
 
       resolve();
@@ -651,7 +653,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(() => {
       act(() => {
-        ReactDOM.hydrateRoot(container, <App hasB={false} />, {
+        ReactDOMClient.hydrateRoot(container, <App hasB={false} />, {
           onRecoverableError(error) {
             Scheduler.unstable_yieldValue(error.message);
           },
@@ -709,7 +711,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(container, <App />, {
+    const root = ReactDOMClient.hydrateRoot(container, <App />, {
       onDeleted(node) {
         deleted.push(node);
       },
@@ -770,7 +772,7 @@ describe('ReactDOMServerPartialHydration', () => {
     }).toErrorDev(
       'Warning: Cannot hydrate Suspense in legacy mode. Switch from ' +
         'ReactDOM.hydrate(element, container) to ' +
-        'ReactDOM.hydrateRoot(container, <App />)' +
+        'ReactDOMClient.hydrateRoot(container, <App />)' +
         '.render(element) or remove the Suspense components from the server ' +
         'rendered components.' +
         '\n    in Suspense (at **)' +
@@ -850,7 +852,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     act(() => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
 
     expect(container.firstChild.firstChild.tagName).not.toBe('DIV');
@@ -906,7 +908,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     act(() => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
 
     expect(container.firstChild.children[1].textContent).toBe('Middle');
@@ -955,7 +957,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(
+    const root = ReactDOMClient.hydrateRoot(
       container,
       <App text="Hello" className="hello" />,
     );
@@ -1029,7 +1031,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(
+    const root = ReactDOMClient.hydrateRoot(
       container,
       <App text="Hello" className="hello" />,
     );
@@ -1102,7 +1104,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(
+    const root = ReactDOMClient.hydrateRoot(
       container,
       <App text="Hello" className="hello" />,
       {
@@ -1188,7 +1190,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(
+    const root = ReactDOMClient.hydrateRoot(
       container,
       <App text="Hello" className="hello" />,
       {
@@ -1273,7 +1275,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(
+    const root = ReactDOMClient.hydrateRoot(
       container,
       <App text="Hello" className="hello" />,
       {
@@ -1357,7 +1359,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(
+    const root = ReactDOMClient.hydrateRoot(
       container,
       <App text="Hello" className="hello" />,
     );
@@ -1439,7 +1441,10 @@ describe('ReactDOMServerPartialHydration', () => {
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
 
-    ReactDOM.hydrateRoot(container, <App text="Hello" className="hello" />);
+    ReactDOMClient.hydrateRoot(
+      container,
+      <App text="Hello" className="hello" />,
+    );
 
     await act(async () => {
       suspend = true;
@@ -1509,7 +1514,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(
+    const root = ReactDOMClient.hydrateRoot(
       container,
       <Context.Provider value={{text: 'Hello', className: 'hello'}}>
         <App />
@@ -1591,7 +1596,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(
+    const root = ReactDOMClient.hydrateRoot(
       container,
       <Context.Provider value={{text: 'Hello', className: 'hello'}}>
         <App />
@@ -1680,7 +1685,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    ReactDOM.hydrateRoot(container, <App />, {
+    ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(error.message);
       },
@@ -1742,7 +1747,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    ReactDOM.hydrateRoot(container, <App />, {
+    ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(error.message);
       },
@@ -1809,7 +1814,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    ReactDOM.hydrateRoot(container, <App />, {
+    ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(error.message);
       },
@@ -1882,7 +1887,10 @@ describe('ReactDOMServerPartialHydration', () => {
 
     const spanB = container.getElementsByTagName('span')[1];
 
-    const root = ReactDOM.hydrateRoot(container, <App showMore={false} />);
+    const root = ReactDOMClient.hydrateRoot(
+      container,
+      <App showMore={false} />,
+    );
     suspend = true;
     Scheduler.unstable_flushAll();
 
@@ -1962,7 +1970,10 @@ describe('ReactDOMServerPartialHydration', () => {
 
     const spanA = container.getElementsByTagName('span')[0];
 
-    const root = ReactDOM.hydrateRoot(container, <App showMore={false} />);
+    const root = ReactDOMClient.hydrateRoot(
+      container,
+      <App showMore={false} />,
+    );
 
     suspend = true;
     Scheduler.unstable_flushAll();
@@ -2048,7 +2059,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const b = container.getElementsByTagName('span')[1];
     expect(b.textContent).toBe('B');
 
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    const root = ReactDOMClient.hydrateRoot(container, <App />);
 
     // Increase hydration priority to higher than "offscreen".
     root.unstable_scheduleHydration(b);
@@ -2119,7 +2130,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const container = document.createElement('div');
     container.innerHTML = html;
 
-    ReactDOM.hydrateRoot(container, <App />, {
+    ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(error.message);
       },
@@ -2184,7 +2195,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const span = container.getElementsByTagName('span')[1];
 
     suspend = false;
-    ReactDOM.hydrateRoot(container, <App />, {
+    ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(error.message);
       },
@@ -2233,7 +2244,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -2285,7 +2296,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(
+    const root = ReactDOMClient.hydrateRoot(
       container,
       <ClassName.Provider value={'hello'}>
         <App text="Hello" />
@@ -2388,7 +2399,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -2475,7 +2486,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     isServerRendering = false;
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
 
     // We'll do one click before hydrating.
     a.click();
@@ -2565,7 +2576,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
 
     // We'll do one click before hydrating.
     await act(async () => {
@@ -2660,7 +2671,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     isServerRendering = false;
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
 
     // We'll do one click before hydrating.
     a.click();
@@ -2747,7 +2758,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -2822,7 +2833,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // We're going to use a different root as a parent.
     // This lets us detect whether an event goes through React's event system.
-    const parentRoot = ReactDOM.createRoot(parentContainer);
+    const parentRoot = ReactDOMClient.createRoot(parentContainer);
     parentRoot.render(<Parent />);
     Scheduler.unstable_flushAll();
 
@@ -2835,7 +2846,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     // Hydrate asynchronously.
-    ReactDOM.hydrateRoot(childContainer, <App />);
+    ReactDOMClient.hydrateRoot(childContainer, <App />);
     jest.runAllTimers();
     Scheduler.unstable_flushAll();
 
@@ -2933,7 +2944,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend1 = true;
     suspend2 = true;
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
 
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -3019,7 +3030,10 @@ describe('ReactDOMServerPartialHydration', () => {
     container.innerHTML = finalHTML;
 
     suspend = true;
-    const root = ReactDOM.hydrateRoot(container, <App showSibling={false} />);
+    const root = ReactDOMClient.hydrateRoot(
+      container,
+      <App showSibling={false} />,
+    );
     expect(Scheduler).toFlushAndYield([]);
 
     expect(ref.current).toBe(null);
@@ -3105,7 +3119,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -3170,7 +3184,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const span = container.getElementsByTagName('span')[0];
     expect(span.innerHTML).toBe('Hidden child');
 
-    ReactDOM.hydrateRoot(container, <App />, {
+    ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(
           'Log recoverable error: ' + error.message,
@@ -3183,7 +3197,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.innerHTML).toBe('Hidden child');
   });
 
-  // @gate experimental || www
+  // @gate www
   it('renders a hidden LegacyHidden component inside a Suspense boundary', async () => {
     const ref = React.createRef();
 
@@ -3205,13 +3219,13 @@ describe('ReactDOMServerPartialHydration', () => {
     const span = container.getElementsByTagName('span')[0];
     expect(span.innerHTML).toBe('Hidden child');
 
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     expect(ref.current).toBe(span);
     expect(span.innerHTML).toBe('Hidden child');
   });
 
-  // @gate experimental || www
+  // @gate www
   it('renders a visible LegacyHidden component', async () => {
     const ref = React.createRef();
 
@@ -3230,7 +3244,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     const span = container.getElementsByTagName('span')[0];
 
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     expect(ref.current).toBe(span);
     expect(ref.current.innerHTML).toBe('Hidden child');
@@ -3243,7 +3257,7 @@ describe('ReactDOMServerPartialHydration', () => {
       const finalHTML = ReactDOMServer.renderToString(<App />);
       container.innerHTML = finalHTML;
 
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
       Scheduler.unstable_flushAll();
     });
   }
@@ -3321,7 +3335,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(() => {
       act(() => {
-        ReactDOM.hydrateRoot(container, <App />, {
+        ReactDOMClient.hydrateRoot(container, <App />, {
           onRecoverableError(error) {
             Scheduler.unstable_yieldValue(
               'Log recoverable error: ' + error.message,
@@ -3373,7 +3387,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
     expect(() => {
       act(() => {
-        ReactDOM.hydrateRoot(container, <DirectTextChild text="bad" />, {
+        ReactDOMClient.hydrateRoot(container, <DirectTextChild text="bad" />, {
           onRecoverableError(error) {
             Scheduler.unstable_yieldValue(error.message);
           },
@@ -3414,11 +3428,15 @@ describe('ReactDOMServerPartialHydration', () => {
     );
     expect(() => {
       act(() => {
-        ReactDOM.hydrateRoot(container2, <TextChildWithSibling text="bad" />, {
-          onRecoverableError(error) {
-            Scheduler.unstable_yieldValue(error.message);
+        ReactDOMClient.hydrateRoot(
+          container2,
+          <TextChildWithSibling text="bad" />,
+          {
+            onRecoverableError(error) {
+              Scheduler.unstable_yieldValue(error.message);
+            },
           },
-        });
+        );
       });
     }).toErrorDev(
       [

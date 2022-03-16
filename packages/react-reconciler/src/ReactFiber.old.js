@@ -15,7 +15,10 @@ import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SuspenseInstance, Props} from './ReactFiberHostConfig';
-import type {OffscreenProps} from './ReactFiberOffscreenComponent';
+import type {
+  OffscreenProps,
+  OffscreenInstance,
+} from './ReactFiberOffscreenComponent';
 
 import {
   createRootStrictEffectsByDefault,
@@ -23,9 +26,11 @@ import {
   enableStrictEffects,
   enableProfilerTimer,
   enableScopeAPI,
+  enableLegacyHidden,
   enableSyncDefaultUpdates,
   allowConcurrentByDefault,
   enableTransitionTracing,
+  enableDebugTracing,
 } from 'shared/ReactFeatureFlags';
 import {
   supportsPersistence,
@@ -492,10 +497,6 @@ export function createFiberFromTypeAndProps(
     getTag: switch (type) {
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children, mode, lanes, key);
-      case REACT_DEBUG_TRACING_MODE_TYPE:
-        fiberTag = Mode;
-        mode |= DebugTracingMode;
-        break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
         mode |= StrictLegacyMode;
@@ -513,7 +514,10 @@ export function createFiberFromTypeAndProps(
       case REACT_OFFSCREEN_TYPE:
         return createFiberFromOffscreen(pendingProps, mode, lanes, key);
       case REACT_LEGACY_HIDDEN_TYPE:
-        return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
+        if (enableLegacyHidden) {
+          return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
+        }
+      // eslint-disable-next-line no-fallthrough
       case REACT_SCOPE_TYPE:
         if (enableScopeAPI) {
           return createFiberFromScope(type, pendingProps, mode, lanes, key);
@@ -527,6 +531,13 @@ export function createFiberFromTypeAndProps(
       case REACT_TRACING_MARKER_TYPE:
         if (enableTransitionTracing) {
           return createFiberFromTracingMarker(pendingProps, mode, lanes, key);
+        }
+      // eslint-disable-next-line no-fallthrough
+      case REACT_DEBUG_TRACING_MODE_TYPE:
+        if (enableDebugTracing) {
+          fiberTag = Mode;
+          mode |= DebugTracingMode;
+          break;
         }
       // eslint-disable-next-line no-fallthrough
       default: {
@@ -727,6 +738,8 @@ export function createFiberFromOffscreen(
   const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
+  const primaryChildInstance: OffscreenInstance = {};
+  fiber.stateNode = primaryChildInstance;
   return fiber;
 }
 

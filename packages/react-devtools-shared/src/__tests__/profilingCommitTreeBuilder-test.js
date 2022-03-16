@@ -12,7 +12,7 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('commit tree', () => {
   let React;
-  let ReactDOM;
+  let ReactDOMClient;
   let Scheduler;
   let TestRenderer: TestRendererType;
   let legacyRender;
@@ -30,7 +30,7 @@ describe('commit tree', () => {
     store.recordChangeDescriptions = true;
 
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     TestRenderer = utils.requireTestRenderer();
   });
@@ -146,7 +146,7 @@ describe('commit tree', () => {
 
     it('should support Lazy components (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
 
       utils.act(() => store.profilerStore.startProfiling());
       utils.act(() => root.render(<App renderChildren={true} />));
@@ -219,7 +219,7 @@ describe('commit tree', () => {
 
     it('should support Lazy components that are unmounted before resolving (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
 
       utils.act(() => store.profilerStore.startProfiling());
       utils.act(() => root.render(<App renderChildren={true} />));

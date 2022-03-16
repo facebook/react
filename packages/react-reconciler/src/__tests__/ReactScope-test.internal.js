@@ -25,10 +25,12 @@ describe('ReactScope', () => {
 
   describe('ReactDOM', () => {
     let ReactDOM;
+    let ReactDOMClient;
     let container;
 
     beforeEach(() => {
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
       ReactDOMServer = require('react-dom/server');
       container = document.createElement('div');
       document.body.appendChild(container);
@@ -312,7 +314,7 @@ describe('ReactScope', () => {
       // On the client we don't have all data yet but we want to start
       // hydrating anyway.
       suspend = true;
-      ReactDOM.hydrateRoot(container2, <App />);
+      ReactDOMClient.hydrateRoot(container2, <App />);
       Scheduler.unstable_flushAll();
       jest.runAllTimers();
 

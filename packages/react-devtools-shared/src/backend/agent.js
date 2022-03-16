@@ -185,6 +185,7 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('clearWarningsForFiberID', this.clearWarningsForFiberID);
     bridge.addListener('copyElementPath', this.copyElementPath);
     bridge.addListener('deletePath', this.deletePath);
+    bridge.addListener('getBackendVersion', this.getBackendVersion);
     bridge.addListener('getBridgeProtocol', this.getBridgeProtocol);
     bridge.addListener('getProfilingData', this.getProfilingData);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
@@ -225,7 +226,12 @@ export default class Agent extends EventEmitter<{|
       bridge.send('profilingStatus', true);
     }
 
-    // Send the Bridge protocol after initialization in case the frontend has already requested it.
+    // Send the Bridge protocol and backend versions, after initialization, in case the frontend has already requested it.
+    // The Store may be instantiated beore the agent.
+    const version = process.env.DEVTOOLS_VERSION;
+    if (version) {
+      this._bridge.send('backendVersion', version);
+    }
     this._bridge.send('bridgeProtocol', currentBridgeProtocol);
 
     // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
@@ -321,6 +327,13 @@ export default class Agent extends EventEmitter<{|
     }
     return null;
   }
+
+  getBackendVersion = () => {
+    const version = process.env.DEVTOOLS_VERSION;
+    if (version) {
+      this._bridge.send('backendVersion', version);
+    }
+  };
 
   getBridgeProtocol = () => {
     this._bridge.send('bridgeProtocol', currentBridgeProtocol);

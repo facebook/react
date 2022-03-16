@@ -8,6 +8,7 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ServerContextJSONValue} from 'shared/ReactTypes';
 import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 
 import {
@@ -24,24 +25,21 @@ function renderToReadableStream(
   model: ReactModel,
   webpackMap: BundlerConfig,
   options?: Options,
+  context?: Array<[string, ServerContextJSONValue]>,
 ): ReadableStream {
   const request = createRequest(
     model,
     webpackMap,
     options ? options.onError : undefined,
+    context,
   );
   const stream = new ReadableStream({
+    type: 'bytes',
     start(controller) {
       startWork(request);
     },
     pull(controller) {
-      // Pull is called immediately even if the stream is not passed to anything.
-      // That's buffering too early. We want to start buffering once the stream
-      // is actually used by something so we can give it the best result possible
-      // at that point.
-      if (stream.locked) {
-        startFlowing(request, controller);
-      }
+      startFlowing(request, controller);
     },
     cancel(reason) {},
   });

@@ -7,7 +7,7 @@
  * @flow
  */
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let act;
 let fakeConsole;
 let legacyRender;
@@ -53,7 +53,7 @@ describe('console', () => {
     };
 
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
 
     const utils = require('./utils');
     act = utils.act;
@@ -476,7 +476,7 @@ describe('console', () => {
     global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     function App() {
       fakeConsole.log('log');
@@ -515,7 +515,7 @@ describe('console', () => {
     global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = true;
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     function App() {
       fakeConsole.log('log');
@@ -557,7 +557,7 @@ describe('console', () => {
       null,
     );
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     function App() {
       fakeConsole.log('log');
@@ -605,7 +605,7 @@ describe('console', () => {
       null,
     );
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     function App() {
       fakeConsole.log('log');
@@ -639,7 +639,7 @@ describe('console', () => {
     global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     const Intermediate = ({children}) => children;
     const Parent = ({children}) => (
@@ -719,7 +719,7 @@ describe('console error', () => {
     };
 
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
 
     const utils = require('./utils');
     act = utils.act;
@@ -728,7 +728,7 @@ describe('console error', () => {
 
   it('error in console log throws without interfering with logging', () => {
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     function App() {
       fakeConsole.log('log');
