@@ -16,7 +16,10 @@ import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
 
 // We destructure each value before re-exporting to avoid a dynamic look-up on
 // the exports object every time a flag is read.
-export const {enablePersistentOffscreenHostContainer} = dynamicFlags;
+export const {
+  enableCache,
+  enablePersistentOffscreenHostContainer,
+} = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
 export const enableDebugTracing = false;
@@ -29,7 +32,6 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
 export const enableLazyElements = false;
-export const enableCache = true;
 export const enableSchedulerDebugging = false;
 export const debugRenderPhaseSideEffectsForStrictMode = true;
 export const disableJavaScriptURLs = false;
