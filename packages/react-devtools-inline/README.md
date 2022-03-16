@@ -1,12 +1,14 @@
 # `react-devtools-inline`
 
-React DevTools implementation for embedding within a browser-based IDE (e.g. [CodeSandbox](https://codesandbox.io/), [StackBlitz](https://stackblitz.com/)).
+This package can be used to embed React DevTools into browser-based tools like [CodeSandbox](https://codesandbox.io/), [StackBlitz](https://stackblitz.com/), and [Replay](https://replay.io).
 
-This is a low-level package. If you're looking for the standalone DevTools app, **use the `react-devtools` package instead.**
+If you're looking for the standalone React DevTools UI, **we suggest using [`react-devtools`](https://github.com/facebook/react/tree/main/packages/react-devtools) instead of using this package directly**.
 
 ---
 
-**Note** that this package (and the DevTools UI) relies on several _experimental_ APIs that are only available in the [experimental release channel](https://reactjs.org/docs/release-channels.html#experimental-channel).
+> **Note** that this package (and the DevTools UI) relies on several _experimental_ APIs that are **only available in the [experimental release channel](https://reactjs.org/docs/release-channels.html#experimental-channel)**. This means that you will need to install `react@experimental` and `react-dom@experimenal`.
+
+---
 
 # Usage
 
@@ -20,15 +22,18 @@ The frontend and backend can be initialized in any order, but **the backend must
 
 <sup>1</sup> Sandboxed iframes are supported.
 
-# API
+# Backend APIs
+### `initialize(windowOrGlobal)`
 
-## `react-devtools-inline/backend`
+Installs the global hook on the window/global object. This hook is how React and DevTools communicate.
 
-* **`initialize(contentWindow)`** -
-Installs the global hook on the window. This hook is how React and DevTools communicate. **This method must be called before React is loaded.**<sup>2</sup>
-* **`activate(contentWindow)`** -
+> **This method must be called before React is loaded.** (This includes `import`/`require` statements and `<script>` tags that include React.)
+
+### `activate(windowOrGlobal)`
+
 Lets the backend know when the frontend is ready. It should not be called until after the frontend has been initialized, else the frontend might miss important tree-initialization events.
 
+### Example
 ```js
 import { activate, initialize } from 'react-devtools-inline/backend';
 
@@ -45,13 +50,14 @@ initialize(contentWindow);
 activate(contentWindow);
 ```
 
-<sup>2</sup> The backend must be initialized before React is loaded. (This means before any `import` or `require` statements or `<script>` tags that include React.)
+# Frontend APIs
 
-## `react-devtools-inline/frontend`
+### `initialize(windowOrGlobal)`
+Configures the DevTools interface to listen to the `window` (or `global` object) the backend was injected into. This method returns a React component that can be rendered directly.
 
-* **`initialize(contentWindow)`** -
-Configures the DevTools interface to listen to the `window` the backend was injected into. This method returns a React component that can be rendered directly<sup>3</sup>.
+> Because the DevTools interface makes use of several new React concurrent features (like Suspense) **it should be rendered using `ReactDOMClient.createRoot` instead of `ReactDOM.render`.**
 
+### Example
 ```js
 import { initialize } from 'react-devtools-inline/frontend';
 
@@ -64,11 +70,9 @@ const contentWindow = iframe.contentWindow;
 const DevTools = initialize(contentWindow);
 ```
 
-<sup>3</sup> Because the DevTools interface makes use of several new React APIs (e.g. suspense, concurrent mode) it should be rendered using `ReactDOMClient.createRoot`. **It should not be rendered with `ReactDOM.render`.**
+# Advanced examples
 
-# Examples
-
-## Supporting named hooks
+### Supporting named hooks
 
 DevTools can display hook "names" for an inspected component, although determining the "names" requires loading the source (and source-maps), parsing the code, and inferring the names based on which variables hook values get assigned to. Because the code for this is non-trivial, it's lazy-loaded only if the feature is enabled.
 
@@ -85,7 +89,7 @@ const hookNamesModuleLoaderFunction = () => import('react-devtools-inline/hookNa
 />;
 ```
 
-## Configuring a same-origin `iframe`
+### Configuring a same-origin `iframe`
 
 The simplest way to use this package is to install the hook from the parent `window`. This is possible if the `iframe` is not sandboxed and there are no cross-origin restrictions.
 
@@ -120,7 +124,7 @@ const DevTools = initializeFrontend(contentWindow);
 activateBackend(contentWindow);
 ```
 
-## Configuring a sandboxed `iframe`
+### Configuring a sandboxed `iframe`
 
 Sandboxed `iframe`s are also supported but require more complex initialization.
 
@@ -173,7 +177,7 @@ iframe.onload = () => {
 };
 ```
 
-## Advanced: Custom "wall"
+### Advanced: Custom "wall"
 
 Below is an example of an advanced integration with a website like [Replay.io](https://replay.io/) or Code Sandbox's Sandpack (where more than one DevTools instance may be rendered per page).
 
@@ -239,11 +243,11 @@ const wall = {
 };
 ```
 
-## Advanced: Node + browser
+### Advanced: Node + browser
 
 Below is an example of an advanced integration that could be used to connect React running in a Node process to React DevTools running in a browser.
 
-#### Sample Node "backend"
+##### Sample Node backend
 ```js
 const {
   activate,
@@ -288,7 +292,7 @@ socket.on('connection', client => {
 socket.listen(PORT);
 ```
 
-#### Sample Web "frontend"
+##### Sample Web frontend
 ```js
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
