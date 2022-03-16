@@ -19,7 +19,7 @@ let viteModules = {};
 
 let act;
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactServerDOMWriter;
 let ReactServerDOMReader;
 let ClientProxy;
@@ -30,7 +30,7 @@ describe('ReactFlightDOMBrowser', () => {
     viteModules = {};
     act = require('jest-react').act;
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactServerDOMWriter = require('react-server-dom-vite/writer.browser.server');
     ReactServerDOMReader = require('react-server-dom-vite');
     ClientProxy = require('react-server-dom-vite/esm/react-server-dom-vite-client-proxy');
@@ -266,7 +266,7 @@ describe('ReactFlightDOMBrowser', () => {
     const response = ReactServerDOMReader.createFromReadableStream(stream);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(
         <Suspense fallback={<p>(loading)</p>}>

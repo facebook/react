@@ -23,7 +23,7 @@ let viteModules = {};
 let act;
 let Stream;
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactServerDOMWriter;
 let ReactServerDOMReader;
 let ClientProxy;
@@ -34,7 +34,7 @@ describe('ReactFlightDOM', () => {
     act = require('jest-react').act;
     Stream = require('stream');
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactServerDOMWriter = require('react-server-dom-vite/writer.node.server');
     ReactServerDOMReader = require('react-server-dom-vite');
     ClientProxy = require('react-server-dom-vite/esm/react-server-dom-vite-client-proxy');
@@ -167,7 +167,7 @@ describe('ReactFlightDOM', () => {
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
@@ -202,7 +202,7 @@ describe('ReactFlightDOM', () => {
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
@@ -235,7 +235,7 @@ describe('ReactFlightDOM', () => {
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
@@ -371,7 +371,7 @@ describe('ReactFlightDOM', () => {
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(
         <Suspense fallback={<p>(loading)</p>}>
@@ -470,7 +470,7 @@ describe('ReactFlightDOM', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     const stream1 = getTestStream();
     const {pipe} = ReactServerDOMWriter.renderToPipeableStream(

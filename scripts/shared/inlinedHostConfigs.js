@@ -87,6 +87,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
+      'react-dom/client',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-server-dom-vite',
       'react-server-dom-vite/writer',
@@ -94,6 +95,10 @@ module.exports = [
       'react-server-dom-vite/esm/react-server-dom-vite-writer.node.server.js',
       'react-server-dom-vite/src/ReactFlightDOMServerNode.js', // react-server-dom-vite/writer.node.server
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
       'react-interactions',
     ],
     isFlowTyped: true,
@@ -110,6 +115,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
+      'react-dom/client',
       'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
       'react-server-dom-vite',
@@ -117,6 +123,10 @@ module.exports = [
       'react-server-dom-vite/src/ReactFlightDOMServerBrowser.js', // react-server-dom-vite/writer.browser.server
       'react-server-dom-vite/esm/react-server-dom-vite-writer.browser.server.js',
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
     ],
     isFlowTyped: true,
     isServerSupported: true,
