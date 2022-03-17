@@ -321,6 +321,14 @@ const bundles = [
     externals: ['react'],
   },
   {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/src/server/ReactDOMFizzServerNext',
+    name: 'react-dom-server-next',
+    global: 'ReactDOMServer',
+    externals: ['react'],
+  },
+  {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
     moduleType: RENDERER,
     entry: 'react-server-dom-relay/src/ReactDOMServerFB.js',

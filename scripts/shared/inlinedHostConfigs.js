@@ -77,6 +77,22 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-next',
+    entryPoints: [
+      'react-server-dom-webpack/writer.next.server',
+      'react-server-dom-webpack',
+      'react-dom/src/server/ReactDOMFizzServerNext', // react-dom/server
+    ],
+    paths: [
+      'react-dom',
+      'react-server-dom-webpack',
+      'react-dom/src/server/ReactDOMFizzServerNext.js', // react-dom/server.next
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'art',
     entryPoints: ['react-art'],
     paths: ['react-art'],
