@@ -1,0 +1,13 @@
+// 0
+
+Without your package.json it's hard to tell where exactly the problem is.
+
+If your version for your package (or any of the dependencies) isn't using a semantic versioning (for example 6.10.0 instead of just 6.10 which might get trimmed to 6.1) then that is what is causing the problem.
+
+When the error mentions minor/patch it is referring to the numbers separated by dots/periods
+
+..
+
+More about this can be found here: https://semver.org/
+
+and here https://docs.npmjs.com/about-semantic-versioning
