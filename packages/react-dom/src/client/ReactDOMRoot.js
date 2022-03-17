@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Container} from './ReactDOMHostConfig';
 import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
 import type {
   FiberRoot,
@@ -165,7 +164,7 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = funct
 };
 
 export function createRoot(
-  container: Container,
+  container: Element | DocumentFragment,
   options?: CreateRootOptions,
 ): RootType {
   if (!isValidContainer(container)) {
@@ -235,8 +234,10 @@ export function createRoot(
   );
   markContainerAsRoot(root.current, container);
 
-  const rootContainerElement =
-    container.nodeType === COMMENT_NODE ? container.parentNode : container;
+  const rootContainerElement: Document | Element | DocumentFragment =
+    container.nodeType === COMMENT_NODE
+      ? (container.parentNode: any)
+      : container;
   listenToAllSupportedEvents(rootContainerElement);
 
   return new ReactDOMRoot(root);
@@ -253,7 +254,7 @@ function scheduleHydration(target: Node) {
 ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = scheduleHydration;
 
 export function hydrateRoot(
-  container: Container,
+  container: Document | Element,
   initialChildren: ReactNodeList,
   options?: HydrateRootOptions,
 ): RootType {
@@ -351,7 +352,7 @@ export function isValidContainerLegacy(node: any): boolean {
   );
 }
 
-function warnIfReactDOMContainerInDEV(container) {
+function warnIfReactDOMContainerInDEV(container: any) {
   if (__DEV__) {
     if (
       container.nodeType === ELEMENT_NODE &&
