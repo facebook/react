@@ -1501,29 +1501,11 @@ function forceStoreRerender(fiber) {
 function mountState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
-  const hook = mountWorkInProgressHook();
   if (typeof initialState === 'function') {
     // $FlowFixMe: Flow doesn't like mixed types
     initialState = initialState();
   }
-  hook.memoizedState = hook.baseState = initialState;
-  const queue: UpdateQueue<S, BasicStateAction<S>> = {
-    pending: null,
-    interleaved: null,
-    lanes: NoLanes,
-    dispatch: null,
-    lastRenderedReducer: basicStateReducer,
-    lastRenderedState: (initialState: any),
-  };
-  hook.queue = queue;
-  const dispatch: Dispatch<
-    BasicStateAction<S>,
-  > = (queue.dispatch = (dispatchSetState.bind(
-    null,
-    currentlyRenderingFiber,
-    queue,
-  ): any));
-  return [hook.memoizedState, dispatch];
+  return mountReducer(basicStateReducer, initialState)
 }
 
 function updateState<S>(
