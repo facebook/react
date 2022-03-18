@@ -4,14 +4,24 @@
 
 ---
 
+### 4.24.1
+March 15, 2022
+
+#### Bugfix
+* Disable unsupported Bridge protocol version dialog and add workaround for old protocol operations format ([bvaughn](https://github.com/bvaughn) in [#24093](https://github.com/facebook/react/pull/24093))
+
+---
+
 ### 4.24.0
-March 2, 2022
+March 10, 2022
 
 #### Feature
 * Show DevTools backend and frontend versions in UI ([bvaughn](https://github.com/bvaughn) in [#23399](https://github.com/facebook/react/pull/23399))
 * Timeline profiler refactored to support reading basic profiling data directly from React ([bvaughn](https://github.com/bvaughn) in [#22529](https://github.com/facebook/react/issues/22529))
 
 #### Bugfix
+* Better handle undefined `Error` stacks in DevTools error boundary ([bvaughn](https://github.com/bvaughn) in [#24065](https://github.com/facebook/react/pull/24065))
+* Fixed edge case bug in Profiler commit filtering ([bvaughn](https://github.com/bvaughn) in [#24031](https://github.com/facebook/react/pull/24031))
 * Gracefully handle empty "xstyle" prop values ([lunaruan](https://github.com/lunaruan) in [#23279](https://github.com/facebook/react/pull/23279) and [bvaughn](https://github.com/bvaughn) in [#23190](https://github.com/facebook/react/pull/23190))
 * Add `<TracingMarker>` component boilerplate ([lunaruan](https://github.com/lunaruan) in [#23275](https://github.com/facebook/react/pull/23275))
 

@@ -459,7 +459,7 @@ describe('InspectedElement', () => {
     const prevInspectedElement = inspectedElement;
 
     // This test causes an intermediate error to be logged but we can ignore it.
-    console.error = () => {};
+    jest.spyOn(console, 'error').mockImplementation(() => {});
 
     // Wait for our check-for-updates poll to get the new data.
     jest.runOnlyPendingTimers();
@@ -2099,7 +2099,7 @@ describe('InspectedElement', () => {
     await utils.actAsync(() => {
       const container = document.createElement('div');
       container.innerHTML = '<div></div>';
-      ReactDOMClient.hydrateRoot(container).render(<Example />);
+      ReactDOMClient.hydrateRoot(container, <Example />);
     }, false);
 
     const inspectedElement = await inspectElementAtIndex(0);
@@ -2734,6 +2734,62 @@ describe('InspectedElement', () => {
     });
   });
 
+  it('inspecting nested renderers should not throw', async () => {
+    // Ignoring react art warnings
+    spyOn(console, 'error');
+    const ReactArt = require('react-art');
+    const ArtSVGMode = require('art/modes/svg');
+    const ARTCurrentMode = require('art/modes/current');
+    store.componentFilters = [];
+
+    ARTCurrentMode.setCurrent(ArtSVGMode);
+    const {Surface, Group} = ReactArt;
+
+    function Child() {
+      return (
+        <Surface width={1} height={1}>
+          <Group />
+        </Surface>
+      );
+    }
+    function App() {
+      return <Child />;
+    }
+
+    await utils.actAsync(() => {
+      legacyRender(<App />, document.createElement('div'));
+    });
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Child>
+            ▾ <Surface>
+                <svg>
+      [root]
+          <Group>
+    `);
+
+    const inspectedElement = await inspectElementAtIndex(4);
+    expect(inspectedElement.owners).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "displayName": "Child",
+          "hocDisplayNames": null,
+          "id": 3,
+          "key": null,
+          "type": 5,
+        },
+        Object {
+          "displayName": "App",
+          "hocDisplayNames": null,
+          "id": 2,
+          "key": null,
+          "type": 5,
+        },
+      ]
+    `);
+  });
+
   describe('error boundary', () => {
     it('can toggle error', async () => {
       class LocalErrorBoundary extends React.Component<any> {
@@ -2804,16 +2860,18 @@ describe('InspectedElement', () => {
       );
 
       // Suppress expected error and warning.
-      const originalError = console.error;
-      const originalWarn = console.warn;
-      console.error = () => {};
-      console.warn = () => {};
+      const consoleErrorMock = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const consoleWarnMock = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
 
       // now force error state on <Example />
       await toggleError(true);
 
-      console.error = originalError;
-      console.warn = originalWarn;
+      consoleErrorMock.mockRestore();
+      consoleWarnMock.mockRestore();
 
       // we are in error state now, <Example /> won't show up
       withErrorsOrWarningsIgnored(['Invalid index'], () => {

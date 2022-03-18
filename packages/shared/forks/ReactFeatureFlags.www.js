@@ -33,6 +33,7 @@ export const {
   enableSyncDefaultUpdates,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnHydrationMismatch,
+  enableClientRenderFallbackOnTextMismatch,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -85,6 +86,8 @@ export const enableCreateEventHandleAPI = true;
 export const enableScopeAPI = true;
 
 export const enableSuspenseCallback = true;
+
+export const enableLegacyHidden = true;
 
 export const enableComponentStackLocations = true;
 

@@ -19,6 +19,7 @@ const customBubblingEventTypes: {
     phasedRegistrationNames: $ReadOnly<{|
       captured: string,
       bubbled: string,
+      skipBubbling?: ?boolean,
     |}>,
   |}>,
   ...,

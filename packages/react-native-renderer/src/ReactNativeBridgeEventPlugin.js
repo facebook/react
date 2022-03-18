@@ -89,7 +89,12 @@ function getParent(inst) {
 /**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
-export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
+export function traverseTwoPhase(
+  inst: Object,
+  fn: Function,
+  arg: Function,
+  skipBubbling: boolean,
+) {
   const path = [];
   while (inst) {
     path.push(inst);
@@ -99,19 +104,40 @@ export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
   for (i = path.length; i-- > 0; ) {
     fn(path[i], 'captured', arg);
   }
-  for (i = 0; i < path.length; i++) {
-    fn(path[i], 'bubbled', arg);
+  if (skipBubbling) {
+    // Dispatch on target only
+    fn(path[0], 'bubbled', arg);
+  } else {
+    for (i = 0; i < path.length; i++) {
+      fn(path[i], 'bubbled', arg);
+    }
   }
 }
 
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
+    traverseTwoPhase(
+      event._targetInst,
+      accumulateDirectionalDispatches,
+      event,
+      false,
+    );
   }
 }
 
 function accumulateTwoPhaseDispatches(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
+}
+
+function accumulateCapturePhaseDispatches(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
+    traverseTwoPhase(
+      event._targetInst,
+      accumulateDirectionalDispatches,
+      event,
+      true,
+    );
+  }
 }
 
 /**
@@ -178,7 +204,15 @@ const ReactNativeBridgeEventPlugin = {
       nativeEventTarget,
     );
     if (bubbleDispatchConfig) {
-      accumulateTwoPhaseDispatches(event);
+      const skipBubbling =
+        event != null &&
+        event.dispatchConfig.phasedRegistrationNames != null &&
+        event.dispatchConfig.phasedRegistrationNames.skipBubbling;
+      if (skipBubbling) {
+        accumulateCapturePhaseDispatches(event);
+      } else {
+        accumulateTwoPhaseDispatches(event);
+      }
     } else if (directDispatchConfig) {
       accumulateDirectDispatches(event);
     } else {

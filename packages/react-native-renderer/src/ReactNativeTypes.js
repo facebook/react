@@ -73,6 +73,7 @@ export type ViewConfig = $ReadOnly<{
       phasedRegistrationNames: $ReadOnly<{
         captured: string,
         bubbled: string,
+        skipBubbling?: ?boolean,
       }>,
     }>,
     ...,

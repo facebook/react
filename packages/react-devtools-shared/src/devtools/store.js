@@ -180,7 +180,8 @@ export default class Store extends EventEmitter<{|
   _rootSupportsBasicProfiling: boolean = false;
   _rootSupportsTimelineProfiling: boolean = false;
 
-  _unsupportedBridgeProtocol: BridgeProtocol | null = null;
+  _bridgeProtocol: BridgeProtocol | null = null;
+  _unsupportedBridgeProtocolDetected: boolean = false;
   _unsupportedRendererVersionDetected: boolean = false;
 
   // Total number of visible elements (within all roots).
@@ -375,6 +376,10 @@ export default class Store extends EventEmitter<{|
     this.emit('componentFilters');
   }
 
+  get bridgeProtocol(): BridgeProtocol | null {
+    return this._bridgeProtocol;
+  }
+
   get errorCount(): number {
     return this._cachedErrorCount;
   }
@@ -466,8 +471,8 @@ export default class Store extends EventEmitter<{|
     return this._supportsTraceUpdates;
   }
 
-  get unsupportedBridgeProtocol(): BridgeProtocol | null {
-    return this._unsupportedBridgeProtocol;
+  get unsupportedBridgeProtocolDetected(): boolean {
+    return this._unsupportedBridgeProtocolDetected;
   }
 
   get unsupportedRendererVersionDetected(): boolean {
@@ -942,11 +947,21 @@ export default class Store extends EventEmitter<{|
               (operations[i] & PROFILING_FLAG_TIMELINE_SUPPORT) !== 0;
             i++;
 
-            const supportsStrictMode = operations[i] > 0;
-            i++;
+            let supportsStrictMode = false;
+            let hasOwnerMetadata = false;
 
-            const hasOwnerMetadata = operations[i] > 0;
-            i++;
+            // If we don't know the bridge protocol, guess that we're dealing with the latest.
+            // If we do know it, we can take it into consideration when parsing operations.
+            if (
+              this._bridgeProtocol === null ||
+              this._bridgeProtocol.version >= 2
+            ) {
+              supportsStrictMode = operations[i] > 0;
+              i++;
+
+              hasOwnerMetadata = operations[i] > 0;
+              i++;
+            }
 
             this._roots = this._roots.concat(id);
             this._rootIDToRendererID.set(id, rendererID);
@@ -1383,14 +1398,13 @@ export default class Store extends EventEmitter<{|
       this._onBridgeProtocolTimeoutID = null;
     }
 
-    if (bridgeProtocol.version !== currentBridgeProtocol.version) {
-      this._unsupportedBridgeProtocol = bridgeProtocol;
-    } else {
-      // If we should happen to get a response after timing out...
-      this._unsupportedBridgeProtocol = null;
-    }
+    this._bridgeProtocol = bridgeProtocol;
 
-    this.emit('unsupportedBridgeProtocolDetected');
+    if (bridgeProtocol.version !== currentBridgeProtocol.version) {
+      // Technically newer versions of the frontend can, at least for now,
+      // gracefully handle older versions of the backend protocol.
+      // So for now we don't need to display the unsupported dialog.
+    }
   };
 
   onBridgeProtocolTimeout = () => {
@@ -1398,7 +1412,7 @@ export default class Store extends EventEmitter<{|
 
     // If we timed out, that indicates the backend predates the bridge protocol,
     // so we can set a fake version (0) to trigger the downgrade message.
-    this._unsupportedBridgeProtocol = BRIDGE_PROTOCOL[0];
+    this._bridgeProtocol = BRIDGE_PROTOCOL[0];
 
     this.emit('unsupportedBridgeProtocolDetected');
   };

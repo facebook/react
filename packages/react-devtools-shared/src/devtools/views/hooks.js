@@ -239,10 +239,13 @@ export function useModalDismissSignal(
       // It's important to listen to the ownerDocument to support the browser extension.
       // Here we use portals to render individual tabs (e.g. Profiler),
       // and the root document might belong to a different window.
-      ownerDocument = ((modalRef.current: any): HTMLDivElement).ownerDocument;
-      ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
-      if (dismissOnClickOutside) {
-        ownerDocument.addEventListener('click', handleDocumentClick, true);
+      const div = modalRef.current;
+      if (div != null) {
+        ownerDocument = div.ownerDocument;
+        ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
+        if (dismissOnClickOutside) {
+          ownerDocument.addEventListener('click', handleDocumentClick, true);
+        }
       }
     }, 0);
 

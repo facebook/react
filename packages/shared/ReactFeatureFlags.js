@@ -42,6 +42,7 @@ export const enableSuspenseLayoutEffectSemantics = true;
 
 // TODO: Finish rolling out in www
 export const enableClientRenderFallbackOnHydrationMismatch = true;
+export const enableClientRenderFallbackOnTextMismatch = true;
 
 // TODO: Need to review this code one more time before landing
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
@@ -100,6 +101,9 @@ export const enableTransitionTracing = false;
 
 // No known bugs, but needs performance testing
 export const enableLazyContextPropagation = false;
+
+// FB-only usage. The new API has different semantics.
+export const enableLegacyHidden = false;
 
 // Enables unstable_avoidThisFallback feature in Fiber
 export const enableSuspenseAvoidThisFallback = false;

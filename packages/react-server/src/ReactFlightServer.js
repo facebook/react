@@ -200,6 +200,12 @@ function attemptResolveElement(
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     switch (type.$$typeof) {
+      case REACT_LAZY_TYPE: {
+        const payload = type._payload;
+        const init = type._init;
+        const wrappedType = init(payload);
+        return attemptResolveElement(wrappedType, key, ref, props);
+      }
       case REACT_FORWARD_REF_TYPE: {
         const render = type.render;
         return render(props, undefined);
@@ -452,10 +458,6 @@ export function resolveModelToJSON(
   switch (value) {
     case REACT_ELEMENT_TYPE:
       return '$';
-    case REACT_LAZY_TYPE:
-      throw new Error(
-        'React Lazy Components are not yet supported on the server.',
-      );
   }
 
   if (__DEV__) {
@@ -477,23 +479,36 @@ export function resolveModelToJSON(
   while (
     typeof value === 'object' &&
     value !== null &&
-    (value: any).$$typeof === REACT_ELEMENT_TYPE
+    ((value: any).$$typeof === REACT_ELEMENT_TYPE ||
+      (value: any).$$typeof === REACT_LAZY_TYPE)
   ) {
     if (__DEV__) {
       if (isInsideContextValue) {
         console.error('React elements are not allowed in ServerContext');
       }
     }
-    // TODO: Concatenate keys of parents onto children.
-    const element: React$Element<any> = (value: any);
+
     try {
-      // Attempt to render the server component.
-      value = attemptResolveElement(
-        element.type,
-        element.key,
-        element.ref,
-        element.props,
-      );
+      switch ((value: any).$$typeof) {
+        case REACT_ELEMENT_TYPE: {
+          // TODO: Concatenate keys of parents onto children.
+          const element: React$Element<any> = (value: any);
+          // Attempt to render the server component.
+          value = attemptResolveElement(
+            element.type,
+            element.key,
+            element.ref,
+            element.props,
+          );
+          break;
+        }
+        case REACT_LAZY_TYPE: {
+          const payload = (value: any)._payload;
+          const init = (value: any)._init;
+          value = init(payload);
+          break;
+        }
+      }
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.

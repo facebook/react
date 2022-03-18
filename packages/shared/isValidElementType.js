@@ -30,6 +30,7 @@ import {
   enableCache,
   enableTransitionTracing,
   enableDebugTracing,
+  enableLegacyHidden,
 } from './ReactFeatureFlags';
 
 const REACT_MODULE_REFERENCE: Symbol = Symbol.for('react.module.reference');
@@ -47,7 +48,7 @@ export default function isValidElementType(type: mixed) {
     type === REACT_STRICT_MODE_TYPE ||
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
-    type === REACT_LEGACY_HIDDEN_TYPE ||
+    (enableLegacyHidden && type === REACT_LEGACY_HIDDEN_TYPE) ||
     type === REACT_OFFSCREEN_TYPE ||
     (enableScopeAPI && type === REACT_SCOPE_TYPE) ||
     (enableCache && type === REACT_CACHE_TYPE) ||

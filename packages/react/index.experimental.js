@@ -32,7 +32,6 @@ export {
   startTransition,
   unstable_Cache,
   unstable_DebugTracingMode,
-  unstable_LegacyHidden,
   unstable_Offscreen,
   unstable_getCacheSignal,
   unstable_getCacheForType,

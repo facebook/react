@@ -548,6 +548,17 @@ export function getInternalReactConstants(
   };
 }
 
+// Map of one or more Fibers in a pair to their unique id number.
+// We track both Fibers to support Fast Refresh,
+// which may forcefully replace one of the pair as part of hot reloading.
+// In that case it's still important to be able to locate the previous ID during subsequent renders.
+const fiberToIDMap: Map<Fiber, number> = new Map();
+
+// Map of id to one (arbitrary) Fiber in a pair.
+// This Map is used to e.g. get the display name for a Fiber or schedule an update,
+// operations that should be the same whether the current and work-in-progress Fiber is used.
+const idToArbitraryFiberMap: Map<number, Fiber> = new Map();
+
 export function attach(
   hook: DevToolsHook,
   rendererID: number,
@@ -1085,17 +1096,6 @@ export function attach(
     }
   }
 
-  // Map of one or more Fibers in a pair to their unique id number.
-  // We track both Fibers to support Fast Refresh,
-  // which may forcefully replace one of the pair as part of hot reloading.
-  // In that case it's still important to be able to locate the previous ID during subsequent renders.
-  const fiberToIDMap: Map<Fiber, number> = new Map();
-
-  // Map of id to one (arbitrary) Fiber in a pair.
-  // This Map is used to e.g. get the display name for a Fiber or schedule an update,
-  // operations that should be the same whether the current and work-in-progress Fiber is used.
-  const idToArbitraryFiberMap: Map<number, Fiber> = new Map();
-
   // When profiling is supported, we store the latest tree base durations for each Fiber.
   // This is so that we can quickly capture a snapshot of those values if profiling starts.
   // If we didn't store these values, we'd have to crawl the tree when profiling started,
@@ -1624,18 +1624,27 @@ export function attach(
     pendingOperations.push(op);
   }
 
-  function flushOrQueueOperations(operations: OperationsArray): void {
-    if (operations.length === 3) {
-      // This operations array is a no op: [renderer ID, root ID, string table size (0)]
-      // We can usually skip sending updates like this across the bridge, unless we're Profiling.
-      // In that case, even though the tree didn't change– some Fibers may have still rendered.
+  function shouldBailoutWithPendingOperations() {
+    if (isProfiling) {
       if (
-        !isProfiling ||
-        currentCommitProfilingMetadata == null ||
-        currentCommitProfilingMetadata.durations.length === 0
+        currentCommitProfilingMetadata != null &&
+        currentCommitProfilingMetadata.durations.length > 0
       ) {
-        return;
+        return false;
       }
+    }
+
+    return (
+      pendingOperations.length === 0 &&
+      pendingRealUnmountedIDs.length === 0 &&
+      pendingSimulatedUnmountedIDs.length === 0 &&
+      pendingUnmountedRootID === null
+    );
+  }
+
+  function flushOrQueueOperations(operations: OperationsArray): void {
+    if (shouldBailoutWithPendingOperations()) {
+      return;
     }
 
     if (pendingOperationsQueue !== null) {
@@ -1668,7 +1677,7 @@ export function attach(
 
       recordPendingErrorsAndWarnings();
 
-      if (pendingOperations.length === 0) {
+      if (shouldBailoutWithPendingOperations()) {
         // No warnings or errors to flush; we can bail out early here too.
         return;
       }
@@ -1791,12 +1800,7 @@ export function attach(
     // We do this just before flushing, so we can ignore errors for no-longer-mounted Fibers.
     recordPendingErrorsAndWarnings();
 
-    if (
-      pendingOperations.length === 0 &&
-      pendingRealUnmountedIDs.length === 0 &&
-      pendingSimulatedUnmountedIDs.length === 0 &&
-      pendingUnmountedRootID === null
-    ) {
+    if (shouldBailoutWithPendingOperations()) {
       // If we aren't profiling, we can just bail out here.
       // No use sending an empty update over the bridge.
       //
@@ -1805,9 +1809,7 @@ export function attach(
       // (2) the operations array for each commit
       // Because of this, it's important that the operations and metadata arrays align,
       // So it's important not to omit even empty operations while profiling is active.
-      if (!isProfiling) {
-        return;
-      }
+      return;
     }
 
     const numUnmountIDs =
@@ -2724,12 +2726,7 @@ export function attach(
     }
 
     if (isProfiling && isProfilingSupported) {
-      // Make sure at least one Fiber performed work during this commit.
-      // If not, don't send it to the frontend; showing an empty commit in the Profiler is confusing.
-      if (
-        currentCommitProfilingMetadata != null &&
-        currentCommitProfilingMetadata.durations.length > 0
-      ) {
+      if (!shouldBailoutWithPendingOperations()) {
         const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
           currentRootID,
         );

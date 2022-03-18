@@ -44,6 +44,7 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 export const enableClientRenderFallbackOnHydrationMismatch = true;
+export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
@@ -61,6 +62,7 @@ export const enableUseRefAccessWarning = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
+export const enableLegacyHidden = false;
 export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = false;
 export const enablePersistentOffscreenHostContainer = false;

@@ -9,7 +9,6 @@
 
 'use strict';
 
-import type {Container} from './src/client/ReactDOMHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   RootType,
@@ -24,7 +23,7 @@ import {
 } from './';
 
 export function createRoot(
-  container: Container,
+  container: Element | DocumentFragment,
   options?: CreateRootOptions,
 ): RootType {
   if (__DEV__) {
@@ -40,7 +39,7 @@ export function createRoot(
 }
 
 export function hydrateRoot(
-  container: Container,
+  container: Document | Element,
   children: ReactNodeList,
   options?: HydrateRootOptions,
 ): RootType {

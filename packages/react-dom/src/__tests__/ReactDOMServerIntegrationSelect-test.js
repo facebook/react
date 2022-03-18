@@ -246,4 +246,34 @@ describe('ReactDOMServerIntegrationSelect', () => {
       expect(option.selected).toBe(true);
     },
   );
+
+  itRenders(
+    'a boolean true select value match the string "true"',
+    async render => {
+      const e = await render(
+        <select value={true} readOnly={true}>
+          <option value="first">First</option>
+          <option value="true">True</option>
+        </select>,
+        1,
+      );
+      expect(e.firstChild.selected).toBe(false);
+      expect(e.lastChild.selected).toBe(true);
+    },
+  );
+
+  itRenders(
+    'a missing select value does not match the string "undefined"',
+    async render => {
+      const e = await render(
+        <select readOnly={true}>
+          <option value="first">First</option>
+          <option value="undefined">Undefined</option>
+        </select>,
+        1,
+      );
+      expect(e.firstChild.selected).toBe(true);
+      expect(e.lastChild.selected).toBe(false);
+    },
+  );
 });

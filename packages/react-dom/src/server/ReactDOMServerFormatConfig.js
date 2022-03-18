@@ -749,7 +749,7 @@ function pushStartOption(
     }
   }
 
-  if (selectedValue !== null) {
+  if (selectedValue != null) {
     let stringValue;
     if (value !== null) {
       if (__DEV__) {
@@ -782,8 +782,13 @@ function pushStartOption(
           break;
         }
       }
-    } else if (selectedValue === stringValue) {
-      target.push(selectedMarkerAttribute);
+    } else {
+      if (__DEV__) {
+        checkAttributeStringCoercion(selectedValue, 'select.value');
+      }
+      if ('' + selectedValue === stringValue) {
+        target.push(selectedMarkerAttribute);
+      }
     }
   } else if (selected) {
     target.push(selectedMarkerAttribute);
