@@ -1505,7 +1505,7 @@ function mountState<S>(
     // $FlowFixMe: Flow doesn't like mixed types
     initialState = initialState();
   }
-  return mountReducer(basicStateReducer, initialState)
+  return mountReducer(basicStateReducer, initialState);
 }
 
 function updateState<S>(
