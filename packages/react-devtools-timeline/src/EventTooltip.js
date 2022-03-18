@@ -255,7 +255,7 @@ const TooltipNetworkMeasure = ({
 
   let urlToDisplay = url;
   if (urlToDisplay.length > MAX_TOOLTIP_TEXT_LENGTH) {
-    const half = Math.floor(MAX_TOOLTIP_TEXT_LENGTH / 2);
+    const half = MAX_TOOLTIP_TEXT_LENGTH >> 1;
     urlToDisplay = url.substr(0, half) + '…' + url.substr(url.length - half);
   }
 

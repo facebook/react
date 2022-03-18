@@ -43,7 +43,7 @@ export function trimText(
   // Trimming long text could be really slow if we decrease only 1 character at a time.
   // Trimming with more of a binary search approach is faster in the worst cases.
   while (startIndex <= stopIndex) {
-    const currentIndex = Math.floor((startIndex + stopIndex) / 2);
+    const currentIndex = (startIndex + stopIndex) >> 1;
     const trimmedText =
       currentIndex === maxIndex ? text : text.substr(0, currentIndex) + '…';
 

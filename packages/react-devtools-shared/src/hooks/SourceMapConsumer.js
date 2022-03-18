@@ -65,7 +65,7 @@ function BasicSourceMapConsumer(sourceMapJSON: BasicSourceMap) {
     let stopIndex = lineMappings.length - 1;
     let index = -1;
     while (startIndex <= stopIndex) {
-      index = Math.floor((stopIndex + startIndex) / 2);
+      index = (stopIndex + startIndex) >> 1;
       nearestEntry = lineMappings[index];
 
       const currentColumn = nearestEntry[0];
@@ -189,7 +189,7 @@ function IndexedSourceMapConsumer(sourceMapJSON: IndexSourceMap) {
     let stopIndex = sections.length - 1;
     let index = -1;
     while (startIndex <= stopIndex) {
-      index = Math.floor((stopIndex + startIndex) / 2);
+      index = (stopIndex + startIndex) >> 1;
       section = sections[index];
 
       const currentLine = section.generatedLine;

@@ -43,7 +43,7 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   // build the stable channel, and the other half for experimental. Override
   // the environment variables to "trick" the underlying build script.
   const total = parseInt(process.env.CIRCLE_NODE_TOTAL, 10);
-  const halfTotal = Math.floor(total / 2);
+  const halfTotal = total >> 1;
   const index = parseInt(process.env.CIRCLE_NODE_INDEX, 10);
   if (index < halfTotal) {
     const nodeTotal = halfTotal;
