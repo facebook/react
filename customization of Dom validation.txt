@@ -1,0 +1,8 @@
+Here is the code to handle custom error message in HTML5:
+
+<input type="text" id="username" required placeholder="Enter Name"
+  oninvalid="this.setCustomValidity('Enter User Name Here')"
+  oninput="this.setCustomValidity('')"/>
+This part is important because it hides the error message when the user inputs new data:
+
+oninput="this.setCustomValidity('')"
