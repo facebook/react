@@ -1576,9 +1576,6 @@ function commitPlacement(finishedWork: Fiber): void {
       isContainer = false;
       break;
     case HostRoot:
-      parent = parentStateNode.containerInfo;
-      isContainer = true;
-      break;
     case HostPortal:
       parent = parentStateNode.containerInfo;
       isContainer = true;
