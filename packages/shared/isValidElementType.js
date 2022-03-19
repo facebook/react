@@ -27,7 +27,7 @@ import {
 } from 'shared/ReactSymbols';
 import {
   enableScopeAPI,
-  enableCache,
+  enableCacheElement,
   enableTransitionTracing,
   enableDebugTracing,
   enableLegacyHidden,
@@ -51,7 +51,7 @@ export default function isValidElementType(type: mixed) {
     (enableLegacyHidden && type === REACT_LEGACY_HIDDEN_TYPE) ||
     type === REACT_OFFSCREEN_TYPE ||
     (enableScopeAPI && type === REACT_SCOPE_TYPE) ||
-    (enableCache && type === REACT_CACHE_TYPE) ||
+    (enableCacheElement && type === REACT_CACHE_TYPE) ||
     (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE)
   ) {
     return true;
