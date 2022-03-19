@@ -1,0 +1,23 @@
+There is a major and quite obvious difference between an empty array and an 'no deps'.
+
+When you use an empty array, you are actually using componentDidMount in class components. But if you do not leave the same empty array, you will see that your counter does not work well.
+
+If you do not want to use an empty array, you must clean up your useEffect.
+
+See docs about "Effects Without Cleanup"
+The reason the function does not work properly is that every time your component is updated, the counter also runs very fast. But with a simple clean up command this problem can be solved.
+
+See docs about "Effects with Cleanup"
+You can see an example for your hooks bellow:
+
+  useEffect(() => {
+    console.log("SETTING INTERVAL");
+    setInterval(() => {
+      console.log("NOW", Date.now() / 1000);
+      setDuration(Date.now() - startTime);
+      return function cleanup() {
+         return 0;
+         // Also you can use 'clearInterval' here or anything else to stop rendering more
+      };
+    }, 1000);
+  });
