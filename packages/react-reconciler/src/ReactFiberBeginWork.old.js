@@ -37,6 +37,7 @@ import type {RootState} from './ReactFiberRoot.old';
 import {
   enableSuspenseAvoidThisFallback,
   enableCPUSuspense,
+  enableUseMutableSource,
 } from 'shared/ReactFeatureFlags';
 
 import checkPropTypes from 'shared/checkPropTypes';
@@ -1398,7 +1399,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     } else {
       // The outermost shell has not hydrated yet. Start hydrating.
       enterHydrationState(workInProgress);
-      if (supportsHydration) {
+      if (enableUseMutableSource && supportsHydration) {
         const mutableSourceEagerHydrationData =
           root.mutableSourceEagerHydrationData;
         if (mutableSourceEagerHydrationData != null) {
