@@ -20,6 +20,7 @@ import typeof * as DynamicFlagsType from 'ReactNativeInternalFeatureFlags';
 // flag here but it won't be set to `true` in any of our test runs. Need to
 // update the test configuration.
 
+export const enableCache = __VARIANT__;
 export const enablePersistentOffscreenHostContainer = __VARIANT__;
 
 // Flow magic to verify the exports of this file match the original version.
