@@ -153,14 +153,14 @@ function extractEvents(
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
 ) {
-  const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
+  const targetNode = targetInst ? getNodeFromInstance(targetInst) : null;
 
   switch (domEventName) {
     // Track the input node that has focus.
     case 'focusin':
       if (
-        isTextInputElement((targetNode: any)) ||
-        targetNode.contentEditable === 'true'
+        isTextInputElement(targetNode) ||
+        (targetNode !== null && (targetNode: any).contentEditable === 'true')
       ) {
         activeElement = targetNode;
         activeElementInst = targetInst;

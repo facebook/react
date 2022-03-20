@@ -28,8 +28,8 @@ const supportedInputTypes: {[key: string]: true | void, ...} = {
   week: true,
 };
 
-function isTextInputElement(elem: ?HTMLElement): boolean {
-  const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+function isTextInputElement(elem: Element | Text | null): boolean {
+  const nodeName = elem && elem.nodeName.toLowerCase();
 
   if (nodeName === 'input') {
     return !!supportedInputTypes[((elem: any): HTMLInputElement).type];
