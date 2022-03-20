@@ -974,7 +974,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         root = NoopRenderer.createContainer(
           container,
           tag,
-          false,
           null,
           null,
           false,
@@ -996,7 +995,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const fiberRoot = NoopRenderer.createContainer(
         container,
         ConcurrentRoot,
-        false,
         null,
         null,
         false,
@@ -1029,7 +1027,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const fiberRoot = NoopRenderer.createContainer(
         container,
         LegacyRoot,
-        false,
         null,
         null,
         false,

@@ -25,6 +25,7 @@ import type {Wakeable} from 'shared/ReactTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
+import type {RootState} from './ReactFiberRoot.new';
 
 import {
   enableCreateEventHandleAPI,
@@ -1869,11 +1870,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       }
       case HostRoot: {
         if (supportsHydration) {
-          const root: FiberRoot = finishedWork.stateNode;
-          if (root.isDehydrated) {
-            // We've just hydrated. No need to hydrate again.
-            root.isDehydrated = false;
-            commitHydratedContainer(root.containerInfo);
+          if (current !== null) {
+            const prevRootState: RootState = current.memoizedState;
+            if (prevRootState.isDehydrated) {
+              const root: FiberRoot = finishedWork.stateNode;
+              commitHydratedContainer(root.containerInfo);
+            }
           }
         }
         break;
@@ -1977,11 +1979,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     }
     case HostRoot: {
       if (supportsHydration) {
-        const root: FiberRoot = finishedWork.stateNode;
-        if (root.isDehydrated) {
-          // We've just hydrated. No need to hydrate again.
-          root.isDehydrated = false;
-          commitHydratedContainer(root.containerInfo);
+        if (current !== null) {
+          const prevRootState: RootState = current.memoizedState;
+          if (prevRootState.isDehydrated) {
+            const root: FiberRoot = finishedWork.stateNode;
+            commitHydratedContainer(root.containerInfo);
+          }
         }
       }
       return;
