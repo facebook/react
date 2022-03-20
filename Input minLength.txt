@@ -1,0 +1,5 @@
+This is by design. The minlength attribute only validates a field once it has been edited by the user. It doesn't validate the field if its value hasn't been changed, even if that value doesn't meet the constraint. From the spec (emphasis mine):
+
+Constraint validation: If an element has a minimum allowed value length, its dirty value flag is true, its value was last changed by a user edit (as opposed to a change made by a script), its value is not the empty string, and the JavaScript string length of the element's API value is less than the element's minimum allowed value length, then the element is suffering from being too short.
+
+If you need to validate the value regardless of whether the user has since edited the field, see Racil Hilan's answer (although their statement about the minlength attribute not being supported everywhere doesn't imply anything and is largely irrelevant — as shown, this is clearly by design; if anything it shows that the browsers that do support the attribute support it fully).
