@@ -1,0 +1,65 @@
+Nope, SLOTs are unique,
+and multiple lightDOM elements can be slotted to the same SLOT
+
+Think of SLOTs as your mailbox; would you want your mail to always duplicate to another mailbox?
+
+If you have that requirement you need a filter to copy emails (or slot content)
+
+With WebComponents there are 2 options to duplicate:
+
+Clone <span slot="bar"> to other (non-slot) DOM elements inside the shadowRoot
+
+Clone to new lightDOM elements <span slot="duplicate_bar1"> for newly slotted content
+
+Code below has both options for slotchange Events occuring on <span slot="bar"> (new content in slot)
+
+on slotchange the slot content is cloned in class="duplicate_bar" (let dups = ...)
+
+on slotchange new lightDOM elements are created (let dupslots = ...)
+
+
+
+Note that only method 2. uses <slot> functionality, and you can use :slotted styling
+
+This code only duplicates content; it does not clean up removed SLOT content.
+
+
+<my-element>
+  <span slot="bar"> ONE </span>
+  <span slot="bar"> TWO </span>
+  <span slot="content"> content </span>
+</my-element>
+<template id="MY-ELEMENT">
+  <style>
+    ::slotted(*) { background: lightgreen }
+  </style>
+  slot bar: <slot name="bar"></slot>
+  <br> slot: content: <slot name="content"></slot>
+  <br>Duplicate in SPAN: <span class="duplicate_bar"></span>
+  <br>Duplicate in B:<b class="duplicate_bar"></b>
+  <br>duplicate_bar1:<slot name="duplicate_bar1"></slot>
+  <br>duplicate_bar2:<slot name="duplicate_bar2"></slot>
+</template>
+<script>
+  customElements.define('my-element', class extends HTMLElement {
+    constructor() {
+      let template = id => document.getElementById(id).content.cloneNode(true);
+      super().attachShadow({mode: 'open'}).append(template(this.nodeName));
+      let slotname = "bar";
+      let slot = this.shadowRoot.querySelector(`[name="${slotname}"]`);
+      slot.addEventListener("slotchange", (evt) => {
+        let assigned = slot.assignedNodes();
+        let dups = [...this.shadowRoot.querySelectorAll(".duplicate_" + slotname)];
+        let dupslots = [...this.shadowRoot.querySelectorAll(`slot[name*="duplicate_bar"]`)];
+        assigned.forEach(node => {
+          dups.forEach(el => el.append(node.cloneNode(true)));
+          dupslots.forEach(duplicateslot => {
+            let newNode = node.cloneNode(true);
+            newNode.slot = duplicateslot.name; // set BEFORE adding to DOM! otherwise 'bar' slotchange Events triggers on it
+            this.append(newNode);
+          })
+        });
+      });
+    }
+  });
+</script>
