@@ -30,6 +30,7 @@ export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
 export const enableLazyElements = false;
 export const enableCache = false;
+export const enableCacheElement = true;
 export const enableSchedulerDebugging = false;
 export const debugRenderPhaseSideEffectsForStrictMode = true;
 export const disableJavaScriptURLs = false;

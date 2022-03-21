@@ -96,6 +96,7 @@ export const enableLegacyFBSupport = false;
 // -----------------------------------------------------------------------------
 
 export const enableCache = __EXPERIMENTAL__;
+export const enableCacheElement = __EXPERIMENTAL__;
 
 export const enableTransitionTracing = false;
 

@@ -24,6 +24,7 @@ export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 export const enableLazyElements = false;
 export const enableCache = true;
+export const enableCacheElement = true;
 export const disableJavaScriptURLs = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
