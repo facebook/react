@@ -1,0 +1,83 @@
+You are modifying the existing state of styles, so you will need to create a deep copy of the array first.
+
+You can either write your own clone function, or you can import the Lodash cloneDeep function.
+
+Add the following dependency to your package.json using:
+
+npm install lodash
+Also, you are passing the length of the array to the removeStyle function. You should be passing the last index which is length - 1.
+
+// ...
+
+import { cloneDeep } from 'lodash';
+
+// ...
+
+  function removeStyle(index) {
+    let newStyles = cloneDeep(styles); // Copy styles
+    newStyles.splice(index, 1);        // Splice from copy
+    setStyles(newStyles);              // Assign copy to styles
+  }
+
+// ...
+
+              <Button onClick={() => removeStyle(styles.length - 1)}>x</Button>
+// ...
+If you want to use a different clone function or write your own, there is a performance benchmark here:
+
+"What is the most efficient way to deep clone an object in JavaScript?"
+
+I would also move the function assigned to the onClick event handler in the button outside of the render function. It looks like you are calling setStyles which adds a button with a removeStyle event which itself calls setStyles. Once you move it out, you may be able to better diagnose your issue.
+
+Update
+I rewrote your component below. Try to render elements using the map method.
+
+import React, { useState } from "react";
+import { Button } from "reactstrap";
+
+const Controls = (props) => {
+  const [styles, setStyles] = useState([]);
+
+  const removeStyle = (index) => {
+    const newStyles = [...styles];
+    newStyles.splice(index, 1);
+    setStyles(newStyles);
+  };
+
+  const getChildNodeIndex = (elem) => {
+    let position = 0;
+    let curr = elem.previousSibling;
+    while (curr != null) {
+      if (curr.nodeType !== Node.TEXT_NODE) {
+        position++;
+      }
+      curr = curr.previousSibling;
+    }
+    return position;
+  };
+
+  const handleRemove = (e) => {
+    //removeStyle(parseInt(e.target.dataset.index, 10));
+    removeStyle(getChildNodeIndex(e.target.closest("div")));
+  };
+
+  const handleAdd = (e) => setStyles([...styles, styles.length]);
+
+  return (
+    <div>
+      {styles.map((style, index) => (
+          <div key={index}>
+          {style}
+          <Button data-index={index} onClick={handleRemove}>
+            &times;
+          </Button>
+        </div>
+      ))}
+      <Button color="primary" onClick={handleAdd}>
+        +
+      </Button>
+    </div>
+  );
+};
+
+export default Controls;
