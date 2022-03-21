@@ -1,0 +1,17 @@
+1
+
+I'm not sure exactly, But I think, the problem occurring because of Event Propagation, By the time propagation completes, document click event is been registered, that might be reason it's calling the eventHandler. Correct me if am I'm wrong.
+
+If you stop the event propagation, it's working fine.
+
+const openModal = useCallback(
+    function (e) {
+      if (!isOpen) { // stopping the propagation
+        e.stopPropagation();
+      }
+      setOpen(true);
+    },
+    [setOpen, isOpen]
+  );
+Demo link here
+https://codesandbox.io/s/react-createportal-useeffect-forked-z16yp?file=/src/index.js:313-475
