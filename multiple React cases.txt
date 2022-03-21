@@ -1,0 +1,62 @@
+It is perfectly fine to use two ReactDOM.render() in a single script.
+
+See example below
+
+var Hello = React.createClass({
+  render: function() {
+    return <div>Hello {this.props.name}</div>;
+  }
+});
+
+ReactDOM.render(
+  <Hello name="World" />,
+  document.getElementById('container')
+);
+var HelloAgain = React.createClass({
+  render: function() {
+    return <div>Hello {this.props.name}</div>;
+  }
+});
+
+ReactDOM.render(
+  <HelloAgain name="World again" />,
+  document.getElementById('another-container')
+);
+JSFIDDLE
+
+Refer to the following articles
+
+React Forum, SO POST
+
+In your case
+
+var deal_recommendations_id = document.getElementById('deal_recommendations_app');
+ReactDOM.render(
+ <DealRecommendation/>,
+document.getElementById('deal_recommendations_id'));
+deal_recommendation_id is already a DOM element and not an id you need not use document.getElementById again. Use it like below
+
+var deal_recommendations_id = document.getElementById('deal_recommendations_app');
+ReactDOM.render(
+ <DealRecommendation/>,
+deal_recommendations_id);
+EDIT:
+
+As far as I can see you need to remove the redundant route for dealrecommendation
+
+ReactDOM.render((
+    <Provider store={store}>
+        <Router history={hashHistory}>
+            <Route path="/" component={WizardApp}> </Route> 
+             <Route path="/overview/:deal" component={DealRecommendation}></Route>         
+            <Route path="/users/invite" component={ReferralApp}></Route> 
+            <Route path="/adm/custodian" component={CustodianApp}></Route> 
+
+        </Router>
+    </Provider>
+    ), document.getElementById('appRoot')
+);
+   var deal_recommendations_id = document.getElementById('deal_recommendations_app');
+ReactDOM.render(
+ <DealRecommendation/>,
+deal_recommendations_id);
