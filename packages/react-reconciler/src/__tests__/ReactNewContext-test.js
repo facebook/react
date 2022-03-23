@@ -1548,7 +1548,7 @@ describe('ReactNewContext', () => {
       for (let i = 0; i < LIMIT; i++) {
         const seed = Math.random()
           .toString(36)
-          .substr(2, 5);
+          .slice(2, 7);
         const actions = randomActions(5);
         try {
           simulate(seed, actions);

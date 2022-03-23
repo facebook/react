@@ -24,7 +24,7 @@ export function formatDuration(ms: number) {
 
 export function trimString(string: string, length: number): string {
   if (string.length > length) {
-    return `${string.substr(0, length - 1)}…`;
+    return `${string.slice(0, length >= 1 ? length - 1 : 0)}…`;
   }
   return string;
 }

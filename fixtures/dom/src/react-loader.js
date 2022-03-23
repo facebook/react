@@ -11,7 +11,7 @@ import semver from 'semver';
 
 function parseQuery(qstr) {
   var query = {};
-  var a = qstr.substr(1).split('&');
+  var a = qstr.slice(1).split('&');
 
   for (var i = 0; i < a.length; i++) {
     var b = a[i].split('=');

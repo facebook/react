@@ -116,7 +116,7 @@ function mockAllConfigs(rendererInfo) {
     // We want the reconciler to pick up the host config for this renderer.
     jest.mock(path, () => {
       let idx = path.lastIndexOf('/');
-      let forkPath = path.substr(0, idx) + '/forks' + path.substr(idx);
+      let forkPath = path.slice(0, idx) + '/forks' + path.slice(idx);
       return jest.requireActual(`${forkPath}.${rendererInfo.shortName}.js`);
     });
   });

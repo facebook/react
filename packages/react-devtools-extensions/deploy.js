@@ -30,7 +30,7 @@ const main = async buildId => {
   const commit = execSync('git rev-parse HEAD')
     .toString()
     .trim()
-    .substr(0, 7);
+    .slice(0, 7);
 
   let date = new Date();
   date = `${date.toLocaleDateString()} – ${date.toLocaleTimeString()}`;

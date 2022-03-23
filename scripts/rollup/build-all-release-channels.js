@@ -35,7 +35,7 @@ let dateString = String(
 
 // On CI environment, this string is wrapped with quotes '...'s
 if (dateString.startsWith("'")) {
-  dateString = dateString.substr(1, 8);
+  dateString = dateString.slice(1, 9);
 }
 
 if (process.env.CIRCLE_NODE_TOTAL) {

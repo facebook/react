@@ -45,7 +45,7 @@ export function trimText(
   while (startIndex <= stopIndex) {
     const currentIndex = Math.floor((startIndex + stopIndex) / 2);
     const trimmedText =
-      currentIndex === maxIndex ? text : text.substr(0, currentIndex) + '…';
+      currentIndex === maxIndex ? text : text.slice(0, currentIndex) + '…';
 
     if (getTextWidth(context, trimmedText) <= width) {
       if (longestValidIndex < currentIndex) {
