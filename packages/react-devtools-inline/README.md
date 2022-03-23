@@ -350,8 +350,11 @@ yarn build-for-devtools
 ### Download from CI
 To use the latest build from CI, run the following command from the root of the repository:
 ```sh
-./scripts/release/download-experimental-build.js
+./scripts/release/download-experimental-build.js --commit=main
 ```
+
+Please note that you might need to [create a API Token for Circle CI](https://circleci.com/docs/2.0/managing-api-tokens/) and set up an environment variable `CIRCLE_CI_API_TOKEN`.
+
 ## Build steps
 Once the above packages have been built or downloaded, you can watch for changes made to the source code and automatically rebuild by running:
 ```sh
