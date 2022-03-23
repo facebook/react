@@ -33,6 +33,7 @@ export const {
   enableSyncDefaultUpdates,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnHydrationMismatch,
+  enableClientRenderFallbackOnTextMismatch,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -71,6 +72,7 @@ export const enableSelectiveHydration = true;
 
 export const enableLazyElements = true;
 export const enableCache = true;
+export const enableCacheElement = true;
 
 export const disableJavaScriptURLs = true;
 

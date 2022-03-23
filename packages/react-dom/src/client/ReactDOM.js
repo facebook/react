@@ -148,7 +148,7 @@ const Internals = {
 };
 
 function createRoot(
-  container: Container,
+  container: Element | DocumentFragment,
   options?: CreateRootOptions,
 ): RootType {
   if (__DEV__) {
@@ -163,7 +163,7 @@ function createRoot(
 }
 
 function hydrateRoot(
-  container: Container,
+  container: Document | Element,
   initialChildren: ReactNodeList,
   options?: HydrateRootOptions,
 ): RootType {

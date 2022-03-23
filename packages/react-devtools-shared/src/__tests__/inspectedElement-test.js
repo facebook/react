@@ -2734,6 +2734,62 @@ describe('InspectedElement', () => {
     });
   });
 
+  it('inspecting nested renderers should not throw', async () => {
+    // Ignoring react art warnings
+    spyOn(console, 'error');
+    const ReactArt = require('react-art');
+    const ArtSVGMode = require('art/modes/svg');
+    const ARTCurrentMode = require('art/modes/current');
+    store.componentFilters = [];
+
+    ARTCurrentMode.setCurrent(ArtSVGMode);
+    const {Surface, Group} = ReactArt;
+
+    function Child() {
+      return (
+        <Surface width={1} height={1}>
+          <Group />
+        </Surface>
+      );
+    }
+    function App() {
+      return <Child />;
+    }
+
+    await utils.actAsync(() => {
+      legacyRender(<App />, document.createElement('div'));
+    });
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Child>
+            ▾ <Surface>
+                <svg>
+      [root]
+          <Group>
+    `);
+
+    const inspectedElement = await inspectElementAtIndex(4);
+    expect(inspectedElement.owners).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "displayName": "Child",
+          "hocDisplayNames": null,
+          "id": 3,
+          "key": null,
+          "type": 5,
+        },
+        Object {
+          "displayName": "App",
+          "hocDisplayNames": null,
+          "id": 2,
+          "key": null,
+          "type": 5,
+        },
+      ]
+    `);
+  });
+
   describe('error boundary', () => {
     it('can toggle error', async () => {
       class LocalErrorBoundary extends React.Component<any> {

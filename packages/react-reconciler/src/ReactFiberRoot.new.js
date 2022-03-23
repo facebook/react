@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   FiberRoot,
   SuspenseHydrationCallbacks,
@@ -39,7 +40,8 @@ import {createCache, retainCache} from './ReactFiberCacheComponent.new';
 
 export type RootState = {
   element: any,
-  cache: Cache | null,
+  isDehydrated: boolean,
+  cache: Cache,
   transitions: Transitions | null,
 };
 
@@ -59,7 +61,6 @@ function FiberRootNode(
   this.timeoutHandle = noTimeout;
   this.context = null;
   this.pendingContext = null;
-  this.isDehydrated = hydrate;
   this.callbackNode = null;
   this.callbackPriority = NoLane;
   this.eventTimes = createLaneMap(NoLanes);
@@ -128,6 +129,7 @@ export function createFiberRoot(
   containerInfo: any,
   tag: RootTag,
   hydrate: boolean,
+  initialChildren: ReactNodeList,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
@@ -178,15 +180,17 @@ export function createFiberRoot(
     root.pooledCache = initialCache;
     retainCache(initialCache);
     const initialState: RootState = {
-      element: null,
+      element: initialChildren,
+      isDehydrated: hydrate,
       cache: initialCache,
       transitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
   } else {
     const initialState: RootState = {
-      element: null,
-      cache: null,
+      element: initialChildren,
+      isDehydrated: hydrate,
+      cache: (null: any), // not enabled yet
       transitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
