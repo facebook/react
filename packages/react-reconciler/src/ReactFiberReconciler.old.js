@@ -452,20 +452,6 @@ function markRetryLaneIfNotHydrated(fiber: Fiber, retryLane: Lane) {
   }
 }
 
-export function attemptDiscreteHydration(fiber: Fiber): void {
-  if (fiber.tag !== SuspenseComponent) {
-    // We ignore HostRoots here because we can't increase
-    // their priority and they should not suspend on I/O,
-    // since you have to wrap anything that might suspend in
-    // Suspense.
-    return;
-  }
-  const eventTime = requestEventTime();
-  const lane = SyncLane;
-  scheduleUpdateOnFiber(fiber, lane, eventTime);
-  markRetryLaneIfNotHydrated(fiber, lane);
-}
-
 export function attemptContinuousHydration(fiber: Fiber): void {
   if (fiber.tag !== SuspenseComponent) {
     // We ignore HostRoots here because we can't increase
