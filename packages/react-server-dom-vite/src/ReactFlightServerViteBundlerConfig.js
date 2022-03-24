@@ -29,8 +29,11 @@ export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
   return reference.filepath + '#' + reference.name;
 }
 
-export function isModuleReference(reference: Object): boolean {
-  return (reference.$$typeof_rsc || reference.$$typeof) === MODULE_TAG;
+export function getModuleReference(reference: any): Object | undefined {
+  return reference &&
+    (reference.$$typeof_rsc || reference.$$typeof) === MODULE_TAG
+    ? reference
+    : undefined;
 }
 
 export function resolveModuleMetaData<T>(
