@@ -348,10 +348,14 @@ To build dependencies from source, run the following command from the root of th
 yarn build-for-devtools
 ```
 ### Download from CI
-To use the latest build from CI, run the following command from the root of the repository:
+To use the latest build from CI, go to `scripts/release/` and run the following commands:
 ```sh
-./scripts/release/download-experimental-build.js
+yarn
+./download-experimental-build.js --commit=main
 ```
+
+Please note that you might need to [create a Circle CI API Token](https://circleci.com/docs/2.0/managing-api-tokens/) and set up an environment variable `CIRCLE_CI_API_TOKEN`.
+
 ## Build steps
 Once the above packages have been built or downloaded, you can watch for changes made to the source code and automatically rebuild by running:
 ```sh
