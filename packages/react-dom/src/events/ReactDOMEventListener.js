@@ -228,7 +228,7 @@ function dispatchEvent(
   );
 }
 
-export let return_targetInst = null;
+let return_targetInst = null;
 
 // Returns a SuspenseInstance or Container if it's blocked.
 // The return_targetInst field above is conceptually part of the return value.
