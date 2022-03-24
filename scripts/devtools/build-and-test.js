@@ -21,6 +21,26 @@ const {
 async function main() {
   clear();
 
+  await confirm('Have you stopped all NPM DEV scripts?', () => {
+    const packagesPath = relative(process.cwd(), join(__dirname, 'packages'));
+
+    console.log('Stop all NPM DEV scripts in the following directories:');
+    console.log(
+      chalk.bold('  ' + join(packagesPath, 'react-devtools-core')),
+      chalk.gray('(start:backend, start:standalone)')
+    );
+    console.log(
+      chalk.bold('  ' + join(packagesPath, 'react-devtools-inline')),
+      chalk.gray('(start)')
+    );
+
+    const buildAndTestScriptPath = join(__dirname, 'build-and-test.js');
+    const pathToPrint = relative(process.cwd(), buildAndTestScriptPath);
+
+    console.log('\nThen restart this release step:');
+    console.log(chalk.bold.green('  ' + pathToPrint));
+  });
+
   await confirm('Have you run the prepare-release script?', () => {
     const prepareReleaseScriptPath = join(__dirname, 'prepare-release.js');
     const pathToPrint = relative(process.cwd(), prepareReleaseScriptPath);
