@@ -1181,7 +1181,7 @@ function renderNodeDestructive(
     const iteratorFn = getIteratorFn(node);
     if (iteratorFn) {
       if (__DEV__) {
-        validateIterable(node, iteratorFn());
+        validateIterable(node, iteratorFn);
       }
       const iterator = iteratorFn.call(node);
       if (iterator) {
