@@ -2508,4 +2508,27 @@ describe('ReactDOMFizzServer', () => {
       <span>default</span>,
     ]);
   });
+
+  // @gate experimental
+  it('Supports iterable', async () => {
+    const Immutable = require('immutable');
+
+    const mappedJSX = Immutable.fromJS([
+      {name: 'a', value: 'a'},
+      {name: 'b', value: 'b'},
+    ]).map(item => <li key={item.get('value')}>{item.get('name')}</li>);
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <ul>{mappedJSX}</ul>,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <ul>
+        <li>a</li>
+        <li>b</li>
+      </ul>,
+    );
+  });
 });
