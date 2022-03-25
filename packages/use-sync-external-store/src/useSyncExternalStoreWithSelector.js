@@ -24,7 +24,11 @@ export function useSyncExternalStoreWithSelector<Snapshot, Selection>(
   isEqual?: (a: Selection, b: Selection) => boolean,
 ): Selection {
   // Use this to track the rendered snapshot.
-  const instRef = useRef(null);
+  const instRef = useRef({
+    hasValue: false,
+    value: (null: Selection | null),
+  });
+  const inst = instRef.current;
   let inst;
   if (instRef.current === null) {
     inst = {
