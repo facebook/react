@@ -29,6 +29,7 @@ import {
   ContextProvider,
   ForwardRef,
 } from 'react-reconciler/src/ReactWorkTags';
+import {createUnsupportedFeatureError} from './ReactDebugCustomErrors';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -356,6 +357,21 @@ const Dispatcher: DispatcherType = {
   useId,
 };
 
+// create a proxy to throw a custom error
+// in case future versions of React adds more hooks
+const DispatcherProxyHandler = {
+  get(target, prop, _receiver) {
+    if (target.hasOwnProperty(prop)) {
+      return Reflect.get(...arguments);
+    }
+    throw createUnsupportedFeatureError(
+      'Missing method in Dispatcher: ' + prop,
+    );
+  },
+};
+
+const DispatcherProxy = new Proxy(Dispatcher, DispatcherProxyHandler);
+
 // Inspect
 
 export type HookSource = {
@@ -664,7 +680,7 @@ export function inspectHooks<Props>(
 
   const previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  currentDispatcher.current = Dispatcher;
+  currentDispatcher.current = DispatcherProxy;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
@@ -708,7 +724,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
 ): HooksTree {
   const previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  currentDispatcher.current = Dispatcher;
+  currentDispatcher.current = DispatcherProxy;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
