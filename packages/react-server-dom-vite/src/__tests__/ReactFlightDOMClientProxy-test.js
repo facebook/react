@@ -15,6 +15,17 @@ let ClientProxy;
 const id = '/path/to/Counter.jsx';
 const name = 'Counter';
 
+jest.mock('react', () => {
+  const actualModule = jest.requireActual('react');
+  return {
+    ...actualModule,
+    useState: jest.fn(() => undefined),
+  };
+});
+
+const wrapInClientProxy = component =>
+  ClientProxy.wrapInClientProxy({id, name, named: false, component});
+
 describe('ReactFlightDOMClientProxy', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -22,32 +33,60 @@ describe('ReactFlightDOMClientProxy', () => {
     ClientProxy = require('../ClientProxy');
   });
 
-  it('should wrap client components in a proxy', async () => {
-    const result = ClientProxy.wrapInClientProxy({
-      id,
-      name,
-      named: false,
-      component: <div>MyCounter</div>,
-    });
+  it('does not affect the exports in non-RSC environments', () => {
+    React.useState.mockReturnValue(undefined);
 
-    expect(typeof result).toEqual('object');
-    expect(typeof result.render).toEqual('function');
-    expect(result.filepath).toEqual(id);
-    expect(result.name).toEqual('default');
+    const wrappedElement = wrapInClientProxy(<div>test</div>);
+    expect(wrappedElement).toHaveProperty(
+      '$$typeof',
+      Symbol.for('react.element'),
+    );
 
-    if (process.env.NODE_ENV !== 'production') {
-      expect(result.render.displayName).toEqual(name);
-    }
+    const wrappedComponent = wrapInClientProxy(() => <div>test</div>);
+    expect(typeof wrappedComponent).toEqual('function');
+    expect(wrappedComponent).not.toHaveProperty('$$typeof');
+
+    [(42, '42', null, undefined)].forEach(value =>
+      expect(wrapInClientProxy(value)).toEqual(value),
+    );
   });
 
-  it('should not wrap anything that is not a React component', () => {
-    const result = ClientProxy.wrapInClientProxy({
-      id,
-      name,
-      named: true,
-      component: '42',
+  it('does not allow calling exported functions or reading properties in RSC', () => {
+    const myFn = () => true;
+    myFn.myProp = true;
+
+    React.useState.mockReturnValue(undefined);
+    const wrappedFnSsr = wrapInClientProxy(myFn);
+    expect(wrappedFnSsr.myProp).toEqual(true);
+    expect(wrappedFnSsr()).toEqual(true);
+
+    React.useState.mockImplementation(() => {
+      throw new Error('Not supported in RSC');
+    });
+    const wrappedFnRsc = wrapInClientProxy(myFn);
+    expect(wrappedFnRsc.myProp).toEqual(undefined);
+    expect(() => wrappedFnRsc()).toThrowError(ClientProxy.FN_RSC_ERROR);
+    expect(() => new wrappedFnRsc()).toThrowError(ClientProxy.FN_RSC_ERROR);
+  });
+
+  it('wraps client components and elements in a proxy during RSC', async () => {
+    React.useState.mockImplementation(() => {
+      throw new Error('Not supported in RSC');
     });
 
-    expect(result).toEqual('42');
+    const wrappedElement = wrapInClientProxy(<div>MyCounter</div>);
+    expect(wrappedElement).toHaveProperty('$$typeof', ClientProxy.MODULE_TAG);
+
+    expect(typeof wrappedElement).toEqual('object');
+    expect(wrappedElement).toHaveProperty('filepath', id);
+    expect(wrappedElement).toHaveProperty('name', 'default');
+
+    const wrappedComponent = wrapInClientProxy(() => <div>MyCounter</div>);
+
+    expect(wrappedComponent).toHaveProperty('$$typeof', ClientProxy.MODULE_TAG);
+
+    expect(typeof wrappedComponent).toEqual('function');
+    expect(wrappedComponent).toHaveProperty('filepath', id);
+    expect(wrappedComponent).toHaveProperty('name', 'default');
   });
 });

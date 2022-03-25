@@ -30,10 +30,7 @@ export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
 }
 
 export function getModuleReference(reference: any): Object | undefined {
-  return reference &&
-    (reference.$$typeof_rsc || reference.$$typeof) === MODULE_TAG
-    ? reference
-    : undefined;
+  return reference && reference.$$typeof === MODULE_TAG ? reference : undefined;
 }
 
 export function resolveModuleMetaData<T>(

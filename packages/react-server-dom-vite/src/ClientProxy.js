@@ -7,15 +7,11 @@
  * @flow
  */
 
-import {createElement} from 'react';
+import {useState} from 'react';
 
 declare var globalThis: any;
 // eslint-disable-next-line no-unused-vars
 /*global globalThis*/
-
-// This is a store of components discovered during RSC
-// to load them later when consuming the response in SSR.
-globalThis.__COMPONENT_INDEX = {};
 
 type ClientProxy = {
   id: string,
@@ -24,57 +20,82 @@ type ClientProxy = {
   component: mixed,
 };
 
-function isReactComponent(component: any, name: string, isNamed: boolean) {
-  if (!component) return false;
+// Store of components discovered during RSC to load
+// them later when consuming the response in SSR.
+globalThis.__COMPONENT_INDEX = {};
 
-  return (
-    (typeof component === 'function' && (!isNamed || /^[A-Z]/.test(name))) ||
-    typeof component.render === 'function' ||
-    component.$$typeof === Symbol.for('react.element')
-  );
+export const MODULE_TAG = Symbol.for('react.module.reference');
+export const FN_RSC_ERROR =
+  'Functions exported from client components cannot be called or used as constructors from a server component.';
+
+// TODO what's a better way to detect Flight runtime?
+// const cacheType = () => new Map();
+export function isRsc() {
+  try {
+    useState();
+    return false;
+  } catch (e) {
+    return true;
+  }
 }
 
-// A ClientProxy behaves as a module reference for the Flight
-// runtime (RSC) and as a real component for the Fizz runtime (SSR).
-// Note that this is not used in browser environments.
-export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
-  if (!isReactComponent(component, name, named)) {
-    // This is not a React component, do not wrap it.
-    return component;
-  }
-
-  const render = (props: any) => createElement(component, props);
-  Object.defineProperty(render, 'name', {value: name});
-
-  if (__DEV__) {
-    render.displayName = name;
-  }
-
-  // Fizz runtime accesses the `render` method directly when encountering a forward_ref
-  const componentRef = Object.create(null);
-  componentRef.$$typeof = Symbol.for('react.forward_ref');
-  componentRef.render = render;
-
-  // Flight runtime will check this custom typeof to decide wether this is a module ref
+function createModuleReference(id, component, name, isNamed) {
   const moduleRef = Object.create(null);
-  moduleRef.$$typeof_rsc = Symbol.for('react.module.reference');
+  moduleRef.$$typeof = MODULE_TAG;
   moduleRef.filepath = id;
-  moduleRef.name = named ? name : 'default';
+  moduleRef.name = isNamed ? name : 'default';
 
-  // Store component in a global index during RSC to use them later in SSR
+  // Store component in a global index during RSC to use it later in SSR
   globalThis.__COMPONENT_INDEX[id] = Object.defineProperty(
     globalThis.__COMPONENT_INDEX[id] || Object.create(null),
     moduleRef.name,
     {value: component, writable: true},
   );
 
-  return new Proxy(componentRef, {
-    get: (target, prop) =>
-      // 1. Let React access the element/ref and type in SSR
-      (target: any)[prop] ||
-      // 2. Check module properties for RSC requests
-      (moduleRef: any)[prop] ||
-      // 3. Fallback to custom component properties such as `ImageComponent.Fragment`
-      (component: any)[prop],
-  });
+  return moduleRef;
+}
+
+// A ClientProxy behaves as a module reference for the Flight
+// runtime (RSC) and as a real component for the Fizz runtime (SSR).
+// Note that this is not used in browser environments.
+export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
+  const type = typeof component;
+
+  if (component === null || (type !== 'object' && type !== 'function')) {
+    return component;
+  }
+
+  if (component.$$typeof) {
+    // Make $$typeof configurable to bypass proxy invariance where
+    // it cannot return a different type from its original target.
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/get#invariants
+    component = Object.create(component, {
+      $$typeof: {
+        value: component.$$typeof,
+        configurable: true,
+      },
+    });
+  }
+
+  const moduleRef = createModuleReference(id, component, name, named);
+  const get = (target, prop, receiver) =>
+    Reflect.get(isRsc() ? moduleRef : target, prop, receiver);
+
+  return new Proxy(
+    component,
+    type === 'object'
+      ? {get}
+      : {
+          get,
+          apply() {
+            if (isRsc()) throw new Error(FN_RSC_ERROR + ` Calling "${name}".`);
+            return Reflect.apply(...arguments);
+          },
+          construct() {
+            if (isRsc())
+              throw new Error(FN_RSC_ERROR + ` Instantiating "${name}".`);
+            return Reflect.construct(...arguments);
+          },
+        },
+  );
 }
