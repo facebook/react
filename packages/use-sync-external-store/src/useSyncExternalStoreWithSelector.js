@@ -29,16 +29,6 @@ export function useSyncExternalStoreWithSelector<Snapshot, Selection>(
     value: (null: Selection | null),
   });
   const inst = instRef.current;
-  let inst;
-  if (instRef.current === null) {
-    inst = {
-      hasValue: false,
-      value: (null: Selection | null),
-    };
-    instRef.current = inst;
-  } else {
-    inst = instRef.current;
-  }
 
   const [getSelection, getServerSelection] = useMemo(() => {
     // Track the memoized state using closure variables that are local to this
