@@ -89,4 +89,23 @@ describe('ReactFlightDOMClientProxy', () => {
     expect(wrappedComponent).toHaveProperty('filepath', id);
     expect(wrappedComponent).toHaveProperty('name', 'default');
   });
+
+  it('registers module references for long strings globally', () => {
+    // eslint-disable-next-line no-unused-vars
+    /*global globalThis*/
+
+    const shortString = 'a'.repeat(ClientProxy.STRING_SIZE_LIMIT - 1);
+    const wrappedShortString = wrapInClientProxy(shortString);
+    expect(shortString).toEqual(wrappedShortString);
+    expect(globalThis.__STRING_REFERENCE_INDEX[shortString]).toEqual(undefined);
+
+    const longString = 'a'.repeat(ClientProxy.STRING_SIZE_LIMIT);
+    const wrappedLongString = wrapInClientProxy(longString);
+    expect(longString).toEqual(wrappedLongString);
+    expect(globalThis.__STRING_REFERENCE_INDEX[longString]).toMatchObject({
+      $$typeof: ClientProxy.MODULE_TAG,
+      filepath: id,
+      name: 'default',
+    });
+  });
 });

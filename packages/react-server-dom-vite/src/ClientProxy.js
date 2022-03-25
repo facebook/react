@@ -24,7 +24,12 @@ type ClientProxy = {
 // them later when consuming the response in SSR.
 globalThis.__COMPONENT_INDEX = {};
 
+// Store to get module references for long strings
+// when rendering in RSC (strings cannot be wrapped Proxy).
+globalThis.__STRING_REFERENCE_INDEX = {};
+
 export const MODULE_TAG = Symbol.for('react.module.reference');
+export const STRING_SIZE_LIMIT = 64;
 export const FN_RSC_ERROR =
   'Functions exported from client components cannot be called or used as constructors from a server component.';
 
@@ -62,6 +67,11 @@ export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
   const type = typeof component;
 
   if (component === null || (type !== 'object' && type !== 'function')) {
+    if (type === 'string' && component.length >= STRING_SIZE_LIMIT) {
+      const moduleRef = createModuleReference(id, component, name, named);
+      globalThis.__STRING_REFERENCE_INDEX[component] = moduleRef;
+    }
+
     return component;
   }
 

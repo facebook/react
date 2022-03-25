@@ -30,6 +30,10 @@ export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
 }
 
 export function getModuleReference(reference: any): Object | undefined {
+  /*global globalThis*/
+  if (typeof reference === 'string')
+    return globalThis.__STRING_REFERENCE_INDEX[reference];
+
   return reference && reference.$$typeof === MODULE_TAG ? reference : undefined;
 }
 
