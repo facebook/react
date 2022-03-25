@@ -62,7 +62,7 @@ import {
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
-import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
+import {DOCUMENT_NODE, ELEMENT_NODE} from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
 import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
@@ -208,21 +208,26 @@ if (__DEV__) {
     return testElement.innerHTML;
   };
 
-  formatTagDEV = function(node: Element): string {
+  formatTagDEV = function(node: Element | Document | DocumentFragment): string {
     let str = '<' + node.nodeName.toLowerCase();
-    const attributeNames = node.getAttributeNames();
-    for (let i = 0; i < attributeNames.length; i++) {
-      if (i > 30) {
-        str += ' ...';
-        break;
+    if (node.nodeType === ELEMENT_NODE) {
+      const element = ((node: any): Element);
+      const attributes = element.attributes;
+      for (let i = 0; i < attributes.length; i++) {
+        if (i > 30) {
+          str += ' ...';
+          break;
+        }
+        const attributeName = attributes[i].name;
+        const value = attributes[i].value;
+        if (value != null) {
+          let trimmedValue = value;
+          if (value.length > 30) {
+            trimmedValue = value.substr(0, 30) + '...';
+          }
+          str += ' ' + attributeName + '="' + trimmedValue + '"';
+        }
       }
-      const attributeName = attributeNames[i];
-      const value = node.getAttribute(attributeName);
-      let trimmedValue = value;
-      if (value.length > 30) {
-        trimmedValue = value.substr(0, 30) + '...';
-      }
-      str += ' ' + attributeName + '="' + trimmedValue + '"';
     }
     str += '>';
     return str;
