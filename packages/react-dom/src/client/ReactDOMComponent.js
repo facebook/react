@@ -82,6 +82,18 @@ import {
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;
 
+let isJsdomDev = false;
+if (__DEV__) {
+  if (
+    typeof navigator !== 'undefined' &&
+    navigator != null &&
+    typeof navigator.userAgent === 'string' &&
+    navigator.userAgent.includes('jsdom')
+  ) {
+    isJsdomDev = true;
+  }
+}
+
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
 const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
@@ -136,6 +148,7 @@ if (__DEV__) {
     propName: string,
     serverValue: mixed,
     clientValue: mixed,
+    domElement: Element,
   ) {
     if (didWarnInvalidHydration) {
       return;
@@ -156,9 +169,15 @@ if (__DEV__) {
       JSON.stringify(normalizedServerValue),
       JSON.stringify(normalizedClientValue),
     );
+    if (!isJsdomDev) {
+      console['error']('Server HTML:', domElement);
+    }
   };
 
-  warnForExtraAttributes = function(attributeNames: Set<string>) {
+  warnForExtraAttributes = function(
+    attributeNames: Set<string>,
+    domElement: Element,
+  ) {
     if (didWarnInvalidHydration) {
       return;
     }
@@ -168,6 +187,9 @@ if (__DEV__) {
       names.push(name);
     });
     console.error('Extra attributes from the server: %s', names);
+    if (!isJsdomDev) {
+      console['error']('Server HTML:', domElement);
+    }
   };
 
   warnForInvalidEventListener = function(registrationName, listener) {
@@ -1046,7 +1068,12 @@ export function diffHydratedProperties(
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
           if (expectedHTML !== serverHTML) {
-            warnForPropDifference(propKey, serverHTML, expectedHTML);
+            warnForPropDifference(
+              propKey,
+              serverHTML,
+              expectedHTML,
+              domElement,
+            );
           }
         }
       } else if (propKey === STYLE) {
@@ -1057,7 +1084,12 @@ export function diffHydratedProperties(
           const expectedStyle = createDangerousStringForStyles(nextProp);
           serverValue = domElement.getAttribute('style');
           if (expectedStyle !== serverValue) {
-            warnForPropDifference(propKey, serverValue, expectedStyle);
+            warnForPropDifference(
+              propKey,
+              serverValue,
+              expectedStyle,
+              domElement,
+            );
           }
         }
       } else if (
@@ -1086,7 +1118,7 @@ export function diffHydratedProperties(
         serverValue = getValueForAttribute(domElement, propKey, nextProp);
 
         if (nextProp !== serverValue) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+          warnForPropDifference(propKey, serverValue, nextProp, domElement);
         }
       } else if (
         !shouldIgnoreAttribute(propKey, propertyInfo, isCustomComponentTag) &&
@@ -1142,7 +1174,7 @@ export function diffHydratedProperties(
           nextProp !== serverValue &&
           !isMismatchDueToBadCasing
         ) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+          warnForPropDifference(propKey, serverValue, nextProp, domElement);
         }
       }
     }
@@ -1153,7 +1185,7 @@ export function diffHydratedProperties(
       // $FlowFixMe - Should be inferred as not undefined.
       if (extraAttributeNames.size > 0 && !suppressHydrationWarning) {
         // $FlowFixMe - Should be inferred as not undefined.
-        warnForExtraAttributes(extraAttributeNames);
+        warnForExtraAttributes(extraAttributeNames, domElement);
       }
     }
   }
@@ -1213,6 +1245,14 @@ export function warnForDeletedHydratableElement(
       child.nodeName.toLowerCase(),
       parentNode.nodeName.toLowerCase(),
     );
+    if (!isJsdomDev) {
+      console['error'](
+        'Server HTML:',
+        parentNode,
+        '\n\nFirst mismatching child:',
+        child,
+      );
+    }
   }
 }
 
@@ -1230,6 +1270,14 @@ export function warnForDeletedHydratableText(
       child.nodeValue,
       parentNode.nodeName.toLowerCase(),
     );
+    if (!isJsdomDev) {
+      console['error'](
+        'Server HTML:',
+        parentNode,
+        '\n\nFirst mismatching child:',
+        child,
+      );
+    }
   }
 }
 
@@ -1248,6 +1296,9 @@ export function warnForInsertedHydratedElement(
       tag,
       parentNode.nodeName.toLowerCase(),
     );
+    if (!isJsdomDev) {
+      console['error']('Server HTML:', parentNode);
+    }
   }
 }
 
@@ -1272,6 +1323,9 @@ export function warnForInsertedHydratedText(
       text,
       parentNode.nodeName.toLowerCase(),
     );
+    if (!isJsdomDev) {
+      console['error']('Server HTML:', parentNode);
+    }
   }
 }
 
