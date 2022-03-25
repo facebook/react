@@ -2509,7 +2509,7 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  it('Supports immutable lists', async () => {
+  it('Supports iterable', async () => {
     const Immutable = require('immutable');
 
     const mappedJSX = Immutable.fromJS([
