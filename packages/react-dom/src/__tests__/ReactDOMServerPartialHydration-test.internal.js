@@ -361,9 +361,9 @@ describe('ReactDOMServerPartialHydration', () => {
 
       if (__DEV__) {
         expect(mockError.mock.calls[0]).toEqual([
-          'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
+          'Warning: Expected server HTML to contain a matching <%s> in %s.%s',
           'div',
-          'div',
+          '<div>',
           '\n' +
             '    in div (at **)\n' +
             '    in Component (at **)\n' +
@@ -610,9 +610,9 @@ describe('ReactDOMServerPartialHydration', () => {
       }
       if (__DEV__) {
         expect(mockError).toHaveBeenCalledWith(
-          'Warning: Did not expect server HTML to contain a <%s> in <%s>.%s',
-          'span',
-          'div',
+          'Warning: Did not expect server HTML to contain a %s in %s.%s',
+          '<span>',
+          '<div>',
           '\n' +
             '    in Suspense (at **)\n' +
             '    in div (at **)\n' +

@@ -1846,7 +1846,7 @@ describe('ReactDOMFizzServer', () => {
       }).toErrorDev(
         [
           'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
-          'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
+          'Warning: Expected server HTML to contain a matching <div> in <div id="container">.\n' +
             '    in div (at **)\n' +
             '    in App (at **)',
         ],
@@ -1947,7 +1947,7 @@ describe('ReactDOMFizzServer', () => {
       }).toErrorDev(
         [
           'Warning: An error occurred during hydration. The server HTML was replaced with client content',
-          'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
+          'Warning: Expected server HTML to contain a matching <div> in <div id="container">.\n' +
             '    in div (at **)\n' +
             '    in App (at **)',
         ],

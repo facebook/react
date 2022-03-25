@@ -100,6 +100,7 @@ let warnForInvalidEventListener;
 let canDiffStyleForHydrationWarning;
 
 let normalizeHTML;
+let formatTagDEV;
 
 if (__DEV__) {
   warnedUnknownTags = {
@@ -205,6 +206,26 @@ if (__DEV__) {
           );
     testElement.innerHTML = html;
     return testElement.innerHTML;
+  };
+
+  formatTagDEV = function(node: Element): string {
+    let str = '<' + node.nodeName.toLowerCase();
+    const attributeNames = node.getAttributeNames();
+    for (let i = 0; i < attributeNames.length; i++) {
+      if (i > 30) {
+        str += ' ...';
+        break;
+      }
+      const attributeName = attributeNames[i];
+      const value = node.getAttribute(attributeName);
+      let trimmedValue = value;
+      if (value.length > 30) {
+        trimmedValue = value.substr(0, 30) + '...';
+      }
+      str += ' ' + attributeName + '="' + trimmedValue + '"';
+    }
+    str += '>';
+    return str;
   };
 }
 
@@ -1209,9 +1230,9 @@ export function warnForDeletedHydratableElement(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'Did not expect server HTML to contain a <%s> in <%s>.',
-      child.nodeName.toLowerCase(),
-      parentNode.nodeName.toLowerCase(),
+      'Did not expect server HTML to contain a %s in %s.',
+      formatTagDEV(child),
+      formatTagDEV(parentNode),
     );
   }
 }
@@ -1226,9 +1247,9 @@ export function warnForDeletedHydratableText(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'Did not expect server HTML to contain the text node "%s" in <%s>.',
+      'Did not expect server HTML to contain the text node "%s" in %s.',
       child.nodeValue,
-      parentNode.nodeName.toLowerCase(),
+      formatTagDEV(parentNode),
     );
   }
 }
@@ -1244,9 +1265,9 @@ export function warnForInsertedHydratedElement(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'Expected server HTML to contain a matching <%s> in <%s>.',
+      'Expected server HTML to contain a matching <%s> in %s.',
       tag,
-      parentNode.nodeName.toLowerCase(),
+      formatTagDEV(parentNode),
     );
   }
 }
@@ -1268,9 +1289,9 @@ export function warnForInsertedHydratedText(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'Expected server HTML to contain a matching text node for "%s" in <%s>.',
+      'Expected server HTML to contain a matching text node for "%s" in %s.',
       text,
-      parentNode.nodeName.toLowerCase(),
+      formatTagDEV(parentNode),
     );
   }
 }
