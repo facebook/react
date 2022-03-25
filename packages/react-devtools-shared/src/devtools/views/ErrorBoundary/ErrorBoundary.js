@@ -15,8 +15,10 @@ import ErrorView from './ErrorView';
 import SearchingGitHubIssues from './SearchingGitHubIssues';
 import SuspendingErrorView from './SuspendingErrorView';
 import TimeoutView from './TimeoutView';
+import UserErrorView from './UserErrorView';
 import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
-import TimeoutError from 'react-devtools-shared/src/TimeoutError';
+import TimeoutError from 'react-devtools-shared/src/errors/TimeoutError';
+import UserError from 'react-devtools-shared/src/errors/UserError';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 
 type Props = {|
@@ -34,6 +36,7 @@ type State = {|
   hasError: boolean,
   isUnsupportedBridgeOperationError: boolean,
   isTimeout: boolean,
+  isUserError: boolean,
 |};
 
 const InitialState: State = {
@@ -44,6 +47,7 @@ const InitialState: State = {
   hasError: false,
   isUnsupportedBridgeOperationError: false,
   isTimeout: false,
+  isUserError: false,
 };
 
 export default class ErrorBoundary extends Component<Props, State> {
@@ -58,6 +62,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         : null;
 
     const isTimeout = error instanceof TimeoutError;
+    const isUserError = error instanceof UserError;
     const isUnsupportedBridgeOperationError =
       error instanceof UnsupportedBridgeOperationError;
 
@@ -77,6 +82,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       hasError: true,
       isUnsupportedBridgeOperationError,
       isTimeout,
+      isUserError,
     };
   }
 
@@ -111,6 +117,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       hasError,
       isUnsupportedBridgeOperationError,
       isTimeout,
+      isUserError,
     } = this.state;
 
     if (hasError) {
@@ -128,6 +135,14 @@ export default class ErrorBoundary extends Component<Props, State> {
       } else if (isUnsupportedBridgeOperationError) {
         return (
           <UnsupportedBridgeOperationView
+            callStack={callStack}
+            componentStack={componentStack}
+            errorMessage={errorMessage}
+          />
+        );
+      } else if (isUserError) {
+        return (
+          <UserErrorView
             callStack={callStack}
             componentStack={componentStack}
             errorMessage={errorMessage}

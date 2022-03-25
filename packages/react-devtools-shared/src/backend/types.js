@@ -281,6 +281,7 @@ export type InspectedElement = {|
 |};
 
 export const InspectElementErrorType = 'error';
+export const InspectElementUserErrorType = 'user-error';
 export const InspectElementFullDataType = 'full-data';
 export const InspectElementNoChangeType = 'no-change';
 export const InspectElementNotFoundType = 'not-found';
@@ -291,6 +292,14 @@ export type InspectElementError = {|
   type: 'error',
   message: string,
   stack: string,
+|};
+
+export type InspectElementUserError = {|
+  id: number,
+  responseID: number,
+  type: 'user-error',
+  message: string,
+  stack: ?string,
 |};
 
 export type InspectElementFullData = {|
@@ -322,6 +331,7 @@ export type InspectElementNotFound = {|
 
 export type InspectedElementPayload =
   | InspectElementError
+  | InspectElementUserError
   | InspectElementFullData
   | InspectElementHydratedPath
   | InspectElementNoChange

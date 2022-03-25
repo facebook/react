@@ -8,6 +8,7 @@
  */
 
 import LRU from 'lru-cache';
+import {UserHookError} from 'react-debug-tools';
 import {
   convertInspectedElementBackendToFrontend,
   hydrateHelper,
@@ -19,6 +20,7 @@ import type {LRUCache} from 'react-devtools-shared/src/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {
   InspectElementError,
+  InspectElementUserError,
   InspectElementFullData,
   InspectElementHydratedPath,
 } from 'react-devtools-shared/src/backend/types';
@@ -27,6 +29,7 @@ import type {
   InspectedElement as InspectedElementFrontend,
   InspectedElementResponseType,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
+import UserError from 'react-devtools-shared/src/errors/UserError';
 
 // Maps element ID to inspected data.
 // We use an LRU for this rather than a WeakMap because of how the "no-change" optimization works.
@@ -80,7 +83,7 @@ export function inspectElement({
 
     let inspectedElement;
     switch (type) {
-      case 'error':
+      case 'error': {
         const {message, stack} = ((data: any): InspectElementError);
 
         // The backend's stack (where the error originated) is more meaningful than this stack.
@@ -88,6 +91,15 @@ export function inspectElement({
         error.stack = stack;
 
         throw error;
+      }
+
+      case 'user-error': {
+        const {message, stack} = (data: InspectElementUserError);
+        // Trying to keep useful information from user's side.
+        const error = new UserError(message);
+        error.stack = stack || error.stack;
+        throw error;
+      }
 
       case 'no-change':
         // This is a no-op for the purposes of our cache.

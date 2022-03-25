@@ -60,7 +60,7 @@ import {
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import {inspectHooksOfFiber} from 'react-debug-tools';
+import {inspectHooksOfFiber, ErrorsNames as DebugToolsErrors} from 'react-debug-tools';
 import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
@@ -3607,6 +3607,27 @@ export function attach(
     try {
       mostRecentlyInspectedElement = inspectElementRaw(id);
     } catch (error) {
+      if (error.name === DebugToolsErrors.RENDER_FUNCTION_ERROR) {
+        let message = 'Error rendering inspected element.';
+        let stack;
+        console.error(message + '\n\n', error);
+        if (error.cause != null) {
+          console.error('Original error causing above error: \n\n', error.cause);
+          if (error.cause instanceof Error) {
+            message = error.cause.message || message;
+            stack = error.cause.stack;
+          }
+        }
+
+        return {
+          type: 'user-error',
+          id,
+          responseID: requestID,
+          message,
+          stack,
+        };
+      }
+
       console.error('Error inspecting element.\n\n', error);
 
       return {
