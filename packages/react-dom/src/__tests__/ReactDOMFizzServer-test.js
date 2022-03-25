@@ -2509,6 +2509,7 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
+  // @gate experimental
   it('Supports iterable', async () => {
     const Immutable = require('immutable');
 
