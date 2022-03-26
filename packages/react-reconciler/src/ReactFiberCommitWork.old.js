@@ -25,6 +25,7 @@ import type {Wakeable} from 'shared/ReactTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.old';
+import type {RootState} from './ReactFiberRoot.old';
 
 import {
   enableCreateEventHandleAPI,
@@ -1567,43 +1568,35 @@ function commitPlacement(finishedWork: Fiber): void {
   const parentFiber = getHostParentFiber(finishedWork);
 
   // Note: these two variables *must* always be updated together.
-  let parent;
-  let isContainer;
-  const parentStateNode = parentFiber.stateNode;
   switch (parentFiber.tag) {
-    case HostComponent:
-      parent = parentStateNode;
-      isContainer = false;
+    case HostComponent: {
+      const parent: Instance = parentFiber.stateNode;
+      if (parentFiber.flags & ContentReset) {
+        // Reset the text content of the parent before doing any insertions
+        resetTextContent(parent);
+        // Clear ContentReset from the effect tag
+        parentFiber.flags &= ~ContentReset;
+      }
+
+      const before = getHostSibling(finishedWork);
+      // We only have the top Fiber that was inserted but we need to recurse down its
+      // children to find all the terminal nodes.
+      insertOrAppendPlacementNode(finishedWork, before, parent);
       break;
+    }
     case HostRoot:
-      parent = parentStateNode.containerInfo;
-      isContainer = true;
+    case HostPortal: {
+      const parent: Container = parentFiber.stateNode.containerInfo;
+      const before = getHostSibling(finishedWork);
+      insertOrAppendPlacementNodeIntoContainer(finishedWork, before, parent);
       break;
-    case HostPortal:
-      parent = parentStateNode.containerInfo;
-      isContainer = true;
-      break;
+    }
     // eslint-disable-next-line-no-fallthrough
     default:
       throw new Error(
         'Invalid host parent fiber. This error is likely caused by a bug ' +
           'in React. Please file an issue.',
       );
-  }
-  if (parentFiber.flags & ContentReset) {
-    // Reset the text content of the parent before doing any insertions
-    resetTextContent(parent);
-    // Clear ContentReset from the effect tag
-    parentFiber.flags &= ~ContentReset;
-  }
-
-  const before = getHostSibling(finishedWork);
-  // We only have the top Fiber that was inserted but we need to recurse down its
-  // children to find all the terminal nodes.
-  if (isContainer) {
-    insertOrAppendPlacementNodeIntoContainer(finishedWork, before, parent);
-  } else {
-    insertOrAppendPlacementNode(finishedWork, before, parent);
   }
 }
 
@@ -1877,11 +1870,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       }
       case HostRoot: {
         if (supportsHydration) {
-          const root: FiberRoot = finishedWork.stateNode;
-          if (root.isDehydrated) {
-            // We've just hydrated. No need to hydrate again.
-            root.isDehydrated = false;
-            commitHydratedContainer(root.containerInfo);
+          if (current !== null) {
+            const prevRootState: RootState = current.memoizedState;
+            if (prevRootState.isDehydrated) {
+              const root: FiberRoot = finishedWork.stateNode;
+              commitHydratedContainer(root.containerInfo);
+            }
           }
         }
         break;
@@ -1985,11 +1979,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     }
     case HostRoot: {
       if (supportsHydration) {
-        const root: FiberRoot = finishedWork.stateNode;
-        if (root.isDehydrated) {
-          // We've just hydrated. No need to hydrate again.
-          root.isDehydrated = false;
-          commitHydratedContainer(root.containerInfo);
+        if (current !== null) {
+          const prevRootState: RootState = current.memoizedState;
+          if (prevRootState.isDehydrated) {
+            const root: FiberRoot = finishedWork.stateNode;
+            commitHydratedContainer(root.containerInfo);
+          }
         }
       }
       return;

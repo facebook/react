@@ -215,7 +215,6 @@ function render(
     root = createContainer(
       containerTag,
       concurrentRoot ? ConcurrentRoot : LegacyRoot,
-      false,
       null,
       false,
       null,

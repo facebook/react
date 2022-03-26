@@ -88,6 +88,7 @@ import {
   createWorkInProgress,
   assignFiberPropertiesInDEV,
 } from './ReactFiber.new';
+import {isRootDehydrated} from './ReactFiberShellHydration';
 import {NoMode, ProfileMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
   HostRoot,
@@ -109,6 +110,7 @@ import {
   StoreConsistency,
   HostEffectMask,
   Hydrating,
+  ForceClientRender,
   BeforeMutationMask,
   MutationMask,
   LayoutMask,
@@ -581,34 +583,7 @@ export function scheduleUpdateOnFiber(
       }
     }
 
-    if (root.isDehydrated && root.tag !== LegacyRoot) {
-      // This root's shell hasn't hydrated yet. Revert to client rendering.
-      if (workInProgressRoot === root) {
-        // If this happened during an interleaved event, interrupt the
-        // in-progress hydration. Theoretically, we could attempt to force a
-        // synchronous hydration before switching to client rendering, but the
-        // most common reason the shell hasn't hydrated yet is because it
-        // suspended. So it's very likely to suspend again anyway. For
-        // simplicity, we'll skip that atttempt and go straight to
-        // client rendering.
-        //
-        // Another way to model this would be to give the initial hydration its
-        // own special lane. However, it may not be worth adding a lane solely
-        // for this purpose, so we'll wait until we find another use case before
-        // adding it.
-        //
-        // TODO: Consider only interrupting hydration if the priority of the
-        // update is higher than default.
-        prepareFreshStack(root, NoLanes);
-      }
-      root.isDehydrated = false;
-      const error = new Error(
-        'This root received an early update, before anything was able ' +
-          'hydrate. Switched the entire root to client rendering.',
-      );
-      const onRecoverableError = root.onRecoverableError;
-      onRecoverableError(error);
-    } else if (root === workInProgressRoot) {
+    if (root === workInProgressRoot) {
       // TODO: Consolidate with `isInterleavedUpdate` check
 
       // Received an update to a tree that's in the middle of rendering. Mark
@@ -1016,28 +991,42 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 function recoverFromConcurrentError(root, errorRetryLanes) {
   // If an error occurred during hydration, discard server response and fall
   // back to client side render.
-  if (root.isDehydrated) {
-    root.isDehydrated = false;
+
+  // Before rendering again, save the errors from the previous attempt.
+  const errorsFromFirstAttempt = workInProgressRootConcurrentErrors;
+
+  if (isRootDehydrated(root)) {
+    // The shell failed to hydrate. Set a flag to force a client rendering
+    // during the next attempt. To do this, we call prepareFreshStack now
+    // to create the root work-in-progress fiber. This is a bit weird in terms
+    // of factoring, because it relies on renderRootSync not calling
+    // prepareFreshStack again in the call below, which happens because the
+    // root and lanes haven't changed.
+    //
+    // TODO: I think what we should do is set ForceClientRender inside
+    // throwException, like we do for nested Suspense boundaries. The reason
+    // it's here instead is so we can switch to the synchronous work loop, too.
+    // Something to consider for a future refactor.
+    const rootWorkInProgress = prepareFreshStack(root, errorRetryLanes);
+    rootWorkInProgress.flags |= ForceClientRender;
     if (__DEV__) {
       errorHydratingContainer(root.containerInfo);
     }
-    const error = new Error(
-      'There was an error while hydrating. Because the error happened outside ' +
-        'of a Suspense boundary, the entire root will switch to ' +
-        'client rendering.',
-    );
-    renderDidError(error);
   }
 
-  const errorsFromFirstAttempt = workInProgressRootConcurrentErrors;
   const exitStatus = renderRootSync(root, errorRetryLanes);
   if (exitStatus !== RootErrored) {
     // Successfully finished rendering on retry
-    if (errorsFromFirstAttempt !== null) {
-      // The errors from the failed first attempt have been recovered. Add
-      // them to the collection of recoverable errors. We'll log them in the
-      // commit phase.
-      queueRecoverableErrors(errorsFromFirstAttempt);
+
+    // The errors from the failed first attempt have been recovered. Add
+    // them to the collection of recoverable errors. We'll log them in the
+    // commit phase.
+    const errorsFromSecondAttempt = workInProgressRootRecoverableErrors;
+    workInProgressRootRecoverableErrors = errorsFromFirstAttempt;
+    // The errors from the second attempt should be queued after the errors
+    // from the first attempt, to preserve the causal sequence.
+    if (errorsFromSecondAttempt !== null) {
+      queueRecoverableErrors(errorsFromSecondAttempt);
     }
   } else {
     // The UI failed to recover.
@@ -1453,7 +1442,7 @@ export function popRenderLanes(fiber: Fiber) {
   popFromStack(subtreeRenderLanesCursor, fiber);
 }
 
-function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
+function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   root.finishedWork = null;
   root.finishedLanes = NoLanes;
 
@@ -1479,7 +1468,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
     }
   }
   workInProgressRoot = root;
-  workInProgress = createWorkInProgress(root.current, null);
+  const rootWorkInProgress = createWorkInProgress(root.current, null);
+  workInProgress = rootWorkInProgress;
   workInProgressRootRenderLanes = subtreeRenderLanes = workInProgressRootIncludedLanes = lanes;
   workInProgressRootExitStatus = RootInProgress;
   workInProgressRootFatalError = null;
@@ -1495,6 +1485,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
   }
+
+  return rootWorkInProgress;
 }
 
 function handleError(root, thrownValue): void {

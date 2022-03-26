@@ -27,7 +27,6 @@ import {
   flushPassiveEffects as flushPassiveEffects_old,
   getPublicRootInstance as getPublicRootInstance_old,
   attemptSynchronousHydration as attemptSynchronousHydration_old,
-  attemptDiscreteHydration as attemptDiscreteHydration_old,
   attemptContinuousHydration as attemptContinuousHydration_old,
   attemptHydrationAtCurrentPriority as attemptHydrationAtCurrentPriority_old,
   findHostInstance as findHostInstance_old,
@@ -65,7 +64,6 @@ import {
   flushPassiveEffects as flushPassiveEffects_new,
   getPublicRootInstance as getPublicRootInstance_new,
   attemptSynchronousHydration as attemptSynchronousHydration_new,
-  attemptDiscreteHydration as attemptDiscreteHydration_new,
   attemptContinuousHydration as attemptContinuousHydration_new,
   attemptHydrationAtCurrentPriority as attemptHydrationAtCurrentPriority_new,
   findHostInstance as findHostInstance_new,
@@ -124,9 +122,6 @@ export const getPublicRootInstance = enableNewReconciler
 export const attemptSynchronousHydration = enableNewReconciler
   ? attemptSynchronousHydration_new
   : attemptSynchronousHydration_old;
-export const attemptDiscreteHydration = enableNewReconciler
-  ? attemptDiscreteHydration_new
-  : attemptDiscreteHydration_old;
 export const attemptContinuousHydration = enableNewReconciler
   ? attemptContinuousHydration_new
   : attemptContinuousHydration_old;

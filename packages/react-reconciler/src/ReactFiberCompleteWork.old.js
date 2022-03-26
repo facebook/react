@@ -8,6 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
+import type {RootState} from './ReactFiberRoot.old';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {
   ReactScopeInstance,
@@ -890,12 +891,29 @@ function completeWork(
           // If we hydrated, then we'll need to schedule an update for
           // the commit side-effects on the root.
           markUpdate(workInProgress);
-        } else if (!fiberRoot.isDehydrated) {
-          // Schedule an effect to clear this container at the start of the next commit.
-          // This handles the case of React rendering into a container with previous children.
-          // It's also safe to do for updates too, because current.child would only be null
-          // if the previous render was null (so the container would already be empty).
-          workInProgress.flags |= Snapshot;
+        } else {
+          if (current !== null) {
+            const prevState: RootState = current.memoizedState;
+            if (
+              // Check if this is a client root
+              !prevState.isDehydrated ||
+              // Check if we reverted to client rendering (e.g. due to an error)
+              (workInProgress.flags & ForceClientRender) !== NoFlags
+            ) {
+              // Schedule an effect to clear this container at the start of the
+              // next commit. This handles the case of React rendering into a
+              // container with previous children. It's also safe to do for
+              // updates too, because current.child would only be null if the
+              // previous render was null (so the container would already
+              // be empty).
+              workInProgress.flags |= Snapshot;
+
+              // If this was a forced client render, there may have been
+              // recoverable errors during first hydration attempt. If so, add
+              // them to a queue so we can log them in the commit phase.
+              upgradeHydrationErrorsToRecoverable();
+            }
+          }
         }
       }
       updateHostContainer(current, workInProgress);

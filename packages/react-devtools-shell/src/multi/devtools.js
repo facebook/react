@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {createRoot} from 'react-dom';
+import {createRoot} from 'react-dom/client';
 import {
   activate as activateBackend,
   createBridge as createBackendBridge,

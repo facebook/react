@@ -4,6 +4,15 @@
 
 ---
 
+### 4.24.2
+March 24, 2022
+
+#### Bugfix
+* Show upgrade/downgrade instructions inline for errors thrown by the Store due to incompatible protocol (mismatched backend and frontend versions) ([bvaughn](https://github.com/bvaughn) in [#24147](https://github.com/facebook/react/pull/24147))
+* Inspecting an element in a nested renderer no longer throws ([lunaruan](https://github.com/lunaruan) in [#24116](https://github.com/facebook/react/pull/24116))
+
+---
+
 ### 4.24.1
 March 15, 2022
 

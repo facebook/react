@@ -44,9 +44,6 @@ export const enableSuspenseLayoutEffectSemantics = true;
 export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 
-// TODO: Need to review this code one more time before landing
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
-
 // Recoil still uses useMutableSource in www, need to delete
 export const enableUseMutableSource = false;
 
@@ -96,6 +93,7 @@ export const enableLegacyFBSupport = false;
 // -----------------------------------------------------------------------------
 
 export const enableCache = __EXPERIMENTAL__;
+export const enableCacheElement = __EXPERIMENTAL__;
 
 export const enableTransitionTracing = false;
 

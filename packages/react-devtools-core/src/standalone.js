@@ -8,10 +8,7 @@
  */
 
 import {createElement} from 'react';
-import {
-  // $FlowFixMe Flow does not yet know about flushSync()
-  flushSync,
-} from 'react-dom';
+import {flushSync} from 'react-dom';
 import {createRoot} from 'react-dom/client';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
