@@ -359,7 +359,6 @@ function getRenderedAttributeValue(
   } else if (!didError && !ssrDidError) {
     if (canonicalResult === canonicalSsrResult) {
       ssrHasSameBehaviorExceptWarnings = true;
-      ssrHasSameBehavior = didWarn === ssrDidWarn;
     }
     ssrHasSameBehavior =
       didWarn === ssrDidWarn && canonicalResult === canonicalSsrResult;
@@ -707,8 +706,8 @@ function saveToLocalStorage(completedHashes) {
 function restoreFromLocalStorage() {
   const str = localStorage.getItem('completedHashes');
   if (str) {
-    const completedHashes = new Set(JSON.parse(str));
-    return completedHashes;
+    //Return completedHashes
+    return new Set(JSON.parse(str));
   }
   return new Set();
 }
@@ -786,12 +785,12 @@ class App extends React.Component {
 
       // Creating globals for every single test is too slow.
       // However caching them between runs won't work for the same attribute names
-      // because warnings will be deduplicated. As a result, we only share globals
+      // because warnings will be de-duplicated. As a result, we only share globals
       // between different attribute names.
-      for (let i = 0; i < pool.length; i++) {
-        if (!pool[i].testedAttributes.has(attribute.name)) {
-          pool[i].testedAttributes.add(attribute.name);
-          return pool[i].globals;
+      for (const poolItem of pool) {
+        if (poolItem.testedAttributes.has(attribute.name)) {
+          poolItem.testedAttributes.add(attribute.name);
+          return poolItem.globals;
         }
       }
 
