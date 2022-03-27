@@ -16,6 +16,40 @@ global.__DEV__ = process.env.NODE_ENV !== 'production';
 
 expect.extend(require('../toWarnDev'));
 
+/**
+ * Helper function for flush tests.
+ * @param  React
+ * @param  TestRenderer
+ * @param  TestAct
+ */
+function testFlush(React, TestRenderer, TestAct) {
+  let log = [];
+  function Effecty() {
+    React.useEffect(() => {
+      log.push('called');
+    }, []);
+    return null;
+  }
+
+  TestAct(() => {
+    DOMAct(() => {
+      TestRenderer.create(<Effecty />);
+    });
+    expect(log).toEqual([]);
+  });
+  expect(log).toEqual(['called']);
+
+  log = [];
+  // for doublechecking, we flip it inside out, and assert on the outermost
+  DOMAct(() => {
+    TestAct(() => {
+      TestRenderer.create(<Effecty />);
+    });
+    expect(log).toEqual([]);
+  });
+  expect(log).toEqual(['called']);
+}
+
 describe('unmocked scheduler', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -26,31 +60,8 @@ describe('unmocked scheduler', () => {
   });
 
   it('flushes work only outside the outermost act() corresponding to its own renderer', () => {
-    let log = [];
-    function Effecty() {
-      React.useEffect(() => {
-        log.push('called');
-      }, []);
-      return null;
-    }
     // in legacy mode, this tests whether an act only flushes its own effects
-    TestAct(() => {
-      DOMAct(() => {
-        TestRenderer.create(<Effecty />);
-      });
-      expect(log).toEqual([]);
-    });
-    expect(log).toEqual(['called']);
-
-    log = [];
-    // for doublechecking, we flip it inside out, and assert on the outermost
-    DOMAct(() => {
-      TestAct(() => {
-        TestRenderer.create(<Effecty />);
-      });
-      expect(log).toEqual([]);
-    });
-    expect(log).toEqual(['called']);
+    testFlush(React, TestRenderer, TestAct);
   });
 });
 
@@ -71,30 +82,7 @@ describe('mocked scheduler', () => {
   });
 
   it('flushes work only outside the outermost act()', () => {
-    let log = [];
-    function Effecty() {
-      React.useEffect(() => {
-        log.push('called');
-      }, []);
-      return null;
-    }
     // with a mocked scheduler, this tests whether it flushes all work only on the outermost act
-    TestAct(() => {
-      DOMAct(() => {
-        TestRenderer.create(<Effecty />);
-      });
-      expect(log).toEqual([]);
-    });
-    expect(log).toEqual(['called']);
-
-    log = [];
-    // for doublechecking, we flip it inside out, and assert on the outermost
-    DOMAct(() => {
-      TestAct(() => {
-        TestRenderer.create(<Effecty />);
-      });
-      expect(log).toEqual([]);
-    });
-    expect(log).toEqual(['called']);
+    testFlush(React, TestRenderer, TestAct);
   });
 });
