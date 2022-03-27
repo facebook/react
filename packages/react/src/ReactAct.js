@@ -212,7 +212,7 @@ function flushActQueue(queue) {
         queue.length = 0;
       } catch (error) {
         // If something throws, leave the remaining callbacks on the queue.
-        queue = queue.slice(i + 1);
+        ReactCurrentActQueue.current = queue.slice(i + 1);
         throw error;
       } finally {
         isFlushing = false;
