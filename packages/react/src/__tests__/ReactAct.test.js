@@ -5,7 +5,9 @@ describe('act', () => {
   it('If something throws, leave the remaining callbacks on the queue.', () => {
     ReactCurrentActQueue.current = [
       () => null,
-      () => throw new Error(),
+      () => {
+        throw new Error();
+      },
       () => null,
     ];
     ReactCurrentActQueue.didScheduleLegacyUpdate = true;
