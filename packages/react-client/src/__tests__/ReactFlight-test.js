@@ -512,6 +512,59 @@ describe('ReactFlight', () => {
     );
   });
 
+  describe('Hooks', () => {
+    function DivWithId() {
+      const id = React.useId();
+      return <div prop={id} />;
+    }
+
+    it('should support useId', () => {
+      function App() {
+        return (
+          <>
+            <DivWithId />
+            <DivWithId />
+          </>
+        );
+      }
+
+      const transport = ReactNoopFlightServer.render(<App />);
+      act(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <div prop=":$:F1" />
+          <div prop=":$:F2" />
+        </>,
+      );
+    });
+
+    it('accepts an identifier prefix that prefixes generated ids', () => {
+      function App() {
+        return (
+          <>
+            <DivWithId />
+            <DivWithId />
+          </>
+        );
+      }
+
+      const transport = ReactNoopFlightServer.render(<App />, {
+        identifierPrefix: 'foo',
+      });
+      act(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <div prop=":foo:F1" />
+          <div prop=":foo:F2" />
+        </>,
+      );
+    });
+  });
+
   describe('ServerContext', () => {
     // @gate enableServerContext
     it('supports basic createServerContext usage', () => {
@@ -759,15 +812,14 @@ describe('ReactFlight', () => {
       function Bar() {
         return <span>{React.useContext(ServerContext)}</span>;
       }
-      const transport = ReactNoopFlightServer.render(<Bar />, {}, [
-        ['ServerContext', 'Override'],
-      ]);
+      const transport = ReactNoopFlightServer.render(<Bar />, {
+        context: [['ServerContext', 'Override']],
+      });
 
       act(() => {
         const flightModel = ReactNoopFlightClient.read(transport);
         ReactNoop.render(flightModel);
       });
-
       expect(ReactNoop).toMatchRenderedOutput(<span>Override</span>);
     });
 

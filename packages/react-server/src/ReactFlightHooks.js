@@ -8,9 +8,26 @@
  */
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
+import type {Request} from './ReactFlightServer';
 import type {ReactServerContext} from 'shared/ReactTypes';
 import {REACT_SERVER_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
+
+let currentIndentifierPrefix = '$';
+let currentIndentifierCount = 0;
+
+export function prepareToUseHooksForRequest(request: Request) {
+  if (request.identifierPrefix) {
+    currentIndentifierPrefix = request.identifierPrefix;
+  }
+  currentIndentifierCount = request.identifierCount;
+}
+
+export function resetHooksForRequest(request: Request) {
+  currentIndentifierPrefix = '$';
+  request.identifierCount = currentIndentifierCount;
+  currentIndentifierCount = 0;
+}
 
 function readContext<T>(context: ReactServerContext<T>): T {
   if (__DEV__) {
@@ -61,7 +78,7 @@ export const Dispatcher: DispatcherType = {
   useLayoutEffect: (unsupportedHook: any),
   useImperativeHandle: (unsupportedHook: any),
   useEffect: (unsupportedHook: any),
-  useId: (unsupportedHook: any),
+  useId,
   useMutableSource: (unsupportedHook: any),
   useSyncExternalStore: (unsupportedHook: any),
   useCacheRefresh(): <T>(?() => T, ?T) => void {
@@ -90,4 +107,13 @@ export function setCurrentCache(cache: Map<Function, mixed> | null) {
 
 export function getCurrentCache() {
   return currentCache;
+}
+
+function useId(): string {
+  return (
+    ':' +
+    currentIndentifierPrefix +
+    ':F' +
+    (currentIndentifierCount++).toString(32)
+  );
 }

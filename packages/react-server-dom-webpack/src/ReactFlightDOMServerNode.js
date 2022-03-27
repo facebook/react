@@ -24,6 +24,8 @@ function createDrainHandler(destination, request) {
 
 type Options = {
   onError?: (error: mixed) => void,
+  context?: Array<[string, ServerContextJSONValue]>,
+  identifierPrefix?: string,
 };
 
 type PipeableStream = {|
@@ -40,7 +42,8 @@ function renderToPipeableStream(
     model,
     webpackMap,
     options ? options.onError : undefined,
-    context,
+    options ? options.context : undefined,
+    options ? options.identifierPrefix : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
