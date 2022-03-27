@@ -8,6 +8,25 @@ function BadRender(props) {
   props.doThrow();
 }
 
+/**
+ * Helper function used in TriggerErrorAndCatch & TrySilenceFatalError
+ * @param container
+ */
+function triggerErrorAndCatch(container) {
+  try {
+    ReactDOM.flushSync(() => {
+      ReactDOM.render(
+        <BadRender
+          doThrow={() => {
+            throw new Error('Caught error');
+          }}
+        />,
+        container
+      );
+    });
+  } catch (e) {}
+}
+
 class BadDidMount extends React.Component {
   componentDidMount() {
     this.props.doThrow();
@@ -73,24 +92,9 @@ class Example extends React.Component {
 class TriggerErrorAndCatch extends React.Component {
   container = document.createElement('div');
 
-  triggerErrorAndCatch = () => {
-    try {
-      ReactDOM.flushSync(() => {
-        ReactDOM.render(
-          <BadRender
-            doThrow={() => {
-              throw new Error('Caught error');
-            }}
-          />,
-          this.container
-        );
-      });
-    } catch (e) {}
-  };
-
   render() {
     return (
-      <button onClick={this.triggerErrorAndCatch}>
+      <button onClick={() => triggerErrorAndCatch(this.container)}>
         Trigger error and catch
       </button>
     );
@@ -217,25 +221,12 @@ class SilenceRecoverableError extends React.Component {
 class TrySilenceFatalError extends React.Component {
   container = document.createElement('div');
 
-  triggerErrorAndCatch = () => {
-    try {
-      ReactDOM.flushSync(() => {
-        ReactDOM.render(
-          <BadRender
-            doThrow={() => {
-              throw new Error('Caught error');
-            }}
-          />,
-          this.container
-        );
-      });
-    } catch (e) {}
-  };
-
   render() {
     return (
       <SilenceErrors>
-        <button onClick={this.triggerErrorAndCatch}>Throw fatal error</button>
+        <button onClick={() => triggerErrorAndCatch(this.container)}>
+          Throw fatal error
+        </button>
       </SilenceErrors>
     );
   }
