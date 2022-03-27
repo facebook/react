@@ -39,8 +39,15 @@ body {
 
 label {
   zoom: 1;
-  font-size: 30px;
+  /* Changed from font-size: 30px to 20px, since duplicate selector was removed that set it to 20. */
+  font-size: 20px;
 }
+
+label label {
+  display: 'inline-block';
+  margin-left: 20px;
+}
+
 
 label.selected {
   font-weight: bold;
@@ -83,16 +90,6 @@ input[type="radio" i]:nth-child(1) {
   outline-color: rgba(97, 218, 251, 0.1);
 }
 
-
-label {
-  font-size: 20px;
-}
-
-label label {
-  display: 'inline-block';
-  margin-left: 20px;
-}
-
 .row {
   flex: 1;
   display: flex;
@@ -132,9 +129,6 @@ label label {
 .clockFace {
   stroke: white;
   stroke-width: 10px;
-}
-
-.arcHand {
 }
 
 .innerLine {
