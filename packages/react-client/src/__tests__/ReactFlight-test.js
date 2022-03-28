@@ -534,8 +534,8 @@ describe('ReactFlight', () => {
       });
       expect(ReactNoop).toMatchRenderedOutput(
         <>
-          <div prop=":$:F1" />
-          <div prop=":$:F2" />
+          <div prop=":F1:" />
+          <div prop=":F2:" />
         </>,
       );
     });
@@ -558,8 +558,8 @@ describe('ReactFlight', () => {
       });
       expect(ReactNoop).toMatchRenderedOutput(
         <>
-          <div prop=":foo:F1" />
-          <div prop=":foo:F2" />
+          <div prop=":fooF1:" />
+          <div prop=":fooF2:" />
         </>,
       );
     });

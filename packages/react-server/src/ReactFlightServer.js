@@ -851,7 +851,7 @@ function performWork(request: Request): void {
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
     setCurrentCache(prevCache);
-    resetHooksForRequest(request);
+    resetHooksForRequest();
   }
 }
 

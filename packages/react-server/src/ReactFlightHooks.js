@@ -13,20 +13,14 @@ import type {ReactServerContext} from 'shared/ReactTypes';
 import {REACT_SERVER_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
 
-let currentIndentifierPrefix = '$';
-let currentIndentifierCount = 0;
+let currentRequest = null;
 
 export function prepareToUseHooksForRequest(request: Request) {
-  if (request.identifierPrefix) {
-    currentIndentifierPrefix = request.identifierPrefix;
-  }
-  currentIndentifierCount = request.identifierCount;
+  currentRequest = request;
 }
 
-export function resetHooksForRequest(request: Request) {
-  currentIndentifierPrefix = '$';
-  request.identifierCount = currentIndentifierCount;
-  currentIndentifierCount = 0;
+export function resetHooksForRequest() {
+  currentRequest = null;
 }
 
 function readContext<T>(context: ReactServerContext<T>): T {
@@ -110,10 +104,12 @@ export function getCurrentCache() {
 }
 
 function useId(): string {
-  return (
-    ':' +
-    currentIndentifierPrefix +
-    ':F' +
-    (currentIndentifierCount++).toString(32)
-  );
+  if (currentRequest === null) {
+    throw new Error('useId can only be used while React is rendering.');
+  }
+  const prefix = currentRequest.identifierPrefix
+    ? currentRequest.identifierPrefix
+    : '';
+  const id = currentRequest.identifierCount++;
+  return ':' + prefix + 'F' + id.toString(32) + ':';
 }
