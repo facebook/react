@@ -105,11 +105,12 @@ export function getCurrentCache() {
 
 function useId(): string {
   if (currentRequest === null) {
-    throw new Error('useId can only be used while React is rendering.');
+    throw new Error('useId can only be used while React is rendering');
   }
   const prefix = currentRequest.identifierPrefix
     ? currentRequest.identifierPrefix
     : '';
   const id = currentRequest.identifierCount++;
-  return ':' + prefix + 'F' + id.toString(32) + ':';
+  // use 'S' for Flight components to distinguish from 'R' and 'r' in Fizz/Client
+  return ':' + prefix + 'S' + id.toString(32) + ':';
 }

@@ -513,9 +513,9 @@ describe('ReactFlight', () => {
   });
 
   describe('Hooks', () => {
-    function DivWithId() {
+    function DivWithId({children}) {
       const id = React.useId();
-      return <div prop={id} />;
+      return <div prop={id}>{children}</div>;
     }
 
     it('should support useId', () => {
@@ -534,8 +534,8 @@ describe('ReactFlight', () => {
       });
       expect(ReactNoop).toMatchRenderedOutput(
         <>
-          <div prop=":F1:" />
-          <div prop=":F2:" />
+          <div prop=":S1:" />
+          <div prop=":S2:" />
         </>,
       );
     });
@@ -558,8 +558,8 @@ describe('ReactFlight', () => {
       });
       expect(ReactNoop).toMatchRenderedOutput(
         <>
-          <div prop=":fooF1:" />
-          <div prop=":fooF2:" />
+          <div prop=":fooS1:" />
+          <div prop=":fooS2:" />
         </>,
       );
     });
