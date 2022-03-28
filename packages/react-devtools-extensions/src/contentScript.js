@@ -25,15 +25,15 @@ function handleMessageFromDevtools(message) {
   );
 }
 
-function handleMessageFromPage(evt) {
+function handleMessageFromPage(event) {
   if (
-    evt.source === window &&
-    evt.data &&
-    evt.data.source === 'react-devtools-bridge'
+    event.source === window &&
+    event.data &&
+    event.data.source === 'react-devtools-bridge'
   ) {
     backendInitialized = true;
 
-    port.postMessage(evt.data.payload);
+    port.postMessage(event.data.payload);
   }
 }
 
