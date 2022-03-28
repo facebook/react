@@ -204,8 +204,8 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
 /**
  * https://github.com/reactjs/rfcs/pull/107
  * @param {*} type
- * @param {object} props
- * @param {string} key
+ * @param {object} config
+ * @param {?string} maybeKey
  */
 export function jsx(type, config, maybeKey) {
   let propName;
@@ -274,8 +274,10 @@ export function jsx(type, config, maybeKey) {
 /**
  * https://github.com/reactjs/rfcs/pull/107
  * @param {*} type
- * @param {object} props
- * @param {string} key
+ * @param {object} config
+ * @param {?string} maybeKey
+ * @param {?*} source
+ * @param {?*} self
  */
 export function jsxDEV(type, config, maybeKey, source, self) {
   if (__DEV__) {
