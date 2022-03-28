@@ -15,7 +15,7 @@ describe('act', () => {
       ReactCurrentActQueue.didScheduleLegacyUpdate = true;
 
       try {
-        act();
+        act(() => {});
       } catch {}
 
       expect(ReactCurrentActQueue.current.length).toBe(1);
