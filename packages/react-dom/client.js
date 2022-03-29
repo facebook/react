@@ -23,7 +23,7 @@ import {
 } from './';
 
 export function createRoot(
-  container: Element | DocumentFragment,
+  container: Element | DocumentFragment | HTMLElement,
   options?: CreateRootOptions,
 ): RootType {
   if (__DEV__) {
