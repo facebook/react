@@ -93,7 +93,6 @@ import {
   enableStyleXFeatures,
 } from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
-import isArray from 'shared/isArray';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {getStyleXData} from './StyleX/utils';
 import {createProfilingHooks} from './profilingHooks';
@@ -1444,50 +1443,41 @@ export function attach(
     return null;
   }
 
-  function areHookInputsEqual(
-    nextDeps: Array<mixed>,
-    prevDeps: Array<mixed> | null,
-  ) {
-    if (prevDeps === null) {
+  function isHookThatCanScheduleUpdate(hookObject: any) {
+    const queue = hookObject.queue;
+    if (!queue) {
       return false;
     }
 
-    for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
-      if (is(nextDeps[i], prevDeps[i])) {
-        continue;
-      }
-      return false;
-    }
-    return true;
+    const boundHasOwnProperty = hasOwnProperty.bind(queue);
+
+    // Detect the shape of useState() or useReducer()
+    // using the attributes that are unique to these hooks
+    // but also stable (e.g. not tied to current Lanes implementation)
+    const isStateOrReducer =
+      boundHasOwnProperty('pending') &&
+      boundHasOwnProperty('dispatch') &&
+      typeof queue.dispatch === 'function';
+
+    // Detect useSyncExternalStore()
+    const isSyncExternalStore =
+      boundHasOwnProperty('value') &&
+      boundHasOwnProperty('getSnapshot') &&
+      typeof queue.getSnapshot === 'function';
+
+    // These are the only types of hooks that can schedule an update.
+    return isStateOrReducer || isSyncExternalStore;
   }
 
-  function isEffect(memoizedState) {
-    if (memoizedState === null || typeof memoizedState !== 'object') {
-      return false;
-    }
-    const {deps} = memoizedState;
-    const boundHasOwnProperty = hasOwnProperty.bind(memoizedState);
-    return (
-      boundHasOwnProperty('create') &&
-      boundHasOwnProperty('destroy') &&
-      boundHasOwnProperty('deps') &&
-      boundHasOwnProperty('next') &&
-      boundHasOwnProperty('tag') &&
-      (deps === null || isArray(deps))
-    );
-  }
-
-  function didHookChange(prev: any, next: any): boolean {
+  function didStatefulHookChange(prev: any, next: any): boolean {
     const prevMemoizedState = prev.memoizedState;
     const nextMemoizedState = next.memoizedState;
 
-    if (isEffect(prevMemoizedState) && isEffect(nextMemoizedState)) {
-      return (
-        prevMemoizedState !== nextMemoizedState &&
-        !areHookInputsEqual(nextMemoizedState.deps, prevMemoizedState.deps)
-      );
+    if (isHookThatCanScheduleUpdate(prev)) {
+      return prevMemoizedState !== nextMemoizedState;
     }
-    return nextMemoizedState !== prevMemoizedState;
+
+    return false;
   }
 
   function didHooksChange(prev: any, next: any): boolean {
@@ -1503,7 +1493,7 @@ export function attach(
       next.hasOwnProperty('queue')
     ) {
       while (next !== null) {
-        if (didHookChange(prev, next)) {
+        if (didStatefulHookChange(prev, next)) {
           return true;
         } else {
           next = next.next;
@@ -1530,7 +1520,7 @@ export function attach(
         next.hasOwnProperty('queue')
       ) {
         while (next !== null) {
-          if (didHookChange(prev, next)) {
+          if (didStatefulHookChange(prev, next)) {
             indices.push(index);
           }
           next = next.next;
