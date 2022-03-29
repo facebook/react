@@ -8,6 +8,5 @@
  */
 
 import {inspectHooks, inspectHooksOfFiber} from './ReactDebugHooks';
-import {ErrorsNames} from './ReactDebugCustomErrors';
 
-export {inspectHooks, inspectHooksOfFiber, ErrorsNames};
+export {inspectHooks, inspectHooksOfFiber};

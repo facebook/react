@@ -29,7 +29,6 @@ import {
   ContextProvider,
   ForwardRef,
 } from 'react-reconciler/src/ReactWorkTags';
-import {createUnsupportedFeatureError} from './ReactDebugCustomErrors';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -362,11 +361,13 @@ const Dispatcher: DispatcherType = {
 const DispatcherProxyHandler = {
   get(target, prop, _receiver) {
     if (target.hasOwnProperty(prop)) {
-      return Reflect.get(...arguments);
+      return target[prop];
     }
-    throw createUnsupportedFeatureError(
-      'Missing method in Dispatcher: ' + prop,
-    );
+    const error = new Error('Missing method in Dispatcher: ' + prop);
+    // Note: This error name needs to stay in sync with react-devtools-shared
+    // TODO: refactor this if we ever combine the devtools and debug tools packages
+    error.name = 'UnsupportedFeatureError';
+    throw error;
   },
 };
 
