@@ -26,7 +26,7 @@ const nextChannelLabel = 'next';
 
 const stablePackages = {
   'create-subscription': ReactVersion,
-  'eslint-plugin-react-hooks': '4.2.1',
+  'eslint-plugin-react-hooks': '4.4.0',
   'jest-react': '0.12.1',
   react: ReactVersion,
   'react-art': ReactVersion,
