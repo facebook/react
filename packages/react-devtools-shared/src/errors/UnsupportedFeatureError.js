@@ -7,15 +7,15 @@
  * @flow
  */
 
-export default class UserError extends Error {
+export default class UnsupportedFeatureError extends Error {
   constructor(message: string) {
     super(message);
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, UserError);
+      Error.captureStackTrace(this, UnsupportedFeatureError);
     }
 
-    this.name = 'UserError';
+    this.name = 'UnsupportedFeatureError';
   }
 }

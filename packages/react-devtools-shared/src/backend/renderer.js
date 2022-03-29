@@ -60,7 +60,10 @@ import {
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import {inspectHooksOfFiber, ErrorsNames as DebugToolsErrors} from 'react-debug-tools';
+import {
+  inspectHooksOfFiber,
+  ErrorsNames as DebugToolsErrors,
+} from 'react-debug-tools';
 import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
@@ -3610,9 +3613,13 @@ export function attach(
       if (error.name === DebugToolsErrors.RENDER_FUNCTION_ERROR) {
         let message = 'Error rendering inspected element.';
         let stack;
+        // Log error & cause for user to debug
         console.error(message + '\n\n', error);
         if (error.cause != null) {
-          console.error('Original error causing above error: \n\n', error.cause);
+          console.error(
+            'Original error causing above error: \n\n',
+            error.cause,
+          );
           if (error.cause instanceof Error) {
             message = error.cause.message || message;
             stack = error.cause.stack;
@@ -3628,6 +3635,16 @@ export function attach(
         };
       }
 
+      if (error.name === DebugToolsErrors.UNSUPPORTTED_FEATURE_ERROR) {
+        return {
+          type: 'unsupported-feature',
+          id,
+          responseID: requestID,
+          message: 'Unsupported feature: ' + error.message,
+        };
+      }
+
+      // Log Uncaught Error
       console.error('Error inspecting element.\n\n', error);
 
       return {

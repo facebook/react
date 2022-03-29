@@ -21,6 +21,7 @@ import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {
   InspectElementError,
   InspectElementUserError,
+  InspectElementUnsupportedFeatureError,
   InspectElementFullData,
   InspectElementHydratedPath,
 } from 'react-devtools-shared/src/backend/types';
@@ -30,6 +31,7 @@ import type {
   InspectedElementResponseType,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
 import UserError from 'react-devtools-shared/src/errors/UserError';
+import UnsupportedFeatureError from 'react-devtools-shared/src/errors/UnsupportedFeatureError';
 
 // Maps element ID to inspected data.
 // We use an LRU for this rather than a WeakMap because of how the "no-change" optimization works.
@@ -98,6 +100,13 @@ export function inspectElement({
         // Trying to keep useful information from user's side.
         const error = new UserError(message);
         error.stack = stack || error.stack;
+        throw error;
+      }
+
+      case 'unsupported-faeture': {
+        const {message} = (data: InspectElementUnsupportedFeatureError);
+        // Trying to keep useful information from user's side.
+        const error = new UnsupportedFeatureError(message);
         throw error;
       }
 
