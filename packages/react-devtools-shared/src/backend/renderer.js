@@ -62,7 +62,6 @@ import {
 } from '../constants';
 import {
   inspectHooksOfFiber,
-  ErrorsNames as DebugToolsErrors,
 } from 'react-debug-tools';
 import {
   patch as patchConsole,
@@ -3610,7 +3609,8 @@ export function attach(
     try {
       mostRecentlyInspectedElement = inspectElementRaw(id);
     } catch (error) {
-      if (error.name === DebugToolsErrors.RENDER_FUNCTION_ERROR) {
+      // the error name is synced with ReactDebugHooks
+      if (error.name === 'RenderFunctionError') {
         let message = 'Error rendering inspected element.';
         let stack;
         // Log error & cause for user to debug
@@ -3635,7 +3635,8 @@ export function attach(
         };
       }
 
-      if (error.name === DebugToolsErrors.UNSUPPORTTED_FEATURE_ERROR) {
+      // the error name is synced with ReactDebugHooks
+      if (error.name === 'UnsupportedFeatureError') {
         return {
           type: 'unsupported-feature',
           id,
