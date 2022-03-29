@@ -6039,10 +6039,8 @@ Object {
   "changeDescriptions": Map {
     5 => Object {
       "context": null,
-      "didHooksChange": true,
-      "hooks": Array [
-        0,
-      ],
+      "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -6059,10 +6057,8 @@ Object {
     },
     7 => Object {
       "context": null,
-      "didHooksChange": true,
-      "hooks": Array [
-        0,
-      ],
+      "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -6506,10 +6502,8 @@ Object {
               5,
               Object {
                 "context": null,
-                "didHooksChange": true,
-                "hooks": Array [
-                  0,
-                ],
+                "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -6532,10 +6526,8 @@ Object {
               7,
               Object {
                 "context": null,
-                "didHooksChange": true,
-                "hooks": Array [
-                  0,
-                ],
+                "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "count",
