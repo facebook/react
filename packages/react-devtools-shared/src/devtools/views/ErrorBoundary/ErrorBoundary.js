@@ -21,7 +21,6 @@ import TimeoutError from 'react-devtools-shared/src/errors/TimeoutError';
 import UserError from 'react-devtools-shared/src/errors/UserError';
 import UnsupportedFeatureError from 'react-devtools-shared/src/errors/UnsupportedFeatureError';
 import {logEvent} from 'react-devtools-shared/src/Logger';
-import {boolean} from 'yargs';
 
 type Props = {|
   children: React$Node,
