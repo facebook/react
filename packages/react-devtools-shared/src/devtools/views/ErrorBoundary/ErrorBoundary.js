@@ -15,11 +15,13 @@ import ErrorView from './ErrorView';
 import SearchingGitHubIssues from './SearchingGitHubIssues';
 import SuspendingErrorView from './SuspendingErrorView';
 import TimeoutView from './TimeoutView';
-import UserErrorView from './UserErrorView';
+import CaughtErrorView from './CaughtErrorView';
 import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
 import TimeoutError from 'react-devtools-shared/src/errors/TimeoutError';
 import UserError from 'react-devtools-shared/src/errors/UserError';
+import UnsupportedFeatureError from 'react-devtools-shared/src/errors/UnsupportedFeatureError';
 import {logEvent} from 'react-devtools-shared/src/Logger';
+import {boolean} from 'yargs';
 
 type Props = {|
   children: React$Node,
@@ -37,6 +39,7 @@ type State = {|
   isUnsupportedBridgeOperationError: boolean,
   isTimeout: boolean,
   isUserError: boolean,
+  isUnsupportedFeatureError: boolean,
 |};
 
 const InitialState: State = {
@@ -48,6 +51,7 @@ const InitialState: State = {
   isUnsupportedBridgeOperationError: false,
   isTimeout: false,
   isUserError: false,
+  isUnsupportedFeatureError: false,
 };
 
 export default class ErrorBoundary extends Component<Props, State> {
@@ -63,6 +67,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     const isTimeout = error instanceof TimeoutError;
     const isUserError = error instanceof UserError;
+    const isUnsupportedFeatureError = error instanceof UnsupportedFeatureError;
     const isUnsupportedBridgeOperationError =
       error instanceof UnsupportedBridgeOperationError;
 
@@ -81,6 +86,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       errorMessage,
       hasError: true,
       isUnsupportedBridgeOperationError,
+      isUnsupportedFeatureError,
       isTimeout,
       isUserError,
     };
@@ -118,6 +124,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       isUnsupportedBridgeOperationError,
       isTimeout,
       isUserError,
+      isUnsupportedFeatureError,
     } = this.state;
 
     if (hasError) {
@@ -142,10 +149,34 @@ export default class ErrorBoundary extends Component<Props, State> {
         );
       } else if (isUserError) {
         return (
-          <UserErrorView
+          <CaughtErrorView
             callStack={callStack}
             componentStack={componentStack}
-            errorMessage={errorMessage}
+            errorMessage={errorMessage || 'Error occured in inspected element'}
+            info={
+              <>
+                This is likely to be caused by implementation of current
+                inspected element. Please see your console for logged error.
+              </>
+            }
+          />
+        );
+      } else if (isUnsupportedFeatureError) {
+        return (
+          <CaughtErrorView
+            callStack={callStack}
+            componentStack={componentStack}
+            errorMessage={
+              errorMessage ||
+              'Current DevTools version does not support a feature used in the inspected element.'
+            }
+            info={
+              <>
+                React DevTools is unable to handle a feature you are using in
+                this component (e.g. a new React build-in Hook). Please upgrade
+                to the latest version.
+              </>
+            }
           />
         );
       } else {
@@ -156,10 +187,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             dismissError={
               canDismissProp || canDismissState ? this._dismissError : null
             }
-            errorMessage={errorMessage}
-            isUnsupportedBridgeOperationError={
-              isUnsupportedBridgeOperationError
-            }>
+            errorMessage={errorMessage}>
             <Suspense fallback={<SearchingGitHubIssues />}>
               <SuspendingErrorView
                 callStack={callStack}

@@ -282,6 +282,7 @@ export type InspectedElement = {|
 
 export const InspectElementErrorType = 'error';
 export const InspectElementUserErrorType = 'user-error';
+export const InspectElementUnsupportedFeatureErrorType = 'unsupported-feature';
 export const InspectElementFullDataType = 'full-data';
 export const InspectElementNoChangeType = 'no-change';
 export const InspectElementNotFoundType = 'not-found';
@@ -300,6 +301,13 @@ export type InspectElementUserError = {|
   type: 'user-error',
   message: string,
   stack: ?string,
+|};
+
+export type InspectElementUnsupportedFeatureError = {|
+  id: number,
+  responseID: number,
+  type: 'unsupported-feature',
+  message: string,
 |};
 
 export type InspectElementFullData = {|
@@ -332,6 +340,7 @@ export type InspectElementNotFound = {|
 export type InspectedElementPayload =
   | InspectElementError
   | InspectElementUserError
+  | InspectElementUnsupportedFeatureError
   | InspectElementFullData
   | InspectElementHydratedPath
   | InspectElementNoChange
