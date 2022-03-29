@@ -103,7 +103,7 @@ export function inspectElement({
         throw error;
       }
 
-      case 'unsupported-faeture': {
+      case 'unsupported-feature': {
         const {message} = (data: InspectElementUnsupportedFeatureError);
         // Trying to keep useful information from user's side.
         const error = new UnsupportedFeatureError(message);
