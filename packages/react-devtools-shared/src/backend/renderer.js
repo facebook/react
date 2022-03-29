@@ -60,9 +60,7 @@ import {
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import {
-  inspectHooksOfFiber,
-} from 'react-debug-tools';
+import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
