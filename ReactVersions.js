@@ -33,7 +33,7 @@ const stablePackages = {
   'react-dom': ReactVersion,
   'react-is': ReactVersion,
   'react-reconciler': '0.27.0',
-  'react-refresh': '0.11.0',
+  'react-refresh': '0.12.0',
   'react-test-renderer': ReactVersion,
   'use-subscription': '1.6.0',
   'use-sync-external-store': '1.0.0',
