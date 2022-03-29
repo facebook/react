@@ -313,7 +313,6 @@ describe('ProfilingCache', () => {
 
   it('should properly detect changed hooks', () => {
     const Context = React.createContext(0);
-    const Context2 = React.createContext(0);
 
     function reducer(state, action) {
       switch (action.type) {
@@ -324,6 +323,19 @@ describe('ProfilingCache', () => {
       }
     }
 
+    let snapshot = 0;
+    function getServerSnapshot() {
+      return snapshot;
+    }
+    function getClientSnapshot() {
+      return snapshot;
+    }
+
+    let syncExternalStoreCallback;
+    function subscribe(callback) {
+      syncExternalStoreCallback = callback;
+    }
+
     let dispatch = null;
     let setState = null;
 
@@ -331,20 +343,31 @@ describe('ProfilingCache', () => {
       // These hooks may change and initiate re-renders.
       setState = React.useState('abc')[1];
       dispatch = React.useReducer(reducer, {value: true})[1];
+      React.useSyncExternalStore(
+        subscribe,
+        getClientSnapshot,
+        getServerSnapshot,
+      );
 
       // This hook's return value may change between renders,
       // but the hook itself isn't stateful.
       React.useContext(Context);
-      React.useContext(Context2);
 
-      // These hooks and their dependencies may not change between renders.
-      // We're using them to ensure that they don't trigger false positives.
+      // These hooks never change in a way that schedules an update.
       React.useCallback(() => () => {}, [string]);
       React.useMemo(() => string, [string]);
+      React.useCallback(() => () => {}, [count]);
+      React.useMemo(() => count, [count]);
+      React.useCallback(() => () => {});
+      React.useMemo(() => string);
 
-      // These hooks never "change".
+      // These hooks never change in a way that schedules an update.
       React.useEffect(() => {}, [string]);
       React.useLayoutEffect(() => {}, [string]);
+      React.useEffect(() => {}, [count]);
+      React.useLayoutEffect(() => {}, [count]);
+      React.useEffect(() => {});
+      React.useLayoutEffect(() => {});
 
       return null;
     };
@@ -355,9 +378,7 @@ describe('ProfilingCache', () => {
     utils.act(() =>
       legacyRender(
         <Context.Provider value={true}>
-          <Context2.Provider value={true}>
-            <Component count={1} />
-          </Context2.Provider>
+          <Component count={1} />
         </Context.Provider>,
         container,
       ),
@@ -367,87 +388,173 @@ describe('ProfilingCache', () => {
     utils.act(() =>
       legacyRender(
         <Context.Provider value={true}>
-          <Context2.Provider value={true}>
-            <Component count={2} />
-          </Context2.Provider>
+          <Component count={2} />
         </Context.Provider>,
         container,
       ),
     );
 
-    // Third render has a changed reducer hook
+    // Third render has a changed reducer hook.
     utils.act(() => dispatch({type: 'invert'}));
 
-    // Fourth render has a changed state hook
+    // Fourth render has a changed state hook.
     utils.act(() => setState('def'));
 
-    // Fifth render has a changed context value for context 1, but no changed hook.
+    // Fifth render has a changed context value, but no changed hook.
     utils.act(() =>
       legacyRender(
         <Context.Provider value={false}>
-          <Context2.Provider value={true}>
-            <Component count={2} />
-          </Context2.Provider>
+          <Component count={2} />
         </Context.Provider>,
         container,
       ),
     );
 
-    // Sixth render has another changed context value for context 2, but no changed hook.
-    utils.act(() =>
-      legacyRender(
-        <Context.Provider value={false}>
-          <Context2.Provider value={false}>
-            <Component count={2} />
-          </Context2.Provider>
-        </Context.Provider>,
-        container,
-      ),
-    );
+    // 6th renderer is triggered by a sync external store change.
+    utils.act(() => {
+      snapshot++;
+      syncExternalStoreCallback();
+    });
+
     utils.act(() => store.profilerStore.stopProfiling());
-
-    const allCommitData = [];
-
-    function Validator({commitIndex, previousCommitDetails, rootID}) {
-      const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
-      if (previousCommitDetails != null) {
-        expect(commitData).toEqual(previousCommitDetails);
-      } else {
-        allCommitData.push(commitData);
-        expect(commitData).toMatchSnapshot(
-          `CommitDetails commitIndex: ${commitIndex}`,
-        );
-      }
-      return null;
-    }
 
     const rootID = store.roots[0];
 
-    for (let commitIndex = 0; commitIndex < 6; commitIndex++) {
-      utils.act(() => {
-        TestRenderer.create(
-          <Validator
-            commitIndex={commitIndex}
-            previousCommitDetails={null}
-            rootID={rootID}
-          />,
+    const allChangeDescriptions = [];
+
+    function getChangeDescriptions(commitIndex, label) {
+      let changeDescriptions;
+
+      function Validator() {
+        const commitData = store.profilerStore.getCommitData(
+          rootID,
+          commitIndex,
         );
+
+        changeDescriptions = commitData.changeDescriptions;
+
+        allChangeDescriptions.push(changeDescriptions);
+
+        return null;
+      }
+
+      utils.act(() => {
+        TestRenderer.create(<Validator />);
       });
+
+      return changeDescriptions;
     }
 
-    expect(allCommitData).toHaveLength(6);
+    // 1st render: No change
+    expect(getChangeDescriptions(0)).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "isFirstMount": true,
+          "props": null,
+          "state": null,
+        },
+      }
+    `);
+
+    // 2nd render: Changed props
+    expect(getChangeDescriptions(1)).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": false,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [
+            "count",
+          ],
+          "state": null,
+        },
+      }
+    `);
+
+    // 3rd render: Changed useReducer
+    expect(getChangeDescriptions(2)).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": false,
+          "didHooksChange": true,
+          "hooks": Array [
+            1,
+          ],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+      }
+    `);
+
+    // 4th render: Changed useState
+    expect(getChangeDescriptions(3)).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": false,
+          "didHooksChange": true,
+          "hooks": Array [
+            0,
+          ],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+      }
+    `);
+
+    // 5th render: Changed context
+    expect(getChangeDescriptions(4)).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": true,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+      }
+    `);
+
+    // 6th render: Sync external store
+    expect(getChangeDescriptions(5)).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": false,
+          "didHooksChange": true,
+          "hooks": Array [
+            2,
+          ],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+      }
+    `);
+
+    expect(allChangeDescriptions).toHaveLength(6);
 
     // Export and re-import profile data and make sure it is retained.
     utils.exportImportHelper(bridge, store);
 
+    function ExportImportValidator({commitIndex}) {
+      const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
+
+      expect(commitData.changeDescriptions).toEqual(
+        allChangeDescriptions[commitIndex],
+      );
+
+      return null;
+    }
+
     for (let commitIndex = 0; commitIndex < 6; commitIndex++) {
       utils.act(() => {
         TestRenderer.create(
-          <Validator
-            commitIndex={commitIndex}
-            previousCommitDetails={allCommitData[commitIndex]}
-            rootID={rootID}
-          />,
+          <ExportImportValidator commitIndex={commitIndex} />,
         );
       });
     }

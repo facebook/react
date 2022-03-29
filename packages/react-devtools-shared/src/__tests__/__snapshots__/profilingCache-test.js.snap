@@ -4543,245 +4543,6 @@ Object {
 }
 `;
 
-exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 0 1`] = `
-Object {
-  "changeDescriptions": Map {
-    4 => Object {
-      "context": null,
-      "didHooksChange": false,
-      "isFirstMount": true,
-      "props": null,
-      "state": null,
-    },
-  },
-  "duration": 0,
-  "effectDuration": 0,
-  "fiberActualDurations": Map {
-    1 => 0,
-    2 => 0,
-    3 => 0,
-    4 => 0,
-  },
-  "fiberSelfDurations": Map {
-    1 => 0,
-    2 => 0,
-    3 => 0,
-    4 => 0,
-  },
-  "passiveEffectDuration": 0,
-  "priorityLevel": "Immediate",
-  "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "render()",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
-}
-`;
-
-exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 1 1`] = `
-Object {
-  "changeDescriptions": Map {
-    4 => Object {
-      "context": false,
-      "didHooksChange": false,
-      "hooks": Array [],
-      "isFirstMount": false,
-      "props": Array [
-        "count",
-      ],
-      "state": null,
-    },
-  },
-  "duration": 0,
-  "effectDuration": null,
-  "fiberActualDurations": Map {
-    4 => 0,
-    3 => 0,
-    2 => 0,
-    1 => 0,
-  },
-  "fiberSelfDurations": Map {
-    4 => 0,
-    3 => 0,
-    2 => 0,
-    1 => 0,
-  },
-  "passiveEffectDuration": null,
-  "priorityLevel": "Immediate",
-  "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "render()",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
-}
-`;
-
-exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 2 1`] = `
-Object {
-  "changeDescriptions": Map {
-    4 => Object {
-      "context": false,
-      "didHooksChange": true,
-      "hooks": Array [
-        1,
-      ],
-      "isFirstMount": false,
-      "props": Array [],
-      "state": null,
-    },
-  },
-  "duration": 0,
-  "effectDuration": null,
-  "fiberActualDurations": Map {
-    4 => 0,
-  },
-  "fiberSelfDurations": Map {
-    4 => 0,
-  },
-  "passiveEffectDuration": null,
-  "priorityLevel": "Immediate",
-  "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "Component",
-      "hocDisplayNames": null,
-      "id": 4,
-      "key": null,
-      "type": 5,
-    },
-  ],
-}
-`;
-
-exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 3 1`] = `
-Object {
-  "changeDescriptions": Map {
-    4 => Object {
-      "context": false,
-      "didHooksChange": true,
-      "hooks": Array [
-        0,
-      ],
-      "isFirstMount": false,
-      "props": Array [],
-      "state": null,
-    },
-  },
-  "duration": 0,
-  "effectDuration": null,
-  "fiberActualDurations": Map {
-    4 => 0,
-  },
-  "fiberSelfDurations": Map {
-    4 => 0,
-  },
-  "passiveEffectDuration": null,
-  "priorityLevel": "Immediate",
-  "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "Component",
-      "hocDisplayNames": null,
-      "id": 4,
-      "key": null,
-      "type": 5,
-    },
-  ],
-}
-`;
-
-exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 4 1`] = `
-Object {
-  "changeDescriptions": Map {
-    4 => Object {
-      "context": true,
-      "didHooksChange": false,
-      "hooks": Array [],
-      "isFirstMount": false,
-      "props": Array [],
-      "state": null,
-    },
-  },
-  "duration": 0,
-  "effectDuration": null,
-  "fiberActualDurations": Map {
-    4 => 0,
-    3 => 0,
-    2 => 0,
-    1 => 0,
-  },
-  "fiberSelfDurations": Map {
-    4 => 0,
-    3 => 0,
-    2 => 0,
-    1 => 0,
-  },
-  "passiveEffectDuration": null,
-  "priorityLevel": "Immediate",
-  "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "render()",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
-}
-`;
-
-exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 5 1`] = `
-Object {
-  "changeDescriptions": Map {
-    4 => Object {
-      "context": true,
-      "didHooksChange": false,
-      "hooks": Array [],
-      "isFirstMount": false,
-      "props": Array [],
-      "state": null,
-    },
-  },
-  "duration": 0,
-  "effectDuration": null,
-  "fiberActualDurations": Map {
-    4 => 0,
-    3 => 0,
-    2 => 0,
-    1 => 0,
-  },
-  "fiberSelfDurations": Map {
-    4 => 0,
-    3 => 0,
-    2 => 0,
-    1 => 0,
-  },
-  "passiveEffectDuration": null,
-  "priorityLevel": "Immediate",
-  "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "render()",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
-}
-`;
-
 exports[`ProfilingCache should properly detect changed hooks: imported data 1`] = `
 Object {
   "dataForRoots": Array [
@@ -4790,7 +4551,7 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              4,
+              3,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -4815,10 +4576,6 @@ Object {
               3,
               0,
             ],
-            Array [
-              4,
-              0,
-            ],
           ],
           "fiberSelfDurations": Array [
             Array [
@@ -4831,10 +4588,6 @@ Object {
             ],
             Array [
               3,
-              0,
-            ],
-            Array [
-              4,
               0,
             ],
           ],
@@ -4854,7 +4607,7 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              4,
+              3,
               Object {
                 "context": false,
                 "didHooksChange": false,
@@ -4868,12 +4621,8 @@ Object {
             ],
           ],
           "duration": 0,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
-            Array [
-              4,
-              0,
-            ],
             Array [
               3,
               0,
@@ -4889,10 +4638,6 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              4,
-              0,
-            ],
-            Array [
               3,
               0,
             ],
@@ -4905,7 +4650,7 @@ Object {
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 0,
           "updaters": Array [
@@ -4921,7 +4666,7 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              4,
+              3,
               Object {
                 "context": false,
                 "didHooksChange": true,
@@ -4935,27 +4680,27 @@ Object {
             ],
           ],
           "duration": 0,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
-              4,
+              3,
               0,
             ],
           ],
           "fiberSelfDurations": Array [
             Array [
-              4,
+              3,
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 0,
           "updaters": Array [
             Object {
               "displayName": "Component",
               "hocDisplayNames": null,
-              "id": 4,
+              "id": 3,
               "key": null,
               "type": 5,
             },
@@ -4964,7 +4709,7 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              4,
+              3,
               Object {
                 "context": false,
                 "didHooksChange": true,
@@ -4978,27 +4723,27 @@ Object {
             ],
           ],
           "duration": 0,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
-              4,
+              3,
               0,
             ],
           ],
           "fiberSelfDurations": Array [
             Array [
-              4,
+              3,
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 0,
           "updaters": Array [
             Object {
               "displayName": "Component",
               "hocDisplayNames": null,
-              "id": 4,
+              "id": 3,
               "key": null,
               "type": 5,
             },
@@ -5007,7 +4752,7 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              4,
+              3,
               Object {
                 "context": true,
                 "didHooksChange": false,
@@ -5019,12 +4764,8 @@ Object {
             ],
           ],
           "duration": 0,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
-            Array [
-              4,
-              0,
-            ],
             Array [
               3,
               0,
@@ -5040,10 +4781,6 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              4,
-              0,
-            ],
-            Array [
               3,
               0,
             ],
@@ -5056,7 +4793,7 @@ Object {
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 0,
           "updaters": Array [
@@ -5072,11 +4809,13 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              4,
+              3,
               Object {
-                "context": true,
-                "didHooksChange": false,
-                "hooks": Array [],
+                "context": false,
+                "didHooksChange": true,
+                "hooks": Array [
+                  2,
+                ],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -5084,53 +4823,29 @@ Object {
             ],
           ],
           "duration": 0,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
-              4,
-              0,
-            ],
-            Array [
               3,
-              0,
-            ],
-            Array [
-              2,
-              0,
-            ],
-            Array [
-              1,
               0,
             ],
           ],
           "fiberSelfDurations": Array [
             Array [
-              4,
-              0,
-            ],
-            Array [
               3,
               0,
             ],
-            Array [
-              2,
-              0,
-            ],
-            Array [
-              1,
-              0,
-            ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "render()",
+              "displayName": "Component",
               "hocDisplayNames": null,
-              "id": 1,
+              "id": 3,
               "key": null,
-              "type": 11,
+              "type": 5,
             },
           ],
         },
@@ -5188,23 +4903,13 @@ Object {
           0,
           1,
           3,
-          2,
-          2,
-          0,
-          1,
-          0,
-          4,
-          3,
-          0,
-          1,
-          4,
           5,
-          3,
+          2,
           0,
           2,
           0,
           4,
-          4,
+          3,
           0,
         ],
         Array [
@@ -5312,6 +5017,22 @@ Object {
               "timestamp": 10,
               "type": "commit",
             },
+            Object {
+              "batchUID": 2,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
+            },
           ],
         ],
         Array [
@@ -5340,6 +5061,22 @@ Object {
               "lanes": "0b0000000000000000000000000000001",
               "timestamp": 10,
               "type": "commit",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
             },
           ],
         ],
@@ -5370,6 +5107,22 @@ Object {
               "timestamp": 10,
               "type": "commit",
             },
+            Object {
+              "batchUID": 4,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
+            },
           ],
         ],
         Array [
@@ -5398,6 +5151,22 @@ Object {
               "lanes": "0b0000000000000000000000000000001",
               "timestamp": 10,
               "type": "commit",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
             },
           ],
         ],
@@ -5428,10 +5197,124 @@ Object {
               "timestamp": 10,
               "type": "commit",
             },
+            Object {
+              "batchUID": 6,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 6,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
+            },
           ],
         ],
       ],
       "componentMeasures": Array [
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "layout-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "layout-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "layout-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "layout-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "layout-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
+          "warning": null,
+        },
         Object {
           "componentName": "Component",
           "duration": 0,
@@ -5464,7 +5347,14 @@ Object {
           "componentName": "Component",
           "duration": 0,
           "timestamp": 10,
-          "type": "render",
+          "type": "layout-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
           "warning": null,
         },
         Object {
@@ -5478,7 +5368,14 @@ Object {
           "componentName": "Component",
           "duration": 0,
           "timestamp": 10,
-          "type": "render",
+          "type": "layout-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
           "warning": null,
         },
         Object {
@@ -5486,6 +5383,27 @@ Object {
           "duration": 0,
           "timestamp": 10,
           "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "layout-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
           "warning": null,
         },
       ],
@@ -5687,6 +5605,22 @@ Object {
               "type": "commit",
             },
             Object {
+              "batchUID": 2,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
+            },
+            Object {
               "batchUID": 3,
               "depth": 0,
               "duration": 0,
@@ -5709,6 +5643,22 @@ Object {
               "lanes": "0b0000000000000000000000000000001",
               "timestamp": 10,
               "type": "commit",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
             },
             Object {
               "batchUID": 4,
@@ -5735,6 +5685,22 @@ Object {
               "type": "commit",
             },
             Object {
+              "batchUID": 4,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
+            },
+            Object {
               "batchUID": 5,
               "depth": 0,
               "duration": 0,
@@ -5759,6 +5725,22 @@ Object {
               "type": "commit",
             },
             Object {
+              "batchUID": 5,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
+            },
+            Object {
               "batchUID": 6,
               "depth": 0,
               "duration": 0,
@@ -5781,6 +5763,22 @@ Object {
               "lanes": "0b0000000000000000000000000000001",
               "timestamp": 10,
               "type": "commit",
+            },
+            Object {
+              "batchUID": 6,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 6,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
             },
           ],
         ],
@@ -5942,12 +5940,6 @@ Object {
           "type": "schedule-render",
           "warning": null,
         },
-        Object {
-          "lanes": "0b0000000000000000000000000000001",
-          "timestamp": 10,
-          "type": "schedule-render",
-          "warning": null,
-        },
       ],
       "snapshotHeight": 0,
       "snapshots": Array [],
@@ -6039,10 +6031,8 @@ Object {
   "changeDescriptions": Map {
     5 => Object {
       "context": null,
-      "didHooksChange": true,
-      "hooks": Array [
-        0,
-      ],
+      "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -6059,10 +6049,8 @@ Object {
     },
     7 => Object {
       "context": null,
-      "didHooksChange": true,
-      "hooks": Array [
-        0,
-      ],
+      "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -6506,10 +6494,8 @@ Object {
               5,
               Object {
                 "context": null,
-                "didHooksChange": true,
-                "hooks": Array [
-                  0,
-                ],
+                "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -6532,10 +6518,8 @@ Object {
               7,
               Object {
                 "context": null,
-                "didHooksChange": true,
-                "hooks": Array [
-                  0,
-                ],
+                "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "count",
