@@ -4,6 +4,16 @@
 
 ---
 
+### 4.24.3
+March 29, 2022
+
+#### Bugfix
+* Profiler should only report stateful hooks that change between renders ([bvaughn](https://github.com/bvaughn) in [#24189](https://github.com/facebook/react/pull/24189))
+* Ignore duplicate welcome "message" events ([bvaughn](https://github.com/bvaughn) in [#24186](https://github.com/facebook/react/pull/24186))
+* Attach DevTools Tree keyboard events to the Tree container (not the document) ([bvaughn](https://github.com/bvaughn) in [#24164](https://github.com/facebook/react/pull/24164))
+
+---
+
 ### 4.24.2
 March 24, 2022
 
