@@ -7,13 +7,11 @@
  * @flow
  */
 
-import typeof TestRendererType from 'react-test-renderer';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('profiling charts', () => {
   let React;
   let Scheduler;
-  let TestRenderer: TestRendererType;
   let legacyRender;
   let store: Store;
   let utils;
@@ -30,8 +28,35 @@ describe('profiling charts', () => {
 
     React = require('react');
     Scheduler = require('scheduler');
-    TestRenderer = utils.requireTestRenderer();
   });
+
+  function getFlamegraphChartData(rootID, commitIndex) {
+    const commitTree = store.profilerStore.profilingCache.getCommitTree({
+      commitIndex,
+      rootID,
+    });
+    const chartData = store.profilerStore.profilingCache.getFlamegraphChartData(
+      {
+        commitIndex,
+        commitTree,
+        rootID,
+      },
+    );
+    return {commitTree, chartData};
+  }
+
+  function getRankedChartData(rootID, commitIndex) {
+    const commitTree = store.profilerStore.profilingCache.getCommitTree({
+      commitIndex,
+      rootID,
+    });
+    const chartData = store.profilerStore.profilingCache.getRankedChartData({
+      commitIndex,
+      commitTree,
+      rootID,
+    });
+    return {commitTree, chartData};
+  }
 
   describe('flamegraph chart', () => {
     it('should contain valid data', () => {
@@ -55,47 +80,130 @@ describe('profiling charts', () => {
       const container = document.createElement('div');
 
       utils.act(() => store.profilerStore.startProfiling());
+
       utils.act(() => legacyRender(<Parent />, container));
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Parent>
+              <Child key="first"> [Memo]
+              <Child key="second"> [Memo]
+              <Child key="third"> [Memo]
+      `);
+
       utils.act(() => legacyRender(<Parent />, container));
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Parent>
+              <Child key="first"> [Memo]
+              <Child key="second"> [Memo]
+              <Child key="third"> [Memo]
+      `);
+
       utils.act(() => store.profilerStore.stopProfiling());
-
-      let renderFinished = false;
-
-      function Validator({commitIndex, rootID}) {
-        const commitTree = store.profilerStore.profilingCache.getCommitTree({
-          commitIndex,
-          rootID,
-        });
-        const chartData = store.profilerStore.profilingCache.getFlamegraphChartData(
-          {
-            commitIndex,
-            commitTree,
-            rootID,
-          },
-        );
-        expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
-        expect(chartData).toMatchSnapshot(
-          `${commitIndex}: FlamegraphChartData`,
-        );
-        renderFinished = true;
-        return null;
-      }
 
       const rootID = store.roots[0];
 
-      for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
-        renderFinished = false;
+      const firstCommitData = getFlamegraphChartData(rootID, 0);
+      expect(firstCommitData.commitTree.nodes.size).toBe(5);
+      expect(firstCommitData.chartData.rows).toMatchInlineSnapshot(`
+        Array [
+          Array [
+            Object {
+              "actualDuration": 15,
+              "didRender": true,
+              "id": 2,
+              "label": "Parent (10ms of 15ms)",
+              "name": "Parent",
+              "offset": 0,
+              "selfDuration": 10,
+              "treeBaseDuration": 15,
+            },
+          ],
+          Array [
+            Object {
+              "actualDuration": 0,
+              "didRender": true,
+              "id": 5,
+              "label": "Child key=\\"third\\" (<0.1ms of <0.1ms)",
+              "name": "Child",
+              "offset": 15,
+              "selfDuration": 0,
+              "treeBaseDuration": 0,
+            },
+            Object {
+              "actualDuration": 2,
+              "didRender": true,
+              "id": 4,
+              "label": "Child key=\\"second\\" (2ms of 2ms)",
+              "name": "Child",
+              "offset": 13,
+              "selfDuration": 2,
+              "treeBaseDuration": 2,
+            },
+            Object {
+              "actualDuration": 3,
+              "didRender": true,
+              "id": 3,
+              "label": "Child key=\\"first\\" (3ms of 3ms)",
+              "name": "Child",
+              "offset": 10,
+              "selfDuration": 3,
+              "treeBaseDuration": 3,
+            },
+          ],
+        ]
+      `);
 
-        utils.act(() => {
-          TestRenderer.create(
-            <Validator commitIndex={commitIndex} rootID={rootID} />,
-          );
-        });
-
-        expect(renderFinished).toBe(true);
-      }
-
-      expect(renderFinished).toBe(true);
+      const secondCommitData = getFlamegraphChartData(rootID, 1);
+      expect(secondCommitData.commitTree.nodes.size).toBe(5);
+      expect(secondCommitData.chartData.rows).toMatchInlineSnapshot(`
+        Array [
+          Array [
+            Object {
+              "actualDuration": 10,
+              "didRender": true,
+              "id": 2,
+              "label": "Parent (10ms of 10ms)",
+              "name": "Parent",
+              "offset": 0,
+              "selfDuration": 10,
+              "treeBaseDuration": 15,
+            },
+          ],
+          Array [
+            Object {
+              "actualDuration": 0,
+              "didRender": false,
+              "id": 5,
+              "label": "Child key=\\"third\\"",
+              "name": "Child",
+              "offset": 15,
+              "selfDuration": 0,
+              "treeBaseDuration": 0,
+            },
+            Object {
+              "actualDuration": 0,
+              "didRender": false,
+              "id": 4,
+              "label": "Child key=\\"second\\"",
+              "name": "Child",
+              "offset": 13,
+              "selfDuration": 0,
+              "treeBaseDuration": 2,
+            },
+            Object {
+              "actualDuration": 0,
+              "didRender": false,
+              "id": 3,
+              "label": "Child key=\\"first\\"",
+              "name": "Child",
+              "offset": 10,
+              "selfDuration": 0,
+              "treeBaseDuration": 3,
+            },
+          ],
+        ]
+      `);
     });
   });
 
@@ -121,43 +229,74 @@ describe('profiling charts', () => {
       const container = document.createElement('div');
 
       utils.act(() => store.profilerStore.startProfiling());
+
       utils.act(() => legacyRender(<Parent />, container));
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Parent>
+              <Child key="first"> [Memo]
+              <Child key="second"> [Memo]
+              <Child key="third"> [Memo]
+      `);
+
       utils.act(() => legacyRender(<Parent />, container));
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Parent>
+              <Child key="first"> [Memo]
+              <Child key="second"> [Memo]
+              <Child key="third"> [Memo]
+      `);
+
       utils.act(() => store.profilerStore.stopProfiling());
-
-      let renderFinished = false;
-
-      function Validator({commitIndex, rootID}) {
-        const commitTree = store.profilerStore.profilingCache.getCommitTree({
-          commitIndex,
-          rootID,
-        });
-        const chartData = store.profilerStore.profilingCache.getRankedChartData(
-          {
-            commitIndex,
-            commitTree,
-            rootID,
-          },
-        );
-        expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
-        expect(chartData).toMatchSnapshot(`${commitIndex}: RankedChartData`);
-        renderFinished = true;
-        return null;
-      }
 
       const rootID = store.roots[0];
 
-      for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
-        renderFinished = false;
+      // Everything should render the first time.
+      const firstCommitData = getRankedChartData(rootID, 0);
+      expect(firstCommitData.commitTree.nodes.size).toBe(5);
+      expect(firstCommitData.chartData.nodes).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "id": 2,
+            "label": "Parent (10ms)",
+            "name": "Parent",
+            "value": 10,
+          },
+          Object {
+            "id": 3,
+            "label": "Child (Memo) key=\\"first\\" (3ms)",
+            "name": "Child",
+            "value": 3,
+          },
+          Object {
+            "id": 4,
+            "label": "Child (Memo) key=\\"second\\" (2ms)",
+            "name": "Child",
+            "value": 2,
+          },
+          Object {
+            "id": 5,
+            "label": "Child (Memo) key=\\"third\\" (<0.1ms)",
+            "name": "Child",
+            "value": 0,
+          },
+        ]
+      `);
 
-        utils.act(() => {
-          TestRenderer.create(
-            <Validator commitIndex={commitIndex} rootID={rootID} />,
-          );
-        });
-
-        expect(renderFinished).toBe(true);
-      }
+      // Only parent should render the second time, since child props have not changed.
+      const secondCommitData = getRankedChartData(rootID, 1);
+      expect(secondCommitData.commitTree.nodes.size).toBe(5);
+      expect(secondCommitData.chartData.nodes).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "id": 2,
+            "label": "Parent (10ms)",
+            "name": "Parent",
+            "value": 10,
+          },
+        ]
+      `);
     });
   });
 });
