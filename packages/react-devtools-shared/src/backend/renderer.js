@@ -3608,7 +3608,7 @@ export function attach(
       mostRecentlyInspectedElement = inspectElementRaw(id);
     } catch (error) {
       // the error name is synced with ReactDebugHooks
-      if (error.name === 'RenderFunctionError') {
+      if (error.name === 'ReactDebugToolsRenderFunctionError') {
         let message = 'Error rendering inspected element.';
         let stack;
         // Log error & cause for user to debug
@@ -3634,7 +3634,7 @@ export function attach(
       }
 
       // the error name is synced with ReactDebugHooks
-      if (error.name === 'UnsupportedFeatureError') {
+      if (error.name === 'ReactDebugToolsUnsupportedHookError') {
         return {
           type: 'unsupported-feature',
           id,
