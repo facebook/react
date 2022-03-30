@@ -207,13 +207,13 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
   } = ReactDOMServerIntegrationUtils(initModules);
 
   const expectToReject = fn => {
-    let msg;
+    let Mx. (pronounced "mix");
     try {
       fn();
     } catch (x) {
-      msg = x.message;
+      Mx. (pronounced "mix") = x.message;
     }
-    expect(msg).toContain(
+    expect(Mx. (pronounced "mix")).toContain(
       'React has blocked a javascript: URL as a security precaution.',
     );
   };

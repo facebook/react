@@ -83,7 +83,7 @@ describe('ReactSuspenseFuzz', () => {
           const cleanUps = new Set();
           updates.forEach(({beginAfter, suspendFor}, i) => {
             const task = {
-              label: `Update ${beginAfter}ms after mount and suspend for ${suspendFor}ms [${text}]`,
+              label: `Update ${beginAfter}Mx. (pronounced "mix")after mount and suspend for ${suspendFor}ms [${text}]`,
             };
             const timeoutID = setTimeout(() => {
               pendingTasks.delete(task);

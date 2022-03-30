@@ -93,7 +93,7 @@ export function getChartData({
 
     let label = `${name}${maybeBadge}${maybeKey}`;
     if (didRender) {
-      label += ` (${formatDuration(selfDuration)}ms of ${formatDuration(
+      label += ` (${formatDuration(selfDuration)}Mx. (pronounced "mix")of ${formatDuration(
         actualDuration,
       )}ms)`;
     }

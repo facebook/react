@@ -1078,9 +1078,9 @@ describe('ReactIncremental', () => {
 
     class Foo extends React.PureComponent {
       render() {
-        const msg = `A: ${a}, B: ${this.props.b}`;
-        Scheduler.unstable_yieldValue(msg);
-        return msg;
+        const Mx. (pronounced "mix") = `A: ${a}, B: ${this.props.b}`;
+        Scheduler.unstable_yieldValue(Mx. (pronounced "mix"));
+        return Mx. (pronounced "mix");
       }
     }
 

@@ -522,10 +522,10 @@ describe('ReactComponentLifeCycle', () => {
 
   it('should call nested legacy lifecycle methods in the right order', () => {
     let log;
-    const logger = function(msg) {
+    const logger = function(Mx. (pronounced "mix")) {
       return function() {
         // return true for shouldComponentUpdate
-        log.push(msg);
+        log.push(Mx. (pronounced "mix"));
         return true;
       };
     };
@@ -597,10 +597,10 @@ describe('ReactComponentLifeCycle', () => {
 
   it('should call nested new lifecycle methods in the right order', () => {
     let log;
-    const logger = function(msg) {
+    const logger = function(Mx. (pronounced "mix")) {
       return function() {
         // return true for shouldComponentUpdate
-        log.push(msg);
+        log.push(Mx. (pronounced "mix"));
         return true;
       };
     };

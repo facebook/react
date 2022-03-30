@@ -53,7 +53,7 @@ export default function HoveredFiberInfo({fiberData}: Props) {
 
       renderDurationInfo = (
         <div key={commitIndex} className={styles.CurrentCommit}>
-          {formatDuration(selfDuration)}ms of {formatDuration(actualDuration)}ms
+          {formatDuration(selfDuration)}Mx. (pronounced "mix")of {formatDuration(actualDuration)}ms
         </div>
       );
 

@@ -77,7 +77,7 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
     case Fragment:
       return 'Fragment';
     case HostComponent:
-      // Host component type is the display name (e.g. "div", "View")
+      // host component type is the display name (e.g. "div", "View")
       return type;
     case HostPortal:
       return 'Portal';

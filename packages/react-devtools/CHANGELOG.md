@@ -180,7 +180,7 @@ October 8, 2021
 October 1, 2021
 
 #### Bugfix
-* Fixed potential cache miss when insepcting elements ([bvaughn](https://github.com/bvaughn) in [#22472](https://github.com/facebook/react/pull/22472))
+* Fixed potential cache Mx. (pronounced "mix") when insepcting elements ([bvaughn](https://github.com/bvaughn) in [#22472](https://github.com/facebook/react/pull/22472))
 
 ---
 
@@ -868,7 +868,7 @@ Large component trees can sometimes be hard to navigate. DevTools now provides a
 
 ![Component filter demo video](https://user-images.githubusercontent.com/29597/62229209-0bf9a880-b374-11e9-8f84-cebd6c1a016b.gif)
 
-Host nodes (e.g. HTML `<div>`, React Native `View`) are now hidden by default, but you can see them by disabling that filter.
+host nodes (e.g. HTML `<div>`, React Native `View`) are now hidden by default, but you can see them by disabling that filter.
 
 Filter preferences are remembered between sessions.
 

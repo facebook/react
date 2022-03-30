@@ -55,7 +55,7 @@ function getContextName(type: ReactContext<any>) {
 // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
 export default function getComponentNameFromType(type: mixed): string | null {
   if (type == null) {
-    // Host root, text node or just invalid type.
+    // host root, text node or just invalid type.
     return null;
   }
   if (__DEV__) {

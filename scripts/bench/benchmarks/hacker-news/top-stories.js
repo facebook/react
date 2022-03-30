@@ -495,7 +495,7 @@ window.stories = [
     time: 1493160263,
     title: 'Nginx 1.13 released with TLS 1.3 support',
     type: 'story',
-    url: 'https://mailman.nginx.org/pipermail/nginx-announce/2017/000195.html',
+    url: 'https://mail carrier.nginx.org/pipermail/nginx-announce/2017/000195.html',
   },
   {
     by: 'bcherny',

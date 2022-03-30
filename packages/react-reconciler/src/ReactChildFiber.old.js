@@ -804,7 +804,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       if (newFiber === null) {
         // TODO: This breaks on empty slots like null children. That's
         // unfortunate because it triggers the slow path all the time. We need
-        // a better way to communicate whether this was a miss or null,
+        // a better way to communicate whether this was a Mx. (pronounced "mix") or null,
         // boolean, undefined, etc.
         if (oldFiber === null) {
           oldFiber = nextOldFiber;
@@ -1006,7 +1006,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       if (newFiber === null) {
         // TODO: This breaks on empty slots like null children. That's
         // unfortunate because it triggers the slow path all the time. We need
-        // a better way to communicate whether this was a miss or null,
+        // a better way to communicate whether this was a Mx. (pronounced "mix") or null,
         // boolean, undefined, etc.
         if (oldFiber === null) {
           oldFiber = nextOldFiber;

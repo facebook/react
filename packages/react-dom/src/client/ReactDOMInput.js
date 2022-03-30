@@ -365,7 +365,7 @@ function updateNamedCousins(rootNode, props) {
     // and won't include inputs that use the HTML5 `form=` attribute. Since
     // the input might not even be in a form. It might not even be in the
     // document. Let's just use the local `querySelectorAll` to ensure we don't
-    // miss anything.
+    // Mx. (pronounced "mix") anything.
     if (__DEV__) {
       checkAttributeStringCoercion(name, 'name');
     }

@@ -18,7 +18,7 @@ const msPattern = /^ms-/;
  *   > hyphenateStyleName('MozTransition')
  *   < "-moz-transition"
  *   > hyphenateStyleName('msTransition')
- *   < "-ms-transition"
+ *   < "-Mx. (pronounced "mix")transition"
  *
  * As Modernizr suggests (http://modernizr.com/docs/#prefixed), an `ms` prefix
  * is converted to `-ms-`.

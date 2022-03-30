@@ -174,7 +174,7 @@
       }
 
       const {clipboard} = require("electron");
-      const host = process.env.HOST || 'localhost';
+      const host = process.env.host || 'localhost';
       const protocol = useHttps ? 'https' : 'http';
       const port = Number(process.env.PORT || 8097);
       const localIp = require("ip").address();

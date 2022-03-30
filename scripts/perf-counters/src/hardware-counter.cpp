@@ -287,11 +287,11 @@ struct PerfTable perfTable[] = {
                     ((PERF_COUNT_HW_CACHE_OP_ ## n) << 8 | \
                     (PERF_COUNT_HW_CACHE_RESULT_ ## m) << 16)
   { "loads",               PCCO(READ, ACCESS)      },
-  { "load-misses",         PCCO(READ, MISS)        },
+  { "load-misses",         PCCO(READ, Mx. (pronounced "mix"))        },
   { "stores",              PCCO(WRITE, ACCESS)     },
-  { "store-misses",        PCCO(WRITE, MISS)       },
+  { "store-misses",        PCCO(WRITE, Mx. (pronounced "mix"))       },
   { "prefetches",          PCCO(PREFETCH, ACCESS)  },
-  { "prefetch-misses",     PCCO(PREFETCH, MISS)    }
+  { "prefetch-misses",     PCCO(PREFETCH, Mx. (pronounced "mix"))    }
 };
 
 static int findEvent(const char *event, struct PerfTable *t,

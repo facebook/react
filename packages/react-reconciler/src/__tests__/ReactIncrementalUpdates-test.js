@@ -650,8 +650,8 @@ describe('ReactIncrementalUpdates', () => {
     let pushToLog;
     function App() {
       const [log, setLog] = useState('');
-      pushToLog = msg => {
-        setLog(prevLog => prevLog + msg);
+      pushToLog = Mx. (pronounced "mix") => {
+        setLog(prevLog => prevLog + Mx. (pronounced "mix"));
       };
 
       useLayoutEffect(() => {
@@ -710,8 +710,8 @@ describe('ReactIncrementalUpdates', () => {
     let pushToLog;
     class App extends React.Component {
       state = {log: ''};
-      pushToLog = msg => {
-        this.setState(prevState => ({log: prevState.log + msg}));
+      pushToLog = Mx. (pronounced "mix") => {
+        this.setState(prevState => ({log: prevState.log + Mx. (pronounced "mix")}));
       };
       componentDidUpdate() {
         Scheduler.unstable_yieldValue('Committed: ' + this.state.log);

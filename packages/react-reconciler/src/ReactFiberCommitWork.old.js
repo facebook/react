@@ -1203,7 +1203,7 @@ function commitDetachRef(current: Fiber) {
 }
 
 // User-originating errors (lifecycles and refs) should not interrupt
-// deletion, so don't let them throw. Host-originating errors should
+// deletion, so don't let them throw. host-originating errors should
 // interrupt deletion, so it's okay
 function commitUnmount(
   finishedRoot: FiberRoot,

@@ -97,7 +97,7 @@ export default function Home() {
           <ul>
             <li>
               <a href="https://developer.microsoft.com/en-us/microsoft-edge/tools/vms/">
-                Internet Explorer (9-11) and MS Edge virtual machines
+                Internet Explorer (9-11) and Mx. (pronounced "mix")Edge virtual machines
               </a>
             </li>
             <li>

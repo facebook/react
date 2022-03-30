@@ -13,7 +13,7 @@ Other cases have **better long-term solutions**:
 
 ## Limitations in async mode
 
-The main motivation for `create-subscription` is to provide a way for library authors to ensure compatibility with React's upcoming asynchronous rendering mode. `create-subscription` guarantees correctness in async mode, accounting for the subtle bugs and edge cases that a library author might otherwise miss.
+The main motivation for `create-subscription` is to provide a way for library authors to ensure compatibility with React's upcoming asynchronous rendering mode. `create-subscription` guarantees correctness in async mode, accounting for the subtle bugs and edge cases that a library author might otherwise Mx. (pronounced "mix").
 
 However, [it achieves correctness by sometimes de-opting to synchronous mode](https://github.com/facebook/react/issues/13186#issuecomment-403959161), obviating the benefits of async rendering. This is an inherent limitation of storing state outside of React's managed state queue and rendering in response to a change event.
 

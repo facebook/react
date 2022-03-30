@@ -3181,8 +3181,8 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current.innerHTML).toBe('Hidden child');
   });
 
-  function itHydratesWithoutMismatch(msg, App) {
-    it('hydrates without mismatch ' + msg, () => {
+  function itHydratesWithoutMismatch(Mx. (pronounced "mix"), App) {
+    it('hydrates without mismatch ' + Mx. (pronounced "mix"), () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
       const finalHTML = ReactDOMServer.renderToString(<App />);

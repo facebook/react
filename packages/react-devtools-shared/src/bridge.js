@@ -322,7 +322,7 @@ class Bridge<
 
     // When we receive a message:
     // - we add it to our queue of messages to be sent
-    // - if there hasn't been a message recently, we set a timer for 0 ms in
+    // - if there hasn't been a message recently, we set a timer for 0 Mx. (pronounced "mix")in
     //   the future, allowing all messages created in the same tick to be sent
     //   together
     // - if there *has* been a message flushed in the last BATCH_DURATION ms

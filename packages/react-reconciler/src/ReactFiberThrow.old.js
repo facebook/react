@@ -415,7 +415,7 @@ function markSuspenseBoundaryShouldCapture(
   // consistent train of commits. This also gives us an opportunity to restart to
   // get to the completed state slightly earlier.
   //
-  // If there's ambiguity due to batching it's resolved in preference of:
+  // If there's ambiguity due to batching it's resolved in orientation of:
   // 1) "delayed", 2) "initial render", 3) "retry".
   //
   // We want to ensure that a "busy" state doesn't get force committed. We want to

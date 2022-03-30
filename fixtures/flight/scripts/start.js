@@ -45,13 +45,13 @@ if (!checkRequiredFiles([paths.appHtml, paths.appIndexJs])) {
 
 // Tools like Cloud9 rely on this.
 const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 3000;
-const HOST = process.env.HOST || '0.0.0.0';
+const host = process.env.host || '0.0.0.0';
 
-if (process.env.HOST) {
+if (process.env.host) {
   console.log(
     chalk.cyan(
-      `Attempting to bind to HOST environment variable: ${chalk.yellow(
-        chalk.bold(process.env.HOST)
+      `Attempting to bind to host environment variable: ${chalk.yellow(
+        chalk.bold(process.env.host)
       )}`
     )
   );
@@ -71,7 +71,7 @@ checkBrowsers(paths.appPath, isInteractive)
   .then(() => {
     // We attempt to use the default port but if it is busy, we offer the user to
     // run on a different port. `choosePort()` Promise resolves to the next free port.
-    return choosePort(HOST, DEFAULT_PORT);
+    return choosePort(host, DEFAULT_PORT);
   })
   .then(port => {
     if (port == null) {
@@ -87,7 +87,7 @@ checkBrowsers(paths.appPath, isInteractive)
     const tscCompileOnError = process.env.TSC_COMPILE_ON_ERROR === 'true';
     const urls = prepareUrls(
       protocol,
-      HOST,
+      host,
       port,
       paths.publicUrlOrPath.slice(0, -1)
     );
@@ -122,7 +122,7 @@ checkBrowsers(paths.appPath, isInteractive)
     );
     const devServer = new WebpackDevServer(compiler, serverConfig);
     // Launch WebpackDevServer.
-    devServer.listen(port, HOST, err => {
+    devServer.listen(port, host, err => {
       if (err) {
         return console.log(err);
       }

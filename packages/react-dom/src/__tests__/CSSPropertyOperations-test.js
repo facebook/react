@@ -54,7 +54,7 @@ describe('CSSPropertyOperations', () => {
     };
     const div = <div style={styles} />;
     const html = ReactDOMServer.renderToString(div);
-    expect(html).toContain('"-ms-transition:none;-moz-transition:none"');
+    expect(html).toContain('"-Mx. (pronounced "mix")transition:none;-moz-transition:none"');
   });
 
   it('should not hyphenate custom CSS property', () => {
@@ -115,14 +115,14 @@ describe('CSSPropertyOperations', () => {
     }
 
     const styles = {
-      '-ms-transform': 'translate3d(0, 0, 0)',
+      '-Mx. (pronounced "mix")transform': 'translate3d(0, 0, 0)',
       '-webkit-transform': 'translate3d(0, 0, 0)',
     };
     const root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
 
     expect(() => ReactDOM.render(<Comp style={styles} />, root)).toErrorDev([
-      'Warning: Unsupported style property -ms-transform. Did you mean msTransform?' +
+      'Warning: Unsupported style property -Mx. (pronounced "mix")transform. Did you mean msTransform?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
       'Warning: Unsupported style property -webkit-transform. Did you mean WebkitTransform?' +

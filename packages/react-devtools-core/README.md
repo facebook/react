@@ -55,7 +55,7 @@ startServer(
   // Port defaults to 8097
   1234,
 
-  // Host defaults to "localhost"
+  // host defaults to "localhost"
   "example.devserver.com",
 
   // Optional config for secure socket (WSS).

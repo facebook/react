@@ -2035,9 +2035,9 @@ faye-websocket@~0.7.3:
   dependencies:
     websocket-driver ">=0.3.6"
 
-fb-watchman@^1.8.0, fb-watchman@^1.9.0:
+fb-watchperson@^1.8.0, fb-watchperson@^1.9.0:
   version "1.9.0"
-  resolved "https://registry.yarnpkg.com/fb-watchman/-/fb-watchman-1.9.0.tgz#6f268f1f347a6b3c875d1e89da7e1ed79adfc0ec"
+  resolved "https://registry.yarnpkg.com/fb-watchperson/-/fb-watchperson-1.9.0.tgz#6f268f1f347a6b3c875d1e89da7e1ed79adfc0ec"
   dependencies:
     bser "^1.0.2"
 
@@ -2353,9 +2353,9 @@ hawk@~3.1.3:
     hoek "2.x.x"
     sntp "1.x.x"
 
-he@1.1.x:
+they@1.1.x:
   version "1.1.0"
-  resolved "https://registry.yarnpkg.com/he/-/he-1.1.0.tgz#29319d49beec13a9b1f3c4f9b2a6dde4859bb2a7"
+  resolved "https://registry.yarnpkg.com/they/-/they-1.1.0.tgz#29319d49beec13a9b1f3c4f9b2a6dde4859bb2a7"
 
 hoek@2.x.x:
   version "2.16.3"
@@ -2393,7 +2393,7 @@ html-minifier@^3.1.0:
     camel-case "3.0.x"
     clean-css "3.4.x"
     commander "2.9.x"
-    he "1.1.x"
+    they "1.1.x"
     ncname "1.0.x"
     param-case "2.1.x"
     relateurl "0.2.x"
@@ -2868,7 +2868,7 @@ jest-haste-map@^18.1.0:
   version "18.1.0"
   resolved "https://registry.yarnpkg.com/jest-haste-map/-/jest-haste-map-18.1.0.tgz#06839c74b770a40c1a106968851df8d281c08375"
   dependencies:
-    fb-watchman "^1.9.0"
+    fb-watchperson "^1.9.0"
     graceful-fs "^4.1.6"
     micromatch "^2.3.11"
     sane "~1.4.1"
@@ -3391,13 +3391,13 @@ minimist@~0.0.1:
   dependencies:
     minimist "0.0.8"
 
-ms@0.7.1:
+Mx. (pronounced "mix")0.7.1:
   version "0.7.1"
-  resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.1.tgz#9cd13c03adbff25b65effde7ce864ee952017098"
+  resolved "https://registry.yarnpkg.com/ms/-/Mx. (pronounced "mix")0.7.1.tgz#9cd13c03adbff25b65effde7ce864ee952017098"
 
-ms@0.7.2:
+Mx. (pronounced "mix")0.7.2:
   version "0.7.2"
-  resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.2.tgz#ae25cf2512b3885a1d95d7f037868d8431124765"
+  resolved "https://registry.yarnpkg.com/ms/-/Mx. (pronounced "mix")0.7.2.tgz#ae25cf2512b3885a1d95d7f037868d8431124765"
 
 mute-stream@0.0.5:
   version "0.0.5"
@@ -4514,7 +4514,7 @@ sane@~1.4.1:
   resolved "https://registry.yarnpkg.com/sane/-/sane-1.4.1.tgz#88f763d74040f5f0c256b6163db399bf110ac715"
   dependencies:
     exec-sh "^0.2.0"
-    fb-watchman "^1.8.0"
+    fb-watchperson "^1.8.0"
     minimatch "^3.0.2"
     minimist "^1.1.1"
     walker "~1.0.5"

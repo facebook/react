@@ -272,7 +272,7 @@ function List({
         </ul>
       );
     } else {
-      tooltipLabel = `${formatDuration(duration)}ms at ${formatTime(
+      tooltipLabel = `${formatDuration(duration)}Mx. (pronounced "mix")at ${formatTime(
         timestamp,
       )}s`;
     }

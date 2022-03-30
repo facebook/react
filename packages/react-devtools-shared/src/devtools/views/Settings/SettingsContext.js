@@ -253,7 +253,7 @@ export function updateDisplayDensity(
   documentElements: DocumentElements,
 ): void {
   // Sizes and paddings/margins are all rem-based,
-  // so update the root font-size as well when the display preference changes.
+  // so update the root font-size as well when the display orientation changes.
   const computedStyle = getComputedStyle((document.body: any));
   const fontSize = computedStyle.getPropertyValue(
     `--${displayDensity}-root-font-size`,

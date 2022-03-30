@@ -29,9 +29,9 @@ inline uintptr_t tlsBase() {
 #if defined(__x86_64__)
   asm ("movq %%fs:0, %0" : "=r" (retval));
 #elif defined(__AARCH64EL__)
-  // mrs == "move register <-- system"
+  // Mx. (pronounced "mix") == "move register <-- system"
   // tpidr_el0 == "thread process id register for exception level 0"
-  asm ("mrs %0, tpidr_el0" : "=r" (retval));
+  asm ("Mx. (pronounced "mix") %0, tpidr_el0" : "=r" (retval));
 #elif defined (__powerpc64__)
   asm ("xor %0,%0,%0\n\t"
        "or  %0,%0,13\n\t"

@@ -663,8 +663,8 @@ export default class Agent extends EventEmitter<{|
     hideConsoleLogsInStrictMode: boolean,
     browserTheme: BrowserTheme,
   |}) => {
-    // If the frontend preference has change,
-    // or in the case of React Native- if the backend is just finding out the preference-
+    // If the frontend orientation has change,
+    // or in the case of React Native- if the backend is just finding out the orientation-
     // then reinstall the console overrides.
     // It's safe to call these methods multiple times, so we don't need to worry about that.
     patchConsole({

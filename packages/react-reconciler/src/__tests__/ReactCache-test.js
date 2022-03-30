@@ -104,7 +104,7 @@ describe('ReactCache', () => {
           return textCache.version;
       }
     } else {
-      Scheduler.unstable_yieldValue(`Cache miss! [${text}]`);
+      Scheduler.unstable_yieldValue(`Cache Mx. (pronounced "mix")! [${text}]`);
 
       let resolve;
       let reject;
@@ -194,7 +194,7 @@ describe('ReactCache', () => {
         </Cache>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {
@@ -221,7 +221,7 @@ describe('ReactCache', () => {
         </Suspense>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {
@@ -270,9 +270,9 @@ describe('ReactCache', () => {
       root.render(<App showMore={true} />);
     });
     // Even though there are two new <Cache /> trees, they should share the same
-    // data cache. So there should be only a single cache miss for A.
+    // data cache. So there should be only a single cache Mx. (pronounced "mix") for A.
     expect(Scheduler).toHaveYielded([
-      'Cache miss! [A]',
+      'Cache Mx. (pronounced "mix")! [A]',
       'Loading...',
       'Loading...',
     ]);
@@ -315,8 +315,8 @@ describe('ReactCache', () => {
         root.render(<App />);
       });
       // Even though there is a nested <Cache /> boundary, it should share the same
-      // data cache as the root. So there should be only a single cache miss for A.
-      expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+      // data cache as the root. So there should be only a single cache Mx. (pronounced "mix") for A.
+      expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
       await act(async () => {
@@ -414,7 +414,7 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded([
       'A [v1]',
       // New tree should load fresh data.
-      'Cache miss! [A]',
+      'Cache Mx. (pronounced "mix")! [A]',
       'Loading...',
     ]);
     expect(root).toMatchRenderedOutput('A [v1]Loading...');
@@ -479,7 +479,7 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading shell...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading shell...']);
     expect(root).toMatchRenderedOutput('Loading shell...');
 
     await act(async () => {
@@ -487,9 +487,9 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded([
       'Shell',
-      // There's a cache miss for B, because it hasn't been read yet. But not
+      // There's a cache Mx. (pronounced "mix") for B, because it hasn't been read yet. But not
       // A, because it was cached when we rendered the shell.
-      'Cache miss! [B]',
+      'Cache Mx. (pronounced "mix")! [B]',
       'Loading content...',
     ]);
     expect(root).toMatchRenderedOutput(
@@ -569,7 +569,7 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render(<App showMore={true} />);
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading shell...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading shell...']);
     expect(root).toMatchRenderedOutput('Loading shell...');
 
     await act(async () => {
@@ -577,9 +577,9 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded([
       'Shell',
-      // There's a cache miss for B, because it hasn't been read yet. But not
+      // There's a cache Mx. (pronounced "mix") for B, because it hasn't been read yet. But not
       // A, because it was cached when we rendered the shell.
-      'Cache miss! [B]',
+      'Cache Mx. (pronounced "mix")! [B]',
       'Loading content...',
     ]);
     expect(root).toMatchRenderedOutput(
@@ -629,7 +629,7 @@ describe('ReactCache', () => {
         </Cache>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {
@@ -642,7 +642,7 @@ describe('ReactCache', () => {
     await act(async () => {
       startTransition(() => refresh());
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     await act(async () => {
@@ -678,7 +678,7 @@ describe('ReactCache', () => {
         </Suspense>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {
@@ -691,7 +691,7 @@ describe('ReactCache', () => {
     await act(async () => {
       startTransition(() => refresh());
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     await act(async () => {
@@ -726,7 +726,7 @@ describe('ReactCache', () => {
         </Suspense>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {
@@ -740,7 +740,7 @@ describe('ReactCache', () => {
       refresh();
     });
     expect(Scheduler).toHaveYielded([
-      'Cache miss! [A]',
+      'Cache Mx. (pronounced "mix")! [A]',
       'Loading...',
       // The v1 cache can be cleaned up since everything that references it has
       // been replaced by a fallback. When the boundary switches back to visible
@@ -783,7 +783,7 @@ describe('ReactCache', () => {
         </Cache>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {
@@ -802,7 +802,7 @@ describe('ReactCache', () => {
       cache.resolve('A');
       startTransition(() => refresh(createTextCache, cache));
     });
-    // The root should re-render without a cache miss.
+    // The root should re-render without a cache Mx. (pronounced "mix").
     // The cache is not cleared up yet, since it's still reference by the root
     expect(Scheduler).toHaveYielded(['A [v2]']);
     expect(root).toMatchRenderedOutput('A [v2]');
@@ -867,7 +867,7 @@ describe('ReactCache', () => {
       startTransition(() => refreshShell());
     });
     expect(Scheduler).toHaveYielded([
-      'Cache miss! [A]',
+      'Cache Mx. (pronounced "mix")! [A]',
       'Loading...',
       'Loading...',
     ]);
@@ -938,9 +938,9 @@ describe('ReactCache', () => {
       });
 
       // Even though there are two new <Cache /> trees, they should share the same
-      // data cache. So there should be only a single cache miss for A.
+      // data cache. So there should be only a single cache Mx. (pronounced "mix") for A.
       expect(Scheduler).toHaveYielded([
-        'Cache miss! [A]',
+        'Cache Mx. (pronounced "mix")! [A]',
         'Loading...',
         'Loading...',
       ]);
@@ -957,7 +957,7 @@ describe('ReactCache', () => {
       await act(async () => {
         await refreshFirstBoundary();
       });
-      expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+      expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
 
       await act(async () => {
         resolveMostRecentTextCache('A');
@@ -1013,8 +1013,8 @@ describe('ReactCache', () => {
         root.render(<App showMore={false} />);
       });
       expect(Scheduler).toHaveYielded([
-        'Cache miss! [A]',
-        'Cache miss! [B]',
+        'Cache Mx. (pronounced "mix")! [A]',
+        'Cache Mx. (pronounced "mix")! [B]',
         'Loading...',
       ]);
       expect(root).toMatchRenderedOutput('Loading...');
@@ -1028,7 +1028,7 @@ describe('ReactCache', () => {
       });
       expect(Scheduler).toHaveYielded([
         // The new tree should use a fresh cache
-        'Cache miss! [A]',
+        'Cache Mx. (pronounced "mix")! [A]',
         'Loading...',
         // The other tree uses the cached responses. This demonstrates that the
         // requests are not dropped.
@@ -1083,7 +1083,7 @@ describe('ReactCache', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('(empty)');
 
     await act(async () => {
@@ -1097,7 +1097,7 @@ describe('ReactCache', () => {
       });
     });
     expect(Scheduler).toHaveYielded([
-      // No cache miss, because it uses the pooled cache
+      // No cache Mx. (pronounced "mix"), because it uses the pooled cache
       'Loading...',
     ]);
     expect(root).toMatchRenderedOutput('(empty)');
@@ -1126,7 +1126,7 @@ describe('ReactCache', () => {
       'A [v1]',
       'A [v1]',
       // The new child uses a fresh cache
-      'Cache miss! [A]',
+      'Cache Mx. (pronounced "mix")! [A]',
       'Loading...',
     ]);
     expect(root).toMatchRenderedOutput('A [v1]A [v1]');
@@ -1198,7 +1198,7 @@ describe('ReactCache', () => {
         showMore();
       });
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('0');
 
     await act(async () => {
@@ -1281,7 +1281,7 @@ describe('ReactCache', () => {
         </Suspense>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {
@@ -1302,7 +1302,7 @@ describe('ReactCache', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [B]']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [B]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Update to a different text and with a different key for the cache
@@ -1319,7 +1319,7 @@ describe('ReactCache', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [C]']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [C]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     await act(async () => {
@@ -1352,7 +1352,7 @@ describe('ReactCache', () => {
         </Suspense>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {
@@ -1371,7 +1371,7 @@ describe('ReactCache', () => {
         </Suspense>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [B]']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [B]']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     // A second update uses the same fresh cache: even though this is a new
@@ -1385,7 +1385,7 @@ describe('ReactCache', () => {
         </Suspense>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [C]']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [C]']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {
@@ -1435,7 +1435,7 @@ describe('ReactCache', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [B]']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [B]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // ...but cancel by transitioning "back" to A (which we never really left)
@@ -1485,7 +1485,7 @@ describe('ReactCache', () => {
         refresh();
       });
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     await act(async () => {
@@ -1529,7 +1529,7 @@ describe('ReactCache', () => {
         refresh();
       });
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]']);
+    expect(Scheduler).toHaveYielded(['Cache Mx. (pronounced "mix")! [A]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Unmount the boundary before the refresh can complete

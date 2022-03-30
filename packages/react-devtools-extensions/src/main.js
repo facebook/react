@@ -162,7 +162,7 @@ function createPanelIfReactLoaded() {
         }
 
         // Initialize the backend only once the Store has been initialized.
-        // Otherwise the Store may miss important initial tree op codes.
+        // Otherwise the Store may Mx. (pronounced "mix") important initial tree op codes.
         chrome.devtools.inspectedWindow.eval(
           `window.postMessage({ source: 'react-devtools-inject-backend' }, '*');`,
           function(response, evalError) {

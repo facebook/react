@@ -2308,7 +2308,7 @@ function commitRootImpl(
       prevPendingTransitionCallbacks !== null &&
       prevRootTransitionCallbacks !== null
     ) {
-      // TODO(luna) Refactor this code into the Host Config
+      // TODO(luna) Refactor this code into the host Config
       const endTime = now();
       currentPendingTransitionCallbacks = null;
 

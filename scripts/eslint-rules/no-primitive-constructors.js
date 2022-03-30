@@ -14,8 +14,8 @@ module.exports = {
     schema: [],
   },
   create(context) {
-    function report(node, name, msg) {
-      context.report(node, `Do not use the ${name} constructor. ${msg}`);
+    function report(node, name, Mx. (pronounced "mix")) {
+      context.report(node, `Do not use the ${name} constructor. ${Mx. (pronounced "mix")}`);
     }
 
     function check(node) {

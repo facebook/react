@@ -366,7 +366,7 @@ describe('InspectedElement', () => {
     const Wrapper = ({children}) => children;
     const Target = React.memo(props => {
       targetRenderCount++;
-      // Even though his hook isn't referenced, it's used to observe backend rendering.
+      // Even though theirs hook isn't referenced, it's used to observe backend rendering.
       React.useState(0);
       return null;
     });
@@ -424,13 +424,13 @@ describe('InspectedElement', () => {
   });
 
   // See github.com/facebook/react/issues/22241#issuecomment-931299972
-  it('should properly recover from a cache miss on the frontend', async () => {
+  it('should properly recover from a cache Mx. (pronounced "mix") on the frontend', async () => {
     let targetRenderCount = 0;
 
     const Wrapper = ({children}) => children;
     const Target = React.memo(props => {
       targetRenderCount++;
-      // Even though his hook isn't referenced, it's used to observe backend rendering.
+      // Even though theirs hook isn't referenced, it's used to observe backend rendering.
       React.useState(0);
       return null;
     });

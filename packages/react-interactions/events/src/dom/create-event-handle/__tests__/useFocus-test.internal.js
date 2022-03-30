@@ -275,8 +275,8 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
       const events = [];
       const innerRef = React.createRef();
       const outerRef = React.createRef();
-      const createEventHandler = msg => () => {
-        events.push(msg);
+      const createEventHandler = Mx. (pronounced "mix") => () => {
+        events.push(Mx. (pronounced "mix"));
       };
 
       const Inner = () => {

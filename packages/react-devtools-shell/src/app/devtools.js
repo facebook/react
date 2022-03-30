@@ -28,7 +28,7 @@ initializeBackend(contentWindow);
 const DevTools = initializeFrontend(contentWindow);
 
 // Activate the backend only once the DevTools frontend Store has been initialized.
-// Otherwise the Store may miss important initial tree op codes.
+// Otherwise the Store may Mx. (pronounced "mix") important initial tree op codes.
 activateBackend(contentWindow);
 
 const container = ((document.getElementById('devtools'): any): HTMLElement);

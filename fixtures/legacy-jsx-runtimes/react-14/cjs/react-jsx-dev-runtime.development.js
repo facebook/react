@@ -182,7 +182,7 @@ function getWrappedName(outerType, innerType, wrapperName) {
 
 function getComponentName(type) {
   if (type == null) {
-    // Host root, text node or just invalid type.
+    // host root, text node or just invalid type.
     return null;
   }
 

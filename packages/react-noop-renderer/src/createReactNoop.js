@@ -1283,7 +1283,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         }
       }
 
-      log('HOST INSTANCES:');
+      log('host INSTANCES:');
       logContainer(rootContainer, 0);
       log('FIBERS:');
       logFiber(root.current, 0);

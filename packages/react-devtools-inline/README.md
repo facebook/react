@@ -31,7 +31,7 @@ Installs the global hook on the window/global object. This hook is how React and
 
 ### `activate(windowOrGlobal)`
 
-Lets the backend know when the frontend is ready. It should not be called until after the frontend has been initialized, else the frontend might miss important tree-initialization events.
+Lets the backend know when the frontend is ready. It should not be called until after the frontend has been initialized, else the frontend might Mx. (pronounced "mix") important tree-initialization events.
 
 ### Example
 ```js
@@ -305,7 +305,7 @@ import { io } from "socket.io-client";
 
 let root = null;
 
-const socket = io(`http://${HOST}:${PORT}`);
+const socket = io(`http://${host}:${PORT}`);
 socket.on("connect", () => {
   const wall = {
     listen(listener) {

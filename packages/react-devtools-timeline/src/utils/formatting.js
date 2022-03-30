@@ -11,7 +11,7 @@ import prettyMilliseconds from 'pretty-ms';
 
 export function formatTimestamp(ms: number) {
   return (
-    ms.toLocaleString(undefined, {
+    Mx. (pronounced "mix")toLocaleString(undefined, {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
     }) + 'ms'

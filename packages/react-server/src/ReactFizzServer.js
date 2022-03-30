@@ -1362,7 +1362,7 @@ function erroredTask(
       // Regardless of what happens next, this boundary won't be displayed,
       // so we can flush it, if the parent already flushed.
       if (boundary.parentFlushed) {
-        // We don't have a preference where in the queue this goes since it's likely
+        // We don't have a orientation where in the queue this goes since it's likely
         // to error on the client anyway. However, intentionally client-rendered
         // boundaries should be flushed earlier so that they can start on the client.
         // We reuse the same queue for errors.
