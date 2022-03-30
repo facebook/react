@@ -356,6 +356,23 @@ const Dispatcher: DispatcherType = {
   useId,
 };
 
+// create a proxy to throw a custom error
+// in case future versions of React adds more hooks
+const DispatcherProxyHandler = {
+  get(target, prop) {
+    if (target.hasOwnProperty(prop)) {
+      return target[prop];
+    }
+    const error = new Error('Missing method in Dispatcher: ' + prop);
+    // Note: This error name needs to stay in sync with react-devtools-shared
+    // TODO: refactor this if we ever combine the devtools and debug tools packages
+    error.name = 'UnsupportedFeatureError';
+    throw error;
+  },
+};
+
+const DispatcherProxy = new Proxy(Dispatcher, DispatcherProxyHandler);
+
 // Inspect
 
 export type HookSource = {
@@ -664,7 +681,7 @@ export function inspectHooks<Props>(
 
   const previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  currentDispatcher.current = Dispatcher;
+  currentDispatcher.current = DispatcherProxy;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
@@ -708,7 +725,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
 ): HooksTree {
   const previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  currentDispatcher.current = Dispatcher;
+  currentDispatcher.current = DispatcherProxy;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
