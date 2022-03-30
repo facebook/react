@@ -359,7 +359,7 @@ const Dispatcher: DispatcherType = {
 // create a proxy to throw a custom error
 // in case future versions of React adds more hooks
 const DispatcherProxyHandler = {
-  get(target, prop, _receiver) {
+  get(target, prop) {
     if (target.hasOwnProperty(prop)) {
       return target[prop];
     }
