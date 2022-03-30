@@ -366,7 +366,7 @@ const DispatcherProxyHandler = {
     const error = new Error('Missing method in Dispatcher: ' + prop);
     // Note: This error name needs to stay in sync with react-devtools-shared
     // TODO: refactor this if we ever combine the devtools and debug tools packages
-    error.name = 'ReactDebugToolsUnsupportedFeatureError';
+    error.name = 'ReactDebugToolsUnsupportedHookError';
     throw error;
   },
 };
@@ -669,20 +669,20 @@ function processDebugValues(
 
 function handleRenderFunctionError(error: any): void {
   // original error might be any type.
-  const isError = error instanceof Error;
-  if (isError && error.name === 'ReactDebugToolsUnsupportedFeatureError') {
+  if (
+    error instanceof Error &&
+    error.name === 'ReactDebugToolsUnsupportedHookError'
+  ) {
     throw error;
   }
   // If the error is not caused by an unsupported feature, it means
   // that the error is caused by user's code in renderFunction.
   // In this case, we should wrap the original error inside a custom error
-  // so that devtools can show a clear message for it.
-  const messgae: string =
-    isError && error.message
-      ? error.message
-      : 'Error rendering inspected component';
+  // so that devtools can give a clear message about it.
   // $FlowFixMe: Flow doesn't know about 2nd argument of Error constructor
-  const wrapperError = new Error(messgae, {cause: error});
+  const wrapperError = new Error('Error rendering inspected component', {
+    cause: error,
+  });
   // Note: This error name needs to stay in sync with react-devtools-shared
   // TODO: refactor this if we ever combine the devtools and debug tools packages
   wrapperError.name = 'ReactDebugToolsRenderFunctionError';
