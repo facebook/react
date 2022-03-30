@@ -3993,14 +3993,38 @@ export function attach(
       if (currentTimelineData) {
         const {
           batchUIDToMeasuresMap,
+          componentMeasures,
+          duration,
+          flamechart,
           internalModuleSourceToRanges,
           laneToLabelMap,
           laneToReactMeasureMap,
-          ...rest
+          nativeEvents,
+          networkMeasures,
+          otherUserTimingMarks,
+          reactVersion,
+          schedulingEvents,
+          snapshots,
+          snapshotHeight,
+          startTime,
+          suspenseEvents,
+          thrownErrors,
         } = currentTimelineData;
 
         timelineData = {
-          ...rest,
+          componentMeasures,
+          duration,
+          flamechart,
+          nativeEvents,
+          networkMeasures,
+          otherUserTimingMarks,
+          reactVersion,
+          schedulingEvents,
+          snapshots,
+          snapshotHeight,
+          startTime,
+          suspenseEvents,
+          thrownErrors,
 
           // Most of the data is safe to parse as-is,
           // but we need to convert the nested Arrays back to Maps.

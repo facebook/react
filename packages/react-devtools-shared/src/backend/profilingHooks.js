@@ -14,25 +14,15 @@ import type {
 } from 'react-devtools-shared/src/backend/types';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {
-  BatchUID,
-  LaneToLabelMap,
-  ReactComponentMeasure,
-  ReactMeasure,
-  ReactMeasureType,
-  TimelineData,
-  SuspenseEvent,
-} from 'react-devtools-timeline/src/types';
+import type {LaneToLabelMap} from 'react-devtools-timeline/src/types';
+import type {RecordComponentSuspendedCallback} from 'react-devtools-timeline/src/TimelineData';
 
+import TimelineData from 'react-devtools-timeline/src/TimelineData';
 import isArray from 'shared/isArray';
 import {
   REACT_TOTAL_NUM_LANES,
   SCHEDULING_PROFILER_VERSION,
 } from 'react-devtools-timeline/src/constants';
-
-// Add padding to the start/stop time of the profile.
-// This makes the UI nicer to use.
-const TIME_OFFSET = 10;
 
 let performanceTarget: Performance | null = null;
 
@@ -105,25 +95,19 @@ export function createProfilingHooks({
   getLaneLabelMap?: () => Map<Lane, string> | null,
   reactVersion: string,
 |}): Response {
-  let currentBatchUID: BatchUID = 0;
-  let currentReactComponentMeasure: ReactComponentMeasure | null = null;
-  let currentReactMeasuresStack: Array<ReactMeasure> = [];
   let currentTimelineData: TimelineData | null = null;
   let isProfiling: boolean = false;
-  let nextRenderShouldStartNewBatch: boolean = false;
 
-  function getRelativeTime() {
-    const currentTime = getCurrentTime();
+  const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
-    if (currentTimelineData) {
-      if (currentTimelineData.startTime === 0) {
-        currentTimelineData.startTime = currentTime - TIME_OFFSET;
-      }
-
-      return currentTime - currentTimelineData.startTime;
+  // $FlowFixMe: Flow cannot handle polymorphic WeakMaps
+  const wakeableIDs: WeakMap<Wakeable, number> = new PossiblyWeakMap();
+  let wakeableIDCounter: number = 0;
+  function getWakeableID(wakeable: Wakeable): number {
+    if (!wakeableIDs.has(wakeable)) {
+      wakeableIDs.set(wakeable, wakeableIDCounter++);
     }
-
-    return 0;
+    return ((wakeableIDs.get(wakeable): any): number);
   }
 
   function getInternalModuleRanges() {
@@ -198,92 +182,12 @@ export function createProfilingHooks({
     ((performanceTarget: any): Performance).clearMarks(markName);
   }
 
-  function recordReactMeasureStarted(
-    type: ReactMeasureType,
-    lanes: Lanes,
-  ): void {
-    // Decide what depth thi work should be rendered at, based on what's on the top of the stack.
-    // It's okay to render over top of "idle" work but everything else should be on its own row.
-    let depth = 0;
-    if (currentReactMeasuresStack.length > 0) {
-      const top =
-        currentReactMeasuresStack[currentReactMeasuresStack.length - 1];
-      depth = top.type === 'render-idle' ? top.depth : top.depth + 1;
-    }
-
-    const lanesArray = laneToLanesArray(lanes);
-
-    const reactMeasure: ReactMeasure = {
-      type,
-      batchUID: currentBatchUID,
-      depth,
-      lanes: lanesArray,
-      timestamp: getRelativeTime(),
-      duration: 0,
-    };
-
-    currentReactMeasuresStack.push(reactMeasure);
-
-    if (currentTimelineData) {
-      const {
-        batchUIDToMeasuresMap,
-        laneToReactMeasureMap,
-      } = currentTimelineData;
-
-      let reactMeasures = batchUIDToMeasuresMap.get(currentBatchUID);
-      if (reactMeasures != null) {
-        reactMeasures.push(reactMeasure);
-      } else {
-        batchUIDToMeasuresMap.set(currentBatchUID, [reactMeasure]);
-      }
-
-      lanesArray.forEach(lane => {
-        reactMeasures = laneToReactMeasureMap.get(lane);
-        if (reactMeasures) {
-          reactMeasures.push(reactMeasure);
-        }
-      });
-    }
-  }
-
-  function recordReactMeasureCompleted(type: ReactMeasureType): void {
-    const currentTime = getRelativeTime();
-
-    if (currentReactMeasuresStack.length === 0) {
-      console.error(
-        'Unexpected type "%s" completed at %sms while currentReactMeasuresStack is empty.',
-        type,
-        currentTime,
-      );
-      // Ignore work "completion" user timing mark that doesn't complete anything
-      return;
-    }
-
-    const top = currentReactMeasuresStack.pop();
-    if (top.type !== type) {
-      console.error(
-        'Unexpected type "%s" completed at %sms before "%s" completed.',
-        type,
-        currentTime,
-        top.type,
-      );
-    }
-
-    // $FlowFixMe This property should not be writable outside of this function.
-    top.duration = currentTime - top.timestamp;
-
-    if (currentTimelineData) {
-      currentTimelineData.duration = getRelativeTime() + TIME_OFFSET;
-    }
-  }
-
   function markCommitStarted(lanes: Lanes): void {
-    if (isProfiling) {
-      recordReactMeasureStarted('commit', lanes);
-
-      // TODO (timeline) Re-think this approach to "batching"; I don't think it works for Suspense or pre-rendering.
-      // This issue applies to the User Timing data also.
-      nextRenderShouldStartNewBatch = true;
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordCommitStarted(
+        laneToLanesArray(lanes),
+        getCurrentTime(),
+      );
     }
 
     if (supportsUserTimingV3) {
@@ -298,9 +202,8 @@ export function createProfilingHooks({
   }
 
   function markCommitStopped(): void {
-    if (isProfiling) {
-      recordReactMeasureCompleted('commit');
-      recordReactMeasureCompleted('render-idle');
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordCommitStopped(getCurrentTime());
     }
 
     if (supportsUserTimingV3) {
@@ -309,20 +212,15 @@ export function createProfilingHooks({
   }
 
   function markComponentRenderStarted(fiber: Fiber): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if ((isProfiling && currentTimelineData) || supportsUserTimingV3) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (isProfiling) {
-          currentReactComponentMeasure = {
-            componentName,
-            duration: 0,
-            timestamp: getRelativeTime(),
-            type: 'render',
-            warning: null,
-          };
-        }
+      if (isProfiling && currentTimelineData) {
+        currentTimelineData.recordComponentRenderStarted(
+          fiber,
+          componentName,
+          getCurrentTime(),
+        );
       }
 
       if (supportsUserTimingV3) {
@@ -332,18 +230,8 @@ export function createProfilingHooks({
   }
 
   function markComponentRenderStopped(): void {
-    if (isProfiling) {
-      if (currentReactComponentMeasure) {
-        if (currentTimelineData) {
-          currentTimelineData.componentMeasures.push(
-            currentReactComponentMeasure,
-          );
-        }
-
-        currentReactComponentMeasure.duration =
-          getRelativeTime() - currentReactComponentMeasure.timestamp;
-        currentReactComponentMeasure = null;
-      }
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordComponentRenderStopped(getCurrentTime());
     }
 
     if (supportsUserTimingV3) {
@@ -352,20 +240,15 @@ export function createProfilingHooks({
   }
 
   function markComponentLayoutEffectMountStarted(fiber: Fiber): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if ((isProfiling && currentTimelineData) || supportsUserTimingV3) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (isProfiling) {
-          currentReactComponentMeasure = {
-            componentName,
-            duration: 0,
-            timestamp: getRelativeTime(),
-            type: 'layout-effect-mount',
-            warning: null,
-          };
-        }
+      if (isProfiling && currentTimelineData) {
+        currentTimelineData.recordComponentLayoutEffectMountStarted(
+          fiber,
+          componentName,
+          getCurrentTime(),
+        );
       }
 
       if (supportsUserTimingV3) {
@@ -375,18 +258,10 @@ export function createProfilingHooks({
   }
 
   function markComponentLayoutEffectMountStopped(): void {
-    if (isProfiling) {
-      if (currentReactComponentMeasure) {
-        if (currentTimelineData) {
-          currentTimelineData.componentMeasures.push(
-            currentReactComponentMeasure,
-          );
-        }
-
-        currentReactComponentMeasure.duration =
-          getRelativeTime() - currentReactComponentMeasure.timestamp;
-        currentReactComponentMeasure = null;
-      }
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordComponentLayoutEffectMountStopped(
+        getCurrentTime(),
+      );
     }
 
     if (supportsUserTimingV3) {
@@ -395,20 +270,15 @@ export function createProfilingHooks({
   }
 
   function markComponentLayoutEffectUnmountStarted(fiber: Fiber): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if ((isProfiling && currentTimelineData) || supportsUserTimingV3) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (isProfiling) {
-          currentReactComponentMeasure = {
-            componentName,
-            duration: 0,
-            timestamp: getRelativeTime(),
-            type: 'layout-effect-unmount',
-            warning: null,
-          };
-        }
+      if (isProfiling && currentTimelineData) {
+        currentTimelineData.recordComponentLayoutEffectUnmountStarted(
+          fiber,
+          componentName,
+          getCurrentTime(),
+        );
       }
 
       if (supportsUserTimingV3) {
@@ -420,18 +290,10 @@ export function createProfilingHooks({
   }
 
   function markComponentLayoutEffectUnmountStopped(): void {
-    if (isProfiling) {
-      if (currentReactComponentMeasure) {
-        if (currentTimelineData) {
-          currentTimelineData.componentMeasures.push(
-            currentReactComponentMeasure,
-          );
-        }
-
-        currentReactComponentMeasure.duration =
-          getRelativeTime() - currentReactComponentMeasure.timestamp;
-        currentReactComponentMeasure = null;
-      }
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordComponentLayoutEffectUnmountStopped(
+        getCurrentTime(),
+      );
     }
 
     if (supportsUserTimingV3) {
@@ -440,20 +302,15 @@ export function createProfilingHooks({
   }
 
   function markComponentPassiveEffectMountStarted(fiber: Fiber): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if ((isProfiling && currentTimelineData) || supportsUserTimingV3) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (isProfiling) {
-          currentReactComponentMeasure = {
-            componentName,
-            duration: 0,
-            timestamp: getRelativeTime(),
-            type: 'passive-effect-mount',
-            warning: null,
-          };
-        }
+      if (isProfiling && currentTimelineData) {
+        currentTimelineData.recordComponentPassiveEffectMountStarted(
+          fiber,
+          componentName,
+          getCurrentTime(),
+        );
       }
 
       if (supportsUserTimingV3) {
@@ -463,18 +320,10 @@ export function createProfilingHooks({
   }
 
   function markComponentPassiveEffectMountStopped(): void {
-    if (isProfiling) {
-      if (currentReactComponentMeasure) {
-        if (currentTimelineData) {
-          currentTimelineData.componentMeasures.push(
-            currentReactComponentMeasure,
-          );
-        }
-
-        currentReactComponentMeasure.duration =
-          getRelativeTime() - currentReactComponentMeasure.timestamp;
-        currentReactComponentMeasure = null;
-      }
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordComponentPassiveEffectMountStopped(
+        getCurrentTime(),
+      );
     }
 
     if (supportsUserTimingV3) {
@@ -483,20 +332,15 @@ export function createProfilingHooks({
   }
 
   function markComponentPassiveEffectUnmountStarted(fiber: Fiber): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if ((isProfiling && currentTimelineData) || supportsUserTimingV3) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (isProfiling) {
-          currentReactComponentMeasure = {
-            componentName,
-            duration: 0,
-            timestamp: getRelativeTime(),
-            type: 'passive-effect-unmount',
-            warning: null,
-          };
-        }
+      if (isProfiling && currentTimelineData) {
+        currentTimelineData.recordComponentPassiveEffectUnmountStarted(
+          fiber,
+          componentName,
+          getCurrentTime(),
+        );
       }
 
       if (supportsUserTimingV3) {
@@ -508,18 +352,10 @@ export function createProfilingHooks({
   }
 
   function markComponentPassiveEffectUnmountStopped(): void {
-    if (isProfiling) {
-      if (currentReactComponentMeasure) {
-        if (currentTimelineData) {
-          currentTimelineData.componentMeasures.push(
-            currentReactComponentMeasure,
-          );
-        }
-
-        currentReactComponentMeasure.duration =
-          getRelativeTime() - currentReactComponentMeasure.timestamp;
-        currentReactComponentMeasure = null;
-      }
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordComponentPassiveEffectUnmountStopped(
+        getCurrentTime(),
+      );
     }
 
     if (supportsUserTimingV3) {
@@ -532,7 +368,7 @@ export function createProfilingHooks({
     thrownValue: mixed,
     lanes: Lanes,
   ): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if ((isProfiling && currentTimelineData) || supportsUserTimingV3) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
       const phase = fiber.alternate === null ? 'mount' : 'update';
 
@@ -547,17 +383,15 @@ export function createProfilingHooks({
         message = thrownValue;
       }
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (currentTimelineData) {
-          currentTimelineData.thrownErrors.push({
-            componentName,
-            message,
-            phase,
-            timestamp: getRelativeTime(),
-            type: 'thrown-error',
-          });
-        }
+      if (isProfiling && currentTimelineData) {
+        currentTimelineData.recordComponentErrored(
+          fiber,
+          message,
+          phase,
+          laneToLanesArray(lanes),
+          getDisplayNameForFiber(fiber) || 'Unknown',
+          getCurrentTime(),
+        );
       }
 
       if (supportsUserTimingV3) {
@@ -566,26 +400,12 @@ export function createProfilingHooks({
     }
   }
 
-  const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-
-  // $FlowFixMe: Flow cannot handle polymorphic WeakMaps
-  const wakeableIDs: WeakMap<Wakeable, number> = new PossiblyWeakMap();
-  let wakeableID: number = 0;
-  function getWakeableID(wakeable: Wakeable): number {
-    if (!wakeableIDs.has(wakeable)) {
-      wakeableIDs.set(wakeable, wakeableID++);
-    }
-    return ((wakeableIDs.get(wakeable): any): number);
-  }
-
   function markComponentSuspended(
     fiber: Fiber,
     wakeable: Wakeable,
     lanes: Lanes,
   ): void {
-    if (isProfiling || supportsUserTimingV3) {
-      const eventType = wakeableIDs.has(wakeable) ? 'resuspend' : 'suspend';
-      const id = getWakeableID(wakeable);
+    if ((isProfiling && currentTimelineData) || supportsUserTimingV3) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
       const phase = fiber.alternate === null ? 'mount' : 'update';
 
@@ -593,56 +413,48 @@ export function createProfilingHooks({
       // frameworks like Relay may also annotate Promises with a displayName,
       // describing what operation/data the thrown Promise is related to.
       // When this is available we should pass it along to the Timeline.
-      const displayName = (wakeable: any).displayName || '';
+      const wakeableDisplayName = (wakeable: any).displayName || '';
 
-      let suspenseEvent: SuspenseEvent | null = null;
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        suspenseEvent = {
+      const eventType = wakeableIDs.has(wakeable) ? 'resuspend' : 'suspend';
+      const wakeableID = getWakeableID(wakeable);
+
+      let resolveOrRejectCallback: RecordComponentSuspendedCallback | null = null;
+
+      if (isProfiling && currentTimelineData) {
+        resolveOrRejectCallback = currentTimelineData.recordComponentSuspended(
+          fiber,
           componentName,
-          depth: 0,
-          duration: 0,
-          id: `${id}`,
           phase,
-          promiseName: displayName,
-          resolution: 'unresolved',
-          timestamp: getRelativeTime(),
-          type: 'suspense',
-          warning: null,
-        };
-
-        if (currentTimelineData) {
-          currentTimelineData.suspenseEvents.push(suspenseEvent);
-        }
+          wakeableID,
+          wakeableDisplayName,
+          laneToLanesArray(lanes),
+          getCurrentTime(),
+        );
       }
 
       if (supportsUserTimingV3) {
         markAndClear(
-          `--suspense-${eventType}-${id}-${componentName}-${phase}-${lanes}-${displayName}`,
+          `--suspense-${eventType}-${wakeableID}-${componentName}-${phase}-${lanes}-${wakeableDisplayName}`,
         );
       }
 
       wakeable.then(
         () => {
-          if (suspenseEvent) {
-            suspenseEvent.duration =
-              getRelativeTime() - suspenseEvent.timestamp;
-            suspenseEvent.resolution = 'resolved';
+          if (resolveOrRejectCallback !== null) {
+            resolveOrRejectCallback('resolved', getCurrentTime());
           }
 
           if (supportsUserTimingV3) {
-            markAndClear(`--suspense-resolved-${id}-${componentName}`);
+            markAndClear(`--suspense-resolved-${wakeableID}-${componentName}`);
           }
         },
         () => {
-          if (suspenseEvent) {
-            suspenseEvent.duration =
-              getRelativeTime() - suspenseEvent.timestamp;
-            suspenseEvent.resolution = 'rejected';
+          if (resolveOrRejectCallback !== null) {
+            resolveOrRejectCallback('rejected', getCurrentTime());
           }
 
           if (supportsUserTimingV3) {
-            markAndClear(`--suspense-rejected-${id}-${componentName}`);
+            markAndClear(`--suspense-rejected-${wakeableID}-${componentName}`);
           }
         },
       );
@@ -650,8 +462,11 @@ export function createProfilingHooks({
   }
 
   function markLayoutEffectsStarted(lanes: Lanes): void {
-    if (isProfiling) {
-      recordReactMeasureStarted('layout-effects', lanes);
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordLayoutEffectsStarted(
+        laneToLanesArray(lanes),
+        getCurrentTime(),
+      );
     }
 
     if (supportsUserTimingV3) {
@@ -660,8 +475,8 @@ export function createProfilingHooks({
   }
 
   function markLayoutEffectsStopped(): void {
-    if (isProfiling) {
-      recordReactMeasureCompleted('layout-effects');
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordLayoutEffectsStopped(getCurrentTime());
     }
 
     if (supportsUserTimingV3) {
@@ -670,8 +485,11 @@ export function createProfilingHooks({
   }
 
   function markPassiveEffectsStarted(lanes: Lanes): void {
-    if (isProfiling) {
-      recordReactMeasureStarted('passive-effects', lanes);
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordPassiveEffectsStarted(
+        laneToLanesArray(lanes),
+        getCurrentTime(),
+      );
     }
 
     if (supportsUserTimingV3) {
@@ -680,8 +498,8 @@ export function createProfilingHooks({
   }
 
   function markPassiveEffectsStopped(): void {
-    if (isProfiling) {
-      recordReactMeasureCompleted('passive-effects');
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordPassiveEffectsStopped(getCurrentTime());
     }
 
     if (supportsUserTimingV3) {
@@ -690,23 +508,11 @@ export function createProfilingHooks({
   }
 
   function markRenderStarted(lanes: Lanes): void {
-    if (isProfiling) {
-      if (nextRenderShouldStartNewBatch) {
-        nextRenderShouldStartNewBatch = false;
-        currentBatchUID++;
-      }
-
-      // If this is a new batch of work, wrap an "idle" measure around it.
-      // Log it before the "render" measure to preserve the stack ordering.
-      if (
-        currentReactMeasuresStack.length === 0 ||
-        currentReactMeasuresStack[currentReactMeasuresStack.length - 1].type !==
-          'render-idle'
-      ) {
-        recordReactMeasureStarted('render-idle', lanes);
-      }
-
-      recordReactMeasureStarted('render', lanes);
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordRenderStarted(
+        laneToLanesArray(lanes),
+        getCurrentTime(),
+      );
     }
 
     if (supportsUserTimingV3) {
@@ -715,8 +521,8 @@ export function createProfilingHooks({
   }
 
   function markRenderYielded(): void {
-    if (isProfiling) {
-      recordReactMeasureCompleted('render');
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordRenderYielded(getCurrentTime());
     }
 
     if (supportsUserTimingV3) {
@@ -725,8 +531,8 @@ export function createProfilingHooks({
   }
 
   function markRenderStopped(): void {
-    if (isProfiling) {
-      recordReactMeasureCompleted('render');
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordRenderStopped(getCurrentTime());
     }
 
     if (supportsUserTimingV3) {
@@ -735,15 +541,11 @@ export function createProfilingHooks({
   }
 
   function markRenderScheduled(lane: Lane): void {
-    if (isProfiling) {
-      if (currentTimelineData) {
-        currentTimelineData.schedulingEvents.push({
-          lanes: laneToLanesArray(lane),
-          timestamp: getRelativeTime(),
-          type: 'schedule-render',
-          warning: null,
-        });
-      }
+    if (isProfiling && currentTimelineData) {
+      currentTimelineData.recordRenderScheduled(
+        laneToLanesArray(lane),
+        getCurrentTime(),
+      );
     }
 
     if (supportsUserTimingV3) {
@@ -752,20 +554,16 @@ export function createProfilingHooks({
   }
 
   function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if ((isProfiling && currentTimelineData) || supportsUserTimingV3) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (currentTimelineData) {
-          currentTimelineData.schedulingEvents.push({
-            componentName,
-            lanes: laneToLanesArray(lane),
-            timestamp: getRelativeTime(),
-            type: 'schedule-force-update',
-            warning: null,
-          });
-        }
+      if (isProfiling && currentTimelineData) {
+        currentTimelineData.recordForceUpdateScheduled(
+          fiber,
+          componentName,
+          laneToLanesArray(lane),
+          getCurrentTime(),
+        );
       }
 
       if (supportsUserTimingV3) {
@@ -775,20 +573,16 @@ export function createProfilingHooks({
   }
 
   function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
-    if (isProfiling || supportsUserTimingV3) {
+    if ((isProfiling && currentTimelineData) || supportsUserTimingV3) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
 
-      if (isProfiling) {
-        // TODO (timeline) Record and cache component stack
-        if (currentTimelineData) {
-          currentTimelineData.schedulingEvents.push({
-            componentName,
-            lanes: laneToLanesArray(lane),
-            timestamp: getRelativeTime(),
-            type: 'schedule-state-update',
-            warning: null,
-          });
-        }
+      if (isProfiling && currentTimelineData) {
+        currentTimelineData.recordStateUpdateScheduled(
+          fiber,
+          componentName,
+          laneToLanesArray(lane),
+          getCurrentTime(),
+        );
       }
 
       if (supportsUserTimingV3) {
@@ -802,8 +596,6 @@ export function createProfilingHooks({
       isProfiling = value;
 
       if (isProfiling) {
-        const internalModuleSourceToRanges = new Map();
-
         if (supportsUserTimingV3) {
           const ranges = getInternalModuleRanges();
           if (ranges) {
@@ -821,43 +613,11 @@ export function createProfilingHooks({
           }
         }
 
-        const laneToReactMeasureMap = new Map();
-        let lane = 1;
-        for (let index = 0; index < REACT_TOTAL_NUM_LANES; index++) {
-          laneToReactMeasureMap.set(lane, []);
-          lane *= 2;
-        }
-
-        currentBatchUID = 0;
-        currentReactComponentMeasure = null;
-        currentReactMeasuresStack = [];
-        currentTimelineData = {
-          // Session wide metadata; only collected once.
-          internalModuleSourceToRanges,
-          laneToLabelMap: laneToLabelMap || new Map(),
+        currentTimelineData = new TimelineData(
+          laneToLabelMap,
           reactVersion,
-
-          // Data logged by React during profiling session.
-          componentMeasures: [],
-          schedulingEvents: [],
-          suspenseEvents: [],
-          thrownErrors: [],
-
-          // Data inferred based on what React logs.
-          batchUIDToMeasuresMap: new Map(),
-          duration: 0,
-          laneToReactMeasureMap,
-          startTime: 0,
-
-          // Data only available in Chrome profiles.
-          flamechart: [],
-          nativeEvents: [],
-          networkMeasures: [],
-          otherUserTimingMarks: [],
-          snapshots: [],
-          snapshotHeight: 0,
-        };
-        nextRenderShouldStartNewBatch = true;
+          getCurrentTime(),
+        );
       }
     }
   }

@@ -60,6 +60,7 @@ export type ReactScheduleForceUpdateEvent = {|
 
 export type Phase = 'mount' | 'update';
 
+export type SuspenseEventResolution = 'rejected' | 'resolved' | 'unresolved';
 export type SuspenseEvent = {|
   ...BaseReactEvent,
   depth: number,
@@ -67,7 +68,7 @@ export type SuspenseEvent = {|
   +id: string,
   +phase: Phase | null,
   promiseName: string | null,
-  resolution: 'rejected' | 'resolved' | 'unresolved',
+  resolution: SuspenseEventResolution,
   +type: 'suspense',
 |};
 
@@ -197,7 +198,8 @@ export type InternalModuleSourceToRanges = Map<
 
 export type LaneToLabelMap = Map<ReactLane, string>;
 
-export type TimelineData = {|
+// TODO (timeline) Remove this type.
+export type TimelineData = {
   batchUIDToMeasuresMap: Map<BatchUID, ReactMeasure[]>,
   componentMeasures: ReactComponentMeasure[],
   duration: number,
@@ -215,7 +217,7 @@ export type TimelineData = {|
   startTime: number,
   suspenseEvents: SuspenseEvent[],
   thrownErrors: ThrownError[],
-|};
+};
 
 export type TimelineDataExport = {|
   batchUIDToMeasuresKeyValueArray: Array<[BatchUID, ReactMeasure[]]>,
