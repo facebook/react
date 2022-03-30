@@ -680,7 +680,7 @@ function handleRenderFunctionError(error: any): void {
   const messgae: string =
     isError && error.message
       ? error.message
-      : 'Error rendering inspected component'
+      : 'Error rendering inspected component';
   // $FlowFixMe: Flow doesn't know about 2nd argument of Error constructor
   const wrapperError = new Error(messgae, {cause: error});
   // Note: This error name needs to stay in sync with react-devtools-shared
