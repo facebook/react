@@ -366,7 +366,7 @@ const DispatcherProxyHandler = {
     const error = new Error('Missing method in Dispatcher: ' + prop);
     // Note: This error name needs to stay in sync with react-devtools-shared
     // TODO: refactor this if we ever combine the devtools and debug tools packages
-    error.name = 'UnsupportedFeatureError';
+    error.name = 'ReactDebugToolsUnsupportedFeatureError';
     throw error;
   },
 };
@@ -670,7 +670,7 @@ function processDebugValues(
 function handleRenderFunctionError(error: any): void {
   // original error might be any type.
   const isError = error instanceof Error;
-  if (isError && error.name === 'UnsupportedFeatureError') {
+  if (isError && error.name === 'ReactDebugToolsUnsupportedFeatureError') {
     throw error;
   }
   // If the error is not caused by an unsupported feature, it means
@@ -685,7 +685,7 @@ function handleRenderFunctionError(error: any): void {
   const wrapperError = new Error(messgae, {cause: error});
   // Note: This error name needs to stay in sync with react-devtools-shared
   // TODO: refactor this if we ever combine the devtools and debug tools packages
-  wrapperError.name = 'RenderFunctionError';
+  wrapperError.name = 'ReactDebugToolsRenderFunctionError';
   throw wrapperError;
 }
 
