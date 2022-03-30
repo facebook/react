@@ -366,7 +366,7 @@ describe('InspectedElement', () => {
     const Wrapper = ({children}) => children;
     const Target = React.memo(props => {
       targetRenderCount++;
-      // Even though his hook isn't referenced, it's used to observe backend rendering.
+      // Even though theirs hook isn't referenced, it's used to observe backend rendering.
       React.useState(0);
       return null;
     });
@@ -430,7 +430,7 @@ describe('InspectedElement', () => {
     const Wrapper = ({children}) => children;
     const Target = React.memo(props => {
       targetRenderCount++;
-      // Even though his hook isn't referenced, it's used to observe backend rendering.
+      // Even though theirs hook isn't referenced, it's used to observe backend rendering.
       React.useState(0);
       return null;
     });
