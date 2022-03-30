@@ -23,8 +23,7 @@ type Dispatch<A> = A => void;
 
 function resolveDispatcher() {
   const dispatcher = ReactCurrentDispatcher.current;
-  if (__DEV__) {
-    if (dispatcher === null) {
+    if (dispatcher === null && __DEV__) {
       console.error(
         'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
           ' one of the following reasons:\n' +
@@ -34,7 +33,6 @@ function resolveDispatcher() {
           'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
       );
     }
-  }
   // Will result in a null access error if accessed outside render phase. We
   // intentionally don't throw our own error because this is in a hot path.
   // Also helps ensure this is inlined.
