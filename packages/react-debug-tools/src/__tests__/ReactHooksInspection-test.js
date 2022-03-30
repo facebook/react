@@ -261,6 +261,10 @@ describe('ReactHooksInspection', () => {
       return <div>{state}</div>;
     }
 
+    const OriginalError = global.Error;
+    const MockError = jest.fn();
+    global.Error = MockError;
+
     const initial = {};
     let current = initial;
     let getterCalls = 0;
@@ -279,7 +283,13 @@ describe('ReactHooksInspection', () => {
     expect(() => {
       expect(() => {
         ReactDebugTools.inspectHooks(Foo, {}, FakeDispatcherRef);
-      }).toThrow("Cannot read property 'useState' of null");
+      }).toThrow(MockError);
+      expect(MockError.mock.calls.length).toBe(1);
+      // first argument is the error message
+      expect(MockError.mock.calls[0][0]).toBe('Error rendering inspected component');
+      // The second arg of the first call to the function was 'second arg'
+      expect(MockError.mock.calls[0][1]).toBeInstanceOf(OriginalError);
+      expect(MockError.mock.calls[0][1].message).toBe("Cannot read property 'useState' of null");
     }).toErrorDev(
       'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
         ' one of the following reasons:\n' +
@@ -294,6 +304,8 @@ describe('ReactHooksInspection', () => {
     expect(setterCalls).toHaveLength(2);
     expect(setterCalls[0]).not.toBe(initial);
     expect(setterCalls[1]).toBe(initial);
+
+    global.Error = OriginalError;
   });
 
   describe('useDebugValue', () => {
