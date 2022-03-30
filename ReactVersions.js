@@ -18,7 +18,7 @@
 //
 //   0.0.0-experimental-241c4467e-20200129
 
-const ReactVersion = '18.0.0';
+const ReactVersion = '18.1.0';
 
 // The label used by the @next channel. Represents the upcoming release's
 // stability. Could be "alpha", "beta", "rc", etc.
@@ -26,18 +26,18 @@ const nextChannelLabel = 'next';
 
 const stablePackages = {
   'create-subscription': ReactVersion,
-  'eslint-plugin-react-hooks': '4.4.0',
-  'jest-react': '0.12.1',
+  'eslint-plugin-react-hooks': '4.5.0',
+  'jest-react': '0.13.1',
   react: ReactVersion,
   'react-art': ReactVersion,
   'react-dom': ReactVersion,
   'react-is': ReactVersion,
-  'react-reconciler': '0.27.0',
-  'react-refresh': '0.12.0',
+  'react-reconciler': '0.28.0',
+  'react-refresh': '0.13.0',
   'react-test-renderer': ReactVersion,
-  'use-subscription': '1.6.0',
-  'use-sync-external-store': '1.0.0',
-  scheduler: '0.21.0',
+  'use-subscription': '1.7.0',
+  'use-sync-external-store': '1.1.0',
+  scheduler: '0.22.0',
 };
 
 // These packages do not exist in the @next or @latest channel, only
