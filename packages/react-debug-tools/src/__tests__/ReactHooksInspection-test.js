@@ -286,10 +286,14 @@ describe('ReactHooksInspection', () => {
       }).toThrow(MockError);
       expect(MockError.mock.calls.length).toBe(1);
       // first argument is the error message
-      expect(MockError.mock.calls[0][0]).toBe('Error rendering inspected component');
+      expect(MockError.mock.calls[0][0]).toBe(
+        'Error rendering inspected component',
+      );
       // The second arg of the first call to the function was 'second arg'
       expect(MockError.mock.calls[0][1]).toBeInstanceOf(OriginalError);
-      expect(MockError.mock.calls[0][1].message).toBe("Cannot read property 'useState' of null");
+      expect(MockError.mock.calls[0][1].message).toBe(
+        "Cannot read property 'useState' of null",
+      );
     }).toErrorDev(
       'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
         ' one of the following reasons:\n' +
