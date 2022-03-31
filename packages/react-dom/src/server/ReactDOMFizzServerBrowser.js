@@ -32,7 +32,7 @@ type Options = {|
   bootstrapModules?: Array<string>,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
-  onError?: (error: mixed) => void,
+  onError?: (error: mixed) => ?string,
 |};
 
 // TODO: Move to sub-classing ReadableStream.

@@ -267,7 +267,7 @@ type Options = {
   progressiveChunkSize?: number,
   onShellReady?: () => void,
   onAllReady?: () => void,
-  onError?: (error: mixed) => void,
+  onError?: (error: mixed) => ?string,
 };
 
 function render(children: React$Element<any>, options?: Options): Destination {
