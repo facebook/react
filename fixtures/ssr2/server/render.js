@@ -20,7 +20,6 @@ let assets = {
 };
 
 module.exports = function render(url, res) {
-
   const data = createServerData();
   // This is how you would wire it up previously:
   //
