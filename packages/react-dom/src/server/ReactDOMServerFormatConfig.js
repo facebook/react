@@ -1882,7 +1882,7 @@ export function writeClientRenderBoundaryInstruction(
   writeChunk(destination, boundaryID);
   if (error) {
     writeChunk(destination, clientRenderErrorScript1);
-    writeChunk(destination, error);
+    writeChunk(destination, stringToChunk(error));
   }
   return writeChunkAndReturn(destination, clientRenderScript2);
 }
