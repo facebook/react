@@ -685,7 +685,7 @@ function handleRenderFunctionError(error: any): void {
   });
   // Note: This error name needs to stay in sync with react-devtools-shared
   // TODO: refactor this if we ever combine the devtools and debug tools packages
-  wrapperError.name = 'ReactDebugToolsRenderFunctionError';
+  wrapperError.name = 'ReactDebugToolsRenderError';
   throw wrapperError;
 }
 

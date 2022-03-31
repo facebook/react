@@ -296,7 +296,7 @@ describe('ReactHooksInspection', () => {
       // original error
       expect(lastCall[1].cause).toBeInstanceOf(OriginalError);
       expect(lastCall[1].cause.message).toBe(
-        "Cannot read properties of null (reading 'useState')",
+        "Cannot read property 'useState' of null",
       );
     }).toErrorDev(
       'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
