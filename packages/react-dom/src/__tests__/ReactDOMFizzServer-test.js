@@ -869,16 +869,16 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // We still can't render it on the client.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to an ' +
-        'error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // We now resolve it on the client.
     resolveText('Hello');
 
-    Scheduler.unstable_flushAll();
+    expect(Scheduler).toFlushAndYield([
+      'The server could not finish this Suspense boundary, likely due to an ' +
+        'error during server rendering. Switched to client rendering.',
+    ]);
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(
@@ -2293,17 +2293,12 @@ describe('ReactDOMFizzServer', () => {
         },
       });
 
-      // An error logged but instead of surfacing it to the UI, we switched
-      // to client rendering.
-      expect(Scheduler).toFlushAndYield([
-        'Hydration error',
-        'There was an error while hydrating this Suspense boundary. Switched ' +
-          'to client rendering.',
-      ]);
+      // An error happened but instead of surfacing it to the UI, we suspended.
+      expect(Scheduler).toFlushAndYield([]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <span />
-          Loading...
+          <span>Yay!</span>
           <span />
         </div>,
       );
@@ -2311,7 +2306,12 @@ describe('ReactDOMFizzServer', () => {
       await act(async () => {
         resolveText('Yay!');
       });
-      expect(Scheduler).toFlushAndYield(['Yay!']);
+      expect(Scheduler).toFlushAndYield([
+        'Yay!',
+        'Hydration error',
+        'There was an error while hydrating this Suspense boundary. Switched ' +
+          'to client rendering.',
+      ]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <span />

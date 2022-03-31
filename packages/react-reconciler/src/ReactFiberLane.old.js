@@ -458,8 +458,15 @@ export function includesNonIdleWork(lanes: Lanes) {
 export function includesOnlyRetries(lanes: Lanes) {
   return (lanes & RetryLanes) === lanes;
 }
-export function includesOnlyTransitions(lanes: Lanes) {
-  return (lanes & TransitionLanes) === lanes;
+export function includesOnlyTransitionsOrHydration(lanes: Lanes) {
+  const TransitionOrHydrationLanes =
+    TransitionLanes |
+    InputContinuousHydrationLane |
+    DefaultHydrationLane |
+    TransitionHydrationLane |
+    SelectiveHydrationLane |
+    IdleHydrationLane;
+  return (lanes & TransitionOrHydrationLanes) !== NoLanes;
 }
 
 export function includesBlockingLane(root: FiberRoot, lanes: Lanes) {
