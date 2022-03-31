@@ -40,7 +40,6 @@ webpack(
         console.error(err.details);
       }
       process.exit(1);
-      return;
     }
     const info = stats.toJson();
     if (stats.hasErrors()) {
