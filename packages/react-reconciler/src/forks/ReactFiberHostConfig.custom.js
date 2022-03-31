@@ -136,6 +136,8 @@ export const isSuspenseInstancePending =
   $$$hostConfig.isSuspenseInstancePending;
 export const isSuspenseInstanceFallback =
   $$$hostConfig.isSuspenseInstanceFallback;
+export const getSuspenseInstanceFallbackError =
+  $$$hostConfig.getSuspenseInstanceFallbackError;
 export const registerSuspenseInstanceRetry =
   $$$hostConfig.registerSuspenseInstanceRetry;
 export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;
