@@ -44,10 +44,10 @@ module.exports = function render(url, res) {
     </DataProvider>,
     {
       bootstrapScripts: [assets['main.js']],
-      onAllReady(){
+      onAllReady() {
         // on All Ready hook
       },
-      onShellReady(){
+      onShellReady() {
         // If something errored before we started streaming, we set the error code appropriately.
         res.statusCode = didError ? 500 : 200;
         res.setHeader('Content-type', 'text/html');
