@@ -458,15 +458,9 @@ export function includesNonIdleWork(lanes: Lanes) {
 export function includesOnlyRetries(lanes: Lanes) {
   return (lanes & RetryLanes) === lanes;
 }
-export function includesOnlyTransitionsOrHydration(lanes: Lanes) {
-  const TransitionOrHydrationLanes =
-    TransitionLanes |
-    InputContinuousHydrationLane |
-    DefaultHydrationLane |
-    TransitionHydrationLane |
-    SelectiveHydrationLane |
-    IdleHydrationLane;
-  return (lanes & TransitionOrHydrationLanes) === lanes;
+export function includesOnlyNonUrgentLanes(lanes: Lanes) {
+  const UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
+  return (lanes & UrgentLanes) === NoLanes;
 }
 
 export function includesBlockingLane(root: FiberRoot, lanes: Lanes) {
