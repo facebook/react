@@ -131,6 +131,8 @@ type LegacyContext = {
 type SuspenseBoundary = {
   id: SuspenseBoundaryID,
   rootSegmentID: number,
+  error: ?string, // the error string if it errors
+  errorComponentStack?: string, // the component stack for the error in DEV
   forceClientRender: boolean, // if it errors or infinitely suspends
   parentFlushed: boolean,
   pendingTasks: number, // when it reaches zero we can show this boundary's content
@@ -196,7 +198,9 @@ export opaque type Request = {
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
   // onError is called when an error happens anywhere in the tree. It might recover.
-  onError: (error: mixed) => void,
+  // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
+  // Returning null/undefined will cause a defualt error message in production
+  onError: (error: mixed) => ?string,
   // onAllReady is called when all pending task is done but it may not have flushed yet.
   // This is a good time to start writing if you want only HTML and no intermediate steps.
   onAllReady: () => void,
@@ -229,6 +233,7 @@ const DEFAULT_PROGRESSIVE_CHUNK_SIZE = 12800;
 
 function defaultErrorHandler(error: mixed) {
   console['error'](error); // Don't transform to our wrapper
+  return null;
 }
 
 function noop(): void {}
@@ -238,7 +243,7 @@ export function createRequest(
   responseState: ResponseState,
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
-  onError: void | ((error: mixed) => void),
+  onError: void | ((error: mixed) => string),
   onAllReady: void | (() => void),
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
@@ -317,6 +322,7 @@ function createSuspenseBoundary(
     completedSegments: [],
     byteSize: 0,
     fallbackAbortableTasks,
+    error: null,
   };
 }
 
@@ -426,11 +432,19 @@ function popComponentStackInDEV(task: Task): void {
   }
 }
 
-function logRecoverableError(request: Request, error: mixed): void {
+function logRecoverableError(request: Request, error: any): ?string {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
   const onError = request.onError;
-  onError(error);
+  let errorMsg = onError(error);
+  if (__DEV__) {
+    const msg = error && error.message ? error.message : error;
+    errorMsg = JSON.stringify({
+      error: msg,
+      componentStack: getCurrentStackInDEV(),
+    });
+  }
+  return errorMsg;
 }
 
 function fatalError(request: Request, error: mixed): void {
@@ -527,8 +541,9 @@ function renderSuspenseBoundary(
     }
   } catch (error) {
     contentRootSegment.status = ERRORED;
-    logRecoverableError(request, error);
     newBoundary.forceClientRender = true;
+    newBoundary.error = logRecoverableError(request, error);
+
     // We don't need to decrement any task numbers because we didn't spawn any new task.
     // We don't need to schedule any task because we know the parent has written yet.
     // We do need to fallthrough to create the fallback though.
@@ -1395,13 +1410,14 @@ function erroredTask(
   error: mixed,
 ) {
   // Report the error to a global handler.
-  logRecoverableError(request, error);
+  const errorMsg = logRecoverableError(request, error);
   if (boundary === null) {
     fatalError(request, error);
   } else {
     boundary.pendingTasks--;
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
+      boundary.error = errorMsg;
 
       // Regardless of what happens next, this boundary won't be displayed,
       // so we can flush it, if the parent already flushed.
@@ -1456,6 +1472,7 @@ function abortTask(task: Task): void {
 
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
+      boundary.error = 'This Suspense boundary was aborted by the server';
       if (boundary.parentFlushed) {
         request.clientRenderedBoundaries.push(boundary);
       }
@@ -1815,6 +1832,7 @@ function flushClientRenderedBoundary(
     destination,
     request.responseState,
     boundary.id,
+    boundary.error,
   );
 }
 

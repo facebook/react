@@ -295,6 +295,8 @@ export function writeClientRenderBoundaryInstruction(
   destination: Destination,
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
+  // TODO: encode error for native
+  error: ?string,
 ): boolean {
   writeChunk(destination, SUSPENSE_UPDATE_TO_CLIENT_RENDER);
   return writeChunkAndReturn(destination, formatID(boundaryID));

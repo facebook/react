@@ -89,6 +89,34 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
+  function expectErrors(errorsArr, toBeDevArr, toBeProdArr) {
+    if (__DEV__) {
+      expect(errorsArr.map(error => normalizeCodeLocInfo(error))).toEqual(
+        toBeDevArr.map(error => {
+          if (typeof error === 'string' || error instanceof String) {
+            return error;
+          }
+          let str = JSON.stringify(error).replace(/\\n/g, '\n');
+          // this gets stripped away by normalizeCodeLocInfo...
+          // Kind of hacky but lets strip it away here too just so they match...
+          // easier than fixing the regex to account for this edge case
+          if (str.endsWith('at **)"}')) {
+            str = str.replace(/at \*\*\)\"}$/, 'at **)');
+          }
+          return str;
+        }),
+      );
+    } else {
+      expect(errorsArr).toEqual(toBeProdArr);
+    }
+  }
+
+  function componentStack(components) {
+    return components
+      .map(component => `\n    in ${component} (at **)`)
+      .join('');
+  }
+
   async function act(callback) {
     await callback();
     // Await one turn around the event loop.
@@ -426,12 +454,13 @@ describe('ReactDOMFizzServer', () => {
     }
 
     let bootstrapped = false;
+    const errors = [];
     window.__INIT__ = function() {
       bootstrapped = true;
       // Attempt to hydrate the content.
       ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+          errors.push(error.message);
         },
       });
     };
@@ -443,6 +472,7 @@ describe('ReactDOMFizzServer', () => {
           bootstrapScriptContent: '__INIT__();',
           onError(x) {
             loggedErrors.push(x);
+            return 'Hash';
           },
         },
       );
@@ -469,10 +499,17 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // Now we can client render it instead.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+    expectErrors(
+      errors,
+      [
+        {
+          error: theError.message,
+          componentStack: componentStack(['Lazy', 'Suspense', 'div', 'App']),
+        },
+      ],
+      ['Hash'],
+    );
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
@@ -539,6 +576,7 @@ describe('ReactDOMFizzServer', () => {
         {
           onError(x) {
             loggedErrors.push(x);
+            return 'hash';
           },
         },
       );
@@ -546,10 +584,11 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(loggedErrors).toEqual([]);
 
+    const errors = [];
     // Attempt to hydrate the content.
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        errors.push(error.message);
       },
     });
     Scheduler.unstable_flushAll();
@@ -570,10 +609,18 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // Now we can client render it instead.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+
+    expectErrors(
+      errors,
+      [
+        {
+          error: theError.message,
+          componentStack: componentStack(['div', 'App']),
+        },
+      ],
+      ['hash'],
+    );
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
@@ -857,10 +904,11 @@ describe('ReactDOMFizzServer', () => {
 
     // We're still showing a fallback.
 
+    const errors = [];
     // Attempt to hydrate the content.
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        errors.push(error.message);
       },
     });
     Scheduler.unstable_flushAll();
@@ -874,10 +922,12 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // We still can't render it on the client.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to an ' +
-        'error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+    expectErrors(
+      errors,
+      ['This Suspense boundary was aborted by the server'],
+      ['This Suspense boundary was aborted by the server'],
+    );
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // We now resolve it on the client.
@@ -1544,6 +1594,7 @@ describe('ReactDOMFizzServer', () => {
         {
           onError(x) {
             loggedErrors.push(x);
+            return 'error hash';
           },
         },
       );
@@ -1552,10 +1603,11 @@ describe('ReactDOMFizzServer', () => {
 
     // We're still showing a fallback.
 
+    const errors = [];
     // Attempt to hydrate the content.
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        errors.push(error.message);
       },
     });
     Scheduler.unstable_flushAll();
@@ -1586,10 +1638,24 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // That will let us client render it instead.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+    expectErrors(
+      errors,
+      [
+        {
+          error: theError.message,
+          componentStack: componentStack([
+            'AsyncText',
+            'h1',
+            'Suspense',
+            'div',
+            'Suspense',
+            'App',
+          ]),
+        },
+      ],
+      ['error hash'],
+    );
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(
@@ -2178,11 +2244,10 @@ describe('ReactDOMFizzServer', () => {
 
       // Hydrate the tree. Child will throw during render.
       isClient = true;
+      const errors = [];
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(
-            'Log recoverable error: ' + error.message,
-          );
+          errors.push(error.message);
         },
       });
 
@@ -2190,6 +2255,8 @@ describe('ReactDOMFizzServer', () => {
       // shouldn't be called.
       expect(Scheduler).toFlushAndYield([]);
       expect(getVisibleChildren(container)).toEqual('Oops!');
+
+      expectErrors(errors, [], []);
     },
   );
 
