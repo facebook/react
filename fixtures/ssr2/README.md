@@ -1,4 +1,4 @@
-# SSR Fixtures SSR2
+# SSR Fixtures
 
 A set of test cases for quickly identifying issues with server-side rendering.
 
