@@ -152,6 +152,7 @@ import {
   shouldSetTextContent,
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
+  getSuspenseInstanceFallbackError,
   registerSuspenseInstanceRetry,
   supportsHydration,
   isPrimaryRenderer,
@@ -2689,6 +2690,7 @@ function updateDehydratedSuspenseComponent(
     // This boundary is in a permanent fallback state. In this case, we'll never
     // get an update and we'll never be able to hydrate the final content. Let's just try the
     // client side render instead.
+    const errorMsg = getSuspenseInstanceFallbackError(suspenseInstance);
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
@@ -2696,11 +2698,14 @@ function updateDehydratedSuspenseComponent(
       // TODO: The server should serialize the error message so we can log it
       // here on the client. Or, in production, a hash/id that corresponds to
       // the error.
-      new Error(
-        'The server could not finish this Suspense boundary, likely ' +
-          'due to an error during server rendering. Switched to ' +
-          'client rendering.',
-      ),
+      errorMsg
+        ? // eslint-disable-next-line react-internal/prod-error-codes
+          new Error(errorMsg)
+        : new Error(
+            'The server could not finish this Suspense boundary, likely ' +
+              'due to an error during server rendering. Switched to ' +
+              'client rendering.',
+          ),
     );
   }
 

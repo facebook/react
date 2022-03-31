@@ -43,7 +43,7 @@ type Options = {|
   onShellReady?: () => void,
   onShellError?: () => void,
   onAllReady?: () => void,
-  onError?: (error: mixed) => void,
+  onError?: (error: mixed) => string,
 |};
 
 type Controls = {|

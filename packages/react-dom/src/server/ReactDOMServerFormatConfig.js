@@ -1681,7 +1681,7 @@ export function writeEndSegment(
 // const SUSPENSE_PENDING_START_DATA = '$?';
 // const SUSPENSE_FALLBACK_START_DATA = '$!';
 //
-// function clientRenderBoundary(suspenseBoundaryID) {
+// function clientRenderBoundary(suspenseBoundaryID, errorMsg) {
 //   // Find the fallback's first element.
 //   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
 //   if (!suspenseIdNode) {
@@ -1693,6 +1693,7 @@ export function writeEndSegment(
 //   const suspenseNode = suspenseIdNode.previousSibling;
 //   // Tag it to be client rendered.
 //   suspenseNode.data = SUSPENSE_FALLBACK_START_DATA;
+//   suspenseNode.data2 = errorMsg;
 //   // Tell React to retry it if the parent already hydrated.
 //   if (suspenseNode._reactRetry) {
 //     suspenseNode._reactRetry();
@@ -1780,7 +1781,7 @@ const completeSegmentFunction =
 const completeBoundaryFunction =
   'function $RC(a,b){a=document.getElementById(a);b=document.getElementById(b);b.parentNode.removeChild(b);if(a){a=a.previousSibling;var f=a.parentNode,c=a.nextSibling,e=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d)if(0===e)break;else e--;else"$"!==d&&"$?"!==d&&"$!"!==d||e++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;b.firstChild;)f.insertBefore(b.firstChild,c);a.data="$";a._reactRetry&&a._reactRetry()}}';
 const clientRenderFunction =
-  'function $RX(a){if(a=document.getElementById(a))a=a.previousSibling,a.data="$!",a._reactRetry&&a._reactRetry()}';
+  'function $RX(a,b){if(a=document.getElementById(a))a=a.previousSibling,a.data="$!",a.data2=b,a._reactRetry&&a._reactRetry()}';
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
   completeSegmentFunction + ';$RS("',
@@ -1850,15 +1851,17 @@ export function writeCompletedBoundaryInstruction(
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
-  clientRenderFunction + ';$RX("',
+  clientRenderFunction + ";$RX('",
 );
-const clientRenderScript1Partial = stringToPrecomputedChunk('$RX("');
-const clientRenderScript2 = stringToPrecomputedChunk('")</script>');
+const clientRenderScript1Partial = stringToPrecomputedChunk("$RX('");
+const clientRenderScript2 = stringToPrecomputedChunk("')</script>");
+const clientRenderErrorScript1 = stringToPrecomputedChunk("','");
 
 export function writeClientRenderBoundaryInstruction(
   destination: Destination,
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
+  error: ?string,
 ): boolean {
   writeChunk(destination, responseState.startInlineScript);
   if (!responseState.sentClientRenderFunction) {
@@ -1877,5 +1880,9 @@ export function writeClientRenderBoundaryInstruction(
   }
 
   writeChunk(destination, boundaryID);
+  if (error) {
+    writeChunk(destination, clientRenderErrorScript1);
+    writeChunk(destination, error);
+  }
   return writeChunkAndReturn(destination, clientRenderScript2);
 }

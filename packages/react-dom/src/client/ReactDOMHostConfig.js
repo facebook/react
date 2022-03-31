@@ -734,6 +734,11 @@ export function isSuspenseInstancePending(instance: SuspenseInstance) {
 export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
   return instance.data === SUSPENSE_FALLBACK_START_DATA;
 }
+export function getSuspenseInstanceFallbackError(
+  instance: SuspenseInstance,
+): string {
+  return (instance: any).data2;
+}
 
 export function registerSuspenseInstanceRetry(
   instance: SuspenseInstance,
