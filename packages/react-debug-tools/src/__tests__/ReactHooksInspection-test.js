@@ -291,9 +291,7 @@ describe('ReactHooksInspection', () => {
       // expect the thrown Error is the last one to call the MockError
       const lastCall = MockError.mock.calls[MockError.mock.calls.length - 1];
       // first argument is the error message
-      expect(lastCall[0]).toBe(
-        'Error rendering inspected component',
-      );
+      expect(lastCall[0]).toBe('Error rendering inspected component');
       // The second arg is the options object with the cause, which is the
       // original error
       expect(lastCall[1].cause).toBeInstanceOf(OriginalError);
@@ -314,7 +312,6 @@ describe('ReactHooksInspection', () => {
     expect(setterCalls).toHaveLength(2);
     expect(setterCalls[0]).not.toBe(initial);
     expect(setterCalls[1]).toBe(initial);
-
   });
 
   describe('useDebugValue', () => {
