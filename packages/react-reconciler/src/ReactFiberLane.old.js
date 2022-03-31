@@ -466,7 +466,7 @@ export function includesOnlyTransitionsOrHydration(lanes: Lanes) {
     TransitionHydrationLane |
     SelectiveHydrationLane |
     IdleHydrationLane;
-  return (lanes & TransitionOrHydrationLanes) !== NoLanes;
+  return (lanes & TransitionOrHydrationLanes) === lanes;
 }
 
 export function includesBlockingLane(root: FiberRoot, lanes: Lanes) {
