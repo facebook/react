@@ -75,7 +75,6 @@ describe('ReactDOMServerHydration', () => {
 
   describe('text mismatch', () => {
     // @gate __DEV__
-    // @gate enableClientRenderFallbackOnHydrationMismatch
     it('warns when client and server render different text', () => {
       function Mismatch({isClient}) {
         return (
@@ -84,21 +83,31 @@ describe('ReactDOMServerHydration', () => {
           </div>
         );
       }
-      expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-        Array [
-          "Warning: Text content did not match. Server: \\"server\\" Client: \\"client\\"
-            in main (at **)
-            in div (at **)
-            in Mismatch (at **)",
-          "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-          "Caught [Text content does not match server-rendered HTML.]",
-          "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-        ]
-      `);
+      if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+          Array [
+            "Warning: Text content did not match. Server: \\"server\\" Client: \\"client\\"
+              in main (at **)
+              in div (at **)
+              in Mismatch (at **)",
+            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+            "Caught [Text content does not match server-rendered HTML.]",
+            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+          ]
+        `);
+      } else {
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+          Array [
+            "Warning: Text content did not match. Server: \\"server\\" Client: \\"client\\"
+              in main (at **)
+              in div (at **)
+              in Mismatch (at **)",
+          ]
+        `);
+      }
     });
 
     // @gate __DEV__
-    // @gate enableClientRenderFallbackOnHydrationMismatch
     it('warns when client and server render different html', () => {
       function Mismatch({isClient}) {
         return (
@@ -127,7 +136,6 @@ describe('ReactDOMServerHydration', () => {
 
   describe('attribute mismatch', () => {
     // @gate __DEV__
-    // @gate enableClientRenderFallbackOnHydrationMismatch
     it('warns when client and server render different attributes', () => {
       function Mismatch({isClient}) {
         return (
@@ -150,7 +158,6 @@ describe('ReactDOMServerHydration', () => {
     });
 
     // @gate __DEV__
-    // @gate enableClientRenderFallbackOnHydrationMismatch
     it('warns when client renders extra attributes', () => {
       function Mismatch({isClient}) {
         return (
@@ -174,7 +181,6 @@ describe('ReactDOMServerHydration', () => {
     });
 
     // @gate __DEV__
-    // @gate enableClientRenderFallbackOnHydrationMismatch
     it('warns when server renders extra attributes', () => {
       function Mismatch({isClient}) {
         return (
@@ -198,7 +204,6 @@ describe('ReactDOMServerHydration', () => {
     });
 
     // @gate __DEV__
-    // @gate enableClientRenderFallbackOnHydrationMismatch
     it('warns when both client and server render extra attributes', () => {
       function Mismatch({isClient}) {
         return (
@@ -222,7 +227,6 @@ describe('ReactDOMServerHydration', () => {
     });
 
     // @gate __DEV__
-    // @gate enableClientRenderFallbackOnHydrationMismatch
     it('warns when client and server render different styles', () => {
       function Mismatch({isClient}) {
         return (
@@ -250,7 +254,6 @@ describe('ReactDOMServerHydration', () => {
   describe('extra nodes on the client', () => {
     describe('extra elements on the client', () => {
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when client renders an extra element as only child', () => {
         function Mismatch({isClient}) {
           return (
@@ -259,21 +262,33 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching <main> in <div>.
-              in main (at **)
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <main> in <div>.
+                in main (at **)
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <main> in <div>.
+                in main (at **)
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when client renders an extra element in the beginning', () => {
         function Mismatch({isClient}) {
           return (
@@ -284,21 +299,33 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching <header> in <div>.
-              in header (at **)
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <header> in <div>.
+                in header (at **)
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <header> in <div>.
+                in header (at **)
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when client renders an extra element in the middle', () => {
         function Mismatch({isClient}) {
           return (
@@ -309,21 +336,33 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching <main> in <div>.
-              in main (at **)
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <main> in <div>.
+                in main (at **)
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <main> in <div>.
+                in main (at **)
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when client renders an extra element in the end', () => {
         function Mismatch({isClient}) {
           return (
@@ -334,41 +373,64 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching <footer> in <div>.
-              in footer (at **)
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <footer> in <div>.
+                in footer (at **)
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <footer> in <div>.
+                in footer (at **)
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
     });
 
     describe('extra text nodes on the client', () => {
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when client renders an extra text node as only child', () => {
         function Mismatch({isClient}) {
           return <div className="parent">{isClient && 'only'}</div>;
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Text content did not match. Server: \\"\\" Client: \\"only\\"
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Text content does not match server-rendered HTML.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Text content did not match. Server: \\"\\" Client: \\"only\\"
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Text content does not match server-rendered HTML.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Text content did not match. Server: \\"\\" Client: \\"only\\"
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when client renders an extra text node in the beginning', () => {
         function Mismatch({isClient}) {
           return (
@@ -379,20 +441,31 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching text node for \\"second\\" in <div>.
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching text node for \\"second\\" in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching text node for \\"second\\" in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when client renders an extra text node in the beginning', () => {
         function Mismatch({isClient}) {
           return (
@@ -403,20 +476,31 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching text node for \\"first\\" in <div>.
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching text node for \\"first\\" in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching text node for \\"first\\" in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when client renders an extra text node in the end', () => {
         function Mismatch({isClient}) {
           return (
@@ -427,16 +511,28 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching text node for \\"third\\" in <div>.
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching text node for \\"third\\" in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching text node for \\"third\\" in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
     });
   });
@@ -444,7 +540,6 @@ describe('ReactDOMServerHydration', () => {
   describe('extra nodes on the server', () => {
     describe('extra elements on the server', () => {
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when server renders an extra element as only child', () => {
         function Mismatch({isClient}) {
           return (
@@ -453,20 +548,31 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Did not expect server HTML to contain a <main> in <div>.
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain a <main> in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain a <main> in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when server renders an extra element in the beginning', () => {
         function Mismatch({isClient}) {
           return (
@@ -477,22 +583,34 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching <main> in <div>.
-              in main (at **)
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <main> in <div>.
+                in main (at **)
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain a <header> in <div>.
+                in main (at **)
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when server renders an extra element in the middle', () => {
         function Mismatch({isClient}) {
           return (
@@ -503,21 +621,33 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching <footer> in <div>.
-              in footer (at **)
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <footer> in <div>.
+                in footer (at **)
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain a <main> in <div>.
+                in footer (at **)
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when server renders an extra element in the end', () => {
         function Mismatch({isClient}) {
           return (
@@ -528,40 +658,62 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Did not expect server HTML to contain a <footer> in <div>.
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain a <footer> in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain a <footer> in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
     });
 
     describe('extra text nodes on the server', () => {
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when server renders an extra text node as only child', () => {
         function Mismatch({isClient}) {
           return <div className="parent">{!isClient && 'only'}</div>;
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Did not expect server HTML to contain the text node \\"only\\" in <div>.
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain the text node \\"only\\" in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain the text node \\"only\\" in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when server renders an extra text node in the beginning', () => {
         function Mismatch({isClient}) {
           return (
@@ -572,22 +724,34 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching <main> in <div>.
-              in main (at **)
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <main> in <div>.
+                in main (at **)
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain the text node \\"first\\" in <div>.
+                in main (at **)
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when server renders an extra text node in the middle', () => {
         function Mismatch({isClient}) {
           return (
@@ -598,21 +762,33 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching <footer> in <div>.
-              in footer (at **)
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Expected server HTML to contain a matching <footer> in <div>.
+                in footer (at **)
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain the text node \\"second\\" in <div>.
+                in footer (at **)
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
-      // @gate enableClientRenderFallbackOnHydrationMismatch
       it('warns when server renders an extra text node in the end', () => {
         function Mismatch({isClient}) {
           return (
@@ -623,16 +799,28 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Did not expect server HTML to contain the text node \\"third\\" in <div>.
-              in div (at **)
-              in Mismatch (at **)",
-            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-            "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
-            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-          ]
-        `);
+        if (
+          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
+        ) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain the text node \\"third\\" in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+              "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+              "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
+              "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Did not expect server HTML to contain the text node \\"third\\" in <div>.
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
     });
   });
