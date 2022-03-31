@@ -20,6 +20,8 @@ let assets = {
 };
 
 module.exports = function render(url, res) {
+
+  const data = createServerData();
   // This is how you would wire it up previously:
   //
   // res.send(
@@ -36,14 +38,16 @@ module.exports = function render(url, res) {
     console.error('Fatal', error);
   });
   let didError = false;
-  const data = createServerData();
   const {pipe, abort} = renderToPipeableStream(
     <DataProvider data={data}>
       <App assets={assets} />
     </DataProvider>,
     {
       bootstrapScripts: [assets['main.js']],
-      onCompleteShell() {
+      onAllReady(){
+        // on All Ready hook
+      },
+      onShellReady(){
         // If something errored before we started streaming, we set the error code appropriately.
         res.statusCode = didError ? 500 : 200;
         res.setHeader('Content-type', 'text/html');
