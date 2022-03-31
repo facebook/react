@@ -44,7 +44,8 @@ module.exports = function render(url, res) {
     {
       bootstrapScripts: [assets['main.js']],
       onAllReady() {
-        // on All Ready hook
+        // Full completion.
+        // You can use this for SSG or crawlers.
       },
       onShellReady() {
         // If something errored before we started streaming, we set the error code appropriately.
