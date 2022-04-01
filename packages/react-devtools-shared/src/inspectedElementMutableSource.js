@@ -8,7 +8,6 @@
  */
 
 import LRU from 'lru-cache';
-import {UserHookError} from 'react-debug-tools';
 import {
   convertInspectedElementBackendToFrontend,
   hydrateHelper,
@@ -97,7 +96,7 @@ export function inspectElement({
 
       case 'user-error': {
         const {message, stack} = (data: InspectElementUserError);
-        // Trying to keep useful information from user's side.
+        // Trying to keep useful information from user's component.
         const error = new UserError(message);
         error.stack = stack || error.stack;
         throw error;
@@ -105,7 +104,7 @@ export function inspectElement({
 
       case 'unsupported-feature': {
         const {message} = (data: InspectElementUnsupportedFeatureError);
-        // Trying to keep useful information from user's side.
+        // Trying to keep useful information from backend.
         const error = new UnsupportedFeatureError(message);
         throw error;
       }
