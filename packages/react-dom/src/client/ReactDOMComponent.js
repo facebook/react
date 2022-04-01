@@ -1200,6 +1200,109 @@ export function diffHydratedText(
   return isDifferent;
 }
 
+function formatAttributes(element: Element): string {
+  let str = '';
+  const attributes = element.attributes;
+  for (let i = 0; i < attributes.length; i++) {
+    if (i > 30) {
+      str += ' ...';
+      break;
+    }
+    const attributeName = attributes[i].name;
+    const value = attributes[i].value;
+    if (value != null) {
+      let trimmedValue = value;
+      if (value.length > 30) {
+        trimmedValue = value.substr(0, 30) + '...';
+      }
+      // TODO: what about quotes in attr values
+      str += ' ' + attributeName + '="' + trimmedValue + '"';
+    }
+  }
+  return str;
+}
+
+function formatElement(element, indentation, formattedChildren) {
+  let str = indentation + '<' + element.nodeName.toLowerCase();
+  str += formatAttributes(element);
+  if (formattedChildren === null) {
+    if (element.innerHTML !== '') {
+      str += '>...';
+      str += '</' + element.nodeName.toLowerCase() + '>';
+    } else {
+      str += ' />';
+    }
+  } else {
+    str += '>\n' + formattedChildren;
+    str += '\n' + indentation;
+    str += '</' + element.nodeName.toLowerCase() + '>';
+  }
+  return str;
+}
+
+function formatNode(node, indentation) {
+  switch (node.nodeType) {
+    // TODO: use constants
+    case Node.ELEMENT_NODE:
+      return formatElement(node, indentation, null);
+    case Node.TEXT_NODE:
+      // TODO: trim
+      return indentation + node.textContent;
+    default:
+      return '';
+  }
+}
+
+function shouldIncludeInDiff(node) {
+  return (
+    // TODO: use constants
+    node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.TEXT_NODE
+  );
+}
+
+function findPreviousSiblingForDiff(node) {
+  let sibling = node.previousSibling;
+  while (sibling !== null) {
+    if (shouldIncludeInDiff(sibling)) {
+      return sibling;
+    }
+    sibling = sibling.previousSibling;
+  }
+  return null;
+}
+
+function findNextSiblingForDiff(node) {
+  let sibling = node.nextSibling;
+  while (sibling !== null) {
+    if (shouldIncludeInDiff(sibling)) {
+      return sibling;
+    }
+    sibling = sibling.nextSibling;
+  }
+  return null;
+}
+
+function formatDiffForExtraServerNode(parentNode, child) {
+  let formattedSibling = null;
+  const prevSibling = findPreviousSiblingForDiff(child);
+  if (prevSibling !== null) {
+    formattedSibling = formatNode(prevSibling, '    ');
+  }
+  let formattedChildren = '';
+  if (formattedSibling !== null) {
+    if (findPreviousSiblingForDiff(prevSibling) !== null) {
+      formattedChildren += '    ...\n';
+    }
+    formattedChildren += formattedSibling + '\n';
+  }
+  formattedChildren += formatNode(child, '-   ');
+  formattedChildren += ' <-- server';
+  if (findNextSiblingForDiff(child) !== null) {
+    formattedChildren += '\n    ...';
+  }
+  return formatElement(parentNode, '  ', formattedChildren);
+}
+
 export function warnForDeletedHydratableElement(
   parentNode: Element | Document | DocumentFragment,
   child: Element,
@@ -1210,9 +1313,10 @@ export function warnForDeletedHydratableElement(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'Did not expect server HTML to contain a <%s> in <%s>.',
-      child.nodeName.toLowerCase(),
-      parentNode.nodeName.toLowerCase(),
+      'The content rendered by the server and the client did not match ' +
+        'because the server has rendered an extra element. ' +
+        'The mismatch occurred inside of this parent:\n\n%s',
+      formatDiffForExtraServerNode(parentNode, child),
     );
   }
 }
@@ -1227,9 +1331,10 @@ export function warnForDeletedHydratableText(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'Did not expect server HTML to contain the text node "%s" in <%s>.',
-      child.nodeValue,
-      parentNode.nodeName.toLowerCase(),
+      'The content rendered by the server and the client did not match ' +
+        'because the server has rendered an extra text node. ' +
+        'The mismatch occurred inside of this parent:\n\n%s',
+      formatDiffForExtraServerNode(parentNode, child),
     );
   }
 }
