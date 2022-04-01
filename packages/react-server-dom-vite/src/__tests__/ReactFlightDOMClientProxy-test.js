@@ -61,7 +61,7 @@ describe('ReactFlightDOMClientProxy', () => {
     expect(wrappedFnSsr()).toEqual(true);
 
     React.useState.mockImplementation(() => {
-      throw new Error('Not supported in RSC');
+      throw new Error('Not supported in Server Components.');
     });
     const wrappedFnRsc = wrapInClientProxy(myFn);
     expect(wrappedFnRsc.myProp).toEqual(undefined);
@@ -69,17 +69,10 @@ describe('ReactFlightDOMClientProxy', () => {
     expect(() => new wrappedFnRsc()).toThrowError(ClientProxy.FN_RSC_ERROR);
   });
 
-  it('wraps client components and elements in a proxy during RSC', async () => {
+  it('wraps client components in a proxy during RSC', async () => {
     React.useState.mockImplementation(() => {
-      throw new Error('Not supported in RSC');
+      throw new Error('Not supported in Server Components.');
     });
-
-    const wrappedElement = wrapInClientProxy(<div>MyCounter</div>);
-    expect(wrappedElement).toHaveProperty('$$typeof', ClientProxy.MODULE_TAG);
-
-    expect(typeof wrappedElement).toEqual('object');
-    expect(wrappedElement).toHaveProperty('filepath', id);
-    expect(wrappedElement).toHaveProperty('name', 'default');
 
     const wrappedComponent = wrapInClientProxy(() => <div>MyCounter</div>);
 

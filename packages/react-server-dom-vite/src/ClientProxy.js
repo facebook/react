@@ -74,18 +74,6 @@ export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
     return component;
   }
 
-  if (component.$$typeof) {
-    // Make $$typeof configurable to bypass proxy invariance where
-    // it cannot return a different type from its original target.
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/get#invariants
-    component = Object.create(component, {
-      $$typeof: {
-        value: component.$$typeof,
-        configurable: true,
-      },
-    });
-  }
-
   const moduleRef = createModuleReference(id, component, name, named);
   const get = (target, prop, receiver) =>
     Reflect.get(isRsc() ? moduleRef : target, prop, receiver);
