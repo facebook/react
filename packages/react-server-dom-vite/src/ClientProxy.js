@@ -34,13 +34,12 @@ export const FN_RSC_ERROR =
   'Functions exported from client components cannot be called or used as constructors from a server component.';
 
 // TODO what's a better way to detect Flight runtime?
-// const cacheType = () => new Map();
 export function isRsc() {
   try {
     useState();
     return false;
-  } catch (e) {
-    return true;
+  } catch (error) {
+    return error.message.endsWith('Server Components.');
   }
 }
 
