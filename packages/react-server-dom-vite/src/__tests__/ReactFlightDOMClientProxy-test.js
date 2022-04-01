@@ -23,8 +23,8 @@ jest.mock('react', () => {
   };
 });
 
-const wrapInClientProxy = component =>
-  ClientProxy.wrapInClientProxy({id, name, named: false, component});
+const wrapInClientProxy = value =>
+  ClientProxy.wrapInClientProxy({id, name, isDefault: true, value});
 
 describe('ReactFlightDOMClientProxy', () => {
   beforeEach(() => {

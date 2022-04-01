@@ -14,8 +14,8 @@ declare var globalThis: any;
 type ClientProxy = {
   id: string,
   name: string,
-  named: boolean,
-  component: any,
+  isDefault: boolean,
+  value: any,
 };
 
 // Store of components discovered during RSC to load
@@ -41,17 +41,17 @@ export function isRsc() {
   }
 }
 
-function createModuleReference(id, component, name, isNamed) {
+function createModuleReference(id, value, name, isDefault) {
   const moduleRef = Object.create(null);
   moduleRef.$$typeof = MODULE_TAG;
   moduleRef.filepath = id;
-  moduleRef.name = isNamed ? name : 'default';
+  moduleRef.name = isDefault ? 'default' : name;
 
   // Store component in a global index during RSC to use it later in SSR
   globalThis.__COMPONENT_INDEX[id] = Object.defineProperty(
     globalThis.__COMPONENT_INDEX[id] || Object.create(null),
     moduleRef.name,
-    {value: component, writable: true},
+    {value, writable: true},
   );
 
   return moduleRef;
@@ -60,24 +60,24 @@ function createModuleReference(id, component, name, isNamed) {
 // A ClientProxy behaves as a module reference for the Flight
 // runtime (RSC) and as a real component for the Fizz runtime (SSR).
 // Note that this is not used in browser environments.
-export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
-  const type = typeof component;
+export function wrapInClientProxy({id, name, isDefault, value}: ClientProxy) {
+  const type = typeof value;
 
-  if (component === null || (type !== 'object' && type !== 'function')) {
-    if (type === 'string' && component.length >= STRING_SIZE_LIMIT) {
-      const moduleRef = createModuleReference(id, component, name, named);
-      globalThis.__STRING_REFERENCE_INDEX[component] = moduleRef;
+  if (value === null || (type !== 'object' && type !== 'function')) {
+    if (type === 'string' && value.length >= STRING_SIZE_LIMIT) {
+      const moduleRef = createModuleReference(id, value, name, isDefault);
+      globalThis.__STRING_REFERENCE_INDEX[value] = moduleRef;
     }
 
-    return component;
+    return value;
   }
 
-  const moduleRef = createModuleReference(id, component, name, named);
+  const moduleRef = createModuleReference(id, value, name, isDefault);
   const get = (target, prop, receiver) =>
     Reflect.get(isRsc() ? moduleRef : target, prop, receiver);
 
   return new Proxy(
-    component,
+    value,
     type === 'object'
       ? {get}
       : {

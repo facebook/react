@@ -31,7 +31,7 @@ import * as allImports from '/path/to/Counter.client.jsx?no-proxy';
 
 export default wrapInClientProxy({ name: 'Counter', id: '${getComponentId(
       '/path/to/Counter.client.jsx',
-    )}', component: allImports['default'], named: false });
+    )}', value: allImports['default'], isDefault: true });
 `);
   });
 
@@ -47,10 +47,10 @@ import * as allImports from '/path/to/Counter.client.jsx?no-proxy';
 
 export const Counter = wrapInClientProxy({ name: 'Counter', id: '${getComponentId(
       '/path/to/Counter.client.jsx',
-    )}', component: allImports['Counter'], named: true });
+    )}', value: allImports['Counter'], isDefault: false });
 export const Clicker = wrapInClientProxy({ name: 'Clicker', id: '${getComponentId(
       '/path/to/Counter.client.jsx',
-    )}', component: allImports['Clicker'], named: true });
+    )}', value: allImports['Clicker'], isDefault: false });
 `);
   });
 
@@ -66,10 +66,10 @@ import * as allImports from '/path/to/Counter.client.jsx?no-proxy';
 
 export default wrapInClientProxy({ name: 'Counter', id: '${getComponentId(
       '/path/to/Counter.client.jsx',
-    )}', component: allImports['default'], named: false });
+    )}', value: allImports['default'], isDefault: true });
 export const Clicker = wrapInClientProxy({ name: 'Clicker', id: '${getComponentId(
       '/path/to/Counter.client.jsx',
-    )}', component: allImports['Clicker'], named: true });
+    )}', value: allImports['Clicker'], isDefault: false });
 `);
   });
 });

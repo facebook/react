@@ -197,9 +197,9 @@ export async function proxyClientComponent(filepath: string, src?: string) {
       isDefault ? DEFAULT_EXPORT : `const ${componentName} =`
     } wrapInClientProxy({ name: '${componentName}', id: '${getComponentId(
       filepath,
-    )}', component: allImports['${key}'], named: ${
+    )}', value: allImports['${key}'], isDefault: ${
       // eslint-disable-next-line react-internal/safe-string-coercion
-      String(!isDefault)
+      String(isDefault)
     } });\n`;
   });
 

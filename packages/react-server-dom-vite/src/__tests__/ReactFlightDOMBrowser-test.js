@@ -48,10 +48,10 @@ describe('ReactFlightDOMBrowser', () => {
       });
 
     return ClientProxy.wrapInClientProxy({
-      component: moduleExport,
+      value: moduleExport,
       id: idx,
       name: moduleExport.name || 'MyComponent',
-      named: false,
+      isDefault: true,
     });
   }
 
