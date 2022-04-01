@@ -38,7 +38,7 @@ export type {
   ModuleMetaData,
 } from 'ReactFlightDOMRelayServerIntegration';
 
-export function getModuleReference(reference: any): Object | undefined {
+export function getModuleReference(reference: any): ?Object {
   return reference instanceof JSResourceReference ? reference : undefined;
 }
 

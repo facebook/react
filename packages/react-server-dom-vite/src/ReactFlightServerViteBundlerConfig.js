@@ -29,7 +29,7 @@ export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
   return reference.filepath + '#' + reference.name;
 }
 
-export function getModuleReference(reference: any): Object | undefined {
+export function getModuleReference(reference: any): ?Object {
   /*global globalThis*/
   if (typeof reference === 'string')
     return globalThis.__STRING_REFERENCE_INDEX[reference];

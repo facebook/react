@@ -7,11 +7,11 @@
  * @flow
  */
 
+/* eslint-disable no-undef */
+
 import {useState} from 'react';
 
 declare var globalThis: any;
-// eslint-disable-next-line no-unused-vars
-/*global globalThis*/
 
 type ClientProxy = {
   id: string,
