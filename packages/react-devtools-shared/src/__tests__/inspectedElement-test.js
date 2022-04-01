@@ -2145,7 +2145,7 @@ describe('InspectedElement', () => {
     expect(value).toBe(null);
 
     const error = errorBoundaryInstance.state.error;
-    expect(error.message).toBe('Expected');
+    expect(error.message).toBe('Error rendering inspected component');
     expect(error.stack).toContain('inspectHooksOfFiber');
   });
 
