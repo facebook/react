@@ -921,6 +921,8 @@ describe('ReactHooksInspectionIntegration', () => {
     const renderer = ReactTestRenderer.create(<Foo />);
     const childFiber = renderer.root._currentFiber();
 
+    let didCatch = false;
+
     try {
       ReactDebugTools.inspectHooksOfFiber(childFiber, FakeDispatcherRef);
     } catch (error) {
@@ -934,7 +936,11 @@ describe('ReactHooksInspectionIntegration', () => {
           '3. You might have more than one copy of React in the same app\n' +
           'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
       );
+      didCatch = true;
     }
+    // avoid false positive if no error was thrown at all
+    expect(didCatch).toBe(true);
+
     expect(getterCalls).toBe(1);
     expect(setterCalls).toHaveLength(2);
     expect(setterCalls[0]).not.toBe(initial);

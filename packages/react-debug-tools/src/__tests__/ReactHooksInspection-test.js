@@ -276,6 +276,7 @@ describe('ReactHooksInspection', () => {
       },
     };
 
+    let didCatch = false;
     expect(() => {
       // mock the Error constructor to check the internal of the error instance
       try {
@@ -288,6 +289,7 @@ describe('ReactHooksInspection', () => {
           "Cannot read property 'useState' of null",
         );
       }
+      didCatch = true;
     }).toErrorDev(
       'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
         ' one of the following reasons:\n' +
@@ -297,6 +299,8 @@ describe('ReactHooksInspection', () => {
         'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
       {withoutStack: true},
     );
+    // avoid false positive if no error was thrown at all
+    expect(didCatch).toBe(true);
 
     expect(getterCalls).toBe(1);
     expect(setterCalls).toHaveLength(2);
