@@ -924,10 +924,7 @@ describe('ReactHooksInspectionIntegration', () => {
     try {
       ReactDebugTools.inspectHooksOfFiber(childFiber, FakeDispatcherRef);
     } catch (error) {
-      // first argument is the error message
       expect(error.message).toBe('Error rendering inspected component');
-      // The second arg is the options object with the cause, which is the
-      // original error
       expect(error.cause).toBeInstanceOf(Error);
       expect(error.cause.message).toBe(
         'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +

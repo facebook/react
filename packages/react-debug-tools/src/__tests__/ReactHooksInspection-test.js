@@ -281,10 +281,8 @@ describe('ReactHooksInspection', () => {
       try {
         ReactDebugTools.inspectHooks(Foo, {}, FakeDispatcherRef);
       } catch (error) {
-        // first argument is the error message
         expect(error.message).toBe('Error rendering inspected component');
-        // The second arg is the options object with the cause, which is the
-        // original error
+        // error.cause is the original error
         expect(error.cause).toBeInstanceOf(Error);
         expect(error.cause.message).toBe(
           "Cannot read property 'useState' of null",
