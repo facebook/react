@@ -537,7 +537,7 @@ export function resolveModelToJSON(
     return null;
   }
 
-  const moduleReference: ModuleReference<any> = getModuleReference(value);
+  const moduleReference: ?ModuleReference<any> = getModuleReference(value);
   if (moduleReference) {
     const moduleKey: ModuleKey = getModuleKey(moduleReference);
     const writtenModules = request.writtenModules;

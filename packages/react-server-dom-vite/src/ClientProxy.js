@@ -7,8 +7,6 @@
  * @flow
  */
 
-/* eslint-disable no-undef */
-
 import {useState} from 'react';
 
 declare var globalThis: any;
