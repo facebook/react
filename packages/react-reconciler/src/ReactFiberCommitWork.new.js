@@ -2250,22 +2250,25 @@ function commitMutationEffectsOnFiber(
     }
   }
 
-  if (flags & Visibility) {
-    switch (finishedWork.tag) {
-      case SuspenseComponent: {
-        const newState: OffscreenState | null = finishedWork.memoizedState;
+  switch (finishedWork.tag) {
+    case SuspenseComponent: {
+      const offscreenFiber: Fiber = (finishedWork.child: any);
+      if (offscreenFiber.flags & Visibility) {
+        const newState: OffscreenState | null = offscreenFiber.memoizedState;
         const isHidden = newState !== null;
         if (isHidden) {
-          const current = finishedWork.alternate;
+          const current = offscreenFiber.alternate;
           const wasHidden = current !== null && current.memoizedState !== null;
           if (!wasHidden) {
             // TODO: Move to passive phase
             markCommitTimeOfFallback();
           }
         }
-        break;
       }
-      case OffscreenComponent: {
+      break;
+    }
+    case OffscreenComponent: {
+      if (flags & Visibility) {
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
         const current = finishedWork.alternate;
@@ -2301,7 +2304,6 @@ function commitMutationEffectsOnFiber(
       }
     }
   }
-
   // The following switch statement is only concerned about placement,
   // updates, and deletions. To avoid needing to add a case for every possible
   // bitmap value, we remove the secondary effects from the effect tag and

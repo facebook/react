@@ -285,6 +285,57 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AsyncAfter SuspenseSibling');
   });
 
+  it('throttles fallback committing globally', () => {
+    function Foo() {
+      Scheduler.unstable_yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text="A" ms={200} />
+          <Suspense fallback={<Text text="Loading more..." />}>
+            <AsyncText text="B" ms={300} />
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    // throttling works on fallback committing
+    // here advance some time to skip the first threshold
+    jest.advanceTimersByTime(600);
+    Scheduler.unstable_advanceTime(600);
+
+    const root = ReactTestRenderer.create(<Foo />, {
+      unstable_isConcurrent: true,
+    });
+
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading more...',
+      'Loading...',
+    ]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // resolve A
+    jest.advanceTimersByTime(200);
+    Scheduler.unstable_advanceTime(200);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'Loading more...']);
+
+    // should still renders previous fallback
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // resolve B
+    jest.advanceTimersByTime(100);
+    Scheduler.unstable_advanceTime(100);
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+
+    // before commiting we still shows previous fallback
+    expect(root).toMatchRenderedOutput('Loading...');
+    expect(Scheduler).toFlushAndYield(['A', 'B']);
+    expect(root).toMatchRenderedOutput('AB');
+  });
+
   // @gate !enableSyncDefaultUpdates
   it(
     'interrupts current render when something suspends with a ' +
