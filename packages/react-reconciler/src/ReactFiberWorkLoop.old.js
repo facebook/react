@@ -2322,27 +2322,6 @@ function commitRootImpl(
   // If layout work was scheduled, flush it now.
   flushSyncCallbacks();
 
-  if (enableTransitionTracing) {
-    const prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
-    const prevRootTransitionCallbacks = root.transitionCallbacks;
-    if (
-      prevPendingTransitionCallbacks !== null &&
-      prevRootTransitionCallbacks !== null
-    ) {
-      // TODO(luna) Refactor this code into the Host Config
-      const endTime = now();
-      currentPendingTransitionCallbacks = null;
-
-      scheduleCallback(IdleSchedulerPriority, () =>
-        processTransitionCallbacks(
-          prevPendingTransitionCallbacks,
-          endTime,
-          prevRootTransitionCallbacks,
-        ),
-      );
-    }
-  }
-
   if (__DEV__) {
     if (enableDebugTracing) {
       logCommitStopped();
@@ -2457,7 +2436,7 @@ function flushPassiveEffectsImpl() {
   executionContext |= CommitContext;
 
   commitPassiveUnmountEffects(root.current);
-  commitPassiveMountEffects(root, root.current);
+  commitPassiveMountEffects(root, root.current, lanes);
 
   // TODO: Move to commitPassiveMountEffects
   if (enableProfilerTimer && enableProfilerCommitHooks) {
@@ -2486,6 +2465,34 @@ function flushPassiveEffectsImpl() {
   executionContext = prevExecutionContext;
 
   flushSyncCallbacks();
+
+  if (enableTransitionTracing) {
+    const prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
+    const prevRootTransitionCallbacks = root.transitionCallbacks;
+    if (
+      prevPendingTransitionCallbacks !== null &&
+      prevRootTransitionCallbacks !== null
+    ) {
+      // TODO(luna) Refactor this code into the Host Config
+      // TODO(luna) The end time here is not necessarily accurate
+      // because passive effects could be called before paint
+      // (synchronously) or after paint (normally). We need
+      // to come up with a way to get the correct end time for both cases.
+      // One solution is in the host config, if the passive effects
+      // have not yet been run, make a call to flush the passive effects
+      // right after paint.
+      const endTime = now();
+      currentPendingTransitionCallbacks = null;
+
+      scheduleCallback(IdleSchedulerPriority, () =>
+        processTransitionCallbacks(
+          prevPendingTransitionCallbacks,
+          endTime,
+          prevRootTransitionCallbacks,
+        ),
+      );
+    }
+  }
 
   if (__DEV__) {
     // If additional passive effects were scheduled, increment a counter. If this

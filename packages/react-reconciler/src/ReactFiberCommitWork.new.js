@@ -2227,32 +2227,6 @@ function commitMutationEffectsOnFiber(
   // because of the shared reconciliation logic below.
   const flags = finishedWork.flags;
 
-  if (enableTransitionTracing) {
-    switch (finishedWork.tag) {
-      case HostRoot: {
-        const state = finishedWork.memoizedState;
-        const transitions = state.transitions;
-        if (transitions !== null) {
-          transitions.forEach(transition => {
-            // TODO(luna) Do we want to log TransitionStart in the startTransition callback instead?
-            addTransitionStartCallbackToPendingTransition({
-              transitionName: transition.name,
-              startTime: transition.startTime,
-            });
-
-            addTransitionCompleteCallbackToPendingTransition({
-              transitionName: transition.name,
-              startTime: transition.startTime,
-            });
-          });
-
-          clearTransitionsForLanes(root, lanes);
-          state.transitions = null;
-        }
-      }
-    }
-  }
-
   if (flags & ContentReset) {
     commitResetTextContent(finishedWork);
   }
@@ -2639,12 +2613,17 @@ function reappearLayoutEffects_complete(subtreeRoot: Fiber) {
 export function commitPassiveMountEffects(
   root: FiberRoot,
   finishedWork: Fiber,
+  committedLanes: Lanes,
 ): void {
   nextEffect = finishedWork;
-  commitPassiveMountEffects_begin(finishedWork, root);
+  commitPassiveMountEffects_begin(finishedWork, root, committedLanes);
 }
 
-function commitPassiveMountEffects_begin(subtreeRoot: Fiber, root: FiberRoot) {
+function commitPassiveMountEffects_begin(
+  subtreeRoot: Fiber,
+  root: FiberRoot,
+  committedLanes: Lanes,
+) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
     const firstChild = fiber.child;
@@ -2652,7 +2631,7 @@ function commitPassiveMountEffects_begin(subtreeRoot: Fiber, root: FiberRoot) {
       ensureCorrectReturnPointer(firstChild, fiber);
       nextEffect = firstChild;
     } else {
-      commitPassiveMountEffects_complete(subtreeRoot, root);
+      commitPassiveMountEffects_complete(subtreeRoot, root, committedLanes);
     }
   }
 }
@@ -2660,13 +2639,15 @@ function commitPassiveMountEffects_begin(subtreeRoot: Fiber, root: FiberRoot) {
 function commitPassiveMountEffects_complete(
   subtreeRoot: Fiber,
   root: FiberRoot,
+  committedLanes: Lanes,
 ) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
+
     if ((fiber.flags & Passive) !== NoFlags) {
       setCurrentDebugFiberInDEV(fiber);
       try {
-        commitPassiveMountOnFiber(root, fiber);
+        commitPassiveMountOnFiber(root, fiber, committedLanes);
       } catch (error) {
         reportUncaughtErrorInDEV(error);
         captureCommitPhaseError(fiber, fiber.return, error);
@@ -2693,6 +2674,7 @@ function commitPassiveMountEffects_complete(
 function commitPassiveMountOnFiber(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
+  committedLanes: Lanes,
 ): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -2732,6 +2714,27 @@ function commitPassiveMountOnFiber(
           if (previousCache != null) {
             releaseCache(previousCache);
           }
+        }
+      }
+
+      if (enableTransitionTracing) {
+        const transitions = finishedWork.memoizedState.transitions;
+        if (transitions !== null) {
+          transitions.forEach(transition => {
+            // TODO(luna) Do we want to log TransitionStart in the startTransition callback instead?
+            addTransitionStartCallbackToPendingTransition({
+              transitionName: transition.name,
+              startTime: transition.startTime,
+            });
+
+            addTransitionCompleteCallbackToPendingTransition({
+              transitionName: transition.name,
+              startTime: transition.startTime,
+            });
+          });
+
+          clearTransitionsForLanes(finishedRoot, committedLanes);
+          finishedWork.memoizedState.transitions = null;
         }
       }
       break;
