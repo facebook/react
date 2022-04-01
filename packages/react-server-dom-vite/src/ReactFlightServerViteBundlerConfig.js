@@ -7,6 +7,8 @@
  * @flow
  */
 
+declare var globalThis: any;
+
 export type BundlerConfig = {};
 
 // eslint-disable-next-line no-unused-vars
@@ -30,7 +32,6 @@ export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
 }
 
 export function getModuleReference(reference: any): ?Object {
-  /*global globalThis*/
   if (typeof reference === 'string')
     return globalThis.__STRING_REFERENCE_INDEX[reference];
 

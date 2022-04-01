@@ -15,7 +15,7 @@ type ClientProxy = {
   id: string,
   name: string,
   named: boolean,
-  component: mixed,
+  component: any,
 };
 
 // Store of components discovered during RSC to load
