@@ -920,16 +920,26 @@ describe('ReactHooksInspectionIntegration', () => {
 
     const renderer = ReactTestRenderer.create(<Foo />);
     const childFiber = renderer.root._currentFiber();
-    expect(() => {
+
+    let didCatch = false;
+
+    try {
       ReactDebugTools.inspectHooksOfFiber(childFiber, FakeDispatcherRef);
-    }).toThrow(
-      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
-        ' one of the following reasons:\n' +
-        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-        '2. You might be breaking the Rules of Hooks\n' +
-        '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
-    );
+    } catch (error) {
+      expect(error.message).toBe('Error rendering inspected component');
+      expect(error.cause).toBeInstanceOf(Error);
+      expect(error.cause.message).toBe(
+        'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+          ' one of the following reasons:\n' +
+          '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+          '2. You might be breaking the Rules of Hooks\n' +
+          '3. You might have more than one copy of React in the same app\n' +
+          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+      );
+      didCatch = true;
+    }
+    // avoid false positive if no error was thrown at all
+    expect(didCatch).toBe(true);
 
     expect(getterCalls).toBe(1);
     expect(setterCalls).toHaveLength(2);
