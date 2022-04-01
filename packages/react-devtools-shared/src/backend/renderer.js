@@ -3608,7 +3608,7 @@ export function attach(
       mostRecentlyInspectedElement = inspectElementRaw(id);
     } catch (error) {
       // the error name is synced with ReactDebugHooks
-      if (error.name === 'ReactDebugToolsRenderFunctionError') {
+      if (error.name === 'ReactDebugToolsRenderError') {
         let message = 'Error rendering inspected element.';
         let stack;
         // Log error & cause for user to debug
