@@ -15,7 +15,7 @@ import type {
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent.old';
-import type {Transitions} from './ReactFiberTracingMarkerComponent.old';
+import type {Transition} from './ReactFiberTracingMarkerComponent.old';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.old';
@@ -42,7 +42,7 @@ export type RootState = {
   element: any,
   isDehydrated: boolean,
   cache: Cache,
-  transitions: Transitions | null,
+  transitions: Array<Transition> | null,
 };
 
 function FiberRootNode(

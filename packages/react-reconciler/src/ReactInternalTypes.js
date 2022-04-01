@@ -26,7 +26,7 @@ import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
-import type {Transitions} from './ReactFiberTracingMarkerComponent.new';
+import type {Transition} from './ReactFiberTracingMarkerComponent.new';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -320,7 +320,7 @@ export type TransitionTracingCallbacks = {
 // The following fields are only used in transition tracing in Profile builds
 type TransitionTracingOnlyFiberRootProperties = {|
   transitionCallbacks: null | TransitionTracingCallbacks,
-  transitionLanes: Array<Transitions>,
+  transitionLanes: Array<Array<Transition> | null>,
 |};
 
 // Exported FiberRoot type includes all properties,
