@@ -34,8 +34,6 @@ export type BatchConfigTransition = {
   _updatedFibers?: Set<Fiber>,
 };
 
-export type Transitions = Array<Transition> | null;
-
 export type TransitionCallback = 0 | 1;
 
 export const TransitionStart = 0;
