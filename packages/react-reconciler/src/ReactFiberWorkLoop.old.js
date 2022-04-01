@@ -132,7 +132,7 @@ import {
   pickArbitraryLane,
   includesNonIdleWork,
   includesOnlyRetries,
-  includesOnlyTransitions,
+  includesOnlyNonUrgentLanes,
   includesBlockingLane,
   includesExpiredLane,
   getNextLanes,
@@ -1110,7 +1110,7 @@ function finishConcurrentRender(root, exitStatus, lanes) {
     case RootSuspendedWithDelay: {
       markRootSuspended(root, lanes);
 
-      if (includesOnlyTransitions(lanes)) {
+      if (includesOnlyNonUrgentLanes(lanes)) {
         // This is a transition, so we should exit without committing a
         // placeholder and without scheduling a timeout. Delay indefinitely
         // until we receive more data.
