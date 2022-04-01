@@ -2247,14 +2247,11 @@ describe('ReactDOMFizzServer', () => {
       );
     }
     await act(async () => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-        <App fallbackText="Loading..." />,
-        {
-          onError(error) {
-            Scheduler.unstable_yieldValue('[s!] ' + error.message);
-          },
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        onError(error) {
+          Scheduler.unstable_yieldValue('[s!] ' + error.message);
         },
-      );
+      });
       pipe(writable);
     });
     expect(Scheduler).toHaveYielded(['[s!] Oops.']);
@@ -2301,6 +2298,102 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
   });
+
+  // @gate experimental
+  it(
+    'does not recreate the fallback if server errors and hydration suspends ' +
+      'and root receives a transition',
+    async () => {
+      let isClient = false;
+
+      function Child({color}) {
+        if (isClient) {
+          readText('Yay!');
+        } else {
+          throw Error('Oops.');
+        }
+        Scheduler.unstable_yieldValue('Yay! (' + color + ')');
+        return 'Yay! (' + color + ')';
+      }
+
+      const fallbackRef = React.createRef();
+      function App({color}) {
+        return (
+          <div>
+            <Suspense fallback={<p ref={fallbackRef}>Loading...</p>}>
+              <span>
+                <Child color={color} />
+              </span>
+            </Suspense>
+          </div>
+        );
+      }
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <App color="red" />,
+          {
+            onError(error) {
+              Scheduler.unstable_yieldValue('[s!] ' + error.message);
+            },
+          },
+        );
+        pipe(writable);
+      });
+      expect(Scheduler).toHaveYielded(['[s!] Oops.']);
+
+      // The server could not complete this boundary, so we'll retry on the client.
+      const serverFallback = container.getElementsByTagName('p')[0];
+      expect(serverFallback.innerHTML).toBe('Loading...');
+
+      // Hydrate the tree. This will suspend.
+      isClient = true;
+      const root = ReactDOMClient.hydrateRoot(container, <App color="red" />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue('[c!] ' + error.message);
+        },
+      });
+      // This should not report any errors yet.
+      expect(Scheduler).toFlushAndYield([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <p>Loading...</p>
+        </div>,
+      );
+
+      // Normally, hydrating after server error would force a clean client render.
+      // However, it suspended so at best we'd only get the same fallback anyway.
+      // We don't want to recreate the same fallback in the DOM again because
+      // that's extra work and would restart animations etc. Check we don't do that.
+      const clientFallback = container.getElementsByTagName('p')[0];
+      expect(serverFallback).toBe(clientFallback);
+
+      // Transition updates shouldn't recreate the fallback either.
+      React.startTransition(() => {
+        root.render(<App color="blue" />);
+      });
+      Scheduler.unstable_flushAll();
+      jest.runAllTimers();
+      const clientFallback2 = container.getElementsByTagName('p')[0];
+      expect(clientFallback2).toBe(serverFallback);
+
+      // When we're able to fully hydrate, we expect a clean client render.
+      await act(async () => {
+        resolveText('Yay!');
+      });
+      expect(Scheduler).toFlushAndYield([
+        'Yay! (red)',
+        '[c!] The server could not finish this Suspense boundary, ' +
+          'likely due to an error during server rendering. ' +
+          'Switched to client rendering.',
+        'Yay! (blue)',
+      ]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <span>Yay! (blue)</span>
+        </div>,
+      );
+    },
+  );
 
   // @gate experimental
   it(
