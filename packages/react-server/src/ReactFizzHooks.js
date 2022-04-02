@@ -125,10 +125,9 @@ function areHookInputsEqual(
     }
   }
   for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
-    if (is(nextDeps[i], prevDeps[i])) {
-      continue;
+    if (!is(nextDeps[i], prevDeps[i])) {
+      return false;
     }
-    return false;
   }
   return true;
 }
