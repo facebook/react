@@ -898,10 +898,19 @@ const tests = {
           const local1 = 42;
           const local2 = '42';
           const local3 = null;
+          const local4 = false;
+          const local5 = undefined;
+          const local6 = Symbol(42);
+          const local7 = BigInt(42);
+
           useEffect(() => {
             console.log(local1);
             console.log(local2);
             console.log(local3);
+            console.log(local4);
+            console.log(local5);
+            console.log(local6);
+            console.log(local7);
           }, []);
         }
       `,
@@ -4646,11 +4655,20 @@ const tests = {
           const local2 = '42';
           const local3 = null;
           const local4 = {};
+          const local5 = false;
+          const local6 = undefined;
+          const local7 = Symbol(42);
+          const local8 = BigInt(42);
+
           useEffect(() => {
             console.log(local1);
             console.log(local2);
             console.log(local3);
             console.log(local4);
+            console.log(local5);
+            console.log(local6);
+            console.log(local7);
+            console.log(local8);
           }, [local1, local3]);
         }
       `,
@@ -4669,11 +4687,20 @@ const tests = {
                   const local2 = '42';
                   const local3 = null;
                   const local4 = {};
+                  const local5 = false;
+                  const local6 = undefined;
+                  const local7 = Symbol(42);
+                  const local8 = BigInt(42);
+
                   useEffect(() => {
                     console.log(local1);
                     console.log(local2);
                     console.log(local3);
                     console.log(local4);
+                    console.log(local5);
+                    console.log(local6);
+                    console.log(local7);
+                    console.log(local8);
                   }, [local1, local3, local4]);
                 }
               `,

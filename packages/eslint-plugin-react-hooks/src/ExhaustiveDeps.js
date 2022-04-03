@@ -190,13 +190,8 @@ export default {
             return false;
           }
         }
-        if (
-          declaration.kind === 'const' &&
-          init.type === 'Literal' &&
-          (typeof init.value === 'string' ||
-            typeof init.value === 'number' ||
-            init.value === null)
-        ) {
+
+        if (isDeclaredConst(def) && isPrimitiveValue(def)) {
           // Definitely stable
           return true;
         }
@@ -1811,4 +1806,37 @@ function isSameIdentifier(a, b) {
 
 function isAncestorNodeOf(a, b) {
   return a.range[0] <= b.range[0] && a.range[1] >= b.range[1];
+}
+
+function isDeclaredConst(def) {
+  const declaration = def.node.parent;
+
+  return declaration.kind === 'const';
+}
+
+function isPrimitiveValue(def) {
+  const init = def.node.init;
+
+  if (
+    init.type === 'Literal' &&
+    (typeof init.value === 'string' ||
+      typeof init.value === 'number' ||
+      typeof init.value === 'boolean' ||
+      init.value === null)
+  ) {
+    return true;
+  }
+
+  if (init.type === 'Identifier' && init.name === 'undefined') {
+    return true;
+  }
+
+  if (
+    init.type === 'CallExpression' &&
+    (init.callee.name === 'Symbol' || init.callee.name === 'BigInt')
+  ) {
+    return true;
+  }
+
+  return false;
 }
