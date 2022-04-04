@@ -2903,4 +2903,94 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
   });
+
+  // @gate experimental
+  it('does not suppress insertions with suppressHydrationWarning', async () => {
+    function App({isClient}) {
+      return (
+        <div suppressHydrationWarning={true}>
+          <p>Client and server</p>
+          {isClient && <p>Client only</p>}
+        </div>
+      );
+    }
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App isClient={false} />,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>Client and server</p>
+      </div>,
+    );
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
+    expect(() => {
+      expect(Scheduler).toFlushAndYield([
+        'Hydration failed because the initial UI does not match what was rendered on the server.',
+        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+      ]);
+    }).toErrorDev(
+      [
+        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+      ],
+      {withoutStack: true},
+    );
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>Client and server</p>
+        <p>Client only</p>
+      </div>,
+    );
+  });
+
+  // @gate experimental
+  it('does not suppress deletions with suppressHydrationWarning', async () => {
+    function App({isClient}) {
+      return (
+        <div suppressHydrationWarning={true}>
+          <p>Client and server</p>
+          {!isClient && <p>Server only</p>}
+        </div>
+      );
+    }
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App isClient={false} />,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>Client and server</p>
+        <p>Server only</p>
+      </div>,
+    );
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
+    expect(() => {
+      expect(Scheduler).toFlushAndYield([
+        'Hydration failed because the initial UI does not match what was rendered on the server.',
+        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+      ]);
+    }).toErrorDev(
+      [
+        'An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+      ],
+      {withoutStack: true},
+    );
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>Client and server</p>
+      </div>,
+    );
+  });
 });
