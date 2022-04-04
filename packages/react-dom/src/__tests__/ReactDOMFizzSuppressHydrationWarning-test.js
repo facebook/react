@@ -22,7 +22,7 @@ let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
 
-describe('ReactDOMFizzServer', () => {
+describe('ReactDOMFizzServerHydrationWarning', () => {
   beforeEach(() => {
     jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
