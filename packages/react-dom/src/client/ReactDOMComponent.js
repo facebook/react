@@ -91,7 +91,6 @@ const STYLE = 'style';
 const HTML = '__html';
 
 let warnedUnknownTags;
-let suppressHydrationWarning;
 
 let validatePropertiesInDevelopment;
 let warnForPropDifference;
@@ -875,7 +874,6 @@ export function diffHydratedProperties(
   let extraAttributeNames: Set<string>;
 
   if (__DEV__) {
-    suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
     isCustomComponentTag = isCustomComponent(tag, rawProps);
     validatePropertiesInDevelopment(tag, rawProps);
   }
@@ -984,7 +982,7 @@ export function diffHydratedProperties(
       // TODO: Should we use domElement.firstChild.nodeValue to compare?
       if (typeof nextProp === 'string') {
         if (domElement.textContent !== nextProp) {
-          if (!suppressHydrationWarning) {
+          if (rawProps[SUPPRESS_HYDRATION_WARNING] !== true) {
             checkForUnmatchedText(
               domElement.textContent,
               nextProp,
@@ -996,7 +994,7 @@ export function diffHydratedProperties(
         }
       } else if (typeof nextProp === 'number') {
         if (domElement.textContent !== '' + nextProp) {
-          if (!suppressHydrationWarning) {
+          if (rawProps[SUPPRESS_HYDRATION_WARNING] !== true) {
             checkForUnmatchedText(
               domElement.textContent,
               nextProp,
@@ -1028,7 +1026,7 @@ export function diffHydratedProperties(
         isCustomComponentTag && enableCustomElementPropertySupport
           ? null
           : getPropertyInfo(propKey);
-      if (suppressHydrationWarning) {
+      if (rawProps[SUPPRESS_HYDRATION_WARNING] === true) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
         propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
@@ -1150,8 +1148,11 @@ export function diffHydratedProperties(
 
   if (__DEV__) {
     if (shouldWarnDev) {
-      // $FlowFixMe - Should be inferred as not undefined.
-      if (extraAttributeNames.size > 0 && !suppressHydrationWarning) {
+      if (
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.size > 0 &&
+        rawProps[SUPPRESS_HYDRATION_WARNING] !== true
+      ) {
         // $FlowFixMe - Should be inferred as not undefined.
         warnForExtraAttributes(extraAttributeNames);
       }

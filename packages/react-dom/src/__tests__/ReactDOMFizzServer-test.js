@@ -2811,4 +2811,96 @@ describe('ReactDOMFizzServer', () => {
       </ul>,
     );
   });
+
+  // @gate experimental
+  it('suppresses and fixes text mismatches with suppressHydrationWarning', async () => {
+    function App({isClient}) {
+      return (
+        <div>
+          <span
+            suppressHydrationWarning={true}
+            data-attr={isClient ? 'client-attr' : 'server-attr'}>
+            {isClient ? 'Client Text' : 'Server Text'}
+          </span>
+          <span suppressHydrationWarning={true}>{isClient ? 2 : 1}</span>
+          <span suppressHydrationWarning={true}>
+            hello,{isClient ? 'client' : 'server'}
+          </span>
+        </div>
+      );
+    }
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App isClient={false} />,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span data-attr="server-attr">Server Text</span>
+        <span>1</span>
+        <span>
+          {'hello,'}
+          {'server'}
+        </span>
+      </div>,
+    );
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        // Don't miss a hydration error. There should be none.
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
+    expect(Scheduler).toFlushAndYield([]);
+    // The text mismatch should be *silently* fixed. Even in production.
+    // The attribute mismatch should be ignored and not fixed.
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span data-attr="server-attr">Client Text</span>
+        <span>2</span>
+        <span>
+          {'hello,'}
+          {'client'}
+        </span>
+      </div>,
+    );
+  });
+
+  // @gate experimental
+  it('suppresses and does not fix html mismatches with suppressHydrationWarning', async () => {
+    function App({isClient}) {
+      return (
+        <div>
+          <p
+            suppressHydrationWarning={true}
+            dangerouslySetInnerHTML={{
+              __html: isClient ? 'Client HTML' : 'Server HTML',
+            }}
+          />
+        </div>
+      );
+    }
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App isClient={false} />,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>Server HTML</p>
+      </div>,
+    );
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
+    expect(Scheduler).toFlushAndYield([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>Server HTML</p>
+      </div>,
+    );
+  });
 });
