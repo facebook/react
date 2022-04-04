@@ -1348,13 +1348,17 @@ function formatDiffForExtraServerNode(parentNode, child) {
   return formatElement(parentNode, '  ', formattedChildren);
 }
 
-function formatDiffForExtraClientNode(parentNode, tag, props) {
-  // TODO
+function formatDiffForExtraClientNode(parentNode, tag, props, mismatchNode) {
   let formattedSibling = null;
-  // const prevSibling = findPreviousSiblingForDiff(child);
-  // if (prevSibling !== null) {
-  //   formattedSibling = formatNode(prevSibling, '    ');
-  // }
+  let prevSibling = null;
+  if (mismatchNode !== null) {
+    prevSibling = findPreviousSiblingForDiff(mismatchNode);
+  } else if (parentNode.lastChild !== null) {
+    prevSibling = parentNode.lastChild;
+  }
+  if (prevSibling !== null) {
+    formattedSibling = formatNode(prevSibling, '    ');
+  }
   let formattedChildren = '';
   if (formattedSibling !== null) {
     if (findPreviousSiblingForDiff(prevSibling) !== null) {
@@ -1364,12 +1368,11 @@ function formatDiffForExtraClientNode(parentNode, tag, props) {
   }
   formattedChildren += formatReactElement(tag, props, '+   ');
   formattedChildren += ' <-- client';
-  // if (findNextSiblingForDiff(child) !== null) {
-  //   formattedChildren += '\n    ...';
-  // }
+  if (mismatchNode !== null) {
+    formattedChildren += '\n    ...';
+  }
   return formatElement(parentNode, '  ', formattedChildren);
 }
-
 
 export function warnForDeletedHydratableElement(
   parentNode: Element | Document | DocumentFragment,
@@ -1411,6 +1414,7 @@ export function warnForInsertedHydratedElement(
   parentNode: Element | Document | DocumentFragment,
   tag: string,
   props: Object,
+  mismatchInstance,
 ) {
   if (__DEV__) {
     if (didWarnInvalidHydration) {
@@ -1421,7 +1425,7 @@ export function warnForInsertedHydratedElement(
       'The content rendered by the server and the client did not match ' +
         'because the client has rendered an extra element. ' +
         'The mismatch occurred inside of this parent:\n\n%s',
-      formatDiffForExtraClientNode(parentNode, tag, props),
+      formatDiffForExtraClientNode(parentNode, tag, props, mismatchInstance),
     );
   }
 }

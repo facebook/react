@@ -1020,9 +1020,15 @@ export function didNotFindHydratableInstanceWithinContainer(
   parentContainer: Container,
   type: string,
   props: Props,
+  lastHydratedChild,
 ) {
   if (__DEV__) {
-    warnForInsertedHydratedElement(parentContainer, type, props);
+    warnForInsertedHydratedElement(
+      parentContainer,
+      type,
+      props,
+      lastHydratedChild,
+    );
   }
 }
 
@@ -1047,12 +1053,18 @@ export function didNotFindHydratableInstanceWithinSuspenseInstance(
   parentInstance: SuspenseInstance,
   type: string,
   props: Props,
+  lastHydratedChild,
 ) {
   if (__DEV__) {
     // $FlowFixMe: Only Element or Document can be parent nodes.
     const parentNode: Element | Document | null = parentInstance.parentNode;
     if (parentNode !== null)
-      warnForInsertedHydratedElement(parentNode, type, props);
+      warnForInsertedHydratedElement(
+        parentNode,
+        type,
+        props,
+        lastHydratedChild,
+      );
   }
 }
 
@@ -1083,10 +1095,16 @@ export function didNotFindHydratableInstance(
   type: string,
   props: Props,
   isConcurrentMode: boolean,
+  lastHydratedChild,
 ) {
   if (__DEV__) {
     if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-      warnForInsertedHydratedElement(parentInstance, type, props);
+      warnForInsertedHydratedElement(
+        parentInstance,
+        type,
+        props,
+        lastHydratedChild,
+      );
     }
   }
 }

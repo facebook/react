@@ -243,11 +243,17 @@ describe('ReactDOMServerHydration', () => {
   describe('extra nodes on the client', () => {
     describe('extra elements on the client', () => {
       // @gate __DEV__
-      fit('warns when client renders an extra element as only child', () => {
+      it('warns when client renders an extra element as only child', () => {
         function Mismatch({isClient}) {
           return (
-            <div className="parent" style={{ opacity: 1}} onClick={() => {}}>
-              {isClient && <main className="only" style={{ opacity: 1 }} onClick={() => {}} />}
+            <div className="parent" style={{opacity: 1}} onClick={() => {}}>
+              {isClient && (
+                <main
+                  className="only"
+                  style={{opacity: 1}}
+                  onClick={() => {}}
+                />
+              )}
             </div>
           );
         }
@@ -499,7 +505,7 @@ describe('ReactDOMServerHydration', () => {
       });
 
       // @gate __DEV__
-      it('warns when server renders an extra element in the beginning', () => {
+      fit('warns when server renders an extra element in the beginning', () => {
         function Mismatch({isClient}) {
           return (
             <div className="parent">

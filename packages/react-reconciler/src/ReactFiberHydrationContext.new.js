@@ -194,7 +194,11 @@ function deleteHydratableInstance(
   }
 }
 
-function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
+function warnNonhydratedInstance(
+  returnFiber: Fiber,
+  fiber: Fiber,
+  mismatchInstance,
+) {
   if (__DEV__) {
     if (didSuspend) {
       // Inside a boundary that already suspended. We're currently rendering the
@@ -214,6 +218,7 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
               parentContainer,
               type,
               props,
+              mismatchInstance,
             );
             break;
           case HostText:
@@ -249,6 +254,7 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
               props,
               // TODO: Delete this argument when we remove the legacy root API.
               isConcurrentMode,
+              mismatchInstance,
             );
             break;
           }
@@ -289,6 +295,7 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
                 parentInstance,
                 type,
                 props,
+                mismatchInstance,
               );
               break;
             case HostText:
@@ -311,9 +318,13 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
     }
   }
 }
-function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
+function insertNonHydratedInstance(
+  returnFiber: Fiber,
+  fiber: Fiber,
+  mismatchInstance,
+) {
   fiber.flags = (fiber.flags & ~Hydrating) | Placement;
-  warnNonhydratedInstance(returnFiber, fiber);
+  warnNonhydratedInstance(returnFiber, fiber, lastHydratedChild);
 }
 
 function tryHydrate(fiber, nextInstance) {
@@ -396,11 +407,11 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   let nextInstance = nextHydratableInstance;
   if (!nextInstance) {
     if (shouldClientRenderOnMismatch(fiber)) {
-      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+      warnNonhydratedInstance((hydrationParentFiber: any), fiber, nextInstance);
       throwOnHydrationMismatch(fiber);
     }
     // Nothing to hydrate. Make it an insertion.
-    insertNonHydratedInstance((hydrationParentFiber: any), fiber);
+    insertNonHydratedInstance((hydrationParentFiber: any), fiber, nextInstance);
     isHydrating = false;
     hydrationParentFiber = fiber;
     return;
@@ -408,7 +419,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   const firstAttemptedInstance = nextInstance;
   if (!tryHydrate(fiber, nextInstance)) {
     if (shouldClientRenderOnMismatch(fiber)) {
-      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+      warnNonhydratedInstance((hydrationParentFiber: any), fiber, nextInstance);
       throwOnHydrationMismatch(fiber);
     }
     // If we can't hydrate this instance let's try the next one.
@@ -418,7 +429,11 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
     const prevHydrationParentFiber: Fiber = (hydrationParentFiber: any);
     if (!nextInstance || !tryHydrate(fiber, nextInstance)) {
       // Nothing to hydrate. Make it an insertion.
-      insertNonHydratedInstance((hydrationParentFiber: any), fiber);
+      insertNonHydratedInstance(
+        (hydrationParentFiber: any),
+        fiber,
+        nextInstance,
+      );
       isHydrating = false;
       hydrationParentFiber = fiber;
       return;
