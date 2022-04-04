@@ -259,7 +259,12 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <main> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\" style=\\"opacity:1\\">
+          +   <main className=\\"only\\" style={{\\"opacity\\":1}} /> <-- client
+
+            </div>
               in main (at **)
               in div (at **)
               in Mismatch (at **)",
@@ -283,7 +288,13 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <header> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\">
+          -   <main class=\\"2\\" /> <-- server
+          +   <header className=\\"1\\" /> <-- client
+              ...
+            </div>
               in header (at **)
               in div (at **)
               in Mismatch (at **)",
@@ -307,7 +318,14 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <main> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\">
+              <header class=\\"1\\" />
+          -   <footer class=\\"3\\" /> <-- server
+          +   <main className=\\"2\\" /> <-- client
+              ...
+            </div>
               in main (at **)
               in div (at **)
               in Mismatch (at **)",
@@ -331,7 +349,14 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <footer> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\">
+              ...
+              <main class=\\"2\\" />
+          +   <footer className=\\"3\\" /> <-- client
+
+            </div>
               in footer (at **)
               in div (at **)
               in Mismatch (at **)",
@@ -354,7 +379,13 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <footer> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\">
+              one
+          +   <footer className=\\"2\\" /> <-- client
+
+            </div>
               in footer (at **)
               in div (at **)
               in Mismatch (at **)",
@@ -505,7 +536,7 @@ describe('ReactDOMServerHydration', () => {
       });
 
       // @gate __DEV__
-      fit('warns when server renders an extra element in the beginning', () => {
+      it('warns when server renders an extra element in the beginning', () => {
         function Mismatch({isClient}) {
           return (
             <div className="parent">
@@ -517,7 +548,13 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <main> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\">
+          -   <header class=\\"1\\" /> <-- server
+          +   <main className=\\"2\\" /> <-- client
+              ...
+            </div>
               in main (at **)
               in div (at **)
               in Mismatch (at **)",
@@ -542,7 +579,14 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <footer> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\">
+              <header class=\\"1\\" />
+          -   <main class=\\"2\\" /> <-- server
+          +   <footer className=\\"3\\" /> <-- client
+              ...
+            </div>
               in footer (at **)
               in div (at **)
               in Mismatch (at **)",
@@ -645,7 +689,13 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <main> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\">
+          -   first <-- server
+          +   <main className=\\"2\\" /> <-- client
+              ...
+            </div>
               in main (at **)
               in div (at **)
               in Mismatch (at **)",
@@ -670,7 +720,14 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <footer> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\">
+              <header class=\\"1\\" />
+          -   second <-- server
+          +   <footer className=\\"3\\" /> <-- client
+              ...
+            </div>
               in footer (at **)
               in div (at **)
               in Mismatch (at **)",
@@ -866,7 +923,14 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <main> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\">
+              <header class=\\"1\\" />
+          -   <footer class=\\"3\\" /> <-- server
+          +   <main className=\\"second\\" /> <-- client
+              ...
+            </div>
               in main (at **)
               in Suspense (at **)
               in div (at **)
@@ -892,7 +956,14 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <footer> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\">
+              <header class=\\"1\\" />
+          -   <main class=\\"second\\" /> <-- server
+          +   <footer className=\\"3\\" /> <-- client
+              ...
+            </div>
               in footer (at **)
               in Suspense (at **)
               in div (at **)
@@ -966,7 +1037,12 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Warning: Expected server HTML to contain a matching <header> in <div>.
+            "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+            <div class=\\"parent\\">
+          +   <header className=\\"1\\" /> <-- client
+
+            </div>
               in header (at **)
               in div (at **)
               in Mismatch (at **)",
@@ -1050,7 +1126,14 @@ describe('ReactDOMServerHydration', () => {
 
       expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
         Array [
-          "Warning: Expected server HTML to contain a matching <footer> in <div>.
+          "Warning: The content rendered by the server and the client did not match because the client has rendered an extra element. The mismatch occurred inside of this parent:
+
+          <div class=\\"parent\\">
+            ...
+            <main class=\\"2\\" />
+        +   <footer className=\\"3\\" /> <-- client
+
+          </div>
             in footer (at **)
             in Panel (at **)
             in div (at **)

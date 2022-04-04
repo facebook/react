@@ -324,7 +324,7 @@ function insertNonHydratedInstance(
   mismatchInstance,
 ) {
   fiber.flags = (fiber.flags & ~Hydrating) | Placement;
-  warnNonhydratedInstance(returnFiber, fiber, lastHydratedChild);
+  warnNonhydratedInstance(returnFiber, fiber, mismatchInstance);
 }
 
 function tryHydrate(fiber, nextInstance) {

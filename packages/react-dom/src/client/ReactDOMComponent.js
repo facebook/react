@@ -1351,25 +1351,28 @@ function formatDiffForExtraServerNode(parentNode, child) {
 function formatDiffForExtraClientNode(parentNode, tag, props, mismatchNode) {
   let formattedSibling = null;
   let prevSibling = null;
-  if (mismatchNode !== null) {
+  if (mismatchNode != null) {
     prevSibling = findPreviousSiblingForDiff(mismatchNode);
   } else if (parentNode.lastChild !== null) {
     prevSibling = parentNode.lastChild;
   }
+  let formattedChildren = '';
   if (prevSibling !== null) {
     formattedSibling = formatNode(prevSibling, '    ');
-  }
-  let formattedChildren = '';
-  if (formattedSibling !== null) {
-    if (findPreviousSiblingForDiff(prevSibling) !== null) {
-      formattedChildren += '    ...\n';
+    if (formattedSibling !== null) {
+      if (findPreviousSiblingForDiff(prevSibling) !== null) {
+        formattedChildren += '    ...\n';
+      }
+      formattedChildren += formattedSibling + '\n';
     }
-    formattedChildren += formattedSibling + '\n';
+  }
+  if (mismatchNode != null) {
+    formattedChildren += formatNode(mismatchNode, '-   ') + ' <-- server\n';
   }
   formattedChildren += formatReactElement(tag, props, '+   ');
-  formattedChildren += ' <-- client';
-  if (mismatchNode !== null) {
-    formattedChildren += '\n    ...';
+  formattedChildren += ' <-- client\n';
+  if (mismatchNode != null) {
+    formattedChildren += '    ...';
   }
   return formatElement(parentNode, '  ', formattedChildren);
 }
