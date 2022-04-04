@@ -1222,6 +1222,33 @@ function formatAttributes(element: Element): string {
   return str;
 }
 
+function formatProps(props): string {
+  let str = '';
+  let i = 0;
+  for (let prop in props) {
+    if (!props.hasOwnProperty(prop)) {
+      continue;
+    }
+    if (i > 30) {
+      str += ' ...';
+      break;
+    }
+    const attributeName = prop;
+    const value = props[prop];
+    if (value != null) {
+      // TODO: what about non-strings
+      let trimmedValue = JSON.stringify(value);
+      if (value.length > 30) {
+        trimmedValue = value.substr(0, 30) + '...';
+      }
+      // TODO: what about quotes in attr values
+      str += ' ' + attributeName + '={' + trimmedValue + '}';
+    }
+    i++;
+  }
+  return str;
+}
+
 function formatElement(element, indentation, formattedChildren) {
   let str = indentation + '<' + element.nodeName.toLowerCase();
   str += formatAttributes(element);
@@ -1236,6 +1263,18 @@ function formatElement(element, indentation, formattedChildren) {
     str += '>\n' + formattedChildren;
     str += '\n' + indentation;
     str += '</' + element.nodeName.toLowerCase() + '>';
+  }
+  return str;
+}
+
+function formatReactElement(tag, props, indentation) {
+  let str = indentation + '<' + tag.toLowerCase();
+  str += formatProps(props);
+  if (props.children != null) {
+    str += '>...';
+    str += '</' + tag.toLowerCase() + '>';
+  } else {
+    str += ' />';
   }
   return str;
 }
@@ -1303,6 +1342,29 @@ function formatDiffForExtraServerNode(parentNode, child) {
   return formatElement(parentNode, '  ', formattedChildren);
 }
 
+function formatDiffForExtraClientNode(parentNode, tag, props) {
+  // TODO
+  let formattedSibling = null;
+  // const prevSibling = findPreviousSiblingForDiff(child);
+  // if (prevSibling !== null) {
+  //   formattedSibling = formatNode(prevSibling, '    ');
+  // }
+  let formattedChildren = '';
+  if (formattedSibling !== null) {
+    if (findPreviousSiblingForDiff(prevSibling) !== null) {
+      formattedChildren += '    ...\n';
+    }
+    formattedChildren += formattedSibling + '\n';
+  }
+  formattedChildren += formatReactElement(tag, props, '+   ');
+  formattedChildren += ' <-- client';
+  // if (findNextSiblingForDiff(child) !== null) {
+  //   formattedChildren += '\n    ...';
+  // }
+  return formatElement(parentNode, '  ', formattedChildren);
+}
+
+
 export function warnForDeletedHydratableElement(
   parentNode: Element | Document | DocumentFragment,
   child: Element,
@@ -1350,9 +1412,10 @@ export function warnForInsertedHydratedElement(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'Expected server HTML to contain a matching <%s> in <%s>.',
-      tag,
-      parentNode.nodeName.toLowerCase(),
+      'The content rendered by the server and the client did not match ' +
+        'because the client has rendered an extra element. ' +
+        'The mismatch occurred inside of this parent:\n\n%s',
+      formatDiffForExtraClientNode(parentNode, tag, props),
     );
   }
 }

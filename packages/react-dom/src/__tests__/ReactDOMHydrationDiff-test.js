@@ -243,11 +243,11 @@ describe('ReactDOMServerHydration', () => {
   describe('extra nodes on the client', () => {
     describe('extra elements on the client', () => {
       // @gate __DEV__
-      it('warns when client renders an extra element as only child', () => {
+      fit('warns when client renders an extra element as only child', () => {
         function Mismatch({isClient}) {
           return (
             <div className="parent">
-              {isClient && <main className="only" />}
+              {isClient && <main className="only" style={{opacity: 1}} />}
             </div>
           );
         }
