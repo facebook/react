@@ -132,10 +132,7 @@ type SelectionInformation = {|
   selectionRange: mixed,
 |};
 
-let SUPPRESS_HYDRATION_WARNING;
-if (__DEV__) {
-  SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
-}
+const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 
 const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
