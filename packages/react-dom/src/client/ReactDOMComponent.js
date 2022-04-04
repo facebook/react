@@ -1235,14 +1235,20 @@ function formatProps(props): string {
     }
     const attributeName = prop;
     const value = props[prop];
-    if (value != null) {
-      // TODO: what about non-strings
+    if (
+      value != null &&
+      typeof value !== 'function' &&
+      typeof value !== 'symbol'
+    ) {
       let trimmedValue = JSON.stringify(value);
       if (value.length > 30) {
         trimmedValue = value.substr(0, 30) + '...';
       }
-      // TODO: what about quotes in attr values
-      str += ' ' + attributeName + '={' + trimmedValue + '}';
+      if (typeof value === 'string') {
+        str += ' ' + attributeName + '=' + trimmedValue + '';
+      } else {
+        str += ' ' + attributeName + '={' + trimmedValue + '}';
+      }
     }
     i++;
   }

@@ -246,8 +246,8 @@ describe('ReactDOMServerHydration', () => {
       fit('warns when client renders an extra element as only child', () => {
         function Mismatch({isClient}) {
           return (
-            <div className="parent">
-              {isClient && <main className="only" style={{opacity: 1}} />}
+            <div className="parent" style={{ opacity: 1}} onClick={() => {}}>
+              {isClient && <main className="only" style={{ opacity: 1 }} onClick={() => {}} />}
             </div>
           );
         }
