@@ -1686,6 +1686,73 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('B');
   });
 
+  it('does not destroy ref cleanup twice when hidden child is removed', async () => {
+    function ChildA({label}) {
+      return (
+        <span
+          ref={node => {
+            if (node) {
+              Scheduler.unstable_yieldValue('Ref mount: ' + label);
+            } else {
+              Scheduler.unstable_yieldValue('Ref unmount: ' + label);
+            }
+          }}>
+          <Text text={label} />
+        </span>
+      );
+    }
+
+    function ChildB({label}) {
+      return (
+        <span
+          ref={node => {
+            if (node) {
+              Scheduler.unstable_yieldValue('Ref mount: ' + label);
+            } else {
+              Scheduler.unstable_yieldValue('Ref unmount: ' + label);
+            }
+          }}>
+          <Text text={label} />
+        </span>
+      );
+    }
+
+    const LazyChildA = lazy(() => fakeImport(ChildA));
+    const LazyChildB = lazy(() => fakeImport(ChildB));
+
+    function Parent({swap}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          {swap ? <LazyChildB label="B" /> : <LazyChildA label="A" />}
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<Parent swap={false} />, {
+      unstable_isConcurrent: true,
+      createNodeMock() {
+        return {};
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield(['Loading...']);
+
+    await LazyChildA;
+    expect(Scheduler).toFlushAndYield(['A', 'Ref mount: A']);
+    expect(root).toMatchRenderedOutput(<span>A</span>);
+
+    // Swap the position of A and B
+    root.unstable_flushSync(() => {
+      root.update(<Parent swap={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Loading...', 'Ref unmount: A']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await LazyChildB;
+    expect(Scheduler).toFlushAndYield(['B', 'Ref mount: B']);
+    expect(root).toMatchRenderedOutput(<span>B</span>);
+  });
+
   it('does not call componentWillUnmount twice when hidden child is removed', async () => {
     class ChildA extends React.Component {
       componentDidMount() {
@@ -1789,6 +1856,76 @@ describe('ReactLazy', () => {
       root.update(<Parent swap={true} />);
     });
     expect(Scheduler).toHaveYielded(['Loading...', 'Will unmount: A']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Destroy the whole tree, including the hidden A
+    root.unstable_flushSync(() => {
+      root.update(<h1>Hello</h1>);
+    });
+    expect(Scheduler).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput(<h1>Hello</h1>);
+  });
+
+  it('does not destroy ref cleanup twice when parent suspense is removed', async () => {
+    function ChildA({label}) {
+      return (
+        <span
+          ref={node => {
+            if (node) {
+              Scheduler.unstable_yieldValue('Ref mount: ' + label);
+            } else {
+              Scheduler.unstable_yieldValue('Ref unmount: ' + label);
+            }
+          }}>
+          <Text text={label} />
+        </span>
+      );
+    }
+
+    function ChildB({label}) {
+      return (
+        <span
+          ref={node => {
+            if (node) {
+              Scheduler.unstable_yieldValue('Ref mount: ' + label);
+            } else {
+              Scheduler.unstable_yieldValue('Ref unmount: ' + label);
+            }
+          }}>
+          <Text text={label} />
+        </span>
+      );
+    }
+
+    const LazyChildA = lazy(() => fakeImport(ChildA));
+    const LazyChildB = lazy(() => fakeImport(ChildB));
+
+    function Parent({swap}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          {swap ? <LazyChildB label="B" /> : <LazyChildA label="A" />}
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<Parent swap={false} />, {
+      unstable_isConcurrent: true,
+      createNodeMock() {
+        return {};
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield(['Loading...']);
+
+    await LazyChildA;
+    expect(Scheduler).toFlushAndYield(['A', 'Ref mount: A']);
+    expect(root).toMatchRenderedOutput(<span>A</span>);
+
+    // Swap the position of A and B
+    root.unstable_flushSync(() => {
+      root.update(<Parent swap={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Loading...', 'Ref unmount: A']);
     expect(root).toMatchRenderedOutput('Loading...');
 
     // Destroy the whole tree, including the hidden A
