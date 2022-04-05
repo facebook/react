@@ -1209,6 +1209,7 @@ function commitUnmount(
   finishedRoot: FiberRoot,
   current: Fiber,
   nearestMountedAncestor: Fiber,
+  outermostHiddenFiber: Fiber | null,
 ): void {
   onCommitUnmount(current);
 
@@ -1217,60 +1218,66 @@ function commitUnmount(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
-      const updateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
-      if (updateQueue !== null) {
-        const lastEffect = updateQueue.lastEffect;
-        if (lastEffect !== null) {
-          const firstEffect = lastEffect.next;
+      if (outermostHiddenFiber === null) {
+        const updateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
+        if (updateQueue !== null) {
+          const lastEffect = updateQueue.lastEffect;
+          if (lastEffect !== null) {
+            const firstEffect = lastEffect.next;
 
-          let effect = firstEffect;
-          do {
-            const {destroy, tag} = effect;
-            if (destroy !== undefined) {
-              if ((tag & HookInsertion) !== NoHookEffect) {
-                safelyCallDestroy(current, nearestMountedAncestor, destroy);
-              } else if ((tag & HookLayout) !== NoHookEffect) {
-                if (enableSchedulingProfiler) {
-                  markComponentLayoutEffectUnmountStarted(current);
-                }
-
-                if (
-                  enableProfilerTimer &&
-                  enableProfilerCommitHooks &&
-                  current.mode & ProfileMode
-                ) {
-                  startLayoutEffectTimer();
+            let effect = firstEffect;
+            do {
+              const {destroy, tag} = effect;
+              if (destroy !== undefined) {
+                if ((tag & HookInsertion) !== NoHookEffect) {
                   safelyCallDestroy(current, nearestMountedAncestor, destroy);
-                  recordLayoutEffectDuration(current);
-                } else {
-                  safelyCallDestroy(current, nearestMountedAncestor, destroy);
-                }
+                } else if ((tag & HookLayout) !== NoHookEffect) {
+                  if (enableSchedulingProfiler) {
+                    markComponentLayoutEffectUnmountStarted(current);
+                  }
 
-                if (enableSchedulingProfiler) {
-                  markComponentLayoutEffectUnmountStopped();
+                  if (
+                    enableProfilerTimer &&
+                    enableProfilerCommitHooks &&
+                    current.mode & ProfileMode
+                  ) {
+                    startLayoutEffectTimer();
+                    safelyCallDestroy(current, nearestMountedAncestor, destroy);
+                    recordLayoutEffectDuration(current);
+                  } else {
+                    safelyCallDestroy(current, nearestMountedAncestor, destroy);
+                  }
+
+                  if (enableSchedulingProfiler) {
+                    markComponentLayoutEffectUnmountStopped();
+                  }
                 }
               }
-            }
-            effect = effect.next;
-          } while (effect !== firstEffect);
+              effect = effect.next;
+            } while (effect !== firstEffect);
+          }
         }
       }
       return;
     }
     case ClassComponent: {
-      safelyDetachRef(current, nearestMountedAncestor);
-      const instance = current.stateNode;
-      if (typeof instance.componentWillUnmount === 'function') {
-        safelyCallComponentWillUnmount(
-          current,
-          nearestMountedAncestor,
-          instance,
-        );
+      if (outermostHiddenFiber === null) {
+        safelyDetachRef(current, nearestMountedAncestor);
+        const instance = current.stateNode;
+        if (typeof instance.componentWillUnmount === 'function') {
+          safelyCallComponentWillUnmount(
+            current,
+            nearestMountedAncestor,
+            instance,
+          );
+        }
       }
       return;
     }
     case HostComponent: {
-      safelyDetachRef(current, nearestMountedAncestor);
+      if (outermostHiddenFiber === null) {
+        safelyDetachRef(current, nearestMountedAncestor);
+      }
       return;
     }
     case HostPortal: {
@@ -1278,7 +1285,12 @@ function commitUnmount(
       // We are also not using this parent because
       // the portal will get pushed immediately.
       if (supportsMutation) {
-        unmountHostComponents(finishedRoot, current, nearestMountedAncestor);
+        unmountHostComponents(
+          finishedRoot,
+          current,
+          nearestMountedAncestor,
+          outermostHiddenFiber,
+        );
       } else if (supportsPersistence) {
         emptyPortalContainer(current);
       }
@@ -1297,8 +1309,10 @@ function commitUnmount(
       return;
     }
     case ScopeComponent: {
-      if (enableScopeAPI) {
-        safelyDetachRef(current, nearestMountedAncestor);
+      if (outermostHiddenFiber === null) {
+        if (enableScopeAPI) {
+          safelyDetachRef(current, nearestMountedAncestor);
+        }
       }
       return;
     }
@@ -1309,7 +1323,9 @@ function commitNestedUnmounts(
   finishedRoot: FiberRoot,
   root: Fiber,
   nearestMountedAncestor: Fiber,
+  outermostHiddenFiber: Fiber | null,
 ): void {
+  let currentOutermostHiddenFiber = outermostHiddenFiber;
   // While we're inside a removed host node we don't want to call
   // removeChild on the inner nodes because they're removed by the top
   // call anyway. We also want to call componentWillUnmount on all
@@ -1317,7 +1333,19 @@ function commitNestedUnmounts(
   // we do an inner loop while we're still inside the host node.
   let node: Fiber = root;
   while (true) {
-    commitUnmount(finishedRoot, node, nearestMountedAncestor);
+    if (
+      currentOutermostHiddenFiber === null &&
+      node.tag === OffscreenComponent &&
+      node.memoizedState !== null
+    ) {
+      currentOutermostHiddenFiber = node;
+    }
+    commitUnmount(
+      finishedRoot,
+      node,
+      nearestMountedAncestor,
+      currentOutermostHiddenFiber,
+    );
     // Visit children because they may contain more composite or host nodes.
     // Skip portals because commitUnmount() currently visits them recursively.
     if (
@@ -1338,6 +1366,9 @@ function commitNestedUnmounts(
         return;
       }
       node = node.return;
+      if (node === currentOutermostHiddenFiber) {
+        currentOutermostHiddenFiber = null;
+      }
     }
     node.sibling.return = node.return;
     node = node.sibling;
@@ -1666,6 +1697,7 @@ function unmountHostComponents(
   finishedRoot: FiberRoot,
   current: Fiber,
   nearestMountedAncestor: Fiber,
+  outermostHiddenFiber: Fiber | null,
 ): void {
   // We only have the top Fiber that was deleted but we need to recurse down its
   // children to find all the terminal nodes.
@@ -1678,6 +1710,8 @@ function unmountHostComponents(
   // Note: these two variables *must* always be updated together.
   let currentParent;
   let currentParentIsContainer;
+
+  let currentOutermostHiddenFiber = outermostHiddenFiber;
 
   while (true) {
     if (!currentParentIsValid) {
@@ -1711,7 +1745,12 @@ function unmountHostComponents(
     }
 
     if (node.tag === HostComponent || node.tag === HostText) {
-      commitNestedUnmounts(finishedRoot, node, nearestMountedAncestor);
+      commitNestedUnmounts(
+        finishedRoot,
+        node,
+        nearestMountedAncestor,
+        currentOutermostHiddenFiber,
+      );
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
@@ -1764,7 +1803,19 @@ function unmountHostComponents(
         continue;
       }
     } else {
-      commitUnmount(finishedRoot, node, nearestMountedAncestor);
+      if (
+        node.tag === OffscreenComponent &&
+        currentOutermostHiddenFiber === null &&
+        node.memoizedState !== null
+      ) {
+        currentOutermostHiddenFiber = node;
+      }
+      commitUnmount(
+        finishedRoot,
+        node,
+        nearestMountedAncestor,
+        currentOutermostHiddenFiber,
+      );
       // Visit children because we may find more host components below.
       if (node.child !== null) {
         node.child.return = node;
@@ -1784,6 +1835,8 @@ function unmountHostComponents(
         // When we go out of the portal, we need to restore the parent.
         // Since we don't keep a stack of them, we will search for it.
         currentParentIsValid = false;
+      } else if (node === currentOutermostHiddenFiber) {
+        currentOutermostHiddenFiber = null;
       }
     }
     node.sibling.return = node.return;
@@ -1795,14 +1848,25 @@ function commitDeletion(
   finishedRoot: FiberRoot,
   current: Fiber,
   nearestMountedAncestor: Fiber,
+  outermostHiddenFiber: Fiber | null,
 ): void {
   if (supportsMutation) {
     // Recursively delete all host nodes from the parent.
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    unmountHostComponents(finishedRoot, current, nearestMountedAncestor);
+    unmountHostComponents(
+      finishedRoot,
+      current,
+      nearestMountedAncestor,
+      outermostHiddenFiber,
+    );
   } else {
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    commitNestedUnmounts(finishedRoot, current, nearestMountedAncestor);
+    commitNestedUnmounts(
+      finishedRoot,
+      current,
+      nearestMountedAncestor,
+      outermostHiddenFiber,
+    );
   }
 
   detachFiberMutation(current);
@@ -2144,6 +2208,17 @@ export function commitMutationEffects(
   inProgressRoot = null;
 }
 
+function findOutermostHiddenFiber(fiber: Fiber): Fiber | null {
+  let node = fiber;
+  while (node !== null) {
+    if (node.tag === OffscreenComponent && node.memoizedState !== null) {
+      return node;
+    }
+    node = node.return;
+  }
+  return null;
+}
+
 function commitMutationEffects_begin(root: FiberRoot, lanes: Lanes) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
@@ -2153,8 +2228,9 @@ function commitMutationEffects_begin(root: FiberRoot, lanes: Lanes) {
     if (deletions !== null) {
       for (let i = 0; i < deletions.length; i++) {
         const childToDelete = deletions[i];
+        const outermostHiddenFiber = findOutermostHiddenFiber(childToDelete);
         try {
-          commitDeletion(root, childToDelete, fiber);
+          commitDeletion(root, childToDelete, fiber, outermostHiddenFiber);
         } catch (error) {
           reportUncaughtErrorInDEV(error);
           captureCommitPhaseError(childToDelete, fiber, error);
