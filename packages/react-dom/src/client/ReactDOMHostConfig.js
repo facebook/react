@@ -1009,8 +1009,8 @@ export function didNotHydrateInstance(
 ) {
   if (__DEV__) {
     if (
-      parentProps[SUPPRESS_HYDRATION_WARNING] !== true ||
-      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode)
+      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode) ||
+      parentProps[SUPPRESS_HYDRATION_WARNING] !== true
     ) {
       if (instance.nodeType === ELEMENT_NODE) {
         warnForDeletedHydratableElement(parentInstance, (instance: any));
@@ -1093,8 +1093,8 @@ export function didNotFindHydratableInstance(
 ) {
   if (__DEV__) {
     if (
-      parentProps[SUPPRESS_HYDRATION_WARNING] !== true ||
-      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode)
+      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode) ||
+      parentProps[SUPPRESS_HYDRATION_WARNING] !== true
     ) {
       warnForInsertedHydratedElement(parentInstance, type, props);
     }
@@ -1110,8 +1110,8 @@ export function didNotFindHydratableTextInstance(
 ) {
   if (__DEV__) {
     if (
-      parentProps[SUPPRESS_HYDRATION_WARNING] !== true ||
-      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode)
+      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode) ||
+      parentProps[SUPPRESS_HYDRATION_WARNING] !== true
     ) {
       warnForInsertedHydratedText(parentInstance, text);
     }
