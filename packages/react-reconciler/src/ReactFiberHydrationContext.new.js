@@ -155,11 +155,13 @@ function warnUnhydratedInstance(
         );
         break;
       case HostComponent:
+        const isConcurrentMode = (returnFiber.mode & ConcurrentMode) !== NoMode;
         didNotHydrateInstance(
           returnFiber.type,
           returnFiber.memoizedProps,
           returnFiber.stateNode,
           instance,
+          isConcurrentMode,
         );
         break;
       case SuspenseComponent:
@@ -201,6 +203,7 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
       return;
     }
 
+    const isConcurrentMode = (returnFiber.mode & ConcurrentMode) !== NoMode;
     switch (returnFiber.tag) {
       case HostRoot: {
         const parentContainer = returnFiber.stateNode.containerInfo;
@@ -243,6 +246,7 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
               parentInstance,
               type,
               props,
+              isConcurrentMode,
             );
             break;
           case HostText:
@@ -252,6 +256,7 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
               parentProps,
               parentInstance,
               text,
+              isConcurrentMode,
             );
             break;
           case SuspenseComponent:
