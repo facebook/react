@@ -148,21 +148,26 @@ function warnUnhydratedInstance(
 ) {
   if (__DEV__) {
     switch (returnFiber.tag) {
-      case HostRoot:
+      case HostRoot: {
         didNotHydrateInstanceWithinContainer(
           returnFiber.stateNode.containerInfo,
           instance,
         );
         break;
-      case HostComponent:
+      }
+      case HostComponent: {
+        const isConcurrentMode = (returnFiber.mode & ConcurrentMode) !== NoMode;
         didNotHydrateInstance(
           returnFiber.type,
           returnFiber.memoizedProps,
           returnFiber.stateNode,
           instance,
+          // TODO: Delete this argument when we remove the legacy root API.
+          isConcurrentMode,
         );
         break;
-      case SuspenseComponent:
+      }
+      case SuspenseComponent: {
         const suspenseState: SuspenseState = returnFiber.memoizedState;
         if (suspenseState.dehydrated !== null)
           didNotHydrateInstanceWithinSuspenseInstance(
@@ -170,6 +175,7 @@ function warnUnhydratedInstance(
             instance,
           );
         break;
+      }
     }
   }
 }
@@ -234,33 +240,44 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
         const parentProps = returnFiber.memoizedProps;
         const parentInstance = returnFiber.stateNode;
         switch (fiber.tag) {
-          case HostComponent:
+          case HostComponent: {
             const type = fiber.type;
             const props = fiber.pendingProps;
+            const isConcurrentMode =
+              (returnFiber.mode & ConcurrentMode) !== NoMode;
             didNotFindHydratableInstance(
               parentType,
               parentProps,
               parentInstance,
               type,
               props,
+              // TODO: Delete this argument when we remove the legacy root API.
+              isConcurrentMode,
             );
             break;
-          case HostText:
+          }
+          case HostText: {
             const text = fiber.pendingProps;
+            const isConcurrentMode =
+              (returnFiber.mode & ConcurrentMode) !== NoMode;
             didNotFindHydratableTextInstance(
               parentType,
               parentProps,
               parentInstance,
               text,
+              // TODO: Delete this argument when we remove the legacy root API.
+              isConcurrentMode,
             );
             break;
-          case SuspenseComponent:
+          }
+          case SuspenseComponent: {
             didNotFindHydratableSuspenseInstance(
               parentType,
               parentProps,
               parentInstance,
             );
             break;
+          }
         }
         break;
       }
@@ -476,10 +493,11 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
     // hydration parent is the parent host component of this host text.
     const returnFiber = hydrationParentFiber;
     if (returnFiber !== null) {
-      const isConcurrentMode = (returnFiber.mode & ConcurrentMode) !== NoMode;
       switch (returnFiber.tag) {
         case HostRoot: {
           const parentContainer = returnFiber.stateNode.containerInfo;
+          const isConcurrentMode =
+            (returnFiber.mode & ConcurrentMode) !== NoMode;
           didNotMatchHydratedContainerTextInstance(
             parentContainer,
             textInstance,
@@ -493,6 +511,8 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
           const parentType = returnFiber.type;
           const parentProps = returnFiber.memoizedProps;
           const parentInstance = returnFiber.stateNode;
+          const isConcurrentMode =
+            (returnFiber.mode & ConcurrentMode) !== NoMode;
           didNotMatchHydratedTextInstance(
             parentType,
             parentProps,

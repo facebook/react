@@ -62,6 +62,7 @@ import dangerousStyleValue from '../shared/dangerousStyleValue';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
+  enableClientRenderFallbackOnHydrationMismatch,
   enableSuspenseServerRenderer,
   enableCreateEventHandleAPI,
   enableScopeAPI,
@@ -1004,14 +1005,20 @@ export function didNotHydrateInstance(
   parentProps: Props,
   parentInstance: Instance,
   instance: HydratableInstance,
+  isConcurrentMode: boolean,
 ) {
-  if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    if (instance.nodeType === ELEMENT_NODE) {
-      warnForDeletedHydratableElement(parentInstance, (instance: any));
-    } else if (instance.nodeType === COMMENT_NODE) {
-      // TODO: warnForDeletedHydratableSuspenseBoundary
-    } else {
-      warnForDeletedHydratableText(parentInstance, (instance: any));
+  if (__DEV__) {
+    if (
+      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode) ||
+      parentProps[SUPPRESS_HYDRATION_WARNING] !== true
+    ) {
+      if (instance.nodeType === ELEMENT_NODE) {
+        warnForDeletedHydratableElement(parentInstance, (instance: any));
+      } else if (instance.nodeType === COMMENT_NODE) {
+        // TODO: warnForDeletedHydratableSuspenseBoundary
+      } else {
+        warnForDeletedHydratableText(parentInstance, (instance: any));
+      }
     }
   }
 }
@@ -1082,9 +1089,15 @@ export function didNotFindHydratableInstance(
   parentInstance: Instance,
   type: string,
   props: Props,
+  isConcurrentMode: boolean,
 ) {
-  if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    warnForInsertedHydratedElement(parentInstance, type, props);
+  if (__DEV__) {
+    if (
+      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode) ||
+      parentProps[SUPPRESS_HYDRATION_WARNING] !== true
+    ) {
+      warnForInsertedHydratedElement(parentInstance, type, props);
+    }
   }
 }
 
@@ -1093,9 +1106,15 @@ export function didNotFindHydratableTextInstance(
   parentProps: Props,
   parentInstance: Instance,
   text: string,
+  isConcurrentMode: boolean,
 ) {
-  if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    warnForInsertedHydratedText(parentInstance, text);
+  if (__DEV__) {
+    if (
+      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode) ||
+      parentProps[SUPPRESS_HYDRATION_WARNING] !== true
+    ) {
+      warnForInsertedHydratedText(parentInstance, text);
+    }
   }
 }
 
@@ -1104,7 +1123,7 @@ export function didNotFindHydratableSuspenseInstance(
   parentProps: Props,
   parentInstance: Instance,
 ) {
-  if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+  if (__DEV__) {
     // TODO: warnForInsertedHydratedSuspense(parentInstance);
   }
 }
