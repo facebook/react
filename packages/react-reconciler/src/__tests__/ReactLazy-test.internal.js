@@ -1631,4 +1631,116 @@ describe('ReactLazy', () => {
     ]);
     expect(root).toMatchRenderedOutput('ba');
   });
+
+  it('does not destroy layout effects twice', async () => {
+    function ChildA({label}) {
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Did mount: ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Will unmount: ' + label);
+        };
+      }, []);
+      return <Text text={label} />;
+    }
+
+    function ChildB({label}) {
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Did mount: ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Will unmount: ' + label);
+        };
+      }, []);
+      return <Text text={label} />;
+    }
+
+    const LazyChildA = lazy(() => fakeImport(ChildA));
+    const LazyChildB = lazy(() => fakeImport(ChildB));
+
+    function Parent({swap}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          {swap ? <LazyChildB label="B" /> : <LazyChildA label="A" />}
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<Parent swap={false} />, {
+      unstable_isConcurrent: true,
+    });
+
+    expect(Scheduler).toFlushAndYield(['Loading...']);
+
+    await LazyChildA;
+    expect(Scheduler).toFlushAndYield(['A', 'Did mount: A']);
+    expect(root).toMatchRenderedOutput('A');
+
+    // Swap the position of A and B
+    root.unstable_flushSync(() => {
+      root.update(<Parent swap={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Loading...', 'Will unmount: A']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await LazyChildB;
+    expect(Scheduler).toFlushAndYield(['B', 'Did mount: B']);
+    expect(root).toMatchRenderedOutput('B');
+  });
+
+  it('does not call componentWillUnmount twice', async () => {
+    class ChildA extends React.Component {
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+      }
+      componentWillUnmount() {
+        Scheduler.unstable_yieldValue('Will unmount: ' + this.props.label);
+      }
+      render() {
+        return <Text text={this.props.label} />;
+      }
+    }
+
+    class ChildB extends React.Component {
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+      }
+      componentWillUnmount() {
+        Scheduler.unstable_yieldValue('Will unmount: ' + this.props.label);
+      }
+      render() {
+        return <Text text={this.props.label} />;
+      }
+    }
+
+    const LazyChildA = lazy(() => fakeImport(ChildA));
+    const LazyChildB = lazy(() => fakeImport(ChildB));
+
+    function Parent({swap}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          {swap ? <LazyChildB label="B" /> : <LazyChildA label="A" />}
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<Parent swap={false} />, {
+      unstable_isConcurrent: true,
+    });
+
+    expect(Scheduler).toFlushAndYield(['Loading...']);
+
+    await LazyChildA;
+    expect(Scheduler).toFlushAndYield(['A', 'Did mount: A']);
+    expect(root).toMatchRenderedOutput('A');
+
+    // Swap the position of A and B
+    root.unstable_flushSync(() => {
+      root.update(<Parent swap={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Loading...', 'Will unmount: A']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await LazyChildB;
+    expect(Scheduler).toFlushAndYield(['B', 'Did mount: B']);
+    expect(root).toMatchRenderedOutput('B');
+  });
 });
