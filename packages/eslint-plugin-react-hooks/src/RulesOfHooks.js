@@ -526,7 +526,8 @@ export default {
             reactHooksMap.set(codePathSegment, reactHooks);
           }
           reactHooks.push(node.callee);
-        } else if (node.arguments.some(isHook)) {
+        } 
+        if (node.arguments.some(isHook)) {
           node.arguments.filter(isHook).forEach(hook => {
             const message =
               `React Hook "${context.getSource(hook)}" cannot be called ` +
