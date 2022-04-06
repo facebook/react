@@ -526,7 +526,7 @@ export default {
             reactHooksMap.set(codePathSegment, reactHooks);
           }
           reactHooks.push(node.callee);
-        } 
+        }
         if (node.arguments.some(isHook)) {
           node.arguments.filter(isHook).forEach(hook => {
             const message =
