@@ -1399,7 +1399,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     } else {
       // The outermost shell has not hydrated yet. Start hydrating.
       enterHydrationState(workInProgress);
-      if (enableUseMutableSource && supportsHydration) {
+      if (enableUseMutableSource) {
         const mutableSourceEagerHydrationData =
           root.mutableSourceEagerHydrationData;
         if (mutableSourceEagerHydrationData != null) {
