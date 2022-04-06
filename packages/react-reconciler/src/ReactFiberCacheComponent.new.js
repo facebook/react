@@ -11,6 +11,7 @@ import type {ReactContext} from 'shared/ReactTypes';
 
 import {enableCache} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import AbortController from './ReactAbortController';
 
 import {pushProvider, popProvider} from './ReactFiberNewContext.new';
 import * as Scheduler from 'scheduler';
