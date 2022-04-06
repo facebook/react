@@ -26,7 +26,7 @@ type Options = {
   onError?: (error: mixed) => void,
 };
 
-type Controls = {|
+type PipeableStream = {|
   pipe<T: Writable>(destination: T): T,
 |};
 
@@ -35,7 +35,7 @@ function renderToPipeableStream(
   webpackMap: BundlerConfig,
   options?: Options,
   context?: Array<[string, ServerContextJSONValue]>,
-): Controls {
+): PipeableStream {
   const request = createRequest(
     model,
     webpackMap,

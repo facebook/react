@@ -46,7 +46,7 @@ type Options = {|
   onError?: (error: mixed) => void,
 |};
 
-type Controls = {|
+type PipeableStream = {|
   // Cancel any pending I/O and put anything remaining into
   // client rendered mode.
   abort(): void,
@@ -76,7 +76,7 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
 function renderToPipeableStream(
   children: ReactNodeList,
   options?: Options,
-): Controls {
+): PipeableStream {
   const request = createRequestImpl(children, options);
   let hasStartedFlowing = false;
   startWork(request);
