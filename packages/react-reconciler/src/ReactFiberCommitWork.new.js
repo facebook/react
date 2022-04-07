@@ -2065,13 +2065,14 @@ function commitMutationEffectsOnFiber(
     finishedWork.flags &= ~Hydrating;
   }
 
+  // All logic in these branches should be wrapped in a flag check.
   // TODO: Move the ad-hoc flag checks above into the main switch statement.
-  if (flags & Update) {
-    switch (finishedWork.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case MemoComponent:
-      case SimpleMemoComponent: {
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case MemoComponent:
+    case SimpleMemoComponent: {
+      if (flags & Update) {
         commitHookEffectListUnmount(
           HookInsertion | HookHasEffect,
           finishedWork,
@@ -2105,12 +2106,11 @@ function commitMutationEffectsOnFiber(
             finishedWork.return,
           );
         }
-        return;
       }
-      case ClassComponent: {
-        return;
-      }
-      case HostComponent: {
+      return;
+    }
+    case HostComponent: {
+      if (flags & Update) {
         if (supportsMutation) {
           const instance: Instance = finishedWork.stateNode;
           if (instance != null) {
@@ -2137,9 +2137,11 @@ function commitMutationEffectsOnFiber(
             }
           }
         }
-        return;
       }
-      case HostText: {
+      return;
+    }
+    case HostText: {
+      if (flags & Update) {
         if (supportsMutation) {
           if (finishedWork.stateNode === null) {
             throw new Error(
@@ -2157,9 +2159,11 @@ function commitMutationEffectsOnFiber(
             current !== null ? current.memoizedProps : newText;
           commitTextUpdate(textInstance, oldText, newText);
         }
-        return;
       }
-      case HostRoot: {
+      return;
+    }
+    case HostRoot: {
+      if (flags & Update) {
         if (supportsMutation && supportsHydration) {
           if (current !== null) {
             const prevRootState: RootState = current.memoizedState;
@@ -2173,45 +2177,41 @@ function commitMutationEffectsOnFiber(
           const pendingChildren = root.pendingChildren;
           replaceContainerChildren(containerInfo, pendingChildren);
         }
-        return;
       }
-      case HostPortal: {
+      return;
+    }
+    case HostPortal: {
+      if (flags & Update) {
         if (supportsPersistence) {
           const portal = finishedWork.stateNode;
           const containerInfo = portal.containerInfo;
           const pendingChildren = portal.pendingChildren;
           replaceContainerChildren(containerInfo, pendingChildren);
         }
-        return;
       }
-      case Profiler: {
-        return;
-      }
-      case SuspenseComponent: {
+      return;
+    }
+    case SuspenseComponent: {
+      if (flags & Update) {
         commitSuspenseCallback(finishedWork);
         attachSuspenseRetryListeners(finishedWork);
-        return;
       }
-      case SuspenseListComponent: {
+      return;
+    }
+    case SuspenseListComponent: {
+      if (flags & Update) {
         attachSuspenseRetryListeners(finishedWork);
-        return;
       }
-      case IncompleteClassComponent: {
-        return;
-      }
-      case ScopeComponent: {
+      return;
+    }
+    case ScopeComponent: {
+      if (flags & Update) {
         if (enableScopeAPI) {
           const scopeInstance = finishedWork.stateNode;
           prepareScopeUpdate(scopeInstance, finishedWork);
         }
-        return;
       }
-      default: {
-        throw new Error(
-          'This unit of work tag should not have side-effects. This error is ' +
-            'likely caused by a bug in React. Please file an issue.',
-        );
-      }
+      return;
     }
   }
 }
