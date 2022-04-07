@@ -1,4 +1,3 @@
-/* global BigInt */
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/* global BigInt */
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
 'use strict';
