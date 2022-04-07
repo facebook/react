@@ -406,6 +406,8 @@ let nestedPassiveUpdateCount: number = 0;
 let currentEventTime: number = NoTimestamp;
 let currentEventTransitionLane: Lanes = NoLanes;
 
+let isRunningInsertionEffect = false;
+
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
 }
@@ -516,6 +518,12 @@ export function scheduleUpdateOnFiber(
   eventTime: number,
 ): FiberRoot | null {
   checkForNestedUpdates();
+
+  if (__DEV__) {
+    if (isRunningInsertionEffect) {
+      console.error('useInsertionEffect must not schedule updates.');
+    }
+  }
 
   const root = markUpdateLaneFromFiberToRoot(fiber, lane);
   if (root === null) {
@@ -3130,5 +3138,11 @@ function warnIfSuspenseResolutionNotWrappedWithActDEV(root: FiberRoot): void {
           ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
       );
     }
+  }
+}
+
+export function setIsRunningInsertionEffect(isRunning: boolean): void {
+  if (__DEV__) {
+    isRunningInsertionEffect = isRunning;
   }
 }

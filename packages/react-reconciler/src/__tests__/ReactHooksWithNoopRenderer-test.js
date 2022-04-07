@@ -3090,6 +3090,43 @@ describe('ReactHooksWithNoopRenderer', () => {
         }),
       ).toThrow('is not a function');
     });
+
+    it('warns when setState is called from insertion effect setup', () => {
+      function App(props) {
+        const [, setX] = useState(0);
+        useInsertionEffect(() => {
+          setX(1);
+        }, []);
+        return null;
+      }
+
+      const root = ReactNoop.createRoot();
+      expect(() =>
+        act(() => {
+          root.render(<App />);
+        }),
+      ).toErrorDev(['Warning: useInsertionEffect must not schedule updates.']);
+    });
+
+    it('warns when setState is called from insertion effect cleanup', () => {
+      function App(props) {
+        const [, setX] = useState(0);
+        useInsertionEffect(() => {
+          return () => setX(1);
+        }, [props.foo]);
+        return null;
+      }
+
+      const root = ReactNoop.createRoot();
+      act(() => {
+        root.render(<App foo="hello" />);
+      });
+      expect(() => {
+        act(() => {
+          root.render(<App foo="goodbye" />);
+        });
+      }).toErrorDev(['Warning: useInsertionEffect must not schedule updates.']);
+    });
   });
 
   describe('useLayoutEffect', () => {
