@@ -1481,36 +1481,6 @@ function emptyPortalContainer(current: Fiber) {
   replaceContainerChildren(containerInfo, emptyChildSet);
 }
 
-function commitContainer(finishedWork: Fiber) {
-  if (!supportsPersistence) {
-    return;
-  }
-
-  switch (finishedWork.tag) {
-    case ClassComponent:
-    case HostComponent:
-    case HostText: {
-      return;
-    }
-    case HostRoot:
-    case HostPortal: {
-      const portalOrRoot: {
-        containerInfo: Container,
-        pendingChildren: ChildSet,
-        ...
-      } = finishedWork.stateNode;
-      const {containerInfo, pendingChildren} = portalOrRoot;
-      replaceContainerChildren(containerInfo, pendingChildren);
-      return;
-    }
-  }
-
-  throw new Error(
-    'This unit of work tag should not have side-effects. This error is ' +
-      'likely caused by a bug in React. Please file an issue.',
-  );
-}
-
 function getHostParentFiber(fiber: Fiber): Fiber {
   let parent = fiber.return;
   while (parent !== null) {
@@ -1830,87 +1800,6 @@ function commitDeletion(
 }
 
 function commitWork(current: Fiber | null, finishedWork: Fiber): void {
-  if (!supportsMutation) {
-    switch (finishedWork.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case MemoComponent:
-      case SimpleMemoComponent: {
-        commitHookEffectListUnmount(
-          HookInsertion | HookHasEffect,
-          finishedWork,
-          finishedWork.return,
-        );
-        commitHookEffectListMount(HookInsertion | HookHasEffect, finishedWork);
-
-        // Layout effects are destroyed during the mutation phase so that all
-        // destroy functions for all fibers are called before any create functions.
-        // This prevents sibling component effects from interfering with each other,
-        // e.g. a destroy function in one component should never override a ref set
-        // by a create function in another component during the same commit.
-        // TODO: Check if we're inside an Offscreen subtree that disappeared
-        // during this commit. If so, we would have already unmounted its
-        // layout hooks. (However, since we null out the `destroy` function
-        // right before calling it, the behavior is already correct, so this
-        // would mostly be for modeling purposes.)
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          finishedWork.mode & ProfileMode
-        ) {
-          try {
-            startLayoutEffectTimer();
-            commitHookEffectListUnmount(
-              HookLayout | HookHasEffect,
-              finishedWork,
-              finishedWork.return,
-            );
-          } finally {
-            recordLayoutEffectDuration(finishedWork);
-          }
-        } else {
-          commitHookEffectListUnmount(
-            HookLayout | HookHasEffect,
-            finishedWork,
-            finishedWork.return,
-          );
-        }
-        return;
-      }
-      case Profiler: {
-        return;
-      }
-      case SuspenseComponent: {
-        commitSuspenseCallback(finishedWork);
-        attachSuspenseRetryListeners(finishedWork);
-        return;
-      }
-      case SuspenseListComponent: {
-        attachSuspenseRetryListeners(finishedWork);
-        return;
-      }
-      case HostRoot: {
-        if (supportsHydration) {
-          if (current !== null) {
-            const prevRootState: RootState = current.memoizedState;
-            if (prevRootState.isDehydrated) {
-              const root: FiberRoot = finishedWork.stateNode;
-              commitHydratedContainer(root.containerInfo);
-            }
-          }
-        }
-        break;
-      }
-      case OffscreenComponent:
-      case LegacyHiddenComponent: {
-        return;
-      }
-    }
-
-    commitContainer(finishedWork);
-    return;
-  }
-
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -1955,51 +1844,55 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case HostComponent: {
-      const instance: Instance = finishedWork.stateNode;
-      if (instance != null) {
-        // Commit the work prepared earlier.
-        const newProps = finishedWork.memoizedProps;
-        // For hydration we reuse the update path but we treat the oldProps
-        // as the newProps. The updatePayload will contain the real change in
-        // this case.
-        const oldProps = current !== null ? current.memoizedProps : newProps;
-        const type = finishedWork.type;
-        // TODO: Type the updateQueue to be specific to host components.
-        const updatePayload: null | UpdatePayload = (finishedWork.updateQueue: any);
-        finishedWork.updateQueue = null;
-        if (updatePayload !== null) {
-          commitUpdate(
-            instance,
-            updatePayload,
-            type,
-            oldProps,
-            newProps,
-            finishedWork,
-          );
+      if (supportsMutation) {
+        const instance: Instance = finishedWork.stateNode;
+        if (instance != null) {
+          // Commit the work prepared earlier.
+          const newProps = finishedWork.memoizedProps;
+          // For hydration we reuse the update path but we treat the oldProps
+          // as the newProps. The updatePayload will contain the real change in
+          // this case.
+          const oldProps = current !== null ? current.memoizedProps : newProps;
+          const type = finishedWork.type;
+          // TODO: Type the updateQueue to be specific to host components.
+          const updatePayload: null | UpdatePayload = (finishedWork.updateQueue: any);
+          finishedWork.updateQueue = null;
+          if (updatePayload !== null) {
+            commitUpdate(
+              instance,
+              updatePayload,
+              type,
+              oldProps,
+              newProps,
+              finishedWork,
+            );
+          }
         }
       }
       return;
     }
     case HostText: {
-      if (finishedWork.stateNode === null) {
-        throw new Error(
-          'This should have a text node initialized. This error is likely ' +
-            'caused by a bug in React. Please file an issue.',
-        );
-      }
+      if (supportsMutation) {
+        if (finishedWork.stateNode === null) {
+          throw new Error(
+            'This should have a text node initialized. This error is likely ' +
+              'caused by a bug in React. Please file an issue.',
+          );
+        }
 
-      const textInstance: TextInstance = finishedWork.stateNode;
-      const newText: string = finishedWork.memoizedProps;
-      // For hydration we reuse the update path but we treat the oldProps
-      // as the newProps. The updatePayload will contain the real change in
-      // this case.
-      const oldText: string =
-        current !== null ? current.memoizedProps : newText;
-      commitTextUpdate(textInstance, oldText, newText);
+        const textInstance: TextInstance = finishedWork.stateNode;
+        const newText: string = finishedWork.memoizedProps;
+        // For hydration we reuse the update path but we treat the oldProps
+        // as the newProps. The updatePayload will contain the real change in
+        // this case.
+        const oldText: string =
+          current !== null ? current.memoizedProps : newText;
+        commitTextUpdate(textInstance, oldText, newText);
+      }
       return;
     }
     case HostRoot: {
-      if (supportsHydration) {
+      if (supportsMutation && supportsHydration) {
         if (current !== null) {
           const prevRootState: RootState = current.memoizedState;
           if (prevRootState.isDehydrated) {
@@ -2007,6 +1900,21 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             commitHydratedContainer(root.containerInfo);
           }
         }
+      }
+      if (supportsPersistence) {
+        const fiberRoot: FiberRoot = finishedWork.stateNode;
+        const containerInfo = fiberRoot.containerInfo;
+        const pendingChildren = fiberRoot.pendingChildren;
+        replaceContainerChildren(containerInfo, pendingChildren);
+      }
+      return;
+    }
+    case HostPortal: {
+      if (supportsPersistence) {
+        const portal = finishedWork.stateNode;
+        const containerInfo = portal.containerInfo;
+        const pendingChildren = portal.pendingChildren;
+        replaceContainerChildren(containerInfo, pendingChildren);
       }
       return;
     }
