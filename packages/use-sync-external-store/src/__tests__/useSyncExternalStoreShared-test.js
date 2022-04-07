@@ -584,9 +584,10 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
           'calls setState inside componentWillUpdate or componentDidUpdate. React limits ' +
           'the number of nested updates to prevent infinite loops.',
       );
-    }).toErrorDev(
+    }).toErrorDev([
+      'Maximum update depth exceeded.',
       'The result of getSnapshot should be cached to avoid an infinite loop',
-    );
+    ]);
   });
 
   test('getSnapshot can return NaN without infinite loop warning', async () => {

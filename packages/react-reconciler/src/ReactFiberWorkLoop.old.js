@@ -396,6 +396,8 @@ let pendingPassiveEffectsRemainingLanes: Lanes = NoLanes;
 const NESTED_UPDATE_LIMIT = 50;
 let nestedUpdateCount: number = 0;
 let rootWithNestedUpdates: FiberRoot | null = null;
+let isFlushingPassiveEffects = false;
+let didScheduleUpdateDuringPassiveEffects = false;
 
 const NESTED_PASSIVE_UPDATE_LIMIT = 50;
 let nestedPassiveUpdateCount: number = 0;
@@ -520,6 +522,12 @@ export function scheduleUpdateOnFiber(
   const root = markUpdateLaneFromFiberToRoot(fiber, lane);
   if (root === null) {
     return null;
+  }
+
+  if (__DEV__) {
+    if (isFlushingPassiveEffects) {
+      didScheduleUpdateDuringPassiveEffects = true;
+    }
   }
 
   // Mark that the root has a pending update.
@@ -2204,6 +2212,9 @@ function commitRootImpl(
     // There were no passive effects, so we can immediately release the cache
     // pool for this render.
     releaseRootPooledCache(root, remainingLanes);
+    if (__DEV__) {
+      nestedPassiveUpdateCount = 0;
+    }
   }
 
   // Read this again, since an effect might have updated it
@@ -2420,6 +2431,9 @@ function flushPassiveEffectsImpl() {
   }
 
   if (__DEV__) {
+    isFlushingPassiveEffects = true;
+    didScheduleUpdateDuringPassiveEffects = false;
+
     if (enableDebugTracing) {
       logPassiveEffectsStarted(lanes);
     }
@@ -2463,10 +2477,17 @@ function flushPassiveEffectsImpl() {
 
   flushSyncCallbacks();
 
-  // If additional passive effects were scheduled, increment a counter. If this
-  // exceeds the limit, we'll fire a warning.
-  nestedPassiveUpdateCount =
-    rootWithPendingPassiveEffects === null ? 0 : nestedPassiveUpdateCount + 1;
+  if (__DEV__) {
+    // If additional passive effects were scheduled, increment a counter. If this
+    // exceeds the limit, we'll fire a warning.
+    if (didScheduleUpdateDuringPassiveEffects) {
+      nestedPassiveUpdateCount++;
+    } else {
+      nestedPassiveUpdateCount = 0;
+    }
+    isFlushingPassiveEffects = false;
+    didScheduleUpdateDuringPassiveEffects = false;
+  }
 
   // TODO: Move to commitPassiveMountEffects
   onPostCommitRootDevTools(root);
