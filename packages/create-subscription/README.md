@@ -1,33 +1,8 @@
 # create-subscription
 
-`create-subscription` is a utility for subscribing to external data sources inside React components. It is officially supported and maintained by the React team.
+`create-subscription` is a utility for subscribing to external data sources inside React components.
 
-## When should you NOT use this?
-
-This utility should be used for subscriptions to a single value that are typically only read in one place and may update frequently (e.g. a component that subscribes to a geolocation API to show a dot on a map).
-
-Other cases have **better long-term solutions**:
-* Redux/Flux stores should use the [context API](https://reactjs.org/docs/context.html) instead.
-* I/O subscriptions (e.g. notifications) that update infrequently should use [`react-cache`](https://github.com/facebook/react/blob/main/packages/react-cache/README.md) instead.
-* Complex libraries like Relay/Apollo should manage subscriptions manually with the same techniques which this library uses under the hood (as referenced [here](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)) in a way that is most optimized for their library usage.
-
-## Limitations in async mode
-
-The main motivation for `create-subscription` is to provide a way for library authors to ensure compatibility with React's upcoming asynchronous rendering mode. `create-subscription` guarantees correctness in async mode, accounting for the subtle bugs and edge cases that a library author might otherwise miss.
-
-However, [it achieves correctness by sometimes de-opting to synchronous mode](https://github.com/facebook/react/issues/13186#issuecomment-403959161), obviating the benefits of async rendering. This is an inherent limitation of storing state outside of React's managed state queue and rendering in response to a change event.
-
-The effect of de-opting to sync mode is that the main thread may periodically be blocked (in the case of CPU-bound work), and placeholders may appear earlier than desired (in the case of IO-bound work).
-
-For **full compatibility** with asynchronous rendering, including both **time-slicing** and **React Suspense**, the suggested longer-term solution is to move to one of the patterns described in the previous section.
-
-## What types of subscriptions can this support?
-
-This abstraction can handle a variety of subscription types, including:
-* Event dispatchers like `HTMLInputElement`.
-* Custom pub/sub components like Relay's `FragmentSpecResolver`.
-* Observable types like RxJS `BehaviorSubject` and `ReplaySubject`. (Types like RxJS `Subject` or `Observable` are not supported, because they provide no way to read the "current" value after it has been emitted.)
-* Native Promises.
+**It is no longer maintained and will not be updated. Use the built-in [`React.useSyncExternalStore`](https://reactjs.org/docs/hooks-reference.html#usesyncexternalstore) instead.**
 
 # Installation
 
