@@ -360,7 +360,7 @@ function commitBeforeMutationEffects_begin() {
       (fiber.subtreeFlags & BeforeMutationMask) !== NoFlags &&
       child !== null
     ) {
-      ensureCorrectReturnPointer(child, fiber);
+      child.return = fiber;
       nextEffect = child;
     } else {
       commitBeforeMutationEffects_complete();
@@ -382,7 +382,7 @@ function commitBeforeMutationEffects_complete() {
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
-      ensureCorrectReturnPointer(sibling, fiber.return);
+      sibling.return = fiber.return;
       nextEffect = sibling;
       return;
     }
@@ -2185,7 +2185,7 @@ function commitMutationEffects_begin(root: FiberRoot, lanes: Lanes) {
 
     const child = fiber.child;
     if ((fiber.subtreeFlags & MutationMask) !== NoFlags && child !== null) {
-      ensureCorrectReturnPointer(child, fiber);
+      child.return = fiber;
       nextEffect = child;
     } else {
       commitMutationEffects_complete(root, lanes);
@@ -2207,7 +2207,7 @@ function commitMutationEffects_complete(root: FiberRoot, lanes: Lanes) {
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
-      ensureCorrectReturnPointer(sibling, fiber.return);
+      sibling.return = fiber.return;
       nextEffect = sibling;
       return;
     }
@@ -2425,7 +2425,7 @@ function commitLayoutEffects_begin(
     }
 
     if ((fiber.subtreeFlags & LayoutMask) !== NoFlags && firstChild !== null) {
-      ensureCorrectReturnPointer(firstChild, fiber);
+      firstChild.return = fiber;
       nextEffect = firstChild;
     } else {
       commitLayoutMountEffects_complete(subtreeRoot, root, committedLanes);
@@ -2459,7 +2459,7 @@ function commitLayoutMountEffects_complete(
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
-      ensureCorrectReturnPointer(sibling, fiber.return);
+      sibling.return = fiber.return;
       nextEffect = sibling;
       return;
     }
@@ -2628,7 +2628,7 @@ function commitPassiveMountEffects_begin(
     const fiber = nextEffect;
     const firstChild = fiber.child;
     if ((fiber.subtreeFlags & PassiveMask) !== NoFlags && firstChild !== null) {
-      ensureCorrectReturnPointer(firstChild, fiber);
+      firstChild.return = fiber;
       nextEffect = firstChild;
     } else {
       commitPassiveMountEffects_complete(subtreeRoot, root, committedLanes);
@@ -2662,7 +2662,7 @@ function commitPassiveMountEffects_complete(
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
-      ensureCorrectReturnPointer(sibling, fiber.return);
+      sibling.return = fiber.return;
       nextEffect = sibling;
       return;
     }
@@ -2849,7 +2849,7 @@ function commitPassiveUnmountEffects_begin() {
     }
 
     if ((fiber.subtreeFlags & PassiveMask) !== NoFlags && child !== null) {
-      ensureCorrectReturnPointer(child, fiber);
+      child.return = fiber;
       nextEffect = child;
     } else {
       commitPassiveUnmountEffects_complete();
@@ -2868,7 +2868,7 @@ function commitPassiveUnmountEffects_complete() {
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
-      ensureCorrectReturnPointer(sibling, fiber.return);
+      sibling.return = fiber.return;
       nextEffect = sibling;
       return;
     }
@@ -2923,7 +2923,7 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
     // TODO: Only traverse subtree if it has a PassiveStatic flag. (But, if we
     // do this, still need to handle `deletedTreeCleanUpLevel` correctly.)
     if (child !== null) {
-      ensureCorrectReturnPointer(child, fiber);
+      child.return = fiber;
       nextEffect = child;
     } else {
       commitPassiveUnmountEffectsInsideOfDeletedTree_complete(
@@ -2961,7 +2961,7 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_complete(
     }
 
     if (sibling !== null) {
-      ensureCorrectReturnPointer(sibling, returnFiber);
+      sibling.return = returnFiber;
       nextEffect = sibling;
       return;
     }
@@ -3037,23 +3037,6 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
       break;
     }
   }
-}
-
-let didWarnWrongReturnPointer = false;
-function ensureCorrectReturnPointer(fiber, expectedReturnFiber) {
-  if (__DEV__) {
-    if (!didWarnWrongReturnPointer && fiber.return !== expectedReturnFiber) {
-      didWarnWrongReturnPointer = true;
-      console.error(
-        'Internal React error: Return pointer is inconsistent ' +
-          'with parent.',
-      );
-    }
-  }
-
-  // TODO: Remove this assignment once we're confident that it won't break
-  // anything, by checking the warning logs for the above invariant
-  fiber.return = expectedReturnFiber;
 }
 
 // TODO: Reuse reappearLayoutEffects traversal here?
