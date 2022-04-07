@@ -13,7 +13,7 @@ npm install react react-dom
 ### In the browser
 
 ```js
-import { createRoot } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 function App() {
   return <div>Hello World</div>;
