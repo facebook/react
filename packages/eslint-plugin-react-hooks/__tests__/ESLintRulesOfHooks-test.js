@@ -636,7 +636,7 @@ const tests = {
           return props.items.map(useState);
         }
       `,
-      errors: [genericError('useState')],
+      errors: [callbackError('useState')],
     },
     {
       code: `
@@ -1004,6 +1004,15 @@ function genericError(hook) {
   return {
     message:
       `React Hook "${hook}" cannot be called inside a callback. React Hooks ` +
+      'must be called in a React function component or a custom React ' +
+      'Hook function.',
+  };
+}
+
+function callbackError(hook) {
+  return {
+    message:
+      `React Hook "${hook}" cannot be passed as a callback. React Hooks ` +
       'must be called in a React function component or a custom React ' +
       'Hook function.',
   };
