@@ -401,6 +401,7 @@ let didScheduleUpdateDuringPassiveEffects = false;
 
 const NESTED_PASSIVE_UPDATE_LIMIT = 50;
 let nestedPassiveUpdateCount: number = 0;
+let rootWithPassiveNestedUpdates: FiberRoot | null = null;
 
 // If two updates are scheduled within the same event, we should treat their
 // event times as simultaneous, even if the actual clock time has advanced
@@ -2214,6 +2215,7 @@ function commitRootImpl(
     releaseRootPooledCache(root, remainingLanes);
     if (__DEV__) {
       nestedPassiveUpdateCount = 0;
+      rootWithPassiveNestedUpdates = null;
     }
   }
 
@@ -2481,7 +2483,12 @@ function flushPassiveEffectsImpl() {
     // If additional passive effects were scheduled, increment a counter. If this
     // exceeds the limit, we'll fire a warning.
     if (didScheduleUpdateDuringPassiveEffects) {
-      nestedPassiveUpdateCount++;
+      if (root === rootWithPassiveNestedUpdates) {
+        nestedPassiveUpdateCount++;
+      } else {
+        nestedPassiveUpdateCount = 0;
+        rootWithPassiveNestedUpdates = root;
+      }
     } else {
       nestedPassiveUpdateCount = 0;
     }
@@ -2760,6 +2767,8 @@ function checkForNestedUpdates() {
   if (__DEV__) {
     if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
       nestedPassiveUpdateCount = 0;
+      rootWithPassiveNestedUpdates = null;
+
       console.error(
         'Maximum update depth exceeded. This can happen when a component ' +
           "calls setState inside useEffect, but useEffect either doesn't " +

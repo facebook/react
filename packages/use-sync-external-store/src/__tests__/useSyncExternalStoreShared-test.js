@@ -585,14 +585,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
           'the number of nested updates to prevent infinite loops.',
       );
     }).toErrorDev(
-      gate(flags => flags.enableUseSyncExternalStoreShim)
-        ? [
-            'The result of getSnapshot should be cached to avoid an infinite loop',
-          ]
-        : [
-            'Maximum update depth exceeded.',
-            'The result of getSnapshot should be cached to avoid an infinite loop',
-          ],
+      'The result of getSnapshot should be cached to avoid an infinite loop',
     );
   });
 
