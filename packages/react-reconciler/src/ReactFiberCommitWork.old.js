@@ -1604,7 +1604,9 @@ function commitDeletionEffectsOnFiber(
   // that don't modify the stack.
   switch (deletedFiber.tag) {
     case HostComponent: {
-      safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      if (!offscreenSubtreeWasHidden) {
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
+      }
       // Intentional fallthrough to next branch
     }
     // eslint-disable-next-line-no-fallthrough
@@ -1710,54 +1712,56 @@ function commitDeletionEffectsOnFiber(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
-      const updateQueue: FunctionComponentUpdateQueue | null = (deletedFiber.updateQueue: any);
-      if (updateQueue !== null) {
-        const lastEffect = updateQueue.lastEffect;
-        if (lastEffect !== null) {
-          const firstEffect = lastEffect.next;
+      if (!offscreenSubtreeWasHidden) {
+        const updateQueue: FunctionComponentUpdateQueue | null = (deletedFiber.updateQueue: any);
+        if (updateQueue !== null) {
+          const lastEffect = updateQueue.lastEffect;
+          if (lastEffect !== null) {
+            const firstEffect = lastEffect.next;
 
-          let effect = firstEffect;
-          do {
-            const {destroy, tag} = effect;
-            if (destroy !== undefined) {
-              if ((tag & HookInsertion) !== NoHookEffect) {
-                safelyCallDestroy(
-                  deletedFiber,
-                  nearestMountedAncestor,
-                  destroy,
-                );
-              } else if ((tag & HookLayout) !== NoHookEffect) {
-                if (enableSchedulingProfiler) {
-                  markComponentLayoutEffectUnmountStarted(deletedFiber);
-                }
-
-                if (
-                  enableProfilerTimer &&
-                  enableProfilerCommitHooks &&
-                  deletedFiber.mode & ProfileMode
-                ) {
-                  startLayoutEffectTimer();
+            let effect = firstEffect;
+            do {
+              const {destroy, tag} = effect;
+              if (destroy !== undefined) {
+                if ((tag & HookInsertion) !== NoHookEffect) {
                   safelyCallDestroy(
                     deletedFiber,
                     nearestMountedAncestor,
                     destroy,
                   );
-                  recordLayoutEffectDuration(deletedFiber);
-                } else {
-                  safelyCallDestroy(
-                    deletedFiber,
-                    nearestMountedAncestor,
-                    destroy,
-                  );
-                }
+                } else if ((tag & HookLayout) !== NoHookEffect) {
+                  if (enableSchedulingProfiler) {
+                    markComponentLayoutEffectUnmountStarted(deletedFiber);
+                  }
 
-                if (enableSchedulingProfiler) {
-                  markComponentLayoutEffectUnmountStopped();
+                  if (
+                    enableProfilerTimer &&
+                    enableProfilerCommitHooks &&
+                    deletedFiber.mode & ProfileMode
+                  ) {
+                    startLayoutEffectTimer();
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      destroy,
+                    );
+                    recordLayoutEffectDuration(deletedFiber);
+                  } else {
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      destroy,
+                    );
+                  }
+
+                  if (enableSchedulingProfiler) {
+                    markComponentLayoutEffectUnmountStopped();
+                  }
                 }
               }
-            }
-            effect = effect.next;
-          } while (effect !== firstEffect);
+              effect = effect.next;
+            } while (effect !== firstEffect);
+          }
         }
       }
 
@@ -1769,14 +1773,16 @@ function commitDeletionEffectsOnFiber(
       return;
     }
     case ClassComponent: {
-      safelyDetachRef(deletedFiber, nearestMountedAncestor);
-      const instance = deletedFiber.stateNode;
-      if (typeof instance.componentWillUnmount === 'function') {
-        safelyCallComponentWillUnmount(
-          deletedFiber,
-          nearestMountedAncestor,
-          instance,
-        );
+      if (!offscreenSubtreeWasHidden) {
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        const instance = deletedFiber.stateNode;
+        if (typeof instance.componentWillUnmount === 'function') {
+          safelyCallComponentWillUnmount(
+            deletedFiber,
+            nearestMountedAncestor,
+            instance,
+          );
+        }
       }
       recursivelyTraverseDeletionEffects(
         finishedRoot,
@@ -1795,6 +1801,27 @@ function commitDeletionEffectsOnFiber(
         deletedFiber,
       );
       return;
+    }
+    case OffscreenComponent: {
+      // If this offscreen component is hidden, we already unmounted it. Before
+      // deleting the children, track that it's already unmounted so that we
+      // don't attempt to unmount the effects again.
+      // TODO: If the tree is hidden, in most cases we should be able to skip
+      // over the nested children entirely. An exception is we haven't yet found
+      // the topmost host node to delete, which we already track on the stack.
+      // But the other case is portals, which need to be detached no matter how
+      // deeply they are nested. We should use a subtree flag to track whether a
+      // subtree includes a nested portal.
+      const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+      offscreenSubtreeWasHidden =
+        prevOffscreenSubtreeWasHidden || deletedFiber.memoizedState !== null;
+      recursivelyTraverseDeletionEffects(
+        finishedRoot,
+        nearestMountedAncestor,
+        deletedFiber,
+      );
+      offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+      break;
     }
     default: {
       recursivelyTraverseDeletionEffects(
@@ -2203,13 +2230,21 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case OffscreenComponent: {
+      const wasHidden = current !== null && current.memoizedState !== null;
+
+      // Before committing the children, track on the stack whether this
+      // offscreen subtree was already hidden, so that we don't unmount the
+      // effects again.
+      const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+      offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || wasHidden;
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+
       commitReconciliationEffects(finishedWork);
 
       if (flags & Visibility) {
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
-        const wasHidden = current !== null && current.memoizedState !== null;
         const offscreenBoundary: Fiber = finishedWork;
 
         if (supportsMutation) {

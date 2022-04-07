@@ -1980,7 +1980,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
           // Destroy layout and passive effects in the errored tree.
           'App destroy layout',
-          'ThrowsInWillUnmount componentWillUnmount',
           'Text:Fallback destroy layout',
           'Text:Outside destroy layout',
           'Text:Inside destroy passive',
