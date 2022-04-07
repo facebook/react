@@ -68,13 +68,11 @@ import {
   NoFlags,
   ContentReset,
   Placement,
-  PlacementAndUpdate,
   ChildDeletion,
   Snapshot,
   Update,
   Ref,
   Hydrating,
-  HydratingAndUpdate,
   Passive,
   BeforeMutationMask,
   MutationMask,
@@ -1799,156 +1797,6 @@ function commitDeletion(
   detachFiberMutation(current);
 }
 
-function commitWork(current: Fiber | null, finishedWork: Fiber): void {
-  switch (finishedWork.tag) {
-    case FunctionComponent:
-    case ForwardRef:
-    case MemoComponent:
-    case SimpleMemoComponent: {
-      commitHookEffectListUnmount(
-        HookInsertion | HookHasEffect,
-        finishedWork,
-        finishedWork.return,
-      );
-      commitHookEffectListMount(HookInsertion | HookHasEffect, finishedWork);
-      // Layout effects are destroyed during the mutation phase so that all
-      // destroy functions for all fibers are called before any create functions.
-      // This prevents sibling component effects from interfering with each other,
-      // e.g. a destroy function in one component should never override a ref set
-      // by a create function in another component during the same commit.
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        finishedWork.mode & ProfileMode
-      ) {
-        try {
-          startLayoutEffectTimer();
-          commitHookEffectListUnmount(
-            HookLayout | HookHasEffect,
-            finishedWork,
-            finishedWork.return,
-          );
-        } finally {
-          recordLayoutEffectDuration(finishedWork);
-        }
-      } else {
-        commitHookEffectListUnmount(
-          HookLayout | HookHasEffect,
-          finishedWork,
-          finishedWork.return,
-        );
-      }
-      return;
-    }
-    case ClassComponent: {
-      return;
-    }
-    case HostComponent: {
-      if (supportsMutation) {
-        const instance: Instance = finishedWork.stateNode;
-        if (instance != null) {
-          // Commit the work prepared earlier.
-          const newProps = finishedWork.memoizedProps;
-          // For hydration we reuse the update path but we treat the oldProps
-          // as the newProps. The updatePayload will contain the real change in
-          // this case.
-          const oldProps = current !== null ? current.memoizedProps : newProps;
-          const type = finishedWork.type;
-          // TODO: Type the updateQueue to be specific to host components.
-          const updatePayload: null | UpdatePayload = (finishedWork.updateQueue: any);
-          finishedWork.updateQueue = null;
-          if (updatePayload !== null) {
-            commitUpdate(
-              instance,
-              updatePayload,
-              type,
-              oldProps,
-              newProps,
-              finishedWork,
-            );
-          }
-        }
-      }
-      return;
-    }
-    case HostText: {
-      if (supportsMutation) {
-        if (finishedWork.stateNode === null) {
-          throw new Error(
-            'This should have a text node initialized. This error is likely ' +
-              'caused by a bug in React. Please file an issue.',
-          );
-        }
-
-        const textInstance: TextInstance = finishedWork.stateNode;
-        const newText: string = finishedWork.memoizedProps;
-        // For hydration we reuse the update path but we treat the oldProps
-        // as the newProps. The updatePayload will contain the real change in
-        // this case.
-        const oldText: string =
-          current !== null ? current.memoizedProps : newText;
-        commitTextUpdate(textInstance, oldText, newText);
-      }
-      return;
-    }
-    case HostRoot: {
-      if (supportsMutation && supportsHydration) {
-        if (current !== null) {
-          const prevRootState: RootState = current.memoizedState;
-          if (prevRootState.isDehydrated) {
-            const root: FiberRoot = finishedWork.stateNode;
-            commitHydratedContainer(root.containerInfo);
-          }
-        }
-      }
-      if (supportsPersistence) {
-        const fiberRoot: FiberRoot = finishedWork.stateNode;
-        const containerInfo = fiberRoot.containerInfo;
-        const pendingChildren = fiberRoot.pendingChildren;
-        replaceContainerChildren(containerInfo, pendingChildren);
-      }
-      return;
-    }
-    case HostPortal: {
-      if (supportsPersistence) {
-        const portal = finishedWork.stateNode;
-        const containerInfo = portal.containerInfo;
-        const pendingChildren = portal.pendingChildren;
-        replaceContainerChildren(containerInfo, pendingChildren);
-      }
-      return;
-    }
-    case Profiler: {
-      return;
-    }
-    case SuspenseComponent: {
-      commitSuspenseCallback(finishedWork);
-      attachSuspenseRetryListeners(finishedWork);
-      return;
-    }
-    case SuspenseListComponent: {
-      attachSuspenseRetryListeners(finishedWork);
-      return;
-    }
-    case IncompleteClassComponent: {
-      return;
-    }
-    case ScopeComponent: {
-      if (enableScopeAPI) {
-        const scopeInstance = finishedWork.stateNode;
-        prepareScopeUpdate(scopeInstance, finishedWork);
-        return;
-      }
-      break;
-    }
-  }
-
-  throw new Error(
-    'This unit of work tag should not have side-effects. This error is ' +
-      'likely caused by a bug in React. Please file an issue.',
-  );
-}
-
 function commitSuspenseCallback(finishedWork: Fiber) {
   // TODO: Move this to passive phase
   const newState: SuspenseState | null = finishedWork.memoizedState;
@@ -2133,6 +1981,7 @@ function commitMutationEffectsOnFiber(
   // switching on the type of work before checking the flags. That's what
   // we do in all the other phases. I think this one is only different
   // because of the shared reconciliation logic below.
+  const current = finishedWork.alternate;
   const flags = finishedWork.flags;
 
   if (flags & ContentReset) {
@@ -2140,7 +1989,6 @@ function commitMutationEffectsOnFiber(
   }
 
   if (flags & Ref) {
-    const current = finishedWork.alternate;
     if (current !== null) {
       commitDetachRef(current);
     }
@@ -2159,7 +2007,6 @@ function commitMutationEffectsOnFiber(
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
         if (isHidden) {
-          const current = finishedWork.alternate;
           const wasHidden = current !== null && current.memoizedState !== null;
           if (!wasHidden) {
             // TODO: Move to passive phase
@@ -2171,7 +2018,6 @@ function commitMutationEffectsOnFiber(
       case OffscreenComponent: {
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
-        const current = finishedWork.alternate;
         const wasHidden = current !== null && current.memoizedState !== null;
         const offscreenBoundary: Fiber = finishedWork;
 
@@ -2205,49 +2051,167 @@ function commitMutationEffectsOnFiber(
     }
   }
 
-  // The following switch statement is only concerned about placement,
-  // updates, and deletions. To avoid needing to add a case for every possible
-  // bitmap value, we remove the secondary effects from the effect tag and
-  // switch on that value.
-  const primaryFlags = flags & (Placement | Update | Hydrating);
-  outer: switch (primaryFlags) {
-    case Placement: {
-      commitPlacement(finishedWork);
-      // Clear the "placement" from effect tag so that we know that this is
-      // inserted, before any life-cycles like componentDidMount gets called.
-      // TODO: findDOMNode doesn't rely on this any more but isMounted does
-      // and isMounted is deprecated anyway so we should be able to kill this.
-      finishedWork.flags &= ~Placement;
-      break;
-    }
-    case PlacementAndUpdate: {
-      // Placement
-      commitPlacement(finishedWork);
-      // Clear the "placement" from effect tag so that we know that this is
-      // inserted, before any life-cycles like componentDidMount gets called.
-      finishedWork.flags &= ~Placement;
+  // These are related to reconciliation so they affect every fiber type; that's
+  // why they aren't in the main switch statement below.
+  if (flags & Placement) {
+    commitPlacement(finishedWork);
+    // Clear the "placement" from effect tag so that we know that this is
+    // inserted, before any life-cycles like componentDidMount gets called.
+    // TODO: findDOMNode doesn't rely on this any more but isMounted does
+    // and isMounted is deprecated anyway so we should be able to kill this.
+    finishedWork.flags &= ~Placement;
+  }
+  if (flags & Hydrating) {
+    finishedWork.flags &= ~Hydrating;
+  }
 
-      // Update
-      const current = finishedWork.alternate;
-      commitWork(current, finishedWork);
-      break;
-    }
-    case Hydrating: {
-      finishedWork.flags &= ~Hydrating;
-      break;
-    }
-    case HydratingAndUpdate: {
-      finishedWork.flags &= ~Hydrating;
+  // TODO: Move the ad-hoc flag checks above into the main switch statement.
+  if (flags & Update) {
+    switch (finishedWork.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case MemoComponent:
+      case SimpleMemoComponent: {
+        commitHookEffectListUnmount(
+          HookInsertion | HookHasEffect,
+          finishedWork,
+          finishedWork.return,
+        );
+        commitHookEffectListMount(HookInsertion | HookHasEffect, finishedWork);
+        // Layout effects are destroyed during the mutation phase so that all
+        // destroy functions for all fibers are called before any create functions.
+        // This prevents sibling component effects from interfering with each other,
+        // e.g. a destroy function in one component should never override a ref set
+        // by a create function in another component during the same commit.
+        if (
+          enableProfilerTimer &&
+          enableProfilerCommitHooks &&
+          finishedWork.mode & ProfileMode
+        ) {
+          try {
+            startLayoutEffectTimer();
+            commitHookEffectListUnmount(
+              HookLayout | HookHasEffect,
+              finishedWork,
+              finishedWork.return,
+            );
+          } finally {
+            recordLayoutEffectDuration(finishedWork);
+          }
+        } else {
+          commitHookEffectListUnmount(
+            HookLayout | HookHasEffect,
+            finishedWork,
+            finishedWork.return,
+          );
+        }
+        return;
+      }
+      case ClassComponent: {
+        return;
+      }
+      case HostComponent: {
+        if (supportsMutation) {
+          const instance: Instance = finishedWork.stateNode;
+          if (instance != null) {
+            // Commit the work prepared earlier.
+            const newProps = finishedWork.memoizedProps;
+            // For hydration we reuse the update path but we treat the oldProps
+            // as the newProps. The updatePayload will contain the real change in
+            // this case.
+            const oldProps =
+              current !== null ? current.memoizedProps : newProps;
+            const type = finishedWork.type;
+            // TODO: Type the updateQueue to be specific to host components.
+            const updatePayload: null | UpdatePayload = (finishedWork.updateQueue: any);
+            finishedWork.updateQueue = null;
+            if (updatePayload !== null) {
+              commitUpdate(
+                instance,
+                updatePayload,
+                type,
+                oldProps,
+                newProps,
+                finishedWork,
+              );
+            }
+          }
+        }
+        return;
+      }
+      case HostText: {
+        if (supportsMutation) {
+          if (finishedWork.stateNode === null) {
+            throw new Error(
+              'This should have a text node initialized. This error is likely ' +
+                'caused by a bug in React. Please file an issue.',
+            );
+          }
 
-      // Update
-      const current = finishedWork.alternate;
-      commitWork(current, finishedWork);
-      break;
-    }
-    case Update: {
-      const current = finishedWork.alternate;
-      commitWork(current, finishedWork);
-      break;
+          const textInstance: TextInstance = finishedWork.stateNode;
+          const newText: string = finishedWork.memoizedProps;
+          // For hydration we reuse the update path but we treat the oldProps
+          // as the newProps. The updatePayload will contain the real change in
+          // this case.
+          const oldText: string =
+            current !== null ? current.memoizedProps : newText;
+          commitTextUpdate(textInstance, oldText, newText);
+        }
+        return;
+      }
+      case HostRoot: {
+        if (supportsMutation && supportsHydration) {
+          if (current !== null) {
+            const prevRootState: RootState = current.memoizedState;
+            if (prevRootState.isDehydrated) {
+              commitHydratedContainer(root.containerInfo);
+            }
+          }
+        }
+        if (supportsPersistence) {
+          const containerInfo = root.containerInfo;
+          const pendingChildren = root.pendingChildren;
+          replaceContainerChildren(containerInfo, pendingChildren);
+        }
+        return;
+      }
+      case HostPortal: {
+        if (supportsPersistence) {
+          const portal = finishedWork.stateNode;
+          const containerInfo = portal.containerInfo;
+          const pendingChildren = portal.pendingChildren;
+          replaceContainerChildren(containerInfo, pendingChildren);
+        }
+        return;
+      }
+      case Profiler: {
+        return;
+      }
+      case SuspenseComponent: {
+        commitSuspenseCallback(finishedWork);
+        attachSuspenseRetryListeners(finishedWork);
+        return;
+      }
+      case SuspenseListComponent: {
+        attachSuspenseRetryListeners(finishedWork);
+        return;
+      }
+      case IncompleteClassComponent: {
+        return;
+      }
+      case ScopeComponent: {
+        if (enableScopeAPI) {
+          const scopeInstance = finishedWork.stateNode;
+          prepareScopeUpdate(scopeInstance, finishedWork);
+        }
+        return;
+      }
+      default: {
+        throw new Error(
+          'This unit of work tag should not have side-effects. This error is ' +
+            'likely caused by a bug in React. Please file an issue.',
+        );
+      }
     }
   }
 }
@@ -3056,7 +3020,6 @@ export {
   commitResetTextContent,
   commitPlacement,
   commitDeletion,
-  commitWork,
   commitAttachRef,
   commitDetachRef,
   invokeLayoutEffectMountInDEV,
