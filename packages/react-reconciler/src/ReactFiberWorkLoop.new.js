@@ -409,6 +409,8 @@ let rootWithPassiveNestedUpdates: FiberRoot | null = null;
 let currentEventTime: number = NoTimestamp;
 let currentEventTransitionLane: Lanes = NoLanes;
 
+let isRunningInsertionEffect = false;
+
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
 }
@@ -519,6 +521,12 @@ export function scheduleUpdateOnFiber(
   eventTime: number,
 ): FiberRoot | null {
   checkForNestedUpdates();
+
+  if (__DEV__) {
+    if (isRunningInsertionEffect) {
+      console.error('useInsertionEffect must not schedule updates.');
+    }
+  }
 
   const root = markUpdateLaneFromFiberToRoot(fiber, lane);
   if (root === null) {
@@ -2551,6 +2559,9 @@ export function captureCommitPhaseError(
   nearestMountedAncestor: Fiber | null,
   error: mixed,
 ) {
+  if (__DEV__) {
+    setIsRunningInsertionEffect(false);
+  }
   if (sourceFiber.tag === HostRoot) {
     // Error was thrown at the root. There is no parent, so the root
     // itself should capture it.
@@ -3160,5 +3171,11 @@ function warnIfSuspenseResolutionNotWrappedWithActDEV(root: FiberRoot): void {
           ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
       );
     }
+  }
+}
+
+export function setIsRunningInsertionEffect(isRunning: boolean): void {
+  if (__DEV__) {
+    isRunningInsertionEffect = isRunning;
   }
 }

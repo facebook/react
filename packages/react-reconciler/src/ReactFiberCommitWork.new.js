@@ -136,6 +136,7 @@ import {
   restorePendingUpdaters,
   addTransitionStartCallbackToPendingTransition,
   addTransitionCompleteCallbackToPendingTransition,
+  setIsRunningInsertionEffect,
 } from './ReactFiberWorkLoop.new';
 import {
   NoFlags as NoHookEffect,
@@ -536,7 +537,17 @@ function commitHookEffectListUnmount(
             }
           }
 
+          if (__DEV__) {
+            if ((flags & HookInsertion) !== NoHookEffect) {
+              setIsRunningInsertionEffect(true);
+            }
+          }
           safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+          if (__DEV__) {
+            if ((flags & HookInsertion) !== NoHookEffect) {
+              setIsRunningInsertionEffect(false);
+            }
+          }
 
           if (enableSchedulingProfiler) {
             if ((flags & HookPassive) !== NoHookEffect) {
@@ -570,7 +581,17 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
 
         // Mount
         const create = effect.create;
+        if (__DEV__) {
+          if ((flags & HookInsertion) !== NoHookEffect) {
+            setIsRunningInsertionEffect(true);
+          }
+        }
         effect.destroy = create();
+        if (__DEV__) {
+          if ((flags & HookInsertion) !== NoHookEffect) {
+            setIsRunningInsertionEffect(false);
+          }
+        }
 
         if (enableSchedulingProfiler) {
           if ((flags & HookPassive) !== NoHookEffect) {
