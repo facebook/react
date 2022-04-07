@@ -41,7 +41,7 @@ type Options = {|
   bootstrapModules?: Array<string>,
   progressiveChunkSize?: number,
   onShellReady?: () => void,
-  onShellError?: () => void,
+  onShellError?: (error: mixed) => void,
   onAllReady?: () => void,
   onError?: (error: mixed) => void,
 |};
