@@ -102,36 +102,25 @@ export default function ReactFlightVitePlugin({
         const importerToRootPath = normalizePath(
           path.relative(importerPath, config.root),
         );
-        const [importerToRootNested] =
-          importerToRootPath.match(/(\.\.\/)+(\.\.)?/) || [];
 
-        const userPrefix = path.normalize(
-          path.join(
-            importerPath,
-            importerToRootNested.replace(/\/?$/, path.sep),
-          ),
-        );
         const userGlob = path.join(importerToRootPath, CLIENT_COMPONENT_GLOB);
 
-        const importers = [[userGlob, userPrefix]];
+        const importers = [userGlob];
 
         clientComponentPaths.forEach(componentPath => {
-          const libPrefix = componentPath + path.sep;
-          const libGlob = path.join(
-            path.relative(importerPath, componentPath),
-            CLIENT_COMPONENT_GLOB,
+          importers.push(
+            path.join(
+              path.relative(importerPath, componentPath),
+              CLIENT_COMPONENT_GLOB,
+            ),
           );
-
-          importers.push([libGlob, libPrefix]);
         });
 
         const injectedGlobs = `Object.assign(Object.create(null), ${importers
           .map(
-            ([glob, prefix]) =>
+            glob =>
               // Mark the globs to modify the result after Vite resolves them.
-              // The prefix is used later to turn relative imports
-              // into absolute imports, and then into hashes.
-              `/* HASH_BEGIN ${normalizePath(prefix)} */ ` +
+              `/* HASH_BEGIN */ ` +
               `import.meta.glob('${normalizePath(glob)}') /* HASH_END */`,
           )
           .join(', ')});`;
@@ -212,15 +201,17 @@ const hashImportsPlugin = {
   transform(code: string, id: string) {
     // Turn relative import paths to lossy hashes
     if (rscViteFileRE.test(id)) {
-      const nestedRE = /\.\.\//gm;
-
       return code.replace(
-        /\/\*\s*HASH_BEGIN\s*(.+?)\s*\*\/\s*([^]+?)\/\*\s*HASH_END\s*\*\//gm,
-        function(_, prefix, imports) {
+        /\/\*\s*HASH_BEGIN\s*\*\/\s*([^]+?)\/\*\s*HASH_END\s*\*\//gm,
+        function(_, imports) {
           return imports
             .trim()
             .replace(/"([^"]+?)":/gm, function(__, relativePath) {
-              const absolutePath = prefix + relativePath.replace(nestedRE, '');
+              const absolutePath = path.resolve(
+                path.dirname(id.split('?')[0]),
+                relativePath,
+              );
+
               return `"${getComponentId(absolutePath)}":`;
             });
         },
