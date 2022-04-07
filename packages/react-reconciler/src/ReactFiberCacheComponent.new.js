@@ -24,11 +24,10 @@ const AbortControllerLocal = enableCache
         const listeners = (this.listeners = []);
         const signal = (this.signal = {
           aborted: false,
+          addEventListener: (type, listener) => {
+            listeners.push(listener);
+          },
         });
-
-        signal.addEventListener = (type, listener) => {
-          listeners.push(listener);
-        };
 
         this.abort = () => {
           signal.aborted = true;
