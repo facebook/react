@@ -537,15 +537,16 @@ function commitHookEffectListUnmount(
             }
           }
 
-          if (__DEV__ && (flags & HookInsertion) !== NoHookEffect) {
-            setIsRunningInsertionEffect(true);
-            try {
-              safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
-            } finally {
+          if (__DEV__) {
+            if ((flags & HookInsertion) !== NoHookEffect) {
+              setIsRunningInsertionEffect(true);
+            }
+          }
+          safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+          if (__DEV__) {
+            if ((flags & HookInsertion) !== NoHookEffect) {
               setIsRunningInsertionEffect(false);
             }
-          } else {
-            safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
           }
 
           if (enableSchedulingProfiler) {
@@ -580,15 +581,16 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
 
         // Mount
         const create = effect.create;
-        if (__DEV__ && (flags & HookInsertion) !== NoHookEffect) {
-          setIsRunningInsertionEffect(true);
-          try {
-            effect.destroy = create();
-          } finally {
+        if (__DEV__) {
+          if ((flags & HookInsertion) !== NoHookEffect) {
+            setIsRunningInsertionEffect(true);
+          }
+        }
+        effect.destroy = create();
+        if (__DEV__) {
+          if ((flags & HookInsertion) !== NoHookEffect) {
             setIsRunningInsertionEffect(false);
           }
-        } else {
-          effect.destroy = create();
         }
 
         if (enableSchedulingProfiler) {
