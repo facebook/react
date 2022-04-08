@@ -859,13 +859,6 @@ export function clearTransitionsForLanes(root: FiberRoot, lanes: Lane | Lanes) {
     const transitions = root.transitionLanes[index];
     if (transitions !== null) {
       root.transitionLanes[index] = null;
-    } else {
-      if (__DEV__) {
-        console.error(
-          'React Bug: transition lanes accessed out of bounds index: %s',
-          index.toString(),
-        );
-      }
     }
 
     lanes &= ~lane;
