@@ -131,6 +131,7 @@ export function processSymbolChunk(
 export {
   scheduleWork,
   flushBuffered,
+  requestFlush,
   beginWriting,
   writeChunk,
   writeChunkAndReturn,

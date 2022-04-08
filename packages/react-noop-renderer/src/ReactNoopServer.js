@@ -86,6 +86,7 @@ const ReactNoopServer = ReactFizzServer({
   close(destination: Destination): void {},
   closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
+  requestFlush(destination: Destination): void {},
 
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID: null,
 

@@ -39,7 +39,7 @@ function renderToReadableStream(
       startWork(request);
     },
     pull(controller) {
-      startFlowing(request, controller);
+      startFlowing(request, (controller: any));
     },
     cancel(reason) {},
   });

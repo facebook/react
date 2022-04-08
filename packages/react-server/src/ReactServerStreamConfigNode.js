@@ -33,6 +33,13 @@ export function flushBuffered(destination: Destination) {
   }
 }
 
+export function requestFlush(destination: Destination) {
+  // in node we may end up with sort of timer based flusing logic but for now
+  // we will say that whenever this is called we always flush
+  completeWriting(destination);
+  beginWriting(destination);
+}
+
 export function beginWriting(destination: Destination) {
   // Older Node streams like http.createServer don't have this.
   if (typeof destination.cork === 'function') {

@@ -144,6 +144,8 @@ export function scheduleWork(callback: () => void) {
 
 export function flushBuffered(destination: Destination) {}
 
+export function requestFlush(destination: Destination) {}
+
 export function beginWriting(destination: Destination) {}
 
 export function writeChunk(destination: Destination, chunk: Chunk): void {

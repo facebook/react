@@ -35,6 +35,7 @@ export const writeChunk = $$$hostConfig.writeChunk;
 export const writeChunkAndReturn = $$$hostConfig.writeChunkAndReturn;
 export const completeWriting = $$$hostConfig.completeWriting;
 export const flushBuffered = $$$hostConfig.flushBuffered;
+export const requestFlush = $$$hostConfig.requestFlush;
 export const close = $$$hostConfig.close;
 export const closeWithError = $$$hostConfig.closeWithError;
 export const stringToChunk = $$$hostConfig.stringToChunk;
