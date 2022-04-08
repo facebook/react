@@ -1899,13 +1899,6 @@ export function isSuspenseBoundaryBeingHidden(
   return false;
 }
 
-function commitResetTextContent(current: Fiber) {
-  if (!supportsMutation) {
-    return;
-  }
-  resetTextContent(current.stateNode);
-}
-
 export function commitMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
@@ -1977,101 +1970,19 @@ function commitMutationEffectsOnFiber(
   root: FiberRoot,
   lanes: Lanes,
 ) {
-  // TODO: The factoring of this phase could probably be improved. Consider
-  // switching on the type of work before checking the flags. That's what
-  // we do in all the other phases. I think this one is only different
-  // because of the shared reconciliation logic below.
   const current = finishedWork.alternate;
   const flags = finishedWork.flags;
 
-  if (flags & ContentReset) {
-    commitResetTextContent(finishedWork);
-  }
-
-  if (flags & Ref) {
-    if (current !== null) {
-      commitDetachRef(current);
-    }
-    if (enableScopeAPI) {
-      // TODO: This is a temporary solution that allowed us to transition away
-      // from React Flare on www.
-      if (finishedWork.tag === ScopeComponent) {
-        commitAttachRef(finishedWork);
-      }
-    }
-  }
-
-  if (flags & Visibility) {
-    switch (finishedWork.tag) {
-      case SuspenseComponent: {
-        const newState: OffscreenState | null = finishedWork.memoizedState;
-        const isHidden = newState !== null;
-        if (isHidden) {
-          const wasHidden = current !== null && current.memoizedState !== null;
-          if (!wasHidden) {
-            // TODO: Move to passive phase
-            markCommitTimeOfFallback();
-          }
-        }
-        break;
-      }
-      case OffscreenComponent: {
-        const newState: OffscreenState | null = finishedWork.memoizedState;
-        const isHidden = newState !== null;
-        const wasHidden = current !== null && current.memoizedState !== null;
-        const offscreenBoundary: Fiber = finishedWork;
-
-        if (supportsMutation) {
-          // TODO: This needs to run whenever there's an insertion or update
-          // inside a hidden Offscreen tree.
-          hideOrUnhideAllChildren(offscreenBoundary, isHidden);
-        }
-
-        if (enableSuspenseLayoutEffectSemantics) {
-          if (isHidden) {
-            if (!wasHidden) {
-              if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
-                nextEffect = offscreenBoundary;
-                let offscreenChild = offscreenBoundary.child;
-                while (offscreenChild !== null) {
-                  nextEffect = offscreenChild;
-                  disappearLayoutEffects_begin(offscreenChild);
-                  offscreenChild = offscreenChild.sibling;
-                }
-              }
-            }
-          } else {
-            if (wasHidden) {
-              // TODO: Move re-appear call here for symmetry?
-            }
-          }
-          break;
-        }
-      }
-    }
-  }
-
-  // These are related to reconciliation so they affect every fiber type; that's
-  // why they aren't in the main switch statement below.
-  if (flags & Placement) {
-    commitPlacement(finishedWork);
-    // Clear the "placement" from effect tag so that we know that this is
-    // inserted, before any life-cycles like componentDidMount gets called.
-    // TODO: findDOMNode doesn't rely on this any more but isMounted does
-    // and isMounted is deprecated anyway so we should be able to kill this.
-    finishedWork.flags &= ~Placement;
-  }
-  if (flags & Hydrating) {
-    finishedWork.flags &= ~Hydrating;
-  }
-
-  // All logic in these branches should be wrapped in a flag check.
-  // TODO: Move the ad-hoc flag checks above into the main switch statement.
+  // The effect flag should be checked *after* we refine the type of fiber,
+  // because the fiber tag is more specific. An exception is any flag related
+  // to reconcilation, because those can be set on all fiber types.
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
+      commitReconciliationEffects(finishedWork);
+
       if (flags & Update) {
         commitHookEffectListUnmount(
           HookInsertion | HookHasEffect,
@@ -2109,9 +2020,31 @@ function commitMutationEffectsOnFiber(
       }
       return;
     }
+    case ClassComponent: {
+      commitReconciliationEffects(finishedWork);
+
+      if (flags & Ref) {
+        if (current !== null) {
+          commitDetachRef(current);
+        }
+      }
+      return;
+    }
     case HostComponent: {
-      if (flags & Update) {
-        if (supportsMutation) {
+      commitReconciliationEffects(finishedWork);
+
+      if (flags & Ref) {
+        if (current !== null) {
+          commitDetachRef(current);
+        }
+      }
+      if (supportsMutation) {
+        if (flags & ContentReset) {
+          const instance: Instance = finishedWork.stateNode;
+          resetTextContent(instance);
+        }
+
+        if (flags & Update) {
           const instance: Instance = finishedWork.stateNode;
           if (instance != null) {
             // Commit the work prepared earlier.
@@ -2141,6 +2074,8 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostText: {
+      commitReconciliationEffects(finishedWork);
+
       if (flags & Update) {
         if (supportsMutation) {
           if (finishedWork.stateNode === null) {
@@ -2163,6 +2098,8 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostRoot: {
+      commitReconciliationEffects(finishedWork);
+
       if (flags & Update) {
         if (supportsMutation && supportsHydration) {
           if (current !== null) {
@@ -2181,6 +2118,8 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostPortal: {
+      commitReconciliationEffects(finishedWork);
+
       if (flags & Update) {
         if (supportsPersistence) {
           const portal = finishedWork.stateNode;
@@ -2192,27 +2131,110 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case SuspenseComponent: {
+      commitReconciliationEffects(finishedWork);
+
+      if (flags & Visibility) {
+        const newState: OffscreenState | null = finishedWork.memoizedState;
+        const isHidden = newState !== null;
+        if (isHidden) {
+          const wasHidden = current !== null && current.memoizedState !== null;
+          if (!wasHidden) {
+            // TODO: Move to passive phase
+            markCommitTimeOfFallback();
+          }
+        }
+      }
       if (flags & Update) {
         commitSuspenseCallback(finishedWork);
         attachSuspenseRetryListeners(finishedWork);
       }
       return;
     }
+    case OffscreenComponent: {
+      commitReconciliationEffects(finishedWork);
+
+      if (flags & Visibility) {
+        const newState: OffscreenState | null = finishedWork.memoizedState;
+        const isHidden = newState !== null;
+        const wasHidden = current !== null && current.memoizedState !== null;
+        const offscreenBoundary: Fiber = finishedWork;
+
+        if (supportsMutation) {
+          // TODO: This needs to run whenever there's an insertion or update
+          // inside a hidden Offscreen tree.
+          hideOrUnhideAllChildren(offscreenBoundary, isHidden);
+        }
+
+        if (enableSuspenseLayoutEffectSemantics) {
+          if (isHidden) {
+            if (!wasHidden) {
+              if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
+                nextEffect = offscreenBoundary;
+                let offscreenChild = offscreenBoundary.child;
+                while (offscreenChild !== null) {
+                  nextEffect = offscreenChild;
+                  disappearLayoutEffects_begin(offscreenChild);
+                  offscreenChild = offscreenChild.sibling;
+                }
+              }
+            }
+          } else {
+            if (wasHidden) {
+              // TODO: Move re-appear call here for symmetry?
+            }
+          }
+        }
+      }
+      return;
+    }
     case SuspenseListComponent: {
+      commitReconciliationEffects(finishedWork);
+
       if (flags & Update) {
         attachSuspenseRetryListeners(finishedWork);
       }
       return;
     }
     case ScopeComponent: {
-      if (flags & Update) {
-        if (enableScopeAPI) {
+      if (enableScopeAPI) {
+        commitReconciliationEffects(finishedWork);
+
+        // TODO: This is a temporary solution that allowed us to transition away
+        // from React Flare on www.
+        if (flags & Ref) {
+          if (current !== null) {
+            commitDetachRef(current);
+          }
+          commitAttachRef(finishedWork);
+        }
+        if (flags & Update) {
           const scopeInstance = finishedWork.stateNode;
           prepareScopeUpdate(scopeInstance, finishedWork);
         }
       }
       return;
     }
+    default: {
+      commitReconciliationEffects(finishedWork);
+    }
+  }
+}
+
+function commitReconciliationEffects(finishedWork: Fiber) {
+  // Placement effects (insertions, reorders) can be scheduled on any fiber
+  // type. They needs to happen after the children effects have fired, but
+  // before the effects on this fiber have fired.
+  const flags = finishedWork.flags;
+  if (flags & Placement) {
+    commitPlacement(finishedWork);
+    // Clear the "placement" from effect tag so that we know that this is
+    // inserted, before any life-cycles like componentDidMount gets called.
+    // TODO: findDOMNode doesn't rely on this any more but isMounted does
+    // and isMounted is deprecated anyway so we should be able to kill this.
+    finishedWork.flags &= ~Placement;
+  }
+  if (flags & Hydrating) {
+    finishedWork.flags &= ~Hydrating;
   }
 }
 
@@ -3017,7 +3039,6 @@ function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
 }
 
 export {
-  commitResetTextContent,
   commitPlacement,
   commitDeletion,
   commitAttachRef,
