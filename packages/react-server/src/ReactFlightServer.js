@@ -364,6 +364,17 @@ function describeValueForErrorMessage(value: ReactModel): string {
     }
     case 'function':
       return 'function';
+    case 'undefined':
+      let info = 'undefined';
+
+      if (__DEV__) {
+        info +=
+          '. You likely forgot to export your component from the file ' +
+          "it's defined in, or you might have mixed up default and " +
+          'named imports.';
+      }
+
+      return info;
     default:
       // eslint-disable-next-line react-internal/safe-string-coercion
       return String(value);
