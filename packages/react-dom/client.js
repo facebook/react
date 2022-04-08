@@ -23,9 +23,10 @@ import {
 } from './';
 
 export function createRoot(
-  container: Element | DocumentFragment,
+  container?: Element | DocumentFragment,
   options?: CreateRootOptions,
 ): RootType {
+  if(!container) throw new Error("Root container not found!");
   if (__DEV__) {
     Internals.usingClientEntryPoint = true;
   }
@@ -39,10 +40,11 @@ export function createRoot(
 }
 
 export function hydrateRoot(
-  container: Document | Element,
+  container?: Document | Element,
   children: ReactNodeList,
   options?: HydrateRootOptions,
 ): RootType {
+  if(!container) throw new Error("Root container not found!");
   if (__DEV__) {
     Internals.usingClientEntryPoint = true;
   }
