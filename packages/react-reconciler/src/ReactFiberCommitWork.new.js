@@ -84,6 +84,7 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
+  getCurrentFiber as getCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
 import {
@@ -1901,62 +1902,50 @@ export function isSuspenseBoundaryBeingHidden(
 
 export function commitMutationEffects(
   root: FiberRoot,
-  firstChild: Fiber,
+  finishedWork: Fiber,
   committedLanes: Lanes,
 ) {
   inProgressLanes = committedLanes;
   inProgressRoot = root;
-  nextEffect = firstChild;
+  nextEffect = finishedWork;
 
-  commitMutationEffects_begin(root, committedLanes);
+  setCurrentDebugFiberInDEV(finishedWork);
+  commitMutationEffectsOnFiber(finishedWork, root, committedLanes);
+  setCurrentDebugFiberInDEV(finishedWork);
 
   inProgressLanes = null;
   inProgressRoot = null;
 }
 
-function commitMutationEffects_begin(root: FiberRoot, lanes: Lanes) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-
-    // TODO: Should wrap this in flags check, too, as optimization
-    const deletions = fiber.deletions;
-    if (deletions !== null) {
-      for (let i = 0; i < deletions.length; i++) {
-        const childToDelete = deletions[i];
-        try {
-          commitDeletion(root, childToDelete, fiber);
-        } catch (error) {
-          captureCommitPhaseError(childToDelete, fiber, error);
-        }
+function recursivelyTraverseMutationEffects(
+  root: FiberRoot,
+  parentFiber: Fiber,
+  lanes: Lanes,
+) {
+  // Deletions effects can be scheduled on any fiber type. They need to happen
+  // before the children effects hae fired.
+  const deletions = parentFiber.deletions;
+  if (deletions !== null) {
+    for (let i = 0; i < deletions.length; i++) {
+      const childToDelete = deletions[i];
+      try {
+        commitDeletion(root, childToDelete, parentFiber);
+      } catch (error) {
+        captureCommitPhaseError(childToDelete, parentFiber, error);
       }
     }
+  }
 
-    const child = fiber.child;
-    if ((fiber.subtreeFlags & MutationMask) !== NoFlags && child !== null) {
-      child.return = fiber;
-      nextEffect = child;
-    } else {
-      commitMutationEffects_complete(root, lanes);
+  const prevDebugFiber = getCurrentDebugFiberInDEV();
+  if (parentFiber.subtreeFlags & MutationMask) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      setCurrentDebugFiberInDEV(child);
+      commitMutationEffectsOnFiber(child, root, lanes);
+      child = child.sibling;
     }
   }
-}
-
-function commitMutationEffects_complete(root: FiberRoot, lanes: Lanes) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    setCurrentDebugFiberInDEV(fiber);
-    commitMutationEffectsOnFiber(fiber, root, lanes);
-    resetCurrentDebugFiberInDEV();
-
-    const sibling = fiber.sibling;
-    if (sibling !== null) {
-      sibling.return = fiber.return;
-      nextEffect = sibling;
-      return;
-    }
-
-    nextEffect = fiber.return;
-  }
+  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 function commitMutationEffectsOnFiber(
@@ -1975,6 +1964,7 @@ function commitMutationEffectsOnFiber(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
       if (flags & Update) {
@@ -2027,6 +2017,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case ClassComponent: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
       if (flags & Ref) {
@@ -2037,6 +2028,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostComponent: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
       if (flags & Ref) {
@@ -2045,7 +2037,13 @@ function commitMutationEffectsOnFiber(
         }
       }
       if (supportsMutation) {
-        if (flags & ContentReset) {
+        // TODO: ContentReset gets cleared by the children during the commit
+        // phase. This is a refactor hazard because it means we must read
+        // flags the flags after `commitReconciliationEffects` has already run;
+        // the order matters. We should refactor so that ContentReset does not
+        // rely on mutating the flag during commit. Like by setting a flag
+        // during the render phase instead.
+        if (finishedWork.flags & ContentReset) {
           const instance: Instance = finishedWork.stateNode;
           try {
             resetTextContent(instance);
@@ -2092,6 +2090,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostText: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
       if (flags & Update) {
@@ -2121,6 +2120,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostRoot: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
       if (flags & Update) {
@@ -2153,6 +2153,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostPortal: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
       if (flags & Update) {
@@ -2170,6 +2171,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case SuspenseComponent: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
       if (flags & Visibility) {
@@ -2194,6 +2196,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case OffscreenComponent: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
       if (flags & Visibility) {
@@ -2231,6 +2234,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case SuspenseListComponent: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
       if (flags & Update) {
@@ -2240,6 +2244,7 @@ function commitMutationEffectsOnFiber(
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork);
 
         // TODO: This is a temporary solution that allowed us to transition away
@@ -2258,11 +2263,13 @@ function commitMutationEffectsOnFiber(
       return;
     }
     default: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
+
+      return;
     }
   }
 }
-
 function commitReconciliationEffects(finishedWork: Fiber) {
   // Placement effects (insertions, reorders) can be scheduled on any fiber
   // type. They needs to happen after the children effects have fired, but
