@@ -12,7 +12,6 @@
 // Polyfills for test environment
 global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
-global.AbortController = require('abort-controller');
 
 let React;
 let ReactDOMFizzServer;
