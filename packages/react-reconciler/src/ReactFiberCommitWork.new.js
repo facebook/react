@@ -26,6 +26,7 @@ import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import type {RootState} from './ReactFiberRoot.new';
+import type {Transition} from './ReactFiberTracingMarkerComponent.new';
 
 import {
   enableCreateEventHandleAPI,
@@ -2614,15 +2615,22 @@ export function commitPassiveMountEffects(
   root: FiberRoot,
   finishedWork: Fiber,
   committedLanes: Lanes,
+  committedTransitions: Array<Transition> | null,
 ): void {
   nextEffect = finishedWork;
-  commitPassiveMountEffects_begin(finishedWork, root, committedLanes);
+  commitPassiveMountEffects_begin(
+    finishedWork,
+    root,
+    committedLanes,
+    committedTransitions,
+  );
 }
 
 function commitPassiveMountEffects_begin(
   subtreeRoot: Fiber,
   root: FiberRoot,
   committedLanes: Lanes,
+  committedTransitions: Array<Transition> | null,
 ) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
@@ -2631,7 +2639,12 @@ function commitPassiveMountEffects_begin(
       ensureCorrectReturnPointer(firstChild, fiber);
       nextEffect = firstChild;
     } else {
-      commitPassiveMountEffects_complete(subtreeRoot, root, committedLanes);
+      commitPassiveMountEffects_complete(
+        subtreeRoot,
+        root,
+        committedLanes,
+        committedTransitions,
+      );
     }
   }
 }
@@ -2640,6 +2653,7 @@ function commitPassiveMountEffects_complete(
   subtreeRoot: Fiber,
   root: FiberRoot,
   committedLanes: Lanes,
+  committedTransitions: Array<Transition> | null,
 ) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
@@ -2647,7 +2661,12 @@ function commitPassiveMountEffects_complete(
     if ((fiber.flags & Passive) !== NoFlags) {
       setCurrentDebugFiberInDEV(fiber);
       try {
-        commitPassiveMountOnFiber(root, fiber, committedLanes);
+        commitPassiveMountOnFiber(
+          root,
+          fiber,
+          committedLanes,
+          committedTransitions,
+        );
       } catch (error) {
         reportUncaughtErrorInDEV(error);
         captureCommitPhaseError(fiber, fiber.return, error);
@@ -2675,6 +2694,7 @@ function commitPassiveMountOnFiber(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
   committedLanes: Lanes,
+  committedTransitions: Array<Transition> | null,
 ): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
