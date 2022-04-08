@@ -178,10 +178,9 @@ function attemptResolveElement(
     );
   }
 
-  const moduleReference = getModuleReference(type);
-  if (moduleReference) {
+  if (getModuleReference(type)) {
     // This is a reference to a client component.
-    return [REACT_ELEMENT_TYPE, moduleReference, key, props];
+    return [REACT_ELEMENT_TYPE, type, key, props];
   }
 
   if (typeof type === 'function') {
