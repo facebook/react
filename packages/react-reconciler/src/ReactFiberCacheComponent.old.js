@@ -21,7 +21,7 @@ const AbortControllerLocal = enableCache
   ? typeof AbortController !== 'undefined'
     ? AbortController
     : (function AbortControllerShim() {
-        const listeners = (this.listeners = []);
+        const listeners = [];
         const signal = (this.signal = {
           aborted: false,
           addEventListener: (type, listener) => {
