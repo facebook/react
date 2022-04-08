@@ -406,6 +406,13 @@ const tests = {
         const [myState, setMyState] = useState(null);
       }
     `,
+    `
+      // Valid because useNewBehavior is not a hook
+      function MyComponent() {
+        let useNewBehavior = config.behavior === 'new'
+        doStuff(useNewBehavior)
+      }
+    `
   ],
   invalid: [
     {
@@ -637,6 +644,18 @@ const tests = {
         }
       `,
       errors: [callbackError('useState')],
+    },
+    {
+      code: `
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+
+        let useMyHook = () => {};
+        function List(props) {
+          return props.items.map(useMyHook);
+        }
+      `,
+      errors: [callbackError('useMyHook')],
     },
     {
       code: `
