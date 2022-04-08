@@ -661,7 +661,7 @@ function updateOffscreenComponent(
         // push the cache pool even though we're going to bail out
         // because otherwise there'd be a context mismatch
         if (current !== null) {
-          pushTransition(workInProgress, null);
+          pushTransition(workInProgress, null, null);
         }
       }
       pushRenderLanes(workInProgress, renderLanes);
@@ -695,7 +695,7 @@ function updateOffscreenComponent(
         // push the cache pool even though we're going to bail out
         // because otherwise there'd be a context mismatch
         if (current !== null) {
-          pushTransition(workInProgress, null);
+          pushTransition(workInProgress, null, null);
         }
       }
 
@@ -733,7 +733,9 @@ function updateOffscreenComponent(
         // using the same cache. Unless the parent changed, since that means
         // there was a refresh.
         const prevCachePool = prevState !== null ? prevState.cachePool : null;
-        pushTransition(workInProgress, prevCachePool);
+        // TODO: Consider if and how Offscreen pre-rendering should
+        // be attributed to the transition that spawned it
+        pushTransition(workInProgress, prevCachePool, null);
       }
 
       pushRenderLanes(workInProgress, subtreeRenderLanes);
@@ -751,7 +753,7 @@ function updateOffscreenComponent(
         // using the same cache. Unless the parent changed, since that means
         // there was a refresh.
         const prevCachePool = prevState.cachePool;
-        pushTransition(workInProgress, prevCachePool);
+        pushTransition(workInProgress, prevCachePool, null);
       }
 
       // Since we're not hidden anymore, reset the state
@@ -767,7 +769,7 @@ function updateOffscreenComponent(
         // using the same cache. Unless the parent changed, since that means
         // there was a refresh.
         if (current !== null) {
-          pushTransition(workInProgress, null);
+          pushTransition(workInProgress, null, null);
         }
       }
     }
@@ -1330,10 +1332,10 @@ function updateHostRoot(current, workInProgress, renderLanes) {
 
   const nextState: RootState = workInProgress.memoizedState;
   const root: FiberRoot = workInProgress.stateNode;
+  pushRootTransition(workInProgress, root, renderLanes);
 
   if (enableCache) {
     const nextCache: Cache = nextState.cache;
-    pushRootTransition(root);
     pushCacheProvider(workInProgress, nextCache);
     if (nextCache !== prevState.cache) {
       // The root cache refreshed.
@@ -3572,10 +3574,11 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
     case HostRoot:
       pushHostRootContext(workInProgress);
       const root: FiberRoot = workInProgress.stateNode;
+      pushRootTransition(workInProgress, root, renderLanes);
+
       if (enableCache) {
         const cache: Cache = current.memoizedState.cache;
         pushCacheProvider(workInProgress, cache);
-        pushRootTransition(root);
       }
       if (enableTransitionTracing) {
         workInProgress.memoizedState.transitions = getWorkInProgressTransitions();
