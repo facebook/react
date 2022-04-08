@@ -18,7 +18,9 @@ import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Props} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 type Config = {|
+  checkBridgeProtocolCompatibility?: boolean,
   supportsNativeInspection?: boolean,
+  supportsProfiling?: boolean,
 |};
 
 export function createStore(bridge: FrontendBridge, config?: Config): Store {
@@ -26,7 +28,8 @@ export function createStore(bridge: FrontendBridge, config?: Config): Store {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,
     supportsTimeline: true,
-    supportsNativeInspection: config?.supportsNativeInspection !== false,
+    supportsNativeInspection: true,
+    ...config,
   });
 }
 
