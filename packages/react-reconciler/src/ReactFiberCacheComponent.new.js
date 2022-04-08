@@ -15,29 +15,33 @@ import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {pushProvider, popProvider} from './ReactFiberNewContext.new';
 import * as Scheduler from 'scheduler';
 
-// In environments without AbortController (e.g. tests)
-// replace it with a lightweight shim that only has the features we use.
-const AbortControllerLocal = enableCache
-  ? typeof AbortController !== 'undefined'
-    ? AbortController
-    : (function AbortControllerShim() {
-        const listeners = (this.listeners = []);
-        const signal = (this.signal = {
-          aborted: false,
-          addEventListener: (type, listener) => {
-            listeners.push(listener);
-          },
-        });
+function createFallbackController() {
+  const listeners = [];
+  const signal = {
+    aborted: false,
+    addEventListener(type, listener) {
+      listeners.push(listener);
+    },
+  };
+  return {
+    signal,
+    abort() {
+      signal.aborted = true;
+      listeners.forEach(listener => listener());
+    },
+  };
+}
 
-        this.abort = () => {
-          signal.aborted = true;
-          listeners.forEach(listener => listener());
-        };
-      }: AbortController)
+// In environments without AbortController (e.g. tests in Node < 16)
+// replace it with a lightweight shim that only has the features we use.
+const createController: () => AbortController = enableCache
+  ? typeof AbortController !== 'undefined'
+    ? () => new AbortController()
+    : (createFallbackController: any)
   : (null: any);
 
 export type Cache = {|
-  controller: AbortControllerLocal,
+  controller: AbortController,
   data: Map<() => mixed, mixed>,
   refCount: number,
 |};
@@ -87,7 +91,7 @@ export function createCache(): Cache {
     return (null: any);
   }
   const cache: Cache = {
-    controller: new AbortControllerLocal(),
+    controller: createController(),
     data: new Map(),
     refCount: 0,
   };
