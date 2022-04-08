@@ -1077,21 +1077,28 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
       if (node.tag === HostComponent) {
         if (hostSubtreeRoot === null) {
           hostSubtreeRoot = node;
-
-          const instance = node.stateNode;
-          if (isHidden) {
-            hideInstance(instance);
-          } else {
-            unhideInstance(node.stateNode, node.memoizedProps);
+          try {
+            const instance = node.stateNode;
+            if (isHidden) {
+              hideInstance(instance);
+            } else {
+              unhideInstance(node.stateNode, node.memoizedProps);
+            }
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
         }
       } else if (node.tag === HostText) {
         if (hostSubtreeRoot === null) {
-          const instance = node.stateNode;
-          if (isHidden) {
-            hideTextInstance(instance);
-          } else {
-            unhideTextInstance(instance, node.memoizedProps);
+          try {
+            const instance = node.stateNode;
+            if (isHidden) {
+              hideTextInstance(instance);
+            } else {
+              unhideTextInstance(instance, node.memoizedProps);
+            }
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
         }
       } else if (
@@ -1938,11 +1945,7 @@ function commitMutationEffects_complete(root: FiberRoot, lanes: Lanes) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
     setCurrentDebugFiberInDEV(fiber);
-    try {
-      commitMutationEffectsOnFiber(fiber, root, lanes);
-    } catch (error) {
-      captureCommitPhaseError(fiber, fiber.return, error);
-    }
+    commitMutationEffectsOnFiber(fiber, root, lanes);
     resetCurrentDebugFiberInDEV();
 
     const sibling = fiber.sibling;
@@ -1975,12 +1978,19 @@ function commitMutationEffectsOnFiber(
       commitReconciliationEffects(finishedWork);
 
       if (flags & Update) {
-        commitHookEffectListUnmount(
-          HookInsertion | HookHasEffect,
-          finishedWork,
-          finishedWork.return,
-        );
-        commitHookEffectListMount(HookInsertion | HookHasEffect, finishedWork);
+        try {
+          commitHookEffectListUnmount(
+            HookInsertion | HookHasEffect,
+            finishedWork,
+            finishedWork.return,
+          );
+          commitHookEffectListMount(
+            HookInsertion | HookHasEffect,
+            finishedWork,
+          );
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
         // Layout effects are destroyed during the mutation phase so that all
         // destroy functions for all fibers are called before any create functions.
         // This prevents sibling component effects from interfering with each other,
@@ -1998,15 +2008,20 @@ function commitMutationEffectsOnFiber(
               finishedWork,
               finishedWork.return,
             );
-          } finally {
-            recordLayoutEffectDuration(finishedWork);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
+          recordLayoutEffectDuration(finishedWork);
         } else {
-          commitHookEffectListUnmount(
-            HookLayout | HookHasEffect,
-            finishedWork,
-            finishedWork.return,
-          );
+          try {
+            commitHookEffectListUnmount(
+              HookLayout | HookHasEffect,
+              finishedWork,
+              finishedWork.return,
+            );
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
       }
       return;
@@ -2016,7 +2031,7 @@ function commitMutationEffectsOnFiber(
 
       if (flags & Ref) {
         if (current !== null) {
-          commitDetachRef(current);
+          safelyDetachRef(current, current.return);
         }
       }
       return;
@@ -2026,13 +2041,17 @@ function commitMutationEffectsOnFiber(
 
       if (flags & Ref) {
         if (current !== null) {
-          commitDetachRef(current);
+          safelyDetachRef(current, current.return);
         }
       }
       if (supportsMutation) {
         if (flags & ContentReset) {
           const instance: Instance = finishedWork.stateNode;
-          resetTextContent(instance);
+          try {
+            resetTextContent(instance);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
 
         if (flags & Update) {
@@ -2050,14 +2069,22 @@ function commitMutationEffectsOnFiber(
             const updatePayload: null | UpdatePayload = (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
             if (updatePayload !== null) {
-              commitUpdate(
-                instance,
-                updatePayload,
-                type,
-                oldProps,
-                newProps,
-                finishedWork,
-              );
+              try {
+                commitUpdate(
+                  instance,
+                  updatePayload,
+                  type,
+                  oldProps,
+                  newProps,
+                  finishedWork,
+                );
+              } catch (error) {
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error,
+                );
+              }
             }
           }
         }
@@ -2083,7 +2110,12 @@ function commitMutationEffectsOnFiber(
           // this case.
           const oldText: string =
             current !== null ? current.memoizedProps : newText;
-          commitTextUpdate(textInstance, oldText, newText);
+
+          try {
+            commitTextUpdate(textInstance, oldText, newText);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
       }
       return;
@@ -2096,14 +2128,26 @@ function commitMutationEffectsOnFiber(
           if (current !== null) {
             const prevRootState: RootState = current.memoizedState;
             if (prevRootState.isDehydrated) {
-              commitHydratedContainer(root.containerInfo);
+              try {
+                commitHydratedContainer(root.containerInfo);
+              } catch (error) {
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error,
+                );
+              }
             }
           }
         }
         if (supportsPersistence) {
           const containerInfo = root.containerInfo;
           const pendingChildren = root.pendingChildren;
-          replaceContainerChildren(containerInfo, pendingChildren);
+          try {
+            replaceContainerChildren(containerInfo, pendingChildren);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
       }
       return;
@@ -2116,7 +2160,11 @@ function commitMutationEffectsOnFiber(
           const portal = finishedWork.stateNode;
           const containerInfo = portal.containerInfo;
           const pendingChildren = portal.pendingChildren;
-          replaceContainerChildren(containerInfo, pendingChildren);
+          try {
+            replaceContainerChildren(containerInfo, pendingChildren);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
       }
       return;
@@ -2136,7 +2184,11 @@ function commitMutationEffectsOnFiber(
         }
       }
       if (flags & Update) {
-        commitSuspenseCallback(finishedWork);
+        try {
+          commitSuspenseCallback(finishedWork);
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
         attachSuspenseRetryListeners(finishedWork);
       }
       return;
@@ -2194,9 +2246,9 @@ function commitMutationEffectsOnFiber(
         // from React Flare on www.
         if (flags & Ref) {
           if (current !== null) {
-            commitDetachRef(current);
+            safelyDetachRef(finishedWork, finishedWork.return);
           }
-          commitAttachRef(finishedWork);
+          safelyAttachRef(finishedWork, finishedWork.return);
         }
         if (flags & Update) {
           const scopeInstance = finishedWork.stateNode;
@@ -2217,7 +2269,11 @@ function commitReconciliationEffects(finishedWork: Fiber) {
   // before the effects on this fiber have fired.
   const flags = finishedWork.flags;
   if (flags & Placement) {
-    commitPlacement(finishedWork);
+    try {
+      commitPlacement(finishedWork);
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
+    }
     // Clear the "placement" from effect tag so that we know that this is
     // inserted, before any life-cycles like componentDidMount gets called.
     // TODO: findDOMNode doesn't rely on this any more but isMounted does
