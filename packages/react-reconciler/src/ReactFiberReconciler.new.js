@@ -323,9 +323,9 @@ export function updateContainer(
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): Lane {
-  if (__DEV__) {
-    onScheduleRoot(container, element);
-  }
+  // Works only dev mode
+  onScheduleRoot(container, element);
+ 
   const current = container.current;
   const eventTime = requestEventTime();
   const lane = requestUpdateLane(current);

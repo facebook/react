@@ -117,7 +117,7 @@ export function onScheduleRoot(root: FiberRoot, children: ReactNodeList) {
       try {
         injectedHook.onScheduleFiberRoot(rendererID, root, children);
       } catch (err) {
-        if (__DEV__ && !hasLoggedError) {
+        if (!hasLoggedError) {
           hasLoggedError = true;
           console.error('React instrumentation encountered an error: %s', err);
         }
