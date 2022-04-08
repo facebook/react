@@ -180,6 +180,7 @@ import {
   invokePassiveEffectMountInDEV,
   invokeLayoutEffectUnmountInDEV,
   invokePassiveEffectUnmountInDEV,
+  reportUncaughtErrorInDEV,
 } from './ReactFiberCommitWork.old';
 import {enqueueUpdate} from './ReactUpdateQueue.old';
 import {resetContextDependencies} from './ReactFiberNewContext.old';
@@ -2567,6 +2568,7 @@ export function captureCommitPhaseError(
   error: mixed,
 ) {
   if (__DEV__) {
+    reportUncaughtErrorInDEV(error);
     setIsRunningInsertionEffect(false);
   }
   if (sourceFiber.tag === HostRoot) {
