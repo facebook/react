@@ -171,55 +171,67 @@ export function installHook(target: any): DevToolsHook | null {
     } catch (err) {}
   }
 
-  // NOTE: KEEP IN SYNC with src/backend/utils.js
   function format(
-    maybeMessage: any,
-    ...inputArgs: $ReadOnlyArray<any>
-  ): string {
-    const args = inputArgs.slice();
+    inputArgs: $ReadOnlyArray<any>,
+    color: string
+  ): $ReadOnlyArray<any> {
+    // The console APIs have two forms:
+    // 1) Placeholder form, where the first N+1 arguments are:
+    //    - a string containing N placeholders
+    //    - N placeholder values
+    //    followed by any number of arbitrary values.
+    // 2) Non-placeholder form, where all arguments are arbitrary values.
 
-    // Symbols cannot be concatenated with Strings.
-    let formatted = String(maybeMessage);
+    // The goal is to colorize the placeholder string (if it exists) along with
+    // any additional arguments that are strings. Examples:
+    // ['A', 1, 'B'] => ['%c%s %o %s', 'color: X', 'A', 1, 'B']
+    // ['A %d', 1, 'B'] => ['%cA %d %c%s', 'color: X', 1, 'color: X', 'B']
+    // ['A%cB', 'color: blue', 'C'] => ['%cA%cB %c%s', 'color: X', 'color: blue', 'color: X', 'C']
 
-    // If the first argument is a string, check for substitutions.
-    if (typeof maybeMessage === 'string') {
-      if (args.length) {
-        const REGEXP = /(%?)(%([jds]))/g;
+    // Determine whether the first arg is a string containing N placeholders.
+    const REGEXP = /(^|[^%])%[cfijdsoO]/g;
+    const numPlaceholders = typeof inputArgs[0] === 'string'
+      ? (inputArgs[0].match(REGEXP) || []).length
+      : 0;
 
-        formatted = formatted.replace(REGEXP, (match, escaped, ptn, flag) => {
-          let arg = args.shift();
-          switch (flag) {
-            case 's':
-              arg += '';
-              break;
-            case 'd':
-            case 'i':
-              arg = parseInt(arg, 10).toString();
-              break;
-            case 'f':
-              arg = parseFloat(arg).toString();
-              break;
+    if (numPlaceholders === 0) {
+      let placeholderString = '%c';
+
+      for (let i = 0; i < inputArgs.length; i++) {
+        if (typeof inputArgs[i] === 'string') {
+          placeholderString += '%s ';
+        } else {
+          placeholderString += '%o ';
+        }
+      }
+
+      return [placeholderString.trimEnd(), `color: ${color}`, ...inputArgs];
+    } else {
+      const placeholderArgs = inputArgs.slice(1, numPlaceholders + 1);
+      const nonPlaceholderArgs = inputArgs.slice(numPlaceholders + 1);
+      let placeholderString = '%c' + inputArgs[0];
+
+      if (nonPlaceholderArgs.length > 0) {
+        // Apply the base color again in case it was overriden by the user string.
+        placeholderString += ' %c';
+        for (let i = 0; i < nonPlaceholderArgs.length; i++) {
+          if (typeof nonPlaceholderArgs[i] === 'string') {
+            placeholderString += '%s ';
+          } else {
+            placeholderString += '%o ';
           }
-          if (!escaped) {
-            return arg;
-          }
-          args.unshift(arg);
-          return match;
-        });
+        }
+        return [
+          placeholderString.trimEnd(),
+          `color: ${color}`,
+          ...placeholderArgs,
+          `color: ${color}`,
+          ...nonPlaceholderArgs,
+        ];
+      } else {
+        return [placeholderString, `color: ${color}`, ...placeholderArgs];
       }
     }
-
-    // Arguments that remain after formatting.
-    if (args.length) {
-      for (let i = 0; i < args.length; i++) {
-        formatted += ' ' + String(args[i]);
-      }
-    }
-
-    // Update escaped %% values.
-    formatted = formatted.replace(/%{2,2}/g, '%');
-
-    return String(formatted);
   }
 
   let unpatchFn = null;
@@ -291,7 +303,7 @@ export function installHook(target: any): DevToolsHook | null {
             }
 
             if (color) {
-              originalMethod(`%c${format(...args)}`, `color: ${color}`);
+              originalMethod(...format(args, color));
             } else {
               throw Error('Console color is not defined');
             }
