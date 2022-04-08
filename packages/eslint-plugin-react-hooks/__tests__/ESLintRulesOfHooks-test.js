@@ -412,7 +412,7 @@ const tests = {
         let useNewBehavior = config.behavior === 'new'
         doStuff(useNewBehavior)
       }
-    `
+    `,
   ],
   invalid: [
     {

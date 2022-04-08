@@ -528,14 +528,21 @@ export default {
           reactHooks.push(node.callee);
         }
         if (node.arguments.some(isHook)) {
-          const variableDefs = context.getScope().variables.map(variable => variable.defs)
+          const variableDefs = context
+            .getScope()
+            .variables.map(variable => variable.defs);
           node.arguments.filter(isHook).forEach(hook => {
-            const hookDefs = variableDefs.find(defs => defs.some(def => def.name.name === hook.name))
+            const hookDefs = variableDefs.find(defs =>
+              defs.some(def => def.name.name === hook.name),
+            );
             // Prevent flagging variables within the scope starting with `use` prefix that are not functions
-            if (hookDefs && !hookDefs.some(def => !!getFunctionName(def.node))) {
-              return
+            if (
+              hookDefs &&
+              !hookDefs.some(def => !!getFunctionName(def.node))
+            ) {
+              return;
             }
-            
+
             const message =
               `React Hook "${context.getSource(hook)}" cannot be passed ` +
               'as a callback. React Hooks must be called in a ' +
