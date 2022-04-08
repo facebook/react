@@ -512,6 +512,27 @@ describe('ReactFlight', () => {
     );
   });
 
+  it('should error in DEV if an undefined component is passed to a host component', () => {
+    const X = undefined;
+
+    spyOnDevAndProd(console, 'error');
+
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(<X />);
+      act(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+    }).toThrowError(
+      'Unsupported server component type: undefined' +
+        (__DEV__
+          ? ". You likely forgot to export your component from the file it's defined in" +
+            ', or you might have mixed up default and named imports.'
+          : ''),
+    );
+
+    expect(console.error).toHaveBeenCalledTimes(__DEV__ ? 2 : 1);
+  });
+
   describe('ServerContext', () => {
     // @gate enableServerContext
     it('supports basic createServerContext usage', () => {
