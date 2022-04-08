@@ -4,6 +4,14 @@
 
 ---
 
+### 4.24.4
+April 8, 2022
+
+* Allow react-devtools-inline `createStore()` method to override Store config params ([bvaughn](https://github.com/bvaughn) in [#24303](https://github.com/facebook/react/pull/24303))
+* [ReactDebugTools] wrap uncaught error from rendering user's component ([mondaychen](https://github.com/mondaychen) in [#24216](https://github.com/facebook/react/pull/24216))
+
+---
+
 ### 4.24.3
 March 29, 2022
 
