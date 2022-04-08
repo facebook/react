@@ -212,7 +212,7 @@ const hashImportsPlugin = {
                 relativePath,
               );
 
-              return `"${getComponentId(absolutePath)}":`;
+              return `"${getComponentId(normalizePath(absolutePath))}":`;
             });
         },
       );
