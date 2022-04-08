@@ -18,7 +18,7 @@ type MightBeFlushable = {
 export type Destination = Writable & MightBeFlushable;
 
 export type PrecomputedChunk = Uint8Array;
-export type Chunk = Uint8Array;
+export type Chunk = string;
 
 export function scheduleWork(callback: () => void) {
   setImmediate(callback);
@@ -45,14 +45,49 @@ export function beginWriting(destination: Destination) {
   destinationHasCapacity = true;
 }
 
-export function writeChunk(
-  destination: Destination,
-  chunk: PrecomputedChunk | Chunk,
-): void {
-  if (chunk.byteLength === 0) {
+function writeStringChunk(destination: Destination, stringChunk: string) {
+  if (stringChunk.length === 0) {
+    return;
+  }
+  // maximum possible view needed to encode entire string
+  if (stringChunk.length * 3 > VIEW_SIZE) {
+    if (writtenBytes > 0) {
+      writeToDestination(
+        destination,
+        ((currentView: any): Uint8Array).subarray(0, writtenBytes),
+      );
+      currentView = new Uint8Array(VIEW_SIZE);
+      writtenBytes = 0;
+    }
+    writeToDestination(destination, textEncoder.encode(stringChunk));
     return;
   }
 
+  let target: Uint8Array = (currentView: any);
+  if (writtenBytes > 0) {
+    target = ((currentView: any): Uint8Array).subarray(writtenBytes);
+  }
+  const {read, written} = textEncoder.encodeInto(stringChunk, target);
+  writtenBytes += written;
+
+  if (read < stringChunk.length) {
+    writeToDestination(destination, (currentView: any));
+    currentView = new Uint8Array(VIEW_SIZE);
+    writtenBytes = textEncoder.encodeInto(stringChunk.slice(read), currentView)
+      .written;
+  }
+
+  if (writtenBytes === VIEW_SIZE) {
+    writeToDestination(destination, (currentView: any));
+    currentView = new Uint8Array(VIEW_SIZE);
+    writtenBytes = 0;
+  }
+}
+
+function writeViewChunk(destination: Destination, chunk: PrecomputedChunk) {
+  if (chunk.byteLength === 0) {
+    return;
+  }
   if (chunk.byteLength > VIEW_SIZE) {
     // this chunk may overflow a single view which implies it was not
     // one that is cached by the streaming renderer. We will enqueu
@@ -93,6 +128,23 @@ export function writeChunk(
   }
   ((currentView: any): Uint8Array).set(bytesToWrite, writtenBytes);
   writtenBytes += bytesToWrite.byteLength;
+
+  if (writtenBytes === VIEW_SIZE) {
+    writeToDestination(destination, (currentView: any));
+    currentView = new Uint8Array(VIEW_SIZE);
+    writtenBytes = 0;
+  }
+}
+
+export function writeChunk(
+  destination: Destination,
+  chunk: PrecomputedChunk | Chunk,
+): void {
+  if (typeof chunk === 'string') {
+    writeStringChunk(destination, chunk);
+  } else {
+    writeViewChunk(destination, ((chunk: any): PrecomputedChunk));
+  }
 }
 
 function writeToDestination(destination: Destination, view: Uint8Array) {
@@ -124,7 +176,7 @@ export function close(destination: Destination) {
 const textEncoder = new TextEncoder();
 
 export function stringToChunk(content: string): Chunk {
-  return textEncoder.encode(content);
+  return content;
 }
 
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
