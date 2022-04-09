@@ -634,8 +634,8 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.pendingLanes = remainingLanes;
 
   // Let's try everything again
-  root.suspendedLanes = 0;
-  root.pingedLanes = 0;
+  root.suspendedLanes = NoLanes;
+  root.pingedLanes = NoLanes;
 
   root.expiredLanes &= remainingLanes;
   root.mutableReadLanes &= remainingLanes;
