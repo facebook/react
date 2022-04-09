@@ -875,8 +875,6 @@ function completeWork(
       }
 
       if (enableCache) {
-        popRootTransition(fiberRoot, renderLanes);
-
         let previousCache: Cache | null = null;
         if (current !== null) {
           previousCache = current.memoizedState.cache;
@@ -888,6 +886,7 @@ function completeWork(
         }
         popCacheProvider(workInProgress, cache);
       }
+      popRootTransition(workInProgress, fiberRoot, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
@@ -1593,10 +1592,9 @@ function completeWork(
           // Run passive effects to retain/release the cache.
           workInProgress.flags |= Passive;
         }
-        if (current !== null) {
-          popTransition(workInProgress);
-        }
       }
+
+      popTransition(workInProgress, current);
 
       return null;
     }
