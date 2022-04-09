@@ -40,14 +40,14 @@ You can improve it by sending pull requests to [this repository](https://github.
 We have several examples [on the website](https://reactjs.org/). Here is the first one to get you started:
 
 ```jsx
+import { createRoot } from 'react-dom/client';
+
 function HelloMessage({ name }) {
   return <div>Hello {name}</div>;
 }
 
-ReactDOM.render(
-  <HelloMessage name="Taylor" />,
-  document.getElementById('container')
-);
+const root = createRoot(document.getElementById('container'));
+root.render(<HelloMessage name="Taylor" />);
 ```
 
 This example will render "Hello Taylor" into a container on the page.

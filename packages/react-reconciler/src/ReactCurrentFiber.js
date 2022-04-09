@@ -51,12 +51,20 @@ export function resetCurrentFiber() {
   }
 }
 
-export function setCurrentFiber(fiber: Fiber) {
+export function setCurrentFiber(fiber: Fiber | null) {
   if (__DEV__) {
-    ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackInDev;
+    ReactDebugCurrentFrame.getCurrentStack =
+      fiber === null ? null : getCurrentFiberStackInDev;
     current = fiber;
     isRendering = false;
   }
+}
+
+export function getCurrentFiber(): Fiber | null {
+  if (__DEV__) {
+    return current;
+  }
+  return null;
 }
 
 export function setIsRendering(rendering: boolean) {

@@ -153,6 +153,7 @@ import {
   popRenderLanes,
   getRenderTargetTime,
   subtreeRenderLanes,
+  getWorkInProgressTransitions,
 } from './ReactFiberWorkLoop.new';
 import {
   OffscreenLane,
@@ -862,9 +863,18 @@ function completeWork(
     }
     case HostRoot: {
       const fiberRoot = (workInProgress.stateNode: FiberRoot);
-      if (enableCache) {
-        popRootTransition(fiberRoot, renderLanes);
 
+      if (enableTransitionTracing) {
+        const transitions = getWorkInProgressTransitions();
+        // We set the Passive flag here because if there are new transitions,
+        // we will need to schedule callbacks and process the transitions,
+        // which we do in the passive phase
+        if (transitions !== null) {
+          workInProgress.flags |= Passive;
+        }
+      }
+
+      if (enableCache) {
         let previousCache: Cache | null = null;
         if (current !== null) {
           previousCache = current.memoizedState.cache;
@@ -876,6 +886,7 @@ function completeWork(
         }
         popCacheProvider(workInProgress, cache);
       }
+      popRootTransition(workInProgress, fiberRoot, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
@@ -918,6 +929,14 @@ function completeWork(
       }
       updateHostContainer(current, workInProgress);
       bubbleProperties(workInProgress);
+      if (enableTransitionTracing) {
+        if ((workInProgress.subtreeFlags & Visibility) !== NoFlags) {
+          // If any of our suspense children toggle visibility, this means that
+          // the pending boundaries array needs to be updated, which we only
+          // do in the passive phase.
+          workInProgress.flags |= Passive;
+        }
+      }
       return null;
     }
     case HostComponent: {
@@ -1186,6 +1205,12 @@ function completeWork(
       if (nextDidTimeout && !prevDidTimeout) {
         const offscreenFiber: Fiber = (workInProgress.child: any);
         offscreenFiber.flags |= Visibility;
+
+        // If the suspended state of the boundary changes, we need to schedule
+        // a passive effect, which is when we process the transitions
+        if (enableTransitionTracing) {
+          offscreenFiber.flags |= Passive;
+        }
 
         // TODO: This will still suspend a synchronous tree if anything
         // in the concurrent tree already suspended during this render.
@@ -1567,10 +1592,9 @@ function completeWork(
           // Run passive effects to retain/release the cache.
           workInProgress.flags |= Passive;
         }
-        if (current !== null) {
-          popTransition(workInProgress);
-        }
       }
+
+      popTransition(workInProgress, current);
 
       return null;
     }
