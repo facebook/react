@@ -483,7 +483,7 @@ export function includesExpiredLane(root: FiberRoot, lanes: Lanes) {
 }
 
 export function isTransitionLane(lane: Lane) {
-  return (lane & TransitionLanes) !== 0;
+  return (lane & TransitionLanes) !== NoLanes;
 }
 
 export function claimNextTransitionLane(): Lane {
@@ -492,7 +492,7 @@ export function claimNextTransitionLane(): Lane {
   // run out of lanes and cycle back to the beginning.
   const lane = nextTransitionLane;
   nextTransitionLane <<= 1;
-  if ((nextTransitionLane & TransitionLanes) === 0) {
+  if ((nextTransitionLane & TransitionLanes) === NoLanes) {
     nextTransitionLane = TransitionLane1;
   }
   return lane;
@@ -501,7 +501,7 @@ export function claimNextTransitionLane(): Lane {
 export function claimNextRetryLane(): Lane {
   const lane = nextRetryLane;
   nextRetryLane <<= 1;
-  if ((nextRetryLane & RetryLanes) === 0) {
+  if ((nextRetryLane & RetryLanes) === NoLanes) {
     nextRetryLane = RetryLane1;
   }
   return lane;
@@ -634,8 +634,8 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.pendingLanes = remainingLanes;
 
   // Let's try everything again
-  root.suspendedLanes = 0;
-  root.pingedLanes = 0;
+  root.suspendedLanes = NoLanes;
+  root.pingedLanes = NoLanes;
 
   root.expiredLanes &= remainingLanes;
   root.mutableReadLanes &= remainingLanes;
