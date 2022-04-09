@@ -2215,8 +2215,9 @@ function commitMutationEffectsOnFiber(
         const newState: OffscreenState | null = offscreenFiber.memoizedState;
         const isHidden = newState !== null;
         if (isHidden) {
-          const current = offscreenFiber.alternate;
-          const wasHidden = current !== null && current.memoizedState !== null;
+          const wasHidden =
+            offscreenFiber.alternate !== null &&
+            offscreenFiber.alternate.memoizedState !== null;
           if (!wasHidden) {
             // TODO: Move to passive phase
             markCommitTimeOfFallback();
