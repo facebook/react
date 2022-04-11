@@ -1097,6 +1097,22 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function Counter(unstableProp) {
+          let [count, setCount] = useState(0);
+          setCount = unstableProp
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(c => c + 1);
+            }, 1000);
+            return () => clearInterval(id);
+          }, [setCount]);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
         function Counter() {
           const [count, setCount] = useState(0);
 
@@ -1574,6 +1590,48 @@ const tests = {
                   useEffect(() => {
                     console.log(local);
                   }, [local]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Counter(unstableProp) {
+          let [count, setCount] = useState(0);
+          setCount = unstableProp
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(c => c + 1);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'setCount'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [setCount]',
+              output: normalizeIndent`
+                function Counter(unstableProp) {
+                  let [count, setCount] = useState(0);
+                  setCount = unstableProp
+                  useEffect(() => {
+                    let id = setInterval(() => {
+                      setCount(c => c + 1);
+                    }, 1000);
+                    return () => clearInterval(id);
+                  }, [setCount]);
+        
+                  return <h1>{count}</h1>;
                 }
               `,
             },
