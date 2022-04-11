@@ -71,7 +71,7 @@ or
   "rules": {
     // ...
     "react-hooks/exhaustive-deps": ["warn", {
-      "additionalHooks": [["(useMyCustomHook|useMyOtherCustomHook)"], ["(myThirdCustomHook)", 1]]
+      "additionalHooks": [["(useMyCustomHook|useMyOtherCustomHook)"], ["(useMyThirdCustomHook)", 1]]
     }]
   }
 }
