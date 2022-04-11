@@ -318,7 +318,7 @@ const bundles = [
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'util'],
   },
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
@@ -347,7 +347,7 @@ const bundles = [
     global: 'ReactServerDOMWriter',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'util'],
   },
 
   /******* React Server DOM Webpack Reader *******/
@@ -437,6 +437,7 @@ const bundles = [
       'ReactFlightNativeRelayServerIntegration',
       'JSResourceReferenceImpl',
       'ReactNativeInternalFeatureFlags',
+      'util',
     ],
   },
 
