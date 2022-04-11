@@ -234,9 +234,9 @@ export default {
             if (id.elements[1] === resolved.identifiers[0]) {
               if (name === 'useState') {
                 const references = resolved.references;
-                // console.log(references);
-                if (references.filter(ref => ref.isWrite()).length > 1)
+                if (references.filter(ref => ref.isWrite()).length > 1) {
                   return false;
+                }
                 for (let i = 0; i < references.length; i++) {
                   setStateCallSites.set(
                     references[i].identifier,
