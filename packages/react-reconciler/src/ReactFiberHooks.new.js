@@ -1624,10 +1624,7 @@ function mountRef<T>(initialValue: T): {|current: T|} {
         },
         set current(value) {
           if (currentlyRenderingFiber !== null && !didWarnAboutWrite) {
-            if (
-              hasBeenInitialized ||
-              (!hasBeenInitialized && !didCheckForLazyInit)
-            ) {
+            if (hasBeenInitialized || !didCheckForLazyInit) {
               didWarnAboutWrite = true;
               console.warn(
                 '%s: Unsafe write of a mutable value during render.\n\n' +
