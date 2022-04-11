@@ -236,7 +236,6 @@ import {
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
   pushRenderLanes,
-  getWorkInProgressTransitions,
 } from './ReactFiberWorkLoop.old';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent.old';
@@ -652,9 +651,11 @@ function updateOffscreenComponent(
     // Rendering a hidden tree.
     if ((workInProgress.mode & ConcurrentMode) === NoMode) {
       // In legacy sync mode, don't defer the subtree. Render it now.
+      // TODO: Consider how Offscreen should work with transitions in the future
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
+        transitions: null,
       };
       workInProgress.memoizedState = nextState;
       if (enableCache) {
@@ -688,6 +689,7 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: nextBaseLanes,
         cachePool: spawnedCachePool,
+        transitions: null,
       };
       workInProgress.memoizedState = nextState;
       workInProgress.updateQueue = null;
@@ -723,6 +725,7 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
+        transitions: null,
       };
       workInProgress.memoizedState = nextState;
       // Push the lanes that were skipped when we bailed out.
@@ -1345,13 +1348,6 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     }
   }
 
-  if (enableTransitionTracing) {
-    // FIXME: Slipped past code review. This is not a safe mutation:
-    // workInProgress.memoizedState is a shared object. Need to fix before
-    // rolling out the Transition Tracing experiment.
-    workInProgress.memoizedState.transitions = getWorkInProgressTransitions();
-  }
-
   // Caution: React DevTools currently depends on this property
   // being called "element".
   const nextChildren = nextState.element;
@@ -1365,6 +1361,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
       element: nextChildren,
       isDehydrated: false,
       cache: nextState.cache,
+      pendingSuspenseBoundaries: nextState.pendingSuspenseBoundaries,
       transitions: nextState.transitions,
     };
     const updateQueue: UpdateQueue<RootState> = (workInProgress.updateQueue: any);
@@ -1982,6 +1979,7 @@ function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
   return {
     baseLanes: renderLanes,
     cachePool: getSuspendedCache(),
+    transitions: null,
   };
 }
 
@@ -2016,6 +2014,7 @@ function updateSuspenseOffscreenState(
   return {
     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
     cachePool,
+    transitions: prevOffscreenState.transitions,
   };
 }
 
@@ -3581,9 +3580,6 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       if (enableCache) {
         const cache: Cache = current.memoizedState.cache;
         pushCacheProvider(workInProgress, cache);
-      }
-      if (enableTransitionTracing) {
-        workInProgress.memoizedState.transitions = getWorkInProgressTransitions();
       }
       resetHydrationState();
       break;

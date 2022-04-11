@@ -29,6 +29,7 @@ export type SuspenseProps = {|
   suspenseCallback?: (Set<Wakeable> | null) => mixed,
 
   unstable_expectedLoadTime?: number,
+  unstable_name?: string,
 |};
 
 // A null SuspenseState represents an unsuspended normal Suspense boundary.

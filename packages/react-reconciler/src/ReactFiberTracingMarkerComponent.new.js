@@ -7,8 +7,9 @@
  * @flow
  */
 
-import type {TransitionTracingCallbacks} from './ReactInternalTypes';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {TransitionTracingCallbacks, Fiber} from './ReactInternalTypes';
+import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
+
 import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 
 export type SuspenseInfo = {name: string | null};
@@ -34,10 +35,7 @@ export type BatchConfigTransition = {
   _updatedFibers?: Set<Fiber>,
 };
 
-export type TransitionCallback = 0 | 1;
-
-export const TransitionStart = 0;
-export const TransitionComplete = 1;
+export type PendingSuspenseBoundaries = Map<OffscreenInstance, SuspenseInfo>;
 
 export function processTransitionCallbacks(
   pendingTransitions: PendingTransitionCallbacks,
