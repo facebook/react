@@ -1124,7 +1124,10 @@ export default async function preprocessData(
           lane => profilerData.laneToLabelMap.get(lane) === 'Transition',
         )
       ) {
-        schedulingEvent.warning = WARNING_STRINGS.NESTED_UPDATE;
+        // FIXME: This warning doesn't account for "nested updates" that are
+        // spawned by useDeferredValue. Disabling temporarily until we figure
+        // out the right way to handle this.
+        // schedulingEvent.warning = WARNING_STRINGS.NESTED_UPDATE;
       }
     }
   });
