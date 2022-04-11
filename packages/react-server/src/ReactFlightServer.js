@@ -239,8 +239,26 @@ function attemptResolveElement(
       }
     }
   }
+
+  let info = '';
+  if (__DEV__) {
+    if (
+      type === undefined ||
+      (typeof type === 'object' &&
+        type !== null &&
+        Object.keys(type).length === 0)
+    ) {
+      info +=
+        ' You likely forgot to export your component from the file ' +
+        "it's defined in, or you might have mixed up default and " +
+        'named imports.';
+    }
+  }
+
   throw new Error(
-    `Unsupported server component type: ${describeValueForErrorMessage(type)}`,
+    `Unsupported server component type: ${describeValueForErrorMessage(
+      type,
+    )}.${info}`,
   );
 }
 
@@ -364,17 +382,6 @@ function describeValueForErrorMessage(value: ReactModel): string {
     }
     case 'function':
       return 'function';
-    case 'undefined':
-      let info = 'undefined';
-
-      if (__DEV__) {
-        info +=
-          '. You likely forgot to export your component from the file ' +
-          "it's defined in, or you might have mixed up default and " +
-          'named imports.';
-      }
-
-      return info;
     default:
       // eslint-disable-next-line react-internal/safe-string-coercion
       return String(value);
