@@ -251,7 +251,11 @@ function updatePackageVersions(
         }
       }
       if (packageInfo.peerDependencies) {
-        if (!pinToExactVersion && moduleName === 'use-sync-external-store') {
+        if (
+          !pinToExactVersion &&
+          (moduleName === 'use-sync-external-store' ||
+            moduleName === 'use-subscription')
+        ) {
           // use-sync-external-store supports older versions of React, too, so
           // we don't override to the latest version. We should figure out some
           // better way to handle this.
