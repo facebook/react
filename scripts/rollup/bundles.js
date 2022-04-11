@@ -772,23 +772,6 @@ const bundles = [
     externals: ['react', 'scheduler'],
   },
 
-  /******* createComponentWithSubscriptions *******/
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: ISOMORPHIC,
-    entry: 'create-subscription',
-    global: 'createSubscription',
-    externals: ['react'],
-    minifyWithProdErrorCodes: true,
-    wrapWithModuleBoundaries: true,
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
-        ]),
-      }),
-  },
-
   /******* Hook for managing subscriptions safely *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
