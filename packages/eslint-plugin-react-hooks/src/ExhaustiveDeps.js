@@ -234,6 +234,9 @@ export default {
             if (id.elements[1] === resolved.identifiers[0]) {
               if (name === 'useState') {
                 const references = resolved.references;
+                // console.log(references);
+                if (references.filter(ref => ref.isWrite()).length > 1)
+                  return false;
                 for (let i = 0; i < references.length; i++) {
                   setStateCallSites.set(
                     references[i].identifier,
@@ -321,7 +324,7 @@ export default {
             pureScopes.has(ref.resolved.scope) &&
             // Stable values are fine though,
             // although we won't check functions deeper.
-            !memoizedIsStablecKnownHookValue(ref.resolved)
+            !memoizedIsStableKnownHookValue(ref.resolved)
           ) {
             return false;
           }
@@ -332,7 +335,7 @@ export default {
       }
 
       // Remember such values. Avoid re-running extra checks on them.
-      const memoizedIsStablecKnownHookValue = memoizeWithWeakMap(
+      const memoizedIsStableKnownHookValue = memoizeWithWeakMap(
         isStableKnownHookValue,
         stableKnownValueCache,
       );
@@ -435,7 +438,7 @@ export default {
           if (!dependencies.has(dependency)) {
             const resolved = reference.resolved;
             const isStable =
-              memoizedIsStablecKnownHookValue(resolved) ||
+              memoizedIsStableKnownHookValue(resolved) ||
               memoizedIsFunctionWithoutCapturedValues(resolved);
             dependencies.set(dependency, {
               isStable,
