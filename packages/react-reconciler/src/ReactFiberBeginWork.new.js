@@ -748,13 +748,15 @@ function updateOffscreenComponent(
 
       subtreeRenderLanes = mergeLanes(prevState.baseLanes, renderLanes);
 
+      let prevCachePool = null;
       if (enableCache) {
         // If the render that spawned this one accessed the cache pool, resume
         // using the same cache. Unless the parent changed, since that means
         // there was a refresh.
-        const prevCachePool = prevState.cachePool;
-        pushTransition(workInProgress, prevCachePool, null);
+        prevCachePool = prevState.cachePool;
       }
+
+      pushTransition(workInProgress, prevCachePool, null);
 
       // Since we're not hidden anymore, reset the state
       workInProgress.memoizedState = null;
