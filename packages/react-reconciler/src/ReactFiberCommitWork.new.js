@@ -22,11 +22,17 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {OffscreenState} from './ReactFiberOffscreenComponent';
+import type {
+  OffscreenState,
+  OffscreenInstance,
+} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import type {RootState} from './ReactFiberRoot.new';
-import type {Transition} from './ReactFiberTracingMarkerComponent.new';
+import type {
+  Transition,
+  PendingSuspenseBoundaries,
+} from './ReactFiberTracingMarkerComponent.new';
 
 import {
   enableCreateEventHandleAPI,
@@ -62,6 +68,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {detachDeletedInstance} from './ReactFiberHostConfig';
 import {
@@ -1001,7 +1008,8 @@ function commitLayoutEffectOnFiber(
       case IncompleteClassComponent:
       case ScopeComponent:
       case OffscreenComponent:
-      case LegacyHiddenComponent: {
+      case LegacyHiddenComponent:
+      case TracingMarkerComponent: {
         break;
       }
 
@@ -1062,6 +1070,77 @@ function reappearLayoutEffectsOnFiber(node: Fiber) {
     case HostComponent: {
       safelyAttachRef(node, node.return);
       break;
+    }
+  }
+}
+
+function commitTransitionProgress(
+  finishedRoot: FiberRoot,
+  offscreenFiber: Fiber,
+) {
+  // This function adds suspense boundaries to the root
+  // or tracing marker's pendingSuspenseBoundaries map.
+  // When a suspense boundary goes from a resolved to a fallback
+  // state we add the boundary to the map, and when it goes from
+  // a fallback to a resolved state, we remove the boundary from
+  // the map.
+
+  // We use stateNode on the Offscreen component as a stable object
+  // that doesnt change from render to render. This way we can
+  // distinguish between different Offscreen instances (vs. the same
+  // Offscreen instance with different fibers)
+  const offscreenInstance: OffscreenInstance = offscreenFiber.stateNode;
+
+  let prevState: SuspenseState | null = null;
+  const previousFiber = offscreenFiber.alternate;
+  if (previousFiber !== null && previousFiber.memoizedState !== null) {
+    prevState = previousFiber.memoizedState;
+  }
+  const nextState: SuspenseState | null = offscreenFiber.memoizedState;
+
+  const wasHidden = prevState !== null;
+  const isHidden = nextState !== null;
+
+  const rootState: RootState = finishedRoot.current.memoizedState;
+  // TODO(luna) move pendingSuspenseBoundaries and transitions from
+  // HostRoot fiber to FiberRoot
+  const rootPendingBoundaries = rootState.pendingSuspenseBoundaries;
+
+  // If there is a name on the suspense boundary, store that in
+  // the pending boundaries.
+  let name = null;
+  const parent = offscreenFiber.return;
+  if (
+    parent !== null &&
+    parent.tag === SuspenseComponent &&
+    parent.memoizedProps.unstable_name
+  ) {
+    name = parent.memoizedProps.unstable_name;
+  }
+
+  if (rootPendingBoundaries !== null) {
+    if (previousFiber === null) {
+      // Initial mount
+      if (isHidden) {
+        rootPendingBoundaries.set(offscreenInstance, {
+          name,
+        });
+      }
+    } else {
+      if (wasHidden && !isHidden) {
+        // The suspense boundary went from hidden to visible. Remove
+        // the boundary from the pending suspense boundaries set
+        // if it's there
+        if (rootPendingBoundaries.has(offscreenInstance)) {
+          rootPendingBoundaries.delete(offscreenInstance);
+        }
+      } else if (!wasHidden && isHidden) {
+        // The suspense boundaries was just hidden. Add the boundary
+        // to the pending boundary set if it's there
+        rootPendingBoundaries.set(offscreenInstance, {
+          name,
+        });
+      }
     }
   }
 }
@@ -2747,22 +2826,53 @@ function commitPassiveMountOnFiber(
       }
 
       if (enableTransitionTracing) {
-        if (committedTransitions !== null) {
+        // Get the transitions that were initiatized during the render
+        // and add a start transition callback for each of them
+        const state = finishedWork.memoizedState;
+        if (state.transitions === null) {
+          state.transitions = new Set([]);
+        }
+        const pendingTransitions = state.transitions;
+
+        if (committedTransitions != null) {
           committedTransitions.forEach(transition => {
-            // TODO(luna) Do we want to log TransitionStart in the startTransition callback instead?
             addTransitionStartCallbackToPendingTransition({
               transitionName: transition.name,
               startTime: transition.startTime,
             });
-
-            addTransitionCompleteCallbackToPendingTransition({
-              transitionName: transition.name,
-              startTime: transition.startTime,
-            });
+            pendingTransitions.add(transition);
           });
 
           clearTransitionsForLanes(finishedRoot, committedLanes);
-          finishedWork.memoizedState.transitions = null;
+        }
+
+        const pendingSuspenseBoundaries = state.pendingSuspenseBoundaries;
+        const processedTransitions = new Set();
+        // process the lazy transitions list by filtering duplicate transitions
+        // and calling the transition complete callback on all transitions
+        // if there are no more pending suspense boundaries
+        pendingTransitions.forEach(transition => {
+          if (!processedTransitions.has(transition)) {
+            if (
+              pendingSuspenseBoundaries === null ||
+              pendingSuspenseBoundaries.size === 0
+            ) {
+              addTransitionCompleteCallbackToPendingTransition({
+                transitionName: transition.name,
+                startTime: transition.startTime,
+              });
+            }
+            processedTransitions.add(transition);
+          }
+        });
+
+        // If there are no more pending suspense boundaries we
+        // clear the transitions because they are all complete.
+        if (
+          pendingSuspenseBoundaries === null ||
+          pendingSuspenseBoundaries.size === 0
+        ) {
+          state.transitions = null;
         }
       }
       break;
@@ -2800,9 +2910,44 @@ function commitPassiveMountOnFiber(
       }
 
       if (enableTransitionTracing) {
-        // TODO: Add code to actually process the update queue
+        const isFallback = finishedWork.memoizedState;
+        const queue = (finishedWork.updateQueue: any);
+        const rootMemoizedState = finishedRoot.current.memoizedState;
+
+        if (queue !== null) {
+          // We have one instance of the pendingSuspenseBoundaries map.
+          // We only need one because we update it during the commit phase.
+          // We instantiate a new Map if we haven't already
+          if (rootMemoizedState.pendingSuspenseBoundaries === null) {
+            rootMemoizedState.pendingSuspenseBoundaries = new Map();
+          }
+
+          if (isFallback) {
+            const transitions = queue.transitions;
+            let prevTransitions = finishedWork.memoizedState.transitions;
+            // Add all the transitions saved in the update queue during
+            // the render phase (ie the transitions associated with this boundary)
+            // into the transitions set.
+            if (transitions != null) {
+              if (prevTransitions === null) {
+                // We only have one instance of the transitions set
+                // because we update it only during the commit phase. We
+                // will create the set on a as needed basis in the commit phase
+                finishedWork.memoizedState.transitions = prevTransitions = new Set();
+              }
+
+              transitions.forEach(transition => {
+                prevTransitions.add(transition);
+              });
+            }
+          }
+        }
+
+        commitTransitionProgress(finishedRoot, finishedWork);
+
         finishedWork.updateQueue = null;
       }
+
       break;
     }
     case CacheComponent: {
