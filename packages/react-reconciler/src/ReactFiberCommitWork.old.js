@@ -2725,9 +2725,8 @@ function commitPassiveMountOnFiber(
       }
 
       if (enableTransitionTracing) {
-        const transitions = finishedWork.memoizedState.transitions;
-        if (transitions !== null) {
-          transitions.forEach(transition => {
+        if (committedTransitions !== null) {
+          committedTransitions.forEach(transition => {
             // TODO(luna) Do we want to log TransitionStart in the startTransition callback instead?
             addTransitionStartCallbackToPendingTransition({
               transitionName: transition.name,
