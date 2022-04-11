@@ -234,10 +234,10 @@ export default {
             if (id.elements[1] === resolved.identifiers[0]) {
               if (name === 'useState') {
                 const references = resolved.references;
-                let writeCount = 0
+                let writeCount = 0;
                 for (let i = 0; i < references.length; i++) {
                   if (references[i].isWrite()) {
-                    writeCount++
+                    writeCount++;
                   }
                   if (writeCount > 1) {
                     return false;
