@@ -1192,55 +1192,59 @@ function completeWork(
       }
 
       // If the suspended state of the boundary changes, we need to schedule
-      // an effect to toggle the subtree's visibility. When we switch from
-      // fallback -> primary, the inner Offscreen fiber schedules this effect
-      // as part of its normal complete phase. But when we switch from
-      // primary -> fallback, the inner Offscreen fiber does not have a complete
-      // phase. So we need to schedule its effect here.
-      //
-      // We also use this flag to connect/disconnect the effects, but the same
-      // logic applies: when re-connecting, the Offscreen fiber's complete
-      // phase will handle scheduling the effect. It's only when the fallback
-      // is active that we have to do anything special.
-      if (nextDidTimeout && !prevDidTimeout) {
-        const offscreenFiber: Fiber = (workInProgress.child: any);
-        offscreenFiber.flags |= Visibility;
-
-        // If the suspended state of the boundary changes, we need to schedule
-        // a passive effect, which is when we process the transitions
+      // a passive effect, which is when we process the transitions
+      if (nextDidTimeout !== prevDidTimeout) {
         if (enableTransitionTracing) {
+          const offscreenFiber: Fiber = (workInProgress.child: any);
           offscreenFiber.flags |= Passive;
         }
 
-        // TODO: This will still suspend a synchronous tree if anything
-        // in the concurrent tree already suspended during this render.
-        // This is a known bug.
-        if ((workInProgress.mode & ConcurrentMode) !== NoMode) {
-          // TODO: Move this back to throwException because this is too late
-          // if this is a large tree which is common for initial loads. We
-          // don't know if we should restart a render or not until we get
-          // this marker, and this is too late.
-          // If this render already had a ping or lower pri updates,
-          // and this is the first time we know we're going to suspend we
-          // should be able to immediately restart from within throwException.
-          const hasInvisibleChildContext =
-            current === null &&
-            (workInProgress.memoizedProps.unstable_avoidThisFallback !== true ||
-              !enableSuspenseAvoidThisFallback);
-          if (
-            hasInvisibleChildContext ||
-            hasSuspenseContext(
-              suspenseStackCursor.current,
-              (InvisibleParentSuspenseContext: SuspenseContext),
-            )
-          ) {
-            // If this was in an invisible tree or a new render, then showing
-            // this boundary is ok.
-            renderDidSuspend();
-          } else {
-            // Otherwise, we're going to have to hide content so we should
-            // suspend for longer if possible.
-            renderDidSuspendDelayIfPossible();
+        // If the suspended state of the boundary changes, we need to schedule
+        // an effect to toggle the subtree's visibility. When we switch from
+        // fallback -> primary, the inner Offscreen fiber schedules this effect
+        // as part of its normal complete phase. But when we switch from
+        // primary -> fallback, the inner Offscreen fiber does not have a complete
+        // phase. So we need to schedule its effect here.
+        //
+        // We also use this flag to connect/disconnect the effects, but the same
+        // logic applies: when re-connecting, the Offscreen fiber's complete
+        // phase will handle scheduling the effect. It's only when the fallback
+        // is active that we have to do anything special.
+        if (nextDidTimeout) {
+          const offscreenFiber: Fiber = (workInProgress.child: any);
+          offscreenFiber.flags |= Visibility;
+
+          // TODO: This will still suspend a synchronous tree if anything
+          // in the concurrent tree already suspended during this render.
+          // This is a known bug.
+          if ((workInProgress.mode & ConcurrentMode) !== NoMode) {
+            // TODO: Move this back to throwException because this is too late
+            // if this is a large tree which is common for initial loads. We
+            // don't know if we should restart a render or not until we get
+            // this marker, and this is too late.
+            // If this render already had a ping or lower pri updates,
+            // and this is the first time we know we're going to suspend we
+            // should be able to immediately restart from within throwException.
+            const hasInvisibleChildContext =
+              current === null &&
+              (workInProgress.memoizedProps.unstable_avoidThisFallback !==
+                true ||
+                !enableSuspenseAvoidThisFallback);
+            if (
+              hasInvisibleChildContext ||
+              hasSuspenseContext(
+                suspenseStackCursor.current,
+                (InvisibleParentSuspenseContext: SuspenseContext),
+              )
+            ) {
+              // If this was in an invisible tree or a new render, then showing
+              // this boundary is ok.
+              renderDidSuspend();
+            } else {
+              // Otherwise, we're going to have to hide content so we should
+              // suspend for longer if possible.
+              renderDidSuspendDelayIfPossible();
+            }
           }
         }
       }
