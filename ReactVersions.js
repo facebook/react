@@ -25,7 +25,6 @@ const ReactVersion = '18.1.0';
 const nextChannelLabel = 'next';
 
 const stablePackages = {
-  'create-subscription': ReactVersion,
   'eslint-plugin-react-hooks': '4.5.0',
   'jest-react': '0.13.1',
   react: ReactVersion,
