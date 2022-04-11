@@ -33,4 +33,8 @@ export type OffscreenState = {|
   transitions: Set<Transition> | null,
 |};
 
+export type OffscreenQueue = {|
+  transitions: Array<Transition> | null,
+|} | null;
+
 export type OffscreenInstance = {};
