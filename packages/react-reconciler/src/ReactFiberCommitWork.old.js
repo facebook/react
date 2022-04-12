@@ -2209,17 +2209,22 @@ function commitMutationEffectsOnFiber(
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
-      if (flags & Visibility) {
-        const newState: OffscreenState | null = finishedWork.memoizedState;
+      const offscreenFiber: Fiber = (finishedWork.child: any);
+
+      if (offscreenFiber.flags & Visibility) {
+        const newState: OffscreenState | null = offscreenFiber.memoizedState;
         const isHidden = newState !== null;
         if (isHidden) {
-          const wasHidden = current !== null && current.memoizedState !== null;
+          const wasHidden =
+            offscreenFiber.alternate !== null &&
+            offscreenFiber.alternate.memoizedState !== null;
           if (!wasHidden) {
             // TODO: Move to passive phase
             markCommitTimeOfFallback();
           }
         }
       }
+
       if (flags & Update) {
         try {
           commitSuspenseCallback(finishedWork);
