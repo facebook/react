@@ -6,6 +6,8 @@
  */
 'use strict';
 
+const semver = require('semver');
+
 describe('transform-test-gate-pragma', () => {
   // Fake runtime
   // eslint-disable-next-line no-unused-vars
@@ -23,6 +25,23 @@ describe('transform-test-gate-pragma', () => {
     // to focus something, swap the following `test` call for `test.only`.
     test(testName, (...args) => {
       shouldPass = gateFn(context);
+      isFocused = true;
+      return cb(...args);
+    });
+  };
+
+  // eslint-disable-next-line no-unused-vars
+  const _test_gate_semver_for_devtools = (range, testName, cb) => {
+    test(testName, (...args) => {
+      shouldPass = semver.satisfies('18.0.0', range);
+      return cb(...args);
+    });
+  };
+
+  // eslint-disable-next-line no-unused-vars
+  const _test_gate_semver_focus_for_devtools = (range, testName, cb) => {
+    test(testName, (...args) => {
+      shouldPass = semver.satisfies('18.0.0', range + '     ');
       isFocused = true;
       return cb(...args);
     });
@@ -164,6 +183,30 @@ describe('transform-test-gate-pragma', () => {
   // @gate flagThatIsOn // This is a comment
   test('line comment', () => {
     expect(shouldPass).toBe(true);
+  });
+
+  // @gate react_version >= 18.1
+  test('react_version flag is off', () => {
+    expect(shouldPass).toBe(false);
+  });
+
+  // @gate react_version <= 18.1
+  test('react_version flag is on', () => {
+    expect(shouldPass).toBe(true);
+  });
+
+  /* eslint-disable jest/no-focused-tests */
+
+  // @gate react_version >= 18.1
+  fit('react_version fit', () => {
+    expect(shouldPass).toBe(false);
+    expect(isFocused).toBe(true);
+  });
+
+  // @gate react_version <= 18.1
+  test.only('react_version test.only', () => {
+    expect(shouldPass).toBe(true);
+    expect(isFocused).toBe(true);
   });
 });
 

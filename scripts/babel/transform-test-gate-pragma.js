@@ -5,6 +5,7 @@
 function transform(babel) {
   const {types: t} = babel;
 
+  let shouldGateBySemver = false;
   // A very stupid subset of pseudo-JavaScript, used to run tests conditionally
   // based on the environment.
   //
@@ -20,8 +21,16 @@ function transform(babel) {
   // binary         →  unary ( ( "==" | "!=" | "===" | "!==" ) unary )* ;
   // unary          →  "!" primary
   //                |  primary ;
-  // primary        →  NAME | STRING | BOOLEAN
+  // primary        →  NAME | STRING | BOOLEAN | VERSION
   //                |  "(" expression ")" ;
+
+  // Input:
+  //   @gate version >= 1.2.0
+  //   test('some test', () => {/*...*/})
+  //
+  // Output:
+  //   @gate react_version >= 1.2.0;
+  //   _test_gate_semver_for_devtools('>=1.2.0', 'some test', () => {/*...*/});
   function tokenize(code) {
     const tokens = [];
     let i = 0;
@@ -123,6 +132,13 @@ function transform(babel) {
             tokens.push({type: 'boolean', value: false});
             break;
           }
+          case 'react_version': {
+            const semverVersion = code.slice(i + name.length);
+            shouldGateBySemver = true;
+            tokens.push({type: 'version', value: semverVersion});
+            i += semverVersion;
+            break;
+          }
           default: {
             tokens.push({type: 'name', name});
           }
@@ -213,6 +229,10 @@ function transform(babel) {
           i++;
           return t.stringLiteral(token.value);
         }
+        case 'version': {
+          i++;
+          return t.stringLiteral(token.value);
+        }
         case '(': {
           i++;
           const expression = parseExpression();
@@ -282,16 +302,30 @@ function transform(babel) {
                 if (comments !== undefined) {
                   const condition = buildGateCondition(comments);
                   if (condition !== null) {
-                    callee.name =
-                      callee.name === 'fit' ? '_test_gate_focus' : '_test_gate';
-                    expression.arguments = [
-                      t.arrowFunctionExpression(
-                        [t.identifier('ctx')],
-                        condition
-                      ),
-                      ...expression.arguments,
-                    ];
+                    if (shouldGateBySemver) {
+                      callee.name =
+                        callee.name === 'fit'
+                          ? '_test_gate_semver_focus_for_devtools'
+                          : '_test_gate_semver_for_devtools';
+                      expression.arguments = [
+                        condition,
+                        ...expression.arguments,
+                      ];
+                    } else {
+                      callee.name =
+                        callee.name === 'fit'
+                          ? '_test_gate_focus'
+                          : '_test_gate';
+                      expression.arguments = [
+                        t.arrowFunctionExpression(
+                          [t.identifier('ctx')],
+                          condition
+                        ),
+                        ...expression.arguments,
+                      ];
+                    }
                   }
+                  shouldGateBySemver = false;
                 }
               }
               break;
@@ -308,17 +342,25 @@ function transform(babel) {
                 if (comments !== undefined) {
                   const condition = buildGateCondition(comments);
                   if (condition !== null) {
-                    statement.expression = t.callExpression(
-                      t.identifier('_test_gate_focus'),
-                      [
-                        t.arrowFunctionExpression(
-                          [t.identifier('ctx')],
-                          condition
-                        ),
-                        ...expression.arguments,
-                      ]
-                    );
+                    if (shouldGateBySemver) {
+                      statement.expression = t.callExpression(
+                        t.identifier('_test_gate_semver_focus_for_devtools'),
+                        [condition, ...expression.arguments]
+                      );
+                    } else {
+                      statement.expression = t.callExpression(
+                        t.identifier('_test_gate_focus'),
+                        [
+                          t.arrowFunctionExpression(
+                            [t.identifier('ctx')],
+                            condition
+                          ),
+                          ...expression.arguments,
+                        ]
+                      );
+                    }
                   }
+                  shouldGateBySemver = false;
                 }
               }
               break;
