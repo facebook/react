@@ -195,7 +195,10 @@ import {
   pop as popFromStack,
   createCursor,
 } from './ReactFiberStack.new';
-import {enqueueInterleavedUpdates} from './ReactFiberInterleavedUpdates.new';
+import {
+  enqueueInterleavedUpdates,
+  hasInterleavedUpdates,
+} from './ReactFiberInterleavedUpdates.new';
 
 import {
   markNestedUpdateScheduled,
@@ -723,7 +726,13 @@ export function isInterleavedUpdate(fiber: Fiber, lane: Lane) {
     // TODO: Optimize slightly by comparing to root that fiber belongs to.
     // Requires some refactoring. Not a big deal though since it's rare for
     // concurrent apps to have more than a single root.
-    workInProgressRoot !== null &&
+    (workInProgressRoot !== null ||
+      // If the interleaved updates queue hasn't been cleared yet, then
+      // we should treat this as an interleaved update, too. This is also a
+      // defensive coding measure in case a new update comes in between when
+      // rendering has finished and when the interleaved updates are transferred
+      // to the main queue.
+      hasInterleavedUpdates() !== null) &&
     (fiber.mode & ConcurrentMode) !== NoMode &&
     // If this is a render phase update (i.e. UNSAFE_componentWillReceiveProps),
     // then don't treat this as an interleaved update. This pattern is
