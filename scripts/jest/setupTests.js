@@ -2,8 +2,10 @@
 
 const chalk = require('chalk');
 const util = require('util');
+const semver = require('semver');
 const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
 const {getTestFlags} = require('./TestFlags');
+const ReactVersion = require('../../packages/shared/ReactVersion');
 
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
@@ -304,6 +306,30 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     }
   };
 
+  global._test_gate_semver_for_devtools = (range, testName, callback) => {
+    const trimmedRange = range.replaceAll(' ', '');
+    const currentVersion = process.env.REACT_VERSION || ReactVersion;
+    let shouldPass = semver.satisfies(currentVersion, trimmedRange);
+
+    if (shouldPass) {
+      test(testName, callback);
+    } else {
+      test(`[GATED, SHOULD FAIL] ${testName}`, () =>
+        expectTestToFail(callback, gatedErrorMessage));
+    }
+  };
+
+  global._test_gate_semver_focus_for_devtools = (range, testName, callback) => {
+    const trimmedRange = range.replaceAll(' ', '');
+    let shouldPass = semver.satisfies(process.env.REACT_VERSION, trimmedRange);
+
+    if (shouldPass) {
+      test.only(testName, callback);
+    } else {
+      test.only(`[GATED, SHOULD FAIL] ${testName}`, () =>
+        expectTestToFail(callback, gatedErrorMessage));
+    }
+  };
   // Dynamic version of @gate pragma
   global.gate = fn => {
     const flags = getTestFlags();

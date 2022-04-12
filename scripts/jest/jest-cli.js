@@ -104,6 +104,12 @@ const argv = yargs
       type: 'boolean',
       default: false,
     },
+    version: {
+      describe: 'Current React version we are testing (for DevTools)',
+      requiresArg: true,
+      type: 'string',
+      default: false,
+    },
   }).argv;
 
 function logError(message) {
@@ -169,6 +175,11 @@ function validateOptions() {
   } else {
     if (argv.compactConsole) {
       logError('Only DevTool tests support compactConsole flag.');
+      success = false;
+    }
+
+    if (argv.version) {
+      logError('Only DevTools tests support version flag.');
       success = false;
     }
   }
@@ -312,6 +323,10 @@ function getEnvars() {
 
   if (argv.variant) {
     envars.VARIANT = true;
+  }
+
+  if (argv.version) {
+    envars.REACT_VERSION = argv.version;
   }
 
   return envars;
