@@ -3615,7 +3615,9 @@ export function attach(
         console.error(message + '\n\n', error);
         if (error.cause != null) {
           console.error(
-            'Original error causing above error: \n\n',
+            'React DevTools encountered an error while trying to inspect hooks. ' +
+              'This is most likely caused by an error in current inspected component.' +
+              'The error thrown in the component is: \n\n',
             error.cause,
           );
           if (error.cause instanceof Error) {
@@ -3625,7 +3627,8 @@ export function attach(
         }
 
         return {
-          type: 'user-error',
+          type: 'error',
+          errorType: 'user',
           id,
           responseID: requestID,
           message,
@@ -3636,7 +3639,8 @@ export function attach(
       // the error name is synced with ReactDebugHooks
       if (error.name === 'ReactDebugToolsUnsupportedHookError') {
         return {
-          type: 'unsupported-feature',
+          type: 'error',
+          errorType: 'unknown-hook',
           id,
           responseID: requestID,
           message: 'Unsupported feature: ' + error.message,
@@ -3648,6 +3652,7 @@ export function attach(
 
       return {
         type: 'error',
+        errorType: 'uncaught',
         id,
         responseID: requestID,
         message: error.message,

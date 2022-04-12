@@ -19,7 +19,7 @@ import CaughtErrorView from './CaughtErrorView';
 import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
 import TimeoutError from 'react-devtools-shared/src/errors/TimeoutError';
 import UserError from 'react-devtools-shared/src/errors/UserError';
-import UnsupportedFeatureError from 'react-devtools-shared/src/errors/UnsupportedFeatureError';
+import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 
 type Props = {|
@@ -38,7 +38,7 @@ type State = {|
   isUnsupportedBridgeOperationError: boolean,
   isTimeout: boolean,
   isUserError: boolean,
-  isUnsupportedFeatureError: boolean,
+  isUnknownHookError: boolean,
 |};
 
 const InitialState: State = {
@@ -50,7 +50,7 @@ const InitialState: State = {
   isUnsupportedBridgeOperationError: false,
   isTimeout: false,
   isUserError: false,
-  isUnsupportedFeatureError: false,
+  isUnknownHookError: false,
 };
 
 export default class ErrorBoundary extends Component<Props, State> {
@@ -66,7 +66,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     const isTimeout = error instanceof TimeoutError;
     const isUserError = error instanceof UserError;
-    const isUnsupportedFeatureError = error instanceof UnsupportedFeatureError;
+    const isUnknownHookError = error instanceof UnknownHookError;
     const isUnsupportedBridgeOperationError =
       error instanceof UnsupportedBridgeOperationError;
 
@@ -85,7 +85,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       errorMessage,
       hasError: true,
       isUnsupportedBridgeOperationError,
-      isUnsupportedFeatureError,
+      isUnknownHookError,
       isTimeout,
       isUserError,
     };
@@ -123,7 +123,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       isUnsupportedBridgeOperationError,
       isTimeout,
       isUserError,
-      isUnsupportedFeatureError,
+      isUnknownHookError,
     } = this.state;
 
     if (hasError) {
@@ -160,20 +160,17 @@ export default class ErrorBoundary extends Component<Props, State> {
             }
           />
         );
-      } else if (isUnsupportedFeatureError) {
+      } else if (isUnknownHookError) {
         return (
           <CaughtErrorView
             callStack={callStack}
             componentStack={componentStack}
-            errorMessage={
-              errorMessage ||
-              'Current DevTools version does not support a feature used in the inspected element.'
-            }
+            errorMessage={errorMessage || 'Encountered an unknown hook'}
             info={
               <>
-                React DevTools is unable to handle a feature you are using in
-                this component (e.g. a new React build-in Hook). Please upgrade
-                to the latest version.
+                React DevTools encountered an unknown hook. This is probably
+                because the package is out of date. To fix, upgrade the package
+                to the most recent version.
               </>
             }
           />

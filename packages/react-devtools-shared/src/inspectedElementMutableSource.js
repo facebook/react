@@ -19,8 +19,6 @@ import type {LRUCache} from 'react-devtools-shared/src/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {
   InspectElementError,
-  InspectElementUserError,
-  InspectElementUnsupportedFeatureError,
   InspectElementFullData,
   InspectElementHydratedPath,
 } from 'react-devtools-shared/src/backend/types';
@@ -30,7 +28,7 @@ import type {
   InspectedElementResponseType,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
 import UserError from 'react-devtools-shared/src/errors/UserError';
-import UnsupportedFeatureError from 'react-devtools-shared/src/errors/UnsupportedFeatureError';
+import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError';
 
 // Maps element ID to inspected data.
 // We use an LRU for this rather than a WeakMap because of how the "no-change" optimization works.
@@ -85,27 +83,21 @@ export function inspectElement({
     let inspectedElement;
     switch (type) {
       case 'error': {
-        const {message, stack} = ((data: any): InspectElementError);
+        const {message, stack, errorType} = ((data: any): InspectElementError);
 
+        // create a different error class for each error type
+        // and keep useful information from backend.
+        let error;
+        if (errorType === 'user') {
+          error = new UserError(message);
+        } else if (errorType === 'unknown-hook') {
+          error = new UnknownHookError(message);
+        } else {
+          error = new Error(message);
+        }
         // The backend's stack (where the error originated) is more meaningful than this stack.
-        const error = new Error(message);
-        error.stack = stack;
-
-        throw error;
-      }
-
-      case 'user-error': {
-        const {message, stack} = (data: InspectElementUserError);
-        // Trying to keep useful information from user's component.
-        const error = new UserError(message);
         error.stack = stack || error.stack;
-        throw error;
-      }
 
-      case 'unsupported-feature': {
-        const {message} = (data: InspectElementUnsupportedFeatureError);
-        // Trying to keep useful information from backend.
-        const error = new UnsupportedFeatureError(message);
         throw error;
       }
 
