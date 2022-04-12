@@ -77,14 +77,15 @@ function createPanelIfReactLoaded() {
 
   // If duplicate extension detected, display warning message and write to local storage
   checkForDuplicateInstallations(hasDuplicateInstallation => {
-    if (hasDuplicateInstallation) {
-      if (!localStorageGetItem(LOCAL_STORAGE_WARNED_DUPLICATE_EXTENSION)) {
-        console.warn(DUPLICATE_EXTENSION_WARNING);
-        chrome.devtools.inspectedWindow.eval(
-          `console.warn("${DUPLICATE_EXTENSION_WARNING}")`,
-        );
-        localStorageSetItem(LOCAL_STORAGE_WARNED_DUPLICATE_EXTENSION, 'true');
-      }
+    if (
+      hasDuplicateInstallation &&
+      !localStorageGetItem(LOCAL_STORAGE_WARNED_DUPLICATE_EXTENSION)
+    ) {
+      console.warn(DUPLICATE_EXTENSION_WARNING);
+      chrome.devtools.inspectedWindow.eval(
+        `console.warn("${DUPLICATE_EXTENSION_WARNING}")`,
+      );
+      localStorageSetItem(LOCAL_STORAGE_WARNED_DUPLICATE_EXTENSION, 'true');
     } else {
       localStorageRemoveItem(LOCAL_STORAGE_WARNED_DUPLICATE_EXTENSION);
     }
