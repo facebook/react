@@ -26,6 +26,7 @@ import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 import type {
   OffscreenProps,
   OffscreenState,
+  OffscreenQueue,
 } from './ReactFiberOffscreenComponent';
 import type {
   Cache,
@@ -255,6 +256,7 @@ import {
   getSuspendedCache,
   pushTransition,
   getOffscreenDeferredCache,
+  getSuspendedTransitions,
 } from './ReactFiberTransition.new';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -2161,6 +2163,16 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         renderLanes,
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
+      if (enableTransitionTracing) {
+        const currentTransitions = getSuspendedTransitions();
+        if (currentTransitions !== null) {
+          const primaryChildUpdateQueue: OffscreenQueue = {
+            transitions: currentTransitions,
+          };
+          primaryChildFragment.updateQueue = primaryChildUpdateQueue;
+        }
+      }
+
       return fallbackFragment;
     } else if (
       enableCPUSuspense &&
@@ -2281,6 +2293,15 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           prevOffscreenState === null
             ? mountSuspenseOffscreenState(renderLanes)
             : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
+        if (enableTransitionTracing) {
+          const currentTransitions = getSuspendedTransitions();
+          if (currentTransitions !== null) {
+            const primaryChildUpdateQueue: OffscreenQueue = {
+              transitions: currentTransitions,
+            };
+            primaryChildFragment.updateQueue = primaryChildUpdateQueue;
+          }
+        }
         primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
           current,
           renderLanes,
@@ -2322,6 +2343,17 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           current,
           renderLanes,
         );
+
+        if (enableTransitionTracing) {
+          const currentTransitions = getSuspendedTransitions();
+          if (currentTransitions !== null) {
+            const primaryChildUpdateQueue: OffscreenQueue = {
+              transitions: currentTransitions,
+            };
+            primaryChildFragment.updateQueue = primaryChildUpdateQueue;
+          }
+        }
+
         // Skip the primary children, and continue working on the
         // fallback children.
         workInProgress.memoizedState = SUSPENDED_MARKER;
