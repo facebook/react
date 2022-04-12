@@ -13,12 +13,6 @@ export const CURRENT_EXTENSION_ID = chrome.runtime.id;
 
 export const EXTENSION_INSTALL_CHECK_MESSAGE = 'extension-install-check';
 
-// test extension ids
-// export const CURRENT_EXTENSION_ID = 'dnjnjgbfilfphmojnmhliehogmojhclc';
-// export const CHROME_WEBSTORE_EXTENSION_ID = 'fmkadmapgofadopljbjfkapdkoienihi';
-// export const INTERNAL_EXTENSION_ID = 'dnjnjgbfilfphmojnmhliehogmojhclc';
-// export const LOCAL_EXTENSION_ID = 'obdaoiocnilldddkfgjekefmglfhlncn';
-
 export const CHROME_WEBSTORE_EXTENSION_ID = 'fmkadmapgofadopljbjfkapdkoienihi';
 export const INTERNAL_EXTENSION_ID = 'dnjnjgbfilfphmojnmhliehogmojhclc';
 export const LOCAL_EXTENSION_ID = 'ikiahnapldjmdmpkmfhjdjilojjhgcbf';
