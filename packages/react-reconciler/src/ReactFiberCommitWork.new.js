@@ -22,17 +22,11 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {
-  OffscreenState,
-  OffscreenInstance,
-} from './ReactFiberOffscreenComponent';
+import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import type {RootState} from './ReactFiberRoot.new';
-import type {
-  Transition,
-  PendingSuspenseBoundaries,
-} from './ReactFiberTracingMarkerComponent.new';
+import type {Transition} from './ReactFiberTracingMarkerComponent.new';
 
 import {
   enableCreateEventHandleAPI,
