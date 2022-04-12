@@ -732,7 +732,7 @@ export function isInterleavedUpdate(fiber: Fiber, lane: Lane) {
       // defensive coding measure in case a new update comes in between when
       // rendering has finished and when the interleaved updates are transferred
       // to the main queue.
-      hasInterleavedUpdates() !== null) &&
+      hasInterleavedUpdates()) &&
     (fiber.mode & ConcurrentMode) !== NoMode &&
     // If this is a render phase update (i.e. UNSAFE_componentWillReceiveProps),
     // then don't treat this as an interleaved update. This pattern is
