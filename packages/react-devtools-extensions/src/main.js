@@ -27,6 +27,16 @@ import {logEvent} from 'react-devtools-shared/src/Logger';
 const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
 
+const LOCAL_STORAGE_WARNED_DUPLICATE_EXTENSION =
+  'React::DevTools::duplicateExtension';
+
+const DUPLICATE_EXTENSION_WARNING =
+  'React Developer Tools: Mulitple installations of React DevTools have been detected which may cause the extension to not work properly. ' +
+  'Please make sure you only have a single version of the extension installed or enabled. ' +
+  'If you are developing this extension locally, make sure to build the extension using the `yarn build:<browser>:local` command.';
+
+import {checkForDuplicateInstallations} from './checkForDuplicateInstallations';
+
 const isChrome = getBrowserName() === 'Chrome';
 const isEdge = getBrowserName() === 'Edge';
 
@@ -64,6 +74,21 @@ function createPanelIfReactLoaded() {
   if (panelCreated) {
     return;
   }
+
+  // If duplicate extension detected, display warning message and write to local storage
+  checkForDuplicateInstallations(hasDuplicateInstallation => {
+    if (hasDuplicateInstallation) {
+      if (!localStorageGetItem(LOCAL_STORAGE_WARNED_DUPLICATE_EXTENSION)) {
+        console.error(DUPLICATE_EXTENSION_WARNING);
+        chrome.devtools.inspectedWindow.eval(
+          `console.error("${DUPLICATE_EXTENSION_WARNING}")`,
+        );
+        localStorageSetItem(LOCAL_STORAGE_WARNED_DUPLICATE_EXTENSION, 'true');
+      }
+    } else {
+      localStorageRemoveItem(LOCAL_STORAGE_WARNED_DUPLICATE_EXTENSION);
+    }
+  });
 
   chrome.devtools.inspectedWindow.eval(
     'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
