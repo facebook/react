@@ -28,6 +28,10 @@ export function pushInterleavedQueue(
   }
 }
 
+export function hasInterleavedUpdates() {
+  return interleavedQueues !== null;
+}
+
 export function enqueueInterleavedUpdates() {
   // Transfer the interleaved updates onto the main queue. Each queue has a
   // `pending` field and an `interleaved` field. When they are not null, they
