@@ -79,9 +79,9 @@ function createPanelIfReactLoaded() {
   checkForDuplicateInstallations(hasDuplicateInstallation => {
     if (hasDuplicateInstallation) {
       if (!localStorageGetItem(LOCAL_STORAGE_WARNED_DUPLICATE_EXTENSION)) {
-        console.error(DUPLICATE_EXTENSION_WARNING);
+        console.warn(DUPLICATE_EXTENSION_WARNING);
         chrome.devtools.inspectedWindow.eval(
-          `console.error("${DUPLICATE_EXTENSION_WARNING}")`,
+          `console.warn("${DUPLICATE_EXTENSION_WARNING}")`,
         );
         localStorageSetItem(LOCAL_STORAGE_WARNED_DUPLICATE_EXTENSION, 'true');
       }
