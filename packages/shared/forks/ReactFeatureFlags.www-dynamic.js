@@ -29,7 +29,7 @@ export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = __
 export const enableClientRenderFallbackOnHydrationMismatch = __VARIANT__;
 export const enableClientRenderFallbackOnTextMismatch = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
-
+export const enableSymbolFallbackForWWW = __VARIANT__;
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
 //

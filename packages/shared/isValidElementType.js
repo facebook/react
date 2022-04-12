@@ -31,9 +31,19 @@ import {
   enableTransitionTracing,
   enableDebugTracing,
   enableLegacyHidden,
+  enableSymbolFallbackForWWW,
 } from './ReactFeatureFlags';
 
-const REACT_MODULE_REFERENCE: Symbol = Symbol.for('react.module.reference');
+let REACT_MODULE_REFERENCE;
+if (enableSymbolFallbackForWWW) {
+  if (typeof Symbol === 'function') {
+    REACT_MODULE_REFERENCE = Symbol.for('react.module.reference');
+  } else {
+    REACT_MODULE_REFERENCE = 0;
+  }
+} else {
+  REACT_MODULE_REFERENCE = Symbol.for('react.module.reference');
+}
 
 export default function isValidElementType(type: mixed) {
   if (typeof type === 'string' || typeof type === 'function') {
