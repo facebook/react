@@ -413,6 +413,8 @@ let currentEventTransitionLane: Lanes = NoLanes;
 
 let isRunningInsertionEffect = false;
 
+let queueMicrotaskTimes = 0;
+
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
 }
@@ -791,6 +793,30 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
         );
       }
     }
+
+    if (queueMicrotaskTimes !== 0 && newCallbackPriority === SyncLane) {
+      // Put a new scheduleMicrotask into the queue
+      // In order to execute the existing micro tasks first
+      // So as to ensure that the setState in the micro task can be rendered in batch
+      queueMicrotaskTimes += 1;
+      const _queueMicrotaskTimes = queueMicrotaskTimes;
+      scheduleMicrotask(() => {
+        if (_queueMicrotaskTimes !== queueMicrotaskTimes) {
+          return;
+        }
+        // In Safari, appending an iframe forces microtasks to run.
+        // https://github.com/facebook/react/issues/22459
+        // We don't support running callbacks in the middle of render
+        // or commit so we need to check against that.
+        if (executionContext === NoContext) {
+          // It's only safe to do this conditionally because we always
+          // check for pending work before we exit the task.
+          flushSyncCallbacks();
+        }
+        queueMicrotaskTimes = 0;
+      });
+    }
+
     // The priority hasn't changed. We can reuse the existing task. Exit.
     return;
   }
@@ -821,7 +847,15 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
         // of `act`.
         ReactCurrentActQueue.current.push(flushSyncCallbacks);
       } else {
+        queueMicrotaskTimes += 1;
+        const _queueMicrotaskTimes = queueMicrotaskTimes;
         scheduleMicrotask(() => {
+          // When is not equal to scheduleMicrotask
+          // It means that a new scheduleMicrotask enters the queue
+          // cancel the previous scheduleMicrotask
+          if (_queueMicrotaskTimes !== queueMicrotaskTimes) {
+            return;
+          }
           // In Safari, appending an iframe forces microtasks to run.
           // https://github.com/facebook/react/issues/22459
           // We don't support running callbacks in the middle of render
@@ -831,6 +865,8 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
             // check for pending work before we exit the task.
             flushSyncCallbacks();
           }
+          // reset queueMicrotaskTimes
+          queueMicrotaskTimes = 0;
         });
       }
     } else {
