@@ -28,6 +28,7 @@ let useImperativeHandle;
 let useInsertionEffect;
 let useLayoutEffect;
 let useDebugValue;
+let useDeferredValue;
 let forwardRef;
 let yieldedValues;
 let yieldValue;
@@ -52,6 +53,7 @@ function initModules() {
   useImperativeHandle = React.useImperativeHandle;
   useInsertionEffect = React.useInsertionEffect;
   useLayoutEffect = React.useLayoutEffect;
+  useDeferredValue = React.useDeferredValue;
   forwardRef = React.forwardRef;
 
   yieldedValues = [];
@@ -660,6 +662,32 @@ describe('ReactDOMServerHooks', () => {
       expect(clearYields()).toEqual(['Count: 0']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');
+    });
+  });
+
+  describe('useDeferredValue', () => {
+    it('renders with initialValue, if provided', async () => {
+      function Counter() {
+        const value1 = useDeferredValue('Latest', 'Initial');
+        const value2 = useDeferredValue('Latest');
+        return (
+          <div>
+            <div>{value1}</div>
+            <div>{value2}</div>
+          </div>
+        );
+      }
+      const domNode = await serverRender(<Counter />, 1);
+      expect(domNode).toMatchInlineSnapshot(`
+        <div>
+          <div>
+            Initial
+          </div>
+          <div>
+            Latest
+          </div>
+        </div>
+      `);
     });
   });
 

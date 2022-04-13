@@ -496,9 +496,9 @@ function useSyncExternalStore<T>(
   return getServerSnapshot();
 }
 
-function useDeferredValue<T>(value: T): T {
+function useDeferredValue<T>(value: T, initialValue?: T): T {
   resolveCurrentlyRenderingComponent();
-  return value;
+  return initialValue !== undefined ? initialValue : value;
 }
 
 function useTransition(): [boolean, (callback: () => void) => void] {

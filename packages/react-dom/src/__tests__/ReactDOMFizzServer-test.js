@@ -19,6 +19,7 @@ let Suspense;
 let SuspenseList;
 let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
+let useDeferredValue;
 let PropTypes;
 let textCache;
 let window;
@@ -61,6 +62,7 @@ describe('ReactDOMFizzServer', () => {
     useSyncExternalStore = React.useSyncExternalStore;
     useSyncExternalStoreWithSelector = require('use-sync-external-store/with-selector')
       .useSyncExternalStoreWithSelector;
+    useDeferredValue = React.useDeferredValue;
 
     textCache = new Map();
 
@@ -3083,5 +3085,41 @@ describe('ReactDOMFizzServer', () => {
     );
 
     expect(Scheduler).toFlushAndYield([]);
+  });
+
+  // @gate experimental
+  it('useDeferredValue uses initialValue during hydration even if render is not urgent', async () => {
+    function Child() {
+      const value = useDeferredValue('Canonical', 'Initial');
+      Scheduler.unstable_yieldValue(value);
+      return value;
+    }
+
+    function App() {
+      // Because the child is wrapped in a Suspense boundary, it hydrates
+      // at a non-urgent priority.
+      return (
+        <Suspense fallback="Loading...">
+          <Child />
+        </Suspense>
+      );
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(Scheduler).toHaveYielded(['Initial']);
+    // The server always renders the initial value, not the canonical one.
+    expect(getVisibleChildren(container)).toEqual('Initial');
+
+    // When hydrating, it should use the initial value even if the hydration
+    // is (per usual) not urgent, to avoid a hydration mismatch. Then it does
+    // a deferred client render to switch to the canonical value.
+    // TODO: The deferred render should not be higher than the hydration itself,
+    // but currently it's always a transition.
+    ReactDOMClient.hydrateRoot(container, <App />);
+    expect(Scheduler).toFlushAndYield(['Initial', 'Canonical']);
+    expect(getVisibleChildren(container)).toEqual('Canonical');
   });
 });

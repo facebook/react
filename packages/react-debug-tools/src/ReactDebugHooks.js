@@ -309,7 +309,7 @@ function useTransition(): [
   return [false, callback => {}];
 }
 
-function useDeferredValue<T>(value: T): T {
+function useDeferredValue<T>(value: T, initialValue?: T): T {
   // useDeferredValue() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.

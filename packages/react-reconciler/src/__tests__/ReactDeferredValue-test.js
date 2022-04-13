@@ -296,4 +296,51 @@ describe('ReactDeferredValue', () => {
       );
     });
   });
+
+  it('defers during mount if initialValue is given and priority is urgent', async () => {
+    // Note: This does not cover hydration, which always defers regardless of
+    // priority. That's tested in a different suite.
+    function App({value}) {
+      const deferredValue = useDeferredValue(value, '(initial)');
+      return (
+        <div>
+          <Text text={'Not deferred: ' + value} />
+          <Text text={'Deferred: ' + deferredValue} />
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Initial render not in a transition. It should defer.
+    await act(async () => {
+      root.render(<App value="A" />);
+      // Render with the initial value
+      expect(Scheduler).toFlushUntilNextPaint([
+        'Not deferred: A',
+        'Deferred: (initial)',
+      ]);
+      // Then switch to latest
+      expect(Scheduler).toFlushUntilNextPaint([
+        'Not deferred: A',
+        'Deferred: A',
+      ]);
+    });
+
+    await act(async () => {
+      root.render(null);
+    });
+
+    // Initial render during a transition. It should not defer.
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App value="A" />);
+        // Render both in the same batch
+        expect(Scheduler).toFlushUntilNextPaint([
+          'Not deferred: A',
+          'Deferred: A',
+        ]);
+      });
+    });
+  });
 });
