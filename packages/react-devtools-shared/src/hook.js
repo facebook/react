@@ -172,54 +172,42 @@ export function installHook(target: any): DevToolsHook | null {
   }
 
   // NOTE: KEEP IN SYNC with src/backend/utils.js
-  function format(
-    maybeMessage: any,
-    ...inputArgs: $ReadOnlyArray<any>
-  ): string {
-    const args = inputArgs.slice();
-
-    // Symbols cannot be concatenated with Strings.
-    let formatted = String(maybeMessage);
-
-    // If the first argument is a string, check for substitutions.
-    if (typeof maybeMessage === 'string') {
-      if (args.length) {
-        const REGEXP = /(%?)(%([jds]))/g;
-
-        formatted = formatted.replace(REGEXP, (match, escaped, ptn, flag) => {
-          let arg = args.shift();
-          switch (flag) {
-            case 's':
-              arg += '';
-              break;
-            case 'd':
-            case 'i':
-              arg = parseInt(arg, 10).toString();
-              break;
-            case 'f':
-              arg = parseFloat(arg).toString();
-              break;
-          }
-          if (!escaped) {
-            return arg;
-          }
-          args.unshift(arg);
-          return match;
-        });
-      }
+  function formatWithStyles(
+    inputArgs: $ReadOnlyArray<any>,
+    style?: string,
+  ): $ReadOnlyArray<any> {
+    if (
+      inputArgs === undefined ||
+      inputArgs === null ||
+      inputArgs.length === 0 ||
+      (typeof inputArgs[0] === 'string' && inputArgs[0].includes('%c')) ||
+      style === undefined
+    ) {
+      return inputArgs;
     }
 
-    // Arguments that remain after formatting.
-    if (args.length) {
-      for (let i = 0; i < args.length; i++) {
-        formatted += ' ' + String(args[i]);
-      }
+    const REGEXP = /(%?)(%([oOdisf]))/g;
+    if (inputArgs[0].match(REGEXP)) {
+      return [`%c${inputArgs[0]}`, style, ...inputArgs.slice(1)];
+    } else {
+      const firstArg = inputArgs.reduce((formatStr, elem, i) => {
+        if (i > 0) {
+          formatStr += ' ';
+        }
+        switch (typeof elem) {
+          case 'string':
+          case 'boolean':
+          case 'symbol':
+            return (formatStr += '%s');
+          case 'number':
+            const formatting = Number.isInteger(elem) ? '%i' : '%f';
+            return (formatStr += formatting);
+          default:
+            return (formatStr += '%o');
+        }
+      }, '%c');
+      return [firstArg, style, ...inputArgs];
     }
-
-    // Update escaped %% values.
-    formatted = formatted.replace(/%{2,2}/g, '%');
-
-    return String(formatted);
   }
 
   let unpatchFn = null;
@@ -291,7 +279,7 @@ export function installHook(target: any): DevToolsHook | null {
             }
 
             if (color) {
-              originalMethod(`%c${format(...args)}`, `color: ${color}`);
+              originalMethod(...formatWithStyles(args, `color: ${color}`));
             } else {
               throw Error('Console color is not defined');
             }

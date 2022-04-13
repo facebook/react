@@ -11,7 +11,10 @@ import {
   getDisplayName,
   getDisplayNameForReactElement,
 } from 'react-devtools-shared/src/utils';
-import {format} from 'react-devtools-shared/src/backend/utils';
+import {
+  format,
+  formatWithStyles,
+} from 'react-devtools-shared/src/backend/utils';
 import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_STRICT_MODE_TYPE as StrictMode,
@@ -108,6 +111,83 @@ describe('utils', () => {
 
     it('should gracefully handle Symbol type for the first argument', () => {
       expect(format(Symbol('abc'), 123)).toEqual('Symbol(abc) 123');
+    });
+  });
+
+  describe('formatWithStyles', () => {
+    it('should format empty arrays', () => {
+      expect(formatWithStyles([])).toEqual([]);
+      expect(formatWithStyles([], 'gray')).toEqual([]);
+      expect(formatWithStyles(undefined)).toEqual(undefined);
+    });
+
+    it('should bail out of strings with styles', () => {
+      expect(
+        formatWithStyles(['%ca', 'color: green', 'b', 'c'], 'color: gray'),
+      ).toEqual(['%ca', 'color: green', 'b', 'c']);
+    });
+
+    it('should format simple strings', () => {
+      expect(formatWithStyles(['a'])).toEqual(['a']);
+
+      expect(formatWithStyles(['a', 'b', 'c'])).toEqual(['a', 'b', 'c']);
+      expect(formatWithStyles(['a'], 'color: gray')).toEqual([
+        '%c%s',
+        'color: gray',
+        'a',
+      ]);
+      expect(formatWithStyles(['a', 'b', 'c'], 'color: gray')).toEqual([
+        '%c%s %s %s',
+        'color: gray',
+        'a',
+        'b',
+        'c',
+      ]);
+    });
+
+    it('should format string substituions', () => {
+      expect(
+        formatWithStyles(['%s %s %s', 'a', 'b', 'c'], 'color: gray'),
+      ).toEqual(['%c%s %s %s', 'color: gray', 'a', 'b', 'c']);
+
+      // The last letter isn't gray here but I think it's not a big
+      // deal, since there is a string substituion but it's incorrect
+      expect(
+        formatWithStyles(['%s %s', 'a', 'b', 'c'], 'color: gray'),
+      ).toEqual(['%c%s %s', 'color: gray', 'a', 'b', 'c']);
+    });
+
+    it('should support multiple argument types', () => {
+      const symbol = Symbol('a');
+      expect(
+        formatWithStyles(
+          ['abc', 123, 12.3, true, {hello: 'world'}, symbol],
+          'color: gray',
+        ),
+      ).toEqual([
+        '%c%s %i %f %s %o %s',
+        'color: gray',
+        'abc',
+        123,
+        12.3,
+        true,
+        {hello: 'world'},
+        symbol,
+      ]);
+    });
+
+    it('should properly format escaped string substituions', () => {
+      expect(formatWithStyles(['%%s'], 'color: gray')).toEqual([
+        '%c%s',
+        'color: gray',
+        '%%s',
+      ]);
+      expect(formatWithStyles(['%%c'], 'color: gray')).toEqual([
+        '%c%s',
+        'color: gray',
+        '%%c',
+      ]);
+      expect(formatWithStyles(['%%c%c'], 'color: gray')).toEqual(['%%c%c']);
     });
   });
 });
