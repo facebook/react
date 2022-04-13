@@ -350,6 +350,48 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(container.textContent).toEqual('Count: 1');
   });
 
+  it('should batch microTasks inside native events', async () => {
+    const root = ReactDOMClient.createRoot(container);
+
+    const target = React.createRef(null);
+    function Foo() {
+      const [count, setCount] = React.useState(0);
+      const countRef = React.useRef(-1);
+
+      React.useLayoutEffect(() => {
+        countRef.current = count;
+        target.current.onclick = () => {
+          setCount(countRef.current + 1);
+
+          Promise.resolve().then(() => {
+            setCount(countRef.current + 1);
+          });
+
+          setCount(countRef.current + 1);
+        };
+      });
+      return <div ref={target}>Count: {count}</div>;
+    }
+
+    await act(async () => {
+      root.render(<Foo />);
+    });
+    expect(container.textContent).toEqual('Count: 0');
+
+    const pressEvent = document.createEvent('Event');
+    pressEvent.initEvent('click', true, true);
+    dispatchAndSetCurrentEvent(target.current, pressEvent);
+    // Intentionally not using `act` so we can observe in between the press
+    // event and the microtask, without batching.
+    await null;
+    // If this is 1, that means the `setCount` rendered first before batch the `setCount` in Promise
+    expect(container.textContent).toEqual('Count: 0');
+
+    await null;
+    // If this is 2, that means the `setCount` in Promise calls were not batched.
+    expect(container.textContent).toEqual('Count: 1');
+  });
+
   it('should not flush discrete events at the end of outermost batchedUpdates', async () => {
     const root = ReactDOMClient.createRoot(container);
 
