@@ -16,32 +16,68 @@ import {promises as fs} from 'fs';
 import path from 'path';
 
 type PluginOptions = {
-  clientComponentPaths?: string[],
   isServerComponentImporterAllowed?: (
     importer: string,
     source: string,
   ) => boolean,
+  findClientComponentsForDev?: (
+    config: any,
+    server: any,
+  ) => string[] | Promise<string[]>,
+  findClientComponentsForClientBuild?: (
+    config: any,
+  ) => string[] | Promise<string[]>,
+  isClientComponent?: (id: string) => boolean,
 };
 
 const rscViteFileRE = /\/react-server-dom-vite.js/;
 
 export default function ReactFlightVitePlugin({
-  clientComponentPaths = [],
   isServerComponentImporterAllowed = importer => false,
+  isClientComponent = id => /\.client\.[jt]sx?($|\?)/.test(id),
+  findClientComponentsForDev,
+  findClientComponentsForClientBuild,
 }: PluginOptions = {}) {
   let config;
+  let server;
+  let timeout;
+  let absoluteImporterPath;
+  let discoveredClientComponents = [];
+
+  if (!findClientComponentsForDev) {
+    findClientComponentsForDev = () =>
+      Array.from(server.moduleGraph.fileToModulesMap.keys()).filter(
+        isClientComponent,
+      );
+  }
 
   return {
     name: 'vite-plugin-react-server-components',
 
     enforce: 'pre',
 
-    configResolved(_config: any) {
+    configureServer(_server) {
+      server = _server;
+    },
+
+    async configResolved(_config: any) {
       config = _config;
 
       // By pushing this plugin at the end of the existing array,
       // we enforce running it *after* Vite resolves import.meta.glob.
       config.plugins.push(hashImportsPlugin);
+
+      if (config.command === 'build' && !config.build.ssr) {
+        if (findClientComponentsForClientBuild) {
+          discoveredClientComponents = await findClientComponentsForClientBuild(
+            config,
+          );
+        } else {
+          throw new Error(
+            '[react-server-dom-vite] Parameter findClientComponentsForClientBuild is required for client build',
+          );
+        }
+      }
     },
 
     async resolveId(source: string, importer: string) {
@@ -70,7 +106,24 @@ export default function ReactFlightVitePlugin({
       if (!options.ssr) return null;
 
       // Wrapped components won't match this becase they end in ?no-proxy
-      if (/\.client\.[jt]sx?$/.test(id)) {
+      if (isClientComponent(id) && !/[&?]no-proxy($|&)/.test(id)) {
+        if (config.command === 'serve') {
+          // Refresh the list of discovered client components
+          // every time a new one is processed.
+          clearTimeout(timeout);
+          timeout = setTimeout(async () => {
+            discoveredClientComponents = findClientComponentsForDev
+              ? await findClientComponentsForDev(config, server)
+              : [];
+
+            if (absoluteImporterPath) {
+              // Signal Vite that this file needs to be
+              // refreshed in both server and browser.
+              server.watcher.emit('change', absoluteImporterPath);
+            }
+          }, 100);
+        }
+
         return proxyClientComponent(id);
       }
 
@@ -89,6 +142,7 @@ export default function ReactFlightVitePlugin({
        */
       if (rscViteFileRE.test(id)) {
         const INJECTING_RE = /\{\s*__INJECTED_CLIENT_IMPORTERS__[:\s]*null[,\s]*\}\s*;/;
+        absoluteImporterPath = id.split('?')[0];
 
         if (options && options.ssr) {
           // In SSR, directly use components already discovered by RSC
@@ -96,25 +150,10 @@ export default function ReactFlightVitePlugin({
           return code.replace(INJECTING_RE, 'globalThis.__COMPONENT_INDEX');
         }
 
-        const CLIENT_COMPONENT_GLOB = '**/*.client.[jt]s?(x)';
-
         const importerPath = path.dirname(id);
-        const importerToRootPath = normalizePath(
-          path.relative(importerPath, config.root),
+        const importers = discoveredClientComponents.map(absolutePath =>
+          normalizePath(path.relative(importerPath, absolutePath)),
         );
-
-        const userGlob = path.join(importerToRootPath, CLIENT_COMPONENT_GLOB);
-
-        const importers = [userGlob];
-
-        clientComponentPaths.forEach(componentPath => {
-          importers.push(
-            path.join(
-              path.relative(importerPath, componentPath),
-              CLIENT_COMPONENT_GLOB,
-            ),
-          );
-        });
 
         const injectedGlobs = `Object.assign(Object.create(null), ${importers
           .map(
