@@ -30,7 +30,7 @@ import type {InspectedElement} from './types';
 
 export type Props = {||};
 
-// TODO Make edits and deletes also use transition API!
+// TODO Make edits and deletes also use transition APIè
 
 export default function InspectedElementWrapper(_: Props) {
   const {inspectedElementID} = useContext(TreeStateContext);
@@ -97,6 +97,17 @@ export default function InspectedElementWrapper(_: Props) {
     }
   }, [inspectedElement, viewElementSourceFunction]);
 
+  const openInVscode = useCallback(() => {
+    if (inspectedElement !== null) {
+      const path = inspectedElement.props['data-inspector-relative-path'];
+      const line = inspectedElement.props['data-inspector-line'];
+      const column = inspectedElement.props['data-inspector-column'];
+      chrome.devtools.inspectedWindow.eval(`
+      fetch('/__open-stack-frame-in-editor/relative?fileName=${path}&lineNumber=${line}&colNumber=${column}')
+      `);
+    }
+  }, [inspectedElement]);
+
   // In some cases (e.g. FB internal usage) the standalone shell might not be able to view the source.
   // To detect this case, we defer to an injected helper function (if present).
   const canViewSource =
@@ -105,6 +116,10 @@ export default function InspectedElementWrapper(_: Props) {
     viewElementSourceFunction !== null &&
     (canViewElementSourceFunction === null ||
       canViewElementSourceFunction(inspectedElement));
+
+  const canOpenInVscode=
+  inspectedElement !== null &&
+  inspectedElement.props['data-inspector-relative-path']!==undefined;
 
   const isErrored = inspectedElement != null && inspectedElement.isErrored;
   const targetErrorBoundaryID =
@@ -334,6 +349,13 @@ export default function InspectedElementWrapper(_: Props) {
             <ButtonIcon type="view-source" />
           </Button>
         )}
+        <Button
+          className={styles.IconButton}
+          disabled={!canOpenInVscode}
+          onClick={openInVscode}
+          title="open source in vscode">
+          <ButtonIcon type="up" />
+        </Button>
       </div>
 
       {inspectedElement === null && (
