@@ -31,6 +31,7 @@ export const {
   disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
   enableSyncDefaultUpdates,
+  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnHydrationMismatch,
   enableClientRenderFallbackOnTextMismatch,
 } = dynamicFeatureFlags;
