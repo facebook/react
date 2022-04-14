@@ -494,20 +494,31 @@ describe('console', () => {
     );
     expect(mockLog.mock.calls[0]).toHaveLength(1);
     expect(mockLog.mock.calls[0][0]).toBe('log');
-    expect(mockLog.mock.calls[1]).toHaveLength(2);
-    expect(mockLog.mock.calls[1][0]).toBe('%clog');
+    expect(mockLog.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      'log',
+    ]);
 
     expect(mockWarn).toHaveBeenCalledTimes(2);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
-    expect(mockWarn.mock.calls[1]).toHaveLength(2);
-    expect(mockWarn.mock.calls[1][0]).toBe('%cwarn');
+    expect(mockWarn.mock.calls[1]).toHaveLength(3);
+    expect(mockWarn.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_WARNING_COLOR}`,
+      'warn',
+    ]);
 
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(1);
     expect(mockError.mock.calls[0][0]).toBe('error');
-    expect(mockError.mock.calls[1]).toHaveLength(2);
-    expect(mockError.mock.calls[1][0]).toBe('%cerror');
+    expect(mockError.mock.calls[1]).toHaveLength(3);
+    expect(mockError.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_ERROR_COLOR}`,
+      'error',
+    ]);
   });
 
   it('should not double log if hideConsoleLogsInStrictMode is enabled in Strict mode', () => {
@@ -577,20 +588,32 @@ describe('console', () => {
     expect(mockLog).toHaveBeenCalledTimes(2);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
     expect(mockLog.mock.calls[0][0]).toBe('log');
-    expect(mockLog.mock.calls[1]).toHaveLength(2);
-    expect(mockLog.mock.calls[1][0]).toBe('%clog');
+    expect(mockLog.mock.calls[1]).toHaveLength(3);
+    expect(mockLog.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      'log',
+    ]);
 
     expect(mockWarn).toHaveBeenCalledTimes(2);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
-    expect(mockWarn.mock.calls[1]).toHaveLength(2);
-    expect(mockWarn.mock.calls[1][0]).toBe('%cwarn');
+    expect(mockWarn.mock.calls[1]).toHaveLength(3);
+    expect(mockWarn.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_WARNING_COLOR}`,
+      'warn',
+    ]);
 
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(1);
     expect(mockError.mock.calls[0][0]).toBe('error');
-    expect(mockError.mock.calls[1]).toHaveLength(2);
-    expect(mockError.mock.calls[1][0]).toBe('%cerror');
+    expect(mockError.mock.calls[1]).toHaveLength(3);
+    expect(mockError.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_ERROR_COLOR}`,
+      'error',
+    ]);
   });
 
   it('should not double log in Strict mode initial render for extension', () => {
@@ -666,22 +689,26 @@ describe('console', () => {
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
       '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
-    expect(mockWarn.mock.calls[1]).toHaveLength(2);
-    expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][0])).toEqual(
-      '%cwarn \n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
-    );
+    expect(mockWarn.mock.calls[1]).toHaveLength(4);
+    expect(mockWarn.mock.calls[1][0]).toEqual('%c%s %s');
     expect(mockWarn.mock.calls[1][1]).toMatch('color: rgba(');
+    expect(mockWarn.mock.calls[1][2]).toEqual('warn');
+    expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][3]).trim()).toEqual(
+      'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    );
 
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toEqual(
       '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
-    expect(mockError.mock.calls[1]).toHaveLength(2);
-    expect(normalizeCodeLocInfo(mockError.mock.calls[1][0])).toEqual(
-      '%cerror \n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
-    );
+    expect(mockError.mock.calls[1]).toHaveLength(4);
+    expect(mockError.mock.calls[1][0]).toEqual('%c%s %s');
     expect(mockError.mock.calls[1][1]).toMatch('color: rgba(');
+    expect(mockError.mock.calls[1][2]).toEqual('error');
+    expect(normalizeCodeLocInfo(mockError.mock.calls[1][3]).trim()).toEqual(
+      'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    );
   });
 });
 
