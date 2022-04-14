@@ -13,14 +13,18 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
+let ReactDOMClient;
+let act;
 
 describe('ReactDOM', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    act = require('jest-react').act;
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
+    ReactDOMClient = require('react-dom/client');
   });
 
   it('should bubble onSubmit', function() {
@@ -313,6 +317,121 @@ describe('ReactDOM', () => {
         </div>,
         container,
       );
+
+      expect(inputFocusedAfterMount).toBe(true);
+      expect(focusedElement.tagName).toBe('INPUT');
+    } finally {
+      HTMLElement.prototype.focus = originalFocus;
+    }
+  });
+
+  it('calls focus() on autoFocus elements when after dialog had opened | using createRoot', async () => {
+    const originalFocus = HTMLElement.prototype.focus;
+
+    try {
+      let focusedElement;
+      let inputFocusedAfterMount = false;
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      // This test needs to determine that focus is called after mount.
+      // Can't check document.activeElement because PhantomJS is too permissive;
+      // It doesn't require element to be in the DOM to be focused.
+      HTMLElement.prototype.focus = function() {
+        focusedElement = this;
+        inputFocusedAfterMount = !!this.parentNode;
+      };
+
+      const App = () => {
+        const [number, setNumber] = React.useState(0);
+
+        // Autofocus was handled using useEffect because dispatchEvent doesn't mount the component correctly
+        React.useEffect(() => {
+          setNumber(number + 1);
+        }, []);
+
+        React.useEffect(() => {
+          if (number < 3) {
+            setNumber(number + 1);
+          }
+        }, [number]);
+
+        return (
+          <div>
+            {/* Extra divs are also testing the begin and complete work loop */}
+            <div>s</div>
+            <dialog open={number === 2}>
+              <h1>Auto-focus Test</h1>
+              <div>
+                <input autoFocus={number > 0} />
+              </div>
+            </dialog>
+          </div>
+        );
+      };
+
+      const root = ReactDOMClient.createRoot(container);
+      act(() => {
+        root.render(<App />);
+      });
+
+      expect(inputFocusedAfterMount).toBe(true);
+      expect(focusedElement.tagName).toBe('INPUT');
+    } finally {
+      HTMLElement.prototype.focus = originalFocus;
+    }
+  });
+
+  it('calls focus() on autoFocus elements when after dialog had opened | using ReactDOM.render', async () => {
+    const originalFocus = HTMLElement.prototype.focus;
+
+    try {
+      let focusedElement;
+      let inputFocusedAfterMount = false;
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      // This test needs to determine that focus is called after mount.
+      // Can't check document.activeElement because PhantomJS is too permissive;
+      // It doesn't require element to be in the DOM to be focused.
+      HTMLElement.prototype.focus = function() {
+        focusedElement = this;
+        inputFocusedAfterMount = !!this.parentNode;
+      };
+
+      const App = () => {
+        const [number, setNumber] = React.useState(0);
+
+        // Autofocus was handled using useEffect because dispatchEvent doesn't mount the component correctly
+        React.useEffect(() => {
+          setNumber(number + 1);
+        }, []);
+
+        React.useEffect(() => {
+          if (number < 3) {
+            setNumber(number + 1);
+          }
+        }, [number]);
+
+        return (
+          <div>
+            {/* Extra divs are also testing the begin and complete work loop */}
+            <div>s</div>
+            <dialog open={number === 2}>
+              <h1>Auto-focus Test</h1>
+              <div>
+                <input autoFocus={number > 0} />
+              </div>
+            </dialog>
+          </div>
+        );
+      };
+
+      act(() => {
+        ReactDOM.render(<App />, container);
+      });
 
       expect(inputFocusedAfterMount).toBe(true);
       expect(focusedElement.tagName).toBe('INPUT');

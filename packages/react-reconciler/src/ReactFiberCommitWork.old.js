@@ -703,6 +703,46 @@ export function commitPassiveEffectDurations(
   }
 }
 
+function commitMountDialogAutoFocusChild_complete(current: Fiber) {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    if (fiber.type === current.type) {
+      nextEffect = null;
+      break;
+    }
+    const sibling = fiber.sibling;
+
+    if (sibling !== null) {
+      ensureCorrectReturnPointer(sibling, fiber.return);
+      nextEffect = sibling;
+      break;
+    }
+    nextEffect = fiber.return;
+  }
+}
+
+function commitMountDialogAutoFocusChild_begin(current: Fiber) {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    const firstChild = fiber.child;
+    const props = fiber.memoizedProps;
+
+    if (typeof props === 'object' && props.autoFocus) {
+      const instance = fiber.stateNode;
+      const typeWhichHasAutoFocus = fiber.type;
+      commitMount(instance, typeWhichHasAutoFocus, props);
+      break;
+    }
+
+    if (firstChild !== null) {
+      ensureCorrectReturnPointer(firstChild, fiber);
+      nextEffect = firstChild;
+    } else {
+      commitMountDialogAutoFocusChild_complete(current);
+    }
+  }
+}
+
 function commitLayoutEffectOnFiber(
   finishedRoot: FiberRoot,
   current: Fiber | null,
@@ -925,10 +965,21 @@ function commitLayoutEffectOnFiber(
         // (eg DOM renderer may schedule auto-focus for inputs and form controls).
         // These effects should only be committed when components are first mounted,
         // aka when there is no current/alternate.
+
+        const type = finishedWork.type;
+        const child = finishedWork.child;
+
         if (current === null && finishedWork.flags & Update) {
-          const type = finishedWork.type;
           const props = finishedWork.memoizedProps;
           commitMount(instance, type, props, finishedWork);
+        } else if (
+          type === 'dialog' &&
+          finishedWork.flags & Update &&
+          current !== null &&
+          child !== null
+        ) {
+          nextEffect = child;
+          commitMountDialogAutoFocusChild_begin(current);
         }
 
         break;
