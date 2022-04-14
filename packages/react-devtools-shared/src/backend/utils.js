@@ -187,7 +187,7 @@ export function formatWithStyles(
     return inputArgs;
   }
 
-  // Matches any of %(o|O|i|s|f), but not %%(o|O|i|s|f)
+  // Matches any of %(o|O|d|i|s|f), but not %%(o|O|d|i|s|f)
   const REGEXP = /([^%]|^)(%([oOdisf]))/g;
   if (inputArgs[0].match(REGEXP)) {
     return [`%c${inputArgs[0]}`, style, ...inputArgs.slice(1)];
