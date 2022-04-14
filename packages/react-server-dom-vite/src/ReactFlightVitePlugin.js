@@ -56,7 +56,7 @@ export default function ReactFlightVitePlugin({
 
     enforce: 'pre',
 
-    configureServer(_server) {
+    configureServer(_server: any) {
       server = _server;
     },
 
