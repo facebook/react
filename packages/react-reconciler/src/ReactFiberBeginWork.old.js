@@ -592,8 +592,9 @@ function updateSimpleMemoComponent(
   }
   if (current !== null) {
     const prevProps = current.memoizedProps;
+    nextProps = shallowEqual(prevProps, nextProps) ? prevProps : nextProps;
     if (
-      shallowEqual(prevProps, nextProps) &&
+      prevProps === nextProps &&
       current.ref === workInProgress.ref &&
       // Prevent bailout if the implementation changed due to hot reload.
       (__DEV__ ? workInProgress.type === current.type : true)

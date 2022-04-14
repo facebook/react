@@ -179,6 +179,51 @@ describe('memo', () => {
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
       });
 
+      it('bails out on props referential equality during context change', async () => {
+        const CountContext = React.createContext(0);
+        let renderCount = 0;
+
+        function Inner(props) {
+          React.useContext(CountContext);
+          return React.useMemo(() => {
+            const text = `Inner render count: ${++renderCount}`;
+            return <Text text={text} />;
+          }, [props]);
+        }
+
+        Inner = memo(Inner);
+
+        function Outer(props) {
+          React.useContext(CountContext);
+          return <Inner />;
+        }
+
+        function Parent({value}) {
+          return (
+            <Suspense fallback={<Text text="Loading..." />}>
+              <CountContext.Provider value={value}>
+                <Outer />
+              </CountContext.Provider>
+            </Suspense>
+          );
+        }
+
+        let ctxValue = 0;
+        ReactNoop.render(<Parent value={ctxValue++} />);
+        expect(Scheduler).toFlushAndYield(['Loading...']);
+        await Promise.resolve();
+        expect(Scheduler).toFlushAndYield(['Inner render count: 1']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Inner render count: 1'),
+        ]);
+
+        ReactNoop.render(<Parent value={ctxValue++} />);
+        expect(Scheduler).toFlushAndYield([]);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Inner render count: 1'),
+        ]);
+      });
+
       it('accepts custom comparison function', async () => {
         function Counter({count}) {
           return <Text text={count} />;
