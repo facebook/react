@@ -592,7 +592,11 @@ function updateSimpleMemoComponent(
   }
   if (current !== null) {
     const prevProps = current.memoizedProps;
-    nextProps = shallowEqual(prevProps, nextProps) ? prevProps : nextProps;
+    // potentially recycle `prevProps` if they are the same
+    // this allows hooks depending on the `props` to be reused
+    workInProgress.pendingProps = nextProps = shallowEqual(prevProps, nextProps)
+      ? prevProps
+      : nextProps;
     if (
       prevProps === nextProps &&
       current.ref === workInProgress.ref &&

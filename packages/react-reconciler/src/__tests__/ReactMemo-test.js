@@ -222,6 +222,12 @@ describe('memo', () => {
         expect(ReactNoop.getChildren()).toEqual([
           span('Inner render count: 1'),
         ]);
+
+        ReactNoop.render(<Parent value={ctxValue++} />);
+        expect(Scheduler).toFlushAndYield([]);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Inner render count: 1'),
+        ]);
       });
 
       it('accepts custom comparison function', async () => {
