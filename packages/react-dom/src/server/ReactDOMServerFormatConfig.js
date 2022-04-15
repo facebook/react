@@ -52,7 +52,6 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import warnValidStyle from '../shared/warnValidStyle';
 
 import escapeTextForBrowser from './escapeTextForBrowser';
-import escapeScriptForBrowser from './escapeScriptForBrowser';
 import hyphenateStyleName from '../shared/hyphenateStyleName';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
@@ -84,6 +83,22 @@ const startScriptSrc = stringToPrecomputedChunk('<script src="');
 const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
 const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
+const scriptRegex = /(<\/|<)(s)(cript)/gi;
+const substitutions = {
+  s: '\\u0073',
+  S: '\\u0053',
+};
+
+function escapeBootstrapScriptContent(scriptText) {
+  if (__DEV__) {
+    checkHtmlStringCoercion(scriptText);
+  }
+  return ('' + scriptText).replace(
+    scriptRegex,
+    (match, prefix, s, suffix) => `${prefix}${substitutions[s]}${suffix}`,
+  );
+}
+
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(
   identifierPrefix: string | void,
@@ -103,7 +118,7 @@ export function createResponseState(
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(
       inlineScriptWithNonce,
-      stringToChunk(escapeScriptForBrowser(bootstrapScriptContent)),
+      stringToChunk(escapeBootstrapScriptContent(bootstrapScriptContent)),
       endInlineScript,
     );
   }
