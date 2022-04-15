@@ -156,7 +156,8 @@ export default function ReactFlightVitePlugin({
           );
         }
 
-        return findClientComponentsForClientBuild(config).then(injectGlobs);
+        const tmp = findClientComponentsForClientBuild(config);
+        return Array.isArray(tmp) ? injectGlobs(tmp) : tmp.then(injectGlobs);
       }
     },
   };
