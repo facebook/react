@@ -52,6 +52,7 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import warnValidStyle from '../shared/warnValidStyle';
 
 import escapeTextForBrowser from './escapeTextForBrowser';
+import escapeScriptForBrowser from './escapeScriptForBrowser';
 import hyphenateStyleName from '../shared/hyphenateStyleName';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
@@ -102,7 +103,7 @@ export function createResponseState(
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(
       inlineScriptWithNonce,
-      stringToChunk(escapeTextForBrowser(bootstrapScriptContent)),
+      stringToChunk(escapeScriptForBrowser(bootstrapScriptContent)),
       endInlineScript,
     );
   }
