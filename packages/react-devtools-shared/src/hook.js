@@ -181,12 +181,13 @@ export function installHook(target: any): DevToolsHook | null {
       inputArgs === null ||
       inputArgs.length === 0 ||
       // Matches any of %c but not %%c
-      (typeof inputArgs[0] === 'string' && inputArgs[0].match(/([^%]|^)(%c)/g)) ||
+      (typeof inputArgs[0] === 'string' &&
+        inputArgs[0].match(/([^%]|^)(%c)/g)) ||
       style === undefined
     ) {
       return inputArgs;
     }
-  
+
     // Matches any of %(o|O|d|i|s|f), but not %%(o|O|d|i|s|f)
     const REGEXP = /([^%]|^)(%([oOdisf]))/g;
     if (inputArgs[0].match(REGEXP)) {
