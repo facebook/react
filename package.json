@@ -38,6 +38,7 @@
     "@babel/traverse": "^7.12.5",
     "abort-controller": "^3.0.0",
     "art": "^0.10.1",
+    "babel-code-frame": "^6.26.0",
     "babel-eslint": "^10.0.3",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
     "chalk": "^4.1.1",
