@@ -134,8 +134,9 @@ module.exports = {
               // which in turn avoids a nasty Electron/Chromium bug that breaks DevTools in Nuclide.
               // (Calls to URL.createObjectURL seem to crash the webview process.)
               sourceMap: __DEV__,
-              modules: true,
-              localIdentName: '[local]___[hash:base64:5]',
+              modules: {
+                localIdentName: '[local]___[hash:base64:5]',
+              },
             },
           },
         ],

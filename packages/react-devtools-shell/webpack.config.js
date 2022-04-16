@@ -112,8 +112,9 @@ const config = {
             loader: 'css-loader',
             options: {
               sourceMap: true,
-              modules: true,
-              localIdentName: '[local]',
+              modules: {
+                localIdentName: '[local]',
+              },
             },
           },
         ],
