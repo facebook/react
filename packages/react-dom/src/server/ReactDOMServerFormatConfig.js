@@ -83,6 +83,17 @@ const startScriptSrc = stringToPrecomputedChunk('<script src="');
 const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
 const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
+const scriptRegex = /(<\/|<)(s)(cript)/gi;
+const scriptReplacer = (match, prefix, s, suffix) =>
+  `${prefix}${s === 's' ? '\\u0073' : '\\u0053'}${suffix}`;
+
+function escapeBootstrapScriptContent(scriptText) {
+  if (__DEV__) {
+    checkHtmlStringCoercion(scriptText);
+  }
+  return ('' + scriptText).replace(scriptRegex, scriptReplacer);
+}
+
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(
   identifierPrefix: string | void,
@@ -102,7 +113,7 @@ export function createResponseState(
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(
       inlineScriptWithNonce,
-      stringToChunk(escapeTextForBrowser(bootstrapScriptContent)),
+      stringToChunk(escapeBootstrapScriptContent(bootstrapScriptContent)),
       endInlineScript,
     );
   }
