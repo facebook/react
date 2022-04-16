@@ -18,14 +18,14 @@
     "@babel/preset-flow": "^7.10.4",
     "@babel/preset-react": "^7.10.4",
     "babel-core": "^7.0.0-bridge",
-    "babel-eslint": "^10.0.3",
-    "babel-loader": "^8.1.0",
+    "babel-eslint": "^9.0.0",
+    "babel-loader": "^8.0.4",
     "cross-env": "^3.1.4",
-    "css-loader": "^4.2.1",
+    "css-loader": "^1.0.1",
     "raw-loader": "^3.1.0",
-    "style-loader": "^1.2.1",
-    "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.11.0"
+    "style-loader": "^0.23.1",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
   }
 }
