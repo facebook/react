@@ -41,7 +41,7 @@ const CRITICAL_THRESHOLD = 0.02;
 const SIGNIFICANCE_THRESHOLD = 0.002;
 const CRITICAL_ARTIFACT_PATHS = new Set([
   // We always report changes to these bundles, even if the change is
-  // insiginificant or non-existent.
+  // insignificant or non-existent.
   'oss-stable/react-dom/cjs/react-dom.production.min.js',
   'oss-experimental/react-dom/cjs/react-dom.production.min.js',
   'facebook-www/ReactDOM-prod.classic.js',
