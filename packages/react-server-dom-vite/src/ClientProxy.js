@@ -73,8 +73,12 @@ export function wrapInClientProxy({id, name, isDefault, value}: ClientProxy) {
   }
 
   const moduleRef = createModuleReference(id, value, name, isDefault);
-  const get = (target, prop, receiver) =>
-    Reflect.get(isRsc() ? moduleRef : target, prop, receiver);
+  const get = (target, prop, receiver) => {
+    if (prop === '$$unwrappedValue') return value;
+    if (prop === '$$moduleReference') return moduleRef;
+
+    return Reflect.get(isRsc() ? moduleRef : target, prop, receiver);
+  };
 
   return new Proxy(
     value,
