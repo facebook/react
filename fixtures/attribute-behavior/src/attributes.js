@@ -1232,6 +1232,8 @@ const attributes = [
   },
   {name: 'multiple', tagName: 'select'},
   {name: 'muted', tagName: 'video'},
+  {name: 'defaultMuted', tagName: 'video'},
+  {name: 'defaultmuted', tagName: 'video', read: getAttribute('defaultmuted')},
   {name: 'name', tagName: 'input'},
   {
     name: 'name',

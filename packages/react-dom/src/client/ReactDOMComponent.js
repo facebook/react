@@ -47,6 +47,11 @@ import {
   updateWrapper as ReactDOMTextareaUpdateWrapper,
   restoreControlledState as ReactDOMTextareaRestoreControlledState,
 } from './ReactDOMTextarea';
+import {
+  initWrapperState as ReactDOMVideoInitWrapperState,
+  getHostProps as ReactDOMVideoGetHostProps,
+  postMountWrapper as ReactDOMVideoPostMountWrapper,
+} from './ReactDOMVideo';
 import {track} from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
@@ -511,6 +516,14 @@ export function setInitialProperties(
       props = rawProps;
       break;
     case 'video':
+      ReactDOMVideoInitWrapperState(domElement, rawProps);
+      props = ReactDOMVideoGetHostProps(domElement, rawProps);
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for all the media events.
+      for (let i = 0; i < mediaEventTypes.length; i++) {
+        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
+      }
+      break;
     case 'audio':
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for all the media events.
@@ -597,6 +610,9 @@ export function setInitialProperties(
       break;
     case 'select':
       ReactDOMSelectPostMountWrapper(domElement, rawProps);
+      break;
+    case 'video':
+      ReactDOMVideoPostMountWrapper(domElement, rawProps);
       break;
     default:
       if (typeof props.onClick === 'function') {

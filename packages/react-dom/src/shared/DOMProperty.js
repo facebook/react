@@ -245,6 +245,7 @@ const reservedProps = [
   // defaultValue property -- do we need this?
   'defaultValue',
   'defaultChecked',
+  'defaultMuted',
   'innerHTML',
   'suppressContentEditableWarning',
   'suppressHydrationWarning',
