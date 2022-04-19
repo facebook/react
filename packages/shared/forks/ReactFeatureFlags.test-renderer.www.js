@@ -76,6 +76,7 @@ export const enableServerContext = false;
 export const enableUseMutableSource = true;
 
 export const enableTransitionTracing = false;
+export const enableSymbolFallbackForWWW = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
