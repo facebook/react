@@ -93,60 +93,6 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
   });
 
-  it('does not destroy layout effects twice when hidden child is removed', async () => {
-    function ChildA({label}) {
-      React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Did mount: ' + label);
-        return () => {
-          Scheduler.unstable_yieldValue('Will unmount: ' + label);
-        };
-      }, []);
-      return <Text text={label} />;
-    }
-
-    function ChildB({label}) {
-      React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Did mount: ' + label);
-        return () => {
-          Scheduler.unstable_yieldValue('Will unmount: ' + label);
-        };
-      }, []);
-      return <Text text={label} />;
-    }
-
-    const LazyChildA = React.lazy(() => fakeImport(ChildA));
-    const LazyChildB = React.lazy(() => fakeImport(ChildB));
-
-    function Parent({swap}) {
-      return (
-        <React.Suspense fallback={<Text text="Loading..." />}>
-          {swap ? <LazyChildB label="B" /> : <LazyChildA label="A" />}
-        </React.Suspense>
-      );
-    }
-
-    const root = ReactDOMClient.createRoot(container);
-    act(() => {
-      root.render(<Parent swap={false} />);
-    });
-    expect(Scheduler).toHaveYielded(['Loading...']);
-
-    await LazyChildA;
-    expect(Scheduler).toFlushAndYield(['A', 'Did mount: A']);
-    expect(container.innerHTML).toBe('A');
-
-    // Swap the position of A and B
-    ReactDOM.flushSync(() => {
-      root.render(<Parent swap={true} />);
-    });
-    expect(Scheduler).toHaveYielded(['Loading...', 'Will unmount: A']);
-    expect(container.innerHTML).toBe('Loading...');
-
-    await LazyChildB;
-    expect(Scheduler).toFlushAndYield(['B', 'Did mount: B']);
-    expect(container.innerHTML).toBe('B');
-  });
-
   it('does not destroy ref cleanup twice when hidden child is removed', async () => {
     function ChildA({label}) {
       return (
@@ -454,5 +400,54 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
     expect(Scheduler).toFlushAndYield([]);
     expect(container.innerHTML).toBe('<h1>Hello</h1>');
+  });
+
+  it('regression: unmount hidden tree, in legacy mode', async () => {
+    // In legacy mode, when a tree suspends and switches to a fallback, the
+    // effects are not unmounted. So we have to unmount them during a deletion.
+
+    function Child() {
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount');
+        };
+      }, []);
+      return <Text text="Child" />;
+    }
+
+    function Sibling() {
+      return <Text text="Sibling" />;
+    }
+    const LazySibling = React.lazy(() => fakeImport(Sibling));
+
+    function App({showMore}) {
+      return (
+        <React.Suspense fallback={<Text text="Loading..." />}>
+          <Child />
+          {showMore ? <LazySibling /> : null}
+        </React.Suspense>
+      );
+    }
+
+    // Initial render
+    ReactDOM.render(<App showMore={false} />, container);
+    expect(Scheduler).toHaveYielded(['Child', 'Mount']);
+
+    // Update that suspends, causing the existing tree to switches it to
+    // a fallback.
+    ReactDOM.render(<App showMore={true} />, container);
+    expect(Scheduler).toHaveYielded([
+      'Child',
+      'Loading...',
+
+      // In a concurrent root, the effect would unmount here. But this is legacy
+      // mode, so it doesn't.
+      // Unmount
+    ]);
+
+    // Delete the tree and unmount the effect
+    ReactDOM.render(null, container);
+    expect(Scheduler).toHaveYielded(['Unmount']);
   });
 });

@@ -1804,24 +1804,36 @@ function commitDeletionEffectsOnFiber(
       return;
     }
     case OffscreenComponent: {
-      // If this offscreen component is hidden, we already unmounted it. Before
-      // deleting the children, track that it's already unmounted so that we
-      // don't attempt to unmount the effects again.
-      // TODO: If the tree is hidden, in most cases we should be able to skip
-      // over the nested children entirely. An exception is we haven't yet found
-      // the topmost host node to delete, which we already track on the stack.
-      // But the other case is portals, which need to be detached no matter how
-      // deeply they are nested. We should use a subtree flag to track whether a
-      // subtree includes a nested portal.
-      const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
-      offscreenSubtreeWasHidden =
-        prevOffscreenSubtreeWasHidden || deletedFiber.memoizedState !== null;
-      recursivelyTraverseDeletionEffects(
-        finishedRoot,
-        nearestMountedAncestor,
-        deletedFiber,
-      );
-      offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+      if (
+        // TODO: Remove this dead flag
+        enableSuspenseLayoutEffectSemantics &&
+        deletedFiber.mode & ConcurrentMode
+      ) {
+        // If this offscreen component is hidden, we already unmounted it. Before
+        // deleting the children, track that it's already unmounted so that we
+        // don't attempt to unmount the effects again.
+        // TODO: If the tree is hidden, in most cases we should be able to skip
+        // over the nested children entirely. An exception is we haven't yet found
+        // the topmost host node to delete, which we already track on the stack.
+        // But the other case is portals, which need to be detached no matter how
+        // deeply they are nested. We should use a subtree flag to track whether a
+        // subtree includes a nested portal.
+        const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+        offscreenSubtreeWasHidden =
+          prevOffscreenSubtreeWasHidden || deletedFiber.memoizedState !== null;
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber,
+        );
+        offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+      } else {
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber,
+        );
+      }
       break;
     }
     default: {
@@ -2238,13 +2250,21 @@ function commitMutationEffectsOnFiber(
     case OffscreenComponent: {
       const wasHidden = current !== null && current.memoizedState !== null;
 
-      // Before committing the children, track on the stack whether this
-      // offscreen subtree was already hidden, so that we don't unmount the
-      // effects again.
-      const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
-      offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || wasHidden;
-      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+      if (
+        // TODO: Remove this dead flag
+        enableSuspenseLayoutEffectSemantics &&
+        finishedWork.mode & ConcurrentMode
+      ) {
+        // Before committing the children, track on the stack whether this
+        // offscreen subtree was already hidden, so that we don't unmount the
+        // effects again.
+        const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+        offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || wasHidden;
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+      } else {
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      }
 
       commitReconciliationEffects(finishedWork);
 
