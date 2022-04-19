@@ -2841,4 +2841,94 @@ describe('ReactDOMFizzServer', () => {
       expect(window.__test_outlet).toBe(1);
     });
   });
+
+  // @gate experimental
+  it('#24384: Suspending should halt hydration warnings while still allowing siblings to warm up', async () => {
+    const makeApp = () => {
+      let resolve, resolved;
+      const promise = new Promise(r => {
+        resolve = () => {
+          resolved = true;
+          return r();
+        };
+      });
+      function ComponentThatSuspends() {
+        if (!resolved) {
+          throw promise;
+        }
+        return <p>A</p>;
+      }
+
+      const App = ({text}) => {
+        return (
+          <div>
+            <Suspense fallback={<h1>Loading...</h1>}>
+              <ComponentThatSuspends />
+              <h2 name={text}>{text}</h2>
+            </Suspense>
+          </div>
+        );
+      };
+
+      return [App, resolve];
+    };
+
+    const [ServerApp, serverResolve] = makeApp();
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <ServerApp text="initial" />,
+      );
+      pipe(writable);
+    });
+    await act(() => {
+      serverResolve();
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>A</p>
+        <h2 name="initial">initial</h2>
+      </div>,
+    );
+
+    // the client app is rendered with an intentionally incorrect text. The still Suspended component causes
+    // hydration to fail silently (allowing for cache warming but otherwise skipping this boundary) until it
+    // resolves.
+    const [ClientApp, clientResolve] = makeApp();
+    ReactDOMClient.hydrateRoot(container, <ClientApp text="replaced" />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(
+          'Logged recoverable error: ' + error.message,
+        );
+      },
+    });
+    Scheduler.unstable_flushAll();
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>A</p>
+        <h2 name="initial">initial</h2>
+      </div>,
+    );
+
+    // Now that the boundary resolves to it's children the hydration completes and discovers that there is a mismatch requiring
+    // client-side rendering.
+    await clientResolve();
+    expect(() => {
+      expect(Scheduler).toFlushAndYield([
+        'Logged recoverable error: Text content does not match server-rendered HTML.',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+      ]);
+    }).toErrorDev(
+      'Warning: Prop `name` did not match. Server: "initial" Client: "replaced"',
+    );
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>A</p>
+        <h2 name="replaced">replaced</h2>
+      </div>,
+    );
+
+    expect(Scheduler).toFlushAndYield([]);
+  });
 });
