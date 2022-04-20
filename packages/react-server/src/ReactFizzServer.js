@@ -113,7 +113,6 @@ import {
   disableModulePatternComponents,
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
-  enableLazyElements,
   enableSuspenseAvoidThisFallbackFizz,
 } from 'shared/ReactFeatureFlags';
 
@@ -1162,14 +1161,12 @@ function renderNodeDestructive(
         );
       // eslint-disable-next-line-no-fallthrough
       case REACT_LAZY_TYPE: {
-        if (enableLazyElements) {
-          const lazyNode: LazyComponentType<any, any> = (node: any);
-          const payload = lazyNode._payload;
-          const init = lazyNode._init;
-          const resolvedNode = init(payload);
-          renderNodeDestructive(request, task, resolvedNode);
-          return;
-        }
+        const lazyNode: LazyComponentType<any, any> = (node: any);
+        const payload = lazyNode._payload;
+        const init = lazyNode._init;
+        const resolvedNode = init(payload);
+        renderNodeDestructive(request, task, resolvedNode);
+        return;
       }
     }
 
