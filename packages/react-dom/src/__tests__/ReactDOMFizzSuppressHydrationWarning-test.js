@@ -12,6 +12,7 @@
 let JSDOM;
 let Stream;
 let Scheduler;
+let Suspense;
 let React;
 let ReactDOMClient;
 let ReactDOMFizzServer;
@@ -28,6 +29,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
     JSDOM = require('jsdom').JSDOM;
     Scheduler = require('scheduler');
     React = require('react');
+    Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzServer = require('react-dom/server');
@@ -57,6 +59,18 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
       fatalError = error;
     });
   });
+
+  function normalizeCodeLocInfo(strOrErr) {
+    if (strOrErr && strOrErr.replace) {
+      return strOrErr.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(
+        m,
+        name,
+      ) {
+        return '\n    in ' + name + ' (at **)';
+      });
+    }
+    return strOrErr;
+  }
 
   async function act(callback) {
     await callback();
@@ -666,5 +680,170 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         <p>Client and server</p>
       </div>,
     );
+  });
+
+  // @gate experimental && enableClientRenderFallbackOnTextMismatch && enableClientRenderFallbackOnHydrationMismatch
+  it('#24384: Suspending should halt hydration warnings while still allowing siblings to warm up', async () => {
+    const makeApp = () => {
+      let resolve, resolved;
+      const promise = new Promise(r => {
+        resolve = () => {
+          resolved = true;
+          return r();
+        };
+      });
+      function ComponentThatSuspends() {
+        if (!resolved) {
+          throw promise;
+        }
+        return <p>A</p>;
+      }
+
+      const App = ({text}) => {
+        return (
+          <div>
+            <Suspense fallback={<h1>Loading...</h1>}>
+              <ComponentThatSuspends />
+              <h2 name={text}>{text}</h2>
+            </Suspense>
+          </div>
+        );
+      };
+
+      return [App, resolve];
+    };
+
+    const [ServerApp, serverResolve] = makeApp();
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <ServerApp text="initial" />,
+      );
+      pipe(writable);
+    });
+    await act(() => {
+      serverResolve();
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>A</p>
+        <h2 name="initial">initial</h2>
+      </div>,
+    );
+
+    // the client app is rendered with an intentionally incorrect text. The still Suspended component causes
+    // hydration to fail silently (allowing for cache warming but otherwise skipping this boundary) until it
+    // resolves.
+    const [ClientApp, clientResolve] = makeApp();
+    ReactDOMClient.hydrateRoot(container, <ClientApp text="replaced" />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(
+          'Logged recoverable error: ' + error.message,
+        );
+      },
+    });
+    Scheduler.unstable_flushAll();
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>A</p>
+        <h2 name="initial">initial</h2>
+      </div>,
+    );
+
+    // Now that the boundary resolves to it's children the hydration completes and discovers that there is a mismatch requiring
+    // client-side rendering.
+    await clientResolve();
+    expect(() => {
+      expect(Scheduler).toFlushAndYield([
+        'Logged recoverable error: Text content does not match server-rendered HTML.',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+      ]);
+    }).toErrorDev(
+      'Warning: Prop `name` did not match. Server: "initial" Client: "replaced"',
+    );
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>A</p>
+        <h2 name="replaced">replaced</h2>
+      </div>,
+    );
+
+    expect(Scheduler).toFlushAndYield([]);
+  });
+
+  // @gate experimental && enableClientRenderFallbackOnTextMismatch && enableClientRenderFallbackOnHydrationMismatch
+  it('only warns once on hydration mismatch while within a suspense boundary', async () => {
+    const originalConsoleError = console.error;
+    const mockError = jest.fn();
+    console.error = (...args) => {
+      mockError(...args.map(normalizeCodeLocInfo));
+    };
+
+    const App = ({text}) => {
+      return (
+        <div>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <h2>{text}</h2>
+            <h2>{text}</h2>
+            <h2>{text}</h2>
+          </Suspense>
+        </div>
+      );
+    };
+
+    try {
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <App text="initial" />,
+        );
+        pipe(writable);
+      });
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h2>initial</h2>
+          <h2>initial</h2>
+          <h2>initial</h2>
+        </div>,
+      );
+
+      ReactDOMClient.hydrateRoot(container, <App text="replaced" />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(
+            'Logged recoverable error: ' + error.message,
+          );
+        },
+      });
+      expect(Scheduler).toFlushAndYield([
+        'Logged recoverable error: Text content does not match server-rendered HTML.',
+        'Logged recoverable error: Text content does not match server-rendered HTML.',
+        'Logged recoverable error: Text content does not match server-rendered HTML.',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+      ]);
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h2>replaced</h2>
+          <h2>replaced</h2>
+          <h2>replaced</h2>
+        </div>,
+      );
+
+      expect(Scheduler).toFlushAndYield([]);
+      expect(mockError.mock.calls.length).toBe(1);
+      expect(mockError.mock.calls[0]).toEqual([
+        'Warning: Text content did not match. Server: "%s" Client: "%s"%s',
+        'initial',
+        'replaced',
+        '\n' +
+          '    in h2 (at **)\n' +
+          '    in Suspense (at **)\n' +
+          '    in div (at **)\n' +
+          '    in App (at **)',
+      ]);
+    } finally {
+      console.error = originalConsoleError;
+    }
   });
 });
