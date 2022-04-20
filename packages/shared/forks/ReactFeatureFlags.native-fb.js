@@ -28,7 +28,6 @@ export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
-export const enableLazyElements = false;
 export const enableCache = false;
 export const enableCacheElement = true;
 export const enableSchedulerDebugging = false;

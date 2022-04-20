@@ -16,7 +16,6 @@
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 export const warnAboutDeprecatedLifecycles = true;
-export const enableLazyElements = true;
 export const enableComponentStackLocations = true;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enablePersistentOffscreenHostContainer = false;
