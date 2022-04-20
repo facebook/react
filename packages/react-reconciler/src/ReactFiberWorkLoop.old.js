@@ -296,11 +296,6 @@ const subtreeRenderLanesCursor: StackCursor<Lanes> = createCursor(NoLanes);
 let workInProgressRootExitStatus: RootExitStatus = RootInProgress;
 // A fatal error, if one is thrown
 let workInProgressRootFatalError: mixed = null;
-// "Included" lanes refer to lanes that were worked on during this render. It's
-// slightly different than `renderLanes` because `renderLanes` can change as you
-// enter and exit an Offscreen tree. This value is the combination of all render
-// lanes for the entire render phase.
-let workInProgressRootIncludedLanes: Lanes = NoLanes;
 // The work left over by components that were visited during this render. Only
 // includes unprocessed updates, not work in bailed out children.
 let workInProgressRootSkippedLanes: Lanes = NoLanes;
@@ -1488,10 +1483,6 @@ export function flushControlled(fn: () => mixed): void {
 export function pushRenderLanes(fiber: Fiber, lanes: Lanes) {
   pushToStack(subtreeRenderLanesCursor, subtreeRenderLanes, fiber);
   subtreeRenderLanes = mergeLanes(subtreeRenderLanes, lanes);
-  workInProgressRootIncludedLanes = mergeLanes(
-    workInProgressRootIncludedLanes,
-    lanes,
-  );
 }
 
 export function popRenderLanes(fiber: Fiber) {
@@ -1527,7 +1518,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressRoot = root;
   const rootWorkInProgress = createWorkInProgress(root.current, null);
   workInProgress = rootWorkInProgress;
-  workInProgressRootRenderLanes = subtreeRenderLanes = workInProgressRootIncludedLanes = lanes;
+  workInProgressRootRenderLanes = subtreeRenderLanes = lanes;
   workInProgressRootExitStatus = RootInProgress;
   workInProgressRootFatalError = null;
   workInProgressRootSkippedLanes = NoLanes;
