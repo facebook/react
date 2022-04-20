@@ -68,10 +68,7 @@ import {
   didNotFindHydratableTextInstance,
   didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
-import {
-  enableClientRenderFallbackOnHydrationMismatch,
-  enableSuspenseServerRenderer,
-} from 'shared/ReactFeatureFlags';
+import {enableClientRenderFallbackOnHydrationMismatch} from 'shared/ReactFeatureFlags';
 import {OffscreenLane} from './ReactFiberLane.old';
 import {
   getSuspendedTreeContext,
@@ -347,32 +344,30 @@ function tryHydrate(fiber, nextInstance) {
       return false;
     }
     case SuspenseComponent: {
-      if (enableSuspenseServerRenderer) {
-        const suspenseInstance: null | SuspenseInstance = canHydrateSuspenseInstance(
-          nextInstance,
+      const suspenseInstance: null | SuspenseInstance = canHydrateSuspenseInstance(
+        nextInstance,
+      );
+      if (suspenseInstance !== null) {
+        const suspenseState: SuspenseState = {
+          dehydrated: suspenseInstance,
+          treeContext: getSuspendedTreeContext(),
+          retryLane: OffscreenLane,
+        };
+        fiber.memoizedState = suspenseState;
+        // Store the dehydrated fragment as a child fiber.
+        // This simplifies the code for getHostSibling and deleting nodes,
+        // since it doesn't have to consider all Suspense boundaries and
+        // check if they're dehydrated ones or not.
+        const dehydratedFragment = createFiberFromDehydratedFragment(
+          suspenseInstance,
         );
-        if (suspenseInstance !== null) {
-          const suspenseState: SuspenseState = {
-            dehydrated: suspenseInstance,
-            treeContext: getSuspendedTreeContext(),
-            retryLane: OffscreenLane,
-          };
-          fiber.memoizedState = suspenseState;
-          // Store the dehydrated fragment as a child fiber.
-          // This simplifies the code for getHostSibling and deleting nodes,
-          // since it doesn't have to consider all Suspense boundaries and
-          // check if they're dehydrated ones or not.
-          const dehydratedFragment = createFiberFromDehydratedFragment(
-            suspenseInstance,
-          );
-          dehydratedFragment.return = fiber;
-          fiber.child = dehydratedFragment;
-          hydrationParentFiber = fiber;
-          // While a Suspense Instance does have children, we won't step into
-          // it during the first pass. Instead, we'll reenter it later.
-          nextHydratableInstance = null;
-          return true;
-        }
+        dehydratedFragment.return = fiber;
+        fiber.child = dehydratedFragment;
+        hydrationParentFiber = fiber;
+        // While a Suspense Instance does have children, we won't step into
+        // it during the first pass. Instead, we'll reenter it later.
+        nextHydratableInstance = null;
+        return true;
       }
       return false;
     }

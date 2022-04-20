@@ -23,7 +23,6 @@ import type {
 
 import {
   warnAboutDeprecatedLifecycles,
-  enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableCreateEventHandleAPI,
   enableProfilerTimer,
@@ -2776,26 +2775,22 @@ export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
 export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
   let retryLane = NoLane; // Default
   let retryCache: WeakSet<Wakeable> | Set<Wakeable> | null;
-  if (enableSuspenseServerRenderer) {
-    switch (boundaryFiber.tag) {
-      case SuspenseComponent:
-        retryCache = boundaryFiber.stateNode;
-        const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
-        if (suspenseState !== null) {
-          retryLane = suspenseState.retryLane;
-        }
-        break;
-      case SuspenseListComponent:
-        retryCache = boundaryFiber.stateNode;
-        break;
-      default:
-        throw new Error(
-          'Pinged unknown suspense boundary type. ' +
-            'This is probably a bug in React.',
-        );
-    }
-  } else {
-    retryCache = boundaryFiber.stateNode;
+  switch (boundaryFiber.tag) {
+    case SuspenseComponent:
+      retryCache = boundaryFiber.stateNode;
+      const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
+      if (suspenseState !== null) {
+        retryLane = suspenseState.retryLane;
+      }
+      break;
+    case SuspenseListComponent:
+      retryCache = boundaryFiber.stateNode;
+      break;
+    default:
+      throw new Error(
+        'Pinged unknown suspense boundary type. ' +
+          'This is probably a bug in React.',
+      );
   }
 
   if (retryCache !== null) {

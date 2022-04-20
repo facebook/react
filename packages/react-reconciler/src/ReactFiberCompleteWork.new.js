@@ -138,7 +138,6 @@ import {
 } from './ReactFiberHydrationContext.new';
 import {
   enableSuspenseCallback,
-  enableSuspenseServerRenderer,
   enableScopeAPI,
   enableProfilerTimer,
   enableCache,
@@ -1066,84 +1065,81 @@ function completeWork(
       popSuspenseContext(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
 
-      if (enableSuspenseServerRenderer) {
-        if (
-          enableClientRenderFallbackOnHydrationMismatch &&
-          hasUnhydratedTailNodes() &&
-          (workInProgress.mode & ConcurrentMode) !== NoMode &&
-          (workInProgress.flags & DidCapture) === NoFlags
-        ) {
-          warnIfUnhydratedTailNodes(workInProgress);
-          resetHydrationState();
-          workInProgress.flags |=
-            ForceClientRender | Incomplete | ShouldCapture;
-          return workInProgress;
-        }
-        if (nextState !== null && nextState.dehydrated !== null) {
-          // We might be inside a hydration state the first time we're picking up this
-          // Suspense boundary, and also after we've reentered it for further hydration.
-          const wasHydrated = popHydrationState(workInProgress);
-          if (current === null) {
-            if (!wasHydrated) {
-              throw new Error(
-                'A dehydrated suspense component was completed without a hydrated node. ' +
-                  'This is probably a bug in React.',
-              );
-            }
-            prepareToHydrateHostSuspenseInstance(workInProgress);
-            bubbleProperties(workInProgress);
-            if (enableProfilerTimer) {
-              if ((workInProgress.mode & ProfileMode) !== NoMode) {
-                const isTimedOutSuspense = nextState !== null;
-                if (isTimedOutSuspense) {
-                  // Don't count time spent in a timed out Suspense subtree as part of the base duration.
-                  const primaryChildFragment = workInProgress.child;
-                  if (primaryChildFragment !== null) {
-                    // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
-                    workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
-                  }
-                }
-              }
-            }
-            return null;
-          } else {
-            // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
-            // state since we're now exiting out of it. popHydrationState doesn't do that for us.
-            resetHydrationState();
-            if ((workInProgress.flags & DidCapture) === NoFlags) {
-              // This boundary did not suspend so it's now hydrated and unsuspended.
-              workInProgress.memoizedState = null;
-            }
-            // If nothing suspended, we need to schedule an effect to mark this boundary
-            // as having hydrated so events know that they're free to be invoked.
-            // It's also a signal to replay events and the suspense callback.
-            // If something suspended, schedule an effect to attach retry listeners.
-            // So we might as well always mark this.
-            workInProgress.flags |= Update;
-            bubbleProperties(workInProgress);
-            if (enableProfilerTimer) {
-              if ((workInProgress.mode & ProfileMode) !== NoMode) {
-                const isTimedOutSuspense = nextState !== null;
-                if (isTimedOutSuspense) {
-                  // Don't count time spent in a timed out Suspense subtree as part of the base duration.
-                  const primaryChildFragment = workInProgress.child;
-                  if (primaryChildFragment !== null) {
-                    // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
-                    workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
-                  }
-                }
-              }
-            }
-            return null;
-          }
-        }
-
-        // Successfully completed this tree. If this was a forced client render,
-        // there may have been recoverable errors during first hydration
-        // attempt. If so, add them to a queue so we can log them in the
-        // commit phase.
-        upgradeHydrationErrorsToRecoverable();
+      if (
+        enableClientRenderFallbackOnHydrationMismatch &&
+        hasUnhydratedTailNodes() &&
+        (workInProgress.mode & ConcurrentMode) !== NoMode &&
+        (workInProgress.flags & DidCapture) === NoFlags
+      ) {
+        warnIfUnhydratedTailNodes(workInProgress);
+        resetHydrationState();
+        workInProgress.flags |= ForceClientRender | Incomplete | ShouldCapture;
+        return workInProgress;
       }
+      if (nextState !== null && nextState.dehydrated !== null) {
+        // We might be inside a hydration state the first time we're picking up this
+        // Suspense boundary, and also after we've reentered it for further hydration.
+        const wasHydrated = popHydrationState(workInProgress);
+        if (current === null) {
+          if (!wasHydrated) {
+            throw new Error(
+              'A dehydrated suspense component was completed without a hydrated node. ' +
+                'This is probably a bug in React.',
+            );
+          }
+          prepareToHydrateHostSuspenseInstance(workInProgress);
+          bubbleProperties(workInProgress);
+          if (enableProfilerTimer) {
+            if ((workInProgress.mode & ProfileMode) !== NoMode) {
+              const isTimedOutSuspense = nextState !== null;
+              if (isTimedOutSuspense) {
+                // Don't count time spent in a timed out Suspense subtree as part of the base duration.
+                const primaryChildFragment = workInProgress.child;
+                if (primaryChildFragment !== null) {
+                  // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
+                  workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
+                }
+              }
+            }
+          }
+          return null;
+        } else {
+          // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
+          // state since we're now exiting out of it. popHydrationState doesn't do that for us.
+          resetHydrationState();
+          if ((workInProgress.flags & DidCapture) === NoFlags) {
+            // This boundary did not suspend so it's now hydrated and unsuspended.
+            workInProgress.memoizedState = null;
+          }
+          // If nothing suspended, we need to schedule an effect to mark this boundary
+          // as having hydrated so events know that they're free to be invoked.
+          // It's also a signal to replay events and the suspense callback.
+          // If something suspended, schedule an effect to attach retry listeners.
+          // So we might as well always mark this.
+          workInProgress.flags |= Update;
+          bubbleProperties(workInProgress);
+          if (enableProfilerTimer) {
+            if ((workInProgress.mode & ProfileMode) !== NoMode) {
+              const isTimedOutSuspense = nextState !== null;
+              if (isTimedOutSuspense) {
+                // Don't count time spent in a timed out Suspense subtree as part of the base duration.
+                const primaryChildFragment = workInProgress.child;
+                if (primaryChildFragment !== null) {
+                  // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
+                  workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
+                }
+              }
+            }
+          }
+          return null;
+        }
+      }
+
+      // Successfully completed this tree. If this was a forced client render,
+      // there may have been recoverable errors during first hydration
+      // attempt. If so, add them to a queue so we can log them in the
+      // commit phase.
+      upgradeHydrationErrorsToRecoverable();
 
       if ((workInProgress.flags & DidCapture) !== NoFlags) {
         // Something suspended. Re-render with the fallback children.

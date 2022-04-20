@@ -96,7 +96,6 @@ import {
   disableModulePatternComponents,
   enableProfilerCommitHooks,
   enableProfilerTimer,
-  enableSuspenseServerRenderer,
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableCache,
@@ -2134,17 +2133,15 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
     // If we're currently hydrating, try to hydrate this boundary.
     tryToClaimNextHydratableInstance(workInProgress);
     // This could've been a dehydrated suspense component.
-    if (enableSuspenseServerRenderer) {
-      const suspenseState: null | SuspenseState = workInProgress.memoizedState;
-      if (suspenseState !== null) {
-        const dehydrated = suspenseState.dehydrated;
-        if (dehydrated !== null) {
-          return mountDehydratedSuspenseComponent(
-            workInProgress,
-            dehydrated,
-            renderLanes,
-          );
-        }
+    const suspenseState: null | SuspenseState = workInProgress.memoizedState;
+    if (suspenseState !== null) {
+      const dehydrated = suspenseState.dehydrated;
+      if (dehydrated !== null) {
+        return mountDehydratedSuspenseComponent(
+          workInProgress,
+          dehydrated,
+          renderLanes,
+        );
       }
     }
 
@@ -2220,59 +2217,57 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       // The current tree is already showing a fallback
 
       // Special path for hydration
-      if (enableSuspenseServerRenderer) {
-        const dehydrated = prevState.dehydrated;
-        if (dehydrated !== null) {
-          if (!didSuspend) {
-            return updateDehydratedSuspenseComponent(
-              current,
-              workInProgress,
-              dehydrated,
-              prevState,
-              renderLanes,
-            );
-          } else if (workInProgress.flags & ForceClientRender) {
-            // Something errored during hydration. Try again without hydrating.
-            workInProgress.flags &= ~ForceClientRender;
-            return retrySuspenseComponentWithoutHydrating(
-              current,
-              workInProgress,
-              renderLanes,
-              new Error(
-                'There was an error while hydrating this Suspense boundary. ' +
-                  'Switched to client rendering.',
-              ),
-            );
-          } else if (
-            (workInProgress.memoizedState: null | SuspenseState) !== null
-          ) {
-            // Something suspended and we should still be in dehydrated mode.
-            // Leave the existing child in place.
-            workInProgress.child = current.child;
-            // The dehydrated completion pass expects this flag to be there
-            // but the normal suspense pass doesn't.
-            workInProgress.flags |= DidCapture;
-            return null;
-          } else {
-            // Suspended but we should no longer be in dehydrated mode.
-            // Therefore we now have to render the fallback.
-            renderDidSuspendDelayIfPossible();
-            const nextPrimaryChildren = nextProps.children;
-            const nextFallbackChildren = nextProps.fallback;
-            const fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
-              current,
-              workInProgress,
-              nextPrimaryChildren,
-              nextFallbackChildren,
-              renderLanes,
-            );
-            const primaryChildFragment: Fiber = (workInProgress.child: any);
-            primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
-              renderLanes,
-            );
-            workInProgress.memoizedState = SUSPENDED_MARKER;
-            return fallbackChildFragment;
-          }
+      const dehydrated = prevState.dehydrated;
+      if (dehydrated !== null) {
+        if (!didSuspend) {
+          return updateDehydratedSuspenseComponent(
+            current,
+            workInProgress,
+            dehydrated,
+            prevState,
+            renderLanes,
+          );
+        } else if (workInProgress.flags & ForceClientRender) {
+          // Something errored during hydration. Try again without hydrating.
+          workInProgress.flags &= ~ForceClientRender;
+          return retrySuspenseComponentWithoutHydrating(
+            current,
+            workInProgress,
+            renderLanes,
+            new Error(
+              'There was an error while hydrating this Suspense boundary. ' +
+                'Switched to client rendering.',
+            ),
+          );
+        } else if (
+          (workInProgress.memoizedState: null | SuspenseState) !== null
+        ) {
+          // Something suspended and we should still be in dehydrated mode.
+          // Leave the existing child in place.
+          workInProgress.child = current.child;
+          // The dehydrated completion pass expects this flag to be there
+          // but the normal suspense pass doesn't.
+          workInProgress.flags |= DidCapture;
+          return null;
+        } else {
+          // Suspended but we should no longer be in dehydrated mode.
+          // Therefore we now have to render the fallback.
+          renderDidSuspendDelayIfPossible();
+          const nextPrimaryChildren = nextProps.children;
+          const nextFallbackChildren = nextProps.fallback;
+          const fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
+            current,
+            workInProgress,
+            nextPrimaryChildren,
+            nextFallbackChildren,
+            renderLanes,
+          );
+          const primaryChildFragment: Fiber = (workInProgress.child: any);
+          primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
+            renderLanes,
+          );
+          workInProgress.memoizedState = SUSPENDED_MARKER;
+          return fallbackChildFragment;
         }
       }
 
@@ -3657,20 +3652,18 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
     case SuspenseComponent: {
       const state: SuspenseState | null = workInProgress.memoizedState;
       if (state !== null) {
-        if (enableSuspenseServerRenderer) {
-          if (state.dehydrated !== null) {
-            pushSuspenseContext(
-              workInProgress,
-              setDefaultShallowSuspenseContext(suspenseStackCursor.current),
-            );
-            // We know that this component will suspend again because if it has
-            // been unsuspended it has committed as a resolved Suspense component.
-            // If it needs to be retried, it should have work scheduled on it.
-            workInProgress.flags |= DidCapture;
-            // We should never render the children of a dehydrated boundary until we
-            // upgrade it. We return null instead of bailoutOnAlreadyFinishedWork.
-            return null;
-          }
+        if (state.dehydrated !== null) {
+          pushSuspenseContext(
+            workInProgress,
+            setDefaultShallowSuspenseContext(suspenseStackCursor.current),
+          );
+          // We know that this component will suspend again because if it has
+          // been unsuspended it has committed as a resolved Suspense component.
+          // If it needs to be retried, it should have work scheduled on it.
+          workInProgress.flags |= DidCapture;
+          // We should never render the children of a dehydrated boundary until we
+          // upgrade it. We return null instead of bailoutOnAlreadyFinishedWork.
+          return null;
         }
 
         // If this boundary is currently timed out, we need to decide
