@@ -68,7 +68,6 @@ import {
   didNotFindHydratableTextInstance,
   didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
-import {enableClientRenderFallbackOnHydrationMismatch} from 'shared/ReactFeatureFlags';
 import {OffscreenLane} from './ReactFiberLane.new';
 import {
   getSuspendedTreeContext,
@@ -378,7 +377,6 @@ function tryHydrate(fiber, nextInstance) {
 
 function shouldClientRenderOnMismatch(fiber: Fiber) {
   return (
-    enableClientRenderFallbackOnHydrationMismatch &&
     (fiber.mode & ConcurrentMode) !== NoMode &&
     (fiber.flags & DidCapture) === NoFlags
   );

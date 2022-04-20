@@ -83,7 +83,7 @@ describe('ReactDOMServerHydration', () => {
           </div>
         );
       }
-      if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
+      if (gate(flags => flags.enableClientRenderFallbackOnTextMismatch)) {
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
             "Warning: Text content did not match. Server: \\"server\\" Client: \\"client\\"
@@ -262,10 +262,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching <main> in <div>.
                 in main (at **)
@@ -276,16 +273,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Expected server HTML to contain a matching <main> in <div>.
-                in main (at **)
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -299,10 +286,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching <header> in <div>.
                 in header (at **)
@@ -313,16 +297,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Expected server HTML to contain a matching <header> in <div>.
-                in header (at **)
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -336,10 +310,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching <main> in <div>.
                 in main (at **)
@@ -350,16 +321,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Expected server HTML to contain a matching <main> in <div>.
-                in main (at **)
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -373,10 +334,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching <footer> in <div>.
                 in footer (at **)
@@ -387,16 +345,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Expected server HTML to contain a matching <footer> in <div>.
-                in footer (at **)
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
     });
 
@@ -406,9 +354,7 @@ describe('ReactDOMServerHydration', () => {
         function Mismatch({isClient}) {
           return <div className="parent">{isClient && 'only'}</div>;
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
+        if (gate(flags => flags.enableClientRenderFallbackOnTextMismatch)) {
           expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Text content did not match. Server: \\"\\" Client: \\"only\\"
@@ -441,10 +387,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching text node for \\"second\\" in <div>.
                 in div (at **)
@@ -454,15 +397,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Expected server HTML to contain a matching text node for \\"second\\" in <div>.
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -476,10 +410,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching text node for \\"first\\" in <div>.
                 in div (at **)
@@ -489,15 +420,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Expected server HTML to contain a matching text node for \\"first\\" in <div>.
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -511,10 +433,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching text node for \\"third\\" in <div>.
                 in div (at **)
@@ -524,15 +443,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Expected server HTML to contain a matching text node for \\"third\\" in <div>.
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
     });
   });
@@ -548,10 +458,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Did not expect server HTML to contain a <main> in <div>.
                 in div (at **)
@@ -561,15 +468,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain a <main> in <div>.
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -583,10 +481,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching <main> in <div>.
                 in main (at **)
@@ -598,16 +493,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain a <header> in <div>.
-                in main (at **)
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -621,10 +506,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching <footer> in <div>.
                 in footer (at **)
@@ -635,16 +517,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain a <main> in <div>.
-                in footer (at **)
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -658,10 +530,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Did not expect server HTML to contain a <footer> in <div>.
                 in div (at **)
@@ -671,15 +540,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain a <footer> in <div>.
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
     });
 
@@ -689,10 +549,7 @@ describe('ReactDOMServerHydration', () => {
         function Mismatch({isClient}) {
           return <div className="parent">{!isClient && 'only'}</div>;
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Did not expect server HTML to contain the text node \\"only\\" in <div>.
                 in div (at **)
@@ -702,15 +559,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain the text node \\"only\\" in <div>.
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -724,10 +572,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching <main> in <div>.
                 in main (at **)
@@ -739,16 +584,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain the text node \\"first\\" in <div>.
-                in main (at **)
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -762,10 +597,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching <footer> in <div>.
                 in footer (at **)
@@ -776,16 +608,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain the text node \\"second\\" in <div>.
-                in footer (at **)
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -799,10 +621,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Did not expect server HTML to contain the text node \\"third\\" in <div>.
                 in div (at **)
@@ -812,15 +631,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain the text node \\"third\\" in <div>.
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
     });
   });
@@ -844,20 +654,14 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          // TODO: This message doesn't seem to have any useful details.
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        // TODO: This message doesn't seem to have any useful details.
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
               "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`Array []`);
-        }
       });
 
       // @gate __DEV__
@@ -873,10 +677,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Did not expect server HTML to contain a <main> in <div>.
                 in div (at **)
@@ -886,15 +687,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain a <main> in <div>.
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -911,20 +703,14 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          // TODO: This message doesn't seem to have any useful details.
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        // TODO: This message doesn't seem to have any useful details.
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
               "Caught [Hydration failed because the initial UI does not match what was rendered on the server.]",
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`Array []`);
-        }
       });
 
       // @gate __DEV__
@@ -941,10 +727,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Did not expect server HTML to contain a <p> in <div>.
                 in div (at **)
@@ -954,15 +737,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain a <p> in <div>.
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -978,10 +752,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching <main> in <div>.
                 in main (at **)
@@ -992,17 +763,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating this Suspense boundary. Switched to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Expected server HTML to contain a matching <main> in <div>.
-                in main (at **)
-                in Suspense (at **)
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -1018,10 +778,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching <footer> in <div>.
                 in footer (at **)
@@ -1032,17 +789,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating this Suspense boundary. Switched to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain a <main> in <div>.
-                in footer (at **)
-                in Suspense (at **)
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -1063,14 +809,8 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          // There is no error because we don't actually hydrate fallbacks.
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`Array []`);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`Array []`);
-        }
+        // There is no error because we don't actually hydrate fallbacks.
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`Array []`);
       });
 
       // @gate __DEV__
@@ -1091,14 +831,8 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          // There is no error because we don't actually hydrate fallbacks.
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`Array []`);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`Array []`);
-        }
+        // There is no error because we don't actually hydrate fallbacks.
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`Array []`);
       });
     });
 
@@ -1118,10 +852,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Expected server HTML to contain a matching <header> in <div>.
                 in header (at **)
@@ -1134,16 +865,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Expected server HTML to contain a matching <header> in <div>.
-                in header (at **)
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
@@ -1161,10 +882,7 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        if (
-          gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)
-        ) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Did not expect server HTML to contain a <header> in <div>.
                 in div (at **)
@@ -1174,15 +892,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Did not expect server HTML to contain a <header> in <div>.
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
     });
   });
@@ -1222,8 +931,7 @@ describe('ReactDOMServerHydration', () => {
         );
       }
 
-      if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+      expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
             "Warning: Expected server HTML to contain a matching <footer> in <div>.
               in footer (at **)
@@ -1236,18 +944,6 @@ describe('ReactDOMServerHydration', () => {
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
-      } else {
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Expected server HTML to contain a matching <footer> in <div>.
-              in footer (at **)
-              in Panel (at **)
-              in div (at **)
-              in ProfileSettings (at **)
-              in Mismatch (at **)",
-          ]
-        `);
-      }
     });
 
     // @gate __DEV__
@@ -1284,8 +980,7 @@ describe('ReactDOMServerHydration', () => {
         );
       }
 
-      if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+      expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
             "Warning: Did not expect server HTML to contain a <footer> in <div>.
               in div (at **)
@@ -1296,16 +991,6 @@ describe('ReactDOMServerHydration', () => {
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
-      } else {
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Did not expect server HTML to contain a <footer> in <div>.
-              in div (at **)
-              in ProfileSettings (at **)
-              in Mismatch (at **)",
-          ]
-        `);
-      }
     });
   });
 });

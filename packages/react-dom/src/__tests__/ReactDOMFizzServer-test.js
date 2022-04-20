@@ -1832,41 +1832,26 @@ describe('ReactDOMFizzServer', () => {
       },
     });
 
-    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-      expect(() => {
-        // The first paint switches to client rendering due to mismatch
-        expect(Scheduler).toFlushUntilNextPaint([
-          'client',
-          'Log recoverable error: Hydration failed because the initial ' +
-            'UI does not match what was rendered on the server.',
-          'Log recoverable error: There was an error while hydrating. ' +
-            'Because the error happened outside of a Suspense boundary, the ' +
-            'entire root will switch to client rendering.',
-        ]);
-      }).toErrorDev(
-        [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
-          'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
-            '    in div (at **)\n' +
-            '    in App (at **)',
-        ],
-        {withoutStack: 1},
-      );
-      expect(getVisibleChildren(container)).toEqual(<div>client</div>);
-    } else {
-      const serverRenderedDiv = container.getElementsByTagName('div')[0];
-      // The first paint uses the server snapshot
-      expect(Scheduler).toFlushUntilNextPaint(['server']);
-      expect(getVisibleChildren(container)).toEqual(<div>server</div>);
-      // Hydration succeeded
-      expect(ref.current).toEqual(serverRenderedDiv);
-
-      // Asynchronously we detect that the store has changed on the client,
-      // and patch up the inconsistency
-      expect(Scheduler).toFlushUntilNextPaint(['client']);
-      expect(getVisibleChildren(container)).toEqual(<div>client</div>);
-      expect(ref.current).toEqual(serverRenderedDiv);
-    }
+    expect(() => {
+      // The first paint switches to client rendering due to mismatch
+      expect(Scheduler).toFlushUntilNextPaint([
+        'client',
+        'Log recoverable error: Hydration failed because the initial ' +
+          'UI does not match what was rendered on the server.',
+        'Log recoverable error: There was an error while hydrating. ' +
+          'Because the error happened outside of a Suspense boundary, the ' +
+          'entire root will switch to client rendering.',
+      ]);
+    }).toErrorDev(
+      [
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
+          '    in div (at **)\n' +
+          '    in App (at **)',
+      ],
+      {withoutStack: 1},
+    );
+    expect(getVisibleChildren(container)).toEqual(<div>client</div>);
   });
 
   // The selector implementation uses the lazy ref initialization pattern
@@ -1932,43 +1917,27 @@ describe('ReactDOMFizzServer', () => {
       },
     });
 
-    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-      // The first paint uses the client due to mismatch forcing client render
-      expect(() => {
-        // The first paint switches to client rendering due to mismatch
-        expect(Scheduler).toFlushUntilNextPaint([
-          'client',
-          'Log recoverable error: Hydration failed because the initial ' +
-            'UI does not match what was rendered on the server.',
-          'Log recoverable error: There was an error while hydrating. ' +
-            'Because the error happened outside of a Suspense boundary, the ' +
-            'entire root will switch to client rendering.',
-        ]);
-      }).toErrorDev(
-        [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content',
-          'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
-            '    in div (at **)\n' +
-            '    in App (at **)',
-        ],
-        {withoutStack: 1},
-      );
-      expect(getVisibleChildren(container)).toEqual(<div>client</div>);
-    } else {
-      const serverRenderedDiv = container.getElementsByTagName('div')[0];
-
-      // The first paint uses the server snapshot
-      expect(Scheduler).toFlushUntilNextPaint(['server']);
-      expect(getVisibleChildren(container)).toEqual(<div>server</div>);
-      // Hydration succeeded
-      expect(ref.current).toEqual(serverRenderedDiv);
-
-      // Asynchronously we detect that the store has changed on the client,
-      // and patch up the inconsistency
-      expect(Scheduler).toFlushUntilNextPaint(['client']);
-      expect(getVisibleChildren(container)).toEqual(<div>client</div>);
-      expect(ref.current).toEqual(serverRenderedDiv);
-    }
+    // The first paint uses the client due to mismatch forcing client render
+    expect(() => {
+      // The first paint switches to client rendering due to mismatch
+      expect(Scheduler).toFlushUntilNextPaint([
+        'client',
+        'Log recoverable error: Hydration failed because the initial ' +
+          'UI does not match what was rendered on the server.',
+        'Log recoverable error: There was an error while hydrating. ' +
+          'Because the error happened outside of a Suspense boundary, the ' +
+          'entire root will switch to client rendering.',
+      ]);
+    }).toErrorDev(
+      [
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content',
+        'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
+          '    in div (at **)\n' +
+          '    in App (at **)',
+      ],
+      {withoutStack: 1},
+    );
+    expect(getVisibleChildren(container)).toEqual(<div>client</div>);
   });
 
   // @gate experimental

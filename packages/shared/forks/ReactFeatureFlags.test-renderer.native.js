@@ -51,7 +51,6 @@ export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
-export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;
