@@ -3011,7 +3011,7 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  // @gate experimental && enableClientRenderFallbackOnTextMismatch
+  // @gate experimental
   it('supresses hydration warnings when an error occurs within a Suspense boundary', async () => {
     let isClient = false;
     let shouldThrow = true;
