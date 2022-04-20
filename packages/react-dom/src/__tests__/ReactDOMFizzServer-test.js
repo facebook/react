@@ -2842,7 +2842,7 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
-  // @gate experimental && enableClientRenderFallbackOnTextMismatch && enableClientRenderFallbackOnHydrationMismatch
+  // @gate experimental && enableClientRenderFallbackOnTextMismatch
   it('#24384: Suspending should halt hydration warnings while still allowing siblings to warm up', async () => {
     const makeApp = () => {
       let resolve, resolved;
@@ -2932,7 +2932,7 @@ describe('ReactDOMFizzServer', () => {
     expect(Scheduler).toFlushAndYield([]);
   });
 
-  // @gate experimental && enableClientRenderFallbackOnTextMismatch && enableClientRenderFallbackOnHydrationMismatch
+  // @gate experimental && enableClientRenderFallbackOnTextMismatch
   it('only warns once on hydration mismatch while within a suspense boundary', async () => {
     const originalConsoleError = console.error;
     const mockError = jest.fn();
