@@ -3010,4 +3010,80 @@ describe('ReactDOMFizzServer', () => {
       console.error = originalConsoleError;
     }
   });
+
+  // @gate experimental && enableClientRenderFallbackOnTextMismatch
+  it('supresses hydration warnings when an error occurs within a Suspense boundary', async () => {
+    let isClient = false;
+    let shouldThrow = true;
+
+    function ThrowUntilOnClient({children}) {
+      if (isClient && shouldThrow) {
+        throw new Error('uh oh');
+      }
+      return children;
+    }
+
+    function StopThrowingOnClient() {
+      if (isClient) {
+        shouldThrow = false;
+      }
+      return null;
+    }
+
+    const App = () => {
+      return (
+        <div>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <ThrowUntilOnClient>
+              <h1>one</h1>
+            </ThrowUntilOnClient>
+            <StopThrowingOnClient />
+            <h2>two</h2>
+            <h3>three</h3>
+          </Suspense>
+        </div>
+      );
+    };
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <h1>one</h1>
+        <h2>two</h2>
+        <h3>three</h3>
+      </div>,
+    );
+
+    isClient = true;
+
+    ReactDOMClient.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(
+          'Logged recoverable error: ' + error.message,
+        );
+      },
+    });
+    await act(async () => {
+      expect(Scheduler).toFlushAndYieldThrough([
+        'Logged recoverable error: uh oh',
+        'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
+        'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+      ]);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <h1>one</h1>
+        <h2>two</h2>
+        <h3>three</h3>
+      </div>,
+    );
+
+    expect(Scheduler).toFlushAndYield([]);
+  });
 });
