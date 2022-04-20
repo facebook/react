@@ -2891,7 +2891,7 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
 
-    // the client app is rendered with an intentionally incorrect text. The still Suspended component causes
+    // The client app is rendered with an intentionally incorrect text. The still Suspended component causes
     // hydration to fail silently (allowing for cache warming but otherwise skipping this boundary) until it
     // resolves.
     const [ClientApp, clientResolve] = makeApp();

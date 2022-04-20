@@ -81,8 +81,8 @@ let hydrationParentFiber: null | Fiber = null;
 let nextHydratableInstance: null | HydratableInstance = null;
 let isHydrating: boolean = false;
 
-// this flag allows for warning supression when we expect there to be mismatches due to
-// earlier mismatches or a suspended fiber.
+// This flag allows for warning supression when we expect there to be mismatches
+// due to earlier mismatches or a suspended fiber.
 let didSuspendOrErrorDEV: boolean = false;
 
 // Hydration errors that were thrown inside this boundary
