@@ -67,7 +67,6 @@ export const disableLegacyContext = __EXPERIMENTAL__;
 export const warnAboutStringRefs = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
-export const enableSelectiveHydration = true;
 
 export const enableCache = true;
 export const enableCacheElement = true;
