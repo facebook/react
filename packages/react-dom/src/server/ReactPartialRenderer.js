@@ -21,7 +21,6 @@ import {
   warnAboutDeprecatedLifecycles,
   disableLegacyContext,
   disableModulePatternComponents,
-  enableSuspenseServerRenderer,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -965,21 +964,17 @@ class ReactDOMServerRenderer {
           outBuffer += this.render(child, frame.context, frame.domNamespace);
         } catch (err) {
           if (err != null && typeof err.then === 'function') {
-            if (enableSuspenseServerRenderer) {
-              if (this.suspenseDepth <= 0) {
-                throw new Error(
-                  // TODO: include component name. This is a bit tricky with current factoring.
-                  'A React component suspended while rendering, but no fallback UI was specified.\n' +
-                    '\n' +
-                    'Add a <Suspense fallback=...> component higher in the tree to ' +
-                    'provide a loading indicator or placeholder to display.',
-                );
-              }
-
-              suspended = true;
-            } else {
-              throw new Error('ReactDOMServer does not yet support Suspense.');
+            if (this.suspenseDepth <= 0) {
+              throw new Error(
+                // TODO: include component name. This is a bit tricky with current factoring.
+                'A React component suspended while rendering, but no fallback UI was specified.\n' +
+                  '\n' +
+                  'Add a <Suspense fallback=...> component higher in the tree to ' +
+                  'provide a loading indicator or placeholder to display.',
+              );
             }
+
+            suspended = true;
           } else {
             throw err;
           }
@@ -1097,39 +1092,35 @@ class ReactDOMServerRenderer {
           return '';
         }
         case REACT_SUSPENSE_TYPE: {
-          if (enableSuspenseServerRenderer) {
-            const fallback = ((nextChild: any): ReactElement).props.fallback;
-            const fallbackChildren = toArray(fallback);
-            const nextChildren = toArray(
-              ((nextChild: any): ReactElement).props.children,
-            );
-            const fallbackFrame: Frame = {
-              type: null,
-              domNamespace: parentNamespace,
-              children: fallbackChildren,
-              childIndex: 0,
-              context: context,
-              footer: '<!--/$-->',
-            };
-            const frame: Frame = {
-              fallbackFrame,
-              type: REACT_SUSPENSE_TYPE,
-              domNamespace: parentNamespace,
-              children: nextChildren,
-              childIndex: 0,
-              context: context,
-              footer: '<!--/$-->',
-            };
-            if (__DEV__) {
-              ((frame: any): FrameDev).debugElementStack = [];
-              ((fallbackFrame: any): FrameDev).debugElementStack = [];
-            }
-            this.stack.push(frame);
-            this.suspenseDepth++;
-            return '<!--$-->';
-          } else {
-            throw new Error('ReactDOMServer does not yet support Suspense.');
+          const fallback = ((nextChild: any): ReactElement).props.fallback;
+          const fallbackChildren = toArray(fallback);
+          const nextChildren = toArray(
+            ((nextChild: any): ReactElement).props.children,
+          );
+          const fallbackFrame: Frame = {
+            type: null,
+            domNamespace: parentNamespace,
+            children: fallbackChildren,
+            childIndex: 0,
+            context: context,
+            footer: '<!--/$-->',
+          };
+          const frame: Frame = {
+            fallbackFrame,
+            type: REACT_SUSPENSE_TYPE,
+            domNamespace: parentNamespace,
+            children: nextChildren,
+            childIndex: 0,
+            context: context,
+            footer: '<!--/$-->',
+          };
+          if (__DEV__) {
+            ((frame: any): FrameDev).debugElementStack = [];
+            ((fallbackFrame: any): FrameDev).debugElementStack = [];
           }
+          this.stack.push(frame);
+          this.suspenseDepth++;
+          return '<!--$-->';
         }
         // eslint-disable-next-line-no-fallthrough
         case REACT_SCOPE_TYPE: {

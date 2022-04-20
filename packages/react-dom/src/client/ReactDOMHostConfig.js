@@ -63,7 +63,6 @@ import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
   enableClientRenderFallbackOnHydrationMismatch,
-  enableSuspenseServerRenderer,
   enableCreateEventHandleAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
@@ -747,19 +746,17 @@ function getNextHydratable(node) {
     if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
       break;
     }
-    if (enableSuspenseServerRenderer) {
-      if (nodeType === COMMENT_NODE) {
-        const nodeData = (node: any).data;
-        if (
-          nodeData === SUSPENSE_START_DATA ||
-          nodeData === SUSPENSE_FALLBACK_START_DATA ||
-          nodeData === SUSPENSE_PENDING_START_DATA
-        ) {
-          break;
-        }
-        if (nodeData === SUSPENSE_END_DATA) {
-          return null;
-        }
+    if (nodeType === COMMENT_NODE) {
+      const nodeData = (node: any).data;
+      if (
+        nodeData === SUSPENSE_START_DATA ||
+        nodeData === SUSPENSE_FALLBACK_START_DATA ||
+        nodeData === SUSPENSE_PENDING_START_DATA
+      ) {
+        break;
+      }
+      if (nodeData === SUSPENSE_END_DATA) {
+        return null;
       }
     }
   }

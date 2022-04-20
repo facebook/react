@@ -34,7 +34,6 @@ import {
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
   enableSchedulingProfiler,
-  enableSuspenseServerRenderer,
   enableSuspenseCallback,
   enableScopeAPI,
   enableStrictEffects,
@@ -1652,33 +1651,31 @@ function commitDeletionEffectsOnFiber(
       return;
     }
     case DehydratedFragment: {
-      if (enableSuspenseServerRenderer) {
-        if (enableSuspenseCallback) {
-          const hydrationCallbacks = finishedRoot.hydrationCallbacks;
-          if (hydrationCallbacks !== null) {
-            const onDeleted = hydrationCallbacks.onDeleted;
-            if (onDeleted) {
-              onDeleted((deletedFiber.stateNode: SuspenseInstance));
-            }
+      if (enableSuspenseCallback) {
+        const hydrationCallbacks = finishedRoot.hydrationCallbacks;
+        if (hydrationCallbacks !== null) {
+          const onDeleted = hydrationCallbacks.onDeleted;
+          if (onDeleted) {
+            onDeleted((deletedFiber.stateNode: SuspenseInstance));
           }
         }
+      }
 
-        // Dehydrated fragments don't have any children
+      // Dehydrated fragments don't have any children
 
-        // Delete the dehydrated suspense boundary and all of its content.
-        if (supportsMutation) {
-          if (hostParent !== null) {
-            if (hostParentIsContainer) {
-              clearSuspenseBoundaryFromContainer(
-                ((hostParent: any): Container),
-                (deletedFiber.stateNode: SuspenseInstance),
-              );
-            } else {
-              clearSuspenseBoundary(
-                ((hostParent: any): Instance),
-                (deletedFiber.stateNode: SuspenseInstance),
-              );
-            }
+      // Delete the dehydrated suspense boundary and all of its content.
+      if (supportsMutation) {
+        if (hostParent !== null) {
+          if (hostParentIsContainer) {
+            clearSuspenseBoundaryFromContainer(
+              ((hostParent: any): Container),
+              (deletedFiber.stateNode: SuspenseInstance),
+            );
+          } else {
+            clearSuspenseBoundary(
+              ((hostParent: any): Instance),
+              (deletedFiber.stateNode: SuspenseInstance),
+            );
           }
         }
       }

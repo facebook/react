@@ -20,7 +20,6 @@ export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = false;
-export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
 export const enableCache = true;
 export const enableCacheElement = true;

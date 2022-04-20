@@ -28,11 +28,7 @@ import {
 } from './ReactWorkTags';
 import {DidCapture, NoFlags, ShouldCapture} from './ReactFiberFlags';
 import {NoMode, ProfileMode} from './ReactTypeOfMode';
-import {
-  enableSuspenseServerRenderer,
-  enableProfilerTimer,
-  enableCache,
-} from 'shared/ReactFeatureFlags';
+import {enableProfilerTimer, enableCache} from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.old';
 import {popSuspenseContext} from './ReactFiberSuspenseContext.old';
@@ -108,20 +104,18 @@ function unwindWork(
     }
     case SuspenseComponent: {
       popSuspenseContext(workInProgress);
-      if (enableSuspenseServerRenderer) {
-        const suspenseState: null | SuspenseState =
-          workInProgress.memoizedState;
-        if (suspenseState !== null && suspenseState.dehydrated !== null) {
-          if (workInProgress.alternate === null) {
-            throw new Error(
-              'Threw in newly mounted dehydrated component. This is likely a bug in ' +
-                'React. Please file an issue.',
-            );
-          }
-
-          resetHydrationState();
+      const suspenseState: null | SuspenseState = workInProgress.memoizedState;
+      if (suspenseState !== null && suspenseState.dehydrated !== null) {
+        if (workInProgress.alternate === null) {
+          throw new Error(
+            'Threw in newly mounted dehydrated component. This is likely a bug in ' +
+              'React. Please file an issue.',
+          );
         }
+
+        resetHydrationState();
       }
+
       const flags = workInProgress.flags;
       if (flags & ShouldCapture) {
         workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
