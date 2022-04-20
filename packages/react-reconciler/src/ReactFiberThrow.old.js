@@ -457,6 +457,10 @@ function throwException(
     const wakeable: Wakeable = (value: any);
     resetSuspendedComponent(sourceFiber, rootRenderLanes);
 
+    if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+      markDidSuspendWhileHydratingDEV();
+    }
+
     if (__DEV__) {
       if (enableDebugTracing) {
         if (sourceFiber.mode & DebugTracingMode) {

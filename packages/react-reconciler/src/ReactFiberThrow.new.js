@@ -444,10 +444,6 @@ function throwException(
     }
   }
 
-  if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
-    markDidSuspendWhileHydratingDEV();
-  }
-
   if (
     value !== null &&
     typeof value === 'object' &&
@@ -456,6 +452,10 @@ function throwException(
     // This is a wakeable. The component suspended.
     const wakeable: Wakeable = (value: any);
     resetSuspendedComponent(sourceFiber, rootRenderLanes);
+
+    if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+      markDidSuspendWhileHydratingDEV();
+    }
 
     if (__DEV__) {
       if (enableDebugTracing) {
