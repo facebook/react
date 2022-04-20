@@ -62,7 +62,6 @@ import dangerousStyleValue from '../shared/dangerousStyleValue';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
-  enableClientRenderFallbackOnHydrationMismatch,
   enableCreateEventHandleAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
@@ -1005,10 +1004,7 @@ export function didNotHydrateInstance(
   isConcurrentMode: boolean,
 ) {
   if (__DEV__) {
-    if (
-      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode) ||
-      parentProps[SUPPRESS_HYDRATION_WARNING] !== true
-    ) {
+    if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
       if (instance.nodeType === ELEMENT_NODE) {
         warnForDeletedHydratableElement(parentInstance, (instance: any));
       } else if (instance.nodeType === COMMENT_NODE) {
@@ -1089,10 +1085,7 @@ export function didNotFindHydratableInstance(
   isConcurrentMode: boolean,
 ) {
   if (__DEV__) {
-    if (
-      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode) ||
-      parentProps[SUPPRESS_HYDRATION_WARNING] !== true
-    ) {
+    if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
       warnForInsertedHydratedElement(parentInstance, type, props);
     }
   }
@@ -1106,10 +1099,7 @@ export function didNotFindHydratableTextInstance(
   isConcurrentMode: boolean,
 ) {
   if (__DEV__) {
-    if (
-      (enableClientRenderFallbackOnHydrationMismatch && isConcurrentMode) ||
-      parentProps[SUPPRESS_HYDRATION_WARNING] !== true
-    ) {
+    if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
       warnForInsertedHydratedText(parentInstance, text);
     }
   }

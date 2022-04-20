@@ -224,16 +224,7 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-      Scheduler.unstable_flushAll();
-    } else {
-      expect(() => {
-        Scheduler.unstable_flushAll();
-      }).toErrorDev(
-        // TODO: This error should not be logged in this case. It's a false positive.
-        'Did not expect server HTML to contain the text node "Hello" in <div>.',
-      );
-    }
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // Expect the server-generated HTML to stay intact.
@@ -249,7 +240,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('HelloHello');
   });
 
-  // @gate enableClientRenderFallbackOnHydrationMismatch
   it('falls back to client rendering boundary on mismatch', async () => {
     // We can't use the toErrorDev helper here because this is async.
     const originalConsoleError = console.error;
@@ -532,15 +522,11 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.innerHTML).toContain('<span>A</span>');
     expect(container.innerHTML).not.toContain('<span>B</span>');
 
-    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-      expect(Scheduler).toHaveYielded([
-        'There was an error while hydrating this Suspense boundary. ' +
-          'Switched to client rendering.',
-      ]);
-      expect(ref.current).not.toBe(span);
-    } else {
-      expect(ref.current).toBe(span);
-    }
+    expect(Scheduler).toHaveYielded([
+      'There was an error while hydrating this Suspense boundary. ' +
+        'Switched to client rendering.',
+    ]);
+    expect(ref.current).not.toBe(span);
   });
 
   it('recovers with client render when server rendered additional nodes at suspense root after unsuspending', async () => {
@@ -603,11 +589,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
       expect(container.innerHTML).toContain('<span>A</span>');
       expect(container.innerHTML).not.toContain('<span>B</span>');
-      if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-        expect(ref.current).not.toBe(span);
-      } else {
-        expect(ref.current).toBe(span);
-      }
+      expect(ref.current).not.toBe(span);
       if (__DEV__) {
         expect(mockError).toHaveBeenCalledWith(
           'Warning: Did not expect server HTML to contain a <%s> in <%s>.%s',
@@ -660,20 +642,14 @@ describe('ReactDOMServerPartialHydration', () => {
         });
       });
     }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
-    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-      expect(Scheduler).toHaveYielded([
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
-        'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
-      ]);
-    }
+    expect(Scheduler).toHaveYielded([
+      'Hydration failed because the initial UI does not match what was rendered on the server.',
+      'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+    ]);
 
     expect(container.innerHTML).toContain('<span>A</span>');
     expect(container.innerHTML).not.toContain('<span>B</span>');
-    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-      expect(ref.current).not.toBe(span);
-    } else {
-      expect(ref.current).toBe(span);
-    }
+    expect(ref.current).not.toBe(span);
   });
 
   it('calls the onDeleted hydration callback if the parent gets deleted', async () => {
@@ -3292,7 +3268,6 @@ describe('ReactDOMServerPartialHydration', () => {
 
   itHydratesWithoutMismatch('an empty string in class component', TestAppClass);
 
-  // @gate enableClientRenderFallbackOnHydrationMismatch
   it('fallback to client render on hydration mismatch at root', async () => {
     let isClient = false;
     let suspend = true;

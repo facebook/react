@@ -31,7 +31,6 @@ import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import {
-  enableClientRenderFallbackOnHydrationMismatch,
   enableSuspenseAvoidThisFallback,
   enableLegacyHidden,
 } from 'shared/ReactFeatureFlags';
@@ -1066,7 +1065,6 @@ function completeWork(
       const nextState: null | SuspenseState = workInProgress.memoizedState;
 
       if (
-        enableClientRenderFallbackOnHydrationMismatch &&
         hasUnhydratedTailNodes() &&
         (workInProgress.mode & ConcurrentMode) !== NoMode &&
         (workInProgress.flags & DidCapture) === NoFlags

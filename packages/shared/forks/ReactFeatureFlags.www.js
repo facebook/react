@@ -32,7 +32,6 @@ export const {
   enableLazyContextPropagation,
   enableSyncDefaultUpdates,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableClientRenderFallbackOnHydrationMismatch,
   enableClientRenderFallbackOnTextMismatch,
 } = dynamicFeatureFlags;
 

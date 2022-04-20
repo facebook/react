@@ -41,7 +41,6 @@ export const skipUnmountedBoundaries = true;
 export const enableSuspenseLayoutEffectSemantics = true;
 
 // TODO: Finish rolling out in www
-export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 
 // TODO: Need to review this code one more time before landing
