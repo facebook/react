@@ -2842,7 +2842,7 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
-  // @gate experimental
+  // @gate experimental && enableClientRenderFallbackOnTextMismatch && enableClientRenderFallbackOnHydrationMismatch
   it('#24384: Suspending should halt hydration warnings while still allowing siblings to warm up', async () => {
     const makeApp = () => {
       let resolve, resolved;
