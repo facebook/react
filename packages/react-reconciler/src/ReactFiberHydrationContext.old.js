@@ -80,7 +80,10 @@ import {queueRecoverableErrors} from './ReactFiberWorkLoop.old';
 let hydrationParentFiber: null | Fiber = null;
 let nextHydratableInstance: null | HydratableInstance = null;
 let isHydrating: boolean = false;
-let didSuspend: boolean = false;
+
+// This flag allows for warning supression when we expect there to be mismatches
+// due to earlier mismatches or a suspended fiber.
+let didSuspendOrErrorDEV: boolean = false;
 
 // Hydration errors that were thrown inside this boundary
 let hydrationErrors: Array<mixed> | null = null;
@@ -95,9 +98,9 @@ function warnIfHydrating() {
   }
 }
 
-export function markDidSuspendWhileHydratingDEV() {
+export function markDidThrowWhileHydratingDEV() {
   if (__DEV__) {
-    didSuspend = true;
+    didSuspendOrErrorDEV = true;
   }
 }
 
@@ -113,7 +116,7 @@ function enterHydrationState(fiber: Fiber): boolean {
   hydrationParentFiber = fiber;
   isHydrating = true;
   hydrationErrors = null;
-  didSuspend = false;
+  didSuspendOrErrorDEV = false;
   return true;
 }
 
@@ -131,7 +134,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   hydrationParentFiber = fiber;
   isHydrating = true;
   hydrationErrors = null;
-  didSuspend = false;
+  didSuspendOrErrorDEV = false;
   if (treeContext !== null) {
     restoreSuspendedTreeContext(fiber, treeContext);
   }
@@ -196,7 +199,7 @@ function deleteHydratableInstance(
 
 function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
   if (__DEV__) {
-    if (didSuspend) {
+    if (didSuspendOrErrorDEV) {
       // Inside a boundary that already suspended. We're currently rendering the
       // siblings of a suspended node. The mismatch may be due to the missing
       // data, so it's probably a false positive.
@@ -444,7 +447,7 @@ function prepareToHydrateHostInstance(
   }
 
   const instance: Instance = fiber.stateNode;
-  const shouldWarnIfMismatchDev = !didSuspend;
+  const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
   const updatePayload = hydrateInstance(
     instance,
     fiber.type,
@@ -474,7 +477,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
 
   const textInstance: TextInstance = fiber.stateNode;
   const textContent: string = fiber.memoizedProps;
-  const shouldWarnIfMismatchDev = !didSuspend;
+  const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
   const shouldUpdate = hydrateTextInstance(
     textInstance,
     textContent,
@@ -653,7 +656,7 @@ function resetHydrationState(): void {
   hydrationParentFiber = null;
   nextHydratableInstance = null;
   isHydrating = false;
-  didSuspend = false;
+  didSuspendOrErrorDEV = false;
 }
 
 export function upgradeHydrationErrorsToRecoverable(): void {

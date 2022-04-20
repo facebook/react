@@ -285,7 +285,7 @@ describe('ReactDOMServerPartialHydration', () => {
     }
     try {
       const finalHTML = ReactDOMServer.renderToString(<App />);
-      const container = document.createElement('div');
+      const container = document.createElement('section');
       container.innerHTML = finalHTML;
       expect(Scheduler).toHaveYielded([
         'Hello',
@@ -350,12 +350,14 @@ describe('ReactDOMServerPartialHydration', () => {
       );
 
       if (__DEV__) {
-        expect(mockError.mock.calls[0]).toEqual([
+        const secondToLastCall =
+          mockError.mock.calls[mockError.mock.calls.length - 2];
+        expect(secondToLastCall).toEqual([
           'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
-          'div',
-          'div',
+          'article',
+          'section',
           '\n' +
-            '    in div (at **)\n' +
+            '    in article (at **)\n' +
             '    in Component (at **)\n' +
             '    in Suspense (at **)\n' +
             '    in App (at **)',
