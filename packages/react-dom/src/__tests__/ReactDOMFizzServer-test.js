@@ -3037,9 +3037,9 @@ describe('ReactDOMFizzServer', () => {
             <ThrowUntilOnClient>
               <h1>one</h1>
             </ThrowUntilOnClient>
-            <StopThrowingOnClient />
             <h2>two</h2>
-            <h3>three</h3>
+            <h3>{isClient ? 'five' : 'three'}</h3>
+            <StopThrowingOnClient />
           </Suspense>
         </div>
       );
@@ -3067,20 +3067,18 @@ describe('ReactDOMFizzServer', () => {
         );
       },
     });
-    await act(async () => {
-      expect(Scheduler).toFlushAndYieldThrough([
-        'Logged recoverable error: uh oh',
-        'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
-        'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
-        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
-      ]);
-    });
+    expect(Scheduler).toFlushAndYield([
+      'Logged recoverable error: uh oh',
+      'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
+      'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
+      'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+    ]);
 
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <h1>one</h1>
         <h2>two</h2>
-        <h3>three</h3>
+        <h3>five</h3>
       </div>,
     );
 
