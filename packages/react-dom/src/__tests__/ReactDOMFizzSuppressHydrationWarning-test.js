@@ -831,17 +831,21 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
       );
 
       expect(Scheduler).toFlushAndYield([]);
-      expect(mockError.mock.calls.length).toBe(1);
-      expect(mockError.mock.calls[0]).toEqual([
-        'Warning: Text content did not match. Server: "%s" Client: "%s"%s',
-        'initial',
-        'replaced',
-        '\n' +
-          '    in h2 (at **)\n' +
-          '    in Suspense (at **)\n' +
-          '    in div (at **)\n' +
-          '    in App (at **)',
-      ]);
+      if (__DEV__) {
+        expect(mockError.mock.calls.length).toBe(1);
+        expect(mockError.mock.calls[0]).toEqual([
+          'Warning: Text content did not match. Server: "%s" Client: "%s"%s',
+          'initial',
+          'replaced',
+          '\n' +
+            '    in h2 (at **)\n' +
+            '    in Suspense (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)',
+        ]);
+      } else {
+        expect(mockError.mock.calls.length).toBe(0);
+      }
     } finally {
       console.error = originalConsoleError;
     }
