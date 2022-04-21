@@ -426,7 +426,7 @@ const bundles = [
 
   /******* React Server DOM Relay Hooks *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-relay/flight-hooks',
     global: 'ReactFlightDOMRelayClientHooks',
