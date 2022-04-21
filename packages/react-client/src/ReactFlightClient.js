@@ -457,7 +457,7 @@ export function close(response: Response): void {
   reportGlobalError(response, new Error('Connection closed.'));
 }
 
-const ServerContextContext = createContext<ServerContextNode>(null);
+const ServerContextContext = createContext((null: null | ServerContextNode));
 
 type Props = {
   ServerContext: ReactServerContext<any>,
