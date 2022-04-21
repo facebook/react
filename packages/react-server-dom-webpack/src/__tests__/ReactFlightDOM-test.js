@@ -30,6 +30,7 @@ let React;
 let ReactDOMClient;
 let ReactServerDOMWriter;
 let ReactServerDOMReader;
+let ReactServerDOMHooks;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
@@ -42,6 +43,7 @@ describe('ReactFlightDOM', () => {
     ReactDOMClient = require('react-dom/client');
     ReactServerDOMWriter = require('react-server-dom-webpack/writer.node.server');
     ReactServerDOMReader = require('react-server-dom-webpack');
+    ReactServerDOMHooks = require('react-server-dom-webpack/flight-hooks');
   });
 
   function getTestStream() {
@@ -544,5 +546,106 @@ describe('ReactFlightDOM', () => {
     expect(inputB === container.children[0].children[1]).toBe(true);
     expect(inputB.tagName).toBe('INPUT');
     expect(inputB.value).toBe('goodbye');
+  });
+
+  // @gate enableServerContext
+  it('supports useServerContextsForRefetch', async () => {
+    let ServerContext = React.createServerContext('ServerContext', 'default');
+
+    function Foo() {
+      return (
+        <>
+          <ServerContext.Provider value="hi this is server outer">
+            <ServerContext.Provider value="hi this is server">
+              <Bar value="" />
+            </ServerContext.Provider>
+            <ServerContext.Provider value="hi this is server2">
+              <Bar value="2" />
+            </ServerContext.Provider>
+            <Bar value="outer" />
+          </ServerContext.Provider>
+          <ServerContext.Provider value="hi this is server outer2">
+            <Bar value="outer2" />
+          </ServerContext.Provider>
+          <Bar value="default" />
+        </>
+      );
+    }
+    const contextsForRefetch = [];
+    function ClientBaz() {
+      const context = React.useContext(ServerContext);
+      contextsForRefetch.push(
+        ReactServerDOMHooks.useServerContextsForRefetch(),
+      );
+      return <span>{context}</span>;
+    }
+    function ClientBar({value}) {
+      return (
+        <ServerContext.Provider
+          value={'hi this is client' + (value ? ' ' + value : '')}>
+          <ClientBaz />
+        </ServerContext.Provider>
+      );
+    }
+    const Bar = moduleReference(ClientBar);
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <Foo />,
+      webpackMap,
+    );
+    pipe(writable);
+
+    // Reset modules
+    jest.resetModules();
+    act = require('jest-react').act;
+    Stream = require('stream');
+    React = require('react');
+    ReactDOMClient = require('react-dom/client');
+    ReactServerDOMWriter = require('react-server-dom-webpack/writer.node.server');
+    ReactServerDOMReader = require('react-server-dom-webpack');
+    ReactServerDOMHooks = require('react-server-dom-webpack/flight-hooks');
+
+    ServerContext = React.createServerContext('ServerContext', 'default');
+
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App({response: res}) {
+      return res.readRoot();
+    }
+
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+
+    expect(container.innerHTML).toBe(
+      '<span>hi this is client</span>' +
+        '<span>hi this is client 2</span>' +
+        '<span>hi this is client outer</span>' +
+        '<span>hi this is client outer2</span>' +
+        '<span>hi this is client default</span>',
+    );
+
+    const outer = ['ServerContext', 'hi this is server outer', null];
+    expect(contextsForRefetch[0]).toEqual([
+      'ServerContext',
+      'hi this is server',
+      outer,
+    ]);
+    expect(contextsForRefetch[1]).toEqual([
+      'ServerContext',
+      'hi this is server2',
+      outer,
+    ]);
+    expect(contextsForRefetch[2]).toEqual(outer);
+    expect(contextsForRefetch[3]).toEqual([
+      'ServerContext',
+      'hi this is server outer2',
+      null,
+    ]);
+    expect(contextsForRefetch[4]).toEqual(null);
   });
 });
