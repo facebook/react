@@ -1993,6 +1993,7 @@ function updateDeferredValueImpl<T>(hook: Hook, prevValue: T, value: T): T {
       markWorkInProgressReceivedUpdate();
     }
 
+    hook.memoizedState = value;
     return value;
   }
 }

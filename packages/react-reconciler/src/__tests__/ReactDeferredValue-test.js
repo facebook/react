@@ -221,4 +221,79 @@ describe('ReactDeferredValue', () => {
       </div>,
     );
   });
+
+  it('regression test: during urgent update, reuse previous value, not initial value', async () => {
+    function App({value: propValue}) {
+      const [value, setValue] = useState(null);
+      if (value !== propValue) {
+        setValue(propValue);
+      }
+
+      const deferredValue = useDeferredValue(value);
+
+      const child = useMemo(() => <Text text={'Original: ' + value} />, [
+        value,
+      ]);
+
+      const deferredChild = useMemo(
+        () => <Text text={'Deferred: ' + deferredValue} />,
+        [deferredValue],
+      );
+
+      return (
+        <div>
+          <div>{child}</div>
+          <div>{deferredChild}</div>
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Initial render
+    await act(async () => {
+      root.render(<App value={1} />);
+      expect(Scheduler).toFlushUntilNextPaint(['Original: 1', 'Deferred: 1']);
+      expect(root).toMatchRenderedOutput(
+        <div>
+          <div>Original: 1</div>
+          <div>Deferred: 1</div>
+        </div>,
+      );
+    });
+
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App value={2} />);
+      });
+      expect(Scheduler).toFlushUntilNextPaint(['Original: 2', 'Deferred: 2']);
+      expect(root).toMatchRenderedOutput(
+        <div>
+          <div>Original: 2</div>
+          <div>Deferred: 2</div>
+        </div>,
+      );
+    });
+
+    await act(async () => {
+      root.render(<App value={3} />);
+      // In the regression, the memoized value was not updated during non-urgent
+      // updates, so this would flip the deferred value back to the initial
+      // value (1) instead of reusing the current one (2).
+      expect(Scheduler).toFlushUntilNextPaint(['Original: 3']);
+      expect(root).toMatchRenderedOutput(
+        <div>
+          <div>Original: 3</div>
+          <div>Deferred: 2</div>
+        </div>,
+      );
+      expect(Scheduler).toFlushUntilNextPaint(['Deferred: 3']);
+      expect(root).toMatchRenderedOutput(
+        <div>
+          <div>Original: 3</div>
+          <div>Deferred: 3</div>
+        </div>,
+      );
+    });
+  });
 });
