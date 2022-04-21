@@ -7,4 +7,4 @@
  * @flow
  */
 
-export {useServerContextsForRefetch} from 'react-client/flight-hooks';
+export {useServerContextsForRefetch} from 'react-client/src/ReactFlightClient';

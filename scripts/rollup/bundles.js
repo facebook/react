@@ -681,14 +681,14 @@ const bundles = [
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer/flight-hooks',
-    global: 'ReactNoopFlightClient',
+    global: 'ReactNoopFlightHooks',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: [
       'react',
       'scheduler',
       'expect',
-      'react-noop-renderer/flight-hooks',
+      'react-noop-renderer/flight-modules',
     ],
   },
 
@@ -731,6 +731,17 @@ const bundles = [
     moduleType: RECONCILER,
     entry: 'react-client/flight',
     global: 'ReactFlightClient',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+
+  /******* React Flight Client Hooks *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RECONCILER,
+    entry: 'react-client/flight-hooks',
+    global: 'ReactFlightHooks',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
     externals: ['react'],
