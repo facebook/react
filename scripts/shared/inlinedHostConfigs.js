@@ -15,6 +15,7 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzServerNode.js',
       'react-server-dom-webpack/writer.node.server',
       'react-server-dom-webpack',
+      'react-server-dom-webpack/flight-hooks',
     ],
     paths: [
       'react-dom',
@@ -42,6 +43,7 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzServerBrowser.js',
       'react-server-dom-webpack/writer.browser.server',
       'react-server-dom-webpack',
+      'react-server-dom-webpack/flight-hooks',
     ],
     paths: [
       'react-dom',
@@ -111,6 +113,7 @@ module.exports = [
     shortName: 'dom-relay',
     entryPoints: [
       'react-server-dom-relay',
+      'react-server-dom-relay/flight-hooks',
       'react-server-dom-relay/server',
       'react-server-dom-relay/src/ReactDOMServerFB.js',
     ],
@@ -139,6 +142,7 @@ module.exports = [
     entryPoints: [
       'react-reconciler',
       'react-client/flight',
+      'react-client/flight-hooks',
       'react-server',
       'react-server/flight',
     ],
