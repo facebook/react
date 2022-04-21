@@ -10,10 +10,12 @@ function LoadingIndicator() {
   return <div className={theme + '-loading'}>Loading...</div>;
 }
 
-function Content() {
-  let [CurrentPage, switchPage] = useState(() => Page);
+let [CurrentPage, switchPage] = useState(() => Page);
+
+export default function App({assets}) {
   return (
-    <div>
+    <Chrome title="Hello World" assets={assets}>
+     <div>
       <h1>Hello World</h1>
       <a className="link" onClick={() => switchPage(() => Page)}>
         Page 1
@@ -26,13 +28,6 @@ function Content() {
         <CurrentPage />
       </Suspense>
     </div>
-  );
-}
-
-export default function App({assets}) {
-  return (
-    <Chrome title="Hello World" assets={assets}>
-      <Content />
     </Chrome>
   );
 }
