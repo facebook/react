@@ -2977,8 +2977,6 @@ describe('ReactDOMFizzServer', () => {
       });
       expect(Scheduler).toFlushAndYield([
         'Logged recoverable error: Text content does not match server-rendered HTML.',
-        'Logged recoverable error: Text content does not match server-rendered HTML.',
-        'Logged recoverable error: Text content does not match server-rendered HTML.',
         'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
 
@@ -3069,8 +3067,6 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(Scheduler).toFlushAndYield([
       'Logged recoverable error: uh oh',
-      'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
-      'Logged recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
       'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
     ]);
 

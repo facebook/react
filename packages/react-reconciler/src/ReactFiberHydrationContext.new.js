@@ -386,10 +386,12 @@ function shouldClientRenderOnMismatch(fiber: Fiber) {
 }
 
 function throwOnHydrationMismatch(fiber: Fiber) {
-  throw new Error(
+  const error = new Error(
     'Hydration failed because the initial UI does not match what was ' +
       'rendered on the server.',
   );
+  (error: any)._hydrationMismatch = true;
+  throw error;
 }
 
 function tryToClaimNextHydratableInstance(fiber: Fiber): void {
@@ -448,23 +450,32 @@ function prepareToHydrateHostInstance(
 
   const instance: Instance = fiber.stateNode;
   const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-  const updatePayload = hydrateInstance(
-    instance,
-    fiber.type,
-    fiber.memoizedProps,
-    rootContainerInstance,
-    hostContext,
-    fiber,
-    shouldWarnIfMismatchDev,
-  );
-  // TODO: Type this specific to this type of component.
-  fiber.updateQueue = (updatePayload: any);
-  // If the update payload indicates that there is a change or if there
-  // is a new ref we mark this as an update.
-  if (updatePayload !== null) {
-    return true;
+  try {
+    const updatePayload = hydrateInstance(
+      instance,
+      fiber.type,
+      fiber.memoizedProps,
+      rootContainerInstance,
+      hostContext,
+      fiber,
+      shouldWarnIfMismatchDev,
+    );
+
+    // TODO: Type this specific to this type of component.
+    fiber.updateQueue = (updatePayload: any);
+    // If the update payload indicates that there is a change or if there
+    // is a new ref we mark this as an update.
+    if (updatePayload !== null) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    // We use an expando to decorate errors arising from hydration matching
+    // so we can optionally discard them if a more fundamental preceding
+    // hydration error has occurred.
+    error._hydrationMismatch = true;
+    throw error;
   }
-  return false;
 }
 
 function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
@@ -675,9 +686,20 @@ function getIsHydrating(): boolean {
 
 export function queueHydrationError(error: mixed): void {
   if (hydrationErrors === null) {
+    // We always queue the first hydration error
     hydrationErrors = [error];
   } else {
-    hydrationErrors.push(error);
+    if ((error: any)._hydrationMismatch !== true) {
+      // If there is at least one hydrationError we suppress additional
+      // hydrationMismatch errors on the logic that the earlier error
+      // will lead to a cascade of mismatch errors.
+      // If the boundary is suspending then there will be another hydration
+      // opportunity in a future render.
+      // If the boundary is not suspending then the earlier errors are
+      // the proximal cause and the mismatch errors are almost certainly
+      // a distraction
+      hydrationErrors.push(error);
+    }
   }
 }
 
