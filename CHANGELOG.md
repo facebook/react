@@ -11,7 +11,6 @@
 * Fix a missing warning about a `setState` loop in `useEffect`. ([@gaearon](https://github.com/gaearon) in [#24298](https://github.com/facebook/react/pull/24298))
 * Fix a spurious hydration error. ([@gnoff](https://github.com/gnoff) in [#24404](https://github.com/facebook/react/pull/24404))
 * Warn when calling `setState` in `useInsertionEffect`. ([@gaearon](https://github.com/gaearon) in [#24295](https://github.com/facebook/react/pull/24295))
-* Reuse server Suspense fallback HTML when possible instead of recreating it. ([@gaearon](https://github.com/gaearon) in [#24236](https://github.com/facebook/react/pull/24236))
 * Ensure the reason for hydration errors is always displayed. ([@gaearon](https://github.com/gaearon) in [#24276](https://github.com/facebook/react/pull/24276))
 
 ### React DOM Server
