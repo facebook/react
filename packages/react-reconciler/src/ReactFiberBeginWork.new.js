@@ -2270,7 +2270,6 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         } else {
           // Suspended but we should no longer be in dehydrated mode.
           // Therefore we now have to render the fallback.
-          renderDidSuspendDelayIfPossible();
           const nextPrimaryChildren = nextProps.children;
           const nextFallbackChildren = nextProps.fallback;
           const fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(

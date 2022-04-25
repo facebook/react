@@ -792,7 +792,7 @@ describe('ReactDOMServerHydration', () => {
       });
 
       // @gate __DEV__
-      it('does not warn when client renders an extra node inside Suspense fallback', () => {
+      it('warns when client renders an extra node inside Suspense fallback', () => {
         function Mismatch({isClient}) {
           return (
             <div className="parent">
@@ -809,12 +809,15 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        // There is no error because we don't actually hydrate fallbacks.
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`Array []`);
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+          Array [
+            "Caught [The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.]",
+          ]
+        `);
       });
 
       // @gate __DEV__
-      it('does not warn when server renders an extra node inside Suspense fallback', () => {
+      it('warns when server renders an extra node inside Suspense fallback', () => {
         function Mismatch({isClient}) {
           return (
             <div className="parent">
@@ -831,8 +834,11 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        // There is no error because we don't actually hydrate fallbacks.
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`Array []`);
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+          Array [
+            "Caught [The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.]",
+          ]
+        `);
       });
     });
 

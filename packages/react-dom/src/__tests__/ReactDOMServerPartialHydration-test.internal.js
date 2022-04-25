@@ -2115,7 +2115,10 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     suspend = true;
-    expect(Scheduler).toFlushAndYield([]);
+    expect(Scheduler).toFlushAndYield([
+      'The server could not finish this Suspense boundary, likely due to ' +
+        'an error during server rendering. Switched to client rendering.',
+    ]);
 
     // We haven't hydrated the second child but the placeholder is still in the list.
     expect(container.textContent).toBe('ALoading B');
