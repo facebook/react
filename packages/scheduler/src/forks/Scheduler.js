@@ -549,7 +549,7 @@ const performWorkUntilDeadline = () => {
 
 let schedulePerformWorkUntilDeadline;
 if (typeof localSetImmediate === 'function') {
-  // Node.js and old IE.
+  // Node.js and recent IE.
   // There's a few reasons for why we prefer setImmediate.
   //
   // Unlike MessageChannel, it doesn't prevent a Node.js process from exiting.
