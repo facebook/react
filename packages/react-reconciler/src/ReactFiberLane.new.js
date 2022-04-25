@@ -459,6 +459,9 @@ export function includesOnlyNonUrgentLanes(lanes: Lanes) {
   const UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
   return (lanes & UrgentLanes) === NoLanes;
 }
+export function includesOnlyTransitions(lanes: Lanes) {
+  return (lanes & TransitionLanes) === lanes;
+}
 
 export function includesBlockingLane(root: FiberRoot, lanes: Lanes) {
   if (

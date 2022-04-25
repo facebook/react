@@ -869,16 +869,15 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // We still can't render it on the client.
-    expect(Scheduler).toFlushAndYield([]);
-    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
-
-    // We now resolve it on the client.
-    resolveText('Hello');
-
     expect(Scheduler).toFlushAndYield([
       'The server could not finish this Suspense boundary, likely due to an ' +
         'error during server rendering. Switched to client rendering.',
     ]);
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    // We now resolve it on the client.
+    resolveText('Hello');
+    Scheduler.unstable_flushAll();
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(
@@ -2189,7 +2188,10 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
+  // Disabled because of a WWW late mutations regression.
+  // We may want to re-enable this if we figure out why.
   // @gate experimental
+  // @gate FIXME
   it('does not recreate the fallback if server errors and hydration suspends', async () => {
     let isClient = false;
 
@@ -2268,7 +2270,10 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  // Disabled because of a WWW late mutations regression.
+  // We may want to re-enable this if we figure out why.
   // @gate experimental
+  // @gate FIXME
   it(
     'does not recreate the fallback if server errors and hydration suspends ' +
       'and root receives a transition',
@@ -2364,7 +2369,10 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
+  // Disabled because of a WWW late mutations regression.
+  // We may want to re-enable this if we figure out why.
   // @gate experimental
+  // @gate FIXME
   it(
     'recreates the fallback if server errors and hydration suspends but ' +
       'client receives new props',
@@ -2542,12 +2550,17 @@ describe('ReactDOMFizzServer', () => {
         },
       });
 
-      // An error happened but instead of surfacing it to the UI, we suspended.
-      expect(Scheduler).toFlushAndYield([]);
+      // An error logged but instead of surfacing it to the UI, we switched
+      // to client rendering.
+      expect(Scheduler).toFlushAndYield([
+        'Hydration error',
+        'There was an error while hydrating this Suspense boundary. Switched ' +
+          'to client rendering.',
+      ]);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <span />
-          <span>Yay!</span>
+          Loading...
           <span />
         </div>,
       );
@@ -2555,12 +2568,7 @@ describe('ReactDOMFizzServer', () => {
       await act(async () => {
         resolveText('Yay!');
       });
-      expect(Scheduler).toFlushAndYield([
-        'Yay!',
-        'Hydration error',
-        'There was an error while hydrating this Suspense boundary. Switched ' +
-          'to client rendering.',
-      ]);
+      expect(Scheduler).toFlushAndYield(['Yay!']);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <span />
