@@ -2940,7 +2940,7 @@ describe('ReactDOMFizzServer', () => {
     expect(Scheduler).toFlushAndYield([]);
   });
 
-  // @gate experimental && enableClientRenderFallbackOnTextMismatch
+  // @gate experimental
   it('#24384: Suspending should halt hydration warnings and not emit any if hydration completes successfully after unsuspending', async () => {
     const makeApp = () => {
       let resolve, resolved;
