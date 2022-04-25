@@ -3847,6 +3847,38 @@ describe('ReactHooksWithNoopRenderer', () => {
       // expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 4')]);
     });
 
+    it('mount first state', () => {
+      function App(props) {
+        let A;
+        if (props.loadA) {
+          useState(0);
+        } else {
+          A = '[not loaded]';
+        }
+
+        return <Text text={`A: ${A}`} />;
+      }
+
+      ReactNoop.render(<App loadA={false} />);
+      expect(Scheduler).toFlushAndYield(['A: [not loaded]']);
+      expect(ReactNoop.getChildren()).toEqual([span('A: [not loaded]')]);
+
+      ReactNoop.render(<App loadA={true} />);
+      expect(() => {
+        expect(() => {
+          expect(Scheduler).toFlushAndYield(['A: 0']);
+        }).toThrow('Rendered more hooks than during the previous render');
+      }).toErrorDev([
+        'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'This will lead to bugs and errors if not fixed. For more information, ' +
+          'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+          '   Previous render            Next render\n' +
+          '   ------------------------------------------------------\n' +
+          '3. undefined                  useState\n' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+      ]);
+    });
+
     it('unmount state', () => {
       let updateA;
       let updateB;
@@ -3887,7 +3919,88 @@ describe('ReactHooksWithNoopRenderer', () => {
       );
     });
 
-    it('unmount effects', () => {
+    it('unmount last state', () => {
+      function App(props) {
+        let A;
+        if (props.loadA) {
+          useState(0);
+        } else {
+          A = '[not loaded]';
+        }
+
+        return <Text text={`A: ${A}`} />;
+      }
+
+      ReactNoop.render(<App loadA={true} />);
+      expect(Scheduler).toFlushAndYield(['A: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span('A: 0')]);
+      ReactNoop.render(<App loadA={false} />);
+      expect(Scheduler).toFlushAndThrow(
+        'Rendered fewer hooks than expected. This may be caused by an ' +
+          'accidental early return statement.',
+      );
+    });
+
+    it('mount effect', () => {
+      function App(props) {
+        if (props.showMore) {
+          useEffect(() => {
+            Scheduler.unstable_yieldValue('Mount A');
+            return () => {
+              Scheduler.unstable_yieldValue('Unmount A');
+            };
+          }, []);
+        }
+
+        return null;
+      }
+
+      ReactNoop.render(<App showMore={false} />);
+      expect(Scheduler).toFlushAndYield([]);
+
+      act(() => {
+        ReactNoop.render(<App showMore={true} />);
+        expect(() => {
+          expect(() => {
+            expect(Scheduler).toFlushAndYield([]);
+          }).toThrow('Rendered more hooks than during the previous render');
+        }).toErrorDev([
+          'Warning: React has detected a change in the order of Hooks called by App. ' +
+            'This will lead to bugs and errors if not fixed. For more information, ' +
+            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+            '   Previous render            Next render\n' +
+            '   ------------------------------------------------------\n' +
+            '2. undefined                  useEffect\n' +
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+        ]);
+      });
+    });
+
+    it('unmount effect', () => {
+      function App(props) {
+        if (props.showMore) {
+          useEffect(() => {
+            Scheduler.unstable_yieldValue('Mount A');
+            return () => {
+              Scheduler.unstable_yieldValue('Unmount A');
+            };
+          }, []);
+        }
+
+        return null;
+      }
+
+      ReactNoop.render(<App showMore={true} />);
+      expect(Scheduler).toFlushAndYield(['Mount A']);
+
+      ReactNoop.render(<App loadA={false} />);
+      expect(Scheduler).toFlushAndThrow(
+        'Rendered fewer hooks than expected. This may be caused by an ' +
+          'accidental early return statement.',
+      );
+    });
+
+    it('unmount additional effects', () => {
       function App(props) {
         useEffect(() => {
           Scheduler.unstable_yieldValue('Mount A');
