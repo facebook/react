@@ -20,7 +20,7 @@
   "homepage": "https://reactjs.org/",
   "dependencies": {
     "react-is": "^18.0.0",
-    "react-shallow-renderer": "^16.13.1",
+    "react-shallow-renderer": "^16.15.0",
     "scheduler": "^0.21.0"
   },
   "peerDependencies": {
