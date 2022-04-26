@@ -17,6 +17,15 @@
     "shim/",
     "cjs/"
   ],
+  "exports": {
+    ".": "./index.js",
+    "./with-selector": "./with-selector.js",
+    "./shim": "./shim/index.js",
+    "./shim/index.native": "./shim/index.native.js",
+    "./shim/with-selector": "./shim/with-selector.js",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
   "license": "MIT",
   "peerDependencies": {
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0"
