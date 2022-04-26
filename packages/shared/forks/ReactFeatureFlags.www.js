@@ -33,6 +33,7 @@ export const {
   enableSyncDefaultUpdates,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnTextMismatch,
+  enableFlipOffscreenUnhideOrder,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
