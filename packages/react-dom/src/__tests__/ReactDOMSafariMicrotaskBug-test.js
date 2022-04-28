@@ -16,7 +16,7 @@ let act;
 
 describe('ReactDOMSafariMicrotaskBug-test', () => {
   let container;
-  let simulateSafariBug;
+  let flushMicrotasksPrematurely;
 
   beforeEach(() => {
     // In Safari, microtasks don't always run on clean stack.
@@ -27,9 +27,12 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
     window.queueMicrotask = function(cb) {
       queue.push(cb);
     };
-    simulateSafariBug = function() {
-      queue.forEach(cb => cb());
-      queue = [];
+    flushMicrotasksPrematurely = function() {
+      while (queue.length > 0) {
+        const prevQueue = queue;
+        queue = [];
+        prevQueue.forEach(cb => cb());
+      }
     };
 
     jest.resetModules();
@@ -45,7 +48,7 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
     document.body.removeChild(container);
   });
 
-  it('should be resilient to buggy queueMicrotask', async () => {
+  it('should deal with premature microtask in commit phase', async () => {
     let ran = false;
     function Foo() {
       const [state, setState] = React.useState(0);
@@ -55,7 +58,7 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
             if (!ran) {
               ran = true;
               setState(1);
-              simulateSafariBug();
+              flushMicrotasksPrematurely();
             }
           }}>
           {state}
@@ -65,6 +68,32 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
     const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(<Foo />);
+    });
+    expect(container.textContent).toBe('1');
+  });
+
+  it('should deal with premature microtask in event handler', async () => {
+    function Foo() {
+      const [state, setState] = React.useState(0);
+      return (
+        <button
+          onClick={() => {
+            setState(1);
+            flushMicrotasksPrematurely();
+          }}>
+          {state}
+        </button>
+      );
+    }
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Foo />);
+    });
+    expect(container.textContent).toBe('0');
+    await act(async () => {
+      container.firstChild.dispatchEvent(
+        new MouseEvent('click', {bubbles: true}),
+      );
     });
     expect(container.textContent).toBe('1');
   });
