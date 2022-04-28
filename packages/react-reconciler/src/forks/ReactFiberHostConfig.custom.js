@@ -121,10 +121,6 @@ export const appendChildToContainerChildSet =
 export const finalizeContainerChildren =
   $$$hostConfig.finalizeContainerChildren;
 export const replaceContainerChildren = $$$hostConfig.replaceContainerChildren;
-export const getOffscreenContainerType =
-  $$$hostConfig.getOffscreenContainerType;
-export const getOffscreenContainerProps =
-  $$$hostConfig.getOffscreenContainerProps;
 export const cloneHiddenInstance = $$$hostConfig.cloneHiddenInstance;
 export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
 

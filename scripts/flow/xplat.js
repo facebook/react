@@ -8,5 +8,4 @@
  */
 
 declare module 'ReactNativeInternalFeatureFlags' {
-  declare export var enablePersistentOffscreenHostContainer: boolean;
 }

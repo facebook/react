@@ -99,8 +99,6 @@ export const allowConcurrentByDefault = true;
 
 export const deletedTreeCleanUpLevel = 3;
 
-export const enablePersistentOffscreenHostContainer = false;
-
 export const consoleManagedByDevToolsDuringStrictMode = true;
 export const enableServerContext = true;
 

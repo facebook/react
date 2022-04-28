@@ -141,7 +141,6 @@ import {
   enableProfilerTimer,
   enableCache,
   enableSuspenseLayoutEffectSemantics,
-  enablePersistentOffscreenHostContainer,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -347,11 +346,7 @@ if (supportsMutation) {
         if (child !== null) {
           child.return = node;
         }
-        if (enablePersistentOffscreenHostContainer) {
-          appendAllChildren(parent, node, false, false);
-        } else {
-          appendAllChildren(parent, node, true, true);
-        }
+        appendAllChildren(parent, node, true, true);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -416,11 +411,7 @@ if (supportsMutation) {
         if (child !== null) {
           child.return = node;
         }
-        if (enablePersistentOffscreenHostContainer) {
-          appendAllChildrenToContainer(containerChildSet, node, false, false);
-        } else {
-          appendAllChildrenToContainer(containerChildSet, node, true, true);
-        }
+        appendAllChildrenToContainer(containerChildSet, node, true, true);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -766,65 +757,6 @@ function bubbleProperties(completedWork: Fiber) {
   completedWork.childLanes = newChildLanes;
 
   return didBailout;
-}
-
-export function completeSuspendedOffscreenHostContainer(
-  current: Fiber | null,
-  workInProgress: Fiber,
-) {
-  // This is a fork of the complete phase for HostComponent. We use it when
-  // a suspense tree is in its fallback state, because in that case the primary
-  // tree that includes the offscreen boundary is skipped over without a
-  // regular complete phase.
-  //
-  // We can optimize this path further by inlining the update logic for
-  // offscreen instances specifically, i.e. skipping the `prepareUpdate` call.
-  const rootContainerInstance = getRootHostContainer();
-  const type = workInProgress.type;
-  const newProps = workInProgress.memoizedProps;
-  if (current !== null) {
-    updateHostComponent(
-      current,
-      workInProgress,
-      type,
-      newProps,
-      rootContainerInstance,
-    );
-  } else {
-    const currentHostContext = getHostContext();
-    const instance = createInstance(
-      type,
-      newProps,
-      rootContainerInstance,
-      currentHostContext,
-      workInProgress,
-    );
-
-    appendAllChildren(instance, workInProgress, false, false);
-
-    workInProgress.stateNode = instance;
-
-    // Certain renderers require commit-time effects for initial mount.
-    // (eg DOM renderer supports auto-focus for certain elements).
-    // Make sure such renderers get scheduled for later work.
-    if (
-      finalizeInitialChildren(
-        instance,
-        type,
-        newProps,
-        rootContainerInstance,
-        currentHostContext,
-      )
-    ) {
-      markUpdate(workInProgress);
-    }
-
-    if (workInProgress.ref !== null) {
-      // If there is a ref on a host node we need to schedule a callback
-      markRef(workInProgress);
-    }
-  }
-  bubbleProperties(workInProgress);
 }
 
 function completeWork(
