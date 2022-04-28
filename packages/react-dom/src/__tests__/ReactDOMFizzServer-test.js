@@ -1207,6 +1207,9 @@ describe('ReactDOMFizzServer', () => {
   });
 
   function normalizeCodeLocInfo(str) {
+    if (typeof str === 'object') {
+      return;
+    }
     return (
       str &&
       str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
@@ -3155,5 +3158,218 @@ describe('ReactDOMFizzServer', () => {
     );
 
     expect(Scheduler).toFlushAndYield([]);
+  });
+
+  // @gate __DEV__
+  it('does not invokeGuardedCallback for errors after the first hydration error', async () => {
+    // We can't use the toErrorDev helper here because this is async.
+    const originalConsoleError = console.error;
+    const mockError = jest.fn();
+    console.error = (...args) => {
+      if (args.length > 1) {
+        if (typeof args[1] === 'object') {
+          mockError(args[0].split('\n')[0]);
+          return;
+        }
+      }
+      mockError(...args.map(normalizeCodeLocInfo));
+    };
+    let isClient = false;
+    let shouldThrow = true;
+
+    function ThrowUntilOnClient({children, message}) {
+      if (isClient && shouldThrow) {
+        throw new Error(message);
+      }
+      return children;
+    }
+
+    function StopThrowingOnClient() {
+      if (isClient) {
+        shouldThrow = false;
+      }
+      return null;
+    }
+
+    const App = () => {
+      return (
+        <div>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <ThrowUntilOnClient message="first error">
+              <h1>one</h1>
+            </ThrowUntilOnClient>
+            <ThrowUntilOnClient message="second error">
+              <h2>two</h2>
+            </ThrowUntilOnClient>
+            <ThrowUntilOnClient message="third error">
+              <h3>three</h3>
+            </ThrowUntilOnClient>
+            <StopThrowingOnClient />
+          </Suspense>
+        </div>
+      );
+    };
+
+    try {
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
+
+      isClient = true;
+
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(
+            'Logged recoverable error: ' + error.message,
+          );
+        },
+      });
+      expect(Scheduler).toFlushAndYield([
+        'Logged recoverable error: first error',
+        'Logged recoverable error: second error',
+        'Logged recoverable error: third error',
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+      ]);
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
+
+      expect(Scheduler).toFlushAndYield([]);
+
+      // These Uncaught error calls are the error reported by the runtime (jsdom here, browser in actual use)
+      // when invokeGuardedCallback is used to replay an error in dev using event dispatching in the document
+      expect(mockError.mock.calls).toEqual([
+        // we only get one because we suppress invokeGuardedCallback after the first one when hydrating in a
+        // suspense boundary
+        ['Error: Uncaught [Error: first error]'],
+      ]);
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
+  // @gate __DEV__
+  it('does not invokeGuardedCallback for errors after a preceding fiber suspends', async () => {
+    // We can't use the toErrorDev helper here because this is async.
+    const originalConsoleError = console.error;
+    const mockError = jest.fn();
+    console.error = (...args) => {
+      if (args.length > 1) {
+        if (typeof args[1] === 'object') {
+          mockError(args[0].split('\n')[0]);
+          return;
+        }
+      }
+      mockError(...args.map(normalizeCodeLocInfo));
+    };
+    let isClient = false;
+    let shouldThrow = true;
+    let promise = null;
+    let unsuspend = null;
+    let isResolved = false;
+
+    function ComponentThatSuspendsOnClient() {
+      if (isClient && !isResolved) {
+        if (promise === null) {
+          promise = new Promise(resolve => {
+            unsuspend = () => {
+              isResolved = true;
+              resolve();
+            };
+          });
+        }
+        throw promise;
+      }
+      return null;
+    }
+
+    function ThrowUntilOnClient({children, message}) {
+      if (isClient && shouldThrow) {
+        throw new Error(message);
+      }
+      return children;
+    }
+
+    function StopThrowingOnClient() {
+      if (isClient) {
+        shouldThrow = false;
+      }
+      return null;
+    }
+
+    const App = () => {
+      return (
+        <div>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <ComponentThatSuspendsOnClient />
+            <ThrowUntilOnClient message="first error">
+              <h1>one</h1>
+            </ThrowUntilOnClient>
+            <ThrowUntilOnClient message="second error">
+              <h2>two</h2>
+            </ThrowUntilOnClient>
+            <ThrowUntilOnClient message="third error">
+              <h3>three</h3>
+            </ThrowUntilOnClient>
+            <StopThrowingOnClient />
+          </Suspense>
+        </div>
+      );
+    };
+
+    try {
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
+
+      isClient = true;
+
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(
+            'Logged recoverable error: ' + error.message,
+          );
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
+      await unsuspend();
+      expect(Scheduler).toFlushAndYield([]);
+
+      // These Uncaught error calls are the error reported by the runtime (jsdom here, browser in actual use)
+      // when invokeGuardedCallback is used to replay an error in dev using event dispatching in the document
+      expect(mockError.mock.calls).toEqual([]);
+    } finally {
+      console.error = originalConsoleError;
+    }
   });
 });
