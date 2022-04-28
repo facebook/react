@@ -161,7 +161,7 @@ export const createComponentSelector = enableNewReconciler
   ? createComponentSelector_new
   : createComponentSelector_old;
 
-//TODO: "psuedo" is spelled "pseudo"
+// TODO: "psuedo" is spelled "pseudo"
 export const createHasPseudoClassSelector = enableNewReconciler
   ? createHasPseudoClassSelector_new
   : createHasPseudoClassSelector_old;
