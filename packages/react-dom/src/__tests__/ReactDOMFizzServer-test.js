@@ -3261,7 +3261,9 @@ describe('ReactDOMFizzServer', () => {
       console.error = originalConsoleError;
     }
   });
-  // @gate __DEV__
+
+  // This test is not gated to __DEV__ because in prod there is no iGC call for these errors and so it passes
+  // there too
   it('does not invokeGuardedCallback for errors after a preceding fiber suspends', async () => {
     // We can't use the toErrorDev helper here because this is async.
     const originalConsoleError = console.error;
