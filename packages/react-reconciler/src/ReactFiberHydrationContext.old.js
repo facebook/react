@@ -88,6 +88,14 @@ let didSuspendOrErrorDEV: boolean = false;
 // Hydration errors that were thrown inside this boundary
 let hydrationErrors: Array<mixed> | null = null;
 
+// When true we expect the next queued hydration error to be a mismatch error.
+// These errors are handled differently than other errors that occurr during hydration
+let didThrowNotYetQueuedHydrationMismatchError = false;
+
+export function hydrationDidSuspendOrErrorDEV() {
+  return didSuspendOrErrorDEV;
+}
+
 function warnIfHydrating() {
   if (__DEV__) {
     if (isHydrating) {
@@ -386,12 +394,11 @@ function shouldClientRenderOnMismatch(fiber: Fiber) {
 }
 
 function throwOnHydrationMismatch(fiber: Fiber) {
-  const error = new Error(
+  didThrowNotYetQueuedHydrationMismatchError = true;
+  throw new Error(
     'Hydration failed because the initial UI does not match what was ' +
       'rendered on the server.',
   );
-  (error: any)._hydrationMismatch = true;
-  throw error;
 }
 
 function tryToClaimNextHydratableInstance(fiber: Fiber): void {
@@ -470,10 +477,7 @@ function prepareToHydrateHostInstance(
     }
     return false;
   } catch (error) {
-    // We use an expando to decorate errors arising from hydration matching
-    // so we can optionally discard them if a more fundamental preceding
-    // hydration error has occurred.
-    error._hydrationMismatch = true;
+    didThrowNotYetQueuedHydrationMismatchError = true;
     throw error;
   }
 }
@@ -689,18 +693,19 @@ export function queueHydrationError(error: mixed): void {
     // We always queue the first hydration error
     hydrationErrors = [error];
   } else {
-    if ((error: any)._hydrationMismatch !== true) {
-      // If there is at least one hydrationError we suppress additional
-      // hydrationMismatch errors on the logic that the earlier error
-      // will lead to a cascade of mismatch errors.
-      // If the boundary is suspending then there will be another hydration
-      // opportunity in a future render.
-      // If the boundary is not suspending then the earlier errors are
-      // the proximal cause and the mismatch errors are almost certainly
-      // a distraction
+    // didThrowNotYetQueuedHydrationMismatchError will be true if we just threw
+    // a hydration mismatch error. In those cases we do not want to queue the
+    // error because there is a more useful error related to hydration that
+    // was already queued.
+    if (!didThrowNotYetQueuedHydrationMismatchError) {
+      // this error came from somewhere other than a hydration mismatch so we
+      // queue it even though other errors have also been queued. The user
+      // should see these errors if a recovery is made
       hydrationErrors.push(error);
     }
   }
+  // Now that we have handled the queueing request we reset this
+  didThrowNotYetQueuedHydrationMismatchError = false;
 }
 
 export {
