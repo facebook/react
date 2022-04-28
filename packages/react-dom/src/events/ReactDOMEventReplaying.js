@@ -281,7 +281,12 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
       const fiber = getInstanceFromNode(blockedOn);
       if (fiber !== null) {
         // Attempt to increase the priority of this target.
-        attemptContinuousHydration(fiber);
+        if (
+          existingQueuedEvent === null ||
+          existingQueuedEvent.blockedOn !== blockedOn
+        ) {
+          attemptContinuousHydration(fiber);
+        }
       }
     }
     return queuedEvent;
