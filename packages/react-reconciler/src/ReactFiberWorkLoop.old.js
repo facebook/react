@@ -88,7 +88,7 @@ import {
   assignFiberPropertiesInDEV,
 } from './ReactFiber.old';
 import {isRootDehydrated} from './ReactFiberShellHydration';
-import {hydrationDidSuspendOrErrorDEV} from './ReactFiberHydrationContext.new';
+import {hydrationDidSuspendOrErrorDEV} from './ReactFiberHydrationContext.old';
 import {NoMode, ProfileMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
   HostRoot,
