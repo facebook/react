@@ -3160,7 +3160,7 @@ describe('ReactDOMFizzServer', () => {
     expect(Scheduler).toFlushAndYield([]);
   });
 
-  // @gate __DEV__
+  // @gate experimental && __DEV__
   it('does not invokeGuardedCallback for errors after the first hydration error', async () => {
     // We can't use the toErrorDev helper here because this is async.
     const originalConsoleError = console.error;
@@ -3262,8 +3262,7 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  // This test is not gated to __DEV__ because in prod there is no iGC call for these errors and so it passes
-  // there too
+  // @gate experimental
   it('does not invokeGuardedCallback for errors after a preceding fiber suspends', async () => {
     // We can't use the toErrorDev helper here because this is async.
     const originalConsoleError = console.error;
