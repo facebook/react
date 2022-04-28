@@ -125,6 +125,7 @@ function enterHydrationState(fiber: Fiber): boolean {
   isHydrating = true;
   hydrationErrors = null;
   didSuspendOrErrorDEV = false;
+  didThrowNotYetQueuedHydrationMismatchError = false;
   return true;
 }
 
@@ -143,6 +144,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   isHydrating = true;
   hydrationErrors = null;
   didSuspendOrErrorDEV = false;
+  didThrowNotYetQueuedHydrationMismatchError = false;
   if (treeContext !== null) {
     restoreSuspendedTreeContext(fiber, treeContext);
   }
