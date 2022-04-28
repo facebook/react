@@ -350,9 +350,7 @@ describe('ReactDOMServerPartialHydration', () => {
       );
 
       if (__DEV__) {
-        const secondToLastCall =
-          mockError.mock.calls[mockError.mock.calls.length - 2];
-        expect(secondToLastCall).toEqual([
+        expect(mockError.mock.calls[0]).toEqual([
           'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
           'article',
           'section',

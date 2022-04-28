@@ -88,6 +88,7 @@ import {
   assignFiberPropertiesInDEV,
 } from './ReactFiber.new';
 import {isRootDehydrated} from './ReactFiberShellHydration';
+import {hydrationDidSuspendOrErrorDEV} from './ReactFiberHydrationContext.new';
 import {NoMode, ProfileMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
   HostRoot,
@@ -3001,11 +3002,13 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       return originalBeginWork(current, unitOfWork, lanes);
     } catch (originalError) {
       if (
-        originalError !== null &&
-        typeof originalError === 'object' &&
-        typeof originalError.then === 'function'
+        hydrationDidSuspendOrErrorDEV() ||
+        (originalError !== null &&
+          typeof originalError === 'object' &&
+          typeof originalError.then === 'function')
       ) {
-        // Don't replay promises. Treat everything else like an error.
+        // Don't replay promises.
+        // Don't replay when hydration has suspended or errored already
         throw originalError;
       }
 
