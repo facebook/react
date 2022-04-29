@@ -3235,8 +3235,6 @@ describe('ReactDOMFizzServer', () => {
       });
       expect(Scheduler).toFlushAndYield([
         'Logged recoverable error: first error',
-        'Logged recoverable error: second error',
-        'Logged recoverable error: third error',
         'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
 

@@ -88,10 +88,6 @@ let didSuspendOrErrorDEV: boolean = false;
 // Hydration errors that were thrown inside this boundary
 let hydrationErrors: Array<mixed> | null = null;
 
-// When true we expect the next queued hydration error to be a mismatch error.
-// These errors are handled differently than other errors that occurr during hydration
-let didThrowNotYetQueuedHydrationMismatchError = false;
-
 export function hydrationDidSuspendOrErrorDEV() {
   return didSuspendOrErrorDEV;
 }
@@ -125,7 +121,6 @@ function enterHydrationState(fiber: Fiber): boolean {
   isHydrating = true;
   hydrationErrors = null;
   didSuspendOrErrorDEV = false;
-  didThrowNotYetQueuedHydrationMismatchError = false;
   return true;
 }
 
@@ -144,7 +139,6 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   isHydrating = true;
   hydrationErrors = null;
   didSuspendOrErrorDEV = false;
-  didThrowNotYetQueuedHydrationMismatchError = false;
   if (treeContext !== null) {
     restoreSuspendedTreeContext(fiber, treeContext);
   }
@@ -396,7 +390,6 @@ function shouldClientRenderOnMismatch(fiber: Fiber) {
 }
 
 function throwOnHydrationMismatch(fiber: Fiber) {
-  didThrowNotYetQueuedHydrationMismatchError = true;
   throw new Error(
     'Hydration failed because the initial UI does not match what was ' +
       'rendered on the server.',
@@ -459,29 +452,24 @@ function prepareToHydrateHostInstance(
 
   const instance: Instance = fiber.stateNode;
   const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-  try {
-    const updatePayload = hydrateInstance(
-      instance,
-      fiber.type,
-      fiber.memoizedProps,
-      rootContainerInstance,
-      hostContext,
-      fiber,
-      shouldWarnIfMismatchDev,
-    );
+  const updatePayload = hydrateInstance(
+    instance,
+    fiber.type,
+    fiber.memoizedProps,
+    rootContainerInstance,
+    hostContext,
+    fiber,
+    shouldWarnIfMismatchDev,
+  );
 
-    // TODO: Type this specific to this type of component.
-    fiber.updateQueue = (updatePayload: any);
-    // If the update payload indicates that there is a change or if there
-    // is a new ref we mark this as an update.
-    if (updatePayload !== null) {
-      return true;
-    }
-    return false;
-  } catch (error) {
-    didThrowNotYetQueuedHydrationMismatchError = true;
-    throw error;
+  // TODO: Type this specific to this type of component.
+  fiber.updateQueue = (updatePayload: any);
+  // If the update payload indicates that there is a change or if there
+  // is a new ref we mark this as an update.
+  if (updatePayload !== null) {
+    return true;
   }
+  return false;
 }
 
 function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
@@ -690,24 +678,18 @@ function getIsHydrating(): boolean {
   return isHydrating;
 }
 
-export function queueHydrationError(error: mixed): void {
+function queueIfFirstHydrationError(error: mixed): void {
   if (hydrationErrors === null) {
-    // We always queue the first hydration error
+    hydrationErrors = [error];
+  }
+}
+
+function queueHydrationError(error: mixed): void {
+  if (hydrationErrors === null) {
     hydrationErrors = [error];
   } else {
-    // didThrowNotYetQueuedHydrationMismatchError will be true if we just threw
-    // a hydration mismatch error. In those cases we do not want to queue the
-    // error because there is a more useful error related to hydration that
-    // was already queued.
-    if (!didThrowNotYetQueuedHydrationMismatchError) {
-      // this error came from somewhere other than a hydration mismatch so we
-      // queue it even though other errors have also been queued. The user
-      // should see these errors if a recovery is made
-      hydrationErrors.push(error);
-    }
+    hydrationErrors.push(error);
   }
-  // Now that we have handled the queueing request we reset this
-  didThrowNotYetQueuedHydrationMismatchError = false;
 }
 
 export {
@@ -723,4 +705,6 @@ export {
   popHydrationState,
   hasUnhydratedTailNodes,
   warnIfUnhydratedTailNodes,
+  queueIfFirstHydrationError,
+  queueHydrationError,
 };

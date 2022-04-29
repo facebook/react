@@ -84,7 +84,7 @@ import {
 import {
   getIsHydrating,
   markDidThrowWhileHydratingDEV,
-  queueHydrationError,
+  queueIfFirstHydrationError,
 } from './ReactFiberHydrationContext.new';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
@@ -542,7 +542,7 @@ function throwException(
 
         // Even though the user may not be affected by this error, we should
         // still log it so it can be fixed.
-        queueHydrationError(value);
+        queueIfFirstHydrationError(value);
         return;
       }
     } else {
