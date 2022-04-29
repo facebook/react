@@ -943,6 +943,22 @@ function ChildReconciler(shouldTrackSideEffects) {
           );
         }
         didWarnAboutGenerators = true;
+      } else {
+        // Warn about using one-shot iterators as children
+        const isOneShotIterator =
+          iteratorFn.call(newChildrenIterable) === newChildrenIterable;
+        if (isOneShotIterator) {
+          if (!didWarnAboutOneShotIterators) {
+            console.error(
+              'Using a TOOD-understandable-term as children is unsupported and will likely yield ' +
+                'unexpected results because enumerating a TOOD-understandable-term mutates it. ' +
+                'You may convert it to an array with `Array.from()` or the ' +
+                '`[...spread]` operator before rendering. Keep in mind ' +
+                'you might need to polyfill these features for older browsers.',
+            );
+          }
+          didWarnAboutOneShotIterators = true;
+        }
       }
 
       // Warn about using Maps as children
@@ -954,22 +970,6 @@ function ChildReconciler(shouldTrackSideEffects) {
           );
         }
         didWarnAboutMaps = true;
-      }
-
-      // Warn about using one-shot iterators as children
-      const isOneShotIterator =
-        iteratorFn.call(newChildrenIterable) === newChildrenIterable;
-      if (isOneShotIterator) {
-        if (!didWarnAboutOneShotIterators) {
-          console.error(
-            'Using a TOOD-understandable-term as children is unsupported and will likely yield ' +
-              'unexpected results because enumerating a TOOD-understandable-term mutates it. ' +
-              'You may convert it to an array with `Array.from()` or the ' +
-              '`[...spread]` operator before rendering. Keep in mind ' +
-              'you might need to polyfill these features for older browsers.',
-          );
-        }
-        didWarnAboutOneShotIterators = true;
       }
 
       // First, validate keys.
