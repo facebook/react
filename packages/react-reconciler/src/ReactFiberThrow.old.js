@@ -84,13 +84,8 @@ import {
 import {
   getIsHydrating,
   markDidThrowWhileHydratingDEV,
-<<<<<<< packages/react-reconciler/src/ReactFiberThrow.old.js
-  queueHydrationError,
-} from './ReactFiberHydrationContext.old';
-=======
   queueIfFirstHydrationError,
-} from './ReactFiberHydrationContext.new';
->>>>>>> packages/react-reconciler/src/ReactFiberThrow.new.js
+} from './ReactFiberHydrationContext.old';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
