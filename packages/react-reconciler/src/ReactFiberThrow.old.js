@@ -34,17 +34,12 @@ import {
   ForceUpdateForLegacySuspense,
   ForceClientRender,
 } from './ReactFiberFlags';
-import {
-  supportsPersistence,
-  getOffscreenContainerProps,
-} from './ReactFiberHostConfig';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   enableDebugTracing,
   enableLazyContextPropagation,
   enableUpdaterTracking,
-  enablePersistentOffscreenHostContainer,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -335,26 +330,6 @@ function markSuspenseBoundaryShouldCapture(
       // But we shouldn't call any lifecycle methods or callbacks. Remove
       // all lifecycle effect tags.
       sourceFiber.flags &= ~(LifecycleEffectMask | Incomplete);
-
-      if (supportsPersistence && enablePersistentOffscreenHostContainer) {
-        // Another legacy Suspense quirk. In persistent mode, if this is the
-        // initial mount, override the props of the host container to hide
-        // its contents.
-        const currentSuspenseBoundary = suspenseBoundary.alternate;
-        if (currentSuspenseBoundary === null) {
-          const offscreenFiber: Fiber = (suspenseBoundary.child: any);
-          const offscreenContainer = offscreenFiber.child;
-          if (offscreenContainer !== null) {
-            const children = offscreenContainer.memoizedProps.children;
-            const containerProps = getOffscreenContainerProps(
-              'hidden',
-              children,
-            );
-            offscreenContainer.pendingProps = containerProps;
-            offscreenContainer.memoizedProps = containerProps;
-          }
-        }
-      }
 
       if (sourceFiber.tag === ClassComponent) {
         const currentSourceFiber = sourceFiber.alternate;

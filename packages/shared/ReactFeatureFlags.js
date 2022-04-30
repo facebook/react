@@ -16,7 +16,6 @@
 export const warnAboutDeprecatedLifecycles = true;
 export const enableComponentStackLocations = true;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
-export const enablePersistentOffscreenHostContainer = false;
 
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
