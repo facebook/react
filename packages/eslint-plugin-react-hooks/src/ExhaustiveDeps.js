@@ -361,7 +361,7 @@ export default {
           if (curScope.type === 'function') {
             isInReturnedFunction =
               curScope.block.parent != null &&
-              curScope.block.parent.type === 'ReturnStatement';
+              (curScope.block.parent.type === 'ReturnStatement' || curScope.block.parent.type === 'ArrowFunctionExpression');
           }
           curScope = curScope.upper;
         }
