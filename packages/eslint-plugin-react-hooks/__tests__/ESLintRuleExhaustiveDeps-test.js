@@ -4525,6 +4525,25 @@ const tests = {
       code: normalizeIndent`
         function MyComponent() {
           const myRef = useRef();
+          useEffect(() => () => externalCall(myRef.current), []);
+          return <div ref={myRef} />;
+        }
+      `,
+      errors: [
+        {
+          message:
+            `The ref value 'myRef.current' will likely have changed by the time ` +
+            `this effect cleanup function runs. If this ref points to a node ` +
+            `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+            `and use that variable in the cleanup function.`,
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const myRef = useRef();
           useEffect(() => {
             const handleMove = () => {};
             myRef.current.addEventListener('mousemove', handleMove);
