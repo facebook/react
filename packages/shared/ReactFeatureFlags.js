@@ -38,7 +38,7 @@ export const skipUnmountedBoundaries = true;
 //
 // TODO: Finish rolling out in www
 export const enableSuspenseLayoutEffectSemantics = true;
-export const enableFlipOffscreenUnhideOrder = false;
+export const enableFlipOffscreenUnhideOrder = true;
 
 // TODO: Finish rolling out in www
 export const enableClientRenderFallbackOnTextMismatch = true;
