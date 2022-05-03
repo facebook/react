@@ -42,6 +42,7 @@ import {
   enableUpdaterTracking,
   enableCache,
   enableTransitionTracing,
+  enableFlipOffscreenUnhideOrder,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -2270,28 +2271,56 @@ function commitMutationEffectsOnFiber(
         const isHidden = newState !== null;
         const offscreenBoundary: Fiber = finishedWork;
 
-        if (supportsMutation) {
-          // TODO: This needs to run whenever there's an insertion or update
-          // inside a hidden Offscreen tree.
-          hideOrUnhideAllChildren(offscreenBoundary, isHidden);
-        }
-
-        if (enableSuspenseLayoutEffectSemantics) {
-          if (isHidden) {
-            if (!wasHidden) {
-              if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
-                nextEffect = offscreenBoundary;
-                let offscreenChild = offscreenBoundary.child;
-                while (offscreenChild !== null) {
-                  nextEffect = offscreenChild;
-                  disappearLayoutEffects_begin(offscreenChild);
-                  offscreenChild = offscreenChild.sibling;
+        if (enableFlipOffscreenUnhideOrder) {
+          if (enableSuspenseLayoutEffectSemantics) {
+            if (isHidden) {
+              if (!wasHidden) {
+                if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
+                  nextEffect = offscreenBoundary;
+                  let offscreenChild = offscreenBoundary.child;
+                  while (offscreenChild !== null) {
+                    nextEffect = offscreenChild;
+                    disappearLayoutEffects_begin(offscreenChild);
+                    offscreenChild = offscreenChild.sibling;
+                  }
                 }
               }
+            } else {
+              if (wasHidden) {
+                // TODO: Move re-appear call here for symmetry?
+              }
             }
-          } else {
-            if (wasHidden) {
-              // TODO: Move re-appear call here for symmetry?
+          }
+
+          if (supportsMutation) {
+            // TODO: This needs to run whenever there's an insertion or update
+            // inside a hidden Offscreen tree.
+            hideOrUnhideAllChildren(offscreenBoundary, isHidden);
+          }
+        } else {
+          if (supportsMutation) {
+            // TODO: This needs to run whenever there's an insertion or update
+            // inside a hidden Offscreen tree.
+            hideOrUnhideAllChildren(offscreenBoundary, isHidden);
+          }
+
+          if (enableSuspenseLayoutEffectSemantics) {
+            if (isHidden) {
+              if (!wasHidden) {
+                if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
+                  nextEffect = offscreenBoundary;
+                  let offscreenChild = offscreenBoundary.child;
+                  while (offscreenChild !== null) {
+                    nextEffect = offscreenChild;
+                    disappearLayoutEffects_begin(offscreenChild);
+                    offscreenChild = offscreenChild.sibling;
+                  }
+                }
+              }
+            } else {
+              if (wasHidden) {
+                // TODO: Move re-appear call here for symmetry?
+              }
             }
           }
         }
