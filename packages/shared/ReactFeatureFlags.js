@@ -13,13 +13,9 @@
 // Flags that can likely be deleted or landed without consequences
 // -----------------------------------------------------------------------------
 
-export const enableSuspenseServerRenderer = true;
-export const enableSelectiveHydration = true;
 export const warnAboutDeprecatedLifecycles = true;
-export const enableLazyElements = true;
 export const enableComponentStackLocations = true;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
-export const enablePersistentOffscreenHostContainer = false;
 
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
@@ -27,6 +23,9 @@ export const enablePersistentOffscreenHostContainer = false;
 // Flags that can be probably deleted or landed, but might require extra effort
 // like migrating internal callers or performance testing.
 // -----------------------------------------------------------------------------
+
+// This is blocked on adding a symbol polyfill to www.
+export const enableSymbolFallbackForWWW = false;
 
 // This rolled out to 10% public in www, so we should be able to land, but some
 // internal tests need to be updated. The open source behavior is correct.
@@ -39,9 +38,9 @@ export const skipUnmountedBoundaries = true;
 //
 // TODO: Finish rolling out in www
 export const enableSuspenseLayoutEffectSemantics = true;
+export const enableFlipOffscreenUnhideOrder = true;
 
 // TODO: Finish rolling out in www
-export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 
 // TODO: Need to review this code one more time before landing

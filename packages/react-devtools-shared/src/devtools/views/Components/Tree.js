@@ -126,10 +126,6 @@ export default function Tree(props: Props) {
         return;
       }
 
-      // TODO We should ignore arrow keys if the focus is outside of DevTools.
-      // Otherwise the inline (embedded) DevTools might change selection unexpectedly,
-      // e.g. when a text input or a select has focus.
-
       let element;
       switch (event.key) {
         case 'ArrowDown':
@@ -192,14 +188,25 @@ export default function Tree(props: Props) {
       setIsNavigatingWithKeyboard(true);
     };
 
-    // It's important to listen to the ownerDocument to support the browser extension.
-    // Here we use portals to render individual tabs (e.g. Profiler),
-    // and the root document might belong to a different window.
-    const ownerDocument = treeRef.current.ownerDocument;
-    ownerDocument.addEventListener('keydown', handleKeyDown);
+    // We used to listen to at the document level for this event.
+    // That allowed us to listen to up/down arrow key events while another section
+    // of DevTools (like the search input) was focused.
+    // This was a minor UX positive.
+    //
+    // (We had to use ownerDocument rather than document for this, because the
+    // DevTools extension renders the Components and Profiler tabs into portals.)
+    //
+    // This approach caused a problem though: it meant that a react-devtools-inline
+    // instance could steal (and prevent/block) keyboard events from other JavaScript
+    // on the page– which could even include other react-devtools-inline instances.
+    // This is a potential major UX negative.
+    //
+    // Given the above trade offs, we now listen on the root of the Tree itself.
+    const container = treeRef.current;
+    container.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      ownerDocument.removeEventListener('keydown', handleKeyDown);
+      container.removeEventListener('keydown', handleKeyDown);
     };
   }, [dispatch, selectedElementID, store]);
 

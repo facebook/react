@@ -239,6 +239,53 @@ describe('ReactCache', () => {
   });
 
   // @gate experimental || www
+  test('multiple new Cache boundaries in the same mount share the same, fresh root cache', async () => {
+    function App() {
+      return (
+        <>
+          <Cache>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <AsyncText text="A" />
+            </Suspense>
+          </Cache>
+          <Cache>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <AsyncText text="A" />
+            </Suspense>
+          </Cache>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App showMore={false} />);
+    });
+
+    // Even though there are two new <Cache /> trees, they should share the same
+    // data cache. So there should be only a single cache miss for A.
+    expect(Scheduler).toHaveYielded([
+      'Cache miss! [A]',
+      'Loading...',
+      'Loading...',
+    ]);
+    expect(root).toMatchRenderedOutput('Loading...Loading...');
+
+    await act(async () => {
+      resolveMostRecentTextCache('A');
+    });
+    expect(Scheduler).toHaveYielded(['A', 'A']);
+    expect(root).toMatchRenderedOutput('AA');
+
+    await act(async () => {
+      root.render('Bye');
+    });
+    // no cleanup: cache is still retained at the root
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('Bye');
+  });
+
+  // @gate experimental || www
   test('multiple new Cache boundaries in the same update share the same, fresh cache', async () => {
     function App({showMore}) {
       return showMore ? (

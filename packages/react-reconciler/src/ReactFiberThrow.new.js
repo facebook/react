@@ -34,17 +34,12 @@ import {
   ForceUpdateForLegacySuspense,
   ForceClientRender,
 } from './ReactFiberFlags';
-import {
-  supportsPersistence,
-  getOffscreenContainerProps,
-} from './ReactFiberHostConfig';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   enableDebugTracing,
   enableLazyContextPropagation,
   enableUpdaterTracking,
-  enablePersistentOffscreenHostContainer,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -83,7 +78,7 @@ import {
 } from './ReactFiberLane.new';
 import {
   getIsHydrating,
-  markDidSuspendWhileHydratingDEV,
+  markDidThrowWhileHydratingDEV,
   queueHydrationError,
 } from './ReactFiberHydrationContext.new';
 
@@ -336,26 +331,6 @@ function markSuspenseBoundaryShouldCapture(
       // all lifecycle effect tags.
       sourceFiber.flags &= ~(LifecycleEffectMask | Incomplete);
 
-      if (supportsPersistence && enablePersistentOffscreenHostContainer) {
-        // Another legacy Suspense quirk. In persistent mode, if this is the
-        // initial mount, override the props of the host container to hide
-        // its contents.
-        const currentSuspenseBoundary = suspenseBoundary.alternate;
-        if (currentSuspenseBoundary === null) {
-          const offscreenFiber: Fiber = (suspenseBoundary.child: any);
-          const offscreenContainer = offscreenFiber.child;
-          if (offscreenContainer !== null) {
-            const children = offscreenContainer.memoizedProps.children;
-            const containerProps = getOffscreenContainerProps(
-              'hidden',
-              children,
-            );
-            offscreenContainer.pendingProps = containerProps;
-            offscreenContainer.memoizedProps = containerProps;
-          }
-        }
-      }
-
       if (sourceFiber.tag === ClassComponent) {
         const currentSourceFiber = sourceFiber.alternate;
         if (currentSourceFiber === null) {
@@ -454,6 +429,12 @@ function throwException(
     resetSuspendedComponent(sourceFiber, rootRenderLanes);
 
     if (__DEV__) {
+      if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+        markDidThrowWhileHydratingDEV();
+      }
+    }
+
+    if (__DEV__) {
       if (enableDebugTracing) {
         if (sourceFiber.mode & DebugTracingMode) {
           const name = getComponentNameFromFiber(sourceFiber) || 'Unknown';
@@ -514,8 +495,7 @@ function throwException(
   } else {
     // This is a regular error, not a Suspense wakeable.
     if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
-      markDidSuspendWhileHydratingDEV();
-
+      markDidThrowWhileHydratingDEV();
       const suspenseBoundary = getNearestSuspenseBoundaryToCapture(returnFiber);
       // If the error was thrown during hydration, we may be able to recover by
       // discarding the dehydrated content and switching to a client render.

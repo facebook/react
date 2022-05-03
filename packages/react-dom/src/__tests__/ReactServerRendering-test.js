@@ -14,8 +14,6 @@ let React;
 let ReactDOMServer;
 let PropTypes;
 let ReactCurrentDispatcher;
-const enableSuspenseServerRenderer = require('shared/ReactFeatureFlags')
-  .enableSuspenseServerRenderer;
 
 describe('ReactDOMServer', () => {
   beforeEach(() => {
@@ -677,41 +675,6 @@ describe('ReactDOMServer', () => {
     const markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
     expect(markup).toBe('<div></div>');
   });
-
-  if (!enableSuspenseServerRenderer) {
-    it('throws for unsupported types on the server', () => {
-      expect(() => {
-        ReactDOMServer.renderToString(<React.Suspense />);
-      }).toThrow('ReactDOMServer does not yet support Suspense.');
-
-      async function fakeImport(result) {
-        return {default: result};
-      }
-
-      expect(() => {
-        const LazyFoo = React.lazy(() =>
-          fakeImport(
-            new Promise(resolve =>
-              resolve(function Foo() {
-                return <div />;
-              }),
-            ),
-          ),
-        );
-        ReactDOMServer.renderToString(<LazyFoo />);
-      }).toThrow('ReactDOMServer does not yet support Suspense.');
-    });
-
-    it('throws when suspending on the server', () => {
-      function AsyncFoo() {
-        throw new Promise(() => {});
-      }
-
-      expect(() => {
-        ReactDOMServer.renderToString(<AsyncFoo />);
-      }).toThrow('ReactDOMServer does not yet support Suspense.');
-    });
-  }
 
   it('does not get confused by throwing null', () => {
     function Bad() {

@@ -15,8 +15,29 @@ import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {pushProvider, popProvider} from './ReactFiberNewContext.old';
 import * as Scheduler from 'scheduler';
 
+// In environments without AbortController (e.g. tests)
+// replace it with a lightweight shim that only has the features we use.
+const AbortControllerLocal = enableCache
+  ? typeof AbortController !== 'undefined'
+    ? AbortController
+    : (function AbortControllerShim() {
+        const listeners = [];
+        const signal = (this.signal = {
+          aborted: false,
+          addEventListener: (type, listener) => {
+            listeners.push(listener);
+          },
+        });
+
+        this.abort = () => {
+          signal.aborted = true;
+          listeners.forEach(listener => listener());
+        };
+      }: AbortController)
+  : (null: any);
+
 export type Cache = {|
-  controller: AbortController,
+  controller: AbortControllerLocal,
   data: Map<() => mixed, mixed>,
   refCount: number,
 |};
@@ -66,7 +87,7 @@ export function createCache(): Cache {
     return (null: any);
   }
   const cache: Cache = {
-    controller: new AbortController(),
+    controller: new AbortControllerLocal(),
     data: new Map(),
     refCount: 0,
   };

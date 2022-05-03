@@ -9787,14 +9787,14 @@
 | `src=(integer)`| (changed)| `"http://localhost:3000/1"` |
 | `src=(NaN)`| (changed, warning)| `"http://localhost:3000/NaN"` |
 | `src=(float)`| (changed)| `"http://localhost:3000/99.99"` |
-| `src=(true)`| (initial, warning)| `<empty string>` |
+| `src=(true)`| (changed, warning, ssr mismatch)| `"http://localhost:3000/true"` |
 | `src=(false)`| (initial, warning)| `<empty string>` |
 | `src=(string 'true')`| (changed)| `"http://localhost:3000/true"` |
 | `src=(string 'false')`| (changed)| `"http://localhost:3000/false"` |
 | `src=(string 'on')`| (changed)| `"http://localhost:3000/on"` |
 | `src=(string 'off')`| (changed)| `"http://localhost:3000/off"` |
-| `src=(symbol)`| (initial, warning)| `<empty string>` |
-| `src=(function)`| (initial, warning)| `<empty string>` |
+| `src=(symbol)`| (changed, error, warning, ssr mismatch)| `` |
+| `src=(function)`| (changed, warning, ssr mismatch)| `"http://localhost:3000/function%20f()%20%7B%7D"` |
 | `src=(null)`| (initial)| `<empty string>` |
 | `src=(undefined)`| (initial)| `<empty string>` |
 
@@ -11980,21 +11980,21 @@
 | `value=(empty string)`| (initial)| `<empty string>` |
 | `value=(array with string)`| (changed)| `"string"` |
 | `value=(empty array)`| (initial)| `<empty string>` |
-| `value=(object)`| (changed, ssr error, ssr mismatch)| `"result of toString()"` |
+| `value=(object)`| (changed)| `"result of toString()"` |
 | `value=(numeric string)`| (changed)| `"42"` |
 | `value=(-1)`| (changed)| `"-1"` |
 | `value=(0)`| (changed)| `"0"` |
 | `value=(integer)`| (changed)| `"1"` |
 | `value=(NaN)`| (changed, warning)| `"NaN"` |
 | `value=(float)`| (changed)| `"99.99"` |
-| `value=(true)`| (changed, ssr mismatch)| `"true"` |
-| `value=(false)`| (changed, ssr mismatch)| `"false"` |
+| `value=(true)`| (changed)| `"true"` |
+| `value=(false)`| (changed)| `"false"` |
 | `value=(string 'true')`| (changed)| `"true"` |
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (initial, warning)| `<empty string>` |
-| `value=(function)`| (initial, warning)| `<empty string>` |
+| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
+| `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
 | `value=(null)`| (initial, warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
@@ -12018,7 +12018,7 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
+| `value=(symbol)`| (initial, warning)| `<empty string>` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
 | `value=(null)`| (initial)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |

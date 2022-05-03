@@ -356,6 +356,23 @@ const Dispatcher: DispatcherType = {
   useId,
 };
 
+// create a proxy to throw a custom error
+// in case future versions of React adds more hooks
+const DispatcherProxyHandler = {
+  get(target, prop) {
+    if (target.hasOwnProperty(prop)) {
+      return target[prop];
+    }
+    const error = new Error('Missing method in Dispatcher: ' + prop);
+    // Note: This error name needs to stay in sync with react-devtools-shared
+    // TODO: refactor this if we ever combine the devtools and debug tools packages
+    error.name = 'ReactDebugToolsUnsupportedHookError';
+    throw error;
+  },
+};
+
+const DispatcherProxy = new Proxy(Dispatcher, DispatcherProxyHandler);
+
 // Inspect
 
 export type HookSource = {
@@ -650,6 +667,30 @@ function processDebugValues(
   }
 }
 
+function handleRenderFunctionError(error: any): void {
+  // original error might be any type.
+  if (
+    error instanceof Error &&
+    error.name === 'ReactDebugToolsUnsupportedHookError'
+  ) {
+    throw error;
+  }
+  // If the error is not caused by an unsupported feature, it means
+  // that the error is caused by user's code in renderFunction.
+  // In this case, we should wrap the original error inside a custom error
+  // so that devtools can give a clear message about it.
+  // $FlowFixMe: Flow doesn't know about 2nd argument of Error constructor
+  const wrapperError = new Error('Error rendering inspected component', {
+    cause: error,
+  });
+  // Note: This error name needs to stay in sync with react-devtools-shared
+  // TODO: refactor this if we ever combine the devtools and debug tools packages
+  wrapperError.name = 'ReactDebugToolsRenderError';
+  // this stage-4 proposal is not supported by all environments yet.
+  wrapperError.cause = error;
+  throw wrapperError;
+}
+
 export function inspectHooks<Props>(
   renderFunction: Props => React$Node,
   props: Props,
@@ -664,11 +705,13 @@ export function inspectHooks<Props>(
 
   const previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  currentDispatcher.current = Dispatcher;
+  currentDispatcher.current = DispatcherProxy;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
     renderFunction(props);
+  } catch (error) {
+    handleRenderFunctionError(error);
   } finally {
     readHookLog = hookLog;
     hookLog = [];
@@ -708,11 +751,13 @@ function inspectHooksOfForwardRef<Props, Ref>(
 ): HooksTree {
   const previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  currentDispatcher.current = Dispatcher;
+  currentDispatcher.current = DispatcherProxy;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
     renderFunction(props, ref);
+  } catch (error) {
+    handleRenderFunctionError(error);
   } finally {
     readHookLog = hookLog;
     hookLog = [];

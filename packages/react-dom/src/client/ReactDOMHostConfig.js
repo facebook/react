@@ -62,7 +62,6 @@ import dangerousStyleValue from '../shared/dangerousStyleValue';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
-  enableSuspenseServerRenderer,
   enableCreateEventHandleAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
@@ -132,10 +131,7 @@ type SelectionInformation = {|
   selectionRange: mixed,
 |};
 
-let SUPPRESS_HYDRATION_WARNING;
-if (__DEV__) {
-  SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
-}
+const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 
 const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
@@ -749,19 +745,17 @@ function getNextHydratable(node) {
     if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
       break;
     }
-    if (enableSuspenseServerRenderer) {
-      if (nodeType === COMMENT_NODE) {
-        const nodeData = (node: any).data;
-        if (
-          nodeData === SUSPENSE_START_DATA ||
-          nodeData === SUSPENSE_FALLBACK_START_DATA ||
-          nodeData === SUSPENSE_PENDING_START_DATA
-        ) {
-          break;
-        }
-        if (nodeData === SUSPENSE_END_DATA) {
-          return null;
-        }
+    if (nodeType === COMMENT_NODE) {
+      const nodeData = (node: any).data;
+      if (
+        nodeData === SUSPENSE_START_DATA ||
+        nodeData === SUSPENSE_FALLBACK_START_DATA ||
+        nodeData === SUSPENSE_PENDING_START_DATA
+      ) {
+        break;
+      }
+      if (nodeData === SUSPENSE_END_DATA) {
+        return null;
       }
     }
   }
@@ -1007,14 +1001,17 @@ export function didNotHydrateInstance(
   parentProps: Props,
   parentInstance: Instance,
   instance: HydratableInstance,
+  isConcurrentMode: boolean,
 ) {
-  if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    if (instance.nodeType === ELEMENT_NODE) {
-      warnForDeletedHydratableElement(parentInstance, (instance: any));
-    } else if (instance.nodeType === COMMENT_NODE) {
-      // TODO: warnForDeletedHydratableSuspenseBoundary
-    } else {
-      warnForDeletedHydratableText(parentInstance, (instance: any));
+  if (__DEV__) {
+    if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      if (instance.nodeType === ELEMENT_NODE) {
+        warnForDeletedHydratableElement(parentInstance, (instance: any));
+      } else if (instance.nodeType === COMMENT_NODE) {
+        // TODO: warnForDeletedHydratableSuspenseBoundary
+      } else {
+        warnForDeletedHydratableText(parentInstance, (instance: any));
+      }
     }
   }
 }
@@ -1085,9 +1082,12 @@ export function didNotFindHydratableInstance(
   parentInstance: Instance,
   type: string,
   props: Props,
+  isConcurrentMode: boolean,
 ) {
-  if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    warnForInsertedHydratedElement(parentInstance, type, props);
+  if (__DEV__) {
+    if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      warnForInsertedHydratedElement(parentInstance, type, props);
+    }
   }
 }
 
@@ -1096,9 +1096,12 @@ export function didNotFindHydratableTextInstance(
   parentProps: Props,
   parentInstance: Instance,
   text: string,
+  isConcurrentMode: boolean,
 ) {
-  if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    warnForInsertedHydratedText(parentInstance, text);
+  if (__DEV__) {
+    if (isConcurrentMode || parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      warnForInsertedHydratedText(parentInstance, text);
+    }
   }
 }
 
@@ -1107,7 +1110,7 @@ export function didNotFindHydratableSuspenseInstance(
   parentProps: Props,
   parentInstance: Instance,
 ) {
-  if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+  if (__DEV__) {
     // TODO: warnForInsertedHydratedSuspense(parentInstance);
   }
 }

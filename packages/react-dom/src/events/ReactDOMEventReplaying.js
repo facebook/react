@@ -14,10 +14,7 @@ import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
-import {
-  enableSelectiveHydration,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-} from 'shared/ReactFeatureFlags';
+import {enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay} from 'shared/ReactFeatureFlags';
 import {
   unstable_scheduleCallback as scheduleCallback,
   unstable_NormalPriority as NormalPriority,
@@ -204,27 +201,25 @@ export function queueDiscreteEvent(
     nativeEvent,
   );
   queuedDiscreteEvents.push(queuedEvent);
-  if (enableSelectiveHydration) {
-    if (queuedDiscreteEvents.length === 1) {
-      // If this was the first discrete event, we might be able to
-      // synchronously unblock it so that preventDefault still works.
-      while (queuedEvent.blockedOn !== null) {
-        const fiber = getInstanceFromNode(queuedEvent.blockedOn);
-        if (fiber === null) {
-          break;
-        }
-        attemptSynchronousHydration(fiber);
-        if (queuedEvent.blockedOn === null) {
-          // We got unblocked by hydration. Let's try again.
-          replayUnblockedEvents();
-          // If we're reblocked, on an inner boundary, we might need
-          // to attempt hydrating that one.
-          continue;
-        } else {
-          // We're still blocked from hydration, we have to give up
-          // and replay later.
-          break;
-        }
+  if (queuedDiscreteEvents.length === 1) {
+    // If this was the first discrete event, we might be able to
+    // synchronously unblock it so that preventDefault still works.
+    while (queuedEvent.blockedOn !== null) {
+      const fiber = getInstanceFromNode(queuedEvent.blockedOn);
+      if (fiber === null) {
+        break;
+      }
+      attemptSynchronousHydration(fiber);
+      if (queuedEvent.blockedOn === null) {
+        // We got unblocked by hydration. Let's try again.
+        replayUnblockedEvents();
+        // If we're reblocked, on an inner boundary, we might need
+        // to attempt hydrating that one.
+        continue;
+      } else {
+        // We're still blocked from hydration, we have to give up
+        // and replay later.
+        break;
       }
     }
   }
@@ -428,32 +423,30 @@ function attemptExplicitHydrationTarget(
 }
 
 export function queueExplicitHydrationTarget(target: Node): void {
-  if (enableSelectiveHydration) {
-    // TODO: This will read the priority if it's dispatched by the React
-    // event system but not native events. Should read window.event.type, like
-    // we do for updates (getCurrentEventPriority).
-    const updatePriority = getCurrentUpdatePriority();
-    const queuedTarget: QueuedHydrationTarget = {
-      blockedOn: null,
-      target: target,
-      priority: updatePriority,
-    };
-    let i = 0;
-    for (; i < queuedExplicitHydrationTargets.length; i++) {
-      // Stop once we hit the first target with lower priority than
-      if (
-        !isHigherEventPriority(
-          updatePriority,
-          queuedExplicitHydrationTargets[i].priority,
-        )
-      ) {
-        break;
-      }
+  // TODO: This will read the priority if it's dispatched by the React
+  // event system but not native events. Should read window.event.type, like
+  // we do for updates (getCurrentEventPriority).
+  const updatePriority = getCurrentUpdatePriority();
+  const queuedTarget: QueuedHydrationTarget = {
+    blockedOn: null,
+    target: target,
+    priority: updatePriority,
+  };
+  let i = 0;
+  for (; i < queuedExplicitHydrationTargets.length; i++) {
+    // Stop once we hit the first target with lower priority than
+    if (
+      !isHigherEventPriority(
+        updatePriority,
+        queuedExplicitHydrationTargets[i].priority,
+      )
+    ) {
+      break;
     }
-    queuedExplicitHydrationTargets.splice(i, 0, queuedTarget);
-    if (i === 0) {
-      attemptExplicitHydrationTarget(queuedTarget);
-    }
+  }
+  queuedExplicitHydrationTargets.splice(i, 0, queuedTarget);
+  if (i === 0) {
+    attemptExplicitHydrationTarget(queuedTarget);
   }
 }
 

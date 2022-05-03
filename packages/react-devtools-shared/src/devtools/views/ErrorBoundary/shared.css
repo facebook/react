@@ -122,3 +122,12 @@
 .CloseButtonIcon {
   margin-left: 0.25rem;
 }
+
+.InfoBox {
+  margin-top: 0.5rem;
+  background: var(--color-console-warning-background);
+  border: 1px solid var(--color-console-warning-border);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  color: var(--color-console-warning-text);
+}

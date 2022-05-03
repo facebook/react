@@ -28,11 +28,7 @@ import {
 } from './ReactWorkTags';
 import {DidCapture, NoFlags, ShouldCapture} from './ReactFiberFlags';
 import {NoMode, ProfileMode} from './ReactTypeOfMode';
-import {
-  enableSuspenseServerRenderer,
-  enableProfilerTimer,
-  enableCache,
-} from 'shared/ReactFeatureFlags';
+import {enableProfilerTimer, enableCache} from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.old';
 import {popSuspenseContext} from './ReactFiberSuspenseContext.old';
@@ -79,13 +75,12 @@ function unwindWork(
       return null;
     }
     case HostRoot: {
+      const root: FiberRoot = workInProgress.stateNode;
       if (enableCache) {
-        const root: FiberRoot = workInProgress.stateNode;
-        popRootTransition(root, renderLanes);
-
         const cache: Cache = workInProgress.memoizedState.cache;
         popCacheProvider(workInProgress, cache);
       }
+      popRootTransition(workInProgress, root, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
@@ -109,20 +104,18 @@ function unwindWork(
     }
     case SuspenseComponent: {
       popSuspenseContext(workInProgress);
-      if (enableSuspenseServerRenderer) {
-        const suspenseState: null | SuspenseState =
-          workInProgress.memoizedState;
-        if (suspenseState !== null && suspenseState.dehydrated !== null) {
-          if (workInProgress.alternate === null) {
-            throw new Error(
-              'Threw in newly mounted dehydrated component. This is likely a bug in ' +
-                'React. Please file an issue.',
-            );
-          }
-
-          resetHydrationState();
+      const suspenseState: null | SuspenseState = workInProgress.memoizedState;
+      if (suspenseState !== null && suspenseState.dehydrated !== null) {
+        if (workInProgress.alternate === null) {
+          throw new Error(
+            'Threw in newly mounted dehydrated component. This is likely a bug in ' +
+              'React. Please file an issue.',
+          );
         }
+
+        resetHydrationState();
       }
+
       const flags = workInProgress.flags;
       if (flags & ShouldCapture) {
         workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
@@ -153,11 +146,7 @@ function unwindWork(
     case OffscreenComponent:
     case LegacyHiddenComponent:
       popRenderLanes(workInProgress);
-      if (enableCache) {
-        if (current !== null) {
-          popTransition(workInProgress);
-        }
-      }
+      popTransition(workInProgress, current);
       return null;
     case CacheComponent:
       if (enableCache) {
@@ -189,13 +178,12 @@ function unwindInterruptedWork(
       break;
     }
     case HostRoot: {
+      const root: FiberRoot = interruptedWork.stateNode;
       if (enableCache) {
-        const root: FiberRoot = interruptedWork.stateNode;
-        popRootTransition(root, renderLanes);
-
         const cache: Cache = interruptedWork.memoizedState.cache;
         popCacheProvider(interruptedWork, cache);
       }
+      popRootTransition(interruptedWork, root, renderLanes);
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
       resetMutableSourceWorkInProgressVersions();
@@ -221,12 +209,7 @@ function unwindInterruptedWork(
     case OffscreenComponent:
     case LegacyHiddenComponent:
       popRenderLanes(interruptedWork);
-      if (enableCache) {
-        if (current !== null) {
-          popTransition(interruptedWork);
-        }
-      }
-
+      popTransition(interruptedWork, current);
       break;
     case CacheComponent:
       if (enableCache) {

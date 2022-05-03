@@ -4,6 +4,33 @@
 
 ---
 
+### 4.24.4
+April 8, 2022
+
+* Allow react-devtools-inline `createStore()` method to override Store config params ([bvaughn](https://github.com/bvaughn) in [#24303](https://github.com/facebook/react/pull/24303))
+* [ReactDebugTools] wrap uncaught error from rendering user's component ([mondaychen](https://github.com/mondaychen) in [#24216](https://github.com/facebook/react/pull/24216))
+
+---
+
+### 4.24.3
+March 29, 2022
+
+#### Bugfix
+* Profiler should only report stateful hooks that change between renders ([bvaughn](https://github.com/bvaughn) in [#24189](https://github.com/facebook/react/pull/24189))
+* Ignore duplicate welcome "message" events ([bvaughn](https://github.com/bvaughn) in [#24186](https://github.com/facebook/react/pull/24186))
+* Attach DevTools Tree keyboard events to the Tree container (not the document) ([bvaughn](https://github.com/bvaughn) in [#24164](https://github.com/facebook/react/pull/24164))
+
+---
+
+### 4.24.2
+March 24, 2022
+
+#### Bugfix
+* Show upgrade/downgrade instructions inline for errors thrown by the Store due to incompatible protocol (mismatched backend and frontend versions) ([bvaughn](https://github.com/bvaughn) in [#24147](https://github.com/facebook/react/pull/24147))
+* Inspecting an element in a nested renderer no longer throws ([lunaruan](https://github.com/lunaruan) in [#24116](https://github.com/facebook/react/pull/24116))
+
+---
+
 ### 4.24.1
 March 15, 2022
 

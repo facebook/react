@@ -285,6 +285,117 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AsyncAfter SuspenseSibling');
   });
 
+  it('throttles fallback committing globally', () => {
+    function Foo() {
+      Scheduler.unstable_yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text="A" ms={200} />
+          <Suspense fallback={<Text text="Loading more..." />}>
+            <AsyncText text="B" ms={300} />
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    // Committing fallbacks should be throttled.
+    // First, advance some time to skip the first threshold.
+    jest.advanceTimersByTime(600);
+    Scheduler.unstable_advanceTime(600);
+
+    const root = ReactTestRenderer.create(<Foo />, {
+      unstable_isConcurrent: true,
+    });
+
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading more...',
+      'Loading...',
+    ]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Resolve A.
+    jest.advanceTimersByTime(200);
+    Scheduler.unstable_advanceTime(200);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'Loading more...']);
+
+    // By this point, we have enough info to show "A" and "Loading more..."
+    // However, we've just shown the outer fallback. So we'll delay
+    // showing the inner fallback hoping that B will resolve soon enough.
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Resolve B.
+    jest.advanceTimersByTime(100);
+    Scheduler.unstable_advanceTime(100);
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+
+    // By this point, B has resolved.
+    // We're still showing the outer fallback.
+    expect(root).toMatchRenderedOutput('Loading...');
+    expect(Scheduler).toFlushAndYield(['A', 'B']);
+    // Then contents of both should pop in together.
+    expect(root).toMatchRenderedOutput('AB');
+  });
+
+  it('does not throttle fallback committing for too long', () => {
+    function Foo() {
+      Scheduler.unstable_yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text="A" ms={200} />
+          <Suspense fallback={<Text text="Loading more..." />}>
+            <AsyncText text="B" ms={1200} />
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    // Committing fallbacks should be throttled.
+    // First, advance some time to skip the first threshold.
+    jest.advanceTimersByTime(600);
+    Scheduler.unstable_advanceTime(600);
+
+    const root = ReactTestRenderer.create(<Foo />, {
+      unstable_isConcurrent: true,
+    });
+
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading more...',
+      'Loading...',
+    ]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Resolve A.
+    jest.advanceTimersByTime(200);
+    Scheduler.unstable_advanceTime(200);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'Loading more...']);
+
+    // By this point, we have enough info to show "A" and "Loading more..."
+    // However, we've just shown the outer fallback. So we'll delay
+    // showing the inner fallback hoping that B will resolve soon enough.
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Wait some more. B is still not resolving.
+    jest.advanceTimersByTime(500);
+    Scheduler.unstable_advanceTime(500);
+    // Give up and render A with a spinner for B.
+    expect(root).toMatchRenderedOutput('ALoading more...');
+
+    // Resolve B.
+    jest.advanceTimersByTime(500);
+    Scheduler.unstable_advanceTime(500);
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+    expect(Scheduler).toFlushAndYield(['B']);
+    expect(root).toMatchRenderedOutput('AB');
+  });
+
   // @gate !enableSyncDefaultUpdates
   it(
     'interrupts current render when something suspends with a ' +

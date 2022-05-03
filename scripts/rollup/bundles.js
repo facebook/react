@@ -318,7 +318,7 @@ const bundles = [
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'util'],
   },
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
@@ -347,7 +347,7 @@ const bundles = [
     global: 'ReactServerDOMWriter',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'util'],
   },
 
   /******* React Server DOM Webpack Reader *******/
@@ -437,6 +437,7 @@ const bundles = [
       'ReactFlightNativeRelayServerIntegration',
       'JSResourceReferenceImpl',
       'ReactNativeInternalFeatureFlags',
+      'util',
     ],
   },
 
@@ -769,23 +770,6 @@ const bundles = [
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'scheduler'],
-  },
-
-  /******* createComponentWithSubscriptions *******/
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: ISOMORPHIC,
-    entry: 'create-subscription',
-    global: 'createSubscription',
-    externals: ['react'],
-    minifyWithProdErrorCodes: true,
-    wrapWithModuleBoundaries: true,
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
-        ]),
-      }),
   },
 
   /******* Hook for managing subscriptions safely *******/

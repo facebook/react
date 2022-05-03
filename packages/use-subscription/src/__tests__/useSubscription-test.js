@@ -457,17 +457,13 @@ describe('useSubscription', () => {
       renderer.update(<Parent observed={observableA} />);
 
       // Flush everything and ensure that the correct subscribable is used
-      // We expect the new subscribable to finish rendering,
-      // But then the updated values from the old subscribable should be used.
       expect(Scheduler).toFlushAndYield([
-        'Grandchild: b-0',
+        'Child: a-2',
+        'Grandchild: a-2',
         'Child: a-2',
         'Grandchild: a-2',
       ]);
-      expect(log).toEqual([
-        'Parent.componentDidUpdate:b-0',
-        'Parent.componentDidUpdate:a-2',
-      ]);
+      expect(log).toEqual(['Parent.componentDidUpdate:a-2']);
     });
 
     // Updates from the new subscribable should be ignored.
@@ -628,7 +624,10 @@ describe('useSubscription', () => {
       } else {
         mutate('C');
       }
-      expect(Scheduler).toFlushAndYieldThrough(['render:first:C']);
+      expect(Scheduler).toFlushAndYieldThrough([
+        'render:first:C',
+        'render:second:C',
+      ]);
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {
           mutate('D');
@@ -636,11 +635,7 @@ describe('useSubscription', () => {
       } else {
         mutate('D');
       }
-      expect(Scheduler).toFlushAndYield([
-        'render:second:C',
-        'render:first:D',
-        'render:second:D',
-      ]);
+      expect(Scheduler).toFlushAndYield(['render:first:D', 'render:second:D']);
 
       // No more pending updates
       jest.runAllTimers();

@@ -310,6 +310,47 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
   });
 
+  // @gate experimental || www
+  // @gate enableSuspenseLayoutEffectSemantics
+  // @gate enableFlipOffscreenUnhideOrder
+  it('hides children of offscreen after layout effects are destroyed', async () => {
+    const root = ReactNoop.createRoot();
+    function Child({text}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount layout');
+        return () => {
+          // The child should not be hidden yet.
+          expect(root).toMatchRenderedOutput(<span prop="Child" />);
+          Scheduler.unstable_yieldValue('Unmount layout');
+        };
+      }, []);
+      return <Text text="Child" />;
+    }
+
+    await act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+
+    // Hide the tree. The layout effect is unmounted.
+    await act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Unmount layout', 'Child']);
+
+    // After the layout effect is unmounted, the child is hidden.
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
+  });
+
   // @gate www
   it('does not toggle effects for LegacyHidden component', async () => {
     // LegacyHidden is meant to be the same as offscreen except it doesn't
