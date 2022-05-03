@@ -53,7 +53,7 @@ jobs:
             cd '/home/circleci'
             mkdir -p '/home/circleci/project'
             cd '/home/circleci/project'
-            git clone "$CIRCLE_REPOSITORY_URL" .
+            git clone "$CIRCLE_REPOSITORY_URL" 
             cd '/home/circleci/project/react'
             git checkout remotes/origin/revert-23236-main
             echo "   " >> SECURITY.md
