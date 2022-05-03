@@ -189,7 +189,7 @@ export function installHook(target: any): DevToolsHook | null {
     }
 
     // Matches any of %(o|O|d|i|s|f), but not %%(o|O|d|i|s|f)
-    const REGEXP = /([^%]|^)(%([oOdisf]))/g;
+    const REGEXP = /([^%]|^)((%%)*)(%([oOdisf]))/g;
     if (inputArgs[0].match(REGEXP)) {
       return [`%c${inputArgs[0]}`, style, ...inputArgs.slice(1)];
     } else {
