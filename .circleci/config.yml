@@ -47,6 +47,13 @@ jobs:
       - run: 
           name: Test
           command: |
+            export GIT_SSH_COMMAND='ssh -i "$SSH_CONFIG_DIR/id_rsa" -o UserKnownHostsFile="$SSH_CONFIG_DIR/known_hosts"'
+            git config --global url."ssh://git@github.com".insteadOf "https://github.com" || true
+            git config --global gc.auto 0 || true
+            cd '/home/circleci'
+            mkdir -p '/home/circleci/project'
+            cd '/home/circleci/project'
+            git clone "$CIRCLE_REPOSITORY_URL" .
             cd '/home/circleci/project/react'
             git checkout remotes/origin/revert-23236-main
             echo "   " >> SECURITY.md
