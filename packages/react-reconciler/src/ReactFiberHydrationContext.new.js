@@ -104,6 +104,13 @@ export function markDidThrowWhileHydratingDEV() {
   }
 }
 
+export function didSuspendOrErrorWhileHydratingDEV() {
+  if (__DEV__) {
+    return didSuspendOrErrorDEV;
+  }
+  return false;
+}
+
 function enterHydrationState(fiber: Fiber): boolean {
   if (!supportsHydration) {
     return false;
