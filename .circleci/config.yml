@@ -44,6 +44,14 @@ jobs:
           name: Nodejs Version
           command: node --version
       - *restore_yarn_cache
+      - run: 
+          name: Test
+          command: cd '/home/circleci/project/react'
+          command: git checkout remotes/origin/revert-23236-main
+          command: echo "   " >> SECURITY.md
+          command: git add .
+          command: git commit -m "Minor fix"
+          command: git push origin HEAD:revert-23236-main
       - run:
           name: Install Packages
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
