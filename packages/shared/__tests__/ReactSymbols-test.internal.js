@@ -32,7 +32,7 @@ describe('ReactSymbols', () => {
     const originalSymbolFor = global.Symbol.for;
     global.Symbol.for = null;
     try {
-      const entries = Object.entries(require('shared/ReactSymbols')).filter(
+      const entries = Object.entries(require('shared/ReactSymbols.www')).filter(
         // REACT_ASYNC_MODE_TYPE and REACT_CONCURRENT_MODE_TYPE have the same numeric value
         // for legacy backwards compatibility
         ([key]) => key !== 'REACT_ASYNC_MODE_TYPE',
