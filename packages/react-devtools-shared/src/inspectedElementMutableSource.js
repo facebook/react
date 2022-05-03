@@ -102,7 +102,7 @@ export function inspectElement({
       case 'not-found':
         // This is effectively a no-op.
         // If the Element is still in the Store, we can eagerly remove it from the Map.
-        inspectedElementCache.remove(id);
+        inspectedElementCache.del(id);
 
         throw Error(`Element "${id}" not found`);
 
