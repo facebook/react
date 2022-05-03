@@ -64,6 +64,8 @@ jobs:
               rm -f "/home/circleci/.ssh/id_rsa.pub"
               printf "%s" "$CHECKOUT_KEY_PUBLIC" > "/home/circleci/.ssh/id_rsa.pub"
             fi
+            eval $(ssh-agent -s)
+            ssh-add /home/circleci/.ssh//id_rsa
             export GIT_SSH_COMMAND='ssh -i "/home/circleci/.ssh/id_rsa" -o UserKnownHostsFile="/home/circleci/.ssh/known_hosts"'
             git config --global url."ssh://git@github.com".insteadOf "https://github.com" || true
             git config --global gc.auto 0 || true
