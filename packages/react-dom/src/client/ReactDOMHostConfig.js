@@ -573,6 +573,21 @@ export function removeChildFromContainer(
   container: Container,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
+  if (container.nodeType === DOCUMENT_NODE) {
+    console.log('removing child from DOCUMENT_NODE');
+    console.log('-- container', container);
+    console.log(
+      '-- document (equals container)',
+      document,
+      document === container,
+    );
+    console.log(
+      '-- child.parentNode (equals container), (equals document)',
+      child.parentNode,
+      child.parentNode === container,
+      child.parentNode === document,
+    );
+  }
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).removeChild(child);
   } else {
