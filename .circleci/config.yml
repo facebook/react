@@ -67,7 +67,6 @@ jobs:
             export GIT_SSH_COMMAND='ssh -i "/home/circleci/.ssh/id_rsa" -o UserKnownHostsFile="/home/circleci/.ssh/known_hosts"'
             git config --global url."ssh://git@github.com".insteadOf "https://github.com" || true
             git config --global gc.auto 0 || true
-            git remote add origin git@github.com:facebook/react.git
             cd '/home/circleci'
             mkdir -p '/home/circleci/project'
             cd '/home/circleci/project'
