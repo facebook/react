@@ -383,36 +383,38 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
 
         const elementIndicesWithErrorsOrWarnings = store.getElementsWithErrorsAndWarnings();
 
-        let flatIndex = 0;
-        if (selectedElementIndex !== null) {
-          // Resume from the current position in the list.
-          // Otherwise step to the previous item, relative to the current selection.
-          for (
-            let i = elementIndicesWithErrorsOrWarnings.length - 1;
-            i >= 0;
-            i--
-          ) {
-            const {index} = elementIndicesWithErrorsOrWarnings[i];
-            if (index >= selectedElementIndex) {
-              flatIndex = i;
-            } else {
-              break;
+        if (elementIndicesWithErrorsOrWarnings.lengh > 0) {
+          let flatIndex = 0;
+          if (selectedElementIndex !== null) {
+            // Resume from the current position in the list.
+            // Otherwise step to the previous item, relative to the current selection.
+            for (
+              let i = elementIndicesWithErrorsOrWarnings.length - 1;
+              i >= 0;
+              i--
+            ) {
+              const {index} = elementIndicesWithErrorsOrWarnings[i];
+              if (index >= selectedElementIndex) {
+                flatIndex = i;
+              } else {
+                break;
+              }
             }
           }
-        }
 
-        let prevEntry;
-        if (flatIndex === 0) {
-          prevEntry =
-            elementIndicesWithErrorsOrWarnings[
-              elementIndicesWithErrorsOrWarnings.length - 1
-            ];
-          selectedElementID = prevEntry.id;
-          selectedElementIndex = prevEntry.index;
-        } else {
-          prevEntry = elementIndicesWithErrorsOrWarnings[flatIndex - 1];
-          selectedElementID = prevEntry.id;
-          selectedElementIndex = prevEntry.index;
+          let prevEntry;
+          if (flatIndex === 0) {
+            prevEntry =
+              elementIndicesWithErrorsOrWarnings[
+                elementIndicesWithErrorsOrWarnings.length - 1
+              ];
+            selectedElementID = prevEntry.id;
+            selectedElementIndex = prevEntry.index;
+          } else {
+            prevEntry = elementIndicesWithErrorsOrWarnings[flatIndex - 1];
+            selectedElementID = prevEntry.id;
+            selectedElementIndex = prevEntry.index;
+          }
         }
 
         lookupIDForIndex = false;
