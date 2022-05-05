@@ -3614,10 +3614,14 @@ export function attach(
         // Log error & cause for user to debug
         console.error(message + '\n\n', error);
         if (error.cause != null) {
+          const fiber = findCurrentFiberUsingSlowPathById(id);
+          const componentName =
+            fiber != null ? getDisplayNameForFiber(fiber) : null;
           console.error(
             'React DevTools encountered an error while trying to inspect hooks. ' +
-              'This is most likely caused by an error in current inspected component.' +
-              'The error thrown in the component is: \n\n',
+              'This is most likely caused by an error in current inspected component' +
+              (componentName != null ? `: "${componentName}".` : '.') +
+              '\nThe error thrown in the component is: \n\n',
             error.cause,
           );
           if (error.cause instanceof Error) {
@@ -3643,7 +3647,9 @@ export function attach(
           errorType: 'unknown-hook',
           id,
           responseID: requestID,
-          message: 'Unsupported feature: ' + error.message,
+          message:
+            'Unsupported hook in the react-debug-tools package: ' +
+            error.message,
         };
       }
 
