@@ -7,11 +7,11 @@
 
 'use strict';
 
-import JSResourceReference from 'JSResourceReference';
+import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
 
 const ReactFlightDOMRelayClientIntegration = {
   resolveModuleReference(moduleData) {
-    return new JSResourceReference(moduleData);
+    return new JSResourceReferenceImpl(moduleData);
   },
   preloadModule(moduleReference) {},
   requireModule(moduleReference) {

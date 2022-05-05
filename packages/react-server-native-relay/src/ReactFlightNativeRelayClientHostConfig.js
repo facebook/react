@@ -9,7 +9,7 @@
 
 import type {JSONValue, ResponseBase} from 'react-client/src/ReactFlightClient';
 
-import type JSResourceReference from 'JSResourceReference';
+import type {JSResourceReference} from 'JSResourceReference';
 
 export type ModuleReference<T> = JSResourceReference<T>;
 

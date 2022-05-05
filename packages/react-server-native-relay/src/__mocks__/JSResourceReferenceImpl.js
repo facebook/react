@@ -8,8 +8,8 @@
 'use strict';
 
 class JSResourceReferenceImpl {
-  constructor(exportedValue) {
-    this._moduleId = exportedValue;
+  constructor(moduleId) {
+    this._moduleId = moduleId;
   }
   getModuleId() {
     return this._moduleId;
