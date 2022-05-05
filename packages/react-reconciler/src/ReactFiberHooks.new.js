@@ -85,6 +85,7 @@ import {
   Layout as HookLayout,
   Passive as HookPassive,
   Insertion as HookInsertion,
+  Snapshot as HookSnapshot,
 } from './ReactHookEffectTags';
 import {
   getWorkInProgressRoot,
@@ -93,6 +94,7 @@ import {
   requestUpdateLane,
   requestEventTime,
   markSkippedUpdateLanes,
+  isAlreadyRenderingProd,
 } from './ReactFiberWorkLoop.new';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -1868,6 +1870,47 @@ function updateEffect(
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
+function mountEvent<T>(callback: () => T): () => T {
+  const hook = mountWorkInProgressHook();
+  const ref = {current: callback};
+
+  function event(...args) {
+    if (isAlreadyRenderingProd()) {
+      throw new Error('An event from useEvent was called during render.');
+    }
+    return ref.current.apply(this, args);
+  }
+
+  mountEffectImpl(
+    UpdateEffect,
+    HookSnapshot,
+    () => {
+      ref.current = callback;
+    },
+    [ref, callback],
+  );
+
+  hook.memoizedState = [ref, event];
+
+  return event;
+}
+
+function updateEvent<T>(callback: () => T): () => T {
+  const hook = updateWorkInProgressHook();
+  const ref = hook.memoizedState[0];
+
+  updateEffectImpl(
+    UpdateEffect,
+    HookInsertion,
+    () => {
+      ref.current = callback;
+    },
+    [ref, callback],
+  );
+
+  return hook.memoizedState[1];
+}
+
 function mountInsertionEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
@@ -2519,6 +2562,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useCallback: throwInvalidHookError,
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
+  useEvent: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
   useInsertionEffect: throwInvalidHookError,
   useLayoutEffect: throwInvalidHookError,
@@ -2553,6 +2597,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useCallback: mountCallback,
   useContext: readContext,
   useEffect: mountEffect,
+  useEvent: mountEvent,
   useImperativeHandle: mountImperativeHandle,
   useLayoutEffect: mountLayoutEffect,
   useInsertionEffect: mountInsertionEffect,
@@ -2587,6 +2632,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useCallback: updateCallback,
   useContext: readContext,
   useEffect: updateEffect,
+  useEvent: updateEvent,
   useImperativeHandle: updateImperativeHandle,
   useInsertionEffect: updateInsertionEffect,
   useLayoutEffect: updateLayoutEffect,
@@ -2621,6 +2667,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useCallback: updateCallback,
   useContext: readContext,
   useEffect: updateEffect,
+  useEvent: updateEvent,
   useImperativeHandle: updateImperativeHandle,
   useInsertionEffect: updateInsertionEffect,
   useLayoutEffect: updateLayoutEffect,
@@ -2699,6 +2746,11 @@ if (__DEV__) {
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
       return mountEffect(create, deps);
+    },
+    useEvent<T>(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      mountHookTypesDev();
+      return mountEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -2852,6 +2904,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountEffect(create, deps);
     },
+    useEvent<T>(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return mountEvent(callback);
+    },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
       create: () => T,
@@ -2999,6 +3056,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
       return updateEffect(create, deps);
+    },
+    useEvent<T>(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return updateEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -3148,6 +3210,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
       return updateEffect(create, deps);
+    },
+    useEvent<T>(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return updateEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -3300,6 +3367,12 @@ if (__DEV__) {
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountEffect(create, deps);
+    },
+    useEvent<T>(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -3476,6 +3549,12 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateEffect(create, deps);
     },
+    useEvent<T>(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEvent(callback);
+    },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
       create: () => T,
@@ -3651,6 +3730,12 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateEffect(create, deps);
+    },
+    useEvent<T>(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEvent(callback);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,

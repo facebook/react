@@ -107,6 +107,11 @@ export function useEffect(
   return dispatcher.useEffect(create, deps);
 }
 
+export function useEvent<T>(callback: T): void {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useEvent(callback);
+}
+
 export function useInsertionEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,

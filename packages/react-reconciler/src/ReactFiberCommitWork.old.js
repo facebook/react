@@ -162,6 +162,7 @@ import {
   Layout as HookLayout,
   Insertion as HookInsertion,
   Passive as HookPassive,
+  Snapshot as HookSnapshot,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
 import {doesFiberContain} from './ReactFiberTreeReflection';
@@ -410,6 +411,23 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
 
     switch (finishedWork.tag) {
       case FunctionComponent:
+        // TODO: swap ref.current for useEvent;
+        if (flags & Update) {
+          try {
+            commitHookEffectListUnmount(
+              HookSnapshot | HookHasEffect,
+              finishedWork,
+              finishedWork.return,
+            );
+            commitHookEffectListMount(
+              HookSnapshot | HookHasEffect,
+              finishedWork,
+            );
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
+        }
+        break;
       case ForwardRef:
       case SimpleMemoComponent: {
         break;
