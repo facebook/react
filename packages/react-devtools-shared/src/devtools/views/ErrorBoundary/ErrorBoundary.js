@@ -154,8 +154,10 @@ export default class ErrorBoundary extends Component<Props, State> {
             errorMessage={errorMessage || 'Error occured in inspected element'}
             info={
               <>
-                This is likely to be caused by implementation of current
-                inspected element. Please see your console for logged error.
+                React DevTools encountered an error while trying to inspect the
+                hooks. This is most likely caused by a developer error in the
+                currently inspected element. Please see your console for logged
+                error.
               </>
             }
           />
