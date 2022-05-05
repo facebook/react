@@ -169,8 +169,8 @@ export default class ErrorBoundary extends Component<Props, State> {
             info={
               <>
                 React DevTools encountered an unknown hook. This is probably
-                because the package is out of date. To fix, upgrade the package
-                to the most recent version.
+                because the react-debug-tools package is out of date. To fix,
+                upgrade the React DevTools to the most recent version.
               </>
             }
           />
