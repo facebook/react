@@ -130,12 +130,49 @@ const tests = {
         }
       `,
     },
+    {
+      code: `
+        function MyComponent() {
+          let ref = React.useRef();
+          if (ref.current == null) {
+            ref.current = somethingExpensive();
+          }
+        }
+      `,
+    },
   ],
   invalid: [
     {
       code: `
         function MyComponent() {
           let ref = useRef(false);
+          ref.current = true;
+        }
+      `,
+      errors: [writeError],
+    },
+    {
+      code: `
+        let MyComponent = () => {
+          let ref = useRef(false);
+          ref.current = true;
+        };
+      `,
+      errors: [writeError],
+    },
+    {
+      code: `
+        let MyComponent = function () {
+          let ref = useRef(false);
+          ref.current = true;
+        };
+      `,
+      errors: [writeError],
+    },
+    {
+      code: `
+        function MyComponent() {
+          let ref = React.useRef(false);
           ref.current = true;
         }
       `,

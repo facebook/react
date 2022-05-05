@@ -75,8 +75,13 @@ export default {
 
           return (
             init.type === 'CallExpression' &&
-            init.callee.type === 'Identifier' &&
-            init.callee.name === 'useRef' &&
+            ((init.callee.type === 'Identifier' &&
+              init.callee.name === 'useRef') ||
+              (init.callee.type === 'MemberExpression' &&
+                init.callee.object.type === 'Identifier' &&
+                init.callee.object.name === 'React' &&
+                init.callee.property.type === 'Identifier' &&
+                init.callee.property.name === 'useRef')) &&
             parentFunction(def.node) === fn
           );
         });
