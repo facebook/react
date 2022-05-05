@@ -1354,6 +1354,10 @@ export function getExecutionContext(): ExecutionContext {
   return executionContext;
 }
 
+export function isCurrentlyRendering(): boolean {
+  return (executionContext & (RenderContext | CommitContext)) !== NoContext;
+}
+
 export function deferredUpdates<A>(fn: () => A): A {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
@@ -1462,6 +1466,11 @@ export function isAlreadyRendering() {
     __DEV__ &&
     (executionContext & (RenderContext | CommitContext)) !== NoContext
   );
+}
+
+export function isAlreadyRenderingProd() {
+  // Used to throw if certain APIs are called from the wrong context.
+  return (executionContext & RenderContext) !== NoContext;
 }
 
 export function flushControlled(fn: () => mixed): void {
