@@ -15,24 +15,29 @@ type JSONValue =
   | {+[key: string]: JSONValue}
   | $ReadOnlyArray<JSONValue>;
 
-declare class JSResourceReference<T> {
-  _moduleId: T;
-  getModuleId(): string;
-}
-
-// Haste
 declare module 'JSResourceReference' {
-  declare export default typeof JSResourceReference;
+  declare export interface JSResourceReference<T> {
+    getModuleId(): string;
+    getModuleIdAsRef(): $Flow$ModuleRef<T>;
+    getModuleIfRequired(): ?T;
+    load(): Promise<T>;
+    preload(): void;
+  }
 }
 
-// Metro
 declare module 'JSResourceReferenceImpl' {
-  declare export default class JSResourceReferenceImpl<
-    T,
-  > extends JSResourceReference<T> {}
+  declare export default class JSResourceReferenceImpl<T> {
+    getModuleId(): string;
+    getModuleIdAsRef(): $Flow$ModuleRef<T>;
+    getModuleIfRequired(): ?T;
+    load(): Promise<T>;
+    preload(): void;
+  }
 }
 
 declare module 'ReactFlightDOMRelayServerIntegration' {
+  import type {JSResourceReference} from 'JSResourceReference';
+
   declare export opaque type Destination;
   declare export opaque type BundlerConfig;
   declare export function emitRow(
@@ -49,6 +54,8 @@ declare module 'ReactFlightDOMRelayServerIntegration' {
 }
 
 declare module 'ReactFlightDOMRelayClientIntegration' {
+  import type {JSResourceReference} from 'JSResourceReference';
+
   declare export opaque type ModuleMetaData;
   declare export function resolveModuleReference<T>(
     moduleData: ModuleMetaData,
@@ -62,6 +69,8 @@ declare module 'ReactFlightDOMRelayClientIntegration' {
 }
 
 declare module 'ReactFlightNativeRelayServerIntegration' {
+  import type {JSResourceReference} from 'JSResourceReference';
+
   declare export opaque type Destination;
   declare export opaque type BundlerConfig;
   declare export function emitRow(
@@ -78,6 +87,8 @@ declare module 'ReactFlightNativeRelayServerIntegration' {
 }
 
 declare module 'ReactFlightNativeRelayClientIntegration' {
+  import type {JSResourceReference} from 'JSResourceReference';
+
   declare export opaque type ModuleMetaData;
   declare export function resolveModuleReference<T>(
     moduleData: ModuleMetaData,

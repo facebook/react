@@ -405,7 +405,7 @@ const bundles = [
     externals: [
       'react',
       'ReactFlightDOMRelayServerIntegration',
-      'JSResourceReference',
+      'JSResourceReferenceImpl',
     ],
   },
 
@@ -420,7 +420,7 @@ const bundles = [
     externals: [
       'react',
       'ReactFlightDOMRelayClientIntegration',
-      'JSResourceReference',
+      'JSResourceReferenceImpl',
     ],
   },
 

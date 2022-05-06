@@ -13629,7 +13629,7 @@ rc@^1.0.1, rc@^1.1.6, rc@^1.2.8:
     prop-types "^15.6.2"
     scheduler "^0.13.0"
 
-react-is@^16.8.1, "react-is@npm:react-is":
+react-is@^16.8.1, react-is@^17.0.1, "react-is@npm:react-is":
   version "17.0.2"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==

@@ -7,13 +7,13 @@
 
 'use strict';
 
-class JSResourceReference {
-  constructor(exportedValue) {
-    this._moduleId = exportedValue;
+class JSResourceReferenceImpl {
+  constructor(moduleId) {
+    this._moduleId = moduleId;
   }
   getModuleId() {
     return this._moduleId;
   }
 }
 
-module.exports = JSResourceReference;
+module.exports = JSResourceReferenceImpl;
