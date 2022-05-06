@@ -27,6 +27,8 @@ import type {
   InspectedElement as InspectedElementFrontend,
   InspectedElementResponseType,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
+import UserError from 'react-devtools-shared/src/errors/UserError';
+import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError';
 
 // Maps element ID to inspected data.
 // We use an LRU for this rather than a WeakMap because of how the "no-change" optimization works.
@@ -80,14 +82,24 @@ export function inspectElement({
 
     let inspectedElement;
     switch (type) {
-      case 'error':
-        const {message, stack} = ((data: any): InspectElementError);
+      case 'error': {
+        const {message, stack, errorType} = ((data: any): InspectElementError);
 
+        // create a different error class for each error type
+        // and keep useful information from backend.
+        let error;
+        if (errorType === 'user') {
+          error = new UserError(message);
+        } else if (errorType === 'unknown-hook') {
+          error = new UnknownHookError(message);
+        } else {
+          error = new Error(message);
+        }
         // The backend's stack (where the error originated) is more meaningful than this stack.
-        const error = new Error(message);
-        error.stack = stack;
+        error.stack = stack || error.stack;
 
         throw error;
+      }
 
       case 'no-change':
         // This is a no-op for the purposes of our cache.

@@ -289,8 +289,9 @@ export type InspectElementError = {|
   id: number,
   responseID: number,
   type: 'error',
+  errorType: 'user' | 'unknown-hook' | 'uncaught',
   message: string,
-  stack: string,
+  stack?: string,
 |};
 
 export type InspectElementFullData = {|
