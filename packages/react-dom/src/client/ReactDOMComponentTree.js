@@ -154,6 +154,42 @@ export function getClosestInstanceFromNode(targetNode: Node): null | Fiber {
 }
 
 /**
+ * Given an original DOM node attached to a Fiber, replace it with the
+ * replacement DOM node, detatching the original in the process
+ *
+ * This function throws if the original node is not attached to a Fiber
+ */
+export function replaceNode(original: Node, replacement: Node): void {
+  const fiber = original[internalInstanceKey];
+  if (fiber == null) {
+    throw new Error(
+      'replaceNode expected the original DOM node to have a fiber reference but one was not found. this is a bug in React, please file an issue.',
+    );
+  }
+  fiber.stateNode = replacement;
+  replacement[internalInstanceKey] = original[internalInstanceKey];
+  delete original[internalInstanceKey];
+  if (internalPropsKey in original) {
+    replacement[internalPropsKey] = original[internalPropsKey];
+    delete original[internalPropsKey];
+  }
+  if (internalEventHandlersKey in original) {
+    replacement[internalEventHandlersKey] = original[internalEventHandlersKey];
+    delete original[internalEventHandlersKey];
+  }
+  if (internalEventHandlerListenersKey in original) {
+    replacement[internalEventHandlerListenersKey] =
+      original[internalEventHandlerListenersKey];
+    delete original[internalEventHandlerListenersKey];
+  }
+  if (internalEventHandlesSetKey in original) {
+    replacement[internalEventHandlesSetKey] =
+      original[internalEventHandlesSetKey];
+    delete original[internalEventHandlesSetKey];
+  }
+}
+
+/**
  * Given a DOM node, return the ReactDOMComponent or ReactDOMTextComponent
  * instance, or null if the node was not rendered by this React.
  */

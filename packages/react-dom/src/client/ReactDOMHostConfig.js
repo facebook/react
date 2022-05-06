@@ -23,8 +23,10 @@ import {
   getFiberFromScopeInstance,
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
+  replaceNode,
+  detachDeletedInstance,
 } from './ReactDOMComponentTree';
-export {detachDeletedInstance} from './ReactDOMComponentTree';
+export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
 import {
   createElement,
@@ -484,29 +486,45 @@ export function appendChildToContainer(
   container: Container,
   child: Instance | TextInstance,
 ): void {
-  let parentNode;
-  if (container.nodeType === COMMENT_NODE) {
-    parentNode = (container.parentNode: any);
-    parentNode.insertBefore(child, container);
-  } else {
-    parentNode = container;
-    parentNode.appendChild(child);
-  }
-  // This container might be used for a portal.
-  // If something inside a portal is clicked, that click should bubble
-  // through the React tree. However, on Mobile Safari the click would
-  // never bubble through the *DOM* tree unless an ancestor with onclick
-  // event exists. So we wouldn't see it and dispatch it.
-  // This is why we ensure that non React root containers have inline onclick
-  // defined.
-  // https://github.com/facebook/react/issues/11918
-  const reactRootContainer = container._reactRootContainer;
-  if (
-    (reactRootContainer === null || reactRootContainer === undefined) &&
-    parentNode.onclick === null
-  ) {
-    // TODO: This cast may not be sound for SVG, MathML or custom elements.
-    trapClickOnNonInteractiveElement(((parentNode: any): HTMLElement));
+  switch (container.nodeType) {
+    case DOCUMENT_NODE: {
+      const documentElement = container.documentElement;
+      // We cannot append an html element to the document when another one is present
+      // We also cannot remove the html element without breaking some browsers. Instead
+      // we are going to swap the current node with the document root element and append
+      // the head and children to this container. It should have already been cleared
+      // during an earlier step of the commit phase.
+
+      replaceNode(child, documentElement);
+      const childrenToAppend = child.childNodes;
+      while (childrenToAppend.length) {
+        documentElement.appendChild(childrenToAppend[0]);
+      }
+      return;
+    }
+    case COMMENT_NODE: {
+      container.parentNode.insertBefore(child, container);
+      return;
+    }
+    default: {
+      container.appendChild(child);
+      // This container might be used for a portal.
+      // If something inside a portal is clicked, that click should bubble
+      // through the React tree. However, on Mobile Safari the click would
+      // never bubble through the *DOM* tree unless an ancestor with onclick
+      // event exists. So we wouldn't see it and dispatch it.
+      // This is why we ensure that non React root containers have inline onclick
+      // defined.
+      // https://github.com/facebook/react/issues/11918
+      const reactRootContainer = container._reactRootContainer;
+      if (
+        (reactRootContainer === null || reactRootContainer === undefined) &&
+        container.onclick === null
+      ) {
+        // TODO: This cast may not be sound for SVG, MathML or custom elements.
+        trapClickOnNonInteractiveElement(((container: any): HTMLElement));
+      }
+    }
   }
 }
 
@@ -573,10 +591,24 @@ export function removeChildFromContainer(
   container: Container,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
-  if (container.nodeType === COMMENT_NODE) {
-    (container.parentNode: any).removeChild(child);
-  } else {
-    container.removeChild(child);
+  switch (container.nodeType) {
+    case DOCUMENT_NODE: {
+      detachDeletedInstance(child);
+      let childOfChild = child.firstChild;
+      while (childOfChild) {
+        child.removeChild(childOfChild);
+        childOfChild = child.firstChild;
+      }
+      return;
+    }
+    case COMMENT_NODE: {
+      (container.parentNode: any).removeChild(child);
+      return;
+    }
+    default: {
+      container.removeChild(child);
+      return;
+    }
   }
 }
 
@@ -672,10 +704,7 @@ export function clearContainer(container: Container): void {
   if (container.nodeType === ELEMENT_NODE) {
     ((container: any): Element).textContent = '';
   } else if (container.nodeType === DOCUMENT_NODE) {
-    const body = ((container: any): Document).body;
-    if (body != null) {
-      body.textContent = '';
-    }
+    ((container: any): Document).documentElement.textContent = '';
   }
 }
 

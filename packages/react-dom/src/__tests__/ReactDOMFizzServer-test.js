@@ -577,6 +577,82 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('#22833 should not error when client rendering a fallback at the document root (html element)', async () => {
+    function App({isClient}) {
+      return (
+        <html>
+          <head>
+            <title>an introduction</title>
+          </head>
+          <body>
+            <p>hi</p>
+            <p>{isClient ? 'hello client' : 'hello server'}</p>
+          </body>
+        </html>
+      );
+    }
+
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      <App isClient={false} />,
+    );
+    pipe(writable);
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+
+    // Test Environment
+    const jsdom = new JSDOM(buffer, {
+      runScripts: 'dangerously',
+    });
+    buffer = '';
+    window = jsdom.window;
+    document = jsdom.window.document;
+    container = document;
+
+    // Attempt to hydrate the content.
+    ReactDOMClient.hydrateRoot(document, <App isClient={true} />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
+
+    const assertion = () => {
+      expect(Scheduler).toFlushAndYield([
+        'Text content does not match server-rendered HTML.',
+        'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+      ]);
+    };
+
+    if (__DEV__) {
+      expect(assertion).toErrorDev(
+        [
+          'Warning: Text content did not match. Server: "hello server" Client: "hello client"\n' +
+            '    in p (at **)\n' +
+            '    in body (at **)\n' +
+            '    in html (at **)',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+        ],
+        {withoutStack: 1},
+      );
+    } else {
+      assertion();
+    }
+
+    // We're still loading because we're waiting for the server to stream more content.
+    expect(getVisibleChildren(container)).toEqual(
+      <html>
+        <head>
+          <title>an introduction</title>
+        </head>
+        <body>
+          <p>hi</p>
+          <p>hello client</p>
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate experimental
   it('should asynchronously load the suspense boundary', async () => {
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
