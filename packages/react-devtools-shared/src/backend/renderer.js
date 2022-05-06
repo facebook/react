@@ -2630,6 +2630,10 @@ export function attach(
   }
 
   function handleCommitFiberUnmount(fiber) {
+    // Flush any pending Fibers that we are untracking before processing the new commit.
+    // If we don't do this, we might end up double-deleting Fibers in some cases (like Legacy Suspense).
+    untrackFibers();
+
     // This is not recursive.
     // We can't traverse fibers after unmounting so instead
     // we rely on React telling us about each unmount.
