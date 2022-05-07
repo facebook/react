@@ -9,7 +9,6 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {EventPriority} from 'shared/ReactTypes';
 import type {TopLevelType} from './TopLevelEventTypes';
 
 export type DispatchConfig = {|
@@ -17,15 +16,16 @@ export type DispatchConfig = {|
   phasedRegistrationNames: {|
     bubbled: null | string,
     captured: null | string,
+    skipBubbling?: ?boolean,
   |},
   registrationName?: string,
-  eventPriority: EventPriority,
 |};
 
 export type CustomDispatchConfig = {|
   phasedRegistrationNames: {|
     bubbled: null,
     captured: null,
+    skipBubbling?: ?boolean,
   |},
   registrationName?: string,
   customEvent: true,

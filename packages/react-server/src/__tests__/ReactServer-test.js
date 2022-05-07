@@ -21,8 +21,15 @@ describe('ReactServer', () => {
     ReactNoopServer = require('react-noop-renderer/server');
   });
 
+  function div(...children) {
+    children = children.map(c =>
+      typeof c === 'string' ? {text: c, hidden: false} : c,
+    );
+    return {type: 'div', children, prop: undefined, hidden: false};
+  }
+
   it('can call render', () => {
     const result = ReactNoopServer.render(<div>hello world</div>);
-    expect(result).toEqual([{type: 'div', props: {children: 'hello world'}}]);
+    expect(result.root).toEqual(div('hello world'));
   });
 });

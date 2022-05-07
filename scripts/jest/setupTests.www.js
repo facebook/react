@@ -14,8 +14,28 @@ jest.mock('shared/ReactFeatureFlags', () => {
   // www configuration. Update those tests so that they work against the www
   // configuration, too. Then remove these overrides.
   wwwFlags.disableLegacyContext = defaultFlags.disableLegacyContext;
-  wwwFlags.warnAboutUnmockedScheduler = defaultFlags.warnAboutUnmockedScheduler;
   wwwFlags.disableJavaScriptURLs = defaultFlags.disableJavaScriptURLs;
 
   return wwwFlags;
 });
+
+jest.mock('shared/ReactSymbols', () => {
+  return jest.requireActual('shared/ReactSymbols.www');
+});
+
+jest.mock('scheduler/src/SchedulerFeatureFlags', () => {
+  const schedulerSrcPath = process.cwd() + '/packages/scheduler';
+  jest.mock(
+    'SchedulerFeatureFlags',
+    () =>
+      jest.requireActual(
+        schedulerSrcPath + '/src/forks/SchedulerFeatureFlags.www-dynamic'
+      ),
+    {virtual: true}
+  );
+  return jest.requireActual(
+    schedulerSrcPath + '/src/forks/SchedulerFeatureFlags.www'
+  );
+});
+
+global.__WWW__ = true;

@@ -7,7 +7,7 @@
  * @flow
  */
 
-// Keep in sync with https://github.com/facebook/flow/blob/master/lib/react.js
+// Keep in sync with https://github.com/facebook/flow/blob/main/lib/react.js
 export type StatelessFunctionalComponent<
   P,
 > = React$StatelessFunctionalComponent<P>;
@@ -28,60 +28,56 @@ export type ElementConfig<C> = React$ElementConfig<C>;
 export type ElementRef<C> = React$ElementRef<C>;
 export type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>;
 export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-export type Interaction = {
-  name: string,
-  timestamp: number,
-  ...
-};
 
 // Export all exports so that they're available in tests.
 // We can't use export * from in Flow for some reason.
 export {
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  act as unstable_act,
   Children,
-  createRef,
   Component,
+  Fragment,
+  Profiler,
   PureComponent,
+  StrictMode,
+  Suspense,
+  SuspenseList,
+  cloneElement,
   createContext,
+  createElement,
+  createFactory,
+  createMutableSource,
+  createRef,
+  createServerContext,
   forwardRef,
+  isValidElement,
   lazy,
   memo,
+  startTransition,
+  unstable_Cache,
+  unstable_DebugTracingMode,
+  unstable_LegacyHidden,
+  unstable_Offscreen,
+  unstable_Scope,
+  unstable_TracingMarker,
+  unstable_getCacheSignal,
+  unstable_getCacheForType,
+  unstable_useCacheRefresh,
+  useId,
   useCallback,
   useContext,
+  useDebugValue,
+  useDeferredValue,
   useEffect,
   useImperativeHandle,
-  useDebugValue,
+  useInsertionEffect,
   useLayoutEffect,
   useMemo,
+  useMutableSource,
+  useSyncExternalStore,
   useReducer,
   useRef,
   useState,
-  useMutableSource,
-  useMutableSource as unstable_useMutableSource,
-  createMutableSource,
-  createMutableSource as unstable_createMutableSource,
-  Fragment,
-  Profiler,
-  unstable_DebugTracingMode,
-  StrictMode,
-  Suspense,
-  createElement,
-  cloneElement,
-  isValidElement,
-  version,
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  createFactory,
   useTransition,
-  useTransition as unstable_useTransition,
-  startTransition,
-  startTransition as unstable_startTransition,
-  useDeferredValue,
-  useDeferredValue as unstable_useDeferredValue,
-  SuspenseList,
-  SuspenseList as unstable_SuspenseList,
-  block,
-  block as unstable_block,
-  unstable_LegacyHidden,
-  unstable_createFundamental,
-  unstable_Scope,
-  unstable_useOpaqueIdentifier,
+  version,
 } from './src/React';

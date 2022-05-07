@@ -25,8 +25,6 @@ export default function useEvent(
   event: string,
   options?: {|
     capture?: boolean,
-    passive?: boolean,
-    priority?: 0 | 1 | 2,
   |},
 ): UseEventHandle {
   const handleRef = useRef<UseEventHandle | null>(null);
@@ -52,10 +50,9 @@ export default function useEvent(
         clears.set(target, clear);
       },
       clear(): void {
-        const clearsArr = Array.from(clears.values());
-        for (let i = 0; i < clearsArr.length; i++) {
-          clearsArr[i]();
-        }
+        clears.forEach(c => {
+          c();
+        });
         clears.clear();
       },
     };

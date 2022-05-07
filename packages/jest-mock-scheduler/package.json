@@ -20,12 +20,11 @@
   "homepage": "https://reactjs.org/",
   "peerDependencies": {
     "jest": "^23.0.1 || ^24.0.0 || ^25.1.0",
-    "scheduler": "^0.15.0"
+    "scheduler": "^0.20.0"
   },
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "cjs/"
   ]

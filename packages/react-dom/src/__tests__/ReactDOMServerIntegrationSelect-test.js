@@ -156,13 +156,12 @@ describe('ReactDOMServerIntegrationSelect', () => {
           </option>
           <option
             id="baz"
-            value="baz"
             dangerouslySetInnerHTML={{
-              __html: 'Baz',
+              __html: 'Baz', // This warns because no value prop is passed.
             }}
           />
         </select>,
-        1,
+        2,
       );
       expectSelectValue(e, 'bar');
     },
@@ -228,26 +227,53 @@ describe('ReactDOMServerIntegrationSelect', () => {
       </select>,
     );
     const option = e.options[0];
-    expect(option.childNodes.length).toBe(1);
-    expect(option.childNodes[0].nodeType).toBe(3);
-    expect(option.childNodes[0].nodeValue).toBe('A B');
+    expect(option.textContent).toBe('A B');
+    expect(option.value).toBe('bar');
+    expect(option.selected).toBe(true);
   });
 
   itRenders(
-    'a select option with flattened children and a warning',
+    'a select option with flattened children no value',
     async render => {
       const e = await render(
-        <select readOnly={true} value="bar">
-          <option value="bar">
-            {['Bar', false, 'Foo', <div key="1" />, 'Baz']}
-          </option>
+        <select value="A B" readOnly={true}>
+          <option>A {'B'}</option>
+        </select>,
+      );
+      const option = e.options[0];
+      expect(option.textContent).toBe('A B');
+      expect(option.value).toBe('A B');
+      expect(option.selected).toBe(true);
+    },
+  );
+
+  itRenders(
+    'a boolean true select value match the string "true"',
+    async render => {
+      const e = await render(
+        <select value={true} readOnly={true}>
+          <option value="first">First</option>
+          <option value="true">True</option>
         </select>,
         1,
       );
-      expect(e.getAttribute('value')).toBe(null);
-      expect(e.getAttribute('defaultValue')).toBe(null);
-      expect(e.firstChild.innerHTML).toBe('BarFoo[object Object]Baz');
+      expect(e.firstChild.selected).toBe(false);
+      expect(e.lastChild.selected).toBe(true);
+    },
+  );
+
+  itRenders(
+    'a missing select value does not match the string "undefined"',
+    async render => {
+      const e = await render(
+        <select readOnly={true}>
+          <option value="first">First</option>
+          <option value="undefined">Undefined</option>
+        </select>,
+        1,
+      );
       expect(e.firstChild.selected).toBe(true);
+      expect(e.lastChild.selected).toBe(false);
     },
   );
 });

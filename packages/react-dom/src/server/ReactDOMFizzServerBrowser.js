@@ -9,24 +9,97 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import ReactVersion from 'shared/ReactVersion';
+
 import {
   createRequest,
   startWork,
   startFlowing,
+  abort,
 } from 'react-server/src/ReactFizzServer';
 
-function renderToReadableStream(children: ReactNodeList): ReadableStream {
-  let request;
-  return new ReadableStream({
-    start(controller) {
-      request = createRequest(children, controller);
-      startWork(request);
-    },
-    pull(controller) {
-      startFlowing(request);
-    },
-    cancel(reason) {},
+import {
+  createResponseState,
+  createRootFormatContext,
+} from './ReactDOMServerFormatConfig';
+
+type Options = {|
+  identifierPrefix?: string,
+  namespaceURI?: string,
+  nonce?: string,
+  bootstrapScriptContent?: string,
+  bootstrapScripts?: Array<string>,
+  bootstrapModules?: Array<string>,
+  progressiveChunkSize?: number,
+  signal?: AbortSignal,
+  onError?: (error: mixed) => void,
+|};
+
+// TODO: Move to sub-classing ReadableStream.
+type ReactDOMServerReadableStream = ReadableStream & {
+  allReady: Promise<void>,
+};
+
+function renderToReadableStream(
+  children: ReactNodeList,
+  options?: Options,
+): Promise<ReactDOMServerReadableStream> {
+  return new Promise((resolve, reject) => {
+    let onFatalError;
+    let onAllReady;
+    const allReady = new Promise((res, rej) => {
+      onAllReady = res;
+      onFatalError = rej;
+    });
+
+    function onShellReady() {
+      const stream: ReactDOMServerReadableStream = (new ReadableStream({
+        type: 'bytes',
+        pull(controller) {
+          startFlowing(request, controller);
+        },
+        cancel(reason) {
+          abort(request);
+        },
+      }): any);
+      // TODO: Move to sub-classing ReadableStream.
+      stream.allReady = allReady;
+      resolve(stream);
+    }
+    function onShellError(error: mixed) {
+      // If the shell errors the caller of `renderToReadableStream` won't have access to `allReady`.
+      // However, `allReady` will be rejected by `onFatalError` as well.
+      // So we need to catch the duplicate, uncatchable fatal error in `allReady` to prevent a `UnhandledPromiseRejection`.
+      allReady.catch(() => {});
+      reject(error);
+    }
+    const request = createRequest(
+      children,
+      createResponseState(
+        options ? options.identifierPrefix : undefined,
+        options ? options.nonce : undefined,
+        options ? options.bootstrapScriptContent : undefined,
+        options ? options.bootstrapScripts : undefined,
+        options ? options.bootstrapModules : undefined,
+      ),
+      createRootFormatContext(options ? options.namespaceURI : undefined),
+      options ? options.progressiveChunkSize : undefined,
+      options ? options.onError : undefined,
+      onAllReady,
+      onShellReady,
+      onShellError,
+      onFatalError,
+    );
+    if (options && options.signal) {
+      const signal = options.signal;
+      const listener = () => {
+        abort(request);
+        signal.removeEventListener('abort', listener);
+      };
+      signal.addEventListener('abort', listener);
+    }
+    startWork(request);
   });
 }
 
-export {renderToReadableStream};
+export {renderToReadableStream, ReactVersion as version};

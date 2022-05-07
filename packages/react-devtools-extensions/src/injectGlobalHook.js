@@ -23,21 +23,65 @@ let lastDetectionResult;
 // (it will be injected directly into the page).
 // So instead, the hook will use postMessage() to pass message to us here.
 // And when this happens, we'll send a message to the "background page".
-window.addEventListener('message', function(evt) {
-  if (evt.source !== window || !evt.data) {
+window.addEventListener('message', function onMessage({data, source}) {
+  if (source !== window || !data) {
     return;
   }
-  if (evt.data.source === 'react-devtools-detector') {
-    lastDetectionResult = {
-      hasDetectedReact: true,
-      reactBuildType: evt.data.reactBuildType,
-    };
-    chrome.runtime.sendMessage(lastDetectionResult);
-  } else if (evt.data.source === 'react-devtools-inject-backend') {
-    const script = document.createElement('script');
-    script.src = chrome.runtime.getURL('build/react_devtools_backend.js');
-    document.documentElement.appendChild(script);
-    script.parentNode.removeChild(script);
+  switch (data.source) {
+    case 'react-devtools-detector':
+      lastDetectionResult = {
+        hasDetectedReact: true,
+        reactBuildType: data.reactBuildType,
+      };
+      chrome.runtime.sendMessage(lastDetectionResult);
+      break;
+    case 'react-devtools-extension':
+      if (data.payload?.type === 'fetch-file-with-cache') {
+        const url = data.payload.url;
+
+        const reject = value => {
+          chrome.runtime.sendMessage({
+            source: 'react-devtools-content-script',
+            payload: {
+              type: 'fetch-file-with-cache-error',
+              url,
+              value,
+            },
+          });
+        };
+
+        const resolve = value => {
+          chrome.runtime.sendMessage({
+            source: 'react-devtools-content-script',
+            payload: {
+              type: 'fetch-file-with-cache-complete',
+              url,
+              value,
+            },
+          });
+        };
+
+        fetch(url, {cache: 'force-cache'}).then(
+          response => {
+            if (response.ok) {
+              response
+                .text()
+                .then(text => resolve(text))
+                .catch(error => reject(null));
+            } else {
+              reject(null);
+            }
+          },
+          error => reject(null),
+        );
+      }
+      break;
+    case 'react-devtools-inject-backend':
+      const script = document.createElement('script');
+      script.src = chrome.runtime.getURL('build/react_devtools_backend.js');
+      document.documentElement.appendChild(script);
+      script.parentNode.removeChild(script);
+      break;
   }
 });
 
@@ -45,18 +89,18 @@ window.addEventListener('message', function(evt) {
 // while navigating the history to a document that has not been destroyed yet,
 // replay the last detection result if the content script is active and the
 // document has been hidden and shown again.
-window.addEventListener('pageshow', function(evt) {
-  if (!lastDetectionResult || evt.target !== window.document) {
+window.addEventListener('pageshow', function({target}) {
+  if (!lastDetectionResult || target !== window.document) {
     return;
   }
   chrome.runtime.sendMessage(lastDetectionResult);
 });
 
 const detectReact = `
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on('renderer', function(evt) {
+window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on('renderer', function({reactBuildType}) {
   window.postMessage({
     source: 'react-devtools-detector',
-    reactBuildType: evt.reactBuildType,
+    reactBuildType,
   }, '*');
 });
 `;
@@ -88,14 +132,21 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
 
 // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
 // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
-if ('text/html' === document.contentType) {
-  injectCode(
-    ';(' +
-      installHook.toString() +
-      '(window))' +
-      saveNativeValues +
-      detectReact,
-  );
+// We need to inject this code because content scripts (ie injectGlobalHook.js) don't have access
+// to the webpage's window, so in order to access front end settings
+// and communicate with React, we must inject this code into the webpage
+switch (document.contentType) {
+  case 'text/html':
+  case 'application/xhtml+xml': {
+    injectCode(
+      ';(' +
+        installHook.toString() +
+        '(window))' +
+        saveNativeValues +
+        detectReact,
+    );
+    break;
+  }
 }
 
 if (typeof exportFunction === 'function') {

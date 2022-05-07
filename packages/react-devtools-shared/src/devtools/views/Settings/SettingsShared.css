@@ -14,6 +14,10 @@
   margin-bottom: 0;
 }
 
+.OpenInURLSetting {
+  margin: 0.5rem 0;
+}
+
 .OptionGroup {
   display: inline-flex;
   flex-direction: row;
@@ -28,6 +32,10 @@
 .RadioLabel {
   display: inline;
   margin-right: 0.5rem;
+}
+
+.Spacer {
+  height: 0.5rem;
 }
 
 .Select {
@@ -137,4 +145,14 @@
 
 .ReleaseNotesLink {
   color: var(--color-button-active);
+}
+
+.Warning {
+  color: var(--color-error-text);
+}
+
+.VersionsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }

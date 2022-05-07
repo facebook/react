@@ -7,11 +7,11 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
 
+import * as React from 'react';
 import * as Scheduler from 'scheduler/unstable_mock';
 import {
   getPublicRootInstance,
@@ -20,8 +20,6 @@ import {
   flushSync,
   injectIntoDevTools,
   batchedUpdates,
-  act,
-  IsThisRendererActing,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {
@@ -39,24 +37,27 @@ import {
   Profiler,
   MemoComponent,
   SimpleMemoComponent,
-  Block,
   IncompleteClassComponent,
   ScopeComponent,
 } from 'react-reconciler/src/ReactWorkTags';
-import invariant from 'shared/invariant';
-import getComponentName from 'shared/getComponentName';
+import isArray from 'shared/isArray';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactVersion from 'shared/ReactVersion';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-import enqueueTask from 'shared/enqueueTask';
+import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 
 import {getPublicInstance} from './ReactTestHostConfig';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
-const {IsSomeRendererActing} = ReactSharedInternals;
+const act = React.unstable_act;
+
+// TODO: Remove from public bundle
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
   unstable_isConcurrent: boolean,
+  unstable_strictMode: boolean,
+  unstable_concurrentUpdatesByDefault: boolean,
   ...
 };
 
@@ -158,7 +159,7 @@ function flatten(arr) {
     while (n.i < n.array.length) {
       const el = n.array[n.i];
       n.i += 1;
-      if (Array.isArray(el)) {
+      if (isArray(el)) {
         stack.push(n);
         stack.push({i: 0, array: el});
         break;
@@ -195,14 +196,6 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
-    case Block:
-      return {
-        nodeType: 'block',
-        type: node.type,
-        props: {...node.memoizedProps},
-        instance: null,
-        rendered: childrenToTree(node.child),
-      };
     case HostComponent: {
       return {
         nodeType: 'host',
@@ -225,10 +218,8 @@ function toTree(node: ?Fiber) {
     case ScopeComponent:
       return childrenToTree(node.child);
     default:
-      invariant(
-        false,
-        'toTree() does not yet know how to handle nodes with tag=%s',
-        node.tag,
+      throw new Error(
+        `toTree() does not yet know how to handle nodes with tag=${node.tag}`,
       );
   }
 }
@@ -240,7 +231,6 @@ const validWrapperTypes = new Set([
   ForwardRef,
   MemoComponent,
   SimpleMemoComponent,
-  Block,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);
@@ -259,6 +249,9 @@ function getChildren(parent: Fiber) {
     if (validWrapperTypes.has(node.tag)) {
       children.push(wrapFiber(node));
     } else if (node.tag === HostText) {
+      if (__DEV__) {
+        checkPropStringCoercion(node.memoizedProps, 'memoizedProps');
+      }
       children.push('' + node.memoizedProps);
     } else {
       descend = true;
@@ -286,21 +279,25 @@ class ReactTestInstance {
   _currentFiber(): Fiber {
     // Throws if this component has been unmounted.
     const fiber = findCurrentFiberUsingSlowPath(this._fiber);
-    invariant(
-      fiber !== null,
-      "Can't read from currently-mounting component. This error is likely " +
-        'caused by a bug in React. Please file an issue.',
-    );
+
+    if (fiber === null) {
+      throw new Error(
+        "Can't read from currently-mounting component. This error is likely " +
+          'caused by a bug in React. Please file an issue.',
+      );
+    }
+
     return fiber;
   }
 
   constructor(fiber: Fiber) {
-    invariant(
-      validWrapperTypes.has(fiber.tag),
-      'Unexpected object passed to ReactTestInstance constructor (tag: %s). ' +
-        'This is probably a bug in React.',
-      fiber.tag,
-    );
+    if (!validWrapperTypes.has(fiber.tag)) {
+      throw new Error(
+        `Unexpected object passed to ReactTestInstance constructor (tag: ${fiber.tag}). ` +
+          'This is probably a bug in React.',
+      );
+    }
+
     this._fiber = fiber;
   }
 
@@ -353,7 +350,7 @@ class ReactTestInstance {
   findByType(type: any): ReactTestInstance {
     return expectOne(
       this.findAllByType(type, {deep: false}),
-      `with node type: "${getComponentName(type) || 'Unknown'}"`,
+      `with node type: "${getComponentNameFromType(type) || 'Unknown'}"`,
     );
   }
 
@@ -440,15 +437,32 @@ function propsMatch(props: Object, filter: Object): boolean {
   return true;
 }
 
+function onRecoverableError(error) {
+  // TODO: Expose onRecoverableError option to userspace
+  // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
+  console.error(error);
+}
+
 function create(element: React$Element<any>, options: TestRendererOptions) {
   let createNodeMock = defaultTestOptions.createNodeMock;
   let isConcurrent = false;
+  let isStrictMode = false;
+  let concurrentUpdatesByDefault = null;
   if (typeof options === 'object' && options !== null) {
     if (typeof options.createNodeMock === 'function') {
       createNodeMock = options.createNodeMock;
     }
     if (options.unstable_isConcurrent === true) {
       isConcurrent = true;
+    }
+    if (options.unstable_strictMode === true) {
+      isStrictMode = true;
+    }
+    if (allowConcurrentByDefault) {
+      if (options.unstable_concurrentUpdatesByDefault !== undefined) {
+        concurrentUpdatesByDefault =
+          options.unstable_concurrentUpdatesByDefault;
+      }
     }
   }
   let container = {
@@ -459,10 +473,18 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
   let root: FiberRoot | null = createContainer(
     container,
     isConcurrent ? ConcurrentRoot : LegacyRoot,
-    false,
+    null,
+    isStrictMode,
+    concurrentUpdatesByDefault,
+    '',
+    onRecoverableError,
     null,
   );
-  invariant(root != null, 'something went wrong');
+
+  if (root == null) {
+    throw new Error('something went wrong');
+  }
+
   updateContainer(element, root, null, null);
 
   const entry = {
@@ -531,9 +553,7 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
       return getPublicRootInstance(root);
     },
 
-    unstable_flushSync<T>(fn: () => T): T {
-      return flushSync(fn);
-    },
+    unstable_flushSync: flushSync,
   };
 
   Object.defineProperty(
@@ -587,125 +607,10 @@ injectIntoDevTools({
   rendererPackageName: 'react-test-renderer',
 });
 
-let actingUpdatesScopeDepth = 0;
-
-// This version of `act` is only used by our tests. Unlike the public version
-// of `act`, it's designed to work identically in both production and
-// development. It may have slightly different behavior from the public
-// version, too, since our constraints in our test suite are not the same as
-// those of developers using React — we're testing React itself, as opposed to
-// building an app with React.
-// TODO: Migrate our tests to use ReactNoop. Although we would need to figure
-// out a solution for Relay, which has some Concurrent Mode tests.
-function unstable_concurrentAct(scope: () => Thenable<mixed> | void) {
-  if (Scheduler.unstable_flushAllWithoutAsserting === undefined) {
-    throw Error(
-      'This version of `act` requires a special mock build of Scheduler.',
-    );
-  }
-  if (setTimeout._isMockFunction !== true) {
-    throw Error(
-      "This version of `act` requires Jest's timer mocks " +
-        '(i.e. jest.useFakeTimers).',
-    );
-  }
-
-  const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-  const previousIsSomeRendererActing = IsSomeRendererActing.current;
-  const previousIsThisRendererActing = IsThisRendererActing.current;
-  IsSomeRendererActing.current = true;
-  IsThisRendererActing.current = true;
-  actingUpdatesScopeDepth++;
-
-  const unwind = () => {
-    actingUpdatesScopeDepth--;
-    IsSomeRendererActing.current = previousIsSomeRendererActing;
-    IsThisRendererActing.current = previousIsThisRendererActing;
-    if (__DEV__) {
-      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
-        // if it's _less than_ previousActingUpdatesScopeDepth, then we can
-        // assume the 'other' one has warned
-        console.error(
-          'You seem to have overlapping act() calls, this is not supported. ' +
-            'Be sure to await previous act() calls before making a new one. ',
-        );
-      }
-    }
-  };
-
-  // TODO: This would be way simpler if 1) we required a promise to be
-  // returned and 2) we could use async/await. Since it's only our used in
-  // our test suite, we should be able to.
-  try {
-    const thenable = batchedUpdates(scope);
-    if (
-      typeof thenable === 'object' &&
-      thenable !== null &&
-      typeof thenable.then === 'function'
-    ) {
-      return {
-        then(resolve: () => void, reject: (error: mixed) => void) {
-          thenable.then(
-            () => {
-              flushActWork(
-                () => {
-                  unwind();
-                  resolve();
-                },
-                error => {
-                  unwind();
-                  reject(error);
-                },
-              );
-            },
-            error => {
-              unwind();
-              reject(error);
-            },
-          );
-        },
-      };
-    } else {
-      try {
-        // TODO: Let's not support non-async scopes at all in our tests. Need to
-        // migrate existing tests.
-        let didFlushWork;
-        do {
-          didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
-        } while (didFlushWork);
-      } finally {
-        unwind();
-      }
-    }
-  } catch (error) {
-    unwind();
-    throw error;
-  }
-}
-
-function flushActWork(resolve, reject) {
-  // Flush suspended fallbacks
-  // $FlowFixMe: Flow doesn't know about global Jest object
-  jest.runOnlyPendingTimers();
-  enqueueTask(() => {
-    try {
-      const didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
-      if (didFlushWork) {
-        flushActWork(resolve, reject);
-      } else {
-        resolve();
-      }
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
-
 export {
   Scheduler as _Scheduler,
   create,
   /* eslint-disable-next-line camelcase */
   batchedUpdates as unstable_batchedUpdates,
   act,
-  unstable_concurrentAct,
 };

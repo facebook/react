@@ -8,7 +8,7 @@ const {join} = require('path');
 const {confirm} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, packages, tags}) => {
+const run = async ({cwd, packages, tags, ci}) => {
   clear();
 
   if (tags.length === 0) {
@@ -40,7 +40,9 @@ const run = async ({cwd, packages, tags}) => {
     );
   }
 
-  await confirm('Do you want to proceed?');
+  if (!ci) {
+    await confirm('Do you want to proceed?');
+  }
 
   clear();
 };

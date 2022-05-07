@@ -139,9 +139,7 @@ describe('ReactLegacyContextDisabled', () => {
       'LegacyFnConsumer uses the legacy contextTypes API which is no longer supported. ' +
         'Use React.createContext() with React.useContext() instead.',
     ]);
-    expect(text).toBe(
-      '<span data-reactroot="">{}<!-- -->undefined<!-- -->undefined</span>',
-    );
+    expect(text).toBe('<span>{}<!-- -->undefined<!-- -->undefined</span>');
     expect(lifecycleContextLog).toEqual([{}, {}, {}]);
   });
 
@@ -226,7 +224,15 @@ describe('ReactLegacyContextDisabled', () => {
       container,
     );
     expect(container.textContent).toBe('bbb');
-    expect(lifecycleContextLog).toEqual(['b', 'b']); // sCU skipped due to changed context value.
+    if (gate(flags => flags.enableLazyContextPropagation)) {
+      // In the lazy propagation implementation, we don't check if context
+      // changed until after shouldComponentUpdate is run.
+      expect(lifecycleContextLog).toEqual(['b', 'b', 'b']);
+    } else {
+      // In the eager implementation, a dirty flag was set when the parent
+      // changed, so we skipped sCU.
+      expect(lifecycleContextLog).toEqual(['b', 'b']);
+    }
     ReactDOM.unmountComponentAtNode(container);
   });
 });

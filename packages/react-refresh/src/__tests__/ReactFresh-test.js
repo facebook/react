@@ -13,6 +13,7 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactFreshRuntime;
 let Scheduler;
 let act;
@@ -28,8 +29,9 @@ describe('ReactFresh', () => {
       ReactFreshRuntime = require('react-refresh/runtime');
       ReactFreshRuntime.injectIntoGlobalHook(global);
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
-      act = require('react-dom/test-utils').unstable_concurrentAct;
+      act = require('jest-react').act;
       createReactClass = require('create-react-class/factory')(
         React.Component,
         React.isValidElement,
@@ -76,7 +78,7 @@ describe('ReactFresh', () => {
   }
 
   // Note: This is based on a similar component we use in www. We can delete
-  // once the extra div wrapper is no longer neccessary.
+  // once the extra div wrapper is no longer necessary.
   function LegacyHiddenDiv({children, mode}) {
     return (
       <div hidden={mode === 'hidden'}>
@@ -2409,102 +2411,106 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('can hot reload offscreen components', () => {
-    if (__DEV__ && __EXPERIMENTAL__) {
-      const AppV1 = prepare(() => {
-        function Hello() {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('Hello#layout');
-          });
-          const [val, setVal] = React.useState(0);
-          return (
-            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
-              {val}
-            </p>
-          );
-        }
-        $RefreshReg$(Hello, 'Hello');
+  // @gate www && __DEV__
+  it('can hot reload offscreen components', async () => {
+    const AppV1 = prepare(() => {
+      function Hello() {
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('Hello#layout');
+        });
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      $RefreshReg$(Hello, 'Hello');
 
-        return function App({offscreen}) {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('App#layout');
-          });
-          return (
-            <LegacyHiddenDiv mode={offscreen ? 'hidden' : 'visible'}>
-              <Hello />
-            </LegacyHiddenDiv>
-          );
-        };
-      });
+      return function App({offscreen}) {
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('App#layout');
+        });
+        return (
+          <LegacyHiddenDiv mode={offscreen ? 'hidden' : 'visible'}>
+            <Hello />
+          </LegacyHiddenDiv>
+        );
+      };
+    });
 
-      const root = ReactDOM.unstable_createRoot(container);
-      root.render(<AppV1 offscreen={true} />);
-      expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
-      const el = container.firstChild;
-      expect(el.hidden).toBe(true);
-      expect(el.firstChild).toBe(null); // Offscreen content not flushed yet.
+    const root = ReactDOMClient.createRoot(container);
+    root.render(<AppV1 offscreen={true} />);
+    expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
+    const el = container.firstChild;
+    expect(el.hidden).toBe(true);
+    expect(el.firstChild).toBe(null); // Offscreen content not flushed yet.
 
-      // Perform a hot update.
-      patch(() => {
-        function Hello() {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('Hello#layout');
-          });
-          const [val, setVal] = React.useState(0);
-          return (
-            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
-              {val}
-            </p>
-          );
-        }
-        $RefreshReg$(Hello, 'Hello');
-      });
+    // Perform a hot update.
+    patch(() => {
+      function Hello() {
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('Hello#layout');
+        });
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      $RefreshReg$(Hello, 'Hello');
+    });
 
-      // It's still offscreen so we don't see anything.
-      expect(container.firstChild).toBe(el);
-      expect(el.hidden).toBe(true);
-      expect(el.firstChild).toBe(null);
+    // It's still offscreen so we don't see anything.
+    expect(container.firstChild).toBe(el);
+    expect(el.hidden).toBe(true);
+    expect(el.firstChild).toBe(null);
 
-      // Process the offscreen updates.
-      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
-      expect(container.firstChild).toBe(el);
-      expect(el.firstChild.textContent).toBe('0');
-      expect(el.firstChild.style.color).toBe('red');
+    // Process the offscreen updates.
+    expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+    expect(container.firstChild).toBe(el);
+    expect(el.firstChild.textContent).toBe('0');
+    expect(el.firstChild.style.color).toBe('red');
 
-      el.firstChild.dispatchEvent(new MouseEvent('click', {bubbles: true}));
-      expect(el.firstChild.textContent).toBe('0');
-      expect(el.firstChild.style.color).toBe('red');
-      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
-      expect(el.firstChild.textContent).toBe('1');
-      expect(el.firstChild.style.color).toBe('red');
+    await act(async () => {
+      el.firstChild.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+        }),
+      );
+    });
 
-      // Hot reload while we're offscreen.
-      patch(() => {
-        function Hello() {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('Hello#layout');
-          });
-          const [val, setVal] = React.useState(0);
-          return (
-            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
-              {val}
-            </p>
-          );
-        }
-        $RefreshReg$(Hello, 'Hello');
-      });
+    expect(Scheduler).toHaveYielded(['Hello#layout']);
+    expect(el.firstChild.textContent).toBe('1');
+    expect(el.firstChild.style.color).toBe('red');
 
-      // It's still offscreen so we don't see the updates.
-      expect(container.firstChild).toBe(el);
-      expect(el.firstChild.textContent).toBe('1');
-      expect(el.firstChild.style.color).toBe('red');
+    // Hot reload while we're offscreen.
+    patch(() => {
+      function Hello() {
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('Hello#layout');
+        });
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      $RefreshReg$(Hello, 'Hello');
+    });
 
-      // Process the offscreen updates.
-      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
-      expect(container.firstChild).toBe(el);
-      expect(el.firstChild.textContent).toBe('1');
-      expect(el.firstChild.style.color).toBe('orange');
-    }
+    // It's still offscreen so we don't see the updates.
+    expect(container.firstChild).toBe(el);
+    expect(el.firstChild.textContent).toBe('1');
+    expect(el.firstChild.style.color).toBe('red');
+
+    // Process the offscreen updates.
+    expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+    expect(container.firstChild).toBe(el);
+    expect(el.firstChild.textContent).toBe('1');
+    expect(el.firstChild.style.color).toBe('orange');
   });
 
   it('remounts failed error boundaries (componentDidCatch)', () => {
@@ -3612,11 +3618,26 @@ describe('ReactFresh', () => {
       const useStore = () => {};
       expect(ReactFreshRuntime.isLikelyComponentType(useStore)).toBe(false);
       expect(ReactFreshRuntime.isLikelyComponentType(useTheme)).toBe(false);
+      const rogueProxy = new Proxy(
+        {},
+        {
+          get(target, property) {
+            throw new Error();
+          },
+        },
+      );
+      expect(ReactFreshRuntime.isLikelyComponentType(rogueProxy)).toBe(false);
 
       // These seem like function components.
       const Button = () => {};
       expect(ReactFreshRuntime.isLikelyComponentType(Button)).toBe(true);
       expect(ReactFreshRuntime.isLikelyComponentType(Widget)).toBe(true);
+      const ProxyButton = new Proxy(Button, {
+        get(target, property) {
+          return target[property];
+        },
+      });
+      expect(ReactFreshRuntime.isLikelyComponentType(ProxyButton)).toBe(true);
       const anon = (() => () => {})();
       anon.displayName = 'Foo';
       expect(ReactFreshRuntime.isLikelyComponentType(anon)).toBe(true);
@@ -3624,8 +3645,14 @@ describe('ReactFresh', () => {
       // These seem like class components.
       class Btn extends React.Component {}
       class PureBtn extends React.PureComponent {}
+      const ProxyBtn = new Proxy(Btn, {
+        get(target, property) {
+          return target[property];
+        },
+      });
       expect(ReactFreshRuntime.isLikelyComponentType(Btn)).toBe(true);
       expect(ReactFreshRuntime.isLikelyComponentType(PureBtn)).toBe(true);
+      expect(ReactFreshRuntime.isLikelyComponentType(ProxyBtn)).toBe(true);
       expect(
         ReactFreshRuntime.isLikelyComponentType(
           createReactClass({render() {}}),
@@ -3724,31 +3751,39 @@ describe('ReactFresh', () => {
     }
   });
 
-  // This simulates the scenario in https://github.com/facebook/react/issues/17626.
+  function initFauxDevToolsHook() {
+    const onCommitFiberRoot = jest.fn();
+    const onCommitFiberUnmount = jest.fn();
+
+    let idCounter = 0;
+    const renderers = new Map();
+
+    // This is a minimal shim for the global hook installed by DevTools.
+    // The real one is in packages/react-devtools-shared/src/hook.js.
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+      renderers,
+      supportsFiber: true,
+      inject(renderer) {
+        const id = ++idCounter;
+        renderers.set(id, renderer);
+        return id;
+      },
+      onCommitFiberRoot,
+      onCommitFiberUnmount,
+    };
+  }
+
+  // This simulates the scenario in https://github.com/facebook/react/issues/17626
   it('can inject the runtime after the renderer executes', () => {
     if (__DEV__) {
-      // This is a minimal shim for the global hook installed by DevTools.
-      // The real one is in packages/react-devtools-shared/src/hook.js.
-      let idCounter = 0;
-      const renderers = new Map();
-      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-        renderers,
-        supportsFiber: true,
-        inject(renderer) {
-          const id = ++idCounter;
-          renderers.set(id, renderer);
-          return id;
-        },
-        onCommitFiberRoot() {},
-        onCommitFiberUnmount() {},
-      };
+      initFauxDevToolsHook();
 
       // Load these first, as if they're coming from a CDN.
       jest.resetModules();
       React = require('react');
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
-      act = require('react-dom/test-utils').unstable_concurrentAct;
+      act = require('jest-react').act;
 
       // Important! Inject into the global hook *after* ReactDOM runs:
       ReactFreshRuntime = require('react-refresh/runtime');
@@ -3797,6 +3832,45 @@ describe('ReactFresh', () => {
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('1');
       expect(el.style.color).toBe('red');
+    }
+  });
+
+  // This simulates the scenario in https://github.com/facebook/react/issues/20100
+  it('does not block DevTools when an unsupported renderer is injected', () => {
+    if (__DEV__) {
+      initFauxDevToolsHook();
+
+      const onCommitFiberRoot =
+        global.__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot;
+
+      // Redirect all React/ReactDOM requires to v16.8.0
+      // This version predates Fast Refresh support.
+      jest.mock('scheduler', () => jest.requireActual('scheduler-0-13'));
+      jest.mock('scheduler/tracing', () =>
+        jest.requireActual('scheduler-0-13/tracing'),
+      );
+      jest.mock('react', () => jest.requireActual('react-16-8'));
+      jest.mock('react-dom', () => jest.requireActual('react-dom-16-8'));
+
+      // Load React and company.
+      jest.resetModules();
+      React = require('react');
+      ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
+
+      // Important! Inject into the global hook *after* ReactDOM runs:
+      ReactFreshRuntime = require('react-refresh/runtime');
+      ReactFreshRuntime.injectIntoGlobalHook(global);
+
+      render(() => {
+        function Hello() {
+          return <div>Hi!</div>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+        return Hello;
+      });
+
+      expect(onCommitFiberRoot).toHaveBeenCalled();
     }
   });
 });

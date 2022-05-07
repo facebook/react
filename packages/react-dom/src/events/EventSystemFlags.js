@@ -13,11 +13,10 @@ export const IS_EVENT_HANDLE_NON_MANAGED_NODE = 1;
 export const IS_NON_DELEGATED = 1 << 1;
 export const IS_CAPTURE_PHASE = 1 << 2;
 export const IS_PASSIVE = 1 << 3;
-export const IS_REPLAYED = 1 << 4;
-export const IS_LEGACY_FB_SUPPORT_MODE = 1 << 5;
+export const IS_LEGACY_FB_SUPPORT_MODE = 1 << 4;
 
 export const SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE =
-  IS_LEGACY_FB_SUPPORT_MODE | IS_REPLAYED | IS_CAPTURE_PHASE;
+  IS_LEGACY_FB_SUPPORT_MODE | IS_CAPTURE_PHASE;
 
 // We do not want to defer if the event system has already been
 // set to LEGACY_FB_SUPPORT. LEGACY_FB_SUPPORT only gets set when

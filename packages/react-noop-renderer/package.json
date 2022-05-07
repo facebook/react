@@ -11,25 +11,22 @@
   },
   "license": "MIT",
   "dependencies": {
-    "object-assign": "^4.1.1",
     "react-reconciler": "*",
     "react-client": "*",
     "react-server": "*"
   },
   "peerDependencies": {
-    "react": "^17.0.0-alpha"
+    "react": "^17.0.0"
   },
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "persistent.js",
     "server.js",
     "flight-client.js",
     "flight-modules.js",
     "flight-server.js",
-    "flight-server-runtime.js",
     "cjs/"
   ]
 }

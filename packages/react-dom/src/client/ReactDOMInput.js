@@ -9,7 +9,6 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import invariant from 'shared/invariant';
 
 import {setValueForProperty} from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
@@ -17,7 +16,9 @@ import {getToStringValue, toString} from './ToStringValue';
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {updateValueIfChanged} from './inputValueTracking';
 import getActiveElement from './getActiveElement';
+import assign from 'shared/assign';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import type {ToStringValue} from './ToStringValue';
 
@@ -62,7 +63,7 @@ export function getHostProps(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
   const checked = props.checked;
 
-  const hostProps = Object.assign({}, props, {
+  const hostProps = assign({}, props, {
     defaultChecked: undefined,
     defaultValue: undefined,
     value: undefined,
@@ -365,6 +366,9 @@ function updateNamedCousins(rootNode, props) {
     // the input might not even be in a form. It might not even be in the
     // document. Let's just use the local `querySelectorAll` to ensure we don't
     // miss anything.
+    if (__DEV__) {
+      checkAttributeStringCoercion(name, 'name');
+    }
     const group = queryRoot.querySelectorAll(
       'input[name=' + JSON.stringify('' + name) + '][type="radio"]',
     );
@@ -379,11 +383,13 @@ function updateNamedCousins(rootNode, props) {
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
       const otherProps = getFiberCurrentPropsFromNode(otherNode);
-      invariant(
-        otherProps,
-        'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-          'same `name` is not supported.',
-      );
+
+      if (!otherProps) {
+        throw new Error(
+          'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
+            'same `name` is not supported.',
+        );
+      }
 
       // We need update the tracked value on the named cousin since the value
       // was changed but the input saw no event or value set

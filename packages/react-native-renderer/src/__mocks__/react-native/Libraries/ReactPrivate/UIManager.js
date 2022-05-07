@@ -5,13 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/* eslint-disable react-internal/invariant-args */
-
 'use strict';
 
 // Mock of the Native Hooks
-
-import invariant from 'shared/invariant';
 
 // Map of viewTag -> {children: [childTag], parent: ?parentTag}
 const roots = [];
@@ -33,18 +29,21 @@ function autoCreateRoot(tag) {
 function insertSubviewAtIndex(parent, child, index) {
   const parentInfo = views.get(parent);
   const childInfo = views.get(child);
-  invariant(
-    childInfo.parent === null,
-    'Inserting view %s %s which already has parent',
-    child,
-    JSON.stringify(childInfo.props),
-  );
-  invariant(
-    0 <= index && index <= parentInfo.children.length,
-    'Invalid index %s for children %s',
-    index,
-    parentInfo.children,
-  );
+
+  if (childInfo.parent !== null) {
+    throw new Error(
+      `Inserting view ${child} ${JSON.stringify(
+        childInfo.props,
+      )} which already has parent`,
+    );
+  }
+
+  if (0 > index || index > parentInfo.children.length) {
+    throw new Error(
+      `Invalid index ${index} for children ${parentInfo.children}`,
+    );
+  }
+
   parentInfo.children.splice(index, 0, child);
   childInfo.parent = parent;
 }
@@ -53,7 +52,11 @@ function removeChild(parent, child) {
   const parentInfo = views.get(parent);
   const childInfo = views.get(child);
   const index = parentInfo.children.indexOf(child);
-  invariant(index >= 0, 'Missing view %s during removal', child);
+
+  if (index < 0) {
+    throw new Error(`Missing view ${child} during removal`);
+  }
+
   parentInfo.children.splice(index, 1);
   childInfo.parent = null;
 }
@@ -75,11 +78,10 @@ const RCTUIManager = {
   },
   clearJSResponder: jest.fn(),
   createView: jest.fn(function createView(reactTag, viewName, rootTag, props) {
-    invariant(
-      !views.has(reactTag),
-      'Created two native views with tag %s',
-      reactTag,
-    );
+    if (views.has(reactTag)) {
+      throw new Error(`Created two native views with tag ${reactTag}`);
+    }
+
     views.set(reactTag, {
       children: [],
       parent: null,
@@ -88,15 +90,16 @@ const RCTUIManager = {
     });
   }),
   dispatchViewManagerCommand: jest.fn(),
+  sendAccessibilityEvent: jest.fn(),
   setJSResponder: jest.fn(),
   setChildren: jest.fn(function setChildren(parentTag, reactTags) {
     autoCreateRoot(parentTag);
+
     // Native doesn't actually check this but it seems like a good idea
-    invariant(
-      views.get(parentTag).children.length === 0,
-      'Calling .setChildren on nonempty view %s',
-      parentTag,
-    );
+    if (views.get(parentTag).children.length !== 0) {
+      throw new Error(`Calling .setChildren on nonempty view ${parentTag}`);
+    }
+
     // This logic ported from iOS (RCTUIManager.m)
     reactTags.forEach((tag, i) => {
       insertSubviewAtIndex(parentTag, tag, i);
@@ -111,19 +114,20 @@ const RCTUIManager = {
     removeAtIndices = [],
   ) {
     autoCreateRoot(parentTag);
+
     // This logic ported from iOS (RCTUIManager.m)
-    invariant(
-      moveFromIndices.length === moveToIndices.length,
-      'Mismatched move indices %s and %s',
-      moveFromIndices,
-      moveToIndices,
-    );
-    invariant(
-      addChildReactTags.length === addAtIndices.length,
-      'Mismatched add indices %s and %s',
-      addChildReactTags,
-      addAtIndices,
-    );
+    if (moveFromIndices.length !== moveToIndices.length) {
+      throw new Error(
+        `Mismatched move indices ${moveFromIndices} and ${moveToIndices}`,
+      );
+    }
+
+    if (addChildReactTags.length !== addAtIndices.length) {
+      throw new Error(
+        `Mismatched add indices ${addChildReactTags} and ${addAtIndices}`,
+      );
+    }
+
     const parentInfo = views.get(parentTag);
     const permanentlyRemovedChildren = removeAtIndices.map(
       index => parentInfo.children[index],
@@ -156,19 +160,17 @@ const RCTUIManager = {
   }),
   replaceExistingNonRootView: jest.fn(),
   measure: jest.fn(function measure(tag, callback) {
-    invariant(
-      typeof tag === 'number',
-      'Expected tag to be a number, was passed %s',
-      tag,
-    );
+    if (typeof tag !== 'number') {
+      throw new Error(`Expected tag to be a number, was passed ${tag}`);
+    }
+
     callback(10, 10, 100, 100, 0, 0);
   }),
   measureInWindow: jest.fn(function measureInWindow(tag, callback) {
-    invariant(
-      typeof tag === 'number',
-      'Expected tag to be a number, was passed %s',
-      tag,
-    );
+    if (typeof tag !== 'number') {
+      throw new Error(`Expected tag to be a number, was passed ${tag}`);
+    }
+
     callback(10, 10, 100, 100);
   }),
   measureLayout: jest.fn(function measureLayout(
@@ -177,16 +179,16 @@ const RCTUIManager = {
     fail,
     success,
   ) {
-    invariant(
-      typeof tag === 'number',
-      'Expected tag to be a number, was passed %s',
-      tag,
-    );
-    invariant(
-      typeof relativeTag === 'number',
-      'Expected relativeTag to be a number, was passed %s',
-      relativeTag,
-    );
+    if (typeof tag !== 'number') {
+      throw new Error(`Expected tag to be a number, was passed ${tag}`);
+    }
+
+    if (typeof relativeTag !== 'number') {
+      throw new Error(
+        `Expected relativeTag to be a number, was passed ${relativeTag}`,
+      );
+    }
+
     success(1, 1, 100, 100);
   }),
   __takeSnapshot: jest.fn(),

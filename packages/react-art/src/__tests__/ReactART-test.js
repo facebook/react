@@ -360,6 +360,7 @@ describe('ReactART', () => {
     expect(onClick2).toBeCalled();
   });
 
+  // @gate !enableSyncDefaultUpdates
   it('can concurrently render with a "primary" renderer while sharing context', () => {
     const CurrentRendererContext = React.createContext(null);
 
@@ -435,6 +436,60 @@ describe('ReactARTComponents', () => {
   it('should generate a <Shape> with props for drawing the Rectangle', () => {
     const rectangle = ReactTestRenderer.create(
       <Rectangle width={50} height={50} stroke="green" fill="blue" />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with positive width when width prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle width={-50} height={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with positive height when height prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle height={-50} width={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with a radius property of 0 when top left radius prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle radiusTopLeft={-25} width={50} height={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with a radius property of 0 when top right radius prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle radiusTopRight={-25} width={50} height={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with a radius property of 0 when bottom right radius prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle radiusBottomRight={-30} width={50} height={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with a radius property of 0 when bottom left radius prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle radiusBottomLeft={-25} width={50} height={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> where top radius is 0 if the sum of the top radius is greater than width', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle
+        radiusTopRight={25}
+        radiusTopLeft={26}
+        width={50}
+        height={40}
+      />,
     );
     expect(rectangle.toJSON()).toMatchSnapshot();
   });

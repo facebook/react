@@ -14,8 +14,7 @@
 FLIGHT PROTOCOL GRAMMAR
 
 Response
-- JSONData RowSequence
-- JSONData
+- RowSequence
 
 RowSequence
 - Row RowSequence
@@ -23,6 +22,7 @@ RowSequence
 
 Row
 - "J" RowID JSONData
+- "M" RowID JSONModuleData
 - "H" RowID HTMLData
 - "B" RowID BlobData
 - "U" RowID URLData
@@ -66,11 +66,11 @@ ByteSize
 
 import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 
-import {convertStringToBuffer} from './ReactServerStreamConfig';
+import {stringToChunk} from './ReactServerStreamConfig';
 
-export type {Destination} from './ReactServerStreamConfig';
+import type {Chunk} from './ReactServerStreamConfig';
 
-export type Chunk = Uint8Array;
+export type {Destination, Chunk} from './ReactServerStreamConfig';
 
 const stringify = JSON.stringify;
 
@@ -86,7 +86,7 @@ export function processErrorChunk(
 ): Chunk {
   const errorInfo = {message, stack};
   const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
-  return convertStringToBuffer(row);
+  return stringToChunk(row);
 }
 
 export function processModelChunk(
@@ -95,13 +95,37 @@ export function processModelChunk(
   model: ReactModel,
 ): Chunk {
   const json = stringify(model, request.toJSON);
-  let row;
-  if (id === 0) {
-    row = json + '\n';
-  } else {
-    row = serializeRowHeader('J', id) + json + '\n';
-  }
-  return convertStringToBuffer(row);
+  const row = serializeRowHeader('J', id) + json + '\n';
+  return stringToChunk(row);
+}
+
+export function processModuleChunk(
+  request: Request,
+  id: number,
+  moduleMetaData: ReactModel,
+): Chunk {
+  const json = stringify(moduleMetaData);
+  const row = serializeRowHeader('M', id) + json + '\n';
+  return stringToChunk(row);
+}
+
+export function processProviderChunk(
+  request: Request,
+  id: number,
+  contextName: string,
+): Chunk {
+  const row = serializeRowHeader('P', id) + contextName + '\n';
+  return stringToChunk(row);
+}
+
+export function processSymbolChunk(
+  request: Request,
+  id: number,
+  name: string,
+): Chunk {
+  const json = stringify(name);
+  const row = serializeRowHeader('S', id) + json + '\n';
+  return stringToChunk(row);
 }
 
 export {
@@ -109,6 +133,8 @@ export {
   flushBuffered,
   beginWriting,
   writeChunk,
+  writeChunkAndReturn,
   completeWriting,
   close,
+  closeWithError,
 } from './ReactServerStreamConfig';

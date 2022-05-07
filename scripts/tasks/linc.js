@@ -7,13 +7,21 @@
 
 'use strict';
 
+const minimist = require('minimist');
 const runESLint = require('../eslint');
 
-console.log('Linting changed files...');
+async function main() {
+  console.log('Linting changed files...');
 
-if (runESLint({onlyChanged: true})) {
-  console.log('Lint passed for changed files.');
-} else {
-  console.log('Lint failed for changed files.');
-  process.exit(1);
+  // eslint-disable-next-line no-unused-vars
+  const {_, ...cliOptions} = minimist(process.argv.slice(2));
+
+  if (await runESLint({onlyChanged: true, ...cliOptions})) {
+    console.log('Lint passed for changed files.');
+  } else {
+    console.log('Lint failed for changed files.');
+    process.exit(1);
+  }
 }
+
+main();

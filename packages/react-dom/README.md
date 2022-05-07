@@ -13,42 +13,48 @@ npm install react react-dom
 ### In the browser
 
 ```js
-var React = require('react');
-var ReactDOM = require('react-dom');
+import { createRoot } from 'react-dom/client';
 
-class MyComponent extends React.Component {
-  render() {
-    return <div>Hello World</div>;
-  }
+function App() {
+  return <div>Hello World</div>;
 }
 
-ReactDOM.render(<MyComponent />, node);
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);
 ```
 
 ### On the server
 
 ```js
-var React = require('react');
-var ReactDOMServer = require('react-dom/server');
+import { renderToPipeableStream } from 'react-dom/server';
 
-class MyComponent extends React.Component {
-  render() {
-    return <div>Hello World</div>;
-  }
+function App() {
+  return <div>Hello World</div>;
 }
 
-ReactDOMServer.renderToString(<MyComponent />);
+function handleRequest(res) {
+  // ... in your server handler ...
+  const stream = renderToPipeableStream(<App />, {
+    onShellReady() {
+      res.statusCode = 200;
+      res.setHeader('Content-type', 'text/html');
+      stream.pipe(res);
+    },
+    // ...
+  });
+}
 ```
 
 ## API
 
 ### `react-dom`
 
-- `findDOMNode`
-- `render`
-- `unmountComponentAtNode`
+See https://reactjs.org/docs/react-dom.html
+
+### `react-dom/client`
+
+See https://reactjs.org/docs/react-dom-client.html
 
 ### `react-dom/server`
 
-- `renderToString`
-- `renderToStaticMarkup`
+See https://reactjs.org/docs/react-dom-server.html

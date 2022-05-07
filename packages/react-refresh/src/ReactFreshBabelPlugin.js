@@ -226,8 +226,8 @@ export default function(babel, opts = {}) {
       case 'React.useRef':
       case 'useContext':
       case 'React.useContext':
-      case 'useImperativeMethods':
-      case 'React.useImperativeMethods':
+      case 'useImperativeHandle':
+      case 'React.useImperativeHandle':
       case 'useDebugValue':
       case 'React.useDebugValue':
         return true;
@@ -331,6 +331,38 @@ export default function(babel, opts = {}) {
       );
     }
     return args;
+  }
+
+  function findHOCCallPathsAbove(path) {
+    const calls = [];
+    while (true) {
+      if (!path) {
+        return calls;
+      }
+      const parentPath = path.parentPath;
+      if (!parentPath) {
+        return calls;
+      }
+      if (
+        // hoc(_c = function() { })
+        parentPath.node.type === 'AssignmentExpression' &&
+        path.node === parentPath.node.right
+      ) {
+        // Ignore registrations.
+        path = parentPath;
+        continue;
+      }
+      if (
+        // hoc1(hoc2(...))
+        parentPath.node.type === 'CallExpression' &&
+        path.node !== parentPath.node.callee
+      ) {
+        calls.push(parentPath);
+        path = parentPath;
+        continue;
+      }
+      return calls; // Stop at other types.
+    }
   }
 
   const seenForRegistration = new WeakSet();
@@ -446,10 +478,15 @@ export default function(babel, opts = {}) {
           const node = path.node;
           let programPath;
           let insertAfterPath;
+          let modulePrefix = '';
           switch (path.parent.type) {
             case 'Program':
               insertAfterPath = path;
               programPath = path.parentPath;
+              break;
+            case 'TSModuleBlock':
+              insertAfterPath = path;
+              programPath = insertAfterPath.parentPath.parentPath;
               break;
             case 'ExportNamedDeclaration':
               insertAfterPath = path.parentPath;
@@ -462,6 +499,28 @@ export default function(babel, opts = {}) {
             default:
               return;
           }
+
+          // These types can be nested in typescript namespace
+          // We need to find the export chain
+          // Or return if it stays local
+          if (
+            path.parent.type === 'TSModuleBlock' ||
+            path.parent.type === 'ExportNamedDeclaration'
+          ) {
+            while (programPath.type !== 'Program') {
+              if (programPath.type === 'TSModuleDeclaration') {
+                if (
+                  programPath.parentPath.type !== 'Program' &&
+                  programPath.parentPath.type !== 'ExportNamedDeclaration'
+                ) {
+                  return;
+                }
+                modulePrefix = programPath.node.id.name + '$' + modulePrefix;
+              }
+              programPath = programPath.parentPath;
+            }
+          }
+
           const id = node.id;
           if (id === null) {
             // We don't currently handle anonymous default exports.
@@ -480,20 +539,17 @@ export default function(babel, opts = {}) {
           seenForRegistration.add(node);
           // Don't mutate the tree above this point.
 
+          const innerName = modulePrefix + inferredName;
           // export function Named() {}
           // function Named() {}
-          findInnerComponents(
-            inferredName,
-            path,
-            (persistentID, targetExpr) => {
-              const handle = createRegistration(programPath, persistentID);
-              insertAfterPath.insertAfter(
-                t.expressionStatement(
-                  t.assignmentExpression('=', handle, targetExpr),
-                ),
-              );
-            },
-          );
+          findInnerComponents(innerName, path, (persistentID, targetExpr) => {
+            const handle = createRegistration(programPath, persistentID);
+            insertAfterPath.insertAfter(
+              t.expressionStatement(
+                t.assignmentExpression('=', handle, targetExpr),
+              ),
+            );
+          });
         },
         exit(path) {
           const node = path.node;
@@ -630,13 +686,16 @@ export default function(babel, opts = {}) {
             // Result: let Foo = () => {}; __signature(Foo, ...);
           } else {
             // let Foo = hoc(() => {})
-            path.replaceWith(
-              t.callExpression(
-                sigCallID,
-                createArgumentsForSignature(node, signature, path.scope),
-              ),
-            );
-            // Result: let Foo = hoc(__signature(() => {}, ...))
+            const paths = [path, ...findHOCCallPathsAbove(path)];
+            paths.forEach(p => {
+              p.replaceWith(
+                t.callExpression(
+                  sigCallID,
+                  createArgumentsForSignature(p.node, signature, p.scope),
+                ),
+              );
+            });
+            // Result: let Foo = __signature(hoc(__signature(() => {}, ...)), ...)
           }
         },
       },
@@ -644,10 +703,15 @@ export default function(babel, opts = {}) {
         const node = path.node;
         let programPath;
         let insertAfterPath;
+        let modulePrefix = '';
         switch (path.parent.type) {
           case 'Program':
             insertAfterPath = path;
             programPath = path.parentPath;
+            break;
+          case 'TSModuleBlock':
+            insertAfterPath = path;
+            programPath = insertAfterPath.parentPath.parentPath;
             break;
           case 'ExportNamedDeclaration':
             insertAfterPath = path.parentPath;
@@ -659,6 +723,27 @@ export default function(babel, opts = {}) {
             break;
           default:
             return;
+        }
+
+        // These types can be nested in typescript namespace
+        // We need to find the export chain
+        // Or return if it stays local
+        if (
+          path.parent.type === 'TSModuleBlock' ||
+          path.parent.type === 'ExportNamedDeclaration'
+        ) {
+          while (programPath.type !== 'Program') {
+            if (programPath.type === 'TSModuleDeclaration') {
+              if (
+                programPath.parentPath.type !== 'Program' &&
+                programPath.parentPath.type !== 'ExportNamedDeclaration'
+              ) {
+                return;
+              }
+              modulePrefix = programPath.node.id.name + '$' + modulePrefix;
+            }
+            programPath = programPath.parentPath;
+          }
         }
 
         // Make sure we're not mutating the same tree twice.
@@ -675,8 +760,9 @@ export default function(babel, opts = {}) {
         }
         const declPath = declPaths[0];
         const inferredName = declPath.node.id.name;
+        const innerName = modulePrefix + inferredName;
         findInnerComponents(
-          inferredName,
+          innerName,
           declPath,
           (persistentID, targetExpr, targetPath) => {
             if (targetPath === null) {

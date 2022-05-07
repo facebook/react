@@ -7,6 +7,8 @@
  * @flow
  */
 
+/* eslint-disable react-internal/prod-error-codes */
+
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
@@ -20,7 +22,7 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {updateContainer} from './ReactFiberReconciler.old';
 import {emptyContextObject} from './ReactFiberContext.old';
-import {SyncLane, NoTimestamp} from './ReactFiberLane';
+import {SyncLane, NoTimestamp} from './ReactFiberLane.old';
 import {
   ClassComponent,
   FunctionComponent,

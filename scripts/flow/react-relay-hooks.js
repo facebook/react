@@ -15,40 +15,88 @@ type JSONValue =
   | {+[key: string]: JSONValue}
   | $ReadOnlyArray<JSONValue>;
 
+declare module 'JSResourceReference' {
+  declare export interface JSResourceReference<T> {
+    getModuleId(): string;
+    getModuleIdAsRef(): $Flow$ModuleRef<T>;
+    getModuleIfRequired(): ?T;
+    load(): Promise<T>;
+    preload(): void;
+  }
+}
+
+declare module 'JSResourceReferenceImpl' {
+  declare export default class JSResourceReferenceImpl<T> {
+    getModuleId(): string;
+    getModuleIdAsRef(): $Flow$ModuleRef<T>;
+    getModuleIfRequired(): ?T;
+    load(): Promise<T>;
+    preload(): void;
+  }
+}
+
 declare module 'ReactFlightDOMRelayServerIntegration' {
+  import type {JSResourceReference} from 'JSResourceReference';
+
   declare export opaque type Destination;
   declare export opaque type BundlerConfig;
-  declare export function emitModel(
+  declare export function emitRow(
     destination: Destination,
-    id: number,
     json: JSONValue,
-  ): void;
-  declare export function emitError(
-    destination: Destination,
-    id: number,
-    message: string,
-    stack: string,
   ): void;
   declare export function close(destination: Destination): void;
 
-  declare export opaque type ModuleReference<T>;
   declare export type ModuleMetaData = JSONValue;
   declare export function resolveModuleMetaData<T>(
     config: BundlerConfig,
-    resourceReference: ModuleReference<T>,
+    resourceReference: JSResourceReference<T>,
   ): ModuleMetaData;
 }
 
 declare module 'ReactFlightDOMRelayClientIntegration' {
-  declare export opaque type ModuleReference<T>;
+  import type {JSResourceReference} from 'JSResourceReference';
+
   declare export opaque type ModuleMetaData;
   declare export function resolveModuleReference<T>(
     moduleData: ModuleMetaData,
-  ): ModuleReference<T>;
+  ): JSResourceReference<T>;
   declare export function preloadModule<T>(
-    moduleReference: ModuleReference<T>,
+    moduleReference: JSResourceReference<T>,
   ): void;
   declare export function requireModule<T>(
-    moduleReference: ModuleReference<T>,
+    moduleReference: JSResourceReference<T>,
+  ): T;
+}
+
+declare module 'ReactFlightNativeRelayServerIntegration' {
+  import type {JSResourceReference} from 'JSResourceReference';
+
+  declare export opaque type Destination;
+  declare export opaque type BundlerConfig;
+  declare export function emitRow(
+    destination: Destination,
+    json: JSONValue,
+  ): void;
+  declare export function close(destination: Destination): void;
+
+  declare export type ModuleMetaData = JSONValue;
+  declare export function resolveModuleMetaData<T>(
+    config: BundlerConfig,
+    resourceReference: JSResourceReference<T>,
+  ): ModuleMetaData;
+}
+
+declare module 'ReactFlightNativeRelayClientIntegration' {
+  import type {JSResourceReference} from 'JSResourceReference';
+
+  declare export opaque type ModuleMetaData;
+  declare export function resolveModuleReference<T>(
+    moduleData: ModuleMetaData,
+  ): JSResourceReference<T>;
+  declare export function preloadModule<T>(
+    moduleReference: JSResourceReference<T>,
+  ): void;
+  declare export function requireModule<T>(
+    moduleReference: JSResourceReference<T>,
   ): T;
 }

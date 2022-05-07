@@ -23,12 +23,16 @@ import {updateValueIfChanged} from '../../client/inputValueTracking';
 import {setDefaultValue} from '../../client/ReactDOMInput';
 import {enqueueStateRestore} from '../ReactDOMControlledComponent';
 
-import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+import {
+  disableInputAttributeSyncing,
+  enableCustomElementPropertySupport,
+} from 'shared/ReactFeatureFlags';
 import {batchedUpdates} from '../ReactDOMUpdateBatching';
 import {
   processDispatchQueue,
   accumulateTwoPhaseListeners,
 } from '../DOMPluginEventSystem';
+import isCustomComponent from '../../shared/isCustomComponent';
 
 function registerEvents() {
   registerTwoPhaseEvent('onChange', [
@@ -49,16 +53,19 @@ function createAndAccumulateChangeEvent(
   nativeEvent,
   target,
 ) {
-  const event = new SyntheticEvent(
-    'onChange',
-    'change',
-    null,
-    nativeEvent,
-    target,
-  );
   // Flag this event loop as needing state restore.
   enqueueStateRestore(((target: any): Node));
-  accumulateTwoPhaseListeners(inst, dispatchQueue, event);
+  const listeners = accumulateTwoPhaseListeners(inst, 'onChange');
+  if (listeners.length > 0) {
+    const event = new SyntheticEvent(
+      'onChange',
+      'change',
+      null,
+      nativeEvent,
+      target,
+    );
+    dispatchQueue.push({event, listeners});
+  }
 }
 /**
  * For IE shims
@@ -289,6 +296,12 @@ function extractEvents(
     }
   } else if (shouldUseClickEvent(targetNode)) {
     getTargetInstFunc = getTargetInstForClickEvent;
+  } else if (
+    enableCustomElementPropertySupport &&
+    targetInst &&
+    isCustomComponent(targetInst.elementType, targetInst.memoizedProps)
+  ) {
+    getTargetInstFunc = getTargetInstForChangeEvent;
   }
 
   if (getTargetInstFunc) {

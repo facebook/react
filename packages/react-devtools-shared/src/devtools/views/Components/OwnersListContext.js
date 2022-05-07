@@ -17,23 +17,27 @@ import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
 import type {OwnersList} from 'react-devtools-shared/src/backend/types';
 import type {
   Element,
-  Owner,
+  SerializedElement,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
 import type {Resource, Thenable} from '../../cache';
 
-type Context = (id: number) => Array<Owner> | null;
+type Context = (id: number) => Array<SerializedElement> | null;
 
 const OwnersListContext = createContext<Context>(((null: any): Context));
 OwnersListContext.displayName = 'OwnersListContext';
 
-type ResolveFn = (ownersList: Array<Owner> | null) => void;
+type ResolveFn = (ownersList: Array<SerializedElement> | null) => void;
 type InProgressRequest = {|
-  promise: Thenable<Array<Owner>>,
+  promise: Thenable<Array<SerializedElement>>,
   resolveFn: ResolveFn,
 |};
 
 const inProgressRequests: WeakMap<Element, InProgressRequest> = new WeakMap();
-const resource: Resource<Element, Element, Array<Owner>> = createResource(
+const resource: Resource<
+  Element,
+  Element,
+  Array<SerializedElement>,
+> = createResource(
   (element: Element) => {
     const request = inProgressRequests.get(element);
     if (request != null) {

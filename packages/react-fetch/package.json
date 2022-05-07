@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "react-fetch",
   "description": "Helpers for creating React data sources",
   "version": "0.0.0",
@@ -11,14 +10,13 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "index.node.js",
     "index.browser.js",
     "cjs/"
   ],
   "peerDependencies": {
-    "react": "^17.0.0-alpha"
+    "react": "^17.0.0"
   },
   "browser": {
     "./index.js": "./index.browser.js"

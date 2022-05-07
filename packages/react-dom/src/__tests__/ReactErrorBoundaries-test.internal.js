@@ -42,9 +42,10 @@ describe('ReactErrorBoundaries', () => {
     PropTypes = require('prop-types');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    ReactFeatureFlags.skipUnmountedBoundaries = true;
     ReactDOM = require('react-dom');
     React = require('react');
-    act = require('react-dom/test-utils').unstable_concurrentAct;
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
 
     BrokenConstructor = class extends React.Component {
@@ -786,16 +787,22 @@ describe('ReactErrorBoundaries', () => {
 
   it('logs a single error when using error boundary', () => {
     const container = document.createElement('div');
-    expect(() =>
-      ReactDOM.render(
-        <ErrorBoundary>
-          <BrokenRender />
-        </ErrorBoundary>,
-        container,
-      ),
-    ).toErrorDev('The above error occurred in the <BrokenRender> component:', {
-      logAllErrors: true,
-    });
+    spyOnDev(console, 'error');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+      container,
+    );
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'ReactDOM.render is no longer supported',
+      );
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'The above error occurred in the <BrokenRender> component:',
+      );
+    }
 
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
     expect(Scheduler).toHaveYielded([
@@ -2474,7 +2481,6 @@ describe('ReactErrorBoundaries', () => {
     );
   });
 
-  // @gate skipUnmountedBoundaries
   it('catches errors thrown in componentWillUnmount', () => {
     class LocalErrorBoundary extends React.Component {
       state = {error: null};
@@ -2559,7 +2565,6 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  // @gate skipUnmountedBoundaries
   it('catches errors thrown while detaching refs', () => {
     class LocalErrorBoundary extends React.Component {
       state = {error: null};

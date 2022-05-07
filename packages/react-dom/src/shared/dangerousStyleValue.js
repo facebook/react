@@ -6,6 +6,7 @@
  */
 
 import {isUnitlessNumber} from './CSSProperty';
+import {checkCSSPropertyStringCoercion} from 'shared/CheckStringCoercion';
 
 /**
  * Convert a value into the proper css writable value. The style name `name`
@@ -41,6 +42,9 @@ function dangerousStyleValue(name, value, isCustomProperty) {
     return value + 'px'; // Presumes implicit 'px' suffix for unitless numbers
   }
 
+  if (__DEV__) {
+    checkCSSPropertyStringCoercion(value, name);
+  }
   return ('' + value).trim();
 }
 

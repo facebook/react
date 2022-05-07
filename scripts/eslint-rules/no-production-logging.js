@@ -12,6 +12,7 @@
 module.exports = {
   meta: {
     fixable: 'code',
+    schema: [],
   },
   create: function(context) {
     function isInDEVBlock(node) {

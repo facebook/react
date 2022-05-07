@@ -13,6 +13,8 @@ import {
 } from '../events/EventRegistry';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
+import hasOwnProperty from 'shared/hasOwnProperty';
+import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
 
 import {
   getValueForAttribute,
@@ -28,7 +30,6 @@ import {
   restoreControlledState as ReactDOMInputRestoreControlledState,
 } from './ReactDOMInput';
 import {
-  getHostProps as ReactDOMOptionGetHostProps,
   postMountWrapper as ReactDOMOptionPostMountWrapper,
   validateProps as ReactDOMOptionValidateProps,
 } from './ReactDOMOption';
@@ -53,33 +54,27 @@ import {
   createDangerousStringForStyles,
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
-} from '../shared/CSSPropertyOperations';
-import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
+} from './CSSPropertyOperations';
+import {HTML_NAMESPACE, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
   getPropertyInfo,
   shouldIgnoreAttribute,
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
-import {
-  DOCUMENT_NODE,
-  ELEMENT_NODE,
-  COMMENT_NODE,
-  DOCUMENT_FRAGMENT_NODE,
-} from '../shared/HTMLNodeType';
+import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
 import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
 import {
   enableTrustedTypesIntegration,
-  enableEagerRootListeners,
+  enableCustomElementPropertySupport,
+  enableClientRenderFallbackOnTextMismatch,
 } from 'shared/ReactFeatureFlags';
 import {
-  listenToReactEvent,
   mediaEventTypes,
   listenToNonDelegatedEvent,
 } from '../events/DOMPluginEventSystem';
@@ -95,28 +90,18 @@ const CHILDREN = 'children';
 const STYLE = 'style';
 const HTML = '__html';
 
-const {html: HTML_NAMESPACE} = Namespaces;
-
 let warnedUnknownTags;
-let suppressHydrationWarning;
 
 let validatePropertiesInDevelopment;
-let warnForTextDifference;
 let warnForPropDifference;
 let warnForExtraAttributes;
 let warnForInvalidEventListener;
 let canDiffStyleForHydrationWarning;
 
-let normalizeMarkupForTextOrAttribute;
 let normalizeHTML;
 
 if (__DEV__) {
   warnedUnknownTags = {
-    // Chrome is the only major browser not shipping <time>. But as of July
-    // 2017 it intends to ship it due to widespread usage. We intentionally
-    // *don't* warn for <time> even if it's unrecognized by Chrome because
-    // it soon will be, and many apps have been using it anyway.
-    time: true,
     // There are working polyfills for <dialog>. Let people use it.
     dialog: true,
     // Electron ships a custom <webview> tag to display external web content in
@@ -145,42 +130,6 @@ if (__DEV__) {
   // in that browser completely in favor of doing all that work.
   // See https://github.com/facebook/react/issues/11807
   canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
-
-  // HTML parsing normalizes CR and CRLF to LF.
-  // It also can turn \u0000 into \uFFFD inside attributes.
-  // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
-  // If we have a mismatch, it might be caused by that.
-  // We will still patch up in this case but not fire the warning.
-  const NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
-  const NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
-
-  normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
-    const markupString =
-      typeof markup === 'string' ? markup : '' + (markup: any);
-    return markupString
-      .replace(NORMALIZE_NEWLINES_REGEX, '\n')
-      .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
-  };
-
-  warnForTextDifference = function(
-    serverText: string,
-    clientText: string | number,
-  ) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
-    const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
-    if (normalizedServerText === normalizedClientText) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    console.error(
-      'Text content did not match. Server: "%s" Client: "%s"',
-      normalizedServerText,
-      normalizedClientText,
-    );
-  };
 
   warnForPropDifference = function(
     propName: string,
@@ -258,41 +207,58 @@ if (__DEV__) {
   };
 }
 
-export function ensureListeningTo(
-  rootContainerInstance: Element | Node,
-  reactPropEvent: string,
-  targetElement: Element | null,
-): void {
-  if (!enableEagerRootListeners) {
-    // If we have a comment node, then use the parent node,
-    // which should be an element.
-    const rootContainerElement =
-      rootContainerInstance.nodeType === COMMENT_NODE
-        ? rootContainerInstance.parentNode
-        : rootContainerInstance;
+// HTML parsing normalizes CR and CRLF to LF.
+// It also can turn \u0000 into \uFFFD inside attributes.
+// https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
+// If we have a mismatch, it might be caused by that.
+// We will still patch up in this case but not fire the warning.
+const NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
+const NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
+
+function normalizeMarkupForTextOrAttribute(markup: mixed): string {
+  if (__DEV__) {
+    checkHtmlStringCoercion(markup);
+  }
+  const markupString = typeof markup === 'string' ? markup : '' + (markup: any);
+  return markupString
+    .replace(NORMALIZE_NEWLINES_REGEX, '\n')
+    .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
+}
+
+export function checkForUnmatchedText(
+  serverText: string,
+  clientText: string | number,
+  isConcurrentMode: boolean,
+  shouldWarnDev: boolean,
+) {
+  const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
+  const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
+  if (normalizedServerText === normalizedClientText) {
+    return;
+  }
+
+  if (shouldWarnDev) {
     if (__DEV__) {
-      if (
-        rootContainerElement == null ||
-        (rootContainerElement.nodeType !== ELEMENT_NODE &&
-          // This is to support rendering into a ShadowRoot:
-          rootContainerElement.nodeType !== DOCUMENT_FRAGMENT_NODE)
-      ) {
+      if (!didWarnInvalidHydration) {
+        didWarnInvalidHydration = true;
         console.error(
-          'ensureListeningTo(): received a container that was not an element node. ' +
-            'This is likely a bug in React. Please file an issue.',
+          'Text content did not match. Server: "%s" Client: "%s"',
+          normalizedServerText,
+          normalizedClientText,
         );
       }
     }
-    listenToReactEvent(
-      reactPropEvent,
-      ((rootContainerElement: any): Element),
-      targetElement,
-    );
+  }
+
+  if (isConcurrentMode && enableClientRenderFallbackOnTextMismatch) {
+    // In concurrent roots, we throw when there's a text mismatch and revert to
+    // client rendering, up to the nearest Suspense boundary.
+    throw new Error('Text content does not match server-rendered HTML.');
   }
 }
 
 function getOwnerDocumentFromRootContainer(
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
 ): Document {
   return rootContainerElement.nodeType === DOCUMENT_NODE
     ? (rootContainerElement: any)
@@ -317,7 +283,7 @@ export function trapClickOnNonInteractiveElement(node: HTMLElement) {
 function setInitialDOMProperties(
   tag: string,
   domElement: Element,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
   nextProps: Object,
   isCustomComponentTag: boolean,
 ): void {
@@ -369,9 +335,7 @@ function setInitialDOMProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        if (!enableEagerRootListeners) {
-          ensureListeningTo(rootContainerElement, propKey, domElement);
-        } else if (propKey === 'onScroll') {
+        if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
         }
       }
@@ -406,7 +370,7 @@ function updateDOMProperties(
 export function createElement(
   type: string,
   props: Object,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
   parentNamespace: string,
 ): Element {
   let isCustomComponentTag;
@@ -494,7 +458,7 @@ export function createElement(
         !isCustomComponentTag &&
         Object.prototype.toString.call(domElement) ===
           '[object HTMLUnknownElement]' &&
-        !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
+        !hasOwnProperty.call(warnedUnknownTags, type)
       ) {
         warnedUnknownTags[type] = true;
         console.error(
@@ -512,7 +476,7 @@ export function createElement(
 
 export function createTextNode(
   text: string,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
 ): Text {
   return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
     text,
@@ -523,7 +487,7 @@ export function setInitialProperties(
   domElement: Element,
   tag: string,
   rawProps: Object,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
 ): void {
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
@@ -582,15 +546,10 @@ export function setInitialProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
-      props = ReactDOMOptionGetHostProps(domElement, rawProps);
+      props = rawProps;
       break;
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
@@ -598,11 +557,6 @@ export function setInitialProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
@@ -610,11 +564,6 @@ export function setInitialProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
     default:
       props = rawProps;
@@ -664,7 +613,7 @@ export function diffProperties(
   tag: string,
   lastRawProps: Object,
   nextRawProps: Object,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
 ): null | Array<mixed> {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, nextRawProps);
@@ -678,11 +627,6 @@ export function diffProperties(
     case 'input':
       lastProps = ReactDOMInputGetHostProps(domElement, lastRawProps);
       nextProps = ReactDOMInputGetHostProps(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-    case 'option':
-      lastProps = ReactDOMOptionGetHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMOptionGetHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'select':
@@ -832,9 +776,7 @@ export function diffProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        if (!enableEagerRootListeners) {
-          ensureListeningTo(rootContainerElement, propKey, domElement);
-        } else if (propKey === 'onScroll') {
+        if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
         }
       }
@@ -844,15 +786,6 @@ export function diffProperties(
         // to update this element.
         updatePayload = [];
       }
-    } else if (
-      typeof nextProp === 'object' &&
-      nextProp !== null &&
-      nextProp.$$typeof === REACT_OPAQUE_ID_TYPE
-    ) {
-      // If we encounter useOpaqueReference's opaque object, this means we are hydrating.
-      // In this case, call the opaque object's toString function which generates a new client
-      // ID so client and server IDs match and throws to rerender.
-      nextProp.toString();
     } else {
       // For any other property we always add it to the queue and then we
       // filter it out using the allowed property list during the commit.
@@ -933,13 +866,14 @@ export function diffHydratedProperties(
   tag: string,
   rawProps: Object,
   parentNamespace: string,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
+  isConcurrentMode: boolean,
+  shouldWarnDev: boolean,
 ): null | Array<mixed> {
   let isCustomComponentTag;
   let extraAttributeNames: Set<string>;
 
   if (__DEV__) {
-    suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
     isCustomComponentTag = isCustomComponent(tag, rawProps);
     validatePropertiesInDevelopment(tag, rawProps);
   }
@@ -988,11 +922,6 @@ export function diffHydratedProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
@@ -1002,22 +931,12 @@ export function diffHydratedProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
   }
 
@@ -1029,9 +948,6 @@ export function diffHydratedProperties(
     for (let i = 0; i < attributes.length; i++) {
       const name = attributes[i].name.toLowerCase();
       switch (name) {
-        // Built-in SSR attribute is allowed
-        case 'data-reactroot':
-          break;
         // Controlled attributes are not validated
         // TODO: Only ignore them on controlled tags.
         case 'value':
@@ -1066,15 +982,25 @@ export function diffHydratedProperties(
       // TODO: Should we use domElement.firstChild.nodeValue to compare?
       if (typeof nextProp === 'string') {
         if (domElement.textContent !== nextProp) {
-          if (__DEV__ && !suppressHydrationWarning) {
-            warnForTextDifference(domElement.textContent, nextProp);
+          if (rawProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+            checkForUnmatchedText(
+              domElement.textContent,
+              nextProp,
+              isConcurrentMode,
+              shouldWarnDev,
+            );
           }
           updatePayload = [CHILDREN, nextProp];
         }
       } else if (typeof nextProp === 'number') {
         if (domElement.textContent !== '' + nextProp) {
-          if (__DEV__ && !suppressHydrationWarning) {
-            warnForTextDifference(domElement.textContent, nextProp);
+          if (rawProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+            checkForUnmatchedText(
+              domElement.textContent,
+              nextProp,
+              isConcurrentMode,
+              shouldWarnDev,
+            );
           }
           updatePayload = [CHILDREN, '' + nextProp];
         }
@@ -1084,21 +1010,23 @@ export function diffHydratedProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        if (!enableEagerRootListeners) {
-          ensureListeningTo(rootContainerElement, propKey, domElement);
-        } else if (propKey === 'onScroll') {
+        if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
         }
       }
     } else if (
+      shouldWarnDev &&
       __DEV__ &&
       // Convince Flow we've calculated it (it's DEV-only in this method.)
       typeof isCustomComponentTag === 'boolean'
     ) {
       // Validate that the properties correspond to their expected values.
       let serverValue;
-      const propertyInfo = getPropertyInfo(propKey);
-      if (suppressHydrationWarning) {
+      const propertyInfo =
+        isCustomComponentTag && enableCustomElementPropertySupport
+          ? null
+          : getPropertyInfo(propKey);
+      if (rawProps[SUPPRESS_HYDRATION_WARNING] === true) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
         propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
@@ -1130,7 +1058,27 @@ export function diffHydratedProperties(
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
         }
-      } else if (isCustomComponentTag) {
+      } else if (
+        enableCustomElementPropertySupport &&
+        isCustomComponentTag &&
+        (propKey === 'offsetParent' ||
+          propKey === 'offsetTop' ||
+          propKey === 'offsetLeft' ||
+          propKey === 'offsetWidth' ||
+          propKey === 'offsetHeight' ||
+          propKey === 'isContentEditable' ||
+          propKey === 'outerText' ||
+          propKey === 'outerHTML')
+      ) {
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.delete(propKey.toLowerCase());
+        if (__DEV__) {
+          console.error(
+            'Assignment to read-only property will result in a no-op: `%s`',
+            propKey,
+          );
+        }
+      } else if (isCustomComponentTag && !enableCustomElementPropertySupport) {
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey.toLowerCase());
         serverValue = getValueForAttribute(domElement, propKey, nextProp);
@@ -1183,7 +1131,15 @@ export function diffHydratedProperties(
           serverValue = getValueForAttribute(domElement, propKey, nextProp);
         }
 
-        if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
+        const dontWarnCustomElement =
+          enableCustomElementPropertySupport &&
+          isCustomComponentTag &&
+          (typeof nextProp === 'function' || typeof nextProp === 'object');
+        if (
+          !dontWarnCustomElement &&
+          nextProp !== serverValue &&
+          !isMismatchDueToBadCasing
+        ) {
           warnForPropDifference(propKey, serverValue, nextProp);
         }
       }
@@ -1191,10 +1147,15 @@ export function diffHydratedProperties(
   }
 
   if (__DEV__) {
-    // $FlowFixMe - Should be inferred as not undefined.
-    if (extraAttributeNames.size > 0 && !suppressHydrationWarning) {
-      // $FlowFixMe - Should be inferred as not undefined.
-      warnForExtraAttributes(extraAttributeNames);
+    if (shouldWarnDev) {
+      if (
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.size > 0 &&
+        rawProps[SUPPRESS_HYDRATION_WARNING] !== true
+      ) {
+        // $FlowFixMe - Should be inferred as not undefined.
+        warnForExtraAttributes(extraAttributeNames);
+      }
     }
   }
 
@@ -1230,19 +1191,17 @@ export function diffHydratedProperties(
   return updatePayload;
 }
 
-export function diffHydratedText(textNode: Text, text: string): boolean {
+export function diffHydratedText(
+  textNode: Text,
+  text: string,
+  isConcurrentMode: boolean,
+): boolean {
   const isDifferent = textNode.nodeValue !== text;
   return isDifferent;
 }
 
-export function warnForUnmatchedText(textNode: Text, text: string) {
-  if (__DEV__) {
-    warnForTextDifference(textNode.nodeValue, text);
-  }
-}
-
 export function warnForDeletedHydratableElement(
-  parentNode: Element | Document,
+  parentNode: Element | Document | DocumentFragment,
   child: Element,
 ) {
   if (__DEV__) {
@@ -1259,7 +1218,7 @@ export function warnForDeletedHydratableElement(
 }
 
 export function warnForDeletedHydratableText(
-  parentNode: Element | Document,
+  parentNode: Element | Document | DocumentFragment,
   child: Text,
 ) {
   if (__DEV__) {
@@ -1276,7 +1235,7 @@ export function warnForDeletedHydratableText(
 }
 
 export function warnForInsertedHydratedElement(
-  parentNode: Element | Document,
+  parentNode: Element | Document | DocumentFragment,
   tag: string,
   props: Object,
 ) {
@@ -1294,7 +1253,7 @@ export function warnForInsertedHydratedElement(
 }
 
 export function warnForInsertedHydratedText(
-  parentNode: Element | Document,
+  parentNode: Element | Document | DocumentFragment,
   text: string,
 ) {
   if (__DEV__) {

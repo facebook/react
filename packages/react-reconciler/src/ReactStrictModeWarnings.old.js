@@ -13,8 +13,8 @@ import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import getComponentName from 'shared/getComponentName';
-import {StrictMode} from './ReactTypeOfMode';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import {StrictLegacyMode} from './ReactTypeOfMode';
 
 type FiberArray = Array<Fiber>;
 type FiberToFiberComponentsMap = Map<Fiber, FiberArray>;
@@ -33,7 +33,7 @@ if (__DEV__) {
 
     let node = fiber;
     while (node !== null) {
-      if (node.mode & StrictMode) {
+      if (node.mode & StrictLegacyMode) {
         maybeStrictRoot = node;
       }
       node = node.return;
@@ -64,7 +64,7 @@ if (__DEV__) {
     fiber: Fiber,
     instance: any,
   ) => {
-    // Dedup strategy: Warn once per component.
+    // Dedupe strategy: Warn once per component.
     if (didWarnAboutUnsafeLifecycles.has(fiber.type)) {
       return;
     }
@@ -78,7 +78,7 @@ if (__DEV__) {
     }
 
     if (
-      fiber.mode & StrictMode &&
+      fiber.mode & StrictLegacyMode &&
       typeof instance.UNSAFE_componentWillMount === 'function'
     ) {
       pendingUNSAFE_ComponentWillMountWarnings.push(fiber);
@@ -92,7 +92,7 @@ if (__DEV__) {
     }
 
     if (
-      fiber.mode & StrictMode &&
+      fiber.mode & StrictLegacyMode &&
       typeof instance.UNSAFE_componentWillReceiveProps === 'function'
     ) {
       pendingUNSAFE_ComponentWillReceivePropsWarnings.push(fiber);
@@ -106,7 +106,7 @@ if (__DEV__) {
     }
 
     if (
-      fiber.mode & StrictMode &&
+      fiber.mode & StrictLegacyMode &&
       typeof instance.UNSAFE_componentWillUpdate === 'function'
     ) {
       pendingUNSAFE_ComponentWillUpdateWarnings.push(fiber);
@@ -119,7 +119,7 @@ if (__DEV__) {
     if (pendingComponentWillMountWarnings.length > 0) {
       pendingComponentWillMountWarnings.forEach(fiber => {
         componentWillMountUniqueNames.add(
-          getComponentName(fiber.type) || 'Component',
+          getComponentNameFromFiber(fiber) || 'Component',
         );
         didWarnAboutUnsafeLifecycles.add(fiber.type);
       });
@@ -130,7 +130,7 @@ if (__DEV__) {
     if (pendingUNSAFE_ComponentWillMountWarnings.length > 0) {
       pendingUNSAFE_ComponentWillMountWarnings.forEach(fiber => {
         UNSAFE_componentWillMountUniqueNames.add(
-          getComponentName(fiber.type) || 'Component',
+          getComponentNameFromFiber(fiber) || 'Component',
         );
         didWarnAboutUnsafeLifecycles.add(fiber.type);
       });
@@ -141,7 +141,7 @@ if (__DEV__) {
     if (pendingComponentWillReceivePropsWarnings.length > 0) {
       pendingComponentWillReceivePropsWarnings.forEach(fiber => {
         componentWillReceivePropsUniqueNames.add(
-          getComponentName(fiber.type) || 'Component',
+          getComponentNameFromFiber(fiber) || 'Component',
         );
         didWarnAboutUnsafeLifecycles.add(fiber.type);
       });
@@ -153,7 +153,7 @@ if (__DEV__) {
     if (pendingUNSAFE_ComponentWillReceivePropsWarnings.length > 0) {
       pendingUNSAFE_ComponentWillReceivePropsWarnings.forEach(fiber => {
         UNSAFE_componentWillReceivePropsUniqueNames.add(
-          getComponentName(fiber.type) || 'Component',
+          getComponentNameFromFiber(fiber) || 'Component',
         );
         didWarnAboutUnsafeLifecycles.add(fiber.type);
       });
@@ -165,7 +165,7 @@ if (__DEV__) {
     if (pendingComponentWillUpdateWarnings.length > 0) {
       pendingComponentWillUpdateWarnings.forEach(fiber => {
         componentWillUpdateUniqueNames.add(
-          getComponentName(fiber.type) || 'Component',
+          getComponentNameFromFiber(fiber) || 'Component',
         );
         didWarnAboutUnsafeLifecycles.add(fiber.type);
       });
@@ -177,7 +177,7 @@ if (__DEV__) {
     if (pendingUNSAFE_ComponentWillUpdateWarnings.length > 0) {
       pendingUNSAFE_ComponentWillUpdateWarnings.forEach(fiber => {
         UNSAFE_componentWillUpdateUniqueNames.add(
-          getComponentName(fiber.type) || 'Component',
+          getComponentNameFromFiber(fiber) || 'Component',
         );
         didWarnAboutUnsafeLifecycles.add(fiber.type);
       });
@@ -333,7 +333,7 @@ if (__DEV__) {
 
         const uniqueNames = new Set();
         fiberArray.forEach(fiber => {
-          uniqueNames.add(getComponentName(fiber.type) || 'Component');
+          uniqueNames.add(getComponentNameFromFiber(fiber) || 'Component');
           didWarnAboutLegacyContext.add(fiber.type);
         });
 

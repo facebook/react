@@ -12,7 +12,8 @@ const {getPublicPackages, logPromise} = require('../utils');
 const theme = require('../theme');
 
 const run = async ({branch, checksum, commit, reactVersion, tempDirectory}) => {
-  const packages = getPublicPackages(join(tempDirectory, 'packages'));
+  const isExperimental = reactVersion.includes('experimental');
+  const packages = getPublicPackages(isExperimental);
   const packagesDir = join(tempDirectory, 'packages');
 
   const buildInfoJSON = {

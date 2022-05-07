@@ -5,18 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from 'shared/invariant';
-
 function getInstanceFromInstance(instanceHandle) {
   return instanceHandle;
 }
 
 function getTagFromInstance(inst) {
   const nativeInstance = inst.stateNode.canonical;
-  invariant(
-    nativeInstance._nativeTag,
-    'All native instances should have a tag.',
-  );
+
+  if (!nativeInstance._nativeTag) {
+    throw new Error('All native instances should have a tag.');
+  }
+
   return nativeInstance;
 }
 

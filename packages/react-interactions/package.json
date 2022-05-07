@@ -21,7 +21,6 @@
     "events/press.js",
     "events/press-legacy.js",
     "events/tap.js",
-    "build-info.json",
     "cjs/",
     "umd/"
   ],
@@ -38,7 +37,7 @@
     "loose-envify": "^1.1.0"
   },
   "peerDependencies": {
-    "react": "^17.0.0-alpha"
+    "react": "^17.0.0"
   },
   "browserify": {
     "transform": [

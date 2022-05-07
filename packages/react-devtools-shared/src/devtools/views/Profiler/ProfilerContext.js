@@ -19,7 +19,7 @@ import {StoreContext} from '../context';
 
 import type {ProfilingDataFrontend} from './types';
 
-export type TabID = 'flame-chart' | 'ranked-chart' | 'interactions';
+export type TabID = 'flame-chart' | 'ranked-chart' | 'timeline';
 
 export type Context = {|
   // Which tab is selected in the Profiler UI?
@@ -64,10 +64,6 @@ export type Context = {|
   selectedFiberID: number | null,
   selectedFiberName: string | null,
   selectFiber: (id: number | null, name: string | null) => void,
-
-  // Which interaction is currently selected in the Interactions graph?
-  selectedInteractionID: number | null,
-  selectInteraction: (id: number | null) => void,
 |};
 
 const ProfilerContext = createContext<Context>(((null: any): Context));
@@ -99,18 +95,18 @@ function ProfilerContextController({children}: Props) {
         isProcessingData: profilerStore.isProcessingData,
         isProfiling: profilerStore.isProfiling,
         profilingData: profilerStore.profilingData,
-        supportsProfiling: store.supportsProfiling,
+        supportsProfiling: store.rootSupportsBasicProfiling,
       }),
       subscribe: (callback: Function) => {
         profilerStore.addListener('profilingData', callback);
         profilerStore.addListener('isProcessingData', callback);
         profilerStore.addListener('isProfiling', callback);
-        store.addListener('supportsProfiling', callback);
+        store.addListener('rootSupportsBasicProfiling', callback);
         return () => {
           profilerStore.removeListener('profilingData', callback);
           profilerStore.removeListener('isProcessingData', callback);
           profilerStore.removeListener('isProfiling', callback);
-          store.removeListener('supportsProfiling', callback);
+          store.removeListener('rootSupportsBasicProfiling', callback);
         };
       },
     }),
@@ -215,9 +211,9 @@ function ProfilerContextController({children}: Props) {
   const [selectedCommitIndex, selectCommitIndex] = useState<number | null>(
     null,
   );
-  const [selectedTabID, selectTab] = useState<TabID>('flame-chart');
-  const [selectedInteractionID, selectInteraction] = useState<number | null>(
-    null,
+  const [selectedTabID, selectTab] = useLocalStorage<TabID>(
+    'React::DevTools::Profiler::defaultTab',
+    'flame-chart',
   );
 
   if (isProfiling) {
@@ -228,9 +224,6 @@ function ProfilerContextController({children}: Props) {
       if (selectedFiberID !== null) {
         selectFiberID(null);
         selectFiberName(null);
-      }
-      if (selectedInteractionID !== null) {
-        selectInteraction(null);
       }
     });
   }
@@ -262,9 +255,6 @@ function ProfilerContextController({children}: Props) {
       selectedFiberID,
       selectedFiberName,
       selectFiber,
-
-      selectedInteractionID,
-      selectInteraction,
     }),
     [
       selectedTabID,
@@ -293,9 +283,6 @@ function ProfilerContextController({children}: Props) {
       selectedFiberID,
       selectedFiberName,
       selectFiber,
-
-      selectedInteractionID,
-      selectInteraction,
     ],
   );
 

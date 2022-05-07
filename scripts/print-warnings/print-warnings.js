@@ -12,7 +12,7 @@ const through = require('through2');
 const traverse = require('@babel/traverse').default;
 const gs = require('glob-stream');
 
-const evalToString = require('../shared/evalToString');
+const {evalStringConcat} = require('../shared/evalToString');
 
 const parserOptions = {
   sourceType: 'module',
@@ -64,15 +64,13 @@ function transform(file, enc, cb) {
             // warning messages can be concatenated (`+`) at runtime, so here's
             // a trivial partial evaluator that interprets the literal value
             try {
-              const warningMsgLiteral = evalToString(node.arguments[0]);
+              const warningMsgLiteral = evalStringConcat(node.arguments[0]);
               warnings.add(JSON.stringify(warningMsgLiteral));
             } catch (error) {
-              console.error(
-                'Failed to extract warning message from',
-                file.path
-              );
-              console.error(astPath.node.loc);
-              throw error;
+              // Silently skip over this call. We have a lint rule to enforce
+              // that all calls are extractable, so if this one fails, assume
+              // it's intentional.
+              return;
             }
           }
         },
@@ -90,6 +88,7 @@ gs([
   '!packages/react-devtools*/**/*.js',
   '!**/__tests__/**/*.js',
   '!**/__mocks__/**/*.js',
+  '!**/node_modules/**/*.js',
 ]).pipe(
   through.obj(transform, cb => {
     process.stdout.write(

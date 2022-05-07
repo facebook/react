@@ -17,6 +17,7 @@ let React;
 let ReactNoop;
 let Suspense;
 let Scheduler;
+let act;
 
 describe('memo', () => {
   beforeEach(() => {
@@ -26,6 +27,7 @@ describe('memo', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     ({Suspense} = React);
   });
 
@@ -177,6 +179,159 @@ describe('memo', () => {
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
       });
 
+      it('consistent behavior for reusing props object across different function component types', async () => {
+        // This test is a bit complicated because it relates to an
+        // implementation detail. We don't have strong guarantees that the props
+        // object is referentially equal during updates where we can't bail
+        // out anyway — like if the props are shallowly equal, but there's a
+        // local state or context update in the same batch.
+        //
+        // However, as a principle, we should aim to make the behavior
+        // consistent across different ways of memoizing a component. For
+        // example, React.memo has a different internal Fiber layout if you pass
+        // a normal function component (SimpleMemoComponent) versus if you pass
+        // a different type like forwardRef (MemoComponent). But this is an
+        // implementation detail. Wrapping a component in forwardRef (or
+        // React.lazy, etc) shouldn't affect whether the props object is reused
+        // during a bailout.
+        //
+        // So this test isn't primarily about asserting a particular behavior
+        // for reusing the props object; it's about making sure the behavior
+        // is consistent.
+
+        const {useEffect, useState} = React;
+
+        let setSimpleMemoStep;
+        const SimpleMemo = React.memo(props => {
+          const [step, setStep] = useState(0);
+          setSimpleMemoStep = setStep;
+
+          const prevProps = React.useRef(props);
+          useEffect(() => {
+            if (props !== prevProps.current) {
+              prevProps.current = props;
+              Scheduler.unstable_yieldValue('Props changed [SimpleMemo]');
+            }
+          }, [props]);
+
+          return <Text text={`SimpleMemo [${props.prop}${step}]`} />;
+        });
+
+        let setComplexMemo;
+        const ComplexMemo = React.memo(
+          React.forwardRef((props, ref) => {
+            const [step, setStep] = useState(0);
+            setComplexMemo = setStep;
+
+            const prevProps = React.useRef(props);
+            useEffect(() => {
+              if (props !== prevProps.current) {
+                prevProps.current = props;
+                Scheduler.unstable_yieldValue('Props changed [ComplexMemo]');
+              }
+            }, [props]);
+
+            return <Text text={`ComplexMemo [${props.prop}${step}]`} />;
+          }),
+        );
+
+        let setMemoWithIndirectionStep;
+        const MemoWithIndirection = React.memo(props => {
+          return <Indirection props={props} />;
+        });
+        function Indirection({props}) {
+          const [step, setStep] = useState(0);
+          setMemoWithIndirectionStep = setStep;
+
+          const prevProps = React.useRef(props);
+          useEffect(() => {
+            if (props !== prevProps.current) {
+              prevProps.current = props;
+              Scheduler.unstable_yieldValue(
+                'Props changed [MemoWithIndirection]',
+              );
+            }
+          }, [props]);
+
+          return <Text text={`MemoWithIndirection [${props.prop}${step}]`} />;
+        }
+
+        function setLocalUpdateOnChildren(step) {
+          setSimpleMemoStep(step);
+          setMemoWithIndirectionStep(step);
+          setComplexMemo(step);
+        }
+
+        function App({prop}) {
+          return (
+            <>
+              <SimpleMemo prop={prop} />
+              <ComplexMemo prop={prop} />
+              <MemoWithIndirection prop={prop} />
+            </>
+          );
+        }
+
+        const root = ReactNoop.createRoot();
+        await act(async () => {
+          root.render(<App prop="A" />);
+        });
+        expect(Scheduler).toHaveYielded([
+          'SimpleMemo [A0]',
+          'ComplexMemo [A0]',
+          'MemoWithIndirection [A0]',
+        ]);
+
+        // Demonstrate what happens when the props change
+        await act(async () => {
+          root.render(<App prop="B" />);
+        });
+        expect(Scheduler).toHaveYielded([
+          'SimpleMemo [B0]',
+          'ComplexMemo [B0]',
+          'MemoWithIndirection [B0]',
+          'Props changed [SimpleMemo]',
+          'Props changed [ComplexMemo]',
+          'Props changed [MemoWithIndirection]',
+        ]);
+
+        // Demonstrate what happens when the prop object changes but there's a
+        // bailout because all the individual props are the same.
+        await act(async () => {
+          root.render(<App prop="B" />);
+        });
+        // Nothing re-renders
+        expect(Scheduler).toHaveYielded([]);
+
+        // Demonstrate what happens when the prop object changes, it bails out
+        // because all the props are the same, but we still render the
+        // children because there's a local update in the same batch.
+        await act(async () => {
+          root.render(<App prop="B" />);
+          setLocalUpdateOnChildren(1);
+        });
+        // The components should re-render with the new local state, but none
+        // of the props objects should have changed
+        expect(Scheduler).toHaveYielded([
+          'SimpleMemo [B1]',
+          'ComplexMemo [B1]',
+          'MemoWithIndirection [B1]',
+        ]);
+
+        // Do the same thing again. We should still reuse the props object.
+        await act(async () => {
+          root.render(<App prop="B" />);
+          setLocalUpdateOnChildren(2);
+        });
+        // The components should re-render with the new local state, but none
+        // of the props objects should have changed
+        expect(Scheduler).toHaveYielded([
+          'SimpleMemo [B2]',
+          'ComplexMemo [B2]',
+          'MemoWithIndirection [B2]',
+        ]);
+      });
+
       it('accepts custom comparison function', async () => {
         function Counter({count}) {
           return <Text text={count} />;
@@ -221,7 +376,7 @@ describe('memo', () => {
         class CounterInner extends React.Component {
           static defaultProps = {suffix: '!'};
           render() {
-            return <Text text={this.props.count + '' + this.props.suffix} />;
+            return <Text text={this.props.count + String(this.props.suffix)} />;
           }
         }
         const Counter = memo(CounterInner);
@@ -447,12 +602,12 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await ReactNoop.act(async () => {
+        await act(async () => {
           root.render(<App />);
         });
         expect(root).toMatchRenderedOutput('0');
 
-        await ReactNoop.act(async () => {
+        await act(async () => {
           setCounter(1);
           ReactNoop.discreteUpdates(() => {
             root.render(<App />);
@@ -483,12 +638,12 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await ReactNoop.act(async () => {
+        await act(async () => {
           root.render(<App />);
         });
         expect(root).toMatchRenderedOutput('0');
 
-        await ReactNoop.act(async () => {
+        await act(async () => {
           setCounter(1);
           ReactNoop.discreteUpdates(() => {
             root.render(<App />);
@@ -498,11 +653,48 @@ describe('memo', () => {
       });
     });
 
+    it('should fall back to showing something meaningful if no displayName or name are present', () => {
+      const MemoComponent = React.memo(props => <div {...props} />);
+      MemoComponent.propTypes = {
+        required: PropTypes.string.isRequired,
+      };
+
+      expect(() =>
+        ReactNoop.render(<MemoComponent optional="foo" />),
+      ).toErrorDev(
+        'Warning: Failed prop type: The prop `required` is marked as required in ' +
+          '`Memo`, but its value is `undefined`.',
+        // There's no component stack in this warning because the inner function is anonymous.
+        // If we wanted to support this (for the Error frames / source location)
+        // we could do this by updating ReactComponentStackFrame.
+        {withoutStack: true},
+      );
+    });
+
+    it('should honor a displayName if set on the inner component in warnings', () => {
+      function Component(props) {
+        return <div {...props} />;
+      }
+      Component.displayName = 'Inner';
+      const MemoComponent = React.memo(Component);
+      MemoComponent.propTypes = {
+        required: PropTypes.string.isRequired,
+      };
+
+      expect(() =>
+        ReactNoop.render(<MemoComponent optional="foo" />),
+      ).toErrorDev(
+        'Warning: Failed prop type: The prop `required` is marked as required in ' +
+          '`Inner`, but its value is `undefined`.\n' +
+          '    in Inner (at **)',
+      );
+    });
+
     it('should honor a displayName if set on the memo wrapper in warnings', () => {
       const MemoComponent = React.memo(function Component(props) {
         return <div {...props} />;
       });
-      MemoComponent.displayName = 'Foo';
+      MemoComponent.displayName = 'Outer';
       MemoComponent.propTypes = {
         required: PropTypes.string.isRequired,
       };
@@ -511,19 +703,16 @@ describe('memo', () => {
         ReactNoop.render(<MemoComponent optional="foo" />),
       ).toErrorDev(
         'Warning: Failed prop type: The prop `required` is marked as required in ' +
-          '`Foo`, but its value is `undefined`.\n' +
-          '    in Foo (at **)',
+          '`Outer`, but its value is `undefined`.\n' +
+          '    in Component (at **)',
       );
     });
 
-    it('should honor a inner displayName if set on the wrapped function', () => {
-      function Component(props) {
+    it('should pass displayName to an anonymous inner component so it shows up in component stacks', () => {
+      const MemoComponent = React.memo(props => {
         return <div {...props} />;
-      }
-      Component.displayName = 'Foo';
-
-      const MemoComponent = React.memo(Component);
-      MemoComponent.displayName = 'Bar';
+      });
+      MemoComponent.displayName = 'Memo';
       MemoComponent.propTypes = {
         required: PropTypes.string.isRequired,
       };
@@ -532,8 +721,29 @@ describe('memo', () => {
         ReactNoop.render(<MemoComponent optional="foo" />),
       ).toErrorDev(
         'Warning: Failed prop type: The prop `required` is marked as required in ' +
-          '`Foo`, but its value is `undefined`.\n' +
-          '    in Foo (at **)',
+          '`Memo`, but its value is `undefined`.\n' +
+          '    in Memo (at **)',
+      );
+    });
+
+    it('should honor a outer displayName when wrapped component and memo component set displayName at the same time.', () => {
+      function Component(props) {
+        return <div {...props} />;
+      }
+      Component.displayName = 'Inner';
+
+      const MemoComponent = React.memo(Component);
+      MemoComponent.displayName = 'Outer';
+      MemoComponent.propTypes = {
+        required: PropTypes.string.isRequired,
+      };
+
+      expect(() =>
+        ReactNoop.render(<MemoComponent optional="foo" />),
+      ).toErrorDev(
+        'Warning: Failed prop type: The prop `required` is marked as required in ' +
+          '`Outer`, but its value is `undefined`.\n' +
+          '    in Inner (at **)',
       );
     });
   }

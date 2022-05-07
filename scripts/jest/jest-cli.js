@@ -44,7 +44,7 @@ const argv = yargs
       describe: 'Run with the given release channel.',
       requiresArg: true,
       type: 'string',
-      default: 'experimental',
+      default: 'www-modern',
       choices: ['experimental', 'stable', 'www-classic', 'www-modern'],
     },
     env: {
@@ -71,7 +71,6 @@ const argv = yargs
       describe: 'Run with www variant set to true.',
       requiresArg: false,
       type: 'boolean',
-      default: false,
     },
     build: {
       alias: 'b',
@@ -93,6 +92,18 @@ const argv = yargs
       type: 'boolean',
       default: false,
     },
+    deprecated: {
+      describe: 'Print deprecation message for command.',
+      requiresArg: true,
+      type: 'string',
+    },
+    compactConsole: {
+      alias: 'c',
+      describe: 'Compact console output (hide file locations).',
+      requiresArg: false,
+      type: 'boolean',
+      default: false,
+    },
   }).argv;
 
 function logError(message) {
@@ -100,8 +111,9 @@ function logError(message) {
 }
 function isWWWConfig() {
   return (
-    argv.releaseChannel === 'www-classic' ||
-    argv.releaseChannel === 'www-modern'
+    (argv.releaseChannel === 'www-classic' ||
+      argv.releaseChannel === 'www-modern') &&
+    argv.project !== 'devtools'
   );
 }
 
@@ -154,13 +166,25 @@ function validateOptions() {
       logError('DevTool tests require --build.');
       success = false;
     }
+  } else {
+    if (argv.compactConsole) {
+      logError('Only DevTool tests support compactConsole flag.');
+      success = false;
+    }
   }
 
-  if (argv.variant && !isWWWConfig()) {
-    logError(
-      'Variant is only supported for the www release channels. Update these options to continue.'
-    );
-    success = false;
+  if (isWWWConfig()) {
+    if (argv.variant === undefined) {
+      // Turn internal experiments on by default
+      argv.variant = true;
+    }
+  } else {
+    if (argv.variant) {
+      logError(
+        'Variant is only supported for the www release channels. Update these options to continue.'
+      );
+      success = false;
+    }
   }
 
   if (argv.build && argv.persistent) {
@@ -210,7 +234,7 @@ function validateOptions() {
     const buildDir = path.resolve('./build');
     if (!fs.existsSync(buildDir)) {
       logError(
-        'Build directory does not exist, please run `yarn build` or remove the --build option.'
+        'Build directory does not exist, please run `yarn build-combined` or remove the --build option.'
       );
       success = false;
     } else if (Date.now() - fs.statSync(buildDir).mtimeMs > 1000 * 60 * 15) {
@@ -249,6 +273,9 @@ function getCommandArgs() {
   if (argv.debug) {
     args.unshift('--inspect-brk');
     args.push('--runInBand');
+
+    // Prevent console logs from being hidden until test completes.
+    args.push('--useStderr');
   }
 
   // CI Environments have limited workers.
@@ -269,6 +296,10 @@ function getEnvars() {
     RELEASE_CHANNEL: argv.releaseChannel.match(/modern|experimental/)
       ? 'experimental'
       : 'stable',
+
+    // Pass this flag through to the config environment
+    // so the base config can conditionally load the console setup file.
+    compactConsole: argv.compactConsole,
   };
 
   if (argv.prod) {
@@ -287,20 +318,20 @@ function getEnvars() {
 }
 
 function main() {
+  if (argv.deprecated) {
+    console.log(chalk.red(`\nPlease run: \`${argv.deprecated}\` instead.\n`));
+    return;
+  }
+
   validateOptions();
+
   const args = getCommandArgs();
   const envars = getEnvars();
+  const env = Object.entries(envars).map(([k, v]) => `${k}=${v}`);
 
   // Print the full command we're actually running.
-  console.log(
-    chalk.dim(
-      `$ ${Object.keys(envars)
-        .map(envar => `${envar}=${envars[envar]}`)
-        .join(' ')}`,
-      'node',
-      args.join(' ')
-    )
-  );
+  const command = `$ ${env.join(' ')} node ${args.join(' ')}`;
+  console.log(chalk.dim(command));
 
   // Print the release channel and project we're running for quick confirmation.
   console.log(
@@ -321,6 +352,7 @@ function main() {
     stdio: 'inherit',
     env: {...envars, ...process.env},
   });
+
   // Ensure we close our process when we get a failure case.
   jest.on('close', code => {
     // Forward the exit code from the Jest process.

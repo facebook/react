@@ -1,0 +1,37 @@
+.Column { 
+  display: flex;  
+  flex-direction: column; 
+} 
+
+.Title {  
+  font-size: var(--font-size-sans-large); 
+  margin-bottom: 0.5rem;  
+} 
+
+.ReleaseNotesLink { 
+  color: var(--color-button-active);  
+}
+
+.Version {
+  color: var(--color-bridge-version-number);
+  font-weight: bold;
+}
+
+.NpmCommand {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0.25rem 0.25rem 0.5rem;
+  background-color: var(--color-bridge-version-npm-background);
+  color: var(--color-bridge-version-npm-text);
+  margin: 0;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-large);
+}
+
+.Paragraph {
+  margin: 0.5rem 0;
+}
+
+.Link {
+  color: var(--color-link);
+}

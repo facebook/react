@@ -34,12 +34,8 @@ import {
   useMemo,
   useReducer,
   useRef,
+  startTransition,
 } from 'react';
-import {
-  unstable_next as next,
-  unstable_runWithPriority as runWithPriority,
-  unstable_UserBlockingPriority as UserBlockingPriority,
-} from 'scheduler';
 import {createRegExp} from '../utils';
 import {BridgeContext, StoreContext} from '../context';
 import Store from '../../store';
@@ -93,6 +89,9 @@ type ACTION_SELECT_ELEMENT_BY_ID = {|
 type ACTION_SELECT_NEXT_ELEMENT_IN_TREE = {|
   type: 'SELECT_NEXT_ELEMENT_IN_TREE',
 |};
+type ACTION_SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {|
+  type: 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
+|};
 type ACTION_SELECT_NEXT_SIBLING_IN_TREE = {|
   type: 'SELECT_NEXT_SIBLING_IN_TREE',
 |};
@@ -105,6 +104,9 @@ type ACTION_SELECT_PARENT_ELEMENT_IN_TREE = {|
 |};
 type ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE = {|
   type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE',
+|};
+type ACTION_SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {|
+  type: 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
 |};
 type ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE = {|
   type: 'SELECT_PREVIOUS_SIBLING_IN_TREE',
@@ -132,10 +134,12 @@ type Action =
   | ACTION_SELECT_ELEMENT_AT_INDEX
   | ACTION_SELECT_ELEMENT_BY_ID
   | ACTION_SELECT_NEXT_ELEMENT_IN_TREE
+  | ACTION_SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE
   | ACTION_SELECT_NEXT_SIBLING_IN_TREE
   | ACTION_SELECT_OWNER
   | ACTION_SELECT_PARENT_ELEMENT_IN_TREE
   | ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE
+  | ACTION_SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE
   | ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE
   | ACTION_SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE
   | ACTION_SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE
@@ -372,6 +376,81 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           }
         }
         break;
+      case 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
+        const elementIndicesWithErrorsOrWarnings = store.getElementsWithErrorsAndWarnings();
+        if (elementIndicesWithErrorsOrWarnings.length === 0) {
+          return state;
+        }
+
+        let flatIndex = 0;
+        if (selectedElementIndex !== null) {
+          // Resume from the current position in the list.
+          // Otherwise step to the previous item, relative to the current selection.
+          for (
+            let i = elementIndicesWithErrorsOrWarnings.length - 1;
+            i >= 0;
+            i--
+          ) {
+            const {index} = elementIndicesWithErrorsOrWarnings[i];
+            if (index >= selectedElementIndex) {
+              flatIndex = i;
+            } else {
+              break;
+            }
+          }
+        }
+
+        let prevEntry;
+        if (flatIndex === 0) {
+          prevEntry =
+            elementIndicesWithErrorsOrWarnings[
+              elementIndicesWithErrorsOrWarnings.length - 1
+            ];
+          selectedElementID = prevEntry.id;
+          selectedElementIndex = prevEntry.index;
+        } else {
+          prevEntry = elementIndicesWithErrorsOrWarnings[flatIndex - 1];
+          selectedElementID = prevEntry.id;
+          selectedElementIndex = prevEntry.index;
+        }
+
+        lookupIDForIndex = false;
+        break;
+      }
+      case 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
+        const elementIndicesWithErrorsOrWarnings = store.getElementsWithErrorsAndWarnings();
+        if (elementIndicesWithErrorsOrWarnings.length === 0) {
+          return state;
+        }
+
+        let flatIndex = -1;
+        if (selectedElementIndex !== null) {
+          // Resume from the current position in the list.
+          // Otherwise step to the next item, relative to the current selection.
+          for (let i = 0; i < elementIndicesWithErrorsOrWarnings.length; i++) {
+            const {index} = elementIndicesWithErrorsOrWarnings[i];
+            if (index <= selectedElementIndex) {
+              flatIndex = i;
+            } else {
+              break;
+            }
+          }
+        }
+
+        let nextEntry;
+        if (flatIndex >= elementIndicesWithErrorsOrWarnings.length - 1) {
+          nextEntry = elementIndicesWithErrorsOrWarnings[0];
+          selectedElementID = nextEntry.id;
+          selectedElementIndex = nextEntry.index;
+        } else {
+          nextEntry = elementIndicesWithErrorsOrWarnings[flatIndex + 1];
+          selectedElementID = nextEntry.id;
+          selectedElementIndex = nextEntry.index;
+        }
+
+        lookupIDForIndex = false;
+        break;
+      }
       default:
         // React can bailout of no-op updates.
         return state;
@@ -748,7 +827,7 @@ type Props = {|
   defaultSelectedElementIndex?: ?number,
 |};
 
-// TODO Remove TreeContextController wrapper element once global ConsearchText.write API exists.
+// TODO Remove TreeContextController wrapper element once global Context.write API exists.
 function TreeContextController({
   children,
   defaultInspectedElementID,
@@ -776,11 +855,13 @@ function TreeContextController({
         case 'SELECT_ELEMENT_BY_ID':
         case 'SELECT_CHILD_ELEMENT_IN_TREE':
         case 'SELECT_NEXT_ELEMENT_IN_TREE':
+        case 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE':
         case 'SELECT_NEXT_SIBLING_IN_TREE':
         case 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE':
         case 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE':
         case 'SELECT_PARENT_ELEMENT_IN_TREE':
         case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
+        case 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE':
         case 'SELECT_PREVIOUS_SIBLING_IN_TREE':
         case 'SELECT_OWNER':
         case 'UPDATE_INSPECTED_ELEMENT_ID':
@@ -836,11 +917,10 @@ function TreeContextController({
 
   const dispatchWrapper = useCallback(
     (action: Action) => {
-      // Run the first update at "user-blocking" priority in case dispatch is called from a non-React event.
-      // In this case, the current (and "next") priorities would both be "normal",
-      // and suspense would potentially block both updates.
-      runWithPriority(UserBlockingPriority, () => dispatch(action));
-      next(() => dispatch({type: 'UPDATE_INSPECTED_ELEMENT_ID'}));
+      dispatch(action);
+      startTransition(() => {
+        dispatch({type: 'UPDATE_INSPECTED_ELEMENT_ID'});
+      });
     },
     [dispatch],
   );

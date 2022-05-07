@@ -1,32 +1,8 @@
 # use-subscription
 
-React hook that safely manages subscriptions in concurrent mode.
+React Hook for subscribing to external data sources.
 
-This utility can be used for subscriptions to a single value that are typically only read in one place and may update frequently (e.g. a component that subscribes to a geolocation API to show a dot on a map).
-
-## When should you NOT use this?
-
-Most other cases have **better long-term solutions**:
-* Redux/Flux stores should use the [context API](https://reactjs.org/docs/context.html) instead.
-* I/O subscriptions (e.g. notifications) that update infrequently should use a mechanism like [`react-cache`](https://github.com/facebook/react/blob/master/packages/react-cache/README.md) instead.
-* Complex libraries like Relay/Apollo should manage subscriptions manually with the same techniques which this library uses under the hood (as referenced [here](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)) in a way that is most optimized for their library usage.
-
-## Limitations in concurrent mode
-
-`use-subscription` is safe to use in concurrent mode. However, [it achieves correctness by sometimes de-opting to synchronous mode](https://github.com/facebook/react/issues/13186#issuecomment-403959161), obviating the benefits of concurrent rendering. This is an inherent limitation of storing state outside of React's managed state queue and rendering in response to a change event.
-
-The effect of de-opting to sync mode is that the main thread may periodically be blocked (in the case of CPU-bound work), and placeholders may appear earlier than desired (in the case of IO-bound work).
-
-For **full compatibility** with concurrent rendering, including both **time-slicing** and **React Suspense**, the suggested longer-term solution is to move to one of the patterns described in the previous section.
-
-## What types of subscriptions can this support?
-
-This abstraction can handle a variety of subscription types, including:
-* Event dispatchers like `HTMLInputElement`.
-* Custom pub/sub components like Relay's `FragmentSpecResolver`.
-* Observable types like RxJS `BehaviorSubject` and `ReplaySubject`. (Types like RxJS `Subject` or `Observable` are not supported, because they provide no way to read the "current" value after it has been emitted.)
-
-Note that JavaScript promises are also **not supported** because they provide no way to synchronously read the "current" value.
+**You may now migrate to [`use-sync-external-store`](https://www.npmjs.com/package/use-sync-external-store) directly instead, which has the same API as [`React.useSyncExternalStore`](https://reactjs.org/docs/hooks-reference.html#usesyncexternalstore). The `use-subscription` package is now a thin wrapper over `use-sync-external-store` and will not be updated further.**
 
 # Installation
 

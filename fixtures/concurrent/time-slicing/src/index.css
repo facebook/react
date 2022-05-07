@@ -32,16 +32,18 @@ body {
   margin-top: 20px;
   margin-bottom: 20px;
   zoom: 1.8;
+  text-align: center;
+  display: flex;
+  justify-content: space-between;
 }
 
 label {
   zoom: 1;
-  margin-right: 50px;
   font-size: 30px;
 }
 
 label.selected {
-  font-weight: bold;  
+  font-weight: bold;
 }
 
 label:nth-child(1).selected {
@@ -54,6 +56,10 @@ label:nth-child(2).selected {
 
 label:nth-child(3).selected {
   color: #61dafb;
+}
+
+input[type="radio" i]:nth-child(1) {
+  margin-left: 0;
 }
 
 .chart {

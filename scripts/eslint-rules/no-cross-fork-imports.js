@@ -26,48 +26,59 @@ module.exports = {
     const sourceFilename = context.getFilename();
 
     if (isOldFork(sourceFilename)) {
+      const visitor = node => {
+        const sourceNode = node.source;
+        if (sourceNode === null) {
+          return;
+        }
+        const filename = sourceNode.value;
+        if (isNewFork(filename)) {
+          context.report({
+            node: sourceNode,
+            message:
+              'A module that belongs to the old fork cannot import a module ' +
+              'from the new fork.',
+            fix(fixer) {
+              return fixer.replaceText(
+                sourceNode,
+                `'${filename.replace(/\.new(\.js)?$/, '.old')}'`
+              );
+            },
+          });
+        }
+      };
       return {
-        ImportDeclaration(node) {
-          const importSourceNode = node.source;
-          const filename = importSourceNode.value;
-          if (isNewFork(filename)) {
-            context.report({
-              node: importSourceNode,
-              message:
-                'A module that belongs to the old fork cannot import a module ' +
-                'from the new fork.',
-              fix(fixer) {
-                return fixer.replaceText(
-                  importSourceNode,
-                  `'${filename.replace(/\.new(\.js)?$/, '.old')}'`
-                );
-              },
-            });
-          }
-        },
+        ImportDeclaration: visitor,
+        ExportNamedDeclaration: visitor,
       };
     }
 
     if (isNewFork(sourceFilename)) {
+      const visitor = node => {
+        const sourceNode = node.source;
+        if (sourceNode === null) {
+          return;
+        }
+        const filename = sourceNode.value;
+        if (isOldFork(filename)) {
+          context.report({
+            node: sourceNode,
+            message:
+              'A module that belongs to the new fork cannot import a module ' +
+              'from the old fork.',
+            fix(fixer) {
+              return fixer.replaceText(
+                sourceNode,
+                `'${filename.replace(/\.old(\.js)?$/, '.new')}'`
+              );
+            },
+          });
+        }
+      };
+
       return {
-        ImportDeclaration(node) {
-          const importSourceNode = node.source;
-          const filename = importSourceNode.value;
-          if (isOldFork(filename)) {
-            context.report({
-              node: importSourceNode,
-              message:
-                'A module that belongs to the new fork cannot import a module ' +
-                'from the old fork.',
-              fix(fixer) {
-                return fixer.replaceText(
-                  importSourceNode,
-                  `'${filename.replace(/\.old(\.js)?$/, '.new')}'`
-                );
-              },
-            });
-          }
-        },
+        ImportDeclaration: visitor,
+        ExportNamedDeclaration: visitor,
       };
     }
 

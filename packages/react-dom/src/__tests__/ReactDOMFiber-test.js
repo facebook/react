@@ -244,34 +244,6 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  // TODO: remove in React 18
-  if (!__EXPERIMENTAL__) {
-    it('should support unstable_createPortal alias', () => {
-      const portalContainer = document.createElement('div');
-
-      expect(() =>
-        ReactDOM.render(
-          <div>
-            {ReactDOM.unstable_createPortal(<div>portal</div>, portalContainer)}
-          </div>,
-          container,
-        ),
-      ).toWarnDev(
-        'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
-          'and will be removed in React 18+. Update your code to use ' +
-          'ReactDOM.createPortal() instead. It has the exact same API, ' +
-          'but without the "unstable_" prefix.',
-        {withoutStack: true},
-      );
-      expect(portalContainer.innerHTML).toBe('<div>portal</div>');
-      expect(container.innerHTML).toBe('<div></div>');
-
-      ReactDOM.unmountComponentAtNode(container);
-      expect(portalContainer.innerHTML).toBe('');
-      expect(container.innerHTML).toBe('');
-    });
-  }
-
   it('should render many portals', () => {
     const portalContainer1 = document.createElement('div');
     const portalContainer2 = document.createElement('div');
@@ -1038,7 +1010,6 @@ describe('ReactDOMFiber', () => {
     expect(ops).toEqual([]);
   });
 
-  // @gate enableEagerRootListeners
   it('listens to events that do not exist in the Portal subtree', () => {
     const onClick = jest.fn();
 
@@ -1181,13 +1152,13 @@ describe('ReactDOMFiber', () => {
     expect(ops).toEqual(['A']);
 
     if (__DEV__) {
-      // TODO: this warning shouldn't be firing in the first place if user didn't call it.
-      const errorCalls = console.error.calls.count();
-      for (let i = 0; i < errorCalls; i++) {
-        expect(console.error.calls.argsFor(i)[0]).toMatch(
-          'unstable_flushDiscreteUpdates: Cannot flush updates when React is already rendering.',
-        );
-      }
+      expect(console.error.calls.count()).toBe(2);
+      expect(console.error.calls.argsFor(0)[0]).toMatch(
+        'ReactDOM.render is no longer supported in React 18',
+      );
+      expect(console.error.calls.argsFor(1)[0]).toMatch(
+        'ReactDOM.render is no longer supported in React 18',
+      );
     }
   });
 

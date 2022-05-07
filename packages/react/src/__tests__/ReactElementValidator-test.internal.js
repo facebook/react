@@ -532,4 +532,14 @@ describe('ReactElementValidator', () => {
       {withoutStack: true},
     );
   });
+
+  it('does not call lazy initializers eagerly', () => {
+    let didCall = false;
+    const Lazy = React.lazy(() => {
+      didCall = true;
+      return {then() {}};
+    });
+    React.createElement(Lazy);
+    expect(didCall).toBe(false);
+  });
 });

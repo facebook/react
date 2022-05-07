@@ -604,10 +604,10 @@ const tests = {
           const [state4, dispatch2] = React.useReducer();
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
-          const [startTransition1] = useTransition();
-          const [startTransition2, isPending2] = useTransition();
-          const [startTransition3] = React.useTransition();
-          const [startTransition4, isPending4] = React.useTransition();
+          const [isPending1] = useTransition();
+          const [isPending2, startTransition2] = useTransition();
+          const [isPending3] = React.useTransition();
+          const [isPending4, startTransition4] = React.useTransition();
           const mySetState = useCallback(() => {}, []);
           let myDispatch = useCallback(() => {}, []);
 
@@ -1090,6 +1090,22 @@ const tests = {
             }, 1000);
             return () => clearInterval(id);
           }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function Counter(unstableProp) {
+          let [count, setCount] = useState(0);
+          setCount = unstableProp
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(c => c + 1);
+            }, 1000);
+            return () => clearInterval(id);
+          }, [setCount]);
 
           return <h1>{count}</h1>;
         }
@@ -1582,6 +1598,48 @@ const tests = {
       ],
     },
     {
+      code: normalizeIndent`
+        function Counter(unstableProp) {
+          let [count, setCount] = useState(0);
+          setCount = unstableProp
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(c => c + 1);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'setCount'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [setCount]',
+              output: normalizeIndent`
+                function Counter(unstableProp) {
+                  let [count, setCount] = useState(0);
+                  setCount = unstableProp
+                  useEffect(() => {
+                    let id = setInterval(() => {
+                      setCount(c => c + 1);
+                    }, 1000);
+                    return () => clearInterval(id);
+                  }, [setCount]);
+        
+                  return <h1>{count}</h1>;
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
       // Note: we *could* detect it's a primitive and never assigned
       // even though it's not a constant -- but we currently don't.
       // So this is an error.
@@ -1688,6 +1746,42 @@ const tests = {
           message:
             'React Hook useCallback does nothing when called with only one argument. ' +
             'Did you forget to pass an array of dependencies?',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          useEffect()
+          useLayoutEffect()
+          useCallback()
+          useMemo()
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useEffect requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useLayoutEffect requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useCallback requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useMemo requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
           suggestions: undefined,
         },
       ],
@@ -3585,6 +3679,36 @@ const tests = {
             },
           ],
         },
+        {
+          message:
+            'React Hook useEffect has a complex expression in the dependency array. ' +
+            'Extract it to a separate variable so it can be statically checked.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {}, [props?.attribute.method()]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useEffect has a complex expression in the dependency array. ' +
+            'Extract it to a separate variable so it can be statically checked.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {}, [props.method()]);
+        }
+      `,
+      errors: [
         {
           message:
             'React Hook useEffect has a complex expression in the dependency array. ' +
@@ -8071,6 +8195,20 @@ describe('react-hooks', () => {
     parser: require.resolve('@typescript-eslint/parser-v4'),
     parserOptions,
   }).run('parser: @typescript-eslint/parser@4.x', ReactHooksESLintRule, {
+    valid: [
+      ...testsTypescriptEslintParserV4.valid,
+      ...testsTypescriptEslintParser.valid,
+    ],
+    invalid: [
+      ...testsTypescriptEslintParserV4.invalid,
+      ...testsTypescriptEslintParser.invalid,
+    ],
+  });
+
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v5'),
+    parserOptions,
+  }).run('parser: @typescript-eslint/parser@^5.0.0-0', ReactHooksESLintRule, {
     valid: [
       ...testsTypescriptEslintParserV4.valid,
       ...testsTypescriptEslintParser.valid,

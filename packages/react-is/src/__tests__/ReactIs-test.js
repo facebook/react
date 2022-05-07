@@ -12,6 +12,7 @@
 let React;
 let ReactDOM;
 let ReactIs;
+let SuspenseList;
 
 describe('ReactIs', () => {
   beforeEach(() => {
@@ -20,6 +21,10 @@ describe('ReactIs', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactIs = require('react-is');
+
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.SuspenseList;
+    }
   });
 
   it('should return undefined for unknown/invalid types', () => {
@@ -29,10 +34,17 @@ describe('ReactIs', () => {
     expect(ReactIs.typeOf({})).toBe(undefined);
     expect(ReactIs.typeOf(null)).toBe(undefined);
     expect(ReactIs.typeOf(undefined)).toBe(undefined);
+    expect(ReactIs.typeOf(NaN)).toBe(undefined);
+    expect(ReactIs.typeOf(Symbol('def'))).toBe(undefined);
   });
 
   it('identifies valid element types', () => {
     class Component extends React.Component {
+      render() {
+        return React.createElement('div');
+      }
+    }
+    class PureComponent extends React.PureComponent {
       render() {
         return React.createElement('div');
       }
@@ -48,6 +60,7 @@ describe('ReactIs', () => {
 
     expect(ReactIs.isValidElementType('div')).toEqual(true);
     expect(ReactIs.isValidElementType(Component)).toEqual(true);
+    expect(ReactIs.isValidElementType(PureComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(FunctionComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(ForwardRefComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(LazyComponent)).toEqual(true);
@@ -176,6 +189,16 @@ describe('ReactIs', () => {
     expect(ReactIs.isSuspense({type: ReactIs.Suspense})).toBe(false);
     expect(ReactIs.isSuspense('React.Suspense')).toBe(false);
     expect(ReactIs.isSuspense(<div />)).toBe(false);
+  });
+
+  // @gate enableSuspenseList
+  it('should identify suspense list', () => {
+    expect(ReactIs.isValidElementType(SuspenseList)).toBe(true);
+    expect(ReactIs.typeOf(<SuspenseList />)).toBe(ReactIs.SuspenseList);
+    expect(ReactIs.isSuspenseList(<SuspenseList />)).toBe(true);
+    expect(ReactIs.isSuspenseList({type: ReactIs.SuspenseList})).toBe(false);
+    expect(ReactIs.isSuspenseList('React.SuspenseList')).toBe(false);
+    expect(ReactIs.isSuspenseList(<div />)).toBe(false);
   });
 
   it('should identify profile root', () => {

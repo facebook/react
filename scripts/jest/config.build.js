@@ -4,6 +4,11 @@ const {readdirSync, statSync} = require('fs');
 const {join} = require('path');
 const baseConfig = require('./config.base');
 
+process.env.IS_BUILD = true;
+
+const NODE_MODULES_DIR =
+  process.env.RELEASE_CHANNEL === 'stable' ? 'oss-stable' : 'oss-experimental';
+
 // Find all folders in packages/* with package.json
 const packagesRoot = join(__dirname, '..', '..', 'packages');
 const packages = readdirSync(packagesRoot).filter(dir => {
@@ -33,18 +38,26 @@ moduleNameMapper[
 // Map packages to bundles
 packages.forEach(name => {
   // Root entry point
-  moduleNameMapper[`^${name}$`] = `<rootDir>/build/node_modules/${name}`;
+  moduleNameMapper[`^${name}$`] = `<rootDir>/build/${NODE_MODULES_DIR}/${name}`;
   // Named entry points
   moduleNameMapper[
     `^${name}\/([^\/]+)$`
-  ] = `<rootDir>/build/node_modules/${name}/$1`;
+  ] = `<rootDir>/build/${NODE_MODULES_DIR}/${name}/$1`;
 });
+
+moduleNameMapper[
+  'use-sync-external-store/shim/with-selector'
+] = `<rootDir>/build/${NODE_MODULES_DIR}/use-sync-external-store/shim/with-selector`;
+moduleNameMapper[
+  'use-sync-external-store/shim/index.native'
+] = `<rootDir>/build/${NODE_MODULES_DIR}/use-sync-external-store/shim/index.native`;
 
 module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles
   moduleNameMapper,
   modulePathIgnorePatterns: [
     ...baseConfig.modulePathIgnorePatterns,
+    'packages/react-devtools-extensions',
     'packages/react-devtools-shared',
   ],
   // Don't run bundle tests on -test.internal.* files

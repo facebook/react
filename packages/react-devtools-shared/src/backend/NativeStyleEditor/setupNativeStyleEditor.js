@@ -9,6 +9,7 @@
 
 import Agent from 'react-devtools-shared/src/backend/agent';
 import resolveBoxStyle from './resolveBoxStyle';
+import isArray from 'react-devtools-shared/src/isArray';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {RendererID} from '../types';
@@ -210,12 +211,9 @@ function renameStyle(
     }
     // TODO Fabric does not support setNativeProps; chat with Sebastian or Eli
     instance.setNativeProps({style: newStyle});
-  } else if (Array.isArray(style)) {
+  } else if (isArray(style)) {
     const lastIndex = style.length - 1;
-    if (
-      typeof style[lastIndex] === 'object' &&
-      !Array.isArray(style[lastIndex])
-    ) {
+    if (typeof style[lastIndex] === 'object' && !isArray(style[lastIndex])) {
       customStyle = shallowClone(style[lastIndex]);
       delete customStyle[oldName];
       if (newName) {
@@ -224,14 +222,16 @@ function renameStyle(
         customStyle[oldName] = undefined;
       }
 
-      agent.overrideProps({
+      agent.overrideValueAtPath({
+        type: 'props',
         id,
         rendererID,
         path: ['style', lastIndex],
         value: customStyle,
       });
     } else {
-      agent.overrideProps({
+      agent.overrideValueAtPath({
+        type: 'props',
         id,
         rendererID,
         path: ['style'],
@@ -247,14 +247,16 @@ function renameStyle(
       customStyle[oldName] = undefined;
     }
 
-    agent.overrideProps({
+    agent.overrideValueAtPath({
+      type: 'props',
       id,
       rendererID,
       path: ['style'],
       value: customStyle,
     });
   } else {
-    agent.overrideProps({
+    agent.overrideValueAtPath({
+      type: 'props',
       id,
       rendererID,
       path: ['style'],
@@ -292,20 +294,19 @@ function setStyle(
     }
     // TODO Fabric does not support setNativeProps; chat with Sebastian or Eli
     instance.setNativeProps({style: newStyle});
-  } else if (Array.isArray(style)) {
+  } else if (isArray(style)) {
     const lastLength = style.length - 1;
-    if (
-      typeof style[lastLength] === 'object' &&
-      !Array.isArray(style[lastLength])
-    ) {
-      agent.overrideProps({
+    if (typeof style[lastLength] === 'object' && !isArray(style[lastLength])) {
+      agent.overrideValueAtPath({
+        type: 'props',
         id,
         rendererID,
         path: ['style', lastLength, name],
         value,
       });
     } else {
-      agent.overrideProps({
+      agent.overrideValueAtPath({
+        type: 'props',
         id,
         rendererID,
         path: ['style'],
@@ -313,7 +314,8 @@ function setStyle(
       });
     }
   } else {
-    agent.overrideProps({
+    agent.overrideValueAtPath({
+      type: 'props',
       id,
       rendererID,
       path: ['style'],

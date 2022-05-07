@@ -19,6 +19,7 @@ import {
   Profiler,
   StrictMode,
   Suspense,
+  unstable_Cache as Cache,
 } from 'react';
 
 const Context = createContext('abc');
@@ -61,15 +62,17 @@ export default function ElementTypes() {
           <Context.Consumer>{value => null}</Context.Consumer>
         </Context.Provider>
         <StrictMode>
-          <Suspense fallback={<div>Loading...</div>}>
-            <ClassComponent />
-            <FunctionComponent />
-            <MemoFunctionComponent />
-            <ForwardRefComponent />
-            <ForwardRefComponentWithAnonymousFunction />
-            <ForwardRefComponentWithCustomDisplayName />
-            <LazyComponent />
-          </Suspense>
+          <Cache>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ClassComponent />
+              <FunctionComponent />
+              <MemoFunctionComponent />
+              <ForwardRefComponent />
+              <ForwardRefComponentWithAnonymousFunction />
+              <ForwardRefComponentWithCustomDisplayName />
+              <LazyComponent />
+            </Suspense>
+          </Cache>
         </StrictMode>
       </Fragment>
     </Profiler>

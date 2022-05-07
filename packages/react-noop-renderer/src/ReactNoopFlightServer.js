@@ -15,6 +15,7 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ServerContextJSONValue} from 'shared/ReactTypes';
 
 import {saveModule} from 'react-noop-renderer/flight-modules';
 
@@ -27,35 +28,56 @@ const ReactNoopFlightServer = ReactFlightServer({
     callback();
   },
   beginWriting(destination: Destination): void {},
-  writeChunk(destination: Destination, buffer: Uint8Array): void {
-    destination.push(Buffer.from((buffer: any)).toString('utf8'));
+  writeChunk(destination: Destination, chunk: string): void {
+    destination.push(chunk);
+  },
+  writeChunkAndReturn(destination: Destination, chunk: string): boolean {
+    destination.push(chunk);
+    return true;
   },
   completeWriting(destination: Destination): void {},
   close(destination: Destination): void {},
+  closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
-  convertStringToBuffer(content: string): Uint8Array {
-    return Buffer.from(content, 'utf8');
+  stringToChunk(content: string): string {
+    return content;
   },
-  formatChunkAsString(type: string, props: Object): string {
-    return JSON.stringify({type, props});
+  stringToPrecomputedChunk(content: string): string {
+    return content;
   },
-  formatChunk(type: string, props: Object): Uint8Array {
-    return Buffer.from(JSON.stringify({type, props}), 'utf8');
+  isModuleReference(reference: Object): boolean {
+    return reference.$$typeof === Symbol.for('react.module.reference');
   },
-  resolveModuleMetaData(config: void, renderFn: Function) {
-    return saveModule(renderFn);
+  getModuleKey(reference: Object): Object {
+    return reference;
+  },
+  resolveModuleMetaData(
+    config: void,
+    reference: {$$typeof: Symbol, value: any},
+  ) {
+    return saveModule(reference.value);
   },
 });
 
-function render(model: ReactModel): Destination {
+type Options = {
+  onError?: (error: mixed) => void,
+};
+
+function render(
+  model: ReactModel,
+  options?: Options,
+  context?: Array<[string, ServerContextJSONValue]>,
+): Destination {
   const destination: Destination = [];
   const bundlerConfig = undefined;
   const request = ReactNoopFlightServer.createRequest(
     model,
-    destination,
     bundlerConfig,
+    options ? options.onError : undefined,
+    context,
   );
   ReactNoopFlightServer.startWork(request);
+  ReactNoopFlightServer.startFlowing(request, destination);
   return destination;
 }
 

@@ -84,10 +84,18 @@
 // regardless of priority. Intermediate state may vary according to system
 // resources, but the final state is always the same.
 
-import type {Fiber} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
+import type {Lanes, Lane} from './ReactFiberLane.old';
 
-import {NoLane, NoLanes, isSubsetOfLanes, mergeLanes} from './ReactFiberLane';
+import {
+  NoLane,
+  NoLanes,
+  isSubsetOfLanes,
+  mergeLanes,
+  isTransitionLane,
+  intersectLanes,
+  markRootEntangled,
+} from './ReactFiberLane.old';
 import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
@@ -96,12 +104,15 @@ import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
-import {StrictMode} from './ReactTypeOfMode';
-import {markSkippedUpdateLanes} from './ReactFiberWorkLoop.old';
+import {StrictLegacyMode} from './ReactTypeOfMode';
+import {
+  markSkippedUpdateLanes,
+  isInterleavedUpdate,
+} from './ReactFiberWorkLoop.old';
+import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
+import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
 
-import invariant from 'shared/invariant';
-
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import assign from 'shared/assign';
 
 export type Update<State> = {|
   // TODO: Temporary field. Will remove this by storing a map of
@@ -116,8 +127,10 @@ export type Update<State> = {|
   next: Update<State> | null,
 |};
 
-type SharedQueue<State> = {|
+export type SharedQueue<State> = {|
   pending: Update<State> | null,
+  interleaved: Update<State> | null,
+  lanes: Lanes,
 |};
 
 export type UpdateQueue<State> = {|
@@ -156,6 +169,8 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     lastBaseUpdate: null,
     shared: {
       pending: null,
+      interleaved: null,
+      lanes: NoLanes,
     },
     effects: null,
   };
@@ -195,7 +210,11 @@ export function createUpdate(eventTime: number, lane: Lane): Update<*> {
   return update;
 }
 
-export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
+export function enqueueUpdate<State>(
+  fiber: Fiber,
+  update: Update<State>,
+  lane: Lane,
+) {
   const updateQueue = fiber.updateQueue;
   if (updateQueue === null) {
     // Only occurs if the fiber has been unmounted.
@@ -203,15 +222,31 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
   }
 
   const sharedQueue: SharedQueue<State> = (updateQueue: any).shared;
-  const pending = sharedQueue.pending;
-  if (pending === null) {
-    // This is the first update. Create a circular list.
-    update.next = update;
+
+  if (isInterleavedUpdate(fiber, lane)) {
+    const interleaved = sharedQueue.interleaved;
+    if (interleaved === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+      // At the end of the current render, this queue's interleaved updates will
+      // be transferred to the pending queue.
+      pushInterleavedQueue(sharedQueue);
+    } else {
+      update.next = interleaved.next;
+      interleaved.next = update;
+    }
+    sharedQueue.interleaved = update;
   } else {
-    update.next = pending.next;
-    pending.next = update;
+    const pending = sharedQueue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    sharedQueue.pending = update;
   }
-  sharedQueue.pending = update;
 
   if (__DEV__) {
     if (
@@ -226,6 +261,34 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
       );
       didWarnUpdateInsideUpdate = true;
     }
+  }
+}
+
+export function entangleTransitions(root: FiberRoot, fiber: Fiber, lane: Lane) {
+  const updateQueue = fiber.updateQueue;
+  if (updateQueue === null) {
+    // Only occurs if the fiber has been unmounted.
+    return;
+  }
+
+  const sharedQueue: SharedQueue<mixed> = (updateQueue: any).shared;
+  if (isTransitionLane(lane)) {
+    let queueLanes = sharedQueue.lanes;
+
+    // If any entangled lanes are no longer pending on the root, then they must
+    // have finished. We can remove them from the shared queue, which represents
+    // a superset of the actually pending lanes. In some cases we may entangle
+    // more than we need to, but that's OK. In fact it's worse if we *don't*
+    // entangle when we should.
+    queueLanes = intersectLanes(queueLanes, root.pendingLanes);
+
+    // Entangle the new transition lane with the other transition lanes.
+    const newQueueLanes = mergeLanes(queueLanes, lane);
+    sharedQueue.lanes = newQueueLanes;
+    // Even if queue.lanes already include lane, we don't know for certain if
+    // the lane finished since the last time we entangled it. So we need to
+    // entangle it again, just to be sure.
+    markRootEntangled(root, newQueueLanes);
   }
 }
 
@@ -328,13 +391,13 @@ function getStateFromUpdate<State>(
         if (__DEV__) {
           if (
             debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictMode
+            workInProgress.mode & StrictLegacyMode
           ) {
-            disableLogs();
+            setIsStrictModeForDevtools(true);
             try {
               payload.call(instance, prevState, nextProps);
             } finally {
-              reenableLogs();
+              setIsStrictModeForDevtools(false);
             }
           }
           exitDisallowedContextReadInDEV();
@@ -361,13 +424,13 @@ function getStateFromUpdate<State>(
         if (__DEV__) {
           if (
             debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictMode
+            workInProgress.mode & StrictLegacyMode
           ) {
-            disableLogs();
+            setIsStrictModeForDevtools(true);
             try {
               payload.call(instance, prevState, nextProps);
             } finally {
-              reenableLogs();
+              setIsStrictModeForDevtools(false);
             }
           }
           exitDisallowedContextReadInDEV();
@@ -381,7 +444,7 @@ function getStateFromUpdate<State>(
         return prevState;
       }
       // Merge the partial state and the previous state.
-      return Object.assign({}, prevState, partialState);
+      return assign({}, prevState, partialState);
     }
     case ForceUpdate: {
       hasForceUpdate = true;
@@ -516,7 +579,12 @@ export function processUpdateQueue<State>(
           instance,
         );
         const callback = update.callback;
-        if (callback !== null) {
+        if (
+          callback !== null &&
+          // If the update was already committed, we should not queue its
+          // callback again.
+          update.lane !== NoLane
+        ) {
           workInProgress.flags |= Callback;
           const effects = queue.effects;
           if (effects === null) {
@@ -554,6 +622,22 @@ export function processUpdateQueue<State>(
     queue.firstBaseUpdate = newFirstBaseUpdate;
     queue.lastBaseUpdate = newLastBaseUpdate;
 
+    // Interleaved updates are stored on a separate queue. We aren't going to
+    // process them during this render, but we do need to track which lanes
+    // are remaining.
+    const lastInterleaved = queue.shared.interleaved;
+    if (lastInterleaved !== null) {
+      let interleaved = lastInterleaved;
+      do {
+        newLanes = mergeLanes(newLanes, interleaved.lane);
+        interleaved = ((interleaved: any).next: Update<State>);
+      } while (interleaved !== lastInterleaved);
+    } else if (firstBaseUpdate === null) {
+      // `queue.lanes` is used for entangling transitions. We can set it back to
+      // zero once the queue is empty.
+      queue.shared.lanes = NoLanes;
+    }
+
     // Set the remaining expiration time to be whatever is remaining in the queue.
     // This should be fine because the only two other things that contribute to
     // expiration time are props and context. We're already in the middle of the
@@ -572,12 +656,13 @@ export function processUpdateQueue<State>(
 }
 
 function callCallback(callback, context) {
-  invariant(
-    typeof callback === 'function',
-    'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: %s',
-    callback,
-  );
+  if (typeof callback !== 'function') {
+    throw new Error(
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        `received: ${callback}`,
+    );
+  }
+
   callback.call(context);
 }
 

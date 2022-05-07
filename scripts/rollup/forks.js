@@ -30,42 +30,28 @@ const __EXPERIMENTAL__ =
 
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
-const forks = Object.freeze({
-  // Optimization: for UMDs, use a version that we can inline into the React bundle.
-  // Use that from all other bundles.
-  'object-assign': (bundleType, entry, dependencies) => {
-    if (
-      bundleType !== UMD_DEV &&
-      bundleType !== UMD_PROD &&
-      bundleType !== UMD_PROFILING
-    ) {
-      // It's only relevant for UMD bundles since that's where the duplication
-      // happens. Other bundles just require('object-assign') anyway.
-      return null;
-    }
-    if (entry === 'react') {
-      // Use the forked version that uses ES modules instead of CommonJS.
-      return 'shared/forks/object-assign.inline-umd.js';
-    }
-    if (dependencies.indexOf('react') === -1) {
-      // We can only apply the optimizations to bundle that depend on React
-      // because we read assign() from an object exposed on React internals.
-      return null;
-    }
-    // We can use the fork that reads the secret export!
-    return 'shared/forks/object-assign.umd.js';
-  },
 
-  'react-shallow-renderer': () => {
+// Fork paths are relative to the project root. They must include the full path,
+// including the extension. We intentionally don't use Node's module resolution
+// algorithm because 1) require.resolve doesn't work with ESM modules, and 2)
+// the behavior is easier to predict.
+const forks = Object.freeze({
+  // NOTE: This is hard-coded to the main entry point of the (third-party)
+  // react-shallow-renderer package.
+  './node_modules/react-shallow-renderer/index.js': () => {
     // Use ESM build of `react-shallow-renderer`.
-    return 'react-shallow-renderer/esm/index.js';
+    return './node_modules/react-shallow-renderer/esm/index.js';
   },
 
   // Without this fork, importing `shared/ReactSharedInternals` inside
   // the `react` package itself would not work due to a cyclical dependency.
-  'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
-    if (entry === 'react') {
-      return 'react/src/ReactSharedInternals';
+  './packages/shared/ReactSharedInternals.js': (
+    bundleType,
+    entry,
+    dependencies
+  ) => {
+    if (entry === 'react' || entry === 'react/src/ReactSharedSubset.js') {
+      return './packages/react/src/ReactSharedInternals.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
@@ -82,18 +68,18 @@ const forks = Object.freeze({
   },
 
   // We have a few forks for different environments.
-  'shared/ReactFeatureFlags': (bundleType, entry) => {
+  './packages/shared/ReactFeatureFlags.js': (bundleType, entry) => {
     switch (entry) {
       case 'react-native-renderer':
         switch (bundleType) {
           case RN_FB_DEV:
           case RN_FB_PROD:
           case RN_FB_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.native-fb.js';
+            return './packages/shared/forks/ReactFeatureFlags.native-fb.js';
           case RN_OSS_DEV:
           case RN_OSS_PROD:
           case RN_OSS_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.native-oss.js';
+            return './packages/shared/forks/ReactFeatureFlags.native-oss.js';
           default:
             throw Error(
               `Unexpected entry (${entry}) and bundleType (${bundleType})`
@@ -104,11 +90,11 @@ const forks = Object.freeze({
           case RN_FB_DEV:
           case RN_FB_PROD:
           case RN_FB_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.native-fb.js';
+            return './packages/shared/forks/ReactFeatureFlags.native-fb.js';
           case RN_OSS_DEV:
           case RN_OSS_PROD:
           case RN_OSS_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.native-oss.js';
+            return './packages/shared/forks/ReactFeatureFlags.native-oss.js';
           default:
             throw Error(
               `Unexpected entry (${entry}) and bundleType (${bundleType})`
@@ -122,37 +108,48 @@ const forks = Object.freeze({
           case RN_OSS_DEV:
           case RN_OSS_PROD:
           case RN_OSS_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.test-renderer.native.js';
+            return './packages/shared/forks/ReactFeatureFlags.test-renderer.native.js';
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.test-renderer.www.js';
+            return './packages/shared/forks/ReactFeatureFlags.test-renderer.www.js';
         }
-        return 'shared/forks/ReactFeatureFlags.test-renderer.js';
-      case 'react-dom/testing':
+        return './packages/shared/forks/ReactFeatureFlags.test-renderer.js';
+      case 'react-dom/unstable_testing':
         switch (bundleType) {
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.testing.www.js';
+            return './packages/shared/forks/ReactFeatureFlags.testing.www.js';
         }
-        return 'shared/forks/ReactFeatureFlags.testing.js';
+        return './packages/shared/forks/ReactFeatureFlags.testing.js';
       default:
         switch (bundleType) {
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.www.js';
+            return './packages/shared/forks/ReactFeatureFlags.www.js';
           case RN_FB_DEV:
           case RN_FB_PROD:
           case RN_FB_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.native-fb.js';
+            return './packages/shared/forks/ReactFeatureFlags.native-fb.js';
         }
     }
     return null;
   },
 
-  scheduler: (bundleType, entry, dependencies) => {
+  './packages/shared/ReactSymbols.js': bundleType => {
+    switch (bundleType) {
+      case FB_WWW_DEV:
+      case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
+        return './packages/shared/ReactSymbols.www.js';
+      default:
+        return './packages/shared/ReactSymbols.js';
+    }
+  },
+
+  './packages/scheduler/index.js': (bundleType, entry, dependencies) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
@@ -164,59 +161,32 @@ const forks = Object.freeze({
         }
         // Optimization: for UMDs, use the API that is already a part of the React
         // package instead of requiring it to be loaded via a separate <script> tag
-        return 'shared/forks/Scheduler.umd.js';
+        return './packages/shared/forks/Scheduler.umd.js';
       default:
         // For other bundles, use the shared NPM package.
         return null;
     }
   },
 
-  'scheduler/tracing': (bundleType, entry, dependencies) => {
-    switch (bundleType) {
-      case UMD_DEV:
-      case UMD_PROD:
-      case UMD_PROFILING:
-        if (dependencies.indexOf('react') === -1) {
-          // It's only safe to use this fork for modules that depend on React,
-          // because they read the re-exported API from the SECRET_INTERNALS object.
-          return null;
-        }
-        // Optimization: for UMDs, use the API that is already a part of the React
-        // package instead of requiring it to be loaded via a separate <script> tag
-        return 'shared/forks/SchedulerTracing.umd.js';
-      default:
-        // For other bundles, use the shared NPM package.
-        return null;
-    }
-  },
-
-  'scheduler/src/SchedulerFeatureFlags': (bundleType, entry, dependencies) => {
+  './packages/scheduler/src/SchedulerFeatureFlags.js': (
+    bundleType,
+    entry,
+    dependencies
+  ) => {
     if (
       bundleType === FB_WWW_DEV ||
       bundleType === FB_WWW_PROD ||
       bundleType === FB_WWW_PROFILING
     ) {
-      return 'scheduler/src/forks/SchedulerFeatureFlags.www.js';
+      return './packages/scheduler/src/forks/SchedulerFeatureFlags.www.js';
     }
-    return 'scheduler/src/SchedulerFeatureFlags';
+    return './packages/scheduler/src/SchedulerFeatureFlags.js';
   },
 
-  'scheduler/src/SchedulerHostConfig': (bundleType, entry, dependencies) => {
-    if (
-      entry === 'scheduler/unstable_mock' ||
-      entry === 'react-noop-renderer' ||
-      entry === 'react-noop-renderer/persistent' ||
-      entry === 'react-test-renderer'
-    ) {
-      return 'scheduler/src/forks/SchedulerHostConfig.mock';
-    }
-    return 'scheduler/src/forks/SchedulerHostConfig.default';
-  },
-
-  'shared/consoleWithStackDev': (bundleType, entry) => {
+  './packages/shared/consoleWithStackDev.js': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
-        return 'shared/forks/consoleWithStackDev.www.js';
+        return './packages/shared/forks/consoleWithStackDev.www.js';
       default:
         return null;
     }
@@ -224,12 +194,12 @@ const forks = Object.freeze({
 
   // In FB bundles, we preserve an inline require to ReactCurrentOwner.
   // See the explanation in FB version of ReactCurrentOwner in www:
-  'react/src/ReactCurrentOwner': (bundleType, entry) => {
+  './packages/react/src/ReactCurrentOwner.js': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
-        return 'react/src/forks/ReactCurrentOwner.www.js';
+        return './packages/react/src/forks/ReactCurrentOwner.www.js';
       default:
         return null;
     }
@@ -237,41 +207,41 @@ const forks = Object.freeze({
 
   // Similarly, we preserve an inline require to ReactCurrentDispatcher.
   // See the explanation in FB version of ReactCurrentDispatcher in www:
-  'react/src/ReactCurrentDispatcher': (bundleType, entry) => {
+  './packages/react/src/ReactCurrentDispatcher.js': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
-        return 'react/src/forks/ReactCurrentDispatcher.www.js';
+        return './packages/react/src/forks/ReactCurrentDispatcher.www.js';
       default:
         return null;
     }
   },
 
-  'react/src/ReactSharedInternals.js': (bundleType, entry) => {
+  './packages/react/src/ReactSharedInternals.js': (bundleType, entry) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
       case UMD_PROFILING:
-        return 'react/src/forks/ReactSharedInternals.umd.js';
+        return './packages/react/src/forks/ReactSharedInternals.umd.js';
       default:
         return null;
     }
   },
 
   // Different wrapping/reporting for caught errors.
-  'shared/invokeGuardedCallbackImpl': (bundleType, entry) => {
+  './packages/shared/invokeGuardedCallbackImpl.js': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
-        return 'shared/forks/invokeGuardedCallbackImpl.www.js';
+        return './packages/shared/forks/invokeGuardedCallbackImpl.www.js';
       default:
         return null;
     }
   },
 
-  'react-reconciler/src/ReactFiberReconciler': (
+  './packages/react-reconciler/src/ReactFiberReconciler.js': (
     bundleType,
     entry,
     dependencies,
@@ -284,14 +254,14 @@ const forks = Object.freeze({
         case FB_WWW_PROD:
         case FB_WWW_PROFILING:
           // Use the forked version of the reconciler
-          return 'react-reconciler/src/ReactFiberReconciler.new.js';
+          return './packages/react-reconciler/src/ReactFiberReconciler.new.js';
       }
     }
     // Otherwise, use the non-forked version.
-    return 'react-reconciler/src/ReactFiberReconciler.old.js';
+    return './packages/react-reconciler/src/ReactFiberReconciler.old.js';
   },
 
-  'react-reconciler/src/ReactFiberHotReloading': (
+  './packages/react-reconciler/src/ReactEventPriorities.js': (
     bundleType,
     entry,
     dependencies,
@@ -304,21 +274,44 @@ const forks = Object.freeze({
         case FB_WWW_PROD:
         case FB_WWW_PROFILING:
           // Use the forked version of the reconciler
-          return 'react-reconciler/src/ReactFiberHotReloading.new.js';
+          return './packages/react-reconciler/src/ReactEventPriorities.new.js';
       }
     }
     // Otherwise, use the non-forked version.
-    return 'react-reconciler/src/ReactFiberHotReloading.old.js';
+    return './packages/react-reconciler/src/ReactEventPriorities.old.js';
+  },
+
+  './packages/react-reconciler/src/ReactFiberHotReloading.js': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType,
+    bundle
+  ) => {
+    if (bundle.enableNewReconciler) {
+      switch (bundleType) {
+        case FB_WWW_DEV:
+        case FB_WWW_PROD:
+        case FB_WWW_PROFILING:
+          // Use the forked version of the reconciler
+          return './packages/react-reconciler/src/ReactFiberHotReloading.new.js';
+      }
+    }
+    // Otherwise, use the non-forked version.
+    return './packages/react-reconciler/src/ReactFiberHotReloading.old.js';
   },
 
   // Different dialogs for caught errors.
-  'react-reconciler/src/ReactFiberErrorDialog': (bundleType, entry) => {
+  './packages/react-reconciler/src/ReactFiberErrorDialog.js': (
+    bundleType,
+    entry
+  ) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
         // Use the www fork which shows an error dialog.
-        return 'react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
+        return './packages/react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
       case RN_OSS_DEV:
       case RN_OSS_PROD:
       case RN_OSS_PROFILING:
@@ -329,7 +322,7 @@ const forks = Object.freeze({
           case 'react-native-renderer':
           case 'react-native-renderer/fabric':
             // Use the RN fork which plays well with redbox.
-            return 'react-reconciler/src/forks/ReactFiberErrorDialog.native.js';
+            return './packages/react-reconciler/src/forks/ReactFiberErrorDialog.native.js';
           default:
             return null;
         }
@@ -338,7 +331,7 @@ const forks = Object.freeze({
     }
   },
 
-  'react-reconciler/src/ReactFiberHostConfig': (
+  './packages/react-reconciler/src/ReactFiberHostConfig.js': (
     bundleType,
     entry,
     dependencies,
@@ -353,7 +346,7 @@ const forks = Object.freeze({
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (let rendererInfo of inlinedHostConfigs) {
       if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
-        return `react-reconciler/src/forks/ReactFiberHostConfig.${rendererInfo.shortName}.js`;
+        return `./packages/react-reconciler/src/forks/ReactFiberHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -363,7 +356,7 @@ const forks = Object.freeze({
     );
   },
 
-  'react-server/src/ReactServerStreamConfig': (
+  './packages/react-server/src/ReactServerStreamConfig.js': (
     bundleType,
     entry,
     dependencies,
@@ -381,7 +374,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-server/src/forks/ReactServerStreamConfig.${rendererInfo.shortName}.js`;
+        return `./packages/react-server/src/forks/ReactServerStreamConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -391,7 +384,7 @@ const forks = Object.freeze({
     );
   },
 
-  'react-server/src/ReactServerFormatConfig': (
+  './packages/react-server/src/ReactServerFormatConfig.js': (
     bundleType,
     entry,
     dependencies,
@@ -409,7 +402,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-server/src/forks/ReactServerFormatConfig.${rendererInfo.shortName}.js`;
+        return `./packages/react-server/src/forks/ReactServerFormatConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -419,7 +412,7 @@ const forks = Object.freeze({
     );
   },
 
-  'react-server/src/ReactFlightServerConfig': (
+  './packages/react-server/src/ReactFlightServerConfig.js': (
     bundleType,
     entry,
     dependencies,
@@ -437,7 +430,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-server/src/forks/ReactFlightServerConfig.${rendererInfo.shortName}.js`;
+        return `./packages/react-server/src/forks/ReactFlightServerConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -447,7 +440,7 @@ const forks = Object.freeze({
     );
   },
 
-  'react-client/src/ReactFlightClientHostConfig': (
+  './packages/react-client/src/ReactFlightClientHostConfig.js': (
     bundleType,
     entry,
     dependencies,
@@ -465,7 +458,7 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `react-client/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`;
+        return `./packages/react-client/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
@@ -476,7 +469,7 @@ const forks = Object.freeze({
   },
 
   // We wrap top-level listeners into guards on www.
-  'react-dom/src/events/EventListener': (bundleType, entry) => {
+  './packages/react-dom/src/events/EventListener.js': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
@@ -486,10 +479,34 @@ const forks = Object.freeze({
           return null;
         } else {
           // Use the www fork which is integrated with TimeSlice profiling.
-          return 'react-dom/src/events/forks/EventListener-www.js';
+          return './packages/react-dom/src/events/forks/EventListener-www.js';
         }
       default:
         return null;
+    }
+  },
+
+  './packages/use-sync-external-store/src/useSyncExternalStore.js': (
+    bundleType,
+    entry
+  ) => {
+    if (entry.startsWith('use-sync-external-store/shim')) {
+      return './packages/use-sync-external-store/src/forks/useSyncExternalStore.forward-to-shim.js';
+    }
+    if (entry !== 'use-sync-external-store') {
+      // Internal modules that aren't shims should use the native API from the
+      // react package.
+      return './packages/use-sync-external-store/src/forks/useSyncExternalStore.forward-to-built-in.js';
+    }
+    return null;
+  },
+
+  './packages/use-sync-external-store/src/isServerEnvironment.js': (
+    bundleType,
+    entry
+  ) => {
+    if (entry.endsWith('.native')) {
+      return './packages/use-sync-external-store/src/forks/isServerEnvironment.native.js';
     }
   },
 });

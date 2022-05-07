@@ -8,13 +8,13 @@
  */
 
 import * as React from 'react';
-import {Fragment, useLayoutEffect, useRef} from 'react';
 import styles from './AutoSizeInput.css';
 
 type Props = {
   className?: string,
   onFocus?: (event: FocusEvent) => void,
   placeholder?: string,
+  testName?: ?string,
   value: any,
   ...
 };
@@ -22,17 +22,16 @@ type Props = {
 export default function AutoSizeInput({
   className,
   onFocus,
-  placeholder,
+  placeholder = '',
+  testName,
   value,
   ...rest
 }: Props) {
-  const hiddenDivRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
   const onFocusWrapper = event => {
-    if (inputRef.current !== null) {
-      inputRef.current.selectionStart = 0;
-      inputRef.current.selectionEnd = value.length;
+    const input = event.target;
+    if (input !== null) {
+      input.selectionStart = 0;
+      input.selectionEnd = value.length;
     }
 
     if (typeof onFocus === 'function') {
@@ -40,67 +39,19 @@ export default function AutoSizeInput({
     }
   };
 
-  // Copy text styles from <input> to hidden sizing <div>
-  useLayoutEffect(() => {
-    if (
-      typeof window.getComputedStyle !== 'function' ||
-      inputRef.current === null
-    ) {
-      return;
-    }
-
-    const inputStyle = window.getComputedStyle(inputRef.current);
-    if (!inputStyle) {
-      return;
-    }
-
-    if (hiddenDivRef.current !== null) {
-      const divStyle = hiddenDivRef.current.style;
-      divStyle.border = inputStyle.border;
-      divStyle.fontFamily = inputStyle.fontFamily;
-      divStyle.fontSize = inputStyle.fontSize;
-      divStyle.fontStyle = inputStyle.fontStyle;
-      divStyle.fontWeight = inputStyle.fontWeight;
-      divStyle.letterSpacing = inputStyle.letterSpacing;
-      divStyle.padding = inputStyle.padding;
-    }
-  }, []);
-
-  // Resize input any time text changes
-  useLayoutEffect(() => {
-    if (hiddenDivRef.current === null) {
-      return;
-    }
-
-    const scrollWidth = hiddenDivRef.current.getBoundingClientRect().width;
-    if (!scrollWidth) {
-      return;
-    }
-
-    // Adding an extra pixel avoids a slight horizontal scroll when changing text selection/cursor.
-    // Not sure why this is, but the old DevTools did a similar thing.
-    const targetWidth = Math.ceil(scrollWidth) + 1;
-
-    if (inputRef.current !== null) {
-      inputRef.current.style.width = `${targetWidth}px`;
-    }
-  }, [value]);
-
   const isEmpty = value === '' || value === '""';
 
   return (
-    <Fragment>
-      <input
-        ref={inputRef}
-        className={`${className ? className : ''} ${styles.Input}`}
-        onFocus={onFocusWrapper}
-        placeholder={placeholder}
-        value={isEmpty ? '' : value}
-        {...rest}
-      />
-      <div ref={hiddenDivRef} className={styles.HiddenDiv}>
-        {isEmpty ? placeholder : value}
-      </div>
-    </Fragment>
+    <input
+      className={[styles.Input, className].join(' ')}
+      data-testname={testName}
+      onFocus={onFocusWrapper}
+      placeholder={placeholder}
+      style={{
+        width: `calc(${isEmpty ? placeholder.length : value.length}ch + 1px)`,
+      }}
+      value={isEmpty ? '' : value}
+      {...rest}
+    />
   );
 }

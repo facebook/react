@@ -10,6 +10,7 @@
 import {
   getDataType,
   getDisplayNameForReactElement,
+  getAllEnumerableKeys,
   getInObject,
   formatDataForPreview,
   setInObject,
@@ -159,7 +160,12 @@ export function dehydrate(
       };
 
     case 'string':
-      return data.length <= 500 ? data : data.slice(0, 500) + '...';
+      isPathAllowedCheck = isPathAllowed(path);
+      if (isPathAllowedCheck) {
+        return data;
+      } else {
+        return data.length <= 500 ? data : data.slice(0, 500) + '...';
+      }
 
     case 'bigint':
       cleaned.push(path);
@@ -242,28 +248,36 @@ export function dehydrate(
               : data.constructor.name,
         };
 
-        if (typeof data[Symbol.iterator]) {
-          // TRICKY
-          // Don't use [...spread] syntax for this purpose.
-          // This project uses @babel/plugin-transform-spread in "loose" mode which only works with Array values.
-          // Other types (e.g. typed arrays, Sets) will not spread correctly.
-          Array.from(data).forEach(
-            (item, i) =>
-              (unserializableValue[i] = dehydrate(
-                item,
-                cleaned,
-                unserializable,
-                path.concat([i]),
-                isPathAllowed,
-                isPathAllowedCheck ? 1 : level + 1,
-              )),
-          );
-        }
+        // TRICKY
+        // Don't use [...spread] syntax for this purpose.
+        // This project uses @babel/plugin-transform-spread in "loose" mode which only works with Array values.
+        // Other types (e.g. typed arrays, Sets) will not spread correctly.
+        Array.from(data).forEach(
+          (item, i) =>
+            (unserializableValue[i] = dehydrate(
+              item,
+              cleaned,
+              unserializable,
+              path.concat([i]),
+              isPathAllowed,
+              isPathAllowedCheck ? 1 : level + 1,
+            )),
+        );
 
         unserializable.push(path);
 
         return unserializableValue;
       }
+
+    case 'opaque_iterator':
+      cleaned.push(path);
+      return {
+        inspectable: false,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data[Symbol.toStringTag],
+        type,
+      };
 
     case 'date':
       cleaned.push(path);
@@ -291,16 +305,17 @@ export function dehydrate(
         return createDehydrated(type, true, data, cleaned, path);
       } else {
         const object = {};
-        for (const name in data) {
+        getAllEnumerableKeys(data).forEach(key => {
+          const name = key.toString();
           object[name] = dehydrate(
-            data[name],
+            data[key],
             cleaned,
             unserializable,
             path.concat([name]),
             isPathAllowed,
             isPathAllowedCheck ? 1 : level + 1,
           );
-        }
+        });
         return object;
       }
 
@@ -371,7 +386,9 @@ export function hydrate(
 
     const value = parent[last];
 
-    if (value.type === 'infinity') {
+    if (!value) {
+      return;
+    } else if (value.type === 'infinity') {
       parent[last] = Infinity;
     } else if (value.type === 'nan') {
       parent[last] = NaN;

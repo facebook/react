@@ -10,30 +10,28 @@
 'use strict';
 
 describe('ReactFetchNode', () => {
-  let ReactCache;
-  let ReactFetchNode;
   let http;
   let fetch;
+  let waitForSuspense;
   let server;
   let serverEndpoint;
   let serverImpl;
 
   beforeEach(done => {
     jest.resetModules();
-    if (__EXPERIMENTAL__) {
-      ReactCache = require('react/unstable-cache');
-      // TODO: A way to pass load context.
-      ReactCache.CacheProvider._context._currentValue = ReactCache.createCache();
-      ReactFetchNode = require('react-fetch');
-      fetch = ReactFetchNode.fetch;
-    }
+
+    fetch = require('react-fetch').fetch;
     http = require('http');
+    waitForSuspense = require('react-suspense-test-utils').waitForSuspense;
 
     server = http.createServer((req, res) => {
       serverImpl(req, res);
     });
-    server.listen(done);
-    serverEndpoint = `http://localhost:${server.address().port}/`;
+    serverEndpoint = null;
+    server.listen(() => {
+      serverEndpoint = `http://localhost:${server.address().port}/`;
+      done();
+    });
   });
 
   afterEach(done => {
@@ -41,55 +39,83 @@ describe('ReactFetchNode', () => {
     server = null;
   });
 
-  async function waitForSuspense(fn) {
-    while (true) {
-      try {
-        return fn();
-      } catch (promise) {
-        if (typeof promise.then === 'function') {
-          await promise;
-        } else {
-          throw promise;
-        }
-      }
-    }
-  }
-
-  // @gate experimental
-  it('can read text', async () => {
+  // @gate experimental || www
+  it('can fetch text from a server component', async () => {
     serverImpl = (req, res) => {
-      res.write('ok');
+      res.write('mango');
       res.end();
     };
-    await waitForSuspense(() => {
-      const response = fetch(serverEndpoint);
-      expect(response.status).toBe(200);
-      expect(response.statusText).toBe('OK');
-      expect(response.ok).toBe(true);
-      expect(response.text()).toEqual('ok');
-      // Can read again:
-      expect(response.text()).toEqual('ok');
+    const text = await waitForSuspense(() => {
+      return fetch(serverEndpoint).text();
     });
+    expect(text).toEqual('mango');
   });
 
-  // @gate experimental
-  it('can read json', async () => {
+  // @gate experimental || www
+  it('can fetch json from a server component', async () => {
     serverImpl = (req, res) => {
       res.write(JSON.stringify({name: 'Sema'}));
       res.end();
     };
-    await waitForSuspense(() => {
-      const response = fetch(serverEndpoint);
-      expect(response.status).toBe(200);
-      expect(response.statusText).toBe('OK');
-      expect(response.ok).toBe(true);
-      expect(response.json()).toEqual({
-        name: 'Sema',
-      });
-      // Can read again:
-      expect(response.json()).toEqual({
-        name: 'Sema',
-      });
+    const json = await waitForSuspense(() => {
+      return fetch(serverEndpoint).json();
     });
+    expect(json).toEqual({name: 'Sema'});
+  });
+
+  // @gate experimental || www
+  it('provides response status', async () => {
+    serverImpl = (req, res) => {
+      res.write(JSON.stringify({name: 'Sema'}));
+      res.end();
+    };
+    const response = await waitForSuspense(() => {
+      return fetch(serverEndpoint);
+    });
+    expect(response).toMatchObject({
+      status: 200,
+      statusText: 'OK',
+      ok: true,
+    });
+  });
+
+  // @gate experimental || www
+  it('handles different paths', async () => {
+    serverImpl = (req, res) => {
+      switch (req.url) {
+        case '/banana':
+          res.write('banana');
+          break;
+        case '/mango':
+          res.write('mango');
+          break;
+        case '/orange':
+          res.write('orange');
+          break;
+      }
+      res.end();
+    };
+    const outputs = await waitForSuspense(() => {
+      return [
+        fetch(serverEndpoint + 'banana').text(),
+        fetch(serverEndpoint + 'mango').text(),
+        fetch(serverEndpoint + 'orange').text(),
+      ];
+    });
+    expect(outputs).toMatchObject(['banana', 'mango', 'orange']);
+  });
+
+  // @gate experimental || www
+  it('can produce an error', async () => {
+    serverImpl = (req, res) => {};
+
+    expect.assertions(1);
+    try {
+      await waitForSuspense(() => {
+        return fetch('BOOM');
+      });
+    } catch (err) {
+      expect(err.message).toEqual('Invalid URL: BOOM');
+    }
   });
 });

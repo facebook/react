@@ -11,8 +11,6 @@
 // indices can be used to reference a tightly packed array. As opposed to being used in a Map.
 // The first allocated index is 1.
 
-import invariant from 'shared/invariant';
-
 export type ThreadID = number;
 
 let nextAvailableThreadIDs = new Uint16Array(16);
@@ -25,13 +23,16 @@ function growThreadCountAndReturnNextAvailable() {
   const oldArray = nextAvailableThreadIDs;
   const oldSize = oldArray.length;
   const newSize = oldSize * 2;
-  invariant(
-    newSize <= 0x10000,
-    'Maximum number of concurrent React renderers exceeded. ' +
-      'This can happen if you are not properly destroying the Readable provided by React. ' +
-      'Ensure that you call .destroy() on it if you no longer want to read from it, ' +
-      'and did not read to the end. If you use .pipe() this should be automatic.',
-  );
+
+  if (newSize > 0x10000) {
+    throw new Error(
+      'Maximum number of concurrent React renderers exceeded. ' +
+        'This can happen if you are not properly destroying the Readable provided by React. ' +
+        'Ensure that you call .destroy() on it if you no longer want to read from it, ' +
+        'and did not read to the end. If you use .pipe() this should be automatic.',
+    );
+  }
+
   const newArray = new Uint16Array(newSize);
   newArray.set(oldArray);
   nextAvailableThreadIDs = newArray;

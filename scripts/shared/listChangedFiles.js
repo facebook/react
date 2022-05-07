@@ -26,7 +26,7 @@ const execGitCmd = args =>
     .split('\n');
 
 const listChangedFiles = () => {
-  const mergeBase = execGitCmd(['merge-base', 'HEAD', 'master']);
+  const mergeBase = execGitCmd(['merge-base', 'HEAD', 'main']);
   return new Set([
     ...execGitCmd(['diff', '--name-only', '--diff-filter=ACMRTUB', mergeBase]),
     ...execGitCmd(['ls-files', '--others', '--exclude-standard']),

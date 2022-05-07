@@ -47,6 +47,7 @@ afterEach(() => {
   document.body.removeChild(container);
 });
 
+// @gate __DEV__
 it('can use act to flush effects', () => {
   function App() {
     React.useEffect(() => {
@@ -62,6 +63,7 @@ it('can use act to flush effects', () => {
   expect(clearYields()).toEqual([100]);
 });
 
+// @gate __DEV__
 it('flushes effects on every call', () => {
   function App() {
     const [ctr, setCtr] = React.useState(0);
@@ -100,6 +102,7 @@ it('flushes effects on every call', () => {
   expect(button.innerHTML).toEqual('5');
 });
 
+// @gate __DEV__
 it("should keep flushing effects until they're done", () => {
   function App() {
     const [ctr, setCtr] = React.useState(0);
@@ -118,6 +121,7 @@ it("should keep flushing effects until they're done", () => {
   expect(container.innerHTML).toEqual('5');
 });
 
+// @gate __DEV__
 it('should flush effects only on exiting the outermost act', () => {
   function App() {
     React.useEffect(() => {
@@ -138,6 +142,7 @@ it('should flush effects only on exiting the outermost act', () => {
   expect(clearYields()).toEqual([0]);
 });
 
+// @gate __DEV__
 it('can handle cascading promises', async () => {
   // this component triggers an effect, that waits a tick,
   // then sets state. repeats this 5 times.

@@ -11,18 +11,27 @@
 'use strict';
 
 let React;
+let act;
 let ReactFiberReconciler;
 let ConcurrentRoot;
+let DefaultEventPriority;
 
 describe('ReactFiberHostContext', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    act = React.unstable_act;
     ReactFiberReconciler = require('react-reconciler');
-    ConcurrentRoot = require('react-reconciler/src/ReactRootTags');
+    ConcurrentRoot = require('react-reconciler/src/ReactRootTags')
+      .ConcurrentRoot;
+    DefaultEventPriority = require('react-reconciler/src/ReactEventPriorities')
+      .DefaultEventPriority;
   });
 
-  it('works with null host context', () => {
+  global.IS_REACT_ACT_ENVIRONMENT = true;
+
+  // @gate __DEV__
+  it('works with null host context', async () => {
     let creates = 0;
     const Renderer = ReactFiberReconciler({
       prepareForCommit: function() {
@@ -54,26 +63,34 @@ describe('ReactFiberHostContext', () => {
         return null;
       },
       clearContainer: function() {},
+      getCurrentEventPriority: function() {
+        return DefaultEventPriority;
+      },
       supportsMutation: true,
     });
 
     const container = Renderer.createContainer(
       /* root: */ null,
       ConcurrentRoot,
+      null,
       false,
+      '',
       null,
     );
-    Renderer.updateContainer(
-      <a>
-        <b />
-      </a>,
-      container,
-      /* parentComponent: */ null,
-      /* callback: */ null,
-    );
+    act(() => {
+      Renderer.updateContainer(
+        <a>
+          <b />
+        </a>,
+        container,
+        /* parentComponent: */ null,
+        /* callback: */ null,
+      );
+    });
     expect(creates).toBe(2);
   });
 
+  // @gate __DEV__
   it('should send the context to prepareForCommit and resetAfterCommit', () => {
     const rootContext = {};
     const Renderer = ReactFiberReconciler({
@@ -109,22 +126,29 @@ describe('ReactFiberHostContext', () => {
         return null;
       },
       clearContainer: function() {},
+      getCurrentEventPriority: function() {
+        return DefaultEventPriority;
+      },
       supportsMutation: true,
     });
 
     const container = Renderer.createContainer(
       rootContext,
       ConcurrentRoot,
+      null,
       false,
+      '',
       null,
     );
-    Renderer.updateContainer(
-      <a>
-        <b />
-      </a>,
-      container,
-      /* parentComponent: */ null,
-      /* callback: */ null,
-    );
+    act(() => {
+      Renderer.updateContainer(
+        <a>
+          <b />
+        </a>,
+        container,
+        /* parentComponent: */ null,
+        /* callback: */ null,
+      );
+    });
   });
 });
