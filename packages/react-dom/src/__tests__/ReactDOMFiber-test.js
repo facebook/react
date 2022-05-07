@@ -197,8 +197,6 @@ describe('ReactDOMFiber', () => {
     ReactDOM.render(<Div />, container);
     expect(container.firstChild.tagName).toBe('DIV');
 
-    ReactDOM.render(<EmptyFragment />, container);
-    expect(container.firstChild).toBe(null);
   });
 
   let svgEls, htmlEls, mathEls;
