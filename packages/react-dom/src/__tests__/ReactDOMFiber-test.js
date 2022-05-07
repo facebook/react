@@ -196,7 +196,6 @@ describe('ReactDOMFiber', () => {
 
     ReactDOM.render(<Div />, container);
     expect(container.firstChild.tagName).toBe('DIV');
-
   });
 
   let svgEls, htmlEls, mathEls;
