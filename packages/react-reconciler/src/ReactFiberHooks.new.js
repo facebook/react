@@ -33,6 +33,7 @@ import {
   enableSuspenseLayoutEffectSemantics,
   enableUseMutableSource,
   enableTransitionTracing,
+  enableStaticFlagMissingCheck,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -495,25 +496,27 @@ export function renderWithHooks<Props, SecondArg>(
     hookTypesDev = null;
     hookTypesUpdateIndexDev = -1;
 
-    // Confirm that a static flag was not added or removed since the last
-    // render. If this fires, it suggests that we incorrectly reset the static
-    // flags in some other part of the codebase. This has happened before, for
-    // example, in the SuspenseList implementation.
-    if (
-      current !== null &&
-      (current.flags & StaticMaskEffect) !==
-        (workInProgress.flags & StaticMaskEffect) &&
-      // Disable this warning in legacy mode, because legacy Suspense is weird
-      // and creates false positives. To make this work in legacy mode, we'd
-      // need to mark fibers that commit in an incomplete state, somehow. For
-      // now I'll disable the warning that most of the bugs that would trigger
-      // it are either exclusive to concurrent mode or exist in both.
-      (current.mode & ConcurrentMode) !== NoMode
-    ) {
-      console.error(
-        'Internal React error: Expected static flag was missing. Please ' +
-          'notify the React team.',
-      );
+    if (enableStaticFlagMissingCheck) {
+      // Confirm that a static flag was not added or removed since the last
+      // render. If this fires, it suggests that we incorrectly reset the static
+      // flags in some other part of the codebase. This has happened before, for
+      // example, in the SuspenseList implementation.
+      if (
+        current !== null &&
+        (current.flags & StaticMaskEffect) !==
+          (workInProgress.flags & StaticMaskEffect) &&
+        // Disable this warning in legacy mode, because legacy Suspense is weird
+        // and creates false positives. To make this work in legacy mode, we'd
+        // need to mark fibers that commit in an incomplete state, somehow. For
+        // now I'll disable the warning that most of the bugs that would trigger
+        // it are either exclusive to concurrent mode or exist in both.
+        (current.mode & ConcurrentMode) !== NoMode
+      ) {
+        console.error(
+          'Internal React error: Expected static flag was missing. Please ' +
+            'notify the React team.',
+        );
+      }
     }
   }
 
