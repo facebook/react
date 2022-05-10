@@ -1110,7 +1110,7 @@ function updateClassComponent(
   const instance = workInProgress.stateNode;
   let shouldUpdate;
   if (instance === null) {
-    resetIndeterminatePlacementForLegacyMode(current, workInProgress);
+    resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress);
 
     // In the initial pass we might need to construct the instance.
     constructClassInstance(workInProgress, Component, nextProps);
@@ -1461,7 +1461,7 @@ function mountLazyComponent(
   elementType,
   renderLanes,
 ) {
-  resetIndeterminatePlacementForLegacyMode(_current, workInProgress);
+  resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
   const props = workInProgress.pendingProps;
   const lazyComponent: LazyComponentType<any, any> = elementType;
@@ -1571,7 +1571,7 @@ function mountIncompleteClassComponent(
   nextProps,
   renderLanes,
 ) {
-  resetIndeterminatePlacementForLegacyMode(_current, workInProgress);
+  resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
   // Promote the fiber to a class and try rendering again.
   workInProgress.tag = ClassComponent;
@@ -1609,7 +1609,7 @@ function mountIndeterminateComponent(
   Component,
   renderLanes,
 ) {
-  resetIndeterminatePlacementForLegacyMode(_current, workInProgress);
+  resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
   const props = workInProgress.pendingProps;
   let context;
@@ -3341,9 +3341,9 @@ export function checkIfWorkInProgressReceivedUpdate() {
   return didReceiveUpdate;
 }
 
-function resetIndeterminatePlacementForLegacyMode(current, workInProgress) {
-  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-    if (current !== null) {
+function resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress) {
+  if (current !== null) {
+    if ((workInProgress.mode & ConcurrentMode) === NoMode) {
       // A lazy component only mounts if it suspended inside a non-
       // concurrent tree, in an inconsistent state. We want to treat it like
       // a new mount, even though an empty version of it already committed.
