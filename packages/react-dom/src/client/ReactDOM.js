@@ -148,7 +148,7 @@ const Internals = {
 };
 
 function createRoot(
-  container: Element | DocumentFragment,
+  container: Element | Document | DocumentFragment,
   options?: CreateRootOptions,
 ): RootType {
   if (__DEV__) {
