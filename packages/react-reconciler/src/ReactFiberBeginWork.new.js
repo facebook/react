@@ -3342,8 +3342,8 @@ export function checkIfWorkInProgressReceivedUpdate() {
 }
 
 function resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress) {
-  if (current !== null) {
-    if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+    if (current !== null) {
       // A lazy component only mounts if it suspended inside a non-
       // concurrent tree, in an inconsistent state. We want to treat it like
       // a new mount, even though an empty version of it already committed.
