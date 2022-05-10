@@ -99,7 +99,6 @@ function updateOptions(
     // Do not set `select.value` as exact behavior isn't consistent across all
     // browsers for all cases.
     const selectedValue = toString(getToStringValue((propValue: any)));
-    let defaultSelected = null;
     for (let i = 0; i < options.length; i++) {
       if (options[i].value === selectedValue) {
         options[i].selected = true;
@@ -108,12 +107,6 @@ function updateOptions(
         }
         return;
       }
-      if (defaultSelected === null && !options[i].disabled) {
-        defaultSelected = options[i];
-      }
-    }
-    if (defaultSelected !== null) {
-      defaultSelected.selected = true;
     }
   }
 }
