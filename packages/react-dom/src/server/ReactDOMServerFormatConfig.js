@@ -1156,7 +1156,7 @@ function pushStartCustomElement(
   let innerHTML = null;
   for (let propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
-      const propValue = props[propKey];
+      let propValue = props[propKey];
       if (propValue == null) {
         continue;
       }
@@ -1168,6 +1168,12 @@ function pushStartCustomElement(
         // client rendering, but when server rendering the output isn't useful,
         // so skip it.
         continue;
+      }
+      if (enableCustomElementPropertySupport && propValue === false) {
+        continue;
+      }
+      if (enableCustomElementPropertySupport && propValue === true) {
+        propValue = '';
       }
       if (enableCustomElementPropertySupport && propKey === 'className') {
         // className gets rendered as class on the client, so it should be
