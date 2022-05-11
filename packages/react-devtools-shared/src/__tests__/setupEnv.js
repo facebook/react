@@ -1,5 +1,8 @@
 'use strict';
 
+const semver = require('semver');
+const ReactVersion = require('../../../shared/ReactVersion');
+
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -24,3 +27,24 @@ global.process.env.DARK_MODE_DIMMED_LOG_COLOR = DARK_MODE_DIMMED_LOG_COLOR;
 global.process.env.LIGHT_MODE_DIMMED_WARNING_COLOR = LIGHT_MODE_DIMMED_WARNING_COLOR;
 global.process.env.LIGHT_MODE_DIMMED_ERROR_COLOR = LIGHT_MODE_DIMMED_ERROR_COLOR;
 global.process.env.LIGHT_MODE_DIMMED_LOG_COLOR = LIGHT_MODE_DIMMED_LOG_COLOR;
+
+global._test_react_version = (range, testName, callback) => {
+  const trimmedRange = range.replaceAll(' ', '');
+  const reactVersion = process.env.REACT_VERSION || ReactVersion;
+  const shouldPass = semver.satisfies(reactVersion, trimmedRange);
+
+  if (shouldPass) {
+    test(testName, callback);
+  }
+};
+
+global._test_react_version_focus = (range, testName, callback) => {
+  const trimmedRange = range.replaceAll(' ', '');
+  const reactVersion = process.env.REACT_VERSION || ReactVersion;
+  const shouldPass = semver.satisfies(reactVersion, trimmedRange);
+
+  if (shouldPass) {
+    // eslint-disable-next-line jest/no-focused-tests
+    test.only(testName, callback);
+  }
+};
