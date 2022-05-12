@@ -312,7 +312,6 @@ describe('ReactOffscreen', () => {
 
   // @gate experimental || www
   // @gate enableSuspenseLayoutEffectSemantics
-  // @gate enableFlipOffscreenUnhideOrder
   it('hides children of offscreen after layout effects are destroyed', async () => {
     const root = ReactNoop.createRoot();
     function Child({text}) {
