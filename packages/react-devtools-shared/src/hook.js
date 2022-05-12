@@ -180,9 +180,9 @@ export function installHook(target: any): DevToolsHook | null {
       inputArgs === undefined ||
       inputArgs === null ||
       inputArgs.length === 0 ||
+      typeof inputArgs[0] !== 'string' ||
       // Matches any of %c but not %%c
-      (typeof inputArgs[0] === 'string' &&
-        inputArgs[0].match(/([^%]|^)(%c)/g)) ||
+      inputArgs[0].match(/([^%]|^)(%c)/g) ||
       style === undefined
     ) {
       return inputArgs;
