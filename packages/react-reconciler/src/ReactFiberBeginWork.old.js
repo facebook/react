@@ -2049,6 +2049,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
   // a stack.
   if (current === null) {
     // Initial mount
+
+    // Special path for hydration
     // If we're currently hydrating, try to hydrate this boundary.
     tryToClaimNextHydratableInstance(workInProgress);
     // This could've been a dehydrated suspense component.
@@ -2129,161 +2131,65 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
   } else {
     // This is an update.
 
-    // If the current fiber has a SuspenseState, that means it's already showing
-    // a fallback.
+    // Special path for hydration
     const prevState: null | SuspenseState = current.memoizedState;
     if (prevState !== null) {
-      // The current tree is already showing a fallback
-
-      // Special path for hydration
       const dehydrated = prevState.dehydrated;
       if (dehydrated !== null) {
-        if (!didSuspend) {
-          return updateDehydratedSuspenseComponent(
-            current,
-            workInProgress,
-            dehydrated,
-            prevState,
-            renderLanes,
-          );
-        } else if (workInProgress.flags & ForceClientRender) {
-          // Something errored during hydration. Try again without hydrating.
-          workInProgress.flags &= ~ForceClientRender;
-          return retrySuspenseComponentWithoutHydrating(
-            current,
-            workInProgress,
-            renderLanes,
-            new Error(
-              'There was an error while hydrating this Suspense boundary. ' +
-                'Switched to client rendering.',
-            ),
-          );
-        } else if (
-          (workInProgress.memoizedState: null | SuspenseState) !== null
-        ) {
-          // Something suspended and we should still be in dehydrated mode.
-          // Leave the existing child in place.
-          workInProgress.child = current.child;
-          // The dehydrated completion pass expects this flag to be there
-          // but the normal suspense pass doesn't.
-          workInProgress.flags |= DidCapture;
-          return null;
-        } else {
-          // Suspended but we should no longer be in dehydrated mode.
-          // Therefore we now have to render the fallback.
-          const nextPrimaryChildren = nextProps.children;
-          const nextFallbackChildren = nextProps.fallback;
-          const fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
-            current,
-            workInProgress,
-            nextPrimaryChildren,
-            nextFallbackChildren,
-            renderLanes,
-          );
-          const primaryChildFragment: Fiber = (workInProgress.child: any);
-          primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
-            renderLanes,
-          );
-          workInProgress.memoizedState = SUSPENDED_MARKER;
-          return fallbackChildFragment;
-        }
+        return updateDehydratedSuspenseComponent(
+          current,
+          workInProgress,
+          didSuspend,
+          nextProps,
+          dehydrated,
+          prevState,
+          renderLanes,
+        );
       }
+    }
 
-      if (showFallback) {
-        const nextFallbackChildren = nextProps.fallback;
-        const nextPrimaryChildren = nextProps.children;
-        const fallbackChildFragment = updateSuspenseFallbackChildren(
-          current,
-          workInProgress,
-          nextPrimaryChildren,
-          nextFallbackChildren,
-          renderLanes,
-        );
-        const primaryChildFragment: Fiber = (workInProgress.child: any);
-        const prevOffscreenState: OffscreenState | null = (current.child: any)
-          .memoizedState;
-        primaryChildFragment.memoizedState =
-          prevOffscreenState === null
-            ? mountSuspenseOffscreenState(renderLanes)
-            : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
-        if (enableTransitionTracing) {
-          const currentTransitions = getSuspendedTransitions();
-          if (currentTransitions !== null) {
-            const primaryChildUpdateQueue: OffscreenQueue = {
-              transitions: currentTransitions,
-            };
-            primaryChildFragment.updateQueue = primaryChildUpdateQueue;
-          }
+    if (showFallback) {
+      const nextFallbackChildren = nextProps.fallback;
+      const nextPrimaryChildren = nextProps.children;
+      const fallbackChildFragment = updateSuspenseFallbackChildren(
+        current,
+        workInProgress,
+        nextPrimaryChildren,
+        nextFallbackChildren,
+        renderLanes,
+      );
+      const primaryChildFragment: Fiber = (workInProgress.child: any);
+      const prevOffscreenState: OffscreenState | null = (current.child: any)
+        .memoizedState;
+      primaryChildFragment.memoizedState =
+        prevOffscreenState === null
+          ? mountSuspenseOffscreenState(renderLanes)
+          : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
+      if (enableTransitionTracing) {
+        const currentTransitions = getSuspendedTransitions();
+        if (currentTransitions !== null) {
+          const primaryChildUpdateQueue: OffscreenQueue = {
+            transitions: currentTransitions,
+          };
+          primaryChildFragment.updateQueue = primaryChildUpdateQueue;
         }
-        primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
-          current,
-          renderLanes,
-        );
-        workInProgress.memoizedState = SUSPENDED_MARKER;
-        return fallbackChildFragment;
-      } else {
-        const nextPrimaryChildren = nextProps.children;
-        const primaryChildFragment = updateSuspensePrimaryChildren(
-          current,
-          workInProgress,
-          nextPrimaryChildren,
-          renderLanes,
-        );
-        workInProgress.memoizedState = null;
-        return primaryChildFragment;
       }
+      primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+        current,
+        renderLanes,
+      );
+      workInProgress.memoizedState = SUSPENDED_MARKER;
+      return fallbackChildFragment;
     } else {
-      // The current tree is not already showing a fallback.
-      if (showFallback) {
-        // Timed out.
-        const nextFallbackChildren = nextProps.fallback;
-        const nextPrimaryChildren = nextProps.children;
-        const fallbackChildFragment = updateSuspenseFallbackChildren(
-          current,
-          workInProgress,
-          nextPrimaryChildren,
-          nextFallbackChildren,
-          renderLanes,
-        );
-        const primaryChildFragment: Fiber = (workInProgress.child: any);
-        const prevOffscreenState: OffscreenState | null = (current.child: any)
-          .memoizedState;
-        primaryChildFragment.memoizedState =
-          prevOffscreenState === null
-            ? mountSuspenseOffscreenState(renderLanes)
-            : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
-        primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
-          current,
-          renderLanes,
-        );
-
-        if (enableTransitionTracing) {
-          const currentTransitions = getSuspendedTransitions();
-          if (currentTransitions !== null) {
-            const primaryChildUpdateQueue: OffscreenQueue = {
-              transitions: currentTransitions,
-            };
-            primaryChildFragment.updateQueue = primaryChildUpdateQueue;
-          }
-        }
-
-        // Skip the primary children, and continue working on the
-        // fallback children.
-        workInProgress.memoizedState = SUSPENDED_MARKER;
-        return fallbackChildFragment;
-      } else {
-        // Still haven't timed out. Continue rendering the children, like we
-        // normally do.
-        const nextPrimaryChildren = nextProps.children;
-        const primaryChildFragment = updateSuspensePrimaryChildren(
-          current,
-          workInProgress,
-          nextPrimaryChildren,
-          renderLanes,
-        );
-        workInProgress.memoizedState = null;
-        return primaryChildFragment;
-      }
+      const nextPrimaryChildren = nextProps.children;
+      const primaryChildFragment = updateSuspensePrimaryChildren(
+        current,
+        workInProgress,
+        nextPrimaryChildren,
+        renderLanes,
+      );
+      workInProgress.memoizedState = null;
+      return primaryChildFragment;
     }
   }
 }
@@ -2637,146 +2543,194 @@ function mountDehydratedSuspenseComponent(
 function updateDehydratedSuspenseComponent(
   current: Fiber,
   workInProgress: Fiber,
+  didSuspend: boolean,
+  nextProps: any,
   suspenseInstance: SuspenseInstance,
   suspenseState: SuspenseState,
   renderLanes: Lanes,
 ): null | Fiber {
-  // We should never be hydrating at this point because it is the first pass,
-  // but after we've already committed once.
-  warnIfHydrating();
+  if (!didSuspend) {
+    // This is the first render pass. Attempt to hydrate.
 
-  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-    return retrySuspenseComponentWithoutHydrating(
-      current,
-      workInProgress,
-      renderLanes,
-      // TODO: When we delete legacy mode, we should make this error argument
-      // required — every concurrent mode path that causes hydration to
-      // de-opt to client rendering should have an error message.
-      null,
-    );
-  }
+    // We should never be hydrating at this point because it is the first pass,
+    // but after we've already committed once.
+    warnIfHydrating();
 
-  if (isSuspenseInstanceFallback(suspenseInstance)) {
-    // This boundary is in a permanent fallback state. In this case, we'll never
-    // get an update and we'll never be able to hydrate the final content. Let's just try the
-    // client side render instead.
-    return retrySuspenseComponentWithoutHydrating(
-      current,
-      workInProgress,
-      renderLanes,
-      // TODO: The server should serialize the error message so we can log it
-      // here on the client. Or, in production, a hash/id that corresponds to
-      // the error.
-      new Error(
-        'The server could not finish this Suspense boundary, likely ' +
-          'due to an error during server rendering. Switched to ' +
-          'client rendering.',
-      ),
-    );
-  }
-
-  if (
-    enableLazyContextPropagation &&
-    // TODO: Factoring is a little weird, since we check this right below, too.
-    // But don't want to re-arrange the if-else chain until/unless this
-    // feature lands.
-    !didReceiveUpdate
-  ) {
-    // We need to check if any children have context before we decide to bail
-    // out, so propagate the changes now.
-    lazilyPropagateParentContextChanges(current, workInProgress, renderLanes);
-  }
-
-  // We use lanes to indicate that a child might depend on context, so if
-  // any context has changed, we need to treat is as if the input might have changed.
-  const hasContextChanged = includesSomeLane(renderLanes, current.childLanes);
-  if (didReceiveUpdate || hasContextChanged) {
-    // This boundary has changed since the first render. This means that we are now unable to
-    // hydrate it. We might still be able to hydrate it using a higher priority lane.
-    const root = getWorkInProgressRoot();
-    if (root !== null) {
-      const attemptHydrationAtLane = getBumpedLaneForHydration(
-        root,
+    if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
         renderLanes,
+        // TODO: When we delete legacy mode, we should make this error argument
+        // required — every concurrent mode path that causes hydration to
+        // de-opt to client rendering should have an error message.
+        null,
       );
-      if (
-        attemptHydrationAtLane !== NoLane &&
-        attemptHydrationAtLane !== suspenseState.retryLane
-      ) {
-        // Intentionally mutating since this render will get interrupted. This
-        // is one of the very rare times where we mutate the current tree
-        // during the render phase.
-        suspenseState.retryLane = attemptHydrationAtLane;
-        // TODO: Ideally this would inherit the event time of the current render
-        const eventTime = NoTimestamp;
-        scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime);
-      } else {
-        // We have already tried to ping at a higher priority than we're rendering with
-        // so if we got here, we must have failed to hydrate at those levels. We must
-        // now give up. Instead, we're going to delete the whole subtree and instead inject
-        // a new real Suspense boundary to take its place, which may render content
-        // or fallback. This might suspend for a while and if it does we might still have
-        // an opportunity to hydrate before this pass commits.
-      }
     }
 
-    // If we have scheduled higher pri work above, this will probably just abort the render
-    // since we now have higher priority work, but in case it doesn't, we need to prepare to
-    // render something, if we time out. Even if that requires us to delete everything and
-    // skip hydration.
-    // Delay having to do this as long as the suspense timeout allows us.
-    renderDidSuspendDelayIfPossible();
-    return retrySuspenseComponentWithoutHydrating(
-      current,
-      workInProgress,
-      renderLanes,
-      new Error(
-        'This Suspense boundary received an update before it finished ' +
-          'hydrating. This caused the boundary to switch to client rendering. ' +
-          'The usual way to fix this is to wrap the original update ' +
-          'in startTransition.',
-      ),
-    );
-  } else if (isSuspenseInstancePending(suspenseInstance)) {
-    // This component is still pending more data from the server, so we can't hydrate its
-    // content. We treat it as if this component suspended itself. It might seem as if
-    // we could just try to render it client-side instead. However, this will perform a
-    // lot of unnecessary work and is unlikely to complete since it often will suspend
-    // on missing data anyway. Additionally, the server might be able to render more
-    // than we can on the client yet. In that case we'd end up with more fallback states
-    // on the client than if we just leave it alone. If the server times out or errors
-    // these should update this boundary to the permanent Fallback state instead.
-    // Mark it as having captured (i.e. suspended).
-    workInProgress.flags |= DidCapture;
-    // Leave the child in place. I.e. the dehydrated fragment.
-    workInProgress.child = current.child;
-    // Register a callback to retry this boundary once the server has sent the result.
-    const retry = retryDehydratedSuspenseBoundary.bind(null, current);
-    registerSuspenseInstanceRetry(suspenseInstance, retry);
-    return null;
+    if (isSuspenseInstanceFallback(suspenseInstance)) {
+      // This boundary is in a permanent fallback state. In this case, we'll never
+      // get an update and we'll never be able to hydrate the final content. Let's just try the
+      // client side render instead.
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+        // TODO: The server should serialize the error message so we can log it
+        // here on the client. Or, in production, a hash/id that corresponds to
+        // the error.
+        new Error(
+          'The server could not finish this Suspense boundary, likely ' +
+            'due to an error during server rendering. Switched to ' +
+            'client rendering.',
+        ),
+      );
+    }
+
+    if (
+      enableLazyContextPropagation &&
+      // TODO: Factoring is a little weird, since we check this right below, too.
+      // But don't want to re-arrange the if-else chain until/unless this
+      // feature lands.
+      !didReceiveUpdate
+    ) {
+      // We need to check if any children have context before we decide to bail
+      // out, so propagate the changes now.
+      lazilyPropagateParentContextChanges(current, workInProgress, renderLanes);
+    }
+
+    // We use lanes to indicate that a child might depend on context, so if
+    // any context has changed, we need to treat is as if the input might have changed.
+    const hasContextChanged = includesSomeLane(renderLanes, current.childLanes);
+    if (didReceiveUpdate || hasContextChanged) {
+      // This boundary has changed since the first render. This means that we are now unable to
+      // hydrate it. We might still be able to hydrate it using a higher priority lane.
+      const root = getWorkInProgressRoot();
+      if (root !== null) {
+        const attemptHydrationAtLane = getBumpedLaneForHydration(
+          root,
+          renderLanes,
+        );
+        if (
+          attemptHydrationAtLane !== NoLane &&
+          attemptHydrationAtLane !== suspenseState.retryLane
+        ) {
+          // Intentionally mutating since this render will get interrupted. This
+          // is one of the very rare times where we mutate the current tree
+          // during the render phase.
+          suspenseState.retryLane = attemptHydrationAtLane;
+          // TODO: Ideally this would inherit the event time of the current render
+          const eventTime = NoTimestamp;
+          scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime);
+        } else {
+          // We have already tried to ping at a higher priority than we're rendering with
+          // so if we got here, we must have failed to hydrate at those levels. We must
+          // now give up. Instead, we're going to delete the whole subtree and instead inject
+          // a new real Suspense boundary to take its place, which may render content
+          // or fallback. This might suspend for a while and if it does we might still have
+          // an opportunity to hydrate before this pass commits.
+        }
+      }
+
+      // If we have scheduled higher pri work above, this will probably just abort the render
+      // since we now have higher priority work, but in case it doesn't, we need to prepare to
+      // render something, if we time out. Even if that requires us to delete everything and
+      // skip hydration.
+      // Delay having to do this as long as the suspense timeout allows us.
+      renderDidSuspendDelayIfPossible();
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+        new Error(
+          'This Suspense boundary received an update before it finished ' +
+            'hydrating. This caused the boundary to switch to client rendering. ' +
+            'The usual way to fix this is to wrap the original update ' +
+            'in startTransition.',
+        ),
+      );
+    } else if (isSuspenseInstancePending(suspenseInstance)) {
+      // This component is still pending more data from the server, so we can't hydrate its
+      // content. We treat it as if this component suspended itself. It might seem as if
+      // we could just try to render it client-side instead. However, this will perform a
+      // lot of unnecessary work and is unlikely to complete since it often will suspend
+      // on missing data anyway. Additionally, the server might be able to render more
+      // than we can on the client yet. In that case we'd end up with more fallback states
+      // on the client than if we just leave it alone. If the server times out or errors
+      // these should update this boundary to the permanent Fallback state instead.
+      // Mark it as having captured (i.e. suspended).
+      workInProgress.flags |= DidCapture;
+      // Leave the child in place. I.e. the dehydrated fragment.
+      workInProgress.child = current.child;
+      // Register a callback to retry this boundary once the server has sent the result.
+      const retry = retryDehydratedSuspenseBoundary.bind(null, current);
+      registerSuspenseInstanceRetry(suspenseInstance, retry);
+      return null;
+    } else {
+      // This is the first attempt.
+      reenterHydrationStateFromDehydratedSuspenseInstance(
+        workInProgress,
+        suspenseInstance,
+        suspenseState.treeContext,
+      );
+      const primaryChildren = nextProps.children;
+      const primaryChildFragment = mountSuspensePrimaryChildren(
+        workInProgress,
+        primaryChildren,
+        renderLanes,
+      );
+      // Mark the children as hydrating. This is a fast path to know whether this
+      // tree is part of a hydrating tree. This is used to determine if a child
+      // node has fully mounted yet, and for scheduling event replaying.
+      // Conceptually this is similar to Placement in that a new subtree is
+      // inserted into the React tree here. It just happens to not need DOM
+      // mutations because it already exists.
+      primaryChildFragment.flags |= Hydrating;
+      return primaryChildFragment;
+    }
   } else {
-    // This is the first attempt.
-    reenterHydrationStateFromDehydratedSuspenseInstance(
-      workInProgress,
-      suspenseInstance,
-      suspenseState.treeContext,
-    );
-    const nextProps = workInProgress.pendingProps;
-    const primaryChildren = nextProps.children;
-    const primaryChildFragment = mountSuspensePrimaryChildren(
-      workInProgress,
-      primaryChildren,
-      renderLanes,
-    );
-    // Mark the children as hydrating. This is a fast path to know whether this
-    // tree is part of a hydrating tree. This is used to determine if a child
-    // node has fully mounted yet, and for scheduling event replaying.
-    // Conceptually this is similar to Placement in that a new subtree is
-    // inserted into the React tree here. It just happens to not need DOM
-    // mutations because it already exists.
-    primaryChildFragment.flags |= Hydrating;
-    return primaryChildFragment;
+    // This is the second render pass. We already attempted to hydrated, but
+    // something either suspended or errored.
+
+    if (workInProgress.flags & ForceClientRender) {
+      // Something errored during hydration. Try again without hydrating.
+      workInProgress.flags &= ~ForceClientRender;
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+        new Error(
+          'There was an error while hydrating this Suspense boundary. ' +
+            'Switched to client rendering.',
+        ),
+      );
+    } else if ((workInProgress.memoizedState: null | SuspenseState) !== null) {
+      // Something suspended and we should still be in dehydrated mode.
+      // Leave the existing child in place.
+      workInProgress.child = current.child;
+      // The dehydrated completion pass expects this flag to be there
+      // but the normal suspense pass doesn't.
+      workInProgress.flags |= DidCapture;
+      return null;
+    } else {
+      // Suspended but we should no longer be in dehydrated mode.
+      // Therefore we now have to render the fallback.
+      const nextPrimaryChildren = nextProps.children;
+      const nextFallbackChildren = nextProps.fallback;
+      const fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
+        current,
+        workInProgress,
+        nextPrimaryChildren,
+        nextFallbackChildren,
+        renderLanes,
+      );
+      const primaryChildFragment: Fiber = (workInProgress.child: any);
+      primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
+        renderLanes,
+      );
+      workInProgress.memoizedState = SUSPENDED_MARKER;
+      return fallbackChildFragment;
+    }
   }
 }
 
