@@ -1110,16 +1110,8 @@ function updateClassComponent(
   const instance = workInProgress.stateNode;
   let shouldUpdate;
   if (instance === null) {
-    if (current !== null) {
-      // A class component without an instance only mounts if it suspended
-      // inside a non-concurrent tree, in an inconsistent state. We want to
-      // treat it like a new mount, even though an empty version of it already
-      // committed. Disconnect the alternate pointers.
-      current.alternate = null;
-      workInProgress.alternate = null;
-      // Since this is conceptually a new fiber, schedule a Placement effect
-      workInProgress.flags |= Placement;
-    }
+    resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress);
+
     // In the initial pass we might need to construct the instance.
     constructClassInstance(workInProgress, Component, nextProps);
     mountClassInstance(workInProgress, Component, nextProps, renderLanes);
@@ -1469,16 +1461,7 @@ function mountLazyComponent(
   elementType,
   renderLanes,
 ) {
-  if (_current !== null) {
-    // A lazy component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to treat it like
-    // a new mount, even though an empty version of it already committed.
-    // Disconnect the alternate pointers.
-    _current.alternate = null;
-    workInProgress.alternate = null;
-    // Since this is conceptually a new fiber, schedule a Placement effect
-    workInProgress.flags |= Placement;
-  }
+  resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
   const props = workInProgress.pendingProps;
   const lazyComponent: LazyComponentType<any, any> = elementType;
@@ -1588,16 +1571,7 @@ function mountIncompleteClassComponent(
   nextProps,
   renderLanes,
 ) {
-  if (_current !== null) {
-    // An incomplete component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to treat it like
-    // a new mount, even though an empty version of it already committed.
-    // Disconnect the alternate pointers.
-    _current.alternate = null;
-    workInProgress.alternate = null;
-    // Since this is conceptually a new fiber, schedule a Placement effect
-    workInProgress.flags |= Placement;
-  }
+  resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
   // Promote the fiber to a class and try rendering again.
   workInProgress.tag = ClassComponent;
@@ -1635,16 +1609,7 @@ function mountIndeterminateComponent(
   Component,
   renderLanes,
 ) {
-  if (_current !== null) {
-    // An indeterminate component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to treat it like
-    // a new mount, even though an empty version of it already committed.
-    // Disconnect the alternate pointers.
-    _current.alternate = null;
-    workInProgress.alternate = null;
-    // Since this is conceptually a new fiber, schedule a Placement effect
-    workInProgress.flags |= Placement;
-  }
+  resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
   const props = workInProgress.pendingProps;
   let context;
@@ -3374,6 +3339,21 @@ export function markWorkInProgressReceivedUpdate() {
 
 export function checkIfWorkInProgressReceivedUpdate() {
   return didReceiveUpdate;
+}
+
+function resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress) {
+  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+    if (current !== null) {
+      // A lazy component only mounts if it suspended inside a non-
+      // concurrent tree, in an inconsistent state. We want to treat it like
+      // a new mount, even though an empty version of it already committed.
+      // Disconnect the alternate pointers.
+      current.alternate = null;
+      workInProgress.alternate = null;
+      // Since this is conceptually a new fiber, schedule a Placement effect
+      workInProgress.flags |= Placement;
+    }
+  }
 }
 
 function bailoutOnAlreadyFinishedWork(
