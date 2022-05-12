@@ -131,8 +131,9 @@ type LegacyContext = {
 type SuspenseBoundary = {
   id: SuspenseBoundaryID,
   rootSegmentID: number,
-  error: ?string, // the error string if it errors
-  errorComponentStack?: string, // the component stack for the error in DEV
+  errorHash: ?string, // the error hash if it errors
+  errorMessage?: string, // the error string if it errors
+  errorComponentStack?: string, // the error component stack if it errors
   forceClientRender: boolean, // if it errors or infinitely suspends
   parentFlushed: boolean,
   pendingTasks: number, // when it reaches zero we can show this boundary's content
@@ -322,7 +323,7 @@ function createSuspenseBoundary(
     completedSegments: [],
     byteSize: 0,
     fallbackAbortableTasks,
-    error: null,
+    errorHash: null,
   };
 }
 
@@ -432,19 +433,44 @@ function popComponentStackInDEV(task: Task): void {
   }
 }
 
+// stash the component stack of an unwinding error until it is processed
+let lastBoundaryErrorComponentStackDev: ?string = null;
+
+function captureBoundaryErrorDetailsDev(
+  boundary: SuspenseBoundary,
+  error: mixed,
+) {
+  if (__DEV__) {
+    let errorMessage;
+    if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error && typeof error.message === 'string') {
+      errorMessage = error.message;
+    } else {
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      errorMessage = String(error);
+    }
+
+    const errorComponentStack =
+      lastBoundaryErrorComponentStackDev || getCurrentStackInDEV();
+    lastBoundaryErrorComponentStackDev = null;
+
+    boundary.errorMessage = errorMessage;
+    boundary.errorComponentStack = errorComponentStack;
+  }
+}
+
 function logRecoverableError(request: Request, error: any): ?string {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
-  const onError = request.onError;
-  let errorMsg = onError(error);
-  if (__DEV__) {
-    const msg = error && error.message ? error.message : error;
-    errorMsg = JSON.stringify({
-      error: msg,
-      componentStack: getCurrentStackInDEV(),
-    });
+  const errorHash = request.onError(error);
+  if (errorHash != null && typeof errorHash !== 'string') {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorHash}" instead`,
+    );
   }
-  return errorMsg;
+  return errorHash;
 }
 
 function fatalError(request: Request, error: mixed): void {
@@ -542,7 +568,10 @@ function renderSuspenseBoundary(
   } catch (error) {
     contentRootSegment.status = ERRORED;
     newBoundary.forceClientRender = true;
-    newBoundary.error = logRecoverableError(request, error);
+    newBoundary.errorHash = logRecoverableError(request, error);
+    if (__DEV__) {
+      captureBoundaryErrorDetailsDev(newBoundary, error);
+    }
 
     // We don't need to decrement any task numbers because we didn't spawn any new task.
     // We don't need to schedule any task because we know the parent has written yet.
@@ -1180,9 +1209,37 @@ function validateIterable(iterable, iteratorFn: Function): void {
   }
 }
 
+let renderNodeDestructive = renderNodeDestructiveImpl;
+if (__DEV__) {
+  // In Dev we wrap renderNodeDestructiveImpl in a try / catch so we can capture
+  // a component stack at the right place in the tree. We don't do this in renderNode
+  // becuase it is not called at every layer of the tree and we may lose frames
+  renderNodeDestructive = (
+    request: Request,
+    task: Task,
+    node: ReactNodeList,
+  ): void => {
+    try {
+      return renderNodeDestructiveImpl(request, task, node);
+    } catch (x) {
+      if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
+        // This is a Wakable, noop
+      } else {
+        // This is an error, stash the component stack if it is null.
+        lastBoundaryErrorComponentStackDev =
+          lastBoundaryErrorComponentStackDev !== null
+            ? lastBoundaryErrorComponentStackDev
+            : getCurrentStackInDEV();
+      }
+      // rethrow so normal suspense logic can handle thrown value accordingly
+      throw x;
+    }
+  };
+}
+
 // This function by it self renders a node and consumes the task by mutating it
 // to update the current execution state.
-function renderNodeDestructive(
+function renderNodeDestructiveImpl(
   request: Request,
   task: Task,
   node: ReactNodeList,
@@ -1212,7 +1269,21 @@ function renderNodeDestructive(
         const lazyNode: LazyComponentType<any, any> = (node: any);
         const payload = lazyNode._payload;
         const init = lazyNode._init;
-        const resolvedNode = init(payload);
+        let resolvedNode;
+        if (__DEV__) {
+          // If a lazy element throws a componentStack frame will be popped but since
+          // it is an element and not a component it never added a frame. We
+          // add a fake frame here in case we throw and then remove it if we didn't
+          // @TODO decide if this frame showing up in dev component stacks is good
+          // Currently if a lazy element rejects the component stack will include this
+          // special frame. My current intuition is this is good and will aid in identifying
+          // where errors are happening.
+          pushBuiltInComponentStackInDEV(task, '~lazy-element~');
+          resolvedNode = init(payload);
+          popComponentStackInDEV(task);
+        } else {
+          resolvedNode = init(payload);
+        }
         renderNodeDestructive(request, task, resolvedNode);
         return;
       }
@@ -1410,14 +1481,17 @@ function erroredTask(
   error: mixed,
 ) {
   // Report the error to a global handler.
-  const errorMsg = logRecoverableError(request, error);
+  const errorHash = logRecoverableError(request, error);
   if (boundary === null) {
     fatalError(request, error);
   } else {
     boundary.pendingTasks--;
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
-      boundary.error = errorMsg;
+      boundary.errorHash = errorHash;
+      if (__DEV__) {
+        captureBoundaryErrorDetailsDev(boundary, error);
+      }
 
       // Regardless of what happens next, this boundary won't be displayed,
       // so we can flush it, if the parent already flushed.
@@ -1472,7 +1546,13 @@ function abortTask(task: Task): void {
 
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
-      boundary.error = 'This Suspense boundary was aborted by the server';
+      const error = new Error(
+        'This Suspense boundary was aborted by the server',
+      );
+      boundary.errorHash = request.onError(error);
+      if (__DEV__) {
+        captureBoundaryErrorDetailsDev(boundary, error);
+      }
       if (boundary.parentFlushed) {
         request.clientRenderedBoundaries.push(boundary);
       }
@@ -1751,8 +1831,10 @@ function flushSegment(
     writeStartClientRenderedSuspenseBoundary(
       destination,
       request.responseState,
+      boundary.errorHash,
+      boundary.errorMessage,
+      boundary.errorComponentStack,
     );
-
     // Flush the fallback.
     flushSubtree(request, destination, segment);
 
@@ -1832,7 +1914,9 @@ function flushClientRenderedBoundary(
     destination,
     request.responseState,
     boundary.id,
-    boundary.error,
+    boundary.errorHash,
+    boundary.errorMessage,
+    boundary.errorComponentStack,
   );
 }
 

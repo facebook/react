@@ -225,6 +225,10 @@ export function writeStartPendingSuspenseBoundary(
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
+  // TODO: encode error for native
+  errorHash: ?string,
+  errorMessage: ?string,
+  errorComponentStack: ?string,
 ): boolean {
   return writeChunkAndReturn(destination, SUSPENSE_CLIENT_RENDER);
 }
@@ -296,7 +300,9 @@ export function writeClientRenderBoundaryInstruction(
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
   // TODO: encode error for native
-  error: ?string,
+  errorHash: ?string,
+  errorMessage: ?string,
+  errorComponentStack: ?string,
 ): boolean {
   writeChunk(destination, SUSPENSE_UPDATE_TO_CLIENT_RENDER);
   return writeChunkAndReturn(destination, formatID(boundaryID));
