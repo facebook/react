@@ -189,5 +189,26 @@ describe('utils', () => {
       ]);
       expect(formatWithStyles(['%%c%c'], 'color: gray')).toEqual(['%%c%c']);
     });
+
+    it('should format non string inputs as the first argument', () => {
+      expect(formatWithStyles([{foo: 'bar'}])).toEqual([{foo: 'bar'}]);
+      expect(formatWithStyles([[1, 2, 3]])).toEqual([[1, 2, 3]]);
+      expect(formatWithStyles([{foo: 'bar'}], 'color: gray')).toEqual([
+        '%c%o',
+        'color: gray',
+        {foo: 'bar'},
+      ]);
+      expect(formatWithStyles([[1, 2, 3]], 'color: gray')).toEqual([
+        '%c%o',
+        'color: gray',
+        [1, 2, 3],
+      ]);
+      expect(formatWithStyles([{foo: 'bar'}, 'hi'], 'color: gray')).toEqual([
+        '%c%o %s',
+        'color: gray',
+        {foo: 'bar'},
+        'hi',
+      ]);
+    });
   });
 });
