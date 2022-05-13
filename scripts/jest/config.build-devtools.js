@@ -89,9 +89,7 @@ module.exports = Object.assign({}, baseConfig, {
   setupFiles: [
     ...baseConfig.setupFiles,
     require.resolve('./setupTests.build.js'),
-    require.resolve(
-      '../../packages/react-devtools-shared/src/__tests__/setupEnv.js'
-    ),
+    require.resolve('./devtools/setupEnv.js'),
   ],
   setupFilesAfterEnv: [
     require.resolve(

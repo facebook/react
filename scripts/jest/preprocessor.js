@@ -7,7 +7,7 @@ const coffee = require('coffee-script');
 
 const tsPreprocessor = require('./typescript/preprocessor');
 const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
-const {devtoolsPlugins} = require('./devtools/preprocessor.js');
+const {getDevToolsPlugins} = require('./devtools/preprocessor.js');
 
 const pathToBabel = path.join(
   require.resolve('@babel/core'),
@@ -84,7 +84,7 @@ module.exports = {
         babelOptions.plugins
       );
       if (isTestFile && isInDevToolsPackages) {
-        plugins.push(...devtoolsPlugins);
+        plugins.push(...getDevToolsPlugins(filePath));
       }
       return babel.transform(
         src,
