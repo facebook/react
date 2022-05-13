@@ -181,9 +181,8 @@ export function formatWithStyles(
     inputArgs === undefined ||
     inputArgs === null ||
     inputArgs.length === 0 ||
-    typeof inputArgs[0] !== 'string' ||
     // Matches any of %c but not %%c
-    inputArgs[0].match(/([^%]|^)(%c)/g) ||
+    (typeof inputArgs[0] === 'string' && inputArgs[0].match(/([^%]|^)(%c)/g)) ||
     style === undefined
   ) {
     return inputArgs;
@@ -191,7 +190,7 @@ export function formatWithStyles(
 
   // Matches any of %(o|O|d|i|s|f), but not %%(o|O|d|i|s|f)
   const REGEXP = /([^%]|^)((%%)*)(%([oOdisf]))/g;
-  if (inputArgs[0].match(REGEXP)) {
+  if (typeof inputArgs[0] === 'string' && inputArgs[0].match(REGEXP)) {
     return [`%c${inputArgs[0]}`, style, ...inputArgs.slice(1)];
   } else {
     const firstArg = inputArgs.reduce((formatStr, elem, i) => {
