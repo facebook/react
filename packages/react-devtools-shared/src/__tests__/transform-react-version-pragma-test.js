@@ -10,20 +10,32 @@ const semver = require('semver');
 
 let shouldPass;
 let isFocused;
+let shouldIgnore;
 describe('transform-react-version-pragma', () => {
+  const originalTest = test;
+
   // eslint-disable-next-line no-unused-vars
   const _test_react_version = (range, testName, cb) => {
-    test(testName, (...args) => {
-      shouldPass = semver.satisfies('18.0.0', range);
+    originalTest(testName, (...args) => {
+      shouldPass = !!semver.satisfies('18.0.0', range);
       return cb(...args);
     });
   };
 
   // eslint-disable-next-line no-unused-vars
   const _test_react_version_focus = (range, testName, cb) => {
-    test(testName, (...args) => {
-      shouldPass = semver.satisfies('18.0.0', range);
+    originalTest(testName, (...args) => {
+      shouldPass = !!semver.satisfies('18.0.0', range);
       isFocused = true;
+      return cb(...args);
+    });
+  };
+
+  // eslint-disable-next-line no-unused-vars
+  const _test_ignore_for_react_version = (testName, cb) => {
+    originalTest(testName, (...args) => {
+      shouldIgnore = true;
+      shouldPass = false;
       return cb(...args);
     });
   };
@@ -31,6 +43,7 @@ describe('transform-react-version-pragma', () => {
   beforeEach(() => {
     shouldPass = null;
     isFocused = false;
+    shouldIgnore = false;
   });
 
   // @reactVersion >= 17.9
@@ -123,5 +136,15 @@ describe('transform-react-version-pragma', () => {
   test.only('reactVersion focused multiple pragmas pass', () => {
     expect(shouldPass).toBe(true);
     expect(isFocused).toBe(true);
+  });
+
+  test('ignore test if no reactVersion', () => {
+    expect(shouldPass).toBe(false);
+    expect(shouldIgnore).toBe(true);
+  });
+
+  test.only('ignore focused test if no reactVersion', () => {
+    expect(shouldPass).toBe(false);
+    expect(shouldIgnore).toBe(true);
   });
 });
