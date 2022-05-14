@@ -7,6 +7,16 @@
     "url": "https://github.com/facebook/react.git",
     "directory": "packages/use-sync-external-store"
   },
+  "exports": {
+    ".": "./index.js",
+    "./shim": "./shim/index.js",
+    "./shim/index.native": "./shim/index.native.js",
+    "./shim/with-selector": "./shim/with-selector.js",
+    "./with-selector": "./with-selector.js",
+    "./with-selector.native": "./with-selector.native.js",
+    "./package.json": "./package.json",
+    "./shim/*": "./shim/*"
+  },
   "files": [
     "LICENSE",
     "README.md",
