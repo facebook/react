@@ -5,6 +5,7 @@ const chalk = require('chalk');
 const yargs = require('yargs');
 const fs = require('fs');
 const path = require('path');
+const semver = require('semver');
 
 const ossConfig = './scripts/jest/config.source.js';
 const wwwConfig = './scripts/jest/config.source-www.js';
@@ -104,6 +105,11 @@ const argv = yargs
       type: 'boolean',
       default: false,
     },
+    reactVersion: {
+      describe: 'DevTools testing for specific version of React',
+      requiresArg: true,
+      type: 'string',
+    },
   }).argv;
 
 function logError(message) {
@@ -166,9 +172,18 @@ function validateOptions() {
       logError('DevTool tests require --build.');
       success = false;
     }
+
+    if (argv.reactVersion && !semver.validRange(argv.reactVersion)) {
+      success = false;
+      logError('please specify a valid version range for --reactVersion');
+    }
   } else {
     if (argv.compactConsole) {
       logError('Only DevTool tests support compactConsole flag.');
+      success = false;
+    }
+    if (argv.reactVersion) {
+      logError('Only DevTools tests supports the --reactVersion flag.');
       success = false;
     }
   }
@@ -312,6 +327,10 @@ function getEnvars() {
 
   if (argv.variant) {
     envars.VARIANT = true;
+  }
+
+  if (argv.reactVersion) {
+    envars.REACT_VERSION = semver.coerce(argv.reactVersion);
   }
 
   return envars;
