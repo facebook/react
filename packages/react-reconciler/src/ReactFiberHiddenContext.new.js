@@ -64,3 +64,7 @@ export function popHiddenContext(fiber: Fiber): void {
   pop(currentTreeHiddenStackCursor, fiber);
   pop(prevRenderLanesStackCursor, fiber);
 }
+
+export function isCurrentTreeHidden() {
+  return currentTreeHiddenStackCursor.current !== null;
+}

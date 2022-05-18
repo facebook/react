@@ -13,13 +13,11 @@ import type {Lane, Lanes} from './ReactFiberLane.new';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactFiberClassUpdateQueue.new';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
   ClassComponent,
   HostRoot,
-  SuspenseComponent,
   IncompleteClassComponent,
   FunctionComponent,
   ForwardRef,
@@ -34,7 +32,6 @@ import {
   ForceUpdateForLegacySuspense,
   ForceClientRender,
 } from './ReactFiberFlags';
-import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   enableDebugTracing,
@@ -50,11 +47,7 @@ import {
   enqueueUpdate,
 } from './ReactFiberClassUpdateQueue.new';
 import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading.new';
-import {
-  suspenseStackCursor,
-  InvisibleParentSuspenseContext,
-  hasSuspenseContext,
-} from './ReactFiberSuspenseContext.new';
+import {getSuspenseHandler} from './ReactFiberSuspenseContext.new';
 import {
   renderDidError,
   renderDidSuspendDelayIfPossible,
@@ -269,26 +262,6 @@ function resetSuspendedComponent(sourceFiber: Fiber, rootRenderLanes: Lanes) {
   }
 }
 
-function getNearestSuspenseBoundaryToCapture(returnFiber: Fiber) {
-  let node = returnFiber;
-  const hasInvisibleParentBoundary = hasSuspenseContext(
-    suspenseStackCursor.current,
-    (InvisibleParentSuspenseContext: SuspenseContext),
-  );
-  do {
-    if (
-      node.tag === SuspenseComponent &&
-      shouldCaptureSuspense(node, hasInvisibleParentBoundary)
-    ) {
-      return node;
-    }
-    // This boundary already captured during this render. Continue to the next
-    // boundary.
-    node = node.return;
-  } while (node !== null);
-  return null;
-}
-
 function markSuspenseBoundaryShouldCapture(
   suspenseBoundary: Fiber,
   returnFiber: Fiber,
@@ -444,7 +417,7 @@ function throwException(
     }
 
     // Schedule the nearest Suspense to re-render the timed out view.
-    const suspenseBoundary = getNearestSuspenseBoundaryToCapture(returnFiber);
+    const suspenseBoundary = getSuspenseHandler();
     if (suspenseBoundary !== null) {
       suspenseBoundary.flags &= ~ForceClientRender;
       markSuspenseBoundaryShouldCapture(
@@ -496,7 +469,7 @@ function throwException(
     // This is a regular error, not a Suspense wakeable.
     if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
       markDidThrowWhileHydratingDEV();
-      const suspenseBoundary = getNearestSuspenseBoundaryToCapture(returnFiber);
+      const suspenseBoundary = getSuspenseHandler();
       // If the error was thrown during hydration, we may be able to recover by
       // discarding the dehydrated content and switching to a client render.
       // Instead of surfacing the error, find the nearest Suspense boundary

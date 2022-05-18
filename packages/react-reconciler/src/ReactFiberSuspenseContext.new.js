@@ -9,32 +9,95 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
+import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
 import {createCursor, push, pop} from './ReactFiberStack.new';
+import {isCurrentTreeHidden} from './ReactFiberHiddenContext.new';
+import {SuspenseComponent} from './ReactWorkTags';
 
+// The Suspense handler is the boundary that should capture if something
+// suspends, i.e. it's the nearest `catch` block on the stack.
+const suspenseHandlerStackCursor: StackCursor<Fiber | null> = createCursor(
+  null,
+);
+
+function shouldAvoidedBoundaryCapture(
+  workInProgress: Fiber,
+  handlerOnStack: Fiber,
+  props: any,
+): boolean {
+  if (enableSuspenseAvoidThisFallback) {
+    // If the parent is already showing content, and we're not inside a hidden
+    // tree, then we should show the avoided fallback.
+    if (handlerOnStack.alternate !== null && !isCurrentTreeHidden()) {
+      return true;
+    }
+
+    // If the handler on the stack is also an avoided boundary, then we should
+    // favor this inner one.
+    if (
+      handlerOnStack.tag === SuspenseComponent &&
+      handlerOnStack.memoizedProps.unstable_avoidThisFallback === true
+    ) {
+      return true;
+    }
+
+    // If this avoided boundary is dehydrated, then it should capture.
+    const suspenseState: SuspenseState | null = workInProgress.memoizedState;
+    if (suspenseState !== null && suspenseState.dehydrated !== null) {
+      return true;
+    }
+  }
+
+  // If none of those cases apply, then we should avoid this fallback and show
+  // the outer one instead.
+  return false;
+}
+
+export function pushPrimaryTreeSuspenseHandler(handler: Fiber): void {
+  const props = handler.pendingProps;
+  const handlerOnStack = suspenseHandlerStackCursor.current;
+  if (
+    enableSuspenseAvoidThisFallback &&
+    props.unstable_avoidThisFallback === true &&
+    handlerOnStack !== null &&
+    !shouldAvoidedBoundaryCapture(handler, handlerOnStack, props)
+  ) {
+    // This boundary should not capture if something suspends. Reuse the
+    // existing handler on the stack.
+    push(suspenseHandlerStackCursor, handlerOnStack, handler);
+  } else {
+    // Push this handler onto the stack.
+    push(suspenseHandlerStackCursor, handler, handler);
+  }
+}
+
+export function pushFallbackTreeSuspenseHandler(fiber: Fiber): void {
+  // We're about to render the fallback. If something in the fallback suspends,
+  // it's akin to throwing inside of a `catch` block. This boundary should not
+  // capture. Reuse the existing handler on the stack.
+  push(suspenseHandlerStackCursor, getSuspenseHandler(), fiber);
+}
+
+export function getSuspenseHandler(): Fiber | null {
+  return suspenseHandlerStackCursor.current;
+}
+
+export function popSuspenseHandler(fiber: Fiber): void {
+  pop(suspenseHandlerStackCursor, fiber);
+}
+
+// SuspenseList context
+// TODO: Move to a separate module? We may change the SuspenseList
+// implementation to hide/show in the commit phase, anyway.
 export opaque type SuspenseContext = number;
 export opaque type SubtreeSuspenseContext: SuspenseContext = number;
 export opaque type ShallowSuspenseContext: SuspenseContext = number;
 
 const DefaultSuspenseContext: SuspenseContext = 0b00;
 
-// The Suspense Context is split into two parts. The lower bits is
-// inherited deeply down the subtree. The upper bits only affect
-// this immediate suspense boundary and gets reset each new
-// boundary or suspense list.
 const SubtreeSuspenseContextMask: SuspenseContext = 0b01;
-
-// Subtree Flags:
-
-// InvisibleParentSuspenseContext indicates that one of our parent Suspense
-// boundaries is not currently showing visible main content.
-// Either because it is already showing a fallback or is not mounted at all.
-// We can use this to determine if it is desirable to trigger a fallback at
-// the parent. If not, then we might need to trigger undesirable boundaries
-// and/or suspend the commit to avoid hiding the parent content.
-export const InvisibleParentSuspenseContext: SubtreeSuspenseContext = 0b01;
-
-// Shallow Flags:
 
 // ForceSuspenseFallback can be used by SuspenseList to force newly added
 // items into their fallback state during one of the render passes.
@@ -44,40 +107,33 @@ export const suspenseStackCursor: StackCursor<SuspenseContext> = createCursor(
   DefaultSuspenseContext,
 );
 
-export function hasSuspenseContext(
+export function hasSuspenseListContext(
   parentContext: SuspenseContext,
   flag: SuspenseContext,
 ): boolean {
   return (parentContext & flag) !== 0;
 }
 
-export function setDefaultShallowSuspenseContext(
+export function setDefaultShallowSuspenseListContext(
   parentContext: SuspenseContext,
 ): SuspenseContext {
   return parentContext & SubtreeSuspenseContextMask;
 }
 
-export function setShallowSuspenseContext(
+export function setShallowSuspenseListContext(
   parentContext: SuspenseContext,
   shallowContext: ShallowSuspenseContext,
 ): SuspenseContext {
   return (parentContext & SubtreeSuspenseContextMask) | shallowContext;
 }
 
-export function addSubtreeSuspenseContext(
-  parentContext: SuspenseContext,
-  subtreeContext: SubtreeSuspenseContext,
-): SuspenseContext {
-  return parentContext | subtreeContext;
-}
-
-export function pushSuspenseContext(
+export function pushSuspenseListContext(
   fiber: Fiber,
   newContext: SuspenseContext,
 ): void {
   push(suspenseStackCursor, newContext, fiber);
 }
 
-export function popSuspenseContext(fiber: Fiber): void {
+export function popSuspenseListContext(fiber: Fiber): void {
   pop(suspenseStackCursor, fiber);
 }
