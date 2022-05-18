@@ -110,6 +110,12 @@ const argv = yargs
       requiresArg: true,
       type: 'string',
     },
+    sourceMaps: {
+      describe:
+        'Enable inline source maps when tranforming source files with Jest. Useful for debugging, but makes it slower.',
+      type: 'boolean',
+      default: false,
+    },
   }).argv;
 
 function logError(message) {
@@ -331,6 +337,12 @@ function getEnvars() {
 
   if (argv.reactVersion) {
     envars.REACT_VERSION = semver.coerce(argv.reactVersion);
+  }
+
+  if (argv.sourceMaps) {
+    // This is off by default because it slows down the test runner, but it's
+    // super useful when running the debugger.
+    envars.JEST_ENABLE_SOURCE_MAPS = 'inline';
   }
 
   return envars;
