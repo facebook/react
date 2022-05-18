@@ -326,7 +326,7 @@ function normalizeMarkupForTextOrAttribute(markup: mixed): string {
 
 export function checkForUnmatchedText(
   serverText: string,
-  clientText: string | number,
+  clientText: string | number | bigint,
   isConcurrentMode: boolean,
   shouldWarnDev: boolean,
 ) {
@@ -397,12 +397,14 @@ function setProp(
         if (canSetTextContent) {
           setTextContent(domElement, value);
         }
-      } else if (typeof value === 'number') {
+      } else if (typeof value === 'number' || typeof value === 'bigint') {
         if (__DEV__) {
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           validateTextNesting('' + value, tag);
         }
         const canSetTextContent = tag !== 'body';
         if (canSetTextContent) {
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           setTextContent(domElement, '' + value);
         }
       }
@@ -955,7 +957,8 @@ function setPropOnCustomElement(
     case 'children': {
       if (typeof value === 'string') {
         setTextContent(domElement, value);
-      } else if (typeof value === 'number') {
+      } else if (typeof value === 'number' || typeof value === 'bigint') {
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         setTextContent(domElement, '' + value);
       }
       break;
@@ -2817,7 +2820,12 @@ export function diffHydratedProperties(
   // even listeners these nodes might be wired up to.
   // TODO: Warn if there is more than a single textNode as a child.
   // TODO: Should we use domElement.firstChild.nodeValue to compare?
-  if (typeof children === 'string' || typeof children === 'number') {
+  if (
+    typeof children === 'string' ||
+    typeof children === 'number' ||
+    typeof children === 'bigint'
+  ) {
+    // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
     if (domElement.textContent !== '' + children) {
       if (props.suppressHydrationWarning !== true) {
         checkForUnmatchedText(
