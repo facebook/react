@@ -72,6 +72,12 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.nodeValue).toMatch('42');
     });
 
+    itRenders('a bigint', async render => {
+      const e = await render(42n);
+      expect(e.nodeType).toBe(3);
+      expect(e.nodeValue).toMatch('42');
+    });
+
     itRenders('an array with one child', async render => {
       const e = await render([<div key={1}>text1</div>]);
       const parent = e.parentNode;

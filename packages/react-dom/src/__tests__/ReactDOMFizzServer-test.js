@@ -3373,6 +3373,16 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('Supports bigint', async () => {
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <div>{10n}</div>,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(<div>10</div>);
+  });
+
   it('Supports custom abort reasons with a string', async () => {
     function App() {
       return (
