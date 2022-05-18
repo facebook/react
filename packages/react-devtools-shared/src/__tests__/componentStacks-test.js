@@ -49,6 +49,7 @@ describe('component stack', () => {
     React = require('react');
   });
 
+  // @reactVersion >=16.9
   it('should log the current component stack along with an error or warning', () => {
     const Grandparent = () => <Parent />;
     const Parent = () => <Child />;

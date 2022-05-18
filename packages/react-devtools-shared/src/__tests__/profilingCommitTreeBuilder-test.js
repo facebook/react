@@ -32,6 +32,7 @@ describe('commit tree', () => {
     Scheduler = require('scheduler');
   });
 
+  // @reactVersion >= 16.9
   it('should be able to rebuild the store tree for each commit', () => {
     const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
@@ -116,6 +117,7 @@ describe('commit tree', () => {
       LazyComponent = React.lazy(() => fakeImport(LazyInnerComponent));
     });
 
+    // @reactVersion >= 16.9
     it('should support Lazy components (legacy render)', async () => {
       const container = document.createElement('div');
 
@@ -157,6 +159,7 @@ describe('commit tree', () => {
       expect(commitTrees[2].nodes.size).toBe(2); // <Root> + <App>
     });
 
+    // @reactVersion >= 18.0
     it('should support Lazy components (createRoot)', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
@@ -199,6 +202,7 @@ describe('commit tree', () => {
       expect(commitTrees[2].nodes.size).toBe(2); // <Root> + <App>
     });
 
+    // @reactVersion >= 16.9
     it('should support Lazy components that are unmounted before resolving (legacy render)', async () => {
       const container = document.createElement('div');
 
@@ -231,6 +235,7 @@ describe('commit tree', () => {
       expect(commitTrees[1].nodes.size).toBe(2); // <Root> + <App>
     });
 
+    // @reactVersion >= 18.0
     it('should support Lazy components that are unmounted before resolving (createRoot)', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);

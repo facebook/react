@@ -84,6 +84,7 @@ describe('editing interface', () => {
       });
     }
 
+    // @reactVersion >= 16.0
     it('should have editable values', () => {
       mountTestApp();
 
@@ -125,6 +126,7 @@ describe('editing interface', () => {
       });
     });
 
+    // @reactVersion >= 16.0
     it('should have editable paths', () => {
       mountTestApp();
 
@@ -158,6 +160,7 @@ describe('editing interface', () => {
       });
     });
 
+    // @reactVersion >= 16.0
     it('should enable adding new object properties and array values', async () => {
       await mountTestApp();
 
@@ -206,6 +209,7 @@ describe('editing interface', () => {
       });
     });
 
+    // @reactVersion >= 16.0
     it('should have deletable keys', () => {
       mountTestApp();
 
@@ -282,6 +286,7 @@ describe('editing interface', () => {
       });
     }
 
+    // @reactVersion >= 16.0
     it('should have editable values', () => {
       mountTestApp();
 
@@ -319,6 +324,7 @@ describe('editing interface', () => {
       });
     });
 
+    // @reactVersion >= 16.0
     it('should have editable paths', () => {
       mountTestApp();
 
@@ -353,6 +359,7 @@ describe('editing interface', () => {
       });
     });
 
+    // @reactVersion >= 16.0
     it('should enable adding new object properties and array values', async () => {
       await mountTestApp();
 
@@ -401,6 +408,7 @@ describe('editing interface', () => {
       });
     });
 
+    // @reactVersion >= 16.0
     it('should have deletable keys', () => {
       mountTestApp();
 
@@ -502,6 +510,7 @@ describe('editing interface', () => {
       });
     }
 
+    // @reactVersion >= 16.0
     it('should have editable values', () => {
       mountTestApp();
 
@@ -546,6 +555,7 @@ describe('editing interface', () => {
       });
     });
 
+    // @reactVersion >= 16.0
     it('should have editable paths', () => {
       mountTestApp();
 
@@ -581,6 +591,7 @@ describe('editing interface', () => {
       });
     });
 
+    // @reactVersion >= 16.0
     it('should enable adding new object properties and array values', async () => {
       await mountTestApp();
 
@@ -630,6 +641,7 @@ describe('editing interface', () => {
       });
     });
 
+    // @reactVersion >= 16.0
     it('should have deletable keys', () => {
       mountTestApp();
 
