@@ -222,6 +222,43 @@ jobs:
             RELEASE_CHANNEL: experimental
           command: ./scripts/circleci/run_devtools_e2e_tests.js
 
+  run_devtools_tests_for_versions:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      version:
+        type: string
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Install nested packages from Yarn cache
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run: 
+          command: ./scripts/circleci/run_devtools_tests_for_react_versions.js << parameters.version >>
+      - run:
+          command: ls ./build
+      - run:
+          command: ls ./build/oss-experimental
+      - run:
+          command: ls ./build/oss-experimental/react
+      - run:
+          command: ls ./packages/react-devtools-shared/src
+      - run:
+          command: ls ./packages/react/src
+      - run:
+          command: ls ./packages/react-devtools-shared/src/__tests__
+      - run:
+          command: ls ./packages/react/src/__tests__
+      - run:
+          command: grep -i \"version\" ./build/oss-experimental/react/package.json
+      - run: 
+          command: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
+
   yarn_lint_build:
     docker: *docker
     environment: *environment
@@ -477,6 +514,29 @@ workflows:
       - run_devtools_e2e_tests:
           requires:
             - build_devtools_and_process_artifacts
+      - run_devtools_tests_for_versions:
+          requires:
+            - build_devtools_and_process_artifacts
+          matrix:
+            parameters:
+              version:
+                - "16.0"
+                - "16.1"
+                - "16.2"
+                - "16.3"
+                - "16.4"
+                - "16.5"
+                - "16.6"
+                - "16.7"
+                - "16.8"
+                - "16.9"
+                - "16.10"
+                - "16.11"
+                - "16.12"
+                - "16.13"
+                - "16.14"
+                - "17.0"
+                - "18.0"
 
   fuzz_tests:
     unless: << pipeline.parameters.prerelease_commit_sha >>
