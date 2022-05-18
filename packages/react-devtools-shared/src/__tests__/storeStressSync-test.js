@@ -33,6 +33,7 @@ describe('StoreStress (Legacy Mode)', () => {
 
   // This is a stress test for the tree mount/update/unmount traversal.
   // It renders different trees that should produce the same output.
+  // @reactVersion >= 16.9
   it('should handle a stress test with different tree operations (Legacy Mode)', () => {
     let setShowX;
     const A = () => 'a';
@@ -174,6 +175,7 @@ describe('StoreStress (Legacy Mode)', () => {
     expect(print(store)).toBe('');
   });
 
+  // @reactVersion >= 16.9
   it('should handle stress test with reordering (Legacy Mode)', () => {
     const A = () => 'a';
     const B = () => 'b';
@@ -274,6 +276,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
   });
 
+  // @reactVersion >= 18.0
   it('should handle a stress test for Suspense (Legacy Mode)', async () => {
     const A = () => 'a';
     const B = () => 'b';
@@ -667,6 +670,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
   });
 
+  // @reactVersion >= 18.0
   it('should handle a stress test for Suspense without type change (Legacy Mode)', () => {
     const A = () => 'a';
     const B = () => 'b';

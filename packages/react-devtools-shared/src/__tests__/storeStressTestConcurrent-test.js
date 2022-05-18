@@ -39,6 +39,7 @@ describe('StoreStressConcurrent', () => {
 
   // This is a stress test for the tree mount/update/unmount traversal.
   // It renders different trees that should produce the same output.
+  // @reactVersion >= 18.0
   it('should handle a stress test with different tree operations (Concurrent Mode)', () => {
     let setShowX;
     const A = () => 'a';
@@ -207,6 +208,7 @@ describe('StoreStressConcurrent', () => {
     expect(print(store)).toBe('');
   });
 
+  // @reactVersion >= 18.0
   it('should handle stress test with reordering (Concurrent Mode)', () => {
     const A = () => 'a';
     const B = () => 'b';
@@ -368,6 +370,7 @@ describe('StoreStressConcurrent', () => {
     }
   });
 
+  // @reactVersion >= 18.0
   it('should handle a stress test for Suspense (Concurrent Mode)', async () => {
     const A = () => 'a';
     const B = () => 'b';
@@ -841,6 +844,7 @@ describe('StoreStressConcurrent', () => {
     }
   });
 
+  // @reactVersion >= 18.0
   it('should handle a stress test for Suspense without type change (Concurrent Mode)', async () => {
     const A = () => 'a';
     const B = () => 'b';
