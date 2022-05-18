@@ -46,7 +46,7 @@ const hasPerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
 
 if (hasPerformanceNow) {
-  getCurrentTime = performance.now.bind(performance)
+  getCurrentTime = performance.now.bind(performance);
 } else {
   const initialTime = Date.now();
   getCurrentTime = () => Date.now() - initialTime;
