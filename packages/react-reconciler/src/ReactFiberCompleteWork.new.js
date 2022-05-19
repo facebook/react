@@ -117,6 +117,7 @@ import {
   ForceSuspenseFallback,
   setDefaultShallowSuspenseContext,
 } from './ReactFiberSuspenseContext.new';
+import {popHiddenContext} from './ReactFiberHiddenContext.new';
 import {findFirstSuspended} from './ReactFiberSuspenseComponent.new';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -146,9 +147,7 @@ import {
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
-  popRenderLanes,
   getRenderTargetTime,
-  subtreeRenderLanes,
   getWorkInProgressTransitions,
 } from './ReactFiberWorkLoop.new';
 import {
@@ -1499,7 +1498,7 @@ function completeWork(
     }
     case OffscreenComponent:
     case LegacyHiddenComponent: {
-      popRenderLanes(workInProgress);
+      popHiddenContext(workInProgress);
       const nextState: OffscreenState | null = workInProgress.memoizedState;
       const nextIsHidden = nextState !== null;
 
@@ -1520,7 +1519,7 @@ function completeWork(
       } else {
         // Don't bubble properties for hidden children unless we're rendering
         // at offscreen priority.
-        if (includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane))) {
+        if (includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
           bubbleProperties(workInProgress);
           // Check if there was an insertion or update in the hidden subtree.
           // If so, we need to hide those nodes in the commit phase, so

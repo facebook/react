@@ -175,6 +175,10 @@ import {
   addSubtreeSuspenseContext,
   setShallowSuspenseContext,
 } from './ReactFiberSuspenseContext.new';
+import {
+  pushHiddenContext,
+  reuseHiddenContextOnStack,
+} from './ReactFiberHiddenContext.new';
 import {findFirstSuspended} from './ReactFiberSuspenseComponent.new';
 import {
   pushProvider,
@@ -232,7 +236,6 @@ import {
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
-  pushRenderLanes,
 } from './ReactFiberWorkLoop.new';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.new';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
@@ -688,21 +691,14 @@ function updateOffscreenComponent(
           pushTransition(workInProgress, null, null);
         }
       }
-      pushRenderLanes(workInProgress, renderLanes);
+      reuseHiddenContextOnStack(workInProgress);
     } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
-      let spawnedCachePool: SpawnedCachePool | null = null;
       // We're hidden, and we're not rendering at Offscreen. We will bail out
       // and resume this tree later.
-      let nextBaseLanes;
+      let nextBaseLanes = renderLanes;
       if (prevState !== null) {
-        const prevBaseLanes = prevState.baseLanes;
-        nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes);
-        if (enableCache) {
-          // Save the cache pool so we can resume later.
-          spawnedCachePool = getOffscreenDeferredCache();
-        }
-      } else {
-        nextBaseLanes = renderLanes;
+        // Include the base lanes from the last render
+        nextBaseLanes = mergeLanes(nextBaseLanes, prevState.baseLanes);
       }
 
       // Schedule this fiber to re-render at offscreen priority. Then bailout.
@@ -711,7 +707,8 @@ function updateOffscreenComponent(
       );
       const nextState: OffscreenState = {
         baseLanes: nextBaseLanes,
-        cachePool: spawnedCachePool,
+        // Save the cache pool so we can resume later.
+        cachePool: enableCache ? getOffscreenDeferredCache() : null,
       };
       workInProgress.memoizedState = nextState;
       workInProgress.updateQueue = null;
@@ -725,7 +722,7 @@ function updateOffscreenComponent(
 
       // We're about to bail out, but we need to push this to the stack anyway
       // to avoid a push/pop misalignment.
-      pushRenderLanes(workInProgress, nextBaseLanes);
+      reuseHiddenContextOnStack(workInProgress);
 
       if (enableLazyContextPropagation && current !== null) {
         // Since this tree will resume rendering in a separate render, we need
@@ -749,9 +746,6 @@ function updateOffscreenComponent(
         cachePool: null,
       };
       workInProgress.memoizedState = nextState;
-      // Push the lanes that were skipped when we bailed out.
-      const subtreeRenderLanes =
-        prevState !== null ? prevState.baseLanes : renderLanes;
       if (enableCache && current !== null) {
         // If the render that spawned this one accessed the cache pool, resume
         // using the same cache. Unless the parent changed, since that means
@@ -762,16 +756,17 @@ function updateOffscreenComponent(
         pushTransition(workInProgress, prevCachePool, null);
       }
 
-      pushRenderLanes(workInProgress, subtreeRenderLanes);
+      // Push the lanes that were skipped when we bailed out.
+      if (prevState !== null) {
+        pushHiddenContext(workInProgress, prevState);
+      } else {
+        reuseHiddenContextOnStack(workInProgress);
+      }
     }
   } else {
     // Rendering a visible tree.
-    let subtreeRenderLanes;
     if (prevState !== null) {
       // We're going from hidden -> visible.
-
-      subtreeRenderLanes = mergeLanes(prevState.baseLanes, renderLanes);
-
       let prevCachePool = null;
       if (enableCache) {
         // If the render that spawned this one accessed the cache pool, resume
@@ -789,13 +784,15 @@ function updateOffscreenComponent(
 
       pushTransition(workInProgress, prevCachePool, transitions);
 
+      // Push the lanes that were skipped when we bailed out.
+      pushHiddenContext(workInProgress, prevState);
+
       // Since we're not hidden anymore, reset the state
       workInProgress.memoizedState = null;
     } else {
       // We weren't previously hidden, and we still aren't, so there's nothing
       // special to do. Need to push to the stack regardless, though, to avoid
       // a push/pop misalignment.
-      subtreeRenderLanes = renderLanes;
 
       if (enableCache) {
         // If the render that spawned this one accessed the cache pool, resume
@@ -805,8 +802,11 @@ function updateOffscreenComponent(
           pushTransition(workInProgress, null, null);
         }
       }
+
+      // We're about to bail out, but we need to push this to the stack anyway
+      // to avoid a push/pop misalignment.
+      reuseHiddenContextOnStack(workInProgress);
     }
-    pushRenderLanes(workInProgress, subtreeRenderLanes);
   }
 
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);

@@ -37,6 +37,7 @@ import {
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.new';
 import {popSuspenseContext} from './ReactFiberSuspenseContext.new';
+import {popHiddenContext} from './ReactFiberHiddenContext.new';
 import {resetHydrationState} from './ReactFiberHydrationContext.new';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -44,7 +45,6 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext.new';
 import {popProvider} from './ReactFiberNewContext.new';
-import {popRenderLanes} from './ReactFiberWorkLoop.new';
 import {popCacheProvider} from './ReactFiberCacheComponent.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
@@ -151,7 +151,7 @@ function unwindWork(
       return null;
     case OffscreenComponent:
     case LegacyHiddenComponent:
-      popRenderLanes(workInProgress);
+      popHiddenContext(workInProgress);
       popTransition(workInProgress, current);
       return null;
     case CacheComponent:
@@ -219,7 +219,7 @@ function unwindInterruptedWork(
       break;
     case OffscreenComponent:
     case LegacyHiddenComponent:
-      popRenderLanes(interruptedWork);
+      popHiddenContext(interruptedWork);
       popTransition(interruptedWork, current);
       break;
     case CacheComponent:
