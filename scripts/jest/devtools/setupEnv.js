@@ -29,9 +29,8 @@ global.process.env.LIGHT_MODE_DIMMED_ERROR_COLOR = LIGHT_MODE_DIMMED_ERROR_COLOR
 global.process.env.LIGHT_MODE_DIMMED_LOG_COLOR = LIGHT_MODE_DIMMED_LOG_COLOR;
 
 global._test_react_version = (range, testName, callback) => {
-  const trimmedRange = range.replaceAll(' ', '');
   const reactVersion = process.env.REACT_VERSION || ReactVersion.default;
-  const shouldPass = semver.satisfies(reactVersion, trimmedRange);
+  const shouldPass = semver.satisfies(reactVersion, range);
 
   if (shouldPass) {
     test(testName, callback);
@@ -41,9 +40,8 @@ global._test_react_version = (range, testName, callback) => {
 };
 
 global._test_react_version_focus = (range, testName, callback) => {
-  const trimmedRange = range.replaceAll(' ', '');
   const reactVersion = process.env.REACT_VERSION || ReactVersion.default;
-  const shouldPass = semver.satisfies(reactVersion, trimmedRange);
+  const shouldPass = semver.satisfies(reactVersion, range);
 
   if (shouldPass) {
     // eslint-disable-next-line jest/no-focused-tests
