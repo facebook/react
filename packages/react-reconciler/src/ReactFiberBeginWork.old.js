@@ -236,7 +236,11 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent.old';
-import {createCapturedValue} from './ReactCapturedValue';
+import {
+  createCapturedValue,
+  createCapturedValueAtFiber,
+  type CapturedValue,
+} from './ReactCapturedValue';
 import {createClassErrorUpdate} from './ReactFiberThrow.old';
 import is from 'shared/objectIs';
 import {
@@ -1073,7 +1077,7 @@ function updateClassComponent(
         // Schedule the error boundary to re-render using updated state
         const update = createClassErrorUpdate(
           workInProgress,
-          createCapturedValue(error, workInProgress),
+          createCapturedValueAtFiber(error, workInProgress),
           lane,
         );
         enqueueCapturedUpdate(workInProgress, update);
@@ -1321,10 +1325,13 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     if (workInProgress.flags & ForceClientRender) {
       // Something errored during a previous attempt to hydrate the shell, so we
       // forced a client render.
-      const recoverableError = new Error(
-        'There was an error while hydrating. Because the error happened outside ' +
-          'of a Suspense boundary, the entire root will switch to ' +
-          'client rendering.',
+      const recoverableError = createCapturedValueAtFiber(
+        new Error(
+          'There was an error while hydrating. Because the error happened outside ' +
+            'of a Suspense boundary, the entire root will switch to ' +
+            'client rendering.',
+        ),
+        workInProgress,
       );
       return mountHostRootWithoutHydrating(
         current,
@@ -1334,9 +1341,12 @@ function updateHostRoot(current, workInProgress, renderLanes) {
         recoverableError,
       );
     } else if (nextChildren !== prevChildren) {
-      const recoverableError = new Error(
-        'This root received an early update, before anything was able ' +
-          'hydrate. Switched the entire root to client rendering.',
+      const recoverableError = createCapturedValueAtFiber(
+        new Error(
+          'This root received an early update, before anything was able ' +
+            'hydrate. Switched the entire root to client rendering.',
+        ),
+        workInProgress,
       );
       return mountHostRootWithoutHydrating(
         current,
@@ -1399,7 +1409,7 @@ function mountHostRootWithoutHydrating(
   workInProgress: Fiber,
   nextChildren: ReactNodeList,
   renderLanes: Lanes,
-  recoverableError: Error,
+  recoverableError: CapturedValue<mixed>,
 ) {
   // Revert to client rendering.
   resetHydrationState();
@@ -2428,7 +2438,7 @@ function retrySuspenseComponentWithoutHydrating(
   current: Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
-  recoverableError: Error | null,
+  recoverableError: CapturedValue<mixed> | null,
 ) {
   // Falling back to client rendering. Because this has performance
   // implications, it's considered a recoverable error, even though the user
@@ -2573,22 +2583,23 @@ function updateDehydratedSuspenseComponent(
       // This boundary is in a permanent fallback state. In this case, we'll never
       // get an update and we'll never be able to hydrate the final content. Let's just try the
       // client side render instead.
-      const {errorMessage} = getSuspenseInstanceFallbackErrorDetails(
+      const {message, hash, stack} = getSuspenseInstanceFallbackErrorDetails(
         suspenseInstance,
       );
-      const error = errorMessage
+      const error = message
         ? // eslint-disable-next-line react-internal/prod-error-codes
-          new Error(errorMessage)
+          new Error(message)
         : new Error(
             'The server could not finish this Suspense boundary, likely ' +
               'due to an error during server rendering. Switched to ' +
               'client rendering.',
           );
+      const capturedValue = createCapturedValue(error, hash, stack);
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
         renderLanes,
-        error,
+        capturedValue,
       );
     }
 
@@ -2643,16 +2654,19 @@ function updateDehydratedSuspenseComponent(
       // skip hydration.
       // Delay having to do this as long as the suspense timeout allows us.
       renderDidSuspendDelayIfPossible();
-      return retrySuspenseComponentWithoutHydrating(
-        current,
-        workInProgress,
-        renderLanes,
+      const capturedValue = createCapturedValue(
         new Error(
           'This Suspense boundary received an update before it finished ' +
             'hydrating. This caused the boundary to switch to client rendering. ' +
             'The usual way to fix this is to wrap the original update ' +
             'in startTransition.',
         ),
+      );
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+        capturedValue,
       );
     } else if (isSuspenseInstancePending(suspenseInstance)) {
       // This component is still pending more data from the server, so we can't hydrate its
@@ -2700,14 +2714,17 @@ function updateDehydratedSuspenseComponent(
     if (workInProgress.flags & ForceClientRender) {
       // Something errored during hydration. Try again without hydrating.
       workInProgress.flags &= ~ForceClientRender;
-      return retrySuspenseComponentWithoutHydrating(
-        current,
-        workInProgress,
-        renderLanes,
+      const capturedValue = createCapturedValue(
         new Error(
           'There was an error while hydrating this Suspense boundary. ' +
             'Switched to client rendering.',
         ),
+      );
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+        capturedValue,
       );
     } else if ((workInProgress.memoizedState: null | SuspenseState) !== null) {
       // Something suspended and we should still be in dehydrated mode.

@@ -731,27 +731,20 @@ export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
 }
 export function getSuspenseInstanceFallbackErrorDetails(
   instance: SuspenseInstance,
-) {
+): {message?: string, stack?: string, hash?: string} {
   const nextSibling = instance.nextSibling;
-  let errorMessage /*, errorComponentStack, errorHash*/;
   if (
     nextSibling &&
     nextSibling.nodeType === ELEMENT_NODE &&
     nextSibling.nodeName.toLowerCase() === 'template'
   ) {
-    const msg = ((nextSibling: any): HTMLTemplateElement).dataset.msg;
-    if (msg !== null) errorMessage = msg;
-
-    // @TODO read and return hash and componentStack once we know how we are goign to
-    // expose this extra errorInfo to onRecoverableError
-
-    // const hash = ((nextSibling: any): HTMLTemplateElement).dataset.hash;
-    // if (hash !== null) errorHash = hash;
-
-    // const stack = ((nextSibling: any): HTMLTemplateElement).dataset.stack;
-    // if (stack !== null) errorComponentStack = stack;
+    return {
+      message: ((nextSibling: any): HTMLTemplateElement).dataset.msg,
+      stack: ((nextSibling: any): HTMLTemplateElement).dataset.stack,
+      hash: ((nextSibling: any): HTMLTemplateElement).dataset.hash,
+    };
   }
-  return {errorMessage /*, errorComponentStack, errorHash*/};
+  return {};
 }
 
 export function registerSuspenseInstanceRetry(

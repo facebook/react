@@ -41,7 +41,7 @@ import {
   enableLazyContextPropagation,
   enableUpdaterTracking,
 } from 'shared/ReactFeatureFlags';
-import {createCapturedValue} from './ReactCapturedValue';
+import {createCapturedValueAtFiber} from './ReactCapturedValue';
 import {
   enqueueCapturedUpdate,
   createUpdate,
@@ -517,7 +517,7 @@ function throwException(
 
         // Even though the user may not be affected by this error, we should
         // still log it so it can be fixed.
-        queueHydrationError(value);
+        queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
         return;
       }
     } else {
@@ -525,12 +525,12 @@ function throwException(
     }
   }
 
+  value = createCapturedValueAtFiber(value, sourceFiber);
+  renderDidError(value);
+
   // We didn't find a boundary that could handle this type of exception. Start
   // over and traverse parent path again, this time treating the exception
   // as an error.
-  renderDidError(value);
-
-  value = createCapturedValue(value, sourceFiber);
   let workInProgress = returnFiber;
   do {
     switch (workInProgress.tag) {
