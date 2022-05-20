@@ -10,7 +10,10 @@
 'use strict';
 
 // Set by `yarn test-fire`.
-const {disableInputAttributeSyncing} = require('shared/ReactFeatureFlags');
+const {
+  enableCustomElementPropertySupport,
+  disableInputAttributeSyncing,
+} = require('shared/ReactFeatureFlags');
 
 describe('DOMPropertyOperations', () => {
   let React;
@@ -256,8 +259,12 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.getAttribute('onstring')).toBe('hello');
       expect(customElement.getAttribute('onobj')).toBe('[object Object]');
       expect(customElement.getAttribute('onarray')).toBe('one,two');
-      expect(customElement.getAttribute('ontrue')).toBe('true');
-      expect(customElement.getAttribute('onfalse')).toBe('false');
+      expect(customElement.getAttribute('ontrue')).toBe(
+        enableCustomElementPropertySupport ? '' : 'true',
+      );
+      expect(customElement.getAttribute('onfalse')).toBe(
+        enableCustomElementPropertySupport ? null : 'false',
+      );
 
       // Dispatch the corresponding event names to make sure that nothing crashes.
       customElement.dispatchEvent(new Event('string'));
@@ -957,6 +964,21 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.foo).toBe(false);
       ReactDOM.render(<my-custom-element foo={null} />, container);
       expect(customElement.foo).toBe(null);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('boolean props should not be stringified in attributes', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      ReactDOM.render(<my-custom-element foo={true} />, container);
+      const customElement = container.querySelector('my-custom-element');
+
+      expect(customElement.getAttribute('foo')).toBe('');
+
+      // true => false
+      ReactDOM.render(<my-custom-element foo={false} />, container);
+
+      expect(customElement.getAttribute('foo')).toBe(null);
     });
 
     // @gate enableCustomElementPropertySupport

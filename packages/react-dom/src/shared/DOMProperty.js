@@ -162,6 +162,11 @@ export function shouldRemoveAttribute(
     return true;
   }
   if (isCustomComponentTag) {
+    if (enableCustomElementPropertySupport) {
+      if (value === false) {
+        return true;
+      }
+    }
     return false;
   }
   if (propertyInfo !== null) {
