@@ -526,9 +526,10 @@ function processTimelineEvent(
       } else if (name.startsWith('--schedule-state-update-')) {
         const [laneBitmaskString, componentName] = name.substr(24).split('-');
 
-        const stateUpdateEvent = {
+        const stateUpdateEvent: SchedulingEvent = {
           type: 'schedule-state-update',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
+          parents: null,
           componentName,
           timestamp: startTime,
           warning: null,
@@ -1009,6 +1010,7 @@ export default async function preprocessData(
 
   const profilerData: TimelineData = {
     batchUIDToMeasuresMap: new Map(),
+    componentDisplayNames: new Map(),
     componentMeasures: [],
     duration: 0,
     flamechart,

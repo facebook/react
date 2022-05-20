@@ -490,3 +490,13 @@ export type DevToolsHook = {
 
   ...
 };
+
+export type ReactFiberMetadata = {
+  displayName: string,
+  source?: DebugSource,
+};
+
+export type DebugSource = {|
+  ...Source,
+  columnNumber: number,
+|};

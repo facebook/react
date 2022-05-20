@@ -69,6 +69,7 @@ module.exports = {
     new DefinePlugin({
       __DEV__: true,
       __PROFILE__: false,
+      __EXPERIMENTAL__: true,
       __DEV____DEV__: true,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,

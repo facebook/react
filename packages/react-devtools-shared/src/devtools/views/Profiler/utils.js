@@ -52,9 +52,11 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
     if (timelineData != null) {
       const {
         batchUIDToMeasuresKeyValueArray,
+        componentDisplayNamesValueArray,
         internalModuleSourceToRanges,
         laneToLabelKeyValueArray,
         laneToReactMeasureKeyValueArray,
+        schedulingEvents,
         ...rest
       } = timelineData;
 
@@ -64,9 +66,11 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
         // Most of the data is safe to parse as-is,
         // but we need to convert the nested Arrays back to Maps.
         batchUIDToMeasuresMap: new Map(batchUIDToMeasuresKeyValueArray),
+        componentDisplayNames: new Map(componentDisplayNamesValueArray),
         internalModuleSourceToRanges: new Map(internalModuleSourceToRanges),
         laneToLabelMap: new Map(laneToLabelKeyValueArray),
         laneToReactMeasureMap: new Map(laneToReactMeasureKeyValueArray),
+        schedulingEvents,
       });
     }
 
@@ -155,6 +159,7 @@ export function prepareProfilingDataFrontendFromExport(
     ? profilingDataExport.timelineData.map(
         ({
           batchUIDToMeasuresKeyValueArray,
+          componentDisplayNamesValueArray,
           componentMeasures,
           duration,
           flamechart,
@@ -175,6 +180,7 @@ export function prepareProfilingDataFrontendFromExport(
           // Most of the data is safe to parse as-is,
           // but we need to convert the nested Arrays back to Maps.
           batchUIDToMeasuresMap: new Map(batchUIDToMeasuresKeyValueArray),
+          componentDisplayNames: new Map(componentDisplayNamesValueArray),
           componentMeasures,
           duration,
           flamechart,
@@ -253,6 +259,7 @@ export function prepareProfilingDataExport(
   const timelineData: Array<TimelineDataExport> = profilingDataFrontend.timelineData.map(
     ({
       batchUIDToMeasuresMap,
+      componentDisplayNames,
       componentMeasures,
       duration,
       flamechart,
@@ -274,6 +281,9 @@ export function prepareProfilingDataExport(
       // but we need to convert the Maps to nested Arrays.
       batchUIDToMeasuresKeyValueArray: Array.from(
         batchUIDToMeasuresMap.entries(),
+      ),
+      componentDisplayNamesValueArray: Array.from(
+        componentDisplayNames.entries(),
       ),
       componentMeasures: componentMeasures,
       duration,

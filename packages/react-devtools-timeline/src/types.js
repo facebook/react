@@ -51,6 +51,7 @@ export type ReactScheduleRenderEvent = {|
 |};
 export type ReactScheduleStateUpdateEvent = {|
   ...BaseReactScheduleEvent,
+  +parents: number[] | null,
   +type: 'schedule-state-update',
 |};
 export type ReactScheduleForceUpdateEvent = {|
@@ -199,6 +200,7 @@ export type LaneToLabelMap = Map<ReactLane, string>;
 
 export type TimelineData = {|
   batchUIDToMeasuresMap: Map<BatchUID, ReactMeasure[]>,
+  componentDisplayNames: Map<number, string>,
   componentMeasures: ReactComponentMeasure[],
   duration: number,
   flamechart: Flamechart,
@@ -219,6 +221,7 @@ export type TimelineData = {|
 
 export type TimelineDataExport = {|
   batchUIDToMeasuresKeyValueArray: Array<[BatchUID, ReactMeasure[]]>,
+  componentDisplayNamesValueArray: Array<[number, string]>,
   componentMeasures: ReactComponentMeasure[],
   duration: number,
   flamechart: Flamechart,

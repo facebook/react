@@ -20,8 +20,8 @@ import type {
   ReactComponentMeasure,
   ReactMeasure,
   ReactMeasureType,
-  TimelineData,
   SuspenseEvent,
+  TimelineData,
 } from 'react-devtools-timeline/src/types';
 
 import isArray from 'shared/isArray';
@@ -96,11 +96,15 @@ type Response = {|
 
 export function createProfilingHooks({
   getDisplayNameForFiber,
+  getDisplayNameForFiberID,
+  getFiberParentIDs,
   getIsProfiling,
   getLaneLabelMap,
   reactVersion,
 }: {|
   getDisplayNameForFiber: (fiber: Fiber) => string | null,
+  getDisplayNameForFiberID: (id: number) => string | null,
+  getFiberParentIDs: (fiber: Fiber) => number[],
   getIsProfiling: () => boolean,
   getLaneLabelMap?: () => Map<Lane, string> | null,
   reactVersion: string,
@@ -108,6 +112,7 @@ export function createProfilingHooks({
   let currentBatchUID: BatchUID = 0;
   let currentReactComponentMeasure: ReactComponentMeasure | null = null;
   let currentReactMeasuresStack: Array<ReactMeasure> = [];
+  let componentIDs: Set<number> | null = null;
   let currentTimelineData: TimelineData | null = null;
   let isProfiling: boolean = false;
   let nextRenderShouldStartNewBatch: boolean = false;
@@ -781,8 +786,13 @@ export function createProfilingHooks({
       if (isProfiling) {
         // TODO (timeline) Record and cache component stack
         if (currentTimelineData) {
+          const parents = getFiberParentIDs(fiber);
+          if (componentIDs != null) {
+            parents.forEach(id => componentIDs && componentIDs.add(id));
+          }
           currentTimelineData.schedulingEvents.push({
             componentName,
+            parents,
             lanes: laneToLanesArray(lane),
             timestamp: getRelativeTime(),
             type: 'schedule-state-update',
@@ -828,6 +838,10 @@ export function createProfilingHooks({
           lane *= 2;
         }
 
+        // Components we need to track to display names + link to source in the
+        // UI
+        componentIDs = new Set();
+
         currentBatchUID = 0;
         currentReactComponentMeasure = null;
         currentReactMeasuresStack = [];
@@ -835,6 +849,7 @@ export function createProfilingHooks({
           // Session wide metadata; only collected once.
           internalModuleSourceToRanges,
           laneToLabelMap: laneToLabelMap || new Map(),
+          componentDisplayNames: new Map(),
           reactVersion,
 
           // Data logged by React during profiling session.
@@ -858,6 +873,13 @@ export function createProfilingHooks({
           snapshotHeight: 0,
         };
         nextRenderShouldStartNewBatch = true;
+      } else if (componentIDs != null && currentTimelineData != null) {
+        currentTimelineData.componentDisplayNames = new Map(
+          Array.from(componentIDs).map(id => [
+            id,
+            getDisplayNameForFiberID(id) || 'Unknown',
+          ]),
+        );
       }
     }
   }

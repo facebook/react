@@ -653,11 +653,21 @@ export function attach(
     };
   }
 
+  function getFiberParentIDs(fiber: Fiber): number[] {
+    const ids = [];
+    for (let ptr = fiber; ptr; ptr = ptr.return) {
+      ids.push(getOrGenerateFiberID(ptr));
+    }
+    return ids;
+  }
+
   let getTimelineData: null | GetTimelineData = null;
   let toggleProfilingStatus: null | ToggleProfilingStatus = null;
   if (typeof injectProfilingHooks === 'function') {
     const response = createProfilingHooks({
       getDisplayNameForFiber,
+      getDisplayNameForFiberID,
+      getFiberParentIDs,
       getIsProfiling: () => isProfiling,
       getLaneLabelMap,
       reactVersion: version,
@@ -4050,6 +4060,7 @@ export function attach(
       if (currentTimelineData) {
         const {
           batchUIDToMeasuresMap,
+          componentDisplayNames,
           internalModuleSourceToRanges,
           laneToLabelMap,
           laneToReactMeasureMap,
@@ -4065,6 +4076,9 @@ export function attach(
           // but we need to convert the Maps to nested Arrays.
           batchUIDToMeasuresKeyValueArray: Array.from(
             batchUIDToMeasuresMap.entries(),
+          ),
+          componentDisplayNamesValueArray: Array.from(
+            componentDisplayNames.entries(),
           ),
           internalModuleSourceToRanges: Array.from(
             internalModuleSourceToRanges.entries(),

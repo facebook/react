@@ -1257,6 +1257,10 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000000000100",
+              "parents": Array [
+                2,
+                1,
+              ],
               "timestamp": 10,
               "type": "schedule-state-update",
               "warning": null,
@@ -1264,6 +1268,10 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000001000000",
+              "parents": Array [
+                2,
+                1,
+              ],
               "timestamp": 10,
               "type": "schedule-state-update",
               "warning": null,
@@ -1271,6 +1279,10 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000001000000",
+              "parents": Array [
+                2,
+                1,
+              ],
               "timestamp": 10,
               "type": "schedule-state-update",
               "warning": null,
@@ -1278,6 +1290,10 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000000010000",
+              "parents": Array [
+                2,
+                1,
+              ],
               "timestamp": 10,
               "type": "schedule-state-update",
               "warning": null,
@@ -1615,6 +1631,10 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000000000001",
+              "parents": Array [
+                1,
+                2,
+              ],
               "timestamp": 20,
               "type": "schedule-state-update",
               "warning": null,
@@ -1742,6 +1762,10 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000000010000",
+              "parents": Array [
+                1,
+                2,
+              ],
               "timestamp": 10,
               "type": "schedule-state-update",
               "warning": null,
@@ -1873,6 +1897,10 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000000000001",
+              "parents": Array [
+                1,
+                2,
+              ],
               "timestamp": 21,
               "type": "schedule-state-update",
               "warning": null,
@@ -1935,6 +1963,10 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000000010000",
+              "parents": Array [
+                2,
+                1,
+              ],
               "timestamp": 21,
               "type": "schedule-state-update",
               "warning": null,
@@ -1983,6 +2015,10 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000000010000",
+              "parents": Array [
+                1,
+                2,
+              ],
               "timestamp": 20,
               "type": "schedule-state-update",
               "warning": null,
@@ -2066,6 +2102,10 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "ErrorBoundary",
               "lanes": "0b0000000000000000000000000000001",
+              "parents": Array [
+                1,
+                2,
+              ],
               "timestamp": 20,
               "type": "schedule-state-update",
               "warning": null,
@@ -2178,6 +2218,10 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "ErrorBoundary",
               "lanes": "0b0000000000000000000000000000001",
+              "parents": Array [
+                1,
+                2,
+              ],
               "timestamp": 30,
               "type": "schedule-state-update",
               "warning": null,
