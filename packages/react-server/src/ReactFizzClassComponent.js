@@ -449,17 +449,17 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
         name,
       );
     }
-    if (typeof instance.componentWillReceiveProps === 'function') {
+    if (typeof instance.componentWillRecieveProps === 'function') {
       console.error(
         '%s has a method called ' +
-          'componentWillReceiveProps(). Did you mean componentWillReceiveProps()?',
+          'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         name,
       );
     }
-    if (typeof instance.UNSAFE_componentWillReceiveProps === 'function') {
+    if (typeof instance.UNSAFE_componentWillRecieveProps === 'function') {
       console.error(
         '%s has a method called ' +
-          'UNSAFE_componentWillReceiveProps(). Did you mean UNSAFE_componentWillReceiveProps()?',
+          'UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?',
         name,
       );
     }
