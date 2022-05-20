@@ -600,7 +600,7 @@ describe('ReactFlight', () => {
     });
 
     // @gate enableServerContext
-    it('propagates ServerContext and cleansup providers in flight', () => {
+    it('propagates ServerContext and cleans up the providers in flight', () => {
       const ServerContext = React.createServerContext(
         'ServerContext',
         'default',
@@ -751,7 +751,7 @@ describe('ReactFlight', () => {
     });
 
     // @gate enableServerContext
-    it('takes ServerContext from client for refetching usecases', async () => {
+    it('takes ServerContext from the client for refetching use cases', async () => {
       const ServerContext = React.createServerContext(
         'ServerContext',
         'default',
