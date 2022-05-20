@@ -463,7 +463,7 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'should warn when misspelling componentWillReceiveProps', ->
     class NamedComponent extends React.Component
-      componentWillRecieveProps: ->
+      componentWillReceiveProps: ->
         false
 
       render: ->
@@ -474,13 +474,13 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
     ).toErrorDev(
-      'Warning: NamedComponent has a method called componentWillRecieveProps().
+      'Warning: NamedComponent has a method called componentWillReceiveProps().
        Did you mean componentWillReceiveProps()?'
     )
 
   it 'should warn when misspelling UNSAFE_componentWillReceiveProps', ->
     class NamedComponent extends React.Component
-      UNSAFE_componentWillRecieveProps: ->
+      UNSAFE_componentWillReceiveProps: ->
         false
 
       render: ->
@@ -491,7 +491,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
     ).toErrorDev(
-      'Warning: NamedComponent has a method called UNSAFE_componentWillRecieveProps().
+      'Warning: NamedComponent has a method called UNSAFE_componentWillReceiveProps().
        Did you mean UNSAFE_componentWillReceiveProps()?'
     )
 

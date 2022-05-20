@@ -500,7 +500,7 @@ describe('ReactES6Class', () => {
 
   it('should warn when misspelling componentWillReceiveProps', () => {
     class NamedComponent extends React.Component {
-      componentWillRecieveProps() {
+      componentWillReceiveProps() {
         return false;
       }
       render() {
@@ -510,14 +510,14 @@ describe('ReactES6Class', () => {
 
     expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
       'Warning: ' +
-        'NamedComponent has a method called componentWillRecieveProps(). Did ' +
+        'NamedComponent has a method called componentWillReceiveProps(). Did ' +
         'you mean componentWillReceiveProps()?',
     );
   });
 
   it('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
     class NamedComponent extends React.Component {
-      UNSAFE_componentWillRecieveProps() {
+      UNSAFE_componentWillReceiveProps() {
         return false;
       }
       render() {
@@ -527,7 +527,7 @@ describe('ReactES6Class', () => {
 
     expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
       'Warning: ' +
-        'NamedComponent has a method called UNSAFE_componentWillRecieveProps(). ' +
+        'NamedComponent has a method called UNSAFE_componentWillReceiveProps(). ' +
         'Did you mean UNSAFE_componentWillReceiveProps()?',
     );
   });
