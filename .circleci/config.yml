@@ -222,6 +222,25 @@ jobs:
             RELEASE_CHANNEL: experimental
           command: ./scripts/circleci/run_devtools_e2e_tests.js
 
+  run_devtools_tests_for_versions:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      version:
+        type: string
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Install nested packages from Yarn cache
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >>
+      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
+
   yarn_lint_build:
     docker: *docker
     environment: *environment
@@ -493,6 +512,36 @@ workflows:
       - test_fuzz:
           requires:
             - setup
+
+  devtools_regression_tests:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
+    triggers:
+      - schedule:
+          # DevTools regression tests run hourly
+          cron: "0 * * * *"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - setup
+      - yarn_build_combined:
+          requires:
+            - setup
+      - build_devtools_and_process_artifacts:
+          requires:
+            - yarn_build_combined
+      - run_devtools_tests_for_versions:
+          requires:
+            - build_devtools_and_process_artifacts
+          matrix:
+            parameters:
+              version:
+                - "16.0"
+                - "16.5" # schedule package
+                - "16.8" # hooks
+                - "17.0" 
+                - "18.0"
 
   # Used to publish a prerelease manually via the command line
   publish_preleases:
