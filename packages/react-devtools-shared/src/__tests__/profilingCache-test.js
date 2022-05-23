@@ -734,7 +734,7 @@ describe('ProfilingCache', () => {
     }
   });
 
-  // @reactVersion >= 16.9
+  // @reactVersion >= 18.0
   it('should calculate durations based on actual children (not filtered children)', () => {
     store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
 

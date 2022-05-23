@@ -51,8 +51,8 @@ moduleNameMapper['^react-reconciler/([^/]+)$'] =
 module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles
   moduleNameMapper: {
-    ...moduleNameMapper,
     ...devtoolsRegressionConfig.moduleNameMapper,
+    ...moduleNameMapper,
   },
   // Don't run bundle tests on -test.internal.* files
   testPathIgnorePatterns: ['/node_modules/', '-test.internal.js$'],
