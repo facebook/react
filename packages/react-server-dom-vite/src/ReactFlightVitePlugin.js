@@ -9,6 +9,7 @@
 
 // $FlowFixMe[module-missing]
 import {init, parse} from 'es-module-lexer';
+import MagicString from 'magic-string';
 // $FlowFixMe[module-missing]
 import {normalizePath, transformWithEsbuild} from 'vite';
 
@@ -120,11 +121,19 @@ export default function ReactFlightVitePlugin({
        */
       if (rscViteFileRE.test(id)) {
         const INJECTING_RE = /\{\s*__INJECTED_CLIENT_IMPORTERS__[:\s]*null[,\s]*\}\s*;/;
+        const s = new MagicString(code);
+
+        id = id.split('?')[0];
 
         if (options && options.ssr) {
           // In SSR, directly use components already discovered by RSC
           // instead of globs to avoid bundling unused components.
-          return code.replace(INJECTING_RE, 'globalThis.__COMPONENT_INDEX');
+          s.replace(INJECTING_RE, 'globalThis.__COMPONENT_INDEX');
+
+          return {
+            code: s.toString(),
+            map: s.generateMap({file: id, source: id}),
+          };
         }
 
         const injectGlobs = (clientComponents: string[]) => {
@@ -142,11 +151,16 @@ export default function ReactFlightVitePlugin({
             )
             .join(', ')});`;
 
-          return code.replace(INJECTING_RE, injectedGlobs);
+          s.replace(INJECTING_RE, injectedGlobs);
+
+          return {
+            code: s.toString(),
+            map: s.generateMap({file: id, source: id}),
+          };
         };
 
         if (config.command === 'serve') {
-          absoluteImporterPath = id.split('?')[0];
+          absoluteImporterPath = id;
           return injectGlobs(findClientComponentsForDev(server));
         }
 
@@ -252,7 +266,9 @@ const hashImportsPlugin = {
   transform(code: string, id: string) {
     // Turn relative import paths to lossy hashes
     if (rscViteFileRE.test(id)) {
-      return code.replace(
+      const s = new MagicString(code);
+
+      s.replace(
         /\/\*\s*HASH_BEGIN\s*\*\/\s*([^]+?)\/\*\s*HASH_END\s*\*\//gm,
         function(_, imports) {
           return imports
@@ -267,6 +283,11 @@ const hashImportsPlugin = {
             });
         },
       );
+
+      return {
+        code: s.toString(),
+        map: s.generateMap({file: id, source: id}),
+      };
     }
   },
 };

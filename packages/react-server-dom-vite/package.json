@@ -58,7 +58,8 @@
     "vite": "^2.7.1"
   },
   "dependencies": {
-    "es-module-lexer": "^0.9.3"
+    "es-module-lexer": "^0.9.3",
+    "magic-string": "^0.25.2"
   },
   "devDependencies": {
     "vite": "^2.7.1"
