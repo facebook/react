@@ -3,6 +3,7 @@
 const {readdirSync, statSync} = require('fs');
 const {join} = require('path');
 const baseConfig = require('./config.base');
+const devtoolsRegressionConfig = require('./devtools/config.build-devtools-regression');
 
 const NODE_MODULES_DIR =
   process.env.RELEASE_CHANNEL === 'stable' ? 'oss-stable' : 'oss-experimental';
@@ -49,7 +50,10 @@ moduleNameMapper['^react-reconciler/([^/]+)$'] =
 
 module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles
-  moduleNameMapper,
+  moduleNameMapper: {
+    ...moduleNameMapper,
+    ...devtoolsRegressionConfig.moduleNameMapper,
+  },
   // Don't run bundle tests on -test.internal.* files
   testPathIgnorePatterns: ['/node_modules/', '-test.internal.js$'],
   // Exclude the build output from transforms
@@ -88,6 +92,7 @@ module.exports = Object.assign({}, baseConfig, {
   ],
   setupFiles: [
     ...baseConfig.setupFiles,
+    ...devtoolsRegressionConfig.setupFiles,
     require.resolve('./setupTests.build.js'),
     require.resolve('./devtools/setupEnv.js'),
   ],
