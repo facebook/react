@@ -85,7 +85,6 @@ export function describeNativeComponentFrame(
   reentry = true;
 
   // Override the dispatcher so effects scheduled by this shallow render are thrown away.
-  //
   // Note that unlike the code this was forked from (in ReactComponentStackFrame)
   // DevTools should override the dispatcher even when DevTools is compiled in production mode,
   // because the app itself may be in development mode and log errors/warnings.
