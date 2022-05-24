@@ -696,12 +696,20 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('unknown boolean `true` attributes as strings', async render => {
       const e = await render(<custom-element foo={true} />);
-      expect(e.getAttribute('foo')).toBe('true');
+      if (ReactFeatureFlags.enableCustomElementPropertySupport) {
+        expect(e.getAttribute('foo')).toBe('');
+      } else {
+        expect(e.getAttribute('foo')).toBe('true');
+      }
     });
 
     itRenders('unknown boolean `false` attributes as strings', async render => {
       const e = await render(<custom-element foo={false} />);
-      expect(e.getAttribute('foo')).toBe('false');
+      if (ReactFeatureFlags.enableCustomElementPropertySupport) {
+        expect(e.getAttribute('foo')).toBe(null);
+      } else {
+        expect(e.getAttribute('foo')).toBe('false');
+      }
     });
 
     itRenders(
