@@ -75,7 +75,7 @@ async function downloadRegressionBuild() {
   // For React versions earlier than 18.0.0, we explicitly scheduler v0.20.1, which
   // is the first version that has unstable_mock, which DevTools tests need, but also
   // has Scheduler.unstable_trace, which, although we don't use in DevTools tests
-  // is imported by older React versions and will break if it's not ther
+  // is imported by older React versions and will break if it's not there
   if (semver.lte(semver.coerce(version).version, '18.0.0')) {
     await exec(`npm install --prefix ${REGRESSION_FOLDER} scheduler@0.20.1`);
   }
