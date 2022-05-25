@@ -5,17 +5,21 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {createRoot} from 'react-dom/client';
+import ListApp from '../e2e-apps/ListApp';
 
-const container = document.createElement('div');
+function mountApp(App) {
+  const container = document.createElement('div');
 
-((document.body: any): HTMLBodyElement).appendChild(container);
+  ((document.body: any): HTMLBodyElement).appendChild(container);
 
-// TODO We may want to parameterize this app
-// so that it can load things other than just ToDoList.
-const App = require('../e2e-apps/ListApp').default;
+  const root = createRoot(container);
+  root.render(<App />);
+}
+function mountTestApp() {
+  mountApp(ListApp);
+}
 
-const root = createRoot(container);
-root.render(<App />);
+mountTestApp();
 
 // ReactDOM Test Selector APIs used by Playwright e2e tests
 window.parent.REACT_DOM_APP = ReactDOM;
