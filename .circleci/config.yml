@@ -238,7 +238,7 @@ jobs:
       - run:
           name: Install nested packages from Yarn cache
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
-      - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >>
+      - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
       - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
 
   yarn_lint_build:
