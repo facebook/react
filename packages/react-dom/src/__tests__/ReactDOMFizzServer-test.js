@@ -3553,8 +3553,8 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
 
-    let errors = [];
-    ReactDOMClient.hydrateRoot(container, <App isClient />, {
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
         errors.push(error.message);
       },
