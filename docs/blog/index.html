@@ -1,0 +1,34 @@
+---
+title: Blog
+layout: default
+sectionid: blog
+---
+
+<section class="content wrap blogContent">
+  {% include nav_blog.html %}
+  <div class="inner-content">
+    {% for page in paginator.posts %}
+      <div class="post-list-item">
+        <h1><a href="/react{{ page.url }}">{{ page.title }}</a></h1>
+        <p class="meta">{{ page.date | date: "%B %e, %Y" }} by {{ page.author }}</p>
+        <hr />
+        <div class="post">
+         {{ page.content }}
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="pagination">
+      {% if paginator.previous_page %}
+        <a href="/react{{ paginator.previous_page_path }}" class="previous">
+          &laquo; Previous Page
+        </a>
+      {% endif %}
+      {% if paginator.next_page %}
+        <a href="/react{{ paginator.next_page_path }}" class="next">
+          Next Page &raquo;
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
