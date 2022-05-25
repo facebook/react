@@ -28,6 +28,7 @@ type PluginOptions = {
 };
 
 const rscViteFileRE = /\/react-server-dom-vite.js/;
+const noProxyRE = /[&?]no-proxy($|&)/;
 
 export default function ReactFlightVitePlugin({
   isServerComponentImporterAllowed = importer => false,
@@ -104,9 +105,25 @@ export default function ReactFlightVitePlugin({
     },
 
     load(id: string, options: {ssr?: boolean} = {}) {
-      return options.ssr && shouldCheckClientComponent(id)
-        ? wrapIfClientComponent(id)
-        : null;
+      if (!options.ssr || !shouldCheckClientComponent(id)) return;
+
+      if (server) {
+        const mod = server.moduleGraph.idToModuleMap.get(
+          id.replace('/@fs', ''),
+        );
+
+        if (mod && mod.importers) {
+          if (
+            Array.from(mod.importers).every(impMod => noProxyRE.test(impMod.id))
+          ) {
+            // This module is only imported from client components
+            // so we don't need to create a module reference
+            return;
+          }
+        }
+      }
+
+      return wrapIfClientComponent(id);
     },
 
     transform(code: string, id: string, options: {ssr?: boolean} = {}) {
@@ -242,7 +259,7 @@ export async function proxyClientComponent(filepath: string, src?: string) {
 }
 
 function shouldCheckClientComponent(id: string) {
-  return /\.[jt]sx?($|\?)/.test(id) && !/[&?]no-proxy($|&)/.test(id);
+  return /\.[jt]sx?($|\?)/.test(id) && !noProxyRE.test(id);
 }
 
 function findClientComponentsForDev(server: any) {
