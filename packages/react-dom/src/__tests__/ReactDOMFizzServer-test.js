@@ -3531,4 +3531,50 @@ describe('ReactDOMFizzServer', () => {
       console.error = originalConsoleError;
     }
   });
+
+  // @gate experimental
+  it('#24578 Hydration errors caused by a suspending component should not become recoverable when nested in an ancestor Suspense that is showing primary content', async () => {
+    // this test failed before because hydration errors on the inner boundary were upgraded to recoverable by
+    // a codepath of the outer boundary
+    function App({isClient}) {
+      return (
+        <Suspense fallback={'outer'}>
+          <Suspense fallback={'inner'}>
+            <div>
+              {isClient ? <AsyncText text="A" /> : <Text text="A" />}
+              <b>B</b>
+            </div>
+          </Suspense>
+        </Suspense>
+      );
+    }
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        errors.push(error.message);
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        A<b>B</b>
+      </div>,
+    );
+
+    resolveText('A');
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        A<b>B</b>
+      </div>,
+    );
+  });
 });
