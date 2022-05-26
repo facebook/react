@@ -53,15 +53,21 @@ function renderToReadableStream(
     });
 
     function onShellReady() {
-      const stream: ReactDOMServerReadableStream = (new ReadableStream({
-        type: 'bytes',
-        pull(controller) {
-          startFlowing(request, controller);
+      const stream: ReactDOMServerReadableStream = (new ReadableStream(
+        {
+          type: 'bytes',
+          pull(controller) {
+            startFlowing(request, controller);
+          },
+          cancel(reason) {
+            abort(request);
+          },
         },
-        cancel(reason) {
-          abort(request);
+        {
+          highWaterMark: 0,
+          size: () => 1,
         },
-      }): any);
+      ): any);
       // TODO: Move to sub-classing ReadableStream.
       stream.allReady = allReady;
       resolve(stream);

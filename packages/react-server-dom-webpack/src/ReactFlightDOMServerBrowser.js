@@ -33,16 +33,22 @@ function renderToReadableStream(
     options ? options.onError : undefined,
     context,
   );
-  const stream = new ReadableStream({
-    type: 'bytes',
-    start(controller) {
-      startWork(request);
+  const stream = new ReadableStream(
+    {
+      type: 'bytes',
+      start(controller) {
+        startWork(request);
+      },
+      pull(controller) {
+        startFlowing(request, controller);
+      },
+      cancel(reason) {},
     },
-    pull(controller) {
-      startFlowing(request, controller);
+    {
+      highWaterMark: 0,
+      size: () => 1,
     },
-    cancel(reason) {},
-  });
+  );
   return stream;
 }
 
