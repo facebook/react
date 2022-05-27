@@ -284,7 +284,7 @@ export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-  textEmbedded?: boolean,
+  textEmbedded: boolean,
 ): boolean {
   if (text === '') {
     // Empty text doesn't have a DOM node representation and the hydration is aware of this.
@@ -302,8 +302,8 @@ export function pushTextInstance(
 export function pushSegmentFinale(
   target: Array<Chunk | PrecomputedChunk>,
   responseState: ResponseState,
-  lastPushedText: Boolean,
-  textEmbedded: Boolean,
+  lastPushedText: boolean,
+  textEmbedded: boolean,
 ): void {
   if (lastPushedText && textEmbedded) {
     target.push(textSeparator);

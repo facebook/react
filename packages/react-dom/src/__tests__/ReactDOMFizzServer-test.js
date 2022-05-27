@@ -3592,6 +3592,7 @@ describe('ReactDOMFizzServer', () => {
       });
     }
 
+    // @gate experimental
     it('it only includes separators between adjacent text nodes', async () => {
       function App({name}) {
         return (
@@ -3626,6 +3627,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
+    // @gate experimental
     it('it does not insert text separators even when adjacent text is in a delayed segment', async () => {
       function App({name}) {
         return (
@@ -3681,6 +3683,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
+    // @gate experimental
     it('it works with multiple adjacent segments', async () => {
       function App() {
         return (
@@ -3726,6 +3729,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
+    // @gate experimental
     it('it works when some segments are flushed and others are patched', async () => {
       function App() {
         return (
@@ -3768,6 +3772,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
+    // @gate experimental
     it('it does not prepend a text separators if the segment follows a non-Text Node', async () => {
       function App() {
         return (
@@ -3808,6 +3813,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
+    // @gate experimental
     it('it does not prepend a text separators if the segments first emission is a non-Text Node', async () => {
       function App() {
         return (
@@ -3846,6 +3852,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
+    // @gate experimental
     it('should not insert separators for text inside Suspense boundaries even if they would otherwise be considered text-embedded', async () => {
       function App() {
         return (
@@ -3930,6 +3937,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
+    // @gate experimental
     it('(only) includes extraneous text separators in segments that complete before flushing, followed by nothing or a non-Text node', async () => {
       function App() {
         return (

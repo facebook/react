@@ -60,11 +60,6 @@ import {
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
-  textEmbeddingForBoundarySegment,
-  textEmbeddingForSegment,
-  textEmbeddingForDelayedSegment,
-  prepareForSegment,
-  finalizeForSegment,
 } from './ReactServerFormatConfig';
 import {
   constructClassInstance,
@@ -1254,7 +1249,7 @@ function renderNodeDestructive(
   }
 
   if (typeof node === 'string') {
-    let segment = task.blockedSegment;
+    const segment = task.blockedSegment;
     segment.lastPushedText = pushTextInstance(
       task.blockedSegment.chunks,
       node,
@@ -1265,7 +1260,7 @@ function renderNodeDestructive(
   }
 
   if (typeof node === 'number') {
-    let segment = task.blockedSegment;
+    const segment = task.blockedSegment;
     segment.lastPushedText = pushTextInstance(
       task.blockedSegment.chunks,
       '' + node,
