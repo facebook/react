@@ -75,6 +75,7 @@ export function createRootFormatContext(): FormatContext {
 export type {
   FormatContext,
   SuspenseBoundaryID,
+  TextEmbedding,
 } from './ReactDOMServerFormatConfig';
 
 export {
@@ -97,6 +98,7 @@ export {
   writeCompletedRoot,
   textEmbeddingForBoundarySegment,
   textEmbeddingForSegment,
+  textEmbeddingForDelayedSegment,
   prepareForSegment,
   finalizeForSegment,
 } from './ReactDOMServerFormatConfig';

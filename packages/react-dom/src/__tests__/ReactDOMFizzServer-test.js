@@ -235,7 +235,7 @@ describe('ReactDOMFizzServer', () => {
   }
 
   function AsyncTextWrapped({as, text}) {
-    let As = as;
+    const As = as;
     return <As>{readText(text)}</As>;
   }
 
@@ -3584,6 +3584,14 @@ describe('ReactDOMFizzServer', () => {
   });
 
   describe('text separators', () => {
+    // To force performWork to start before resolving AsyncText but before piping we need to wait until
+    // after scheduleWork which currently uses setImmediate to delay performWork
+    function afterImmediate() {
+      return new Promise(resolve => {
+        setImmediate(resolve);
+      });
+    }
+
     it('it only includes separators between adjacent text nodes', async () => {
       function App({name}) {
         return (
@@ -3603,9 +3611,22 @@ describe('ReactDOMFizzServer', () => {
       expect(container.innerHTML).toEqual(
         '<div>hello<b>world, <!-- -->Foo</b>!</div>',
       );
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App name="Foo" />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          hello<b>world, {'Foo'}</b>!
+        </div>,
+      );
     });
 
-    it('it inserts text separators even when adjacent text is in a delayed segment', async () => {
+    it('it does not insert text separators even when adjacent text is in a delayed segment', async () => {
       function App({name}) {
         return (
           <Suspense fallback={'loading...'}>
@@ -3634,7 +3655,29 @@ describe('ReactDOMFizzServer', () => {
       await act(() => resolveText('Foo'));
 
       expect(container.firstElementChild.outerHTML).toEqual(
-        '<div id="app-div">hello<b>world, <!-- -->Foo<!-- --></b>!</div>',
+        '<div id="app-div">hello<b>world, Foo</b>!</div>',
+      );
+      // there are extra script nodes at the end of container
+      expect(container.childNodes.length).toBe(5);
+      const div = container.childNodes[1];
+      expect(div.childNodes.length).toBe(3);
+      const b = div.childNodes[1];
+      expect(b.childNodes.length).toBe(2);
+      expect(b.childNodes[0]).toMatchInlineSnapshot('world, ');
+      expect(b.childNodes[1]).toMatchInlineSnapshot('Foo');
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App name="Foo" />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div id="app-div">
+          hello<b>world, {'Foo'}</b>!
+        </div>,
       );
     });
 
@@ -3662,12 +3705,24 @@ describe('ReactDOMFizzServer', () => {
       await act(() => resolveText('orld'));
 
       expect(document.getElementById('app-div').outerHTML).toEqual(
-        '<div id="app-div">h<template id="P:1"></template>w<!-- -->orld<!-- --></div>',
+        '<div id="app-div">h<template id="P:1"></template>world</div>',
       );
 
       await act(() => resolveText('ello'));
       expect(container.firstElementChild.outerHTML).toEqual(
-        '<div id="app-div">h<!-- -->ello<!-- -->w<!-- -->orld<!-- --></div>',
+        '<div id="app-div">helloworld</div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App name="Foo" />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div id="app-div">{['h', 'ello', 'w', 'orld']}</div>,
       );
     });
 
@@ -3685,6 +3740,7 @@ describe('ReactDOMFizzServer', () => {
 
       await act(async () => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await afterImmediate();
         await act(() => resolveText('ello'));
         pipe(writable);
       });
@@ -3696,7 +3752,19 @@ describe('ReactDOMFizzServer', () => {
       await act(() => resolveText('orld'));
 
       expect(container.firstElementChild.outerHTML).toEqual(
-        '<div id="app-div">h<!-- -->ello<!-- -->w<!-- -->orld<!-- --></div>',
+        '<div id="app-div">h<!-- -->ello<!-- -->world</div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div id="app-div">{['h', 'ello', 'w', 'orld']}</div>,
       );
     });
 
@@ -3716,12 +3784,27 @@ describe('ReactDOMFizzServer', () => {
 
       await act(async () => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await afterImmediate();
         await act(() => resolveText('world'));
         pipe(writable);
       });
 
       expect(container.firstElementChild.outerHTML).toEqual(
-        '<div>hello<b>world</b></div>',
+        '<div>hello<b>world<!-- --></b></div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          hello<b>world</b>
+        </div>,
       );
     });
 
@@ -3739,12 +3822,27 @@ describe('ReactDOMFizzServer', () => {
 
       await act(async () => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await afterImmediate();
         await act(() => resolveText('world'));
         pipe(writable);
       });
 
       expect(container.firstElementChild.outerHTML).toEqual(
         '<div>hello<b>world</b></div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          hello<b>world</b>
+        </div>,
       );
     });
 
@@ -3773,6 +3871,7 @@ describe('ReactDOMFizzServer', () => {
 
       await act(async () => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await afterImmediate();
         await act(() => resolveText('world'));
         pipe(writable);
       });
@@ -3786,7 +3885,26 @@ describe('ReactDOMFizzServer', () => {
       });
 
       expect(document.getElementById('app-div').outerHTML).toEqual(
-        '<div id="app-div">start<!--$-->firststart<!-- -->first suspended<!-- -->firstend<!--/$--><!--$?--><template id="B:1"></template>[loading second]<!--/$-->end</div>',
+        '<div id="app-div">start<!--$-->firststartfirst suspendedfirstend<!--/$--><!--$?--><template id="B:1"></template>[loading second]<!--/$-->end</div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div id="app-div">
+          {'start'}
+          {'firststart'}
+          {'first suspended'}
+          {'firstend'}
+          {'[loading second]'}
+          {'end'}
+        </div>,
       );
 
       await act(async () => {
@@ -3794,7 +3912,82 @@ describe('ReactDOMFizzServer', () => {
       });
 
       expect(container.firstElementChild.outerHTML).toEqual(
-        '<div id="app-div">start<!--$-->firststart<!-- -->first suspended<!-- -->firstend<!--/$--><!--$-->secondstart<b>second suspended<!-- --></b><!--/$-->end</div>',
+        '<div id="app-div">start<!--$-->firststartfirst suspendedfirstend<!--/$--><!--$-->secondstart<b>second suspended</b><!--/$-->end</div>',
+      );
+
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div id="app-div">
+          {'start'}
+          {'firststart'}
+          {'first suspended'}
+          {'firstend'}
+          {'secondstart'}
+          <b>second suspended</b>
+          {'end'}
+        </div>,
+      );
+    });
+
+    it('(only) includes extraneous text separators in segments that complete before flushing, followed by nothing or a non-Text node', async () => {
+      function App() {
+        return (
+          <div>
+            <Suspense fallback={'text before, nothing after...'}>
+              hello
+              <AsyncText text="world" />
+            </Suspense>
+            <Suspense fallback={'nothing before or after...'}>
+              <AsyncText text="world" />
+            </Suspense>
+            <Suspense fallback={'text before, element after...'}>
+              hello
+              <AsyncText text="world" />
+              <br />
+            </Suspense>
+            <Suspense fallback={'nothing before, element after...'}>
+              <AsyncText text="world" />
+              <br />
+            </Suspense>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await afterImmediate();
+        await act(() => resolveText('world'));
+        pipe(writable);
+      });
+
+      expect(container.innerHTML).toEqual(
+        '<div><!--$-->hello<!-- -->world<!-- --><!--/$--><!--$-->world<!-- --><!--/$--><!--$-->hello<!-- -->world<!-- --><br><!--/$--><!--$-->world<!-- --><br><!--/$--></div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          {/* first boundary */}
+          {'hello'}
+          {'world'}
+          {/* second boundary */}
+          {'world'}
+          {/* third boundary */}
+          {'hello'}
+          {'world'}
+          <br />
+          {/* fourth boundary */}
+          {'world'}
+          <br />
+        </div>,
       );
     });
   });

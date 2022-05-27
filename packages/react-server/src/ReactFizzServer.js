@@ -62,6 +62,7 @@ import {
   getChildFormatContext,
   textEmbeddingForBoundarySegment,
   textEmbeddingForSegment,
+  textEmbeddingForDelayedSegment,
   prepareForSegment,
   finalizeForSegment,
 } from './ReactServerFormatConfig';
@@ -175,7 +176,7 @@ type Segment = {
   // If this segment represents a fallback, this is the content that will replace that fallback.
   +boundary: null | SuspenseBoundary,
   // opaque data that tells the formatter uses to modify output based on how the Segment is embedded in other output
-  +textEmbedding: TextEmbedding,
+  textEmbedding: TextEmbedding,
 };
 
 const OPEN = 0;
@@ -1652,6 +1653,7 @@ function flushSubtree(
       // We're emitting a placeholder for this segment to be filled in later.
       // Therefore we'll need to assign it an ID - to refer to it by.
       const segmentID = (segment.id = request.nextSegmentId++);
+      segment.textEmbedding = textEmbeddingForDelayedSegment();
       return writePlaceholder(destination, request.responseState, segmentID);
     }
     case COMPLETED: {

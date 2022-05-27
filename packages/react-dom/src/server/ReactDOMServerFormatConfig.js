@@ -307,17 +307,16 @@ export function pushTextInstance(
 // advanced with the tracking and drop the trailing edge in some cases when we know a segment
 // is followed by a Text or non-Text Node explicitly vs followed by another Segment
 export opaque type TextEmbedding = number;
-type Embeddable = {textEmbedding: TextEmbedding, ...};
 
-const NO_TEXT_EMBED = /*                 */ 0b0000;
+const NO_TEXT_EMBED = /*                    */ 0b0000;
 
-const LEADING_SEPARATOR_NEEDED = /*      */ 0b0011;
-const LEADING_TEXT_EMBED_KNOWN = /*      */ 0b0001;
+const LEADING_SEPARATOR_NEEDED = /*         */ 0b0011;
+const LEADING_TEXT_EMBED_KNOWN = /*         */ 0b0001;
 // const LEADING_TEXT_EMBED_POSSIBLE = /*   */ 0b0010;
 
-const TRAILING_SEPARATOR_NEEDED = /*     */ 0b1100;
+const TRAILING_SEPARATOR_NEEDED = /*        */ 0b1100;
 // const TRAILING_TEXT_EMBED_KNOWN = /*     */ 0b0100;
-const TRAILING_TEXT_EMBED_POSSIBLE = /*  */ 0b1000;
+const TRAILING_TEXT_EMBED_POSSIBLE = /*     */ 0b1000;
 
 // Suspense boundaries always emit a comment node at the leading and trailing edge and thus need
 // no additional separators. we also use this for the root segment even though it isn't a Boundary
@@ -327,12 +326,20 @@ export function textEmbeddingForBoundarySegment(): TextEmbedding {
   return NO_TEXT_EMBED;
 }
 
+// Segments that are not the boundary segment can be truly embedded in Text. we determine the leading edge
+// based on what was last pushed. We cannot know the trailing edge so we conservatively assume we are embedded there
 export function textEmbeddingForSegment(): TextEmbedding {
   let embedding = TRAILING_TEXT_EMBED_POSSIBLE;
   embedding |= lastPushedText ? LEADING_TEXT_EMBED_KNOWN : NO_TEXT_EMBED;
 
   lastPushedText = false;
   return embedding;
+}
+
+// If a Segment is going to be flushed later than it's parent text separators arent needed
+// because the DOM patch will leavee the adjacent text as separate nodes
+export function textEmbeddingForDelayedSegment(): TextEmbedding {
+  return NO_TEXT_EMBED;
 }
 
 // Called when a segment is about to be rendered by a Task

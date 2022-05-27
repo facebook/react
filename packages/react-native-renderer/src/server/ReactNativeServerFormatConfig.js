@@ -155,13 +155,10 @@ export function pushEndInstance(
 ): void {
   target.push(END);
 }
-
-export function textEmbeddingForBoundarySegment() {
-  return null;
-}
-export function textEmbeddingForSegment() {
-  return null;
-}
+export opaque type TextEmbedding = void;
+export function textEmbeddingForBoundarySegment() {}
+export function textEmbeddingForSegment() {}
+export function textEmbeddingForDelayedSegment() {}
 export function prepareForSegment() {}
 export function finalizeForSegment() {}
 
