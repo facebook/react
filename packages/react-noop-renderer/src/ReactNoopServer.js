@@ -128,14 +128,7 @@ const ReactNoopServer = ReactFizzServer({
     target.push(POP);
   },
 
-  textEmbeddingForBoundarySegment() {
-    return null;
-  },
-  textEmbeddingForSegment() {
-    return null;
-  },
-  prepareForSegment() {},
-  finalizeForSegment() {},
+  pushSegmentFinale() {},
 
   writeCompletedRoot(
     destination: Destination,

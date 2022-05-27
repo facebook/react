@@ -87,6 +87,7 @@ export {
   pushEndInstance,
   pushStartCompletedSuspenseBoundary,
   pushEndCompletedSuspenseBoundary,
+  pushSegmentFinale,
   writeStartSegment,
   writeEndSegment,
   writeCompletedSegmentInstruction,
@@ -96,11 +97,6 @@ export {
   writeEndPendingSuspenseBoundary,
   writePlaceholder,
   writeCompletedRoot,
-  textEmbeddingForBoundarySegment,
-  textEmbeddingForSegment,
-  textEmbeddingForDelayedSegment,
-  prepareForSegment,
-  finalizeForSegment,
 } from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';
@@ -111,11 +107,13 @@ export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-): void {
+  textEmbedded: boolean,
+): boolean {
   if (responseState.generateStaticMarkup) {
     target.push(stringToChunk(escapeTextForBrowser(text)));
+    return false;
   } else {
-    pushTextInstanceImpl(target, text, responseState);
+    return pushTextInstanceImpl(target, text, responseState, textEmbedded);
   }
 }
 
