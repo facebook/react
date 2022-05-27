@@ -54,7 +54,8 @@ export default function ReactFlightVitePlugin({
       server = _server;
     },
 
-    configResolved(_config: any) {
+    async configResolved(_config: any) {
+      await init;
       config = _config;
 
       // By pushing this plugin at the end of the existing array,
@@ -114,6 +115,12 @@ export default function ReactFlightVitePlugin({
     },
 
     transform(code: string, id: string, options: {ssr?: boolean} = {}) {
+      // Add more information for this module in the graph.
+      // It will be used later to discover client boundaries.
+      if (server && options.ssr && /\.[jt]sx?($|\?)/.test(id)) {
+        augmentModuleGraph(server.moduleGraph, id, code);
+      }
+
       /**
        * In order to allow dynamic component imports from RSC, we use Vite's import.meta.glob.
        * This hook replaces the glob placeholders with resolved paths to all client components.
@@ -215,8 +222,6 @@ export async function proxyClientComponent(filepath: string, src?: string) {
   // Modify the import ID to avoid infinite wraps
   const importFrom = `${filepath}?no-proxy`;
 
-  await init;
-
   if (!src) {
     src = await fs.readFile(filepath, 'utf-8');
   }
@@ -255,7 +260,7 @@ function findClientBoundaries(moduleGraph: any) {
       moduleNode => moduleNode.meta && moduleNode.meta.isClientComponent,
     );
 
-    if (clientModule) {
+    if (clientModule && isDirectImportInServer(clientModule)) {
       clientBoundaries.push(clientModule.file);
     }
   }
@@ -315,5 +320,125 @@ const hashImportsPlugin = {
   },
 };
 
-// This can be used in custom findClientComponentsForClientBuild implementations
-ReactFlightVitePlugin.findClientComponentsFromServer = findClientComponentsForDev;
+/**
+ * A client module should behave as a client boundary
+ * if it is imported by the server before encountering
+ * another boundary in the process.
+ * Traverse the module graph upwards to find non client
+ * components that import the current module.
+ */
+function isDirectImportInServer(currentMod, originalMod) {
+  // TODO: this should use recursion in any module that exports
+  // the original one, not only in full facade files.
+  if (!originalMod || (currentMod.meta || {}).isFacade) {
+    return Array.from(currentMod.importers).some(importer =>
+      // eslint-disable-next-line no-unused-vars
+      isDirectImportInServer(importer, originalMod || currentMod),
+    );
+  }
+
+  // Not enough information: safer to assume it is
+  // imported in server to create a new boundary.
+  if (!currentMod.meta || !originalMod.meta) return true;
+
+  // If current module is a client component, stop checking
+  // parents since this can be the actual boundary.
+  if (isClientComponent(currentMod.file)) return false;
+
+  // If current module is not a client component, assume
+  // it is a server component on a shared component
+  // that will be imported in the server to be safe.
+  // However, due to the lack of tree-shaking in the dev module graph,
+  // we need to manually make sure this module is importing something from
+  // the original module before marking it as client boundary.
+  // -- TODO: this only checks namedExports right now. It should
+  // consider default exports and variable renaming in facade modules.
+  return currentMod.meta.imports.some(imp => {
+    return (
+      imp.action === 'import' &&
+      (imp.from === originalMod.file ||
+        (imp.variables || []).some(([name]) =>
+          originalMod.meta.namedExports.includes(name),
+        ))
+    );
+  });
+}
+
+function resolveModPath(
+  modPath: string,
+  dirname: string,
+  retryExtension?: string,
+) {
+  let absolutePath: string;
+  try {
+    absolutePath = modPath.startsWith('.')
+      ? path.resolve(dirname, modPath)
+      : modPath;
+
+    return require.resolve(
+      (modPath.startsWith('.') ? path.resolve(dirname, modPath) : modPath) +
+        (retryExtension || ''),
+    );
+  } catch (error) {
+    if (!/\.[jt]sx?$/.test(absolutePath) && retryExtension !== '.tsx') {
+      // Node cannot infer .[jt]sx extensions.
+      // Append them here and retry a couple of times.
+      return resolveModPath(
+        absolutePath,
+        dirname,
+        retryExtension ? '.tsx' : '.jsx',
+      );
+    }
+  }
+}
+
+function augmentModuleGraph(moduleGraph: any, id: string, code: string) {
+  const currentModule = moduleGraph.getModuleById(id);
+  if (!currentModule) return;
+
+  const [source] = id.split('?');
+  const dirname = path.dirname(source);
+  const [rawImports, namedExports, isFacade] = parse(code);
+
+  // This is currently not used but it should be considered
+  // to improve the crawling in `isDirectImportInServer`.
+  const imports = [];
+  rawImports.forEach(
+    ({
+      s: startMod,
+      e: endMod,
+      d: dynamicImportIndex,
+      ss: startStatement,
+      se: endStatement,
+    }) => {
+      if (dynamicImportIndex !== -1) return; // Skip dynamic imports for now
+
+      const modPath = code.slice(startMod, endMod);
+      const resolvedPath = resolveModPath(modPath.split('?')[0], dirname);
+      if (!resolvedPath) return; // Virtual modules or other exceptions
+
+      const [action, variables] = code
+        .slice(startStatement, endStatement)
+        .split(/\s+from\s+['"]/m)[0]
+        .split(/\s+(.+)/m);
+
+      imports.push({
+        action, // 'import' or 'export'
+        variables: variables // [['originalName', 'alias']]
+          .replace(/[{}]/gm, '')
+          .trim()
+          .split(/\s*,\s*/m)
+          .map(s => s.split(/\s+as\s+/m))
+          .filter(Boolean),
+        from: resolvedPath, // '/absolute/path'
+        originalFrom: modPath, // './path' or '3plib/subpath'
+      });
+    },
+  );
+
+  if (!currentModule.meta) {
+    currentModule.meta = {};
+  }
+
+  Object.assign(currentModule.meta, {isFacade, namedExports, imports});
+}
