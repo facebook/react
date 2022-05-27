@@ -24,47 +24,28 @@ type PluginOptions = {
   findClientComponentsForClientBuild?: (
     config: any,
   ) => string[] | Promise<string[]>,
-  isClientComponent?: (id: string) => boolean | Promise<boolean>,
 };
 
 const rscViteFileRE = /\/react-server-dom-vite.js/;
 const noProxyRE = /[&?]no-proxy($|&)/;
 
+const isClientComponent = id => /\.client\.[jt]sx?($|\?)/.test(id);
+
 export default function ReactFlightVitePlugin({
   isServerComponentImporterAllowed = importer => false,
-  isClientComponent = id => /\.client\.[jt]sx?($|\?)/.test(id),
   findClientComponentsForClientBuild,
 }: PluginOptions = {}) {
   let config;
   let server;
   let invalidateTimeout;
-  let absoluteImporterPath;
+  let globImporterPath;
 
-  function invalidateImporter() {
+  function invalidateGlobImporter() {
     clearTimeout(invalidateTimeout);
     invalidateTimeout = setTimeout(
-      () => server.watcher.emit('change', absoluteImporterPath),
+      () => server.watcher.emit('change', globImporterPath),
       100,
     );
-  }
-
-  function wrapIfClientComponent(id: string) {
-    const handle = (isClient: boolean) => {
-      if (!isClient) return null;
-
-      if (server) {
-        const moduleNode = server.moduleGraph.getModuleById(id);
-        if (!moduleNode.__isClientComponent) {
-          moduleNode.__isClientComponent = true;
-          if (absoluteImporterPath) invalidateImporter();
-        }
-      }
-
-      return proxyClientComponent(id.split('?')[0]);
-    };
-
-    const tmp = isClientComponent(id);
-    return typeof tmp === 'boolean' ? handle(tmp) : tmp.then(handle);
   }
 
   return {
@@ -105,7 +86,7 @@ export default function ReactFlightVitePlugin({
     },
 
     load(id: string, options: {ssr?: boolean} = {}) {
-      if (!options.ssr || !shouldCheckClientComponent(id)) return;
+      if (!options.ssr || !isClientComponent(id) || noProxyRE.test(id)) return;
 
       if (server) {
         const mod = server.moduleGraph.idToModuleMap.get(
@@ -121,9 +102,17 @@ export default function ReactFlightVitePlugin({
             return;
           }
         }
+
+        // Mark module as a client component.
+        const moduleNode = server.moduleGraph.getModuleById(id);
+        if (!moduleNode.meta) moduleNode.meta = {};
+        if (!moduleNode.meta.isClientComponent) {
+          moduleNode.meta.isClientComponent = true;
+          if (globImporterPath) invalidateGlobImporter();
+        }
       }
 
-      return wrapIfClientComponent(id);
+      return proxyClientComponent(id.split('?')[0]);
     },
 
     transform(code: string, id: string, options: {ssr?: boolean} = {}) {
@@ -177,7 +166,7 @@ export default function ReactFlightVitePlugin({
         };
 
         if (config.command === 'serve') {
-          absoluteImporterPath = id;
+          globImporterPath = id;
           return injectGlobs(findClientComponentsForDev(server));
         }
 
@@ -258,17 +247,13 @@ export async function proxyClientComponent(filepath: string, src?: string) {
   return proxyCode;
 }
 
-function shouldCheckClientComponent(id: string) {
-  return /\.[jt]sx?($|\?)/.test(id) && !noProxyRE.test(id);
-}
-
 function findClientComponentsForDev(server: any) {
   const clientComponents = [];
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const set of server.moduleGraph.fileToModulesMap.values()) {
     const clientModule = Array.from(set).find(
-      moduleNode => moduleNode.__isClientComponent,
+      moduleNode => moduleNode.meta && moduleNode.meta.isClientComponent,
     );
 
     if (clientModule) clientComponents.push(clientModule.file);
