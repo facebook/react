@@ -59,7 +59,7 @@
   },
   "dependencies": {
     "es-module-lexer": "^0.9.3",
-    "magic-string": "^0.25.2"
+    "magic-string": "^0.26.2"
   },
   "devDependencies": {
     "vite": "^2.7.1"
