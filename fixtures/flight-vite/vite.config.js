@@ -22,22 +22,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    rsc({
-      async findClientComponentsForClientBuild() {
-        // In client build, create a local server to discover client componets
-        const server = await createServer({
-          clearScreen: false,
-          server: {middlewareMode: 'ssr'},
-        });
-
-        // Load server entry to discover client components early
-        await server.ssrLoadModule(RSC_ENTRY);
-        await server.close();
-
-        // At this point, the server has loaded all the components in the module graph
-        return rsc.findClientComponentsFromServer(server);
-      },
-    }),
+    rsc({serverBuildEntries: [RSC_ENTRY]}),
 
     // Custom plugin
     {

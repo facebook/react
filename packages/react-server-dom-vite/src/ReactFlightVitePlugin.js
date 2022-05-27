@@ -11,19 +11,17 @@
 import {init, parse} from 'es-module-lexer';
 import MagicString from 'magic-string';
 // $FlowFixMe[module-missing]
-import {normalizePath, transformWithEsbuild} from 'vite';
+import {normalizePath, transformWithEsbuild, createServer} from 'vite';
 
 import {promises as fs} from 'fs';
 import path from 'path';
 
 type PluginOptions = {
+  serverBuildEntries: string[],
   isServerComponentImporterAllowed?: (
     importer: string,
     source: string,
   ) => boolean,
-  findClientComponentsForClientBuild?: (
-    config: any,
-  ) => string[] | Promise<string[]>,
 };
 
 const rscViteFileRE = /\/react-server-dom-vite.js/;
@@ -32,8 +30,8 @@ const noProxyRE = /[&?]no-proxy($|&)/;
 const isClientComponent = id => /\.client\.[jt]sx?($|\?)/.test(id);
 
 export default function ReactFlightVitePlugin({
+  serverBuildEntries,
   isServerComponentImporterAllowed = importer => false,
-  findClientComponentsForClientBuild,
 }: PluginOptions = {}) {
   let config;
   let server;
@@ -167,17 +165,18 @@ export default function ReactFlightVitePlugin({
 
         if (config.command === 'serve') {
           globImporterPath = id;
-          return injectGlobs(findClientComponentsForDev(server));
+          return injectGlobs(findClientBoundaries(server.moduleGraph));
         }
 
-        if (!findClientComponentsForClientBuild) {
+        if (!serverBuildEntries) {
           throw new Error(
-            '[react-server-dom-vite] Parameter findClientComponentsForClientBuild is required for client build',
+            '[react-server-dom-vite] Parameter serverBuildEntries is required for client build',
           );
         }
 
-        const tmp = findClientComponentsForClientBuild(config);
-        return Array.isArray(tmp) ? injectGlobs(tmp) : tmp.then(injectGlobs);
+        return findClientBoundariesForClientBuild(serverBuildEntries).then(
+          injectGlobs,
+        );
       }
     },
   };
@@ -247,19 +246,41 @@ export async function proxyClientComponent(filepath: string, src?: string) {
   return proxyCode;
 }
 
-function findClientComponentsForDev(server: any) {
-  const clientComponents = [];
+function findClientBoundaries(moduleGraph: any) {
+  const clientBoundaries = [];
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-  for (const set of server.moduleGraph.fileToModulesMap.values()) {
+  for (const set of moduleGraph.fileToModulesMap.values()) {
     const clientModule = Array.from(set).find(
       moduleNode => moduleNode.meta && moduleNode.meta.isClientComponent,
     );
 
-    if (clientModule) clientComponents.push(clientModule.file);
+    if (clientModule) {
+      clientBoundaries.push(clientModule.file);
+    }
   }
 
-  return clientComponents;
+  return clientBoundaries;
+}
+
+async function findClientBoundariesForClientBuild(serverEntries: string[]) {
+  // Viteception
+  const server = await createServer({
+    clearScreen: false,
+    server: {middlewareMode: 'ssr'},
+  });
+
+  try {
+    // Load server entries to discover client components
+    await Promise.all(serverEntries.map(server.ssrLoadModule));
+  } catch (error) {
+    error.message = 'Could not load server build entries: ' + error.message;
+    throw error;
+  }
+
+  await server.close();
+
+  return findClientBoundaries(server.moduleGraph);
 }
 
 const hashImportsPlugin = {
