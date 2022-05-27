@@ -95,6 +95,10 @@ export {
   writeEndPendingSuspenseBoundary,
   writePlaceholder,
   writeCompletedRoot,
+  textEmbeddingForBoundarySegment,
+  textEmbeddingForSegment,
+  prepareForSegment,
+  finalizeForSegment,
 } from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';

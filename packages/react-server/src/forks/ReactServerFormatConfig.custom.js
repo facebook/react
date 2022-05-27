@@ -43,6 +43,11 @@ export const pushStartCompletedSuspenseBoundary =
   $$$hostConfig.pushStartCompletedSuspenseBoundary;
 export const pushEndCompletedSuspenseBoundary =
   $$$hostConfig.pushEndCompletedSuspenseBoundary;
+export const textEmbeddingForBoundarySegment =
+  $$$hostConfig.textEmbeddingForBoundarySegment;
+export const textEmbeddingForSegment = $$$hostConfig.textEmbeddingForSegment;
+export const prepareForSegment = $$$hostConfig.prepareForSegment;
+export const finalizeForSegment = $$$hostConfig.finalizeForSegment;
 export const writeCompletedRoot = $$$hostConfig.writeCompletedRoot;
 export const writePlaceholder = $$$hostConfig.writePlaceholder;
 export const writeStartCompletedSuspenseBoundary =

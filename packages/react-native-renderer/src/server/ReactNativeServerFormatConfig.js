@@ -156,6 +156,15 @@ export function pushEndInstance(
   target.push(END);
 }
 
+export function textEmbeddingForBoundarySegment() {
+  return null;
+}
+export function textEmbeddingForSegment() {
+  return null;
+}
+export function prepareForSegment() {}
+export function finalizeForSegment() {}
+
 export function writeCompletedRoot(
   destination: Destination,
   responseState: ResponseState,

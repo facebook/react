@@ -234,6 +234,11 @@ describe('ReactDOMFizzServer', () => {
     return readText(text);
   }
 
+  function AsyncTextWrapped({as, text}) {
+    let As = as;
+    return <As>{readText(text)}</As>;
+  }
+
   // @gate experimental
   it('should asynchronously load a lazy component', async () => {
     let resolveA;
@@ -3576,5 +3581,221 @@ describe('ReactDOMFizzServer', () => {
         A<b>B</b>
       </div>,
     );
+  });
+
+  describe('text separators', () => {
+    it('it only includes separators between adjacent text nodes', async () => {
+      function App({name}) {
+        return (
+          <div>
+            hello<b>world, {name}</b>!
+          </div>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <App name="Foo" />,
+        );
+        pipe(writable);
+      });
+
+      expect(container.innerHTML).toEqual(
+        '<div>hello<b>world, <!-- -->Foo</b>!</div>',
+      );
+    });
+
+    it('it inserts text separators even when adjacent text is in a delayed segment', async () => {
+      function App({name}) {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div id="app-div">
+              hello
+              <b>
+                world, <AsyncText text={name} />
+              </b>
+              !
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <App name="Foo" />,
+        );
+        pipe(writable);
+      });
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">hello<b>world, <template id="P:1"></template></b>!</div>',
+      );
+
+      await act(() => resolveText('Foo'));
+
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div id="app-div">hello<b>world, <!-- -->Foo<!-- --></b>!</div>',
+      );
+    });
+
+    it('it works with multiple adjacent segments', async () => {
+      function App() {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div id="app-div">
+              h<AsyncText text={'ello'} />
+              w<AsyncText text={'orld'} />
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">h<template id="P:1"></template>w<template id="P:2"></template></div>',
+      );
+
+      await act(() => resolveText('orld'));
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">h<template id="P:1"></template>w<!-- -->orld<!-- --></div>',
+      );
+
+      await act(() => resolveText('ello'));
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div id="app-div">h<!-- -->ello<!-- -->w<!-- -->orld<!-- --></div>',
+      );
+    });
+
+    it('it works when some segments are flushed and others are patched', async () => {
+      function App() {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div id="app-div">
+              h<AsyncText text={'ello'} />
+              w<AsyncText text={'orld'} />
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await act(() => resolveText('ello'));
+        pipe(writable);
+      });
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">h<!-- -->ello<!-- -->w<template id="P:1"></template></div>',
+      );
+
+      await act(() => resolveText('orld'));
+
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div id="app-div">h<!-- -->ello<!-- -->w<!-- -->orld<!-- --></div>',
+      );
+    });
+
+    it('it does not prepend a text separators if the segment follows a non-Text Node', async () => {
+      function App() {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div>
+              hello
+              <b>
+                <AsyncText text={'world'} />
+              </b>
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await act(() => resolveText('world'));
+        pipe(writable);
+      });
+
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div>hello<b>world</b></div>',
+      );
+    });
+
+    it('it does not prepend a text separators if the segments first emission is a non-Text Node', async () => {
+      function App() {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div>
+              hello
+              <AsyncTextWrapped as={'b'} text={'world'} />
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await act(() => resolveText('world'));
+        pipe(writable);
+      });
+
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div>hello<b>world</b></div>',
+      );
+    });
+
+    it('should not insert separators for text inside Suspense boundaries even if they would otherwise be considered text-embedded', async () => {
+      function App() {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div id="app-div">
+              start
+              <Suspense fallback={'[loading first]'}>
+                firststart
+                <AsyncText text={'first suspended'} />
+                firstend
+              </Suspense>
+              <Suspense fallback={'[loading second]'}>
+                secondstart
+                <b>
+                  <AsyncText text={'second suspended'} />
+                </b>
+              </Suspense>
+              end
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await act(() => resolveText('world'));
+        pipe(writable);
+      });
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">start<!--$?--><template id="B:0"></template>[loading first]<!--/$--><!--$?--><template id="B:1"></template>[loading second]<!--/$-->end</div>',
+      );
+
+      await act(async () => {
+        resolveText('first suspended');
+      });
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">start<!--$-->firststart<!-- -->first suspended<!-- -->firstend<!--/$--><!--$?--><template id="B:1"></template>[loading second]<!--/$-->end</div>',
+      );
+
+      await act(async () => {
+        resolveText('second suspended');
+      });
+
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div id="app-div">start<!--$-->firststart<!-- -->first suspended<!-- -->firstend<!--/$--><!--$-->secondstart<b>second suspended<!-- --></b><!--/$-->end</div>',
+      );
+    });
   });
 });

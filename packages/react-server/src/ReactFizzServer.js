@@ -26,6 +26,7 @@ import type {
 import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
+import type {TextEmbedding} from './ReactServerFormatConfig';
 
 import {
   scheduleWork,
@@ -59,6 +60,10 @@ import {
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
+  textEmbeddingForBoundarySegment,
+  textEmbeddingForSegment,
+  prepareForSegment,
+  finalizeForSegment,
 } from './ReactServerFormatConfig';
 import {
   constructClassInstance,
@@ -169,6 +174,8 @@ type Segment = {
   formatContext: FormatContext,
   // If this segment represents a fallback, this is the content that will replace that fallback.
   +boundary: null | SuspenseBoundary,
+  // opaque data that tells the formatter uses to modify output based on how the Segment is embedded in other output
+  +textEmbedding: TextEmbedding,
 };
 
 const OPEN = 0;
@@ -267,7 +274,13 @@ export function createRequest(
     onFatalError: onFatalError === undefined ? noop : onFatalError,
   };
   // This segment represents the root fallback.
-  const rootSegment = createPendingSegment(request, 0, null, rootFormatContext);
+  const rootSegment = createPendingSegment(
+    request,
+    0,
+    null,
+    rootFormatContext,
+    textEmbeddingForBoundarySegment(),
+  );
   // There is no parent so conceptually, we're unblocked to flush this segment.
   rootSegment.parentFlushed = true;
   const rootTask = createTask(
@@ -346,6 +359,7 @@ function createPendingSegment(
   index: number,
   boundary: null | SuspenseBoundary,
   formatContext: FormatContext,
+  textEmbedding: TextEmbedding,
 ): Segment {
   return {
     status: PENDING,
@@ -356,6 +370,7 @@ function createPendingSegment(
     children: [],
     formatContext,
     boundary,
+    textEmbedding,
   };
 }
 
@@ -454,11 +469,13 @@ function renderSuspenseBoundary(
   const newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
   const insertionIndex = parentSegment.chunks.length;
   // The children of the boundary segment is actually the fallback.
+  const textEmbedding = textEmbeddingForBoundarySegment();
   const boundarySegment = createPendingSegment(
     request,
     insertionIndex,
     newBoundary,
     parentSegment.formatContext,
+    textEmbedding,
   );
   parentSegment.children.push(boundarySegment);
 
@@ -468,6 +485,7 @@ function renderSuspenseBoundary(
     0,
     null,
     parentSegment.formatContext,
+    textEmbedding,
   );
   // We mark the root segment as having its parent flushed. It's not really flushed but there is
   // no parent segment so there's nothing to wait on.
@@ -485,7 +503,12 @@ function renderSuspenseBoundary(
   task.blockedSegment = contentRootSegment;
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
+    prepareForSegment(contentRootSegment.textEmbedding);
     renderNode(request, task, content);
+    finalizeForSegment(
+      contentRootSegment.chunks,
+      contentRootSegment.textEmbedding,
+    );
     contentRootSegment.status = COMPLETED;
     queueCompletedSegment(newBoundary, contentRootSegment);
     if (newBoundary.pendingTasks === 0) {
@@ -1263,11 +1286,13 @@ function spawnNewSuspendedTask(
   // Something suspended, we'll need to create a new segment and resolve it later.
   const segment = task.blockedSegment;
   const insertionIndex = segment.chunks.length;
+  const textEmbedding = textEmbeddingForSegment();
   const newSegment = createPendingSegment(
     request,
     insertionIndex,
     null,
     segment.formatContext,
+    textEmbedding,
   );
   segment.children.push(newSegment);
   const newTask = createTask(
@@ -1544,7 +1569,9 @@ function retryTask(request: Request, task: Task): void {
   try {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
+    prepareForSegment(segment.textEmbedding);
     renderNodeDestructive(request, task, task.node);
+    finalizeForSegment(segment.chunks, segment.textEmbedding);
 
     task.abortSet.delete(task);
     segment.status = COMPLETED;

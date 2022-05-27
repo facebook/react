@@ -279,6 +279,7 @@ function encodeHTMLTextNode(text: string): string {
 }
 
 const textSeparator = stringToPrecomputedChunk('<!-- -->');
+let lastPushedText = false;
 
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
@@ -289,8 +290,65 @@ export function pushTextInstance(
     // Empty text doesn't have a DOM node representation and the hydration is aware of this.
     return;
   }
-  // TODO: Avoid adding a text separator in common cases.
-  target.push(stringToChunk(encodeHTMLTextNode(text)), textSeparator);
+  // We use a null charater to wrap every text chunk. we use this to boundary check whether we need
+  // to insert a Node textSeparator like <!-- --> when flushing segments between sets of chunks.
+  if (lastPushedText) {
+    target.push(textSeparator);
+  }
+  lastPushedText = true;
+  target.push(stringToChunk(encodeHTMLTextNode(text)));
+}
+
+// The Text Embedding flags allow the format config to know when to include or exclude
+// text separators between parent and child segments. We track the leading edge and
+// trailing edges separately however due to the fact that peeking ahead is usually
+// not possible we discern between knowing we need a separator at the leading edge and
+// assuming we might need one at the trailing edge. In the future we could get more
+// advanced with the tracking and drop the trailing edge in some cases when we know a segment
+// is followed by a Text or non-Text Node explicitly vs followed by another Segment
+export opaque type TextEmbedding = number;
+type Embeddable = {textEmbedding: TextEmbedding, ...};
+
+const NO_TEXT_EMBED = /*                 */ 0b0000;
+
+const LEADING_SEPARATOR_NEEDED = /*      */ 0b0011;
+const LEADING_TEXT_EMBED_KNOWN = /*      */ 0b0001;
+// const LEADING_TEXT_EMBED_POSSIBLE = /*   */ 0b0010;
+
+const TRAILING_SEPARATOR_NEEDED = /*     */ 0b1100;
+// const TRAILING_TEXT_EMBED_KNOWN = /*     */ 0b0100;
+const TRAILING_TEXT_EMBED_POSSIBLE = /*  */ 0b1000;
+
+// Suspense boundaries always emit a comment node at the leading and trailing edge and thus need
+// no additional separators. we also use this for the root segment even though it isn't a Boundary
+// because it cannot have pre or post text and thus matches the same embedding semantics or Boundaries
+export function textEmbeddingForBoundarySegment(): TextEmbedding {
+  lastPushedText = false;
+  return NO_TEXT_EMBED;
+}
+
+export function textEmbeddingForSegment(): TextEmbedding {
+  let embedding = TRAILING_TEXT_EMBED_POSSIBLE;
+  embedding |= lastPushedText ? LEADING_TEXT_EMBED_KNOWN : NO_TEXT_EMBED;
+
+  lastPushedText = false;
+  return embedding;
+}
+
+// Called when a segment is about to be rendered by a Task
+export function prepareForSegment(textEmbedding: TextEmbedding) {
+  lastPushedText = textEmbedding & LEADING_SEPARATOR_NEEDED;
+}
+
+// Called when a segment is exhaustively rendered
+export function finalizeForSegment(
+  target: Array<Chunk | PrecomputedChunk>,
+  textEmbedding: TextEmbedding,
+) {
+  if (lastPushedText && textEmbedding & TRAILING_SEPARATOR_NEEDED) {
+    target.push(textSeparator);
+  }
+  lastPushedText = false;
 }
 
 const styleNameCache: Map<string, PrecomputedChunk> = new Map();
@@ -1324,6 +1382,7 @@ export function pushStartInstance(
   responseState: ResponseState,
   formatContext: FormatContext,
 ): ReactNodeList {
+  lastPushedText = false;
   if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
@@ -1436,6 +1495,7 @@ export function pushEndInstance(
   type: string,
   props: Object,
 ): void {
+  lastPushedText = false;
   switch (type) {
     // Omitted close tags
     // TODO: Instead of repeating this switch we could try to pass a flag from above.
