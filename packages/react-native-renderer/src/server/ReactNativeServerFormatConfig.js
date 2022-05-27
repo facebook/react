@@ -123,7 +123,7 @@ export function pushTextInstance(
   text: string,
   responseState: ResponseState,
   // This Renderer does not use this argument
-  textEmbedded: mixed,
+  textEmbedded: boolean,
 ): boolean {
   target.push(
     INSTANCE,
@@ -160,7 +160,12 @@ export function pushEndInstance(
 }
 
 // In this Renderer this is a noop
-export function pushSegmentFinale(a: mixed, b: mixed, c: mixed, d: mixed) {}
+export function pushSegmentFinale(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  lastPushedText: boolean,
+  textEmbedded: boolean,
+): void {}
 
 export function writeCompletedRoot(
   destination: Destination,
