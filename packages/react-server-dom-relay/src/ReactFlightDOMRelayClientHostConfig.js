@@ -11,6 +11,8 @@ import type {JSONValue, ResponseBase} from 'react-client/src/ReactFlightClient';
 
 import type {JSResourceReference} from 'JSResourceReference';
 
+import type {ModuleMetaData} from 'ReactFlightDOMRelayClientIntegration';
+
 export type ModuleReference<T> = JSResourceReference<T>;
 
 import {
@@ -19,18 +21,28 @@ import {
 } from 'react-client/src/ReactFlightClient';
 
 export {
-  resolveModuleReference,
   preloadModule,
   requireModule,
 } from 'ReactFlightDOMRelayClientIntegration';
+
+import {resolveModuleReference as resolveModuleReferenceImpl} from 'ReactFlightDOMRelayClientIntegration';
 
 import isArray from 'shared/isArray';
 
 export type {ModuleMetaData} from 'ReactFlightDOMRelayClientIntegration';
 
+export type BundlerConfig = null;
+
 export type UninitializedModel = JSONValue;
 
 export type Response = ResponseBase;
+
+export function resolveModuleReference<T>(
+  bundlerConfig: BundlerConfig,
+  moduleData: ModuleMetaData,
+): ModuleReference<T> {
+  return resolveModuleReferenceImpl(moduleData);
+}
 
 function parseModelRecursively(response: Response, parentObj, value) {
   if (typeof value === 'string') {

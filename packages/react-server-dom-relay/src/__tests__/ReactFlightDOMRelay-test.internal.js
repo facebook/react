@@ -31,7 +31,7 @@ describe('ReactFlightDOMRelay', () => {
   });
 
   function readThrough(data) {
-    const response = ReactDOMFlightRelayClient.createResponse();
+    const response = ReactDOMFlightRelayClient.createResponse(null);
     for (let i = 0; i < data.length; i++) {
       const chunk = data[i];
       ReactDOMFlightRelayClient.resolveRow(response, chunk);
