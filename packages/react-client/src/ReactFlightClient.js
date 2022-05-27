@@ -15,6 +15,7 @@ import type {
   ModuleMetaData,
   UninitializedModel,
   Response,
+  BundlerConfig,
 } from './ReactFlightClientHostConfig';
 
 import {
@@ -97,6 +98,7 @@ Chunk.prototype.then = function<T>(resolve: () => mixed) {
 };
 
 export type ResponseBase = {
+  _bundlerConfig: BundlerConfig,
   _chunks: Map<number, SomeChunk<any>>,
   readRoot<T>(): T,
   ...
@@ -338,9 +340,10 @@ export function parseModelTuple(
   return value;
 }
 
-export function createResponse(): ResponseBase {
+export function createResponse(bundlerConfig: BundlerConfig): ResponseBase {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response = {
+    _bundlerConfig: bundlerConfig,
     _chunks: chunks,
     readRoot: readRoot,
   };
@@ -384,7 +387,10 @@ export function resolveModule(
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   const moduleMetaData: ModuleMetaData = parseModel(response, model);
-  const moduleReference = resolveModuleReference(moduleMetaData);
+  const moduleReference = resolveModuleReference(
+    response._bundlerConfig,
+    moduleMetaData,
+  );
 
   // TODO: Add an option to encode modules that are lazy loaded.
   // For now we preload all modules as early as possible since it's likely
