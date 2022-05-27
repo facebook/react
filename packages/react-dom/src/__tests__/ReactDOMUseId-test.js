@@ -343,7 +343,6 @@ describe('useId', () => {
         id="container"
       >
         :R0:, :R0H1:, :R0H2:
-        <!-- -->
       </div>
     `);
   });
@@ -369,7 +368,6 @@ describe('useId', () => {
         id="container"
       >
         :R0:
-        <!-- -->
       </div>
     `);
   });
