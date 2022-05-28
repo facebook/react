@@ -93,9 +93,7 @@ describe('ReactDOMServerFB', () => {
     await jest.runAllTimers();
 
     const result = readResult(stream);
-    expect(result).toMatchInlineSnapshot(
-      `"<div><!--$-->Done<!-- --><!--/$--></div>"`,
-    );
+    expect(result).toMatchInlineSnapshot(`"<div><!--$-->Done<!--/$--></div>"`);
   });
 
   it('should throw an error when an error is thrown at the root', () => {

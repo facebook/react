@@ -122,7 +122,9 @@ export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-): void {
+  // This Renderer does not use this argument
+  textEmbedded: boolean,
+): boolean {
   target.push(
     INSTANCE,
     RAW_TEXT, // Type
@@ -130,6 +132,7 @@ export function pushTextInstance(
     // TODO: props { text: text }
     END, // End of children
   );
+  return false;
 }
 
 export function pushStartInstance(
@@ -155,6 +158,14 @@ export function pushEndInstance(
 ): void {
   target.push(END);
 }
+
+// In this Renderer this is a noop
+export function pushSegmentFinale(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  lastPushedText: boolean,
+  textEmbedded: boolean,
+): void {}
 
 export function writeCompletedRoot(
   destination: Destination,

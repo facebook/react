@@ -12,6 +12,7 @@ import type {FormatContext} from './ReactDOMServerFormatConfig';
 import {
   createResponseState as createResponseStateImpl,
   pushTextInstance as pushTextInstanceImpl,
+  pushSegmentFinale as pushSegmentFinaleImpl,
   writeStartCompletedSuspenseBoundary as writeStartCompletedSuspenseBoundaryImpl,
   writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
@@ -105,11 +106,31 @@ export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-): void {
+  textEmbedded: boolean,
+): boolean {
   if (responseState.generateStaticMarkup) {
     target.push(stringToChunk(escapeTextForBrowser(text)));
+    return false;
   } else {
-    pushTextInstanceImpl(target, text, responseState);
+    return pushTextInstanceImpl(target, text, responseState, textEmbedded);
+  }
+}
+
+export function pushSegmentFinale(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  lastPushedText: boolean,
+  textEmbedded: boolean,
+): void {
+  if (responseState.generateStaticMarkup) {
+    return;
+  } else {
+    return pushSegmentFinaleImpl(
+      target,
+      responseState,
+      lastPushedText,
+      textEmbedded,
+    );
   }
 }
 

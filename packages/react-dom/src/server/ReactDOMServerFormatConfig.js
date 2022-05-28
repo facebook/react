@@ -284,13 +284,30 @@ export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-): void {
+  textEmbedded: boolean,
+): boolean {
   if (text === '') {
     // Empty text doesn't have a DOM node representation and the hydration is aware of this.
-    return;
+    return textEmbedded;
   }
-  // TODO: Avoid adding a text separator in common cases.
-  target.push(stringToChunk(encodeHTMLTextNode(text)), textSeparator);
+  if (textEmbedded) {
+    target.push(textSeparator);
+  }
+  target.push(stringToChunk(encodeHTMLTextNode(text)));
+  return true;
+}
+
+// Called when Fizz is done with a Segment. Currently the only purpose is to conditionally
+// emit a text separator when we don't know for sure it is safe to omit
+export function pushSegmentFinale(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  lastPushedText: boolean,
+  textEmbedded: boolean,
+): void {
+  if (lastPushedText && textEmbedded) {
+    target.push(textSeparator);
+  }
 }
 
 const styleNameCache: Map<string, PrecomputedChunk> = new Map();
