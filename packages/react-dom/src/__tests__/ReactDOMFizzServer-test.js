@@ -4216,8 +4216,8 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
 
-      let helloWorld = '<div>hello<!-- -->world</div>';
-      let testcases = 6;
+      const helloWorld = '<div>hello<!-- -->world</div>';
+      const testcases = 6;
 
       expect(container.firstElementChild.outerHTML).toEqual(
         '<div><!--$-->' +
