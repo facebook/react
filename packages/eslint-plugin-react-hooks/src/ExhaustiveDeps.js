@@ -49,9 +49,7 @@ export default {
         : undefined;
 
     const avoidObjects =
-      context.options &&
-      context.options[0] &&
-      context.options[0].avoidObjects;
+      context.options && context.options[0] && context.options[0].avoidObjects;
 
     const enableDangerousAutofixThisMayCauseInfiniteLoops =
       (context.options &&
@@ -632,7 +630,11 @@ export default {
             return;
           }
           // If we see an object then add a special warning if the avoidObjects option is true.
-          if (declaredDependencyNode.type === 'Identifier' && options && options.avoidObjects) {
+          if (
+            declaredDependencyNode.type === 'Identifier' &&
+            options &&
+            options.avoidObjects
+          ) {
             reportProblem({
               node: declaredDependencyNode,
               message:
