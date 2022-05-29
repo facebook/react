@@ -159,14 +159,6 @@ export function pushEndInstance(
   target.push(END);
 }
 
-// In this Renderer this is a noop
-export function pushSegmentFinale(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  lastPushedText: boolean,
-  textEmbedded: boolean,
-): void {}
-
 export function writeCompletedRoot(
   destination: Destination,
   responseState: ResponseState,
@@ -266,6 +258,12 @@ export function writeEndSegment(
   formatContext: FormatContext,
 ): boolean {
   return writeChunkAndReturn(destination, END);
+}
+export function writeTextSeparator(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return true;
 }
 
 // Instruction Set

@@ -12,11 +12,11 @@ import type {FormatContext} from './ReactDOMServerFormatConfig';
 import {
   createResponseState as createResponseStateImpl,
   pushTextInstance as pushTextInstanceImpl,
-  pushSegmentFinale as pushSegmentFinaleImpl,
   writeStartCompletedSuspenseBoundary as writeStartCompletedSuspenseBoundaryImpl,
   writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
   writeEndClientRenderedSuspenseBoundary as writeEndClientRenderedSuspenseBoundaryImpl,
+  writeTextSeparator as writeTextSeparatorImpl,
   HTML_MODE,
 } from './ReactDOMServerFormatConfig';
 
@@ -116,24 +116,6 @@ export function pushTextInstance(
   }
 }
 
-export function pushSegmentFinale(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  lastPushedText: boolean,
-  textEmbedded: boolean,
-): void {
-  if (responseState.generateStaticMarkup) {
-    return;
-  } else {
-    return pushSegmentFinaleImpl(
-      target,
-      responseState,
-      lastPushedText,
-      textEmbedded,
-    );
-  }
-}
-
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
@@ -176,4 +158,13 @@ export function writeEndClientRenderedSuspenseBoundary(
     return true;
   }
   return writeEndClientRenderedSuspenseBoundaryImpl(destination, responseState);
+}
+export function writeTextSeparator(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  if (responseState.generateStaticMarkup) {
+    return true;
+  }
+  return writeTextSeparatorImpl(destination, responseState);
 }

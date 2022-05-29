@@ -161,7 +161,7 @@ describe('ReactDOMFizzServer', () => {
     // Then React starts writing.
     pipe(writable);
     expect(output.result).toMatchInlineSnapshot(
-      `"<!doctype html><html><head><title>test</title><head><body><div><!--$-->Done<!-- --><!--/$--></div>"`,
+      `"<!doctype html><html><head><title>test</title><head><body><div><!--$-->Done<!--/$--></div>"`,
     );
   });
 

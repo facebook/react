@@ -280,6 +280,7 @@ function encodeHTMLTextNode(text: string): string {
 
 const textSeparator = stringToPrecomputedChunk('<!-- -->');
 
+// Returns a boolean signifying whether text was actually pushed.
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
@@ -288,26 +289,13 @@ export function pushTextInstance(
 ): boolean {
   if (text === '') {
     // Empty text doesn't have a DOM node representation and the hydration is aware of this.
-    return textEmbedded;
+    return false;
   }
   if (textEmbedded) {
     target.push(textSeparator);
   }
   target.push(stringToChunk(encodeHTMLTextNode(text)));
   return true;
-}
-
-// Called when Fizz is done with a Segment. Currently the only purpose is to conditionally
-// emit a text separator when we don't know for sure it is safe to omit
-export function pushSegmentFinale(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  lastPushedText: boolean,
-  textEmbedded: boolean,
-): void {
-  if (lastPushedText && textEmbedded) {
-    target.push(textSeparator);
-  }
 }
 
 const styleNameCache: Map<string, PrecomputedChunk> = new Map();
@@ -1711,6 +1699,13 @@ export function writeEndSegment(
       throw new Error('Unknown insertion mode. This is a bug in React.');
     }
   }
+}
+
+export function writeTextSeparator(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return writeChunkAndReturn(destination, textSeparator);
 }
 
 // Instruction Set

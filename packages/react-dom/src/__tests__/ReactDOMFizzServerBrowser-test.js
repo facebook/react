@@ -119,9 +119,7 @@ describe('ReactDOMFizzServer', () => {
     expect(isComplete).toBe(true);
 
     const result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(
-      `"<div><!--$-->Done<!-- --><!--/$--></div>"`,
-    );
+    expect(result).toMatchInlineSnapshot(`"<div><!--$-->Done<!--/$--></div>"`);
   });
 
   // @gate experimental

@@ -48,6 +48,7 @@ import {
   writeEndClientRenderedSuspenseBoundary,
   writeStartSegment,
   writeEndSegment,
+  writeTextSeparator,
   writeClientRenderBoundaryInstruction,
   writeCompletedBoundaryInstruction,
   writeCompletedSegmentInstruction,
@@ -56,7 +57,6 @@ import {
   pushEndInstance,
   pushStartCompletedSuspenseBoundary,
   pushEndCompletedSuspenseBoundary,
-  pushSegmentFinale,
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
@@ -159,6 +159,14 @@ const ERRORED = 4;
 
 type Root = null;
 
+const TEXT_EDGE = 0;
+const NODE_EDGE = 1;
+
+// A SegmentEdge is a descriptor for the kind of object on either side of a segments boundary (leading and trailing).
+// In some cases the Edge type isn't known because the edge is a child segment itself. For these cases we use
+// the child segment to identify as the edge unless and until a known edge type is found
+type SegmentEdge = 0 | 1 | Segment;
+
 type Segment = {
   status: 0 | 1 | 2 | 3 | 4,
   parentFlushed: boolean, // typically a segment will be flushed by its parent, except if its parent was already flushed
@@ -171,8 +179,8 @@ type Segment = {
   // If this segment represents a fallback, this is the content that will replace that fallback.
   +boundary: null | SuspenseBoundary,
   // used to discern when text separator boundaries are needed
-  lastPushedText: boolean,
-  textEmbedded: boolean,
+  currentEdge: SegmentEdge,
+  followingEdge: ?SegmentEdge,
 };
 
 const OPEN = 0;
@@ -276,9 +284,8 @@ export function createRequest(
     0,
     null,
     rootFormatContext,
-    // Root segments are never embedded in Text on either edge
-    false,
-    false,
+    // Root segments are never embedded in anything but NODE_EDGE has the semantics we need
+    NODE_EDGE,
   );
   // There is no parent so conceptually, we're unblocked to flush this segment.
   rootSegment.parentFlushed = true;
@@ -358,8 +365,7 @@ function createPendingSegment(
   index: number,
   boundary: null | SuspenseBoundary,
   formatContext: FormatContext,
-  lastPushedText: boolean,
-  textEmbedded: boolean,
+  currentEdge: SegmentEdge,
 ): Segment {
   return {
     status: PENDING,
@@ -370,8 +376,8 @@ function createPendingSegment(
     children: [],
     formatContext,
     boundary,
-    lastPushedText,
-    textEmbedded,
+    currentEdge,
+    followingEdge: null,
   };
 }
 
@@ -459,6 +465,10 @@ function renderSuspenseBoundary(
   const parentBoundary = task.blockedBoundary;
   const parentSegment = task.blockedSegment;
 
+  // Regardless of whether the boundary segment renders text at it's edges it
+  // will be wrapped in comment nodes so we can set the currentEdge to NODE_EDGE
+  parentSegment.currentEdge = NODE_EDGE;
+
   // Each time we enter a suspense boundary, we split out into a new segment for
   // the fallback so that we can later replace that segment with the content.
   // This also lets us split out the main content even if it doesn't suspend,
@@ -475,13 +485,12 @@ function renderSuspenseBoundary(
     insertionIndex,
     newBoundary,
     parentSegment.formatContext,
-    // boundaries never require text embedding at their edges because comment nodes bound them
-    false,
-    false,
+    // Boudnaries are wrapped in comment nodes so regardless of the parent segment's currentEdge we
+    // use a NODE_EDGE here
+    NODE_EDGE,
   );
+  boundarySegment.followingEdge = NODE_EDGE;
   parentSegment.children.push(boundarySegment);
-  // The parentSegment has a child Segment at this index so we reset the lastPushedText marker on the parent
-  parentSegment.lastPushedText = false;
 
   // This segment is the actual child content. We can start rendering that immediately.
   const contentRootSegment = createPendingSegment(
@@ -489,10 +498,11 @@ function renderSuspenseBoundary(
     0,
     null,
     parentSegment.formatContext,
-    // boundaries never require text embedding at their edges because comment nodes bound them
-    false,
-    false,
+    // Boudnaries are wrapped in comment nodes so regardless of the parent segment's currentEdge we
+    // use a NODE_EDGE here
+    NODE_EDGE,
   );
+  contentRootSegment.followingEdge = NODE_EDGE;
   // We mark the root segment as having its parent flushed. It's not really flushed but there is
   // no parent segment so there's nothing to wait on.
   contentRootSegment.parentFlushed = true;
@@ -510,12 +520,6 @@ function renderSuspenseBoundary(
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
     renderNode(request, task, content);
-    pushSegmentFinale(
-      contentRootSegment.chunks,
-      request.responseState,
-      contentRootSegment.lastPushedText,
-      contentRootSegment.textEmbedded,
-    );
     contentRootSegment.status = COMPLETED;
     queueCompletedSegment(newBoundary, contentRootSegment);
     if (newBoundary.pendingTasks === 0) {
@@ -591,7 +595,10 @@ function renderHostElement(
     request.responseState,
     segment.formatContext,
   );
-  segment.lastPushedText = false;
+  if (typeof segment.currentEdge === 'object') {
+    segment.currentEdge.followingEdge = NODE_EDGE;
+  }
+  segment.currentEdge = NODE_EDGE;
   const prevContext = segment.formatContext;
   segment.formatContext = getChildFormatContext(prevContext, type, props);
   // We use the non-destructive form because if something suspends, we still
@@ -602,7 +609,11 @@ function renderHostElement(
   // the correct context. Therefore this is not in a finally.
   segment.formatContext = prevContext;
   pushEndInstance(segment.chunks, type, props);
-  segment.lastPushedText = false;
+
+  if (typeof segment.currentEdge === 'object') {
+    segment.currentEdge.followingEdge = NODE_EDGE;
+  }
+  segment.currentEdge = NODE_EDGE;
   popComponentStackInDEV(task);
 }
 
@@ -1250,23 +1261,37 @@ function renderNodeDestructive(
 
   if (typeof node === 'string') {
     const segment = task.blockedSegment;
-    segment.lastPushedText = pushTextInstance(
-      task.blockedSegment.chunks,
-      node,
-      request.responseState,
-      segment.lastPushedText,
-    );
+    if (
+      pushTextInstance(
+        task.blockedSegment.chunks,
+        node,
+        request.responseState,
+        segment.currentEdge === TEXT_EDGE,
+      )
+    ) {
+      if (typeof segment.currentEdge === 'object') {
+        segment.currentEdge.followingEdge = TEXT_EDGE;
+      }
+      segment.currentEdge = TEXT_EDGE;
+    }
     return;
   }
 
   if (typeof node === 'number') {
     const segment = task.blockedSegment;
-    segment.lastPushedText = pushTextInstance(
-      task.blockedSegment.chunks,
-      '' + node,
-      request.responseState,
-      segment.lastPushedText,
-    );
+    if (
+      pushTextInstance(
+        task.blockedSegment.chunks,
+        '' + node,
+        request.responseState,
+        segment.currentEdge === TEXT_EDGE,
+      )
+    ) {
+      if (typeof segment.currentEdge === 'object') {
+        segment.currentEdge.followingEdge = TEXT_EDGE;
+      }
+      segment.currentEdge = TEXT_EDGE;
+    }
     return;
   }
 
@@ -1310,13 +1335,14 @@ function spawnNewSuspendedTask(
     null,
     segment.formatContext,
     // Adopt the parent segment's leading text embed
-    segment.lastPushedText,
-    // Assume we are text embedded at the trailing edge
-    true,
+    segment.currentEdge,
   );
+  // Advance the currentEdge to point to this new Segment.
+  if (typeof segment.currentEdge === 'object') {
+    segment.currentEdge.followingEdge = newSegment;
+  }
+  segment.currentEdge = newSegment;
   segment.children.push(newSegment);
-  // Reset lastPushedText for current Segment since the new Segment "consumed" it
-  segment.lastPushedText = false;
   const newTask = createTask(
     request,
     task.node,
@@ -1592,15 +1618,8 @@ function retryTask(request: Request, task: Task): void {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
     renderNodeDestructive(request, task, task.node);
-    pushSegmentFinale(
-      segment.chunks,
-      request.responseState,
-      segment.lastPushedText,
-      segment.textEmbedded,
-    );
-
-    task.abortSet.delete(task);
     segment.status = COMPLETED;
+    task.abortSet.delete(task);
     finishedTask(request, task.blockedBoundary, segment);
   } catch (x) {
     resetHooksState();
@@ -1679,8 +1698,10 @@ function flushSubtree(
       // Therefore we'll need to assign it an ID - to refer to it by.
       const segmentID = (segment.id = request.nextSegmentId++);
       // When this segment finally completes it won't be embedded in text since it will flush separately
-      segment.lastPushedText = false;
-      segment.textEmbedded = false;
+      // The currentEdge of a Pending Segment is the Edge just before the Segment begins because we have not
+      // retried the task for this segment yet.
+      segment.currentEdge = NODE_EDGE;
+      segment.followingEdge = NODE_EDGE;
       return writePlaceholder(destination, request.responseState, segmentID);
     }
     case COMPLETED: {
@@ -1696,6 +1717,21 @@ function flushSubtree(
           writeChunk(destination, chunks[chunkIdx]);
         }
         r = flushSegment(request, destination, nextChild);
+        if (nextChild.currentEdge === TEXT_EDGE) {
+          let followingEdge = nextChild.followingEdge;
+          // Loop over followingEdges that are Segments until you find somethign that isn't a Completed Segment
+          // The reason we can halt at pending segments is we know they will emit a placeholder and thus act
+          // like NODE_EDGE
+          while (followingEdge !== null && typeof followingEdge === 'object') {
+            if (followingEdge.status === PENDING) {
+              break;
+            }
+            followingEdge = followingEdge.followingEdge;
+          }
+          if (followingEdge === TEXT_EDGE) {
+            r = writeTextSeparator(destination, request.responseState);
+          }
+        }
       }
       // Finally just write all the remaining chunks
       for (; chunkIdx < chunks.length - 1; chunkIdx++) {
