@@ -109,6 +109,10 @@ export const hideTextInstance = $$$hostConfig.hideTextInstance;
 export const unhideInstance = $$$hostConfig.unhideInstance;
 export const unhideTextInstance = $$$hostConfig.unhideTextInstance;
 export const clearContainer = $$$hostConfig.clearContainer;
+export const commitMutationEffectsBegin =
+  $$$hostConfig.commitMutationEffectsBegin;
+export const commitMutationEffectsComplete =
+  $$$hostConfig.commitMutationEffectsComplete;
 
 // -------------------
 //     Persistence

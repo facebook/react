@@ -1243,3 +1243,11 @@ export function setupIntersectionObserver(
     },
   };
 }
+
+export function commitMutationEffectsBegin(): void {
+  // noop
+}
+
+export function commitMutationEffectsComplete(): void {
+  // noop
+}
