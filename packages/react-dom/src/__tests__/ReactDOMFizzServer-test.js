@@ -89,6 +89,48 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
+  function expectErrors(errorsArr, toBeDevArr, toBeProdArr) {
+    const mappedErrows = errorsArr.map(error => {
+      if (error.componentStack) {
+        return [
+          error.message,
+          error.hash,
+          normalizeCodeLocInfo(error.componentStack),
+        ];
+      } else if (error.hash) {
+        return [error.message, error.hash];
+      }
+      return error.message;
+    });
+    if (__DEV__) {
+      expect(mappedErrows).toEqual(
+        toBeDevArr,
+        // .map(([errorMessage, errorHash, errorComponentStack]) => {
+        //   if (typeof error === 'string' || error instanceof String) {
+        //     return error;
+        //   }
+        //   let str = JSON.stringify(error).replace(/\\n/g, '\n');
+        //   // this gets stripped away by normalizeCodeLocInfo...
+        //   // Kind of hacky but lets strip it away here too just so they match...
+        //   // easier than fixing the regex to account for this edge case
+        //   if (str.endsWith('at **)"}')) {
+        //     str = str.replace(/at \*\*\)\"}$/, 'at **)');
+        //   }
+        //   return str;
+        // }),
+      );
+    } else {
+      expect(mappedErrows).toEqual(toBeProdArr);
+    }
+  }
+
+  // @TODO we will use this in a followup change once we start exposing componentStacks from server errors
+  // function componentStack(components) {
+  //   return components
+  //     .map(component => `\n    in ${component} (at **)`)
+  //     .join('');
+  // }
+
   async function act(callback) {
     await callback();
     // Await one turn around the event loop.
@@ -413,8 +455,6 @@ describe('ReactDOMFizzServer', () => {
       });
     });
 
-    const loggedErrors = [];
-
     function App({isClient}) {
       return (
         <div>
@@ -426,24 +466,32 @@ describe('ReactDOMFizzServer', () => {
     }
 
     let bootstrapped = false;
+    const errors = [];
     window.__INIT__ = function() {
       bootstrapped = true;
       // Attempt to hydrate the content.
       ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+          errors.push(error);
         },
       });
     };
+
+    const theError = new Error('Test');
+    const loggedErrors = [];
+    function onError(x) {
+      loggedErrors.push(x);
+      return 'Hash of (' + x.message + ')';
+    }
+    // const expectedHash = onError(theError);
+    // loggedErrors.length = 0;
 
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
         {
           bootstrapScriptContent: '__INIT__();',
-          onError(x) {
-            loggedErrors.push(x);
-          },
+          onError,
         },
       );
       pipe(writable);
@@ -458,7 +506,6 @@ describe('ReactDOMFizzServer', () => {
 
     expect(loggedErrors).toEqual([]);
 
-    const theError = new Error('Test');
     await act(async () => {
       rejectComponent(theError);
     });
@@ -469,10 +516,14 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // Now we can client render it instead.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+    expectErrors(
+      errors,
+      [theError.message],
+      [
+        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+      ],
+    );
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
@@ -520,7 +571,14 @@ describe('ReactDOMFizzServer', () => {
       });
     });
 
+    const theError = new Error('Test');
     const loggedErrors = [];
+    function onError(x) {
+      loggedErrors.push(x);
+      return 'hash of (' + x.message + ')';
+    }
+    // const expectedHash = onError(theError);
+    // loggedErrors.length = 0;
 
     function App({isClient}) {
       return (
@@ -537,19 +595,18 @@ describe('ReactDOMFizzServer', () => {
         <App isClient={false} />,
 
         {
-          onError(x) {
-            loggedErrors.push(x);
-          },
+          onError,
         },
       );
       pipe(writable);
     });
     expect(loggedErrors).toEqual([]);
 
+    const errors = [];
     // Attempt to hydrate the content.
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        errors.push(error);
       },
     });
     Scheduler.unstable_flushAll();
@@ -559,7 +616,6 @@ describe('ReactDOMFizzServer', () => {
 
     expect(loggedErrors).toEqual([]);
 
-    const theError = new Error('Test');
     await act(async () => {
       rejectElement(theError);
     });
@@ -570,14 +626,161 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // Now we can client render it instead.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+
+    expectErrors(
+      errors,
+      [theError.message],
+      [
+        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+      ],
+    );
+
+    // The client rendered HTML is now in place.
+    // expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+
+    expect(loggedErrors).toEqual([theError]);
+  });
+
+  // @gate experimental
+  it('Errors in boundaries should be sent to the client and reported on client render - Error before flushing', async () => {
+    function Indirection({level, children}) {
+      if (level > 0) {
+        return <Indirection level={level - 1}>{children}</Indirection>;
+      }
+      return children;
+    }
+
+    const theError = new Error('uh oh');
+
+    function Erroring({isClient}) {
+      if (isClient) {
+        return 'Hello World';
+      }
+      throw theError;
+    }
+
+    function App({isClient}) {
+      return (
+        <div>
+          <Suspense fallback={<span>loading...</span>}>
+            <Erroring isClient={isClient} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const loggedErrors = [];
+    function onError(x) {
+      loggedErrors.push(x);
+      return 'hash(' + x.message + ')';
+    }
+    // const expectedHash = onError(theError);
+    // loggedErrors.length = 0;
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App />,
+
+        {
+          onError,
+        },
+      );
+      pipe(writable);
+    });
+    expect(loggedErrors).toEqual([theError]);
+
+    const errors = [];
+    // Attempt to hydrate the content.
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        errors.push(error);
+      },
+    });
+    Scheduler.unstable_flushAll();
+
+    expect(getVisibleChildren(container)).toEqual(<div>Hello World</div>);
+
+    expectErrors(
+      errors,
+      [theError.message],
+      [
+        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+      ],
+    );
+  });
+
+  // @gate experimental
+  it('Errors in boundaries should be sent to the client and reported on client render - Error after flushing', async () => {
+    let rejectComponent;
+    const LazyComponent = React.lazy(() => {
+      return new Promise((resolve, reject) => {
+        rejectComponent = reject;
+      });
+    });
+
+    function App({isClient}) {
+      return (
+        <div>
+          <Suspense fallback={<Text text="Loading..." />}>
+            {isClient ? <Text text="Hello" /> : <LazyComponent text="Hello" />}
+          </Suspense>
+        </div>
+      );
+    }
+
+    const loggedErrors = [];
+    const theError = new Error('uh oh');
+    function onError(x) {
+      loggedErrors.push(x);
+      return 'hash(' + x.message + ')';
+    }
+    // const expectedHash = onError(theError);
+    // loggedErrors.length = 0;
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App />,
+
+        {
+          onError,
+        },
+      );
+      pipe(writable);
+    });
+    expect(loggedErrors).toEqual([]);
+
+    const errors = [];
+    // Attempt to hydrate the content.
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        errors.push(error);
+      },
+    });
+    Scheduler.unstable_flushAll();
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await act(async () => {
+      rejectComponent(theError);
+    });
+
+    expect(loggedErrors).toEqual([theError]);
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    // Now we can client render it instead.
+    expect(Scheduler).toFlushAndYield([]);
+
+    expectErrors(
+      errors,
+      [theError.message],
+      [
+        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+      ],
+    );
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
-
     expect(loggedErrors).toEqual([theError]);
   });
 
@@ -849,18 +1052,25 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
+    const loggedErrors = [];
+    function onError(error) {
+      loggedErrors.push(error);
+      return `Hash of (${error.message})`;
+    }
+
     let controls;
     await act(async () => {
-      controls = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      controls = ReactDOMFizzServer.renderToPipeableStream(<App />, {onError});
       controls.pipe(writable);
     });
 
     // We're still showing a fallback.
 
+    const errors = [];
     // Attempt to hydrate the content.
     ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        errors.push(error);
       },
     });
     Scheduler.unstable_flushAll();
@@ -874,10 +1084,14 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // We still can't render it on the client.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to an ' +
-        'error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+    expectErrors(
+      errors,
+      ['This Suspense boundary was aborted by the server'],
+      [
+        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+      ],
+    );
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // We now resolve it on the client.
@@ -1535,16 +1749,22 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
+    const theError = new Error('Test');
     const loggedErrors = [];
+    function onError(x) {
+      loggedErrors.push(x);
+      return `hash of (${x.message})`;
+    }
+    // const expectedHash = onError(theError);
+    // loggedErrors.length = 0;
+
     let controls;
     await act(async () => {
       controls = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
 
         {
-          onError(x) {
-            loggedErrors.push(x);
-          },
+          onError,
         },
       );
       controls.pipe(writable);
@@ -1552,10 +1772,11 @@ describe('ReactDOMFizzServer', () => {
 
     // We're still showing a fallback.
 
+    const errors = [];
     // Attempt to hydrate the content.
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+        errors.push(error);
       },
     });
     Scheduler.unstable_flushAll();
@@ -1565,7 +1786,6 @@ describe('ReactDOMFizzServer', () => {
 
     expect(loggedErrors).toEqual([]);
 
-    const theError = new Error('Test');
     // Error the content, but we don't have a fallback yet.
     await act(async () => {
       rejectText('Hello', theError);
@@ -1586,10 +1806,14 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // That will let us client render it instead.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+    expectErrors(
+      errors,
+      [theError.message],
+      [
+        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+      ],
+    );
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(
@@ -2178,11 +2402,10 @@ describe('ReactDOMFizzServer', () => {
 
       // Hydrate the tree. Child will throw during render.
       isClient = true;
+      const errors = [];
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(
-            'Log recoverable error: ' + error.message,
-          );
+          errors.push(error.message);
         },
       });
 
@@ -2190,6 +2413,8 @@ describe('ReactDOMFizzServer', () => {
       // shouldn't be called.
       expect(Scheduler).toFlushAndYield([]);
       expect(getVisibleChildren(container)).toEqual('Oops!');
+
+      expectErrors(errors, [], []);
     },
   );
 
@@ -2792,6 +3017,160 @@ describe('ReactDOMFizzServer', () => {
         <li>b</li>
       </ul>,
     );
+  });
+
+  describe('error escaping', () => {
+    //@gate experimental
+    it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
+      window.__outlet = {};
+
+      const dangerousErrorString =
+        '"></template></div><script>window.__outlet.message="from error"</script><div><template data-foo="';
+
+      function Erroring() {
+        throw new Error(dangerousErrorString);
+      }
+
+      // We can't test newline in component stacks because the stack always takes just one line and we end up
+      // dropping the first part including the \n character
+      Erroring.displayName =
+        'DangerousName' +
+        dangerousErrorString.replace(
+          'message="from error"',
+          'stack="from_stack"',
+        );
+
+      function App() {
+        return (
+          <div>
+            <Suspense fallback={<div>Loading...</div>}>
+              <Erroring />
+            </Suspense>
+          </div>
+        );
+      }
+
+      function onError(x) {
+        return `dangerous hash ${x.message.replace(
+          'message="from error"',
+          'hash="from hash"',
+        )}`;
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+          onError,
+        });
+        pipe(writable);
+      });
+      expect(window.__outlet).toEqual({});
+    });
+    //@gate experimental
+    it('escapes error hash, message, and component stack values in clientRenderInstruction (javascript escaping)', async () => {
+      window.__outlet = {};
+
+      const dangerousErrorString =
+        '");window.__outlet.message="from error";</script><script>(() => {})("';
+
+      let rejectComponent;
+      const SuspensyErroring = React.lazy(() => {
+        return new Promise((resolve, reject) => {
+          rejectComponent = reject;
+        });
+      });
+
+      // We can't test newline in component stacks because the stack always takes just one line and we end up
+      // dropping the first part including the \n character
+      SuspensyErroring.displayName =
+        'DangerousName' +
+        dangerousErrorString.replace(
+          'message="from error"',
+          'stack="from_stack"',
+        );
+
+      function App() {
+        return (
+          <div>
+            <Suspense fallback={<div>Loading...</div>}>
+              <SuspensyErroring />
+            </Suspense>
+          </div>
+        );
+      }
+
+      function onError(x) {
+        return `dangerous hash ${x.message.replace(
+          'message="from error"',
+          'hash="from hash"',
+        )}`;
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+          onError,
+        });
+        pipe(writable);
+      });
+
+      await act(() => {
+        rejectComponent(new Error(dangerousErrorString));
+      });
+      expect(window.__outlet).toEqual({});
+    });
+    //@gate experimental
+    it('escapes such that attributes cannot be masked', async () => {
+      const dangerousErrorString = '" data-msg="bad message" data-foo="';
+      const theError = new Error(dangerousErrorString);
+
+      function Erroring({isClient}) {
+        if (isClient) return 'Hello';
+        throw theError;
+      }
+
+      function App({isClient}) {
+        return (
+          <div>
+            <Suspense fallback={<div>Loading...</div>}>
+              <Erroring isClient={isClient} />
+            </Suspense>
+          </div>
+        );
+      }
+
+      const loggedErrors = [];
+      function onError(x) {
+        loggedErrors.push(x);
+        return x.message.replace('bad message', 'bad hash');
+      }
+      // const expectedHash = onError(theError);
+      // loggedErrors.length = 0;
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+          onError,
+        });
+        pipe(writable);
+      });
+
+      expect(loggedErrors).toEqual([theError]);
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+        onRecoverableError(error) {
+          errors.push(error);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+
+      // If escaping were not done we would get a message that says "bad hash"
+      expectErrors(
+        errors,
+        [theError.message],
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+        ],
+      );
+    });
   });
 
   describe('bootstrapScriptContent escaping', () => {

@@ -43,7 +43,7 @@ type Options = {|
   onShellReady?: () => void,
   onShellError?: (error: mixed) => void,
   onAllReady?: () => void,
-  onError?: (error: mixed) => void,
+  onError?: (error: mixed) => ?string,
 |};
 
 type PipeableStream = {|

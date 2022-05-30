@@ -193,6 +193,7 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it('should be able to complete by aborting even if the promise never resolves', async () => {
+    const errors = [];
     const controller = new AbortController();
     const stream = await ReactDOMFizzServer.renderToReadableStream(
       <div>
@@ -200,13 +201,22 @@ describe('ReactDOMFizzServer', () => {
           <InfiniteSuspend />
         </Suspense>
       </div>,
-      {signal: controller.signal},
+      {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+        },
+      },
     );
 
     controller.abort();
 
     const result = await readResult(stream);
     expect(result).toContain('Loading');
+
+    expect(errors).toEqual([
+      'This Suspense boundary was aborted by the server',
+    ]);
   });
 
   // @gate experimental
@@ -223,12 +233,18 @@ describe('ReactDOMFizzServer', () => {
       rendered = true;
       return 'Done';
     }
+    const errors = [];
     const stream = await ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <Wait /> />
         </Suspense>
       </div>,
+      {
+        onError(x) {
+          errors.push(x.message);
+        },
+      },
     );
 
     stream.allReady.then(() => (isComplete = true));
@@ -238,6 +254,10 @@ describe('ReactDOMFizzServer', () => {
 
     const reader = stream.getReader();
     reader.cancel();
+
+    expect(errors).toEqual([
+      'This Suspense boundary was aborted by the server',
+    ]);
 
     hasLoaded = true;
     resolve();

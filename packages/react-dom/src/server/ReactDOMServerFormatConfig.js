@@ -1526,6 +1526,19 @@ const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
 );
 const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
+const clientRenderedSuspenseBoundaryError1 = stringToPrecomputedChunk(
+  '<template data-hash="',
+);
+const clientRenderedSuspenseBoundaryError1A = stringToPrecomputedChunk(
+  '" data-msg="',
+);
+const clientRenderedSuspenseBoundaryError1B = stringToPrecomputedChunk(
+  '" data-stack="',
+);
+const clientRenderedSuspenseBoundaryError2 = stringToPrecomputedChunk(
+  '"></template>',
+);
+
 export function pushStartCompletedSuspenseBoundary(
   target: Array<Chunk | PrecomputedChunk>,
 ) {
@@ -1563,8 +1576,43 @@ export function writeStartPendingSuspenseBoundary(
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
+  errorHash: ?string,
+  errorMesssage: ?string,
+  errorComponentStack: ?string,
 ): boolean {
-  return writeChunkAndReturn(destination, startClientRenderedSuspenseBoundary);
+  let result;
+  result = writeChunkAndReturn(
+    destination,
+    startClientRenderedSuspenseBoundary,
+  );
+  if (errorHash) {
+    writeChunk(destination, clientRenderedSuspenseBoundaryError1);
+    writeChunk(destination, stringToChunk(escapeTextForBrowser(errorHash)));
+    // In prod errorMessage will usually be nullish but there is one case where
+    // it is used (currently when the server aborts the task) so we leave it ungated.
+    if (errorMesssage) {
+      writeChunk(destination, clientRenderedSuspenseBoundaryError1A);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorMesssage)),
+      );
+    }
+    if (__DEV__) {
+      // Component stacks are currently only captured in dev
+      if (errorComponentStack) {
+        writeChunk(destination, clientRenderedSuspenseBoundaryError1B);
+        writeChunk(
+          destination,
+          stringToChunk(escapeTextForBrowser(errorComponentStack)),
+        );
+      }
+    }
+    result = writeChunkAndReturn(
+      destination,
+      clientRenderedSuspenseBoundaryError2,
+    );
+  }
+  return result;
 }
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
@@ -1724,7 +1772,7 @@ export function writeEndSegment(
 // const SUSPENSE_PENDING_START_DATA = '$?';
 // const SUSPENSE_FALLBACK_START_DATA = '$!';
 //
-// function clientRenderBoundary(suspenseBoundaryID) {
+// function clientRenderBoundary(suspenseBoundaryID, errorHash, errorMsg, errorComponentStack) {
 //   // Find the fallback's first element.
 //   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
 //   if (!suspenseIdNode) {
@@ -1736,6 +1784,11 @@ export function writeEndSegment(
 //   const suspenseNode = suspenseIdNode.previousSibling;
 //   // Tag it to be client rendered.
 //   suspenseNode.data = SUSPENSE_FALLBACK_START_DATA;
+//   // assign error metadata to first sibling
+//   let dataset = suspenseIdNode.dataset;
+//   if (errorHash) dataset.hash = errorHash;
+//   if (errorMsg) dataset.msg = errorMsg;
+//   if (errorComponentStack) dataset.stack = errorComponentStack;
 //   // Tell React to retry it if the parent already hydrated.
 //   if (suspenseNode._reactRetry) {
 //     suspenseNode._reactRetry();
@@ -1823,7 +1876,7 @@ const completeSegmentFunction =
 const completeBoundaryFunction =
   'function $RC(a,b){a=document.getElementById(a);b=document.getElementById(b);b.parentNode.removeChild(b);if(a){a=a.previousSibling;var f=a.parentNode,c=a.nextSibling,e=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d)if(0===e)break;else e--;else"$"!==d&&"$?"!==d&&"$!"!==d||e++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;b.firstChild;)f.insertBefore(b.firstChild,c);a.data="$";a._reactRetry&&a._reactRetry()}}';
 const clientRenderFunction =
-  'function $RX(a){if(a=document.getElementById(a))a=a.previousSibling,a.data="$!",a._reactRetry&&a._reactRetry()}';
+  'function $RX(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.hash=c),d&&(a.msg=d),e&&(a.stack=e),b._reactRetry&&b._reactRetry())}';
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
   completeSegmentFunction + ';$RS("',
@@ -1896,12 +1949,17 @@ const clientRenderScript1Full = stringToPrecomputedChunk(
   clientRenderFunction + ';$RX("',
 );
 const clientRenderScript1Partial = stringToPrecomputedChunk('$RX("');
-const clientRenderScript2 = stringToPrecomputedChunk('")</script>');
+const clientRenderScript1A = stringToPrecomputedChunk('"');
+const clientRenderScript2 = stringToPrecomputedChunk(')</script>');
+const clientRenderErrorScriptArgInterstitial = stringToPrecomputedChunk(',');
 
 export function writeClientRenderBoundaryInstruction(
   destination: Destination,
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
+  errorHash: ?string,
+  errorMessage?: string,
+  errorComponentStack?: string,
 ): boolean {
   writeChunk(destination, responseState.startInlineScript);
   if (!responseState.sentClientRenderFunction) {
@@ -1920,5 +1978,49 @@ export function writeClientRenderBoundaryInstruction(
   }
 
   writeChunk(destination, boundaryID);
+  writeChunk(destination, clientRenderScript1A);
+  if (errorHash || errorMessage || errorComponentStack) {
+    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+    writeChunk(
+      destination,
+      stringToChunk(escapeJSStringsForInstructionScripts(errorHash || '')),
+    );
+  }
+  if (errorMessage || errorComponentStack) {
+    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+    writeChunk(
+      destination,
+      stringToChunk(escapeJSStringsForInstructionScripts(errorMessage || '')),
+    );
+  }
+  if (errorComponentStack) {
+    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+    writeChunk(
+      destination,
+      stringToChunk(escapeJSStringsForInstructionScripts(errorComponentStack)),
+    );
+  }
   return writeChunkAndReturn(destination, clientRenderScript2);
+}
+
+const regexForJSStringsInScripts = /[<\u2028\u2029]/g;
+function escapeJSStringsForInstructionScripts(input: string): string {
+  const escaped = JSON.stringify(input);
+  return escaped.replace(regexForJSStringsInScripts, match => {
+    switch (match) {
+      // santizing breaking out of strings and script tags
+      case '<':
+        return '\\u003c';
+      case '\u2028':
+        return '\\u2028';
+      case '\u2029':
+        return '\\u2029';
+      default: {
+        // eslint-disable-next-line react-internal/prod-error-codes
+        throw new Error(
+          'escapeJSStringsForInstructionScripts encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React',
+        );
+      }
+    }
+  });
 }
