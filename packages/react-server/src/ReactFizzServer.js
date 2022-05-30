@@ -1209,16 +1209,15 @@ function validateIterable(iterable, iteratorFn: Function): void {
   }
 }
 
-let renderNodeDestructive = renderNodeDestructiveImpl;
-if (__DEV__) {
-  // In Dev we wrap renderNodeDestructiveImpl in a try / catch so we can capture
-  // a component stack at the right place in the tree. We don't do this in renderNode
-  // becuase it is not called at every layer of the tree and we may lose frames
-  renderNodeDestructive = (
-    request: Request,
-    task: Task,
-    node: ReactNodeList,
-  ): void => {
+function renderNodeDestructive(
+  request: Request,
+  task: Task,
+  node: ReactNodeList,
+): void {
+  if (__DEV__) {
+    // In Dev we wrap renderNodeDestructiveImpl in a try / catch so we can capture
+    // a component stack at the right place in the tree. We don't do this in renderNode
+    // becuase it is not called at every layer of the tree and we may lose frames
     try {
       return renderNodeDestructiveImpl(request, task, node);
     } catch (x) {
@@ -1234,7 +1233,9 @@ if (__DEV__) {
       // rethrow so normal suspense logic can handle thrown value accordingly
       throw x;
     }
-  };
+  } else {
+    return renderNodeDestructiveImpl(request, task, node);
+  }
 }
 
 // This function by it self renders a node and consumes the task by mutating it
@@ -1271,16 +1272,22 @@ function renderNodeDestructiveImpl(
         const init = lazyNode._init;
         let resolvedNode;
         if (__DEV__) {
-          // If a lazy element throws a componentStack frame will be popped but since
-          // it is an element and not a component it never added a frame. We
-          // add a fake frame here in case we throw and then remove it if we didn't
-          // @TODO decide if this frame showing up in dev component stacks is good
-          // Currently if a lazy element rejects the component stack will include this
-          // special frame. My current intuition is this is good and will aid in identifying
-          // where errors are happening.
-          pushBuiltInComponentStackInDEV(task, '~lazy-element~');
-          resolvedNode = init(payload);
-          popComponentStackInDEV(task);
+          try {
+            resolvedNode = init(payload);
+          } catch (x) {
+            if (
+              typeof x === 'object' &&
+              x !== null &&
+              typeof x.then === 'function'
+            ) {
+              // this Lazy initializer is suspending. push a temporary frame onto the stack so it can be
+              // popped off in spawnNewSuspendedTask. This aligns stack behavior between Lazy in element position
+              // vs Component position. We do not want the frame for Errors so we exclusively do this in
+              // the wakeable branch
+              pushBuiltInComponentStackInDEV(task, 'Lazy');
+            }
+            throw x;
+          }
         } else {
           resolvedNode = init(payload);
         }
