@@ -44,10 +44,8 @@ function renderToReadableStream(
       },
       cancel(reason) {},
     },
-    {
-      highWaterMark: 0,
-      size: () => 1,
-    },
+    // $FlowFixMe size() methods are not allowed on byte streams.
+    {highWaterMark: 0},
   );
   return stream;
 }

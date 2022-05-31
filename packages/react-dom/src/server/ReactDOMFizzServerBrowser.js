@@ -63,10 +63,8 @@ function renderToReadableStream(
             abort(request);
           },
         },
-        {
-          highWaterMark: 0,
-          size: () => 1,
-        },
+        // $FlowFixMe size() methods are not allowed on byte streams.
+        {highWaterMark: 0},
       ): any);
       // TODO: Move to sub-classing ReadableStream.
       stream.allReady = allReady;
