@@ -6,7 +6,7 @@ const {spawn} = require('child_process');
 const {join} = require('path');
 
 const ROOT_PATH = join(__dirname, '..', '..');
-
+const reactVersion = process.argv[2];
 const inlinePackagePath = join(ROOT_PATH, 'packages', 'react-devtools-inline');
 const shellPackagePath = join(ROOT_PATH, 'packages', 'react-devtools-shell');
 
@@ -74,7 +74,15 @@ function runTestShell() {
 
   logBright('Starting testing shell server');
 
-  serverProcess = spawn('yarn', ['start'], {cwd: shellPackagePath});
+  if (!reactVersion) {
+    serverProcess = spawn('yarn', ['start'], {cwd: shellPackagePath});
+  } else {
+    serverProcess = spawn('yarn', ['start'], {
+      cwd: shellPackagePath,
+      env: {...process.env, REACT_VERSION: reactVersion},
+    });
+  }
+
   serverProcess.stdout.on('data', data => {
     if (`${data}`.includes('Compiled successfully.')) {
       logBright('Testing shell server running');
@@ -106,8 +114,15 @@ function runTestShell() {
 
 async function runEndToEndTests() {
   logBright('Running e2e tests');
+  if (!reactVersion) {
+    testProcess = spawn('yarn', ['test:e2e'], {cwd: inlinePackagePath});
+  } else {
+    testProcess = spawn('yarn', ['test:e2e'], {
+      cwd: inlinePackagePath,
+      env: {...process.env, REACT_VERSION: reactVersion},
+    });
+  }
 
-  testProcess = spawn('yarn', ['test:e2e'], {cwd: inlinePackagePath});
   testProcess.stdout.on('data', data => {
     // Log without formatting because Playwright applies its own formatting.
     const formatted = format(data);
