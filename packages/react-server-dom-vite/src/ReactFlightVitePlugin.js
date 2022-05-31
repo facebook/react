@@ -66,6 +66,18 @@ export default function ReactFlightVitePlugin({
     resolveId(source: string, importer: string) {
       if (!importer) return null;
 
+      if (noProxyRE.test(source)) {
+        const [id, query] = source.split('?');
+        return this.resolve(id, importer, {skipSelf: true}).then(result => {
+          if (!result) return null;
+          return {
+            ...result,
+            id: result.id + (query ? `?${query}` : ''),
+            moduleSideEffects: false,
+          };
+        });
+      }
+
       /**
        * Throw errors when non-Server Components try to load Server Components.
        */
@@ -240,7 +252,7 @@ export async function proxyClientComponent(filepath: string, src?: string) {
 
     proxyCode += `export ${
       isDefault ? DEFAULT_EXPORT : `const ${componentName} =`
-    } wrapInClientProxy({ name: '${componentName}', id: '${getComponentId(
+    } /* @__PURE__ */wrapInClientProxy({ name: '${componentName}', id: '${getComponentId(
       filepath,
     )}', value: allImports['${key}'], isDefault: ${
       // eslint-disable-next-line react-internal/safe-string-coercion
@@ -248,7 +260,7 @@ export async function proxyClientComponent(filepath: string, src?: string) {
     } });\n`;
   });
 
-  return proxyCode;
+  return {code: proxyCode, moduleSideEffects: false};
 }
 
 function findClientBoundaries(moduleGraph: any) {

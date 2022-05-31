@@ -15,7 +15,8 @@ describe('ReactFlightVitePlugin', () => {
   beforeEach(() => {
     jest.resetModules();
     const plugin = require('../ReactFlightVitePlugin');
-    proxyClientComponent = plugin.proxyClientComponent;
+    proxyClientComponent = (...args) =>
+      plugin.proxyClientComponent(...args).then(result => result.code);
     getComponentId = plugin.getComponentId;
   });
 
@@ -29,7 +30,7 @@ describe('ReactFlightVitePlugin', () => {
       .toBe(`import {wrapInClientProxy} from 'react-server-dom-vite/client-proxy';
 import * as allImports from '/path/to/Counter.client.jsx?no-proxy';
 
-export default wrapInClientProxy({ name: 'Counter', id: '${getComponentId(
+export default /* @__PURE__ */wrapInClientProxy({ name: 'Counter', id: '${getComponentId(
       '/path/to/Counter.client.jsx',
     )}', value: allImports['default'], isDefault: true });
 `);
@@ -45,10 +46,10 @@ export default wrapInClientProxy({ name: 'Counter', id: '${getComponentId(
       .toBe(`import {wrapInClientProxy} from 'react-server-dom-vite/client-proxy';
 import * as allImports from '/path/to/Counter.client.jsx?no-proxy';
 
-export const Counter = wrapInClientProxy({ name: 'Counter', id: '${getComponentId(
+export const Counter = /* @__PURE__ */wrapInClientProxy({ name: 'Counter', id: '${getComponentId(
       '/path/to/Counter.client.jsx',
     )}', value: allImports['Counter'], isDefault: false });
-export const Clicker = wrapInClientProxy({ name: 'Clicker', id: '${getComponentId(
+export const Clicker = /* @__PURE__ */wrapInClientProxy({ name: 'Clicker', id: '${getComponentId(
       '/path/to/Counter.client.jsx',
     )}', value: allImports['Clicker'], isDefault: false });
 `);
@@ -64,10 +65,10 @@ export const Clicker = wrapInClientProxy({ name: 'Clicker', id: '${getComponentI
       .toBe(`import {wrapInClientProxy} from 'react-server-dom-vite/client-proxy';
 import * as allImports from '/path/to/Counter.client.jsx?no-proxy';
 
-export default wrapInClientProxy({ name: 'Counter', id: '${getComponentId(
+export default /* @__PURE__ */wrapInClientProxy({ name: 'Counter', id: '${getComponentId(
       '/path/to/Counter.client.jsx',
     )}', value: allImports['default'], isDefault: true });
-export const Clicker = wrapInClientProxy({ name: 'Clicker', id: '${getComponentId(
+export const Clicker = /* @__PURE__ */wrapInClientProxy({ name: 'Clicker', id: '${getComponentId(
       '/path/to/Counter.client.jsx',
     )}', value: allImports['Clicker'], isDefault: false });
 `);
