@@ -33,16 +33,20 @@ function renderToReadableStream(
     options ? options.onError : undefined,
     context,
   );
-  const stream = new ReadableStream({
-    type: 'bytes',
-    start(controller) {
-      startWork(request);
+  const stream = new ReadableStream(
+    {
+      type: 'bytes',
+      start(controller) {
+        startWork(request);
+      },
+      pull(controller) {
+        startFlowing(request, controller);
+      },
+      cancel(reason) {},
     },
-    pull(controller) {
-      startFlowing(request, controller);
-    },
-    cancel(reason) {},
-  });
+    // $FlowFixMe size() methods are not allowed on byte streams.
+    {highWaterMark: 0},
+  );
   return stream;
 }
 
