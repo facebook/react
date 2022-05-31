@@ -81,8 +81,8 @@ const defaultOnRecoverableError =
       reportError
     : (error: mixed) => {
         // In older browsers and test environments, fallback to console.error.
-        // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
-        console.error(error);
+        // eslint-disable-next-line react-internal/no-production-logging
+        console['error'](error);
       };
 
 function ReactDOMRoot(internalRoot: FiberRoot) {
@@ -164,7 +164,7 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = funct
 };
 
 export function createRoot(
-  container: Element | DocumentFragment,
+  container: Element | Document | DocumentFragment,
   options?: CreateRootOptions,
 ): RootType {
   if (!isValidContainer(container)) {

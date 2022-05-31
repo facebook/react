@@ -1268,7 +1268,6 @@ describe('ReactLazy', () => {
     expect(componentStackMessage).toContain('in Lazy');
   });
 
-  // @gate enableLazyElements
   it('mount and reorder lazy types', async () => {
     class Child extends React.Component {
       componentWillUnmount() {
@@ -1385,7 +1384,6 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('ba');
   });
 
-  // @gate enableLazyElements
   it('mount and reorder lazy types (legacy mode)', async () => {
     class Child extends React.Component {
       componentDidMount() {
@@ -1474,7 +1472,6 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('ba');
   });
 
-  // @gate enableLazyElements
   it('mount and reorder lazy elements', async () => {
     class Child extends React.Component {
       componentDidMount() {
@@ -1556,7 +1553,6 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('ba');
   });
 
-  // @gate enableLazyElements
   it('mount and reorder lazy elements (legacy mode)', async () => {
     class Child extends React.Component {
       componentDidMount() {

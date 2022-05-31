@@ -28,7 +28,7 @@ module.exports = function autoImporter(babel) {
 
     visitor: {
       CallExpression: function(path, file) {
-        if (file.filename.indexOf('shared/assign') !== -1) {
+        if (/shared(\/|\\)assign/.test(file.filename)) {
           // Don't replace Object.assign if we're transforming shared/assign
           return;
         }
@@ -40,7 +40,7 @@ module.exports = function autoImporter(babel) {
       },
 
       MemberExpression: function(path, file) {
-        if (file.filename.indexOf('shared/assign') !== -1) {
+        if (/shared(\/|\\)assign/.test(file.filename)) {
           // Don't replace Object.assign if we're transforming shared/assign
           return;
         }

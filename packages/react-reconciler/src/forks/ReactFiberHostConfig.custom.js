@@ -64,7 +64,7 @@ export const getInstanceFromNode = $$$hostConfig.getInstanceFromNode;
 export const beforeActiveInstanceBlur = $$$hostConfig.beforeActiveInstanceBlur;
 export const afterActiveInstanceBlur = $$$hostConfig.afterActiveInstanceBlur;
 export const preparePortalMount = $$$hostConfig.preparePortalMount;
-export const prepareScopeUpdate = $$$hostConfig.preparePortalMount;
+export const prepareScopeUpdate = $$$hostConfig.prepareScopeUpdate;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
 export const detachDeletedInstance = $$$hostConfig.detachDeletedInstance;
@@ -121,10 +121,6 @@ export const appendChildToContainerChildSet =
 export const finalizeContainerChildren =
   $$$hostConfig.finalizeContainerChildren;
 export const replaceContainerChildren = $$$hostConfig.replaceContainerChildren;
-export const getOffscreenContainerType =
-  $$$hostConfig.getOffscreenContainerType;
-export const getOffscreenContainerProps =
-  $$$hostConfig.getOffscreenContainerProps;
 export const cloneHiddenInstance = $$$hostConfig.cloneHiddenInstance;
 export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
 
@@ -140,6 +136,8 @@ export const isSuspenseInstancePending =
   $$$hostConfig.isSuspenseInstancePending;
 export const isSuspenseInstanceFallback =
   $$$hostConfig.isSuspenseInstanceFallback;
+export const getSuspenseInstanceFallbackErrorDetails =
+  $$$hostConfig.getSuspenseInstanceFallbackErrorDetails;
 export const registerSuspenseInstanceRetry =
   $$$hostConfig.registerSuspenseInstanceRetry;
 export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;

@@ -107,7 +107,7 @@ setBatchingImplementation(
 
 function createPortal(
   children: ReactNodeList,
-  container: Container,
+  container: Element | DocumentFragment,
   key: ?string = null,
 ): React$Portal {
   if (!isValidContainer(container)) {
@@ -148,11 +148,11 @@ const Internals = {
 };
 
 function createRoot(
-  container: Element | DocumentFragment,
+  container: Element | Document | DocumentFragment,
   options?: CreateRootOptions,
 ): RootType {
   if (__DEV__) {
-    if (!Internals.usingClientEntryPoint) {
+    if (!Internals.usingClientEntryPoint && !__UMD__) {
       console.error(
         'You are importing createRoot from "react-dom" which is not supported. ' +
           'You should instead import it from "react-dom/client".',
@@ -168,7 +168,7 @@ function hydrateRoot(
   options?: HydrateRootOptions,
 ): RootType {
   if (__DEV__) {
-    if (!Internals.usingClientEntryPoint) {
+    if (!Internals.usingClientEntryPoint && !__UMD__) {
       console.error(
         'You are importing hydrateRoot from "react-dom" which is not supported. ' +
           'You should instead import it from "react-dom/client".',

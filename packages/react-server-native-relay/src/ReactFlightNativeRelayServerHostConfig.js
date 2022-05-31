@@ -11,9 +11,10 @@ import type {RowEncoding, JSONValue} from './ReactFlightNativeRelayProtocol';
 import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import isArray from 'shared/isArray';
+import type {JSResourceReference} from 'JSResourceReference';
 import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
 
-export type ModuleReference<T> = JSResourceReferenceImpl<T>;
+export type ModuleReference<T> = JSResourceReference<T>;
 
 import type {
   Destination,

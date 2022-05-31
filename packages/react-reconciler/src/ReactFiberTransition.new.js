@@ -10,11 +10,15 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import type {Transition} from './ReactFiberTracingMarkerComponent.new';
 
-import {enableCache} from 'shared/ReactFeatureFlags';
+import {enableCache, enableTransitionTracing} from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
-import {getWorkInProgressRoot} from './ReactFiberWorkLoop.new';
+import {
+  getWorkInProgressRoot,
+  getWorkInProgressTransitions,
+} from './ReactFiberWorkLoop.new';
 import {
   createCache,
   retainCache,
@@ -24,6 +28,15 @@ import {
 // When retrying a Suspense/Offscreen boundary, we restore the cache that was
 // used during the previous render by placing it here, on the stack.
 const resumedCache: StackCursor<Cache | null> = createCursor(null);
+
+// During the render/synchronous commit phase, we don't actually process the
+// transitions. Therefore, we want to lazily combine transitions. Instead of
+// comparing the arrays of transitions when we combine them and storing them
+// and filtering out the duplicates, we will instead store the unprocessed transitions
+// in an array and actually filter them in the passive phase.
+const transitionStack: StackCursor<Array<Transition> | null> = createCursor(
+  null,
+);
 
 function peekCacheFromPool(): Cache | null {
   if (!enableCache) {
@@ -75,25 +88,31 @@ export function requestCacheFromPool(renderLanes: Lanes): Cache {
   return freshCache;
 }
 
-export function pushRootTransition(root: FiberRoot) {
-  if (enableCache) {
-    return;
+export function pushRootTransition(
+  workInProgress: Fiber,
+  root: FiberRoot,
+  renderLanes: Lanes,
+) {
+  if (enableTransitionTracing) {
+    const rootTransitions = getWorkInProgressTransitions();
+    push(transitionStack, rootTransitions, workInProgress);
   }
-  // Note: This function currently does nothing but I'll leave it here for
-  // code organization purposes in case that changes.
 }
 
-export function popRootTransition(root: FiberRoot, renderLanes: Lanes) {
-  if (enableCache) {
-    return;
+export function popRootTransition(
+  workInProgress: Fiber,
+  root: FiberRoot,
+  renderLanes: Lanes,
+) {
+  if (enableTransitionTracing) {
+    pop(transitionStack, workInProgress);
   }
-  // Note: This function currently does nothing but I'll leave it here for
-  // code organization purposes in case that changes.
 }
 
 export function pushTransition(
   offscreenWorkInProgress: Fiber,
   prevCachePool: SpawnedCachePool | null,
+  newTransitions: Array<Transition> | null,
 ): void {
   if (enableCache) {
     if (prevCachePool === null) {
@@ -102,12 +121,40 @@ export function pushTransition(
       push(resumedCache, prevCachePool.pool, offscreenWorkInProgress);
     }
   }
+
+  if (enableTransitionTracing) {
+    if (transitionStack.current === null) {
+      push(transitionStack, newTransitions, offscreenWorkInProgress);
+    } else if (newTransitions === null) {
+      push(transitionStack, transitionStack.current, offscreenWorkInProgress);
+    } else {
+      push(
+        transitionStack,
+        transitionStack.current.concat(newTransitions),
+        offscreenWorkInProgress,
+      );
+    }
+  }
 }
 
-export function popTransition(workInProgress: Fiber) {
-  if (enableCache) {
-    pop(resumedCache, workInProgress);
+export function popTransition(workInProgress: Fiber, current: Fiber | null) {
+  if (current !== null) {
+    if (enableCache) {
+      pop(resumedCache, workInProgress);
+    }
+
+    if (enableTransitionTracing) {
+      pop(transitionStack, workInProgress);
+    }
   }
+}
+
+export function getSuspendedTransitions(): Array<Transition> | null {
+  if (!enableTransitionTracing) {
+    return null;
+  }
+
+  return transitionStack.current;
 }
 
 export function getSuspendedCache(): SpawnedCachePool | null {

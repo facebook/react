@@ -22,7 +22,7 @@ type Source = Array<string>;
 
 const {createResponse, processStringChunk, close} = ReactFlightClient({
   supportsBinaryStreams: false,
-  resolveModuleReference(idx: string) {
+  resolveModuleReference(bundlerConfig: null, idx: string) {
     return idx;
   },
   preloadModule(idx: string) {},
@@ -35,7 +35,7 @@ const {createResponse, processStringChunk, close} = ReactFlightClient({
 });
 
 function read<T>(source: Source): T {
-  const response = createResponse(source);
+  const response = createResponse(source, null);
   for (let i = 0; i < source.length; i++) {
     processStringChunk(response, source[i], 0);
   }

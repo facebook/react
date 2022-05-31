@@ -115,6 +115,7 @@ export function getValueForAttribute(
   node: Element,
   name: string,
   expected: mixed,
+  isCustomComponentTag: boolean,
 ): mixed {
   if (__DEV__) {
     if (!isAttributeNameSafe(name)) {
@@ -124,6 +125,13 @@ export function getValueForAttribute(
       return expected === undefined ? undefined : null;
     }
     const value = node.getAttribute(name);
+
+    if (enableCustomElementPropertySupport) {
+      if (isCustomComponentTag && value === '') {
+        return true;
+      }
+    }
+
     if (__DEV__) {
       checkAttributeStringCoercion(expected, name);
     }
@@ -195,6 +203,11 @@ export function setValueForProperty(
 
   if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
     value = null;
+  }
+  if (enableCustomElementPropertySupport) {
+    if (isCustomComponentTag && value === true) {
+      value = '';
+    }
   }
 
   // If the prop isn't in the special list, treat it as a simple attribute.

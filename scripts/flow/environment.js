@@ -125,6 +125,33 @@ declare module 'pg' {
   };
 }
 
+declare module 'util' {
+  declare function debuglog(section: string): (data: any, ...args: any) => void;
+  declare function format(format: string, ...placeholders: any): string;
+  declare function log(string: string): void;
+  declare function inspect(object: any, options?: util$InspectOptions): string;
+  declare function isArray(object: any): boolean;
+  declare function isRegExp(object: any): boolean;
+  declare function isDate(object: any): boolean;
+  declare function isError(object: any): boolean;
+  declare function inherits(
+    constructor: Function,
+    superConstructor: Function,
+  ): void;
+  declare function deprecate(f: Function, string: string): Function;
+  declare function promisify(f: Function): Function;
+  declare function callbackify(f: Function): Function;
+  declare class TextEncoder {
+    constructor(encoding?: string): TextEncoder;
+    encode(buffer: string): Uint8Array;
+    encodeInto(
+      buffer: string,
+      dest: Uint8Array,
+    ): {read: number, written: number};
+    encoding: string;
+  }
+}
+
 declare module 'pg/lib/utils' {
   declare module.exports: {
     prepareValue(val: any): mixed,

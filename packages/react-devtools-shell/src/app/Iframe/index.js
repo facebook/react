@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import {Fragment} from 'react';
-import * as ReactDOM from 'react-dom';
+import {createPortal} from 'react-dom';
 
 export default function Iframe() {
   return (
@@ -56,7 +56,7 @@ function Frame(props) {
         style={iframeStyle}
       />
 
-      {element ? ReactDOM.createPortal(props.children, element) : null}
+      {element ? createPortal(props.children, element) : null}
     </Fragment>
   );
 }

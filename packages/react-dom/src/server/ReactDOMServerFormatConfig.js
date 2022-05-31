@@ -83,6 +83,26 @@ const startScriptSrc = stringToPrecomputedChunk('<script src="');
 const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
 const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
+/**
+ * This escaping function is designed to work with bootstrapScriptContent only.
+ * because we know we are escaping the entire script. We can avoid for instance
+ * escaping html comment string sequences that are valid javascript as well because
+ * if there are no sebsequent <script sequences the html parser will never enter
+ * script data double escaped state (see: https://www.w3.org/TR/html53/syntax.html#script-data-double-escaped-state)
+ *
+ * While untrusted script content should be made safe before using this api it will
+ * ensure that the script cannot be early terminated or never terminated state
+ */
+function escapeBootstrapScriptContent(scriptText) {
+  if (__DEV__) {
+    checkHtmlStringCoercion(scriptText);
+  }
+  return ('' + scriptText).replace(scriptRegex, scriptReplacer);
+}
+const scriptRegex = /(<\/|<)(s)(cript)/gi;
+const scriptReplacer = (match, prefix, s, suffix) =>
+  `${prefix}${s === 's' ? '\\u0073' : '\\u0053'}${suffix}`;
+
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(
   identifierPrefix: string | void,
@@ -102,7 +122,7 @@ export function createResponseState(
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(
       inlineScriptWithNonce,
-      stringToChunk(escapeTextForBrowser(bootstrapScriptContent)),
+      stringToChunk(escapeBootstrapScriptContent(bootstrapScriptContent)),
       endInlineScript,
     );
   }
@@ -264,13 +284,30 @@ export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-): void {
+  textEmbedded: boolean,
+): boolean {
   if (text === '') {
     // Empty text doesn't have a DOM node representation and the hydration is aware of this.
-    return;
+    return textEmbedded;
   }
-  // TODO: Avoid adding a text separator in common cases.
-  target.push(stringToChunk(encodeHTMLTextNode(text)), textSeparator);
+  if (textEmbedded) {
+    target.push(textSeparator);
+  }
+  target.push(stringToChunk(encodeHTMLTextNode(text)));
+  return true;
+}
+
+// Called when Fizz is done with a Segment. Currently the only purpose is to conditionally
+// emit a text separator when we don't know for sure it is safe to omit
+export function pushSegmentFinale(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  lastPushedText: boolean,
+  textEmbedded: boolean,
+): void {
+  if (lastPushedText && textEmbedded) {
+    target.push(textSeparator);
+  }
 }
 
 const styleNameCache: Map<string, PrecomputedChunk> = new Map();
@@ -1136,7 +1173,7 @@ function pushStartCustomElement(
   let innerHTML = null;
   for (let propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
-      const propValue = props[propKey];
+      let propValue = props[propKey];
       if (propValue == null) {
         continue;
       }
@@ -1148,6 +1185,12 @@ function pushStartCustomElement(
         // client rendering, but when server rendering the output isn't useful,
         // so skip it.
         continue;
+      }
+      if (enableCustomElementPropertySupport && propValue === false) {
+        continue;
+      }
+      if (enableCustomElementPropertySupport && propValue === true) {
+        propValue = '';
       }
       if (enableCustomElementPropertySupport && propKey === 'className') {
         // className gets rendered as class on the client, so it should be
@@ -1483,6 +1526,19 @@ const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
 );
 const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
+const clientRenderedSuspenseBoundaryError1 = stringToPrecomputedChunk(
+  '<template data-hash="',
+);
+const clientRenderedSuspenseBoundaryError1A = stringToPrecomputedChunk(
+  '" data-msg="',
+);
+const clientRenderedSuspenseBoundaryError1B = stringToPrecomputedChunk(
+  '" data-stack="',
+);
+const clientRenderedSuspenseBoundaryError2 = stringToPrecomputedChunk(
+  '"></template>',
+);
+
 export function pushStartCompletedSuspenseBoundary(
   target: Array<Chunk | PrecomputedChunk>,
 ) {
@@ -1520,8 +1576,43 @@ export function writeStartPendingSuspenseBoundary(
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
+  errorHash: ?string,
+  errorMesssage: ?string,
+  errorComponentStack: ?string,
 ): boolean {
-  return writeChunkAndReturn(destination, startClientRenderedSuspenseBoundary);
+  let result;
+  result = writeChunkAndReturn(
+    destination,
+    startClientRenderedSuspenseBoundary,
+  );
+  if (errorHash) {
+    writeChunk(destination, clientRenderedSuspenseBoundaryError1);
+    writeChunk(destination, stringToChunk(escapeTextForBrowser(errorHash)));
+    // In prod errorMessage will usually be nullish but there is one case where
+    // it is used (currently when the server aborts the task) so we leave it ungated.
+    if (errorMesssage) {
+      writeChunk(destination, clientRenderedSuspenseBoundaryError1A);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorMesssage)),
+      );
+    }
+    if (__DEV__) {
+      // Component stacks are currently only captured in dev
+      if (errorComponentStack) {
+        writeChunk(destination, clientRenderedSuspenseBoundaryError1B);
+        writeChunk(
+          destination,
+          stringToChunk(escapeTextForBrowser(errorComponentStack)),
+        );
+      }
+    }
+    result = writeChunkAndReturn(
+      destination,
+      clientRenderedSuspenseBoundaryError2,
+    );
+  }
+  return result;
 }
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
@@ -1681,7 +1772,7 @@ export function writeEndSegment(
 // const SUSPENSE_PENDING_START_DATA = '$?';
 // const SUSPENSE_FALLBACK_START_DATA = '$!';
 //
-// function clientRenderBoundary(suspenseBoundaryID) {
+// function clientRenderBoundary(suspenseBoundaryID, errorHash, errorMsg, errorComponentStack) {
 //   // Find the fallback's first element.
 //   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
 //   if (!suspenseIdNode) {
@@ -1693,6 +1784,11 @@ export function writeEndSegment(
 //   const suspenseNode = suspenseIdNode.previousSibling;
 //   // Tag it to be client rendered.
 //   suspenseNode.data = SUSPENSE_FALLBACK_START_DATA;
+//   // assign error metadata to first sibling
+//   let dataset = suspenseIdNode.dataset;
+//   if (errorHash) dataset.hash = errorHash;
+//   if (errorMsg) dataset.msg = errorMsg;
+//   if (errorComponentStack) dataset.stack = errorComponentStack;
 //   // Tell React to retry it if the parent already hydrated.
 //   if (suspenseNode._reactRetry) {
 //     suspenseNode._reactRetry();
@@ -1780,7 +1876,7 @@ const completeSegmentFunction =
 const completeBoundaryFunction =
   'function $RC(a,b){a=document.getElementById(a);b=document.getElementById(b);b.parentNode.removeChild(b);if(a){a=a.previousSibling;var f=a.parentNode,c=a.nextSibling,e=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d)if(0===e)break;else e--;else"$"!==d&&"$?"!==d&&"$!"!==d||e++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;b.firstChild;)f.insertBefore(b.firstChild,c);a.data="$";a._reactRetry&&a._reactRetry()}}';
 const clientRenderFunction =
-  'function $RX(a){if(a=document.getElementById(a))a=a.previousSibling,a.data="$!",a._reactRetry&&a._reactRetry()}';
+  'function $RX(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.hash=c),d&&(a.msg=d),e&&(a.stack=e),b._reactRetry&&b._reactRetry())}';
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
   completeSegmentFunction + ';$RS("',
@@ -1853,12 +1949,17 @@ const clientRenderScript1Full = stringToPrecomputedChunk(
   clientRenderFunction + ';$RX("',
 );
 const clientRenderScript1Partial = stringToPrecomputedChunk('$RX("');
-const clientRenderScript2 = stringToPrecomputedChunk('")</script>');
+const clientRenderScript1A = stringToPrecomputedChunk('"');
+const clientRenderScript2 = stringToPrecomputedChunk(')</script>');
+const clientRenderErrorScriptArgInterstitial = stringToPrecomputedChunk(',');
 
 export function writeClientRenderBoundaryInstruction(
   destination: Destination,
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
+  errorHash: ?string,
+  errorMessage?: string,
+  errorComponentStack?: string,
 ): boolean {
   writeChunk(destination, responseState.startInlineScript);
   if (!responseState.sentClientRenderFunction) {
@@ -1877,5 +1978,49 @@ export function writeClientRenderBoundaryInstruction(
   }
 
   writeChunk(destination, boundaryID);
+  writeChunk(destination, clientRenderScript1A);
+  if (errorHash || errorMessage || errorComponentStack) {
+    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+    writeChunk(
+      destination,
+      stringToChunk(escapeJSStringsForInstructionScripts(errorHash || '')),
+    );
+  }
+  if (errorMessage || errorComponentStack) {
+    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+    writeChunk(
+      destination,
+      stringToChunk(escapeJSStringsForInstructionScripts(errorMessage || '')),
+    );
+  }
+  if (errorComponentStack) {
+    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+    writeChunk(
+      destination,
+      stringToChunk(escapeJSStringsForInstructionScripts(errorComponentStack)),
+    );
+  }
   return writeChunkAndReturn(destination, clientRenderScript2);
+}
+
+const regexForJSStringsInScripts = /[<\u2028\u2029]/g;
+function escapeJSStringsForInstructionScripts(input: string): string {
+  const escaped = JSON.stringify(input);
+  return escaped.replace(regexForJSStringsInScripts, match => {
+    switch (match) {
+      // santizing breaking out of strings and script tags
+      case '<':
+        return '\\u003c';
+      case '\u2028':
+        return '\\u2028';
+      case '\u2029':
+        return '\\u2029';
+      default: {
+        // eslint-disable-next-line react-internal/prod-error-codes
+        throw new Error(
+          'escapeJSStringsForInstructionScripts encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React',
+        );
+      }
+    }
+  });
 }

@@ -211,7 +211,7 @@ describe('ReactDOMFizzServer', () => {
 
       {
         onError(x) {
-          reportedErrors.push(x);
+          reportedErrors.push(x.message);
         },
         onShellError(x) {
           reportedShellErrors.push(x);
@@ -224,7 +224,10 @@ describe('ReactDOMFizzServer', () => {
 
     expect(output.error).toBe(theError);
     expect(output.result).toBe('');
-    expect(reportedErrors).toEqual([theError]);
+    expect(reportedErrors).toEqual([
+      theError.message,
+      'This Suspense boundary was aborted by the server',
+    ]);
     expect(reportedShellErrors).toEqual([theError]);
   });
 
@@ -289,6 +292,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     let isCompleteCalls = 0;
+    const errors = [];
     const {writable, output, completed} = getTestWritable();
     const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
@@ -298,6 +302,9 @@ describe('ReactDOMFizzServer', () => {
       </div>,
 
       {
+        onError(x) {
+          errors.push(x.message);
+        },
         onAllReady() {
           isCompleteCalls++;
         },
@@ -314,6 +321,9 @@ describe('ReactDOMFizzServer', () => {
 
     await completed;
 
+    expect(errors).toEqual([
+      'This Suspense boundary was aborted by the server',
+    ]);
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('Loading');
     expect(isCompleteCalls).toBe(1);
@@ -322,6 +332,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should be able to complete by abort when the fallback is also suspended', async () => {
     let isCompleteCalls = 0;
+    const errors = [];
     const {writable, output, completed} = getTestWritable();
     const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
@@ -333,6 +344,9 @@ describe('ReactDOMFizzServer', () => {
       </div>,
 
       {
+        onError(x) {
+          errors.push(x.message);
+        },
         onAllReady() {
           isCompleteCalls++;
         },
@@ -349,6 +363,11 @@ describe('ReactDOMFizzServer', () => {
 
     await completed;
 
+    expect(errors).toEqual([
+      // There are two boundaries that abort
+      'This Suspense boundary was aborted by the server',
+      'This Suspense boundary was aborted by the server',
+    ]);
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('Loading');
     expect(isCompleteCalls).toBe(1);
@@ -552,6 +571,7 @@ describe('ReactDOMFizzServer', () => {
       rendered = true;
       return 'Done';
     }
+    const errors = [];
     const {writable, completed} = getTestWritable();
     const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
@@ -560,6 +580,9 @@ describe('ReactDOMFizzServer', () => {
         </Suspense>
       </div>,
       {
+        onError(x) {
+          errors.push(x.message);
+        },
         onAllReady() {
           isComplete = true;
         },
@@ -579,6 +602,9 @@ describe('ReactDOMFizzServer', () => {
 
     await completed;
 
+    expect(errors).toEqual([
+      'This Suspense boundary was aborted by the server',
+    ]);
     expect(rendered).toBe(false);
     expect(isComplete).toBe(true);
   });

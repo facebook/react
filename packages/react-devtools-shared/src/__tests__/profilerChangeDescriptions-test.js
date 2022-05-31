@@ -26,6 +26,7 @@ describe('Profiler change descriptions', () => {
     React = require('react');
   });
 
+  // @reactVersion >=18.0
   it('should identify useContext as the cause for a re-render', () => {
     const Context = React.createContext(0);
 

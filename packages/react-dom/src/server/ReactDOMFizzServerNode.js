@@ -41,12 +41,12 @@ type Options = {|
   bootstrapModules?: Array<string>,
   progressiveChunkSize?: number,
   onShellReady?: () => void,
-  onShellError?: () => void,
+  onShellError?: (error: mixed) => void,
   onAllReady?: () => void,
-  onError?: (error: mixed) => void,
+  onError?: (error: mixed) => ?string,
 |};
 
-type Controls = {|
+type PipeableStream = {|
   // Cancel any pending I/O and put anything remaining into
   // client rendered mode.
   abort(): void,
@@ -76,7 +76,7 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
 function renderToPipeableStream(
   children: ReactNodeList,
   options?: Options,
-): Controls {
+): PipeableStream {
   const request = createRequestImpl(children, options);
   let hasStartedFlowing = false;
   startWork(request);

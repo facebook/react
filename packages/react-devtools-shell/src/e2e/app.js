@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import * as ReactDOMClient from 'react-dom/client';
+import {createRoot} from 'react-dom/client';
 
 const container = document.createElement('div');
 
@@ -12,9 +12,9 @@ const container = document.createElement('div');
 
 // TODO We may want to parameterize this app
 // so that it can load things other than just ToDoList.
-const App = require('./apps/ListApp').default;
+const App = require('../e2e-apps/ListApp').default;
 
-const root = ReactDOMClient.createRoot(container);
+const root = createRoot(container);
 root.render(<App />);
 
 // ReactDOM Test Selector APIs used by Playwright e2e tests

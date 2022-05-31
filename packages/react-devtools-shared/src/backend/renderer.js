@@ -93,7 +93,6 @@ import {
   enableStyleXFeatures,
 } from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
-import isArray from 'shared/isArray';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {getStyleXData} from './StyleX/utils';
 import {createProfilingHooks} from './profilingHooks';
@@ -1444,50 +1443,41 @@ export function attach(
     return null;
   }
 
-  function areHookInputsEqual(
-    nextDeps: Array<mixed>,
-    prevDeps: Array<mixed> | null,
-  ) {
-    if (prevDeps === null) {
+  function isHookThatCanScheduleUpdate(hookObject: any) {
+    const queue = hookObject.queue;
+    if (!queue) {
       return false;
     }
 
-    for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
-      if (is(nextDeps[i], prevDeps[i])) {
-        continue;
-      }
-      return false;
-    }
-    return true;
+    const boundHasOwnProperty = hasOwnProperty.bind(queue);
+
+    // Detect the shape of useState() or useReducer()
+    // using the attributes that are unique to these hooks
+    // but also stable (e.g. not tied to current Lanes implementation)
+    const isStateOrReducer =
+      boundHasOwnProperty('pending') &&
+      boundHasOwnProperty('dispatch') &&
+      typeof queue.dispatch === 'function';
+
+    // Detect useSyncExternalStore()
+    const isSyncExternalStore =
+      boundHasOwnProperty('value') &&
+      boundHasOwnProperty('getSnapshot') &&
+      typeof queue.getSnapshot === 'function';
+
+    // These are the only types of hooks that can schedule an update.
+    return isStateOrReducer || isSyncExternalStore;
   }
 
-  function isEffect(memoizedState) {
-    if (memoizedState === null || typeof memoizedState !== 'object') {
-      return false;
-    }
-    const {deps} = memoizedState;
-    const boundHasOwnProperty = hasOwnProperty.bind(memoizedState);
-    return (
-      boundHasOwnProperty('create') &&
-      boundHasOwnProperty('destroy') &&
-      boundHasOwnProperty('deps') &&
-      boundHasOwnProperty('next') &&
-      boundHasOwnProperty('tag') &&
-      (deps === null || isArray(deps))
-    );
-  }
-
-  function didHookChange(prev: any, next: any): boolean {
+  function didStatefulHookChange(prev: any, next: any): boolean {
     const prevMemoizedState = prev.memoizedState;
     const nextMemoizedState = next.memoizedState;
 
-    if (isEffect(prevMemoizedState) && isEffect(nextMemoizedState)) {
-      return (
-        prevMemoizedState !== nextMemoizedState &&
-        !areHookInputsEqual(nextMemoizedState.deps, prevMemoizedState.deps)
-      );
+    if (isHookThatCanScheduleUpdate(prev)) {
+      return prevMemoizedState !== nextMemoizedState;
     }
-    return nextMemoizedState !== prevMemoizedState;
+
+    return false;
   }
 
   function didHooksChange(prev: any, next: any): boolean {
@@ -1503,7 +1493,7 @@ export function attach(
       next.hasOwnProperty('queue')
     ) {
       while (next !== null) {
-        if (didHookChange(prev, next)) {
+        if (didStatefulHookChange(prev, next)) {
           return true;
         } else {
           next = next.next;
@@ -1530,7 +1520,7 @@ export function attach(
         next.hasOwnProperty('queue')
       ) {
         while (next !== null) {
-          if (didHookChange(prev, next)) {
+          if (didStatefulHookChange(prev, next)) {
             indices.push(index);
           }
           next = next.next;
@@ -1580,6 +1570,7 @@ export function attach(
       case ContextConsumer:
       case MemoComponent:
       case SimpleMemoComponent:
+      case ForwardRef:
         // For types that execute user code, we check PerformedWork effect.
         // We don't reflect bailouts (either referential or sCU) in DevTools.
         // eslint-disable-next-line no-bitwise
@@ -2639,6 +2630,10 @@ export function attach(
   }
 
   function handleCommitFiberUnmount(fiber) {
+    // Flush any pending Fibers that we are untracking before processing the new commit.
+    // If we don't do this, we might end up double-deleting Fibers in some cases (like Legacy Suspense).
+    untrackFibers();
+
     // This is not recursive.
     // We can't traverse fibers after unmounting so instead
     // we rely on React telling us about each unmount.
@@ -3616,10 +3611,58 @@ export function attach(
     try {
       mostRecentlyInspectedElement = inspectElementRaw(id);
     } catch (error) {
+      // the error name is synced with ReactDebugHooks
+      if (error.name === 'ReactDebugToolsRenderError') {
+        let message = 'Error rendering inspected element.';
+        let stack;
+        // Log error & cause for user to debug
+        console.error(message + '\n\n', error);
+        if (error.cause != null) {
+          const fiber = findCurrentFiberUsingSlowPathById(id);
+          const componentName =
+            fiber != null ? getDisplayNameForFiber(fiber) : null;
+          console.error(
+            'React DevTools encountered an error while trying to inspect hooks. ' +
+              'This is most likely caused by an error in current inspected component' +
+              (componentName != null ? `: "${componentName}".` : '.') +
+              '\nThe error thrown in the component is: \n\n',
+            error.cause,
+          );
+          if (error.cause instanceof Error) {
+            message = error.cause.message || message;
+            stack = error.cause.stack;
+          }
+        }
+
+        return {
+          type: 'error',
+          errorType: 'user',
+          id,
+          responseID: requestID,
+          message,
+          stack,
+        };
+      }
+
+      // the error name is synced with ReactDebugHooks
+      if (error.name === 'ReactDebugToolsUnsupportedHookError') {
+        return {
+          type: 'error',
+          errorType: 'unknown-hook',
+          id,
+          responseID: requestID,
+          message:
+            'Unsupported hook in the react-debug-tools package: ' +
+            error.message,
+        };
+      }
+
+      // Log Uncaught Error
       console.error('Error inspecting element.\n\n', error);
 
       return {
         type: 'error',
+        errorType: 'uncaught',
         id,
         responseID: requestID,
         message: error.message,

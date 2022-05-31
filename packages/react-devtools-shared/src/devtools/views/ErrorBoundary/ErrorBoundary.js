@@ -10,11 +10,16 @@
 import * as React from 'react';
 import {Component, Suspense} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
+import UnsupportedBridgeOperationView from './UnsupportedBridgeOperationView';
 import ErrorView from './ErrorView';
 import SearchingGitHubIssues from './SearchingGitHubIssues';
 import SuspendingErrorView from './SuspendingErrorView';
 import TimeoutView from './TimeoutView';
-import TimeoutError from 'react-devtools-shared/src/TimeoutError';
+import CaughtErrorView from './CaughtErrorView';
+import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
+import TimeoutError from 'react-devtools-shared/src/errors/TimeoutError';
+import UserError from 'react-devtools-shared/src/errors/UserError';
+import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 
 type Props = {|
@@ -30,7 +35,10 @@ type State = {|
   componentStack: string | null,
   errorMessage: string | null,
   hasError: boolean,
+  isUnsupportedBridgeOperationError: boolean,
   isTimeout: boolean,
+  isUserError: boolean,
+  isUnknownHookError: boolean,
 |};
 
 const InitialState: State = {
@@ -39,7 +47,10 @@ const InitialState: State = {
   componentStack: null,
   errorMessage: null,
   hasError: false,
+  isUnsupportedBridgeOperationError: false,
   isTimeout: false,
+  isUserError: false,
+  isUnknownHookError: false,
 };
 
 export default class ErrorBoundary extends Component<Props, State> {
@@ -54,6 +65,10 @@ export default class ErrorBoundary extends Component<Props, State> {
         : null;
 
     const isTimeout = error instanceof TimeoutError;
+    const isUserError = error instanceof UserError;
+    const isUnknownHookError = error instanceof UnknownHookError;
+    const isUnsupportedBridgeOperationError =
+      error instanceof UnsupportedBridgeOperationError;
 
     const callStack =
       typeof error === 'object' &&
@@ -69,7 +84,10 @@ export default class ErrorBoundary extends Component<Props, State> {
       callStack,
       errorMessage,
       hasError: true,
+      isUnsupportedBridgeOperationError,
+      isUnknownHookError,
       isTimeout,
+      isUserError,
     };
   }
 
@@ -102,7 +120,10 @@ export default class ErrorBoundary extends Component<Props, State> {
       componentStack,
       errorMessage,
       hasError,
+      isUnsupportedBridgeOperationError,
       isTimeout,
+      isUserError,
+      isUnknownHookError,
     } = this.state;
 
     if (hasError) {
@@ -115,6 +136,45 @@ export default class ErrorBoundary extends Component<Props, State> {
               canDismissProp || canDismissState ? this._dismissError : null
             }
             errorMessage={errorMessage}
+          />
+        );
+      } else if (isUnsupportedBridgeOperationError) {
+        return (
+          <UnsupportedBridgeOperationView
+            callStack={callStack}
+            componentStack={componentStack}
+            errorMessage={errorMessage}
+          />
+        );
+      } else if (isUserError) {
+        return (
+          <CaughtErrorView
+            callStack={callStack}
+            componentStack={componentStack}
+            errorMessage={errorMessage || 'Error occured in inspected element'}
+            info={
+              <>
+                React DevTools encountered an error while trying to inspect the
+                hooks. This is most likely caused by a developer error in the
+                currently inspected element. Please see your console for logged
+                error.
+              </>
+            }
+          />
+        );
+      } else if (isUnknownHookError) {
+        return (
+          <CaughtErrorView
+            callStack={callStack}
+            componentStack={componentStack}
+            errorMessage={errorMessage || 'Encountered an unknown hook'}
+            info={
+              <>
+                React DevTools encountered an unknown hook. This is probably
+                because the react-debug-tools package is out of date. To fix,
+                upgrade the React DevTools to the most recent version.
+              </>
+            }
           />
         );
       } else {

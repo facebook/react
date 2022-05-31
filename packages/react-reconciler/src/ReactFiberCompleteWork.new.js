@@ -31,7 +31,6 @@ import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import {
-  enableClientRenderFallbackOnHydrationMismatch,
   enableSuspenseAvoidThisFallback,
   enableLegacyHidden,
 } from 'shared/ReactFeatureFlags';
@@ -138,12 +137,10 @@ import {
 } from './ReactFiberHydrationContext.new';
 import {
   enableSuspenseCallback,
-  enableSuspenseServerRenderer,
   enableScopeAPI,
   enableProfilerTimer,
   enableCache,
   enableSuspenseLayoutEffectSemantics,
-  enablePersistentOffscreenHostContainer,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -153,6 +150,7 @@ import {
   popRenderLanes,
   getRenderTargetTime,
   subtreeRenderLanes,
+  getWorkInProgressTransitions,
 } from './ReactFiberWorkLoop.new';
 import {
   OffscreenLane,
@@ -348,11 +346,7 @@ if (supportsMutation) {
         if (child !== null) {
           child.return = node;
         }
-        if (enablePersistentOffscreenHostContainer) {
-          appendAllChildren(parent, node, false, false);
-        } else {
-          appendAllChildren(parent, node, true, true);
-        }
+        appendAllChildren(parent, node, true, true);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -417,11 +411,7 @@ if (supportsMutation) {
         if (child !== null) {
           child.return = node;
         }
-        if (enablePersistentOffscreenHostContainer) {
-          appendAllChildrenToContainer(containerChildSet, node, false, false);
-        } else {
-          appendAllChildrenToContainer(containerChildSet, node, true, true);
-        }
+        appendAllChildrenToContainer(containerChildSet, node, true, true);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -769,63 +759,91 @@ function bubbleProperties(completedWork: Fiber) {
   return didBailout;
 }
 
-export function completeSuspendedOffscreenHostContainer(
+function completeDehydratedSuspenseBoundary(
   current: Fiber | null,
   workInProgress: Fiber,
-) {
-  // This is a fork of the complete phase for HostComponent. We use it when
-  // a suspense tree is in its fallback state, because in that case the primary
-  // tree that includes the offscreen boundary is skipped over without a
-  // regular complete phase.
-  //
-  // We can optimize this path further by inlining the update logic for
-  // offscreen instances specifically, i.e. skipping the `prepareUpdate` call.
-  const rootContainerInstance = getRootHostContainer();
-  const type = workInProgress.type;
-  const newProps = workInProgress.memoizedProps;
-  if (current !== null) {
-    updateHostComponent(
-      current,
-      workInProgress,
-      type,
-      newProps,
-      rootContainerInstance,
-    );
-  } else {
-    const currentHostContext = getHostContext();
-    const instance = createInstance(
-      type,
-      newProps,
-      rootContainerInstance,
-      currentHostContext,
-      workInProgress,
-    );
+  nextState: SuspenseState | null,
+): boolean {
+  if (
+    hasUnhydratedTailNodes() &&
+    (workInProgress.mode & ConcurrentMode) !== NoMode &&
+    (workInProgress.flags & DidCapture) === NoFlags
+  ) {
+    warnIfUnhydratedTailNodes(workInProgress);
+    resetHydrationState();
+    workInProgress.flags |= ForceClientRender | Incomplete | ShouldCapture;
 
-    appendAllChildren(instance, workInProgress, false, false);
-
-    workInProgress.stateNode = instance;
-
-    // Certain renderers require commit-time effects for initial mount.
-    // (eg DOM renderer supports auto-focus for certain elements).
-    // Make sure such renderers get scheduled for later work.
-    if (
-      finalizeInitialChildren(
-        instance,
-        type,
-        newProps,
-        rootContainerInstance,
-        currentHostContext,
-      )
-    ) {
-      markUpdate(workInProgress);
-    }
-
-    if (workInProgress.ref !== null) {
-      // If there is a ref on a host node we need to schedule a callback
-      markRef(workInProgress);
-    }
+    return false;
   }
-  bubbleProperties(workInProgress);
+
+  const wasHydrated = popHydrationState(workInProgress);
+
+  if (nextState !== null && nextState.dehydrated !== null) {
+    // We might be inside a hydration state the first time we're picking up this
+    // Suspense boundary, and also after we've reentered it for further hydration.
+    if (current === null) {
+      if (!wasHydrated) {
+        throw new Error(
+          'A dehydrated suspense component was completed without a hydrated node. ' +
+            'This is probably a bug in React.',
+        );
+      }
+      prepareToHydrateHostSuspenseInstance(workInProgress);
+      bubbleProperties(workInProgress);
+      if (enableProfilerTimer) {
+        if ((workInProgress.mode & ProfileMode) !== NoMode) {
+          const isTimedOutSuspense = nextState !== null;
+          if (isTimedOutSuspense) {
+            // Don't count time spent in a timed out Suspense subtree as part of the base duration.
+            const primaryChildFragment = workInProgress.child;
+            if (primaryChildFragment !== null) {
+              // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
+              workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
+            }
+          }
+        }
+      }
+      return false;
+    } else {
+      // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
+      // state since we're now exiting out of it. popHydrationState doesn't do that for us.
+      resetHydrationState();
+      if ((workInProgress.flags & DidCapture) === NoFlags) {
+        // This boundary did not suspend so it's now hydrated and unsuspended.
+        workInProgress.memoizedState = null;
+      }
+      // If nothing suspended, we need to schedule an effect to mark this boundary
+      // as having hydrated so events know that they're free to be invoked.
+      // It's also a signal to replay events and the suspense callback.
+      // If something suspended, schedule an effect to attach retry listeners.
+      // So we might as well always mark this.
+      workInProgress.flags |= Update;
+      bubbleProperties(workInProgress);
+      if (enableProfilerTimer) {
+        if ((workInProgress.mode & ProfileMode) !== NoMode) {
+          const isTimedOutSuspense = nextState !== null;
+          if (isTimedOutSuspense) {
+            // Don't count time spent in a timed out Suspense subtree as part of the base duration.
+            const primaryChildFragment = workInProgress.child;
+            if (primaryChildFragment !== null) {
+              // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
+              workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
+            }
+          }
+        }
+      }
+      return false;
+    }
+  } else {
+    // Successfully completed this tree. If this was a forced client render,
+    // there may have been recoverable errors during first hydration
+    // attempt. If so, add them to a queue so we can log them in the
+    // commit phase.
+    upgradeHydrationErrorsToRecoverable();
+
+    // Fall through to normal Suspense path
+    return true;
+  }
 }
 
 function completeWork(
@@ -862,9 +880,18 @@ function completeWork(
     }
     case HostRoot: {
       const fiberRoot = (workInProgress.stateNode: FiberRoot);
-      if (enableCache) {
-        popRootTransition(fiberRoot, renderLanes);
 
+      if (enableTransitionTracing) {
+        const transitions = getWorkInProgressTransitions();
+        // We set the Passive flag here because if there are new transitions,
+        // we will need to schedule callbacks and process the transitions,
+        // which we do in the passive phase
+        if (transitions !== null) {
+          workInProgress.flags |= Passive;
+        }
+      }
+
+      if (enableCache) {
         let previousCache: Cache | null = null;
         if (current !== null) {
           previousCache = current.memoizedState.cache;
@@ -876,6 +903,7 @@ function completeWork(
         }
         popCacheProvider(workInProgress, cache);
       }
+      popRootTransition(workInProgress, fiberRoot, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
@@ -918,6 +946,14 @@ function completeWork(
       }
       updateHostContainer(current, workInProgress);
       bubbleProperties(workInProgress);
+      if (enableTransitionTracing) {
+        if ((workInProgress.subtreeFlags & Visibility) !== NoFlags) {
+          // If any of our suspense children toggle visibility, this means that
+          // the pending boundaries array needs to be updated, which we only
+          // do in the passive phase.
+          workInProgress.flags |= Passive;
+        }
+      }
       return null;
     }
     case HostComponent: {
@@ -1047,83 +1083,34 @@ function completeWork(
       popSuspenseContext(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
 
-      if (enableSuspenseServerRenderer) {
-        if (
-          enableClientRenderFallbackOnHydrationMismatch &&
-          hasUnhydratedTailNodes() &&
-          (workInProgress.mode & ConcurrentMode) !== NoMode &&
-          (workInProgress.flags & DidCapture) === NoFlags
-        ) {
-          warnIfUnhydratedTailNodes(workInProgress);
-          resetHydrationState();
-          workInProgress.flags |=
-            ForceClientRender | Incomplete | ShouldCapture;
-          return workInProgress;
-        }
-        if (nextState !== null && nextState.dehydrated !== null) {
-          // We might be inside a hydration state the first time we're picking up this
-          // Suspense boundary, and also after we've reentered it for further hydration.
-          const wasHydrated = popHydrationState(workInProgress);
-          if (current === null) {
-            if (!wasHydrated) {
-              throw new Error(
-                'A dehydrated suspense component was completed without a hydrated node. ' +
-                  'This is probably a bug in React.',
-              );
-            }
-            prepareToHydrateHostSuspenseInstance(workInProgress);
-            bubbleProperties(workInProgress);
-            if (enableProfilerTimer) {
-              if ((workInProgress.mode & ProfileMode) !== NoMode) {
-                const isTimedOutSuspense = nextState !== null;
-                if (isTimedOutSuspense) {
-                  // Don't count time spent in a timed out Suspense subtree as part of the base duration.
-                  const primaryChildFragment = workInProgress.child;
-                  if (primaryChildFragment !== null) {
-                    // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
-                    workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
-                  }
-                }
-              }
-            }
-            return null;
+      // Special path for dehydrated boundaries. We may eventually move this
+      // to its own fiber type so that we can add other kinds of hydration
+      // boundaries that aren't associated with a Suspense tree. In anticipation
+      // of such a refactor, all the hydration logic is contained in
+      // this branch.
+      if (
+        current === null ||
+        (current.memoizedState !== null &&
+          current.memoizedState.dehydrated !== null)
+      ) {
+        const fallthroughToNormalSuspensePath = completeDehydratedSuspenseBoundary(
+          current,
+          workInProgress,
+          nextState,
+        );
+        if (!fallthroughToNormalSuspensePath) {
+          if (workInProgress.flags & ShouldCapture) {
+            // Special case. There were remaining unhydrated nodes. We treat
+            // this as a mismatch. Revert to client rendering.
+            return workInProgress;
           } else {
-            // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
-            // state since we're now exiting out of it. popHydrationState doesn't do that for us.
-            resetHydrationState();
-            if ((workInProgress.flags & DidCapture) === NoFlags) {
-              // This boundary did not suspend so it's now hydrated and unsuspended.
-              workInProgress.memoizedState = null;
-            }
-            // If nothing suspended, we need to schedule an effect to mark this boundary
-            // as having hydrated so events know that they're free to be invoked.
-            // It's also a signal to replay events and the suspense callback.
-            // If something suspended, schedule an effect to attach retry listeners.
-            // So we might as well always mark this.
-            workInProgress.flags |= Update;
-            bubbleProperties(workInProgress);
-            if (enableProfilerTimer) {
-              if ((workInProgress.mode & ProfileMode) !== NoMode) {
-                const isTimedOutSuspense = nextState !== null;
-                if (isTimedOutSuspense) {
-                  // Don't count time spent in a timed out Suspense subtree as part of the base duration.
-                  const primaryChildFragment = workInProgress.child;
-                  if (primaryChildFragment !== null) {
-                    // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
-                    workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
-                  }
-                }
-              }
-            }
+            // Did not finish hydrating, either because this is the initial
+            // render or because something suspended.
             return null;
           }
         }
 
-        // Successfully completed this tree. If this was a forced client render,
-        // there may have been recoverable errors during first hydration
-        // attempt. If so, add them to a queue so we can log them in the
-        // commit phase.
-        upgradeHydrationErrorsToRecoverable();
+        // Continue with the normal Suspense path.
       }
 
       if ((workInProgress.flags & DidCapture) !== NoFlags) {
@@ -1141,13 +1128,9 @@ function completeWork(
       }
 
       const nextDidTimeout = nextState !== null;
-      let prevDidTimeout = false;
-      if (current === null) {
-        popHydrationState(workInProgress);
-      } else {
-        const prevState: null | SuspenseState = current.memoizedState;
-        prevDidTimeout = prevState !== null;
-      }
+      const prevDidTimeout =
+        current !== null &&
+        (current.memoizedState: null | SuspenseState) !== null;
 
       if (enableCache && nextDidTimeout) {
         const offscreenFiber: Fiber = (workInProgress.child: any);
@@ -1173,49 +1156,59 @@ function completeWork(
       }
 
       // If the suspended state of the boundary changes, we need to schedule
-      // an effect to toggle the subtree's visibility. When we switch from
-      // fallback -> primary, the inner Offscreen fiber schedules this effect
-      // as part of its normal complete phase. But when we switch from
-      // primary -> fallback, the inner Offscreen fiber does not have a complete
-      // phase. So we need to schedule its effect here.
-      //
-      // We also use this flag to connect/disconnect the effects, but the same
-      // logic applies: when re-connecting, the Offscreen fiber's complete
-      // phase will handle scheduling the effect. It's only when the fallback
-      // is active that we have to do anything special.
-      if (nextDidTimeout && !prevDidTimeout) {
-        const offscreenFiber: Fiber = (workInProgress.child: any);
-        offscreenFiber.flags |= Visibility;
+      // a passive effect, which is when we process the transitions
+      if (nextDidTimeout !== prevDidTimeout) {
+        if (enableTransitionTracing) {
+          const offscreenFiber: Fiber = (workInProgress.child: any);
+          offscreenFiber.flags |= Passive;
+        }
 
-        // TODO: This will still suspend a synchronous tree if anything
-        // in the concurrent tree already suspended during this render.
-        // This is a known bug.
-        if ((workInProgress.mode & ConcurrentMode) !== NoMode) {
-          // TODO: Move this back to throwException because this is too late
-          // if this is a large tree which is common for initial loads. We
-          // don't know if we should restart a render or not until we get
-          // this marker, and this is too late.
-          // If this render already had a ping or lower pri updates,
-          // and this is the first time we know we're going to suspend we
-          // should be able to immediately restart from within throwException.
-          const hasInvisibleChildContext =
-            current === null &&
-            (workInProgress.memoizedProps.unstable_avoidThisFallback !== true ||
-              !enableSuspenseAvoidThisFallback);
-          if (
-            hasInvisibleChildContext ||
-            hasSuspenseContext(
-              suspenseStackCursor.current,
-              (InvisibleParentSuspenseContext: SuspenseContext),
-            )
-          ) {
-            // If this was in an invisible tree or a new render, then showing
-            // this boundary is ok.
-            renderDidSuspend();
-          } else {
-            // Otherwise, we're going to have to hide content so we should
-            // suspend for longer if possible.
-            renderDidSuspendDelayIfPossible();
+        // If the suspended state of the boundary changes, we need to schedule
+        // an effect to toggle the subtree's visibility. When we switch from
+        // fallback -> primary, the inner Offscreen fiber schedules this effect
+        // as part of its normal complete phase. But when we switch from
+        // primary -> fallback, the inner Offscreen fiber does not have a complete
+        // phase. So we need to schedule its effect here.
+        //
+        // We also use this flag to connect/disconnect the effects, but the same
+        // logic applies: when re-connecting, the Offscreen fiber's complete
+        // phase will handle scheduling the effect. It's only when the fallback
+        // is active that we have to do anything special.
+        if (nextDidTimeout) {
+          const offscreenFiber: Fiber = (workInProgress.child: any);
+          offscreenFiber.flags |= Visibility;
+
+          // TODO: This will still suspend a synchronous tree if anything
+          // in the concurrent tree already suspended during this render.
+          // This is a known bug.
+          if ((workInProgress.mode & ConcurrentMode) !== NoMode) {
+            // TODO: Move this back to throwException because this is too late
+            // if this is a large tree which is common for initial loads. We
+            // don't know if we should restart a render or not until we get
+            // this marker, and this is too late.
+            // If this render already had a ping or lower pri updates,
+            // and this is the first time we know we're going to suspend we
+            // should be able to immediately restart from within throwException.
+            const hasInvisibleChildContext =
+              current === null &&
+              (workInProgress.memoizedProps.unstable_avoidThisFallback !==
+                true ||
+                !enableSuspenseAvoidThisFallback);
+            if (
+              hasInvisibleChildContext ||
+              hasSuspenseContext(
+                suspenseStackCursor.current,
+                (InvisibleParentSuspenseContext: SuspenseContext),
+              )
+            ) {
+              // If this was in an invisible tree or a new render, then showing
+              // this boundary is ok.
+              renderDidSuspend();
+            } else {
+              // Otherwise, we're going to have to hide content so we should
+              // suspend for longer if possible.
+              renderDidSuspendDelayIfPossible();
+            }
           }
         }
       }
@@ -1567,10 +1560,9 @@ function completeWork(
           // Run passive effects to retain/release the cache.
           workInProgress.flags |= Passive;
         }
-        if (current !== null) {
-          popTransition(workInProgress);
-        }
       }
+
+      popTransition(workInProgress, current);
 
       return null;
     }

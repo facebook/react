@@ -10,7 +10,7 @@
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {CurrentDispatcherRef, ReactRenderer, WorkTagMap} from './types';
 import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
-import {format} from './utils';
+import {format, formatWithStyles} from './utils';
 
 import {getInternalReactConstants} from './renderer';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
@@ -38,7 +38,7 @@ const STYLE_DIRECTIVE_REGEX = /^%c/;
 // so the console color stays consistent
 function isStrictModeOverride(args: Array<string>, method: string): boolean {
   return (
-    args.length === 2 &&
+    args.length >= 2 &&
     STYLE_DIRECTIVE_REGEX.test(args[0]) &&
     args[1] === `color: ${getConsoleColor(method) || ''}`
   );
@@ -246,7 +246,8 @@ export function patch({
                   );
                   if (componentStack !== '') {
                     if (isStrictModeOverride(args, method)) {
-                      args[0] = format(args[0], componentStack);
+                      args[0] = `${args[0]} %s`;
+                      args.push(componentStack);
                     } else {
                       args.push(componentStack);
                     }
@@ -335,7 +336,7 @@ export function patchForStrictMode() {
             } else {
               const color = getConsoleColor(method);
               if (color) {
-                originalMethod(`%c${format(...args)}`, `color: ${color}`);
+                originalMethod(...formatWithStyles(args, `color: ${color}`));
               } else {
                 throw Error('Console color is not defined');
               }

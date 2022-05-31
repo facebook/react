@@ -11,7 +11,8 @@ import type {RowEncoding, JSONValue} from './ReactFlightDOMRelayProtocol';
 
 import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 
-import JSResourceReference from 'JSResourceReference';
+import type {JSResourceReference} from 'JSResourceReference';
+import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import isArray from 'shared/isArray';
@@ -39,7 +40,7 @@ export type {
 } from 'ReactFlightDOMRelayServerIntegration';
 
 export function isModuleReference(reference: Object): boolean {
-  return reference instanceof JSResourceReference;
+  return reference instanceof JSResourceReferenceImpl;
 }
 
 export type ModuleKey = ModuleReference<any>;

@@ -4,6 +4,55 @@
 
 ---
 
+### 4.24.6
+May 12, 2022
+
+* fix a bug in console.log with non-string args ([mondaychen](https://github.com/mondaychen) in [#24546](https://github.com/facebook/react/pull/24546))
+* Add Pragma to Only Run Tests if Version Requirement Satisfied ([lunaruan](https://github.com/lunaruan) in [#24533](https://github.com/facebook/react/pull/24533))
+* [DevTools][Bug] Fix Race Condition When Unmounting Fibers ([lunaruan](https://github.com/lunaruan) in [#24510](https://github.com/facebook/react/pull/24510))
+* [React DevTools] Improve DevTools UI when Inspecting a user Component that Throws an Error  ([mondaychen](https://github.com/mondaychen) in [#24248](https://github.com/facebook/react/pull/24248))
+
+---
+
+### 4.24.5
+May 5, 2022
+
+* Fixed potential undefined error in `TreeContext` reducer ([bvaughn](https://github.com/bvaughn) in [#24501](https://github.com/facebook/react/pull/24501))
+* Fix error where Profiler sometimes incorrectlyed reported that a `forwardRef` did not render ([lunaruan](https://github.com/lunaruan) in [#24494](https://github.com/facebook/react/pull/24494))
+* Fix regex for `formateWithStyles` function ([lunaruan](https://github.com/lunaruan) in [#24486](https://github.com/facebook/react/pull/24486))
+* Fixed wrong method call for LRU cache ([bvaughn](https://github.com/bvaughn) in [#24477](https://github.com/facebook/react/pull/24477))
+* Synchronize implementations of second render logging ([billyjanitsch](https://github.com/billyjanitsch) in [#24381](https://github.com/facebook/react/pull/24381))
+* Don't stringify objects for console log second render ([lunaruan](https://github.com/lunaruan) in [#24373](https://github.com/facebook/react/pull/24373))
+
+---
+
+### 4.24.4
+April 8, 2022
+
+* Allow react-devtools-inline `createStore()` method to override Store config params ([bvaughn](https://github.com/bvaughn) in [#24303](https://github.com/facebook/react/pull/24303))
+* [ReactDebugTools] wrap uncaught error from rendering user's component ([mondaychen](https://github.com/mondaychen) in [#24216](https://github.com/facebook/react/pull/24216))
+
+---
+
+### 4.24.3
+March 29, 2022
+
+#### Bugfix
+* Profiler should only report stateful hooks that change between renders ([bvaughn](https://github.com/bvaughn) in [#24189](https://github.com/facebook/react/pull/24189))
+* Ignore duplicate welcome "message" events ([bvaughn](https://github.com/bvaughn) in [#24186](https://github.com/facebook/react/pull/24186))
+* Attach DevTools Tree keyboard events to the Tree container (not the document) ([bvaughn](https://github.com/bvaughn) in [#24164](https://github.com/facebook/react/pull/24164))
+
+---
+
+### 4.24.2
+March 24, 2022
+
+#### Bugfix
+* Show upgrade/downgrade instructions inline for errors thrown by the Store due to incompatible protocol (mismatched backend and frontend versions) ([bvaughn](https://github.com/bvaughn) in [#24147](https://github.com/facebook/react/pull/24147))
+* Inspecting an element in a nested renderer no longer throws ([lunaruan](https://github.com/lunaruan) in [#24116](https://github.com/facebook/react/pull/24116))
+
+---
+
 ### 4.24.1
 March 15, 2022
 

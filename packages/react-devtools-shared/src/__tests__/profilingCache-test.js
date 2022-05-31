@@ -7,7 +7,6 @@
  * @flow
  */
 
-import typeof ReactTestRenderer from 'react-test-renderer';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
@@ -17,7 +16,6 @@ describe('ProfilingCache', () => {
   let ReactDOM;
   let ReactDOMClient;
   let Scheduler;
-  let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
   let legacyRender;
   let store: Store;
@@ -39,9 +37,9 @@ describe('ProfilingCache', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
-    TestRenderer = utils.requireTestRenderer();
   });
 
+  // @reactVersion >= 16.9
   it('should collect data for each root (including ones added or mounted after profiling started)', () => {
     const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
@@ -61,71 +59,99 @@ describe('ProfilingCache', () => {
     };
     const MemoizedChild = React.memo(Child);
 
+    const RootA = ({children}) => children;
+    const RootB = ({children}) => children;
+    const RootC = ({children}) => children;
+
     const containerA = document.createElement('div');
     const containerB = document.createElement('div');
     const containerC = document.createElement('div');
 
-    utils.act(() => legacyRender(<Parent count={2} />, containerA));
-    utils.act(() => legacyRender(<Parent count={1} />, containerB));
+    utils.act(() =>
+      legacyRender(
+        <RootA>
+          <Parent count={2} />
+        </RootA>,
+        containerA,
+      ),
+    );
+    utils.act(() =>
+      legacyRender(
+        <RootB>
+          <Parent count={1} />
+        </RootB>,
+        containerB,
+      ),
+    );
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => legacyRender(<Parent count={3} />, containerA));
-    utils.act(() => legacyRender(<Parent count={1} />, containerC));
-    utils.act(() => legacyRender(<Parent count={1} />, containerA));
+    utils.act(() =>
+      legacyRender(
+        <RootA>
+          <Parent count={3} />
+        </RootA>,
+        containerA,
+      ),
+    );
+    utils.act(() =>
+      legacyRender(
+        <RootC>
+          <Parent count={1} />
+        </RootC>,
+        containerC,
+      ),
+    );
+    utils.act(() =>
+      legacyRender(
+        <RootA>
+          <Parent count={1} />
+        </RootA>,
+        containerA,
+      ),
+    );
     utils.act(() => ReactDOM.unmountComponentAtNode(containerB));
-    utils.act(() => legacyRender(<Parent count={0} />, containerA));
+    utils.act(() =>
+      legacyRender(
+        <RootA>
+          <Parent count={0} />
+        </RootA>,
+        containerA,
+      ),
+    );
     utils.act(() => store.profilerStore.stopProfiling());
+    utils.act(() => ReactDOM.unmountComponentAtNode(containerA));
 
-    const allProfilingDataForRoots = [];
+    const rootIDs = Array.from(
+      store.profilerStore.profilingData.dataForRoots.values(),
+    ).map(({rootID}) => rootID);
+    expect(rootIDs).toHaveLength(3);
 
-    function Validator({previousProfilingDataForRoot, rootID}) {
-      const profilingDataForRoot = store.profilerStore.getDataForRoot(rootID);
-      if (previousProfilingDataForRoot != null) {
-        expect(profilingDataForRoot).toEqual(previousProfilingDataForRoot);
-      } else {
-        expect(profilingDataForRoot).toMatchSnapshot(
-          `Data for root ${profilingDataForRoot.displayName}`,
-        );
-      }
-      allProfilingDataForRoots.push(profilingDataForRoot);
-      return null;
-    }
+    const originalProfilingDataForRoot = [];
 
-    const dataForRoots =
-      store.profilerStore.profilingData !== null
-        ? store.profilerStore.profilingData.dataForRoots
-        : null;
+    let data = store.profilerStore.getDataForRoot(rootIDs[0]);
+    expect(data.displayName).toMatchInlineSnapshot(`"RootA"`);
+    expect(data.commitData).toHaveLength(3);
+    originalProfilingDataForRoot.push(data);
 
-    expect(dataForRoots).not.toBeNull();
+    data = store.profilerStore.getDataForRoot(rootIDs[1]);
+    expect(data.displayName).toMatchInlineSnapshot(`"RootC"`);
+    expect(data.commitData).toHaveLength(1);
+    originalProfilingDataForRoot.push(data);
 
-    if (dataForRoots !== null) {
-      dataForRoots.forEach(dataForRoot => {
-        utils.act(() =>
-          TestRenderer.create(
-            <Validator
-              previousProfilingDataForRoot={null}
-              rootID={dataForRoot.rootID}
-            />,
-          ),
-        );
-      });
-    }
-
-    expect(allProfilingDataForRoots).toHaveLength(3);
+    data = store.profilerStore.getDataForRoot(rootIDs[2]);
+    expect(data.displayName).toMatchInlineSnapshot(`"RootB"`);
+    expect(data.commitData).toHaveLength(1);
+    originalProfilingDataForRoot.push(data);
 
     utils.exportImportHelper(bridge, store);
 
-    allProfilingDataForRoots.forEach(profilingDataForRoot => {
-      utils.act(() =>
-        TestRenderer.create(
-          <Validator
-            previousProfilingDataForRoot={profilingDataForRoot}
-            rootID={profilingDataForRoot.rootID}
-          />,
-        ),
-      );
+    rootIDs.forEach((rootID, index) => {
+      const current = store.profilerStore.getDataForRoot(rootID);
+      const prev = originalProfilingDataForRoot[index];
+      expect(current).toEqual(prev);
     });
   });
 
+  // @reactVersion >= 16.9
   it('should collect data for each commit', () => {
     const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
@@ -154,52 +180,23 @@ describe('ProfilingCache', () => {
     utils.act(() => legacyRender(<Parent count={0} />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
-    const allCommitData = [];
-
-    function Validator({commitIndex, previousCommitDetails, rootID}) {
-      const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
-      if (previousCommitDetails != null) {
-        expect(commitData).toEqual(previousCommitDetails);
-      } else {
-        allCommitData.push(commitData);
-        expect(commitData).toMatchSnapshot(
-          `CommitDetails commitIndex: ${commitIndex}`,
-        );
-      }
-      return null;
-    }
-
     const rootID = store.roots[0];
 
-    for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
-      utils.act(() => {
-        TestRenderer.create(
-          <Validator
-            commitIndex={commitIndex}
-            previousCommitDetails={null}
-            rootID={rootID}
-          />,
-        );
-      });
-    }
-
-    expect(allCommitData).toHaveLength(4);
+    const prevCommitData = store.profilerStore.getDataForRoot(rootID)
+      .commitData;
+    expect(prevCommitData).toHaveLength(4);
 
     utils.exportImportHelper(bridge, store);
 
-    for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
-      utils.act(() => {
-        TestRenderer.create(
-          <Validator
-            commitIndex={commitIndex}
-            previousCommitDetails={allCommitData[commitIndex]}
-            rootID={rootID}
-          />,
-        );
-      });
-    }
+    const nextCommitData = store.profilerStore.getDataForRoot(rootID)
+      .commitData;
+    expect(nextCommitData).toHaveLength(4);
+    nextCommitData.forEach((commitData, index) => {
+      expect(commitData).toEqual(prevCommitData[index]);
+    });
   });
 
+  // @reactVersion >= 16.9
   it('should record changed props/state/context/hooks', () => {
     let instance = null;
 
@@ -265,55 +262,262 @@ describe('ProfilingCache', () => {
     utils.act(() => legacyRender(<LegacyContextProvider />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
-    const allCommitData = [];
-
-    function Validator({commitIndex, previousCommitDetails, rootID}) {
-      const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
-      if (previousCommitDetails != null) {
-        expect(commitData).toEqual(previousCommitDetails);
-      } else {
-        allCommitData.push(commitData);
-        expect(commitData).toMatchSnapshot(
-          `CommitDetails commitIndex: ${commitIndex}`,
-        );
-      }
-      return null;
-    }
-
     const rootID = store.roots[0];
 
-    for (let commitIndex = 0; commitIndex < 5; commitIndex++) {
-      utils.act(() => {
-        TestRenderer.create(
-          <Validator
-            commitIndex={commitIndex}
-            previousCommitDetails={null}
-            rootID={rootID}
-          />,
-        );
-      });
-    }
-
-    expect(allCommitData).toHaveLength(5);
+    let changeDescriptions = store.profilerStore
+      .getDataForRoot(rootID)
+      .commitData.map(commitData => commitData.changeDescriptions);
+    expect(changeDescriptions).toHaveLength(5);
+    expect(changeDescriptions[0]).toMatchInlineSnapshot(`
+      Map {
+        2 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "isFirstMount": true,
+          "props": null,
+          "state": null,
+        },
+        4 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "isFirstMount": true,
+          "props": null,
+          "state": null,
+        },
+        5 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "isFirstMount": true,
+          "props": null,
+          "state": null,
+        },
+        6 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "isFirstMount": true,
+          "props": null,
+          "state": null,
+        },
+        7 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "isFirstMount": true,
+          "props": null,
+          "state": null,
+        },
+      }
+    `);
+    expect(changeDescriptions[1]).toMatchInlineSnapshot(`
+      Map {
+        5 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [
+            "count",
+          ],
+          "state": null,
+        },
+        4 => Object {
+          "context": true,
+          "didHooksChange": false,
+          "hooks": null,
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        7 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [
+            "count",
+          ],
+          "state": null,
+        },
+        6 => Object {
+          "context": Array [
+            "count",
+          ],
+          "didHooksChange": false,
+          "hooks": null,
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        2 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": Array [
+            "count",
+          ],
+        },
+      }
+    `);
+    expect(changeDescriptions[2]).toMatchInlineSnapshot(`
+      Map {
+        5 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        4 => Object {
+          "context": false,
+          "didHooksChange": false,
+          "hooks": null,
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        7 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        6 => Object {
+          "context": Array [],
+          "didHooksChange": false,
+          "hooks": null,
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        2 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [
+            "foo",
+          ],
+          "state": Array [],
+        },
+      }
+    `);
+    expect(changeDescriptions[3]).toMatchInlineSnapshot(`
+      Map {
+        5 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        4 => Object {
+          "context": false,
+          "didHooksChange": false,
+          "hooks": null,
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        7 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        6 => Object {
+          "context": Array [],
+          "didHooksChange": false,
+          "hooks": null,
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        2 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [
+            "foo",
+            "bar",
+          ],
+          "state": Array [],
+        },
+      }
+    `);
+    expect(changeDescriptions[4]).toMatchInlineSnapshot(`
+      Map {
+        5 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        4 => Object {
+          "context": false,
+          "didHooksChange": false,
+          "hooks": null,
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        7 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        6 => Object {
+          "context": Array [],
+          "didHooksChange": false,
+          "hooks": null,
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        2 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [
+            "bar",
+          ],
+          "state": Array [],
+        },
+      }
+    `);
 
     utils.exportImportHelper(bridge, store);
 
+    const prevChangeDescriptions = [...changeDescriptions];
+
+    changeDescriptions = store.profilerStore
+      .getDataForRoot(rootID)
+      .commitData.map(commitData => commitData.changeDescriptions);
+    expect(changeDescriptions).toHaveLength(5);
+
     for (let commitIndex = 0; commitIndex < 5; commitIndex++) {
-      utils.act(() => {
-        TestRenderer.create(
-          <Validator
-            commitIndex={commitIndex}
-            previousCommitDetails={allCommitData[commitIndex]}
-            rootID={rootID}
-          />,
-        );
-      });
+      expect(changeDescriptions[commitIndex]).toEqual(
+        prevChangeDescriptions[commitIndex],
+      );
     }
   });
 
+  // @reactVersion >= 18.0
   it('should properly detect changed hooks', () => {
     const Context = React.createContext(0);
-    const Context2 = React.createContext(0);
 
     function reducer(state, action) {
       switch (action.type) {
@@ -324,6 +528,19 @@ describe('ProfilingCache', () => {
       }
     }
 
+    let snapshot = 0;
+    function getServerSnapshot() {
+      return snapshot;
+    }
+    function getClientSnapshot() {
+      return snapshot;
+    }
+
+    let syncExternalStoreCallback;
+    function subscribe(callback) {
+      syncExternalStoreCallback = callback;
+    }
+
     let dispatch = null;
     let setState = null;
 
@@ -331,20 +548,31 @@ describe('ProfilingCache', () => {
       // These hooks may change and initiate re-renders.
       setState = React.useState('abc')[1];
       dispatch = React.useReducer(reducer, {value: true})[1];
+      React.useSyncExternalStore(
+        subscribe,
+        getClientSnapshot,
+        getServerSnapshot,
+      );
 
       // This hook's return value may change between renders,
       // but the hook itself isn't stateful.
       React.useContext(Context);
-      React.useContext(Context2);
 
-      // These hooks and their dependencies may not change between renders.
-      // We're using them to ensure that they don't trigger false positives.
+      // These hooks never change in a way that schedules an update.
       React.useCallback(() => () => {}, [string]);
       React.useMemo(() => string, [string]);
+      React.useCallback(() => () => {}, [count]);
+      React.useMemo(() => count, [count]);
+      React.useCallback(() => () => {});
+      React.useMemo(() => string);
 
-      // These hooks never "change".
+      // These hooks never change in a way that schedules an update.
       React.useEffect(() => {}, [string]);
       React.useLayoutEffect(() => {}, [string]);
+      React.useEffect(() => {}, [count]);
+      React.useLayoutEffect(() => {}, [count]);
+      React.useEffect(() => {});
+      React.useLayoutEffect(() => {});
 
       return null;
     };
@@ -355,9 +583,7 @@ describe('ProfilingCache', () => {
     utils.act(() =>
       legacyRender(
         <Context.Provider value={true}>
-          <Context2.Provider value={true}>
-            <Component count={1} />
-          </Context2.Provider>
+          <Component count={1} />
         </Context.Provider>,
         container,
       ),
@@ -367,93 +593,149 @@ describe('ProfilingCache', () => {
     utils.act(() =>
       legacyRender(
         <Context.Provider value={true}>
-          <Context2.Provider value={true}>
-            <Component count={2} />
-          </Context2.Provider>
+          <Component count={2} />
         </Context.Provider>,
         container,
       ),
     );
 
-    // Third render has a changed reducer hook
+    // Third render has a changed reducer hook.
     utils.act(() => dispatch({type: 'invert'}));
 
-    // Fourth render has a changed state hook
+    // Fourth render has a changed state hook.
     utils.act(() => setState('def'));
 
-    // Fifth render has a changed context value for context 1, but no changed hook.
+    // Fifth render has a changed context value, but no changed hook.
     utils.act(() =>
       legacyRender(
         <Context.Provider value={false}>
-          <Context2.Provider value={true}>
-            <Component count={2} />
-          </Context2.Provider>
+          <Component count={2} />
         </Context.Provider>,
         container,
       ),
     );
 
-    // Sixth render has another changed context value for context 2, but no changed hook.
-    utils.act(() =>
-      legacyRender(
-        <Context.Provider value={false}>
-          <Context2.Provider value={false}>
-            <Component count={2} />
-          </Context2.Provider>
-        </Context.Provider>,
-        container,
-      ),
-    );
+    // 6th renderer is triggered by a sync external store change.
+    utils.act(() => {
+      snapshot++;
+      syncExternalStoreCallback();
+    });
+
     utils.act(() => store.profilerStore.stopProfiling());
-
-    const allCommitData = [];
-
-    function Validator({commitIndex, previousCommitDetails, rootID}) {
-      const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
-      if (previousCommitDetails != null) {
-        expect(commitData).toEqual(previousCommitDetails);
-      } else {
-        allCommitData.push(commitData);
-        expect(commitData).toMatchSnapshot(
-          `CommitDetails commitIndex: ${commitIndex}`,
-        );
-      }
-      return null;
-    }
 
     const rootID = store.roots[0];
 
-    for (let commitIndex = 0; commitIndex < 6; commitIndex++) {
-      utils.act(() => {
-        TestRenderer.create(
-          <Validator
-            commitIndex={commitIndex}
-            previousCommitDetails={null}
-            rootID={rootID}
-          />,
-        );
-      });
-    }
+    const changeDescriptions = store.profilerStore
+      .getDataForRoot(rootID)
+      .commitData.map(commitData => commitData.changeDescriptions);
+    expect(changeDescriptions).toHaveLength(6);
 
-    expect(allCommitData).toHaveLength(6);
+    // 1st render: No change
+    expect(changeDescriptions[0]).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "isFirstMount": true,
+          "props": null,
+          "state": null,
+        },
+      }
+    `);
+
+    // 2nd render: Changed props
+    expect(changeDescriptions[1]).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": false,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [
+            "count",
+          ],
+          "state": null,
+        },
+      }
+    `);
+
+    // 3rd render: Changed useReducer
+    expect(changeDescriptions[2]).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": false,
+          "didHooksChange": true,
+          "hooks": Array [
+            1,
+          ],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+      }
+    `);
+
+    // 4th render: Changed useState
+    expect(changeDescriptions[3]).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": false,
+          "didHooksChange": true,
+          "hooks": Array [
+            0,
+          ],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+      }
+    `);
+
+    // 5th render: Changed context
+    expect(changeDescriptions[4]).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": true,
+          "didHooksChange": false,
+          "hooks": Array [],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+      }
+    `);
+
+    // 6th render: Sync external store
+    expect(changeDescriptions[5]).toMatchInlineSnapshot(`
+      Map {
+        3 => Object {
+          "context": false,
+          "didHooksChange": true,
+          "hooks": Array [
+            2,
+          ],
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+      }
+    `);
+
+    expect(changeDescriptions).toHaveLength(6);
 
     // Export and re-import profile data and make sure it is retained.
     utils.exportImportHelper(bridge, store);
 
     for (let commitIndex = 0; commitIndex < 6; commitIndex++) {
-      utils.act(() => {
-        TestRenderer.create(
-          <Validator
-            commitIndex={commitIndex}
-            previousCommitDetails={allCommitData[commitIndex]}
-            rootID={rootID}
-          />,
-        );
-      });
+      const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
+      expect(commitData.changeDescriptions).toEqual(
+        changeDescriptions[commitIndex],
+      );
     }
   });
 
-  it('should calculate a self duration based on actual children (not filtered children)', () => {
+  // @reactVersion >= 18.0
+  it('should calculate durations based on actual children (not filtered children)', () => {
     store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
 
     const Grandparent = () => {
@@ -480,26 +762,39 @@ describe('ProfilingCache', () => {
     );
     utils.act(() => store.profilerStore.stopProfiling());
 
-    let commitData = null;
-
-    function Validator({commitIndex, rootID}) {
-      commitData = store.profilerStore.getCommitData(rootID, commitIndex);
-      expect(commitData).toMatchSnapshot(
-        `CommitDetails with filtered self durations`,
-      );
-      return null;
-    }
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Grandparent>
+            <Child>
+            <Child>
+    `);
 
     const rootID = store.roots[0];
+    const commitData = store.profilerStore.getDataForRoot(rootID).commitData;
+    expect(commitData).toHaveLength(1);
 
-    utils.act(() => {
-      TestRenderer.create(<Validator commitIndex={0} rootID={rootID} />);
-    });
+    // Actual duration should also include both filtered <Parent> components.
+    expect(commitData[0].fiberActualDurations).toMatchInlineSnapshot(`
+      Map {
+        1 => 16,
+        2 => 16,
+        4 => 1,
+        6 => 1,
+      }
+    `);
 
-    expect(commitData).not.toBeNull();
+    expect(commitData[0].fiberSelfDurations).toMatchInlineSnapshot(`
+      Map {
+        1 => 0,
+        2 => 10,
+        4 => 1,
+        6 => 1,
+      }
+    `);
   });
 
-  it('should calculate self duration correctly for suspended views', async () => {
+  // @reactVersion >= 17.0
+  it('should calculate durations correctly for suspended views', async () => {
     let data;
     const getData = () => {
       if (data) {
@@ -535,30 +830,40 @@ describe('ProfilingCache', () => {
     );
     utils.act(() => store.profilerStore.stopProfiling());
 
-    const allCommitData = [];
-
-    function Validator({commitIndex, rootID}) {
-      const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
-      allCommitData.push(commitData);
-      expect(commitData).toMatchSnapshot(
-        `CommitDetails with filtered self durations`,
-      );
-      return null;
-    }
-
     const rootID = store.roots[0];
-
-    for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
-      utils.act(() => {
-        TestRenderer.create(
-          <Validator commitIndex={commitIndex} rootID={rootID} />,
-        );
-      });
-    }
-
-    expect(allCommitData).toHaveLength(2);
+    const commitData = store.profilerStore.getDataForRoot(rootID).commitData;
+    expect(commitData).toHaveLength(2);
+    expect(commitData[0].fiberActualDurations).toMatchInlineSnapshot(`
+      Map {
+        1 => 15,
+        2 => 15,
+        3 => 5,
+        4 => 2,
+      }
+    `);
+    expect(commitData[0].fiberSelfDurations).toMatchInlineSnapshot(`
+      Map {
+        1 => 0,
+        2 => 10,
+        3 => 3,
+        4 => 2,
+      }
+    `);
+    expect(commitData[1].fiberActualDurations).toMatchInlineSnapshot(`
+      Map {
+        7 => 3,
+        3 => 3,
+      }
+    `);
+    expect(commitData[1].fiberSelfDurations).toMatchInlineSnapshot(`
+      Map {
+        7 => 3,
+        3 => 0,
+      }
+    `);
   });
 
+  // @reactVersion >= 16.9
   it('should collect data for each rendered fiber', () => {
     const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
@@ -586,63 +891,57 @@ describe('ProfilingCache', () => {
     utils.act(() => legacyRender(<Parent count={3} />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
+    const rootID = store.roots[0];
     const allFiberCommits = [];
-
-    function Validator({fiberID, previousFiberCommits, rootID}) {
+    for (let index = 0; index < store.numElements; index++) {
+      const fiberID = store.getElementIDAtIndex(index);
       const fiberCommits = store.profilerStore.profilingCache.getFiberCommits({
         fiberID,
         rootID,
       });
-      if (previousFiberCommits != null) {
-        expect(fiberCommits).toEqual(previousFiberCommits);
-      } else {
-        allFiberCommits.push(fiberCommits);
-        expect(fiberCommits).toMatchSnapshot(
-          `FiberCommits: element ${fiberID}`,
-        );
-      }
-      return null;
+
+      allFiberCommits.push(fiberCommits);
     }
 
-    const rootID = store.roots[0];
-
-    for (let index = 0; index < store.numElements; index++) {
-      utils.act(() => {
-        const fiberID = store.getElementIDAtIndex(index);
-        if (fiberID == null) {
-          throw Error(`Unexpected null ID for element at index ${index}`);
-        }
-        TestRenderer.create(
-          <Validator
-            fiberID={fiberID}
-            previousFiberCommits={null}
-            rootID={rootID}
-          />,
-        );
-      });
-    }
-
-    expect(allFiberCommits).toHaveLength(store.numElements);
+    expect(allFiberCommits).toMatchInlineSnapshot(`
+      Array [
+        Array [
+          0,
+          1,
+          2,
+        ],
+        Array [
+          0,
+          1,
+          2,
+        ],
+        Array [
+          1,
+          2,
+        ],
+        Array [
+          2,
+        ],
+        Array [
+          0,
+        ],
+      ]
+    `);
 
     utils.exportImportHelper(bridge, store);
 
     for (let index = 0; index < store.numElements; index++) {
-      utils.act(() => {
-        const fiberID = store.getElementIDAtIndex(index);
-        if (fiberID == null) {
-          throw Error(`Unexpected null ID for element at index ${index}`);
-        }
-        TestRenderer.create(
-          <Validator
-            fiberID={fiberID}
-            previousFiberCommits={allFiberCommits[index]}
-            rootID={rootID}
-          />,
-        );
+      const fiberID = store.getElementIDAtIndex(index);
+      const fiberCommits = store.profilerStore.profilingCache.getFiberCommits({
+        fiberID,
+        rootID,
       });
+
+      expect(fiberCommits).toEqual(allFiberCommits[index]);
     }
   });
 
+  // @reactVersion >= 18.0
   it('should handle unexpectedly shallow suspense trees', () => {
     const container = document.createElement('div');
 
@@ -650,20 +949,41 @@ describe('ProfilingCache', () => {
     utils.act(() => legacyRender(<React.Suspense />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
-    function Validator({commitIndex, rootID}) {
-      const profilingDataForRoot = store.profilerStore.getDataForRoot(rootID);
-      expect(profilingDataForRoot).toMatchSnapshot('Empty Suspense node');
-      return null;
-    }
-
     const rootID = store.roots[0];
-
-    utils.act(() => {
-      TestRenderer.create(<Validator commitIndex={0} rootID={rootID} />);
-    });
+    const commitData = store.profilerStore.getDataForRoot(rootID).commitData;
+    expect(commitData).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "changeDescriptions": Map {},
+          "duration": 0,
+          "effectDuration": null,
+          "fiberActualDurations": Map {
+            1 => 0,
+            2 => 0,
+          },
+          "fiberSelfDurations": Map {
+            1 => 0,
+            2 => 0,
+          },
+          "passiveEffectDuration": null,
+          "priorityLevel": "Immediate",
+          "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
+        },
+      ]
+    `);
   });
 
   // See https://github.com/facebook/react/issues/18831
+  // @reactVersion >= 16.9
   it('should not crash during route transitions with Suspense', () => {
     const RouterContext = React.createContext();
 
@@ -752,6 +1072,7 @@ describe('ProfilingCache', () => {
     expect(container.textContent).toBe('About');
   });
 
+  // @reactVersion >= 18.0
   it('components that were deleted and added to updaters during the layout phase should not crash', () => {
     let setChildUnmounted;
     function Child() {
@@ -782,6 +1103,7 @@ describe('ProfilingCache', () => {
     expect(updaters[0].displayName).toEqual('App');
   });
 
+  // @reactVersion >= 18.0
   it('components in a deleted subtree and added to updaters during the layout phase should not crash', () => {
     let setChildUnmounted;
     function Child() {
@@ -816,6 +1138,7 @@ describe('ProfilingCache', () => {
     expect(updaters[0].displayName).toEqual('App');
   });
 
+  // @reactVersion >= 18.0
   it('components that were deleted should not be added to updaters during the passive phase', () => {
     let setChildUnmounted;
     function Child() {

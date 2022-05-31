@@ -49,6 +49,7 @@ describe('profiling HostRoot', () => {
     };
   });
 
+  // @reactVersion >=18.0
   it('should expose passive and layout effect durations for render()', () => {
     function App() {
       React.useEffect(() => {
@@ -77,6 +78,7 @@ describe('profiling HostRoot', () => {
     );
   });
 
+  // @reactVersion >=18.0
   it('should expose passive and layout effect durations for createRoot()', () => {
     function App() {
       React.useEffect(() => {
@@ -106,6 +108,7 @@ describe('profiling HostRoot', () => {
     );
   });
 
+  // @reactVersion >=18.0
   it('should properly reset passive and layout effect durations between commits', () => {
     function App({shouldCascade}) {
       const [, setState] = React.useState(false);

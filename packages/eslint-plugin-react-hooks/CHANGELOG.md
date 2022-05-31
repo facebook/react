@@ -1,3 +1,7 @@
+## 4.4.0
+
+* No changes, this was an automated release together with React 18.
+
 ## 4.3.0
 
 * Support ESLint 8. ([@MichaelDeBoey](https://github.com/MichaelDeBoey) in [#22248](https://github.com/facebook/react/pull/22248))

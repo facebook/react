@@ -127,19 +127,22 @@ jobs:
     environment: *environment
     steps:
       - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
       - run:
           name: Download artifacts for base revision
-          # TODO: We can't use the normal download-build script here because it
-          # depends on the CircleCI artifacts API, which was recently changed to
-          # require authorization. And we can't pass an authorization token
-          # without possibly leaking it to the public, since we run sizebot on
-          # PRs from external contributors. As a temporary workaround, this job
-          # will pull the artifacts from a public mirror that I set up. But we
-          # should find some other solution so we don't have to maintain
-          # the mirror.
           command: |
-            curl -L --retry 60 --retry-delay 10 --retry-max-time 600 https://react-builds.vercel.app/api/commits/$(git merge-base HEAD origin/main)/artifacts/build.tgz | tar -xz
-            mv ./build ./base-build
+              git fetch origin main
+              cd ./scripts/release && yarn && cd ../../
+              scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main)
+              mv ./build ./base-build
+      - run:
+          # TODO: The `download-experimental-build` script copies the npm
+          # packages into the `node_modules` directory. This is a historical
+          # quirk of how the release script works. Let's pretend they
+          # don't exist.
+          name: Delete extraneous files
+          command: rm -rf ./base-build/node_modules
 
       - persist_to_workspace:
           root: .
@@ -218,6 +221,25 @@ jobs:
           environment:
             RELEASE_CHANNEL: experimental
           command: ./scripts/circleci/run_devtools_e2e_tests.js
+
+  run_devtools_tests_for_versions:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      version:
+        type: string
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Install nested packages from Yarn cache
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >>
+      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
 
   yarn_lint_build:
     docker: *docker
@@ -490,6 +512,36 @@ workflows:
       - test_fuzz:
           requires:
             - setup
+
+  devtools_regression_tests:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
+    triggers:
+      - schedule:
+          # DevTools regression tests run hourly
+          cron: "0 * * * *"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - setup
+      - yarn_build_combined:
+          requires:
+            - setup
+      - build_devtools_and_process_artifacts:
+          requires:
+            - yarn_build_combined
+      - run_devtools_tests_for_versions:
+          requires:
+            - build_devtools_and_process_artifacts
+          matrix:
+            parameters:
+              version:
+                - "16.0"
+                - "16.5" # schedule package
+                - "16.8" # hooks
+                - "17.0" 
+                - "18.0"
 
   # Used to publish a prerelease manually via the command line
   publish_preleases:

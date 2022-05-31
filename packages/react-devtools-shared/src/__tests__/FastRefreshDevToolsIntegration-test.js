@@ -123,6 +123,7 @@ describe('Fast Refresh', () => {
     return ReactFreshRuntime.createSignatureFunctionForTransform();
   }
 
+  // @reactVersion >= 16.9
   it('should not break the DevTools store', () => {
     render(`
       function Parent() {
@@ -186,6 +187,7 @@ describe('Fast Refresh', () => {
     expect(container.firstChild).not.toBe(element);
   });
 
+  // @reactVersion >= 16.9
   it('should not break when there are warnings in between patching', () => {
     withErrorsOrWarningsIgnored(['Expected:'], () => {
       render(`

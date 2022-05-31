@@ -61,6 +61,31 @@ describe('OwnersListContext', () => {
     </BridgeContext.Provider>
   );
 
+  async function getOwnersListForOwner(owner) {
+    let ownerDisplayNames = null;
+
+    function Suspender() {
+      const read = React.useContext(OwnersListContext);
+      const owners = read(owner.id);
+      ownerDisplayNames = owners.map(({displayName}) => displayName);
+      return null;
+    }
+
+    await utils.actAsync(() =>
+      TestRenderer.create(
+        <Contexts defaultOwnerID={owner.id}>
+          <React.Suspense fallback={null}>
+            <Suspender owner={owner} />
+          </React.Suspense>
+        </Contexts>,
+      ),
+    );
+
+    expect(ownerDisplayNames).not.toBeNull();
+
+    return ownerDisplayNames;
+  }
+
   it('should fetch the owners list for the selected element', async () => {
     const Grandparent = () => <Parent />;
     const Parent = () => {
@@ -77,45 +102,31 @@ describe('OwnersListContext', () => {
       legacyRender(<Grandparent />, document.createElement('div')),
     );
 
-    expect(store).toMatchSnapshot('mount');
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Grandparent>
+          ▾ <Parent>
+              <Child>
+              <Child>
+    `);
 
     const parent = ((store.getElementAtIndex(1): any): Element);
     const firstChild = ((store.getElementAtIndex(2): any): Element);
 
-    let didFinish = false;
+    expect(await getOwnersListForOwner(parent)).toMatchInlineSnapshot(`
+      Array [
+        "Grandparent",
+        "Parent",
+      ]
+    `);
 
-    function Suspender({owner}) {
-      const read = React.useContext(OwnersListContext);
-      const owners = read(owner.id);
-      expect(owners).toMatchSnapshot(
-        `owners for "${(owner && owner.displayName) || ''}"`,
-      );
-      didFinish = true;
-      return null;
-    }
-
-    await utils.actAsync(() =>
-      TestRenderer.create(
-        <Contexts defaultOwnerID={parent.id}>
-          <React.Suspense fallback={null}>
-            <Suspender owner={parent} />
-          </React.Suspense>
-        </Contexts>,
-      ),
-    );
-    expect(didFinish).toBe(true);
-
-    didFinish = false;
-    await utils.actAsync(() =>
-      TestRenderer.create(
-        <Contexts defaultOwnerID={firstChild.id}>
-          <React.Suspense fallback={null}>
-            <Suspender owner={firstChild} />
-          </React.Suspense>
-        </Contexts>,
-      ),
-    );
-    expect(didFinish).toBe(true);
+    expect(await getOwnersListForOwner(firstChild)).toMatchInlineSnapshot(`
+      Array [
+        "Grandparent",
+        "Parent",
+        "Child",
+      ]
+    `);
   });
 
   it('should fetch the owners list for the selected element that includes filtered components', async () => {
@@ -136,32 +147,22 @@ describe('OwnersListContext', () => {
       legacyRender(<Grandparent />, document.createElement('div')),
     );
 
-    expect(store).toMatchSnapshot('mount');
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Grandparent>
+            <Child>
+            <Child>
+    `);
 
     const firstChild = ((store.getElementAtIndex(1): any): Element);
 
-    let didFinish = false;
-
-    function Suspender({owner}) {
-      const read = React.useContext(OwnersListContext);
-      const owners = read(owner.id);
-      expect(owners).toMatchSnapshot(
-        `owners for "${(owner && owner.displayName) || ''}"`,
-      );
-      didFinish = true;
-      return null;
-    }
-
-    await utils.actAsync(() =>
-      TestRenderer.create(
-        <Contexts defaultOwnerID={firstChild.id}>
-          <React.Suspense fallback={null}>
-            <Suspender owner={firstChild} />
-          </React.Suspense>
-        </Contexts>,
-      ),
-    );
-    expect(didFinish).toBe(true);
+    expect(await getOwnersListForOwner(firstChild)).toMatchInlineSnapshot(`
+      Array [
+        "Grandparent",
+        "Parent",
+        "Child",
+      ]
+    `);
   });
 
   it('should include the current element even if there are no other owners', async () => {
@@ -174,32 +175,18 @@ describe('OwnersListContext', () => {
       legacyRender(<Grandparent />, document.createElement('div')),
     );
 
-    expect(store).toMatchSnapshot('mount');
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Grandparent>
+    `);
 
     const grandparent = ((store.getElementAtIndex(0): any): Element);
 
-    let didFinish = false;
-
-    function Suspender({owner}) {
-      const read = React.useContext(OwnersListContext);
-      const owners = read(owner.id);
-      expect(owners).toMatchSnapshot(
-        `owners for "${(owner && owner.displayName) || ''}"`,
-      );
-      didFinish = true;
-      return null;
-    }
-
-    await utils.actAsync(() =>
-      TestRenderer.create(
-        <Contexts defaultOwnerID={grandparent.id}>
-          <React.Suspense fallback={null}>
-            <Suspender owner={grandparent} />
-          </React.Suspense>
-        </Contexts>,
-      ),
-    );
-    expect(didFinish).toBe(true);
+    expect(await getOwnersListForOwner(grandparent)).toMatchInlineSnapshot(`
+      Array [
+        "Grandparent",
+      ]
+    `);
   });
 
   it('should include all owners for a component wrapped in react memo', async () => {
@@ -215,28 +202,21 @@ describe('OwnersListContext', () => {
       legacyRender(<Grandparent />, document.createElement('div')),
     );
 
-    let didFinish = false;
-    function Suspender({owner}) {
-      const read = React.useContext(OwnersListContext);
-      const owners = read(owner.id);
-      didFinish = true;
-      expect(owners.length).toBe(3);
-      expect(owners).toMatchSnapshot(
-        `owners for "${(owner && owner.displayName) || ''}"`,
-      );
-      return null;
-    }
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Grandparent>
+          ▾ <InnerComponent> [Memo]
+              <InnerComponent> [ForwardRef]
+    `);
 
     const wrapped = ((store.getElementAtIndex(2): any): Element);
-    await utils.actAsync(() =>
-      TestRenderer.create(
-        <Contexts defaultOwnerID={wrapped.id}>
-          <React.Suspense fallback={null}>
-            <Suspender owner={wrapped} />
-          </React.Suspense>
-        </Contexts>,
-      ),
-    );
-    expect(didFinish).toBe(true);
+
+    expect(await getOwnersListForOwner(wrapped)).toMatchInlineSnapshot(`
+      Array [
+        "Grandparent",
+        "InnerComponent",
+        "InnerComponent",
+      ]
+    `);
   });
 });

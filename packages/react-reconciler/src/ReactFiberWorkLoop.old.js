@@ -18,12 +18,11 @@ import type {EventPriority} from './ReactEventPriorities.old';
 import type {
   PendingTransitionCallbacks,
   TransitionObject,
-  Transitions,
+  Transition,
 } from './ReactFiberTracingMarkerComponent.old';
 
 import {
   warnAboutDeprecatedLifecycles,
-  enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableCreateEventHandleAPI,
   enableProfilerTimer,
@@ -89,6 +88,7 @@ import {
   assignFiberPropertiesInDEV,
 } from './ReactFiber.old';
 import {isRootDehydrated} from './ReactFiberShellHydration';
+import {didSuspendOrErrorWhileHydratingDEV} from './ReactFiberHydrationContext.old';
 import {NoMode, ProfileMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
   HostRoot,
@@ -180,6 +180,7 @@ import {
   invokePassiveEffectMountInDEV,
   invokeLayoutEffectUnmountInDEV,
   invokePassiveEffectUnmountInDEV,
+  reportUncaughtErrorInDEV,
 } from './ReactFiberCommitWork.old';
 import {enqueueUpdate} from './ReactUpdateQueue.old';
 import {resetContextDependencies} from './ReactFiberNewContext.old';
@@ -194,7 +195,10 @@ import {
   pop as popFromStack,
   createCursor,
 } from './ReactFiberStack.old';
-import {enqueueInterleavedUpdates} from './ReactFiberInterleavedUpdates.old';
+import {
+  enqueueInterleavedUpdates,
+  hasInterleavedUpdates,
+} from './ReactFiberInterleavedUpdates.old';
 
 import {
   markNestedUpdateScheduled,
@@ -325,7 +329,7 @@ let workInProgressRootRenderTargetTime: number = Infinity;
 // suspense heuristics and opt out of rendering more content.
 const RENDER_TIMEOUT_MS = 500;
 
-let workInProgressTransitions: Transitions | null = null;
+let workInProgressTransitions: Array<Transition> | null = null;
 export function getWorkInProgressTransitions() {
   return workInProgressTransitions;
 }
@@ -391,20 +395,26 @@ let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
 let pendingPassiveProfilerEffects: Array<Fiber> = [];
 let pendingPassiveEffectsRemainingLanes: Lanes = NoLanes;
+let pendingPassiveTransitions: Array<Transition> | null = null;
 
 // Use these to prevent an infinite loop of nested updates
 const NESTED_UPDATE_LIMIT = 50;
 let nestedUpdateCount: number = 0;
 let rootWithNestedUpdates: FiberRoot | null = null;
+let isFlushingPassiveEffects = false;
+let didScheduleUpdateDuringPassiveEffects = false;
 
 const NESTED_PASSIVE_UPDATE_LIMIT = 50;
 let nestedPassiveUpdateCount: number = 0;
+let rootWithPassiveNestedUpdates: FiberRoot | null = null;
 
 // If two updates are scheduled within the same event, we should treat their
 // event times as simultaneous, even if the actual clock time has advanced
 // between the first and second call.
 let currentEventTime: number = NoTimestamp;
 let currentEventTransitionLane: Lanes = NoLanes;
+
+let isRunningInsertionEffect = false;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
@@ -517,9 +527,21 @@ export function scheduleUpdateOnFiber(
 ): FiberRoot | null {
   checkForNestedUpdates();
 
+  if (__DEV__) {
+    if (isRunningInsertionEffect) {
+      console.error('useInsertionEffect must not schedule updates.');
+    }
+  }
+
   const root = markUpdateLaneFromFiberToRoot(fiber, lane);
   if (root === null) {
     return null;
+  }
+
+  if (__DEV__) {
+    if (isFlushingPassiveEffects) {
+      didScheduleUpdateDuringPassiveEffects = true;
+    }
   }
 
   // Mark that the root has a pending update.
@@ -704,7 +726,13 @@ export function isInterleavedUpdate(fiber: Fiber, lane: Lane) {
     // TODO: Optimize slightly by comparing to root that fiber belongs to.
     // Requires some refactoring. Not a big deal though since it's rare for
     // concurrent apps to have more than a single root.
-    workInProgressRoot !== null &&
+    (workInProgressRoot !== null ||
+      // If the interleaved updates queue hasn't been cleared yet, then
+      // we should treat this as an interleaved update, too. This is also a
+      // defensive coding measure in case a new update comes in between when
+      // rendering has finished and when the interleaved updates are transferred
+      // to the main queue.
+      hasInterleavedUpdates()) &&
     (fiber.mode & ConcurrentMode) !== NoMode &&
     // If this is a render phase update (i.e. UNSAFE_componentWillReceiveProps),
     // then don't treat this as an interleaved update. This pattern is
@@ -807,9 +835,12 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
           // https://github.com/facebook/react/issues/22459
           // We don't support running callbacks in the middle of render
           // or commit so we need to check against that.
-          if (executionContext === NoContext) {
-            // It's only safe to do this conditionally because we always
-            // check for pending work before we exit the task.
+          if (
+            (executionContext & (RenderContext | CommitContext)) ===
+            NoContext
+          ) {
+            // Note that this would still prematurely flush the callbacks
+            // if this happens outside render or commit phase (e.g. in an event).
             flushSyncCallbacks();
           }
         });
@@ -1057,7 +1088,11 @@ function finishConcurrentRender(root, exitStatus, lanes) {
     case RootErrored: {
       // We should have already attempted to retry this tree. If we reached
       // this point, it errored again. Commit it.
-      commitRoot(root, workInProgressRootRecoverableErrors);
+      commitRoot(
+        root,
+        workInProgressRootRecoverableErrors,
+        workInProgressTransitions,
+      );
       break;
     }
     case RootSuspended: {
@@ -1097,14 +1132,23 @@ function finishConcurrentRender(root, exitStatus, lanes) {
           // lower priority work to do. Instead of committing the fallback
           // immediately, wait for more data to arrive.
           root.timeoutHandle = scheduleTimeout(
-            commitRoot.bind(null, root, workInProgressRootRecoverableErrors),
+            commitRoot.bind(
+              null,
+              root,
+              workInProgressRootRecoverableErrors,
+              workInProgressTransitions,
+            ),
             msUntilTimeout,
           );
           break;
         }
       }
       // The work expired. Commit immediately.
-      commitRoot(root, workInProgressRootRecoverableErrors);
+      commitRoot(
+        root,
+        workInProgressRootRecoverableErrors,
+        workInProgressTransitions,
+      );
       break;
     }
     case RootSuspendedWithDelay: {
@@ -1135,7 +1179,12 @@ function finishConcurrentRender(root, exitStatus, lanes) {
           // Instead of committing the fallback immediately, wait for more data
           // to arrive.
           root.timeoutHandle = scheduleTimeout(
-            commitRoot.bind(null, root, workInProgressRootRecoverableErrors),
+            commitRoot.bind(
+              null,
+              root,
+              workInProgressRootRecoverableErrors,
+              workInProgressTransitions,
+            ),
             msUntilTimeout,
           );
           break;
@@ -1143,12 +1192,20 @@ function finishConcurrentRender(root, exitStatus, lanes) {
       }
 
       // Commit the placeholder.
-      commitRoot(root, workInProgressRootRecoverableErrors);
+      commitRoot(
+        root,
+        workInProgressRootRecoverableErrors,
+        workInProgressTransitions,
+      );
       break;
     }
     case RootCompleted: {
       // The work completed. Ready to commit.
-      commitRoot(root, workInProgressRootRecoverableErrors);
+      commitRoot(
+        root,
+        workInProgressRootRecoverableErrors,
+        workInProgressTransitions,
+      );
       break;
     }
     default: {
@@ -1272,7 +1329,11 @@ function performSyncWorkOnRoot(root) {
   const finishedWork: Fiber = (root.current.alternate: any);
   root.finishedWork = finishedWork;
   root.finishedLanes = lanes;
-  commitRoot(root, workInProgressRootRecoverableErrors);
+  commitRoot(
+    root,
+    workInProgressRootRecoverableErrors,
+    workInProgressTransitions,
+  );
 
   // Before exiting, make sure there's a callback scheduled for the next
   // pending level.
@@ -1954,7 +2015,11 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
   }
 }
 
-function commitRoot(root: FiberRoot, recoverableErrors: null | Array<mixed>) {
+function commitRoot(
+  root: FiberRoot,
+  recoverableErrors: null | Array<mixed>,
+  transitions: Array<Transition> | null,
+) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
   const previousUpdateLanePriority = getCurrentUpdatePriority();
@@ -1963,7 +2028,12 @@ function commitRoot(root: FiberRoot, recoverableErrors: null | Array<mixed>) {
   try {
     ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
-    commitRootImpl(root, recoverableErrors, previousUpdateLanePriority);
+    commitRootImpl(
+      root,
+      recoverableErrors,
+      transitions,
+      previousUpdateLanePriority,
+    );
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
     setCurrentUpdatePriority(previousUpdateLanePriority);
@@ -1975,6 +2045,7 @@ function commitRoot(root: FiberRoot, recoverableErrors: null | Array<mixed>) {
 function commitRootImpl(
   root: FiberRoot,
   recoverableErrors: null | Array<mixed>,
+  transitions: Array<Transition> | null,
   renderPriorityLevel: EventPriority,
 ) {
   do {
@@ -2070,6 +2141,13 @@ function commitRootImpl(
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
       pendingPassiveEffectsRemainingLanes = remainingLanes;
+      // workInProgressTransitions might be overwritten, so we want
+      // to store it in pendingPassiveTransitions until they get processed
+      // We need to pass this through as an argument to commitRoot
+      // because workInProgressTransitions might have changed between
+      // the previous render and commit if we throttle the commit
+      // with setTimeout
+      pendingPassiveTransitions = transitions;
       scheduleCallback(NormalSchedulerPriority, () => {
         flushPassiveEffects();
         // This render triggered passive effects: release the root cache pool
@@ -2204,6 +2282,10 @@ function commitRootImpl(
     // There were no passive effects, so we can immediately release the cache
     // pool for this render.
     releaseRootPooledCache(root, remainingLanes);
+    if (__DEV__) {
+      nestedPassiveUpdateCount = 0;
+      rootWithPassiveNestedUpdates = null;
+    }
   }
 
   // Read this again, since an effect might have updated it
@@ -2301,27 +2383,6 @@ function commitRootImpl(
   // If layout work was scheduled, flush it now.
   flushSyncCallbacks();
 
-  if (enableTransitionTracing) {
-    const prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
-    const prevRootTransitionCallbacks = root.transitionCallbacks;
-    if (
-      prevPendingTransitionCallbacks !== null &&
-      prevRootTransitionCallbacks !== null
-    ) {
-      // TODO(luna) Refactor this code into the Host Config
-      const endTime = now();
-      currentPendingTransitionCallbacks = null;
-
-      scheduleCallback(IdleSchedulerPriority, () =>
-        processTransitionCallbacks(
-          prevPendingTransitionCallbacks,
-          endTime,
-          prevRootTransitionCallbacks,
-        ),
-      );
-    }
-  }
-
   if (__DEV__) {
     if (enableDebugTracing) {
       logCommitStopped();
@@ -2407,6 +2468,10 @@ function flushPassiveEffectsImpl() {
     return false;
   }
 
+  // Cache and clear the transitions flag
+  const transitions = pendingPassiveTransitions;
+  pendingPassiveTransitions = null;
+
   const root = rootWithPendingPassiveEffects;
   const lanes = pendingPassiveEffectsLanes;
   rootWithPendingPassiveEffects = null;
@@ -2420,6 +2485,9 @@ function flushPassiveEffectsImpl() {
   }
 
   if (__DEV__) {
+    isFlushingPassiveEffects = true;
+    didScheduleUpdateDuringPassiveEffects = false;
+
     if (enableDebugTracing) {
       logPassiveEffectsStarted(lanes);
     }
@@ -2433,7 +2501,7 @@ function flushPassiveEffectsImpl() {
   executionContext |= CommitContext;
 
   commitPassiveUnmountEffects(root.current);
-  commitPassiveMountEffects(root, root.current);
+  commitPassiveMountEffects(root, root.current, lanes, transitions);
 
   // TODO: Move to commitPassiveMountEffects
   if (enableProfilerTimer && enableProfilerCommitHooks) {
@@ -2463,10 +2531,50 @@ function flushPassiveEffectsImpl() {
 
   flushSyncCallbacks();
 
-  // If additional passive effects were scheduled, increment a counter. If this
-  // exceeds the limit, we'll fire a warning.
-  nestedPassiveUpdateCount =
-    rootWithPendingPassiveEffects === null ? 0 : nestedPassiveUpdateCount + 1;
+  if (enableTransitionTracing) {
+    const prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
+    const prevRootTransitionCallbacks = root.transitionCallbacks;
+    if (
+      prevPendingTransitionCallbacks !== null &&
+      prevRootTransitionCallbacks !== null
+    ) {
+      // TODO(luna) Refactor this code into the Host Config
+      // TODO(luna) The end time here is not necessarily accurate
+      // because passive effects could be called before paint
+      // (synchronously) or after paint (normally). We need
+      // to come up with a way to get the correct end time for both cases.
+      // One solution is in the host config, if the passive effects
+      // have not yet been run, make a call to flush the passive effects
+      // right after paint.
+      const endTime = now();
+      currentPendingTransitionCallbacks = null;
+
+      scheduleCallback(IdleSchedulerPriority, () =>
+        processTransitionCallbacks(
+          prevPendingTransitionCallbacks,
+          endTime,
+          prevRootTransitionCallbacks,
+        ),
+      );
+    }
+  }
+
+  if (__DEV__) {
+    // If additional passive effects were scheduled, increment a counter. If this
+    // exceeds the limit, we'll fire a warning.
+    if (didScheduleUpdateDuringPassiveEffects) {
+      if (root === rootWithPassiveNestedUpdates) {
+        nestedPassiveUpdateCount++;
+      } else {
+        nestedPassiveUpdateCount = 0;
+        rootWithPassiveNestedUpdates = root;
+      }
+    } else {
+      nestedPassiveUpdateCount = 0;
+    }
+    isFlushingPassiveEffects = false;
+    didScheduleUpdateDuringPassiveEffects = false;
+  }
 
   // TODO: Move to commitPassiveMountEffects
   onPostCommitRootDevTools(root);
@@ -2523,6 +2631,10 @@ export function captureCommitPhaseError(
   nearestMountedAncestor: Fiber | null,
   error: mixed,
 ) {
+  if (__DEV__) {
+    reportUncaughtErrorInDEV(error);
+    setIsRunningInsertionEffect(false);
+  }
   if (sourceFiber.tag === HostRoot) {
     // Error was thrown at the root. There is no parent, so the root
     // itself should capture it.
@@ -2667,26 +2779,22 @@ export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
 export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
   let retryLane = NoLane; // Default
   let retryCache: WeakSet<Wakeable> | Set<Wakeable> | null;
-  if (enableSuspenseServerRenderer) {
-    switch (boundaryFiber.tag) {
-      case SuspenseComponent:
-        retryCache = boundaryFiber.stateNode;
-        const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
-        if (suspenseState !== null) {
-          retryLane = suspenseState.retryLane;
-        }
-        break;
-      case SuspenseListComponent:
-        retryCache = boundaryFiber.stateNode;
-        break;
-      default:
-        throw new Error(
-          'Pinged unknown suspense boundary type. ' +
-            'This is probably a bug in React.',
-        );
-    }
-  } else {
-    retryCache = boundaryFiber.stateNode;
+  switch (boundaryFiber.tag) {
+    case SuspenseComponent:
+      retryCache = boundaryFiber.stateNode;
+      const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
+      if (suspenseState !== null) {
+        retryLane = suspenseState.retryLane;
+      }
+      break;
+    case SuspenseListComponent:
+      retryCache = boundaryFiber.stateNode;
+      break;
+    default:
+      throw new Error(
+        'Pinged unknown suspense boundary type. ' +
+          'This is probably a bug in React.',
+      );
   }
 
   if (retryCache !== null) {
@@ -2739,6 +2847,8 @@ function checkForNestedUpdates() {
   if (__DEV__) {
     if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
       nestedPassiveUpdateCount = 0;
+      rootWithPassiveNestedUpdates = null;
+
       console.error(
         'Maximum update depth exceeded. This can happen when a component ' +
           "calls setState inside useEffect, but useEffect either doesn't " +
@@ -2895,11 +3005,13 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       return originalBeginWork(current, unitOfWork, lanes);
     } catch (originalError) {
       if (
-        originalError !== null &&
-        typeof originalError === 'object' &&
-        typeof originalError.then === 'function'
+        didSuspendOrErrorWhileHydratingDEV() ||
+        (originalError !== null &&
+          typeof originalError === 'object' &&
+          typeof originalError.then === 'function')
       ) {
-        // Don't replay promises. Treat everything else like an error.
+        // Don't replay promises.
+        // Don't replay errors if we are hydrating and have already suspended or handled an error
         throw originalError;
       }
 
@@ -3130,5 +3242,11 @@ function warnIfSuspenseResolutionNotWrappedWithActDEV(root: FiberRoot): void {
           ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
       );
     }
+  }
+}
+
+export function setIsRunningInsertionEffect(isRunning: boolean): void {
+  if (__DEV__) {
+    isRunningInsertionEffect = isRunning;
   }
 }

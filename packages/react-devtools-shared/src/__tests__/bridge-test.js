@@ -14,6 +14,7 @@ describe('Bridge', () => {
     Bridge = require('react-devtools-shared/src/bridge').default;
   });
 
+  // @reactVersion >=16.0
   it('should shutdown properly', () => {
     const wall = {
       listen: jest.fn(() => () => {}),

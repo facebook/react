@@ -23,7 +23,14 @@ async function getBuildIdForCommit(sha) {
     );
 
     if (!statusesResponse.ok) {
-      throw Error('Could not find commit for: ' + sha);
+      if (statusesResponse.status === 404) {
+        throw Error('Could not find commit for: ' + sha);
+      }
+      const {message, documentation_url} = await statusesResponse.json();
+      const msg = documentation_url
+        ? `${message}\n\t${documentation_url}`
+        : message;
+      throw Error(msg);
     }
 
     const {statuses, state} = await statusesResponse.json();

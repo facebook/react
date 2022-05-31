@@ -19,6 +19,10 @@ jest.mock('shared/ReactFeatureFlags', () => {
   return wwwFlags;
 });
 
+jest.mock('shared/ReactSymbols', () => {
+  return jest.requireActual('shared/ReactSymbols.www');
+});
+
 jest.mock('scheduler/src/SchedulerFeatureFlags', () => {
   const schedulerSrcPath = process.cwd() + '/packages/scheduler';
   jest.mock(
