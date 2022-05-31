@@ -35,10 +35,11 @@ const isEdge = getBrowserName() === 'Edge';
 // https://github.com/facebook/react/issues/24626
 // The polyfill is based on https://gist.github.com/jalbam/5fe05443270fa6d8136238ec72accbc0
 if (isChrome || isEdge) {
+  const FRAME_TIME = 16;
   let lastTime = 0;
   window.requestAnimationFrame = function(callback, element) {
     const now = window.performance.now();
-    const nextTime = Math.max(lastTime + 16, now);
+    const nextTime = Math.max(lastTime + FRAME_TIME, now);
     return setTimeout(function() {
       callback((lastTime = nextTime));
     }, nextTime - now);
