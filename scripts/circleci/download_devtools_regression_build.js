@@ -6,6 +6,7 @@ const {exec} = require('child-process-promise');
 const chalk = require('chalk');
 const {join} = require('path');
 const semver = require('semver');
+const yargs = require('yargs');
 const fs = require('fs');
 
 const INSTALL_PACKAGES = ['react-dom', 'react', 'react-test-renderer'];
@@ -16,7 +17,10 @@ const ROOT_PATH = join(__dirname, '..', '..');
 const buildPath = join(ROOT_PATH, `build`, 'oss-experimental');
 const regressionBuildPath = join(ROOT_PATH, REGRESSION_FOLDER);
 
+const argv = yargs(process.argv.slice(2)).argv;
+
 const version = process.argv[2];
+const shouldReplaceBuild = !!argv.replaceBuild;
 
 async function downloadRegressionBuild() {
   console.log(chalk.bold.white(`Downloading React v${version}\n`));
@@ -38,6 +42,12 @@ async function downloadRegressionBuild() {
   await exec(
     `npm install --prefix ${REGRESSION_FOLDER} ${downloadPackagesStr}`
   );
+
+  // If we shouldn't replace the build folder, we can stop here now
+  // before we modify anything
+  if (!shouldReplaceBuild) {
+    return;
+  }
 
   // Remove all the packages that we downloaded in the original build folder
   // so we can move the modules from the regression build over
@@ -102,12 +112,20 @@ async function downloadRegressionBuild() {
 
 async function main() {
   try {
+    if (!version) {
+      console.log(chalk.red('Must specify React version to download'));
+      return;
+    }
     await downloadRegressionBuild();
   } catch (e) {
     console.log(chalk.red(e));
   } finally {
-    console.log(chalk.bold.white(`Removing regression build`));
-    await exec(`rm -r ${regressionBuildPath}`);
+    // We shouldn't remove the regression-build folder unless we're using
+    // it to replace the build folder
+    if (shouldReplaceBuild) {
+      console.log(chalk.bold.white(`Removing regression build`));
+      await exec(`rm -r ${regressionBuildPath}`);
+    }
   }
 }
 
