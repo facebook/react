@@ -193,7 +193,7 @@ const e2eRegressionApp = semver.lt(REACT_VERSION, '18.0.0')
       {
         react: resolve(E2E_APP_BUILD_DIR, 'react'),
         'react-dom': resolve(E2E_APP_BUILD_DIR, 'react-dom'),
-        'react-dom/client': resolve(E2E_APP_BUILD_DIR, 'react-dom'),
+        'react-dom/client': resolve(E2E_APP_BUILD_DIR, 'react-dom/client'),
         scheduler: resolve(E2E_APP_BUILD_DIR, 'scheduler'),
       },
     );
