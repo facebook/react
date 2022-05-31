@@ -195,10 +195,7 @@ import {
   pop as popFromStack,
   createCursor,
 } from './ReactFiberStack.old';
-import {
-  enqueueInterleavedUpdates,
-  hasInterleavedUpdates,
-} from './ReactFiberInterleavedUpdates.old';
+import {enqueueInterleavedUpdates} from './ReactFiberInterleavedUpdates.old';
 
 import {
   markNestedUpdateScheduled,
@@ -606,8 +603,6 @@ export function scheduleUpdateOnFiber(
     }
 
     if (root === workInProgressRoot) {
-      // TODO: Consolidate with `isInterleavedUpdate` check
-
       // Received an update to a tree that's in the middle of rendering. Mark
       // that there was an interleaved update work on this root. Unless the
       // `deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
@@ -721,25 +716,15 @@ function markUpdateLaneFromFiberToRoot(
   }
 }
 
-export function isInterleavedUpdate(fiber: Fiber, lane: Lane) {
+export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber) {
+  // Check if this is a render phase update. Only called by class components,
+  // which special (deprecated) behavior for UNSAFE_componentWillReceive props.
   return (
-    // TODO: Optimize slightly by comparing to root that fiber belongs to.
-    // Requires some refactoring. Not a big deal though since it's rare for
-    // concurrent apps to have more than a single root.
-    (workInProgressRoot !== null ||
-      // If the interleaved updates queue hasn't been cleared yet, then
-      // we should treat this as an interleaved update, too. This is also a
-      // defensive coding measure in case a new update comes in between when
-      // rendering has finished and when the interleaved updates are transferred
-      // to the main queue.
-      hasInterleavedUpdates()) &&
-    (fiber.mode & ConcurrentMode) !== NoMode &&
-    // If this is a render phase update (i.e. UNSAFE_componentWillReceiveProps),
-    // then don't treat this as an interleaved update. This pattern is
-    // accompanied by a warning but we haven't fully deprecated it yet. We can
-    // remove once the deferRenderPhaseUpdateToNextBatch flag is enabled.
-    (deferRenderPhaseUpdateToNextBatch ||
-      (executionContext & RenderContext) === NoContext)
+    // TODO: Remove outdated deferRenderPhaseUpdateToNextBatch experiment. We
+    // decided not to enable it.
+    (!deferRenderPhaseUpdateToNextBatch ||
+      (fiber.mode & ConcurrentMode) === NoMode) &&
+    (executionContext & RenderContext) !== NoContext
   );
 }
 

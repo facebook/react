@@ -87,7 +87,6 @@ import {
   requestUpdateLane,
   requestEventTime,
   markSkippedUpdateLanes,
-  isInterleavedUpdate,
 } from './ReactFiberWorkLoop.old';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -2337,30 +2336,18 @@ function enqueueUpdate<S, A>(
   update: Update<S, A>,
   lane: Lane,
 ) {
-  if (isInterleavedUpdate(fiber, lane)) {
-    const interleaved = queue.interleaved;
-    if (interleaved === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-      // At the end of the current render, this queue's interleaved updates will
-      // be transferred to the pending queue.
-      pushInterleavedQueue(queue);
-    } else {
-      update.next = interleaved.next;
-      interleaved.next = update;
-    }
-    queue.interleaved = update;
+  const interleaved = queue.interleaved;
+  if (interleaved === null) {
+    // This is the first update. Create a circular list.
+    update.next = update;
+    // At the end of the current render, this queue's interleaved updates will
+    // be transferred to the pending queue.
+    pushInterleavedQueue(queue);
   } else {
-    const pending = queue.pending;
-    if (pending === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-    } else {
-      update.next = pending.next;
-      pending.next = update;
-    }
-    queue.pending = update;
+    update.next = interleaved.next;
+    interleaved.next = update;
   }
+  queue.interleaved = update;
 }
 
 function entangleTransitionUpdate<S, A>(

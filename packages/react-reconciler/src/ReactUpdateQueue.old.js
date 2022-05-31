@@ -107,7 +107,7 @@ import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {
   markSkippedUpdateLanes,
-  isInterleavedUpdate,
+  isUnsafeClassRenderPhaseUpdate,
 } from './ReactFiberWorkLoop.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
@@ -223,7 +223,19 @@ export function enqueueUpdate<State>(
 
   const sharedQueue: SharedQueue<State> = (updateQueue: any).shared;
 
-  if (isInterleavedUpdate(fiber, lane)) {
+  if (isUnsafeClassRenderPhaseUpdate(fiber)) {
+    // This is an unsafe render phase update. Add directly to the update
+    // queue so we can process it immediately during the current render.
+    const pending = sharedQueue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    sharedQueue.pending = update;
+  } else {
     const interleaved = sharedQueue.interleaved;
     if (interleaved === null) {
       // This is the first update. Create a circular list.
@@ -236,16 +248,6 @@ export function enqueueUpdate<State>(
       interleaved.next = update;
     }
     sharedQueue.interleaved = update;
-  } else {
-    const pending = sharedQueue.pending;
-    if (pending === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-    } else {
-      update.next = pending.next;
-      pending.next = update;
-    }
-    sharedQueue.pending = update;
   }
 
   if (__DEV__) {
