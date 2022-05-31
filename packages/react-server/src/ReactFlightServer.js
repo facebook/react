@@ -108,7 +108,7 @@ export type Request = {
   writtenSymbols: Map<Symbol, number>,
   writtenModules: Map<ModuleKey, number>,
   writtenProviders: Map<string, number>,
-  identifierPrefix?: string,
+  identifierPrefix: string,
   identifierCount: number,
   onError: (error: mixed) => void,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
@@ -148,7 +148,7 @@ export function createRequest(
     writtenSymbols: new Map(),
     writtenModules: new Map(),
     writtenProviders: new Map(),
-    identifierPrefix,
+    identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
     onError: onError === undefined ? defaultErrorHandler : onError,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
