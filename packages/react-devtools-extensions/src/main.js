@@ -30,6 +30,23 @@ const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
 const isChrome = getBrowserName() === 'Chrome';
 const isEdge = getBrowserName() === 'Edge';
 
+// since Chromium v102, requestAnimationFrame no longer fires in devtools_page (i.e. this file)
+// mock requestAnimationFrame with setTimeout as a temporary workaround
+// https://github.com/facebook/react/issues/24626
+// The polyfill is based on https://gist.github.com/jalbam/5fe05443270fa6d8136238ec72accbc0
+if (isChrome || isEdge) {
+  const FRAME_TIME = 16;
+  let lastTime = 0;
+  window.requestAnimationFrame = function(callback, element) {
+    const now = window.performance.now();
+    const nextTime = Math.max(lastTime + FRAME_TIME, now);
+    return setTimeout(function() {
+      callback((lastTime = nextTime));
+    }, nextTime - now);
+  };
+  window.cancelAnimationFrame = clearTimeout;
+}
+
 let panelCreated = false;
 
 // The renderer interface can't read saved component filters directly,
