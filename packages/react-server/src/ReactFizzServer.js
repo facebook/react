@@ -179,7 +179,7 @@ type Segment = {
   // used to discern when text separator boundaries are needed
   preEdge: SegmentEdge,
   leadEdge: SegmentEdge,
-  trailEdge: SegmentEdge,
+  currentEdge: SegmentEdge,
   postEdge: SegmentEdge,
 };
 
@@ -1793,7 +1793,7 @@ function flushSegmentInline(
 
     // We might have emitted Text or Nodes since the last segment to flush. set the value accordingly or
     // retain the existing value if no Edges were emitted
-    let precedingEdge = segment.preEdge;
+    const precedingEdge = segment.preEdge;
     lastText =
       precedingEdge === TEXT_EDGE
         ? true
@@ -1808,7 +1808,7 @@ function flushSegmentInline(
 
     // We might have emitted Text or Nodes following this segment. set the value accordingly or
     // retain teh existing valeu if no Edges were emitted
-    let lastEdge = segment.currentEdge;
+    const lastEdge = segment.currentEdge;
     lastText =
       lastEdge === TEXT_EDGE ? true : lastEdge === NODE_EDGE ? false : lastText;
     if (parentFlushed === false && lastText && segment.postEdge === TEXT_EDGE) {
