@@ -39,7 +39,13 @@ import {
   isModuleReference,
 } from './ReactFlightServerConfig';
 
-import {Dispatcher, getCurrentCache, setCurrentCache} from './ReactFlightHooks';
+import {
+  Dispatcher,
+  getCurrentCache,
+  prepareToUseHooksForRequest,
+  resetHooksForRequest,
+  setCurrentCache,
+} from './ReactFlightHooks';
 import {
   pushProvider,
   popProvider,
@@ -102,12 +108,10 @@ export type Request = {
   writtenSymbols: Map<Symbol, number>,
   writtenModules: Map<ModuleKey, number>,
   writtenProviders: Map<string, number>,
+  identifierPrefix: string,
+  identifierCount: number,
   onError: (error: mixed) => void,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
-};
-
-export type Options = {
-  onError?: (error: mixed) => void,
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
@@ -126,6 +130,7 @@ export function createRequest(
   bundlerConfig: BundlerConfig,
   onError: void | ((error: mixed) => void),
   context?: Array<[string, ServerContextJSONValue]>,
+  identifierPrefix?: string,
 ): Request {
   const pingedSegments = [];
   const request = {
@@ -143,6 +148,8 @@ export function createRequest(
     writtenSymbols: new Map(),
     writtenModules: new Map(),
     writtenProviders: new Map(),
+    identifierPrefix: identifierPrefix || '',
+    identifierCount: 1,
     onError: onError === undefined ? defaultErrorHandler : onError,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
@@ -826,6 +833,7 @@ function performWork(request: Request): void {
   const prevCache = getCurrentCache();
   ReactCurrentDispatcher.current = Dispatcher;
   setCurrentCache(request.cache);
+  prepareToUseHooksForRequest(request);
 
   try {
     const pingedSegments = request.pingedSegments;
@@ -843,6 +851,7 @@ function performWork(request: Request): void {
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
     setCurrentCache(prevCache);
+    resetHooksForRequest();
   }
 }
 
