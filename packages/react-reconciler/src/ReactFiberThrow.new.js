@@ -11,7 +11,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lane, Lanes} from './ReactFiberLane.new';
 import type {CapturedValue} from './ReactCapturedValue';
-import type {Update} from './ReactUpdateQueue.new';
+import type {Update} from './ReactFiberClassUpdateQueue.new';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 
@@ -48,7 +48,7 @@ import {
   CaptureUpdate,
   ForceUpdate,
   enqueueUpdate,
-} from './ReactUpdateQueue.new';
+} from './ReactFiberClassUpdateQueue.new';
 import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading.new';
 import {
   suspenseStackCursor,

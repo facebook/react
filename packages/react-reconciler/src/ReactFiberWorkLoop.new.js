@@ -182,7 +182,7 @@ import {
   invokePassiveEffectUnmountInDEV,
   reportUncaughtErrorInDEV,
 } from './ReactFiberCommitWork.new';
-import {enqueueUpdate} from './ReactUpdateQueue.new';
+import {enqueueUpdate} from './ReactFiberClassUpdateQueue.new';
 import {resetContextDependencies} from './ReactFiberNewContext.new';
 import {
   resetHooksAfterThrow,
@@ -195,7 +195,7 @@ import {
   pop as popFromStack,
   createCursor,
 } from './ReactFiberStack.new';
-import {enqueueInterleavedUpdates} from './ReactFiberInterleavedUpdates.new';
+import {finishQueueingConcurrentUpdates} from './ReactFiberConcurrentUpdates.new';
 
 import {
   markNestedUpdateScheduled,
@@ -1521,7 +1521,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressRootConcurrentErrors = null;
   workInProgressRootRecoverableErrors = null;
 
-  enqueueInterleavedUpdates();
+  finishQueueingConcurrentUpdates();
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();

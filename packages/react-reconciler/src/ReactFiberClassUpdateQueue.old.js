@@ -109,7 +109,7 @@ import {
   markSkippedUpdateLanes,
   isUnsafeClassRenderPhaseUpdate,
 } from './ReactFiberWorkLoop.old';
-import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
+import {pushConcurrentUpdateQueue} from './ReactFiberConcurrentUpdates.old';
 import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
 
 import assign from 'shared/assign';
@@ -242,7 +242,7 @@ export function enqueueUpdate<State>(
       update.next = update;
       // At the end of the current render, this queue's interleaved updates will
       // be transferred to the pending queue.
-      pushInterleavedQueue(sharedQueue);
+      pushConcurrentUpdateQueue(sharedQueue);
     } else {
       update.next = interleaved.next;
       interleaved.next = update;

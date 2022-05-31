@@ -111,8 +111,8 @@ import {
   createUpdate as createLegacyQueueUpdate,
   enqueueUpdate as enqueueLegacyQueueUpdate,
   entangleTransitions as entangleLegacyQueueTransitions,
-} from './ReactUpdateQueue.new';
-import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
+} from './ReactFiberClassUpdateQueue.new';
+import {pushConcurrentUpdateQueue} from './ReactFiberConcurrentUpdates.new';
 import {getTreeId} from './ReactFiberTreeContext.new';
 import {now} from './Scheduler';
 
@@ -2349,7 +2349,7 @@ function enqueueUpdate<S, A>(
     update.next = update;
     // At the end of the current render, this queue's interleaved updates will
     // be transferred to the pending queue.
-    pushInterleavedQueue(queue);
+    pushConcurrentUpdateQueue(queue);
   } else {
     update.next = interleaved.next;
     interleaved.next = update;

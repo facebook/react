@@ -19,7 +19,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import type {UpdateQueue} from './ReactUpdateQueue.new';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {
@@ -100,7 +100,7 @@ import {
   startPassiveEffectTimer,
 } from './ReactProfilerTimer.new';
 import {ConcurrentMode, NoMode, ProfileMode} from './ReactTypeOfMode';
-import {commitUpdateQueue} from './ReactUpdateQueue.new';
+import {commitUpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import {
   getPublicInstance,
   supportsMutation,

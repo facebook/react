@@ -37,7 +37,7 @@ import {
   enableUpdaterTracking,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
-import {initializeUpdateQueue} from './ReactUpdateQueue.new';
+import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
 import {createCache, retainCache} from './ReactFiberCacheComponent.new';
 

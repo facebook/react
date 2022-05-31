@@ -33,7 +33,7 @@ import type {
   CacheComponentState,
   SpawnedCachePool,
 } from './ReactFiberCacheComponent.old';
-import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {RootState} from './ReactFiberRoot.old';
 import {
   enableSuspenseAvoidThisFallback,
@@ -131,7 +131,7 @@ import {
   cloneUpdateQueue,
   initializeUpdateQueue,
   enqueueCapturedUpdate,
-} from './ReactUpdateQueue.old';
+} from './ReactFiberClassUpdateQueue.old';
 import {
   NoLane,
   NoLanes,

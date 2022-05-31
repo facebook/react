@@ -73,7 +73,7 @@ import {
   createUpdate,
   enqueueUpdate,
   entangleTransitions,
-} from './ReactUpdateQueue.new';
+} from './ReactFiberClassUpdateQueue.new';
 import {
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
