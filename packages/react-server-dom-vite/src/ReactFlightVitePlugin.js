@@ -234,6 +234,8 @@ export async function proxyClientComponent(filepath: string, src?: string) {
   // Modify the import ID to avoid infinite wraps
   const importFrom = `${filepath}?no-proxy`;
 
+  await init;
+
   if (!src) {
     src = await fs.readFile(filepath, 'utf-8');
   }
