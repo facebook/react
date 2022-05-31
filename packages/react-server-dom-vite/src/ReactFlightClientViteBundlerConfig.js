@@ -7,6 +7,9 @@
  * @flow
  */
 
+import type {BundlerConfig} from './ReactFlightServerViteBundlerConfig';
+export type {BundlerConfig} from './ReactFlightServerViteBundlerConfig';
+
 export opaque type ModuleMetaData = {
   id: string,
   name: string,
@@ -16,6 +19,7 @@ export opaque type ModuleMetaData = {
 export opaque type ModuleReference<T> = ModuleMetaData;
 
 export function resolveModuleReference<T>(
+  bundlerConfig: BundlerConfig,
   moduleData: ModuleMetaData,
 ): ModuleReference<T> {
   return moduleData;

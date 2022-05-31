@@ -411,7 +411,7 @@ const bundles = [
     global: 'ReactServerDOMViteWriter',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'util'],
   },
 
   /******* React Server DOM Vite Reader *******/

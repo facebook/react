@@ -25,7 +25,7 @@ type Options = {
   onError?: (error: mixed) => void,
 };
 
-type Controls = {|
+type PipeableStream = {|
   pipe<T: Writable>(destination: T): T,
 |};
 
@@ -33,7 +33,7 @@ function renderToPipeableStream(
   model: ReactModel,
   options?: Options,
   context?: Array<[string, ServerContextJSONValue]>,
-): Controls {
+): PipeableStream {
   const request = createRequest(
     model,
     {}, // Manifest, not used
