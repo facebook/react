@@ -159,13 +159,11 @@ const ERRORED = 4;
 
 type Root = null;
 
-const TEXT_EDGE = 0;
-const NODE_EDGE = 1;
-
-// A SegmentEdge is a descriptor for the kind of object on either side of a segments boundary (leading and trailing).
-// In some cases the Edge type isn't known because the edge is a child segment itself. For these cases we use
-// the child segment to identify as the edge unless and until a known edge type is found
-type SegmentEdge = 0 | 1 | Segment;
+const UNKNOWN_EDGE = 0;
+const SEGMENT_EDGE = 1;
+const NODE_EDGE = 2;
+const TEXT_EDGE = 3;
+type SegmentEdge = 0 | 1 | 2 | 3;
 
 type Segment = {
   status: 0 | 1 | 2 | 3 | 4,
@@ -179,8 +177,10 @@ type Segment = {
   // If this segment represents a fallback, this is the content that will replace that fallback.
   +boundary: null | SuspenseBoundary,
   // used to discern when text separator boundaries are needed
-  currentEdge: SegmentEdge,
-  followingEdge: ?SegmentEdge,
+  preEdge: SegmentEdge,
+  leadEdge: SegmentEdge,
+  trailEdge: SegmentEdge,
+  postEdge: SegmentEdge,
 };
 
 const OPEN = 0;
@@ -370,14 +370,17 @@ function createPendingSegment(
   return {
     status: PENDING,
     id: -1, // lazily assigned later
+    name: ((Math.random() * 100) | 0).toString(16),
     index,
     parentFlushed: false,
     chunks: [],
     children: [],
     formatContext,
     boundary,
-    currentEdge,
-    followingEdge: null,
+    preEdge: currentEdge,
+    leadEdge: UNKNOWN_EDGE,
+    currentEdge: UNKNOWN_EDGE,
+    postEdge: UNKNOWN_EDGE,
   };
 }
 
@@ -489,7 +492,6 @@ function renderSuspenseBoundary(
     // use a NODE_EDGE here
     NODE_EDGE,
   );
-  boundarySegment.followingEdge = NODE_EDGE;
   parentSegment.children.push(boundarySegment);
 
   // This segment is the actual child content. We can start rendering that immediately.
@@ -502,7 +504,6 @@ function renderSuspenseBoundary(
     // use a NODE_EDGE here
     NODE_EDGE,
   );
-  contentRootSegment.followingEdge = NODE_EDGE;
   // We mark the root segment as having its parent flushed. It's not really flushed but there is
   // no parent segment so there's nothing to wait on.
   contentRootSegment.parentFlushed = true;
@@ -588,6 +589,12 @@ function renderHostElement(
 ): void {
   pushBuiltInComponentStackInDEV(task, type);
   const segment = task.blockedSegment;
+  let immediatelyPrecedingChildSegment =
+    segment.children.length > 0 &&
+    segment.children[segment.children.length - 1].index ===
+      segment.chunks.length
+      ? segment.children[segment.children.length - 1]
+      : null;
   const children = pushStartInstance(
     segment.chunks,
     type,
@@ -595,8 +602,11 @@ function renderHostElement(
     request.responseState,
     segment.formatContext,
   );
-  if (typeof segment.currentEdge === 'object') {
-    segment.currentEdge.followingEdge = NODE_EDGE;
+  if (segment.leadEdge === UNKNOWN_EDGE) {
+    segment.leadEdge = NODE_EDGE;
+  }
+  if (immediatelyPrecedingChildSegment) {
+    immediatelyPrecedingChildSegment.postEdge = NODE_EDGE;
   }
   segment.currentEdge = NODE_EDGE;
   const prevContext = segment.formatContext;
@@ -608,11 +618,16 @@ function renderHostElement(
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
   segment.formatContext = prevContext;
-  pushEndInstance(segment.chunks, type, props);
-
-  if (typeof segment.currentEdge === 'object') {
-    segment.currentEdge.followingEdge = NODE_EDGE;
+  immediatelyPrecedingChildSegment =
+    segment.children.length > 0 &&
+    segment.children[segment.children.length - 1].index ===
+      segment.chunks.length
+      ? segment.children[segment.children.length - 1]
+      : null;
+  if (immediatelyPrecedingChildSegment) {
+    immediatelyPrecedingChildSegment.postEdge = NODE_EDGE;
   }
+  pushEndInstance(segment.chunks, type, props);
   segment.currentEdge = NODE_EDGE;
   popComponentStackInDEV(task);
 }
@@ -1261,6 +1276,12 @@ function renderNodeDestructive(
 
   if (typeof node === 'string') {
     const segment = task.blockedSegment;
+    const immediatelyPrecedingChildSegment =
+      segment.children.length > 0 &&
+      segment.children[segment.children.length - 1].index ===
+        segment.chunks.length
+        ? segment.children[segment.children.length - 1]
+        : null;
     if (
       pushTextInstance(
         task.blockedSegment.chunks,
@@ -1269,8 +1290,11 @@ function renderNodeDestructive(
         segment.currentEdge === TEXT_EDGE,
       )
     ) {
-      if (typeof segment.currentEdge === 'object') {
-        segment.currentEdge.followingEdge = TEXT_EDGE;
+      if (segment.leadEdge === UNKNOWN_EDGE) {
+        segment.leadEdge = TEXT_EDGE;
+      }
+      if (immediatelyPrecedingChildSegment) {
+        immediatelyPrecedingChildSegment.postEdge = TEXT_EDGE;
       }
       segment.currentEdge = TEXT_EDGE;
     }
@@ -1279,6 +1303,12 @@ function renderNodeDestructive(
 
   if (typeof node === 'number') {
     const segment = task.blockedSegment;
+    const immediatelyPrecedingChildSegment =
+      segment.children.length > 0 &&
+      segment.children[segment.children.length - 1].index ===
+        segment.chunks.length
+        ? segment.children[segment.children.length - 1]
+        : null;
     if (
       pushTextInstance(
         task.blockedSegment.chunks,
@@ -1287,8 +1317,11 @@ function renderNodeDestructive(
         segment.currentEdge === TEXT_EDGE,
       )
     ) {
-      if (typeof segment.currentEdge === 'object') {
-        segment.currentEdge.followingEdge = TEXT_EDGE;
+      if (segment.leadEdge === UNKNOWN_EDGE) {
+        segment.leadEdge = TEXT_EDGE;
+      }
+      if (immediatelyPrecedingChildSegment) {
+        immediatelyPrecedingChildSegment.postEdge = TEXT_EDGE;
       }
       segment.currentEdge = TEXT_EDGE;
     }
@@ -1337,11 +1370,10 @@ function spawnNewSuspendedTask(
     // Adopt the parent segment's leading text embed
     segment.currentEdge,
   );
-  // Advance the currentEdge to point to this new Segment.
-  if (typeof segment.currentEdge === 'object') {
-    segment.currentEdge.followingEdge = newSegment;
+  if (segment.leadEdge === UNKNOWN_EDGE) {
+    segment.leadEdge = SEGMENT_EDGE;
   }
-  segment.currentEdge = newSegment;
+  segment.currentEdge = SEGMENT_EDGE;
   segment.children.push(newSegment);
   const newTask = createTask(
     request,
@@ -1701,7 +1733,6 @@ function flushSubtree(
       // The currentEdge of a Pending Segment is the Edge just before the Segment begins because we have not
       // retried the task for this segment yet.
       segment.currentEdge = NODE_EDGE;
-      segment.followingEdge = NODE_EDGE;
       return writePlaceholder(destination, request.responseState, segmentID);
     }
     case COMPLETED: {
@@ -1716,22 +1747,7 @@ function flushSubtree(
         for (; chunkIdx < nextChild.index; chunkIdx++) {
           writeChunk(destination, chunks[chunkIdx]);
         }
-        r = flushSegment(request, destination, nextChild);
-        if (nextChild.currentEdge === TEXT_EDGE) {
-          let followingEdge = nextChild.followingEdge;
-          // Loop over followingEdges that are Segments until you find somethign that isn't a Completed Segment
-          // The reason we can halt at pending segments is we know they will emit a placeholder and thus act
-          // like NODE_EDGE
-          while (followingEdge !== null && typeof followingEdge === 'object') {
-            if (followingEdge.status === PENDING) {
-              break;
-            }
-            followingEdge = followingEdge.followingEdge;
-          }
-          if (followingEdge === TEXT_EDGE) {
-            r = writeTextSeparator(destination, request.responseState);
-          }
-        }
+        r = flushSegmentInline(request, destination, nextChild);
       }
       // Finally just write all the remaining chunks
       for (; chunkIdx < chunks.length - 1; chunkIdx++) {
@@ -1750,7 +1766,18 @@ function flushSubtree(
   }
 }
 
+let lastText = false;
+
 function flushSegment(
+  request: Request,
+  destination,
+  segment: Segment,
+): boolean {
+  lastText = false;
+  return flushSegmentInline(request, destination, segment);
+}
+
+function flushSegmentInline(
   request: Request,
   destination,
   segment: Segment,
@@ -1758,8 +1785,42 @@ function flushSegment(
   const boundary = segment.boundary;
   if (boundary === null) {
     // Not a suspense boundary.
-    return flushSubtree(request, destination, segment);
+
+    // If parent not flushed we are flushing inside another segment and need to consider text separator
+    // insertion. If parent is flushed we are a top-level Segment that will be emitted inside non-text
+    // nodes and can avoid separators regardless of what edges the segment derived when it was rendering
+    const parentFlushed = segment.parentFlushed;
+
+    // We might have emitted Text or Nodes since the last segment to flush. set the value accordingly or
+    // retain the existing value if no Edges were emitted
+    let precedingEdge = segment.preEdge;
+    lastText =
+      precedingEdge === TEXT_EDGE
+        ? true
+        : precedingEdge === NODE_EDGE
+        ? false
+        : lastText;
+    if (parentFlushed === false && lastText && segment.leadEdge === TEXT_EDGE) {
+      // This Segment has a Text embedding at the leading edge and we need a separator
+      writeTextSeparator(destination, request.responseState);
+    }
+    let r = flushSubtree(request, destination, segment);
+
+    // We might have emitted Text or Nodes following this segment. set the value accordingly or
+    // retain teh existing valeu if no Edges were emitted
+    let lastEdge = segment.currentEdge;
+    lastText =
+      lastEdge === TEXT_EDGE ? true : lastEdge === NODE_EDGE ? false : lastText;
+    if (parentFlushed === false && lastText && segment.postEdge === TEXT_EDGE) {
+      // This Segment has a Text embedding at the trailing edge and we need a separator
+      r = writeTextSeparator(destination, request.responseState);
+    }
+
+    return r;
   }
+  // Boundaries will always write non-Text last
+  lastText = false;
+
   boundary.parentFlushed = true;
   // This segment is a Suspense boundary. We need to decide whether to
   // emit the content or the fallback now.
@@ -1833,7 +1894,7 @@ function flushSegment(
     }
 
     const contentSegment = completedSegments[0];
-    flushSegment(request, destination, contentSegment);
+    flushSegmentInline(request, destination, contentSegment);
 
     return writeEndCompletedSuspenseBoundary(
       destination,
