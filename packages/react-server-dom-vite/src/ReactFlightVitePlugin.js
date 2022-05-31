@@ -372,12 +372,11 @@ function resolveModPath(
   let absolutePath: string;
   try {
     absolutePath = modPath.startsWith('.')
-      ? path.resolve(dirname, modPath)
+      ? normalizePath(path.resolve(dirname, modPath))
       : modPath;
 
-    return require.resolve(
-      (modPath.startsWith('.') ? path.resolve(dirname, modPath) : modPath) +
-        (retryExtension || ''),
+    return normalizePath(
+      require.resolve(absolutePath + (retryExtension || '')),
     );
   } catch (error) {
     if (!/\.[jt]sx?$/.test(absolutePath) && retryExtension !== '.tsx') {
@@ -397,7 +396,7 @@ function augmentModuleGraph(moduleGraph: any, id: string, code: string) {
   if (!currentModule) return;
 
   const [source] = id.split('?');
-  const dirname = path.dirname(source);
+  const dirname = normalizePath(path.dirname(source));
   const [rawImports, namedExports, isFacade] = parse(code);
 
   // This is currently not used but it should be considered
@@ -417,9 +416,9 @@ function augmentModuleGraph(moduleGraph: any, id: string, code: string) {
       const resolvedPath = resolveModPath(modPath.split('?')[0], dirname);
       if (!resolvedPath) return; // Virtual modules or other exceptions
 
-      const [action, variables] = code
+      const [action, variables = ''] = code
         .slice(startStatement, endStatement)
-        .split(/\s+from\s+['"]/m)[0]
+        .split(/\s+(from\s+)?['"]/m)[0]
         .split(/\s+(.+)/m);
 
       imports.push({
@@ -428,8 +427,8 @@ function augmentModuleGraph(moduleGraph: any, id: string, code: string) {
           .replace(/[{}]/gm, '')
           .trim()
           .split(/\s*,\s*/m)
-          .map(s => s.split(/\s+as\s+/m))
-          .filter(Boolean),
+          .filter(Boolean)
+          .map(s => s.split(/\s+as\s+/m)),
         from: resolvedPath, // '/absolute/path'
         originalFrom: modPath, // './path' or '3plib/subpath'
       });
