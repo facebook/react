@@ -564,7 +564,6 @@ describe('ReactFlight', () => {
       );
     });
 
-    // @gate enableServerContext
     it('[TODO] it does not warn if you render a server element passed to a client module reference twice on the client when using useId', async () => {
       // @TODO Today if you render a server component with useId and pass it to a client component and that client component renders the element in two or more
       // places the id used on the server will be duplicated in the client. This is a deviation from the guarantees useId makes for Fizz/Client and is a consequence
@@ -572,8 +571,8 @@ describe('ReactFlight', () => {
       // so the output passed to the Client has no knowledge of the useId use. In the future we would like to add a DEV warning when this happens. For now
       // we just accept that it is a nuance of useId in Flight
       function App() {
-        let id = React.useId();
-        let div = <div prop={id}>{id}</div>;
+        const id = React.useId();
+        const div = <div prop={id}>{id}</div>;
         return <ClientDoublerModuleRef el={div} />;
       }
 
