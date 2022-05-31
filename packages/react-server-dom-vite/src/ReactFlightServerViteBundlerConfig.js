@@ -28,10 +28,16 @@ export type ModuleKey = string;
 const MODULE_TAG = Symbol.for('react.module.reference');
 
 export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
+  if (typeof reference === 'string')
+    reference = globalThis.__STRING_REFERENCE_INDEX[reference];
+
   return reference.filepath + '#' + reference.name;
 }
 
 export function isModuleReference(reference: Object): boolean {
+  if (typeof reference === 'string')
+    return !!globalThis.__STRING_REFERENCE_INDEX[reference];
+
   return reference.$$typeof === MODULE_TAG;
 }
 
@@ -39,6 +45,9 @@ export function resolveModuleMetaData<T>(
   config: BundlerConfig,
   moduleReference: ModuleReference<T>,
 ): ModuleMetaData {
+  if (typeof moduleReference === 'string')
+    moduleReference = globalThis.__STRING_REFERENCE_INDEX[moduleReference];
+
   return {
     id: moduleReference.filepath,
     name: moduleReference.name,

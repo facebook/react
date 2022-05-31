@@ -178,6 +178,11 @@ function attemptResolveElement(
     );
   }
 
+  if (type != null && isModuleReference(type)) {
+    // This is a reference to a client component.
+    return [REACT_ELEMENT_TYPE, type, key, props];
+  }
+
   if (typeof type === 'function') {
     // This is a server-side component.
     return type(props);
@@ -196,10 +201,6 @@ function attemptResolveElement(
     // Any built-in works as long as its props are serializable.
     return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (type != null && typeof type === 'object') {
-    if (isModuleReference(type)) {
-      // This is a reference to a client component.
-      return [REACT_ELEMENT_TYPE, type, key, props];
-    }
     switch (type.$$typeof) {
       case REACT_LAZY_TYPE: {
         const payload = type._payload;
@@ -531,11 +532,11 @@ export function resolveModelToJSON(
     }
   }
 
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
 
-  if (typeof value === 'object') {
+  if (typeof value === 'object' || isModuleReference(value)) {
     if (isModuleReference(value)) {
       const moduleReference: ModuleReference<any> = (value: any);
       const moduleKey: ModuleKey = getModuleKey(moduleReference);
