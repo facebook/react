@@ -228,6 +228,7 @@ import {
 } from './ReactFiber.old';
 import {
   retryDehydratedSuspenseBoundary,
+  markUpdateLaneFromFiberToRoot,
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
@@ -2626,7 +2627,13 @@ function updateDehydratedSuspenseComponent(
           suspenseState.retryLane = attemptHydrationAtLane;
           // TODO: Ideally this would inherit the event time of the current render
           const eventTime = NoTimestamp;
-          scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime);
+          markUpdateLaneFromFiberToRoot(current, attemptHydrationAtLane);
+          scheduleUpdateOnFiber(
+            root,
+            current,
+            attemptHydrationAtLane,
+            eventTime,
+          );
         } else {
           // We have already tried to ping at a higher priority than we're rendering with
           // so if we got here, we must have failed to hydrate at those levels. We must

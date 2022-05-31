@@ -83,6 +83,7 @@ import {
 } from './ReactHookEffectTags';
 import {
   getWorkInProgressRoot,
+  markUpdateLaneFromFiberToRoot,
   scheduleUpdateOnFiber,
   requestUpdateLane,
   requestEventTime,
@@ -1496,7 +1497,10 @@ function checkIfSnapshotChanged(inst) {
 }
 
 function forceStoreRerender(fiber) {
-  scheduleUpdateOnFiber(fiber, SyncLane, NoTimestamp);
+  const root = markUpdateLaneFromFiberToRoot(fiber, SyncLane);
+  if (root !== null) {
+    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+  }
 }
 
 function mountState<S>(
@@ -2154,8 +2158,9 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
       case HostRoot: {
         const lane = requestUpdateLane(provider);
         const eventTime = requestEventTime();
-        const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+        const root = markUpdateLaneFromFiberToRoot(provider, lane);
         if (root !== null) {
+          scheduleUpdateOnFiber(root, provider, lane, eventTime);
           entangleLegacyQueueTransitions(root, provider, lane);
         }
 
@@ -2213,9 +2218,10 @@ function dispatchReducerAction<S, A>(
     enqueueRenderPhaseUpdate(queue, update);
   } else {
     enqueueUpdate(fiber, queue, update, lane);
-    const eventTime = requestEventTime();
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = markUpdateLaneFromFiberToRoot(fiber, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitionUpdate(root, queue, lane);
     }
   }
@@ -2293,9 +2299,10 @@ function dispatchSetState<S, A>(
         }
       }
     }
-    const eventTime = requestEventTime();
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = markUpdateLaneFromFiberToRoot(fiber, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitionUpdate(root, queue, lane);
     }
   }

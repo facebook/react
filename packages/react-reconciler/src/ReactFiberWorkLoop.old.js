@@ -518,21 +518,17 @@ function requestRetryLane(fiber: Fiber) {
 }
 
 export function scheduleUpdateOnFiber(
+  root: FiberRoot,
   fiber: Fiber,
   lane: Lane,
   eventTime: number,
-): FiberRoot | null {
+) {
   checkForNestedUpdates();
 
   if (__DEV__) {
     if (isRunningInsertionEffect) {
       console.error('useInsertionEffect must not schedule updates.');
     }
-  }
-
-  const root = markUpdateLaneFromFiberToRoot(fiber, lane);
-  if (root === null) {
-    return null;
   }
 
   if (__DEV__) {
@@ -645,7 +641,6 @@ export function scheduleUpdateOnFiber(
       flushSyncCallbacksOnlyInLegacyMode();
     }
   }
-  return root;
 }
 
 export function scheduleInitialHydrationOnRoot(
@@ -672,7 +667,7 @@ export function scheduleInitialHydrationOnRoot(
 // work without treating it as a typical update that originates from an event;
 // e.g. retrying a Suspense boundary isn't an update, but it does schedule work
 // on a fiber.
-function markUpdateLaneFromFiberToRoot(
+export function markUpdateLaneFromFiberToRoot(
   sourceFiber: Fiber,
   lane: Lane,
 ): FiberRoot | null {

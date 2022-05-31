@@ -72,6 +72,7 @@ import {
   requestEventTime,
   requestUpdateLane,
   scheduleUpdateOnFiber,
+  markUpdateLaneFromFiberToRoot,
 } from './ReactFiberWorkLoop.new';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 import {
@@ -216,8 +217,9 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = markUpdateLaneFromFiberToRoot(fiber, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -251,8 +253,9 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = markUpdateLaneFromFiberToRoot(fiber, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -285,8 +288,9 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = markUpdateLaneFromFiberToRoot(fiber, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 
