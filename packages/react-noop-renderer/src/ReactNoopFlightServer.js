@@ -45,11 +45,8 @@ const ReactNoopFlightServer = ReactFlightServer({
   stringToPrecomputedChunk(content: string): string {
     return content;
   },
-  getModuleReference(reference: any): ?Object {
-    return reference &&
-      reference.$$typeof === Symbol.for('react.module.reference')
-      ? reference
-      : undefined;
+  isModuleReference(reference: Object): boolean {
+    return reference.$$typeof === Symbol.for('react.module.reference');
   },
   getModuleKey(reference: Object): Object {
     return reference;

@@ -35,8 +35,8 @@ export type {
   ModuleMetaData,
 } from 'ReactFlightNativeRelayServerIntegration';
 
-export function getModuleReference(reference: any): ?Object {
-  return reference instanceof JSResourceReferenceImpl ? reference : undefined;
+export function isModuleReference(reference: Object): boolean {
+  return reference instanceof JSResourceReferenceImpl;
 }
 
 export type ModuleKey = ModuleReference<any>;

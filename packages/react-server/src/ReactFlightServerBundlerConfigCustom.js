@@ -13,6 +13,6 @@ export opaque type BundlerConfig = mixed; // eslint-disable-line no-undef
 export opaque type ModuleReference<T> = mixed; // eslint-disable-line no-undef
 export opaque type ModuleMetaData: any = mixed; // eslint-disable-line no-undef
 export opaque type ModuleKey: any = mixed; // eslint-disable-line no-undef
-export const getModuleReference = $$$hostConfig.getModuleReference;
+export const isModuleReference = $$$hostConfig.isModuleReference;
 export const getModuleKey = $$$hostConfig.getModuleKey;
 export const resolveModuleMetaData = $$$hostConfig.resolveModuleMetaData;

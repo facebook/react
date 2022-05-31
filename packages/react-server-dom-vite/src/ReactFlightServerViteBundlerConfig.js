@@ -31,11 +31,8 @@ export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
   return reference.filepath + '#' + reference.name;
 }
 
-export function getModuleReference(reference: any): ?Object {
-  if (typeof reference === 'string')
-    return globalThis.__STRING_REFERENCE_INDEX[reference];
-
-  return reference && reference.$$typeof === MODULE_TAG ? reference : undefined;
+export function isModuleReference(reference: Object): boolean {
+  return reference.$$typeof === MODULE_TAG;
 }
 
 export function resolveModuleMetaData<T>(
