@@ -241,6 +241,36 @@ jobs:
       - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
       - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
 
+  run_devtools_e2e_tests_for_versions:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      version:
+        type: string
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Install nested packages from Yarn cache
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run:
+          name: Playwright install deps
+          command: |
+            npx playwright install
+            sudo npx playwright install-deps
+      - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >>
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: ./scripts/circleci/run_devtools_e2e_tests.js << parameters.version >>
+      - run:
+          name: Cleanup build regression folder
+          command: rm -r ./build-regression
+
   yarn_lint_build:
     docker: *docker
     environment: *environment
@@ -532,6 +562,17 @@ workflows:
           requires:
             - yarn_build_combined
       - run_devtools_tests_for_versions:
+          requires:
+            - build_devtools_and_process_artifacts
+          matrix:
+            parameters:
+              version:
+                - "16.0"
+                - "16.5" # schedule package
+                - "16.8" # hooks
+                - "17.0" 
+                - "18.0"
+      - run_devtools_e2e_tests_for_versions:
           requires:
             - build_devtools_and_process_artifacts
           matrix:
