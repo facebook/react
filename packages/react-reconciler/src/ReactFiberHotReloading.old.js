@@ -18,9 +18,9 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import {
   flushSync,
   scheduleUpdateOnFiber,
-  markUpdateLaneFromFiberToRoot,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop.old';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.old';
 import {updateContainer} from './ReactFiberReconciler.old';
 import {emptyContextObject} from './ReactFiberContext.old';
 import {SyncLane, NoTimestamp} from './ReactFiberLane.old';
@@ -322,7 +322,7 @@ function scheduleFibersWithFamiliesRecursively(
       fiber._debugNeedsRemount = true;
     }
     if (needsRemount || needsRender) {
-      const root = markUpdateLaneFromFiberToRoot(fiber, SyncLane);
+      const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
         scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
       }

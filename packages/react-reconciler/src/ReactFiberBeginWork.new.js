@@ -228,13 +228,13 @@ import {
 } from './ReactFiber.new';
 import {
   retryDehydratedSuspenseBoundary,
-  markUpdateLaneFromFiberToRoot,
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
   pushRenderLanes,
 } from './ReactFiberWorkLoop.new';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.new';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent.new';
 import {createCapturedValue} from './ReactCapturedValue';
@@ -2627,7 +2627,7 @@ function updateDehydratedSuspenseComponent(
           suspenseState.retryLane = attemptHydrationAtLane;
           // TODO: Ideally this would inherit the event time of the current render
           const eventTime = NoTimestamp;
-          markUpdateLaneFromFiberToRoot(current, attemptHydrationAtLane);
+          enqueueConcurrentRenderForLane(current, attemptHydrationAtLane);
           scheduleUpdateOnFiber(
             root,
             current,

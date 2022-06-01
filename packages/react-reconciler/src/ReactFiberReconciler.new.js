@@ -57,7 +57,6 @@ import {
 import {
   requestEventTime,
   requestUpdateLane,
-  markUpdateLaneFromFiberToRoot,
   scheduleUpdateOnFiber,
   scheduleInitialHydrationOnRoot,
   flushRoot,
@@ -69,6 +68,7 @@ import {
   discreteUpdates,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop.new';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.new';
 import {
   createUpdate,
   enqueueUpdate,
@@ -378,8 +378,7 @@ export function updateContainer(
     update.callback = callback;
   }
 
-  enqueueUpdate(current, update, lane);
-  const root = markUpdateLaneFromFiberToRoot(current, lane);
+  const root = enqueueUpdate(current, update, lane);
   if (root !== null) {
     scheduleUpdateOnFiber(root, current, lane, eventTime);
     entangleTransitions(root, current, lane);
@@ -426,7 +425,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
     }
     case SuspenseComponent: {
       flushSync(() => {
-        const root = markUpdateLaneFromFiberToRoot(fiber, SyncLane);
+        const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
         if (root !== null) {
           const eventTime = requestEventTime();
           scheduleUpdateOnFiber(root, fiber, SyncLane, eventTime);
@@ -470,7 +469,7 @@ export function attemptDiscreteHydration(fiber: Fiber): void {
     return;
   }
   const lane = SyncLane;
-  const root = markUpdateLaneFromFiberToRoot(fiber, lane);
+  const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     const eventTime = requestEventTime();
     scheduleUpdateOnFiber(root, fiber, lane, eventTime);
@@ -487,7 +486,7 @@ export function attemptContinuousHydration(fiber: Fiber): void {
     return;
   }
   const lane = SelectiveHydrationLane;
-  const root = markUpdateLaneFromFiberToRoot(fiber, lane);
+  const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     const eventTime = requestEventTime();
     scheduleUpdateOnFiber(root, fiber, lane, eventTime);
@@ -502,7 +501,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     return;
   }
   const lane = requestUpdateLane(fiber);
-  const root = markUpdateLaneFromFiberToRoot(fiber, lane);
+  const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     const eventTime = requestEventTime();
     scheduleUpdateOnFiber(root, fiber, lane, eventTime);
@@ -682,7 +681,7 @@ if (__DEV__) {
       // Shallow cloning props works as a workaround for now to bypass the bailout check.
       fiber.memoizedProps = {...fiber.memoizedProps};
 
-      const root = markUpdateLaneFromFiberToRoot(fiber, SyncLane);
+      const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
         scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
       }
@@ -706,7 +705,7 @@ if (__DEV__) {
       // Shallow cloning props works as a workaround for now to bypass the bailout check.
       fiber.memoizedProps = {...fiber.memoizedProps};
 
-      const root = markUpdateLaneFromFiberToRoot(fiber, SyncLane);
+      const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
         scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
       }
@@ -731,7 +730,7 @@ if (__DEV__) {
       // Shallow cloning props works as a workaround for now to bypass the bailout check.
       fiber.memoizedProps = {...fiber.memoizedProps};
 
-      const root = markUpdateLaneFromFiberToRoot(fiber, SyncLane);
+      const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
         scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
       }
@@ -744,7 +743,7 @@ if (__DEV__) {
     if (fiber.alternate) {
       fiber.alternate.pendingProps = fiber.pendingProps;
     }
-    const root = markUpdateLaneFromFiberToRoot(fiber, SyncLane);
+    const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
       scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
     }
@@ -754,7 +753,7 @@ if (__DEV__) {
     if (fiber.alternate) {
       fiber.alternate.pendingProps = fiber.pendingProps;
     }
-    const root = markUpdateLaneFromFiberToRoot(fiber, SyncLane);
+    const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
       scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
     }
@@ -768,14 +767,14 @@ if (__DEV__) {
     if (fiber.alternate) {
       fiber.alternate.pendingProps = fiber.pendingProps;
     }
-    const root = markUpdateLaneFromFiberToRoot(fiber, SyncLane);
+    const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
       scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
     }
   };
 
   scheduleUpdate = (fiber: Fiber) => {
-    const root = markUpdateLaneFromFiberToRoot(fiber, SyncLane);
+    const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
       scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
     }
