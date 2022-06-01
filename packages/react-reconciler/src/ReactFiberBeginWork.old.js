@@ -253,6 +253,7 @@ import {
   getOffscreenDeferredCache,
   getSuspendedTransitions,
 } from './ReactFiberTransition.old';
+import {pushTracingMarker} from './ReactFiberTracingMarkerComponent.old';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -882,6 +883,7 @@ function updateTracingMarkerComponent(
     return null;
   }
 
+  pushTracingMarker(workInProgress);
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
