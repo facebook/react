@@ -727,9 +727,13 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
+        // @TODO changes made to sending Fizz errors to client led to the insertion of templates in client rendered
+        // suspense boundaries. This leaks in this test becuase the client rendered suspense boundary appears like
+        // unhydrated tail nodes and this template is the first match. When we add special case handling for client
+        // rendered suspense boundaries this test will likely change again
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
-              "Warning: Did not expect server HTML to contain a <p> in <div>.
+              "Warning: Did not expect server HTML to contain a <template> in <div>.
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
