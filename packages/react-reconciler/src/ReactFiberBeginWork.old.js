@@ -2583,9 +2583,15 @@ function updateDehydratedSuspenseComponent(
       // This boundary is in a permanent fallback state. In this case, we'll never
       // get an update and we'll never be able to hydrate the final content. Let's just try the
       // client side render instead.
-      const {message, hash, stack} = getSuspenseInstanceFallbackErrorDetails(
-        suspenseInstance,
-      );
+      let digest, message, stack;
+      if (__DEV__) {
+        ({digest, message, stack} = getSuspenseInstanceFallbackErrorDetails(
+          suspenseInstance,
+        ));
+      } else {
+        ({digest} = getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
+      }
+
       const error = message
         ? // eslint-disable-next-line react-internal/prod-error-codes
           new Error(message)
@@ -2594,7 +2600,7 @@ function updateDehydratedSuspenseComponent(
               'due to an error during server rendering. Switched to ' +
               'client rendering.',
           );
-      const capturedValue = createCapturedValue(error, hash, stack);
+      const capturedValue = createCapturedValue(error, digest, stack);
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,

@@ -92,11 +92,11 @@ describe('ReactDOMFizzServer', () => {
   function expectErrors(errorsArr, toBeDevArr, toBeProdArr) {
     const mappedErrows = errorsArr.map(({error, errorInfo}) => {
       const stack = errorInfo && errorInfo.componentStack;
-      const errorHash = errorInfo && errorInfo.errorHash;
+      const digest = errorInfo && errorInfo.digest;
       if (stack) {
-        return [error.message, errorHash, normalizeCodeLocInfo(stack)];
-      } else if (errorHash) {
-        return [error.message, errorHash];
+        return [error.message, digest, normalizeCodeLocInfo(stack)];
+      } else if (digest) {
+        return [error.message, digest];
       }
       return error.message;
     });

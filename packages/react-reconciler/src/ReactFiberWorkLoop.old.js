@@ -2343,8 +2343,8 @@ function commitRootImpl(
     for (let i = 0; i < recoverableErrors.length; i++) {
       const recoverableError = recoverableErrors[i];
       const componentStack = recoverableError.stack;
-      const errorHash = recoverableError.hash;
-      onRecoverableError(recoverableError.value, {componentStack, errorHash});
+      const digest = recoverableError.digest;
+      onRecoverableError(recoverableError.value, {componentStack, digest});
     }
   }
 

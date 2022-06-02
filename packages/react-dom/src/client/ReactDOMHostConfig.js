@@ -729,22 +729,43 @@ export function isSuspenseInstancePending(instance: SuspenseInstance) {
 export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
   return instance.data === SUSPENSE_FALLBACK_START_DATA;
 }
+
 export function getSuspenseInstanceFallbackErrorDetails(
   instance: SuspenseInstance,
-): {message?: string, stack?: string, hash?: string} {
-  const nextSibling = instance.nextSibling;
-  if (
-    nextSibling &&
-    nextSibling.nodeType === ELEMENT_NODE &&
-    nextSibling.nodeName.toLowerCase() === 'template'
-  ) {
+): {digest: ?string, message?: string, stack?: string} {
+  const dataset =
+    instance.nextSibling && ((instance.nextSibling: any): HTMLElement).dataset;
+  let digest, message, stack;
+  if (dataset) {
+    digest = dataset.dgst;
+    if (__DEV__) {
+      message = dataset.msg;
+      stack = dataset.stck;
+    }
+  }
+  if (__DEV__) {
     return {
-      message: ((nextSibling: any): HTMLTemplateElement).dataset.msg,
-      stack: ((nextSibling: any): HTMLTemplateElement).dataset.stack,
-      hash: ((nextSibling: any): HTMLTemplateElement).dataset.hash,
+      message,
+      digest,
+      stack,
+    };
+  } else {
+    return {
+      digest,
     };
   }
-  return {};
+
+  // let value = {message: undefined, hash: undefined};
+  // const nextSibling = instance.nextSibling;
+  // if (nextSibling) {
+  //   const dataset = ((nextSibling: any): HTMLTemplateElement).dataset;
+  //   value.message = dataset.msg;
+  //   value.hash = dataset.hash;
+  //   if (__DEV__) {
+  //     value.stack = dataset.stack;
+  //   }
+  // }
+  // return value;
 }
 
 export function registerSuspenseInstanceRetry(

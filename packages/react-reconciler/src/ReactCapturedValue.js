@@ -15,7 +15,7 @@ export type CapturedValue<T> = {|
   value: T,
   source: Fiber | null,
   stack: string | null,
-  hash: string | null,
+  digest: string | null,
 |};
 
 export function createCapturedValueAtFiber<T>(
@@ -28,19 +28,19 @@ export function createCapturedValueAtFiber<T>(
     value,
     source,
     stack: getStackByFiberInDevAndProd(source),
-    hash: null,
+    digest: null,
   };
 }
 
 export function createCapturedValue<T>(
   value: T,
-  hash?: string,
-  stack?: string,
+  digest: ?string,
+  stack: ?string,
 ): CapturedValue<T> {
   return {
     value,
     source: null,
     stack: stack != null ? stack : null,
-    hash: hash != null ? hash : null,
+    digest: digest != null ? digest : null,
   };
 }

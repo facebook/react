@@ -149,7 +149,7 @@ export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
   // flushing these error arguments are not currently supported in this legacy streaming format.
-  errorHash: ?string,
+  errorDigest: ?string,
   errorMessage?: string,
   errorComponentStack?: string,
 ): boolean {
