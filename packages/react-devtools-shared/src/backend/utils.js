@@ -280,6 +280,7 @@ export function getBestMatchingRendererInterface(
   node: Object,
 ): RendererInterface | null {
   let bestMatch = null;
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const renderer of rendererInterfaces) {
     const fiber = renderer.getFiberForNative(node);
     if (fiber != null) {
