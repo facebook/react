@@ -1527,16 +1527,22 @@ const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
 const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
 const clientRenderedSuspenseBoundaryError1 = stringToPrecomputedChunk(
-  '<template data-dgst="',
+  '<template',
+);
+const clientRenderedSuspenseBoundaryErrorAttrInterstitial = stringToPrecomputedChunk(
+  '"',
 );
 const clientRenderedSuspenseBoundaryError1A = stringToPrecomputedChunk(
-  '" data-msg="',
+  ' data-dgst="',
 );
 const clientRenderedSuspenseBoundaryError1B = stringToPrecomputedChunk(
-  '" data-stck="',
+  ' data-msg="',
+);
+const clientRenderedSuspenseBoundaryError1C = stringToPrecomputedChunk(
+  ' data-stck="',
 );
 const clientRenderedSuspenseBoundaryError2 = stringToPrecomputedChunk(
-  '"></template>',
+  '></template>',
 );
 
 export function pushStartCompletedSuspenseBoundary(
@@ -1586,23 +1592,35 @@ export function writeStartClientRenderedSuspenseBoundary(
     startClientRenderedSuspenseBoundary,
   );
   writeChunk(destination, clientRenderedSuspenseBoundaryError1);
-  writeChunk(
-    destination,
-    stringToChunk(escapeTextForBrowser(errorDigest || '')),
-  );
+  if (errorDigest) {
+    writeChunk(destination, clientRenderedSuspenseBoundaryError1A);
+    writeChunk(destination, stringToChunk(escapeTextForBrowser(errorDigest)));
+    writeChunk(
+      destination,
+      clientRenderedSuspenseBoundaryErrorAttrInterstitial,
+    );
+  }
   if (__DEV__) {
     if (errorMesssage) {
-      writeChunk(destination, clientRenderedSuspenseBoundaryError1A);
+      writeChunk(destination, clientRenderedSuspenseBoundaryError1B);
       writeChunk(
         destination,
         stringToChunk(escapeTextForBrowser(errorMesssage)),
       );
+      writeChunk(
+        destination,
+        clientRenderedSuspenseBoundaryErrorAttrInterstitial,
+      );
     }
     if (errorComponentStack) {
-      writeChunk(destination, clientRenderedSuspenseBoundaryError1B);
+      writeChunk(destination, clientRenderedSuspenseBoundaryError1C);
       writeChunk(
         destination,
         stringToChunk(escapeTextForBrowser(errorComponentStack)),
+      );
+      writeChunk(
+        destination,
+        clientRenderedSuspenseBoundaryErrorAttrInterstitial,
       );
     }
   }

@@ -750,6 +750,7 @@ export function getSuspenseInstanceFallbackErrorDetails(
       stack,
     };
   } else {
+    // Object gets DCE'd if constructed in tail position and matches callsite destructuring
     return {
       digest,
     };
