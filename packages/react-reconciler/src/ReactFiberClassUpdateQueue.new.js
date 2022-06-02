@@ -132,7 +132,6 @@ export type Update<State> = {|
 
 export type SharedQueue<State> = {|
   pending: Update<State> | null,
-  interleaved: Update<State> | null,
   lanes: Lanes,
 |};
 
@@ -172,7 +171,6 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     lastBaseUpdate: null,
     shared: {
       pending: null,
-      interleaved: null,
       lanes: NoLanes,
     },
     effects: null,
@@ -622,17 +620,7 @@ export function processUpdateQueue<State>(
     queue.firstBaseUpdate = newFirstBaseUpdate;
     queue.lastBaseUpdate = newLastBaseUpdate;
 
-    // Interleaved updates are stored on a separate queue. We aren't going to
-    // process them during this render, but we do need to track which lanes
-    // are remaining.
-    const lastInterleaved = queue.shared.interleaved;
-    if (lastInterleaved !== null) {
-      let interleaved = lastInterleaved;
-      do {
-        newLanes = mergeLanes(newLanes, interleaved.lane);
-        interleaved = ((interleaved: any).next: Update<State>);
-      } while (interleaved !== lastInterleaved);
-    } else if (firstBaseUpdate === null) {
+    if (firstBaseUpdate === null) {
       // `queue.lanes` is used for entangling transitions. We can set it back to
       // zero once the queue is empty.
       queue.shared.lanes = NoLanes;

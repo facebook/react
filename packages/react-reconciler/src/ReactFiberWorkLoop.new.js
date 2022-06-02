@@ -2046,9 +2046,15 @@ function commitRootImpl(
   root.callbackNode = null;
   root.callbackPriority = NoLane;
 
-  // Update the first and last pending times on this root. The new first
-  // pending time is whatever is left on the root fiber.
+  // Check which lanes no longer have any work scheduled on them, and mark
+  // those as finished.
   let remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
+
+  // Make sure to account for lanes that were updated by a concurrent event
+  // during the render phase; don't mark them as finished.
+  const concurrentlyUpdatedLanes = finishQueueingConcurrentUpdates();
+  remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
+
   markRootFinished(root, remainingLanes);
 
   if (root === workInProgressRoot) {
