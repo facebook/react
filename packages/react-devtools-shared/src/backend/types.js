@@ -350,6 +350,7 @@ export type RendererInterface = {
   findNativeNodesForFiberID: FindNativeNodesForFiberID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
+  getFiberForNative: (hostInstance: NativeType) => ?Fiber,
   getFiberIDForNative: GetFiberIDForNative,
   getDisplayNameForFiberID: GetDisplayNameForFiberID,
   getInstanceAndStyle(id: number): InstanceAndStyle,

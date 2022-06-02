@@ -39,7 +39,10 @@ import type {
   RendererInterface,
 } from './types';
 import type {ComponentFilter} from '../types';
-import {isSynchronousXHRSupported} from './utils';
+import {
+  isSynchronousXHRSupported,
+  getBestMatchingRendererInterface,
+} from './utils';
 import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 const debug = (methodName, ...args) => {
@@ -310,20 +313,16 @@ export default class Agent extends EventEmitter<{|
   }
 
   getIDForNode(node: Object): number | null {
+    const renderers = [];
     for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
-
-      try {
-        const id = renderer.getFiberIDForNative(node, true);
-        if (id !== null) {
-          return id;
-        }
-      } catch (error) {
-        // Some old React versions might throw if they can't find a match.
-        // If so we should ignore it...
-      }
+      renderers.push(renderer);
+    }
+    const rendererInterface = getBestMatchingRendererInterface(renderers, node);
+    if (rendererInterface != null) {
+      return rendererInterface.getFiberIDForNative(node, true);
     }
     return null;
   }

@@ -11,6 +11,7 @@
 import {copy} from 'clipboard-js';
 import {dehydrate} from '../hydration';
 import isArray from 'shared/isArray';
+import type {RendererInterface} from './types';
 
 import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
 
@@ -272,4 +273,24 @@ export function isSynchronousXHRSupported(): boolean {
     window.document.featurePolicy &&
     window.document.featurePolicy.allowsFeature('sync-xhr')
   );
+}
+
+export function getBestMatchingRendererInterface(
+  rendererInterfaces: Iterable<RendererInterface>,
+  node: Object,
+): RendererInterface | null {
+  let bestMatch = null;
+  for (const renderer of rendererInterfaces) {
+    const fiber = renderer.getFiberForNative(node);
+    if (fiber != null) {
+      // check if fiber.stateNode is matching the original hostInstance
+      if (fiber.stateNode === node) {
+        return renderer;
+      } else {
+        bestMatch = renderer;
+      }
+    }
+  }
+  // if an exact match is not found, return the best match as fallback
+  return bestMatch;
 }

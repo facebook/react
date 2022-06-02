@@ -2818,6 +2818,10 @@ export function attach(
     return fiber != null ? getDisplayNameForFiber(((fiber: any): Fiber)) : null;
   }
 
+  function getFiberForNative(hostInstance) {
+    return renderer.findFiberByHostInstance(hostInstance);
+  }
+
   function getFiberIDForNative(
     hostInstance,
     findNearestUnfilteredAncestor = false,
@@ -4490,6 +4494,7 @@ export function attach(
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForFiberID,
+    getFiberForNative,
     getFiberIDForNative,
     getInstanceAndStyle,
     getOwnersList,

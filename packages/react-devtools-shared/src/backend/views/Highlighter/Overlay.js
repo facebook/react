@@ -8,6 +8,7 @@
  */
 
 import {getElementDimensions, getNestedBoundingClientRect} from '../utils';
+import {getBestMatchingRendererInterface} from '../../utils';
 
 const assign = Object.assign;
 
@@ -233,13 +234,15 @@ export default class Overlay {
       const hook: DevToolsHook =
         node.ownerDocument.defaultView.__REACT_DEVTOOLS_GLOBAL_HOOK__;
       if (hook != null && hook.rendererInterfaces != null) {
+        const rendererInterface = getBestMatchingRendererInterface(
+          hook.rendererInterfaces.values(),
+          node,
+        );
         let ownerName = null;
-        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-        for (const rendererInterface of hook.rendererInterfaces.values()) {
+        if (rendererInterface !== null) {
           const id = rendererInterface.getFiberIDForNative(node, true);
           if (id !== null) {
             ownerName = rendererInterface.getDisplayNameForFiberID(id, true);
-            break;
           }
         }
 

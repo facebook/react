@@ -1084,6 +1084,11 @@ export function attach(
 
   function unpatchConsoleForStrictMode() {}
 
+  function getFiberForNative() {
+    // Not implemented
+    return null;
+  }
+
   return {
     clearErrorsAndWarnings,
     clearErrorsForFiberID,
@@ -1094,6 +1099,7 @@ export function attach(
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForFiberID,
+    getFiberForNative,
     getFiberIDForNative: getInternalIDForNative,
     getInstanceAndStyle,
     findNativeNodesForFiberID: (id: number) => {
