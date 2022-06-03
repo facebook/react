@@ -7,9 +7,6 @@
  * @flow
  */
 
-// Intentional divergence between "old" and "new" reconciler files to see
-// if CI detects it.
-
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
