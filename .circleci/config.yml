@@ -421,7 +421,7 @@ jobs:
           name: Confirm reconciler forks are the same
           command: |
             yarn replace-fork
-            git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, disable this CI check." && false)
+            git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, add the commit SHA to scripts/merge-fork/forked-revisions." && false)
 
 
 workflows:
