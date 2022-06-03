@@ -9,6 +9,7 @@ const ROOT_PATH = join(__dirname, '..', '..');
 const reactVersion = process.argv[2];
 const inlinePackagePath = join(ROOT_PATH, 'packages', 'react-devtools-inline');
 const shellPackagePath = join(ROOT_PATH, 'packages', 'react-devtools-shell');
+const screenshotPath = join(ROOT_PATH, 'tmp', 'screenshots');
 
 let buildProcess = null;
 let serverProcess = null;
@@ -115,9 +116,11 @@ function runTestShell() {
 async function runEndToEndTests() {
   logBright('Running e2e tests');
   if (!reactVersion) {
-    testProcess = spawn('yarn', ['test:e2e'], {cwd: inlinePackagePath});
+    testProcess = spawn('yarn', ['test:e2e', `--output=${screenshotPath}`], {
+      cwd: inlinePackagePath,
+    });
   } else {
-    testProcess = spawn('yarn', ['test:e2e'], {
+    testProcess = spawn('yarn', ['test:e2e', `--output=${screenshotPath}`], {
       cwd: inlinePackagePath,
       env: {...process.env, REACT_VERSION: reactVersion},
     });
