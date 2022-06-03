@@ -134,7 +134,7 @@ jobs:
           command: |
               git fetch origin main
               cd ./scripts/release && yarn && cd ../../
-              scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main)
+              scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main) --allowBrokenCI
               mv ./build ./base-build
       - run:
           # TODO: The `download-experimental-build` script copies the npm
@@ -570,7 +570,7 @@ workflows:
                 - "16.0"
                 - "16.5" # schedule package
                 - "16.8" # hooks
-                - "17.0" 
+                - "17.0"
                 - "18.0"
       - run_devtools_e2e_tests_for_versions:
           requires:
@@ -581,7 +581,7 @@ workflows:
                 - "16.0"
                 - "16.5" # schedule package
                 - "16.8" # hooks
-                - "17.0" 
+                - "17.0"
                 - "18.0"
 
   # Used to publish a prerelease manually via the command line

@@ -34,6 +34,13 @@ const paramDefinitions = [
     type: String,
     description: 'Release channel (stable, experimental, or latest)',
   },
+  {
+    name: 'allowBrokenCI',
+    type: Boolean,
+    description:
+      'Continue even if CI is failing. Useful if you need to debug a broken build.',
+    defaultValue: false,
+  },
 ];
 
 module.exports = async () => {
@@ -61,7 +68,7 @@ module.exports = async () => {
   try {
     if (params.build === null) {
       params.build = await logPromise(
-        getBuildIdForCommit(params.commit),
+        getBuildIdForCommit(params.commit, params.allowBrokenCI),
         theme`Getting build ID for commit "${params.commit}"`
       );
     }
