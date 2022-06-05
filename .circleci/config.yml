@@ -555,12 +555,12 @@ workflows:
                 - main
     jobs:
       - setup
-      - yarn_build_combined:
+      - get_base_build:
           requires:
             - setup
       - build_devtools_and_process_artifacts:
           requires:
-            - yarn_build_combined
+            - get_base_build
       - run_devtools_tests_for_versions:
           requires:
             - build_devtools_and_process_artifacts
