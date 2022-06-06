@@ -729,29 +729,44 @@ export function isSuspenseInstancePending(instance: SuspenseInstance) {
 export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
   return instance.data === SUSPENSE_FALLBACK_START_DATA;
 }
+
 export function getSuspenseInstanceFallbackErrorDetails(
   instance: SuspenseInstance,
-) {
-  const nextSibling = instance.nextSibling;
-  let errorMessage /*, errorComponentStack, errorHash*/;
-  if (
-    nextSibling &&
-    nextSibling.nodeType === ELEMENT_NODE &&
-    nextSibling.nodeName.toLowerCase() === 'template'
-  ) {
-    const msg = ((nextSibling: any): HTMLTemplateElement).dataset.msg;
-    if (msg !== null) errorMessage = msg;
-
-    // @TODO read and return hash and componentStack once we know how we are goign to
-    // expose this extra errorInfo to onRecoverableError
-
-    // const hash = ((nextSibling: any): HTMLTemplateElement).dataset.hash;
-    // if (hash !== null) errorHash = hash;
-
-    // const stack = ((nextSibling: any): HTMLTemplateElement).dataset.stack;
-    // if (stack !== null) errorComponentStack = stack;
+): {digest: ?string, message?: string, stack?: string} {
+  const dataset =
+    instance.nextSibling && ((instance.nextSibling: any): HTMLElement).dataset;
+  let digest, message, stack;
+  if (dataset) {
+    digest = dataset.dgst;
+    if (__DEV__) {
+      message = dataset.msg;
+      stack = dataset.stck;
+    }
   }
-  return {errorMessage /*, errorComponentStack, errorHash*/};
+  if (__DEV__) {
+    return {
+      message,
+      digest,
+      stack,
+    };
+  } else {
+    // Object gets DCE'd if constructed in tail position and matches callsite destructuring
+    return {
+      digest,
+    };
+  }
+
+  // let value = {message: undefined, hash: undefined};
+  // const nextSibling = instance.nextSibling;
+  // if (nextSibling) {
+  //   const dataset = ((nextSibling: any): HTMLTemplateElement).dataset;
+  //   value.message = dataset.msg;
+  //   value.hash = dataset.hash;
+  //   if (__DEV__) {
+  //     value.stack = dataset.stack;
+  //   }
+  // }
+  // return value;
 }
 
 export function registerSuspenseInstanceRetry(

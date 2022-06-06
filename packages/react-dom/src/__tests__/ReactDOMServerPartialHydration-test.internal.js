@@ -19,6 +19,7 @@ let Suspense;
 let SuspenseList;
 let act;
 let IdleEventPriority;
+let usingPartialRenderer;
 
 function normalizeCodeLocInfo(strOrErr) {
   if (strOrErr && strOrErr.replace) {
@@ -109,6 +110,8 @@ describe('ReactDOMServerPartialHydration', () => {
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
     }
+
+    usingPartialRenderer = global.__WWW__ && !__EXPERIMENTAL__;
 
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
   });
@@ -1668,10 +1671,16 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    // we exclude fb bundles with partial renderer
+    if (__DEV__ && !usingPartialRenderer) {
+      expect(Scheduler).toFlushAndYield([
+        'This Suspense boundary was aborted by the server.',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYield([
+        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+      ]);
+    }
     jest.runAllTimers();
 
     expect(container.textContent).toBe('Hello');
@@ -1730,10 +1739,16 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    // we exclude fb bundles with partial renderer
+    if (__DEV__ && !usingPartialRenderer) {
+      expect(Scheduler).toFlushAndYield([
+        'This Suspense boundary was aborted by the server.',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYield([
+        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+      ]);
+    }
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
     // The boundary should longer be suspended for the middle content
@@ -1797,10 +1812,16 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    // we exclude fb bundles with partial renderer
+    if (__DEV__ && !usingPartialRenderer) {
+      expect(Scheduler).toFlushAndYield([
+        'This Suspense boundary was aborted by the server.',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYield([
+        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+      ]);
+    }
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
     // The boundary should longer be suspended for the middle content
@@ -2115,10 +2136,16 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     suspend = true;
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    // we exclude fb bundles with partial renderer
+    if (__DEV__ && !usingPartialRenderer) {
+      expect(Scheduler).toFlushAndYield([
+        'This Suspense boundary was aborted by the server.',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYield([
+        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+      ]);
+    }
 
     // We haven't hydrated the second child but the placeholder is still in the list.
     expect(container.textContent).toBe('ALoading B');
@@ -2178,10 +2205,16 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    // we exclude fb bundles with partial renderer
+    if (__DEV__ && !usingPartialRenderer) {
+      expect(Scheduler).toFlushAndYield([
+        'This Suspense boundary was aborted by the server.',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYield([
+        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+      ]);
+    }
     jest.runAllTimers();
 
     expect(ref.current).toBe(span);

@@ -149,9 +149,9 @@ export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
   // flushing these error arguments are not currently supported in this legacy streaming format.
-  errorHash: ?string,
-  errorMessage?: string,
-  errorComponentStack?: string,
+  errorDigest: ?string,
+  errorMessage: ?string,
+  errorComponentStack: ?string,
 ): boolean {
   if (responseState.generateStaticMarkup) {
     // A client rendered boundary is done and doesn't need a representation in the HTML
@@ -161,6 +161,9 @@ export function writeStartClientRenderedSuspenseBoundary(
   return writeStartClientRenderedSuspenseBoundaryImpl(
     destination,
     responseState,
+    errorDigest,
+    errorMessage,
+    errorComponentStack,
   );
 }
 export function writeEndCompletedSuspenseBoundary(

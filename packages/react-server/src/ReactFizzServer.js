@@ -131,7 +131,7 @@ type LegacyContext = {
 type SuspenseBoundary = {
   id: SuspenseBoundaryID,
   rootSegmentID: number,
-  errorHash: ?string, // the error hash if it errors
+  errorDigest: ?string, // the error hash if it errors
   errorMessage?: string, // the error string if it errors
   errorComponentStack?: string, // the error component stack if it errors
   forceClientRender: boolean, // if it errors or infinitely suspends
@@ -323,7 +323,7 @@ function createSuspenseBoundary(
     completedSegments: [],
     byteSize: 0,
     fallbackAbortableTasks,
-    errorHash: null,
+    errorDigest: null,
   };
 }
 
@@ -463,14 +463,14 @@ function captureBoundaryErrorDetailsDev(
 function logRecoverableError(request: Request, error: any): ?string {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
-  const errorHash = request.onError(error);
-  if (errorHash != null && typeof errorHash !== 'string') {
+  const errorDigest = request.onError(error);
+  if (errorDigest != null && typeof errorDigest !== 'string') {
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorHash}" instead`,
+      `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorDigest}" instead`,
     );
   }
-  return errorHash;
+  return errorDigest;
 }
 
 function fatalError(request: Request, error: mixed): void {
@@ -568,7 +568,7 @@ function renderSuspenseBoundary(
   } catch (error) {
     contentRootSegment.status = ERRORED;
     newBoundary.forceClientRender = true;
-    newBoundary.errorHash = logRecoverableError(request, error);
+    newBoundary.errorDigest = logRecoverableError(request, error);
     if (__DEV__) {
       captureBoundaryErrorDetailsDev(newBoundary, error);
     }
@@ -1488,14 +1488,14 @@ function erroredTask(
   error: mixed,
 ) {
   // Report the error to a global handler.
-  const errorHash = logRecoverableError(request, error);
+  const errorDigest = logRecoverableError(request, error);
   if (boundary === null) {
     fatalError(request, error);
   } else {
     boundary.pendingTasks--;
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
-      boundary.errorHash = errorHash;
+      boundary.errorDigest = errorDigest;
       if (__DEV__) {
         captureBoundaryErrorDetailsDev(boundary, error);
       }
@@ -1554,9 +1554,9 @@ function abortTask(task: Task): void {
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
       const error = new Error(
-        'This Suspense boundary was aborted by the server',
+        'This Suspense boundary was aborted by the server.',
       );
-      boundary.errorHash = request.onError(error);
+      boundary.errorDigest = request.onError(error);
       if (__DEV__) {
         captureBoundaryErrorDetailsDev(boundary, error);
       }
@@ -1838,7 +1838,7 @@ function flushSegment(
     writeStartClientRenderedSuspenseBoundary(
       destination,
       request.responseState,
-      boundary.errorHash,
+      boundary.errorDigest,
       boundary.errorMessage,
       boundary.errorComponentStack,
     );
@@ -1921,7 +1921,7 @@ function flushClientRenderedBoundary(
     destination,
     request.responseState,
     boundary.id,
-    boundary.errorHash,
+    boundary.errorDigest,
     boundary.errorMessage,
     boundary.errorComponentStack,
   );

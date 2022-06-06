@@ -187,7 +187,10 @@ import {
   ContextOnlyDispatcher,
   getIsUpdatingOpaqueValueInRenderPhaseInDEV,
 } from './ReactFiberHooks.old';
-import {createCapturedValue} from './ReactCapturedValue';
+import {
+  createCapturedValueAtFiber,
+  type CapturedValue,
+} from './ReactCapturedValue';
 import {
   push as pushToStack,
   pop as popFromStack,
@@ -310,10 +313,14 @@ let workInProgressRootRenderPhaseUpdatedLanes: Lanes = NoLanes;
 // Lanes that were pinged (in an interleaved event) during this render.
 let workInProgressRootPingedLanes: Lanes = NoLanes;
 // Errors that are thrown during the render phase.
-let workInProgressRootConcurrentErrors: Array<mixed> | null = null;
+let workInProgressRootConcurrentErrors: Array<
+  CapturedValue<mixed>,
+> | null = null;
 // These are errors that we recovered from without surfacing them to the UI.
 // We will log them once the tree commits.
-let workInProgressRootRecoverableErrors: Array<mixed> | null = null;
+let workInProgressRootRecoverableErrors: Array<
+  CapturedValue<mixed>,
+> | null = null;
 
 // The most recent time we committed a fallback. This lets us ensure a train
 // model where we don't commit new loading states in too quick succession.
@@ -998,7 +1005,7 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
   return exitStatus;
 }
 
-export function queueRecoverableErrors(errors: Array<mixed>) {
+export function queueRecoverableErrors(errors: Array<CapturedValue<mixed>>) {
   if (workInProgressRootRecoverableErrors === null) {
     workInProgressRootRecoverableErrors = errors;
   } else {
@@ -1629,7 +1636,7 @@ export function renderDidSuspendDelayIfPossible(): void {
   }
 }
 
-export function renderDidError(error: mixed) {
+export function renderDidError(error: CapturedValue<mixed>) {
   if (workInProgressRootExitStatus !== RootSuspendedWithDelay) {
     workInProgressRootExitStatus = RootErrored;
   }
@@ -1950,7 +1957,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
 
 function commitRoot(
   root: FiberRoot,
-  recoverableErrors: null | Array<mixed>,
+  recoverableErrors: null | Array<CapturedValue<mixed>>,
   transitions: Array<Transition> | null,
 ) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
@@ -1977,7 +1984,7 @@ function commitRoot(
 
 function commitRootImpl(
   root: FiberRoot,
-  recoverableErrors: null | Array<mixed>,
+  recoverableErrors: null | Array<CapturedValue<mixed>>,
   transitions: Array<Transition> | null,
   renderPriorityLevel: EventPriority,
 ) {
@@ -2268,7 +2275,9 @@ function commitRootImpl(
     const onRecoverableError = root.onRecoverableError;
     for (let i = 0; i < recoverableErrors.length; i++) {
       const recoverableError = recoverableErrors[i];
-      onRecoverableError(recoverableError);
+      const componentStack = recoverableError.stack;
+      const digest = recoverableError.digest;
+      onRecoverableError(recoverableError.value, {componentStack, digest});
     }
   }
 
@@ -2548,7 +2557,7 @@ function captureCommitPhaseErrorOnRoot(
   sourceFiber: Fiber,
   error: mixed,
 ) {
-  const errorInfo = createCapturedValue(error, sourceFiber);
+  const errorInfo = createCapturedValueAtFiber(error, sourceFiber);
   const update = createRootErrorUpdate(rootFiber, errorInfo, (SyncLane: Lane));
   const root = enqueueUpdate(rootFiber, update, (SyncLane: Lane));
   const eventTime = requestEventTime();
@@ -2593,7 +2602,7 @@ export function captureCommitPhaseError(
         (typeof instance.componentDidCatch === 'function' &&
           !isAlreadyFailedLegacyErrorBoundary(instance))
       ) {
-        const errorInfo = createCapturedValue(error, sourceFiber);
+        const errorInfo = createCapturedValueAtFiber(error, sourceFiber);
         const update = createClassErrorUpdate(
           fiber,
           errorInfo,

@@ -247,7 +247,10 @@ type BaseFiberRootProperties = {|
   // a reference to.
   identifierPrefix: string,
 
-  onRecoverableError: (error: mixed) => void,
+  onRecoverableError: (
+    error: mixed,
+    errorInfo: {digest?: ?string, componentStack?: ?string},
+  ) => void,
 |};
 
 // The following attributes are only used by DevTools and are only present in DEV builds.
