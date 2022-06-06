@@ -138,6 +138,10 @@ jobs:
               git fetch origin main
               cd ./scripts/release && yarn && cd ../../
               scripts/release/download-experimental-build.js --commit=<< parameters.revision >> --allowBrokenCI
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build
 
   download_base_build_for_sizebot:
     docker: *docker
