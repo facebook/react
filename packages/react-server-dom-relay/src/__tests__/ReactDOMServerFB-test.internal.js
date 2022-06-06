@@ -191,8 +191,6 @@ describe('ReactDOMServerFB', () => {
     const remaining = readResult(stream);
     expect(remaining).toEqual('');
 
-    expect(errors).toEqual([
-      'This Suspense boundary was aborted by the server.',
-    ]);
+    expect(errors).toEqual(['signal is aborted without reason']);
   });
 });

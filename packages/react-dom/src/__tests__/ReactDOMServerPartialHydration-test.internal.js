@@ -1674,11 +1674,17 @@ describe('ReactDOMServerPartialHydration', () => {
     // we exclude fb bundles with partial renderer
     if (__DEV__ && !usingPartialRenderer) {
       expect(Scheduler).toFlushAndYield([
-        'This Suspense boundary was aborted by the server.',
+        'The server did not finish this Suspense boundary: The server used' +
+          ' "renderToString" which does not support Suspense. If you intended' +
+          ' for this Suspense boundary to render the fallback content on the' +
+          ' server consider throwing an Error somewhere within the Suspense boundary.' +
+          ' If you intended to have the server wait for the suspended component' +
+          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
       ]);
     } else {
       expect(Scheduler).toFlushAndYield([
-        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
       ]);
     }
     jest.runAllTimers();
@@ -1742,11 +1748,17 @@ describe('ReactDOMServerPartialHydration', () => {
     // we exclude fb bundles with partial renderer
     if (__DEV__ && !usingPartialRenderer) {
       expect(Scheduler).toFlushAndYield([
-        'This Suspense boundary was aborted by the server.',
+        'The server did not finish this Suspense boundary: The server used' +
+          ' "renderToString" which does not support Suspense. If you intended' +
+          ' for this Suspense boundary to render the fallback content on the' +
+          ' server consider throwing an Error somewhere within the Suspense boundary.' +
+          ' If you intended to have the server wait for the suspended component' +
+          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
       ]);
     } else {
       expect(Scheduler).toFlushAndYield([
-        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
       ]);
     }
     // This will have exceeded the suspended time so we should timeout.
@@ -1815,11 +1827,17 @@ describe('ReactDOMServerPartialHydration', () => {
     // we exclude fb bundles with partial renderer
     if (__DEV__ && !usingPartialRenderer) {
       expect(Scheduler).toFlushAndYield([
-        'This Suspense boundary was aborted by the server.',
+        'The server did not finish this Suspense boundary: The server used' +
+          ' "renderToString" which does not support Suspense. If you intended' +
+          ' for this Suspense boundary to render the fallback content on the' +
+          ' server consider throwing an Error somewhere within the Suspense boundary.' +
+          ' If you intended to have the server wait for the suspended component' +
+          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
       ]);
     } else {
       expect(Scheduler).toFlushAndYield([
-        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
       ]);
     }
     // This will have exceeded the suspended time so we should timeout.
@@ -2139,11 +2157,17 @@ describe('ReactDOMServerPartialHydration', () => {
     // we exclude fb bundles with partial renderer
     if (__DEV__ && !usingPartialRenderer) {
       expect(Scheduler).toFlushAndYield([
-        'This Suspense boundary was aborted by the server.',
+        'The server did not finish this Suspense boundary: The server used' +
+          ' "renderToString" which does not support Suspense. If you intended' +
+          ' for this Suspense boundary to render the fallback content on the' +
+          ' server consider throwing an Error somewhere within the Suspense boundary.' +
+          ' If you intended to have the server wait for the suspended component' +
+          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
       ]);
     } else {
       expect(Scheduler).toFlushAndYield([
-        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
       ]);
     }
 
@@ -2208,11 +2232,17 @@ describe('ReactDOMServerPartialHydration', () => {
     // we exclude fb bundles with partial renderer
     if (__DEV__ && !usingPartialRenderer) {
       expect(Scheduler).toFlushAndYield([
-        'This Suspense boundary was aborted by the server.',
+        'The server did not finish this Suspense boundary: The server used' +
+          ' "renderToString" which does not support Suspense. If you intended' +
+          ' for this Suspense boundary to render the fallback content on the' +
+          ' server consider throwing an Error somewhere within the Suspense boundary.' +
+          ' If you intended to have the server wait for the suspended component' +
+          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
       ]);
     } else {
       expect(Scheduler).toFlushAndYield([
-        'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
       ]);
     }
     jest.runAllTimers();

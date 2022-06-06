@@ -28,8 +28,8 @@ function createDrainHandler(destination, request) {
   return () => startFlowing(request, destination);
 }
 
-function createAbortHandler(request) {
-  return () => abort(request);
+function createAbortHandler(request, reason) {
+  return () => abort(request, reason);
 }
 
 type Options = {|
@@ -90,11 +90,26 @@ function renderToPipeableStream(
       hasStartedFlowing = true;
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
-      destination.on('close', createAbortHandler(request));
+      destination.on(
+        'error',
+        createAbortHandler(
+          request,
+          // eslint-disable-next-line react-internal/prod-error-codes
+          new Error('The destination stream errored while writing data.'),
+        ),
+      );
+      destination.on(
+        'close',
+        createAbortHandler(
+          request,
+          // eslint-disable-next-line react-internal/prod-error-codes
+          new Error('The destination stream closed early.'),
+        ),
+      );
       return destination;
     },
-    abort() {
-      abort(request);
+    abort(reason) {
+      abort(request, reason);
     },
   };
 }

@@ -97,7 +97,7 @@ function renderToReadableStream(
     if (options && options.signal) {
       const signal = options.signal;
       const listener = () => {
-        abort(request);
+        abort(request, (signal: any).reason);
         signal.removeEventListener('abort', listener);
       };
       signal.addEventListener('abort', listener);

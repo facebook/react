@@ -419,5 +419,6 @@
   "431": "React elements are not allowed in ServerContext",
   "432": "This Suspense boundary was aborted by the server.",
   "433": "useId can only be used while React is rendering",
-  "434": "`dangerouslySetInnerHTML` does not make sense on <title>."
+  "434": "`dangerouslySetInnerHTML` does not make sense on <title>.",
+  "435": "The server did not finish this Suspense boundary. The server used \"%s\" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to \"%s\" which supports Suspense on the server"
 }
