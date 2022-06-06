@@ -291,6 +291,8 @@ jobs:
       - run:
           name: Cleanup build regression folder
           command: rm -r ./build-regression
+      - store_artifacts:
+          path: ./tmp/screenshots
 
   yarn_lint_build:
     docker: *docker
