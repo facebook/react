@@ -19,6 +19,7 @@ let Suspense;
 let SuspenseList;
 let act;
 let IdleEventPriority;
+let __WWW__;
 
 function normalizeCodeLocInfo(strOrErr) {
   if (strOrErr && strOrErr.replace) {
@@ -109,6 +110,8 @@ describe('ReactDOMServerPartialHydration', () => {
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
     }
+
+    __WWW__ = global.__WWW__;
 
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
   });
@@ -1668,8 +1671,8 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    // we exclude fb-classic as well by requiring __EXPERIMENTAL__
-    if (__DEV__ && __EXPERIMENTAL__) {
+    // we exclude dev fb bundles
+    if (__DEV__ && !__WWW__) {
       expect(Scheduler).toFlushAndYield([
         'This Suspense boundary was aborted by the server.',
       ]);
@@ -1736,8 +1739,8 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    // we exclude fb-classic as well by requiring __EXPERIMENTAL__
-    if (__DEV__ && __EXPERIMENTAL__) {
+    // we exclude dev fb bundles
+    if (__DEV__ && !__WWW__) {
       expect(Scheduler).toFlushAndYield([
         'This Suspense boundary was aborted by the server.',
       ]);
@@ -1809,8 +1812,8 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    // we exclude fb-classic as well by requiring __EXPERIMENTAL__
-    if (__DEV__ && __EXPERIMENTAL__) {
+    // we exclude dev fb bundles
+    if (__DEV__ && !__WWW__) {
       expect(Scheduler).toFlushAndYield([
         'This Suspense boundary was aborted by the server.',
       ]);
@@ -2202,8 +2205,8 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    // we exclude fb-classic as well by requiring __EXPERIMENTAL__
-    if (__DEV__ && __EXPERIMENTAL__) {
+    // we exclude dev fb bundles
+    if (__DEV__ && !__WWW__) {
       expect(Scheduler).toFlushAndYield([
         'This Suspense boundary was aborted by the server.',
       ]);
