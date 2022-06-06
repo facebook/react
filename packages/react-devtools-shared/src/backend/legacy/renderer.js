@@ -149,7 +149,7 @@ export function attach(
 
   let getInternalIDForNative: GetFiberIDForNative = ((null: any): GetFiberIDForNative);
   let findNativeNodeForInternalID: (id: number) => ?NativeType;
-  let getFiberForNative: GetFiberForNative = (node) => {
+  let getFiberForNative: GetFiberForNative = node => {
     // Not implemented.
     return null;
   };
@@ -165,10 +165,8 @@ export function attach(
       const internalInstance = idToInternalInstanceMap.get(id);
       return renderer.ComponentTree.getNodeFromInstance(internalInstance);
     };
-    getFiberForNative = (node) => {
-      return renderer.ComponentTree.getClosestInstanceFromNode(
-        node,
-      );
+    getFiberForNative = node => {
+      return renderer.ComponentTree.getClosestInstanceFromNode(node);
     };
   } else if (renderer.Mount.getID && renderer.Mount.getNode) {
     getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
