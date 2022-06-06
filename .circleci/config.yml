@@ -122,7 +122,28 @@ jobs:
           paths:
             - build
 
-  get_base_build:
+  download_build:
+    docker: *docker
+    environment: *environment
+    parameters:
+      revision:
+        type: string
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Download artifacts for revision
+          command: |
+              git fetch origin main
+              cd ./scripts/release && yarn && cd ../../
+              scripts/release/download-experimental-build.js --commit=<< parameters.revision >> --allowBrokenCI
+      - persist_to_workspace:
+          root: .
+          paths:
+            - base-build
+
+  download_base_build_for_sizebot:
     docker: *docker
     environment: *environment
     steps:
@@ -493,7 +514,7 @@ workflows:
                 # - "-r=www-modern --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
-      - get_base_build:
+      - download_base_build_for_sizebot:
           filters:
             branches:
               ignore:
@@ -506,7 +527,7 @@ workflows:
               ignore:
                 - main
           requires:
-            - get_base_build
+            - download_base_build_for_sizebot
             - yarn_build_combined
       - yarn_lint_build:
           requires:
@@ -555,12 +576,13 @@ workflows:
                 - main
     jobs:
       - setup
-      - get_base_build:
+      - download_build:
           requires:
             - setup
+          revision: << pipeline.git.revision >>
       - build_devtools_and_process_artifacts:
           requires:
-            - get_base_build
+            - download_build
       - run_devtools_tests_for_versions:
           requires:
             - build_devtools_and_process_artifacts
