@@ -613,7 +613,7 @@ export function resolveModelToJSON(
             describeKeyForErrorMessage(key),
             describeObjectForErrorMessage(parent),
           );
-        } else if (!isSimpleObject(value)) {
+        } else if (typeof value === 'object' && !isSimpleObject(value)) {
           console.error(
             'Only plain objects can be passed to client components from server components. ' +
               'Classes or other objects with methods are not supported. ' +
