@@ -105,11 +105,9 @@ import {
 import {LegacyRoot} from './ReactRootTags';
 import {
   NoFlags,
-  Placement,
   Incomplete,
   StoreConsistency,
   HostEffectMask,
-  Hydrating,
   ForceClientRender,
   BeforeMutationMask,
   MutationMask,
@@ -182,7 +180,7 @@ import {
   invokePassiveEffectUnmountInDEV,
   reportUncaughtErrorInDEV,
 } from './ReactFiberCommitWork.new';
-import {enqueueUpdate} from './ReactUpdateQueue.new';
+import {enqueueUpdate} from './ReactFiberClassUpdateQueue.new';
 import {resetContextDependencies} from './ReactFiberNewContext.new';
 import {
   resetHooksAfterThrow,
@@ -196,9 +194,9 @@ import {
   createCursor,
 } from './ReactFiberStack.new';
 import {
-  enqueueInterleavedUpdates,
-  hasInterleavedUpdates,
-} from './ReactFiberInterleavedUpdates.new';
+  enqueueConcurrentRenderForLane,
+  finishQueueingConcurrentUpdates,
+} from './ReactFiberConcurrentUpdates.new';
 
 import {
   markNestedUpdateScheduled,
@@ -521,21 +519,17 @@ function requestRetryLane(fiber: Fiber) {
 }
 
 export function scheduleUpdateOnFiber(
+  root: FiberRoot,
   fiber: Fiber,
   lane: Lane,
   eventTime: number,
-): FiberRoot | null {
+) {
   checkForNestedUpdates();
 
   if (__DEV__) {
     if (isRunningInsertionEffect) {
       console.error('useInsertionEffect must not schedule updates.');
     }
-  }
-
-  const root = markUpdateLaneFromFiberToRoot(fiber, lane);
-  if (root === null) {
-    return null;
   }
 
   if (__DEV__) {
@@ -606,8 +600,6 @@ export function scheduleUpdateOnFiber(
     }
 
     if (root === workInProgressRoot) {
-      // TODO: Consolidate with `isInterleavedUpdate` check
-
       // Received an update to a tree that's in the middle of rendering. Mark
       // that there was an interleaved update work on this root. Unless the
       // `deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
@@ -650,7 +642,6 @@ export function scheduleUpdateOnFiber(
       flushSyncCallbacksOnlyInLegacyMode();
     }
   }
-  return root;
 }
 
 export function scheduleInitialHydrationOnRoot(
@@ -673,73 +664,15 @@ export function scheduleInitialHydrationOnRoot(
   ensureRootIsScheduled(root, eventTime);
 }
 
-// This is split into a separate function so we can mark a fiber with pending
-// work without treating it as a typical update that originates from an event;
-// e.g. retrying a Suspense boundary isn't an update, but it does schedule work
-// on a fiber.
-function markUpdateLaneFromFiberToRoot(
-  sourceFiber: Fiber,
-  lane: Lane,
-): FiberRoot | null {
-  // Update the source fiber's lanes
-  sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
-  let alternate = sourceFiber.alternate;
-  if (alternate !== null) {
-    alternate.lanes = mergeLanes(alternate.lanes, lane);
-  }
-  if (__DEV__) {
-    if (
-      alternate === null &&
-      (sourceFiber.flags & (Placement | Hydrating)) !== NoFlags
-    ) {
-      warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
-    }
-  }
-  // Walk the parent path to the root and update the child lanes.
-  let node = sourceFiber;
-  let parent = sourceFiber.return;
-  while (parent !== null) {
-    parent.childLanes = mergeLanes(parent.childLanes, lane);
-    alternate = parent.alternate;
-    if (alternate !== null) {
-      alternate.childLanes = mergeLanes(alternate.childLanes, lane);
-    } else {
-      if (__DEV__) {
-        if ((parent.flags & (Placement | Hydrating)) !== NoFlags) {
-          warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
-        }
-      }
-    }
-    node = parent;
-    parent = parent.return;
-  }
-  if (node.tag === HostRoot) {
-    const root: FiberRoot = node.stateNode;
-    return root;
-  } else {
-    return null;
-  }
-}
-
-export function isInterleavedUpdate(fiber: Fiber, lane: Lane) {
+export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber) {
+  // Check if this is a render phase update. Only called by class components,
+  // which special (deprecated) behavior for UNSAFE_componentWillReceive props.
   return (
-    // TODO: Optimize slightly by comparing to root that fiber belongs to.
-    // Requires some refactoring. Not a big deal though since it's rare for
-    // concurrent apps to have more than a single root.
-    (workInProgressRoot !== null ||
-      // If the interleaved updates queue hasn't been cleared yet, then
-      // we should treat this as an interleaved update, too. This is also a
-      // defensive coding measure in case a new update comes in between when
-      // rendering has finished and when the interleaved updates are transferred
-      // to the main queue.
-      hasInterleavedUpdates()) &&
-    (fiber.mode & ConcurrentMode) !== NoMode &&
-    // If this is a render phase update (i.e. UNSAFE_componentWillReceiveProps),
-    // then don't treat this as an interleaved update. This pattern is
-    // accompanied by a warning but we haven't fully deprecated it yet. We can
-    // remove once the deferRenderPhaseUpdateToNextBatch flag is enabled.
-    (deferRenderPhaseUpdateToNextBatch ||
-      (executionContext & RenderContext) === NoContext)
+    // TODO: Remove outdated deferRenderPhaseUpdateToNextBatch experiment. We
+    // decided not to enable it.
+    (!deferRenderPhaseUpdateToNextBatch ||
+      (fiber.mode & ConcurrentMode) === NoMode) &&
+    (executionContext & RenderContext) !== NoContext
   );
 }
 
@@ -1541,7 +1474,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressRootConcurrentErrors = null;
   workInProgressRootRecoverableErrors = null;
 
-  enqueueInterleavedUpdates();
+  finishQueueingConcurrentUpdates();
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
@@ -2113,9 +2046,15 @@ function commitRootImpl(
   root.callbackNode = null;
   root.callbackPriority = NoLane;
 
-  // Update the first and last pending times on this root. The new first
-  // pending time is whatever is left on the root fiber.
+  // Check which lanes no longer have any work scheduled on them, and mark
+  // those as finished.
   let remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
+
+  // Make sure to account for lanes that were updated by a concurrent event
+  // during the render phase; don't mark them as finished.
+  const concurrentlyUpdatedLanes = finishQueueingConcurrentUpdates();
+  remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
+
   markRootFinished(root, remainingLanes);
 
   if (root === workInProgressRoot) {
@@ -2617,9 +2556,8 @@ function captureCommitPhaseErrorOnRoot(
 ) {
   const errorInfo = createCapturedValue(error, sourceFiber);
   const update = createRootErrorUpdate(rootFiber, errorInfo, (SyncLane: Lane));
-  enqueueUpdate(rootFiber, update, (SyncLane: Lane));
+  const root = enqueueUpdate(rootFiber, update, (SyncLane: Lane));
   const eventTime = requestEventTime();
-  const root = markUpdateLaneFromFiberToRoot(rootFiber, (SyncLane: Lane));
   if (root !== null) {
     markRootUpdated(root, SyncLane, eventTime);
     ensureRootIsScheduled(root, eventTime);
@@ -2667,9 +2605,8 @@ export function captureCommitPhaseError(
           errorInfo,
           (SyncLane: Lane),
         );
-        enqueueUpdate(fiber, update, (SyncLane: Lane));
+        const root = enqueueUpdate(fiber, update, (SyncLane: Lane));
         const eventTime = requestEventTime();
-        const root = markUpdateLaneFromFiberToRoot(fiber, (SyncLane: Lane));
         if (root !== null) {
           markRootUpdated(root, SyncLane, eventTime);
           ensureRootIsScheduled(root, eventTime);
@@ -2760,7 +2697,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   }
   // TODO: Special case idle priority?
   const eventTime = requestEventTime();
-  const root = markUpdateLaneFromFiberToRoot(boundaryFiber, retryLane);
+  const root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   if (root !== null) {
     markRootUpdated(root, retryLane, eventTime);
     ensureRootIsScheduled(root, eventTime);
@@ -2931,7 +2868,7 @@ function invokeEffectsInDev(
 }
 
 let didWarnStateUpdateForNotYetMountedComponent: Set<string> | null = null;
-function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber) {
+export function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber: Fiber) {
   if (__DEV__) {
     if ((executionContext & RenderContext) !== NoContext) {
       // We let the other warning about render phase updates deal with this one.

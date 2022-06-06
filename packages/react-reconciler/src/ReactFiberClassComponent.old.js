@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
-import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {Flags} from './ReactFiberFlags';
 
 import * as React from 'react';
@@ -58,7 +58,7 @@ import {
   ForceUpdate,
   initializeUpdateQueue,
   cloneUpdateQueue,
-} from './ReactUpdateQueue.old';
+} from './ReactFiberClassUpdateQueue.old';
 import {NoLanes} from './ReactFiberLane.old';
 import {
   cacheContext,
@@ -215,9 +215,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -250,9 +250,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -284,9 +284,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 

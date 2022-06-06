@@ -33,7 +33,7 @@ import type {
   CacheComponentState,
   SpawnedCachePool,
 } from './ReactFiberCacheComponent.new';
-import type {UpdateQueue} from './ReactUpdateQueue.new';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import type {RootState} from './ReactFiberRoot.new';
 import {
   enableSuspenseAvoidThisFallback,
@@ -131,7 +131,7 @@ import {
   cloneUpdateQueue,
   initializeUpdateQueue,
   enqueueCapturedUpdate,
-} from './ReactUpdateQueue.new';
+} from './ReactFiberClassUpdateQueue.new';
 import {
   NoLane,
   NoLanes,
@@ -234,6 +234,7 @@ import {
   getWorkInProgressRoot,
   pushRenderLanes,
 } from './ReactFiberWorkLoop.new';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.new';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent.new';
 import {createCapturedValue} from './ReactCapturedValue';
@@ -2626,7 +2627,13 @@ function updateDehydratedSuspenseComponent(
           suspenseState.retryLane = attemptHydrationAtLane;
           // TODO: Ideally this would inherit the event time of the current render
           const eventTime = NoTimestamp;
-          scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime);
+          enqueueConcurrentRenderForLane(current, attemptHydrationAtLane);
+          scheduleUpdateOnFiber(
+            root,
+            current,
+            attemptHydrationAtLane,
+            eventTime,
+          );
         } else {
           // We have already tried to ping at a higher priority than we're rendering with
           // so if we got here, we must have failed to hydrate at those levels. We must

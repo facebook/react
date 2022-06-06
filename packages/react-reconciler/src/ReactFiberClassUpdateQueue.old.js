@@ -107,9 +107,12 @@ import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {
   markSkippedUpdateLanes,
-  isInterleavedUpdate,
+  isUnsafeClassRenderPhaseUpdate,
 } from './ReactFiberWorkLoop.old';
-import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
+import {
+  enqueueConcurrentClassUpdate,
+  unsafe_markUpdateLaneFromFiberToRoot,
+} from './ReactFiberConcurrentUpdates.old';
 import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
 
 import assign from 'shared/assign';
@@ -214,39 +217,14 @@ export function enqueueUpdate<State>(
   fiber: Fiber,
   update: Update<State>,
   lane: Lane,
-) {
+): FiberRoot | null {
   const updateQueue = fiber.updateQueue;
   if (updateQueue === null) {
     // Only occurs if the fiber has been unmounted.
-    return;
+    return null;
   }
 
   const sharedQueue: SharedQueue<State> = (updateQueue: any).shared;
-
-  if (isInterleavedUpdate(fiber, lane)) {
-    const interleaved = sharedQueue.interleaved;
-    if (interleaved === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-      // At the end of the current render, this queue's interleaved updates will
-      // be transferred to the pending queue.
-      pushInterleavedQueue(sharedQueue);
-    } else {
-      update.next = interleaved.next;
-      interleaved.next = update;
-    }
-    sharedQueue.interleaved = update;
-  } else {
-    const pending = sharedQueue.pending;
-    if (pending === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-    } else {
-      update.next = pending.next;
-      pending.next = update;
-    }
-    sharedQueue.pending = update;
-  }
 
   if (__DEV__) {
     if (
@@ -261,6 +239,28 @@ export function enqueueUpdate<State>(
       );
       didWarnUpdateInsideUpdate = true;
     }
+  }
+
+  if (isUnsafeClassRenderPhaseUpdate(fiber)) {
+    // This is an unsafe render phase update. Add directly to the update
+    // queue so we can process it immediately during the current render.
+    const pending = sharedQueue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    sharedQueue.pending = update;
+
+    // Update the childLanes even though we're most likely already rendering
+    // this fiber. This is for backwards compatibility in the case where you
+    // update a different component during render phase than the one that is
+    // currently renderings (a pattern that is accompanied by a warning).
+    return unsafe_markUpdateLaneFromFiberToRoot(fiber, lane);
+  } else {
+    return enqueueConcurrentClassUpdate(fiber, sharedQueue, update, lane);
   }
 }
 
