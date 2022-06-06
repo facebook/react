@@ -383,7 +383,7 @@ function resolveModPath(
   dirname: string,
   retryExtension?: string,
 ) {
-  let absolutePath: string;
+  let absolutePath = '';
   try {
     absolutePath = modPath.startsWith('.')
       ? normalizePath(path.resolve(dirname, modPath))

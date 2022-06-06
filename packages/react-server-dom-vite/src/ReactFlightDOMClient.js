@@ -38,7 +38,7 @@ function startReadingFromStream(
 }
 
 function createFromReadableStream(stream: ReadableStream): FlightResponse {
-  const response: FlightResponse = createResponse();
+  const response: FlightResponse = createResponse({});
   startReadingFromStream(response, stream);
   return response;
 }
@@ -46,7 +46,7 @@ function createFromReadableStream(stream: ReadableStream): FlightResponse {
 function createFromFetch(
   promiseForResponse: Promise<Response>,
 ): FlightResponse {
-  const response: FlightResponse = createResponse();
+  const response: FlightResponse = createResponse({});
   promiseForResponse.then(
     function(r) {
       startReadingFromStream(response, (r.body: any));
@@ -59,7 +59,7 @@ function createFromFetch(
 }
 
 function createFromXHR(request: XMLHttpRequest): FlightResponse {
-  const response: FlightResponse = createResponse();
+  const response: FlightResponse = createResponse({});
   let processedLength = 0;
   function progress(e: ProgressEvent): void {
     const chunk = request.responseText;
