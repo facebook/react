@@ -81,6 +81,9 @@ export type GetFiberIDForNative = (
   component: NativeType,
   findNearestUnfilteredAncestor?: boolean,
 ) => number | null;
+export type GetFiberForNative = (
+  component: NativeType,
+) => Fiber | null;
 export type FindNativeNodesForFiberID = (id: number) => ?Array<NativeType>;
 
 export type ReactProviderType<T> = {
@@ -93,7 +96,7 @@ export type Lane = number;
 export type Lanes = number;
 
 export type ReactRenderer = {
-  findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
+  findFiberByHostInstance: (hostInstance: NativeType) => Fiber | null,
   version: string,
   rendererPackageName: string,
   bundleType: BundleType,
@@ -350,7 +353,7 @@ export type RendererInterface = {
   findNativeNodesForFiberID: FindNativeNodesForFiberID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getFiberForNative: (hostInstance: NativeType) => ?Fiber,
+  getFiberForNative: GetFiberForNative,
   getFiberIDForNative: GetFiberIDForNative,
   getDisplayNameForFiberID: GetDisplayNameForFiberID,
   getInstanceAndStyle(id: number): InstanceAndStyle,
