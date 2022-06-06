@@ -465,7 +465,7 @@ describe('ReactDOMFizzServer', () => {
       loggedErrors.push(x);
       return 'Hash of (' + x.message + ')';
     }
-    const expectedHash = onError(theError);
+    const expectedDigest = onError(theError);
     loggedErrors.length = 0;
 
     await act(async () => {
@@ -504,14 +504,14 @@ describe('ReactDOMFizzServer', () => {
       [
         [
           theError.message,
-          expectedHash,
+          expectedDigest,
           componentStack(['Lazy', 'Suspense', 'div', 'App']),
         ],
       ],
       [
         [
           'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-          expectedHash,
+          expectedDigest,
         ],
       ],
     );
@@ -568,7 +568,7 @@ describe('ReactDOMFizzServer', () => {
       loggedErrors.push(x);
       return 'hash of (' + x.message + ')';
     }
-    const expectedHash = onError(theError);
+    const expectedDigest = onError(theError);
     loggedErrors.length = 0;
 
     function App({isClient}) {
@@ -624,14 +624,14 @@ describe('ReactDOMFizzServer', () => {
       [
         [
           theError.message,
-          expectedHash,
+          expectedDigest,
           componentStack(['Suspense', 'div', 'App']),
         ],
       ],
       [
         [
           'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-          expectedHash,
+          expectedDigest,
         ],
       ],
     );
@@ -675,7 +675,7 @@ describe('ReactDOMFizzServer', () => {
       loggedErrors.push(x);
       return 'hash(' + x.message + ')';
     }
-    const expectedHash = onError(theError);
+    const expectedDigest = onError(theError);
     loggedErrors.length = 0;
 
     await act(async () => {
@@ -706,14 +706,14 @@ describe('ReactDOMFizzServer', () => {
       [
         [
           theError.message,
-          expectedHash,
+          expectedDigest,
           componentStack(['Erroring', 'Suspense', 'div', 'App']),
         ],
       ],
       [
         [
           'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-          expectedHash,
+          expectedDigest,
         ],
       ],
     );
@@ -744,7 +744,7 @@ describe('ReactDOMFizzServer', () => {
       loggedErrors.push(x);
       return 'hash(' + x.message + ')';
     }
-    const expectedHash = onError(theError);
+    const expectedDigest = onError(theError);
     loggedErrors.length = 0;
 
     await act(async () => {
@@ -785,14 +785,14 @@ describe('ReactDOMFizzServer', () => {
       [
         [
           theError.message,
-          expectedHash,
+          expectedDigest,
           componentStack(['Lazy', 'Suspense', 'div', 'App']),
         ],
       ],
       [
         [
           'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-          expectedHash,
+          expectedDigest,
         ],
       ],
     );
@@ -1071,10 +1071,10 @@ describe('ReactDOMFizzServer', () => {
     }
 
     const loggedErrors = [];
-    const expectedHash = 'Hash for Abort';
+    const expectedDigest = 'Hash for Abort';
     function onError(error) {
       loggedErrors.push(error);
-      return expectedHash;
+      return expectedDigest;
     }
 
     let controls;
@@ -1106,11 +1106,11 @@ describe('ReactDOMFizzServer', () => {
     expect(Scheduler).toFlushAndYield([]);
     expectErrors(
       errors,
-      [['This Suspense boundary was aborted by the server', expectedHash]],
+      [['This Suspense boundary was aborted by the server.', expectedDigest]],
       [
         [
           'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-          expectedHash,
+          expectedDigest,
         ],
       ],
     );
@@ -1777,7 +1777,7 @@ describe('ReactDOMFizzServer', () => {
       loggedErrors.push(x);
       return `hash of (${x.message})`;
     }
-    const expectedHash = onError(theError);
+    const expectedDigest = onError(theError);
     loggedErrors.length = 0;
 
     let controls;
@@ -1834,7 +1834,7 @@ describe('ReactDOMFizzServer', () => {
       [
         [
           theError.message,
-          expectedHash,
+          expectedDigest,
           componentStack([
             'AsyncText',
             'h1',
@@ -1848,7 +1848,7 @@ describe('ReactDOMFizzServer', () => {
       [
         [
           'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-          expectedHash,
+          expectedDigest,
         ],
       ],
     );
@@ -3180,7 +3180,7 @@ describe('ReactDOMFizzServer', () => {
         loggedErrors.push(x);
         return x.message.replace('bad message', 'bad hash');
       }
-      const expectedHash = onError(theError);
+      const expectedDigest = onError(theError);
       loggedErrors.length = 0;
 
       await act(async () => {
@@ -3206,14 +3206,14 @@ describe('ReactDOMFizzServer', () => {
         [
           [
             theError.message,
-            expectedHash,
+            expectedDigest,
             componentStack(['Erroring', 'Suspense', 'div', 'App']),
           ],
         ],
         [
           [
             'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-            expectedHash,
+            expectedDigest,
           ],
         ],
       );

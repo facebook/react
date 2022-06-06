@@ -815,7 +815,7 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Caught [The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.]",
+            "Caught [This Suspense boundary was aborted by the server.]",
           ]
         `);
       });
@@ -840,7 +840,7 @@ describe('ReactDOMServerHydration', () => {
         }
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
-            "Caught [The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.]",
+            "Caught [This Suspense boundary was aborted by the server.]",
           ]
         `);
       });

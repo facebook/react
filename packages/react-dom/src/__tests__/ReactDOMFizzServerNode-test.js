@@ -226,7 +226,7 @@ describe('ReactDOMFizzServer', () => {
     expect(output.result).toBe('');
     expect(reportedErrors).toEqual([
       theError.message,
-      'This Suspense boundary was aborted by the server',
+      'This Suspense boundary was aborted by the server.',
     ]);
     expect(reportedShellErrors).toEqual([theError]);
   });
@@ -322,7 +322,7 @@ describe('ReactDOMFizzServer', () => {
     await completed;
 
     expect(errors).toEqual([
-      'This Suspense boundary was aborted by the server',
+      'This Suspense boundary was aborted by the server.',
     ]);
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('Loading');
@@ -365,8 +365,8 @@ describe('ReactDOMFizzServer', () => {
 
     expect(errors).toEqual([
       // There are two boundaries that abort
-      'This Suspense boundary was aborted by the server',
-      'This Suspense boundary was aborted by the server',
+      'This Suspense boundary was aborted by the server.',
+      'This Suspense boundary was aborted by the server.',
     ]);
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('Loading');
@@ -603,7 +603,7 @@ describe('ReactDOMFizzServer', () => {
     await completed;
 
     expect(errors).toEqual([
-      'This Suspense boundary was aborted by the server',
+      'This Suspense boundary was aborted by the server.',
     ]);
     expect(rendered).toBe(false);
     expect(isComplete).toBe(true);

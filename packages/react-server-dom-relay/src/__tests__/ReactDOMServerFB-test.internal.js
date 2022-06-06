@@ -192,7 +192,7 @@ describe('ReactDOMServerFB', () => {
     expect(remaining).toEqual('');
 
     expect(errors).toEqual([
-      'This Suspense boundary was aborted by the server',
+      'This Suspense boundary was aborted by the server.',
     ]);
   });
 });

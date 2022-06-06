@@ -1554,7 +1554,7 @@ function abortTask(task: Task): void {
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
       const error = new Error(
-        'This Suspense boundary was aborted by the server',
+        'This Suspense boundary was aborted by the server.',
       );
       boundary.errorDigest = request.onError(error);
       if (__DEV__) {

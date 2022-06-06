@@ -215,7 +215,7 @@ describe('ReactDOMFizzServer', () => {
     expect(result).toContain('Loading');
 
     expect(errors).toEqual([
-      'This Suspense boundary was aborted by the server',
+      'This Suspense boundary was aborted by the server.',
     ]);
   });
 
@@ -256,7 +256,7 @@ describe('ReactDOMFizzServer', () => {
     reader.cancel();
 
     expect(errors).toEqual([
-      'This Suspense boundary was aborted by the server',
+      'This Suspense boundary was aborted by the server.',
     ]);
 
     hasLoaded = true;

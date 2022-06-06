@@ -1669,8 +1669,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
+      'This Suspense boundary was aborted by the server.',
     ]);
     jest.runAllTimers();
 
@@ -1731,8 +1730,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
+      'This Suspense boundary was aborted by the server.',
     ]);
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
@@ -1798,8 +1796,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
+      'This Suspense boundary was aborted by the server.',
     ]);
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
@@ -2116,8 +2113,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     suspend = true;
     expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
+      'This Suspense boundary was aborted by the server.',
     ]);
 
     // We haven't hydrated the second child but the placeholder is still in the list.
@@ -2179,8 +2175,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
+      'This Suspense boundary was aborted by the server.',
     ]);
     jest.runAllTimers();
 
