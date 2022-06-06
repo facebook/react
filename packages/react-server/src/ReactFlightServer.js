@@ -178,12 +178,11 @@ function attemptResolveElement(
     );
   }
 
-  if (type != null && isModuleReference(type)) {
-    // This is a reference to a client component.
-    return [REACT_ELEMENT_TYPE, type, key, props];
-  }
-
   if (typeof type === 'function') {
+    if (isModuleReference(type)) {
+      // This is a reference to a client component.
+      return [REACT_ELEMENT_TYPE, type, key, props];
+    }
     // This is a server-side component.
     return type(props);
   } else if (typeof type === 'string') {
@@ -201,6 +200,10 @@ function attemptResolveElement(
     // Any built-in works as long as its props are serializable.
     return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (type != null && typeof type === 'object') {
+    if (isModuleReference(type)) {
+      // This is a reference to a client component.
+      return [REACT_ELEMENT_TYPE, type, key, props];
+    }
     switch (type.$$typeof) {
       case REACT_LAZY_TYPE: {
         const payload = type._payload;
