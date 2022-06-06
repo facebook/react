@@ -115,7 +115,20 @@ function createPanelIfReactLoaded() {
 
       const tabId = chrome.devtools.inspectedWindow.tabId;
 
-      registerDevToolsEventLogger('extension');
+      // TODO: after we upgrade to Manifest V3, chrome.tabs.query returns a Promise
+      // without the callback.
+      function getCurrentTab() {
+        return new Promise(resolve => {
+          chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+            resolve(tabs[0]);
+          });
+        });
+      }
+
+      registerDevToolsEventLogger('extension', async () => {
+        const tab = await getCurrentTab();
+        return tab.url;
+      });
 
       function initBridgeAndStore() {
         const port = chrome.runtime.connect({
