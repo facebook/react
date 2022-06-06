@@ -426,10 +426,23 @@ jobs:
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
+          name: Fetch revisions that contain an intentional fork
+          # This will fetch each revision listed in the `forked-revisions` file,
+          # which may be necessary if it's not part of main. For example, it
+          # may have been part of a PR branch that was squashed on merge.
+          command: |
+            cut -d " " -f 1 scripts/merge-fork/forked-revisions | xargs -r git fetch origin
+      - run:
+          name: Revert forked revisions
+          # This will revert the changes without committing. At the end, it's
+          # expected that both forks will be identical.
+          command: |
+            cut -d " " -f 1 scripts/merge-fork/forked-revisions | xargs -r git revert --no-commit
+      - run:
           name: Confirm reconciler forks are the same
           command: |
             yarn replace-fork
-            git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, disable this CI check." && false)
+            git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, add the commit SHA to scripts/merge-fork/forked-revisions." && false)
 
 
 workflows:
