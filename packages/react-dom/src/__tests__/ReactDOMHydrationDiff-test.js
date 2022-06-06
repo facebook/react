@@ -731,9 +731,10 @@ describe('ReactDOMServerHydration', () => {
         // suspense boundaries. This leaks in this test becuase the client rendered suspense boundary appears like
         // unhydrated tail nodes and this template is the first match. When we add special case handling for client
         // rendered suspense boundaries this test will likely change again
+        const mismatchEl = __EXPERIMENTAL__ ? '<template>' : '<p>';
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
-              "Warning: Did not expect server HTML to contain a <template> in <div>.
+              "Warning: Did not expect server HTML to contain a ${mismatchEl} in <div>.
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
@@ -813,11 +814,21 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Caught [This Suspense boundary was aborted by the server.]",
-          ]
-        `);
+        // We gate this assertion becuase fb-classic uses PartialRenderer for renderToString and it does not
+        // serialize server errors and send to client
+        if (__EXPERIMENTAL__) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Caught [This Suspense boundary was aborted by the server.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Caught [The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.]",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
@@ -838,11 +849,21 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Caught [This Suspense boundary was aborted by the server.]",
-          ]
-        `);
+        // We gate this assertion becuase fb-classic uses PartialRenderer for renderToString and it does not
+        // serialize server errors and send to client
+        if (__EXPERIMENTAL__) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Caught [This Suspense boundary was aborted by the server.]",
+            ]
+          `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Caught [The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.]",
+            ]
+          `);
+        }
       });
     });
 
