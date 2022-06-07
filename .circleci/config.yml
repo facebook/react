@@ -583,8 +583,8 @@ workflows:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     triggers:
       - schedule:
-          # DevTools regression tests run hourly
-          cron: "0 * * * *"
+          # DevTools regression tests run once a day
+          cron: "0 0 * * *"
           filters:
             branches:
               only:
