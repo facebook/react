@@ -11,7 +11,6 @@
 import {copy} from 'clipboard-js';
 import {dehydrate} from '../hydration';
 import isArray from 'shared/isArray';
-import type {RendererInterface} from './types';
 
 import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
 
