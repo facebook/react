@@ -126,6 +126,8 @@ export default function InspectedElementWrapper(_: Props) {
     inspectedElement != null &&
     inspectedElement.canToggleSuspense;
 
+  const canNativeInspect = store.supportsNativeInspection;
+
   const editorURL = useSyncExternalStore(
     function subscribe(callback) {
       window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
@@ -254,7 +256,6 @@ export default function InspectedElementWrapper(_: Props) {
     <div className={styles.InspectedElement}>
       <div className={styles.TitleRow} data-testname="InspectedElement-Title">
         {strictModeBadge}
-
         {element.key && (
           <>
             <div className={styles.Key} title={`key "${element.key}"`}>
@@ -263,7 +264,6 @@ export default function InspectedElementWrapper(_: Props) {
             <div className={styles.KeyArrow} />
           </>
         )}
-
         <div className={styles.SelectedComponentName}>
           <div
             className={
@@ -309,7 +309,7 @@ export default function InspectedElementWrapper(_: Props) {
             <ButtonIcon type="suspend" />
           </Toggle>
         )}
-        {store.supportsNativeInspection && (
+        {canNativeInspect && (
           <Button
             className={styles.IconButton}
             onClick={highlightElement}
@@ -332,6 +332,15 @@ export default function InspectedElementWrapper(_: Props) {
             onClick={viewSource}
             title="View source for this element">
             <ButtonIcon type="view-source" />
+          </Button>
+        )}
+        {true && (
+          <Button
+            className={styles.IconButton}
+            disabled={false}
+            onClick={viewSource}
+            title="Comment on component">
+            <ButtonIcon type="comment" />
           </Button>
         )}
       </div>
