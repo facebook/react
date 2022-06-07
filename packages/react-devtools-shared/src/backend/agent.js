@@ -316,16 +316,16 @@ export default class Agent extends EventEmitter<{|
         (rendererID: any)
       ]: any): RendererInterface);
       const fiber = renderer.getFiberForNative(node);
-      if (fiber != null) {
+      if (fiber !== null) {
         // check if fiber.stateNode is matching the original hostInstance
         if (fiber.stateNode === node) {
           return renderer;
-        } else {
+        } else if (bestMatch === null) {
           bestMatch = renderer;
         }
       }
     }
-    // if an exact match is not found, return the best match as fallback
+    // if an exact match is not found, return the first valid renderer as fallback
     return bestMatch;
   }
 
@@ -333,14 +333,6 @@ export default class Agent extends EventEmitter<{|
     const rendererInterface = this.getBestMatchingRendererInterface(node);
     if (rendererInterface != null) {
       return rendererInterface.getFiberIDForNative(node, true);
-    }
-    return null;
-  }
-
-  getDisplayNameForNode(node: Object): string | null {
-    const rendererInterface = this.getBestMatchingRendererInterface(node);
-    if (rendererInterface != null) {
-      return rendererInterface.getDisplayNameForFiberID(node, true);
     }
     return null;
   }
