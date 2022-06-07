@@ -1157,8 +1157,7 @@ function pushStartTitle(
       Array.isArray(children) && children.length < 2
         ? children[0] || null
         : children;
-    if (Array.isArray(child)) {
-      // child will only be an Array if it has lenght > 1 based on how it was constructed
+    if (Array.isArray(children) && children.length > 1) {
       console.error(
         'A title element received an array with more than 1 element as children. ' +
           'In browsers title Elements can only have Text Nodes as children. If ' +
@@ -1174,7 +1173,11 @@ function pushStartTitle(
           'will display markup and comments as text in the title and hydration will likely fail and ' +
           'fall back to client rendering',
       );
-    } else if (typeof child !== 'string' && typeof child !== 'number') {
+    } else if (
+      child != null &&
+      typeof child !== 'string' &&
+      typeof child !== 'number'
+    ) {
       console.error(
         'A title element received a value that was not a string or number for children. ' +
           'In the browser title Elements can only have Text Nodes as children. If ' +
