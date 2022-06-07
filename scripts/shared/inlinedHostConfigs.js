@@ -72,6 +72,7 @@ module.exports = [
       'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Brower and *Node files
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMLegacyServerNode.classic.fb.js',
       'react-dom/src/server/ReactDOMLegacyServerNodeStream.js', // file indirection to support partial forking of some methods in *Node
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
     ],
