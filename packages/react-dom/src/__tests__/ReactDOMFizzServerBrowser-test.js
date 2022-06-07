@@ -397,7 +397,6 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
-  // @gate experimental
   describe('renderToString', () => {
     beforeEach(() => {
       JSDOM = require('jsdom').JSDOM;
@@ -413,6 +412,7 @@ describe('ReactDOMFizzServer', () => {
       container = document.getElementById('container');
     });
 
+    // @gate experimental
     it('refers users to apis that support Suspense when somethign suspends', () => {
       function App({isClient}) {
         return (
