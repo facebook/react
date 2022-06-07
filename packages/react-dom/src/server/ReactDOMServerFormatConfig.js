@@ -1128,7 +1128,6 @@ function pushStartTitle(
   target.push(startChunkForTag('title'));
 
   let children = null;
-  let innerHTML = null;
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
       const propValue = props[propKey];
@@ -1153,7 +1152,7 @@ function pushStartTitle(
   target.push(endOfStartTag);
 
   if (__DEV__) {
-    let child =
+    const child =
       Array.isArray(children) && children.length < 2
         ? children[0] || null
         : children;
