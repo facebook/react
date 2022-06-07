@@ -8,14 +8,13 @@
  */
 
 import {getElementDimensions, getNestedBoundingClientRect} from '../utils';
-import {getBestMatchingRendererInterface} from '../../utils';
 
-const assign = Object.assign;
-
-import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 import type {Rect} from '../utils';
+import type Agent from 'react-devtools-shared/src/backend/agent';
 
 type Box = {|top: number, left: number, width: number, height: number|};
+
+const assign = Object.assign;
 
 // Note that the Overlay components are not affected by the active Theme,
 // because they highlight elements in the main Chrome window (outside of devtools).
@@ -154,8 +153,9 @@ export default class Overlay {
   container: HTMLElement;
   tip: OverlayTip;
   rects: Array<OverlayRect>;
+  agent: Agent;
 
-  constructor() {
+  constructor(agent: Agent) {
     // Find the root window, because overlays are positioned relative to it.
     const currentWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
     this.window = currentWindow;
@@ -170,6 +170,8 @@ export default class Overlay {
 
     this.tip = new OverlayTip(doc, this.container);
     this.rects = [];
+
+    this.agent = agent;
 
     doc.body.appendChild(this.container);
   }
@@ -231,24 +233,10 @@ export default class Overlay {
       name = elements[0].nodeName.toLowerCase();
 
       const node = elements[0];
-      const hook: DevToolsHook =
-        node.ownerDocument.defaultView.__REACT_DEVTOOLS_GLOBAL_HOOK__;
-      if (hook != null && hook.rendererInterfaces != null) {
-        const rendererInterface = getBestMatchingRendererInterface(
-          hook.rendererInterfaces.values(),
-          node,
-        );
-        let ownerName = null;
-        if (rendererInterface !== null) {
-          const id = rendererInterface.getFiberIDForNative(node, true);
-          if (id !== null) {
-            ownerName = rendererInterface.getDisplayNameForFiberID(id, true);
-          }
-        }
+      const ownerName = this.agent.getDisplayNameForNode(node);
 
-        if (ownerName) {
-          name += ' (in ' + ownerName + ')';
-        }
+      if (ownerName) {
+        name += ' (in ' + ownerName + ')';
       }
     }
 

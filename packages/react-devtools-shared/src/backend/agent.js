@@ -39,10 +39,7 @@ import type {
   RendererInterface,
 } from './types';
 import type {ComponentFilter} from '../types';
-import {
-  isSynchronousXHRSupported,
-  getBestMatchingRendererInterface,
-} from './utils';
+import {isSynchronousXHRSupported} from './utils';
 import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 const debug = (methodName, ...args) => {
@@ -312,17 +309,38 @@ export default class Agent extends EventEmitter<{|
     return renderer.getInstanceAndStyle(id);
   }
 
-  getIDForNode(node: Object): number | null {
-    const renderers = [];
+  getBestMatchingRendererInterface(node: Object): RendererInterface | null {
+    let bestMatch = null;
     for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
-      renderers.push(renderer);
+      const fiber = renderer.getFiberForNative(node);
+      if (fiber != null) {
+        // check if fiber.stateNode is matching the original hostInstance
+        if (fiber.stateNode === node) {
+          return renderer;
+        } else {
+          bestMatch = renderer;
+        }
+      }
     }
-    const rendererInterface = getBestMatchingRendererInterface(renderers, node);
+    // if an exact match is not found, return the best match as fallback
+    return bestMatch;
+  }
+
+  getIDForNode(node: Object): number | null {
+    const rendererInterface = this.getBestMatchingRendererInterface(node);
     if (rendererInterface != null) {
       return rendererInterface.getFiberIDForNative(node, true);
+    }
+    return null;
+  }
+
+  getDisplayNameForNode(node: Object): string | null {
+    const rendererInterface = this.getBestMatchingRendererInterface(node);
+    if (rendererInterface != null) {
+      return rendererInterface.getDisplayNameForFiberID(node, true);
     }
     return null;
   }

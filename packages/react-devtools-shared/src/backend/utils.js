@@ -274,24 +274,3 @@ export function isSynchronousXHRSupported(): boolean {
     window.document.featurePolicy.allowsFeature('sync-xhr')
   );
 }
-
-export function getBestMatchingRendererInterface(
-  rendererInterfaces: Iterable<RendererInterface>,
-  node: Object,
-): RendererInterface | null {
-  let bestMatch = null;
-  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-  for (const renderer of rendererInterfaces) {
-    const fiber = renderer.getFiberForNative(node);
-    if (fiber != null) {
-      // check if fiber.stateNode is matching the original hostInstance
-      if (fiber.stateNode === node) {
-        return renderer;
-      } else {
-        bestMatch = renderer;
-      }
-    }
-  }
-  // if an exact match is not found, return the best match as fallback
-  return bestMatch;
-}
