@@ -2309,8 +2309,14 @@ function commitMutationEffectsOnFiber(
       const offscreenFiber: Fiber = (finishedWork.child: any);
 
       if (offscreenFiber.flags & Visibility) {
+        const offscreenInstance: OffscreenInstance = offscreenFiber.stateNode;
         const newState: OffscreenState | null = offscreenFiber.memoizedState;
         const isHidden = newState !== null;
+
+        // Track the current state on the Offscreen instance so we can
+        // read it during an event
+        offscreenInstance.isHidden = isHidden;
+
         if (isHidden) {
           const wasHidden =
             offscreenFiber.alternate !== null &&
@@ -2354,9 +2360,14 @@ function commitMutationEffectsOnFiber(
       commitReconciliationEffects(finishedWork);
 
       if (flags & Visibility) {
+        const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
         const offscreenBoundary: Fiber = finishedWork;
+
+        // Track the current state on the Offscreen instance so we can
+        // read it during an event
+        offscreenInstance.isHidden = isHidden;
 
         if (enableSuspenseLayoutEffectSemantics) {
           if (isHidden) {
