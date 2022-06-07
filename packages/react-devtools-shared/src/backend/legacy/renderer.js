@@ -40,7 +40,6 @@ import {decorateMany, forceUpdate, restoreMany} from './utils';
 import type {
   DevToolsHook,
   GetFiberIDForNative,
-  GetFiberForNative,
   InspectedElementPayload,
   InstanceAndStyle,
   NativeType,
@@ -149,7 +148,7 @@ export function attach(
 
   let getInternalIDForNative: GetFiberIDForNative = ((null: any): GetFiberIDForNative);
   let findNativeNodeForInternalID: (id: number) => ?NativeType;
-  let getFiberForNative: GetFiberForNative = node => {
+  let getFiberForNative = (node: NativeType) => {
     // Not implemented.
     return null;
   };
@@ -165,7 +164,7 @@ export function attach(
       const internalInstance = idToInternalInstanceMap.get(id);
       return renderer.ComponentTree.getNodeFromInstance(internalInstance);
     };
-    getFiberForNative = node => {
+    getFiberForNative = (node: NativeType) => {
       return renderer.ComponentTree.getClosestInstanceFromNode(node);
     };
   } else if (renderer.Mount.getID && renderer.Mount.getNode) {
