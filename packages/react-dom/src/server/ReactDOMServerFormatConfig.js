@@ -1164,7 +1164,7 @@ function pushStartTitle(
           'will display markup and comments as text in the title and hydration will likely fail and ' +
           'fall back to client rendering',
       );
-    } else if (child.$$typeof != null) {
+    } else if (child != null && child.$$typeof != null) {
       console.error(
         'A title element received a React element for children. ' +
           'In the browser title Elements can only have Text Nodes as children. If ' +

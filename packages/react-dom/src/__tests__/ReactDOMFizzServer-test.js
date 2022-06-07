@@ -4537,11 +4537,15 @@ describe('ReactDOMFizzServer', () => {
           },
         });
         expect(Scheduler).toFlushAndYield([]);
-        expect(errors).toEqual([
-          'Text content does not match server-rendered HTML.',
-          'Hydration failed because the initial UI does not match what was rendered on the server.',
-          'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-        ]);
+        expect(errors).toEqual(
+          [
+            gate(flags => flags.enableClientRenderFallbackOnTextMismatch)
+              ? 'Text content does not match server-rendered HTML.'
+              : null,
+            'Hydration failed because the initial UI does not match what was rendered on the server.',
+            'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+          ].filter(Boolean),
+        );
         expect(getVisibleChildren(container)).toEqual(
           <title>{['hello1', 'hello2']}</title>,
         );
