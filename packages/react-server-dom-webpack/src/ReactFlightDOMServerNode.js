@@ -36,7 +36,6 @@ function renderToPipeableStream(
   model: ReactModel,
   webpackMap: BundlerConfig,
   options?: Options,
-  context?: Array<[string, ServerContextJSONValue]>,
 ): PipeableStream {
   const request = createRequest(
     model,
