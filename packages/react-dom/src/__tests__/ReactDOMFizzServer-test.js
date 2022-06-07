@@ -4425,4 +4425,195 @@ describe('ReactDOMFizzServer', () => {
       );
     });
   });
+
+  describe('title children', () => {
+    function prepareJSDOMForTitle() {
+      // Test Environment
+      const jsdom = new JSDOM('<!DOCTYPE html><html><head>\u0000', {
+        runScripts: 'dangerously',
+      });
+      window = jsdom.window;
+      document = jsdom.window.document;
+      container = document.getElementsByTagName('head')[0];
+    }
+
+    // @gate experimental
+    it('should accept a single string child', async () => {
+      // a Single string child
+      function App() {
+        return <title>hello</title>;
+      }
+
+      prepareJSDOMForTitle();
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+    });
+
+    // @gate experimental
+    it('should accept children array of length 1 containing a string', async () => {
+      // a Single string child
+      function App() {
+        return <title>{['hello']}</title>;
+      }
+
+      prepareJSDOMForTitle();
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+    });
+
+    // @gate experimental
+    it('should warn in dev when given an array of length 2 or more', async () => {
+      const originalConsoleError = console.error;
+      const mockError = jest.fn();
+      console.error = (...args) => {
+        if (args.length > 1) {
+          if (typeof args[1] === 'object') {
+            mockError(args[0].split('\n')[0]);
+            return;
+          }
+        }
+        mockError(...args.map(normalizeCodeLocInfo));
+      };
+
+      // a Single string child
+      function App() {
+        return <title>{['hello1', 'hello2']}</title>;
+      }
+
+      try {
+        prepareJSDOMForTitle();
+
+        await act(async () => {
+          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+          pipe(writable);
+        });
+        if (__DEV__) {
+          expect(mockError).toHaveBeenCalledWith(
+            'Warning: A title element received an array with more than 1 element as children. ' +
+              'In browsers title Elements can only have Text Nodes as children. If ' +
+              'the children being rendered output more than a single text node in aggregate the browser ' +
+              'will display markup and comments as text in the title and hydration will likely fail and ' +
+              'fall back to client rendering%s',
+            '\n' + '    in title (at **)\n' + '    in App (at **)',
+          );
+        } else {
+          expect(mockError).not.toHaveBeenCalled();
+        }
+
+        expect(getVisibleChildren(container)).toEqual(
+          <title>{'hello1<!-- -->hello2'}</title>,
+        );
+
+        const errors = [];
+        ReactDOMClient.hydrateRoot(container, <App />, {
+          onRecoverableError(error) {
+            errors.push(error.message);
+          },
+        });
+        expect(Scheduler).toFlushAndYield([]);
+        expect(errors).toEqual(
+          [
+            gate(flags => flags.enableClientRenderFallbackOnTextMismatch)
+              ? 'Text content does not match server-rendered HTML.'
+              : null,
+            'Hydration failed because the initial UI does not match what was rendered on the server.',
+            'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+          ].filter(Boolean),
+        );
+        expect(getVisibleChildren(container)).toEqual(
+          <title>{['hello1', 'hello2']}</title>,
+        );
+      } finally {
+        console.error = originalConsoleError;
+      }
+    });
+
+    // @gate experimental
+    it('should warn in dev if you pass a React Component as a child to <title>', async () => {
+      const originalConsoleError = console.error;
+      const mockError = jest.fn();
+      console.error = (...args) => {
+        if (args.length > 1) {
+          if (typeof args[1] === 'object') {
+            mockError(args[0].split('\n')[0]);
+            return;
+          }
+        }
+        mockError(...args.map(normalizeCodeLocInfo));
+      };
+
+      function IndirectTitle() {
+        return 'hello';
+      }
+
+      function App() {
+        return (
+          <title>
+            <IndirectTitle />
+          </title>
+        );
+      }
+
+      try {
+        prepareJSDOMForTitle();
+
+        await act(async () => {
+          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+          pipe(writable);
+        });
+        if (__DEV__) {
+          expect(mockError).toHaveBeenCalledWith(
+            'Warning: A title element received a React element for children. ' +
+              'In the browser title Elements can only have Text Nodes as children. If ' +
+              'the children being rendered output more than a single text node in aggregate the browser ' +
+              'will display markup and comments as text in the title and hydration will likely fail and ' +
+              'fall back to client rendering%s',
+            '\n' + '    in title (at **)\n' + '    in App (at **)',
+          );
+        } else {
+          expect(mockError).not.toHaveBeenCalled();
+        }
+
+        expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+
+        const errors = [];
+        ReactDOMClient.hydrateRoot(container, <App />, {
+          onRecoverableError(error) {
+            errors.push(error.message);
+          },
+        });
+        expect(Scheduler).toFlushAndYield([]);
+        expect(errors).toEqual([]);
+        expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+      } finally {
+        console.error = originalConsoleError;
+      }
+    });
+  });
 });
