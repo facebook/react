@@ -226,7 +226,7 @@ describe('ReactDOMFizzServer', () => {
     expect(output.result).toBe('');
     expect(reportedErrors).toEqual([
       theError.message,
-      'This Suspense boundary was aborted by the server.',
+      'The destination stream errored while writing data.',
     ]);
     expect(reportedShellErrors).toEqual([theError]);
   });
@@ -317,13 +317,11 @@ describe('ReactDOMFizzServer', () => {
     expect(output.result).toContain('Loading');
     expect(isCompleteCalls).toBe(0);
 
-    abort();
+    abort(new Error('uh oh'));
 
     await completed;
 
-    expect(errors).toEqual([
-      'This Suspense boundary was aborted by the server.',
-    ]);
+    expect(errors).toEqual(['uh oh']);
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('Loading');
     expect(isCompleteCalls).toBe(1);
@@ -365,8 +363,8 @@ describe('ReactDOMFizzServer', () => {
 
     expect(errors).toEqual([
       // There are two boundaries that abort
-      'This Suspense boundary was aborted by the server.',
-      'This Suspense boundary was aborted by the server.',
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
     ]);
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('Loading');
@@ -603,7 +601,7 @@ describe('ReactDOMFizzServer', () => {
     await completed;
 
     expect(errors).toEqual([
-      'This Suspense boundary was aborted by the server.',
+      'The destination stream errored while writing data.',
     ]);
     expect(rendered).toBe(false);
     expect(isComplete).toBe(true);

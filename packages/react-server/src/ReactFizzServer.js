@@ -1530,10 +1530,9 @@ function abortTaskSoft(task: Task): void {
   finishedTask(request, boundary, segment);
 }
 
-function abortTask(task: Task): void {
+function abortTask(task: Task, request: Request, reason: mixed): void {
   // This aborts the task and aborts the parent that it blocks, putting it into
   // client rendered mode.
-  const request: Request = this;
   const boundary = task.blockedBoundary;
   const segment = task.blockedSegment;
   segment.status = ABORTED;
@@ -1553,12 +1552,27 @@ function abortTask(task: Task): void {
 
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
-      const error = new Error(
-        'This Suspense boundary was aborted by the server.',
-      );
+      let error =
+        reason === undefined
+          ? new Error('The render was aborted by the server without a reason.')
+          : reason;
       boundary.errorDigest = request.onError(error);
       if (__DEV__) {
-        captureBoundaryErrorDetailsDev(boundary, error);
+        const errorPrefix =
+          'The server did not finish this Suspense boundary: ';
+        if (error && typeof error.message === 'string') {
+          error = errorPrefix + error.message;
+        } else {
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          error = errorPrefix + String(error);
+        }
+        const previousTaskInDev = currentTaskInDEV;
+        currentTaskInDEV = task;
+        try {
+          captureBoundaryErrorDetailsDev(boundary, error);
+        } finally {
+          currentTaskInDEV = previousTaskInDev;
+        }
       }
       if (boundary.parentFlushed) {
         request.clientRenderedBoundaries.push(boundary);
@@ -1567,7 +1581,9 @@ function abortTask(task: Task): void {
 
     // If this boundary was still pending then we haven't already cancelled its fallbacks.
     // We'll need to abort the fallbacks, which will also error that parent boundary.
-    boundary.fallbackAbortableTasks.forEach(abortTask, request);
+    boundary.fallbackAbortableTasks.forEach(fallbackTask =>
+      abortTask(fallbackTask, request, reason),
+    );
     boundary.fallbackAbortableTasks.clear();
 
     request.allPendingTasks--;
@@ -2159,10 +2175,10 @@ export function startFlowing(request: Request, destination: Destination): void {
 }
 
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
-export function abort(request: Request): void {
+export function abort(request: Request, reason: mixed): void {
   try {
     const abortableTasks = request.abortableTasks;
-    abortableTasks.forEach(abortTask, request);
+    abortableTasks.forEach(task => abortTask(task, request, reason));
     abortableTasks.clear();
     if (request.destination !== null) {
       flushCompletedQueues(request, request.destination);

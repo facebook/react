@@ -417,7 +417,7 @@
   "429": "ServerContext: %s already defined",
   "430": "ServerContext can only have a value prop and children. Found: %s",
   "431": "React elements are not allowed in ServerContext",
-  "432": "This Suspense boundary was aborted by the server.",
+  "432": "The render was aborted by the server without a reason.",
   "433": "useId can only be used while React is rendering",
   "434": "`dangerouslySetInnerHTML` does not make sense on <title>."
 }

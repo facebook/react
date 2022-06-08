@@ -1106,7 +1106,13 @@ describe('ReactDOMFizzServer', () => {
     expect(Scheduler).toFlushAndYield([]);
     expectErrors(
       errors,
-      [['This Suspense boundary was aborted by the server.', expectedDigest]],
+      [
+        [
+          'The server did not finish this Suspense boundary: The render was aborted by the server without a reason.',
+          expectedDigest,
+          componentStack(['h1', 'Suspense', 'div', 'App']),
+        ],
+      ],
       [
         [
           'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
@@ -3054,6 +3060,178 @@ describe('ReactDOMFizzServer', () => {
         <li>a</li>
         <li>b</li>
       </ul>,
+    );
+  });
+
+  // @gate experimental
+  it('Supports custom abort reasons with a string', async () => {
+    function App() {
+      return (
+        <div>
+          <p>
+            <Suspense fallback={'p'}>
+              <AsyncText text={'hello'} />
+            </Suspense>
+          </p>
+          <span>
+            <Suspense fallback={'span'}>
+              <AsyncText text={'world'} />
+            </Suspense>
+          </span>
+        </div>
+      );
+    }
+
+    let abort;
+    const loggedErrors = [];
+    await act(async () => {
+      const {
+        pipe,
+        abort: abortImpl,
+      } = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        onError(error) {
+          // In this test we contrive erroring with strings so we push the error whereas in most
+          // other tests we contrive erroring with Errors and push the message.
+          loggedErrors.push(error);
+          return 'a digest';
+        },
+      });
+      abort = abortImpl;
+      pipe(writable);
+    });
+
+    expect(loggedErrors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>p</p>
+        <span>span</span>
+      </div>,
+    );
+
+    await act(() => {
+      abort('foobar');
+    });
+
+    expect(loggedErrors).toEqual(['foobar', 'foobar']);
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push({error, errorInfo});
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+
+    expectErrors(
+      errors,
+      [
+        [
+          'The server did not finish this Suspense boundary: foobar',
+          'a digest',
+          componentStack(['Suspense', 'p', 'div', 'App']),
+        ],
+        [
+          'The server did not finish this Suspense boundary: foobar',
+          'a digest',
+          componentStack(['Suspense', 'span', 'div', 'App']),
+        ],
+      ],
+      [
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          'a digest',
+        ],
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          'a digest',
+        ],
+      ],
+    );
+  });
+
+  // @gate experimental
+  it('Supports custom abort reasons with an Error', async () => {
+    function App() {
+      return (
+        <div>
+          <p>
+            <Suspense fallback={'p'}>
+              <AsyncText text={'hello'} />
+            </Suspense>
+          </p>
+          <span>
+            <Suspense fallback={'span'}>
+              <AsyncText text={'world'} />
+            </Suspense>
+          </span>
+        </div>
+      );
+    }
+
+    let abort;
+    const loggedErrors = [];
+    await act(async () => {
+      const {
+        pipe,
+        abort: abortImpl,
+      } = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        onError(error) {
+          loggedErrors.push(error.message);
+          return 'a digest';
+        },
+      });
+      abort = abortImpl;
+      pipe(writable);
+    });
+
+    expect(loggedErrors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>p</p>
+        <span>span</span>
+      </div>,
+    );
+
+    await act(() => {
+      abort(new Error('uh oh'));
+    });
+
+    expect(loggedErrors).toEqual(['uh oh', 'uh oh']);
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push({error, errorInfo});
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+
+    expectErrors(
+      errors,
+      [
+        [
+          'The server did not finish this Suspense boundary: uh oh',
+          'a digest',
+          componentStack(['Suspense', 'p', 'div', 'App']),
+        ],
+        [
+          'The server did not finish this Suspense boundary: uh oh',
+          'a digest',
+          componentStack(['Suspense', 'span', 'div', 'App']),
+        ],
+      ],
+      [
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          'a digest',
+        ],
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          'a digest',
+        ],
+      ],
     );
   });
 
