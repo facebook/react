@@ -51,7 +51,7 @@ The sections below include meaningful `--tags` in the instructions. However, kee
 
 To prepare a build for a particular commit:
 1. Choose a commit from [the commit log](https://github.com/facebook/react/commits/main).
-2. Copy the SHA (by clicking the 📋 button)
+2. Copy the SHA (by clicking the 📋 button).
 5. Run the [`prepare-release-from-ci`](#prepare-release-from-ci) script with the SHA <sup>1</sup> you found:
 ```sh
 scripts/release/prepare-release-from-ci.js -r stable --commit=0e526bc
