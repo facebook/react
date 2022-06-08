@@ -62,8 +62,16 @@ module.exports = function(babel) {
       //     throw Error(`A ${adj} message that contains ${noun}`);
       //   }
 
+      let leadingComments = node.leadingComments;
+
       const statementParent = path.getStatementParent();
-      const leadingComments = statementParent.node.leadingComments;
+      const parentLeadingComments = statementParent.node.leadingComments;
+
+      if (parentLeadingComments) {
+        leadingComments = leadingComments
+          ? leadingComments.concat(parentLeadingComments)
+          : parentLeadingComments;
+      }
       if (leadingComments !== undefined) {
         for (let i = 0; i < leadingComments.length; i++) {
           // TODO: Since this only detects one of many ways to disable a lint

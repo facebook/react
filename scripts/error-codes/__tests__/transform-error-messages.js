@@ -109,4 +109,31 @@ new Error(\`Expected \\\`\$\{listener\}\\\` listener to be a function, instead g
 `)
     ).toMatchSnapshot();
   });
+
+  it('handles ignoring errors that are comment-excluded inside ternary expressions', () => {
+    expect(
+      transform(`
+let val = someBool
+  ? //eslint-disable-next-line react-internal/prod-error-codes
+    new Error('foo')
+  : someOtherBool
+  ? new Error('bar')
+  : //eslint-disable-next-line react-internal/prod-error-codes
+    new Error('baz');
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('handles ignoring errors that are comment-excluded outside ternary expressions', () => {
+    expect(
+      transform(`
+//eslint-disable-next-line react-internal/prod-error-codes
+let val = someBool
+  ? new Error('foo')
+  : someOtherBool
+  ? new Error('bar')
+  : new Error('baz');
+`)
+    ).toMatchSnapshot();
+  });
 });
