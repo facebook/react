@@ -332,7 +332,12 @@ export default class Agent extends EventEmitter<{|
   getIDForNode(node: Object): number | null {
     const rendererInterface = this.getBestMatchingRendererInterface(node);
     if (rendererInterface != null) {
-      return rendererInterface.getFiberIDForNative(node, true);
+      try {
+        return rendererInterface.getFiberIDForNative(node, true);
+      } catch (error) {
+        // Some old React versions might throw if they can't find a match.
+        // If so we should ignore it...
+      }
     }
     return null;
   }
