@@ -1,5 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`error transform handles deeply nested expressions 1`] = `
+"var val = (a, (b, // eslint-disable-next-line react-internal/prod-error-codes
+new Error('foo')));"
+`;
+
+exports[`error transform handles deeply nested expressions 2`] = `
+"var val = (a, ( // eslint-disable-next-line react-internal/prod-error-codes
+b, new Error('foo')));"
+`;
+
 exports[`error transform handles escaped backticks in template string 1`] = `
 "import _formatProdErrorMessage from \\"shared/formatProdErrorMessage\\";
 Error(_formatProdErrorMessage(231, listener, type));"

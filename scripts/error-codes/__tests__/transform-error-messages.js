@@ -136,4 +136,25 @@ let val = someBool
 `)
     ).toMatchSnapshot();
   });
+
+  it('handles deeply nested expressions', () => {
+    expect(
+      transform(`
+let val =
+  (a,
+  (b,
+  // eslint-disable-next-line react-internal/prod-error-codes
+  new Error('foo')));
+`)
+    ).toMatchSnapshot();
+
+    expect(
+      transform(`
+let val =
+  (a,
+  // eslint-disable-next-line react-internal/prod-error-codes
+  (b, new Error('foo')));
+`)
+    ).toMatchSnapshot();
+  });
 });
