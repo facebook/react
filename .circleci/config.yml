@@ -329,7 +329,7 @@ jobs:
           name: Search build artifacts for unminified errors
           command: |
             yarn extract-errors
-            git diff || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
+            git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
 
   yarn_test:
     docker: *docker
