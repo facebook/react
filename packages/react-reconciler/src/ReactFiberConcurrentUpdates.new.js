@@ -17,14 +17,21 @@ import type {
   Update as ClassUpdate,
 } from './ReactFiberClassUpdateQueue.new';
 import type {Lane, Lanes} from './ReactFiberLane.new';
+import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 
 import {warnAboutUpdateOnNotYetMountedFiberInDEV} from './ReactFiberWorkLoop.new';
-import {NoLane, NoLanes, mergeLanes} from './ReactFiberLane.new';
+import {
+  NoLane,
+  NoLanes,
+  mergeLanes,
+  markHiddenUpdate,
+} from './ReactFiberLane.new';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
-import {HostRoot} from './ReactWorkTags';
+import {HostRoot, OffscreenComponent} from './ReactWorkTags';
 
-type ConcurrentUpdate = {
+export type ConcurrentUpdate = {
   next: ConcurrentUpdate,
+  lane: Lane,
 };
 
 type ConcurrentQueue = {
@@ -38,11 +45,13 @@ type ConcurrentQueue = {
 const concurrentQueues: Array<any> = [];
 let concurrentQueuesIndex = 0;
 
-export function finishQueueingConcurrentUpdates(): Lanes {
+let concurrentlyUpdatedLanes: Lanes = NoLanes;
+
+export function finishQueueingConcurrentUpdates(): void {
   const endIndex = concurrentQueuesIndex;
   concurrentQueuesIndex = 0;
 
-  let lanes = NoLanes;
+  concurrentlyUpdatedLanes = NoLanes;
 
   let i = 0;
   while (i < endIndex) {
@@ -68,12 +77,13 @@ export function finishQueueingConcurrentUpdates(): Lanes {
     }
 
     if (lane !== NoLane) {
-      lanes = mergeLanes(lanes, lane);
-      markUpdateLaneFromFiberToRoot(fiber, lane);
+      markUpdateLaneFromFiberToRoot(fiber, update, lane);
     }
   }
+}
 
-  return lanes;
+export function getConcurrentlyUpdatedLanes(): Lanes {
+  return concurrentlyUpdatedLanes;
 }
 
 function enqueueUpdate(
@@ -88,6 +98,8 @@ function enqueueUpdate(
   concurrentQueues[concurrentQueuesIndex++] = queue;
   concurrentQueues[concurrentQueuesIndex++] = update;
   concurrentQueues[concurrentQueuesIndex++] = lane;
+
+  concurrentlyUpdatedLanes = mergeLanes(concurrentlyUpdatedLanes, lane);
 
   // The fiber's `lane` field is used in some places to check if any work is
   // scheduled, to perform an eager bailout, so we need to update it immediately.
@@ -151,11 +163,15 @@ export function unsafe_markUpdateLaneFromFiberToRoot(
   sourceFiber: Fiber,
   lane: Lane,
 ): FiberRoot | null {
-  markUpdateLaneFromFiberToRoot(sourceFiber, lane);
+  markUpdateLaneFromFiberToRoot(sourceFiber, null, lane);
   return getRootForUpdatedFiber(sourceFiber);
 }
 
-function markUpdateLaneFromFiberToRoot(sourceFiber: Fiber, lane: Lane): void {
+function markUpdateLaneFromFiberToRoot(
+  sourceFiber: Fiber,
+  update: ConcurrentUpdate | null,
+  lane: Lane,
+): void {
   // Update the source fiber's lanes
   sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
   let alternate = sourceFiber.alternate;
@@ -163,14 +179,30 @@ function markUpdateLaneFromFiberToRoot(sourceFiber: Fiber, lane: Lane): void {
     alternate.lanes = mergeLanes(alternate.lanes, lane);
   }
   // Walk the parent path to the root and update the child lanes.
+  let isHidden = false;
   let parent = sourceFiber.return;
+  let node = sourceFiber;
   while (parent !== null) {
     parent.childLanes = mergeLanes(parent.childLanes, lane);
     alternate = parent.alternate;
     if (alternate !== null) {
       alternate.childLanes = mergeLanes(alternate.childLanes, lane);
     }
+
+    if (parent.tag === OffscreenComponent) {
+      const offscreenInstance: OffscreenInstance = parent.stateNode;
+      if (offscreenInstance.isHidden) {
+        isHidden = true;
+      }
+    }
+
+    node = parent;
     parent = parent.return;
+  }
+
+  if (isHidden && update !== null && node.tag === HostRoot) {
+    const root: FiberRoot = node.stateNode;
+    markHiddenUpdate(root, update, lane);
   }
 }
 

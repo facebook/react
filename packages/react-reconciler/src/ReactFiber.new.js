@@ -715,7 +715,9 @@ export function createFiberFromOffscreen(
   const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
-  const primaryChildInstance: OffscreenInstance = {};
+  const primaryChildInstance: OffscreenInstance = {
+    isHidden: false,
+  };
   fiber.stateNode = primaryChildInstance;
   return fiber;
 }

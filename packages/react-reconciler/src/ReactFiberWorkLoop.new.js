@@ -199,6 +199,7 @@ import {
 import {
   enqueueConcurrentRenderForLane,
   finishQueueingConcurrentUpdates,
+  getConcurrentlyUpdatedLanes,
 } from './ReactFiberConcurrentUpdates.new';
 
 import {
@@ -423,6 +424,10 @@ let isRunningInsertionEffect = false;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
+}
+
+export function getWorkInProgressRootRenderLanes(): Lanes {
+  return workInProgressRootRenderLanes;
 }
 
 export function requestEventTime() {
@@ -2059,7 +2064,7 @@ function commitRootImpl(
 
   // Make sure to account for lanes that were updated by a concurrent event
   // during the render phase; don't mark them as finished.
-  const concurrentlyUpdatedLanes = finishQueueingConcurrentUpdates();
+  const concurrentlyUpdatedLanes = getConcurrentlyUpdatedLanes();
   remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
 
   markRootFinished(root, remainingLanes);

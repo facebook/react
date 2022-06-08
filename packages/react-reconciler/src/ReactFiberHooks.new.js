@@ -44,6 +44,7 @@ import {
 import {
   NoLane,
   SyncLane,
+  OffscreenLane,
   NoLanes,
   isSubsetOfLanes,
   includesBlockingLane,
@@ -83,6 +84,7 @@ import {
 } from './ReactHookEffectTags';
 import {
   getWorkInProgressRoot,
+  getWorkInProgressRootRenderLanes,
   scheduleUpdateOnFiber,
   requestUpdateLane,
   requestEventTime,
@@ -811,8 +813,20 @@ function updateReducer<S, I, A>(
     let newBaseQueueLast = null;
     let update = first;
     do {
-      const updateLane = update.lane;
-      if (!isSubsetOfLanes(renderLanes, updateLane)) {
+      // An extra OffscreenLane bit is added to updates that were made to
+      // a hidden tree, so that we can distinguish them from updates that were
+      // already there when the tree was hidden.
+      const updateLane = removeLanes(update.lane, OffscreenLane);
+      const isHiddenUpdate = updateLane !== update.lane;
+
+      // Check if this update was made while the tree was hidden. If so, then
+      // it's not a "base" update and we should disregard the extra base lanes
+      // that were added to renderLanes when we entered the Offscreen tree.
+      const shouldSkipUpdate = isHiddenUpdate
+        ? !isSubsetOfLanes(getWorkInProgressRootRenderLanes(), updateLane)
+        : !isSubsetOfLanes(renderLanes, updateLane);
+
+      if (shouldSkipUpdate) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
