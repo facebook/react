@@ -363,8 +363,8 @@ describe('ReactDOMFizzServer', () => {
 
     expect(errors).toEqual([
       // There are two boundaries that abort
-      'signal is aborted without reason',
-      'signal is aborted without reason',
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
     ]);
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('Loading');

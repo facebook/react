@@ -1108,7 +1108,7 @@ describe('ReactDOMFizzServer', () => {
       errors,
       [
         [
-          'The server did not finish this Suspense boundary: signal is aborted without reason',
+          'The server did not finish this Suspense boundary: The render was aborted by the server without a reason.',
           expectedDigest,
           componentStack(['h1', 'Suspense', 'div', 'App']),
         ],

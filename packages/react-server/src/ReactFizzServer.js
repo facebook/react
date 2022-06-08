@@ -1554,8 +1554,7 @@ function abortTask(task: Task, request: Request, reason: mixed): void {
       boundary.forceClientRender = true;
       let error =
         reason === undefined
-          ? // eslint-disable-next-line react-internal/prod-error-codes
-            new Error('signal is aborted without reason')
+          ? new Error('The render was aborted by the server without a reason.')
           : reason;
       boundary.errorDigest = request.onError(error);
       if (__DEV__) {

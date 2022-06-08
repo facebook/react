@@ -222,7 +222,9 @@ describe('ReactDOMFizzServer', () => {
       const result = await readResult(stream);
       expect(result).toContain('Loading');
 
-      expect(errors).toEqual(['signal is aborted without reason']);
+      expect(errors).toEqual([
+        'The render was aborted by the server without a reason.',
+      ]);
     });
 
     // @gate experimental
@@ -261,7 +263,9 @@ describe('ReactDOMFizzServer', () => {
       const reader = stream.getReader();
       reader.cancel();
 
-      expect(errors).toEqual(['signal is aborted without reason']);
+      expect(errors).toEqual([
+        'The render was aborted by the server without a reason.',
+      ]);
 
       hasLoaded = true;
       resolve();

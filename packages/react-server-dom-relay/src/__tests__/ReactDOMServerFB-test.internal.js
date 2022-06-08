@@ -191,6 +191,8 @@ describe('ReactDOMServerFB', () => {
     const remaining = readResult(stream);
     expect(remaining).toEqual('');
 
-    expect(errors).toEqual(['signal is aborted without reason']);
+    expect(errors).toEqual([
+      'The render was aborted by the server without a reason.',
+    ]);
   });
 });
