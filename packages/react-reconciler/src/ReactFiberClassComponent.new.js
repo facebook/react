@@ -59,6 +59,7 @@ import {readContext, checkIfContextChanged} from './ReactFiberNewContext.new';
 import {
   requestEventTime,
   requestUpdateLane,
+  requestUpdateLane_isUnknownEventPriority,
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.new';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
@@ -193,7 +194,7 @@ const classComponentUpdater = {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
-
+    const isUnknownEventPriority = requestUpdateLane_isUnknownEventPriority();
     const update = createUpdate(eventTime, lane);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
@@ -205,7 +206,13 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(
+        root,
+        fiber,
+        lane,
+        eventTime,
+        isUnknownEventPriority,
+      );
       entangleTransitions(root, fiber, lane);
     }
 
@@ -226,6 +233,7 @@ const classComponentUpdater = {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
+    const isUnknownEventPriority = requestUpdateLane_isUnknownEventPriority();
 
     const update = createUpdate(eventTime, lane);
     update.tag = ReplaceState;
@@ -240,7 +248,13 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(
+        root,
+        fiber,
+        lane,
+        eventTime,
+        isUnknownEventPriority,
+      );
       entangleTransitions(root, fiber, lane);
     }
 
@@ -261,6 +275,7 @@ const classComponentUpdater = {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
+    const isUnknownEventPriority = requestUpdateLane_isUnknownEventPriority();
 
     const update = createUpdate(eventTime, lane);
     update.tag = ForceUpdate;
@@ -274,7 +289,13 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(
+        root,
+        fiber,
+        lane,
+        eventTime,
+        isUnknownEventPriority,
+      );
       entangleTransitions(root, fiber, lane);
     }
 

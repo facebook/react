@@ -430,6 +430,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
               })
         : setTimeout,
 
+    supportsFrameAlignedTask: false,
+    scheduleFrameAlignedTask: undefined,
+    cancelFrameAlignedTask: undefined,
+
     prepareForCommit(): null | Object {
       return null;
     },

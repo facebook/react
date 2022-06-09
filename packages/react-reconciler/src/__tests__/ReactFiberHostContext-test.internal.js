@@ -67,6 +67,7 @@ describe('ReactFiberHostContext', () => {
         return DefaultEventPriority;
       },
       supportsMutation: true,
+      supportsFrameAlignedTask: false,
       requestPostPaintCallback: function() {},
     });
 
@@ -132,6 +133,7 @@ describe('ReactFiberHostContext', () => {
       },
       requestPostPaintCallback: function() {},
       supportsMutation: true,
+      shouldScheduleAnimationFrame: () => false,
     });
 
     const container = Renderer.createContainer(
