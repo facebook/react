@@ -16,10 +16,6 @@ let loggingIFrame = null;
 
 const LOGGING_INTERVAL = 500;
 
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 // We need to create a queue to ensure an interval between sending events
 // otherwise Meta's logging system will drop some of them.
 function createLoggingQueue<T>(
@@ -43,11 +39,11 @@ function createLoggingQueue<T>(
     pending = true;
     const event = eventQueue.shift();
     logFunc(event);
-    delay(LOGGING_INTERVAL).then(() => {
+    setTimeout(() => {
       // process the next event in the queue
       pending = false;
       processQueue();
-    });
+    }, LOGGING_INTERVAL);
   }
 
   function pushEvent(event: T) {
