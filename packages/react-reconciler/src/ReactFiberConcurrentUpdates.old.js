@@ -18,7 +18,10 @@ import type {
 } from './ReactFiberClassUpdateQueue.old';
 import type {Lane} from './ReactFiberLane.old';
 
-import {warnAboutUpdateOnNotYetMountedFiberInDEV} from './ReactFiberWorkLoop.old';
+import {
+  warnAboutUpdateOnNotYetMountedFiberInDEV,
+  throwIfInfiniteUpdateLoopDetected,
+} from './ReactFiberWorkLoop.old';
 import {mergeLanes} from './ReactFiberLane.old';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {HostRoot} from './ReactWorkTags';
@@ -143,6 +146,13 @@ function markUpdateLaneFromFiberToRoot(
   sourceFiber: Fiber,
   lane: Lane,
 ): FiberRoot | null {
+  // TODO: We will detect and infinite update loop and throw even if this fiber
+  // has already unmounted. This isn't really necessary but it happens to be the
+  // current behavior we've used for several release cycles. Consider not
+  // performing this check if the updated fiber already unmounted, since it's
+  // not possible for that to cause an infinite update loop.
+  throwIfInfiniteUpdateLoopDetected();
+
   // Update the source fiber's lanes
   sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
   let alternate = sourceFiber.alternate;

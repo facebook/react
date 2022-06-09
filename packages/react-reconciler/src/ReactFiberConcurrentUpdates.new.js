@@ -19,7 +19,10 @@ import type {
 import type {Lane, Lanes} from './ReactFiberLane.new';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 
-import {warnAboutUpdateOnNotYetMountedFiberInDEV} from './ReactFiberWorkLoop.new';
+import {
+  warnAboutUpdateOnNotYetMountedFiberInDEV,
+  throwIfInfiniteUpdateLoopDetected,
+} from './ReactFiberWorkLoop.new';
 import {
   NoLane,
   NoLanes,
@@ -207,6 +210,13 @@ function markUpdateLaneFromFiberToRoot(
 }
 
 function getRootForUpdatedFiber(sourceFiber: Fiber): FiberRoot | null {
+  // TODO: We will detect and infinite update loop and throw even if this fiber
+  // has already unmounted. This isn't really necessary but it happens to be the
+  // current behavior we've used for several release cycles. Consider not
+  // performing this check if the updated fiber already unmounted, since it's
+  // not possible for that to cause an infinite update loop.
+  throwIfInfiniteUpdateLoopDetected();
+
   // When a setState happens, we must ensure the root is scheduled. Because
   // update queues do not have a backpointer to the root, the only way to do
   // this currently is to walk up the return path. This used to not be a big
