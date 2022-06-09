@@ -15,23 +15,76 @@ import {enableLogger} from 'react-devtools-feature-flags';
 let loggingIFrame = null;
 let missedEvents = [];
 
+const LOGGING_INTERVAL = 500;
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+// We need to create a queue to ensure an interval between sending events
+// otherwise Meta's logging system will drop some of them.
+function createLoggingQueue<T>(logFunc: T => void): {
+  push: (T) => void,
+  process: () => void,
+} {
+  const eventQueue: Array<T> = [];
+  let pending = false;
+
+  function processQueue() {
+    if (eventQueue.length === 0) {
+      pending = false;
+      return;
+    }
+    // prevent multiple events from being sent at the same time
+    if (pending) {
+      return;
+    }
+    pending = true;
+    const event = eventQueue.shift();
+    logFunc(event);
+    delay(LOGGING_INTERVAL).then(() => {
+      // process the next event in the queue
+      pending = false;
+      processQueue();
+    });
+  }
+
+  function pushEvent(event: T) {
+    eventQueue.push(event);
+  }
+
+  return {
+    push: pushEvent,
+    process: processQueue
+  }
+}
+
 export function registerDevToolsEventLogger(surface: string) {
+  const queue = createLoggingQueue<LogEvent>(event => {
+    if (loggingIFrame != null) {
+      loggingIFrame.contentWindow.postMessage(
+        {
+          source: 'react-devtools-logging',
+          event: event,
+          context: {
+            surface,
+            version: process.env.DEVTOOLS_VERSION,
+          },
+        },
+        '*',
+      );
+    }
+  });
+
   function logEvent(event: LogEvent) {
     if (enableLogger) {
       if (loggingIFrame != null) {
-        loggingIFrame.contentWindow.postMessage(
-          {
-            source: 'react-devtools-logging',
-            event: event,
-            context: {
-              surface,
-              version: process.env.DEVTOOLS_VERSION,
-            },
-          },
-          '*',
-        );
+        // push the event and start processing it
+        queue.push(event);
+        queue.process();
       } else {
-        missedEvents.push(event);
+        // push the event in queue and wait for the logging iframe to be created
+        queue.push(event);
       }
     }
   }
@@ -42,10 +95,8 @@ export function registerDevToolsEventLogger(surface: string) {
     }
 
     loggingIFrame = iframe;
-    if (missedEvents.length > 0) {
-      missedEvents.forEach(logEvent);
-      missedEvents = [];
-    }
+    // we might already have missed some events, so send them now
+    queue.process();
   }
 
   // If logger is enabled, register a logger that captures logged events
