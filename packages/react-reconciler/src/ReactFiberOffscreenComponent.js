@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
+import type {ReactNodeList, OffscreenMode, Wakeable} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SpawnedCachePool} from './ReactFiberCacheComponent.new';
 import type {
@@ -40,10 +40,12 @@ export type OffscreenState = {|
 export type OffscreenQueue = {|
   transitions: Array<Transition> | null,
   markerInstances: Array<TracingMarkerInstance> | null,
-|} | null;
+  wakeables: Set<Wakeable> | null,
+|};
 
 export type OffscreenInstance = {|
   isHidden: boolean,
   pendingMarkers: Set<PendingSuspenseBoundaries> | null,
   transitions: Set<Transition> | null,
+  retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,
 |};

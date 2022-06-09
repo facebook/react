@@ -2,10 +2,12 @@ let React;
 let ReactNoop;
 let Scheduler;
 let act;
+let LegacyHidden;
 let Offscreen;
 let Suspense;
 let useState;
 let useEffect;
+let startTransition;
 let textCache;
 
 describe('ReactOffscreen', () => {
@@ -16,10 +18,12 @@ describe('ReactOffscreen', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
+    LegacyHidden = React.unstable_LegacyHidden;
     Offscreen = React.unstable_Offscreen;
     Suspense = React.Suspense;
     useState = React.useState;
     useEffect = React.useEffect;
+    startTransition = React.startTransition;
 
     textCache = new Map();
   });
@@ -86,6 +90,328 @@ describe('ReactOffscreen', () => {
     return text;
   }
 
+  // Only works in new reconciler
+  // @gate variant
+  // @gate enableOffscreen
+  test('basic example of suspending inside hidden tree', async () => {
+    const root = ReactNoop.createRoot();
+
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <span>
+            <Text text="Visible" />
+          </span>
+          <Offscreen mode="hidden">
+            <span>
+              <AsyncText text="Hidden" />
+            </span>
+          </Offscreen>
+        </Suspense>
+      );
+    }
+
+    // The hidden tree hasn't finished loading, but we should still be able to
+    // show the surrounding contents. The outer Suspense boundary
+    // isn't affected.
+    await act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['Visible', 'Suspend! [Hidden]']);
+    expect(root).toMatchRenderedOutput(<span>Visible</span>);
+
+    // When the data resolves, we should be able to finish prerendering
+    // the hidden tree.
+    await act(async () => {
+      await resolveText('Hidden');
+    });
+    expect(Scheduler).toHaveYielded(['Hidden']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span>Visible</span>
+        <span hidden={true}>Hidden</span>
+      </>,
+    );
+  });
+
+  // @gate www
+  test('LegacyHidden does not handle suspense', async () => {
+    const root = ReactNoop.createRoot();
+
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <span>
+            <Text text="Visible" />
+          </span>
+          <LegacyHidden mode="hidden">
+            <span>
+              <AsyncText text="Hidden" />
+            </span>
+          </LegacyHidden>
+        </Suspense>
+      );
+    }
+
+    // Unlike Offscreen, LegacyHidden never captures if something suspends
+    await act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Visible',
+      'Suspend! [Hidden]',
+      'Loading...',
+    ]);
+    // Nearest Suspense boundary switches to a fallback even though the
+    // suspended content is hidden.
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span hidden={true}>Visible</span>
+        Loading...
+      </>,
+    );
+  });
+
+  // Only works in new reconciler
+  // @gate variant
+  // @gate experimental || www
+  test("suspending inside currently hidden tree that's switching to visible", async () => {
+    const root = ReactNoop.createRoot();
+
+    function Details({open, children}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <span>
+            <Text text={open ? 'Open' : 'Closed'} />
+          </span>
+          <Offscreen mode={open ? 'visible' : 'hidden'}>
+            <span>{children}</span>
+          </Offscreen>
+        </Suspense>
+      );
+    }
+
+    // The hidden tree hasn't finished loading, but we should still be able to
+    // show the surrounding contents. It doesn't matter that there's no
+    // Suspense boundary because the unfinished content isn't visible.
+    await act(async () => {
+      root.render(
+        <Details open={false}>
+          <AsyncText text="Async" />
+        </Details>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Closed', 'Suspend! [Async]']);
+    expect(root).toMatchRenderedOutput(<span>Closed</span>);
+
+    // But when we switch the boundary from hidden to visible, it should
+    // now bubble to the nearest Suspense boundary.
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Details open={true}>
+            <AsyncText text="Async" />
+          </Details>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Open', 'Suspend! [Async]', 'Loading...']);
+    // It should suspend with delay to prevent the already-visible Suspense
+    // boundary from switching to a fallback
+    expect(root).toMatchRenderedOutput(<span>Closed</span>);
+
+    // Resolve the data and finish rendering
+    await act(async () => {
+      await resolveText('Async');
+    });
+    expect(Scheduler).toHaveYielded(['Open', 'Async']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span>Open</span>
+        <span>Async</span>
+      </>,
+    );
+  });
+
+  // Only works in new reconciler
+  // @gate variant
+  // @gate enableOffscreen
+  test("suspending inside currently visible tree that's switching to hidden", async () => {
+    const root = ReactNoop.createRoot();
+
+    function Details({open, children}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <span>
+            <Text text={open ? 'Open' : 'Closed'} />
+          </span>
+          <Offscreen mode={open ? 'visible' : 'hidden'}>
+            <span>{children}</span>
+          </Offscreen>
+        </Suspense>
+      );
+    }
+
+    // Initial mount. Nothing suspends
+    await act(async () => {
+      root.render(
+        <Details open={true}>
+          <Text text="(empty)" />
+        </Details>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Open', '(empty)']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span>Open</span>
+        <span>(empty)</span>
+      </>,
+    );
+
+    // Update that suspends inside the currently visible tree
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Details open={true}>
+            <AsyncText text="Async" />
+          </Details>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Open', 'Suspend! [Async]', 'Loading...']);
+    // It should suspend with delay to prevent the already-visible Suspense
+    // boundary from switching to a fallback
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span>Open</span>
+        <span>(empty)</span>
+      </>,
+    );
+
+    // Update that hides the suspended tree
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Details open={false}>
+            <AsyncText text="Async" />
+          </Details>,
+        );
+      });
+    });
+    // Now the visible part of the tree can commit without being blocked
+    // by the suspended content, which is hidden.
+    expect(Scheduler).toHaveYielded(['Closed', 'Suspend! [Async]']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span>Closed</span>
+        <span hidden={true}>(empty)</span>
+      </>,
+    );
+
+    // Resolve the data and finish rendering
+    await act(async () => {
+      await resolveText('Async');
+    });
+    expect(Scheduler).toHaveYielded(['Async']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span>Closed</span>
+        <span hidden={true}>Async</span>
+      </>,
+    );
+  });
+
+  // @gate experimental || www
+  test('update that suspends inside hidden tree', async () => {
+    let setText;
+    function Child() {
+      const [text, _setText] = useState('A');
+      setText = _setText;
+      return <AsyncText text={text} />;
+    }
+
+    function App({show}) {
+      return (
+        <Offscreen mode={show ? 'visible' : 'hidden'}>
+          <span>
+            <Child />
+          </span>
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    resolveText('A');
+    await act(async () => {
+      root.render(<App show={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['A']);
+
+    await act(async () => {
+      startTransition(() => {
+        setText('B');
+      });
+    });
+  });
+
+  // Only works in new reconciler
+  // @gate variant
+  // @gate experimental || www
+  test('updates at multiple priorities that suspend inside hidden tree', async () => {
+    let setText;
+    let setStep;
+    function Child() {
+      const [text, _setText] = useState('A');
+      setText = _setText;
+
+      const [step, _setStep] = useState(0);
+      setStep = _setStep;
+
+      return <AsyncText text={text + step} />;
+    }
+
+    function App({show}) {
+      return (
+        <Offscreen mode={show ? 'visible' : 'hidden'}>
+          <span>
+            <Child />
+          </span>
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    resolveText('A0');
+    await act(async () => {
+      root.render(<App show={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['A0']);
+    expect(root).toMatchRenderedOutput(<span hidden={true}>A0</span>);
+
+    await act(async () => {
+      setStep(1);
+      ReactNoop.flushSync(() => {
+        setText('B');
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      // The high priority render suspends again
+      'Suspend! [B0]',
+      // There's still pending work in another lane, so we should attempt
+      // that, too.
+      'Suspend! [B1]',
+    ]);
+    expect(root).toMatchRenderedOutput(<span hidden={true}>A0</span>);
+
+    // Resolve the data and finish rendering
+    await act(async () => {
+      resolveText('B1');
+    });
+    expect(Scheduler).toHaveYielded(['B1']);
+    expect(root).toMatchRenderedOutput(<span hidden={true}>B1</span>);
+  });
+
+  // Only works in new reconciler
   // @gate enableOffscreen
   test('detect updates to a hidden tree during a concurrent event', async () => {
     // This is a pretty complex test case. It relates to how we detect if an

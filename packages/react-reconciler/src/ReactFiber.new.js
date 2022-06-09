@@ -719,6 +719,7 @@ export function createFiberFromOffscreen(
   const primaryChildInstance: OffscreenInstance = {
     isHidden: false,
     pendingMarkers: null,
+    retryCache: null,
     transitions: null,
   };
   fiber.stateNode = primaryChildInstance;
@@ -740,6 +741,7 @@ export function createFiberFromLegacyHidden(
     isHidden: false,
     pendingMarkers: null,
     transitions: null,
+    retryCache: null,
   };
   fiber.stateNode = instance;
   return fiber;
