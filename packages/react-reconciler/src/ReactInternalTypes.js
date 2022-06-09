@@ -224,6 +224,8 @@ type BaseFiberRootProperties = {|
   // task that the root will work on.
   callbackNode: *,
   callbackPriority: Lane,
+  frameAlignedNode?: number | null,
+  hasUnknownUpdates?: boolean,
   eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
   hiddenUpdates: LaneMap<Array<ConcurrentUpdate> | null>,

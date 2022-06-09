@@ -103,6 +103,11 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
         let didFlushWork;
         do {
           didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
+
+          // Flush scheduled rAF.
+          if (global.flushRequestAnimationFrameQueue) {
+            global.flushRequestAnimationFrameQueue();
+          }
         } while (didFlushWork);
         return {
           then(resolve, reject) {
@@ -126,6 +131,11 @@ function flushActWork(resolve, reject) {
   enqueueTask(() => {
     try {
       const didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
+
+      // Flush scheduled rAF.
+      if (global.flushRequestAnimationFrameQueue) {
+        global.flushRequestAnimationFrameQueue();
+      }
       if (didFlushWork) {
         flushActWork(resolve, reject);
       } else {

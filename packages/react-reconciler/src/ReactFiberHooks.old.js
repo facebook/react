@@ -85,6 +85,7 @@ import {
   getWorkInProgressRoot,
   scheduleUpdateOnFiber,
   requestUpdateLane,
+  requestUpdateLane_isUnknownEventPriority,
   requestEventTime,
   markSkippedUpdateLanes,
 } from './ReactFiberWorkLoop.old';
@@ -1142,6 +1143,7 @@ function useMutableSource<Source, Snapshot>(
         setSnapshot(maybeNewSnapshot);
 
         const lane = requestUpdateLane(fiber);
+        // TODO: What to do about isUnknownEventPriority
         markRootMutableRead(root, lane);
       }
       // If the source mutated between render and now,
@@ -1162,7 +1164,7 @@ function useMutableSource<Source, Snapshot>(
 
         // Record a pending mutable source update with the same expiration time.
         const lane = requestUpdateLane(fiber);
-
+        // TODO: What to do about isUnknownEventPriority
         markRootMutableRead(root, lane);
       } catch (error) {
         // A selector might throw after a source mutation.
@@ -1502,7 +1504,7 @@ function checkIfSnapshotChanged(inst) {
 function forceStoreRerender(fiber) {
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
   if (root !== null) {
-    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false); // TODO: isUnknownEvent
   }
 }
 
@@ -2161,11 +2163,18 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
       case HostRoot: {
         // Schedule an update on the cache boundary to trigger a refresh.
         const lane = requestUpdateLane(provider);
+        const isUnknownEventPriority = requestUpdateLane_isUnknownEventPriority();
         const eventTime = requestEventTime();
         const refreshUpdate = createLegacyQueueUpdate(eventTime, lane);
         const root = enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         if (root !== null) {
-          scheduleUpdateOnFiber(root, provider, lane, eventTime);
+          scheduleUpdateOnFiber(
+            root,
+            provider,
+            lane,
+            eventTime,
+            isUnknownEventPriority,
+          );
           entangleLegacyQueueTransitions(root, provider, lane);
         }
 
@@ -2207,7 +2216,7 @@ function dispatchReducerAction<S, A>(
   }
 
   const lane = requestUpdateLane(fiber);
-
+  const isUnknownEventPriority = requestUpdateLane_isUnknownEventPriority();
   const update: Update<S, A> = {
     lane,
     action,
@@ -2222,7 +2231,13 @@ function dispatchReducerAction<S, A>(
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
       const eventTime = requestEventTime();
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(
+        root,
+        fiber,
+        lane,
+        eventTime,
+        isUnknownEventPriority,
+      );
       entangleTransitionUpdate(root, queue, lane);
     }
   }
@@ -2246,7 +2261,7 @@ function dispatchSetState<S, A>(
   }
 
   const lane = requestUpdateLane(fiber);
-
+  const isUnknownEventPriority = requestUpdateLane_isUnknownEventPriority();
   const update: Update<S, A> = {
     lane,
     action,
@@ -2309,7 +2324,13 @@ function dispatchSetState<S, A>(
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
       const eventTime = requestEventTime();
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(
+        root,
+        fiber,
+        lane,
+        eventTime,
+        isUnknownEventPriority,
+      );
       entangleTransitionUpdate(root, queue, lane);
     }
   }

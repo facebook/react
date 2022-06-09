@@ -65,6 +65,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       throw error;
     }
   });
+  env.beforeEach(() => {
+    // TODO: warn if this has not flushed.
+    global.requestAnimationFrameQueue = null;
+  });
 
   // TODO: Consider consolidating this with `yieldValue`. In both cases, tests
   // should not be allowed to exit without asserting on the entire log.
