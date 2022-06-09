@@ -24,6 +24,7 @@ import {
   enableUpdaterTracking,
   allowConcurrentByDefault,
   enableTransitionTracing,
+  enableFrameEndScheduling,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
@@ -482,7 +483,16 @@ export function includesBlockingLane(root: FiberRoot, lanes: Lanes): boolean {
     allowConcurrentByDefault &&
     (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
   ) {
-    // Concurrent updates by default always use time slicing.
+    if (
+      enableFrameEndScheduling &&
+      (lanes & DefaultLane) !== NoLanes &&
+      root.hasUnknownUpdates
+    ) {
+      // Unknown updates should flush synchronously, even in concurrent by default.
+      return true;
+    }
+
+    // Otherwise, concurrent updates by default always use time slicing.
     return false;
   }
   const SyncDefaultLanes =
@@ -621,6 +631,7 @@ export function markRootUpdated(
 export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
+  root.hasUnknownUpdates = false;
 
   // The suspended lanes are no longer CPU-bound. Clear their expiration times.
   const expirationTimes = root.expirationTimes;
@@ -651,6 +662,10 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
 
   root.pendingLanes = remainingLanes;
+
+  if ((root.pendingLanes & DefaultLane) === NoLane) {
+    root.hasUnknownUpdates = false;
+  }
 
   // Let's try everything again
   root.suspendedLanes = NoLanes;

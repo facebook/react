@@ -33,6 +33,7 @@ export const {
   enableSyncDefaultUpdates,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnTextMismatch,
+  enableFrameEndScheduling,
   enableTransitionTracing,
 } = dynamicFeatureFlags;
 

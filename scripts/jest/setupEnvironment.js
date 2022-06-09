@@ -35,4 +35,28 @@ if (typeof window !== 'undefined') {
   global.cancelIdleCallback = function(callbackID) {
     clearTimeout(callbackID);
   };
+
+  // We need to mock rAF because Jest 26 does not flush rAF.
+  // Once we upgrade to Jest 27+, rAF is flushed every 16ms.
+  global.requestAnimationFrameQueue = null;
+  global.requestAnimationFrame = function(callback) {
+    if (global.requestAnimationFrameQueue == null) {
+      global.requestAnimationFrameQueue = [];
+    }
+    global.requestAnimationFrameQueue.push(callback);
+    return global.requestAnimationFrameQueue.length - 1;
+  };
+
+  global.cancelAnimationFrame = function(id) {
+    if (global.requestAnimationFrameQueue != null) {
+      global.requestAnimationFrameQueue.splice(id, 1);
+    }
+  };
+
+  global.flushRequestAnimationFrameQueue = function() {
+    if (global.requestAnimationFrameQueue != null) {
+      global.requestAnimationFrameQueue.forEach(callback => callback());
+      global.requestAnimationFrameQueue = null;
+    }
+  };
 }

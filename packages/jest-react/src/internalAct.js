@@ -106,6 +106,11 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
         let didFlushWork;
         do {
           didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
+
+          // Flush scheduled rAF.
+          if (global.flushRequestAnimationFrameQueue) {
+            global.flushRequestAnimationFrameQueue();
+          }
         } while (didFlushWork);
         return {
           then(resolve, reject) {
@@ -144,6 +149,10 @@ function flushActWork(resolve, reject) {
   // $FlowFixMe: Flow doesn't know about global Jest object
   jest.runOnlyPendingTimers();
   if (Scheduler.unstable_hasPendingWork()) {
+    // Flush scheduled rAF.
+    if (global.flushRequestAnimationFrameQueue) {
+      global.flushRequestAnimationFrameQueue();
+    }
     // Committing a fallback scheduled additional work. Continue flushing.
     flushActWork(resolve, reject);
     return;

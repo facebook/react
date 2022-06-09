@@ -74,10 +74,11 @@ import {
 } from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {UnknownEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 // TODO: Remove this deep import when we delete the legacy root API
 import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
+import * as Scheduler from 'scheduler';
 
 import {
   prepareToRenderResources,
@@ -373,7 +374,7 @@ export function createTextInstance(
 export function getCurrentEventPriority(): EventPriority {
   const currentEvent = window.event;
   if (currentEvent === undefined) {
-    return DefaultEventPriority;
+    return UnknownEventPriority;
   }
   return getEventPriority(currentEvent.type);
 }
@@ -393,6 +394,11 @@ const localRequestAnimationFrame =
   typeof requestAnimationFrame === 'function'
     ? requestAnimationFrame
     : scheduleTimeout;
+const localCancelAnimationFrame =
+  typeof window !== 'undefined' &&
+  typeof window.cancelAnimationFrame === 'function'
+    ? window.cancelAnimationFrame
+    : cancelTimeout;
 // -------------------
 //     Microtasks
 // -------------------
@@ -407,6 +413,39 @@ export const scheduleMicrotask: any =
           .then(callback)
           .catch(handleErrorInNextTick)
     : scheduleTimeout; // TODO: Determine the best fallback here.
+
+// -------------------
+//     requestAnimationFrame
+// -------------------
+type FrameAlignedTask = {
+  frameNode: any,
+  callbackNode: any,
+};
+
+// TODO: Fix these types
+export const supportsFrameAlignedTask = true;
+export function scheduleFrameAlignedTask(task: any): FrameAlignedTask {
+  // Schedule both tasks, we'll race them and use the first to fire.
+  const raf: any = localRequestAnimationFrame;
+
+  return {
+    frameNode: raf(task),
+    callbackNode: Scheduler.unstable_scheduleCallback(
+      Scheduler.unstable_NormalPriority,
+      task,
+    ),
+  };
+}
+export function cancelFrameAlignedTask(task: any) {
+  const caf: any = localCancelAnimationFrame;
+  if (task.frameNode != null) {
+    caf(task.frameNode);
+  }
+
+  if (task.callbackNode != null) {
+    Scheduler.unstable_cancelCallback(task.callbackNode);
+  }
+}
 
 function handleErrorInNextTick(error) {
   setTimeout(() => {

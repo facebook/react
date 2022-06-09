@@ -69,6 +69,7 @@ describe('ReactFiberHostContext', () => {
       prepareRendererToRender: function() {},
       resetRendererAfterRender: function() {},
       supportsMutation: true,
+      supportsFrameAlignedTask: false,
       requestPostPaintCallback: function() {},
     });
 
@@ -136,6 +137,7 @@ describe('ReactFiberHostContext', () => {
       prepareRendererToRender: function() {},
       resetRendererAfterRender: function() {},
       supportsMutation: true,
+      shouldScheduleAnimationFrame: () => false,
     });
 
     const container = Renderer.createContainer(

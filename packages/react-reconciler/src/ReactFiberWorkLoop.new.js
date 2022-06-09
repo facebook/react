@@ -40,6 +40,7 @@ import {
   enableUpdaterTracking,
   enableCache,
   enableTransitionTracing,
+  enableFrameEndScheduling,
   useModernStrictMode,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -86,8 +87,10 @@ import {
   scheduleMicrotask,
   prepareRendererToRender,
   resetRendererAfterRender,
+  cancelFrameAlignedTask,
+  scheduleFrameAlignedTask,
+  supportsFrameAlignedTask,
 } from './ReactFiberHostConfig';
-
 import {
   createWorkInProgress,
   assignFiberPropertiesInDEV,
@@ -918,13 +921,32 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
         );
       }
     }
-    // The priority hasn't changed. We can reuse the existing task. Exit.
-    return;
+
+    if (
+      enableFrameEndScheduling &&
+      newCallbackPriority === DefaultLane &&
+      root.hasUnknownUpdates
+    ) {
+      // Do nothing, we need to cancel the existing default task and schedule a rAF.
+    } else {
+      // The priority hasn't changed. We can reuse the existing task. Exit.
+      return;
+    }
   }
 
-  if (existingCallbackNode != null) {
+  if (existingCallbackNode !== null) {
     // Cancel the existing callback. We'll schedule a new one below.
-    cancelCallback(existingCallbackNode);
+    if (
+      enableFrameEndScheduling &&
+      supportsFrameAlignedTask &&
+      existingCallbackNode != null &&
+      // TODO: is there a better check for callbackNode type?
+      existingCallbackNode.frameNode != null
+    ) {
+      cancelFrameAlignedTask(existingCallbackNode);
+    } else {
+      cancelCallback(existingCallbackNode);
+    }
   }
 
   // Schedule a new callback.
@@ -968,6 +990,24 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       scheduleCallback(ImmediateSchedulerPriority, flushSyncCallbacks);
     }
     newCallbackNode = null;
+  } else if (
+    enableFrameEndScheduling &&
+    supportsFrameAlignedTask &&
+    newCallbackPriority === DefaultLane &&
+    root.hasUnknownUpdates
+  ) {
+    if (__DEV__ && ReactCurrentActQueue.current !== null) {
+      // Inside `act`, use our internal `act` queue so that these get flushed
+      // at the end of the current scope even when using the sync version
+      // of `act`.
+      ReactCurrentActQueue.current.push(
+        performConcurrentWorkOnRoot.bind(null, root),
+      );
+    } else {
+      newCallbackNode = scheduleFrameAlignedTask(
+        performConcurrentWorkOnRoot.bind(null, root),
+      );
+    }
   } else {
     let schedulerPriorityLevel;
     switch (lanesToEventPriority(nextLanes)) {
