@@ -13,18 +13,19 @@ import {registerEventLogger} from 'react-devtools-shared/src/Logger';
 import {enableLogger} from 'react-devtools-feature-flags';
 
 let loggingIFrame = null;
-let missedEvents = [];
 
 const LOGGING_INTERVAL = 500;
 
 function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // We need to create a queue to ensure an interval between sending events
 // otherwise Meta's logging system will drop some of them.
-function createLoggingQueue<T>(logFunc: T => void): {
-  push: (T) => void,
+function createLoggingQueue<T>(
+  logFunc: T => void,
+): {
+  push: T => void,
   process: () => void,
 } {
   const eventQueue: Array<T> = [];
@@ -55,8 +56,8 @@ function createLoggingQueue<T>(logFunc: T => void): {
 
   return {
     push: pushEvent,
-    process: processQueue
-  }
+    process: processQueue,
+  };
 }
 
 export function registerDevToolsEventLogger(surface: string) {
