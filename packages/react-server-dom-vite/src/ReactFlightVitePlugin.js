@@ -37,6 +37,7 @@ export default function ReactFlightVitePlugin({
   let server;
   let invalidateTimeout;
   let globImporterPath;
+  let resolveAlias;
 
   function invalidateGlobImporter() {
     clearTimeout(invalidateTimeout);
@@ -57,6 +58,17 @@ export default function ReactFlightVitePlugin({
     async configResolved(_config: any) {
       await init;
       config = _config;
+
+      const aliasPlugin = config.plugins.find(
+        plugin => plugin.name === 'alias',
+      );
+
+      if (aliasPlugin) {
+        resolveAlias = aliasPlugin.resolveId.bind({
+          // Mock Rollup instance
+          resolve: id => ({then: () => (id ? {id} : null)}),
+        });
+      }
 
       // By pushing this plugin at the end of the existing array,
       // we enforce running it *after* Vite resolves import.meta.glob.
@@ -130,7 +142,13 @@ export default function ReactFlightVitePlugin({
       // Add more information for this module in the graph.
       // It will be used later to discover client boundaries.
       if (server && options.ssr && /\.[jt]sx?($|\?)/.test(id)) {
-        augmentModuleGraph(server.moduleGraph, id, code);
+        augmentModuleGraph(
+          server.moduleGraph,
+          id,
+          code,
+          config.root,
+          resolveAlias,
+        );
       }
 
       /**
@@ -405,7 +423,13 @@ function resolveModPath(
   }
 }
 
-function augmentModuleGraph(moduleGraph: any, id: string, code: string) {
+function augmentModuleGraph(
+  moduleGraph: any,
+  id: string,
+  code: string,
+  root: string,
+  resolveAlias: any,
+) {
   const currentModule = moduleGraph.getModuleById(id);
   if (!currentModule) return;
 
@@ -426,8 +450,17 @@ function augmentModuleGraph(moduleGraph: any, id: string, code: string) {
     }) => {
       if (dynamicImportIndex !== -1) return; // Skip dynamic imports for now
 
-      const modPath = code.slice(startMod, endMod);
-      const resolvedPath = resolveModPath(modPath.split('?')[0], dirname);
+      const rawModPath = code.slice(startMod, endMod);
+      let modPath = rawModPath.split('?')[0];
+
+      if (resolveAlias) {
+        const resolvedAliasPath = resolveAlias(modPath, 'rsc_importer', {});
+        if (resolvedAliasPath && resolvedAliasPath.id) {
+          modPath = normalizePath(path.join(root, resolvedAliasPath.id));
+        }
+      }
+
+      const resolvedPath = resolveModPath(modPath, dirname);
       if (!resolvedPath) return; // Virtual modules or other exceptions
 
       const [action, variables = ''] = code
@@ -444,7 +477,7 @@ function augmentModuleGraph(moduleGraph: any, id: string, code: string) {
           .filter(Boolean)
           .map(s => s.split(/\s+as\s+/m)),
         from: resolvedPath, // '/absolute/path'
-        originalFrom: modPath, // './path' or '3plib/subpath'
+        originalFrom: rawModPath, // './path' or '3plib/subpath'
       });
     },
   );
