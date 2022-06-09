@@ -83,6 +83,8 @@ export const enableLegacyCache = __EXPERIMENTAL__;
 export const enableCacheElement = __EXPERIMENTAL__;
 export const enableFetchInstrumentation = true;
 
+export const enableFrameEndScheduling = __EXPERIMENTAL__;
+
 export const enableTransitionTracing = false;
 
 // No known bugs, but needs performance testing

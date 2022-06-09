@@ -24,6 +24,7 @@ export const enableCache = true;
 export const enableLegacyCache = true;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
+export const enableFrameEndScheduling = false;
 export const enableSchedulerDebugging = false;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;

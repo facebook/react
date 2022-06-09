@@ -34,6 +34,7 @@ export const {
   enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnTextMismatch,
+  enableFrameEndScheduling,
   enableTransitionTracing,
 } = dynamicFeatureFlags;
 

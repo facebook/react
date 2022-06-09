@@ -397,6 +397,9 @@ describe('ReactDOMRoot', () => {
 
     expect(container.textContent).toEqual('a');
 
+    // Set an event so this isn't flushed synchronously as an unknown update.
+    window.event = 'test';
+
     await act(async () => {
       root.render(<Foo value="b" />);
 

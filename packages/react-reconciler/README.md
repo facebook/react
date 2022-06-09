@@ -206,6 +206,17 @@ Set this to true to indicate that your renderer supports `scheduleMicrotask`. We
 
 Optional. You can proxy this to `queueMicrotask` or its equivalent in your environment.
 
+#### `supportsFrameAlignedTask`
+TODO
+
+### `scheduleFrameAlignedTask(fn)`
+
+TODO
+
+#### `cancelFrameAlignedTask(fn)`
+
+TODO
+
 #### `isPrimaryRenderer`
 
 This is a property (not a function) that should be set to `true` if your renderer is the main one on the page. For example, if you're writing a renderer for the Terminal, it makes sense to set it to `true`, but if your renderer is used *on top of* React DOM or some other existing renderer, set it to `false`.
