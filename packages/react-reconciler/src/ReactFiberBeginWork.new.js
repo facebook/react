@@ -258,6 +258,7 @@ import {
   getOffscreenDeferredCache,
   getSuspendedTransitions,
 } from './ReactFiberTransition.new';
+import {pushTracingMarker} from './ReactFiberTracingMarkerComponent.new';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -887,6 +888,7 @@ function updateTracingMarkerComponent(
     return null;
   }
 
+  pushTracingMarker(workInProgress);
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
@@ -3677,6 +3679,11 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         pushCacheProvider(workInProgress, cache);
       }
       break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        pushTracingMarker(workInProgress);
+      }
     }
   }
   return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
