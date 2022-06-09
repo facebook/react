@@ -435,7 +435,6 @@ function prepareState(initGlobals) {
 
   const table = new Map();
   const rowPatternHashes = new Map();
-
   // Disable error overlay while testing each attribute
   uninjectErrorOverlay();
   for (let attribute of attributes) {
@@ -471,7 +470,6 @@ function prepareState(initGlobals) {
     rowPatternHashes.set(rowPatternHash, rowGroup);
     table.set(attribute, row);
   }
-
   // Renable error overlay
   injectErrorOverlay();
 
@@ -785,7 +783,6 @@ class App extends React.Component {
       } else {
         document.title = `${attribute.name} (${type.name})`;
       }
-
       // Creating globals for every single test is too slow.
       // However caching them between runs won't work for the same attribute names
       // because warnings will be deduplicated. As a result, we only share globals
@@ -802,7 +799,6 @@ class App extends React.Component {
         eval.call(window, codesByIndex[i]); // eslint-disable-line
         globals[name] = window[name.replace(/Stable|Next/g, '')];
       });
-
       // Cache for future use (for different attributes).
       pool.push({
         globals,
@@ -863,7 +859,6 @@ class App extends React.Component {
       default:
         throw new Error('Switch statement should be exhaustive');
     }
-
     // Sort
     switch (sortOrder) {
       case ALPHABETICAL:

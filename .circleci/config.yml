@@ -316,7 +316,6 @@ jobs:
       - *restore_node_modules
       - run: yarn check-release-dependencies
 
-
   check_error_codes:
     docker: *docker
     environment: *environment
@@ -445,7 +444,6 @@ jobs:
           command: |
             yarn replace-fork
             git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, add the commit SHA to scripts/merge-fork/forked-revisions." && false)
-
 
 workflows:
   version: 2

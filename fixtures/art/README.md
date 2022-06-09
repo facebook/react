@@ -7,4 +7,4 @@ yarn
 yarn build
 ```
 
-in this directory, then open index.html in your browser.
+In this directory, then open index.html in your browser.
