@@ -33,6 +33,7 @@ import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostCo
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 // TODO: Remove this deep import when we delete the legacy root API
 import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
+import * as Scheduler from 'scheduler';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
@@ -623,6 +624,11 @@ const localRequestAnimationFrame =
   typeof requestAnimationFrame === 'function'
     ? requestAnimationFrame
     : scheduleTimeout;
+const localCancelAnimationFrame =
+  typeof window !== 'undefined' &&
+  typeof window.cancelAnimationFrame === 'function'
+    ? window.cancelAnimationFrame
+    : cancelTimeout;
 
 export function getInstanceFromNode(node: HTMLElement): null | Object {
   return getClosestInstanceFromNode(node) || null;
@@ -666,6 +672,68 @@ function handleErrorInNextTick(error: any) {
   setTimeout(() => {
     throw error;
   });
+}
+
+// -------------------
+//   Animation Frame
+// -------------------
+export const supportsFrameAlignedTask = true;
+
+type FrameAlignedTask = {|
+  rafNode: AnimationFrameID,
+  schedulerNode: number | null,
+  task: Function,
+|};
+
+let currentTask: FrameAlignedTask | null = null;
+function performFrameAlignedWork() {
+  if (currentTask != null) {
+    const currentTaskForFlow = currentTask;
+    const task = currentTask.task;
+    localCancelAnimationFrame(currentTaskForFlow.rafNode);
+    if (currentTaskForFlow.schedulerNode !== null) {
+      Scheduler.unstable_cancelCallback(currentTaskForFlow.schedulerNode);
+    }
+    currentTask = null;
+    if (task != null) {
+      task();
+    }
+  }
+}
+
+export function scheduleFrameAlignedTask(task: any): any {
+  if (currentTask === null) {
+    const rafNode = localRequestAnimationFrame(performFrameAlignedWork);
+
+    const schedulerNode = Scheduler.unstable_scheduleCallback(
+      Scheduler.unstable_NormalPriority,
+      performFrameAlignedWork,
+    );
+
+    currentTask = {
+      rafNode,
+      schedulerNode,
+      task,
+    };
+  } else {
+    currentTask.task = task;
+    currentTask.schedulerNode = Scheduler.unstable_scheduleCallback(
+      Scheduler.unstable_NormalPriority,
+      performFrameAlignedWork,
+    );
+  }
+
+  return currentTask;
+}
+
+export function cancelFrameAlignedTask(task: any) {
+  if (task.schedulerNode) {
+    Scheduler.unstable_cancelCallback(task.schedulerNode);
+    task.schedulerNode = null;
+  }
+  // We don't cancel the rAF in case it gets re-used later.
+  // But clear the task so if it fires and shouldn't run, it won't.
+  task.task = null;
 }
 
 // -------------------

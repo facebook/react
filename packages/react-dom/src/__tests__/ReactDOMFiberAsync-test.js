@@ -472,6 +472,392 @@ describe('ReactDOMFiberAsync', () => {
       // Therefore the form should have been submitted.
       expect(formSubmitted).toBe(true);
     });
+
+    // @gate enableFrameEndScheduling
+    it('Unknown update followed by default update is batched, scheduled in a rAF', async () => {
+      let setState = null;
+      let counterRef = null;
+      function Counter() {
+        const [count, setCount] = React.useState(0);
+        const ref = React.useRef();
+        setState = setCount;
+        counterRef = ref;
+        Scheduler.unstable_yieldValue('Count: ' + count);
+        return <p ref={ref}>Count: {count}</p>;
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
+        root.render(<Counter />);
+      });
+      expect(Scheduler).toHaveYielded(['Count: 0']);
+
+      window.event = undefined;
+      setState(1);
+      // Unknown updates should schedule a rAF.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+
+      window.event = 'test';
+      setState(2);
+      // Default updates after unknown should re-use the scheduled rAF.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+
+      expect(Scheduler).toHaveYielded([]);
+      expect(counterRef.current.textContent).toBe('Count: 0');
+      global.flushRequestAnimationFrameQueue();
+      expect(Scheduler).toHaveYielded(['Count: 2']);
+      expect(counterRef.current.textContent).toBe('Count: 2');
+    });
+
+    // @gate enableFrameEndScheduling
+    it('Unknown update followed by default update is batched, scheduled in a task', () => {
+      let setState = null;
+      let counterRef = null;
+      function Counter() {
+        const [count, setCount] = React.useState(0);
+        const ref = React.useRef();
+        setState = setCount;
+        counterRef = ref;
+        Scheduler.unstable_yieldValue('Count: ' + count);
+        return <p ref={ref}>Count: {count}</p>;
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      act(() => {
+        root.render(<Counter />);
+      });
+      expect(Scheduler).toHaveYielded(['Count: 0']);
+
+      window.event = undefined;
+      setState(1);
+      // Unknown updates should schedule a rAF.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+
+      window.event = 'test';
+      setState(2);
+      // Default updates after unknown should re-use the scheduled rAF.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+
+      expect(Scheduler).toHaveYielded([]);
+      expect(counterRef.current.textContent).toBe('Count: 0');
+
+      expect(Scheduler).toFlushAndYield(['Count: 2']);
+      expect(counterRef.current.textContent).toBe('Count: 2');
+    });
+
+    // @gate enableFrameEndScheduling
+    it('Should re-use scheduled rAF, not cancel and schedule anew', async () => {
+      let setState = null;
+      let counterRef = null;
+      function Counter() {
+        const [count, setCount] = React.useState(0);
+        const ref = React.useRef();
+        setState = setCount;
+        counterRef = ref;
+        Scheduler.unstable_yieldValue('Count: ' + count);
+        return <p ref={ref}>Count: {count}</p>;
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
+        root.render(<Counter />);
+      });
+      expect(Scheduler).toHaveYielded(['Count: 0']);
+
+      window.event = undefined;
+      setState(1);
+      // Unknown updates should schedule a rAF.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+      const firstRaf = global.requestAnimationFrameQueue[0];
+
+      setState(2);
+      // Default updates after unknown should re-use the scheduled rAF.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+      const secondRaf = global.requestAnimationFrameQueue[0];
+      expect(firstRaf).toBe(secondRaf);
+
+      expect(Scheduler).toHaveYielded([]);
+      expect(counterRef.current.textContent).toBe('Count: 0');
+      global.flushRequestAnimationFrameQueue();
+      expect(Scheduler).toHaveYielded(['Count: 2']);
+      expect(counterRef.current.textContent).toBe('Count: 2');
+    });
+
+    // @gate enableFrameEndScheduling
+    it('Default update followed by an unknown update is batched, scheduled in a rAF', async () => {
+      let setState = null;
+      let counterRef = null;
+      function Counter() {
+        const [count, setCount] = React.useState(0);
+        const ref = React.useRef();
+        setState = setCount;
+        counterRef = ref;
+        Scheduler.unstable_yieldValue('Count: ' + count);
+        return <p ref={ref}>Count: {count}</p>;
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
+        root.render(<Counter />);
+      });
+      expect(Scheduler).toHaveYielded(['Count: 0']);
+
+      window.event = 'test';
+      setState(1);
+
+      // We should schedule a rAF for default updates.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+
+      window.event = undefined;
+      setState(2);
+      // Unknown updates should schedule a rAF.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+
+      expect(Scheduler).toHaveYielded([]);
+      expect(counterRef.current.textContent).toBe('Count: 0');
+      global.flushRequestAnimationFrameQueue();
+      expect(Scheduler).toHaveYielded(['Count: 2']);
+      expect(counterRef.current.textContent).toBe('Count: 2');
+    });
+
+    // @gate enableFrameEndScheduling
+    it('Default update followed by unknown update is batched, scheduled in a task', async () => {
+      let setState = null;
+      let counterRef = null;
+      function Counter() {
+        const [count, setCount] = React.useState(0);
+        const ref = React.useRef();
+        setState = setCount;
+        counterRef = ref;
+        Scheduler.unstable_yieldValue('Count: ' + count);
+        return <p ref={ref}>Count: {count}</p>;
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
+        root.render(<Counter />);
+      });
+      expect(Scheduler).toHaveYielded(['Count: 0']);
+
+      window.event = 'test';
+      setState(1);
+
+      // We should schedule a rAF for default updates.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+
+      window.event = undefined;
+      setState(2);
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+
+      expect(Scheduler).toHaveYielded([]);
+      expect(counterRef.current.textContent).toBe('Count: 0');
+
+      expect(Scheduler).toFlushAndYield(['Count: 2']);
+      expect(counterRef.current.textContent).toBe('Count: 2');
+    });
+
+    // @gate enableFrameEndScheduling || !allowConcurrentByDefault
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced', async () => {
+      let setState = null;
+      let counterRef = null;
+      function Counter() {
+        const [count, setCount] = React.useState(0);
+        const ref = React.useRef();
+        setState = setCount;
+        counterRef = ref;
+        Scheduler.unstable_yieldValue('Count: ' + count);
+        return <p ref={ref}>Count: {count}</p>;
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
+        root.render(<Counter />);
+      });
+      expect(Scheduler).toHaveYielded(['Count: 0']);
+
+      window.event = undefined;
+      setState(1);
+
+      expect(Scheduler).toFlushAndYieldThrough(['Count: 1']);
+      expect(counterRef.current.textContent).toBe('Count: 1');
+    });
+
+    // @gate enableFrameEndScheduling || !allowConcurrentByDefault
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default first', async () => {
+      let setState = null;
+      let counterRef = null;
+      function Counter() {
+        const [count, setCount] = React.useState(0);
+        const ref = React.useRef();
+        setState = setCount;
+        counterRef = ref;
+        Scheduler.unstable_yieldValue('Count: ' + count);
+        return <p ref={ref}>Count: {count}</p>;
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
+        root.render(<Counter />);
+      });
+      expect(Scheduler).toHaveYielded(['Count: 0']);
+
+      window.event = 'test';
+      setState(1);
+
+      window.event = undefined;
+      setState(2);
+
+      expect(Scheduler).toFlushAndYieldThrough(['Count: 2']);
+      expect(counterRef.current.textContent).toBe('Count: 2');
+    });
+
+    // @gate enableFrameEndScheduling || !allowConcurrentByDefault
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default after', async () => {
+      let setState = null;
+      let counterRef = null;
+      function Counter() {
+        const [count, setCount] = React.useState(0);
+        const ref = React.useRef();
+        setState = setCount;
+        counterRef = ref;
+        Scheduler.unstable_yieldValue('Count: ' + count);
+        return <p ref={ref}>Count: {count}</p>;
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
+        root.render(<Counter />);
+      });
+      expect(Scheduler).toHaveYielded(['Count: 0']);
+
+      window.event = undefined;
+      setState(1);
+
+      window.event = 'test';
+      setState(2);
+
+      expect(Scheduler).toFlushAndYieldThrough(['Count: 2']);
+      expect(counterRef.current.textContent).toBe('Count: 2');
+    });
+
+    // @gate enableFrameEndScheduling
+    it('unknown updates should be rescheduled in rAF after a higher priority update', async () => {
+      let setState = null;
+      let counterRef = null;
+      function Counter() {
+        const [count, setCount] = React.useState(0);
+        const ref = React.useRef();
+        setState = setCount;
+        counterRef = ref;
+        Scheduler.unstable_yieldValue('Count: ' + count);
+        return (
+          <p
+            ref={ref}
+            onClick={() => {
+              setCount(c => c + 1);
+            }}>
+            Count: {count}
+          </p>
+        );
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
+        root.render(<Counter />);
+      });
+      expect(Scheduler).toHaveYielded(['Count: 0']);
+
+      window.event = undefined;
+      setState(1);
+
+      // Dispatch a click event on the button.
+      await act(async () => {
+        const firstEvent = document.createEvent('Event');
+        firstEvent.initEvent('click', true, true);
+        counterRef.current.dispatchEvent(firstEvent);
+      });
+
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        expect(Scheduler).toHaveYielded(['Count: 2']);
+        expect(counterRef.current.textContent).toBe('Count: 2');
+      } else {
+        expect(Scheduler).toHaveYielded(['Count: 1']);
+        expect(counterRef.current.textContent).toBe('Count: 1');
+
+        global.flushRequestAnimationFrameQueue();
+        expect(Scheduler).toHaveYielded(['Count: 2']);
+        expect(counterRef.current.textContent).toBe('Count: 2');
+      }
+    });
+
+    // @gate enableFrameEndScheduling && enableUnifiedSyncLane
+    it('unknown updates should be rescheduled in rAF after suspending without a boundary', async () => {
+      let setState = null;
+      let setThrowing = null;
+      let counterRef = null;
+
+      let promise = null;
+      let unsuspend = null;
+
+      function Counter() {
+        const [count, setCount] = React.useState(0);
+        const [isThrowing, setThrowingState] = React.useState(false);
+        setThrowing = setThrowingState;
+        const ref = React.useRef();
+        setState = setCount;
+        counterRef = ref;
+        Scheduler.unstable_yieldValue('Count: ' + count);
+        if (isThrowing) {
+          if (promise === null) {
+            promise = new Promise(resolve => {
+              unsuspend = () => {
+                resolve();
+              };
+            });
+          }
+          Scheduler.unstable_yieldValue('suspending');
+          throw promise;
+        }
+        return (
+          <p
+            ref={ref}
+            onClick={() => {
+              setCount(c => c + 1);
+            }}>
+            Count: {count}
+          </p>
+        );
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
+        root.render(<Counter />);
+      });
+      expect(Scheduler).toHaveYielded(['Count: 0']);
+
+      window.event = undefined;
+      setState(1);
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+      global.flushRequestAnimationFrameQueue();
+      expect(Scheduler).toHaveYielded(['Count: 1']);
+
+      setState(2);
+      setThrowing(true);
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+      global.flushRequestAnimationFrameQueue();
+      expect(Scheduler).toHaveYielded(['Count: 2', 'suspending']);
+      expect(counterRef.current.textContent).toBe('Count: 1');
+
+      unsuspend();
+      // Default update should be scheduled in a rAF.
+      window.event = 'test';
+      setThrowing(false);
+      setState(2);
+
+      global.flushRequestAnimationFrameQueue();
+      expect(Scheduler).toHaveYielded(['Count: 2']);
+      expect(counterRef.current.textContent).toBe('Count: 2');
+    });
   });
 
   it('regression test: does not drop passive effects across roots (#17066)', async () => {

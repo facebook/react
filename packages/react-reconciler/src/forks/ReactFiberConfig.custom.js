@@ -85,6 +85,14 @@ export const supportsMicrotasks = $$$config.supportsMicrotasks;
 export const scheduleMicrotask = $$$config.scheduleMicrotask;
 
 // -------------------
+//      Animation Frame
+//     (optional)
+// -------------------
+export const supportsFrameAlignedTask = $$$config.supportsFrameAlignedTask;
+export const scheduleFrameAlignedTask = $$$config.scheduleFrameAlignedTask;
+export const cancelFrameAlignedTask = $$$config.cancelFrameAlignedTask;
+
+// -------------------
 //      Test selectors
 //     (optional)
 // -------------------

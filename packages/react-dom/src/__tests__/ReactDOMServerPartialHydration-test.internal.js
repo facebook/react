@@ -1404,7 +1404,11 @@ describe('ReactDOMServerPartialHydration', () => {
 
       // While we're part way through the hydration, we update the state.
       // This will schedule an update on the children of the suspense boundary.
-      expect(() => updateText('Hi')).toErrorDev(
+      expect(() => {
+        act(() => {
+          updateText('Hi');
+        });
+      }).toErrorDev(
         "Can't perform a React state update on a component that hasn't mounted yet.",
       );
 

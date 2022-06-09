@@ -142,24 +142,24 @@ describe('useId', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        <div>
-          <div>
-            <div
-              id="101"
-            />
-            <div
-              id="1001"
-            />
-          </div>
-          <div
-            id="10"
-          />
-        </div>
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         <div>
+           <div>
+             <div
+               id="101"
+             />
+             <div
+               id="1001"
+             />
+           </div>
+           <div
+             id="10"
+           />
+         </div>
+       </div>
+     `);
   });
 
   test('indirections', async () => {
@@ -187,24 +187,24 @@ describe('useId', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        <div
-          id="0"
-        >
-          <div>
-            <div>
-              <div>
-                <div
-                  id="1"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         <div
+           id="0"
+         >
+           <div>
+             <div>
+               <div>
+                 <div
+                   id="1"
+                 />
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
+     `);
   });
 
   test('StrictMode double rendering', async () => {
@@ -226,14 +226,14 @@ describe('useId', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        <div
-          id="0"
-        />
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         <div
+           id="0"
+         />
+       </div>
+     `);
   });
 
   test('empty (null) children', async () => {
@@ -262,17 +262,17 @@ describe('useId', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        <div
-          id="10"
-        />
-        <div
-          id="100"
-        />
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         <div
+           id="10"
+         />
+         <div
+           id="100"
+         />
+       </div>
+     `);
   });
 
   test('large ids', async () => {
@@ -342,12 +342,12 @@ describe('useId', () => {
     });
     // We append a suffix to the end of the id to distinguish them
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        :R0:, :R0H1:, :R0H2:
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         :R0:, :R0H1:, :R0H2:
+       </div>
+     `);
   });
 
   test('local render phase updates', async () => {
@@ -367,12 +367,12 @@ describe('useId', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        :R0:
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         :R0:
+       </div>
+     `);
   });
 
   test('basic incremental hydration', async () => {
@@ -396,24 +396,24 @@ describe('useId', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        <div>
-          <!--$-->
-          <div
-            id="101"
-          />
-          <div
-            id="1001"
-          />
-          <!--/$-->
-          <div
-            id="10"
-          />
-        </div>
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         <div>
+           <!--$-->
+           <div
+             id="101"
+           />
+           <div
+             id="1001"
+           />
+           <!--/$-->
+           <div
+             id="10"
+           />
+         </div>
+       </div>
+     `);
   });
 
   test('inserting/deleting siblings outside a dehydrated Suspense boundary', async () => {
@@ -447,26 +447,26 @@ describe('useId', () => {
       const root = ReactDOMClient.hydrateRoot(container, <App />);
       await waitForPaint([]);
       expect(container).toMatchInlineSnapshot(`
-        <div
-          id="container"
-        >
-          <div
-            id="101"
-          />
-          <div
-            id="1001"
-          />
-          <div
-            id="1101"
-          />
-          <!--$-->
-          <div
-            id="110"
-          />
-          <span />
-          <!--/$-->
-        </div>
-      `);
+         <div
+           id="container"
+         >
+           <div
+             id="101"
+           />
+           <div
+             id="1001"
+           />
+           <div
+             id="1101"
+           />
+           <!--$-->
+           <div
+             id="110"
+           />
+           <span />
+           <!--/$-->
+         </div>
+       `);
 
       // The inner boundary hasn't hydrated yet
       expect(span.current).toBe(null);
@@ -476,26 +476,26 @@ describe('useId', () => {
     });
     // The swap should not have caused a mismatch.
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        <div
-          id="101"
-        />
-        <div
-          id="CLIENT_GENERATED_ID"
-        />
-        <div
-          id="1101"
-        />
-        <!--$-->
-        <div
-          id="110"
-        />
-        <span />
-        <!--/$-->
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         <div
+           id="101"
+         />
+         <div
+           id="CLIENT_GENERATED_ID"
+         />
+         <div
+           id="1101"
+         />
+         <!--$-->
+         <div
+           id="110"
+         />
+         <span />
+         <!--/$-->
+       </div>
+     `);
     // Should have hydrated successfully
     expect(span.current).toBe(dehydratedSpan);
   });
@@ -528,23 +528,23 @@ describe('useId', () => {
       const root = ReactDOMClient.hydrateRoot(container, <App />);
       await waitForPaint([]);
       expect(container).toMatchInlineSnapshot(`
-        <div
-          id="container"
-        >
-          <!--$-->
-          <div
-            id="101"
-          />
-          <div
-            id="1001"
-          />
-          <div
-            id="1101"
-          />
-          <span />
-          <!--/$-->
-        </div>
-      `);
+         <div
+           id="container"
+         >
+           <!--$-->
+           <div
+             id="101"
+           />
+           <div
+             id="1001"
+           />
+           <div
+             id="1101"
+           />
+           <span />
+           <!--/$-->
+         </div>
+       `);
 
       // The inner boundary hasn't hydrated yet
       expect(span.current).toBe(null);
@@ -554,23 +554,23 @@ describe('useId', () => {
     });
     // The swap should not have caused a mismatch.
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        <!--$-->
-        <div
-          id="101"
-        />
-        <div
-          id="CLIENT_GENERATED_ID"
-        />
-        <div
-          id="1101"
-        />
-        <span />
-        <!--/$-->
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         <!--$-->
+         <div
+           id="101"
+         />
+         <div
+           id="CLIENT_GENERATED_ID"
+         />
+         <div
+           id="1101"
+         />
+         <span />
+         <!--/$-->
+       </div>
+     `);
     // Should have hydrated successfully
     expect(span.current).toBe(dehydratedSpan);
   });
@@ -604,37 +604,37 @@ describe('useId', () => {
       });
     });
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        <div>
-          :custom-prefix-R1:
-        </div>
-        <div>
-          :custom-prefix-R2:
-        </div>
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         <div>
+           :custom-prefix-R1:
+         </div>
+         <div>
+           :custom-prefix-R2:
+         </div>
+       </div>
+     `);
 
     // Mount a new, client-only id
     await clientAct(async () => {
       root.render(<App showMore={true} />);
     });
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        <div>
-          :custom-prefix-R1:
-        </div>
-        <div>
-          :custom-prefix-R2:
-        </div>
-        <div>
-          :custom-prefix-r0:
-        </div>
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         <div>
+           :custom-prefix-R1:
+         </div>
+         <div>
+           :custom-prefix-R2:
+         </div>
+         <div>
+           :custom-prefix-r0:
+         </div>
+       </div>
+     `);
   });
 
   // https://github.com/vercel/next.js/issues/43033
@@ -668,36 +668,36 @@ describe('useId', () => {
       pipe(writable);
     });
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        <div>
-          :R0:
-          <!-- -->
-           
-          <div>
-            :R7:
-          </div>
-        </div>
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         <div>
+           :R0:
+           <!-- -->
+            
+           <div>
+             :R7:
+           </div>
+         </div>
+       </div>
+     `);
 
     await clientAct(async () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
-      <div
-        id="container"
-      >
-        <div>
-          :R0:
-          <!-- -->
-           
-          <div>
-            :R7:
-          </div>
-        </div>
-      </div>
-    `);
+       <div
+         id="container"
+       >
+         <div>
+           :R0:
+           <!-- -->
+            
+           <div>
+             :R7:
+           </div>
+         </div>
+       </div>
+     `);
   });
 });

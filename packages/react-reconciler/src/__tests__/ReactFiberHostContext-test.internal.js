@@ -86,6 +86,7 @@ describe('ReactFiberHostContext', () => {
         return null;
       },
       supportsMutation: true,
+      shouldScheduleAnimationFrame: () => false,
     });
 
     const container = Renderer.createContainer(

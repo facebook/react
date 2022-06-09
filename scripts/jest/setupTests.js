@@ -52,6 +52,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // loop must always fail the test!
   beforeEach(() => {
     global.infiniteLoopError = null;
+    // TODO: warn if this has not flushed.
+    global.requestAnimationFrameQueue = null;
   });
   afterEach(() => {
     const error = global.infiniteLoopError;

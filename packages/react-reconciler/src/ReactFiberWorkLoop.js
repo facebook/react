@@ -37,6 +37,7 @@ import {
   enableUpdaterTracking,
   enableCache,
   enableTransitionTracing,
+  enableFrameEndScheduling,
   useModernStrictMode,
   disableLegacyContext,
   alwaysThrottleRetries,

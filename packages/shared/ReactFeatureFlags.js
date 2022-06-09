@@ -89,6 +89,7 @@ export const enableBinaryFlight = __EXPERIMENTAL__;
 export const enableTaint = __EXPERIMENTAL__;
 
 export const enablePostpone = __EXPERIMENTAL__;
+export const enableFrameEndScheduling = __EXPERIMENTAL__;
 
 export const enableTransitionTracing = false;
 
