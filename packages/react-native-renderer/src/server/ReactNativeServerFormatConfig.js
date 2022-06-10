@@ -307,3 +307,6 @@ export function writeClientRenderBoundaryInstruction(
   writeChunk(destination, SUSPENSE_UPDATE_TO_CLIENT_RENDER);
   return writeChunkAndReturn(destination, formatID(boundaryID));
 }
+
+export function prepareToRender() {}
+export function cleanupAfterRender() {}

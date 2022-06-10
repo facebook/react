@@ -60,6 +60,8 @@ import {
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
+  prepareToRender,
+  cleanupAfterRender,
 } from './ReactServerFormatConfig';
 import {
   constructClassInstance,
@@ -213,6 +215,7 @@ export opaque type Request = {
   // emit a different response to the stream instead.
   onShellError: (error: mixed) => void,
   onFatalError: (error: mixed) => void,
+  dispatcher: any,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -1689,6 +1692,7 @@ function finishedTask(
 }
 
 function retryTask(request: Request, task: Task): void {
+  prepareToRender(request.responseState);
   const segment = task.blockedSegment;
   if (segment.status !== PENDING) {
     // We completed this by other means before we had a chance to retry it.
@@ -1732,6 +1736,7 @@ function retryTask(request: Request, task: Task): void {
     if (__DEV__) {
       currentTaskInDEV = prevTaskInDEV;
     }
+    cleanupAfterRender();
   }
 }
 

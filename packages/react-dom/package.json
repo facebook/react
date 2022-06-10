@@ -37,6 +37,7 @@
     "static.node.js",
     "test-utils.js",
     "unstable_testing.js",
+    "ReactDOMDispatcher.js",
     "cjs/",
     "umd/"
   ],
@@ -63,7 +64,8 @@
     "./test-utils": "./test-utils.js",
     "./unstable_testing": "./unstable_testing.js",
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./ReactDOMDispatcher": "./ReactDOMDispatcher.js"
   },
   "browser": {
     "./server.js": "./server.browser.js",
