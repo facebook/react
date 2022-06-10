@@ -165,6 +165,7 @@ import {transferActualDuration} from './ReactProfilerTimer.old';
 import {popCacheProvider} from './ReactFiberCacheComponent.old';
 import {popTreeContext} from './ReactFiberTreeContext.old';
 import {popRootTransition, popTransition} from './ReactFiberTransition.old';
+import {popTracingMarker} from './ReactFiberTracingMarkerComponent.old';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -1585,6 +1586,7 @@ function completeWork(
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
         // Bubble subtree flags before so we can set the flag property
+        popTracingMarker(workInProgress);
         bubbleProperties(workInProgress);
       }
       return null;
