@@ -66,6 +66,8 @@ describe('ReactFiberHostContext', () => {
       getCurrentEventPriority: function() {
         return DefaultEventPriority;
       },
+      prepareToRender: function() {},
+      cleanupAfterRender: function() {},
       supportsMutation: true,
     });
 
@@ -129,6 +131,8 @@ describe('ReactFiberHostContext', () => {
       getCurrentEventPriority: function() {
         return DefaultEventPriority;
       },
+      prepareToRender: function() {},
+      cleanupAfterRender: function() {},
       supportsMutation: true,
     });
 

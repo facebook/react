@@ -74,6 +74,7 @@ export function createRootFormatContext(): FormatContext {
 }
 
 export type {
+  Resources,
   FormatContext,
   SuspenseBoundaryID,
 } from './ReactDOMServerFormatConfig';
@@ -96,6 +97,10 @@ export {
   writeEndPendingSuspenseBoundary,
   writePlaceholder,
   writeCompletedRoot,
+  createResources,
+  writeResources,
+  prepareToRender,
+  cleanupAfterRender,
 } from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';

@@ -144,6 +144,30 @@ describe('ReactDOMFizzServer', () => {
     }
   }
 
+  async function actIntoEmptyDocument(callback) {
+    await callback();
+    // Await one turn around the event loop.
+    // This assumes that we'll flush everything we have so far.
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+    if (hasErrored) {
+      throw fatalError;
+    }
+    // JSDOM doesn't support stream HTML parser so we need to give it a proper fragment.
+    // We also want to execute any scripts that are embedded.
+    // We assume that we have now received a proper fragment of HTML.
+    const bufferedContent = buffer;
+    // Test Environment
+    const jsdom = new JSDOM(bufferedContent, {
+      runScripts: 'dangerously',
+    });
+    window = jsdom.window;
+    document = jsdom.window.document;
+    container = document;
+    buffer = '';
+  }
+
   function getVisibleChildren(element) {
     const children = [];
     let node = element.firstChild;
@@ -301,6 +325,7 @@ describe('ReactDOMFizzServer', () => {
       );
       pipe(writable);
     });
+
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <div>Loading...</div>
@@ -3199,6 +3224,50 @@ describe('ReactDOMFizzServer', () => {
           'a digest',
         ],
       ],
+    );
+  });
+
+  it('converts stylesheet links into preinit-as-style resources', async () => {
+    function App() {
+      return (
+        <>
+          <link rel="stylesheet" href="foo" />
+          <html data-foo="foo">
+            <head data-bar="bar">
+              <title>a title</title>
+            </head>
+            <body>a body</body>
+          </html>
+        </>
+      );
+    }
+
+    const chunks = [];
+    function listener(chunk) {
+      chunks.push(chunk);
+    }
+
+    await actIntoEmptyDocument(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      writable.on('data', listener);
+      pipe(writable);
+    });
+    writable.removeListener('data', listener);
+
+    expect(
+      chunks[0].startsWith(
+        '<!DOCTYPE html><html data-foo="foo"><head data-bar="bar">',
+      ),
+    ).toBe(true);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <html data-foo="foo">
+        <head data-bar="bar">
+          <link rel="stylesheet" href="foo" />
+          <title>a title</title>
+        </head>
+        <body>a body</body>
+      </html>,
     );
   });
 

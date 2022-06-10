@@ -778,9 +778,17 @@ export function registerSuspenseInstanceRetry(
 
 function getNextHydratable(node) {
   // Skip non-hydratable nodes.
-  for (; node != null; node = node.nextSibling) {
+  for (; node != null; node = ((node: any): Node).nextSibling) {
     const nodeType = node.nodeType;
-    if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
+    if (nodeType === ELEMENT_NODE) {
+      if (
+        ((node: any): HTMLElement).tagName.toLowerCase() === 'link' &&
+        ((node: any): HTMLElement).getAttribute('rel') === 'preload'
+      ) {
+        continue;
+      }
+      break;
+    } else if (nodeType === TEXT_NODE) {
       break;
     }
     if (nodeType === COMMENT_NODE) {

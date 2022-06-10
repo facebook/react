@@ -57,6 +57,23 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
+import {
+  type Resource,
+  prepareToRender as prepareToRenderImpl,
+  cleanupAfterRender as cleanupAfterRenderImpl,
+  resourcesFromLink,
+  DNS_PREFETCH,
+  PRECONNECT,
+  PREFETCH,
+  PRELOAD,
+  PREINIT,
+  STYLE_RESOURCE,
+  SCRIPT_RESOURCE,
+  FONT_RESOURCE,
+  CORS_ANON,
+  CORS_CREDS,
+} from './ReactDOMFloatServer';
+
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.
 export const isPrimaryRenderer = true;
@@ -240,6 +257,26 @@ export function getChildFormatContext(
     return createFormatContext(HTML_MODE, null);
   }
   return parentContext;
+}
+
+export function isPreludeInsertion(type: string): boolean {
+  switch (type) {
+    case 'html':
+    case 'head': {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isPostludeInsertion(type: string): boolean {
+  switch (type) {
+    case 'body':
+    case 'html': {
+      return true;
+    }
+  }
+  return false;
 }
 
 export type SuspenseBoundaryID = null | PrecomputedChunk;
@@ -1089,6 +1126,44 @@ function pushSelfClosing(
   return null;
 }
 
+function pushLink(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+): ReactNodeList {
+  if (resourcesFromLink(props)) {
+    // We have converted this link exclusively to a resource and no longer
+    // need to emit it
+    return null;
+  }
+
+  target.push(startChunkForTag('link'));
+
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+        case 'dangerouslySetInnerHTML':
+          throw new Error(
+            `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
+              'use `dangerouslySetInnerHTML`.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+
+  target.push(endOfStartTagSelfClosing);
+  return null;
+}
+
 function pushStartMenuItem(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -1405,11 +1480,14 @@ const DOCTYPE: PrecomputedChunk = stringToPrecomputedChunk('<!DOCTYPE html>');
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
+  prelude: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
 ): ReactNodeList {
+  target = isPreludeInsertion(type) ? prelude : target;
+
   if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
@@ -1475,13 +1553,15 @@ export function pushStartInstance(
     case 'hr':
     case 'img':
     case 'keygen':
-    case 'link':
     case 'meta':
     case 'param':
     case 'source':
     case 'track':
     case 'wbr': {
       return pushSelfClosing(target, props, type, responseState);
+    }
+    case 'link': {
+      return pushLink(target, props, responseState);
     }
     // These are reserved SVG and MathML elements, that are never custom elements.
     // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
@@ -1521,9 +1601,11 @@ const endTag2 = stringToPrecomputedChunk('>');
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
+  postlude: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {
+  target = isPostludeInsertion(type) ? postlude : target;
   switch (type) {
     // Omitted close tags
     // TODO: Instead of repeating this switch we could try to pass a flag from above.
@@ -2110,4 +2192,160 @@ function escapeJSStringsForInstructionScripts(input: string): string {
       }
     }
   });
+}
+
+export function writeResources(destination: Destination, resources: Resources) {
+  const iter = resources.values();
+  for (let step = iter.next(); !step.done; step = iter.next()) {
+    const resource = step.value;
+    if (!resource.flushed) {
+      resource.flushed = true;
+      writeResource(destination, resource);
+    }
+  }
+}
+
+function writeResource(destination: Destination, resource: Resource) {
+  switch (resource.priority) {
+    case DNS_PREFETCH: {
+      return writeGenericResource(
+        destination,
+        resource,
+        prefetchDNSStart,
+        linkEnd,
+      );
+    }
+    case PRECONNECT: {
+      return writeGenericResource(
+        destination,
+        resource,
+        preconnectStart,
+        linkEnd,
+      );
+    }
+    case PREFETCH: {
+      return writeAsResource(destination, resource, prefetchStart, linkEnd);
+    }
+    case PRELOAD: {
+      return writeAsResource(destination, resource, preloadStart, linkEnd);
+    }
+    case PREINIT: {
+      return writeInitializingResource(destination, resource);
+    }
+    default: {
+      throw new Error(
+        `writeResource received a resource it did not know how to write. This is a bug in React.`,
+      );
+    }
+  }
+}
+
+const prefetchDNSStart = stringToPrecomputedChunk(
+  '<link rel="dns-prefetch" href="',
+);
+const preconnectStart = stringToPrecomputedChunk(
+  '<link rel="preconnect" href="',
+);
+const prefetchStart = stringToPrecomputedChunk('<link rel="prefetch"');
+const preloadStart = stringToPrecomputedChunk('<link rel="preload"');
+
+const preAsStyle = stringToPrecomputedChunk(' as="style" href="');
+const preAsScript = stringToPrecomputedChunk(' as="script" href="');
+const preAsFont = stringToPrecomputedChunk(' as="font" href="');
+
+const crossOriginAnon = stringToPrecomputedChunk('" crossorigin="');
+const crossOriginCredentials = stringToPrecomputedChunk(
+  '" crossorigin="use-credentials',
+);
+
+const linkEnd = stringToPrecomputedChunk('">');
+
+const initStyleStart = stringToPrecomputedChunk(
+  '<link rel="stylesheet" href="',
+);
+
+const initScriptStart = stringToPrecomputedChunk('<script src="');
+const initScriptEnd = stringToPrecomputedChunk('" async=""></script>');
+
+function writeGenericResource(
+  destination: Destination,
+  resource: Resource,
+  start: PrecomputedChunk,
+  end: PrecomputedChunk,
+) {
+  writeChunk(destination, start);
+  writeChunk(destination, stringToChunk(escapeTextForBrowser(resource.href)));
+  if (resource.crossorigin === CORS_ANON) {
+    writeChunk(destination, crossOriginAnon);
+  } else if (resource.crossorigin === CORS_CREDS) {
+    writeChunk(destination, crossOriginCredentials);
+  }
+  writeChunk(destination, end);
+}
+
+function writeAsResource(
+  destination: Destination,
+  resource: Resource,
+  start: PrecomputedChunk,
+  end: PrecomputedChunk,
+) {
+  writeChunk(destination, start);
+  switch (resource.as) {
+    case STYLE_RESOURCE: {
+      writeChunk(destination, preAsStyle);
+      break;
+    }
+    case SCRIPT_RESOURCE: {
+      writeChunk(destination, preAsScript);
+      break;
+    }
+    case FONT_RESOURCE: {
+      writeChunk(destination, preAsFont);
+      break;
+    }
+  }
+  writeChunk(destination, stringToChunk(escapeTextForBrowser(resource.href)));
+  if (resource.crossorigin === CORS_ANON) {
+    writeChunk(destination, crossOriginAnon);
+  } else if (resource.crossorigin === CORS_CREDS) {
+    writeChunk(destination, crossOriginCredentials);
+  }
+  writeChunk(destination, end);
+}
+
+function writeInitializingResource(
+  destination: Destination,
+  resource: Resource,
+) {
+  switch (resource.as) {
+    case STYLE_RESOURCE: {
+      return writeGenericResource(
+        destination,
+        resource,
+        initStyleStart,
+        linkEnd,
+      );
+    }
+    case SCRIPT_RESOURCE: {
+      return writeGenericResource(
+        destination,
+        resource,
+        initScriptStart,
+        initScriptEnd,
+      );
+    }
+  }
+}
+
+export function prepareToRender(resources: Resources) {
+  prepareToRenderImpl(resources);
+}
+
+export function cleanupAfterRender() {
+  cleanupAfterRenderImpl();
+}
+
+export type Resources = Map<string, Resource>;
+export function createResources(): Resources {
+  return new Map();
 }

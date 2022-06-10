@@ -22,6 +22,7 @@ import type {
   SuspenseBoundaryID,
   ResponseState,
   FormatContext,
+  Resources,
 } from './ReactServerFormatConfig';
 import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
@@ -60,6 +61,10 @@ import {
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
+  writeResources,
+  prepareToRender,
+  cleanupAfterRender,
+  createResources,
 } from './ReactServerFormatConfig';
 import {
   constructClassInstance,
@@ -191,13 +196,16 @@ export opaque type Request = {
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
+  resources: Resources,
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
   abortableTasks: Set<Task>,
-  pingedTasks: Array<Task>,
+  pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
   // Queues to flush in order of priority
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
+  +prelude: Array<Chunk | PrecomputedChunk>, // chunks that need to be emitted before any segment chunks
+  +postlude: Array<Chunk | PrecomputedChunk>, // chunks that need to be emitted before after segments, waiting even for pending tasks before flushing
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
   // Returning null/undefined will cause a defualt error message in production
@@ -252,6 +260,7 @@ export function createRequest(
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
+  const resources: Resources = createResources();
   const request = {
     destination: null,
     responseState,
@@ -264,12 +273,15 @@ export function createRequest(
     nextSegmentId: 0,
     allPendingTasks: 0,
     pendingRootTasks: 0,
+    resources,
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
+    prelude: [],
+    postlude: [],
     onError: onError === undefined ? defaultErrorHandler : onError,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
@@ -628,8 +640,10 @@ function renderHostElement(
 ): void {
   pushBuiltInComponentStackInDEV(task, type);
   const segment = task.blockedSegment;
+
   const children = pushStartInstance(
     segment.chunks,
+    request.prelude,
     type,
     props,
     request.responseState,
@@ -638,6 +652,7 @@ function renderHostElement(
   segment.lastPushedText = false;
   const prevContext = segment.formatContext;
   segment.formatContext = getChildFormatContext(prevContext, type, props);
+
   // We use the non-destructive form because if something suspends, we still
   // need to pop back up and finish this subtree of HTML.
   renderNode(request, task, children);
@@ -645,7 +660,13 @@ function renderHostElement(
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
   segment.formatContext = prevContext;
-  pushEndInstance(segment.chunks, type, props);
+  pushEndInstance(
+    segment.chunks,
+    request.postlude,
+    type,
+    props,
+    segment.formatContext,
+  );
   segment.lastPushedText = false;
   popComponentStackInDEV(task);
 }
@@ -1689,6 +1710,7 @@ function finishedTask(
 }
 
 function retryTask(request: Request, task: Task): void {
+  prepareToRender(request.resources);
   const segment = task.blockedSegment;
   if (segment.status !== PENDING) {
     // We completed this by other means before we had a chance to retry it.
@@ -1732,6 +1754,7 @@ function retryTask(request: Request, task: Task): void {
     if (__DEV__) {
       currentTaskInDEV = prevTaskInDEV;
     }
+    cleanupAfterRender();
   }
 }
 
@@ -1804,6 +1827,7 @@ function flushSubtree(
       const chunks = segment.chunks;
       let chunkIdx = 0;
       const children = segment.children;
+
       for (let childIdx = 0; childIdx < children.length; childIdx++) {
         const nextChild = children[childIdx];
         // Write all the chunks up until the next child.
@@ -2035,6 +2059,7 @@ function flushCompletedQueues(
   request: Request,
   destination: Destination,
 ): void {
+  let allComplete = false;
   beginWriting(destination);
   try {
     // The structure of this is to go through each queue one by one and write
@@ -2042,22 +2067,37 @@ function flushCompletedQueues(
     // that item fully and then yield. At that point we remove the already completed
     // items up until the point we completed them.
 
-    // TODO: Emit preloading.
-
-    // TODO: It's kind of unfortunate to keep checking this array after we've already
-    // emitted the root.
+    let i;
     const completedRootSegment = request.completedRootSegment;
-    if (completedRootSegment !== null && request.pendingRootTasks === 0) {
-      flushSegment(request, destination, completedRootSegment);
-      request.completedRootSegment = null;
-      writeCompletedRoot(destination, request.responseState);
+    if (completedRootSegment !== null) {
+      if (request.pendingRootTasks === 0) {
+        // Flush the prelude if it exists
+        const prelude = request.prelude;
+        for (i = 0; i < prelude.length; i++) {
+          // we expect the prelude to be tiny and will ignore backpressure
+          writeChunk(destination, prelude[i]);
+        }
+        prelude.length = 0;
+
+        // Flush resources
+        writeResources(destination, request.resources);
+
+        // Flush the root segment
+        flushSegment(request, destination, completedRootSegment);
+        request.completedRootSegment = null;
+        writeCompletedRoot(destination, request.responseState);
+      } else {
+        // We haven't flushed the root yet so we don't need to check any other branches further down
+        return;
+      }
+    } else {
+      writeResources(destination, request.resources);
     }
 
     // We emit client rendering instructions for already emitted boundaries first.
     // This is so that we can signal to the client to start client rendering them as
     // soon as possible.
     const clientRenderedBoundaries = request.clientRenderedBoundaries;
-    let i;
     for (i = 0; i < clientRenderedBoundaries.length; i++) {
       const boundary = clientRenderedBoundaries[i];
       if (!flushClientRenderedBoundary(request, destination, boundary)) {
@@ -2119,9 +2159,8 @@ function flushCompletedQueues(
       }
     }
     largeBoundaries.splice(0, i);
-  } finally {
-    completeWriting(destination);
-    flushBuffered(destination);
+
+    // Finally we check if there is no remaining work and flush the postlude
     if (
       request.allPendingTasks === 0 &&
       request.pingedTasks.length === 0 &&
@@ -2130,6 +2169,18 @@ function flushCompletedQueues(
       // We don't need to check any partially completed segments because
       // either they have pending task or they're complete.
     ) {
+      allComplete = true;
+      const postlude = request.postlude;
+      for (i = 0; i < postlude.length; i++) {
+        // we expect the postlude to be tiny and will ignore backpressure
+        writeChunk(destination, postlude[i]);
+      }
+      postlude.length = 0;
+    }
+  } finally {
+    completeWriting(destination);
+    flushBuffered(destination);
+    if (allComplete) {
       if (__DEV__) {
         if (request.abortableTasks.size !== 0) {
           console.error(

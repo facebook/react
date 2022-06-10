@@ -254,3 +254,6 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableProfilerNestedUpdateScheduledHook = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
+
+// enables preloading apis for React-dom server/client
+export const enableFloat = true;
