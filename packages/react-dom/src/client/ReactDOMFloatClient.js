@@ -7,6 +7,16 @@
  * @flow
  */
 
+import {pushDispatcher, popDispatcher} from 'react-dom/ReactDOMDispatcher';
+
+export function prepareToRender() {
+  pushDispatcher(Dispatcher);
+}
+
+export function cleanupAfterRender() {
+  popDispatcher();
+}
+
 type PreloadAs = 'style';
 type PreloadOptions = {as?: PreloadAs, signal: AbortSignal};
 function preload(href: string, options?: PreloadOptions) {
@@ -16,5 +26,3 @@ function preload(href: string, options?: PreloadOptions) {
 const Dispatcher = {
   preload,
 };
-
-export {Dispatcher};

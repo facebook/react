@@ -73,8 +73,10 @@ import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 // TODO: Remove this deep import when we delete the legacy root API
 import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
-import {Dispatcher} from 'react-dom/ReactDOMDispatcher';
-import {Dispatcher as FloatClientDispatcher} from './ReactDOMFloatClient';
+import {
+  prepareToRender as prepareToRenderImpl,
+  cleanupAfterRender as cleanupAfterRenderImpl,
+} from './ReactDOMFloatClient';
 
 export type Type = string;
 export type Props = {
@@ -1332,13 +1334,11 @@ export function setupIntersectionObserver(
   };
 }
 
-let previousFloatDispatcher;
 export function prepareToRender() {
-  console.log('prepareToRender client');
-  previousFloatDispatcher = Dispatcher.current;
-  Dispatcher.current = FloatClientDispatcher;
+  console.log('prepareToRender client DOMHostConfig');
+  prepareToRenderImpl();
 }
 
 export function cleanupAfterRender() {
-  Dispatcher.current = previousFloatDispatcher;
+  cleanupAfterRenderImpl();
 }

@@ -58,7 +58,10 @@ import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
 import {Dispatcher} from 'react-dom/ReactDOMDispatcher';
-import {Dispatcher as FloatServerDispatcher} from './ReactDOMFloatServer';
+import {
+  prepareToRender as prepareToRenderImpl,
+  cleanupAfterRender as cleanupAfterRenderImpl,
+} from './ReactDOMFloatServer';
 
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.
@@ -77,6 +80,11 @@ export type ResponseState = {
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean, // We allow the legacy renderer to extend this object.
   ...
+};
+
+type Resource = {
+  href: string,
+  as?: string,
 };
 
 const startInlineScript = stringToPrecomputedChunk('<script>');
@@ -147,6 +155,7 @@ export function createResponseState(
       );
     }
   }
+  const resourceMap: Map<string, Resource> = new Map();
   return {
     bootstrapChunks: bootstrapChunks,
     startInlineScript: inlineScriptWithNonce,
@@ -158,6 +167,7 @@ export function createResponseState(
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
+    resourceMap,
   };
 }
 
@@ -2115,13 +2125,58 @@ function escapeJSStringsForInstructionScripts(input: string): string {
   });
 }
 
-let previousFloatDispatcher = null;
-export function prepareToRender() {
-  console.log('prepareToRender server');
-  previousFloatDispatcher = Dispatcher.current;
-  Dispatcher.current = FloatServerDispatcher;
+export function writeResource(
+  destination: Destination,
+  responseState: ResponseState,
+  resource: Resource,
+) {
+  console.log('writeResource', resource);
+  switch (resource.as) {
+    case '': {
+      return writeIndeterminantResource(destination, responseState, resource);
+    }
+    case 'style': {
+      return writeStyleResource(destination, responseState, resource);
+    }
+    default: {
+      throw new Error(
+        'writeResource received a resource it did not know how to write',
+        resource,
+      );
+    }
+  }
+}
+
+const preloadStart = stringToPrecomputedChunk('<link rel="preload"');
+const preloadAsStyle = stringToPrecomputedChunk(' as="style" href="');
+const preloadEnd = stringToPrecomputedChunk('">');
+
+function writeIndeterminantResource(
+  destination: Destination,
+  responseState: ResponseState,
+  resource: IndeterminantResource,
+) {
+  console.log('writeIndeterminantResource');
+}
+
+function writeStyleResource(
+  destination: Destination,
+  responseState: ResponseState,
+  resource: StyleResource,
+) {
+  if (resource.loadAction === 'preload') {
+    writeChunk(destination, preloadStart);
+    writeChunk(destination, preloadAsStyle);
+    writeChunk(destination, stringToChunk(resource.href));
+    writeChunk(destination, preloadEnd);
+  }
+}
+
+export function prepareToRender(responseState: ResponseState) {
+  console.log('prepareToRender server formatConfig', responseState);
+  prepareToRenderImpl(responseState.resourceMap);
 }
 
 export function cleanupAfterRender() {
-  Dispatcher.current = previousFloatDispatcher;
+  cleanupAfterRenderImpl();
 }

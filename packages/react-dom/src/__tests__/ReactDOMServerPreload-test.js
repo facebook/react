@@ -267,7 +267,7 @@ describe('ReactDOMServerPreload', () => {
 
   fit('first', async () => {
     function App() {
-      ReactDOM.preload('foo');
+      ReactDOM.preload('foo', {as: 'style'});
       return <div>hi</div>;
     }
 
@@ -275,6 +275,8 @@ describe('ReactDOMServerPreload', () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
       pipe(writable);
     });
+
+    console.log('container', container.outerHTML);
 
     ReactDOMClient.hydrateRoot(container, <App />);
 

@@ -7,4 +7,4 @@
  * @flow
  */
 
-export {Dispatcher} from './src/shared/ReactDOMDispatcher';
+export * from './src/shared/ReactDOMDispatcher';

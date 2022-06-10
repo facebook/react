@@ -11,4 +11,15 @@ const Dispatcher = {
   current: null,
 };
 
-export {Dispatcher};
+let stack = [];
+
+function pushDispatcher(dispatcher) {
+  stack.push(Dispatcher.current);
+  Dispatcher.current = dispatcher;
+}
+
+function popDispatcher() {
+  Dispatcher.current = stack.pop();
+}
+
+export {pushDispatcher, popDispatcher, Dispatcher};

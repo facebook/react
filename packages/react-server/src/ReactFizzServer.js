@@ -60,6 +60,7 @@ import {
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
+  writeResource,
   prepareToRender,
   cleanupAfterRender,
 } from './ReactServerFormatConfig';
@@ -255,6 +256,7 @@ export function createRequest(
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
+  const resourceMap: Map<string, Resource> = new Map();
   const request = {
     destination: null,
     responseState,
@@ -273,6 +275,7 @@ export function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
+    resourceMap,
     onError: onError === undefined ? defaultErrorHandler : onError,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
@@ -2047,8 +2050,12 @@ function flushCompletedQueues(
     // that item fully and then yield. At that point we remove the already completed
     // items up until the point we completed them.
 
-    // TODO: Emit preloading.
-
+    const resourceMap = request.responseState.resourceMap;
+    const resources = resourceMap.values();
+    let r;
+    while (((r = resources.next()), !r.done)) {
+      writeResource(destination, request.responseState, r.value);
+    }
     // TODO: It's kind of unfortunate to keep checking this array after we've already
     // emitted the root.
     const completedRootSegment = request.completedRootSegment;
