@@ -73,6 +73,9 @@ import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 // TODO: Remove this deep import when we delete the legacy root API
 import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
+import {Dispatcher} from 'react-dom/ReactDOMDispatcher';
+import {Dispatcher as FloatClientDispatcher} from './ReactDOMFloatClient';
+
 export type Type = string;
 export type Props = {
   autoFocus?: boolean,
@@ -1327,4 +1330,15 @@ export function setupIntersectionObserver(
       observer.unobserve((target: any));
     },
   };
+}
+
+let previousFloatDispatcher;
+export function prepareToRender() {
+  console.log('prepareToRender client');
+  previousFloatDispatcher = Dispatcher.current;
+  Dispatcher.current = FloatClientDispatcher;
+}
+
+export function cleanupAfterRender() {
+  Dispatcher.current = previousFloatDispatcher;
 }

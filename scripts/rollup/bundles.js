@@ -220,7 +220,7 @@ const bundles = [
     global: 'ReactDOM',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: true,
-    externals: ['react'],
+    externals: ['react', 'react-dom/ReactDOMDispatcher'],
   },
 
   /******* React DOM - www - Uses forked reconciler *******/
@@ -326,6 +326,18 @@ const bundles = [
     entry: 'react-server-dom-relay/src/ReactDOMServerFB.js',
     global: 'ReactDOMServerStreaming',
     minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+
+  /******* React DOM Dispatcher *******/
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-dom/ReactDOMDispatcher',
+    name: 'ReactDOMDispatcher',
+    global: 'ReactDOMDispatcher',
+    minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
     externals: ['react'],
   },

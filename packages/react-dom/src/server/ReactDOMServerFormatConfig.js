@@ -57,6 +57,9 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
+import {Dispatcher} from 'react-dom/ReactDOMDispatcher';
+import {Dispatcher as FloatServerDispatcher} from './ReactDOMFloatServer';
+
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.
 export const isPrimaryRenderer = true;
@@ -2110,4 +2113,15 @@ function escapeJSStringsForInstructionScripts(input: string): string {
       }
     }
   });
+}
+
+let previousFloatDispatcher = null;
+export function prepareToRender() {
+  console.log('prepareToRender server');
+  previousFloatDispatcher = Dispatcher.current;
+  Dispatcher.current = FloatServerDispatcher;
+}
+
+export function cleanupAfterRender() {
+  Dispatcher.current = previousFloatDispatcher;
 }

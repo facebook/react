@@ -22,3 +22,5 @@ export {
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
   version,
 } from './src/client/ReactDOM';
+
+export {preload} from './src/shared/ReactDOMFloat';

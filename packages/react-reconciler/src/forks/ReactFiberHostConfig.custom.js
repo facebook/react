@@ -186,3 +186,5 @@ export const didNotFindHydratableTextInstance =
 export const didNotFindHydratableSuspenseInstance =
   $$$hostConfig.didNotFindHydratableSuspenseInstance;
 export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
+export const prepareToRender = $$$hostConfig.prepareToRender;
+export const cleanupAfterRender = $$$hostConfig.cleanupAfterRender;

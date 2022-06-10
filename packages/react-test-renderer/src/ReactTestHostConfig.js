@@ -318,3 +318,6 @@ export function detachDeletedInstance(node: Instance): void {
 export function logRecoverableError(error: mixed): void {
   // noop
 }
+
+export function prepareToRender() {}
+export function cleanupAfterRender() {}
