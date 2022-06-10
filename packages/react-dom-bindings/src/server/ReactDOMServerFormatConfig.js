@@ -8,6 +8,8 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {Resources, BoundaryResources} from './ReactDOMFloatServer';
+export type {Resources, BoundaryResources};
 
 import {
   checkHtmlStringCoercion,
@@ -58,6 +60,19 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
+import {
+  prepareToRender as prepareToRenderImpl,
+  cleanupAfterRender as cleanupAfterRenderImpl,
+  resourcesFromLink,
+} from './ReactDOMFloatServer';
+export {
+  createResources,
+  createBoundaryResources,
+  setCurrentlyRenderingBoundaryResources,
+  hoistResources,
+  hoistResourcesToRoot,
+} from './ReactDOMFloatServer';
+
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.
 export const isPrimaryRenderer = true;
@@ -73,7 +88,8 @@ export type ResponseState = {
   nextSuspenseID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
-  sentClientRenderFunction: boolean, // We allow the legacy renderer to extend this object.
+  sentClientRenderFunction: boolean,
+  sentStyleInsertionFunction: boolean, // We allow the legacy renderer to extend this object.
   ...
 };
 
@@ -183,6 +199,7 @@ export function createResponseState(
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
+    sentStyleInsertionFunction: false,
   };
 }
 
@@ -206,6 +223,7 @@ type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type FormatContext = {
   insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
+  preambleOpen: boolean,
 };
 
 function createFormatContext(
@@ -215,6 +233,7 @@ function createFormatContext(
   return {
     insertionMode,
     selectedValue,
+    preambleOpen: true,
   };
 }
 
@@ -264,6 +283,25 @@ export function getChildFormatContext(
     return createFormatContext(HTML_MODE, null);
   }
   if (parentContext.insertionMode === ROOT_HTML_MODE) {
+    switch (type) {
+      case 'html': {
+        return parentContext;
+      }
+      case 'head':
+      case 'title':
+      case 'base':
+      case 'link':
+      case 'style':
+      case 'meta':
+      case 'script':
+      case 'noscript':
+      case 'template': {
+        break;
+      }
+      default: {
+        parentContext.preambleOpen = false;
+      }
+    }
     // We've emitted the root and is now in plain HTML mode.
     return createFormatContext(HTML_MODE, null);
   }
@@ -1088,6 +1126,26 @@ function pushLink(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
+  textEmbedded: boolean,
+): ReactNodeList {
+  if (enableFloat && resourcesFromLink(props)) {
+    if (textEmbedded) {
+      // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+      // to be safe and assume text will follow by inserting a textSeparator
+      target.push(textSeparator);
+    }
+    // We have converted this link exclusively to a resource and no longer
+    // need to emit it
+    return null;
+  }
+
+  return pushLinkImpl(target, props, responseState);
+}
+
+function pushLinkImpl(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
 ): ReactNodeList {
   const isStylesheet = props.rel === 'stylesheet';
   target.push(startChunkForTag('link'));
@@ -1106,15 +1164,9 @@ function pushLink(
               'use `dangerouslySetInnerHTML`.',
           );
         case 'precedence': {
-          if (isStylesheet) {
-            if (propValue === true || typeof propValue === 'string') {
-              pushAttribute(target, responseState, 'data-rprec', propValue);
-            } else if (__DEV__) {
-              throw new Error(
-                `the "precedence" prop for links to stylesheets expects to receive a string but received something of type "${typeof propValue}" instead.`,
-              );
-            }
-            break;
+          if (enableFloat && isStylesheet) {
+            // precedence is a reversed property for stylesheets to opt-into resource semantcs
+            continue;
           }
           // intentionally fall through
         }
@@ -1269,9 +1321,15 @@ function pushStartHead(
   props: Object,
   tag: string,
   responseState: ResponseState,
+  formatContext: FormatContext,
 ): ReactNodeList {
   // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target = enableFloat ? preamble : target;
+  target =
+    enableFloat &&
+    formatContext.insertionMode === ROOT_HTML_MODE &&
+    formatContext.preambleOpen
+      ? preamble
+      : target;
 
   return pushStartGenericElement(target, props, tag, responseState);
 }
@@ -1281,13 +1339,11 @@ function pushStartHtml(
   preamble: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
-  formatContext: FormatContext,
   responseState: ResponseState,
+  formatContext: FormatContext,
 ): ReactNodeList {
-  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target = enableFloat ? preamble : target;
-
   if (formatContext.insertionMode === ROOT_HTML_MODE) {
+    target = enableFloat && formatContext.preambleOpen ? preamble : target;
     // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
     // then we also emit the DOCTYPE as part of the root content as a convenience for
     // rendering the whole document.
@@ -1517,6 +1573,7 @@ export function pushStartInstance(
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
+  textEmbedded: boolean,
 ): ReactNodeList {
   if (__DEV__) {
     validateARIAProperties(type, props);
@@ -1570,7 +1627,7 @@ export function pushStartInstance(
     case 'title':
       return pushStartTitle(target, props, responseState);
     case 'link':
-      return pushLink(target, props, responseState);
+      return pushLink(target, props, responseState, textEmbedded);
     // Newline eating tags
     case 'listing':
     case 'pre': {
@@ -1606,15 +1663,22 @@ export function pushStartInstance(
     }
     // Preamble start tags
     case 'head':
-      return pushStartHead(target, preamble, props, type, responseState);
+      return pushStartHead(
+        target,
+        preamble,
+        props,
+        type,
+        responseState,
+        formatContext,
+      );
     case 'html': {
       return pushStartHtml(
         target,
         preamble,
         props,
         type,
-        formatContext,
         responseState,
+        formatContext,
       );
     }
     default: {
@@ -2001,65 +2065,172 @@ export function writeEndSegment(
 //   }
 // }
 //
-// function completeBoundary(suspenseBoundaryID, contentID) {
-//   // Find the fallback's first element.
-//   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
-//   const contentNode = document.getElementById(contentID);
-//   // We'll detach the content node so that regardless of what happens next we don't leave in the tree.
-//   // This might also help by not causing recalcing each time we move a child from here to the target.
-//   contentNode.parentNode.removeChild(contentNode);
-//   if (!suspenseIdNode) {
-//     // The user must have already navigated away from this tree.
-//     // E.g. because the parent was hydrated. That's fine there's nothing to do
-//     // but we have to make sure that we already deleted the container node.
-//     return;
-//   }
-//   // Find the boundary around the fallback. This is always the previous node.
-//   const suspenseNode = suspenseIdNode.previousSibling;
-//
-//   // Clear all the existing children. This is complicated because
-//   // there can be embedded Suspense boundaries in the fallback.
-//   // This is similar to clearSuspenseBoundary in ReactDOMHostConfig.
-//   // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
-//   // They never hydrate anyway. However, currently we support incrementally loading the fallback.
-//   const parentInstance = suspenseNode.parentNode;
-//   let node = suspenseNode.nextSibling;
-//   let depth = 0;
-//   do {
-//     if (node && node.nodeType === COMMENT_NODE) {
-//       const data = node.data;
-//       if (data === SUSPENSE_END_DATA) {
-//         if (depth === 0) {
-//           break;
-//         } else {
-//           depth--;
-//         }
-//       } else if (
-//         data === SUSPENSE_START_DATA ||
-//         data === SUSPENSE_PENDING_START_DATA ||
-//         data === SUSPENSE_FALLBACK_START_DATA
-//       ) {
-//         depth++;
-//       }
-//     }
-//
-//     const nextNode = node.nextSibling;
-//     parentInstance.removeChild(node);
-//     node = nextNode;
-//   } while (node);
-//
-//   const endOfBoundary = node;
-//
-//   // Insert all the children from the contentNode between the start and end of suspense boundary.
-//   while (contentNode.firstChild) {
-//     parentInstance.insertBefore(contentNode.firstChild, endOfBoundary);
+// const insertStyles = (function() {
+//   const resourceMap = new Map();
+//   const precedences = new Map();
+//   // We omit rel stylesheet because only stylesheets should have data-prec attribute
+//   // and we can concievably use another kind of link to act as a placeholder for a
+//   // precedence that does not yet have any resources.
+//   let lastResource, node;
+//   let thisDocument = document;
+
+//   // Seed the precedence list with existing resources
+//   let nodes = thisDocument.querySelectorAll('link[data-rprec]');
+//   for (let i = 0;node = nodes[i++];) {
+//     precedences.set(node.dataset.rprec, lastResource = node);
 //   }
 
-//   suspenseNode.data = SUSPENSE_START_DATA;
-//   if (suspenseNode._reactRetry) {
-//     suspenseNode._reactRetry();
+//   function getPromise(resourceEl) {
+//     let p = resourceEl._p = new Promise((re, rj) => {
+//       resourceEl.onload = re;
+//       resourceEl.onerror = rj;
+//     }).then(() => {
+//       p.s = 'l';
+//     }, (e) => {
+//       p.s = 'e';
+//       throw e;
+//     });
+//     return p;
 //   }
-// }
+
+//   return function insertStyle(styles) {
+//     let i = 0;
+//     let dependencies, style, href, precedence, attr, loadingState, resourceEl;
+
+//     while (style = styles[i++]) {
+//       let j = 0;
+//       href = style[j++];
+//       // We check if this resource is already in our resourceMap and reuse it if so.
+//       // If it is already loaded we don't return it as a depenendency since there is nothing
+//       // to wait for
+//       loadingState = resourceMap.get(href);
+//       if (loadingState) {
+//         if (loadingState.s !== 'l') {
+//           dependencies ? dependencies.push(loadingState) : dependencies = [loadingState];
+//         }
+//         continue;
+//       }
+
+//       // We construct our new resource element, looping over remaining attributes if any
+//       // setting them to the Element.
+//       resourceEl = thisDocument.createElement("link");
+//       resourceEl.href = href;
+//       resourceEl.rel = 'stylesheet';
+//       resourceEl.dataset.rprec = precedence = style[j++];
+//       while(attr = style[j++]) {
+//         resourceEl.setAttribute(attr, style[j++]);
+//       }
+
+//       // We stash a pending promise in our map by href which will resolve or reject
+//       // when the underlying resource loads or errors. We add it to the dependencies
+//       // array to be returned.
+//       loadingState = getPromise(resourceEl);
+//       resourceMap.set(href, loadingState);
+//       dependencies ? dependencies.push(loadingState) : dependencies = [loadingState];
+
+//       // The prior style resource is the last one placed at a given
+//       // precedence or the last resource itself which may be null.
+//       // We grab this value and then update the last resource for this
+//       // precedence to be the inserted element, updating the lastResource
+//       // pointer if needed.
+//       let prior = precedences.get(precedence) || lastResource;
+//       if (prior === lastResource) {
+//         lastResource = resourceEl
+//       }
+//       precedences.set(precedence, resourceEl)
+
+//       // Finally, we insert the newly constructed instance at an appropriate location
+//       // in the Document.
+//       if (prior) {
+//         prior.parentNode.insertBefore(resourceEl, prior.nextSibling);
+//       } else {
+//         let head = thisDocument.head;
+//         head.insertBefore(resourceEl, head.firstChild);
+//       }
+//     }
+//     return dependencies;
+//   }
+// })()
+//
+// const completeBoundary = (function() {
+//   function flipBoundary(suspenseBoundaryID, contentNode, errorDigest) {
+//     // Find the fallback's first element.
+//     const suspenseIdNode = document.getElementById(suspenseBoundaryID);
+//     if (!suspenseIdNode) {
+//       // The user must have already navigated away from this tree.
+//       // E.g. because the parent was hydrated. That's fine there's nothing to do
+//       // but we have to make sure that we already deleted the container node.
+//       return;
+//     }
+//     // Find the boundary around the fallback. This is always the previous node.
+//     const suspenseNode = suspenseIdNode.previousSibling;
+
+//     if (contentNode) {
+//       // Clear all the existing children. This is complicated because
+//       // there can be embedded Suspense boundaries in the fallback.
+//       // This is similar to clearSuspenseBoundary in ReactDOMHostConfig.
+//       // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
+//       // They never hydrate anyway. However, currently we support incrementally loading the fallback.
+//       const parentInstance = suspenseNode.parentNode;
+//       let node = suspenseNode.nextSibling;
+//       let depth = 0;
+//       do {
+//         if (node && node.nodeType === COMMENT_NODE) {
+//           const data = node.data;
+//           if (data === SUSPENSE_END_DATA) {
+//             if (depth === 0) {
+//               break;
+//             } else {
+//               depth--;
+//             }
+//           } else if (
+//             data === SUSPENSE_START_DATA ||
+//             data === SUSPENSE_PENDING_START_DATA ||
+//             data === SUSPENSE_FALLBACK_START_DATA
+//           ) {
+//             depth++;
+//           }
+//         }
+//
+//         const nextNode = node.nextSibling;
+//         parentInstance.removeChild(node);
+//         node = nextNode;
+//       } while (node);
+//
+//       const endOfBoundary = node;
+//
+//       // Insert all the children from the contentNode between the start and end of suspense boundary.
+//       while (contentNode.firstChild) {
+//         parentInstance.insertBefore(contentNode.firstChild, endOfBoundary);
+//       }
+//
+//       suspenseNode.data = '$';
+//     } else {
+//       suspenseNode.data = '$!';
+//       suspenseIdNode.setAttribute('data-dgst', errorDigest)
+//     }
+//
+//     if (suspenseNode._reactRetry) {
+//       suspenseNode._reactRetry();
+//     }
+//   }
+//   return function completeBoundary(suspenseBoundaryID, contentID, styleResources){
+//     const contentNode = document.getElementById(contentID);
+//     // We'll detach the content node so that regardless of what happens next we don't leave in the tree.
+//     // This might also help by not causing recalcing each time we move a child from here to the target.
+//     contentNode.parentNode.removeChild(contentNode);
+//     if (styleResources) {
+//       const p = $RR(styleResources);
+//       if (p) {
+//         return Promise.all(p).then(
+//           flipBoundary.bind(null, suspenseBoundaryID, contentNode, null),
+//           flipBoundary.bind(null, suspenseBoundaryID, null, "Resource failed to load"),
+//         );
+//       }
+//     }
+//     flipBoundary(suspenseBoundaryID, contentNode);
+//   }
+// })()
 //
 // function completeSegment(containerID, placeholderID) {
 //   const segmentContainer = document.getElementById(containerID);
@@ -2079,8 +2250,179 @@ export function writeEndSegment(
 
 const completeSegmentFunction =
   'function $RS(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)}';
+// const completeBoundaryFunction =
+//   'function $RC(a,b){a=document.getElementById(a);b=document.getElementById(b);b.parentNode.removeChild(b);if(a){a=a.previousSibling;var f=a.parentNode,c=a.nextSibling,e=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d)if(0===e)break;else e--;else"$"!==d&&"$?"!==d&&"$!"!==d||e++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;b.firstChild;)f.insertBefore(b.firstChild,c);a.data="$";a._reactRetry&&a._reactRetry()}};';
+// const completeBoundaryFunction =
+//   '$RC=function(){function h(e,f){var a=document.getElementById(e),c=document.getElementById(f);c.parentNode.removeChild(c);if(a){a=a.previousSibling;var k=a.parentNode,b=a.nextSibling,g=0;do{if(b&&8===b.nodeType){var d=b.data;if("/$"===d)if(0===g)break;else g--;else"$"!==d&&"$?"!==d&&"$!"!==d||g++}d=b.nextSibling;k.removeChild(b);b=d}while(b);for(;c.firstChild;)k.insertBefore(c.firstChild,b);a.data="$";a._reactRetry&&a._reactRetry()}}return function(e,f,a){if(a&&(a=$RR(a)))return Promise.all(a).then(h.bind(null,e,f))["catch"](function(c){return console.log("caught",c)});h(e,f)}}()'
+const styleInsertionFunction =
+  '$RR=function(){function r(f){var g=f._p=(new Promise(function(b,a){f.onload=b;f.onerror=a})).then(function(){g.s="l"},function(b){g.s="e";throw b;});return g}for(var q=new Map,m=new Map,h,n,p=document,t=p.querySelectorAll("link[data-rprec]"),u=0;n=t[u++];)m.set(n.dataset.rprec,h=n);return function(f){for(var g=0,b,a,k,e,c,d;a=f[g++];){var l=0;k=a[l++];if(c=q.get(k))"l"!==c.s&&(b?b.push(c):b=[c]);else{d=p.createElement("link");d.href=k;d.rel="stylesheet";for(d.dataset.rprec=e=a[l++];c=a[l++];)d.setAttribute(c,a[l++]);c=r(d);q.set(k,c);b?b.push(c):b=[c];a=m.get(e)||h;a===h&&(h=d);m.set(e,d);a?a.parentNode.insertBefore(d,a.nextSibling):(e=p.head,e.insertBefore(d,e.firstChild))}}return b}}();';
+// const styleInsertionFunction = `$RR = (function() {
+//   const resourceMap = new Map();
+//   const precedences = new Map();
+//   // We omit rel stylesheet because only stylesheets should have data-prec attribute
+//   // and we can concievably use another kind of link to act as a placeholder for a
+//   // precedence that does not yet have any resources.
+//   let lastResource, node;
+//   let thisDocument = document;
+
+//   // Seed the precedence list with existing resources
+//   let nodes = thisDocument.querySelectorAll('link[data-rprec]');
+//   for (let i = 0;node = nodes[i++];) {
+//     precedences.set(node.dataset.rprec, lastResource = node);
+//   }
+
+//   function getPromise(resourceEl) {
+//     let p = resourceEl._p = new Promise((re, rj) => {
+//       resourceEl.onload = re;
+//       resourceEl.onerror = rj;
+//     }).then(() => {
+//       p.s = 'l';
+//     }, (e) => {
+//       p.s = 'e';
+//       throw e;
+//     });
+//     return p;
+//   }
+
+//   return function insertStyle(styles) {
+//     let i = 0;
+//     let dependencies, style, href, precedence, attr, loadingState, resourceEl;
+
+//     while (style = styles[i++]) {
+//       let j = 0;
+//       href = style[j++];
+//       // We check if this resource is already in our resourceMap and reuse it if so.
+//       // If it is already loaded we don't return it as a depenendency since there is nothing
+//       // to wait for
+//       loadingState = resourceMap.get(href);
+//       if (loadingState) {
+//         if (loadingState.s !== 'l') {
+//           dependencies ? dependencies.push(loadingState) : dependencies = [loadingState];
+//         }
+//         continue;
+//       }
+
+//       // We construct our new resource element, looping over remaining attributes if any
+//       // setting them to the Element.
+//       resourceEl = thisDocument.createElement("link");
+//       resourceEl.href = href;
+//       resourceEl.rel = 'stylesheet';
+//       resourceEl.dataset.rprec = precedence = style[j++];
+//       while(attr = style[j++]) {
+//         resourceEl.setAttribute(attr, style[j++]);
+//       }
+
+//       // We stash a pending promise in our map by href which will resolve or reject
+//       // when the underlying resource loads or errors. We add it to the dependencies
+//       // array to be returned.
+//       loadingState = getPromise(resourceEl);
+//       resourceMap.set(href, loadingState);
+//       dependencies ? dependencies.push(loadingState) : dependencies = [loadingState];
+
+//       // The prior style resource is the last one placed at a given
+//       // precedence or the last resource itself which may be null.
+//       // We grab this value and then update the last resource for this
+//       // precedence to be the inserted element, updating the lastResource
+//       // pointer if needed.
+//       let prior = precedences.get(precedence) || lastResource;
+//       if (prior === lastResource) {
+//         lastResource = resourceEl
+//       }
+//       precedences.set(precedence, resourceEl)
+
+//       // Finally, we insert the newly constructed instance at an appropriate location
+//       // in the Document.
+//       if (prior) {
+//         prior.parentNode.insertBefore(resourceEl, prior.nextSibling);
+//       } else {
+//         let head = thisDocument.head;
+//         head.insertBefore(resourceEl, head.firstChild);
+//       }
+//     }
+//     return dependencies;
+//   }
+// })()`;
 const completeBoundaryFunction =
-  'function $RC(a,b){a=document.getElementById(a);b=document.getElementById(b);b.parentNode.removeChild(b);if(a){a=a.previousSibling;var f=a.parentNode,c=a.nextSibling,e=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d)if(0===e)break;else e--;else"$"!==d&&"$?"!==d&&"$!"!==d||e++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;b.firstChild;)f.insertBefore(b.firstChild,c);a.data="$";a._reactRetry&&a._reactRetry()}}';
+  '$RC=function(){function f(a,c,d){var b=document.getElementById(a);if(b){a=b.previousSibling;if(c){d=a.parentNode;b=a.nextSibling;var g=0;do{if(b&&8===b.nodeType){var e=b.data;if("/$"===e)if(0===g)break;else g--;else"$"!==e&&"$?"!==e&&"$!"!==e||g++}e=b.nextSibling;d.removeChild(b);b=e}while(b);for(;c.firstChild;)d.insertBefore(c.firstChild,b);a.data="$"}else a.data="$!",b.setAttribute("data-dgst",d);a._reactRetry&&a._reactRetry()}}return function(a,c,d){c=document.getElementById(c);c.parentNode.removeChild(c);if(d&&(d=$RR(d)))return Promise.all(d).then(f.bind(null,a,c,null),f.bind(null,a,null,"Resource failed to load"));f(a,c)}}();';
+// const completeBoundaryFunction = `$RC = (function() {
+//   function flipBoundary(suspenseBoundaryID, contentNode, errorDigest) {
+//     // Find the fallback's first element.
+//     const suspenseIdNode = document.getElementById(suspenseBoundaryID);
+//     if (!suspenseIdNode) {
+//       // The user must have already navigated away from this tree.
+//       // E.g. because the parent was hydrated. That's fine there's nothing to do
+//       // but we have to make sure that we already deleted the container node.
+//       return;
+//     }
+//     // Find the boundary around the fallback. This is always the previous node.
+//     const suspenseNode = suspenseIdNode.previousSibling;
+
+//     if (contentNode) {
+//       // Clear all the existing children. This is complicated because
+//       // there can be embedded Suspense boundaries in the fallback.
+//       // This is similar to clearSuspenseBoundary in ReactDOMHostConfig.
+//       // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
+//       // They never hydrate anyway. However, currently we support incrementally loading the fallback.
+//       const parentInstance = suspenseNode.parentNode;
+//       let node = suspenseNode.nextSibling;
+//       let depth = 0;
+//       do {
+//         if (node && node.nodeType === 8) {
+//           const data = node.data;
+//           if (data === '/$') {
+//             if (depth === 0) {
+//               break;
+//             } else {
+//               depth--;
+//             }
+//           } else if (
+//             data === '$' ||
+//             data === '$?' ||
+//             data === '$!'
+//           ) {
+//             depth++;
+//           }
+//         }
+
+//         const nextNode = node.nextSibling;
+//         parentInstance.removeChild(node);
+//         node = nextNode;
+//       } while (node);
+
+//       const endOfBoundary = node;
+
+//       // Insert all the children from the contentNode between the start and end of suspense boundary.
+//       while (contentNode.firstChild) {
+//         parentInstance.insertBefore(contentNode.firstChild, endOfBoundary);
+//       }
+
+//       suspenseNode.data = '$';
+//     } else {
+//       suspenseNode.data = '$!';
+//       suspenseIdNode.setAttribute('data-dgst', errorDigest)
+//     }
+
+//     if (suspenseNode._reactRetry) {
+//       suspenseNode._reactRetry();
+//     }
+//   }
+//   return function completeBoundary(suspenseBoundaryID, contentID, styleResources){
+//     const contentNode = document.getElementById(contentID);
+//     // We'll detach the content node so that regardless of what happens next we don't leave in the tree.
+//     // This might also help by not causing recalcing each time we move a child from here to the target.
+//     contentNode.parentNode.removeChild(contentNode);
+//     if (styleResources) {
+//       const p = $RR(styleResources);
+//       if (p) {
+//         return Promise.all(p).then(
+//           flipBoundary.bind(null, suspenseBoundaryID, contentNode, null),
+//           flipBoundary.bind(null, suspenseBoundaryID, null, "Resource failed to load"),
+//         );
+//       }
+//     }
+//     flipBoundary(suspenseBoundaryID, contentNode);
+//   }
+// })()`;
 const clientRenderFunction =
   'function $RX(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),b._reactRetry&&b._reactRetry())}';
 
@@ -2114,25 +2456,55 @@ export function writeCompletedSegmentInstruction(
   return writeChunkAndReturn(destination, completeSegmentScript3);
 }
 
+const completeBoundaryScript1FullWithStyleInsertion = stringToPrecomputedChunk(
+  styleInsertionFunction + ';' + completeBoundaryFunction + ';$RC("',
+);
 const completeBoundaryScript1Full = stringToPrecomputedChunk(
   completeBoundaryFunction + ';$RC("',
 );
+const completeBoundaryScript1PartialWithStyleInsertion = stringToPrecomputedChunk(
+  styleInsertionFunction + ';$RC("',
+);
 const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
 const completeBoundaryScript2 = stringToPrecomputedChunk('","');
-const completeBoundaryScript3 = stringToPrecomputedChunk('")</script>');
+const completeBoundaryScript3 = stringToPrecomputedChunk('"');
+const completeBoundaryScript4 = stringToPrecomputedChunk(')</script>');
 
 export function writeCompletedBoundaryInstruction(
   destination: Destination,
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
   contentSegmentID: number,
+  boundaryResources: BoundaryResources,
 ): boolean {
+  let hasStyleDependencies;
+  if (enableFloat) {
+    hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
+  }
   writeChunk(destination, responseState.startInlineScript);
   if (!responseState.sentCompleteBoundaryFunction) {
-    // The first time we write this, we'll need to include the full implementation.
-    responseState.sentCompleteBoundaryFunction = true;
-    writeChunk(destination, completeBoundaryScript1Full);
+    if (enableFloat) {
+      responseState.sentCompleteBoundaryFunction = true;
+      if (hasStyleDependencies && !responseState.sentStyleInsertionFunction) {
+        responseState.sentStyleInsertionFunction = true;
+        writeChunk(destination, completeBoundaryScript1FullWithStyleInsertion);
+      } else {
+        writeChunk(destination, completeBoundaryScript1Full);
+      }
+    } else {
+      // The first time we write this, we'll need to include the full implementation.
+      responseState.sentCompleteBoundaryFunction = true;
+      writeChunk(destination, completeBoundaryScript1Full);
+    }
   } else {
+    if (
+      enableFloat &&
+      hasStyleDependencies &&
+      !responseState.sentStyleInsertionFunction
+    ) {
+      responseState.sentStyleInsertionFunction = true;
+      writeChunk(destination, completeBoundaryScript1PartialWithStyleInsertion);
+    }
     // Future calls can just reuse the same function.
     writeChunk(destination, completeBoundaryScript1Partial);
   }
@@ -2148,7 +2520,13 @@ export function writeCompletedBoundaryInstruction(
   writeChunk(destination, completeBoundaryScript2);
   writeChunk(destination, responseState.segmentPrefix);
   writeChunk(destination, formattedContentID);
-  return writeChunkAndReturn(destination, completeBoundaryScript3);
+  if (enableFloat && hasStyleDependencies) {
+    writeChunk(destination, stringToChunk('",'));
+    writeStyleResourceDependencies(destination, boundaryResources);
+  } else {
+    writeChunk(destination, completeBoundaryScript3);
+  }
+  return writeChunkAndReturn(destination, completeBoundaryScript4);
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
@@ -2209,10 +2587,10 @@ export function writeClientRenderBoundaryInstruction(
   return writeChunkAndReturn(destination, clientRenderScript2);
 }
 
-const regexForJSStringsInScripts = /[<\u2028\u2029]/g;
+const regexForJSStringsInInstructionScripts = /[<\u2028\u2029]/g;
 function escapeJSStringsForInstructionScripts(input: string): string {
   const escaped = JSON.stringify(input);
-  return escaped.replace(regexForJSStringsInScripts, match => {
+  return escaped.replace(regexForJSStringsInInstructionScripts, match => {
     switch (match) {
       // santizing breaking out of strings and script tags
       case '<':
@@ -2229,4 +2607,335 @@ function escapeJSStringsForInstructionScripts(input: string): string {
       }
     }
   });
+}
+
+const regexForJSStringsInScripts = /[&><\u2028\u2029]/g;
+function escapeJSObjectForInstructionScripts(input: Object): string {
+  const escaped = JSON.stringify(input);
+  return escaped.replace(regexForJSStringsInScripts, match => {
+    switch (match) {
+      // santizing breaking out of strings and script tags
+      case '&':
+        return '\\u0026';
+      case '>':
+        return '\\u003e';
+      case '<':
+        return '\\u003c';
+      case '\u2028':
+        return '\\u2028';
+      case '\u2029':
+        return '\\u2029';
+      default: {
+        // eslint-disable-next-line react-internal/prod-error-codes
+        throw new Error(
+          'escapeJSObjectForInstructionScripts encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React',
+        );
+      }
+    }
+  });
+}
+
+export function writeInitialResources(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+): boolean {
+  const explicitPreloadsTarget = [];
+  const remainingTarget = [];
+
+  const {precedences, explicitPreloads, implicitPreloads} = resources;
+
+  // Flush stylesheets first by earliest precedence
+  precedences.forEach(precedenceResources => {
+    precedenceResources.forEach(resource => {
+      // resources should not already be flushed so we elide this check
+      pushLinkImpl(remainingTarget, resource.props, responseState);
+      resource.flushed = true;
+      resource.inShell = true;
+      resource.hint.flushed = true;
+    });
+  });
+
+  explicitPreloads.forEach(resource => {
+    if (!resource.flushed) {
+      pushLinkImpl(explicitPreloadsTarget, resource.props, responseState);
+      resource.flushed = true;
+    }
+  });
+  explicitPreloads.clear();
+
+  implicitPreloads.forEach(resource => {
+    if (!resource.flushed) {
+      pushLinkImpl(remainingTarget, resource.props, responseState);
+      resource.flushed = true;
+    }
+  });
+  implicitPreloads.clear();
+
+  let i;
+  let r = true;
+  for (i = 0; i < explicitPreloadsTarget.length - 1; i++) {
+    writeChunk(destination, explicitPreloadsTarget[i]);
+  }
+  if (i < explicitPreloadsTarget.length) {
+    r = writeChunkAndReturn(destination, explicitPreloadsTarget[i]);
+  }
+
+  for (i = 0; i < remainingTarget.length - 1; i++) {
+    writeChunk(destination, remainingTarget[i]);
+  }
+  if (i < remainingTarget.length) {
+    r = writeChunkAndReturn(destination, remainingTarget[i]);
+  }
+  return r;
+}
+
+export function writeImmediateResources(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+): boolean {
+  const {explicitPreloads, implicitPreloads} = resources;
+  const target = [];
+
+  explicitPreloads.forEach(resource => {
+    if (!resource.flushed) {
+      pushLinkImpl(target, resource.props, responseState);
+      resource.flushed = true;
+    }
+  });
+  explicitPreloads.clear();
+
+  implicitPreloads.forEach(resource => {
+    if (!resource.flushed) {
+      pushLinkImpl(target, resource.props, responseState);
+      resource.flushed = true;
+    }
+  });
+  implicitPreloads.clear();
+
+  let i = 0;
+  for (; i < target.length - 1; i++) {
+    writeChunk(destination, target[i]);
+  }
+  if (i < target.length) {
+    return writeChunkAndReturn(destination, target[i]);
+  }
+  return false;
+}
+
+function hasStyleResourceDependencies(
+  boundaryResources: BoundaryResources,
+): boolean {
+  const iter = boundaryResources.values();
+  // At the moment boundaries only accumulate style resources
+  // so we assume the type is correct and don't check it
+  while (true) {
+    const {value: resource} = iter.next();
+    if (!resource) break;
+
+    // If every style Resource flushed in the shell we do not need to send
+    // any dependencies
+    if (!resource.inShell) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const arrayFirstOpenBracket = stringToPrecomputedChunk('[');
+const arraySubsequentOpenBracket = stringToPrecomputedChunk(',[');
+const arrayInterstitial = stringToPrecomputedChunk(',');
+const arrayCloseBracket = stringToPrecomputedChunk(']');
+
+function writeStyleResourceDependencies(
+  destination: Destination,
+  boundaryResources: BoundaryResources,
+): void {
+  writeChunk(destination, arrayFirstOpenBracket);
+
+  let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
+  boundaryResources.forEach(resource => {
+    if (resource.inShell) {
+      // We can elide this dependency because it was flushed in the shell and
+      // should be ready before content is shown on the client
+    } else if (resource.flushed) {
+      writeChunk(destination, nextArrayOpenBrackChunk);
+      writeStyleResourceDependencyHrefOnly(destination, resource.href);
+      writeChunk(destination, arrayCloseBracket);
+      nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
+    } else {
+      writeChunk(destination, nextArrayOpenBrackChunk);
+      writeStyleResourceDependency(
+        destination,
+        resource.href,
+        resource.precedence,
+        resource.props,
+      );
+      writeChunk(destination, arrayCloseBracket);
+      nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
+
+      resource.flushed = true;
+      resource.hint.flushed = true;
+    }
+  });
+  writeChunk(destination, arrayCloseBracket);
+}
+
+function writeStyleResourceDependencyHrefOnly(
+  destination: Destination,
+  href: string,
+) {
+  // We should actually enforce this earlier when the resource is created but for
+  // now we make sure we are actually dealing with a string here.
+  if (__DEV__) {
+    checkAttributeStringCoercion(href, 'href');
+  }
+  const coercedHref = '' + (href: any);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(coercedHref)),
+  );
+}
+
+function writeStyleResourceDependency(
+  destination: Destination,
+  href: string,
+  precedence: string,
+  props: Object,
+) {
+  if (__DEV__) {
+    checkAttributeStringCoercion(href, 'href');
+  }
+  const coercedHref = '' + (href: any);
+  sanitizeURL(coercedHref);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(coercedHref)),
+  );
+
+  if (__DEV__) {
+    checkAttributeStringCoercion(precedence, 'precedence');
+  }
+  const coercedPrecedence = '' + (precedence: any);
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(coercedPrecedence)),
+  );
+
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'href':
+        case 'rel':
+        case 'precedence':
+        case 'data-rprec': {
+          break;
+        }
+        case 'children':
+        case 'dangerouslySetInnerHTML':
+          throw new Error(
+            `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
+              'use `dangerouslySetInnerHTML`.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          writeStyleResourceAttribute(destination, propKey, propValue);
+          break;
+      }
+    }
+  }
+  return null;
+}
+
+function writeStyleResourceAttribute(
+  destination: Destination,
+  name: string,
+  value: string | boolean | number | Function | Object, // not null or undefined
+): void {
+  let attributeName = name.toLowerCase();
+  let attributeValue;
+  switch (typeof value) {
+    case 'function':
+    case 'symbol':
+      return;
+  }
+
+  switch (name) {
+    // Reserved names
+    case 'innerHTML':
+    case 'dangerouslySetInnerHTML':
+    case 'suppressContentEditableWarning':
+    case 'suppressHydrationWarning':
+    case 'style':
+      // Ignored
+      return;
+
+    // Attribute renames
+    case 'className':
+      attributeName = 'class';
+      break;
+
+    // Booleans
+    case 'hidden':
+      if (value === false) {
+        return;
+      }
+      attributeValue = '';
+      break;
+
+    // Santized URLs
+    case 'src':
+    case 'href': {
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+      attributeValue = '' + (value: any);
+      sanitizeURL(attributeValue);
+      break;
+    }
+    default: {
+      if (!isAttributeNameSafe(name)) {
+        return;
+      }
+    }
+  }
+
+  if (
+    // shouldIgnoreAttribute
+    // We have already filtered out null/undefined and reserved words.
+    name.length > 2 &&
+    (name[0] === 'o' || name[0] === 'O') &&
+    (name[1] === 'n' || name[1] === 'N')
+  ) {
+    return;
+  }
+
+  if (__DEV__) {
+    checkAttributeStringCoercion(value, attributeName);
+  }
+  attributeValue = '' + (value: any);
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(attributeName)),
+  );
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(attributeValue)),
+  );
+}
+
+export function prepareToRender(resources: Resources) {
+  prepareToRenderImpl(resources);
+}
+
+export function cleanupAfterRender() {
+  cleanupAfterRenderImpl();
 }

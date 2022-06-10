@@ -84,6 +84,8 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
+  prepareRendererToRender,
+  resetRendererAfterRender,
 } from './ReactFiberHostConfig';
 
 import {
@@ -1851,6 +1853,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   const prevDispatcher = pushDispatcher();
+  prepareRendererToRender(root.containerInfo);
 
   // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
@@ -1897,6 +1900,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
 
   executionContext = prevExecutionContext;
   popDispatcher(prevDispatcher);
+  resetRendererAfterRender();
 
   if (workInProgress !== null) {
     // This is a sync render, so we should have finished the whole tree.
@@ -1951,6 +1955,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   const prevDispatcher = pushDispatcher();
+  prepareRendererToRender(root.containerInfo);
 
   // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
@@ -2003,6 +2008,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   resetContextDependencies();
 
   popDispatcher(prevDispatcher);
+  resetRendererAfterRender();
   executionContext = prevExecutionContext;
 
   if (__DEV__) {

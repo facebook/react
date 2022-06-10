@@ -130,7 +130,12 @@ module.exports = [
       'react-server-dom-relay/server',
       'react-server-dom-relay/src/ReactDOMServerFB.js',
     ],
-    paths: ['react-dom', 'react-dom-bindings', 'react-server-dom-relay'],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-server-dom-relay',
+      'shared/ReactDOMSharedInternals',
+    ],
     isFlowTyped: true,
     isServerSupported: true,
   },

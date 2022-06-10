@@ -478,6 +478,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const endTime = Scheduler.unstable_now();
       callback(endTime);
     },
+    prepareToRender() {},
+    cleanupAfterRender() {},
   };
 
   const hostConfig = useMutation

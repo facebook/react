@@ -17,11 +17,10 @@ import {
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
+import Dispatcher from 'react-dom-bindings/src/shared/ReactDOMDispatcher';
 
 const Internals = {
   usingClientEntryPoint: false,
-  // Keep in sync with ReactTestUtils.js.
-  // This is an array for better minification.
   Events: [
     getInstanceFromNode,
     getNodeFromInstance,
@@ -30,6 +29,7 @@ const Internals = {
     restoreStateIfNeeded,
     batchedUpdates,
   ],
+  Dispatcher,
 };
 
 export default Internals;

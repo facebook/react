@@ -40,6 +40,7 @@ export type ResponseState = {
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
+  sentStyleInsertionFunction: boolean,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
 };
@@ -61,6 +62,7 @@ export function createResponseState(
     sentCompleteSegmentFunction: responseState.sentCompleteSegmentFunction,
     sentCompleteBoundaryFunction: responseState.sentCompleteBoundaryFunction,
     sentClientRenderFunction: responseState.sentClientRenderFunction,
+    sentStyleInsertionFunction: responseState.sentStyleInsertionFunction,
     // This is an extra field for the legacy renderer
     generateStaticMarkup,
   };
@@ -70,10 +72,13 @@ export function createRootFormatContext(): FormatContext {
   return {
     insertionMode: HTML_MODE, // We skip the root mode because we don't want to emit the DOCTYPE in legacy mode.
     selectedValue: null,
+    preambleOpen: true,
   };
 }
 
 export type {
+  Resources,
+  BoundaryResources,
   FormatContext,
   SuspenseBoundaryID,
 } from './ReactDOMServerFormatConfig';
@@ -96,6 +101,15 @@ export {
   writeEndPendingSuspenseBoundary,
   writePlaceholder,
   writeCompletedRoot,
+  createResources,
+  createBoundaryResources,
+  writeInitialResources,
+  writeImmediateResources,
+  hoistResources,
+  hoistResourcesToRoot,
+  setCurrentlyRenderingBoundaryResources,
+  prepareToRender,
+  cleanupAfterRender,
 } from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';

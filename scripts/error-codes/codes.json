@@ -426,5 +426,11 @@
   "438": "An unsupported type was passed to use(): %s",
   "439": "We didn't expect to see a forward reference. This is a bug in the React Server.",
   "440": "A function wrapped in useEvent can't be called during rendering.",
-  "441": "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error."
+  "441": "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.",
+  "442": "The current renderer does not support Resources. This error is likely caused by a bug in React. Please file an issue.",
+  "443": "acquireResource encountered a resource type it did not expect: \"%s\". this is a bug in React.",
+  "444": "getResource encountered a resource type it did not expect: \"%s\". this is a bug in React.",
+  "445": "\"currentResources\" was expected to exist. This is a bug in React.",
+  "446": "\"currentDocument\" was expected to exist. This is a bug in React.",
+  "447": "While attempting to insert a Resource, React expected the Document to contain a head element but it was not found."
 }

@@ -17,12 +17,14 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import {
   ClassComponent,
   HostComponent,
+  HostResource,
   HostRoot,
   HostPortal,
   HostText,
   SuspenseComponent,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
+import {enableFloat} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -273,7 +275,11 @@ export function findCurrentHostFiber(parent: Fiber): Fiber | null {
 
 function findCurrentHostFiberImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
-  if (node.tag === HostComponent || node.tag === HostText) {
+  if (
+    node.tag === HostComponent ||
+    node.tag === HostText ||
+    (enableFloat ? node.tag === HostResource : false)
+  ) {
     return node;
   }
 
@@ -298,7 +304,11 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
 
 function findCurrentHostFiberWithNoPortalsImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
-  if (node.tag === HostComponent || node.tag === HostText) {
+  if (
+    node.tag === HostComponent ||
+    node.tag === HostText ||
+    (enableFloat ? node.tag === HostResource : false)
+  ) {
     return node;
   }
 
