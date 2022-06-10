@@ -268,7 +268,7 @@ export type SuspenseHydrationCallbacks = {
   ...
 };
 
-// The follow fields are only used by enableSuspenseCallback for hydration.
+// The following fields are only used by enableSuspenseCallback for hydration.
 type SuspenseCallbackOnlyFiberRootProperties = {|
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
 |};

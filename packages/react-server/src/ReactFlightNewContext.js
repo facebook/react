@@ -151,7 +151,7 @@ function popNextToCommonLevel(
 // Perform context switching to the new snapshot.
 // To make it cheap to read many contexts, while not suspending, we make the switch eagerly by
 // updating all the context's current values. That way reads, always just read the current value.
-// At the cost of updating contexts even if they're never read by this subtree.
+// At the cost of updating contexts even if they've never read by this subtree.
 export function switchContext(newSnapshot: ContextSnapshot): void {
   // The basic algorithm we need to do is to pop back any contexts that are no longer on the stack.
   // We also need to update any new contexts that are now on the stack with the deepest value.

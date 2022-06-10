@@ -1650,7 +1650,7 @@ export function renderDidError(error: CapturedValue<mixed>) {
   }
 }
 
-// Called during render to determine if anything has suspended.
+// Called during render to determine if anything has been suspended.
 // Returns false if we're not sure.
 export function renderHasNotSuspendedYet(): boolean {
   // If something errored or completed, we can't really be sure,

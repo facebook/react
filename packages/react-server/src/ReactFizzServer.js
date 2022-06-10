@@ -1238,7 +1238,7 @@ function renderNodeDestructive(
   }
 }
 
-// This function by it self renders a node and consumes the task by mutating it
+// This function by itself renders a node and consumes the task by mutating it
 // to update the current execution state.
 function renderNodeDestructiveImpl(
   request: Request,

@@ -11,7 +11,7 @@
 // position of a node in a tree.
 
 // Every time the tree forks into multiple children, we add additional bits to
-// the left of the sequence that represent the position of the child within the
+// the left of the sequence that represents the position of the child within the
 // current level of children.
 //
 //      00101       00010001011010101

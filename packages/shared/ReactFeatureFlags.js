@@ -117,7 +117,7 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 // cycles, even a single leak in product code can cause us to retain large
 // amounts of memory.
 //
-// The long term plan is to remove the cycles, but in the meantime, we clear
+// The long-term plan is to remove the cycles, but in the meantime, we clear
 // additional fields to mitigate.
 //
 // It's an enum so that we can experiment with different levels of
@@ -128,7 +128,7 @@ export const deletedTreeCleanUpLevel = 3;
 // Chopping Block
 //
 // Planned feature deprecations and breaking changes. Sorted roughly in order of
-// when we we plan to enable them.
+// when we plan to enable them.
 // -----------------------------------------------------------------------------
 
 // This flag enables Strict Effects by default. We're not turning this on until
