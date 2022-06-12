@@ -86,8 +86,7 @@ describe('ReactDOMServerHydration', () => {
           </div>
         );
       }
-      if (gate(flags => flags.enableClientRenderFallbackOnTextMismatch)) {
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+      expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
             "Warning: Text content did not match. Server: \\"server\\" Client: \\"client\\"
               in main (at **)
@@ -98,16 +97,6 @@ describe('ReactDOMServerHydration', () => {
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
-      } else {
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-          Array [
-            "Warning: Text content did not match. Server: \\"server\\" Client: \\"client\\"
-              in main (at **)
-              in div (at **)
-              in Mismatch (at **)",
-          ]
-        `);
-      }
     });
 
     // @gate __DEV__
@@ -357,8 +346,7 @@ describe('ReactDOMServerHydration', () => {
         function Mismatch({isClient}) {
           return <div className="parent">{isClient && 'only'}</div>;
         }
-        if (gate(flags => flags.enableClientRenderFallbackOnTextMismatch)) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Text content did not match. Server: \\"\\" Client: \\"only\\"
                 in div (at **)
@@ -368,15 +356,6 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Warning: Text content did not match. Server: \\"\\" Client: \\"only\\"
-                in div (at **)
-                in Mismatch (at **)",
-            ]
-          `);
-        }
       });
 
       // @gate __DEV__
