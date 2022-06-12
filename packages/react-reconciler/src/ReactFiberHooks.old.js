@@ -30,7 +30,6 @@ import {
   enableUseRefAccessWarning,
   enableStrictEffects,
   enableLazyContextPropagation,
-  enableSuspenseLayoutEffectSemantics,
   enableUseMutableSource,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
@@ -1754,10 +1753,7 @@ function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  let fiberFlags: Flags = UpdateEffect;
-  if (enableSuspenseLayoutEffectSemantics) {
-    fiberFlags |= LayoutStaticEffect;
-  }
+  let fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
   if (
     __DEV__ &&
     enableStrictEffects &&
@@ -1824,10 +1820,7 @@ function mountImperativeHandle<T>(
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
-  let fiberFlags: Flags = UpdateEffect;
-  if (enableSuspenseLayoutEffectSemantics) {
-    fiberFlags |= LayoutStaticEffect;
-  }
+  let fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
   if (
     __DEV__ &&
     enableStrictEffects &&
