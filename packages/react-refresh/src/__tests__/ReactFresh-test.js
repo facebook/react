@@ -821,6 +821,140 @@ describe('ReactFresh', () => {
     }
   });
 
+  it(`can remount when change function to memo`, () => {
+    if (__DEV__) {
+      render(() => {
+        function Test() {
+          return <p>hi test</p>;
+        }
+
+        $RefreshReg$(Test, 'Test');
+        return Test;
+      });
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('hi test');
+
+      patch(() => {
+        function Test2() {
+          return <p>hi memo</p>;
+        }
+        const Test = React.memo(Test2);
+        $RefreshReg$(Test2, 'Test2');
+        $RefreshReg$(Test, 'Test');
+        return Test;
+      });
+
+      // remount successfully
+      expect(container.firstChild).not.toBe(el);
+      const nextEl = container.firstChild;
+      expect(nextEl.textContent).toBe('hi memo');
+
+      patch(() => {
+        function Test() {
+          return <p>hi test</p>;
+        }
+
+        $RefreshReg$(Test, 'Test');
+        return Test;
+      });
+
+      expect(container.firstChild).not.toBe(nextEl);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('hi test');
+    }
+  });
+
+  it(`can remount when change function to forwardRef`, () => {
+    if (__DEV__) {
+      render(() => {
+        function Test() {
+          return <p>hi test</p>;
+        }
+
+        $RefreshReg$(Test, 'Test');
+        return Test;
+      });
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('hi test');
+
+      patch(() => {
+        function Test2() {
+          return <p>hi forwardRef</p>;
+        }
+        const Test = React.forwardRef(Test2);
+        $RefreshReg$(Test2, 'Test2');
+        $RefreshReg$(Test, 'Test');
+        return Test;
+      });
+
+      // remount successfully
+      expect(container.firstChild).not.toBe(el);
+      const nextEl = container.firstChild;
+      expect(nextEl.textContent).toBe('hi forwardRef');
+
+      patch(() => {
+        function Test() {
+          return <p>hi test1</p>;
+        }
+
+        $RefreshReg$(Test, 'Test');
+        return Test;
+      });
+
+      expect(container.firstChild).not.toBe(nextEl);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('hi test1');
+    }
+  });
+
+  it(`can remount when change memo to forwardRef`, () => {
+    if (__DEV__) {
+      render(() => {
+        function Test2() {
+          return <p>hi memo</p>;
+        }
+        const Test = React.memo(Test2);
+        $RefreshReg$(Test2, 'Test2');
+        $RefreshReg$(Test, 'Test');
+        return Test;
+      });
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('hi memo');
+
+      patch(() => {
+        function Test2() {
+          return <p>hi forwardRef</p>;
+        }
+        const Test = React.forwardRef(Test2);
+        $RefreshReg$(Test2, 'Test2');
+        $RefreshReg$(Test, 'Test');
+        return Test;
+      });
+
+      // remount successfully
+      expect(container.firstChild).not.toBe(el);
+      const nextEl = container.firstChild;
+      expect(nextEl.textContent).toBe('hi forwardRef');
+
+      patch(() => {
+        function Test2() {
+          return <p>hi memo</p>;
+        }
+        const Test = React.memo(Test2);
+        $RefreshReg$(Test2, 'Test2');
+        $RefreshReg$(Test, 'Test');
+        return Test;
+      });
+
+      expect(container.firstChild).not.toBe(nextEl);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('hi memo');
+    }
+  });
+
   it('can preserve state for lazy after resolution', async () => {
     if (__DEV__) {
       const AppV1 = render(() => {
