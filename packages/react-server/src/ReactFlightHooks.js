@@ -8,9 +8,20 @@
  */
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
+import type {Request} from './ReactFlightServer';
 import type {ReactServerContext} from 'shared/ReactTypes';
 import {REACT_SERVER_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
+
+let currentRequest = null;
+
+export function prepareToUseHooksForRequest(request: Request) {
+  currentRequest = request;
+}
+
+export function resetHooksForRequest() {
+  currentRequest = null;
+}
 
 function readContext<T>(context: ReactServerContext<T>): T {
   if (__DEV__) {
@@ -61,7 +72,7 @@ export const Dispatcher: DispatcherType = {
   useLayoutEffect: (unsupportedHook: any),
   useImperativeHandle: (unsupportedHook: any),
   useEffect: (unsupportedHook: any),
-  useId: (unsupportedHook: any),
+  useId,
   useMutableSource: (unsupportedHook: any),
   useSyncExternalStore: (unsupportedHook: any),
   useCacheRefresh(): <T>(?() => T, ?T) => void {
@@ -90,4 +101,13 @@ export function setCurrentCache(cache: Map<Function, mixed> | null) {
 
 export function getCurrentCache() {
   return currentCache;
+}
+
+function useId(): string {
+  if (currentRequest === null) {
+    throw new Error('useId can only be used while React is rendering');
+  }
+  const id = currentRequest.identifierCount++;
+  // use 'S' for Flight components to distinguish from 'R' and 'r' in Fizz/Client
+  return ':' + currentRequest.identifierPrefix + 'S' + id.toString(32) + ':';
 }

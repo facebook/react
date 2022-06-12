@@ -26,6 +26,7 @@ export const canHydrateTextInstance = shim;
 export const canHydrateSuspenseInstance = shim;
 export const isSuspenseInstancePending = shim;
 export const isSuspenseInstanceFallback = shim;
+export const getSuspenseInstanceFallbackErrorDetails = shim;
 export const registerSuspenseInstanceRetry = shim;
 export const getNextHydratableSibling = shim;
 export const getFirstHydratableChild = shim;

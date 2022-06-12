@@ -24,6 +24,7 @@ global.__webpack_require__ = function(id) {
 let act;
 let React;
 let ReactDOMClient;
+let ReactDOMServer;
 let ReactServerDOMWriter;
 let ReactServerDOMReader;
 
@@ -35,6 +36,7 @@ describe('ReactFlightDOMBrowser', () => {
     act = require('jest-react').act;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
+    ReactDOMServer = require('react-dom/server.browser');
     ReactServerDOMWriter = require('react-server-dom-webpack/writer.browser.server');
     ReactServerDOMReader = require('react-server-dom-webpack');
   });
@@ -66,6 +68,18 @@ describe('ReactFlightDOMBrowser', () => {
           throw promise;
         }
       }
+    }
+  }
+
+  async function readResult(stream) {
+    const reader = stream.getReader();
+    let result = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        return result;
+      }
+      result += Buffer.from(value).toString('utf8');
     }
   }
 
@@ -452,5 +466,50 @@ describe('ReactFlightDOMBrowser', () => {
 
     // Final pending chunk is written; stream should be closed.
     expect(isDone).toBeTruthy();
+  });
+
+  it('should allow an alternative module mapping to be used for SSR', async () => {
+    function ClientComponent() {
+      return <span>Client Component</span>;
+    }
+    // The Client build may not have the same IDs as the Server bundles for the same
+    // component.
+    const ClientComponentOnTheClient = moduleReference(ClientComponent);
+    const ClientComponentOnTheServer = moduleReference(ClientComponent);
+
+    // In the SSR bundle this module won't exist. We simulate this by deleting it.
+    const clientId = webpackMap[ClientComponentOnTheClient.filepath].default.id;
+    delete webpackModules[clientId];
+
+    // Instead, we have to provide a translation from the client meta data to the SSR
+    // meta data.
+    const ssrMetaData = webpackMap[ClientComponentOnTheServer.filepath].default;
+    const translationMap = {
+      [clientId]: {
+        d: ssrMetaData,
+      },
+    };
+
+    function App() {
+      return <ClientComponentOnTheClient />;
+    }
+
+    const stream = ReactServerDOMWriter.renderToReadableStream(
+      <App />,
+      webpackMap,
+    );
+    const response = ReactServerDOMReader.createFromReadableStream(stream, {
+      moduleMap: translationMap,
+    });
+
+    function ClientRoot() {
+      return response.readRoot();
+    }
+
+    const ssrStream = await ReactDOMServer.renderToReadableStream(
+      <ClientRoot />,
+    );
+    const result = await readResult(ssrStream);
+    expect(result).toEqual('<span>Client Component</span>');
   });
 });

@@ -7,6 +7,14 @@
  * @flow
  */
 
+export type WebpackSSRMap = {
+  [clientId: string]: {
+    [clientExportName: string]: ModuleMetaData,
+  },
+};
+
+export type BundlerConfig = null | WebpackSSRMap;
+
 export opaque type ModuleMetaData = {
   id: string,
   chunks: Array<string>,
@@ -17,8 +25,12 @@ export opaque type ModuleMetaData = {
 export opaque type ModuleReference<T> = ModuleMetaData;
 
 export function resolveModuleReference<T>(
+  bundlerConfig: BundlerConfig,
   moduleData: ModuleMetaData,
 ): ModuleReference<T> {
+  if (bundlerConfig) {
+    return bundlerConfig[moduleData.id][moduleData.name];
+  }
   return moduleData;
 }
 

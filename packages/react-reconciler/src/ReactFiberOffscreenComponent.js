@@ -38,4 +38,6 @@ export type OffscreenQueue = {|
   transitions: Array<Transition> | null,
 |} | null;
 
-export type OffscreenInstance = {};
+export type OffscreenInstance = {|
+  isHidden: boolean,
+|};

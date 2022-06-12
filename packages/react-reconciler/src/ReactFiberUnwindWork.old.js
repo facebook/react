@@ -25,10 +25,15 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {DidCapture, NoFlags, ShouldCapture} from './ReactFiberFlags';
 import {NoMode, ProfileMode} from './ReactTypeOfMode';
-import {enableProfilerTimer, enableCache} from 'shared/ReactFeatureFlags';
+import {
+  enableProfilerTimer,
+  enableCache,
+  enableTransitionTracing,
+} from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.old';
 import {popSuspenseContext} from './ReactFiberSuspenseContext.old';
@@ -44,6 +49,7 @@ import {popCacheProvider} from './ReactFiberCacheComponent.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 import {popTreeContext} from './ReactFiberTreeContext.old';
 import {popRootTransition, popTransition} from './ReactFiberTransition.old';
+import {popTracingMarker} from './ReactFiberTracingMarkerComponent.old';
 
 function unwindWork(
   current: Fiber | null,
@@ -154,6 +160,11 @@ function unwindWork(
         popCacheProvider(workInProgress, cache);
       }
       return null;
+    case TracingMarkerComponent:
+      if (enableTransitionTracing) {
+        popTracingMarker(workInProgress);
+      }
+      return null;
     default:
       return null;
   }
@@ -215,6 +226,11 @@ function unwindInterruptedWork(
       if (enableCache) {
         const cache: Cache = interruptedWork.memoizedState.cache;
         popCacheProvider(interruptedWork, cache);
+      }
+      break;
+    case TracingMarkerComponent:
+      if (enableTransitionTracing) {
+        popTracingMarker(interruptedWork);
       }
       break;
     default:

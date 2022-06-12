@@ -9,6 +9,7 @@
 
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Transition} from './ReactFiberTracingMarkerComponent.new';
+import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -648,6 +649,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   const entanglements = root.entanglements;
   const eventTimes = root.eventTimes;
   const expirationTimes = root.expirationTimes;
+  const hiddenUpdates = root.hiddenUpdates;
 
   // Clear the lanes that no longer have pending work
   let lanes = noLongerPendingLanes;
@@ -658,6 +660,21 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
     entanglements[index] = NoLanes;
     eventTimes[index] = NoTimestamp;
     expirationTimes[index] = NoTimestamp;
+
+    const hiddenUpdatesForLane = hiddenUpdates[index];
+    if (hiddenUpdatesForLane !== null) {
+      hiddenUpdates[index] = null;
+      // "Hidden" updates are updates that were made to a hidden component. They
+      // have special logic associated with them because they may be entangled
+      // with updates that occur outside that tree. But once the outer tree
+      // commits, they behave like regular updates.
+      for (let i = 0; i < hiddenUpdatesForLane.length; i++) {
+        const update = hiddenUpdatesForLane[i];
+        if (update !== null) {
+          update.lane &= ~OffscreenLane;
+        }
+      }
+    }
 
     lanes &= ~lane;
   }
@@ -692,6 +709,22 @@ export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
     }
     lanes &= ~lane;
   }
+}
+
+export function markHiddenUpdate(
+  root: FiberRoot,
+  update: ConcurrentUpdate,
+  lane: Lane,
+) {
+  const index = laneToIndex(lane);
+  const hiddenUpdates = root.hiddenUpdates;
+  const hiddenUpdatesForLane = hiddenUpdates[index];
+  if (hiddenUpdatesForLane === null) {
+    hiddenUpdates[index] = [update];
+  } else {
+    hiddenUpdatesForLane.push(update);
+  }
+  update.lane = lane | OffscreenLane;
 }
 
 export function getBumpedLaneForHydration(

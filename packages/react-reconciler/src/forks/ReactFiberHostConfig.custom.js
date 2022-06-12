@@ -54,7 +54,6 @@ export const createTextInstance = $$$hostConfig.createTextInstance;
 export const scheduleTimeout = $$$hostConfig.scheduleTimeout;
 export const cancelTimeout = $$$hostConfig.cancelTimeout;
 export const noTimeout = $$$hostConfig.noTimeout;
-export const now = $$$hostConfig.now;
 export const isPrimaryRenderer = $$$hostConfig.isPrimaryRenderer;
 export const warnsIfNotActing = $$$hostConfig.warnsIfNotActing;
 export const supportsMutation = $$$hostConfig.supportsMutation;
@@ -136,6 +135,8 @@ export const isSuspenseInstancePending =
   $$$hostConfig.isSuspenseInstancePending;
 export const isSuspenseInstanceFallback =
   $$$hostConfig.isSuspenseInstanceFallback;
+export const getSuspenseInstanceFallbackErrorDetails =
+  $$$hostConfig.getSuspenseInstanceFallbackErrorDetails;
 export const registerSuspenseInstanceRetry =
   $$$hostConfig.registerSuspenseInstanceRetry;
 export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;

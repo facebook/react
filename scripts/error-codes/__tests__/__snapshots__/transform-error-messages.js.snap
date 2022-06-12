@@ -1,8 +1,32 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`error transform handles deeply nested expressions 1`] = `
+"var val = (a, (b, // eslint-disable-next-line react-internal/prod-error-codes
+new Error('foo')));"
+`;
+
+exports[`error transform handles deeply nested expressions 2`] = `
+"var val = (a, ( // eslint-disable-next-line react-internal/prod-error-codes
+b, new Error('foo')));"
+`;
+
 exports[`error transform handles escaped backticks in template string 1`] = `
 "import _formatProdErrorMessage from \\"shared/formatProdErrorMessage\\";
 Error(_formatProdErrorMessage(231, listener, type));"
+`;
+
+exports[`error transform handles ignoring errors that are comment-excluded inside ternary expressions 1`] = `
+"/*! FIXME (minify-errors-in-prod): Unminified error message in production build!*/
+
+/*! <expected-error-format>\\"bar\\"</expected-error-format>*/
+var val = someBool ? //eslint-disable-next-line react-internal/prod-error-codes
+new Error('foo') : someOtherBool ? new Error('bar') : //eslint-disable-next-line react-internal/prod-error-codes
+new Error('baz');"
+`;
+
+exports[`error transform handles ignoring errors that are comment-excluded outside ternary expressions 1`] = `
+"//eslint-disable-next-line react-internal/prod-error-codes
+var val = someBool ? new Error('foo') : someOtherBool ? new Error('bar') : new Error('baz');"
 `;
 
 exports[`error transform should not touch other calls or new expressions 1`] = `

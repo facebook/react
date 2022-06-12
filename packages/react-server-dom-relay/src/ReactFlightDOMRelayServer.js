@@ -21,6 +21,7 @@ import {
 
 type Options = {
   onError?: (error: mixed) => void,
+  identifierPrefix?: string,
 };
 
 function render(
@@ -33,6 +34,8 @@ function render(
     model,
     config,
     options ? options.onError : undefined,
+    undefined, // not currently set up to supply context overrides
+    options ? options.identifierPrefix : undefined,
   );
   startWork(request);
   startFlowing(request, destination);

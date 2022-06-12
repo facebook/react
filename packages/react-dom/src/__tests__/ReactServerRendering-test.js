@@ -14,6 +14,7 @@ let React;
 let ReactDOMServer;
 let PropTypes;
 let ReactCurrentDispatcher;
+let useingPartialRenderer;
 
 describe('ReactDOMServer', () => {
   beforeEach(() => {
@@ -24,6 +25,8 @@ describe('ReactDOMServer', () => {
     ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .ReactCurrentDispatcher;
+
+    useingPartialRenderer = global.__WWW__ && !__EXPERIMENTAL__;
   });
 
   describe('renderToString', () => {
@@ -562,6 +565,23 @@ describe('ReactDOMServer', () => {
         'Bad lazy',
       );
     });
+
+    it('aborts synchronously any suspended tasks and renders their fallbacks', () => {
+      const promise = new Promise(res => {});
+      function Suspender() {
+        throw promise;
+      }
+      const response = ReactDOMServer.renderToStaticMarkup(
+        <React.Suspense fallback={'fallback'}>
+          <Suspender />
+        </React.Suspense>,
+      );
+      if (useingPartialRenderer) {
+        expect(response).toEqual('<!--$!-->fallback<!--/$-->');
+      } else {
+        expect(response).toEqual('fallback');
+      }
+    });
   });
 
   describe('renderToNodeStream', () => {
@@ -617,6 +637,41 @@ describe('ReactDOMServer', () => {
         });
         expect(response.read()).toBeNull();
       });
+    });
+
+    it('should refer users to new apis when using suspense', async () => {
+      let resolve = null;
+      const promise = new Promise(res => {
+        resolve = () => {
+          resolved = true;
+          res();
+        };
+      });
+      let resolved = false;
+      function Suspender() {
+        if (resolved) {
+          return 'resolved';
+        }
+        throw promise;
+      }
+
+      let response;
+      expect(() => {
+        response = ReactDOMServer.renderToNodeStream(
+          <div>
+            <React.Suspense fallback={'fallback'}>
+              <Suspender />
+            </React.Suspense>
+          </div>,
+        );
+      }).toErrorDev(
+        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+        {withoutStack: true},
+      );
+      await resolve();
+      expect(response.read().toString()).toEqual(
+        '<div><!--$-->resolved<!-- --><!--/$--></div>',
+      );
     });
   });
 

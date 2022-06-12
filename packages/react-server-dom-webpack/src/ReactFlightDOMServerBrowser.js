@@ -19,30 +19,36 @@ import {
 
 type Options = {
   onError?: (error: mixed) => void,
+  context?: Array<[string, ServerContextJSONValue]>,
+  identifierPrefix?: string,
 };
 
 function renderToReadableStream(
   model: ReactModel,
   webpackMap: BundlerConfig,
   options?: Options,
-  context?: Array<[string, ServerContextJSONValue]>,
 ): ReadableStream {
   const request = createRequest(
     model,
     webpackMap,
     options ? options.onError : undefined,
-    context,
+    options ? options.context : undefined,
+    options ? options.identifierPrefix : undefined,
   );
-  const stream = new ReadableStream({
-    type: 'bytes',
-    start(controller) {
-      startWork(request);
+  const stream = new ReadableStream(
+    {
+      type: 'bytes',
+      start(controller) {
+        startWork(request);
+      },
+      pull(controller) {
+        startFlowing(request, controller);
+      },
+      cancel(reason) {},
     },
-    pull(controller) {
-      startFlowing(request, controller);
-    },
-    cancel(reason) {},
-  });
+    // $FlowFixMe size() methods are not allowed on byte streams.
+    {highWaterMark: 0},
+  );
   return stream;
 }
 

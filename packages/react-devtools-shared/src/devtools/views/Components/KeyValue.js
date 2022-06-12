@@ -231,7 +231,7 @@ export default function KeyValue({
     );
   } else {
     renderedName = (
-      <span className={styles.Name}>
+      <span className={styles.Name} data-testname="NonEditableName">
         {name}
         {!!hookName && <span className={styles.HookName}>({hookName})</span>}
       </span>
@@ -286,7 +286,9 @@ export default function KeyValue({
             {displayValue}
           </a>
         ) : (
-          <span className={styles.Value}>{displayValue}</span>
+          <span className={styles.Value} data-testname="NonEditableValue">
+            {displayValue}
+          </span>
         )}
       </div>
     );

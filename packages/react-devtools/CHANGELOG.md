@@ -4,6 +4,14 @@
 
 ---
 
+### 4.24.7
+May 31, 2022
+
+* mock requestAnimationFrame with setTimeout as a temporary fix for #24626 ([mondaychen](https://github.com/mondaychen) in [#24633](https://github.com/facebook/react/pull/24633))
+* Fix formatWithStyles not styling the results if the first argument is an object + Added unit tests ([lunaruan](https://github.com/lunaruan) in [#24554](https://github.com/facebook/react/pull/24554))
+
+---
+
 ### 4.24.6
 May 12, 2022
 

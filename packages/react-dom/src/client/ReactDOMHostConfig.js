@@ -730,6 +730,45 @@ export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
   return instance.data === SUSPENSE_FALLBACK_START_DATA;
 }
 
+export function getSuspenseInstanceFallbackErrorDetails(
+  instance: SuspenseInstance,
+): {digest: ?string, message?: string, stack?: string} {
+  const dataset =
+    instance.nextSibling && ((instance.nextSibling: any): HTMLElement).dataset;
+  let digest, message, stack;
+  if (dataset) {
+    digest = dataset.dgst;
+    if (__DEV__) {
+      message = dataset.msg;
+      stack = dataset.stck;
+    }
+  }
+  if (__DEV__) {
+    return {
+      message,
+      digest,
+      stack,
+    };
+  } else {
+    // Object gets DCE'd if constructed in tail position and matches callsite destructuring
+    return {
+      digest,
+    };
+  }
+
+  // let value = {message: undefined, hash: undefined};
+  // const nextSibling = instance.nextSibling;
+  // if (nextSibling) {
+  //   const dataset = ((nextSibling: any): HTMLTemplateElement).dataset;
+  //   value.message = dataset.msg;
+  //   value.hash = dataset.hash;
+  //   if (__DEV__) {
+  //     value.stack = dataset.stack;
+  //   }
+  // }
+  // return value;
+}
+
 export function registerSuspenseInstanceRetry(
   instance: SuspenseInstance,
   callback: () => void,
