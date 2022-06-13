@@ -1,29 +1,23 @@
 ## 18.2.0 (TODO)
 
-### React
-
-* Only treat updates to Suspended components as a new mount in Legacy Mode ([@rickhanlonii](https://github.com/rickhanlonii)) in [#24530](https://github.com/facebook/react/pull/24530)
-
 ### React DOM
 
-* Provide a Component Stack in Dev to `onRecoverableError` through an `errorInfo` second argument, similar to `componentDidCatch` in Error Boundaries ([@gnoff](https://github.com/gnoff)) in [#24591](https://github.com/facebook/react/pull/24591)
-* Support `hydrateRoot` hydrating into `Document` as the `container` ([@gnoff](https://github.com/gnoff)) in [#24523](https://github.com/facebook/react/pull/24523)
-* Fix extraneous hydration errors when something suspends or errors inside a Suspense boundary ([@gnoff](https://github.com/gnoff)) in [#24480](https://github.com/facebook/react/pull/24480)
-* Fix producing extraneous recoverable errors when an inner Suspense boundary suspends while an outer Suspense boundary hydrates successfully ([@acdlite](https://github.com/acdlite)) in [#24532](https://github.com/facebook/react/pull/24532) and ([@gnoff](https://github.com/gnoff)) in [#24618](https://github.com/facebook/react/pull/24618)
-* Fix ignored setState in Safari when microtasks are flushed too early due to browser bug ([@gaearon](https://github.com/gaearon)) in [#24459](https://github.com/facebook/react/pull/24459) 
-* Do not allow `createPortal` to accept `Document` as the `container` ([@sebmarkbage](https://github.com/sebmarkbage)) in [#24496](https://github.com/facebook/react/pull/24496)
+* Provide a component stack as a second argument to onRecoverableError ([@gnoff](https://github.com/gnoff)) in [#24591](https://github.com/facebook/react/pull/24591)
+* Fix hydrating into `document` causing a blank page on mismatch ([@gnoff](https://github.com/gnoff)) in [#24523](https://github.com/facebook/react/pull/24523)
+* Fix false positive hydration errors with Suspense ([@gnoff](https://github.com/gnoff)) in [#24480](https://github.com/facebook/react/pull/24480) and  [@acdlite](https://github.com/acdlite)) in [#24532](https://github.com/facebook/react/pull/24532)
+* Fix ignored setState in Safari when microtasks are flushed too early due to browser bug ([@gaearon](https://github.com/gaearon)) in [#24459](https://github.com/facebook/react/pull/24459)
 
 ### React DOM Server
 
-* **Server Errors** Errors the occur during Server Side Rendering with `renderToReadableStream` or `renderToPipeableStream` are now sent to the client to be handled in a variety of useful ways. On the server if an `onError` function is provided it can return a `string` representing an error digest. In Prod, only the error digest will be sent to the client where it is exposed to the client application through a new `errorInfo` arguemnt to the `onRecoverableError` callback. The use of a digest is to allow providing some useful error identifier without leaking potentially private information from the server. In Dev, the error message is also sent to the client and used as the error message in `onRecoverableError`. Additionally a Server Component Stack is also provided in the new `errorInfo` argument. ([@salazarm](https://github.com/salazarm) and [@gnoff](https://github.com/gnoff)) in [#24551](https://github.com/facebook/react/pull/24551) and ([@gnoff](https://github.com/gnoff)) in [#24591](https://github.com/facebook/react/pull/24591)
-* Allow for providing a reason when aborting in `renderToPipeableStream` or `renderToReadableStream`. The reason will be passed to `onError` on the server. If a reason is not provided a default error messages is provided to `onError` instead ([@gnoff](https://github.com/gnoff)) in [#24680](https://github.com/facebook/react/pull/24680)
+* Pass information about server errors to the client. ([@salazarm](https://github.com/salazarm) and [@gnoff](https://github.com/gnoff)) in [#24551](https://github.com/facebook/react/pull/24551) and ([@gnoff](https://github.com/gnoff)) in [#24591](https://github.com/facebook/react/pull/24591)
+* Allow for providing a reason when aborting in `renderToPipeableStream` or `renderToReadableStream`. ([@gnoff](https://github.com/gnoff)) in [#24680](https://github.com/facebook/react/pull/24680)
 * Eliminate extraneous text separators whenever possible when Server Side Rendering with `renderToPipeableStream` or `renderToReadableStream` ([@gnoff](https://github.com/gnoff)) in [#24630](https://github.com/facebook/react/pull/24630)
 * Disallow complex children inside `<title>` elements to better align with browser constraints requiring only `Text` content within this element type. ([@gnoff](https://github.com/gnoff)) in [#24679](https://github.com/facebook/react/pull/24679)
 * Fix default `highWaterMark` behavior of `ReadableStream` in `renderToReadableStream` ([@jplhomer](https://github.com/jplhomer)) in [#24641](https://github.com/facebook/react/pull/24641)
 
 ### Server Components (Experimental)
 
-* **useId Hook** `useId` is now supported in Server Components. useId's uniqueness guarantees are different in Server Components because there is no client hydration but there can be ID collisions across refetches if you refetch only a portion of the application on subsequent requests. To avoid collisions `useId` will use an option `identifierPrefix` which needs to be chose to ensure uniqueness across multiple requests. An additional nuanced behavior is that if you pass a Server Component using `useId` to a Client Component and that client component renders the passed in element into more than one place, the id's within the Server Component elements will not be unique. In the future we may add a warning in Dev if you render a Server Component that uses `useId` into more than one place on the client. ([@gnoff](https://github.com/gnoff)) in [#24172](https://github.com/facebook/react/pull/24172)
+* Add support for `useId()` inside Server Components. ([@gnoff](https://github.com/gnoff)) in [#24172](https://github.com/facebook/react/pull/24172)
 
 ## 18.1.0 (April 26, 2022)
 
