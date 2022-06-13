@@ -18,6 +18,7 @@ import type {EventPriority} from './ReactEventPriorities.old';
 import type {
   PendingTransitionCallbacks,
   TransitionObject,
+  MarkerTransitionObject,
   Transition,
 } from './ReactFiberTracingMarkerComponent.old';
 
@@ -349,6 +350,7 @@ export function addTransitionStartCallbackToPendingTransition(
       currentPendingTransitionCallbacks = {
         transitionStart: [],
         transitionComplete: null,
+        markerComplete: null,
       };
     }
 
@@ -360,6 +362,26 @@ export function addTransitionStartCallbackToPendingTransition(
   }
 }
 
+export function addMarkerCompleteCallbackToPendingTransition(
+  transition: MarkerTransitionObject,
+) {
+  if (enableTransitionTracing) {
+    if (currentPendingTransitionCallbacks === null) {
+      currentPendingTransitionCallbacks = {
+        transitionStart: null,
+        transitionComplete: null,
+        markerComplete: [],
+      };
+    }
+
+    if (currentPendingTransitionCallbacks.markerComplete === null) {
+      currentPendingTransitionCallbacks.markerComplete = [];
+    }
+
+    currentPendingTransitionCallbacks.markerComplete.push(transition);
+  }
+}
+
 export function addTransitionCompleteCallbackToPendingTransition(
   transition: TransitionObject,
 ) {
@@ -368,6 +390,7 @@ export function addTransitionCompleteCallbackToPendingTransition(
       currentPendingTransitionCallbacks = {
         transitionStart: null,
         transitionComplete: [],
+        markerComplete: null,
       };
     }
 

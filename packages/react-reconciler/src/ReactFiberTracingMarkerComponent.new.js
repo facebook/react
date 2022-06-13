@@ -21,9 +21,11 @@ export type TransitionObject = {
   startTime: number,
 };
 
+export type MarkerTransitionObject = TransitionObject & {markerName: string};
 export type PendingTransitionCallbacks = {
   transitionStart: Array<TransitionObject> | null,
   transitionComplete: Array<TransitionObject> | null,
+  markerComplete: Array<MarkerTransitionObject> | null,
 };
 
 export type Transition = {
@@ -53,6 +55,20 @@ export function processTransitionCallbacks(
             callbacks.onTransitionStart(
               transition.transitionName,
               transition.startTime,
+            );
+          }
+        });
+      }
+
+      const markerComplete = pendingTransitions.markerComplete;
+      if (markerComplete !== null) {
+        markerComplete.forEach(transition => {
+          if (callbacks.onMarkerComplete != null) {
+            callbacks.onMarkerComplete(
+              transition.transitionName,
+              transition.markerName,
+              transition.startTime,
+              endTime,
             );
           }
         });
