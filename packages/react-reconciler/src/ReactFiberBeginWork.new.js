@@ -100,7 +100,6 @@ import {
   enableScopeAPI,
   enableCache,
   enableLazyContextPropagation,
-  enableSuspenseLayoutEffectSemantics,
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableLegacyHidden,
@@ -944,9 +943,7 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   ) {
     // Schedule a Ref effect
     workInProgress.flags |= Ref;
-    if (enableSuspenseLayoutEffectSemantics) {
-      workInProgress.flags |= RefStatic;
-    }
+    workInProgress.flags |= RefStatic;
   }
 }
 

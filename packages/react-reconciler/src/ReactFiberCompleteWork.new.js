@@ -140,7 +140,6 @@ import {
   enableScopeAPI,
   enableProfilerTimer,
   enableCache,
-  enableSuspenseLayoutEffectSemantics,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -174,10 +173,7 @@ function markUpdate(workInProgress: Fiber) {
 }
 
 function markRef(workInProgress: Fiber) {
-  workInProgress.flags |= Ref;
-  if (enableSuspenseLayoutEffectSemantics) {
-    workInProgress.flags |= RefStatic;
-  }
+  workInProgress.flags |= Ref | RefStatic;
 }
 
 function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {

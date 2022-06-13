@@ -179,7 +179,6 @@ describe('ReactOffscreen', () => {
   });
 
   // @gate experimental || www
-  // @gate enableSuspenseLayoutEffectSemantics
   it('mounts without layout effects when hidden', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
@@ -218,7 +217,6 @@ describe('ReactOffscreen', () => {
   });
 
   // @gate experimental || www
-  // @gate enableSuspenseLayoutEffectSemantics
   it('mounts/unmounts layout effects when visibility changes (starting visible)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
@@ -265,7 +263,6 @@ describe('ReactOffscreen', () => {
   });
 
   // @gate experimental || www
-  // @gate enableSuspenseLayoutEffectSemantics
   it('mounts/unmounts layout effects when visibility changes (starting hidden)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
@@ -313,7 +310,6 @@ describe('ReactOffscreen', () => {
   });
 
   // @gate experimental || www
-  // @gate enableSuspenseLayoutEffectSemantics
   it('hides children of offscreen after layout effects are destroyed', async () => {
     const root = ReactNoop.createRoot();
     function Child({text}) {

@@ -27,7 +27,6 @@ import {
   warnAboutDeprecatedLifecycles,
   enableStrictEffects,
   enableLazyContextPropagation,
-  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -908,10 +907,7 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
-    let fiberFlags: Flags = Update;
-    if (enableSuspenseLayoutEffectSemantics) {
-      fiberFlags |= LayoutStatic;
-    }
+    let fiberFlags: Flags = Update | LayoutStatic;
     if (
       __DEV__ &&
       enableStrictEffects &&
@@ -989,10 +985,7 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      let fiberFlags: Flags = Update;
-      if (enableSuspenseLayoutEffectSemantics) {
-        fiberFlags |= LayoutStatic;
-      }
+      let fiberFlags: Flags = Update | LayoutStatic;
       if (
         __DEV__ &&
         enableStrictEffects &&
@@ -1043,10 +1036,7 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
-      let fiberFlags: Flags = Update;
-      if (enableSuspenseLayoutEffectSemantics) {
-        fiberFlags |= LayoutStatic;
-      }
+      let fiberFlags: Flags = Update | LayoutStatic;
       if (
         __DEV__ &&
         enableStrictEffects &&
@@ -1060,10 +1050,7 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      let fiberFlags: Flags = Update;
-      if (enableSuspenseLayoutEffectSemantics) {
-        fiberFlags |= LayoutStatic;
-      }
+      let fiberFlags: Flags = Update | LayoutStatic;
       if (
         __DEV__ &&
         enableStrictEffects &&
