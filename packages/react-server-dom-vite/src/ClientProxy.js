@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {useState} from 'react';
+import {__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED as ReactSharedInternals} from 'react';
 
 declare var globalThis: any;
 
@@ -31,14 +31,8 @@ export const STRING_SIZE_LIMIT = 64;
 export const FN_RSC_ERROR =
   'Functions exported from client components cannot be called or used as constructors from a server component.';
 
-// TODO what's a better way to detect Flight runtime?
 export function isRsc() {
-  try {
-    useState();
-    return false;
-  } catch (error) {
-    return error.message.endsWith('Server Components.');
-  }
+  return !!ReactSharedInternals.ReactCurrentDispatcher.current.isRsc;
 }
 
 function createModuleReference(id, value, name, isDefault) {

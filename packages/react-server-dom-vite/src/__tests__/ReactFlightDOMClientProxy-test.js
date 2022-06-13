@@ -15,11 +15,17 @@ let ClientProxy;
 const id = '/path/to/Counter.jsx';
 const name = 'Counter';
 
+const mockedDispatcher = {isRsc: true};
+
 jest.mock('react', () => {
   const actualModule = jest.requireActual('react');
   return {
     ...actualModule,
-    useState: jest.fn(() => undefined),
+    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
+      ReactCurrentDispatcher: {
+        current: mockedDispatcher,
+      },
+    },
   };
 });
 
@@ -34,7 +40,7 @@ describe('ReactFlightDOMClientProxy', () => {
   });
 
   it('does not affect the exports in non-RSC environments', () => {
-    React.useState.mockReturnValue(undefined);
+    mockedDispatcher.isRsc = undefined;
 
     const wrappedElement = wrapInClientProxy(<div>test</div>);
     expect(wrappedElement).toHaveProperty(
@@ -55,14 +61,12 @@ describe('ReactFlightDOMClientProxy', () => {
     const myFn = () => true;
     myFn.myProp = true;
 
-    React.useState.mockReturnValue(undefined);
+    mockedDispatcher.isRsc = undefined;
     const wrappedFnSsr = wrapInClientProxy(myFn);
     expect(wrappedFnSsr.myProp).toEqual(true);
     expect(wrappedFnSsr()).toEqual(true);
 
-    React.useState.mockImplementation(() => {
-      throw new Error('Not supported in Server Components.');
-    });
+    mockedDispatcher.isRsc = true;
     const wrappedFnRsc = wrapInClientProxy(myFn);
     expect(wrappedFnRsc.myProp).toEqual(undefined);
     expect(() => wrappedFnRsc()).toThrowError(ClientProxy.FN_RSC_ERROR);
@@ -70,9 +74,7 @@ describe('ReactFlightDOMClientProxy', () => {
   });
 
   it('wraps client components in a proxy during RSC', async () => {
-    React.useState.mockImplementation(() => {
-      throw new Error('Not supported in Server Components.');
-    });
+    mockedDispatcher.isRsc = true;
 
     const wrappedComponent = wrapInClientProxy(() => <div>MyCounter</div>);
 

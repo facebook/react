@@ -10,6 +10,8 @@
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
 import type {ServerContextJSONValue} from 'shared/ReactTypes';
 
+import {__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED as ReactSharedInternals} from 'react';
+
 import {
   createRequest,
   startWork,
@@ -26,7 +28,17 @@ function renderToReadableStream(
   context?: Array<[string, ServerContextJSONValue]>,
 ): ReadableStream {
   const request = createRequest(
-    model,
+    // Wrap root in a dummy element that simply adds a flag
+    // to the current dispatcher to check later in the proxies.
+    {
+      ...model,
+      $$typeof: Symbol.for('react.element'),
+      props: {children: model},
+      type: () => {
+        ReactSharedInternals.ReactCurrentDispatcher.current.isRsc = true;
+        return model;
+      },
+    },
     {}, // Manifest, not used
     options ? options.onError : undefined,
     context,
