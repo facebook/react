@@ -59,9 +59,10 @@ import isArray from 'shared/isArray';
 
 import {Dispatcher} from 'react-dom/ReactDOMDispatcher';
 import {
+  type Resource,
   prepareToRender as prepareToRenderImpl,
   cleanupAfterRender as cleanupAfterRenderImpl,
-  type Resource,
+  PRELOAD,
 } from './ReactDOMFloatServer';
 
 // Used to distinguish these contexts from ones used in other renderers.
@@ -2151,7 +2152,7 @@ function writeIndeterminantResource(
 }
 
 function writeStyleResource(destination: Destination, resource: StyleResource) {
-  if (resource.loadAction === 'preload') {
+  if (resource.priority === PRELOAD) {
     writeChunk(destination, preloadStart);
     writeChunk(destination, preloadAsStyle);
     writeChunk(destination, stringToChunk(resource.href));
@@ -2160,14 +2161,15 @@ function writeStyleResource(destination: Destination, resource: StyleResource) {
 }
 
 export function writeResources(destination: Destination, resources: Resources) {
-  console.log('resources', resources);
   for (let resource of resources.values()) {
-    writeResource(destination, resource);
+    if (!resource.flushed) {
+      resource.flushed = true;
+      writeResource(destination, resource);
+    }
   }
 }
 
 export function prepareToRender(resources: Resources) {
-  console.log('prepareToRender server formatConfig', resources);
   prepareToRenderImpl(resources);
 }
 

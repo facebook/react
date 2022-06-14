@@ -12,14 +12,13 @@ import {pushDispatcher, popDispatcher} from 'react-dom/ReactDOMDispatcher';
 let currentResponseState = null;
 let currentResourceMap = null;
 
-type LoadAction = 'preload';
-
 type CrossOrigin = 'anonymous' | 'use-credentials';
 
 type ResourceMeta = {flushed: boolean, replaced: boolean};
 type ResourceBase = {
   ...ResourceMeta,
-  loadAction: LoadAction,
+  priority: Priority,
+  module: boolean,
   href: string,
   as: '',
   type: '',
@@ -50,6 +49,14 @@ export function cleanupAfterRender() {
   popDispatcher();
 }
 
+export const PRECONNECT = 0;
+export const PREFETCH_DNS = 1;
+export const PREFETCH = 2;
+export const PRELOAD = 3;
+export const PREINIT = 4;
+
+type Priority = 0 | 1 | 2 | 3 | 4;
+
 type PreloadAs = 'style' | 'font';
 type PreloadOptions = {as?: PreloadAs};
 function preload(href: string, options?: PreloadOptions) {
@@ -66,9 +73,10 @@ function preload(href: string, options?: PreloadOptions) {
     return;
   }
   let resource: Resource = {
+    priority: PRELOAD,
+    DEV_actionName: 'preload',
     flushed: false,
-    replaced: false,
-    loadAction: 'preload',
+    module: false,
     href,
     as,
     type: '',

@@ -327,6 +327,55 @@ describe('ReactDOMServerPreload', () => {
     ]);
   });
 
+  it('only emits resources once per priority', async () => {
+    function App() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return (
+        <Suspense fallback={'loading...'}>
+          <Resource href={'foo'} />
+          <Resource href={'bar'} />
+          <Resource href={'baz'} />
+        </Suspense>
+      );
+    }
+
+    function Resource({href}) {
+      let text = readText(href);
+      ReactDOM.preload(text, {as: 'style'});
+      return <div>{text}</div>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      await resolveText('foo');
+      pipe(writable);
+    });
+    console.log('container foo', container.outerHTML);
+
+    expectLinks([['preload', 'foo', 'style']]);
+
+    await act(async () => {
+      resolveText('bar');
+    });
+
+    console.log('container bar', container.outerHTML);
+
+    expectLinks([
+      ['preload', 'foo', 'style'],
+      ['preload', 'bar', 'style'],
+    ]);
+
+    await act(async () => {
+      await resolveText('baz');
+    });
+    console.log('container baz', container.outerHTML);
+    expectLinks([
+      ['preload', 'foo', 'style'],
+      ['preload', 'bar', 'style'],
+      ['preload', 'baz', 'style'],
+    ]);
+  });
+
   it('sandbox', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});
