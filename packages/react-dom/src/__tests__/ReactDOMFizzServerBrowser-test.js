@@ -21,9 +21,7 @@ describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    if (__EXPERIMENTAL__) {
-      ReactDOMFizzServer = require('react-dom/server.browser');
-    }
+    ReactDOMFizzServer = require('react-dom/server.browser');
     Suspense = React.Suspense;
   });
 
@@ -48,7 +46,6 @@ describe('ReactDOMFizzServer', () => {
     }
   }
 
-  // @gate experimental
   it('should call renderToReadableStream', async () => {
     const stream = await ReactDOMFizzServer.renderToReadableStream(
       <div>hello world</div>,
@@ -57,7 +54,6 @@ describe('ReactDOMFizzServer', () => {
     expect(result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
-  // @gate experimental
   it('should emit DOCTYPE at the root of the document', async () => {
     const stream = await ReactDOMFizzServer.renderToReadableStream(
       <html>
@@ -70,7 +66,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('should emit bootstrap script src at the end', async () => {
     const stream = await ReactDOMFizzServer.renderToReadableStream(
       <div>hello world</div>,
@@ -86,7 +81,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('emits all HTML as one unit if we wait until the end to start', async () => {
     let hasLoaded = false;
     let resolve;
@@ -124,7 +118,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('should reject the promise when an error is thrown at the root', async () => {
     const reportedErrors = [];
     let caughtError = null;
@@ -146,7 +139,6 @@ describe('ReactDOMFizzServer', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  // @gate experimental
   it('should reject the promise when an error is thrown inside a fallback', async () => {
     const reportedErrors = [];
     let caughtError = null;
@@ -170,7 +162,6 @@ describe('ReactDOMFizzServer', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
     const stream = await ReactDOMFizzServer.renderToReadableStream(
@@ -191,7 +182,6 @@ describe('ReactDOMFizzServer', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  // @gate experimental
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     const errors = [];
     const controller = new AbortController();
@@ -219,7 +209,6 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  // @gate experimental
   it('should not continue rendering after the reader cancels', async () => {
     let hasLoaded = false;
     let resolve;
@@ -268,7 +257,6 @@ describe('ReactDOMFizzServer', () => {
     expect(isComplete).toBe(true);
   });
 
-  // @gate experimental
   it('should stream large contents that might overlow individual buffers', async () => {
     const str492 = `(492) This string is intentionally 492 bytes long because we want to make sure we process chunks that will overflow buffer boundaries. It will repeat to fill out the bytes required (inclusive of this prompt):: foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux q :: total count (492)`;
     const str2049 = `(2049) This string is intentionally 2049 bytes long because we want to make sure we process chunks that will overflow buffer boundaries. It will repeat to fill out the bytes required (inclusive of this prompt):: foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy  :: total count (2049)`;
@@ -308,7 +296,6 @@ describe('ReactDOMFizzServer', () => {
     expect(result).toMatchInlineSnapshot(`"<div>${str2049}</div>"`);
   });
 
-  // @gate experimental
   it('Supports custom abort reasons with a string', async () => {
     const promise = new Promise(r => {});
     function Wait() {
@@ -350,7 +337,6 @@ describe('ReactDOMFizzServer', () => {
     expect(errors).toEqual(['foobar', 'foobar']);
   });
 
-  // @gate experimental
   it('Supports custom abort reasons with an Error', async () => {
     const promise = new Promise(r => {});
     function Wait() {
