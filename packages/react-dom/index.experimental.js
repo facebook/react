@@ -23,4 +23,4 @@ export {
   version,
 } from './src/client/ReactDOM';
 
-export {preload} from './src/shared/ReactDOMFloat';
+export {preload, preinit} from './src/shared/ReactDOMFloat';

@@ -101,6 +101,7 @@ function preinit(href: String, options?: PreinitOptions) {
       return;
     } else {
       currentResource.priority = PREINIT;
+      currentResource.DEV_actionName = 'preinit';
       currentResource.flushed = false;
     }
   } else {

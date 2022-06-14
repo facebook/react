@@ -62,7 +62,10 @@ import {
   type Resource,
   prepareToRender as prepareToRenderImpl,
   cleanupAfterRender as cleanupAfterRenderImpl,
+  PRECONNECT,
+  PREFETCH,
   PRELOAD,
+  PREINIT,
 } from './ReactDOMFloatServer';
 
 // Used to distinguish these contexts from ones used in other renderers.
@@ -2163,9 +2166,11 @@ function writeStyleResource(destination: Destination, resource: StyleResource) {
     writeChunk(destination, stringToChunk(resource.href));
     writeChunk(destination, preloadEnd);
   } else if (resource.priority === PREINIT) {
+    console.log('writing a preinit');
     writeChunk(destination, resourceStyleStart);
     writeChunk(destination, stringToChunk(resource.href));
     writeChunk(destination, resourceStyleEnd);
+    console.log('done');
   }
 }
 

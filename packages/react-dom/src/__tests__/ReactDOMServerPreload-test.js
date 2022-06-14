@@ -288,8 +288,6 @@ describe('ReactDOMServerPreload', () => {
       pipe(writable);
     });
 
-    console.log('container', container.outerHTML);
-
     expectLinks([['preload', 'foo', 'style']]);
   });
 
@@ -318,8 +316,6 @@ describe('ReactDOMServerPreload', () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
       pipe(writable);
     });
-
-    console.log('container', container.outerHTML);
 
     expectLinks([
       ['preload', 'foo', 'style'],
@@ -350,16 +346,11 @@ describe('ReactDOMServerPreload', () => {
       await resolveText('foo');
       pipe(writable);
     });
-    console.log('container foo', container.outerHTML);
-
     expectLinks([['preload', 'foo', 'style']]);
 
     await act(async () => {
       resolveText('bar');
     });
-
-    console.log('container bar', container.outerHTML);
-
     expectLinks([
       ['preload', 'foo', 'style'],
       ['preload', 'bar', 'style'],
@@ -368,7 +359,6 @@ describe('ReactDOMServerPreload', () => {
     await act(async () => {
       await resolveText('baz');
     });
-    console.log('container baz', container.outerHTML);
     expectLinks([
       ['preload', 'foo', 'style'],
       ['preload', 'bar', 'style'],
@@ -376,7 +366,7 @@ describe('ReactDOMServerPreload', () => {
     ]);
   });
 
-  fit('does not emit a preload if a resource has already been initialized', async () => {
+  it('does not emit a preload if a resource has already been initialized', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});
       return (
@@ -388,7 +378,7 @@ describe('ReactDOMServerPreload', () => {
     }
 
     function PreloadResource({href}) {
-      ReactDOM.preload(text, {as: 'style'});
+      ReactDOM.preload(href, {as: 'style'});
       let text = readText(href);
       ReactDOM.preinit(text, {as: 'style'});
       return <div>{text}</div>;
@@ -399,29 +389,18 @@ describe('ReactDOMServerPreload', () => {
       await resolveText('foo');
       pipe(writable);
     });
-    console.log('container foo', container.outerHTML);
-
-    expectLinks([['preload', 'foo', 'style']]);
-
-    await act(async () => {
-      resolveText('bar');
-    });
-
-    console.log('container bar', container.outerHTML);
-
     expectLinks([
-      ['preload', 'foo', 'style'],
+      ['stylesheet', 'foo', null],
       ['preload', 'bar', 'style'],
     ]);
 
     await act(async () => {
-      await resolveText('baz');
+      resolveText('bar');
     });
-    console.log('container baz', container.outerHTML);
     expectLinks([
-      ['preload', 'foo', 'style'],
+      ['stylesheet', 'foo', null],
       ['preload', 'bar', 'style'],
-      ['preload', 'baz', 'style'],
+      ['stylesheet', 'bar', null],
     ]);
   });
 
@@ -435,8 +414,6 @@ describe('ReactDOMServerPreload', () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
       pipe(writable);
     });
-
-    console.log('container', container.outerHTML);
 
     ReactDOMClient.hydrateRoot(container, <App />);
 
