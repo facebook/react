@@ -785,7 +785,15 @@ function getNextHydratable(node) {
   // Skip non-hydratable nodes.
   for (; node != null; node = node.nextSibling) {
     const nodeType = node.nodeType;
-    if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
+    if (nodeType === ELEMENT_NODE) {
+      if (
+        node.tagName.toLowerCase() === 'link' &&
+        node.getAttribute('rel') === 'preload'
+      ) {
+        continue;
+      }
+      break;
+    } else if (nodeType === TEXT_NODE) {
       break;
     }
     if (nodeType === COMMENT_NODE) {

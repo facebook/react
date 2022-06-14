@@ -61,6 +61,7 @@ import {Dispatcher} from 'react-dom/ReactDOMDispatcher';
 import {
   prepareToRender as prepareToRenderImpl,
   cleanupAfterRender as cleanupAfterRenderImpl,
+  type Resource,
 } from './ReactDOMFloatServer';
 
 // Used to distinguish these contexts from ones used in other renderers.
@@ -80,11 +81,6 @@ export type ResponseState = {
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean, // We allow the legacy renderer to extend this object.
   ...
-};
-
-type Resource = {
-  href: string,
-  as?: string,
 };
 
 const startInlineScript = stringToPrecomputedChunk('<script>');
@@ -2125,18 +2121,14 @@ function escapeJSStringsForInstructionScripts(input: string): string {
   });
 }
 
-export function writeResource(
-  destination: Destination,
-  responseState: ResponseState,
-  resource: Resource,
-) {
+export function writeResource(destination: Destination, resource: Resource) {
   console.log('writeResource', resource);
   switch (resource.as) {
     case '': {
-      return writeIndeterminantResource(destination, responseState, resource);
+      return writeIndeterminantResource(destination, resource);
     }
     case 'style': {
-      return writeStyleResource(destination, responseState, resource);
+      return writeStyleResource(destination, resource);
     }
     default: {
       throw new Error(
@@ -2153,17 +2145,12 @@ const preloadEnd = stringToPrecomputedChunk('">');
 
 function writeIndeterminantResource(
   destination: Destination,
-  responseState: ResponseState,
   resource: IndeterminantResource,
 ) {
   console.log('writeIndeterminantResource');
 }
 
-function writeStyleResource(
-  destination: Destination,
-  responseState: ResponseState,
-  resource: StyleResource,
-) {
+function writeStyleResource(destination: Destination, resource: StyleResource) {
   if (resource.loadAction === 'preload') {
     writeChunk(destination, preloadStart);
     writeChunk(destination, preloadAsStyle);
@@ -2172,11 +2159,23 @@ function writeStyleResource(
   }
 }
 
-export function prepareToRender(responseState: ResponseState) {
-  console.log('prepareToRender server formatConfig', responseState);
-  prepareToRenderImpl(responseState.resourceMap);
+export function writeResources(destination: Destination, resources: Resources) {
+  console.log('resources', resources);
+  for (let resource of resources.values()) {
+    writeResource(destination, resource);
+  }
+}
+
+export function prepareToRender(resources: Resources) {
+  console.log('prepareToRender server formatConfig', resources);
+  prepareToRenderImpl(resources);
 }
 
 export function cleanupAfterRender() {
   cleanupAfterRenderImpl();
+}
+
+export type Resources = Map<string, Resource>;
+export function createResources(): Resources {
+  return new Map();
 }

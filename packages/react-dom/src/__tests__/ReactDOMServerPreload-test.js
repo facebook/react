@@ -91,6 +91,18 @@ describe('ReactDOMServerPreload', () => {
     });
   });
 
+  function expectLinks(toBeLinks) {
+    let allLinksInDoc = Array.from(document.getElementsByTagName('link'));
+    let mappedLinks = allLinksInDoc.map(docLink => {
+      return [
+        docLink.rel,
+        docLink.getAttribute('href'),
+        docLink.getAttribute('as'),
+      ];
+    });
+    expect(mappedLinks).toEqual(toBeLinks);
+  }
+
   function expectErrors(errorsArr, toBeDevArr, toBeProdArr) {
     const mappedErrows = errorsArr.map(({error, errorInfo}) => {
       const stack = errorInfo && errorInfo.componentStack;
@@ -265,7 +277,23 @@ describe('ReactDOMServerPreload', () => {
     return <As>{readText(text)}</As>;
   }
 
-  fit('first', async () => {
+  fit('can flush a preload link for a stylesheet', async () => {
+    function App() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return <div>hi</div>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    console.log('container', container.outerHTML);
+
+    expectLinks([['preload', 'foo', 'style']]);
+  });
+
+  it('sandbox', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});
       return <div>hi</div>;

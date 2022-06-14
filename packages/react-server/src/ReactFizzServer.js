@@ -22,6 +22,7 @@ import type {
   SuspenseBoundaryID,
   ResponseState,
   FormatContext,
+  Resources,
 } from './ReactServerFormatConfig';
 import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
@@ -60,9 +61,10 @@ import {
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
-  writeResource,
+  writeResources,
   prepareToRender,
   cleanupAfterRender,
+  createResources,
 } from './ReactServerFormatConfig';
 import {
   constructClassInstance,
@@ -194,6 +196,7 @@ export opaque type Request = {
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
+  resources: Resources,
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>,
@@ -216,7 +219,6 @@ export opaque type Request = {
   // emit a different response to the stream instead.
   onShellError: (error: mixed) => void,
   onFatalError: (error: mixed) => void,
-  dispatcher: any,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -256,7 +258,7 @@ export function createRequest(
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
-  const resourceMap: Map<string, Resource> = new Map();
+  const resources: Resources = createResources();
   const request = {
     destination: null,
     responseState,
@@ -269,13 +271,13 @@ export function createRequest(
     nextSegmentId: 0,
     allPendingTasks: 0,
     pendingRootTasks: 0,
+    resources,
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
-    resourceMap,
     onError: onError === undefined ? defaultErrorHandler : onError,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
@@ -1695,7 +1697,7 @@ function finishedTask(
 }
 
 function retryTask(request: Request, task: Task): void {
-  prepareToRender(request.responseState);
+  prepareToRender(request.resources);
   const segment = task.blockedSegment;
   if (segment.status !== PENDING) {
     // We completed this by other means before we had a chance to retry it.
@@ -2050,12 +2052,7 @@ function flushCompletedQueues(
     // that item fully and then yield. At that point we remove the already completed
     // items up until the point we completed them.
 
-    const resourceMap = request.responseState.resourceMap;
-    const resources = resourceMap.values();
-    let r;
-    while (((r = resources.next()), !r.done)) {
-      writeResource(destination, request.responseState, r.value);
-    }
+    writeResources(destination, request.resources);
     // TODO: It's kind of unfortunate to keep checking this array after we've already
     // emitted the root.
     const completedRootSegment = request.completedRootSegment;

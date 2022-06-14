@@ -29,7 +29,7 @@ type StyleResource = {...ResourceBase, as: 'style'};
 type FontResource = {...ResourceBase, as: 'font', type: string};
 type FetchResource = {...ResourceBase, as: 'fetch'};
 
-type Resource =
+export type Resource =
   | IndeterminantResource
   | StyleResource
   | FontResource
@@ -58,6 +58,7 @@ function preload(href: string, options?: PreloadOptions) {
       'preload was called while currentResourceMap is null. this is a bug in React',
     );
   }
+  console.log('currentResourceMap', currentResourceMap);
   const as = options && typeof options.as === 'string' ? options.as : '';
   let key = `preload${as}->${href}`;
   if (currentResourceMap.has(key)) {
