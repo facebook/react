@@ -134,14 +134,6 @@ const ReactNoopServer = ReactFizzServer({
     target.push(POP);
   },
 
-  // This is a noop in ReactNoop
-  pushSegmentFinale(
-    target: Array<Uint8Array>,
-    responseState: ResponseState,
-    lastPushedText: boolean,
-    textEmbedded: boolean,
-  ): void {},
-
   writeCompletedRoot(
     destination: Destination,
     responseState: ResponseState,
@@ -219,6 +211,8 @@ const ReactNoopServer = ReactFizzServer({
   writeEndSegment(destination: Destination, formatContext: null): boolean {
     destination.stack.pop();
   },
+
+  writeTextSeparator(destination: Destination, responseState: ResponseState) {},
 
   writeCompletedSegmentInstruction(
     destination: Destination,
