@@ -13,13 +13,19 @@ module.exports = [
       'react-dom',
       'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerNode.js',
+      'react-dom/static.node',
       'react-server-dom-webpack/writer.node.server',
       'react-server-dom-webpack',
     ],
     paths: [
       'react-dom',
       'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom/static',
+      'react-dom/static.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMFizzStaticNode.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/writer',
       'react-server-dom-webpack/writer.node.server',
@@ -40,14 +46,18 @@ module.exports = [
       'react-dom',
       'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js',
+      'react-dom/static.browser',
       'react-server-dom-webpack/writer.browser.server',
       'react-server-dom-webpack',
     ],
     paths: [
       'react-dom',
       'react-dom/client',
+      'react-dom/server.browser',
+      'react-dom/static.browser',
       'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMFizzStaticBrowser.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/writer.browser.server',
       'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/writer.browser.server
