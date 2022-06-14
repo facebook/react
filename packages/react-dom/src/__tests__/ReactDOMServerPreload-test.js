@@ -277,7 +277,7 @@ describe('ReactDOMServerPreload', () => {
     return <As>{readText(text)}</As>;
   }
 
-  fit('can flush a preload link for a stylesheet', async () => {
+  it('can flush a preload link for a stylesheet', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});
       return <div>hi</div>;
@@ -291,6 +291,40 @@ describe('ReactDOMServerPreload', () => {
     console.log('container', container.outerHTML);
 
     expectLinks([['preload', 'foo', 'style']]);
+  });
+
+  it('only emits 1 preload even if preload is called more than once for the same resource', async () => {
+    function App() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return (
+        <>
+          <Component1 />
+          <Component2 />
+        </>
+      );
+    }
+
+    function Component1() {
+      ReactDOM.preload('bar', {as: 'style'});
+      return <div>one</div>;
+    }
+
+    function Component2() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return <div>two</div>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    console.log('container', container.outerHTML);
+
+    expectLinks([
+      ['preload', 'foo', 'style'],
+      ['preload', 'bar', 'style'],
+    ]);
   });
 
   it('sandbox', async () => {

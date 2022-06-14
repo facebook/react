@@ -60,7 +60,7 @@ function preload(href: string, options?: PreloadOptions) {
   }
   console.log('currentResourceMap', currentResourceMap);
   const as = options && typeof options.as === 'string' ? options.as : '';
-  let key = `preload${as}->${href}`;
+  let key = href;
   if (currentResourceMap.has(key)) {
     console.log(key, 'already scheduled to be preloaded');
     return;
