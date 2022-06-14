@@ -285,9 +285,9 @@ describe('ReactHooksInspection', () => {
         expect(error.message).toBe('Error rendering inspected component');
         // error.cause is the original error
         expect(error.cause).toBeInstanceOf(Error);
-        expect(error.cause.message).toBe(
-          "Cannot read property 'useState' of null",
-        );
+        expect(error.cause.message).toEqual(
+          expect.stringMatching(/Cannot read propert(?:y 'useState' of null|ies of null \(reading 'useState'\))/)
+        )
       }
       didCatch = true;
     }).toErrorDev(
