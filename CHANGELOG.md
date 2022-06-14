@@ -9,7 +9,7 @@
 
 ### React DOM Server
 
-* Pass information about server errors to the client. ([@salazarm](https://github.com/salazarm) and [@gnoff](https://github.com/gnoff)) in [#24551](https://github.com/facebook/react/pull/24551) and ([@gnoff](https://github.com/gnoff) in [#24591](https://github.com/facebook/react/pull/24591)
+* Pass information about server errors to the client. ([@salazarm](https://github.com/salazarm) and [@gnoff](https://github.com/gnoff) in [#24551](https://github.com/facebook/react/pull/24551) and [#24591](https://github.com/facebook/react/pull/24591))
 * Allow to provide a reason when aborting the HTML stream. ([@gnoff](https://github.com/gnoff) in [#24680](https://github.com/facebook/react/pull/24680))
 * Eliminate extraneous text separators in the HTML where possible. ([@gnoff](https://github.com/gnoff) in [#24630](https://github.com/facebook/react/pull/24630))
 * Disallow complex children inside `<title>` elements to match the browser constraints. ([@gnoff](https://github.com/gnoff) in [#24679](https://github.com/facebook/react/pull/24679))
