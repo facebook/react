@@ -286,8 +286,10 @@ describe('ReactHooksInspection', () => {
         // error.cause is the original error
         expect(error.cause).toBeInstanceOf(Error);
         expect(error.cause.message).toEqual(
-          expect.stringMatching(/Cannot read propert(?:y 'useState' of null|ies of null \(reading 'useState'\))/)
-        )
+          expect.stringMatching(
+            /Cannot read propert(?:y 'useState' of null|ies of null \(reading 'useState'\))/,
+          ),
+        );
       }
       didCatch = true;
     }).toErrorDev(

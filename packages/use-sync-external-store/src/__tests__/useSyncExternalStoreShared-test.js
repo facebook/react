@@ -928,7 +928,9 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         store.set({});
       });
       expect(container.textContent).toEqual(
-        expect.stringMatching(/Cannot read propert(?:y 'toUpperCase' of undefined|ies of undefined \(reading 'toUpperCase'\))/)
+        expect.stringMatching(
+          /Cannot read propert(?:y 'toUpperCase' of undefined|ies of undefined \(reading 'toUpperCase'\))/,
+        ),
       );
     });
 
@@ -964,7 +966,9 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         store.set({});
       });
       expect(container.textContent).toEqual(
-        expect.stringMatching(/Cannot read propert(?:y 'trim' of undefined|ies of undefined \(reading 'trim'\))/)
+        expect.stringMatching(
+          /Cannot read propert(?:y 'trim' of undefined|ies of undefined \(reading 'trim'\))/,
+        ),
       );
     });
   });
