@@ -376,6 +376,55 @@ describe('ReactDOMServerPreload', () => {
     ]);
   });
 
+  fit('does not emit a preload if a resource has already been initialized', async () => {
+    function App() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return (
+        <Suspense fallback={'loading...'}>
+          <PreloadResource href={'foo'} />
+          <PreloadResource href={'bar'} />
+        </Suspense>
+      );
+    }
+
+    function PreloadResource({href}) {
+      ReactDOM.preload(text, {as: 'style'});
+      let text = readText(href);
+      ReactDOM.preinit(text, {as: 'style'});
+      return <div>{text}</div>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      await resolveText('foo');
+      pipe(writable);
+    });
+    console.log('container foo', container.outerHTML);
+
+    expectLinks([['preload', 'foo', 'style']]);
+
+    await act(async () => {
+      resolveText('bar');
+    });
+
+    console.log('container bar', container.outerHTML);
+
+    expectLinks([
+      ['preload', 'foo', 'style'],
+      ['preload', 'bar', 'style'],
+    ]);
+
+    await act(async () => {
+      await resolveText('baz');
+    });
+    console.log('container baz', container.outerHTML);
+    expectLinks([
+      ['preload', 'foo', 'style'],
+      ['preload', 'bar', 'style'],
+      ['preload', 'baz', 'style'],
+    ]);
+  });
+
   it('sandbox', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});

@@ -18,4 +18,13 @@ function preload() {
   }
 }
 
-export {preload};
+function preinit() {
+  const dispatcher = Dispatcher.current;
+  if (dispatcher) {
+    dispatcher.preinit.apply(this, arguments);
+  } else {
+    console.log('no preinit dispatcher');
+  }
+}
+
+export {preload, preinit};

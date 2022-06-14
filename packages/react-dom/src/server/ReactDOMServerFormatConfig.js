@@ -2144,6 +2144,11 @@ const preloadStart = stringToPrecomputedChunk('<link rel="preload"');
 const preloadAsStyle = stringToPrecomputedChunk(' as="style" href="');
 const preloadEnd = stringToPrecomputedChunk('">');
 
+const resourceStyleStart = stringToPrecomputedChunk(
+  '<link rel="stylesheet" href="',
+);
+const resourceStyleEnd = stringToPrecomputedChunk('">');
+
 function writeIndeterminantResource(
   destination: Destination,
   resource: IndeterminantResource,
@@ -2157,6 +2162,10 @@ function writeStyleResource(destination: Destination, resource: StyleResource) {
     writeChunk(destination, preloadAsStyle);
     writeChunk(destination, stringToChunk(resource.href));
     writeChunk(destination, preloadEnd);
+  } else if (resource.priority === PREINIT) {
+    writeChunk(destination, resourceStyleStart);
+    writeChunk(destination, stringToChunk(resource.href));
+    writeChunk(destination, resourceStyleEnd);
   }
 }
 

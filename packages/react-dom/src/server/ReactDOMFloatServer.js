@@ -72,7 +72,7 @@ function preload(href: string, options?: PreloadOptions) {
     console.log(key, 'already scheduled to be preloaded');
     return;
   }
-  let resource: Resource = {
+  const resource: Resource = {
     priority: PRELOAD,
     DEV_actionName: 'preload',
     flushed: false,
@@ -85,6 +85,40 @@ function preload(href: string, options?: PreloadOptions) {
   console.log('on server: preload', href);
 }
 
+type PreinitAs = 'style' | 'font';
+type PreinitOptions = {as?: PreinitAs};
+function preinit(href: String, options?: PreinitOptions) {
+  if (currentResourceMap === null) {
+    throw new Error(
+      'preinit was called while currentResourceMap is null. this is a bug in React',
+    );
+  }
+  const as = options && typeof options.as === 'string' ? options.as : '';
+  let key = href;
+  let currentResource = currentResourceMap.get(key);
+  if (currentResource) {
+    if (currentResource.priority >= PREINIT) {
+      return;
+    } else {
+      currentResource.priority = PREINIT;
+      currentResource.flushed = false;
+    }
+  } else {
+    const resource: Resource = {
+      priority: PREINIT,
+      DEV_actionName: 'preinit',
+      flushed: false,
+      module: false,
+      href,
+      as,
+      type: '',
+    };
+    currentResourceMap.set(key, resource);
+    console.log('on server: preinit', href);
+  }
+}
+
 const Dispatcher = {
   preload,
+  preinit,
 };
