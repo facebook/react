@@ -779,7 +779,17 @@ function updateOffscreenComponent(
         prevCachePool = prevState.cachePool;
       }
 
-      pushTransition(workInProgress, prevCachePool, null);
+      let transitions = null;
+      if (
+        workInProgress.memoizedState !== null &&
+        workInProgress.memoizedState.transitions !== null
+      ) {
+        // We have now gone from hidden to visible, so any transitions should
+        // be added to the stack to get added to any Offscreen/suspense children
+        transitions = workInProgress.memoizedState.transitions;
+      }
+
+      pushTransition(workInProgress, prevCachePool, transitions);
 
       // Since we're not hidden anymore, reset the state
       workInProgress.memoizedState = null;
