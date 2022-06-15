@@ -13,6 +13,7 @@ let currentResponseState = null;
 let currentResourceMap = null;
 
 type CrossOrigin = 'anonymous' | 'use-credentials';
+type MimeType = string;
 
 type ResourceMeta = {flushed: boolean, replaced: boolean};
 type ResourceBase = {
@@ -22,10 +23,21 @@ type ResourceBase = {
   href: string,
   as: '',
   type: '',
+  crossorigin: '',
 };
 type IndeterminantResource = ResourceBase;
+type ScriptResource = {...ResourceBase, as: 'script'};
 type StyleResource = {...ResourceBase, as: 'style'};
-type FontResource = {...ResourceBase, as: 'font', type: string};
+type ImageResource = {...ResourceBase, as: 'image'};
+type VideoResource = {...ResourceBase, as: 'video'};
+type AudioResource = {...ResourceBase, as: 'audio'};
+type TrackResource = {...ResourceBase, as: 'track'};
+type FontResource = {
+  ...ResourceBase,
+  as: 'font',
+  type: MimeType,
+  crossorigin: 'anonymous',
+};
 type FetchResource = {...ResourceBase, as: 'fetch'};
 
 export type Resource =
@@ -49,8 +61,8 @@ export function cleanupAfterRender() {
   popDispatcher();
 }
 
-export const PRECONNECT = 0;
-export const PREFETCH_DNS = 1;
+export const DNS_PREFETCH = 0;
+export const PRECONNECT = 1;
 export const PREFETCH = 2;
 export const PRELOAD = 3;
 export const PREINIT = 4;
