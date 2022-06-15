@@ -29,7 +29,8 @@ function createDrainHandler(destination, request) {
 }
 
 function createAbortHandler(request, reason) {
-  return () => abort(request, reason);
+  // eslint-disable-next-line react-internal/prod-error-codes
+  return () => abort(request, new Error(reason));
 }
 
 type Options = {|
@@ -49,7 +50,7 @@ type Options = {|
 type PipeableStream = {|
   // Cancel any pending I/O and put anything remaining into
   // client rendered mode.
-  abort(): void,
+  abort(reason: mixed): void,
   pipe<T: Writable>(destination: T): T,
 |};
 
@@ -94,21 +95,16 @@ function renderToPipeableStream(
         'error',
         createAbortHandler(
           request,
-          // eslint-disable-next-line react-internal/prod-error-codes
-          new Error('The destination stream errored while writing data.'),
+          'The destination stream errored while writing data.',
         ),
       );
       destination.on(
         'close',
-        createAbortHandler(
-          request,
-          // eslint-disable-next-line react-internal/prod-error-codes
-          new Error('The destination stream closed early.'),
-        ),
+        createAbortHandler(request, 'The destination stream closed early.'),
       );
       return destination;
     },
-    abort(reason) {
+    abort(reason: mixed) {
       abort(request, reason);
     },
   };
