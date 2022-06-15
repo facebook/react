@@ -347,6 +347,25 @@ const hashImportsPlugin = {
   },
 };
 
+type ModuleMeta = {
+  isFacade: boolean,
+  namedExports: string[],
+  imports: Array<{
+    action: 'import' | 'export',
+    variables: Array<[string] | [string, string]>,
+    from: string,
+    originalFrom: string,
+  }>,
+};
+
+type ViteModule = {
+  id: string,
+  file: string,
+  meta: ?ModuleMeta,
+  importers: ?Set<ViteModule>,
+  [key: string]: any,
+};
+
 /**
  * A client module should behave as a client boundary
  * if it is imported by the server before encountering
@@ -358,7 +377,11 @@ const hashImportsPlugin = {
  * `originalMod` but renamed accordingly to all the intermediate/facade
  * files in the import chain from the `originalMod` to every parent importer.
  */
-function isDirectImportInServer(originalMod, currentMod, accModInfo) {
+function isDirectImportInServer(
+  originalMod: ViteModule,
+  currentMod: ViteModule,
+  accModInfo: ?{file: string, exports: string[]},
+) {
   // TODO: this should use recursion in any module that exports
   // the original one, not only in full facade files.
   if (!currentMod || (currentMod.meta || {}).isFacade) {
@@ -393,9 +416,10 @@ function isDirectImportInServer(originalMod, currentMod, accModInfo) {
       });
     }
 
-    return Array.from((currentMod || originalMod).importers).some(importer =>
-      // eslint-disable-next-line no-unused-vars
-      isDirectImportInServer(originalMod, importer, accModInfo),
+    return Array.from((currentMod || originalMod).importers || []).some(
+      importer =>
+        // eslint-disable-next-line no-unused-vars
+        isDirectImportInServer(originalMod, importer, accModInfo),
     );
   }
 
