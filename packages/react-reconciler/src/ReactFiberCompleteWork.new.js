@@ -140,7 +140,6 @@ import {
   enableScopeAPI,
   enableProfilerTimer,
   enableCache,
-  enableSuspenseLayoutEffectSemantics,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -165,6 +164,7 @@ import {transferActualDuration} from './ReactProfilerTimer.new';
 import {popCacheProvider} from './ReactFiberCacheComponent.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
 import {popRootTransition, popTransition} from './ReactFiberTransition.new';
+import {popTracingMarker} from './ReactFiberTracingMarkerComponent.new';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -173,10 +173,7 @@ function markUpdate(workInProgress: Fiber) {
 }
 
 function markRef(workInProgress: Fiber) {
-  workInProgress.flags |= Ref;
-  if (enableSuspenseLayoutEffectSemantics) {
-    workInProgress.flags |= RefStatic;
-  }
+  workInProgress.flags |= Ref | RefStatic;
 }
 
 function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
@@ -1585,6 +1582,7 @@ function completeWork(
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
         // Bubble subtree flags before so we can set the flag property
+        popTracingMarker(workInProgress);
         bubbleProperties(workInProgress);
       }
       return null;

@@ -9,10 +9,13 @@
 
 'use strict';
 
+global.TextEncoder = require('util').TextEncoder;
+
 let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
+let ReactDOMServerBrowser;
 let Scheduler;
 
 // These tests rely both on ReactDOMServer and ReactDOM.
@@ -24,6 +27,7 @@ describe('ReactDOMServerHydration', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
+    ReactDOMServerBrowser = require('react-dom/server.browser');
     Scheduler = require('scheduler');
   });
 
@@ -597,5 +601,97 @@ describe('ReactDOMServerHydration', () => {
     expect(customElement.getAttribute('obj')).toBe(null);
     expect(customElement.str).toBe(undefined);
     expect(customElement.obj).toBe(undefined);
+  });
+
+  // @gate experimental || !www || !__DEV__
+  it('refers users to apis that support Suspense when something suspends', () => {
+    const theInfinitePromise = new Promise(() => {});
+    function InfiniteSuspend() {
+      throw theInfinitePromise;
+    }
+
+    function App({isClient}) {
+      return (
+        <div>
+          <React.Suspense fallback={'fallback'}>
+            {isClient ? 'resolved' : <InfiniteSuspend />}
+          </React.Suspense>
+        </div>
+      );
+    }
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(
+      <App isClient={false} />,
+    );
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push(error.message);
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors.length).toBe(1);
+    if (__DEV__) {
+      expect(errors[0]).toBe(
+        'The server did not finish this Suspense boundary: The server used "renderToString" ' +
+          'which does not support Suspense. If you intended for this Suspense boundary to render ' +
+          'the fallback content on the server consider throwing an Error somewhere within the ' +
+          'Suspense boundary. If you intended to have the server wait for the suspended component ' +
+          'please switch to "renderToPipeableStream" which supports Suspense on the server',
+      );
+    } else {
+      expect(errors[0]).toBe(
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
+      );
+    }
+  });
+
+  // @gate experimental || !www || !__DEV__
+  it('refers users to apis that support Suspense when something suspends (browser)', () => {
+    const theInfinitePromise = new Promise(() => {});
+    function InfiniteSuspend() {
+      throw theInfinitePromise;
+    }
+
+    function App({isClient}) {
+      return (
+        <div>
+          <React.Suspense fallback={'fallback'}>
+            {isClient ? 'resolved' : <InfiniteSuspend />}
+          </React.Suspense>
+        </div>
+      );
+    }
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServerBrowser.renderToString(
+      <App isClient={false} />,
+    );
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push(error.message);
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors.length).toBe(1);
+    if (__DEV__) {
+      expect(errors[0]).toBe(
+        'The server did not finish this Suspense boundary: The server used "renderToString" ' +
+          'which does not support Suspense. If you intended for this Suspense boundary to render ' +
+          'the fallback content on the server consider throwing an Error somewhere within the ' +
+          'Suspense boundary. If you intended to have the server wait for the suspended component ' +
+          'please switch to "renderToReadableStream" which supports Suspense on the server',
+      );
+    } else {
+      expect(errors[0]).toBe(
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
+      );
+    }
   });
 });

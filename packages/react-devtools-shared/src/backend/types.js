@@ -93,7 +93,7 @@ export type Lane = number;
 export type Lanes = number;
 
 export type ReactRenderer = {
-  findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
+  findFiberByHostInstance: (hostInstance: NativeType) => Fiber | null,
   version: string,
   rendererPackageName: string,
   bundleType: BundleType,
@@ -350,6 +350,7 @@ export type RendererInterface = {
   findNativeNodesForFiberID: FindNativeNodesForFiberID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
+  getFiberForNative: (component: NativeType) => Fiber | null,
   getFiberIDForNative: GetFiberIDForNative,
   getDisplayNameForFiberID: GetDisplayNameForFiberID,
   getInstanceAndStyle(id: number): InstanceAndStyle,

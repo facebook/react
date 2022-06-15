@@ -131,7 +131,7 @@ type LegacyContext = {
 type SuspenseBoundary = {
   id: SuspenseBoundaryID,
   rootSegmentID: number,
-  errorHash: ?string, // the error hash if it errors
+  errorDigest: ?string, // the error hash if it errors
   errorMessage?: string, // the error string if it errors
   errorComponentStack?: string, // the error component stack if it errors
   forceClientRender: boolean, // if it errors or infinitely suspends
@@ -323,7 +323,7 @@ function createSuspenseBoundary(
     completedSegments: [],
     byteSize: 0,
     fallbackAbortableTasks,
-    errorHash: null,
+    errorDigest: null,
   };
 }
 
@@ -463,14 +463,14 @@ function captureBoundaryErrorDetailsDev(
 function logRecoverableError(request: Request, error: any): ?string {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
-  const errorHash = request.onError(error);
-  if (errorHash != null && typeof errorHash !== 'string') {
+  const errorDigest = request.onError(error);
+  if (errorDigest != null && typeof errorDigest !== 'string') {
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorHash}" instead`,
+      `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorDigest}" instead`,
     );
   }
-  return errorHash;
+  return errorDigest;
 }
 
 function fatalError(request: Request, error: mixed): void {
@@ -568,7 +568,7 @@ function renderSuspenseBoundary(
   } catch (error) {
     contentRootSegment.status = ERRORED;
     newBoundary.forceClientRender = true;
-    newBoundary.errorHash = logRecoverableError(request, error);
+    newBoundary.errorDigest = logRecoverableError(request, error);
     if (__DEV__) {
       captureBoundaryErrorDetailsDev(newBoundary, error);
     }
@@ -1488,14 +1488,14 @@ function erroredTask(
   error: mixed,
 ) {
   // Report the error to a global handler.
-  const errorHash = logRecoverableError(request, error);
+  const errorDigest = logRecoverableError(request, error);
   if (boundary === null) {
     fatalError(request, error);
   } else {
     boundary.pendingTasks--;
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
-      boundary.errorHash = errorHash;
+      boundary.errorDigest = errorDigest;
       if (__DEV__) {
         captureBoundaryErrorDetailsDev(boundary, error);
       }
@@ -1530,10 +1530,9 @@ function abortTaskSoft(task: Task): void {
   finishedTask(request, boundary, segment);
 }
 
-function abortTask(task: Task): void {
+function abortTask(task: Task, request: Request, reason: mixed): void {
   // This aborts the task and aborts the parent that it blocks, putting it into
   // client rendered mode.
-  const request: Request = this;
   const boundary = task.blockedBoundary;
   const segment = task.blockedSegment;
   segment.status = ABORTED;
@@ -1553,12 +1552,27 @@ function abortTask(task: Task): void {
 
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
-      const error = new Error(
-        'This Suspense boundary was aborted by the server',
-      );
-      boundary.errorHash = request.onError(error);
+      let error =
+        reason === undefined
+          ? new Error('The render was aborted by the server without a reason.')
+          : reason;
+      boundary.errorDigest = request.onError(error);
       if (__DEV__) {
-        captureBoundaryErrorDetailsDev(boundary, error);
+        const errorPrefix =
+          'The server did not finish this Suspense boundary: ';
+        if (error && typeof error.message === 'string') {
+          error = errorPrefix + error.message;
+        } else {
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          error = errorPrefix + String(error);
+        }
+        const previousTaskInDev = currentTaskInDEV;
+        currentTaskInDEV = task;
+        try {
+          captureBoundaryErrorDetailsDev(boundary, error);
+        } finally {
+          currentTaskInDEV = previousTaskInDev;
+        }
       }
       if (boundary.parentFlushed) {
         request.clientRenderedBoundaries.push(boundary);
@@ -1567,7 +1581,9 @@ function abortTask(task: Task): void {
 
     // If this boundary was still pending then we haven't already cancelled its fallbacks.
     // We'll need to abort the fallbacks, which will also error that parent boundary.
-    boundary.fallbackAbortableTasks.forEach(abortTask, request);
+    boundary.fallbackAbortableTasks.forEach(fallbackTask =>
+      abortTask(fallbackTask, request, reason),
+    );
     boundary.fallbackAbortableTasks.clear();
 
     request.allPendingTasks--;
@@ -1838,7 +1854,7 @@ function flushSegment(
     writeStartClientRenderedSuspenseBoundary(
       destination,
       request.responseState,
-      boundary.errorHash,
+      boundary.errorDigest,
       boundary.errorMessage,
       boundary.errorComponentStack,
     );
@@ -1921,7 +1937,7 @@ function flushClientRenderedBoundary(
     destination,
     request.responseState,
     boundary.id,
-    boundary.errorHash,
+    boundary.errorDigest,
     boundary.errorMessage,
     boundary.errorComponentStack,
   );
@@ -2159,10 +2175,10 @@ export function startFlowing(request: Request, destination: Destination): void {
 }
 
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
-export function abort(request: Request): void {
+export function abort(request: Request, reason: mixed): void {
   try {
     const abortableTasks = request.abortableTasks;
-    abortableTasks.forEach(abortTask, request);
+    abortableTasks.forEach(task => abortTask(task, request, reason));
     abortableTasks.clear();
     if (request.destination !== null) {
       flushCompletedQueues(request, request.destination);

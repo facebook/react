@@ -27,6 +27,7 @@ import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
 import type {Transition} from './ReactFiberTracingMarkerComponent.new';
+import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -225,6 +226,7 @@ type BaseFiberRootProperties = {|
   callbackPriority: Lane,
   eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
+  hiddenUpdates: LaneMap<Array<ConcurrentUpdate> | null>,
 
   pendingLanes: Lanes,
   suspendedLanes: Lanes,
@@ -247,7 +249,10 @@ type BaseFiberRootProperties = {|
   // a reference to.
   identifierPrefix: string,
 
-  onRecoverableError: (error: mixed) => void,
+  onRecoverableError: (
+    error: mixed,
+    errorInfo: {digest?: ?string, componentStack?: ?string},
+  ) => void,
 |};
 
 // The following attributes are only used by DevTools and are only present in DEV builds.

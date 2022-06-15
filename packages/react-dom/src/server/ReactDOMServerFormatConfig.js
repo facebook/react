@@ -1120,6 +1120,75 @@ function pushStartMenuItem(
   return null;
 }
 
+function pushStartTitle(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+): ReactNodeList {
+  target.push(startChunkForTag('title'));
+
+  let children = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          throw new Error(
+            '`dangerouslySetInnerHTML` does not make sense on <title>.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+  target.push(endOfStartTag);
+
+  if (__DEV__) {
+    const child =
+      Array.isArray(children) && children.length < 2
+        ? children[0] || null
+        : children;
+    if (Array.isArray(children) && children.length > 1) {
+      console.error(
+        'A title element received an array with more than 1 element as children. ' +
+          'In browsers title Elements can only have Text Nodes as children. If ' +
+          'the children being rendered output more than a single text node in aggregate the browser ' +
+          'will display markup and comments as text in the title and hydration will likely fail and ' +
+          'fall back to client rendering',
+      );
+    } else if (child != null && child.$$typeof != null) {
+      console.error(
+        'A title element received a React element for children. ' +
+          'In the browser title Elements can only have Text Nodes as children. If ' +
+          'the children being rendered output more than a single text node in aggregate the browser ' +
+          'will display markup and comments as text in the title and hydration will likely fail and ' +
+          'fall back to client rendering',
+      );
+    } else if (
+      child != null &&
+      typeof child !== 'string' &&
+      typeof child !== 'number'
+    ) {
+      console.error(
+        'A title element received a value that was not a string or number for children. ' +
+          'In the browser title Elements can only have Text Nodes as children. If ' +
+          'the children being rendered output more than a single text node in aggregate the browser ' +
+          'will display markup and comments as text in the title and hydration will likely fail and ' +
+          'fall back to client rendering',
+      );
+    }
+  }
+  return children;
+}
+
 function pushStartGenericElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -1390,6 +1459,8 @@ export function pushStartInstance(
       return pushInput(target, props, responseState);
     case 'menuitem':
       return pushStartMenuItem(target, props, responseState);
+    case 'title':
+      return pushStartTitle(target, props, responseState);
     // Newline eating tags
     case 'listing':
     case 'pre': {
@@ -1527,16 +1598,22 @@ const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
 const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
 const clientRenderedSuspenseBoundaryError1 = stringToPrecomputedChunk(
-  '<template data-hash="',
+  '<template',
+);
+const clientRenderedSuspenseBoundaryErrorAttrInterstitial = stringToPrecomputedChunk(
+  '"',
 );
 const clientRenderedSuspenseBoundaryError1A = stringToPrecomputedChunk(
-  '" data-msg="',
+  ' data-dgst="',
 );
 const clientRenderedSuspenseBoundaryError1B = stringToPrecomputedChunk(
-  '" data-stack="',
+  ' data-msg="',
+);
+const clientRenderedSuspenseBoundaryError1C = stringToPrecomputedChunk(
+  ' data-stck="',
 );
 const clientRenderedSuspenseBoundaryError2 = stringToPrecomputedChunk(
-  '"></template>',
+  '></template>',
 );
 
 export function pushStartCompletedSuspenseBoundary(
@@ -1576,7 +1653,7 @@ export function writeStartPendingSuspenseBoundary(
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
-  errorHash: ?string,
+  errorDigest: ?string,
   errorMesssage: ?string,
   errorComponentStack: ?string,
 ): boolean {
@@ -1585,33 +1662,43 @@ export function writeStartClientRenderedSuspenseBoundary(
     destination,
     startClientRenderedSuspenseBoundary,
   );
-  if (errorHash) {
-    writeChunk(destination, clientRenderedSuspenseBoundaryError1);
-    writeChunk(destination, stringToChunk(escapeTextForBrowser(errorHash)));
-    // In prod errorMessage will usually be nullish but there is one case where
-    // it is used (currently when the server aborts the task) so we leave it ungated.
+  writeChunk(destination, clientRenderedSuspenseBoundaryError1);
+  if (errorDigest) {
+    writeChunk(destination, clientRenderedSuspenseBoundaryError1A);
+    writeChunk(destination, stringToChunk(escapeTextForBrowser(errorDigest)));
+    writeChunk(
+      destination,
+      clientRenderedSuspenseBoundaryErrorAttrInterstitial,
+    );
+  }
+  if (__DEV__) {
     if (errorMesssage) {
-      writeChunk(destination, clientRenderedSuspenseBoundaryError1A);
+      writeChunk(destination, clientRenderedSuspenseBoundaryError1B);
       writeChunk(
         destination,
         stringToChunk(escapeTextForBrowser(errorMesssage)),
       );
+      writeChunk(
+        destination,
+        clientRenderedSuspenseBoundaryErrorAttrInterstitial,
+      );
     }
-    if (__DEV__) {
-      // Component stacks are currently only captured in dev
-      if (errorComponentStack) {
-        writeChunk(destination, clientRenderedSuspenseBoundaryError1B);
-        writeChunk(
-          destination,
-          stringToChunk(escapeTextForBrowser(errorComponentStack)),
-        );
-      }
+    if (errorComponentStack) {
+      writeChunk(destination, clientRenderedSuspenseBoundaryError1C);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorComponentStack)),
+      );
+      writeChunk(
+        destination,
+        clientRenderedSuspenseBoundaryErrorAttrInterstitial,
+      );
     }
-    result = writeChunkAndReturn(
-      destination,
-      clientRenderedSuspenseBoundaryError2,
-    );
   }
+  result = writeChunkAndReturn(
+    destination,
+    clientRenderedSuspenseBoundaryError2,
+  );
   return result;
 }
 export function writeEndCompletedSuspenseBoundary(
@@ -1772,7 +1859,7 @@ export function writeEndSegment(
 // const SUSPENSE_PENDING_START_DATA = '$?';
 // const SUSPENSE_FALLBACK_START_DATA = '$!';
 //
-// function clientRenderBoundary(suspenseBoundaryID, errorHash, errorMsg, errorComponentStack) {
+// function clientRenderBoundary(suspenseBoundaryID, errorDigest, errorMsg, errorComponentStack) {
 //   // Find the fallback's first element.
 //   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
 //   if (!suspenseIdNode) {
@@ -1786,9 +1873,9 @@ export function writeEndSegment(
 //   suspenseNode.data = SUSPENSE_FALLBACK_START_DATA;
 //   // assign error metadata to first sibling
 //   let dataset = suspenseIdNode.dataset;
-//   if (errorHash) dataset.hash = errorHash;
+//   if (errorDigest) dataset.dgst = errorDigest;
 //   if (errorMsg) dataset.msg = errorMsg;
-//   if (errorComponentStack) dataset.stack = errorComponentStack;
+//   if (errorComponentStack) dataset.stck = errorComponentStack;
 //   // Tell React to retry it if the parent already hydrated.
 //   if (suspenseNode._reactRetry) {
 //     suspenseNode._reactRetry();
@@ -1876,7 +1963,7 @@ const completeSegmentFunction =
 const completeBoundaryFunction =
   'function $RC(a,b){a=document.getElementById(a);b=document.getElementById(b);b.parentNode.removeChild(b);if(a){a=a.previousSibling;var f=a.parentNode,c=a.nextSibling,e=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d)if(0===e)break;else e--;else"$"!==d&&"$?"!==d&&"$!"!==d||e++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;b.firstChild;)f.insertBefore(b.firstChild,c);a.data="$";a._reactRetry&&a._reactRetry()}}';
 const clientRenderFunction =
-  'function $RX(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.hash=c),d&&(a.msg=d),e&&(a.stack=e),b._reactRetry&&b._reactRetry())}';
+  'function $RX(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),b._reactRetry&&b._reactRetry())}';
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
   completeSegmentFunction + ';$RS("',
@@ -1957,7 +2044,7 @@ export function writeClientRenderBoundaryInstruction(
   destination: Destination,
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
-  errorHash: ?string,
+  errorDigest: ?string,
   errorMessage?: string,
   errorComponentStack?: string,
 ): boolean {
@@ -1979,11 +2066,11 @@ export function writeClientRenderBoundaryInstruction(
 
   writeChunk(destination, boundaryID);
   writeChunk(destination, clientRenderScript1A);
-  if (errorHash || errorMessage || errorComponentStack) {
+  if (errorDigest || errorMessage || errorComponentStack) {
     writeChunk(destination, clientRenderErrorScriptArgInterstitial);
     writeChunk(
       destination,
-      stringToChunk(escapeJSStringsForInstructionScripts(errorHash || '')),
+      stringToChunk(escapeJSStringsForInstructionScripts(errorDigest || '')),
     );
   }
   if (errorMessage || errorComponentStack) {

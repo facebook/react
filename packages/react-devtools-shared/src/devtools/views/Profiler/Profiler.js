@@ -113,9 +113,7 @@ function Profiler(_: {||}) {
         <div className={styles.LeftColumn}>
           <div className={styles.Toolbar}>
             <RecordToggle disabled={!supportsProfiling} />
-            <ReloadAndProfileButton
-              disabled={selectedTabID === 'timeline' || !supportsProfiling}
-            />
+            <ReloadAndProfileButton disabled={!supportsProfiling} />
             <ClearProfilingDataButton />
             <ProfilingImportExportButtons />
             <div className={styles.VRule} />

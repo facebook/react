@@ -727,7 +727,6 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('new value');
   });
 
-  // @gate enableSuspenseLayoutEffectSemantics
   it('re-fires layout effects when re-showing Suspense', () => {
     function TextWithLayout(props) {
       Scheduler.unstable_yieldValue(props.text);

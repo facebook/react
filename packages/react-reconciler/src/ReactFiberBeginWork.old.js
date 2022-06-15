@@ -33,7 +33,7 @@ import type {
   CacheComponentState,
   SpawnedCachePool,
 } from './ReactFiberCacheComponent.old';
-import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {RootState} from './ReactFiberRoot.old';
 import {
   enableSuspenseAvoidThisFallback,
@@ -100,7 +100,6 @@ import {
   enableScopeAPI,
   enableCache,
   enableLazyContextPropagation,
-  enableSuspenseLayoutEffectSemantics,
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableLegacyHidden,
@@ -131,7 +130,7 @@ import {
   cloneUpdateQueue,
   initializeUpdateQueue,
   enqueueCapturedUpdate,
-} from './ReactUpdateQueue.old';
+} from './ReactFiberClassUpdateQueue.old';
 import {
   NoLane,
   NoLanes,
@@ -234,9 +233,14 @@ import {
   getWorkInProgressRoot,
   pushRenderLanes,
 } from './ReactFiberWorkLoop.old';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.old';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent.old';
-import {createCapturedValue} from './ReactCapturedValue';
+import {
+  createCapturedValue,
+  createCapturedValueAtFiber,
+  type CapturedValue,
+} from './ReactCapturedValue';
 import {createClassErrorUpdate} from './ReactFiberThrow.old';
 import is from 'shared/objectIs';
 import {
@@ -253,6 +257,7 @@ import {
   getOffscreenDeferredCache,
   getSuspendedTransitions,
 } from './ReactFiberTransition.old';
+import {pushTracingMarker} from './ReactFiberTracingMarkerComponent.old';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -882,6 +887,7 @@ function updateTracingMarkerComponent(
     return null;
   }
 
+  pushTracingMarker(workInProgress);
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
@@ -937,9 +943,7 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   ) {
     // Schedule a Ref effect
     workInProgress.flags |= Ref;
-    if (enableSuspenseLayoutEffectSemantics) {
-      workInProgress.flags |= RefStatic;
-    }
+    workInProgress.flags |= RefStatic;
   }
 }
 
@@ -1073,7 +1077,7 @@ function updateClassComponent(
         // Schedule the error boundary to re-render using updated state
         const update = createClassErrorUpdate(
           workInProgress,
-          createCapturedValue(error, workInProgress),
+          createCapturedValueAtFiber(error, workInProgress),
           lane,
         );
         enqueueCapturedUpdate(workInProgress, update);
@@ -1321,10 +1325,13 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     if (workInProgress.flags & ForceClientRender) {
       // Something errored during a previous attempt to hydrate the shell, so we
       // forced a client render.
-      const recoverableError = new Error(
-        'There was an error while hydrating. Because the error happened outside ' +
-          'of a Suspense boundary, the entire root will switch to ' +
-          'client rendering.',
+      const recoverableError = createCapturedValueAtFiber(
+        new Error(
+          'There was an error while hydrating. Because the error happened outside ' +
+            'of a Suspense boundary, the entire root will switch to ' +
+            'client rendering.',
+        ),
+        workInProgress,
       );
       return mountHostRootWithoutHydrating(
         current,
@@ -1334,9 +1341,12 @@ function updateHostRoot(current, workInProgress, renderLanes) {
         recoverableError,
       );
     } else if (nextChildren !== prevChildren) {
-      const recoverableError = new Error(
-        'This root received an early update, before anything was able ' +
-          'hydrate. Switched the entire root to client rendering.',
+      const recoverableError = createCapturedValueAtFiber(
+        new Error(
+          'This root received an early update, before anything was able ' +
+            'hydrate. Switched the entire root to client rendering.',
+        ),
+        workInProgress,
       );
       return mountHostRootWithoutHydrating(
         current,
@@ -1399,7 +1409,7 @@ function mountHostRootWithoutHydrating(
   workInProgress: Fiber,
   nextChildren: ReactNodeList,
   renderLanes: Lanes,
-  recoverableError: Error,
+  recoverableError: CapturedValue<mixed>,
 ) {
   // Revert to client rendering.
   resetHydrationState();
@@ -2428,7 +2438,7 @@ function retrySuspenseComponentWithoutHydrating(
   current: Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
-  recoverableError: Error | null,
+  recoverableError: CapturedValue<mixed> | null,
 ) {
   // Falling back to client rendering. Because this has performance
   // implications, it's considered a recoverable error, even though the user
@@ -2573,22 +2583,32 @@ function updateDehydratedSuspenseComponent(
       // This boundary is in a permanent fallback state. In this case, we'll never
       // get an update and we'll never be able to hydrate the final content. Let's just try the
       // client side render instead.
-      const {errorMessage} = getSuspenseInstanceFallbackErrorDetails(
-        suspenseInstance,
-      );
-      const error = errorMessage
-        ? // eslint-disable-next-line react-internal/prod-error-codes
-          new Error(errorMessage)
-        : new Error(
-            'The server could not finish this Suspense boundary, likely ' +
-              'due to an error during server rendering. Switched to ' +
-              'client rendering.',
-          );
+      let digest, message, stack;
+      if (__DEV__) {
+        ({digest, message, stack} = getSuspenseInstanceFallbackErrorDetails(
+          suspenseInstance,
+        ));
+      } else {
+        ({digest} = getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
+      }
+
+      let error;
+      if (message) {
+        // eslint-disable-next-line react-internal/prod-error-codes
+        error = new Error(message);
+      } else {
+        error = new Error(
+          'The server could not finish this Suspense boundary, likely ' +
+            'due to an error during server rendering. Switched to ' +
+            'client rendering.',
+        );
+      }
+      const capturedValue = createCapturedValue(error, digest, stack);
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
         renderLanes,
-        error,
+        capturedValue,
       );
     }
 
@@ -2626,7 +2646,13 @@ function updateDehydratedSuspenseComponent(
           suspenseState.retryLane = attemptHydrationAtLane;
           // TODO: Ideally this would inherit the event time of the current render
           const eventTime = NoTimestamp;
-          scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime);
+          enqueueConcurrentRenderForLane(current, attemptHydrationAtLane);
+          scheduleUpdateOnFiber(
+            root,
+            current,
+            attemptHydrationAtLane,
+            eventTime,
+          );
         } else {
           // We have already tried to ping at a higher priority than we're rendering with
           // so if we got here, we must have failed to hydrate at those levels. We must
@@ -2643,16 +2669,19 @@ function updateDehydratedSuspenseComponent(
       // skip hydration.
       // Delay having to do this as long as the suspense timeout allows us.
       renderDidSuspendDelayIfPossible();
-      return retrySuspenseComponentWithoutHydrating(
-        current,
-        workInProgress,
-        renderLanes,
+      const capturedValue = createCapturedValue(
         new Error(
           'This Suspense boundary received an update before it finished ' +
             'hydrating. This caused the boundary to switch to client rendering. ' +
             'The usual way to fix this is to wrap the original update ' +
             'in startTransition.',
         ),
+      );
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+        capturedValue,
       );
     } else if (isSuspenseInstancePending(suspenseInstance)) {
       // This component is still pending more data from the server, so we can't hydrate its
@@ -2700,14 +2729,17 @@ function updateDehydratedSuspenseComponent(
     if (workInProgress.flags & ForceClientRender) {
       // Something errored during hydration. Try again without hydrating.
       workInProgress.flags &= ~ForceClientRender;
-      return retrySuspenseComponentWithoutHydrating(
-        current,
-        workInProgress,
-        renderLanes,
+      const capturedValue = createCapturedValue(
         new Error(
           'There was an error while hydrating this Suspense boundary. ' +
             'Switched to client rendering.',
         ),
+      );
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+        capturedValue,
       );
     } else if ((workInProgress.memoizedState: null | SuspenseState) !== null) {
       // Something suspended and we should still be in dehydrated mode.
@@ -3644,6 +3676,11 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         pushCacheProvider(workInProgress, cache);
       }
       break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        pushTracingMarker(workInProgress);
+      }
     }
   }
   return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);

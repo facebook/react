@@ -226,7 +226,7 @@ export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
   // TODO: encode error for native
-  errorHash: ?string,
+  errorDigest: ?string,
   errorMessage: ?string,
   errorComponentStack: ?string,
 ): boolean {
@@ -300,7 +300,7 @@ export function writeClientRenderBoundaryInstruction(
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
   // TODO: encode error for native
-  errorHash: ?string,
+  errorDigest: ?string,
   errorMessage: ?string,
   errorComponentStack: ?string,
 ): boolean {

@@ -19,7 +19,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
-import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {
@@ -41,7 +41,6 @@ import {
   enableScopeAPI,
   enableStrictEffects,
   deletedTreeCleanUpLevel,
-  enableSuspenseLayoutEffectSemantics,
   enableUpdaterTracking,
   enableCache,
   enableTransitionTracing,
@@ -100,7 +99,7 @@ import {
   startPassiveEffectTimer,
 } from './ReactProfilerTimer.old';
 import {ConcurrentMode, NoMode, ProfileMode} from './ReactTypeOfMode';
-import {commitUpdateQueue} from './ReactUpdateQueue.old';
+import {commitUpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import {
   getPublicInstance,
   supportsMutation,
@@ -173,7 +172,6 @@ if (__DEV__) {
 
 // Used during the commit phase to track the state of the Offscreen component stack.
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
-// Only used when enableSuspenseLayoutEffectSemantics is enabled.
 let offscreenSubtreeIsHidden: boolean = false;
 let offscreenSubtreeWasHidden: boolean = false;
 
@@ -710,10 +708,7 @@ function commitLayoutEffectOnFiber(
       case FunctionComponent:
       case ForwardRef:
       case SimpleMemoComponent: {
-        if (
-          !enableSuspenseLayoutEffectSemantics ||
-          !offscreenSubtreeWasHidden
-        ) {
+        if (!offscreenSubtreeWasHidden) {
           // At this point layout effects have already been destroyed (during mutation phase).
           // This is done to prevent sibling component effects from interfering with each other,
           // e.g. a destroy function in one component should never override a ref set
@@ -1018,7 +1013,7 @@ function commitLayoutEffectOnFiber(
     }
   }
 
-  if (!enableSuspenseLayoutEffectSemantics || !offscreenSubtreeWasHidden) {
+  if (!offscreenSubtreeWasHidden) {
     if (enableScopeAPI) {
       // TODO: This is a temporary solution that allowed us to transition away
       // from React Flare on www.
@@ -1889,11 +1884,7 @@ function commitDeletionEffectsOnFiber(
       return;
     }
     case OffscreenComponent: {
-      if (
-        // TODO: Remove this dead flag
-        enableSuspenseLayoutEffectSemantics &&
-        deletedFiber.mode & ConcurrentMode
-      ) {
+      if (deletedFiber.mode & ConcurrentMode) {
         // If this offscreen component is hidden, we already unmounted it. Before
         // deleting the children, track that it's already unmounted so that we
         // don't attempt to unmount the effects again.
@@ -2309,8 +2300,14 @@ function commitMutationEffectsOnFiber(
       const offscreenFiber: Fiber = (finishedWork.child: any);
 
       if (offscreenFiber.flags & Visibility) {
+        const offscreenInstance: OffscreenInstance = offscreenFiber.stateNode;
         const newState: OffscreenState | null = offscreenFiber.memoizedState;
         const isHidden = newState !== null;
+
+        // Track the current state on the Offscreen instance so we can
+        // read it during an event
+        offscreenInstance.isHidden = isHidden;
+
         if (isHidden) {
           const wasHidden =
             offscreenFiber.alternate !== null &&
@@ -2335,11 +2332,7 @@ function commitMutationEffectsOnFiber(
     case OffscreenComponent: {
       const wasHidden = current !== null && current.memoizedState !== null;
 
-      if (
-        // TODO: Remove this dead flag
-        enableSuspenseLayoutEffectSemantics &&
-        finishedWork.mode & ConcurrentMode
-      ) {
+      if (finishedWork.mode & ConcurrentMode) {
         // Before committing the children, track on the stack whether this
         // offscreen subtree was already hidden, so that we don't unmount the
         // effects again.
@@ -2354,27 +2347,30 @@ function commitMutationEffectsOnFiber(
       commitReconciliationEffects(finishedWork);
 
       if (flags & Visibility) {
+        const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
         const offscreenBoundary: Fiber = finishedWork;
 
-        if (enableSuspenseLayoutEffectSemantics) {
-          if (isHidden) {
-            if (!wasHidden) {
-              if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
-                nextEffect = offscreenBoundary;
-                let offscreenChild = offscreenBoundary.child;
-                while (offscreenChild !== null) {
-                  nextEffect = offscreenChild;
-                  disappearLayoutEffects_begin(offscreenChild);
-                  offscreenChild = offscreenChild.sibling;
-                }
+        // Track the current state on the Offscreen instance so we can
+        // read it during an event
+        offscreenInstance.isHidden = isHidden;
+
+        if (isHidden) {
+          if (!wasHidden) {
+            if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
+              nextEffect = offscreenBoundary;
+              let offscreenChild = offscreenBoundary.child;
+              while (offscreenChild !== null) {
+                nextEffect = offscreenChild;
+                disappearLayoutEffects_begin(offscreenChild);
+                offscreenChild = offscreenChild.sibling;
               }
             }
-          } else {
-            if (wasHidden) {
-              // TODO: Move re-appear call here for symmetry?
-            }
+          }
+        } else {
+          if (wasHidden) {
+            // TODO: Move re-appear call here for symmetry?
           }
         }
 
@@ -2472,11 +2468,7 @@ function commitLayoutEffects_begin(
     const fiber = nextEffect;
     const firstChild = fiber.child;
 
-    if (
-      enableSuspenseLayoutEffectSemantics &&
-      fiber.tag === OffscreenComponent &&
-      isModernRoot
-    ) {
+    if (fiber.tag === OffscreenComponent && isModernRoot) {
       // Keep track of the current Offscreen stack's state.
       const isHidden = fiber.memoizedState !== null;
       const newOffscreenSubtreeIsHidden = isHidden || offscreenSubtreeIsHidden;

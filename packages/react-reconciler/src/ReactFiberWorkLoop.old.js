@@ -18,6 +18,7 @@ import type {EventPriority} from './ReactEventPriorities.old';
 import type {
   PendingTransitionCallbacks,
   TransitionObject,
+  MarkerTransitionObject,
   Transition,
 } from './ReactFiberTracingMarkerComponent.old';
 
@@ -105,11 +106,9 @@ import {
 import {LegacyRoot} from './ReactRootTags';
 import {
   NoFlags,
-  Placement,
   Incomplete,
   StoreConsistency,
   HostEffectMask,
-  Hydrating,
   ForceClientRender,
   BeforeMutationMask,
   MutationMask,
@@ -182,23 +181,26 @@ import {
   invokePassiveEffectUnmountInDEV,
   reportUncaughtErrorInDEV,
 } from './ReactFiberCommitWork.old';
-import {enqueueUpdate} from './ReactUpdateQueue.old';
+import {enqueueUpdate} from './ReactFiberClassUpdateQueue.old';
 import {resetContextDependencies} from './ReactFiberNewContext.old';
 import {
   resetHooksAfterThrow,
   ContextOnlyDispatcher,
   getIsUpdatingOpaqueValueInRenderPhaseInDEV,
 } from './ReactFiberHooks.old';
-import {createCapturedValue} from './ReactCapturedValue';
+import {
+  createCapturedValueAtFiber,
+  type CapturedValue,
+} from './ReactCapturedValue';
 import {
   push as pushToStack,
   pop as popFromStack,
   createCursor,
 } from './ReactFiberStack.old';
 import {
-  enqueueInterleavedUpdates,
-  hasInterleavedUpdates,
-} from './ReactFiberInterleavedUpdates.old';
+  enqueueConcurrentRenderForLane,
+  finishQueueingConcurrentUpdates,
+} from './ReactFiberConcurrentUpdates.old';
 
 import {
   markNestedUpdateScheduled,
@@ -312,10 +314,14 @@ let workInProgressRootRenderPhaseUpdatedLanes: Lanes = NoLanes;
 // Lanes that were pinged (in an interleaved event) during this render.
 let workInProgressRootPingedLanes: Lanes = NoLanes;
 // Errors that are thrown during the render phase.
-let workInProgressRootConcurrentErrors: Array<mixed> | null = null;
+let workInProgressRootConcurrentErrors: Array<
+  CapturedValue<mixed>,
+> | null = null;
 // These are errors that we recovered from without surfacing them to the UI.
 // We will log them once the tree commits.
-let workInProgressRootRecoverableErrors: Array<mixed> | null = null;
+let workInProgressRootRecoverableErrors: Array<
+  CapturedValue<mixed>,
+> | null = null;
 
 // The most recent time we committed a fallback. This lets us ensure a train
 // model where we don't commit new loading states in too quick succession.
@@ -344,6 +350,7 @@ export function addTransitionStartCallbackToPendingTransition(
       currentPendingTransitionCallbacks = {
         transitionStart: [],
         transitionComplete: null,
+        markerComplete: null,
       };
     }
 
@@ -355,6 +362,26 @@ export function addTransitionStartCallbackToPendingTransition(
   }
 }
 
+export function addMarkerCompleteCallbackToPendingTransition(
+  transition: MarkerTransitionObject,
+) {
+  if (enableTransitionTracing) {
+    if (currentPendingTransitionCallbacks === null) {
+      currentPendingTransitionCallbacks = {
+        transitionStart: null,
+        transitionComplete: null,
+        markerComplete: [],
+      };
+    }
+
+    if (currentPendingTransitionCallbacks.markerComplete === null) {
+      currentPendingTransitionCallbacks.markerComplete = [];
+    }
+
+    currentPendingTransitionCallbacks.markerComplete.push(transition);
+  }
+}
+
 export function addTransitionCompleteCallbackToPendingTransition(
   transition: TransitionObject,
 ) {
@@ -363,6 +390,7 @@ export function addTransitionCompleteCallbackToPendingTransition(
       currentPendingTransitionCallbacks = {
         transitionStart: null,
         transitionComplete: [],
+        markerComplete: null,
       };
     }
 
@@ -521,21 +549,15 @@ function requestRetryLane(fiber: Fiber) {
 }
 
 export function scheduleUpdateOnFiber(
+  root: FiberRoot,
   fiber: Fiber,
   lane: Lane,
   eventTime: number,
-): FiberRoot | null {
-  checkForNestedUpdates();
-
+) {
   if (__DEV__) {
     if (isRunningInsertionEffect) {
       console.error('useInsertionEffect must not schedule updates.');
     }
-  }
-
-  const root = markUpdateLaneFromFiberToRoot(fiber, lane);
-  if (root === null) {
-    return null;
   }
 
   if (__DEV__) {
@@ -606,8 +628,6 @@ export function scheduleUpdateOnFiber(
     }
 
     if (root === workInProgressRoot) {
-      // TODO: Consolidate with `isInterleavedUpdate` check
-
       // Received an update to a tree that's in the middle of rendering. Mark
       // that there was an interleaved update work on this root. Unless the
       // `deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
@@ -650,7 +670,6 @@ export function scheduleUpdateOnFiber(
       flushSyncCallbacksOnlyInLegacyMode();
     }
   }
-  return root;
 }
 
 export function scheduleInitialHydrationOnRoot(
@@ -673,73 +692,15 @@ export function scheduleInitialHydrationOnRoot(
   ensureRootIsScheduled(root, eventTime);
 }
 
-// This is split into a separate function so we can mark a fiber with pending
-// work without treating it as a typical update that originates from an event;
-// e.g. retrying a Suspense boundary isn't an update, but it does schedule work
-// on a fiber.
-function markUpdateLaneFromFiberToRoot(
-  sourceFiber: Fiber,
-  lane: Lane,
-): FiberRoot | null {
-  // Update the source fiber's lanes
-  sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
-  let alternate = sourceFiber.alternate;
-  if (alternate !== null) {
-    alternate.lanes = mergeLanes(alternate.lanes, lane);
-  }
-  if (__DEV__) {
-    if (
-      alternate === null &&
-      (sourceFiber.flags & (Placement | Hydrating)) !== NoFlags
-    ) {
-      warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
-    }
-  }
-  // Walk the parent path to the root and update the child lanes.
-  let node = sourceFiber;
-  let parent = sourceFiber.return;
-  while (parent !== null) {
-    parent.childLanes = mergeLanes(parent.childLanes, lane);
-    alternate = parent.alternate;
-    if (alternate !== null) {
-      alternate.childLanes = mergeLanes(alternate.childLanes, lane);
-    } else {
-      if (__DEV__) {
-        if ((parent.flags & (Placement | Hydrating)) !== NoFlags) {
-          warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
-        }
-      }
-    }
-    node = parent;
-    parent = parent.return;
-  }
-  if (node.tag === HostRoot) {
-    const root: FiberRoot = node.stateNode;
-    return root;
-  } else {
-    return null;
-  }
-}
-
-export function isInterleavedUpdate(fiber: Fiber, lane: Lane) {
+export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber) {
+  // Check if this is a render phase update. Only called by class components,
+  // which special (deprecated) behavior for UNSAFE_componentWillReceive props.
   return (
-    // TODO: Optimize slightly by comparing to root that fiber belongs to.
-    // Requires some refactoring. Not a big deal though since it's rare for
-    // concurrent apps to have more than a single root.
-    (workInProgressRoot !== null ||
-      // If the interleaved updates queue hasn't been cleared yet, then
-      // we should treat this as an interleaved update, too. This is also a
-      // defensive coding measure in case a new update comes in between when
-      // rendering has finished and when the interleaved updates are transferred
-      // to the main queue.
-      hasInterleavedUpdates()) &&
-    (fiber.mode & ConcurrentMode) !== NoMode &&
-    // If this is a render phase update (i.e. UNSAFE_componentWillReceiveProps),
-    // then don't treat this as an interleaved update. This pattern is
-    // accompanied by a warning but we haven't fully deprecated it yet. We can
-    // remove once the deferRenderPhaseUpdateToNextBatch flag is enabled.
-    (deferRenderPhaseUpdateToNextBatch ||
-      (executionContext & RenderContext) === NoContext)
+    // TODO: Remove outdated deferRenderPhaseUpdateToNextBatch experiment. We
+    // decided not to enable it.
+    (!deferRenderPhaseUpdateToNextBatch ||
+      (fiber.mode & ConcurrentMode) === NoMode) &&
+    (executionContext & RenderContext) !== NoContext
   );
 }
 
@@ -1065,7 +1026,7 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
   return exitStatus;
 }
 
-export function queueRecoverableErrors(errors: Array<mixed>) {
+export function queueRecoverableErrors(errors: Array<CapturedValue<mixed>>) {
   if (workInProgressRootRecoverableErrors === null) {
     workInProgressRootRecoverableErrors = errors;
   } else {
@@ -1541,7 +1502,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressRootConcurrentErrors = null;
   workInProgressRootRecoverableErrors = null;
 
-  enqueueInterleavedUpdates();
+  finishQueueingConcurrentUpdates();
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
@@ -1696,7 +1657,7 @@ export function renderDidSuspendDelayIfPossible(): void {
   }
 }
 
-export function renderDidError(error: mixed) {
+export function renderDidError(error: CapturedValue<mixed>) {
   if (workInProgressRootExitStatus !== RootSuspendedWithDelay) {
     workInProgressRootExitStatus = RootErrored;
   }
@@ -2017,7 +1978,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
 
 function commitRoot(
   root: FiberRoot,
-  recoverableErrors: null | Array<mixed>,
+  recoverableErrors: null | Array<CapturedValue<mixed>>,
   transitions: Array<Transition> | null,
 ) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
@@ -2044,7 +2005,7 @@ function commitRoot(
 
 function commitRootImpl(
   root: FiberRoot,
-  recoverableErrors: null | Array<mixed>,
+  recoverableErrors: null | Array<CapturedValue<mixed>>,
   transitions: Array<Transition> | null,
   renderPriorityLevel: EventPriority,
 ) {
@@ -2335,7 +2296,9 @@ function commitRootImpl(
     const onRecoverableError = root.onRecoverableError;
     for (let i = 0; i < recoverableErrors.length; i++) {
       const recoverableError = recoverableErrors[i];
-      onRecoverableError(recoverableError);
+      const componentStack = recoverableError.stack;
+      const digest = recoverableError.digest;
+      onRecoverableError(recoverableError.value, {componentStack, digest});
     }
   }
 
@@ -2615,11 +2578,10 @@ function captureCommitPhaseErrorOnRoot(
   sourceFiber: Fiber,
   error: mixed,
 ) {
-  const errorInfo = createCapturedValue(error, sourceFiber);
+  const errorInfo = createCapturedValueAtFiber(error, sourceFiber);
   const update = createRootErrorUpdate(rootFiber, errorInfo, (SyncLane: Lane));
-  enqueueUpdate(rootFiber, update, (SyncLane: Lane));
+  const root = enqueueUpdate(rootFiber, update, (SyncLane: Lane));
   const eventTime = requestEventTime();
-  const root = markUpdateLaneFromFiberToRoot(rootFiber, (SyncLane: Lane));
   if (root !== null) {
     markRootUpdated(root, SyncLane, eventTime);
     ensureRootIsScheduled(root, eventTime);
@@ -2661,15 +2623,14 @@ export function captureCommitPhaseError(
         (typeof instance.componentDidCatch === 'function' &&
           !isAlreadyFailedLegacyErrorBoundary(instance))
       ) {
-        const errorInfo = createCapturedValue(error, sourceFiber);
+        const errorInfo = createCapturedValueAtFiber(error, sourceFiber);
         const update = createClassErrorUpdate(
           fiber,
           errorInfo,
           (SyncLane: Lane),
         );
-        enqueueUpdate(fiber, update, (SyncLane: Lane));
+        const root = enqueueUpdate(fiber, update, (SyncLane: Lane));
         const eventTime = requestEventTime();
-        const root = markUpdateLaneFromFiberToRoot(fiber, (SyncLane: Lane));
         if (root !== null) {
           markRootUpdated(root, SyncLane, eventTime);
           ensureRootIsScheduled(root, eventTime);
@@ -2760,7 +2721,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   }
   // TODO: Special case idle priority?
   const eventTime = requestEventTime();
-  const root = markUpdateLaneFromFiberToRoot(boundaryFiber, retryLane);
+  const root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   if (root !== null) {
     markRootUpdated(root, retryLane, eventTime);
     ensureRootIsScheduled(root, eventTime);
@@ -2831,7 +2792,7 @@ function jnd(timeElapsed: number) {
     : ceil(timeElapsed / 1960) * 1960;
 }
 
-function checkForNestedUpdates() {
+export function throwIfInfiniteUpdateLoopDetected() {
   if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
     nestedUpdateCount = 0;
     rootWithNestedUpdates = null;
@@ -2931,7 +2892,7 @@ function invokeEffectsInDev(
 }
 
 let didWarnStateUpdateForNotYetMountedComponent: Set<string> | null = null;
-function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber) {
+export function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber: Fiber) {
   if (__DEV__) {
     if ((executionContext & RenderContext) !== NoContext) {
       // We let the other warning about render phase updates deal with this one.

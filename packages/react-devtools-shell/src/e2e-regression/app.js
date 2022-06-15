@@ -22,4 +22,10 @@ function mountTestApp() {
 mountTestApp();
 
 // ReactDOM Test Selector APIs used by Playwright e2e tests
-window.parent.REACT_DOM_APP = ReactDOM;
+// If they don't exist, we mock them
+window.parent.REACT_DOM_APP = {
+  createTestNameSelector: name => `[data-testname="${name}"]`,
+  findAllNodes: (container, nodes) =>
+    container.querySelectorAll(nodes.join(' ')),
+  ...ReactDOM,
+};

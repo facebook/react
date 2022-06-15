@@ -32,7 +32,6 @@ export const {
   enableLazyContextPropagation,
   enableSyncDefaultUpdates,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableClientRenderFallbackOnTextMismatch,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -48,7 +47,6 @@ export const enableProfilerNestedUpdateScheduledHook =
   __PROFILE__ && dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 export const enableUpdaterTracking = __PROFILE__;
 
-export const enableSuspenseLayoutEffectSemantics = true;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;

@@ -30,7 +30,6 @@ import {
   enableUseRefAccessWarning,
   enableStrictEffects,
   enableLazyContextPropagation,
-  enableSuspenseLayoutEffectSemantics,
   enableUseMutableSource,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
@@ -87,7 +86,6 @@ import {
   requestUpdateLane,
   requestEventTime,
   markSkippedUpdateLanes,
-  isInterleavedUpdate,
 } from './ReactFiberWorkLoop.old';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -111,14 +109,18 @@ import {
   createUpdate as createLegacyQueueUpdate,
   enqueueUpdate as enqueueLegacyQueueUpdate,
   entangleTransitions as entangleLegacyQueueTransitions,
-} from './ReactUpdateQueue.old';
-import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
+} from './ReactFiberClassUpdateQueue.old';
+import {
+  enqueueConcurrentHookUpdate,
+  enqueueConcurrentHookUpdateAndEagerlyBailout,
+  enqueueConcurrentRenderForLane,
+} from './ReactFiberConcurrentUpdates.old';
 import {getTreeId} from './ReactFiberTreeContext.old';
 import {now} from './Scheduler';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
-type Update<S, A> = {|
+export type Update<S, A> = {|
   lane: Lane,
   action: A,
   hasEagerState: boolean,
@@ -1497,7 +1499,10 @@ function checkIfSnapshotChanged(inst) {
 }
 
 function forceStoreRerender(fiber) {
-  scheduleUpdateOnFiber(fiber, SyncLane, NoTimestamp);
+  const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+  if (root !== null) {
+    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+  }
 }
 
 function mountState<S>(
@@ -1748,10 +1753,7 @@ function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  let fiberFlags: Flags = UpdateEffect;
-  if (enableSuspenseLayoutEffectSemantics) {
-    fiberFlags |= LayoutStaticEffect;
-  }
+  let fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
   if (
     __DEV__ &&
     enableStrictEffects &&
@@ -1818,10 +1820,7 @@ function mountImperativeHandle<T>(
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
-  let fiberFlags: Flags = UpdateEffect;
-  if (enableSuspenseLayoutEffectSemantics) {
-    fiberFlags |= LayoutStaticEffect;
-  }
+  let fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
   if (
     __DEV__ &&
     enableStrictEffects &&
@@ -2153,10 +2152,13 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
     switch (provider.tag) {
       case CacheComponent:
       case HostRoot: {
+        // Schedule an update on the cache boundary to trigger a refresh.
         const lane = requestUpdateLane(provider);
         const eventTime = requestEventTime();
-        const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+        const refreshUpdate = createLegacyQueueUpdate(eventTime, lane);
+        const root = enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         if (root !== null) {
+          scheduleUpdateOnFiber(root, provider, lane, eventTime);
           entangleLegacyQueueTransitions(root, provider, lane);
         }
 
@@ -2170,13 +2172,10 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
           seededCache.data.set(seedKey, seedValue);
         }
 
-        // Schedule an update on the cache boundary to trigger a refresh.
-        const refreshUpdate = createLegacyQueueUpdate(eventTime, lane);
         const payload = {
           cache: seededCache,
         };
         refreshUpdate.payload = payload;
-        enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         return;
       }
     }
@@ -2213,10 +2212,10 @@ function dispatchReducerAction<S, A>(
   if (isRenderPhaseUpdate(fiber)) {
     enqueueRenderPhaseUpdate(queue, update);
   } else {
-    enqueueUpdate(fiber, queue, update, lane);
-    const eventTime = requestEventTime();
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitionUpdate(root, queue, lane);
     }
   }
@@ -2252,8 +2251,6 @@ function dispatchSetState<S, A>(
   if (isRenderPhaseUpdate(fiber)) {
     enqueueRenderPhaseUpdate(queue, update);
   } else {
-    enqueueUpdate(fiber, queue, update, lane);
-
     const alternate = fiber.alternate;
     if (
       fiber.lanes === NoLanes &&
@@ -2283,6 +2280,13 @@ function dispatchSetState<S, A>(
             // It's still possible that we'll need to rebase this update later,
             // if the component re-renders for a different reason and by that
             // time the reducer has changed.
+            // TODO: Do we still need to entangle transitions in this case?
+            enqueueConcurrentHookUpdateAndEagerlyBailout(
+              fiber,
+              queue,
+              update,
+              lane,
+            );
             return;
           }
         } catch (error) {
@@ -2294,9 +2298,11 @@ function dispatchSetState<S, A>(
         }
       }
     }
-    const eventTime = requestEventTime();
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitionUpdate(root, queue, lane);
     }
   }
@@ -2331,38 +2337,7 @@ function enqueueRenderPhaseUpdate<S, A>(
   queue.pending = update;
 }
 
-function enqueueUpdate<S, A>(
-  fiber: Fiber,
-  queue: UpdateQueue<S, A>,
-  update: Update<S, A>,
-  lane: Lane,
-) {
-  if (isInterleavedUpdate(fiber, lane)) {
-    const interleaved = queue.interleaved;
-    if (interleaved === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-      // At the end of the current render, this queue's interleaved updates will
-      // be transferred to the pending queue.
-      pushInterleavedQueue(queue);
-    } else {
-      update.next = interleaved.next;
-      interleaved.next = update;
-    }
-    queue.interleaved = update;
-  } else {
-    const pending = queue.pending;
-    if (pending === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-    } else {
-      update.next = pending.next;
-      pending.next = update;
-    }
-    queue.pending = update;
-  }
-}
-
+// TODO: Move to ReactFiberConcurrentUpdates?
 function entangleTransitionUpdate<S, A>(
   root: FiberRoot,
   queue: UpdateQueue<S, A>,

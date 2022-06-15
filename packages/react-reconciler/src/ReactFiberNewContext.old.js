@@ -15,7 +15,7 @@ import type {
 } from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.old';
 import type {Lanes} from './ReactFiberLane.old';
-import type {SharedQueue} from './ReactUpdateQueue.old';
+import type {SharedQueue} from './ReactFiberClassUpdateQueue.old';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.old';
@@ -39,7 +39,7 @@ import {
 } from './ReactFiberFlags';
 
 import is from 'shared/objectIs';
-import {createUpdate, ForceUpdate} from './ReactUpdateQueue.old';
+import {createUpdate, ForceUpdate} from './ReactFiberClassUpdateQueue.old';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
 import {
   enableLazyContextPropagation,

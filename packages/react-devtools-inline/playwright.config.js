@@ -18,9 +18,10 @@ const config = {
     react_version: process.env.REACT_VERSION
       ? semver.coerce(process.env.REACT_VERSION).version
       : reactVersion,
+    trace: 'retain-on-failure',
   },
   // Some of our e2e tests can be flaky. Retry tests to make sure the error isn't transient
-  retries: 2,
+  retries: 3,
 };
 
 module.exports = config;

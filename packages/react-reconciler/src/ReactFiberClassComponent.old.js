@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
-import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {Flags} from './ReactFiberFlags';
 
 import * as React from 'react';
@@ -27,7 +27,6 @@ import {
   warnAboutDeprecatedLifecycles,
   enableStrictEffects,
   enableLazyContextPropagation,
-  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -58,7 +57,7 @@ import {
   ForceUpdate,
   initializeUpdateQueue,
   cloneUpdateQueue,
-} from './ReactUpdateQueue.old';
+} from './ReactFiberClassUpdateQueue.old';
 import {NoLanes} from './ReactFiberLane.old';
 import {
   cacheContext,
@@ -215,9 +214,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -250,9 +249,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -284,9 +283,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -908,10 +907,7 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
-    let fiberFlags: Flags = Update;
-    if (enableSuspenseLayoutEffectSemantics) {
-      fiberFlags |= LayoutStatic;
-    }
+    let fiberFlags: Flags = Update | LayoutStatic;
     if (
       __DEV__ &&
       enableStrictEffects &&
@@ -989,10 +985,7 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      let fiberFlags: Flags = Update;
-      if (enableSuspenseLayoutEffectSemantics) {
-        fiberFlags |= LayoutStatic;
-      }
+      let fiberFlags: Flags = Update | LayoutStatic;
       if (
         __DEV__ &&
         enableStrictEffects &&
@@ -1043,10 +1036,7 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
-      let fiberFlags: Flags = Update;
-      if (enableSuspenseLayoutEffectSemantics) {
-        fiberFlags |= LayoutStatic;
-      }
+      let fiberFlags: Flags = Update | LayoutStatic;
       if (
         __DEV__ &&
         enableStrictEffects &&
@@ -1060,10 +1050,7 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      let fiberFlags: Flags = Update;
-      if (enableSuspenseLayoutEffectSemantics) {
-        fiberFlags |= LayoutStatic;
-      }
+      let fiberFlags: Flags = Update | LayoutStatic;
       if (
         __DEV__ &&
         enableStrictEffects &&
