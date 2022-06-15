@@ -354,13 +354,13 @@ const hashImportsPlugin = {
  * Traverse the module graph upwards to find non client
  * components that import the current module.
  */
-function isDirectImportInServer(currentMod, originalMod) {
+function isDirectImportInServer(originalMod, currentMod) {
   // TODO: this should use recursion in any module that exports
   // the original one, not only in full facade files.
-  if (!originalMod || (currentMod.meta || {}).isFacade) {
-    return Array.from(currentMod.importers).some(importer =>
+  if (!currentMod || (currentMod.meta || {}).isFacade) {
+    return Array.from((currentMod || originalMod).importers).some(importer =>
       // eslint-disable-next-line no-unused-vars
-      isDirectImportInServer(importer, originalMod || currentMod),
+      isDirectImportInServer(originalMod, importer),
     );
   }
 
