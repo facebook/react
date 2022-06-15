@@ -466,6 +466,8 @@ function augmentModuleGraph(
       imports.push({
         action, // 'import' or 'export'
         variables: variables // [['originalName', 'alias']]
+          .trim()
+          .replace(/^[^{*]/, 'default as $&')
           .replace(/[{}]/gm, '')
           .trim()
           .split(/\s*,\s*/m)
