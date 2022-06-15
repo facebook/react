@@ -25,6 +25,8 @@ function createDrainHandler(destination, request) {
 
 type Options = {
   onError?: (error: mixed) => void,
+  context?: Array<[string, ServerContextJSONValue]>,
+  identifierPrefix?: string,
 };
 
 type PipeableStream = {|
@@ -34,7 +36,6 @@ type PipeableStream = {|
 function renderToPipeableStream(
   model: ReactModel,
   options?: Options,
-  context?: Array<[string, ServerContextJSONValue]>,
 ): PipeableStream {
   const request = createRequest(
     // Wrap root in a dummy element that simply adds a flag
@@ -50,7 +51,8 @@ function renderToPipeableStream(
     },
     {}, // Manifest, not used
     options ? options.onError : undefined,
-    context,
+    options ? options.context : undefined,
+    options ? options.identifierPrefix : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);

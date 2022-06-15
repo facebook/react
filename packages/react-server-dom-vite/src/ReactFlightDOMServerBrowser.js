@@ -20,12 +20,13 @@ import {
 
 type Options = {
   onError?: (error: mixed) => void,
+  context?: Array<[string, ServerContextJSONValue]>,
+  identifierPrefix?: string,
 };
 
 function renderToReadableStream(
   model: ReactModel,
   options?: Options,
-  context?: Array<[string, ServerContextJSONValue]>,
 ): ReadableStream {
   const request = createRequest(
     // Wrap root in a dummy element that simply adds a flag
@@ -41,7 +42,8 @@ function renderToReadableStream(
     },
     {}, // Manifest, not used
     options ? options.onError : undefined,
-    context,
+    options ? options.context : undefined,
+    options ? options.identifierPrefix : undefined,
   );
   const stream = new ReadableStream(
     {
