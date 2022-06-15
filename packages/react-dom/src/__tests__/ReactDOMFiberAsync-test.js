@@ -619,6 +619,44 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling
+    it('Should re-use scheduled rAF, not cancel and schedule anew', () => {
+      let setState = null;
+      let counterRef = null;
+      function Counter() {
+        const [count, setCount] = React.useState(0);
+        const ref = React.useRef();
+        setState = setCount;
+        counterRef = ref;
+        Scheduler.unstable_yieldValue('Count: ' + count);
+        return <p ref={ref}>Count: {count}</p>;
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      act(() => {
+        root.render(<Counter />);
+      });
+      expect(Scheduler).toHaveYielded(['Count: 0']);
+
+      window.event = undefined;
+      setState(1);
+      // Unknown updates should schedule a rAF.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+      const firstRaf = global.requestAnimationFrameQueue[0];
+
+      setState(2);
+      // Default updates after unknown should re-use the scheduled rAF.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
+      const secondRaf = global.requestAnimationFrameQueue[0];
+      expect(firstRaf).toBe(secondRaf);
+
+      expect(Scheduler).toHaveYielded([]);
+      expect(counterRef.current.textContent).toBe('Count: 0');
+      global.flushRequestAnimationFrameQueue();
+      expect(Scheduler).toHaveYielded(['Count: 2']);
+      expect(counterRef.current.textContent).toBe('Count: 2');
+    });
+
+    // @gate enableFrameEndScheduling
     it('Default update followed by an unknown update is batched, scheduled in a rAF', () => {
       let setState = null;
       let counterRef = null;
