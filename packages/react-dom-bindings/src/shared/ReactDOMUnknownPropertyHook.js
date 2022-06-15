@@ -224,6 +224,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'disableRemotePlayback':
           case 'formNoValidate':
           case 'hidden':
+          case 'inert':
           case 'loop':
           case 'noModule':
           case 'noValidate':

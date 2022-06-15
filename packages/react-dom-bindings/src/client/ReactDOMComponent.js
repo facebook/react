@@ -723,6 +723,7 @@ function setProp(
     case 'disableRemotePlayback':
     case 'formNoValidate':
     case 'hidden':
+    case 'inert':
     case 'loop':
     case 'noModule':
     case 'noValidate':
