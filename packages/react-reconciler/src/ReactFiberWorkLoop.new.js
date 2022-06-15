@@ -925,9 +925,13 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     if (
       enableFrameEndScheduling &&
       newCallbackPriority === DefaultLane &&
+      existingCallbackNode !== null &&
+      // TODO: We can't expose the rafNode here,
+      // but how do we know the rAF is not scheduled?
+      existingCallbackNode.rafNode == null &&
       root.hasUnknownUpdates
     ) {
-      // Do nothing, we need to cancel the existing default task and schedule a rAF.
+      // Do nothing, we need to schedule a new rAF.
     } else {
       // The priority hasn't changed. We can reuse the existing task. Exit.
       return;
@@ -940,8 +944,9 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       enableFrameEndScheduling &&
       supportsFrameAlignedTask &&
       existingCallbackNode != null &&
-      // TODO: is there a better check for callbackNode type?
-      existingCallbackNode.frameNode != null
+      // TODO: we can't expose the scheduler node here,
+      // but how do we know we need to cancel with the host config method?
+      existingCallbackNode.schedulerNode != null
     ) {
       cancelFrameAlignedTask(existingCallbackNode);
     } else {
