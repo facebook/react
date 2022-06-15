@@ -279,4 +279,202 @@ describe('ReactInteractionTracing', () => {
       ]);
     });
   });
+
+  // @gate enableTransitionTracing
+  it('should correctly trace multiple separate root interactions', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    let navigateToPageTwo;
+    let showTextFn;
+    function App() {
+      const [navigate, setNavigate] = useState(false);
+      const [showText, setShowText] = useState(false);
+
+      navigateToPageTwo = () => {
+        setNavigate(true);
+      };
+
+      showTextFn = () => {
+        setShowText(true);
+      };
+
+      return (
+        <div>
+          {navigate ? (
+            <>
+              {showText ? (
+                <Suspense fallback={<Text text="Show Text Loading..." />}>
+                  <AsyncText text="Show Text" />
+                </Suspense>
+              ) : null}
+              <Suspense
+                fallback={<Text text="Loading..." />}
+                name="suspense page">
+                <AsyncText text="Page Two" />
+              </Suspense>
+            </>
+          ) : (
+            <Text text="Page One" />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot({transitionCallbacks});
+    await act(async () => {
+      root.render(<App />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield(['Page One']);
+    });
+
+    await act(async () => {
+      startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Page Two]',
+        'Loading...',
+        'onTransitionStart(page transition, 1000)',
+      ]);
+
+      await resolveText('Page Two');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'Page Two',
+        'onTransitionComplete(page transition, 1000, 2000)',
+      ]);
+
+      startTransition(() => showTextFn(), {name: 'text transition'});
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Show Text]',
+        'Show Text Loading...',
+        'Page Two',
+        'onTransitionStart(text transition, 2000)',
+      ]);
+
+      await resolveText('Show Text');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'Show Text',
+        'onTransitionComplete(text transition, 2000, 3000)',
+      ]);
+    });
+  });
+
+  // @gate enableTransitionTracing
+  it('should correctly trace multiple intertwined root interactions', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+    let navigateToPageTwo;
+    let showTextFn;
+    function App() {
+      const [navigate, setNavigate] = useState(false);
+      const [showText, setShowText] = useState(false);
+      navigateToPageTwo = () => {
+        setNavigate(true);
+      };
+
+      showTextFn = () => {
+        setShowText(true);
+      };
+
+      return (
+        <div>
+          {navigate ? (
+            <>
+              {showText ? (
+                <Suspense fallback={<Text text="Show Text Loading..." />}>
+                  <AsyncText text="Show Text" />
+                </Suspense>
+              ) : null}
+              <Suspense
+                fallback={<Text text="Loading..." />}
+                name="suspense page">
+                <AsyncText text="Page Two" />
+              </Suspense>
+            </>
+          ) : (
+            <Text text="Page One" />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot({transitionCallbacks});
+    await act(async () => {
+      root.render(<App />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield(['Page One']);
+    });
+
+    await act(async () => {
+      startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Page Two]',
+        'Loading...',
+        'onTransitionStart(page transition, 1000)',
+      ]);
+    });
+
+    await act(async () => {
+      startTransition(() => showTextFn(), {name: 'show text'});
+
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Show Text]',
+        'Show Text Loading...',
+        'Suspend [Page Two]',
+        'Loading...',
+        'onTransitionStart(show text, 2000)',
+      ]);
+    });
+
+    await act(async () => {
+      await resolveText('Page Two');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Page Two',
+        'onTransitionComplete(page transition, 1000, 3000)',
+      ]);
+
+      await resolveText('Show Text');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Show Text',
+        'onTransitionComplete(show text, 2000, 4000)',
+      ]);
+    });
+  });
 });

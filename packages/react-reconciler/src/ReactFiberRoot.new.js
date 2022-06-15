@@ -45,8 +45,13 @@ export type RootState = {
   element: any,
   isDehydrated: boolean,
   cache: Cache,
-  pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
-  transitions: Set<Transition> | null,
+  // Transitions on the root can be represented as a bunch of tracing markers.
+  // Each entangled group of transitions can be treated as a tracing marker.
+  // It will have a set of pending suspense boundaries. These transitions
+  // are considered complete when the pending suspense boundaries set is
+  // empty. We can represent this as a Map of transitions to suspense
+  // boundary sets
+  incompleteTransitions: Map<Transition, PendingSuspenseBoundaries> | null,
 };
 
 function FiberRootNode(
@@ -189,8 +194,7 @@ export function createFiberRoot(
       element: initialChildren,
       isDehydrated: hydrate,
       cache: initialCache,
-      transitions: null,
-      pendingSuspenseBoundaries: null,
+      incompleteTransitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
   } else {
@@ -198,8 +202,7 @@ export function createFiberRoot(
       element: initialChildren,
       isDehydrated: hydrate,
       cache: (null: any), // not enabled yet
-      transitions: null,
-      pendingSuspenseBoundaries: null,
+      incompleteTransitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
   }
