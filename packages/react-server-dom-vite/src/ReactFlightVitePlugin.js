@@ -351,16 +351,51 @@ const hashImportsPlugin = {
  * A client module should behave as a client boundary
  * if it is imported by the server before encountering
  * another boundary in the process.
- * Traverse the module graph upwards to find non client
- * components that import the current module.
+ * This traverses the module graph upwards to find non client
+ * components that import the `originalMod`.
+ *
+ * The `accModInfo` represents the exported members from the
+ * `originalMod` but renamed accordingly to all the intermediate/facade
+ * files in the import chain from the `originalMod` to every parent importer.
  */
-function isDirectImportInServer(originalMod, currentMod) {
+function isDirectImportInServer(originalMod, currentMod, accModInfo) {
   // TODO: this should use recursion in any module that exports
   // the original one, not only in full facade files.
   if (!currentMod || (currentMod.meta || {}).isFacade) {
+    if (!accModInfo && originalMod.meta && originalMod.meta.namedExports) {
+      // First iteration in the recursion, initialize the
+      // acumulator with data from the original module.
+      accModInfo = {
+        file: originalMod.file,
+        exports: originalMod.meta.namedExports,
+      };
+    }
+
+    if (currentMod && accModInfo) {
+      // Update accumulator in subsequent iterations with
+      // whatever the current module is re-exporting.
+
+      const lastModExports = accModInfo.exports;
+      const lastModImports = currentMod.meta.imports.filter(
+        importMeta =>
+          importMeta.action === 'export' && importMeta.from === accModInfo.file,
+      );
+
+      accModInfo = {file: currentMod.file, exports: []};
+      lastModImports.forEach(mod => {
+        mod.variables.forEach(([name, alias]) => {
+          if (name === '*' && !alias) {
+            accModInfo.exports.push(...lastModExports);
+          } else {
+            accModInfo.exports.push(alias || name);
+          }
+        });
+      });
+    }
+
     return Array.from((currentMod || originalMod).importers).some(importer =>
       // eslint-disable-next-line no-unused-vars
-      isDirectImportInServer(originalMod, importer),
+      isDirectImportInServer(originalMod, importer, accModInfo),
     );
   }
 
@@ -378,17 +413,12 @@ function isDirectImportInServer(originalMod, currentMod) {
   // However, due to the lack of tree-shaking in the dev module graph,
   // we need to manually make sure this module is importing something from
   // the original module before marking it as client boundary.
-  // -- TODO: this only checks namedExports right now. It should
-  // consider default exports and variable renaming in facade modules.
-  return currentMod.meta.imports.some(imp => {
-    return (
+  return currentMod.meta.imports.some(
+    imp =>
       imp.action === 'import' &&
-      (imp.from === originalMod.file ||
-        (imp.variables || []).some(([name]) =>
-          originalMod.meta.namedExports.includes(name),
-        ))
-    );
-  });
+      imp.from === accModInfo.file &&
+      (imp.variables || []).some(([name]) => accModInfo.exports.includes(name)),
+  );
 }
 
 function resolveModPath(
