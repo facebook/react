@@ -1442,7 +1442,6 @@ function useMutableSource<Source, Snapshot>(
         setSnapshot(maybeNewSnapshot);
 
         const lane = requestUpdateLane(fiber);
-        // TODO: What to do about isUnknownEventPriority
         markRootMutableRead(root, lane);
       }
       // If the source mutated between render and now,
@@ -1463,7 +1462,6 @@ function useMutableSource<Source, Snapshot>(
 
         // Record a pending mutable source update with the same expiration time.
         const lane = requestUpdateLane(fiber);
-        // TODO: What to do about isUnknownEventPriority
         markRootMutableRead(root, lane);
       } catch (error) {
         // A selector might throw after a source mutation.

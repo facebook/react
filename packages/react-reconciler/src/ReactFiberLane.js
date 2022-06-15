@@ -500,11 +500,7 @@ export function includesBlockingLane(root: FiberRoot, lanes: Lanes): boolean {
     allowConcurrentByDefault &&
     (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
   ) {
-    if (
-      enableFrameEndScheduling &&
-      (lanes & DefaultLane) !== NoLanes &&
-      root.hasUnknownUpdates
-    ) {
+    if (enableFrameEndScheduling && (lanes & DefaultLane) !== NoLanes) {
       // Unknown updates should flush synchronously, even in concurrent by default.
       return true;
     }
