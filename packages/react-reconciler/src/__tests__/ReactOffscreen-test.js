@@ -7,6 +7,7 @@ let Offscreen;
 let useState;
 let useLayoutEffect;
 let useEffect;
+let startTransition;
 
 describe('ReactOffscreen', () => {
   beforeEach(() => {
@@ -21,6 +22,7 @@ describe('ReactOffscreen', () => {
     useState = React.useState;
     useLayoutEffect = React.useLayoutEffect;
     useEffect = React.useEffect;
+    startTransition = React.startTransition;
   });
 
   function Text(props) {
@@ -590,5 +592,54 @@ describe('ReactOffscreen', () => {
         <span prop="Inner: 2" />
       </>,
     );
+  });
+
+  // TODO: Create TestFlag alias for Offscreen
+  // @gate experimental || www
+  it('regression: Offscreen instance is sometimes null during setState', async () => {
+    let setState;
+    function Child() {
+      const [state, _setState] = useState('Initial');
+      setState = _setState;
+      return <Text text={state} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<Offscreen hidden={false} />);
+    });
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput(null);
+
+    await act(async () => {
+      // Partially render a component
+      startTransition(() => {
+        root.render(
+          <Offscreen hidden={false}>
+            <Child />
+            <Text text="Sibling" />
+          </Offscreen>,
+        );
+      });
+      expect(Scheduler).toFlushAndYieldThrough(['Initial']);
+
+      // Before it finishes rendering, the whole tree gets deleted
+      ReactNoop.flushSync(() => {
+        root.render(null);
+      });
+
+      // Something attempts to update the never-mounted component. When this
+      // regression test was written, we would walk up the component's return
+      // path and reach an unmounted Offscreen component fiber. Its `stateNode`
+      // would be null because it was nulled out when it was deleted, but there
+      // was no null check before we accessed it. A weird edge case but we must
+      // account for it.
+      expect(() => {
+        setState('Updated');
+      }).toErrorDev(
+        "Can't perform a React state update on a component that hasn't mounted yet",
+      );
+    });
+    expect(root).toMatchRenderedOutput(null);
   });
 });

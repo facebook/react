@@ -193,8 +193,25 @@ function markUpdateLaneFromFiberToRoot(
     }
 
     if (parent.tag === OffscreenComponent) {
-      const offscreenInstance: OffscreenInstance = parent.stateNode;
-      if (offscreenInstance.isHidden) {
+      // Check if this offscreen boundary is currently hidden.
+      //
+      // The instance may be null if the Offscreen parent was unmounted. Usually
+      // the parent wouldn't be reachable in that case because we disconnect
+      // fibers from the tree when they are deleted. However, there's a weird
+      // edge case where setState is called on a fiber that was interrupted
+      // before it ever mounted. Because it never mounts, it also never gets
+      // deleted. Because it never gets deleted, its return pointer never gets
+      // disconnected. Which means it may be attached to a deleted Offscreen
+      // parent node. (This discovery suggests it may be better for memory usage
+      // if we don't attach the `return` pointer until the commit phase, though
+      // in order to do that we'd need some other way to track the return
+      // pointer during the initial render, like on the stack.)
+      //
+      // This case is always accompanied by a warning, but we still need to
+      // account for it. (There may be other cases that we haven't discovered,
+      // too.)
+      const offscreenInstance: OffscreenInstance | null = parent.stateNode;
+      if (offscreenInstance !== null && offscreenInstance.isHidden) {
         isHidden = true;
       }
     }
