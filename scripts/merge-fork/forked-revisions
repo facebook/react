@@ -1,3 +1,4 @@
+d410f0a1bbb12e972b0e99bb9faea10c7e62894d [FORKED] Bugfix: Offscreen instance is null during setState
 58bb11764bf0bb6db47527a64f693f67cdd3b0bb [FORKED] Check for infinite update loops even if unmounted
 31882b5dd66f34f70d341ea2781cacbe802bf4d5 [FORKED] Bugfix: Revealing a hidden update
 17691acc071d56261d43c3cf183f287d983baa9b [FORKED] Don't update childLanes until after current render
