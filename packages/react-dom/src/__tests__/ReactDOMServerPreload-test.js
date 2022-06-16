@@ -103,6 +103,15 @@ describe('ReactDOMServerPreload', () => {
     expect(mappedLinks).toEqual(toBeLinks);
   }
 
+  function expectScript(href, toBeScript) {
+    let script = document.querySelector(`script[data-src="${href}"]`);
+    let expected = [
+      script.tagName.toLowerCase(),
+      script.getAttribute('data-src'),
+    ];
+    expect(expected).toEqual(toBeScript);
+  }
+
   function expectErrors(errorsArr, toBeDevArr, toBeProdArr) {
     const mappedErrows = errorsArr.map(({error, errorInfo}) => {
       const stack = errorInfo && errorInfo.componentStack;
@@ -151,6 +160,10 @@ describe('ReactDOMServerPreload', () => {
         (CSPnonce === null || node.getAttribute('nonce') === CSPnonce)
       ) {
         const script = document.createElement('script');
+        let originalSrc = node.getAttribute('src');
+        if (originalSrc) {
+          script.dataset.src = originalSrc;
+        }
         script.textContent = node.textContent;
         fakeBody.removeChild(node);
         container.appendChild(script);
@@ -404,9 +417,38 @@ describe('ReactDOMServerPreload', () => {
     ]);
   });
 
-  it('late discovered resources flush', async () => {
+  it('does not emit lower priority resource loaders when a higher priority loader is already known', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});
+      return (
+        <Suspense fallback={'loading...'}>
+          <PreloadResource href={'foo'} />
+        </Suspense>
+      );
+    }
+
+    function PreloadResource({href}) {
+      ReactDOM.preinit(href, {as: 'style'});
+      let text = readText(href);
+      ReactDOM.preload(text, {as: 'style'});
+      return <div>{text}</div>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expectLinks([['stylesheet', 'foo', null]]);
+
+    await act(async () => {
+      resolveText('foo');
+    });
+    expectLinks([['stylesheet', 'foo', null]]);
+  });
+
+  it('supports prefetching DNS', async () => {
+    function App() {
+      ReactDOM.prefetchDNS('foo');
       return <div>hi</div>;
     }
 
@@ -415,8 +457,76 @@ describe('ReactDOMServerPreload', () => {
       pipe(writable);
     });
 
-    ReactDOMClient.hydrateRoot(container, <App />);
+    expectLinks([['dns-prefetch', 'foo', null]]);
+  });
 
-    expect(Scheduler).toFlushAndYield([]);
+  it('supports preconnecting', async () => {
+    function App() {
+      ReactDOM.preconnect('foo');
+      return <div>hi</div>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expectLinks([['preconnect', 'foo', null]]);
+  });
+
+  it('supports prefetching', async () => {
+    function App() {
+      ReactDOM.prefetch('foo', {as: 'font'});
+      ReactDOM.prefetch('bar', {as: 'style'});
+      ReactDOM.prefetch('baz', {as: 'script'});
+      return <div>hi</div>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expectLinks([
+      ['prefetch', 'foo', 'font'],
+      ['prefetch', 'bar', 'style'],
+      ['prefetch', 'baz', 'script'],
+    ]);
+  });
+
+  it('supports preloading', async () => {
+    function App() {
+      ReactDOM.preload('foo', {as: 'font'});
+      ReactDOM.preload('bar', {as: 'style'});
+      ReactDOM.preload('baz', {as: 'script'});
+      return <div>hi</div>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expectLinks([
+      ['preload', 'foo', 'font'],
+      ['preload', 'bar', 'style'],
+      ['preload', 'baz', 'script'],
+    ]);
+  });
+
+  it('supports initializing stylesheets and scripts', async () => {
+    function App() {
+      ReactDOM.preinit('foo', {as: 'style'});
+      ReactDOM.preinit('bar', {as: 'script'});
+      return <div>hi</div>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expectLinks([['stylesheet', 'foo', null]]);
+    expectScript('bar', ['script', 'bar']);
   });
 });

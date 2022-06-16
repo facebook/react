@@ -19,9 +19,7 @@ export function cleanupAfterRender() {
 
 type PreloadAs = 'style';
 type PreloadOptions = {as?: PreloadAs, signal: AbortSignal};
-function preload(href: string, options?: PreloadOptions) {
-  console.log('on client: preload', href);
-}
+function preload(href: string, options?: PreloadOptions) {}
 
 const Dispatcher = {
   preload,
