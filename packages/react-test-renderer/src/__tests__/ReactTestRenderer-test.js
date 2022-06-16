@@ -28,12 +28,30 @@ describe('ReactTestRenderer', () => {
     Scheduler = require('scheduler');
   });
 
-  it('should warn if used to render a ReactDOM portal', () => {
+  fit('should warn and throw if used to initial render a ReactDOM portal', () => {
     const container = document.createElement('div');
     expect(() => {
       expect(() => {
         ReactTestRenderer.create(ReactDOM.createPortal('foo', container));
-      }).toThrow();
+      }).toThrow('Expected children property to be Array');
+    }).toErrorDev('An invalid container has been provided.', {
+      withoutStack: true,
+    });
+  });
+
+    fit('should warn and throw if used to update render a ReactDOM portal', () => {
+      const App = () => {
+        return (
+          <div />
+        );
+      };
+
+      const root = ReactTestRenderer.create(<App />);
+    expect(() => {
+      expect(() => {
+        const container = document.createElement('div');
+        root.update(ReactDOM.createPortal('foo', container));
+      }).toThrow('Expected children property to be Array');
     }).toErrorDev('An invalid container has been provided.', {
       withoutStack: true,
     });
