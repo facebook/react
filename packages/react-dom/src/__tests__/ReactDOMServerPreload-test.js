@@ -529,4 +529,52 @@ describe('ReactDOMServerPreload', () => {
     expectLinks([['stylesheet', 'foo', null]]);
     expectScript('bar', ['script', 'bar']);
   });
+
+  it('converts links for preloading into resources for preloading', async () => {
+    function App() {
+      return (
+        <div>
+          <link rel="foo" href="this link is not a resource" />
+          <link rel="dns-prefetch" href="dns-prefetch" />
+          <link rel="preconnect" href="preconnect" />
+          <link rel="prefetch" href="prefetchstyle" as="style" />
+          <link rel="prefetch" href="prefetchscript" as="script" />
+          <link rel="prefetch" href="prefetchfont" as="font" />
+          <link rel="preload" href="preloadstyle" as="style" />
+          <link rel="preload" href="preloadscript" as="script" />
+          <link rel="preload" href="preloadfont" as="font" />
+          <link rel="stylesheet" href="stylesheet" />
+          <link rel="font" href="font" />
+        </div>
+      );
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expectLinks([
+      // We don't start with the rel foo because it is not a resource and is emitted withe content
+      // We start with a list of resources in order that they were discovered
+      ['dns-prefetch', 'dns-prefetch', null],
+      ['preconnect', 'preconnect', null],
+      ['prefetch', 'prefetchstyle', 'style'],
+      ['prefetch', 'prefetchscript', 'script'],
+      ['prefetch', 'prefetchfont', 'font'],
+      ['preload', 'preloadstyle', 'style'],
+      ['preload', 'preloadscript', 'script'],
+      ['preload', 'preloadfont', 'font'],
+      // We Also get resources that were identified when we referred to an external resource directly
+      ['preload', 'stylesheet', 'style'],
+      ['preload', 'font', 'font'],
+      // Finally we get links that were emitted as part of the content. Notice that for hint links
+      // like preconnect or preload we omit them here because they are fully represented by the resource
+      // emitted above. For direct resource references like stylesheets and fonts we emitted a preload but
+      // we still also need the resource as well
+      ['foo', 'this link is not a resource', null],
+      ['stylesheet', 'stylesheet', null],
+      ['font', 'font', null],
+    ]);
+  });
 });

@@ -70,8 +70,7 @@ export function cleanupAfterRender() {
   popDispatcher();
 }
 
-type PrefetchDNSOptions = {};
-function prefetchDNS(href: string, options?: PrefetchOptions) {
+function prefetchDNS(href: string) {
   if (currentResourceMap === null) {
     throw new Error(
       'prefetchDNS was called while currentResourceMap is null. this is a bug in React',
@@ -96,8 +95,7 @@ function prefetchDNS(href: string, options?: PrefetchOptions) {
   }
 }
 
-type PreconnectOptions = {};
-function preconnect(href: string, options?: PreconnectOptions) {
+function preconnect(href: string) {
   if (currentResourceMap === null) {
     throw new Error(
       'preconnect was called while currentResourceMap is null. this is a bug in React',
@@ -284,6 +282,58 @@ function preinit(href: String, options: PreinitOptions) {
       type: '',
     };
     currentResourceMap.set(key, resource);
+  }
+}
+
+// Construct a resource from Link props.
+// Returns true if the link was fully described by the resource and the link can omitted from the stream.
+// Returns false if the link should still be emitted to the stream
+export function resourcesFromLink(props: Object): boolean {
+  let rel = props.rel;
+  let href = props.href;
+  if (typeof rel !== 'string' && typeof href !== 'string') {
+    return false;
+  }
+
+  switch (rel) {
+    case 'dns-prefetch': {
+      prefetchDNS(href);
+      return true;
+    }
+    case 'preconnect': {
+      preconnect(href);
+      return true;
+    }
+    case 'prefetch': {
+      let as = props.as;
+      if (as === 'style' || as === 'script' || as === 'font') {
+        prefetch(href, {as});
+        return true;
+      }
+      return false;
+    }
+    case 'preload': {
+      let as = props.as;
+      if (as === 'style' || as === 'script' || as === 'font') {
+        preload(href, {as});
+        return true;
+      }
+      return false;
+    }
+    case 'stylesheet': {
+      preload(href, {as: 'style'});
+      return false;
+    }
+    case 'script': {
+      preload(href, {as: 'script'});
+      return false;
+    }
+    case 'font': {
+      preload(href, {as: 'font'});
+      return false;
+    }
+    default:
+      return false;
   }
 }
 

@@ -62,6 +62,7 @@ import {
   type Resource,
   prepareToRender as prepareToRenderImpl,
   cleanupAfterRender as cleanupAfterRenderImpl,
+  resourcesFromLink,
   DNS_PREFETCH,
   PRECONNECT,
   PREFETCH,
@@ -1109,6 +1110,44 @@ function pushSelfClosing(
   return null;
 }
 
+function pushLink(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+): ReactNodeList {
+  if (resourcesFromLink(props)) {
+    // We have converted this link exclusively to a resource and no longer
+    // need to emit it
+    return null;
+  }
+
+  target.push(startChunkForTag('link'));
+
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+        case 'dangerouslySetInnerHTML':
+          throw new Error(
+            `${tag} is a self-closing tag and must neither have \`children\` nor ` +
+              'use `dangerouslySetInnerHTML`.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+
+  target.push(endOfStartTagSelfClosing);
+  return null;
+}
+
 function pushStartMenuItem(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -1495,13 +1534,15 @@ export function pushStartInstance(
     case 'hr':
     case 'img':
     case 'keygen':
-    case 'link':
     case 'meta':
     case 'param':
     case 'source':
     case 'track':
     case 'wbr': {
       return pushSelfClosing(target, props, type, responseState);
+    }
+    case 'link': {
+      return pushLink(target, props, responseState);
     }
     // These are reserved SVG and MathML elements, that are never custom elements.
     // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
