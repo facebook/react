@@ -28,7 +28,7 @@ describe('ReactTestRenderer', () => {
     Scheduler = require('scheduler');
   });
 
-  fit('should warn and throw if used to initial render a ReactDOM portal', () => {
+  it('should warn and throw if used to initial render a ReactDOM portal', () => {
     const container = document.createElement('div');
     expect(() => {
       expect(() => {
@@ -39,7 +39,7 @@ describe('ReactTestRenderer', () => {
     });
   });
 
-    fit('should warn and throw if used to update render a ReactDOM portal', () => {
+    it('should warn and throw if used to update render a ReactDOM portal', () => {
       const App = () => {
         return (
           <div />
