@@ -34,6 +34,7 @@ import {
   enableFloat,
   enableFormActions,
   enableFizzExternalRuntime,
+  enableNewBooleanProps,
 } from 'shared/ReactFeatureFlags';
 
 import type {
@@ -1289,6 +1290,7 @@ function pushAttribute(
     case 'disableRemotePlayback':
     case 'formNoValidate':
     case 'hidden':
+    case enableNewBooleanProps ? 'inert' : 'formNoValidate':
     case 'loop':
     case 'noModule':
     case 'noValidate':

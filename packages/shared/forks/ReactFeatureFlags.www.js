@@ -102,6 +102,8 @@ export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
+export const enableNewBooleanProps = __EXPERIMENTAL__;
+
 export const enableFizzExternalRuntime = true;
 
 export const forceConcurrentByDefaultForTesting = false;

@@ -73,6 +73,7 @@ import {
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
+  enableNewBooleanProps,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -723,7 +724,7 @@ function setProp(
     case 'disableRemotePlayback':
     case 'formNoValidate':
     case 'hidden':
-    case 'inert':
+    case enableNewBooleanProps ? 'inert' : 'formNoValidate':
     case 'loop':
     case 'noModule':
     case 'noValidate':
@@ -2509,6 +2510,7 @@ function diffHydratedGenericElement(
       case 'disableRemotePlayback':
       case 'formNoValidate':
       case 'hidden':
+      case enableNewBooleanProps ? 'inert' : 'formNoValidate':
       case 'loop':
       case 'noModule':
       case 'noValidate':

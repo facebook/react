@@ -62,6 +62,7 @@ export const forceConcurrentByDefaultForTesting = false;
 export const enableUnifiedSyncLane = __EXPERIMENTAL__;
 export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = false;
+export const enableNewBooleanProps = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 

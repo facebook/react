@@ -12,6 +12,7 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import {
   enableCustomElementPropertySupport,
   enableFormActions,
+  enableNewBooleanProps,
 } from 'shared/ReactFeatureFlags';
 
 const warnedProperties = {};
@@ -224,7 +225,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'disableRemotePlayback':
           case 'formNoValidate':
           case 'hidden':
-          case 'inert':
+          case enableNewBooleanProps ? 'inert' : 'formNoValidate':
           case 'loop':
           case 'noModule':
           case 'noValidate':
@@ -302,6 +303,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case 'disableRemotePlayback':
             case 'formNoValidate':
             case 'hidden':
+            case enableNewBooleanProps ? 'inert' : 'formNoValidate':
             case 'loop':
             case 'noModule':
             case 'noValidate':

@@ -80,6 +80,7 @@ export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
 export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = true;
+export const enableNewBooleanProps = false;
 
 export const enableTransitionTracing = false;
 
