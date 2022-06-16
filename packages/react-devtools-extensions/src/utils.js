@@ -1,14 +1,27 @@
 /* global chrome */
 
-const IS_CHROME = navigator.userAgent.indexOf('Firefox') < 0;
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
-export type BrowserName = 'Chrome' | 'Firefox';
+const IS_EDGE = navigator.userAgent.indexOf('Edg') >= 0;
+const IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
+const IS_CHROME = IS_EDGE === false && IS_FIREFOX === false;
+
+export type BrowserName = 'Chrome' | 'Firefox' | 'Edge';
 
 export function getBrowserName(): BrowserName {
-  return IS_CHROME ? 'Chrome' : 'Firefox';
+  if (IS_EDGE) {
+    return 'Edge';
+  }
+  if (IS_FIREFOX) {
+    return 'Firefox';
+  }
+  if (IS_CHROME) {
+    return 'Chrome';
+  }
+  throw new Error(
+    'Expected browser name to be one of Chrome, Edge or Firefox.',
+  );
 }
-
-export type BrowserTheme = 'dark' | 'light';
 
 export function getBrowserTheme(): BrowserTheme {
   if (IS_CHROME) {

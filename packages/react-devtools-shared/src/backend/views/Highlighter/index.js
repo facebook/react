@@ -15,7 +15,7 @@ import {hideOverlay, showOverlay} from './Highlighter';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 
 // This plug-in provides in-page highlighting of the selected element.
-// It is used by the browser extension nad the standalone DevTools shell (when connected to a browser).
+// It is used by the browser extension and the standalone DevTools shell (when connected to a browser).
 // It is not currently the mechanism used to highlight React Native views.
 // That is done by the React Native Inspector component.
 
@@ -118,7 +118,7 @@ export default function setupHighlighter(
         node.scrollIntoView({block: 'nearest', inline: 'nearest'});
       }
 
-      showOverlay(nodes, displayName, hideAfterTimeout);
+      showOverlay(nodes, displayName, agent, hideAfterTimeout);
 
       if (openNativeElementsPanel) {
         window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
@@ -171,7 +171,7 @@ export default function setupHighlighter(
 
     // Don't pass the name explicitly.
     // It will be inferred from DOM tag and Fiber owner.
-    showOverlay([target], null, false);
+    showOverlay([target], null, agent, false);
 
     selectFiberForNode(target);
   }

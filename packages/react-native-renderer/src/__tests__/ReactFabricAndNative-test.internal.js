@@ -15,6 +15,7 @@ let ReactFabric;
 let ReactNative;
 let UIManager;
 let createReactNativeComponentClass;
+let ReactNativePrivateInterface;
 
 describe('created with ReactFabric called with ReactNative', () => {
   beforeEach(() => {
@@ -22,6 +23,7 @@ describe('created with ReactFabric called with ReactNative', () => {
     require('react-native/Libraries/ReactPrivate/InitializeNativeFabricUIManager');
     ReactNative = require('react-native-renderer');
     jest.resetModules();
+    ReactNativePrivateInterface = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
     UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
       .UIManager;
     jest.mock('shared/ReactFeatureFlags', () =>
@@ -91,6 +93,28 @@ describe('created with ReactFabric called with ReactNative', () => {
       nativeFabricUIManager.dispatchCommand,
     ).toHaveBeenCalledWith(expect.any(Object), 'myCommand', [10, 20]);
     expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
+  });
+
+  it('dispatches sendAccessibilityEvent on Fabric nodes with the RN renderer', () => {
+    nativeFabricUIManager.sendAccessibilityEvent.mockClear();
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {title: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    const ref = React.createRef();
+
+    ReactFabric.render(<View title="bar" ref={ref} />, 11);
+    expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
+    ReactNative.sendAccessibilityEvent(ref.current, 'focus');
+    expect(nativeFabricUIManager.sendAccessibilityEvent).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(nativeFabricUIManager.sendAccessibilityEvent).toHaveBeenCalledWith(
+      expect.any(Object),
+      'focus',
+    );
+    expect(UIManager.sendAccessibilityEvent).not.toBeCalled();
   });
 });
 
@@ -170,5 +194,29 @@ describe('created with ReactNative called with ReactFabric', () => {
     ).toHaveBeenCalledWith(expect.any(Number), 'myCommand', [10, 20]);
 
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
+  });
+
+  it('dispatches sendAccessibilityEvent on Paper nodes with the Fabric renderer', () => {
+    ReactNativePrivateInterface.legacySendAccessibilityEvent.mockReset();
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {title: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    const ref = React.createRef();
+
+    ReactNative.render(<View title="bar" ref={ref} />, 11);
+    expect(
+      ReactNativePrivateInterface.legacySendAccessibilityEvent,
+    ).not.toBeCalled();
+    ReactFabric.sendAccessibilityEvent(ref.current, 'focus');
+    expect(
+      ReactNativePrivateInterface.legacySendAccessibilityEvent,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      ReactNativePrivateInterface.legacySendAccessibilityEvent,
+    ).toHaveBeenCalledWith(expect.any(Number), 'focus');
+
+    expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
   });
 });

@@ -16,20 +16,25 @@ export type IconType =
   | 'code'
   | 'components'
   | 'copy'
+  | 'error'
+  | 'facebook'
   | 'flame-chart'
-  | 'interactions'
   | 'profiler'
   | 'ranked-chart'
+  | 'timeline'
   | 'search'
   | 'settings'
-  | 'store-as-global-variable';
+  | 'store-as-global-variable'
+  | 'strict-mode-non-compliant'
+  | 'warning';
 
 type Props = {|
   className?: string,
+  title?: string,
   type: IconType,
 |};
 
-export default function Icon({className = '', type}: Props) {
+export default function Icon({className = '', title = '', type}: Props) {
   let pathData = null;
   switch (type) {
     case 'arrow':
@@ -47,17 +52,23 @@ export default function Icon({className = '', type}: Props) {
     case 'copy':
       pathData = PATH_COPY;
       break;
+    case 'error':
+      pathData = PATH_ERROR;
+      break;
+    case 'facebook':
+      pathData = PATH_FACEBOOK;
+      break;
     case 'flame-chart':
       pathData = PATH_FLAME_CHART;
-      break;
-    case 'interactions':
-      pathData = PATH_INTERACTIONS;
       break;
     case 'profiler':
       pathData = PATH_PROFILER;
       break;
     case 'ranked-chart':
       pathData = PATH_RANKED_CHART;
+      break;
+    case 'timeline':
+      pathData = PATH_SCHEDULING_PROFILER;
       break;
     case 'search':
       pathData = PATH_SEARCH;
@@ -67,6 +78,12 @@ export default function Icon({className = '', type}: Props) {
       break;
     case 'store-as-global-variable':
       pathData = PATH_STORE_AS_GLOBAL_VARIABLE;
+      break;
+    case 'strict-mode-non-compliant':
+      pathData = PATH_STRICT_MODE_NON_COMPLIANT;
+      break;
+    case 'warning':
+      pathData = PATH_WARNING;
       break;
     default:
       console.warn(`Unsupported type "${type}" specified for Icon`);
@@ -80,6 +97,7 @@ export default function Icon({className = '', type}: Props) {
       width="24"
       height="24"
       viewBox="0 0 24 24">
+      {title && <title>{title}</title>}
       <path d="M0 0h24v24H0z" fill="none" />
       <path fill="currentColor" d={pathData} />
     </svg>
@@ -107,6 +125,12 @@ const PATH_COPY = `
   2v10a2 2 0 0 0 2 2h10c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H9V5h10v10zm-8 6h2v-2h-2v2zm-4 0h2v-2H7v2z
 `;
 
+const PATH_ERROR = `M16.971 0h-9.942l-7.029 7.029v9.941l7.029 7.03h9.941l7.03-7.029v-9.942l-7.029-7.029zm-1.402 16.945l-3.554-3.521-3.518 3.568-1.418-1.418 3.507-3.566-3.586-3.472 1.418-1.417 3.581 3.458 3.539-3.583 1.431 1.431-3.535 3.568 3.566 3.522-1.431 1.43z`;
+
+const PATH_FACEBOOK = `
+  M22,12c0-5.52-4.48-10-10-10S2,6.48,2,12c0,4.84,3.44,8.87,8,9.8V15H8v-3h2V9.5C10,7.57,11.57,6,13.5,6H16v3h-2 c-0.55,0-1,0.45-1,1v2h3v3h-3v6.95C18.05,21.45,22,17.19,22,12z
+`;
+
 const PATH_FLAME_CHART = `
   M10.0650893,21.5040462 C7.14020814,20.6850349 5,18.0558698 5,14.9390244 C5,14.017627
   5,9.81707317 7.83333333,7.37804878 C7.83333333,7.37804878 7.58333333,11.199187 10,
@@ -120,15 +144,12 @@ const PATH_FLAME_CHART = `
   13.3541667,19.4702042 C13.3541667,20.1226027 12.7851952,20.6514763 12.0833333,20.6514763 Z
 `;
 
-const PATH_INTERACTIONS = `
-  M23 8c0 1.1-.9 2-2 2-.18 0-.35-.02-.51-.07l-3.56 3.55c.05.16.07.34.07.52 0 1.1-.9 2-2
-  2s-2-.9-2-2c0-.18.02-.36.07-.52l-2.55-2.55c-.16.05-.34.07-.52.07s-.36-.02-.52-.07l-4.55
-  4.56c.05.16.07.33.07.51 0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2c.18 0 .35.02.51.07l4.56-4.55C8.02
-  9.36 8 9.18 8 9c0-1.1.9-2 2-2s2 .9 2 2c0 .18-.02.36-.07.52l2.55
-  2.55c.16-.05.34-.07.52-.07s.36.02.52.07l3.55-3.56C19.02 8.35 19 8.18 19 8c0-1.1.9-2 2-2s2 .9 2 2z
-`;
-
 const PATH_PROFILER = 'M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z';
+
+const PATH_SCHEDULING_PROFILER = `
+  M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0
+  16H5V9h14v10zm0-12H5V5h14v2zM7 11h5v5H7z
+`;
 
 const PATH_SEARCH = `
   M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91
@@ -154,3 +175,10 @@ const PATH_STORE_AS_GLOBAL_VARIABLE = `
   1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6
   8h-4v-2h4v2zm0-4h-4v-2h4v2z
 `;
+
+const PATH_STRICT_MODE_NON_COMPLIANT = `
+  M4.47 21h15.06c1.54 0 2.5-1.67 1.73-3L13.73 4.99c-.77-1.33-2.69-1.33-3.46 0L2.74 18c-.77 1.33.19 3 1.73 3zM12
+  14c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1zm1 4h-2v-2h2v2z
+`;
+
+const PATH_WARNING = `M12 1l-12 22h24l-12-22zm-1 8h2v7h-2v-7zm1 11.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z`;

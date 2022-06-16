@@ -9,11 +9,10 @@
 
 import * as React from 'react';
 import {Fragment, useCallback} from 'react';
-import Tooltip from '@reach/tooltip';
 import Icon from './Icon';
 
 import styles from './TabBar.css';
-import tooltipStyles from './Tooltip.css';
+import Tooltip from './Components/reach-ui/tooltip';
 
 import type {IconType} from './Icon';
 
@@ -29,7 +28,7 @@ export type Props = {|
   disabled?: boolean,
   id: string,
   selectTab: (tabID: any) => void,
-  tabs: Array<TabInfo>,
+  tabs: Array<TabInfo | null>,
   type: 'navigation' | 'profiler' | 'settings',
 |};
 
@@ -41,8 +40,9 @@ export default function TabBar({
   tabs,
   type,
 }: Props) {
-  if (!tabs.some(tab => tab.id === currentTab)) {
-    selectTab(tabs[0].id);
+  if (!tabs.some(tab => tab !== null && tab.id === currentTab)) {
+    const firstTab = ((tabs.find(tab => tab !== null): any): TabInfo);
+    selectTab(firstTab.id);
   }
 
   const onChange = useCallback(
@@ -88,7 +88,13 @@ export default function TabBar({
 
   return (
     <Fragment>
-      {tabs.map(({icon, id, label, title}) => {
+      {tabs.map(tab => {
+        if (tab === null) {
+          return <div key="VRule" className={styles.VRule} />;
+        }
+
+        const {icon, id, label, title} = tab;
+
         let button = (
           <label
             className={[
@@ -96,6 +102,7 @@ export default function TabBar({
               disabled ? styles.TabDisabled : styles.Tab,
               !disabled && currentTab === id ? styles.TabCurrent : '',
             ].join(' ')}
+            data-testname={`TabBarButton-${id}`}
             key={id}
             onKeyDown={handleKeyDown}
             onMouseDown={() => selectTab(id)}>
@@ -120,7 +127,7 @@ export default function TabBar({
 
         if (title) {
           button = (
-            <Tooltip key={id} className={tooltipStyles.Tooltip} label={title}>
+            <Tooltip key={id} label={title}>
               {button}
             </Tooltip>
           );

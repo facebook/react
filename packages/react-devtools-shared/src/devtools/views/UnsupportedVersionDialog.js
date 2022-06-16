@@ -30,6 +30,7 @@ export default function UnsupportedVersionDialog(_: {||}) {
           setState('show-dialog');
           dispatch({
             canBeDismissed: true,
+            id: 'UnsupportedVersionDialog',
             type: 'SHOW',
             content: <DialogContent />,
           });

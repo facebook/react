@@ -26,6 +26,12 @@ const paramDefinitions = [
     description: 'Packages to exclude from publishing',
     defaultValue: [],
   },
+  {
+    name: 'ci',
+    type: Boolean,
+    description: 'Run in automated environment, without interactive prompts.',
+    defaultValue: false,
+  },
 ];
 
 module.exports = () => {
@@ -37,10 +43,13 @@ module.exports = () => {
       case 'latest':
       case 'next':
       case 'experimental':
+      case 'alpha':
+      case 'beta':
+      case 'rc':
       case 'untagged':
         break;
       default:
-        console.error('Unknown tag: "' + params.tag + '"');
+        console.error('Unsupported tag: "' + tag + '"');
         process.exit(1);
         break;
     }

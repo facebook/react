@@ -6,46 +6,51 @@ module.exports = {
   },
   globals: {
     // ES6
-    Map: true,
-    Set: true,
-    Symbol: true,
-    Proxy: true,
-    WeakMap: true,
-    WeakSet: true,
-    Uint16Array: true,
-    Reflect: true,
+    Map: 'readonly',
+    Set: 'readonly',
+    Symbol: 'readonly',
+    Proxy: 'readonly',
+    WeakMap: 'readonly',
+    WeakSet: 'readonly',
+    Uint16Array: 'readonly',
+    Reflect: 'readonly',
     // Vendor specific
-    MSApp: true,
-    __REACT_DEVTOOLS_GLOBAL_HOOK__: true,
+    MSApp: 'readonly',
+    __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
     // UMD wrapper code
     // TODO: this is too permissive.
     // Ideally we should only allow these *inside* the UMD wrapper.
-    exports: true,
-    module: true,
-    define: true,
-    require: true,
-    globalThis: true,
-    global: true,
+    exports: 'readonly',
+    module: 'readonly',
+    define: 'readonly',
+    require: 'readonly',
+    globalThis: 'readonly',
+    global: 'readonly',
+    // Internet Explorer
+    setImmediate: 'readonly',
     // Trusted Types
-    trustedTypes: true,
+    trustedTypes: 'readonly',
 
     // Scheduler profiling
-    SharedArrayBuffer: true,
-    Int32Array: true,
-    ArrayBuffer: true,
+    Int32Array: 'readonly',
+    ArrayBuffer: 'readonly',
 
-    TaskController: true,
+    TaskController: 'readonly',
+    reportError: 'readonly',
 
     // Flight
-    Uint8Array: true,
-    Promise: true,
+    Uint8Array: 'readonly',
+    Promise: 'readonly',
 
     // Flight Webpack
-    __webpack_chunk_load__: true,
-    __webpack_require__: true,
+    __webpack_chunk_load__: 'readonly',
+    __webpack_require__: 'readonly',
 
     // jest
-    jest: true,
+    jest: 'readonly',
+
+    // act
+    IS_REACT_ACT_ENVIRONMENT: 'readonly',
   },
   parserOptions: {
     ecmaVersion: 5,

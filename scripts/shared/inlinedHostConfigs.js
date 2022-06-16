@@ -11,21 +11,24 @@ module.exports = [
     shortName: 'dom',
     entryPoints: [
       'react-dom',
-      'react-dom/testing',
-      'react-dom/unstable-fizz.node',
-      'react-transport-dom-webpack/server.node',
-      'react-transport-dom-webpack',
+      'react-dom/unstable_testing',
+      'react-dom/src/server/ReactDOMFizzServerNode.js',
+      'react-server-dom-webpack/writer.node.server',
+      'react-server-dom-webpack',
     ],
     paths: [
       'react-dom',
-      'react-dom/unstable-fizz',
-      'react-dom/unstable-fizz.node',
-      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/unstable-fizz.node
-      'react-transport-dom-webpack',
-      'react-transport-dom-webpack/server',
-      'react-transport-dom-webpack/server.node',
-      'react-transport-dom-webpack/src/ReactFlightDOMServerNode.js', // react-transport-dom-webpack/server.browser
+      'react-dom/client',
+      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
+      'react-server-dom-webpack',
+      'react-server-dom-webpack/writer',
+      'react-server-dom-webpack/writer.node.server',
+      'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/writer.node.server
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
       'react-interactions',
     ],
     isFlowTyped: true,
@@ -35,19 +38,42 @@ module.exports = [
     shortName: 'dom-browser',
     entryPoints: [
       'react-dom',
-      'react-dom/testing',
-      'react-dom/unstable-fizz.browser',
-      'react-transport-dom-webpack/server.browser',
-      'react-transport-dom-webpack',
+      'react-dom/unstable_testing',
+      'react-dom/src/server/ReactDOMFizzServerBrowser.js',
+      'react-server-dom-webpack/writer.browser.server',
+      'react-server-dom-webpack',
     ],
     paths: [
       'react-dom',
-      'react-dom/testing',
-      'react-dom/unstable-fizz.browser',
-      'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/unstable-fizz.browser
-      'react-transport-dom-webpack',
-      'react-transport-dom-webpack/server.browser',
-      'react-transport-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-transport-dom-webpack/server.browser
+      'react-dom/client',
+      'react-dom/unstable_testing',
+      'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
+      'react-server-dom-webpack',
+      'react-server-dom-webpack/writer.browser.server',
+      'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/writer.browser.server
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'dom-legacy',
+    entryPoints: [
+      'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
+    ],
+    paths: [
+      'react-dom',
+      'react-server-dom-webpack',
+      'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Brower and *Node files
+      'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMLegacyServerNode.classic.fb.js',
+      'react-dom/src/server/ReactDOMLegacyServerNodeStream.js', // file indirection to support partial forking of some methods in *Node
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
     ],
     isFlowTyped: true,
@@ -84,20 +110,27 @@ module.exports = [
   {
     shortName: 'dom-relay',
     entryPoints: [
-      'react-transport-dom-relay',
-      'react-transport-dom-relay/server',
+      'react-server-dom-relay',
+      'react-server-dom-relay/server',
+      'react-server-dom-relay/src/ReactDOMServerFB.js',
     ],
-    paths: ['react-dom', 'react-transport-dom-relay'],
+    paths: ['react-dom', 'react-server-dom-relay'],
     isFlowTyped: true,
     isServerSupported: true,
   },
   {
     shortName: 'native-relay',
     entryPoints: [
-      'react-transport-native-relay',
-      'react-transport-native-relay/server',
+      'react-server-native-relay',
+      'react-server-native-relay/server',
     ],
-    paths: ['react-native-renderer', 'react-transport-native-relay'],
+    paths: [
+      'react-native-renderer',
+      'react-server-native-relay',
+      // this is included here so that it's not included in the main native check
+      // remove this when it's added to the main native renderer.
+      'react-native-renderer/src/server',
+    ],
     isFlowTyped: true,
     isServerSupported: true,
   },

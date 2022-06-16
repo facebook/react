@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {enableSymbolFallbackForWWW} from 'shared/ReactFeatureFlags';
+
 let React;
 let ReactDOM;
 let ReactTestUtils;
@@ -25,10 +27,12 @@ describe('ReactElement.jsx', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    // Delete the native Symbol if we have one to ensure we test the
-    // unpolyfilled environment.
-    originalSymbol = global.Symbol;
-    global.Symbol = undefined;
+    if (enableSymbolFallbackForWWW) {
+      // Delete the native Symbol if we have one to ensure we test the
+      // unpolyfilled environment.
+      originalSymbol = global.Symbol;
+      global.Symbol = undefined;
+    }
 
     React = require('react');
     JSXRuntime = require('react/jsx-runtime');
@@ -38,7 +42,9 @@ describe('ReactElement.jsx', () => {
   });
 
   afterEach(() => {
-    global.Symbol = originalSymbol;
+    if (enableSymbolFallbackForWWW) {
+      global.Symbol = originalSymbol;
+    }
   });
 
   it('allows static methods to be called using the type property', () => {
@@ -53,6 +59,7 @@ describe('ReactElement.jsx', () => {
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
   });
 
+  // @gate enableSymbolFallbackForWWW
   it('identifies valid elements', () => {
     class Component extends React.Component {
       render() {
@@ -287,7 +294,49 @@ describe('ReactElement.jsx', () => {
     );
   });
 
+  // @gate !enableSymbolFallbackForWWW
   it('identifies elements, but not JSON, if Symbols are supported', () => {
+    class Component extends React.Component {
+      render() {
+        return JSXRuntime.jsx('div', {});
+      }
+    }
+
+    expect(React.isValidElement(JSXRuntime.jsx('div', {}))).toEqual(true);
+    expect(React.isValidElement(JSXRuntime.jsx(Component, {}))).toEqual(true);
+    expect(
+      React.isValidElement(JSXRuntime.jsx(JSXRuntime.Fragment, {})),
+    ).toEqual(true);
+    if (__DEV__) {
+      expect(React.isValidElement(JSXDEVRuntime.jsxDEV('div', {}))).toEqual(
+        true,
+      );
+    }
+
+    expect(React.isValidElement(null)).toEqual(false);
+    expect(React.isValidElement(true)).toEqual(false);
+    expect(React.isValidElement({})).toEqual(false);
+    expect(React.isValidElement('string')).toEqual(false);
+    if (!__EXPERIMENTAL__) {
+      let factory;
+      expect(() => {
+        factory = React.createFactory('div');
+      }).toWarnDev(
+        'Warning: React.createFactory() is deprecated and will be removed in a ' +
+          'future major release. Consider using JSX or use React.createElement() ' +
+          'directly instead.',
+        {withoutStack: true},
+      );
+      expect(React.isValidElement(factory)).toEqual(false);
+    }
+    expect(React.isValidElement(Component)).toEqual(false);
+    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
+
+    const jsonElement = JSON.stringify(JSXRuntime.jsx('div', {}));
+    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
+  });
+
+  it('identifies elements, but not JSON, if Symbols are polyfilled', () => {
     // Rudimentary polyfill
     // Once all jest engines support Symbols natively we can swap this to test
     // WITH native Symbols by default.

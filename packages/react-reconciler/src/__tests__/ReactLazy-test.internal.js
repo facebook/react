@@ -178,13 +178,13 @@ describe('ReactLazy', () => {
 
     await Promise.resolve();
 
+    expect(Scheduler).toFlushAndThrow('Element type is invalid');
     if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(1);
+      expect(console.error).toHaveBeenCalledTimes(3);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'Expected the result of a dynamic import() call',
       );
     }
-    expect(Scheduler).toFlushAndThrow('Element type is invalid');
   });
 
   it('throws if promise rejects', async () => {
@@ -1268,9 +1268,11 @@ describe('ReactLazy', () => {
     expect(componentStackMessage).toContain('in Lazy');
   });
 
-  // @gate enableLazyElements
   it('mount and reorder lazy types', async () => {
     class Child extends React.Component {
+      componentWillUnmount() {
+        Scheduler.unstable_yieldValue('Did unmount: ' + this.props.label);
+      }
       componentDidMount() {
         Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
       }
@@ -1348,6 +1350,8 @@ describe('ReactLazy', () => {
     expect(Scheduler).toFlushAndYield(['Init B2', 'Loading...']);
     jest.runAllTimers();
 
+    expect(Scheduler).toHaveYielded(['Did unmount: A', 'Did unmount: B']);
+
     // The suspense boundary should've triggered now.
     expect(root).toMatchRenderedOutput('Loading...');
     await resolveB2({default: ChildB});
@@ -1359,13 +1363,12 @@ describe('ReactLazy', () => {
     expect(Scheduler).toFlushAndYield([
       'b',
       'a',
-      'Did update: b',
-      'Did update: a',
+      'Did mount: b',
+      'Did mount: a',
     ]);
     expect(root).toMatchRenderedOutput('ba');
   });
 
-  // @gate enableLazyElements
   it('mount and reorder lazy types (legacy mode)', async () => {
     class Child extends React.Component {
       componentDidMount() {
@@ -1454,7 +1457,6 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('ba');
   });
 
-  // @gate enableLazyElements
   it('mount and reorder lazy elements', async () => {
     class Child extends React.Component {
       componentDidMount() {
@@ -1514,7 +1516,13 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
-    root.update(<Parent swap={true} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        root.update(<Parent swap={true} />);
+      });
+    } else {
+      root.update(<Parent swap={true} />);
+    }
     expect(Scheduler).toFlushAndYield(['Init B2', 'Loading...']);
     await lazyChildB2;
     // We need to flush to trigger the second one to load.
@@ -1530,7 +1538,6 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('ba');
   });
 
-  // @gate enableLazyElements
   it('mount and reorder lazy elements (legacy mode)', async () => {
     class Child extends React.Component {
       componentDidMount() {

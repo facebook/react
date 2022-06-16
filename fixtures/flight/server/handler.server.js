@@ -1,51 +1,31 @@
 'use strict';
 
-import {pipeToNodeWritable} from 'react-transport-dom-webpack/server';
-import * as React from 'react';
+const {renderToPipeableStream} = require('react-server-dom-webpack/writer');
+const {readFile} = require('fs');
+const {resolve} = require('path');
+const React = require('react');
 
-import url from 'url';
-
-function resolve(path) {
-  return url.pathToFileURL(require.resolve(path)).href;
-}
-
-module.exports = async function(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  const m = await import('../src/App.server.js');
+module.exports = function(req, res) {
   // const m = require('../src/App.server.js');
-  const App = m.default.default || m.default;
-  pipeToNodeWritable(<App />, res, {
-    // TODO: Read from a map on the disk.
-    [resolve('../src/Counter.client.js')]: {
-      Counter: {
-        id: './src/Counter.client.js',
-        chunks: ['2'],
-        name: 'Counter',
-      },
-    },
-    [resolve('../src/Counter2.client.js')]: {
-      Counter: {
-        id: './src/Counter2.client.js',
-        chunks: ['1'],
-        name: 'Counter',
-      },
-    },
-    [resolve('../src/ShowMore.client.js')]: {
-      default: {
-        id: './src/ShowMore.client.js',
-        chunks: ['3'],
-        name: 'default',
-      },
-      '': {
-        id: './src/ShowMore.client.js',
-        chunks: ['3'],
-        name: '',
-      },
-      '*': {
-        id: './src/ShowMore.client.js',
-        chunks: ['3'],
-        name: '*',
-      },
-    },
+  import('../src/App.server.js').then(m => {
+    const dist = process.env.NODE_ENV === 'development' ? 'dist' : 'build';
+    readFile(
+      resolve(__dirname, `../${dist}/react-client-manifest.json`),
+      'utf8',
+      (err, data) => {
+        if (err) {
+          throw err;
+        }
+
+        const App = m.default.default || m.default;
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        const moduleMap = JSON.parse(data);
+        const {pipe} = renderToPipeableStream(
+          React.createElement(App),
+          moduleMap
+        );
+        pipe(res);
+      }
+    );
   });
 };

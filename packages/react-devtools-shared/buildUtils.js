@@ -11,14 +11,23 @@ const {resolve} = require('path');
 function resolveFeatureFlags(target) {
   let flagsPath;
   switch (target) {
-    case 'core/backend':
-    case 'core/standalone':
     case 'inline':
     case 'shell':
       flagsPath = 'DevToolsFeatureFlags.default';
       break;
-    case 'extension':
-      flagsPath = 'DevToolsFeatureFlags.extension';
+    case 'core/backend-oss':
+    case 'core/standalone-oss':
+      flagsPath = 'DevToolsFeatureFlags.core-oss';
+      break;
+    case 'core/backend-fb':
+    case 'core/standalone-fb':
+      flagsPath = 'DevToolsFeatureFlags.core-fb';
+      break;
+    case 'extension-oss':
+      flagsPath = 'DevToolsFeatureFlags.extension-oss';
+      break;
+    case 'extension-fb':
+      flagsPath = 'DevToolsFeatureFlags.extension-fb';
       break;
     default:
       console.error(`Invalid target "${target}"`);

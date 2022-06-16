@@ -526,23 +526,23 @@
 ## `amplitude` (on `<feFuncA>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `amplitude=(string)`| (changed)| `<number: 0>` |
+| `amplitude=(string)`| (initial)| `<number: 1>` |
 | `amplitude=(empty string)`| (changed)| `<number: 0>` |
-| `amplitude=(array with string)`| (changed)| `<number: 0>` |
+| `amplitude=(array with string)`| (initial)| `<number: 1>` |
 | `amplitude=(empty array)`| (changed)| `<number: 0>` |
-| `amplitude=(object)`| (changed)| `<number: 0>` |
+| `amplitude=(object)`| (initial)| `<number: 1>` |
 | `amplitude=(numeric string)`| (changed)| `<number: 42>` |
 | `amplitude=(-1)`| (changed)| `<number: -1>` |
 | `amplitude=(0)`| (changed)| `<number: 0>` |
 | `amplitude=(integer)`| (initial)| `<number: 1>` |
-| `amplitude=(NaN)`| (changed, warning)| `<number: 0>` |
+| `amplitude=(NaN)`| (initial, warning)| `<number: 1>` |
 | `amplitude=(float)`| (changed)| `<number: 99.98999786376953>` |
 | `amplitude=(true)`| (initial, warning)| `<number: 1>` |
 | `amplitude=(false)`| (initial, warning)| `<number: 1>` |
-| `amplitude=(string 'true')`| (changed)| `<number: 0>` |
-| `amplitude=(string 'false')`| (changed)| `<number: 0>` |
-| `amplitude=(string 'on')`| (changed)| `<number: 0>` |
-| `amplitude=(string 'off')`| (changed)| `<number: 0>` |
+| `amplitude=(string 'true')`| (initial)| `<number: 1>` |
+| `amplitude=(string 'false')`| (initial)| `<number: 1>` |
+| `amplitude=(string 'on')`| (initial)| `<number: 1>` |
+| `amplitude=(string 'off')`| (initial)| `<number: 1>` |
 | `amplitude=(symbol)`| (initial, warning)| `<number: 1>` |
 | `amplitude=(function)`| (initial, warning)| `<number: 1>` |
 | `amplitude=(null)`| (initial)| `<number: 1>` |
@@ -830,17 +830,17 @@
 | `autoComplete=(empty string)`| (initial)| `<empty string>` |
 | `autoComplete=(array with string)`| (changed)| `"email"` |
 | `autoComplete=(empty array)`| (initial)| `<empty string>` |
-| `autoComplete=(object)`| (changed)| `"result of toString()"` |
-| `autoComplete=(numeric string)`| (changed)| `"42"` |
-| `autoComplete=(-1)`| (changed)| `"-1"` |
-| `autoComplete=(0)`| (changed)| `"0"` |
-| `autoComplete=(integer)`| (changed)| `"1"` |
-| `autoComplete=(NaN)`| (changed, warning)| `"NaN"` |
-| `autoComplete=(float)`| (changed)| `"99.99"` |
+| `autoComplete=(object)`| (initial)| `<empty string>` |
+| `autoComplete=(numeric string)`| (initial)| `<empty string>` |
+| `autoComplete=(-1)`| (initial)| `<empty string>` |
+| `autoComplete=(0)`| (initial)| `<empty string>` |
+| `autoComplete=(integer)`| (initial)| `<empty string>` |
+| `autoComplete=(NaN)`| (initial, warning)| `<empty string>` |
+| `autoComplete=(float)`| (initial)| `<empty string>` |
 | `autoComplete=(true)`| (initial, warning)| `<empty string>` |
 | `autoComplete=(false)`| (initial, warning)| `<empty string>` |
-| `autoComplete=(string 'true')`| (changed)| `"true"` |
-| `autoComplete=(string 'false')`| (changed)| `"false"` |
+| `autoComplete=(string 'true')`| (initial)| `<empty string>` |
+| `autoComplete=(string 'false')`| (initial)| `<empty string>` |
 | `autoComplete=(string 'on')`| (changed)| `"on"` |
 | `autoComplete=(string 'off')`| (changed)| `"off"` |
 | `autoComplete=(symbol)`| (initial, warning)| `<empty string>` |
@@ -1469,16 +1469,16 @@
 | `children=(string 'on')`| (initial)| `[]` |
 | `children=(string 'off')`| (initial)| `[]` |
 | `children=(symbol)`| (initial)| `[]` |
-| `children=(function)`| (initial, warning, ssr warning)| `[]` |
+| `children=(function)`| (initial, warning)| `[]` |
 | `children=(null)`| (initial)| `[]` |
 | `children=(undefined)`| (initial)| `[]` |
 
 ## `cite` (on `<blockquote>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `cite=(string)`| (changed)| `"http://reactjs.com/"` |
+| `cite=(string)`| (changed)| `"https://reactjs.com/"` |
 | `cite=(empty string)`| (changed)| `"http://localhost:3000/"` |
-| `cite=(array with string)`| (changed)| `"http://reactjs.com/"` |
+| `cite=(array with string)`| (changed)| `"https://reactjs.com/"` |
 | `cite=(empty array)`| (changed)| `"http://localhost:3000/"` |
 | `cite=(object)`| (changed)| `"http://localhost:3000/result%20of%20toString()"` |
 | `cite=(numeric string)`| (changed)| `"http://localhost:3000/42"` |
@@ -2560,7 +2560,7 @@
 | `defaultChecked=(-1)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(0)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(integer)`| (changed)| `<boolean: true>` |
-| `defaultChecked=(NaN)`| (initial, warning, ssr warning)| `<boolean: false>` |
+| `defaultChecked=(NaN)`| (initial, warning)| `<boolean: false>` |
 | `defaultChecked=(float)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(true)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(false)`| (initial)| `<boolean: false>` |
@@ -2593,9 +2593,9 @@
 | `defaultValue=(string 'false')`| (changed)| `"false"` |
 | `defaultValue=(string 'on')`| (changed)| `"on"` |
 | `defaultValue=(string 'off')`| (changed)| `"off"` |
-| `defaultValue=(symbol)`| (initial, ssr warning)| `<empty string>` |
-| `defaultValue=(function)`| (initial, ssr warning)| `<empty string>` |
-| `defaultValue=(null)`| (initial, ssr warning)| `<empty string>` |
+| `defaultValue=(symbol)`| (initial)| `<empty string>` |
+| `defaultValue=(function)`| (initial)| `<empty string>` |
+| `defaultValue=(null)`| (initial)| `<empty string>` |
 | `defaultValue=(undefined)`| (initial)| `<empty string>` |
 
 ## `defaultValuE` (on `<input>` inside `<div>`)
@@ -2676,23 +2676,23 @@
 ## `diffuseConstant` (on `<feDiffuseLighting>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `diffuseConstant=(string)`| (changed)| `<number: 0>` |
+| `diffuseConstant=(string)`| (initial)| `<number: 1>` |
 | `diffuseConstant=(empty string)`| (changed)| `<number: 0>` |
-| `diffuseConstant=(array with string)`| (changed)| `<number: 0>` |
+| `diffuseConstant=(array with string)`| (initial)| `<number: 1>` |
 | `diffuseConstant=(empty array)`| (changed)| `<number: 0>` |
-| `diffuseConstant=(object)`| (changed)| `<number: 0>` |
+| `diffuseConstant=(object)`| (initial)| `<number: 1>` |
 | `diffuseConstant=(numeric string)`| (changed)| `<number: 42>` |
 | `diffuseConstant=(-1)`| (changed)| `<number: -1>` |
 | `diffuseConstant=(0)`| (changed)| `<number: 0>` |
 | `diffuseConstant=(integer)`| (initial)| `<number: 1>` |
-| `diffuseConstant=(NaN)`| (changed, warning)| `<number: 0>` |
+| `diffuseConstant=(NaN)`| (initial, warning)| `<number: 1>` |
 | `diffuseConstant=(float)`| (changed)| `<number: 99.98999786376953>` |
 | `diffuseConstant=(true)`| (initial, warning)| `<number: 1>` |
 | `diffuseConstant=(false)`| (initial, warning)| `<number: 1>` |
-| `diffuseConstant=(string 'true')`| (changed)| `<number: 0>` |
-| `diffuseConstant=(string 'false')`| (changed)| `<number: 0>` |
-| `diffuseConstant=(string 'on')`| (changed)| `<number: 0>` |
-| `diffuseConstant=(string 'off')`| (changed)| `<number: 0>` |
+| `diffuseConstant=(string 'true')`| (initial)| `<number: 1>` |
+| `diffuseConstant=(string 'false')`| (initial)| `<number: 1>` |
+| `diffuseConstant=(string 'on')`| (initial)| `<number: 1>` |
+| `diffuseConstant=(string 'off')`| (initial)| `<number: 1>` |
 | `diffuseConstant=(symbol)`| (initial, warning)| `<number: 1>` |
 | `diffuseConstant=(function)`| (initial, warning)| `<number: 1>` |
 | `diffuseConstant=(null)`| (initial)| `<number: 1>` |
@@ -2773,6 +2773,56 @@
 | `disabled=(null)`| (initial)| `<boolean: false>` |
 | `disabled=(undefined)`| (initial)| `<boolean: false>` |
 
+## `disablePictureInPicture` (on `<video>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `disablePictureInPicture=(string)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(empty string)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(array with string)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(empty array)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(object)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(numeric string)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(-1)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(0)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(integer)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(NaN)`| (initial, warning)| `<undefined>` |
+| `disablePictureInPicture=(float)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(true)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(false)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(string 'true')`| (initial, warning)| `<undefined>` |
+| `disablePictureInPicture=(string 'false')`| (initial, warning)| `<undefined>` |
+| `disablePictureInPicture=(string 'on')`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(string 'off')`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(symbol)`| (initial, warning)| `<undefined>` |
+| `disablePictureInPicture=(function)`| (initial, warning)| `<undefined>` |
+| `disablePictureInPicture=(null)`| (initial)| `<undefined>` |
+| `disablePictureInPicture=(undefined)`| (initial)| `<undefined>` |
+
+## `disableRemotePlayback` (on `<video>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `disableRemotePlayback=(string)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(empty string)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(array with string)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(empty array)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(object)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(numeric string)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(-1)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(0)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(integer)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(NaN)`| (initial, warning)| `<undefined>` |
+| `disableRemotePlayback=(float)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(true)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(false)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(string 'true')`| (initial, warning)| `<undefined>` |
+| `disableRemotePlayback=(string 'false')`| (initial, warning)| `<undefined>` |
+| `disableRemotePlayback=(string 'on')`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(string 'off')`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(symbol)`| (initial, warning)| `<undefined>` |
+| `disableRemotePlayback=(function)`| (initial, warning)| `<undefined>` |
+| `disableRemotePlayback=(null)`| (initial)| `<undefined>` |
+| `disableRemotePlayback=(undefined)`| (initial)| `<undefined>` |
+
 ## `display` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
@@ -2801,27 +2851,27 @@
 ## `divisor` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `divisor=(string)`| (initial)| `<number: 0>` |
-| `divisor=(empty string)`| (initial)| `<number: 0>` |
-| `divisor=(array with string)`| (initial)| `<number: 0>` |
-| `divisor=(empty array)`| (initial)| `<number: 0>` |
-| `divisor=(object)`| (initial)| `<number: 0>` |
+| `divisor=(string)`| (initial)| `<number: 1>` |
+| `divisor=(empty string)`| (changed)| `<number: 0>` |
+| `divisor=(array with string)`| (initial)| `<number: 1>` |
+| `divisor=(empty array)`| (changed)| `<number: 0>` |
+| `divisor=(object)`| (initial)| `<number: 1>` |
 | `divisor=(numeric string)`| (changed)| `<number: 42>` |
 | `divisor=(-1)`| (changed)| `<number: -1>` |
-| `divisor=(0)`| (initial)| `<number: 0>` |
-| `divisor=(integer)`| (changed)| `<number: 1>` |
-| `divisor=(NaN)`| (initial, warning)| `<number: 0>` |
+| `divisor=(0)`| (changed)| `<number: 0>` |
+| `divisor=(integer)`| (initial)| `<number: 1>` |
+| `divisor=(NaN)`| (initial, warning)| `<number: 1>` |
 | `divisor=(float)`| (changed)| `<number: 99.98999786376953>` |
-| `divisor=(true)`| (initial, warning)| `<number: 0>` |
-| `divisor=(false)`| (initial, warning)| `<number: 0>` |
-| `divisor=(string 'true')`| (initial)| `<number: 0>` |
-| `divisor=(string 'false')`| (initial)| `<number: 0>` |
-| `divisor=(string 'on')`| (initial)| `<number: 0>` |
-| `divisor=(string 'off')`| (initial)| `<number: 0>` |
-| `divisor=(symbol)`| (initial, warning)| `<number: 0>` |
-| `divisor=(function)`| (initial, warning)| `<number: 0>` |
-| `divisor=(null)`| (initial)| `<number: 0>` |
-| `divisor=(undefined)`| (initial)| `<number: 0>` |
+| `divisor=(true)`| (initial, warning)| `<number: 1>` |
+| `divisor=(false)`| (initial, warning)| `<number: 1>` |
+| `divisor=(string 'true')`| (initial)| `<number: 1>` |
+| `divisor=(string 'false')`| (initial)| `<number: 1>` |
+| `divisor=(string 'on')`| (initial)| `<number: 1>` |
+| `divisor=(string 'off')`| (initial)| `<number: 1>` |
+| `divisor=(symbol)`| (initial, warning)| `<number: 1>` |
+| `divisor=(function)`| (initial, warning)| `<number: 1>` |
+| `divisor=(null)`| (initial)| `<number: 1>` |
+| `divisor=(undefined)`| (initial)| `<number: 1>` |
 
 ## `dominant-baseline` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
@@ -3251,23 +3301,23 @@
 ## `exponent` (on `<feFuncA>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `exponent=(string)`| (changed)| `<number: 0>` |
+| `exponent=(string)`| (initial)| `<number: 1>` |
 | `exponent=(empty string)`| (changed)| `<number: 0>` |
-| `exponent=(array with string)`| (changed)| `<number: 0>` |
+| `exponent=(array with string)`| (initial)| `<number: 1>` |
 | `exponent=(empty array)`| (changed)| `<number: 0>` |
-| `exponent=(object)`| (changed)| `<number: 0>` |
+| `exponent=(object)`| (initial)| `<number: 1>` |
 | `exponent=(numeric string)`| (changed)| `<number: 42>` |
 | `exponent=(-1)`| (changed)| `<number: -1>` |
 | `exponent=(0)`| (changed)| `<number: 0>` |
 | `exponent=(integer)`| (initial)| `<number: 1>` |
-| `exponent=(NaN)`| (changed, warning)| `<number: 0>` |
+| `exponent=(NaN)`| (initial, warning)| `<number: 1>` |
 | `exponent=(float)`| (changed)| `<number: 99.98999786376953>` |
 | `exponent=(true)`| (initial, warning)| `<number: 1>` |
 | `exponent=(false)`| (initial, warning)| `<number: 1>` |
-| `exponent=(string 'true')`| (changed)| `<number: 0>` |
-| `exponent=(string 'false')`| (changed)| `<number: 0>` |
-| `exponent=(string 'on')`| (changed)| `<number: 0>` |
-| `exponent=(string 'off')`| (changed)| `<number: 0>` |
+| `exponent=(string 'true')`| (initial)| `<number: 1>` |
+| `exponent=(string 'false')`| (initial)| `<number: 1>` |
+| `exponent=(string 'on')`| (initial)| `<number: 1>` |
+| `exponent=(string 'off')`| (initial)| `<number: 1>` |
 | `exponent=(symbol)`| (initial, warning)| `<number: 1>` |
 | `exponent=(function)`| (initial, warning)| `<number: 1>` |
 | `exponent=(null)`| (initial)| `<number: 1>` |
@@ -4252,101 +4302,101 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fx=(string)`| (changed)| `<SVGLength: 10px>` |
-| `fx=(empty string)`| (initial)| `<SVGLength: 0>` |
+| `fx=(empty string)`| (initial)| `<SVGLength: 50%>` |
 | `fx=(array with string)`| (changed)| `<SVGLength: 10px>` |
-| `fx=(empty array)`| (initial)| `<SVGLength: 0>` |
-| `fx=(object)`| (initial)| `<SVGLength: 0>` |
+| `fx=(empty array)`| (initial)| `<SVGLength: 50%>` |
+| `fx=(object)`| (initial)| `<SVGLength: 50%>` |
 | `fx=(numeric string)`| (changed)| `<SVGLength: 42>` |
 | `fx=(-1)`| (changed)| `<SVGLength: -1>` |
-| `fx=(0)`| (initial)| `<SVGLength: 0>` |
+| `fx=(0)`| (changed)| `<SVGLength: 0>` |
 | `fx=(integer)`| (changed)| `<SVGLength: 1>` |
-| `fx=(NaN)`| (initial, warning)| `<SVGLength: 0>` |
+| `fx=(NaN)`| (initial, warning)| `<SVGLength: 50%>` |
 | `fx=(float)`| (changed)| `<SVGLength: 99.99>` |
-| `fx=(true)`| (initial, warning)| `<SVGLength: 0>` |
-| `fx=(false)`| (initial, warning)| `<SVGLength: 0>` |
-| `fx=(string 'true')`| (initial)| `<SVGLength: 0>` |
-| `fx=(string 'false')`| (initial)| `<SVGLength: 0>` |
-| `fx=(string 'on')`| (initial)| `<SVGLength: 0>` |
-| `fx=(string 'off')`| (initial)| `<SVGLength: 0>` |
-| `fx=(symbol)`| (initial, warning)| `<SVGLength: 0>` |
-| `fx=(function)`| (initial, warning)| `<SVGLength: 0>` |
-| `fx=(null)`| (initial)| `<SVGLength: 0>` |
-| `fx=(undefined)`| (initial)| `<SVGLength: 0>` |
+| `fx=(true)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fx=(false)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fx=(string 'true')`| (initial)| `<SVGLength: 50%>` |
+| `fx=(string 'false')`| (initial)| `<SVGLength: 50%>` |
+| `fx=(string 'on')`| (initial)| `<SVGLength: 50%>` |
+| `fx=(string 'off')`| (initial)| `<SVGLength: 50%>` |
+| `fx=(symbol)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fx=(function)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fx=(null)`| (initial)| `<SVGLength: 50%>` |
+| `fx=(undefined)`| (initial)| `<SVGLength: 50%>` |
 
 ## `fX` (on `<radialGradient>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `fX=(string)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fX=(empty string)`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(array with string)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fX=(empty array)`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(object)`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(numeric string)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fX=(-1)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fX=(0)`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(integer)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fX=(NaN)`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(float)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fX=(true)`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(false)`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(string 'true')`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(string 'false')`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(string 'on')`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(string 'off')`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(symbol)`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(function)`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(null)`| (initial, warning)| `<SVGLength: 0>` |
-| `fX=(undefined)`| (initial, warning)| `<SVGLength: 0>` |
+| `fX=(string)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fX=(empty string)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(array with string)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fX=(empty array)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(object)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(numeric string)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fX=(-1)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fX=(0)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fX=(integer)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fX=(NaN)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(float)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fX=(true)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(false)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(string 'true')`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(string 'false')`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(string 'on')`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(string 'off')`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(symbol)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(function)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(null)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fX=(undefined)`| (initial, warning)| `<SVGLength: 50%>` |
 
 ## `fY` (on `<radialGradient>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `fY=(string)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fY=(empty string)`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(array with string)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fY=(empty array)`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(object)`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(numeric string)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fY=(-1)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fY=(0)`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(integer)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fY=(NaN)`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(float)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
-| `fY=(true)`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(false)`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(string 'true')`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(string 'false')`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(string 'on')`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(string 'off')`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(symbol)`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(function)`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(null)`| (initial, warning)| `<SVGLength: 0>` |
-| `fY=(undefined)`| (initial, warning)| `<SVGLength: 0>` |
+| `fY=(string)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fY=(empty string)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(array with string)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fY=(empty array)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(object)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(numeric string)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fY=(-1)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fY=(0)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fY=(integer)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fY=(NaN)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(float)`| (initial, warning, ssr mismatch)| `<SVGLength: 50%>` |
+| `fY=(true)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(false)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(string 'true')`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(string 'false')`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(string 'on')`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(string 'off')`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(symbol)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(function)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(null)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fY=(undefined)`| (initial, warning)| `<SVGLength: 50%>` |
 
 ## `fy` (on `<radialGradient>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fy=(string)`| (changed)| `<SVGLength: 20em>` |
-| `fy=(empty string)`| (initial)| `<SVGLength: 0>` |
+| `fy=(empty string)`| (initial)| `<SVGLength: 50%>` |
 | `fy=(array with string)`| (changed)| `<SVGLength: 20em>` |
-| `fy=(empty array)`| (initial)| `<SVGLength: 0>` |
-| `fy=(object)`| (initial)| `<SVGLength: 0>` |
+| `fy=(empty array)`| (initial)| `<SVGLength: 50%>` |
+| `fy=(object)`| (initial)| `<SVGLength: 50%>` |
 | `fy=(numeric string)`| (changed)| `<SVGLength: 42>` |
 | `fy=(-1)`| (changed)| `<SVGLength: -1>` |
-| `fy=(0)`| (initial)| `<SVGLength: 0>` |
+| `fy=(0)`| (changed)| `<SVGLength: 0>` |
 | `fy=(integer)`| (changed)| `<SVGLength: 1>` |
-| `fy=(NaN)`| (initial, warning)| `<SVGLength: 0>` |
+| `fy=(NaN)`| (initial, warning)| `<SVGLength: 50%>` |
 | `fy=(float)`| (changed)| `<SVGLength: 99.99>` |
-| `fy=(true)`| (initial, warning)| `<SVGLength: 0>` |
-| `fy=(false)`| (initial, warning)| `<SVGLength: 0>` |
-| `fy=(string 'true')`| (initial)| `<SVGLength: 0>` |
-| `fy=(string 'false')`| (initial)| `<SVGLength: 0>` |
-| `fy=(string 'on')`| (initial)| `<SVGLength: 0>` |
-| `fy=(string 'off')`| (initial)| `<SVGLength: 0>` |
-| `fy=(symbol)`| (initial, warning)| `<SVGLength: 0>` |
-| `fy=(function)`| (initial, warning)| `<SVGLength: 0>` |
-| `fy=(null)`| (initial)| `<SVGLength: 0>` |
-| `fy=(undefined)`| (initial)| `<SVGLength: 0>` |
+| `fy=(true)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fy=(false)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fy=(string 'true')`| (initial)| `<SVGLength: 50%>` |
+| `fy=(string 'false')`| (initial)| `<SVGLength: 50%>` |
+| `fy=(string 'on')`| (initial)| `<SVGLength: 50%>` |
+| `fy=(string 'off')`| (initial)| `<SVGLength: 50%>` |
+| `fy=(symbol)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fy=(function)`| (initial, warning)| `<SVGLength: 50%>` |
+| `fy=(null)`| (initial)| `<SVGLength: 50%>` |
+| `fy=(undefined)`| (initial)| `<SVGLength: 50%>` |
 
 ## `G1` (on `<hkern>` inside `<svg>`)
 | Test Case | Flags | Result |
@@ -5197,6 +5247,56 @@
 | `imageRendering=(function)`| (initial, warning)| `<null>` |
 | `imageRendering=(null)`| (initial)| `<null>` |
 | `imageRendering=(undefined)`| (initial)| `<null>` |
+
+## `imageSizes` (on `<link>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `imageSizes=(string)`| (changed)| `"a string"` |
+| `imageSizes=(empty string)`| (initial)| `<empty string>` |
+| `imageSizes=(array with string)`| (changed)| `"string"` |
+| `imageSizes=(empty array)`| (initial)| `<empty string>` |
+| `imageSizes=(object)`| (changed)| `"result of toString()"` |
+| `imageSizes=(numeric string)`| (changed)| `"42"` |
+| `imageSizes=(-1)`| (changed)| `"-1"` |
+| `imageSizes=(0)`| (changed)| `"0"` |
+| `imageSizes=(integer)`| (changed)| `"1"` |
+| `imageSizes=(NaN)`| (changed, warning)| `"NaN"` |
+| `imageSizes=(float)`| (changed)| `"99.99"` |
+| `imageSizes=(true)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(false)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(string 'true')`| (changed)| `"true"` |
+| `imageSizes=(string 'false')`| (changed)| `"false"` |
+| `imageSizes=(string 'on')`| (changed)| `"on"` |
+| `imageSizes=(string 'off')`| (changed)| `"off"` |
+| `imageSizes=(symbol)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(function)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(null)`| (initial)| `<empty string>` |
+| `imageSizes=(undefined)`| (initial)| `<empty string>` |
+
+## `imageSrcSet` (on `<link>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `imageSrcSet=(string)`| (changed)| `"a string"` |
+| `imageSrcSet=(empty string)`| (initial)| `<empty string>` |
+| `imageSrcSet=(array with string)`| (changed)| `"string"` |
+| `imageSrcSet=(empty array)`| (initial)| `<empty string>` |
+| `imageSrcSet=(object)`| (changed)| `"result of toString()"` |
+| `imageSrcSet=(numeric string)`| (changed)| `"42"` |
+| `imageSrcSet=(-1)`| (changed)| `"-1"` |
+| `imageSrcSet=(0)`| (changed)| `"0"` |
+| `imageSrcSet=(integer)`| (changed)| `"1"` |
+| `imageSrcSet=(NaN)`| (changed, warning)| `"NaN"` |
+| `imageSrcSet=(float)`| (changed)| `"99.99"` |
+| `imageSrcSet=(true)`| (initial, warning)| `<empty string>` |
+| `imageSrcSet=(false)`| (initial, warning)| `<empty string>` |
+| `imageSrcSet=(string 'true')`| (changed)| `"true"` |
+| `imageSrcSet=(string 'false')`| (changed)| `"false"` |
+| `imageSrcSet=(string 'on')`| (changed)| `"on"` |
+| `imageSrcSet=(string 'off')`| (changed)| `"off"` |
+| `imageSrcSet=(symbol)`| (initial, warning)| `<empty string>` |
+| `imageSrcSet=(function)`| (initial, warning)| `<empty string>` |
+| `imageSrcSet=(null)`| (initial)| `<empty string>` |
+| `imageSrcSet=(undefined)`| (initial)| `<empty string>` |
 
 ## `in` (on `<feBlend>` inside `<svg>`)
 | Test Case | Flags | Result |
@@ -6326,27 +6426,27 @@
 ## `marginHeight` (on `<frame>` inside `<frameset>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `marginHeight=(string)`| (changed, warning, ssr error, ssr mismatch)| `"a string"` |
-| `marginHeight=(empty string)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `marginHeight=(array with string)`| (changed, warning, ssr error, ssr mismatch)| `"string"` |
-| `marginHeight=(empty array)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `marginHeight=(object)`| (changed, warning, ssr error, ssr mismatch)| `"result of toString()"` |
-| `marginHeight=(numeric string)`| (changed, warning, ssr error, ssr mismatch)| `"42"` |
-| `marginHeight=(-1)`| (changed, warning, ssr error, ssr mismatch)| `"-1"` |
-| `marginHeight=(0)`| (changed, warning, ssr error, ssr mismatch)| `"0"` |
-| `marginHeight=(integer)`| (changed, warning, ssr error, ssr mismatch)| `"1"` |
+| `marginHeight=(string)`| (changed, ssr error, ssr mismatch)| `"a string"` |
+| `marginHeight=(empty string)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
+| `marginHeight=(array with string)`| (changed, ssr error, ssr mismatch)| `"string"` |
+| `marginHeight=(empty array)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
+| `marginHeight=(object)`| (changed, ssr error, ssr mismatch)| `"result of toString()"` |
+| `marginHeight=(numeric string)`| (changed, ssr error, ssr mismatch)| `"42"` |
+| `marginHeight=(-1)`| (changed, ssr error, ssr mismatch)| `"-1"` |
+| `marginHeight=(0)`| (changed, ssr error, ssr mismatch)| `"0"` |
+| `marginHeight=(integer)`| (changed, ssr error, ssr mismatch)| `"1"` |
 | `marginHeight=(NaN)`| (changed, warning, ssr error, ssr mismatch)| `"NaN"` |
-| `marginHeight=(float)`| (changed, warning, ssr error, ssr mismatch)| `"99.99"` |
+| `marginHeight=(float)`| (changed, ssr error, ssr mismatch)| `"99.99"` |
 | `marginHeight=(true)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
 | `marginHeight=(false)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `marginHeight=(string 'true')`| (changed, warning, ssr error, ssr mismatch)| `"true"` |
-| `marginHeight=(string 'false')`| (changed, warning, ssr error, ssr mismatch)| `"false"` |
-| `marginHeight=(string 'on')`| (changed, warning, ssr error, ssr mismatch)| `"on"` |
-| `marginHeight=(string 'off')`| (changed, warning, ssr error, ssr mismatch)| `"off"` |
+| `marginHeight=(string 'true')`| (changed, ssr error, ssr mismatch)| `"true"` |
+| `marginHeight=(string 'false')`| (changed, ssr error, ssr mismatch)| `"false"` |
+| `marginHeight=(string 'on')`| (changed, ssr error, ssr mismatch)| `"on"` |
+| `marginHeight=(string 'off')`| (changed, ssr error, ssr mismatch)| `"off"` |
 | `marginHeight=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
 | `marginHeight=(function)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `marginHeight=(null)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `marginHeight=(undefined)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
+| `marginHeight=(null)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
+| `marginHeight=(undefined)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
 
 ## `marginWidth` (on `<frame>` inside `<frameset>`)
 | Test Case | Flags | Result |
@@ -6476,23 +6576,23 @@
 ## `markerHeight` (on `<marker>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `markerHeight=(string)`| (changed)| `<SVGLength: 0>` |
-| `markerHeight=(empty string)`| (changed)| `<SVGLength: 0>` |
-| `markerHeight=(array with string)`| (changed)| `<SVGLength: 0>` |
-| `markerHeight=(empty array)`| (changed)| `<SVGLength: 0>` |
-| `markerHeight=(object)`| (changed)| `<SVGLength: 0>` |
+| `markerHeight=(string)`| (initial)| `<SVGLength: 3>` |
+| `markerHeight=(empty string)`| (initial)| `<SVGLength: 3>` |
+| `markerHeight=(array with string)`| (initial)| `<SVGLength: 3>` |
+| `markerHeight=(empty array)`| (initial)| `<SVGLength: 3>` |
+| `markerHeight=(object)`| (initial)| `<SVGLength: 3>` |
 | `markerHeight=(numeric string)`| (changed)| `<SVGLength: 42>` |
 | `markerHeight=(-1)`| (changed)| `<SVGLength: -1>` |
 | `markerHeight=(0)`| (changed)| `<SVGLength: 0>` |
 | `markerHeight=(integer)`| (changed)| `<SVGLength: 1>` |
-| `markerHeight=(NaN)`| (changed, warning)| `<SVGLength: 0>` |
+| `markerHeight=(NaN)`| (initial, warning)| `<SVGLength: 3>` |
 | `markerHeight=(float)`| (changed)| `<SVGLength: 99.99>` |
 | `markerHeight=(true)`| (initial, warning)| `<SVGLength: 3>` |
 | `markerHeight=(false)`| (initial, warning)| `<SVGLength: 3>` |
-| `markerHeight=(string 'true')`| (changed)| `<SVGLength: 0>` |
-| `markerHeight=(string 'false')`| (changed)| `<SVGLength: 0>` |
-| `markerHeight=(string 'on')`| (changed)| `<SVGLength: 0>` |
-| `markerHeight=(string 'off')`| (changed)| `<SVGLength: 0>` |
+| `markerHeight=(string 'true')`| (initial)| `<SVGLength: 3>` |
+| `markerHeight=(string 'false')`| (initial)| `<SVGLength: 3>` |
+| `markerHeight=(string 'on')`| (initial)| `<SVGLength: 3>` |
+| `markerHeight=(string 'off')`| (initial)| `<SVGLength: 3>` |
 | `markerHeight=(symbol)`| (initial, warning)| `<SVGLength: 3>` |
 | `markerHeight=(function)`| (initial, warning)| `<SVGLength: 3>` |
 | `markerHeight=(null)`| (initial)| `<SVGLength: 3>` |
@@ -6576,23 +6676,23 @@
 ## `markerWidth` (on `<marker>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `markerWidth=(string)`| (changed)| `<SVGLength: 0>` |
-| `markerWidth=(empty string)`| (changed)| `<SVGLength: 0>` |
-| `markerWidth=(array with string)`| (changed)| `<SVGLength: 0>` |
-| `markerWidth=(empty array)`| (changed)| `<SVGLength: 0>` |
-| `markerWidth=(object)`| (changed)| `<SVGLength: 0>` |
+| `markerWidth=(string)`| (initial)| `<SVGLength: 3>` |
+| `markerWidth=(empty string)`| (initial)| `<SVGLength: 3>` |
+| `markerWidth=(array with string)`| (initial)| `<SVGLength: 3>` |
+| `markerWidth=(empty array)`| (initial)| `<SVGLength: 3>` |
+| `markerWidth=(object)`| (initial)| `<SVGLength: 3>` |
 | `markerWidth=(numeric string)`| (changed)| `<SVGLength: 42>` |
 | `markerWidth=(-1)`| (changed)| `<SVGLength: -1>` |
 | `markerWidth=(0)`| (changed)| `<SVGLength: 0>` |
 | `markerWidth=(integer)`| (changed)| `<SVGLength: 1>` |
-| `markerWidth=(NaN)`| (changed, warning)| `<SVGLength: 0>` |
+| `markerWidth=(NaN)`| (initial, warning)| `<SVGLength: 3>` |
 | `markerWidth=(float)`| (changed)| `<SVGLength: 99.99>` |
 | `markerWidth=(true)`| (initial, warning)| `<SVGLength: 3>` |
 | `markerWidth=(false)`| (initial, warning)| `<SVGLength: 3>` |
-| `markerWidth=(string 'true')`| (changed)| `<SVGLength: 0>` |
-| `markerWidth=(string 'false')`| (changed)| `<SVGLength: 0>` |
-| `markerWidth=(string 'on')`| (changed)| `<SVGLength: 0>` |
-| `markerWidth=(string 'off')`| (changed)| `<SVGLength: 0>` |
+| `markerWidth=(string 'true')`| (initial)| `<SVGLength: 3>` |
+| `markerWidth=(string 'false')`| (initial)| `<SVGLength: 3>` |
+| `markerWidth=(string 'on')`| (initial)| `<SVGLength: 3>` |
+| `markerWidth=(string 'off')`| (initial)| `<SVGLength: 3>` |
 | `markerWidth=(symbol)`| (initial, warning)| `<SVGLength: 3>` |
 | `markerWidth=(function)`| (initial, warning)| `<SVGLength: 3>` |
 | `markerWidth=(null)`| (initial)| `<SVGLength: 3>` |
@@ -7251,23 +7351,23 @@
 ## `numOctaves` (on `<feTurbulence>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `numOctaves=(string)`| (changed)| `<number: 0>` |
+| `numOctaves=(string)`| (initial)| `<number: 1>` |
 | `numOctaves=(empty string)`| (changed)| `<number: 0>` |
-| `numOctaves=(array with string)`| (changed)| `<number: 0>` |
+| `numOctaves=(array with string)`| (initial)| `<number: 1>` |
 | `numOctaves=(empty array)`| (changed)| `<number: 0>` |
-| `numOctaves=(object)`| (changed)| `<number: 0>` |
+| `numOctaves=(object)`| (initial)| `<number: 1>` |
 | `numOctaves=(numeric string)`| (changed)| `<number: 42>` |
 | `numOctaves=(-1)`| (changed)| `<number: -1>` |
 | `numOctaves=(0)`| (changed)| `<number: 0>` |
 | `numOctaves=(integer)`| (initial)| `<number: 1>` |
-| `numOctaves=(NaN)`| (changed, warning)| `<number: 0>` |
-| `numOctaves=(float)`| (changed)| `<number: 0>` |
+| `numOctaves=(NaN)`| (initial, warning)| `<number: 1>` |
+| `numOctaves=(float)`| (initial)| `<number: 1>` |
 | `numOctaves=(true)`| (initial, warning)| `<number: 1>` |
 | `numOctaves=(false)`| (initial, warning)| `<number: 1>` |
-| `numOctaves=(string 'true')`| (changed)| `<number: 0>` |
-| `numOctaves=(string 'false')`| (changed)| `<number: 0>` |
-| `numOctaves=(string 'on')`| (changed)| `<number: 0>` |
-| `numOctaves=(string 'off')`| (changed)| `<number: 0>` |
+| `numOctaves=(string 'true')`| (initial)| `<number: 1>` |
+| `numOctaves=(string 'false')`| (initial)| `<number: 1>` |
+| `numOctaves=(string 'on')`| (initial)| `<number: 1>` |
+| `numOctaves=(string 'off')`| (initial)| `<number: 1>` |
 | `numOctaves=(symbol)`| (initial, warning)| `<number: 1>` |
 | `numOctaves=(function)`| (initial, warning)| `<number: 1>` |
 | `numOctaves=(null)`| (initial)| `<number: 1>` |
@@ -9276,23 +9376,23 @@
 ## `selected` (on `<option>` inside `<select>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `selected=(string)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(empty string)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(array with string)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(empty array)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(object)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(numeric string)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(-1)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(0)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(integer)`| (initial, warning, ssr warning)| `<boolean: true>` |
+| `selected=(string)`| (initial, warning)| `<boolean: true>` |
+| `selected=(empty string)`| (initial, warning)| `<boolean: true>` |
+| `selected=(array with string)`| (initial, warning)| `<boolean: true>` |
+| `selected=(empty array)`| (initial, warning)| `<boolean: true>` |
+| `selected=(object)`| (initial, warning)| `<boolean: true>` |
+| `selected=(numeric string)`| (initial, warning)| `<boolean: true>` |
+| `selected=(-1)`| (initial, warning)| `<boolean: true>` |
+| `selected=(0)`| (initial, warning)| `<boolean: true>` |
+| `selected=(integer)`| (initial, warning)| `<boolean: true>` |
 | `selected=(NaN)`| (initial, warning)| `<boolean: true>` |
-| `selected=(float)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(true)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(false)`| (initial, warning, ssr warning)| `<boolean: true>` |
+| `selected=(float)`| (initial, warning)| `<boolean: true>` |
+| `selected=(true)`| (initial, warning)| `<boolean: true>` |
+| `selected=(false)`| (initial, warning)| `<boolean: true>` |
 | `selected=(string 'true')`| (initial, warning)| `<boolean: true>` |
 | `selected=(string 'false')`| (initial, warning)| `<boolean: true>` |
-| `selected=(string 'on')`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(string 'off')`| (initial, warning, ssr warning)| `<boolean: true>` |
+| `selected=(string 'on')`| (initial, warning)| `<boolean: true>` |
+| `selected=(string 'off')`| (initial, warning)| `<boolean: true>` |
 | `selected=(symbol)`| (initial, warning)| `<boolean: true>` |
 | `selected=(function)`| (initial, warning)| `<boolean: true>` |
 | `selected=(null)`| (initial)| `<boolean: true>` |
@@ -9526,23 +9626,23 @@
 ## `specularConstant` (on `<feSpecularLighting>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `specularConstant=(string)`| (changed)| `<number: 0>` |
+| `specularConstant=(string)`| (initial)| `<number: 1>` |
 | `specularConstant=(empty string)`| (changed)| `<number: 0>` |
-| `specularConstant=(array with string)`| (changed)| `<number: 0>` |
+| `specularConstant=(array with string)`| (initial)| `<number: 1>` |
 | `specularConstant=(empty array)`| (changed)| `<number: 0>` |
-| `specularConstant=(object)`| (changed)| `<number: 0>` |
+| `specularConstant=(object)`| (initial)| `<number: 1>` |
 | `specularConstant=(numeric string)`| (changed)| `<number: 42>` |
 | `specularConstant=(-1)`| (changed)| `<number: -1>` |
 | `specularConstant=(0)`| (changed)| `<number: 0>` |
 | `specularConstant=(integer)`| (initial)| `<number: 1>` |
-| `specularConstant=(NaN)`| (changed, warning)| `<number: 0>` |
+| `specularConstant=(NaN)`| (initial, warning)| `<number: 1>` |
 | `specularConstant=(float)`| (changed)| `<number: 99.98999786376953>` |
 | `specularConstant=(true)`| (initial, warning)| `<number: 1>` |
 | `specularConstant=(false)`| (initial, warning)| `<number: 1>` |
-| `specularConstant=(string 'true')`| (changed)| `<number: 0>` |
-| `specularConstant=(string 'false')`| (changed)| `<number: 0>` |
-| `specularConstant=(string 'on')`| (changed)| `<number: 0>` |
-| `specularConstant=(string 'off')`| (changed)| `<number: 0>` |
+| `specularConstant=(string 'true')`| (initial)| `<number: 1>` |
+| `specularConstant=(string 'false')`| (initial)| `<number: 1>` |
+| `specularConstant=(string 'on')`| (initial)| `<number: 1>` |
+| `specularConstant=(string 'off')`| (initial)| `<number: 1>` |
 | `specularConstant=(symbol)`| (initial, warning)| `<number: 1>` |
 | `specularConstant=(function)`| (initial, warning)| `<number: 1>` |
 | `specularConstant=(null)`| (initial)| `<number: 1>` |
@@ -9687,14 +9787,14 @@
 | `src=(integer)`| (changed)| `"http://localhost:3000/1"` |
 | `src=(NaN)`| (changed, warning)| `"http://localhost:3000/NaN"` |
 | `src=(float)`| (changed)| `"http://localhost:3000/99.99"` |
-| `src=(true)`| (initial, warning)| `<empty string>` |
+| `src=(true)`| (changed, warning, ssr mismatch)| `"http://localhost:3000/true"` |
 | `src=(false)`| (initial, warning)| `<empty string>` |
 | `src=(string 'true')`| (changed)| `"http://localhost:3000/true"` |
 | `src=(string 'false')`| (changed)| `"http://localhost:3000/false"` |
 | `src=(string 'on')`| (changed)| `"http://localhost:3000/on"` |
 | `src=(string 'off')`| (changed)| `"http://localhost:3000/off"` |
-| `src=(symbol)`| (initial, warning)| `<empty string>` |
-| `src=(function)`| (initial, warning)| `<empty string>` |
+| `src=(symbol)`| (changed, error, warning, ssr mismatch)| `` |
+| `src=(function)`| (changed, warning, ssr mismatch)| `"http://localhost:3000/function%20f()%20%7B%7D"` |
 | `src=(null)`| (initial)| `<empty string>` |
 | `src=(undefined)`| (initial)| `<empty string>` |
 
@@ -10678,7 +10778,7 @@
 | --- | --- | --- |
 | `style=(string)`| (changed, error, warning, ssr error)| `` |
 | `style=(empty string)`| (changed, error, warning, ssr error)| `` |
-| `style=(array with string)`| (initial)| `[]` |
+| `style=(array with string)`| (changed, error, warning, ssr mismatch)| `` |
 | `style=(empty array)`| (initial)| `[]` |
 | `style=(object)`| (initial)| `[]` |
 | `style=(numeric string)`| (changed, error, warning, ssr error)| `` |
@@ -10751,23 +10851,23 @@
 ## `surfaceScale` (on `<feDiffuseLighting>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `surfaceScale=(string)`| (changed)| `<number: 0>` |
+| `surfaceScale=(string)`| (initial)| `<number: 1>` |
 | `surfaceScale=(empty string)`| (changed)| `<number: 0>` |
-| `surfaceScale=(array with string)`| (changed)| `<number: 0>` |
+| `surfaceScale=(array with string)`| (initial)| `<number: 1>` |
 | `surfaceScale=(empty array)`| (changed)| `<number: 0>` |
-| `surfaceScale=(object)`| (changed)| `<number: 0>` |
+| `surfaceScale=(object)`| (initial)| `<number: 1>` |
 | `surfaceScale=(numeric string)`| (changed)| `<number: 42>` |
 | `surfaceScale=(-1)`| (changed)| `<number: -1>` |
 | `surfaceScale=(0)`| (changed)| `<number: 0>` |
 | `surfaceScale=(integer)`| (initial)| `<number: 1>` |
-| `surfaceScale=(NaN)`| (changed, warning)| `<number: 0>` |
+| `surfaceScale=(NaN)`| (initial, warning)| `<number: 1>` |
 | `surfaceScale=(float)`| (changed)| `<number: 99.98999786376953>` |
 | `surfaceScale=(true)`| (initial, warning)| `<number: 1>` |
 | `surfaceScale=(false)`| (initial, warning)| `<number: 1>` |
-| `surfaceScale=(string 'true')`| (changed)| `<number: 0>` |
-| `surfaceScale=(string 'false')`| (changed)| `<number: 0>` |
-| `surfaceScale=(string 'on')`| (changed)| `<number: 0>` |
-| `surfaceScale=(string 'off')`| (changed)| `<number: 0>` |
+| `surfaceScale=(string 'true')`| (initial)| `<number: 1>` |
+| `surfaceScale=(string 'false')`| (initial)| `<number: 1>` |
+| `surfaceScale=(string 'on')`| (initial)| `<number: 1>` |
+| `surfaceScale=(string 'off')`| (initial)| `<number: 1>` |
 | `surfaceScale=(symbol)`| (initial, warning)| `<number: 1>` |
 | `surfaceScale=(function)`| (initial, warning)| `<number: 1>` |
 | `surfaceScale=(null)`| (initial)| `<number: 1>` |
@@ -11810,7 +11910,7 @@
 | `value=(-1)`| (changed)| `"-1"` |
 | `value=(0)`| (changed)| `"0"` |
 | `value=(integer)`| (changed)| `"1"` |
-| `value=(NaN)`| (changed, warning, ssr warning)| `"NaN"` |
+| `value=(NaN)`| (changed, warning)| `"NaN"` |
 | `value=(float)`| (changed)| `"99.99"` |
 | `value=(true)`| (changed)| `"true"` |
 | `value=(false)`| (changed)| `"false"` |
@@ -11818,9 +11918,9 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (initial, warning, ssr warning)| `<empty string>` |
-| `value=(function)`| (initial, warning, ssr warning)| `<empty string>` |
-| `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
+| `value=(symbol)`| (initial, warning)| `<empty string>` |
+| `value=(function)`| (initial, warning)| `<empty string>` |
+| `value=(null)`| (initial, warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<input>` inside `<div>`)
@@ -11845,7 +11945,7 @@
 | `value=(string 'off')`| (changed)| `"off"` |
 | `value=(symbol)`| (initial, warning)| `<empty string>` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
-| `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
+| `value=(null)`| (initial, warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<input>` inside `<div>`)
@@ -11870,7 +11970,7 @@
 | `value=(string 'off')`| (initial)| `<empty string>` |
 | `value=(symbol)`| (initial, warning)| `<empty string>` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
-| `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
+| `value=(null)`| (initial, warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<textarea>` inside `<div>`)
@@ -11885,7 +11985,7 @@
 | `value=(-1)`| (changed)| `"-1"` |
 | `value=(0)`| (changed)| `"0"` |
 | `value=(integer)`| (changed)| `"1"` |
-| `value=(NaN)`| (changed, warning, ssr warning)| `"NaN"` |
+| `value=(NaN)`| (changed, warning)| `"NaN"` |
 | `value=(float)`| (changed)| `"99.99"` |
 | `value=(true)`| (changed)| `"true"` |
 | `value=(false)`| (changed)| `"false"` |
@@ -11895,7 +11995,7 @@
 | `value=(string 'off')`| (changed)| `"off"` |
 | `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
 | `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
-| `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
+| `value=(null)`| (initial, warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<option>` inside `<select>`)

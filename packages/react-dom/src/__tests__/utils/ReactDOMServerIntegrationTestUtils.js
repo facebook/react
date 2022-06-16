@@ -10,14 +10,16 @@
 'use strict';
 
 const stream = require('stream');
+const shouldIgnoreConsoleError = require('../../../../../scripts/jest/shouldIgnoreConsoleError');
 
 module.exports = function(initModules) {
   let ReactDOM;
   let ReactDOMServer;
-  let ReactTestUtils;
+  let act;
 
   function resetModules() {
-    ({ReactDOM, ReactDOMServer, ReactTestUtils} = initModules());
+    ({ReactDOM, ReactDOMServer} = initModules());
+    act = require('jest-react').act;
   }
 
   function shouldUseDocument(reactElement) {
@@ -49,11 +51,11 @@ module.exports = function(initModules) {
   function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
     return new Promise(resolve => {
       if (forceHydrate) {
-        ReactTestUtils.unstable_concurrentAct(() => {
+        act(() => {
           ReactDOM.hydrate(reactElement, domElement);
         });
       } else {
-        ReactTestUtils.unstable_concurrentAct(() => {
+        act(() => {
           ReactDOM.render(reactElement, domElement);
         });
       }
@@ -74,23 +76,29 @@ module.exports = function(initModules) {
     }
 
     const result = await fn();
-    if (
-      console.error.calls &&
-      console.error.calls.count() !== count &&
-      console.error.calls.count() !== 0
-    ) {
-      console.log(
-        `We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`,
-      );
-      if (console.error.calls.count() > 0) {
-        console.log(`We saw these warnings:`);
-        for (let i = 0; i < console.error.calls.count(); i++) {
-          console.log(...console.error.calls.argsFor(i));
+    if (console.error.calls && console.error.calls.count() !== 0) {
+      const filteredWarnings = [];
+      for (let i = 0; i < console.error.calls.count(); i++) {
+        const args = console.error.calls.argsFor(i);
+        const [format, ...rest] = args;
+        if (!shouldIgnoreConsoleError(format, rest)) {
+          filteredWarnings.push(args);
         }
       }
-    }
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(count);
+      if (filteredWarnings.length !== count) {
+        console.log(
+          `We expected ${count} warning(s), but saw ${filteredWarnings.length} warning(s).`,
+        );
+        if (filteredWarnings.length > 0) {
+          console.log(`We saw these warnings:`);
+          for (let i = 0; i < filteredWarnings.length; i++) {
+            console.log(...filteredWarnings[i]);
+          }
+        }
+        if (__DEV__) {
+          expect(console.error).toHaveBeenCalledTimes(count);
+        }
+      }
     }
     return result;
   }
@@ -146,8 +154,11 @@ module.exports = function(initModules) {
       () =>
         new Promise((resolve, reject) => {
           const writable = new DrainWritable();
-          const s = ReactDOMServer.renderToNodeStream(reactElement);
-          s.on('error', e => reject(e));
+          const s = ReactDOMServer.renderToPipeableStream(reactElement, {
+            onShellError(e) {
+              reject(e);
+            },
+          });
           s.pipe(writable);
           writable.on('finish', () => resolve(writable.buffer));
         }),
@@ -160,7 +171,12 @@ module.exports = function(initModules) {
   // Does not render on client or perform client-side revival.
   async function streamRender(reactElement, errorCount = 0) {
     const markup = await renderIntoStream(reactElement, errorCount);
-    return getContainerFromMarkup(reactElement, markup).firstChild;
+    let firstNode = getContainerFromMarkup(reactElement, markup).firstChild;
+    if (firstNode && firstNode.nodeType === Node.DOCUMENT_TYPE_NODE) {
+      // Skip document type nodes.
+      firstNode = firstNode.nextSibling;
+    }
+    return firstNode;
   }
 
   const clientCleanRender = (element, errorCount = 0) => {
@@ -211,7 +227,7 @@ module.exports = function(initModules) {
       element,
       shouldUseDocument(element)
         ? '<html><body><div id="badIdWhichWillCauseMismatch" /></body></html>'
-        : '<div id="badIdWhichWillCauseMismatch" data-reactroot="" data-reactid="1"></div>',
+        : '<div id="badIdWhichWillCauseMismatch"></div>',
     );
 
     await renderIntoDom(element, container, true, errorCount + 1);
@@ -234,7 +250,7 @@ module.exports = function(initModules) {
     await asyncReactDOMRender(element, cleanContainer, true);
     // This gives us the expected text content.
     const cleanTextContent =
-      cleanContainer.lastChild && cleanContainer.lastChild.textContent;
+      (cleanContainer.lastChild && cleanContainer.lastChild.textContent) || '';
 
     // The only guarantee is that text content has been patched up if needed.
     expect(hydratedTextContent).toBe(cleanTextContent);

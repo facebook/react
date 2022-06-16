@@ -10,23 +10,29 @@ function LoadingIndicator() {
   return <div className={theme + '-loading'}>Loading...</div>;
 }
 
-export default function App({assets}) {
+function Content() {
   let [CurrentPage, switchPage] = useState(() => Page);
   return (
+    <div>
+      <h1>Hello World</h1>
+      <a className="link" onClick={() => switchPage(() => Page)}>
+        Page 1
+      </a>
+      {' | '}
+      <a className="link" onClick={() => switchPage(() => Page2)}>
+        Page 2
+      </a>
+      <Suspense fallback={<LoadingIndicator />}>
+        <CurrentPage />
+      </Suspense>
+    </div>
+  );
+}
+
+export default function App({assets}) {
+  return (
     <Chrome title="Hello World" assets={assets}>
-      <div>
-        <h1>Hello World</h1>
-        <a className="link" onClick={() => switchPage(() => Page)}>
-          Page 1
-        </a>
-        {' | '}
-        <a className="link" onClick={() => switchPage(() => Page2)}>
-          Page 2
-        </a>
-        <Suspense fallback={<LoadingIndicator />}>
-          <CurrentPage />
-        </Suspense>
-      </div>
+      <Content />
     </Chrome>
   );
 }

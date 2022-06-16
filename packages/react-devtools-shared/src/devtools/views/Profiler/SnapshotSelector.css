@@ -7,7 +7,7 @@
   height: 100%;
   min-width: 30px;
   margin-left: 0.25rem;
-  overflow: hidden;
+  overflow: visible;
 }
 .Commits:focus {
   outline: none;
@@ -27,4 +27,20 @@
   align-items: center;
   justify-content: center;
   color: var(--color-dim);
+}
+
+.Input {
+  background: none;
+  font-size: var(--font-size-sans-normal);
+  text-align: right;
+  font-family: var(--font-family-monospace);
+  border: 1px solid transparent;
+  border-radius: 0.125rem;
+  padding: 0.125rem;
+  color: var(--color-attribute-editable-value);
+}
+
+.Input:focus {
+  background-color: var(--color-button-background-focus);
+  outline: none;
 }

@@ -16,8 +16,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import Tooltip from '@reach/tooltip';
-import {Menu, MenuList, MenuButton, MenuItem} from '@reach/menu-button';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
@@ -26,17 +24,24 @@ import {OwnersListContext} from './OwnersListContext';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {useIsOverflowing} from '../hooks';
 import {StoreContext} from '../context';
+import Tooltip from '../Components/reach-ui/tooltip';
+import {
+  Menu,
+  MenuList,
+  MenuButton,
+  MenuItem,
+} from '../Components/reach-ui/menu-button';
 
-import type {Owner} from './types';
+import type {SerializedElement} from './types';
 
 import styles from './OwnersStack.css';
 
-type SelectOwner = (owner: Owner | null) => void;
+type SelectOwner = (owner: SerializedElement | null) => void;
 
 type ACTION_UPDATE_OWNER_ID = {|
   type: 'UPDATE_OWNER_ID',
   ownerID: number | null,
-  owners: Array<Owner>,
+  owners: Array<SerializedElement>,
 |};
 type ACTION_UPDATE_SELECTED_INDEX = {|
   type: 'UPDATE_SELECTED_INDEX',
@@ -47,7 +52,7 @@ type Action = ACTION_UPDATE_OWNER_ID | ACTION_UPDATE_SELECTED_INDEX;
 
 type State = {|
   ownerID: number | null,
-  owners: Array<Owner>,
+  owners: Array<SerializedElement>,
   selectedIndex: number,
 |};
 
@@ -104,7 +109,7 @@ export default function OwnerStack() {
   const {owners, selectedIndex} = state;
 
   const selectOwner = useCallback<SelectOwner>(
-    (owner: Owner | null) => {
+    (owner: SerializedElement | null) => {
       if (owner !== null) {
         const index = owners.indexOf(owner);
         dispatch({
@@ -197,7 +202,7 @@ export default function OwnerStack() {
 }
 
 type ElementsDropdownProps = {
-  owners: Array<Owner>,
+  owners: Array<SerializedElement>,
   selectedIndex: number,
   selectOwner: SelectOwner,
   ...
@@ -245,7 +250,7 @@ function ElementsDropdown({
 
 type ElementViewProps = {
   isSelected: boolean,
-  owner: Owner,
+  owner: SerializedElement,
   selectOwner: SelectOwner,
   ...
 };
@@ -278,7 +283,7 @@ function ElementView({isSelected, owner, selectOwner}: ElementViewProps) {
 }
 
 type BackToOwnerButtonProps = {|
-  owners: Array<Owner>,
+  owners: Array<SerializedElement>,
   selectedIndex: number,
   selectOwner: SelectOwner,
 |};

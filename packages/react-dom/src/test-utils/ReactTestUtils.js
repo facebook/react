@@ -16,26 +16,25 @@ import {
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
 import {SyntheticEvent} from '../events/SyntheticEvent';
-import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import {act} from './ReactTestUtilsPublicAct';
-import {unstable_concurrentAct} from './ReactTestUtilsInternalAct';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
+import assign from 'shared/assign';
+import isArray from 'shared/isArray';
 
-// Keep in sync with ReactDOM.js, and ReactTestUtilsAct.js:
-const EventInternals =
-  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+// Keep in sync with ReactDOM.js:
+const SecretInternals =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+const EventInternals = SecretInternals.Events;
 const getInstanceFromNode = EventInternals[0];
 const getNodeFromInstance = EventInternals[1];
 const getFiberCurrentPropsFromNode = EventInternals[2];
 const enqueueStateRestore = EventInternals[3];
 const restoreStateIfNeeded = EventInternals[4];
-// const flushPassiveEffects = EventInternals[5];
-// TODO: This is related to `act`, not events. Move to separate key?
-// const IsThisRendererActing = EventInternals[6];
+
+const act = React.unstable_act;
 
 function Event(suffix) {}
 
@@ -96,8 +95,8 @@ function validateClassInstance(inst, methodName) {
     return;
   }
   let received;
-  const stringified = '' + inst;
-  if (Array.isArray(inst)) {
+  const stringified = String(inst);
+  if (isArray(inst)) {
     received = 'an array';
   } else if (inst && inst.nodeType === ELEMENT_NODE && inst.tagName) {
     received = 'a DOM node';
@@ -106,12 +105,10 @@ function validateClassInstance(inst, methodName) {
   } else {
     received = stringified;
   }
-  invariant(
-    false,
-    '%s(...): the first argument must be a React class instance. ' +
-      'Instead received: %s.',
-    methodName,
-    received,
+
+  throw new Error(
+    `${methodName}(...): the first argument must be a React class instance. ` +
+      `Instead received: ${received}.`,
   );
 }
 
@@ -182,7 +179,7 @@ function findAllInRenderedTree(inst, test) {
 }
 
 /**
- * Finds all instance of components in the rendered tree that are DOM
+ * Finds all instances of components in the rendered tree that are DOM
  * components with the class name matching `className`.
  * @return {array} an array of all the matches.
  */
@@ -197,12 +194,14 @@ function scryRenderedDOMComponentsWithClass(root, classNames) {
       }
       const classList = className.split(/\s+/);
 
-      if (!Array.isArray(classNames)) {
-        invariant(
-          classNames !== undefined,
-          'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
-            'className as a second argument.',
-        );
+      if (!isArray(classNames)) {
+        if (classNames === undefined) {
+          throw new Error(
+            'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
+              'className as a second argument.',
+          );
+        }
+
         classNames = classNames.split(/\s+/);
       }
       return classNames.every(function(name) {
@@ -235,7 +234,7 @@ function findRenderedDOMComponentWithClass(root, className) {
 }
 
 /**
- * Finds all instance of components in the rendered tree that are DOM
+ * Finds all instances of components in the rendered tree that are DOM
  * components with the tag name matching `tagName`.
  * @return {array} an array of all the matches.
  */
@@ -365,7 +364,7 @@ function executeDispatch(event, listener, inst) {
 function executeDispatchesInOrder(event) {
   const dispatchListeners = event._dispatchListeners;
   const dispatchInstances = event._dispatchInstances;
-  if (Array.isArray(dispatchListeners)) {
+  if (isArray(dispatchListeners)) {
     for (let i = 0; i < dispatchListeners.length; i++) {
       if (event.isPropagationStopped()) {
         break;
@@ -479,12 +478,13 @@ function getListener(inst: Fiber, registrationName: string) {
   if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
     return null;
   }
-  invariant(
-    !listener || typeof listener === 'function',
-    'Expected `%s` listener to be a function, instead got a value of `%s` type.',
-    registrationName,
-    typeof listener,
-  );
+
+  if (listener && typeof listener !== 'function') {
+    throw new Error(
+      `Expected \`${registrationName}\` listener to be a function, instead got a value of \`${typeof listener}\` type.`,
+    );
+  }
+
   return listener;
 }
 
@@ -565,17 +565,20 @@ const directDispatchEventTypes = new Set([
  */
 function makeSimulator(eventType) {
   return function(domNode, eventData) {
-    invariant(
-      !React.isValidElement(domNode),
-      'TestUtils.Simulate expected a DOM node as the first argument but received ' +
-        'a React element. Pass the DOM node you wish to simulate the event on instead. ' +
-        'Note that TestUtils.Simulate will not work if you are using shallow rendering.',
-    );
-    invariant(
-      !isCompositeComponent(domNode),
-      'TestUtils.Simulate expected a DOM node as the first argument but received ' +
-        'a component instance. Pass the DOM node you wish to simulate the event on instead.',
-    );
+    if (React.isValidElement(domNode)) {
+      throw new Error(
+        'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+          'a React element. Pass the DOM node you wish to simulate the event on instead. ' +
+          'Note that TestUtils.Simulate will not work if you are using shallow rendering.',
+      );
+    }
+
+    if (isCompositeComponent(domNode)) {
+      throw new Error(
+        'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+          'a component instance. Pass the DOM node you wish to simulate the event on instead.',
+      );
+    }
 
     const reactName = 'on' + eventType[0].toUpperCase() + eventType.slice(1);
     const fakeNativeEvent = new Event();
@@ -594,7 +597,7 @@ function makeSimulator(eventType) {
     // Since we aren't using pooling, always persist the event. This will make
     // sure it's marked and won't warn when setting additional properties.
     event.persist();
-    Object.assign(event, eventData);
+    assign(event, eventData);
 
     if (directDispatchEventTypes.has(eventType)) {
       accumulateDirectDispatchesSingle(event);
@@ -643,6 +646,7 @@ const simulatedEventTypes = [
   'pointerUp',
   'rateChange',
   'reset',
+  'resize',
   'seeked',
   'submit',
   'touchCancel',
@@ -726,5 +730,4 @@ export {
   nativeTouchData,
   Simulate,
   act,
-  unstable_concurrentAct,
 };

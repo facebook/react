@@ -7,6 +7,8 @@
  * @flow
  */
 
+/* eslint-disable react-internal/prod-error-codes */
+
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
@@ -18,9 +20,10 @@ import {
   scheduleUpdateOnFiber,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop.new';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.new';
 import {updateContainer} from './ReactFiberReconciler.new';
 import {emptyContextObject} from './ReactFiberContext.new';
-import {SyncLane, NoTimestamp} from './ReactFiberLane';
+import {SyncLane, NoTimestamp} from './ReactFiberLane.new';
 import {
   ClassComponent,
   FunctionComponent,
@@ -319,7 +322,10 @@ function scheduleFibersWithFamiliesRecursively(
       fiber._debugNeedsRemount = true;
     }
     if (needsRemount || needsRender) {
-      scheduleUpdateOnFiber(fiber, SyncLane, NoTimestamp);
+      const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+      if (root !== null) {
+        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+      }
     }
     if (child !== null && !needsRemount) {
       scheduleFibersWithFamiliesRecursively(

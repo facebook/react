@@ -409,7 +409,13 @@ describe('ReactIncrementalSideEffects', () => {
       div(div(span('Hello'), span('Hello')), span('Yo')),
     ]);
 
-    ReactNoop.render(<Foo text="World" />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo text="World" />);
+      });
+    } else {
+      ReactNoop.render(<Foo text="World" />);
+    }
 
     // Flush some of the work without committing
     expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Bar']);
@@ -418,7 +424,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  // @gate experimental
+  // @gate www
   it('preserves a previously rendered node when deprioritized', () => {
     function Middle(props) {
       Scheduler.unstable_yieldValue('Middle');
@@ -469,7 +475,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate experimental
+  // @gate www
   it('can reuse side-effects after being preempted', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -549,7 +555,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate experimental
+  // @gate www
   it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', () => {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
@@ -638,7 +644,13 @@ describe('ReactIncrementalSideEffects', () => {
       Scheduler.unstable_yieldValue('Foo');
       return <span prop={props.step} />;
     }
-    ReactNoop.render(<Foo step={1} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo step={1} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={1} />);
+    }
     // This should be just enough to complete the tree without committing it
     expect(Scheduler).toFlushAndYieldThrough(['Foo']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
@@ -647,13 +659,26 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.flushNextYield();
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
 
-    ReactNoop.render(<Foo step={2} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo step={2} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={2} />);
+    }
     // This should be just enough to complete the tree without committing it
     expect(Scheduler).toFlushAndYieldThrough(['Foo']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // This time, before we commit the tree, we update the root component with
     // new props
-    ReactNoop.render(<Foo step={3} />);
+
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo step={3} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={3} />);
+    }
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // Now let's commit. We already had a commit that was pending, which will
     // render 2.
@@ -665,7 +690,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={3} />);
   });
 
-  // @gate experimental
+  // @gate www
   it('updates a child even though the old props is empty', () => {
     function Foo(props) {
       return (
@@ -905,7 +930,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar']);
   });
 
-  // @gate experimental
+  // @gate www
   it('deprioritizes setStates that happens within a deprioritized tree', () => {
     const barInstances = [];
 
@@ -1281,9 +1306,7 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-      'Warning: A string ref, "bar", has been found within a strict mode tree.',
-    );
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(fooInstance.refs.bar.test).toEqual('test');
   });

@@ -7,6 +7,8 @@
 
 'use strict';
 
+/* eslint-disable no-for-of-loops/no-for-of-loops */
+
 // Hi, if this is your first time editing/reading a Dangerfile, here's a summary:
 // It's a JS runtime which helps you provide continuous feedback inside GitHub.
 //
@@ -26,270 +28,231 @@
 // `DANGER_GITHUB_API_TOKEN=[ENV_ABOVE] yarn danger pr https://github.com/facebook/react/pull/11865
 
 const {markdown, danger, warn} = require('danger');
-const fetch = require('node-fetch');
+const {promisify} = require('util');
+const glob = promisify(require('glob'));
+const gzipSize = require('gzip-size');
 
-const {generateResultsArray} = require('./scripts/rollup/stats');
-const {existsSync, readFileSync} = require('fs');
-const {exec} = require('child_process');
+const {readFileSync, statSync} = require('fs');
 
-// This must match the name of the CI job that creates the build artifacts
-const RELEASE_CHANNEL =
-  process.env.RELEASE_CHANNEL === 'experimental' ? 'experimental' : 'stable';
-const artifactsJobName =
-  process.env.RELEASE_CHANNEL === 'experimental'
-    ? 'process_artifacts_experimental'
-    : 'process_artifacts';
+const BASE_DIR = 'base-build';
+const HEAD_DIR = 'build';
 
-if (!existsSync('./build/bundle-sizes.json')) {
-  // This indicates the build failed previously.
-  // In that case, there's nothing for the Dangerfile to do.
-  // Exit early to avoid leaving a redundant (and potentially confusing) PR comment.
-  warn(
-    'No bundle size information found. This indicates the build ' +
-      'job failed.'
-  );
-  process.exit(0);
+const CRITICAL_THRESHOLD = 0.02;
+const SIGNIFICANCE_THRESHOLD = 0.002;
+const CRITICAL_ARTIFACT_PATHS = new Set([
+  // We always report changes to these bundles, even if the change is
+  // insiginificant or non-existent.
+  'oss-stable/react-dom/cjs/react-dom.production.min.js',
+  'oss-experimental/react-dom/cjs/react-dom.production.min.js',
+  'facebook-www/ReactDOM-prod.classic.js',
+  'facebook-www/ReactDOM-prod.modern.js',
+  'facebook-www/ReactDOMForked-prod.classic.js',
+]);
+
+const kilobyteFormatter = new Intl.NumberFormat('en', {
+  style: 'unit',
+  unit: 'kilobyte',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function kbs(bytes) {
+  return kilobyteFormatter.format(bytes / 1000);
 }
 
-const currentBuildResults = JSON.parse(
-  readFileSync('./build/bundle-sizes.json')
-);
+const percentFormatter = new Intl.NumberFormat('en', {
+  style: 'percent',
+  signDisplay: 'exceptZero',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
-/**
- * Generates a Markdown table
- * @param {string[]} headers
- * @param {string[][]} body
- */
-function generateMDTable(headers, body) {
-  const tableHeaders = [
-    headers.join(' | '),
-    headers.map(() => ' --- ').join(' | '),
-  ];
-
-  const tablebody = body.map(r => r.join(' | '));
-  return tableHeaders.join('\n') + '\n' + tablebody.join('\n');
-}
-
-/**
- * Generates a user-readable string from a percentage change
- * @param {number} change
- * @param {boolean} includeEmoji
- */
-function addPercent(change, includeEmoji) {
-  if (!isFinite(change)) {
-    // When a new package is created
-    return 'n/a';
+function change(decimal) {
+  if (Number === Infinity) {
+    return 'New file';
   }
-  const formatted = (change * 100).toFixed(1);
-  if (/^-|^0(?:\.0+)$/.test(formatted)) {
-    return `${formatted}%`;
-  } else {
-    if (includeEmoji) {
-      return `:small_red_triangle:+${formatted}%`;
-    } else {
-      return `+${formatted}%`;
-    }
+  if (decimal === -1) {
+    return 'Deleted';
   }
+  if (decimal < 0.0001) {
+    return '=';
+  }
+  return percentFormatter.format(decimal);
 }
 
-function setBoldness(row, isBold) {
-  if (isBold) {
-    return row.map(element => `**${element}**`);
-  } else {
-    return row;
-  }
-}
+const header = `
+  | Name | +/- | Base | Current | +/- gzip | Base gzip | Current gzip |
+  | ---- | --- | ---- | ------- | -------- | --------- | ------------ |`;
 
-/**
- * Gets the commit that represents the merge between the current branch
- * and master.
- */
-function git(args) {
-  return new Promise(res => {
-    exec('git ' + args, (err, stdout, stderr) => {
-      if (err) {
-        throw err;
-      } else {
-        res(stdout.trim());
-      }
-    });
-  });
+function row(result) {
+  // prettier-ignore
+  return `| ${result.path} | **${change(result.change)}** | ${kbs(result.baseSize)} | ${kbs(result.headSize)} | ${change(result.changeGzip)} | ${kbs(result.baseSizeGzip)} | ${kbs(result.headSizeGzip)}`;
 }
 
 (async function() {
   // Use git locally to grab the commit which represents the place
   // where the branches differ
+
   const upstreamRepo = danger.github.pr.base.repo.full_name;
   if (upstreamRepo !== 'facebook/react') {
     // Exit unless we're running in the main repo
     return;
   }
 
-  markdown(`## Size changes (${RELEASE_CHANNEL})`);
-
-  const upstreamRef = danger.github.pr.base.ref;
-  await git(`remote add upstream https://github.com/facebook/react.git`);
-  await git('fetch upstream');
-  const baseCommit = await git(`merge-base HEAD upstream/${upstreamRef}`);
-
-  let previousBuildResults = null;
+  let headSha;
+  let baseSha;
   try {
-    let baseCIBuildId = null;
-    const statusesResponse = await fetch(
-      `https://api.github.com/repos/facebook/react/commits/${baseCommit}/status`
+    headSha = String(readFileSync(HEAD_DIR + '/COMMIT_SHA')).trim();
+    baseSha = String(readFileSync(BASE_DIR + '/COMMIT_SHA')).trim();
+  } catch {
+    warn(
+      "Failed to read build artifacts. It's possible a build configuration " +
+        'has changed upstream. Try pulling the latest changes from the ' +
+        'main branch.'
     );
-    const {statuses, state} = await statusesResponse.json();
-    if (state === 'failure') {
-      warn(`Base commit is broken: ${baseCommit}`);
-      return;
-    }
-    for (let i = 0; i < statuses.length; i++) {
-      const status = statuses[i];
-      if (status.context === `ci/circleci: ${artifactsJobName}`) {
-        if (status.state === 'success') {
-          baseCIBuildId = /\/facebook\/react\/([0-9]+)/.exec(
-            status.target_url
-          )[1];
-          break;
-        }
-        if (status.state === 'pending') {
-          warn(`Build job for base commit is still pending: ${baseCommit}`);
-          return;
-        }
-      }
-    }
-
-    if (baseCIBuildId === null) {
-      warn(`Could not find build artifacts for base commit: ${baseCommit}`);
-      return;
-    }
-
-    const baseArtifactsInfoResponse = await fetch(
-      `https://circleci.com/api/v1.1/project/github/facebook/react/${baseCIBuildId}/artifacts`
-    );
-    const baseArtifactsInfo = await baseArtifactsInfoResponse.json();
-
-    for (let i = 0; i < baseArtifactsInfo.length; i++) {
-      const info = baseArtifactsInfo[i];
-      if (info.path.endsWith('bundle-sizes.json')) {
-        const resultsResponse = await fetch(info.url);
-        previousBuildResults = await resultsResponse.json();
-        break;
-      }
-    }
-  } catch (error) {
-    warn(`Failed to fetch build artifacts for base commit: ${baseCommit}`);
     return;
   }
 
-  if (previousBuildResults === null) {
-    warn(`Could not find build artifacts for base commit: ${baseCommit}`);
+  // Disable sizeBot in a Devtools Pull Request. Because that doesn't affect production bundle size.
+  const commitFiles = [
+    ...danger.git.created_files,
+    ...danger.git.deleted_files,
+    ...danger.git.modified_files,
+  ];
+  if (
+    commitFiles.every(filename => filename.includes('packages/react-devtools'))
+  )
     return;
-  }
 
-  // Take the JSON of the build response and
-  // make an array comparing the results for printing
-  const results = generateResultsArray(
-    currentBuildResults,
-    previousBuildResults
-  );
+  const resultsMap = new Map();
 
-  const packagesToShow = results
-    .filter(
-      r =>
-        Math.abs(r.prevFileSizeAbsoluteChange) >= 300 || // bytes
-        Math.abs(r.prevGzipSizeAbsoluteChange) >= 100 // bytes
-    )
-    .map(r => r.packageName);
+  // Find all the head (current) artifacts paths.
+  const headArtifactPaths = await glob('**/*.js', {cwd: 'build'});
+  for (const artifactPath of headArtifactPaths) {
+    try {
+      // This will throw if there's no matching base artifact
+      const baseSize = statSync(BASE_DIR + '/' + artifactPath).size;
+      const baseSizeGzip = gzipSize.fileSync(BASE_DIR + '/' + artifactPath);
 
-  if (packagesToShow.length) {
-    let allTables = [];
-
-    // Highlight React and React DOM changes inline
-    // e.g. react: `react.production.min.js`: -3%, `react.development.js`: +4%
-
-    if (packagesToShow.includes('react')) {
-      const reactProd = results.find(
-        r => r.bundleType === 'UMD_PROD' && r.packageName === 'react'
-      );
-      if (
-        reactProd.prevFileSizeChange !== 0 ||
-        reactProd.prevGzipSizeChange !== 0
-      ) {
-        const changeSize = addPercent(reactProd.prevFileSizeChange, true);
-        const changeGzip = addPercent(reactProd.prevGzipSizeChange, true);
-        markdown(`React: size: ${changeSize}, gzip: ${changeGzip}`);
-      }
-    }
-
-    if (packagesToShow.includes('react-dom')) {
-      const reactDOMProd = results.find(
-        r => r.bundleType === 'UMD_PROD' && r.packageName === 'react-dom'
-      );
-      if (
-        reactDOMProd.prevFileSizeChange !== 0 ||
-        reactDOMProd.prevGzipSizeChange !== 0
-      ) {
-        const changeSize = addPercent(reactDOMProd.prevFileSizeChange, true);
-        const changeGzip = addPercent(reactDOMProd.prevGzipSizeChange, true);
-        markdown(`ReactDOM: size: ${changeSize}, gzip: ${changeGzip}`);
-      }
-    }
-
-    // Show a hidden summary table for all diffs
-
-    // eslint-disable-next-line no-var,no-for-of-loops/no-for-of-loops
-    for (var name of new Set(packagesToShow)) {
-      const thisBundleResults = results.filter(r => r.packageName === name);
-      const changedFiles = thisBundleResults.filter(
-        r => r.prevFileSizeChange !== 0 || r.prevGzipSizeChange !== 0
-      );
-
-      const mdHeaders = [
-        'File',
-        'Filesize Diff',
-        'Gzip Diff',
-        'Prev Size',
-        'Current Size',
-        'Prev Gzip',
-        'Current Gzip',
-        'ENV',
-      ];
-
-      const mdRows = changedFiles.map(r => {
-        const isProd = r.bundleType.includes('PROD');
-        return setBoldness(
-          [
-            r.filename,
-            addPercent(r.prevFileSizeChange, isProd),
-            addPercent(r.prevGzipSizeChange, isProd),
-            r.prevSize,
-            r.prevFileSize,
-            r.prevGzip,
-            r.prevGzipSize,
-            r.bundleType,
-          ],
-          isProd
-        );
+      const headSize = statSync(HEAD_DIR + '/' + artifactPath).size;
+      const headSizeGzip = gzipSize.fileSync(HEAD_DIR + '/' + artifactPath);
+      resultsMap.set(artifactPath, {
+        path: artifactPath,
+        headSize,
+        headSizeGzip,
+        baseSize,
+        baseSizeGzip,
+        change: (headSize - baseSize) / baseSize,
+        changeGzip: (headSizeGzip - baseSizeGzip) / baseSizeGzip,
       });
+    } catch {
+      // There's no matching base artifact. This is a new file.
+      const baseSize = 0;
+      const baseSizeGzip = 0;
+      const headSize = statSync(HEAD_DIR + '/' + artifactPath).size;
+      const headSizeGzip = gzipSize.fileSync(HEAD_DIR + '/' + artifactPath);
+      resultsMap.set(artifactPath, {
+        path: artifactPath,
+        headSize,
+        headSizeGzip,
+        baseSize,
+        baseSizeGzip,
+        change: Infinity,
+        changeGzip: Infinity,
+      });
+    }
+  }
 
-      allTables.push(`\n## ${name}`);
-      allTables.push(generateMDTable(mdHeaders, mdRows));
+  // Check for base artifacts that were deleted in the head.
+  const baseArtifactPaths = await glob('**/*.js', {cwd: 'base-build'});
+  for (const artifactPath of baseArtifactPaths) {
+    if (!resultsMap.has(artifactPath)) {
+      const baseSize = statSync(BASE_DIR + '/' + artifactPath).size;
+      const baseSizeGzip = gzipSize.fileSync(BASE_DIR + '/' + artifactPath);
+      const headSize = 0;
+      const headSizeGzip = 0;
+      resultsMap.set(artifactPath, {
+        path: artifactPath,
+        headSize,
+        headSizeGzip,
+        baseSize,
+        baseSizeGzip,
+        change: -1,
+        changeGzip: -1,
+      });
+    }
+  }
+
+  const results = Array.from(resultsMap.values());
+  results.sort((a, b) => b.change - a.change);
+
+  let criticalResults = [];
+  for (const artifactPath of CRITICAL_ARTIFACT_PATHS) {
+    const result = resultsMap.get(artifactPath);
+    if (result === undefined) {
+      throw new Error(
+        'Missing expected bundle. If this was an intentional change to the ' +
+          'build configuration, update Dangerfile.js accordingly: ' +
+          artifactPath
+      );
+    }
+    criticalResults.push(row(result));
+  }
+
+  let significantResults = [];
+  for (const result of results) {
+    // If result exceeds critical threshold, add to top section.
+    if (
+      (result.change > CRITICAL_THRESHOLD ||
+        0 - result.change > CRITICAL_THRESHOLD ||
+        // New file
+        result.change === Infinity ||
+        // Deleted file
+        result.change === -1) &&
+      // Skip critical artifacts. We added those earlier, in a fixed order.
+      !CRITICAL_ARTIFACT_PATHS.has(result.path)
+    ) {
+      criticalResults.push(row(result));
     }
 
-    const summary = `
-  <details>
-  <summary>Details of bundled changes.</summary>
-
-  <p>Comparing: ${baseCommit}...${danger.github.pr.head.sha}</p>
-
-
-  ${allTables.join('\n')}
-
-  </details>
-  `;
-    markdown(summary);
-  } else {
-    markdown('No significant bundle size changes to report.');
+    // Do the same for results that exceed the significant threshold. These
+    // will go into the bottom, collapsed section. Intentionally including
+    // critical artifacts in this section, too.
+    if (
+      result.change > SIGNIFICANCE_THRESHOLD ||
+      0 - result.change > SIGNIFICANCE_THRESHOLD ||
+      result.change === Infinity ||
+      result.change === -1
+    ) {
+      significantResults.push(row(result));
+    }
   }
+
+  markdown(`
+Comparing: ${baseSha}...${headSha}
+
+## Critical size changes
+
+Includes critical production bundles, as well as any change greater than ${CRITICAL_THRESHOLD *
+    100}%:
+
+${header}
+${criticalResults.join('\n')}
+
+## Significant size changes
+
+Includes any change greater than ${SIGNIFICANCE_THRESHOLD * 100}%:
+
+${
+  significantResults.length > 0
+    ? `
+<details>
+<summary>Expand to show</summary>
+${header}
+${significantResults.join('\n')}
+</details>
+`
+    : '(No significant changes)'
+}
+`);
 })();

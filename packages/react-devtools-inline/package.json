@@ -1,6 +1,6 @@
 {
   "name": "react-devtools-inline",
-  "version": "4.10.0",
+  "version": "4.24.7",
   "description": "Embed react-devtools within a website",
   "license": "MIT",
   "main": "./dist/backend.js",
@@ -12,15 +12,19 @@
   "files": [
     "dist",
     "backend.js",
-    "build-info.json",
-    "frontend.js"
+    "frontend.js",
+    "hookNames.js"
   ],
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --config webpack.config.js",
     "prepublish": "yarn run build",
-    "start": "cross-env NODE_ENV=development webpack --config webpack.config.js --watch"
+    "start": "cross-env NODE_ENV=development webpack --config webpack.config.js --watch",
+    "test:e2e": "playwright test --config=playwright.config.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "source-map-js": "^0.6.2",
+    "sourcemap-codec": "^1.4.8"
+  },
   "devDependencies": {
     "@babel/core": "^7.11.1",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
@@ -29,15 +33,18 @@
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-flow": "^7.10.4",
     "@babel/preset-react": "^7.10.4",
+    "@playwright/test": "^1.16.3",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
     "babel-loader": "^8.0.4",
     "cross-env": "^3.1.4",
     "css-loader": "^1.0.1",
+    "file-loader": "^6.1.0",
     "raw-loader": "^3.1.0",
     "style-loader": "^0.23.1",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.10.3"
+    "webpack-dev-server": "^3.10.3",
+    "worker-loader": "^3.0.3"
   }
 }

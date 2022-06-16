@@ -21,6 +21,13 @@ import type {CapturedError} from 'react-reconciler/src/ReactCapturedValue';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 type DeepDifferOptions = {|+unsafelyIgnoreFunctions?: boolean|};
+type RawEventEmitterEvent = $ReadOnly<{|
+  eventName: string,
+  // We expect, but do not/cannot require, that nativeEvent is an object
+  // with the properties: key, elementType (string), type (string), tag (numeric),
+  // and a stateNode of the native element/Fiber the event was emitted to.
+  nativeEvent: {[string]: mixed},
+|}>;
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface' {
   declare export function deepDiffer(
@@ -110,6 +117,10 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     ) => void,
     ...
   };
+  declare export var legacySendAccessibilityEvent: (
+    reactTag: number,
+    eventTypeName: string,
+  ) => void;
   declare export var BatchedBridge: {
     registerCallableModule: (name: string, module: Object) => void,
     ...
@@ -123,6 +134,11 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     get: (name: string) => ReactNativeBaseComponentViewConfig,
     ...
   };
+  declare export var RawEventEmitter: {
+    emit: (channel: string, event: RawEventEmitterEvent) => string,
+    ...
+  };
+  declare export var CustomEvent: CustomEvent;
 }
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {
@@ -156,6 +172,7 @@ declare var nativeFabricUIManager: {
   ) => void,
 
   dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
+  sendAccessibilityEvent: (node: Object, eventTypeName: string) => void,
 
   measure: (node: Node, callback: MeasureOnSuccessCallback) => void,
   measureInWindow: (
@@ -174,6 +191,14 @@ declare var nativeFabricUIManager: {
     locationY: number,
     callback: (Fiber) => void,
   ) => void,
+  setIsJSResponder: (
+    node: Node,
+    isJsResponder: boolean,
+    blockNativeResponder: boolean,
+  ) => void,
+  unstable_DefaultEventPriority: number,
+  unstable_DiscreteEventPriority: number,
+  unstable_getCurrentEventPriority: () => number,
   ...
 };
 

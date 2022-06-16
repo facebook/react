@@ -7,14 +7,12 @@ const coffee = require('coffee-script');
 
 const tsPreprocessor = require('./typescript/preprocessor');
 const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
+const {getDevToolsPlugins} = require('./devtools/preprocessor.js');
 
 const pathToBabel = path.join(
   require.resolve('@babel/core'),
   '../..',
   'package.json'
-);
-const pathToBabelPluginDevWithCode = require.resolve(
-  '../error-codes/transform-error-messages'
 );
 const pathToBabelPluginReplaceConsoleCalls = require.resolve(
   '../babel/transform-replace-console-calls'
@@ -35,8 +33,6 @@ const babelOptions = {
   plugins: [
     // For Node environment only. For builds, Rollup takes care of ESM.
     require.resolve('@babel/plugin-transform-modules-commonjs'),
-
-    pathToBabelPluginDevWithCode,
 
     // Keep stacks detailed in tests.
     // Don't put this in .babelrc so that we don't embed filenames
@@ -59,6 +55,10 @@ const babelOptions = {
 
 module.exports = {
   process: function(src, filePath) {
+    if (filePath.match(/\.css$/)) {
+      // Don't try to parse CSS modules; they aren't needed for tests anyway.
+      return '';
+    }
     if (filePath.match(/\.coffee$/)) {
       return coffee.compile(src, {bare: true});
     }
@@ -83,6 +83,9 @@ module.exports = {
       const plugins = (isTestFile ? testOnlyPlugins : sourceOnlyPlugins).concat(
         babelOptions.plugins
       );
+      if (isTestFile && isInDevToolsPackages) {
+        plugins.push(...getDevToolsPlugins(filePath));
+      }
       return babel.transform(
         src,
         Object.assign(
@@ -90,6 +93,9 @@ module.exports = {
           babelOptions,
           {
             plugins,
+            sourceMaps: process.env.JEST_ENABLE_SOURCE_MAPS
+              ? process.env.JEST_ENABLE_SOURCE_MAPS
+              : false,
           }
         )
       );
@@ -101,7 +107,6 @@ module.exports = {
     __filename,
     pathToBabel,
     pathToBabelrc,
-    pathToBabelPluginDevWithCode,
     pathToTransformInfiniteLoops,
     pathToTransformTestGatePragma,
     pathToErrorCodes,

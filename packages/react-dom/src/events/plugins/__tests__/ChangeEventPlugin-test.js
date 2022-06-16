@@ -11,9 +11,10 @@
 
 let React;
 let ReactDOM;
-let TestUtils;
+let ReactDOMClient;
 let ReactFeatureFlags;
 let Scheduler;
+let act;
 
 const setUntrackedChecked = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
@@ -56,7 +57,8 @@ describe('ChangeEventPlugin', () => {
     };
     React = require('react');
     ReactDOM = require('react-dom');
-    TestUtils = require('react-dom/test-utils');
+    ReactDOMClient = require('react-dom/client');
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -495,9 +497,8 @@ describe('ChangeEventPlugin', () => {
   });
 
   describe('concurrent mode', () => {
-    // @gate experimental
     it('text input', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -538,9 +539,8 @@ describe('ChangeEventPlugin', () => {
       expect(input.value).toBe('changed [!]');
     });
 
-    // @gate experimental
     it('checkbox input', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -594,9 +594,8 @@ describe('ChangeEventPlugin', () => {
       expect(input.checked).toBe(false);
     });
 
-    // @gate experimental
     it('textarea', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       let textarea;
 
       class ControlledTextarea extends React.Component {
@@ -637,9 +636,8 @@ describe('ChangeEventPlugin', () => {
       expect(textarea.value).toBe('changed [!]');
     });
 
-    // @gate experimental
     it('parent of input', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -684,9 +682,8 @@ describe('ChangeEventPlugin', () => {
       expect(input.value).toBe('changed [!]');
     });
 
-    // @gate experimental
-    it('is async for non-input events', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+    it('is sync for non-input events', async () => {
+      const root = ReactDOMClient.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -724,22 +721,17 @@ describe('ChangeEventPlugin', () => {
       input.dispatchEvent(
         new Event('click', {bubbles: true, cancelable: true}),
       );
-      // Nothing should have changed
-      expect(Scheduler).toHaveYielded([]);
-      expect(input.value).toBe('initial');
 
-      // Flush callbacks.
-      // Now the click update has flushed.
-      expect(Scheduler).toFlushAndYield(['render: ']);
+      // Flush microtask queue.
+      await null;
+      expect(Scheduler).toHaveYielded(['render: ']);
       expect(input.value).toBe('');
     });
 
-    // @gate experimental
     it('mouse enter/leave should be user-blocking but not discrete', async () => {
-      const {unstable_concurrentAct: act} = TestUtils;
       const {useState} = React;
 
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
 
       const target = React.createRef(null);
       function Foo() {
@@ -764,11 +756,12 @@ describe('ChangeEventPlugin', () => {
         mouseOverEvent.initEvent('mouseover', true, true);
         target.current.dispatchEvent(mouseOverEvent);
 
-        // 3s should be enough to expire the updates
-        Scheduler.unstable_advanceTime(3000);
-        expect(Scheduler).toFlushExpired([]);
-        expect(container.textContent).toEqual('hovered');
+        // Flush discrete updates
+        ReactDOM.flushSync();
+        // Since mouse enter/leave is not discrete, should not have updated yet
+        expect(container.textContent).toEqual('not hovered');
       });
+      expect(container.textContent).toEqual('hovered');
     });
   });
 });

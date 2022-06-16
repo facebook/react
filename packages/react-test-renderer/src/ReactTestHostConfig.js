@@ -7,9 +7,8 @@
  * @flow
  */
 
-import type {ReactFundamentalComponentInstance} from 'shared/ReactTypes';
-
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
+import isArray from 'shared/isArray';
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 export type Type = string;
 export type Props = Object;
@@ -40,18 +39,13 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type EventResponder = any;
-export opaque type OpaqueIDType =
-  | string
-  | {
-      toString: () => string | void,
-      valueOf: () => string | void,
-    };
 
 export type RendererInspectionConfig = $ReadOnly<{||}>;
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
 
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
@@ -83,8 +77,8 @@ export function appendChild(
   parentInstance: Instance | Container,
   child: Instance | TextInstance,
 ): void {
-  if (!Array.isArray(parentInstance.children)) {
-    if (__DEV__) {
+  if (__DEV__) {
+    if (!isArray(parentInstance.children)) {
       console.error(
         'An invalid container has been provided. ' +
           'This may indicate that another renderer is being used in addition to the test renderer. ' +
@@ -225,11 +219,16 @@ export function createTextInstance(
   };
 }
 
+export function getCurrentEventPriority(): * {
+  return DefaultEventPriority;
+}
+
 export const isPrimaryRenderer = false;
 export const warnsIfNotActing = true;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
+
 export const noTimeout = -1;
 
 // -------------------
@@ -294,97 +293,12 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function getFundamentalComponentInstance(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): Instance {
-  const {impl, props, state} = fundamentalInstance;
-  return impl.getInstance(null, props, state);
-}
-
-export function mountFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): void {
-  const {impl, instance, props, state} = fundamentalInstance;
-  const onMount = impl.onMount;
-  if (onMount !== undefined) {
-    onMount(null, instance, props, state);
-  }
-}
-
-export function shouldUpdateFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): boolean {
-  const {impl, prevProps, props, state} = fundamentalInstance;
-  const shouldUpdate = impl.shouldUpdate;
-  if (shouldUpdate !== undefined) {
-    return shouldUpdate(null, prevProps, props, state);
-  }
-  return true;
-}
-
-export function updateFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): void {
-  const {impl, instance, prevProps, props, state} = fundamentalInstance;
-  const onUpdate = impl.onUpdate;
-  if (onUpdate !== undefined) {
-    onUpdate(null, instance, prevProps, props, state);
-  }
-}
-
-export function unmountFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): void {
-  const {impl, instance, props, state} = fundamentalInstance;
-  const onUnmount = impl.onUnmount;
-  if (onUnmount !== undefined) {
-    onUnmount(null, instance, props, state);
-  }
-}
-
 export function getInstanceFromNode(mockNode: Object) {
   const instance = nodeToInstanceMap.get(mockNode);
   if (instance !== undefined) {
     return instance.internalInstanceHandle;
   }
   return null;
-}
-
-let clientId: number = 0;
-export function makeClientId(): OpaqueIDType {
-  return 'c_' + (clientId++).toString(36);
-}
-
-export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
-  const id = 'c_' + (clientId++).toString(36);
-  return {
-    toString() {
-      warnOnAccessInDEV();
-      return id;
-    },
-    valueOf() {
-      warnOnAccessInDEV();
-      return id;
-    },
-  };
-}
-
-export function isOpaqueHydratingObject(value: mixed): boolean {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    value.$$typeof === REACT_OPAQUE_ID_TYPE
-  );
-}
-
-export function makeOpaqueHydratingObject(
-  attemptToReadValue: () => void,
-): OpaqueIDType {
-  return {
-    $$typeof: REACT_OPAQUE_ID_TYPE,
-    toString: attemptToReadValue,
-    valueOf: attemptToReadValue,
-  };
 }
 
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
@@ -405,4 +319,12 @@ export function prepareScopeUpdate(scopeInstance: Object, inst: Object): void {
 
 export function getInstanceFromScope(scopeInstance: Object): null | Object {
   return nodeToInstanceMap.get(scopeInstance) || null;
+}
+
+export function detachDeletedInstance(node: Instance): void {
+  // noop
+}
+
+export function logRecoverableError(error: mixed): void {
+  // noop
 }

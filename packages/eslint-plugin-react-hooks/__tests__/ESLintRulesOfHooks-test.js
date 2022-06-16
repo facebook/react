@@ -326,6 +326,75 @@ const tests = {
       }
     `,
     `
+      // Valid because the neither the conditions before or after the hook affect the hook call
+      // Failed prior to implementing BigInt because pathsFromStartToEnd and allPathsFromStartToEnd were too big and had rounding errors
+      const useSomeHook = () => {};
+
+      const SomeName = () => {
+        const filler = FILLER ?? FILLER ?? FILLER;
+        const filler2 = FILLER ?? FILLER ?? FILLER;
+        const filler3 = FILLER ?? FILLER ?? FILLER;
+        const filler4 = FILLER ?? FILLER ?? FILLER;
+        const filler5 = FILLER ?? FILLER ?? FILLER;
+        const filler6 = FILLER ?? FILLER ?? FILLER;
+        const filler7 = FILLER ?? FILLER ?? FILLER;
+        const filler8 = FILLER ?? FILLER ?? FILLER;
+
+        useSomeHook();
+
+        if (anyConditionCanEvenBeFalse) {
+          return null;
+        }
+
+        return (
+          <React.Fragment>
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+            {FILLER ? FILLER : FILLER}
+          </React.Fragment>
+        );
+      };
+    `,
+    `
       // Valid because the neither the condition nor the loop affect the hook call.
       function App(props) {
         const someObject = {propA: true};
@@ -915,7 +984,8 @@ function functionError(hook, fn) {
     message:
       `React Hook "${hook}" is called in function "${fn}" that is neither ` +
       'a React function component nor a custom React Hook function.' +
-      ' React component names must start with an uppercase letter.',
+      ' React component names must start with an uppercase letter.' +
+      ' React Hook names must start with the word "use".',
   };
 }
 

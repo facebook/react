@@ -2,9 +2,11 @@
 // Running module factories is intentionally delayed until we know the hook exists.
 // This is to avoid issues like: https://github.com/facebook/react-devtools/issues/1039
 
-/** @flow */
+// @flow strict-local
 
 'use strict';
+
+let welcomeHasInitialized = false;
 
 function welcome(event) {
   if (
@@ -13,6 +15,25 @@ function welcome(event) {
   ) {
     return;
   }
+
+  // In some circumstances, this method is called more than once for a single welcome message.
+  // The exact circumstances of this are unclear, though it seems related to 3rd party event batching code.
+  //
+  // Regardless, call this method multiple times can cause DevTools to add duplicate elements to the Store
+  // (and throw an error) or worse yet, choke up entirely and freeze the browser.
+  //
+  // The simplest solution is to ignore the duplicate events.
+  // To be clear, this SHOULD NOT BE NECESSARY, since we remove the event handler below.
+  //
+  // See https://github.com/facebook/react/issues/24162
+  if (welcomeHasInitialized) {
+    console.warn(
+      'React DevTools detected duplicate welcome "message" events from the content script.',
+    );
+    return;
+  }
+
+  welcomeHasInitialized = true;
 
   window.removeEventListener('message', welcome);
 

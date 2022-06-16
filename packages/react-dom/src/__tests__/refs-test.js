@@ -351,6 +351,35 @@ describe('ref swapping', () => {
       'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
     );
   });
+
+  it('should warn about callback refs returning a function', () => {
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<div ref={() => () => {}} />, container);
+    }).toErrorDev('Unexpected return value from a callback ref in div');
+
+    // Cleanup should warn, too.
+    expect(() => {
+      ReactDOM.render(<span />, container);
+    }).toErrorDev('Unexpected return value from a callback ref in div', {
+      withoutStack: true,
+    });
+
+    // No warning when returning non-functions.
+    ReactDOM.render(<p ref={() => ({})} />, container);
+    ReactDOM.render(<p ref={() => null} />, container);
+    ReactDOM.render(<p ref={() => undefined} />, container);
+
+    // Still warns on functions (not deduped).
+    expect(() => {
+      ReactDOM.render(<div ref={() => () => {}} />, container);
+    }).toErrorDev('Unexpected return value from a callback ref in div');
+    expect(() => {
+      ReactDOM.unmountComponentAtNode(container);
+    }).toErrorDev('Unexpected return value from a callback ref in div', {
+      withoutStack: true,
+    });
+  });
 });
 
 describe('root level refs', () => {

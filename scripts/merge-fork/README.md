@@ -51,7 +51,7 @@ By default, the changes are compared to HEAD. You can use `--base-ref` to compar
 
 ```sh
 yarn merge-fork \
-  --base-ref=$(git merge-base HEAD origin/master)
+  --base-ref=$(git merge-base HEAD origin/main)
   --base-dir=packages/react-reconciler/src \
   ReactFiberWorkLoop
 ```

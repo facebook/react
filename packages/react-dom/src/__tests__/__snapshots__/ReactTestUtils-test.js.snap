@@ -69,6 +69,7 @@ Array [
   "progress",
   "rateChange",
   "reset",
+  "resize",
   "scroll",
   "seeked",
   "seeking",

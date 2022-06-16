@@ -28,7 +28,6 @@ import {
   enableScopeAPI,
   enableCreateEventHandleAPI,
 } from 'shared/ReactFeatureFlags';
-import invariant from 'shared/invariant';
 
 type EventHandleOptions = {|
   capture?: boolean,
@@ -73,8 +72,7 @@ function registerReactDOMEvent(
       eventTarget,
     );
   } else {
-    invariant(
-      false,
+    throw new Error(
       'ReactDOM.createEventHandle: setter called on an invalid ' +
         'target. Provide a valid EventTarget or an element managed by React.',
     );
@@ -97,11 +95,11 @@ export function createEventHandle(
     // Unfortunately, the downside of this invariant is that *removing* a native
     // event from the list of known events has now become a breaking change for
     // any code relying on the createEventHandle API.
-    invariant(
-      allNativeEvents.has(domEventName),
-      'Cannot call unstable_createEventHandle with "%s", as it is not an event known to React.',
-      domEventName,
-    );
+    if (!allNativeEvents.has(domEventName)) {
+      throw new Error(
+        `Cannot call unstable_createEventHandle with "${domEventName}", as it is not an event known to React.`,
+      );
+    }
 
     let isCapturePhaseListener = false;
     if (options != null) {
@@ -115,11 +113,13 @@ export function createEventHandle(
       target: EventTarget | ReactScopeInstance,
       callback: (SyntheticEvent<EventTarget>) => void,
     ) => {
-      invariant(
-        typeof callback === 'function',
-        'ReactDOM.createEventHandle: setter called with an invalid ' +
-          'callback. The callback must be a function.',
-      );
+      if (typeof callback !== 'function') {
+        throw new Error(
+          'ReactDOM.createEventHandle: setter called with an invalid ' +
+            'callback. The callback must be a function.',
+        );
+      }
+
       if (!doesTargetHaveEventHandle(target, eventHandle)) {
         addEventHandleToTarget(target, eventHandle);
         registerReactDOMEvent(target, domEventName, isCapturePhaseListener);

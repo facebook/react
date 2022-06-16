@@ -31,7 +31,7 @@ describe('useRef', () => {
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
 
-    act = ReactNoop.act;
+    act = require('jest-react').act;
     useCallback = React.useCallback;
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;

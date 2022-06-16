@@ -63,7 +63,13 @@ describe('ReactIncrementalReflection', () => {
       return <Component />;
     }
 
-    ReactNoop.render(<Foo />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    } else {
+      ReactNoop.render(<Foo />);
+    }
 
     // Render part way through but don't yet commit the updates.
     expect(Scheduler).toFlushAndYieldThrough(['componentWillMount: false']);
@@ -71,12 +77,7 @@ describe('ReactIncrementalReflection', () => {
     expect(instances[0]._isMounted()).toBe(false);
 
     // Render the rest and commit the updates.
-    expect(() =>
-      expect(Scheduler).toFlushAndYield(['componentDidMount: true']),
-    ).toErrorDev(
-      'Using UNSAFE_componentWillMount in strict mode is not recommended',
-      {withoutStack: true},
-    );
+    expect(Scheduler).toFlushAndYield(['componentDidMount: true']);
 
     expect(instances[0]._isMounted()).toBe(true);
   });
@@ -112,16 +113,17 @@ describe('ReactIncrementalReflection', () => {
     }
 
     ReactNoop.render(<Foo mount={true} />);
-    expect(() =>
-      expect(Scheduler).toFlushAndYield(['Component']),
-    ).toErrorDev(
-      'Using UNSAFE_componentWillMount in strict mode is not recommended',
-      {withoutStack: true},
-    );
+    expect(Scheduler).toFlushAndYield(['Component']);
 
     expect(instances[0]._isMounted()).toBe(true);
 
-    ReactNoop.render(<Foo mount={false} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo mount={false} />);
+      });
+    } else {
+      ReactNoop.render(<Foo mount={false} />);
+    }
     // Render part way through but don't yet commit the updates so it is not
     // fully unmounted yet.
     expect(Scheduler).toFlushAndYieldThrough(['Other']);
@@ -204,7 +206,13 @@ describe('ReactIncrementalReflection', () => {
       return [<Component key="a" step={props.step} />, <Sibling key="b" />];
     }
 
-    ReactNoop.render(<Foo step={0} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo step={0} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={0} />);
+    }
     // Flush past Component but don't complete rendering everything yet.
     expect(Scheduler).toFlushAndYieldThrough([
       ['componentWillMount', null],
@@ -217,15 +225,7 @@ describe('ReactIncrementalReflection', () => {
     // not find any host nodes in it.
     expect(findInstance(classInstance)).toBe(null);
 
-    expect(() =>
-      expect(Scheduler).toFlushAndYield([['componentDidMount', span()]]),
-    ).toErrorDev(
-      [
-        'Using UNSAFE_componentWillMount in strict mode is not recommended',
-        'Using UNSAFE_componentWillUpdate in strict mode is not recommended',
-      ],
-      {withoutStack: true},
-    );
+    expect(Scheduler).toFlushAndYield([['componentDidMount', span()]]);
 
     const hostSpan = classInstance.span;
     expect(hostSpan).toBeDefined();
@@ -246,7 +246,13 @@ describe('ReactIncrementalReflection', () => {
 
     // The next step will render a new host node but won't get committed yet.
     // We expect this to mutate the original Fiber.
-    ReactNoop.render(<Foo step={2} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo step={2} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={2} />);
+    }
     expect(Scheduler).toFlushAndYieldThrough([
       ['componentWillUpdate', hostSpan],
       'render',
@@ -267,7 +273,13 @@ describe('ReactIncrementalReflection', () => {
     expect(ReactNoop.findInstance(classInstance)).toBe(hostDiv);
 
     // Render to null but don't commit it yet.
-    ReactNoop.render(<Foo step={3} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo step={3} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={3} />);
+    }
     expect(Scheduler).toFlushAndYieldThrough([
       ['componentWillUpdate', hostDiv],
       'render',

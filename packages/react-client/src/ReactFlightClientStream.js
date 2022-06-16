@@ -9,9 +9,12 @@
 
 import type {Response} from './ReactFlightClientHostConfigStream';
 
+import type {BundlerConfig} from './ReactFlightClientHostConfig';
+
 import {
   resolveModule,
   resolveModel,
+  resolveProvider,
   resolveSymbol,
   resolveError,
   createResponse as createResponseBase,
@@ -47,6 +50,10 @@ function processFullRow(response: Response, row: string): void {
     }
     case 'M': {
       resolveModule(response, id, text);
+      return;
+    }
+    case 'P': {
+      resolveProvider(response, id, text);
       return;
     }
     case 'S': {
@@ -116,11 +123,11 @@ function createFromJSONCallback(response: Response) {
   };
 }
 
-export function createResponse(): Response {
+export function createResponse(bundlerConfig: BundlerConfig): Response {
   // NOTE: CHECK THE COMPILER OUTPUT EACH TIME YOU CHANGE THIS.
   // It should be inlined to one object literal but minor changes can break it.
   const stringDecoder = supportsBinaryStreams ? createStringDecoder() : null;
-  const response: any = createResponseBase();
+  const response: any = createResponseBase(bundlerConfig);
   response._partialRow = '';
   if (supportsBinaryStreams) {
     response._stringDecoder = stringDecoder;

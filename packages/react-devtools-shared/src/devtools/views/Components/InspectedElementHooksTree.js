@@ -13,6 +13,7 @@ import {useCallback, useContext, useRef, useState} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
+import Toggle from '../Toggle';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
 import KeyValue from './KeyValue';
 import {getMetaValueLabel, serializeHooksForCopy} from '../utils';
@@ -20,26 +21,64 @@ import Store from '../../store';
 import styles from './InspectedElementHooksTree.css';
 import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
+import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
+import {
+  enableNamedHooksFeature,
+  enableProfilerChangedHookIndices,
+} from 'react-devtools-feature-flags';
+import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
+import isArray from 'react-devtools-shared/src/isArray';
 
 import type {InspectedElement} from './types';
-import type {GetInspectedElementPath} from './InspectedElementContext';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {HookNames} from 'react-devtools-shared/src/types';
+import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {ToggleParseHookNames} from './InspectedElementContext';
 
 type HooksTreeViewProps = {|
   bridge: FrontendBridge,
-  getInspectedElementPath: GetInspectedElementPath,
+  element: Element,
+  hookNames: HookNames | null,
   inspectedElement: InspectedElement,
+  parseHookNames: boolean,
   store: Store,
+  toggleParseHookNames: ToggleParseHookNames,
 |};
 
 export function InspectedElementHooksTree({
   bridge,
-  getInspectedElementPath,
+  element,
+  hookNames,
   inspectedElement,
+  parseHookNames,
   store,
+  toggleParseHookNames,
 }: HooksTreeViewProps) {
   const {hooks, id} = inspectedElement;
+
+  // Changing parseHookNames is done in a transition, because it suspends.
+  // This value is done outside of the transition, so the UI toggle feels responsive.
+  const [parseHookNamesOptimistic, setParseHookNamesOptimistic] = useState(
+    parseHookNames,
+  );
+  const handleChange = () => {
+    setParseHookNamesOptimistic(!parseHookNames);
+    toggleParseHookNames();
+  };
+
+  const hookNamesModuleLoader = useContext(HookNamesModuleLoaderContext);
+
+  const hookParsingFailed = parseHookNames && hookNames === null;
+
+  let toggleTitle;
+  if (hookParsingFailed) {
+    toggleTitle = 'Hook parsing failed';
+  } else if (parseHookNames) {
+    toggleTitle = 'Parsing hook names ...';
+  } else {
+    toggleTitle = 'Parse hook names (may be slow)';
+  }
 
   const handleCopy = () => copy(serializeHooksForCopy(hooks));
 
@@ -47,17 +86,33 @@ export function InspectedElementHooksTree({
     return null;
   } else {
     return (
-      <div className={styles.HooksTreeView}>
+      <div
+        className={styles.HooksTreeView}
+        data-testname="InspectedElementHooksTree">
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
+          {enableNamedHooksFeature &&
+            typeof hookNamesModuleLoader === 'function' &&
+            (!parseHookNames || hookParsingFailed) && (
+              <Toggle
+                className={hookParsingFailed ? styles.ToggleError : null}
+                isChecked={parseHookNamesOptimistic}
+                isDisabled={parseHookNamesOptimistic || hookParsingFailed}
+                onChange={handleChange}
+                testName="LoadHookNamesButton"
+                title={toggleTitle}>
+                <ButtonIcon type="parse-hook-names" />
+              </Toggle>
+            )}
           <Button onClick={handleCopy} title="Copy to clipboard">
             <ButtonIcon type="copy" />
           </Button>
         </div>
         <InnerHooksTreeView
+          hookNames={hookNames}
           hooks={hooks}
           id={id}
-          getInspectedElementPath={getInspectedElementPath}
+          element={element}
           inspectedElement={inspectedElement}
           path={[]}
         />
@@ -67,7 +122,8 @@ export function InspectedElementHooksTree({
 }
 
 type InnerHooksTreeViewProps = {|
-  getInspectedElementPath: GetInspectedElementPath,
+  element: Element,
+  hookNames: HookNames | null,
   hooks: HooksTree,
   id: number,
   inspectedElement: InspectedElement,
@@ -75,7 +131,8 @@ type InnerHooksTreeViewProps = {|
 |};
 
 export function InnerHooksTreeView({
-  getInspectedElementPath,
+  element,
+  hookNames,
   hooks,
   id,
   inspectedElement,
@@ -85,8 +142,9 @@ export function InnerHooksTreeView({
   return hooks.map((hook, index) => (
     <HookView
       key={index}
-      getInspectedElementPath={getInspectedElementPath}
+      element={element}
       hook={hooks[index]}
+      hookNames={hookNames}
       id={id}
       inspectedElement={inspectedElement}
       path={path.concat([index])}
@@ -95,16 +153,18 @@ export function InnerHooksTreeView({
 }
 
 type HookViewProps = {|
-  getInspectedElementPath: GetInspectedElementPath,
+  element: Element,
   hook: HooksNode,
+  hookNames: HookNames | null,
   id: number,
   inspectedElement: InspectedElement,
   path: Array<string | number>,
 |};
 
 function HookView({
-  getInspectedElementPath,
+  element,
   hook,
+  hookNames,
   id,
   inspectedElement,
   path,
@@ -114,7 +174,7 @@ function HookView({
     canEditHooksAndDeletePaths,
     canEditHooksAndRenamePaths,
   } = inspectedElement;
-  const {name, id: hookID, isStateEditable, subHooks, value} = hook;
+  const {id: hookID, isStateEditable, subHooks, value} = hook;
 
   const isReadOnly = hookID == null || !isStateEditable;
 
@@ -163,15 +223,41 @@ function HookView({
   }
 
   // Certain hooks are not editable at all (as identified by react-debug-tools).
-  // Primative hook names (e.g. the "State" name for useState) are also never editable.
+  // Primitive hook names (e.g. the "State" name for useState) are also never editable.
   const canRenamePathsAtDepth = depth => isStateEditable && depth > 1;
 
   const isCustomHook = subHooks.length > 0;
+
+  let name = hook.name;
+  if (enableProfilerChangedHookIndices) {
+    if (hookID !== null) {
+      name = (
+        <>
+          <span className={styles.PrimitiveHookNumber}>{hookID + 1}</span>
+          {name}
+        </>
+      );
+    }
+  }
 
   const type = typeof value;
 
   let displayValue;
   let isComplexDisplayValue = false;
+
+  const hookSource = hook.hookSource;
+  const hookName =
+    hookNames != null && hookSource != null
+      ? hookNames.get(getHookSourceLocationKey(hookSource))
+      : null;
+  const hookDisplayName = hookName ? (
+    <>
+      {name}
+      {!!hookName && <span className={styles.HookName}>({hookName})</span>}
+    </>
+  ) : (
+    name
+  );
 
   // Format data for display to mimic the props/state/context for now.
   if (type === 'string') {
@@ -184,7 +270,7 @@ function HookView({
     displayValue = 'null';
   } else if (value === undefined) {
     displayValue = null;
-  } else if (Array.isArray(value)) {
+  } else if (isArray(value)) {
     isComplexDisplayValue = true;
     displayValue = 'Array';
   } else if (type === 'object') {
@@ -193,10 +279,11 @@ function HookView({
   }
 
   if (isCustomHook) {
-    const subHooksView = Array.isArray(subHooks) ? (
+    const subHooksView = isArray(subHooks) ? (
       <InnerHooksTreeView
-        getInspectedElementPath={getInspectedElementPath}
+        element={element}
         hooks={subHooks}
+        hookNames={hookNames}
         id={id}
         inspectedElement={inspectedElement}
         path={path.concat(['subHooks'])}
@@ -210,8 +297,9 @@ function HookView({
         canRenamePaths={canRenamePaths}
         canRenamePathsAtDepth={canRenamePathsAtDepth}
         depth={1}
-        getInspectedElementPath={getInspectedElementPath}
+        element={element}
         hookID={hookID}
+        hookName={hookName}
         inspectedElement={inspectedElement}
         name="subHooks"
         path={path.concat(['subHooks'])}
@@ -229,7 +317,7 @@ function HookView({
             <span
               onClick={toggleIsOpen}
               className={name !== '' ? styles.Name : styles.NameAnonymous}>
-              {name || 'Anonymous'}
+              {hookDisplayName || 'Anonymous'}
             </span>
             <span className={styles.Value} onClick={toggleIsOpen}>
               {isOpen || getMetaValueLabel(value)}
@@ -244,8 +332,9 @@ function HookView({
               canRenamePaths={canRenamePaths}
               canRenamePathsAtDepth={canRenamePathsAtDepth}
               depth={1}
-              getInspectedElementPath={getInspectedElementPath}
+              element={element}
               hookID={hookID}
+              hookName={hookName}
               inspectedElement={inspectedElement}
               name="DebugValue"
               path={path.concat(['value'])}
@@ -265,7 +354,7 @@ function HookView({
             <span
               onClick={toggleIsOpen}
               className={name !== '' ? styles.Name : styles.NameAnonymous}>
-              {name || 'Anonymous'}
+              {hookDisplayName || 'Anonymous'}
             </span>{' '}
             {/* $FlowFixMe */}
             <span className={styles.Value} onClick={toggleIsOpen}>
@@ -290,8 +379,9 @@ function HookView({
             canRenamePaths={canRenamePaths}
             canRenamePathsAtDepth={canRenamePathsAtDepth}
             depth={1}
-            getInspectedElementPath={getInspectedElementPath}
+            element={element}
             hookID={hookID}
+            hookName={hookName}
             inspectedElement={inspectedElement}
             name={name}
             path={path.concat(['value'])}
@@ -311,8 +401,9 @@ function HookView({
             canEditValues={canEditValues}
             canRenamePaths={false}
             depth={1}
-            getInspectedElementPath={getInspectedElementPath}
+            element={element}
             hookID={hookID}
+            hookName={hookName}
             inspectedElement={inspectedElement}
             name={name}
             path={[]}

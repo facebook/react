@@ -1,6 +1,5 @@
-import React, {PureComponent} from 'react';
-import {flushSync, createRoot} from 'react-dom';
-import Scheduler from 'scheduler';
+import React, {PureComponent, unstable_startTransition} from 'react';
+import {createRoot} from 'react-dom/client';
 import _ from 'lodash';
 import Charts from './Charts';
 import Clock from './Clock';
@@ -55,11 +54,9 @@ class App extends PureComponent {
       return;
     }
     if (this.state.strategy !== 'async') {
-      flushSync(() => {
-        this.setState(state => ({
-          showDemo: !state.showDemo,
-        }));
-      });
+      this.setState(state => ({
+        showDemo: !state.showDemo,
+      }));
       return;
     }
     if (this._ignoreClick) {
@@ -67,7 +64,7 @@ class App extends PureComponent {
     }
     this._ignoreClick = true;
 
-    Scheduler.unstable_next(() => {
+    unstable_startTransition(() => {
       this.setState({showDemo: true}, () => {
         this._ignoreClick = false;
       });
@@ -76,9 +73,7 @@ class App extends PureComponent {
 
   debouncedHandleChange = _.debounce(value => {
     if (this.state.strategy === 'debounced') {
-      flushSync(() => {
-        this.setState({value: value});
-      });
+      this.setState({value: value});
     }
   }, 1000);
 
@@ -108,9 +103,9 @@ class App extends PureComponent {
         break;
       case 'async':
         // TODO: useTransition hook instead.
-        setTimeout(() => {
+        unstable_startTransition(() => {
           this.setState({value});
-        }, 0);
+        });
         break;
       default:
         break;

@@ -1,0 +1,133 @@
+.GitHubLinkRow {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: auto;
+  padding: 0.25rem 0.5rem;
+  background: var(--color-console-warning-background);
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-console-warning-border);
+  border-top: 1px solid var(--color-console-warning-border);
+}
+
+.WorkplaceGroupRow {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: auto;
+  padding: 0.25rem 0.5rem;
+  background: var(--color-background-hover);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ErrorBoundary {
+  height: 100%;
+  width: 100%;
+  background-color: var(--color-background);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+}
+
+.ErrorInfo {
+  padding: 0.5rem;
+  overflow: auto;
+}
+
+.HeaderRow {
+  display: flex;
+  flex-direction: row;
+  font-size: var(--font-size-sans-large);
+  font-weight: bold;
+}
+
+.ErrorHeader,
+.TimeoutHeader {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.ErrorHeader {
+  color: var(--color-error-text);
+}
+.TimeoutHeader {
+  color: var(--color-text);
+}
+
+.ErrorStack,
+.TimeoutStack {
+  margin-top: 0.5rem;
+  white-space: pre-wrap;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  -webkit-font-smoothing: initial;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  overflow: auto;
+}
+
+.ErrorStack {
+  background-color: var(--color-error-background);
+  border: 1px solid var(--color-error-border);
+  color: var(--color-error-text);
+}
+
+.TimeoutStack {
+  background-color: var(--color-console-warning-background);
+  color: var(--color-console-warning-text);
+  border: var(--color-console-warning-border)
+}
+
+.LoadingIcon {
+  margin-right: 0.25rem;
+}
+
+.ReportIcon {
+  margin-right: 0.25rem;
+}
+
+.ReportLink {
+  color: var(--color-link);
+}
+
+.FacebookOnly {
+  margin-left: 0.25rem;
+}
+
+.ReproSteps {
+  margin-left: 0.25rem;
+  color: var(--color-console-warning-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.UpdateExistingIssuePrompt {
+  margin-right: 0.25rem;
+  color: var(--color-console-warning-text);
+}
+
+.CloseButton {
+  font-weight: bold;
+}
+
+.CloseButtonIcon {
+  margin-left: 0.25rem;
+}
+
+.InfoBox {
+  margin-top: 0.5rem;
+  background: var(--color-console-warning-background);
+  border: 1px solid var(--color-console-warning-border);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  color: var(--color-console-warning-text);
+}

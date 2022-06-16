@@ -7,8 +7,10 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
+import type {Lanes} from './ReactFiberLane.old';
+import type {SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import type {Transition} from './ReactFiberTracingMarkerComponent.new';
 
 export type OffscreenProps = {|
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum
@@ -17,7 +19,7 @@ export type OffscreenProps = {|
   //
   // Default mode is visible. Kind of a weird default for a component
   // called "Offscreen." Possible alt: <Visibility />?
-  mode?: 'hidden' | 'unstable-defer-without-hiding' | 'visible' | null | void,
+  mode?: OffscreenMode | null | void,
   children?: ReactNodeList,
 |};
 
@@ -28,4 +30,14 @@ export type OffscreenState = {|
   // will represent the pending work that must be included in the render in
   // order to unhide the component.
   baseLanes: Lanes,
+  cachePool: SpawnedCachePool | null,
+  transitions: Set<Transition> | null,
+|};
+
+export type OffscreenQueue = {|
+  transitions: Array<Transition> | null,
+|} | null;
+
+export type OffscreenInstance = {|
+  isHidden: boolean,
 |};

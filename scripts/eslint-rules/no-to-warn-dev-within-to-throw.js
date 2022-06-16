@@ -9,28 +9,33 @@
 
 'use strict';
 
-module.exports = function(context) {
-  return {
-    Identifier(node) {
-      if (node.name === 'toWarnDev' || node.name === 'toErrorDev') {
-        let current = node;
-        while (current.parent) {
-          if (current.type === 'CallExpression') {
-            if (
-              current &&
-              current.callee &&
-              current.callee.property &&
-              current.callee.property.name === 'toThrow'
-            ) {
-              context.report(
-                node,
-                node.name + '() matcher should not be nested'
-              );
+module.exports = {
+  meta: {
+    schema: [],
+  },
+  create(context) {
+    return {
+      Identifier(node) {
+        if (node.name === 'toWarnDev' || node.name === 'toErrorDev') {
+          let current = node;
+          while (current.parent) {
+            if (current.type === 'CallExpression') {
+              if (
+                current &&
+                current.callee &&
+                current.callee.property &&
+                current.callee.property.name === 'toThrow'
+              ) {
+                context.report(
+                  node,
+                  node.name + '() matcher should not be nested'
+                );
+              }
             }
+            current = current.parent;
           }
-          current = current.parent;
         }
-      }
-    },
-  };
+      },
+    };
+  },
 };

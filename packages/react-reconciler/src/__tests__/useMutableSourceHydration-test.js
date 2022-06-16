@@ -10,7 +10,7 @@
 'use strict';
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
 let act;
@@ -22,13 +22,17 @@ describe('useMutableSourceHydration', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
 
-    act = require('react-dom/test-utils').unstable_concurrentAct;
-    createMutableSource = React.unstable_createMutableSource;
-    useMutableSource = React.unstable_useMutableSource;
+    act = require('jest-react').act;
+
+    // Stable entrypoints export with "unstable_" prefix.
+    createMutableSource =
+      React.createMutableSource || React.unstable_createMutableSource;
+    useMutableSource =
+      React.useMutableSource || React.unstable_useMutableSource;
   });
 
   const defaultGetSnapshot = source => source.value;
@@ -131,7 +135,7 @@ describe('useMutableSourceHydration', () => {
     return <div>{`${label}:${snapshot}`}</div>;
   }
 
-  // @gate experimental
+  // @gate enableUseMutableSource
   it('should render and hydrate', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -155,20 +159,17 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['only:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.unstable_createRoot(container, {
-      hydrate: true,
-      hydrationOptions: {
-        mutableSources: [mutableSource],
-      },
-    });
     act(() => {
-      root.render(<TestComponent />);
+      ReactDOMClient.hydrateRoot(container, <TestComponent />, {
+        mutableSources: [mutableSource],
+      });
     });
     expect(Scheduler).toHaveYielded(['only:one']);
     expect(source.listenerCount).toBe(1);
   });
 
-  // @gate experimental
+  // @gate enableUseMutableSource
+  // @gate enableClientRenderFallbackOnTextMismatch
   it('should detect a tear before hydrating a component', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -192,27 +193,34 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['only:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.unstable_createRoot(container, {
-      hydrate: true,
-      hydrationOptions: {
-        mutableSources: [mutableSource],
-      },
-    });
     expect(() => {
       act(() => {
-        root.render(<TestComponent />);
+        ReactDOMClient.hydrateRoot(container, <TestComponent />, {
+          mutableSources: [mutableSource],
+          onRecoverableError(error) {
+            Scheduler.unstable_yieldValue('Log error: ' + error.message);
+          },
+        });
 
         source.value = 'two';
       });
     }).toErrorDev(
-      'Warning: Did not expect server HTML to contain a <div> in <div>.',
-      {withoutStack: true},
+      [
+        'Warning: Text content did not match. Server: "only:one" Client: "only:two"',
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+      ],
+      {withoutStack: 1},
     );
-    expect(Scheduler).toHaveYielded(['only:two']);
+    expect(Scheduler).toHaveYielded([
+      'only:two',
+      'only:two',
+      'Log error: Text content does not match server-rendered HTML.',
+      'Log error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+    ]);
     expect(source.listenerCount).toBe(1);
   });
 
-  // @gate experimental
+  // @gate enableUseMutableSource
   it('should detect a tear between hydrating components', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -244,27 +252,51 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['a:one', 'b:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.unstable_createRoot(container, {
-      hydrate: true,
-      hydrationOptions: {
-        mutableSources: [mutableSource],
-      },
-    });
     expect(() => {
       act(() => {
-        root.render(<TestComponent />);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            ReactDOMClient.hydrateRoot(container, <TestComponent />, {
+              mutableSources: [mutableSource],
+              onRecoverableError(error) {
+                Scheduler.unstable_yieldValue('Log error: ' + error.message);
+              },
+            });
+          });
+        } else {
+          ReactDOMClient.hydrateRoot(container, <TestComponent />, {
+            mutableSources: [mutableSource],
+            onRecoverableError(error) {
+              Scheduler.unstable_yieldValue('Log error: ' + error.message);
+            },
+          });
+        }
         expect(Scheduler).toFlushAndYieldThrough(['a:one']);
         source.value = 'two';
       });
     }).toErrorDev(
-      'Warning: Did not expect server HTML to contain a <div> in <div>.',
+      'Warning: An error occurred during hydration. ' +
+        'The server HTML was replaced with client content in <div>.',
       {withoutStack: true},
     );
-    expect(Scheduler).toHaveYielded(['a:two', 'b:two']);
+    expect(Scheduler).toHaveYielded([
+      'a:two',
+      'b:two',
+      // TODO: Before onRecoverableError, this error was never surfaced to the
+      // user. The request to file an bug report no longer makes sense.
+      // However, the experimental useMutableSource API is slated for
+      // removal, anyway.
+      'Log error: Cannot read from mutable source during the current ' +
+        'render without tearing. This may be a bug in React. Please file ' +
+        'an issue.',
+      'Log error: There was an error while hydrating. Because the error ' +
+        'happened outside of a Suspense boundary, the entire root will ' +
+        'switch to client rendering.',
+    ]);
     expect(source.listenerCount).toBe(2);
   });
 
-  // @gate experimental
+  // @gate enableUseMutableSource
   it('should detect a tear between hydrating components reading from different parts of a source', () => {
     const source = createComplexSource('a:one', 'b:one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -297,15 +329,9 @@ describe('useMutableSourceHydration', () => {
     container.innerHTML = htmlString;
     expect(Scheduler).toHaveYielded(['0:a:one', '1:b:one']);
 
-    const root = ReactDOM.unstable_createRoot(container, {
-      hydrate: true,
-      hydrationOptions: {
-        mutableSources: [mutableSource],
-      },
-    });
     expect(() => {
       act(() => {
-        root.render(
+        const fragment = (
           <>
             <Component
               label="0"
@@ -319,76 +345,46 @@ describe('useMutableSourceHydration', () => {
               mutableSource={mutableSource}
               subscribe={subscribeB}
             />
-          </>,
+          </>
         );
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            ReactDOMClient.hydrateRoot(container, fragment, {
+              mutableSources: [mutableSource],
+              onRecoverableError(error) {
+                Scheduler.unstable_yieldValue('Log error: ' + error.message);
+              },
+            });
+          });
+        } else {
+          ReactDOMClient.hydrateRoot(container, fragment, {
+            mutableSources: [mutableSource],
+            onRecoverableError(error) {
+              Scheduler.unstable_yieldValue('Log error: ' + error.message);
+            },
+          });
+        }
         expect(Scheduler).toFlushAndYieldThrough(['0:a:one']);
         source.valueB = 'b:two';
       });
     }).toErrorDev(
-      'Warning: Did not expect server HTML to contain a <div> in <div>.',
+      'Warning: An error occurred during hydration. ' +
+        'The server HTML was replaced with client content in <div>.',
       {withoutStack: true},
     );
-    expect(Scheduler).toHaveYielded(['0:a:one', '1:b:two']);
-  });
-
-  // @gate experimental
-  it('should detect a tear during a higher priority interruption', () => {
-    const source = createSource('one');
-    const mutableSource = createMutableSource(source, param => param.version);
-
-    function Unrelated({flag}) {
-      Scheduler.unstable_yieldValue(flag);
-      return flag;
-    }
-
-    function TestComponent({flag}) {
-      return (
-        <>
-          <Unrelated flag={flag} />
-          <Component
-            label="a"
-            getSnapshot={defaultGetSnapshot}
-            mutableSource={mutableSource}
-            subscribe={defaultSubscribe}
-          />
-        </>
-      );
-    }
-
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-
-    const htmlString = ReactDOMServer.renderToString(
-      <TestComponent flag={1} />,
-    );
-    container.innerHTML = htmlString;
-    expect(Scheduler).toHaveYielded([1, 'a:one']);
-    expect(source.listenerCount).toBe(0);
-
-    const root = ReactDOM.unstable_createRoot(container, {
-      hydrate: true,
-      hydrationOptions: {
-        mutableSources: [mutableSource],
-      },
-    });
-    expect(() => {
-      act(() => {
-        root.render(<TestComponent flag={1} />);
-        expect(Scheduler).toFlushAndYieldThrough([1]);
-
-        // Render an update which will be higher priority than the hydration.
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => root.render(<TestComponent flag={2} />),
-        );
-        expect(Scheduler).toFlushAndYieldThrough([2]);
-
-        source.value = 'two';
-      });
-    }).toErrorDev(
-      'Warning: Text content did not match. Server: "1" Client: "2"',
-    );
-    expect(Scheduler).toHaveYielded([2, 'a:two']);
-    expect(source.listenerCount).toBe(1);
+    expect(Scheduler).toHaveYielded([
+      '0:a:one',
+      '1:b:two',
+      // TODO: Before onRecoverableError, this error was never surfaced to the
+      // user. The request to file an bug report no longer makes sense.
+      // However, the experimental useMutableSource API is slated for
+      // removal, anyway.
+      'Log error: Cannot read from mutable source during the current ' +
+        'render without tearing. This may be a bug in React. Please file ' +
+        'an issue.',
+      'Log error: There was an error while hydrating. Because the error ' +
+        'happened outside of a Suspense boundary, the entire root will ' +
+        'switch to client rendering.',
+    ]);
   });
 });

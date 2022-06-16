@@ -8,8 +8,6 @@
  */
 
 import {
-  ID_ATTRIBUTE_NAME,
-  ROOT_ATTRIBUTE_NAME,
   BOOLEAN,
   OVERLOADED_BOOLEAN,
   getPropertyInfo,
@@ -18,25 +16,12 @@ import {
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
 
 /**
  * Operations for dealing with DOM properties.
  */
-
-/**
- * Creates markup for the ID property.
- *
- * @param {string} id Unescaped ID.
- * @return {string} Markup string.
- */
-export function createMarkupForID(id: string): string {
-  return ID_ATTRIBUTE_NAME + '=' + quoteAttributeValueForBrowser(id);
-}
-
-export function createMarkupForRoot(): string {
-  return ROOT_ATTRIBUTE_NAME + '=""';
-}
 
 /**
  * Creates markup for a property.
@@ -60,6 +45,9 @@ export function createMarkupForProperty(name: string, value: mixed): string {
       return attributeName + '=""';
     } else {
       if (propertyInfo.sanitizeURL) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
+        }
         value = '' + (value: any);
         sanitizeURL(value);
       }
@@ -82,7 +70,12 @@ export function createMarkupForCustomAttribute(
   name: string,
   value: mixed,
 ): string {
-  if (!isAttributeNameSafe(name) || value == null) {
+  if (
+    !isAttributeNameSafe(name) ||
+    value == null ||
+    typeof value === 'function' ||
+    typeof value === 'symbol'
+  ) {
     return '';
   }
   return name + '=' + quoteAttributeValueForBrowser(value);

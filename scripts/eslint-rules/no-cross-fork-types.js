@@ -46,7 +46,6 @@ function warnIfOldField(context, oldFields, identifier) {
 module.exports = {
   meta: {
     type: 'problem',
-    fixable: 'code',
   },
   create(context) {
     const sourceFilename = context.getFilename();

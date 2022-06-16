@@ -2,7 +2,7 @@ Harness for testing local changes to the `react-devtools-inline` and `react-devt
 
 ## Development
 
-This target should be run in parallel with the `react-devtools-inline` package. The first step then is to run that target following the instructions in the [`react-devtools-inline` README](https://github.com/facebook/react/blob/master/packages/react-devtools-inline/README.md).
+This target should be run in parallel with the `react-devtools-inline` package. The first step then is to run that target following the instructions in the [`react-devtools-inline` README's local development section](https://github.com/facebook/react/tree/main/packages/react-devtools-inline#local-development).
 
 The test harness can then be run as follows:
 ```sh
@@ -10,3 +10,5 @@ cd packages/react-devtools-shell
 
 yarn start
 ```
+
+Once you set both up, you can view the test harness with inlined devtools in browser at http://localhost:8080/

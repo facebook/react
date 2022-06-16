@@ -27,7 +27,7 @@ describe('useSubscription', () => {
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
 
-    act = ReactTestRenderer.unstable_concurrentAct;
+    act = require('jest-react').act;
 
     BehaviorSubject = require('rxjs').BehaviorSubject;
     ReplaySubject = require('rxjs').ReplaySubject;
@@ -331,7 +331,14 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     act(() => {
-      renderer.update(<Parent observed={observableB} />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          renderer.update(<Parent observed={observableB} />);
+        });
+      } else {
+        renderer.update(<Parent observed={observableB} />);
+      }
+
       expect(Scheduler).toFlushAndYieldThrough(['Child: b-0']);
       expect(log).toEqual(['Parent.componentDidMount']);
 
@@ -432,7 +439,13 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     act(() => {
-      renderer.update(<Parent observed={observableB} />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          renderer.update(<Parent observed={observableB} />);
+        });
+      } else {
+        renderer.update(<Parent observed={observableB} />);
+      }
       expect(Scheduler).toFlushAndYieldThrough(['Child: b-0']);
       expect(log).toEqual([]);
 
@@ -444,17 +457,13 @@ describe('useSubscription', () => {
       renderer.update(<Parent observed={observableA} />);
 
       // Flush everything and ensure that the correct subscribable is used
-      // We expect the new subscribable to finish rendering,
-      // But then the updated values from the old subscribable should be used.
       expect(Scheduler).toFlushAndYield([
-        'Grandchild: b-0',
+        'Child: a-2',
+        'Grandchild: a-2',
         'Child: a-2',
         'Grandchild: a-2',
       ]);
-      expect(log).toEqual([
-        'Parent.componentDidUpdate:b-0',
-        'Parent.componentDidUpdate:a-2',
-      ]);
+      expect(log).toEqual(['Parent.componentDidUpdate:a-2']);
     });
 
     // Updates from the new subscribable should be ignored.
@@ -608,14 +617,25 @@ describe('useSubscription', () => {
       // Interrupt with a second mutation "C" -> "D".
       // This update will not be eagerly evaluated,
       // but useSubscription() should eagerly close over the updated value to avoid tearing.
-      mutate('C');
-      expect(Scheduler).toFlushAndYieldThrough(['render:first:C']);
-      mutate('D');
-      expect(Scheduler).toFlushAndYield([
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          mutate('C');
+        });
+      } else {
+        mutate('C');
+      }
+      expect(Scheduler).toFlushAndYieldThrough([
+        'render:first:C',
         'render:second:C',
-        'render:first:D',
-        'render:second:D',
       ]);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          mutate('D');
+        });
+      } else {
+        mutate('D');
+      }
+      expect(Scheduler).toFlushAndYield(['render:first:D', 'render:second:D']);
 
       // No more pending updates
       jest.runAllTimers();

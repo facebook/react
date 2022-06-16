@@ -29,9 +29,9 @@ import {
   SUSPENSE_LIST_SYMBOL_STRING,
 } from './ReactSymbols';
 
-// These methods are safe to import from shared;
-// there is no React-specific logic here.
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+// The shared console patching code is DEV-only.
+// We can't use it since DevTools only ships production builds.
+import {disableLogs, reenableLogs} from './DevToolsConsolePatching';
 
 let prefix;
 export function describeBuiltInComponentFrame(

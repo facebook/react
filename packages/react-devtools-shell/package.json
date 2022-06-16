@@ -3,13 +3,12 @@
   "name": "react-devtools-shell",
   "version": "0.0.0",
   "scripts": {
-    "build": "cross-env NODE_ENV=development cross-env TARGET=remote webpack --config webpack.config.js",
-    "deploy": "yarn run build && now deploy && now alias react-devtools-experimental",
-    "start": "cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open"
+    "start": "cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server"
   },
   "dependencies": {
     "immutable": "^4.0.0-rc.12",
-    "react-native-web": "0.0.0-26873b469"
+    "react-native-web": "0.0.0-26873b469",
+    "semver": "^6.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",

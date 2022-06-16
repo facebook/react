@@ -90,7 +90,7 @@ for (const {base: baseFilename, from, to} of getTransforms()) {
     }
   );
   if (gitShowResult.status !== 0) {
-    console.error('' + gitShowResult.stderr);
+    console.error(String(gitShowResult.stderr));
     continue;
   }
 
@@ -104,6 +104,6 @@ for (const {base: baseFilename, from, to} of getTransforms()) {
   });
 
   if (mergeFileResult.status !== 0) {
-    console.error('' + mergeFileResult.stderr);
+    console.error(String(mergeFileResult.stderr));
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "17.0.2",
+  "version": "18.2.0",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": {
@@ -18,31 +18,44 @@
   "homepage": "https://reactjs.org/",
   "dependencies": {
     "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.1",
-    "scheduler": "^0.20.1"
+    "scheduler": "^0.23.0"
   },
   "peerDependencies": {
-    "react": "17.0.2"
+    "react": "^18.2.0"
   },
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
+    "client.js",
     "profiling.js",
     "server.js",
     "server.browser.js",
     "server.node.js",
     "test-utils.js",
-    "unstable-fizz.js",
-    "unstable-fizz.browser.js",
-    "unstable-fizz.node.js",
+    "unstable_testing.js",
     "cjs/",
     "umd/"
   ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./server": {
+      "deno": "./server.browser.js",
+      "worker": "./server.browser.js",
+      "browser": "./server.browser.js",
+      "default": "./server.node.js"
+    },
+    "./server.browser": "./server.browser.js",
+    "./server.node": "./server.node.js",
+    "./profiling": "./profiling.js",
+    "./test-utils": "./test-utils.js",
+    "./unstable_testing": "./unstable_testing.js",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
   "browser": {
-    "./server.js": "./server.browser.js",
-    "./unstable-fizz.js": "./unstable-fizz.browser.js"
+    "./server.js": "./server.browser.js"
   },
   "browserify": {
     "transform": [

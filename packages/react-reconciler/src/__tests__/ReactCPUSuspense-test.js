@@ -1,6 +1,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 let Suspense;
 let useState;
 let textCache;
@@ -16,6 +17,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     Suspense = React.Suspense;
     useState = React.useState;
 
@@ -106,6 +108,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
   }
 
+  // @gate enableCPUSuspense
   it('skips CPU-bound trees on initial mount', async () => {
     function App() {
       return (
@@ -123,7 +126,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
       expect(Scheduler).toFlushUntilNextPaint(['Outer', 'Loading...']);
       expect(root).toMatchRenderedOutput(
@@ -143,6 +146,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate enableCPUSuspense
   it('does not skip CPU-bound trees during updates', async () => {
     let setCount;
 
@@ -165,7 +169,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Initial mount
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     // Inner contents finish in separate commit from outer
@@ -178,7 +182,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
 
     // Update
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setCount(1);
     });
     // Entire update finishes in a single commit
@@ -191,6 +195,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate enableCPUSuspense
   it('suspend inside CPU-bound tree', async () => {
     function App() {
       return (
@@ -208,7 +213,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
       expect(Scheduler).toFlushUntilNextPaint(['Outer', 'Loading...']);
       expect(root).toMatchRenderedOutput(
@@ -228,7 +233,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
 
     // Resolve the data and finish rendering
-    await ReactNoop.act(async () => {
+    await act(async () => {
       await resolveText('Inner');
     });
     expect(Scheduler).toHaveYielded(['Inner']);
@@ -240,6 +245,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate enableCPUSuspense
   it('nested CPU-bound trees', async () => {
     function App() {
       return (
@@ -264,7 +270,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     // Each level commits separately

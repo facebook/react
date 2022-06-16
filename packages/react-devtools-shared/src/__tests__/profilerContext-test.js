@@ -18,6 +18,7 @@ describe('ProfilerContext', () => {
   let ReactDOM;
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
+  let legacyRender;
   let store: Store;
   let utils;
 
@@ -32,6 +33,8 @@ describe('ProfilerContext', () => {
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
+
+    legacyRender = utils.legacyRender;
 
     bridge = global.bridge;
     store = global.store;
@@ -74,7 +77,7 @@ describe('ProfilerContext', () => {
     </BridgeContext.Provider>
   );
 
-  it('updates updates profiling support based on the attached roots', async done => {
+  it('updates updates profiling support based on the attached roots', async () => {
     const Component = () => null;
 
     let context: Context = ((null: any): Context);
@@ -96,25 +99,21 @@ describe('ProfilerContext', () => {
     const containerA = document.createElement('div');
     const containerB = document.createElement('div');
 
-    await utils.actAsync(() => ReactDOM.render(<Component />, containerA));
+    await utils.actAsync(() => legacyRender(<Component />, containerA));
     expect(context.supportsProfiling).toBe(true);
 
-    await utils.actAsync(() => ReactDOM.render(<Component />, containerB));
+    await utils.actAsync(() => legacyRender(<Component />, containerB));
     await utils.actAsync(() => ReactDOM.unmountComponentAtNode(containerA));
     expect(context.supportsProfiling).toBe(true);
 
     await utils.actAsync(() => ReactDOM.unmountComponentAtNode(containerB));
     expect(context.supportsProfiling).toBe(false);
-
-    done();
   });
 
-  it('should gracefully handle an empty profiling session (with no recorded commits)', async done => {
+  it('should gracefully handle an empty profiling session (with no recorded commits)', async () => {
     const Example = () => null;
 
-    utils.act(() =>
-      ReactDOM.render(<Example />, document.createElement('div')),
-    );
+    utils.act(() => legacyRender(<Example />, document.createElement('div')));
 
     let context: Context = ((null: any): Context);
 
@@ -144,24 +143,29 @@ describe('ProfilerContext', () => {
     expect(context.isProcessingData).toBe(false);
     expect(context.isProfiling).toBe(false);
     expect(context.profilingData).toBe(null);
-
-    done();
   });
 
-  it('should auto-select the root ID matching the Components tab selection if it has profiling data', async done => {
+  it('should auto-select the root ID matching the Components tab selection if it has profiling data', async () => {
     const Parent = () => <Child />;
     const Child = () => null;
 
     const containerOne = document.createElement('div');
     const containerTwo = document.createElement('div');
-    utils.act(() => ReactDOM.render(<Parent />, containerOne));
-    utils.act(() => ReactDOM.render(<Parent />, containerTwo));
-    expect(store).toMatchSnapshot('mounted');
+    utils.act(() => legacyRender(<Parent />, containerOne));
+    utils.act(() => legacyRender(<Parent />, containerTwo));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child>
+      [root]
+        ▾ <Parent>
+            <Child>
+    `);
 
     // Profile and record updates to both roots.
     await utils.actAsync(() => store.profilerStore.startProfiling());
-    await utils.actAsync(() => ReactDOM.render(<Parent />, containerOne));
-    await utils.actAsync(() => ReactDOM.render(<Parent />, containerTwo));
+    await utils.actAsync(() => legacyRender(<Parent />, containerOne));
+    await utils.actAsync(() => legacyRender(<Parent />, containerTwo));
     await utils.actAsync(() => store.profilerStore.stopProfiling());
 
     let context: Context = ((null: any): Context);
@@ -185,23 +189,28 @@ describe('ProfilerContext', () => {
     expect(context.rootID).toBe(
       store.getRootIDForElement(((store.getElementIDAtIndex(3): any): number)),
     );
-
-    done();
   });
 
-  it('should not select the root ID matching the Components tab selection if it has no profiling data', async done => {
+  it('should not select the root ID matching the Components tab selection if it has no profiling data', async () => {
     const Parent = () => <Child />;
     const Child = () => null;
 
     const containerOne = document.createElement('div');
     const containerTwo = document.createElement('div');
-    utils.act(() => ReactDOM.render(<Parent />, containerOne));
-    utils.act(() => ReactDOM.render(<Parent />, containerTwo));
-    expect(store).toMatchSnapshot('mounted');
+    utils.act(() => legacyRender(<Parent />, containerOne));
+    utils.act(() => legacyRender(<Parent />, containerTwo));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child>
+      [root]
+        ▾ <Parent>
+            <Child>
+    `);
 
     // Profile and record updates to only the first root.
     await utils.actAsync(() => store.profilerStore.startProfiling());
-    await utils.actAsync(() => ReactDOM.render(<Parent />, containerOne));
+    await utils.actAsync(() => legacyRender(<Parent />, containerOne));
     await utils.actAsync(() => store.profilerStore.stopProfiling());
 
     let context: Context = ((null: any): Context);
@@ -226,24 +235,29 @@ describe('ProfilerContext', () => {
     expect(context.rootID).toBe(
       store.getRootIDForElement(((store.getElementIDAtIndex(0): any): number)),
     );
-
-    done();
   });
 
-  it('should maintain root selection between profiling sessions so long as there is data for that root', async done => {
+  it('should maintain root selection between profiling sessions so long as there is data for that root', async () => {
     const Parent = () => <Child />;
     const Child = () => null;
 
     const containerA = document.createElement('div');
     const containerB = document.createElement('div');
-    utils.act(() => ReactDOM.render(<Parent />, containerA));
-    utils.act(() => ReactDOM.render(<Parent />, containerB));
-    expect(store).toMatchSnapshot('mounted');
+    utils.act(() => legacyRender(<Parent />, containerA));
+    utils.act(() => legacyRender(<Parent />, containerB));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child>
+      [root]
+        ▾ <Parent>
+            <Child>
+    `);
 
     // Profile and record updates.
     await utils.actAsync(() => store.profilerStore.startProfiling());
-    await utils.actAsync(() => ReactDOM.render(<Parent />, containerA));
-    await utils.actAsync(() => ReactDOM.render(<Parent />, containerB));
+    await utils.actAsync(() => legacyRender(<Parent />, containerA));
+    await utils.actAsync(() => legacyRender(<Parent />, containerB));
     await utils.actAsync(() => store.profilerStore.stopProfiling());
 
     let context: Context = ((null: any): Context);
@@ -271,8 +285,8 @@ describe('ProfilerContext', () => {
 
     // Profile and record more updates to both roots
     await utils.actAsync(() => store.profilerStore.startProfiling());
-    await utils.actAsync(() => ReactDOM.render(<Parent />, containerA));
-    await utils.actAsync(() => ReactDOM.render(<Parent />, containerB));
+    await utils.actAsync(() => legacyRender(<Parent />, containerA));
+    await utils.actAsync(() => legacyRender(<Parent />, containerB));
     await utils.actAsync(() => store.profilerStore.stopProfiling());
 
     const otherID = ((store.getElementIDAtIndex(0): any): number);
@@ -284,11 +298,9 @@ describe('ProfilerContext', () => {
     expect(selectedElementID).toBe(otherID);
     expect(context).not.toBeNull();
     expect(context.rootID).toBe(store.getRootIDForElement(id));
-
-    done();
   });
 
-  it('should sync selected element in the Components tab too, provided the element is a match', async done => {
+  it('should sync selected element in the Components tab too, provided the element is a match', async () => {
     const GrandParent = ({includeChild}) => (
       <Parent includeChild={includeChild} />
     );
@@ -297,9 +309,14 @@ describe('ProfilerContext', () => {
 
     const container = document.createElement('div');
     utils.act(() =>
-      ReactDOM.render(<GrandParent includeChild={true} />, container),
+      legacyRender(<GrandParent includeChild={true} />, container),
     );
-    expect(store).toMatchSnapshot('mounted');
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <GrandParent>
+          ▾ <Parent>
+              <Child>
+    `);
 
     const parentID = ((store.getElementIDAtIndex(1): any): number);
     const childID = ((store.getElementIDAtIndex(2): any): number);
@@ -307,14 +324,18 @@ describe('ProfilerContext', () => {
     // Profile and record updates.
     await utils.actAsync(() => store.profilerStore.startProfiling());
     await utils.actAsync(() =>
-      ReactDOM.render(<GrandParent includeChild={true} />, container),
+      legacyRender(<GrandParent includeChild={true} />, container),
     );
     await utils.actAsync(() =>
-      ReactDOM.render(<GrandParent includeChild={false} />, container),
+      legacyRender(<GrandParent includeChild={false} />, container),
     );
     await utils.actAsync(() => store.profilerStore.stopProfiling());
 
-    expect(store).toMatchSnapshot('updated');
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <GrandParent>
+            <Parent>
+    `);
 
     let context: Context = ((null: any): Context);
     let selectedElementID = null;
@@ -340,7 +361,5 @@ describe('ProfilerContext', () => {
     // Select an unmounted element and verify no Components tab selection doesn't change.
     await utils.actAsync(() => context.selectFiber(childID, 'Child'));
     expect(selectedElementID).toBe(parentID);
-
-    done();
   });
 });

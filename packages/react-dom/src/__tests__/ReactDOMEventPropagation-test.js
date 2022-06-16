@@ -1095,6 +1095,22 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
+    it('onResize', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onResize',
+        reactEventType: 'resize',
+        nativeEvent: 'resize',
+        dispatch(node) {
+          const e = new Event('resize', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
     it('onSeeked', () => {
       testEmulatedBubblingEvent({
         type: 'video',

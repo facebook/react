@@ -11,7 +11,9 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let Scheduler;
+let act;
 
 describe('ReactDOMHooks', () => {
   let container;
@@ -21,7 +23,9 @@ describe('ReactDOMHooks', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -105,8 +109,7 @@ describe('ReactDOMHooks', () => {
     expect(labelRef.current.innerHTML).toBe('abc');
   });
 
-  // @gate experimental
-  it('should not bail out when an update is scheduled from within an event handler in Concurrent Mode', () => {
+  it('should not bail out when an update is scheduled from within an event handler in Concurrent Mode', async () => {
     const {createRef, useCallback, useState} = React;
 
     const Example = ({inputRef, labelRef}) => {
@@ -126,17 +129,20 @@ describe('ReactDOMHooks', () => {
     const inputRef = createRef();
     const labelRef = createRef();
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     root.render(<Example inputRef={inputRef} labelRef={labelRef} />);
 
     Scheduler.unstable_flushAll();
 
     inputRef.current.value = 'abc';
-    inputRef.current.dispatchEvent(
-      new Event('input', {bubbles: true, cancelable: true}),
-    );
-
-    Scheduler.unstable_flushAll();
+    await act(async () => {
+      inputRef.current.dispatchEvent(
+        new Event('input', {
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
 
     expect(labelRef.current.innerHTML).toBe('abc');
   });

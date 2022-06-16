@@ -7,7 +7,6 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
 import invokeGuardedCallbackImpl from './invokeGuardedCallbackImpl';
 
 // Used by Fiber to simulate a try-catch.
@@ -117,8 +116,7 @@ export function clearCaughtError() {
     caughtError = null;
     return error;
   } else {
-    invariant(
-      false,
+    throw new Error(
       'clearCaughtError was called but no error was captured. This error ' +
         'is likely caused by a bug in React. Please file an issue.',
     );

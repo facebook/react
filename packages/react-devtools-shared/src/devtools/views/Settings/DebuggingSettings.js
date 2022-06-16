@@ -17,8 +17,12 @@ export default function DebuggingSettings(_: {||}) {
   const {
     appendComponentStack,
     breakOnConsoleErrors,
+    hideConsoleLogsInStrictMode,
     setAppendComponentStack,
     setBreakOnConsoleErrors,
+    setShowInlineWarningsAndErrors,
+    showInlineWarningsAndErrors,
+    sethideConsoleLogsInStrictMode,
   } = useContext(SettingsContext);
 
   return (
@@ -40,12 +44,38 @@ export default function DebuggingSettings(_: {||}) {
         <label>
           <input
             type="checkbox"
+            checked={showInlineWarningsAndErrors}
+            onChange={({currentTarget}) =>
+              setShowInlineWarningsAndErrors(currentTarget.checked)
+            }
+          />{' '}
+          Show inline warnings and errors.
+        </label>
+      </div>
+
+      <div className={styles.Setting}>
+        <label>
+          <input
+            type="checkbox"
             checked={breakOnConsoleErrors}
             onChange={({currentTarget}) =>
               setBreakOnConsoleErrors(currentTarget.checked)
             }
           />{' '}
           Break on warnings
+        </label>
+      </div>
+
+      <div className={styles.Setting}>
+        <label>
+          <input
+            type="checkbox"
+            checked={hideConsoleLogsInStrictMode}
+            onChange={({currentTarget}) =>
+              sethideConsoleLogsInStrictMode(currentTarget.checked)
+            }
+          />{' '}
+          Hide logs during second render in Strict Mode
         </label>
       </div>
     </div>

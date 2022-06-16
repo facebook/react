@@ -21,6 +21,7 @@ export default class MediaEvents extends React.Component {
       onPlaying: false,
       onProgress: false,
       onRateChange: false,
+      onResize: false,
       onSeeked: false,
       onSeeking: false,
       onSuspend: false,

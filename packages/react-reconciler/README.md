@@ -51,15 +51,15 @@ const HostConfig = {
 * **[Building a simple custom renderer to DOM](https://medium.com/@agent_hunt/hello-world-custom-react-renderer-9a95b7cd04bc)**
 * **[Building a simple custom renderer to native](https://medium.com/@agent_hunt/introduction-to-react-native-renderers-aka-react-native-is-the-java-and-react-native-renderers-are-828a0022f433)**
 
-The full list of supported methods [can be found here](https://github.com/facebook/react/blob/master/packages/react-reconciler/src/forks/ReactFiberHostConfig.custom.js). For their signatures, we recommend looking at specific examples below.
+The full list of supported methods [can be found here](https://github.com/facebook/react/blob/main/packages/react-reconciler/src/forks/ReactFiberHostConfig.custom.js). For their signatures, we recommend looking at specific examples below.
 
 The React repository includes several renderers. Each of them has its own host config.
 
 The examples in the React repository are declared a bit differently than a third-party renderer would be. In particular, the `HostConfig` object mentioned above is never explicitly declared, and instead is a *module* in our code. However, its exports correspond directly to properties on a `HostConfig` object you'd need to declare in your code:
 
-* [React ART](https://github.com/facebook/react/blob/master/packages/react-art/src/ReactART.js) and its [host config](https://github.com/facebook/react/blob/master/packages/react-art/src/ReactARTHostConfig.js)
-* [React DOM](https://github.com/facebook/react/blob/master/packages/react-dom/src/client/ReactDOM.js) and its [host config](https://github.com/facebook/react/blob/master/packages/react-dom/src/client/ReactDOMHostConfig.js)
-* [React Native](https://github.com/facebook/react/blob/master/packages/react-native-renderer/src/ReactNativeRenderer.js) and its [host config](https://github.com/facebook/react/blob/master/packages/react-native-renderer/src/ReactNativeHostConfig.js)
+* [React ART](https://github.com/facebook/react/blob/main/packages/react-art/src/ReactART.js) and its [host config](https://github.com/facebook/react/blob/main/packages/react-art/src/ReactARTHostConfig.js)
+* [React DOM](https://github.com/facebook/react/blob/main/packages/react-dom/src/client/ReactDOM.js) and its [host config](https://github.com/facebook/react/blob/main/packages/react-dom/src/client/ReactDOMHostConfig.js)
+* [React Native](https://github.com/facebook/react/blob/main/packages/react-native-renderer/src/ReactNativeRenderer.js) and its [host config](https://github.com/facebook/react/blob/main/packages/react-native-renderer/src/ReactNativeHostConfig.js)
 
 If these links break please file an issue and we’ll fix them. They intentionally link to the latest versions since the API is still evolving. If you have more questions please file an issue and we’ll try to help!
 
@@ -69,7 +69,7 @@ At the moment, we can't commit to documenting every API detail because the host 
 
 #### Modes
 
-The reconciler has two modes: mutation mode and peristent mode. You must specify one of them.
+The reconciler has two modes: mutation mode and persistent mode. You must specify one of them.
 
 If your target platform is similar to the DOM and has methods similar to `appendChild`, `removeChild`, and so on, you'll want to use the **mutation mode**. This is the same mode used by React DOM, React ART, and the classic React Native renderer.
 
@@ -121,7 +121,7 @@ This method happens **in the render phase**. It can mutate `parentInstance` and 
 
 #### `finalizeInitialChildren(instance, type, props, rootContainer, hostContext)`
 
-In this method, you can perform some final mutations on the `instance`. Unlike with `createInstance`, by the time `finalizeInitialChildren` is called, all the initial children have already been addded to the `instance`, but the instance itself has not yet been connected to the tree on the screen.
+In this method, you can perform some final mutations on the `instance`. Unlike with `createInstance`, by the time `finalizeInitialChildren` is called, all the initial children have already been added to the `instance`, but the instance itself has not yet been connected to the tree on the screen.
 
 This method happens **in the render phase**. It can mutate `instance`, but it must not modify any other nodes. It's called while the tree is still being built up and not connected to the actual tree on the screen.
 
@@ -187,10 +187,6 @@ You can leave it empty.
 
 This method is called for a container that's used as a portal target. Usually you can leave it empty.
 
-#### `now()`
-
-You can proxy this to `performance.now()` or its equivalent in your environment.
-
 #### `scheduleTimeout(fn, delay)`
 
 You can proxy this to `setTimeout` or its equivalent in your environment.
@@ -203,9 +199,48 @@ You can proxy this to `clearTimeout` or its equivalent in your environment.
 
 This is a property (not a function) that should be set to something that can never be a valid timeout ID. For example, you can set it to `-1`.
 
+#### `supportsMicrotask`
+
+Set this to true to indicate that your renderer supports `scheduleMicrotask`. We use microtasks as part of our discrete event implementation in React DOM. If you're not sure if your renderer should support this, you probably should. The option to not implement `scheduleMicrotask` exists so that platforms with more control over user events, like React Native, can choose to use a different mechanism.
+#### `scheduleMicrotask(fn)`
+
+Optional. You can proxy this to `queueMicrotask` or its equivalent in your environment.
+
 #### `isPrimaryRenderer`
 
 This is a property (not a function) that should be set to `true` if your renderer is the main one on the page. For example, if you're writing a renderer for the Terminal, it makes sense to set it to `true`, but if your renderer is used *on top of* React DOM or some other existing renderer, set it to `false`.
+
+#### `getCurrentEventPriority`
+
+To implement this method, you'll need some constants available on the special `react-reconciler/constants` entry point:
+
+```js
+import {
+  DiscreteEventPriority,
+  ContinuousEventPriority,
+  DefaultEventPriority,
+} from 'react-reconciler/constants';
+
+const HostConfig = {
+  // ...
+  getCurrentEventPriority() {
+    return DefaultEventPriority;
+  },
+  // ...
+}
+
+const MyRenderer = Reconciler(HostConfig);
+```
+
+The constant you return depends on which event, if any, is being handled right now. (In the browser, you can check this using `window.event && window.event.type`).
+
+* **Discrete events:** If the active event is _directly caused by the user_ (such as mouse and keyboard events) and _each event in a sequence is intentional_ (e.g. `click`), return `DiscreteEventPriority`. This tells React that they should interrupt any background work and cannot be batched across time.
+
+* **Continuous events:** If the active event is _directly caused by the user_ but _the user can't distinguish between individual events in a sequence_ (e.g. `mouseover`), return `ContinuousEventPriority`. This tells React they should interrupt any background work but can be batched across time.
+
+* **Other events / No active event:** In all other cases, return `DefaultEventPriority`. This tells React that this event is considered background work, and interactive events will be prioritized over it.
+
+You can consult the `getCurrentEventPriority()` implementation in `ReactDOMHostConfig.js` for a reference implementation.
 
 ### Mutation Methods
 
@@ -279,11 +314,11 @@ This method should make the `instance` invisible without removing it from the tr
 
 Same as `hideInstance`, but for nodes created by `createTextInstance`.
 
-#### `unhideInstance(instance)`
+#### `unhideInstance(instance, props)`
 
 This method should make the `instance` visible, undoing what `hideInstance` did.
 
-#### `unhideTextInstance(textInstance)`
+#### `unhideTextInstance(textInstance, text)`
 
 Same as `unhideInstance`, but for nodes created by `createTextInstance`.
 
@@ -293,10 +328,10 @@ This method should mutate the `container` root node and remove all children from
 
 ### Persistence Methods
 
-If you use the persistent mode instead of the mutation mode, you would still need the "Core Methods". However, instead of the Mutation Methods above you will implement a different set of methods that performs cloning nodes and replacing them at the root level. You can find a list of them in the "Persistence" section [listed in this file](https://github.com/facebook/react/blob/master/packages/react-reconciler/src/forks/ReactFiberHostConfig.custom.js). File an issue if you need help.
+If you use the persistent mode instead of the mutation mode, you would still need the "Core Methods". However, instead of the Mutation Methods above you will implement a different set of methods that performs cloning nodes and replacing them at the root level. You can find a list of them in the "Persistence" section [listed in this file](https://github.com/facebook/react/blob/main/packages/react-reconciler/src/forks/ReactFiberHostConfig.custom.js). File an issue if you need help.
 
 ### Hydration Methods
 
 You can optionally implement hydration to "attach" to the existing tree during the initial render instead of creating it from scratch. For example, the DOM renderer uses this to attach to an HTML markup.
 
-To support hydration, you need to declare `supportsHydration: true` and then implement the methods in the "Hydration" section [listed in this file](https://github.com/facebook/react/blob/master/packages/react-reconciler/src/forks/ReactFiberHostConfig.custom.js). File an issue if you need help.
+To support hydration, you need to declare `supportsHydration: true` and then implement the methods in the "Hydration" section [listed in this file](https://github.com/facebook/react/blob/main/packages/react-reconciler/src/forks/ReactFiberHostConfig.custom.js). File an issue if you need help.

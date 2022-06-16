@@ -17,19 +17,19 @@ import Store from '../../store';
 import styles from './InspectedElementSharedStyles.css';
 
 import type {InspectedElement} from './types';
-import type {GetInspectedElementPath} from './InspectedElementContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
 
 type Props = {|
   bridge: FrontendBridge,
-  getInspectedElementPath: GetInspectedElementPath,
+  element: Element,
   inspectedElement: InspectedElement,
   store: Store,
 |};
 
 export default function InspectedElementStateTree({
   bridge,
-  getInspectedElementPath,
+  element,
   inspectedElement,
   store,
 }: Props) {
@@ -68,7 +68,7 @@ export default function InspectedElementStateTree({
               canEditValues={true}
               canRenamePaths={true}
               depth={1}
-              getInspectedElementPath={getInspectedElementPath}
+              element={element}
               hidden={false}
               inspectedElement={inspectedElement}
               name={name}

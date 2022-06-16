@@ -161,11 +161,11 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('readContext() in different components', async render => {
-      function readContext(Ctx, observedBits) {
+      function readContext(Ctx) {
         const dispatcher =
           React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
             .ReactCurrentDispatcher.current;
-        return dispatcher.readContext(Ctx, observedBits);
+        return dispatcher.readContext(Ctx);
       }
 
       class Cls extends React.Component {
@@ -409,12 +409,24 @@ describe('ReactDOMServerIntegration', () => {
         </LoggedInUser.Provider>
       );
 
-      const streamAmy = ReactDOMServer.renderToNodeStream(
-        AppWithUser('Amy'),
-      ).setEncoding('utf8');
-      const streamBob = ReactDOMServer.renderToNodeStream(
-        AppWithUser('Bob'),
-      ).setEncoding('utf8');
+      let streamAmy;
+      let streamBob;
+      expect(() => {
+        streamAmy = ReactDOMServer.renderToNodeStream(
+          AppWithUser('Amy'),
+        ).setEncoding('utf8');
+      }).toErrorDev(
+        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+        {withoutStack: true},
+      );
+      expect(() => {
+        streamBob = ReactDOMServer.renderToNodeStream(
+          AppWithUser('Bob'),
+        ).setEncoding('utf8');
+      }).toErrorDev(
+        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+        {withoutStack: true},
+      );
 
       // Testing by filling the buffer using internal _read() with a small
       // number of bytes to avoid a test case which needs to align to a
@@ -449,9 +461,14 @@ describe('ReactDOMServerIntegration', () => {
       const streamCount = 34;
 
       for (let i = 0; i < streamCount; i++) {
-        streams[i] = ReactDOMServer.renderToNodeStream(
-          NthRender(i % 2 === 0 ? 'Expected to be recreated' : i),
-        ).setEncoding('utf8');
+        expect(() => {
+          streams[i] = ReactDOMServer.renderToNodeStream(
+            NthRender(i % 2 === 0 ? 'Expected to be recreated' : i),
+          ).setEncoding('utf8');
+        }).toErrorDev(
+          'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+          {withoutStack: true},
+        );
       }
 
       // Testing by filling the buffer using internal _read() with a small
@@ -468,9 +485,14 @@ describe('ReactDOMServerIntegration', () => {
 
       // Recreate those same streams.
       for (let i = 0; i < streamCount; i += 2) {
-        streams[i] = ReactDOMServer.renderToNodeStream(
-          NthRender(i),
-        ).setEncoding('utf8');
+        expect(() => {
+          streams[i] = ReactDOMServer.renderToNodeStream(
+            NthRender(i),
+          ).setEncoding('utf8');
+        }).toErrorDev(
+          'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+          {withoutStack: true},
+        );
       }
 
       // Read a bit from all streams again.
@@ -484,75 +506,6 @@ describe('ReactDOMServerIntegration', () => {
           '<header>' + i + '</header><footer>' + i + '</footer>',
         );
       }
-    });
-
-    // Regression test for https://github.com/facebook/react/issues/14705
-    it('does not pollute later renders when stream destroyed', () => {
-      const LoggedInUser = React.createContext('default');
-
-      const AppWithUser = user => (
-        <LoggedInUser.Provider value={user}>
-          <header>
-            <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
-          </header>
-        </LoggedInUser.Provider>
-      );
-
-      const stream = ReactDOMServer.renderToNodeStream(
-        AppWithUser('Amy'),
-      ).setEncoding('utf8');
-
-      // This is an implementation detail because we test a memory leak
-      const {threadID} = stream.partialRenderer;
-
-      // Read enough to render Provider but not enough for it to be exited
-      stream._read(10);
-      expect(LoggedInUser[threadID]).toBe('Amy');
-
-      stream.destroy();
-
-      const AppWithUserNoProvider = () => (
-        <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
-      );
-
-      const stream2 = ReactDOMServer.renderToNodeStream(
-        AppWithUserNoProvider(),
-      ).setEncoding('utf8');
-
-      // Sanity check to ensure 2nd render has same threadID as 1st render,
-      // otherwise this test is not testing what it's meant to
-      expect(stream2.partialRenderer.threadID).toBe(threadID);
-
-      const markup = stream2.read(Infinity);
-
-      expect(markup).toBe('default');
-    });
-
-    // Regression test for https://github.com/facebook/react/issues/14705
-    it('frees context value reference when stream destroyed', () => {
-      const LoggedInUser = React.createContext('default');
-
-      const AppWithUser = user => (
-        <LoggedInUser.Provider value={user}>
-          <header>
-            <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
-          </header>
-        </LoggedInUser.Provider>
-      );
-
-      const stream = ReactDOMServer.renderToNodeStream(
-        AppWithUser('Amy'),
-      ).setEncoding('utf8');
-
-      // This is an implementation detail because we test a memory leak
-      const {threadID} = stream.partialRenderer;
-
-      // Read enough to render Provider but not enough for it to be exited
-      stream._read(10);
-      expect(LoggedInUser[threadID]).toBe('Amy');
-
-      stream.destroy();
-      expect(LoggedInUser[threadID]).toBe('default');
     });
 
     it('does not pollute sync renders after an error', () => {

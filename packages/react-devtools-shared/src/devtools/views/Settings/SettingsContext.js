@@ -18,9 +18,12 @@ import {
 import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
+  LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
+  LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+  LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
@@ -44,8 +47,19 @@ type Context = {|
   breakOnConsoleErrors: boolean,
   setBreakOnConsoleErrors: (value: boolean) => void,
 
+  parseHookNames: boolean,
+  setParseHookNames: (value: boolean) => void,
+
+  hideConsoleLogsInStrictMode: boolean,
+  sethideConsoleLogsInStrictMode: (value: boolean) => void,
+
+  showInlineWarningsAndErrors: boolean,
+  setShowInlineWarningsAndErrors: (value: boolean) => void,
+
   theme: Theme,
   setTheme(value: Theme): void,
+
+  browserTheme: Theme,
 
   traceUpdatesEnabled: boolean,
   setTraceUpdatesEnabled: (value: boolean) => void,
@@ -89,6 +103,24 @@ function SettingsContextController({
   ] = useLocalStorage<boolean>(
     LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
     false,
+  );
+  const [parseHookNames, setParseHookNames] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
+    false,
+  );
+  const [
+    hideConsoleLogsInStrictMode,
+    sethideConsoleLogsInStrictMode,
+  ] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
+    false,
+  );
+  const [
+    showInlineWarningsAndErrors,
+    setShowInlineWarningsAndErrors,
+  ] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+    true,
   );
   const [
     traceUpdatesEnabled,
@@ -147,8 +179,18 @@ function SettingsContextController({
     bridge.send('updateConsolePatchSettings', {
       appendComponentStack,
       breakOnConsoleErrors,
+      showInlineWarningsAndErrors,
+      hideConsoleLogsInStrictMode,
+      browserTheme,
     });
-  }, [bridge, appendComponentStack, breakOnConsoleErrors]);
+  }, [
+    bridge,
+    appendComponentStack,
+    breakOnConsoleErrors,
+    showInlineWarningsAndErrors,
+    hideConsoleLogsInStrictMode,
+    browserTheme,
+  ]);
 
   useEffect(() => {
     bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
@@ -163,24 +205,38 @@ function SettingsContextController({
         displayDensity === 'compact'
           ? COMPACT_LINE_HEIGHT
           : COMFORTABLE_LINE_HEIGHT,
+      parseHookNames,
       setAppendComponentStack,
       setBreakOnConsoleErrors,
       setDisplayDensity,
+      setParseHookNames,
       setTheme,
       setTraceUpdatesEnabled,
+      setShowInlineWarningsAndErrors,
+      showInlineWarningsAndErrors,
+      sethideConsoleLogsInStrictMode,
+      hideConsoleLogsInStrictMode,
       theme,
+      browserTheme,
       traceUpdatesEnabled,
     }),
     [
       appendComponentStack,
       breakOnConsoleErrors,
       displayDensity,
+      parseHookNames,
       setAppendComponentStack,
       setBreakOnConsoleErrors,
       setDisplayDensity,
+      setParseHookNames,
       setTheme,
       setTraceUpdatesEnabled,
+      setShowInlineWarningsAndErrors,
+      showInlineWarningsAndErrors,
+      sethideConsoleLogsInStrictMode,
+      hideConsoleLogsInStrictMode,
       theme,
+      browserTheme,
       traceUpdatesEnabled,
     ],
   );
@@ -192,52 +248,10 @@ function SettingsContextController({
   );
 }
 
-function setStyleVariable(
-  name: string,
-  value: string,
-  documentElements: DocumentElements,
-) {
-  documentElements.forEach(documentElement =>
-    documentElement.style.setProperty(name, value),
-  );
-}
-
-function updateStyleHelper(
-  themeKey: string,
-  style: string,
-  documentElements: DocumentElements,
-) {
-  setStyleVariable(
-    `--${style}`,
-    `var(--${themeKey}-${style})`,
-    documentElements,
-  );
-}
-
 export function updateDisplayDensity(
   displayDensity: DisplayDensity,
   documentElements: DocumentElements,
 ): void {
-  updateStyleHelper(
-    displayDensity,
-    'font-size-monospace-normal',
-    documentElements,
-  );
-  updateStyleHelper(
-    displayDensity,
-    'font-size-monospace-large',
-    documentElements,
-  );
-  updateStyleHelper(
-    displayDensity,
-    'font-size-monospace-small',
-    documentElements,
-  );
-  updateStyleHelper(displayDensity, 'font-size-sans-normal', documentElements);
-  updateStyleHelper(displayDensity, 'font-size-sans-large', documentElements);
-  updateStyleHelper(displayDensity, 'font-size-sans-small', documentElements);
-  updateStyleHelper(displayDensity, 'line-height-data', documentElements);
-
   // Sizes and paddings/margins are all rem-based,
   // so update the root font-size as well when the display preference changes.
   const computedStyle = getComputedStyle((document.body: any));
@@ -252,129 +266,6 @@ export function updateThemeVariables(
   theme: Theme,
   documentElements: DocumentElements,
 ): void {
-  updateStyleHelper(theme, 'color-attribute-name', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-attribute-name-not-editable',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-attribute-name-inverted', documentElements);
-  updateStyleHelper(theme, 'color-attribute-value', documentElements);
-  updateStyleHelper(theme, 'color-attribute-value-inverted', documentElements);
-  updateStyleHelper(theme, 'color-attribute-editable-value', documentElements);
-  updateStyleHelper(theme, 'color-background', documentElements);
-  updateStyleHelper(theme, 'color-background-hover', documentElements);
-  updateStyleHelper(theme, 'color-background-inactive', documentElements);
-  updateStyleHelper(theme, 'color-background-invalid', documentElements);
-  updateStyleHelper(theme, 'color-background-selected', documentElements);
-  updateStyleHelper(theme, 'color-border', documentElements);
-  updateStyleHelper(theme, 'color-button-background', documentElements);
-  updateStyleHelper(theme, 'color-button-background-focus', documentElements);
-  updateStyleHelper(theme, 'color-button', documentElements);
-  updateStyleHelper(theme, 'color-button-active', documentElements);
-  updateStyleHelper(theme, 'color-button-disabled', documentElements);
-  updateStyleHelper(theme, 'color-button-focus', documentElements);
-  updateStyleHelper(theme, 'color-button-hover', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-commit-did-not-render-fill',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-commit-did-not-render-fill-text',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-commit-did-not-render-pattern',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-commit-did-not-render-pattern-text',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-commit-gradient-0', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-1', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-2', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-3', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-4', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-5', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-6', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-7', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-8', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-9', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-text', documentElements);
-  updateStyleHelper(theme, 'color-component-name', documentElements);
-  updateStyleHelper(theme, 'color-component-name-inverted', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-component-badge-background',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-component-badge-background-inverted',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-component-badge-count', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-component-badge-count-inverted',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-context-background', documentElements);
-  updateStyleHelper(theme, 'color-context-background-hover', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-context-background-selected',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-context-border', documentElements);
-  updateStyleHelper(theme, 'color-context-text', documentElements);
-  updateStyleHelper(theme, 'color-context-text-selected', documentElements);
-  updateStyleHelper(theme, 'color-dim', documentElements);
-  updateStyleHelper(theme, 'color-dimmer', documentElements);
-  updateStyleHelper(theme, 'color-dimmest', documentElements);
-  updateStyleHelper(theme, 'color-error-background', documentElements);
-  updateStyleHelper(theme, 'color-error-border', documentElements);
-  updateStyleHelper(theme, 'color-error-text', documentElements);
-  updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
-  updateStyleHelper(theme, 'color-link', documentElements);
-  updateStyleHelper(theme, 'color-modal-background', documentElements);
-  updateStyleHelper(theme, 'color-record-active', documentElements);
-  updateStyleHelper(theme, 'color-record-hover', documentElements);
-  updateStyleHelper(theme, 'color-record-inactive', documentElements);
-  updateStyleHelper(theme, 'color-color-scroll-thumb', documentElements);
-  updateStyleHelper(theme, 'color-color-scroll-track', documentElements);
-  updateStyleHelper(theme, 'color-search-match', documentElements);
-  updateStyleHelper(theme, 'color-shadow', documentElements);
-  updateStyleHelper(theme, 'color-search-match-current', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-selected-tree-highlight-active',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-selected-tree-highlight-inactive',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-tab-selected-border', documentElements);
-  updateStyleHelper(theme, 'color-text', documentElements);
-  updateStyleHelper(theme, 'color-text-invalid', documentElements);
-  updateStyleHelper(theme, 'color-text-selected', documentElements);
-  updateStyleHelper(theme, 'color-toggle-background-invalid', documentElements);
-  updateStyleHelper(theme, 'color-toggle-background-on', documentElements);
-  updateStyleHelper(theme, 'color-toggle-background-off', documentElements);
-  updateStyleHelper(theme, 'color-toggle-text', documentElements);
-  updateStyleHelper(theme, 'color-tooltip-background', documentElements);
-  updateStyleHelper(theme, 'color-tooltip-text', documentElements);
-
-  // Font smoothing varies based on the theme.
-  updateStyleHelper(theme, 'font-smoothing', documentElements);
-
   // Update scrollbar color to match theme.
   // this CSS property is currently only supported in Firefox,
   // but it makes a significant UI improvement in dark mode.

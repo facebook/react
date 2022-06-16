@@ -1,5 +1,5 @@
 import React from 'react';
-import {renderToString} from 'react-dom/server';
+import {renderToPipeableStream} from 'react-dom/server';
 
 import App from '../src/components/App';
 
@@ -14,9 +14,31 @@ if (process.env.NODE_ENV === 'development') {
   assets = require('../build/asset-manifest.json');
 }
 
-export default function render() {
-  var html = renderToString(<App assets={assets} />);
-  // There's no way to render a doctype in React so prepend manually.
-  // Also append a bootstrap script tag.
-  return '<!DOCTYPE html>' + html;
+export default function render(url, res) {
+  res.socket.on('error', error => {
+    // Log fatal errors
+    console.error('Fatal', error);
+  });
+  let didError = false;
+  const {pipe, abort} = renderToPipeableStream(<App assets={assets} />, {
+    bootstrapScripts: [assets['main.js']],
+    onShellReady() {
+      // If something errored before we started streaming, we set the error code appropriately.
+      res.statusCode = didError ? 500 : 200;
+      res.setHeader('Content-type', 'text/html');
+      pipe(res);
+    },
+    onShellError(x) {
+      // Something errored before we could complete the shell so we emit an alternative shell.
+      res.statusCode = 500;
+      res.send('<!doctype><p>Error</p>');
+    },
+    onError(x) {
+      didError = true;
+      console.error(x);
+    },
+  });
+  // Abandon and switch to client rendering after 5 seconds.
+  // Try lowering this to see the client recover.
+  setTimeout(abort, 5000);
 }

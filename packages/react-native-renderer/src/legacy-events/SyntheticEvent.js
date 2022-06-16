@@ -7,7 +7,7 @@
 
 /* eslint valid-typeof: 0 */
 
-import invariant from 'shared/invariant';
+import assign from 'shared/assign';
 
 const EVENT_POOL_SIZE = 10;
 
@@ -112,7 +112,7 @@ function SyntheticEvent(
   return this;
 }
 
-Object.assign(SyntheticEvent.prototype, {
+assign(SyntheticEvent.prototype, {
   preventDefault: function() {
     this.defaultPrevented = true;
     const event = this.nativeEvent;
@@ -238,11 +238,11 @@ SyntheticEvent.extend = function(Interface) {
   function Class() {
     return Super.apply(this, arguments);
   }
-  Object.assign(prototype, Class.prototype);
+  assign(prototype, Class.prototype);
   Class.prototype = prototype;
   Class.prototype.constructor = Class;
 
-  Class.Interface = Object.assign({}, Super.Interface, Interface);
+  Class.Interface = assign({}, Super.Interface, Interface);
   Class.extend = Super.extend;
   addEventPoolingTo(Class);
 
@@ -325,10 +325,13 @@ function createOrGetPooledEvent(
 
 function releasePooledEvent(event) {
   const EventConstructor = this;
-  invariant(
-    event instanceof EventConstructor,
-    'Trying to release an event instance into a pool of a different type.',
-  );
+
+  if (!(event instanceof EventConstructor)) {
+    throw new Error(
+      'Trying to release an event instance into a pool of a different type.',
+    );
+  }
+
   event.destructor();
   if (EventConstructor.eventPool.length < EVENT_POOL_SIZE) {
     EventConstructor.eventPool.push(event);

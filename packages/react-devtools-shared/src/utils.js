@@ -22,18 +22,27 @@ import {
   StrictMode,
   Suspense,
 } from 'react-is';
-import {REACT_SUSPENSE_LIST_TYPE as SuspenseList} from 'shared/ReactSymbols';
+import {
+  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
+  REACT_TRACING_MARKER_TYPE as TracingMarker,
+} from 'shared/ReactSymbols';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
+  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_SET_SUBTREE_MODE,
+  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from './constants';
 import {ElementTypeRoot} from 'react-devtools-shared/src/types';
 import {
   LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+  LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+  LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
 } from './constants';
 import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
 import {
@@ -44,13 +53,18 @@ import {
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
+import isArray from './isArray';
+
 import type {ComponentFilter, ElementType} from './types';
+import type {LRUCache} from 'react-devtools-shared/src/types';
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
 // On large trees, encoding takes significant time.
 // Try to reuse the already encoded strings.
-const encodedStringCache = new LRU({max: 1000});
+const encodedStringCache: LRUCache<string, Array<number>> = new LRU({
+  max: 1000,
+});
 
 export function alphaSortKeys(
   a: string | number | Symbol,
@@ -67,8 +81,8 @@ export function alphaSortKeys(
 
 export function getAllEnumerableKeys(
   obj: Object,
-): Array<string | number | Symbol> {
-  const keys = [];
+): Set<string | number | Symbol> {
+  const keys = new Set();
   let current = obj;
   while (current != null) {
     const currentKeys = [
@@ -79,7 +93,7 @@ export function getAllEnumerableKeys(
     currentKeys.forEach(key => {
       // $FlowFixMe: key can be a Symbol https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
       if (descriptors[key].enumerable) {
-        keys.push(key);
+        keys.add(key);
       }
     });
     current = Object.getPrototypeOf(current);
@@ -118,20 +132,49 @@ export function getUID(): number {
 }
 
 export function utfDecodeString(array: Array<number>): string {
-  return String.fromCodePoint(...array);
+  // Avoid spreading the array (e.g. String.fromCodePoint(...array))
+  // Functions arguments are first placed on the stack before the function is called
+  // which throws a RangeError for large arrays.
+  // See github.com/facebook/react/issues/22293
+  let string = '';
+  for (let i = 0; i < array.length; i++) {
+    const char = array[i];
+    string += String.fromCodePoint(char);
+  }
+  return string;
 }
 
+function surrogatePairToCodePoint(
+  charCode1: number,
+  charCode2: number,
+): number {
+  return ((charCode1 & 0x3ff) << 10) + (charCode2 & 0x3ff) + 0x10000;
+}
+
+// Credit for this encoding approach goes to Tim Down:
+// https://stackoverflow.com/questions/4877326/how-can-i-tell-if-a-string-contains-multibyte-characters-in-javascript
 export function utfEncodeString(string: string): Array<number> {
   const cached = encodedStringCache.get(string);
   if (cached !== undefined) {
     return cached;
   }
 
-  const encoded = new Array(string.length);
-  for (let i = 0; i < string.length; i++) {
-    encoded[i] = string.codePointAt(i);
+  const encoded = [];
+  let i = 0;
+  let charCode;
+  while (i < string.length) {
+    charCode = string.charCodeAt(i);
+    // Handle multibyte unicode characters (like emoji).
+    if ((charCode & 0xf800) === 0xd800) {
+      encoded.push(surrogatePairToCodePoint(charCode, string.charCodeAt(++i)));
+    } else {
+      encoded.push(charCode);
+    }
+    ++i;
   }
+
   encodedStringCache.set(string, encoded);
+
   return encoded;
 }
 
@@ -172,7 +215,9 @@ export function printOperationsArray(operations: Array<number>) {
         if (type === ElementTypeRoot) {
           logs.push(`Add new root node ${id}`);
 
+          i++; // isStrictModeCompliant
           i++; // supportsProfiling
+          i++; // supportsStrictMode
           i++; // hasOwnerMetadata
         } else {
           const parentID = ((operations[i]: any): number);
@@ -204,6 +249,21 @@ export function printOperationsArray(operations: Array<number>) {
         }
         break;
       }
+      case TREE_OPERATION_REMOVE_ROOT: {
+        i += 1;
+
+        logs.push(`Remove root ${rootID}`);
+        break;
+      }
+      case TREE_OPERATION_SET_SUBTREE_MODE: {
+        const id = operations[i + 1];
+        const mode = operations[i + 1];
+
+        i += 3;
+
+        logs.push(`Mode ${mode} set for subtree with root ${id}`);
+        break;
+      }
       case TREE_OPERATION_REORDER_CHILDREN: {
         const id = ((operations[i + 1]: any): number);
         const numChildren = ((operations[i + 2]: any): number);
@@ -220,8 +280,19 @@ export function printOperationsArray(operations: Array<number>) {
         // The profiler UI uses them lazily in order to generate the tree.
         i += 3;
         break;
+      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+        const id = operations[i + 1];
+        const numErrors = operations[i + 2];
+        const numWarnings = operations[i + 3];
+
+        i += 4;
+
+        logs.push(
+          `Node ${id} has ${numErrors} errors and ${numWarnings} warnings`,
+        );
+        break;
       default:
-        throw Error(`Unsupported Bridge operation ${operation}`);
+        throw Error(`Unsupported Bridge operation "${operation}"`);
     }
   }
 
@@ -291,6 +362,60 @@ export function setBreakOnConsoleErrors(value: boolean): void {
     LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
     JSON.stringify(value),
   );
+}
+
+export function getHideConsoleLogsInStrictMode(): boolean {
+  try {
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
+    );
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return false;
+}
+
+export function sethideConsoleLogsInStrictMode(value: boolean): void {
+  localStorageSetItem(
+    LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
+    JSON.stringify(value),
+  );
+}
+
+export function getShowInlineWarningsAndErrors(): boolean {
+  try {
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+    );
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return true;
+}
+
+export function setShowInlineWarningsAndErrors(value: boolean): void {
+  localStorageSetItem(
+    LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+    JSON.stringify(value),
+  );
+}
+
+export function getDefaultOpenInEditorURL(): string {
+  return typeof process.env.EDITOR_URL === 'string'
+    ? process.env.EDITOR_URL
+    : '';
+}
+
+export function getOpenInEditorURL(): string {
+  try {
+    const raw = localStorageGetItem(LOCAL_STORAGE_OPEN_IN_EDITOR_URL);
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return getDefaultOpenInEditorURL();
 }
 
 export function separateDisplayNameAndHOCs(
@@ -383,7 +508,7 @@ export function deletePathInObject(
   if (object != null) {
     const parent = getInObject(object, path.slice(0, length - 1));
     if (parent) {
-      if (Array.isArray(parent)) {
+      if (isArray(parent)) {
         parent.splice(((last: any): number), 1);
       } else {
         delete parent[last];
@@ -404,7 +529,7 @@ export function renamePathInObject(
       const lastOld = oldPath[length - 1];
       const lastNew = newPath[length - 1];
       parent[lastNew] = parent[lastOld];
-      if (Array.isArray(parent)) {
+      if (isArray(parent)) {
         parent.splice(((lastOld: any): number), 1);
       } else {
         delete parent[lastOld];
@@ -488,7 +613,7 @@ export function getDataType(data: Object): DataType {
         return 'number';
       }
     case 'object':
-      if (Array.isArray(data)) {
+      if (isArray(data)) {
         return 'array';
       } else if (ArrayBuffer.isView(data)) {
         return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
@@ -501,9 +626,13 @@ export function getDataType(data: Object): DataType {
         // but this seems kind of awkward and expensive.
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
-        return data[Symbol.iterator]() === data
-          ? 'opaque_iterator'
-          : 'iterator';
+        const iterator = data[Symbol.iterator]();
+        if (!iterator) {
+          // Proxies might break assumptoins about iterators.
+          // See github.com/facebook/react/issues/21654
+        } else {
+          return iterator === data ? 'opaque_iterator' : 'iterator';
+        }
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
       } else {
@@ -558,6 +687,8 @@ export function getDisplayNameForReactElement(
       return 'Suspense';
     case SuspenseList:
       return 'SuspenseList';
+    case TracingMarker:
+      return 'TracingMarker';
     default:
       const {type} = element;
       if (typeof type === 'string') {
@@ -703,7 +834,7 @@ export function formatDataForPreview(
           // To mimic their behavior, detect if we've been given an entries tuple.
           //   Map(2) {"abc" => 123, "def" => 123}
           //   Set(2) {"abc", 123}
-          if (Array.isArray(entryOrEntries)) {
+          if (isArray(entryOrEntries)) {
             const key = formatDataForPreview(entryOrEntries[0], true);
             const value = formatDataForPreview(entryOrEntries[1], false);
             formatted += `${key} => ${value}`;
@@ -728,7 +859,7 @@ export function formatDataForPreview(
       return data.toString();
     case 'object':
       if (showFormattedValue) {
-        const keys = getAllEnumerableKeys(data).sort(alphaSortKeys);
+        const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
 
         let formatted = '';
         for (let i = 0; i < keys.length; i++) {
@@ -758,7 +889,7 @@ export function formatDataForPreview(
       return data;
     default:
       try {
-        return truncateForDisplay('' + data);
+        return truncateForDisplay(String(data));
       } catch (error) {
         return 'unserializable';
       }

@@ -5,24 +5,27 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import assign from 'object-assign';
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
+import ReactCurrentActQueue from './ReactCurrentActQueue';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
-import IsSomeRendererActing from './IsSomeRendererActing';
+import {enableServerContext} from 'shared/ReactFeatureFlags';
+import {ContextRegistry} from './ReactServerContextRegistry';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
   ReactCurrentBatchConfig,
   ReactCurrentOwner,
-  IsSomeRendererActing,
-  // Used by renderers to avoid bundling object-assign twice in UMD bundles:
-  assign,
 };
 
 if (__DEV__) {
   ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame;
+  ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue;
+}
+
+if (enableServerContext) {
+  ReactSharedInternals.ContextRegistry = ContextRegistry;
 }
 
 export default ReactSharedInternals;

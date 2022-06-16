@@ -20,20 +20,20 @@ import {
   ElementTypeFunction,
 } from 'react-devtools-shared/src/types';
 
-import type {GetInspectedElementPath} from './InspectedElementContext';
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
 
 type Props = {|
   bridge: FrontendBridge,
-  getInspectedElementPath: GetInspectedElementPath,
+  element: Element,
   inspectedElement: InspectedElement,
   store: Store,
 |};
 
 export default function InspectedElementContextTree({
   bridge,
-  getInspectedElementPath,
+  element,
   inspectedElement,
   store,
 }: Props) {
@@ -81,15 +81,15 @@ export default function InspectedElementContextTree({
               canEditValues={!isReadOnly}
               canRenamePaths={!isReadOnly}
               canRenamePathsAtDepth={canRenamePathsAtDepth}
-              type="context"
               depth={1}
-              getInspectedElementPath={getInspectedElementPath}
+              element={element}
               hidden={false}
               inspectedElement={inspectedElement}
               name={name}
               path={[name]}
               pathRoot="context"
               store={store}
+              type="context"
               value={value}
             />
           ))}

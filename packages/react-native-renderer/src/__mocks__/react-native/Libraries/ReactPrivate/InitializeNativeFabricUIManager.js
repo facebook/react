@@ -5,13 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/* eslint-disable react-internal/invariant-args */
-
 'use strict';
 
 // Mock of the Native Hooks
-
-import invariant from 'shared/invariant';
 
 const roots = new Map();
 const allocatedTags = new Set();
@@ -54,11 +50,10 @@ const RCTFabricUIManager = {
     props,
     eventTarget,
   ) {
-    invariant(
-      !allocatedTags.has(reactTag),
-      'Created two native views with tag %s',
-      reactTag,
-    );
+    if (allocatedTags.has(reactTag)) {
+      throw new Error(`Created two native views with tag ${reactTag}`);
+    }
+
     allocatedTags.add(reactTag);
     return {
       reactTag: reactTag,
@@ -122,30 +117,34 @@ const RCTFabricUIManager = {
 
   dispatchCommand: jest.fn(),
 
+  sendAccessibilityEvent: jest.fn(),
+
   registerEventHandler: jest.fn(function registerEventHandler(callback) {}),
 
   measure: jest.fn(function measure(node, callback) {
-    invariant(
-      typeof node === 'object',
-      'Expected node to be an object, was passed "%s"',
-      typeof node,
-    );
-    invariant(
-      typeof node.viewName === 'string',
-      'Expected node to be a host node.',
-    );
+    if (typeof node !== 'object') {
+      throw new Error(
+        `Expected node to be an object, was passed "${typeof node}"`,
+      );
+    }
+
+    if (typeof node.viewName !== 'string') {
+      throw new Error('Expected node to be a host node.');
+    }
+
     callback(10, 10, 100, 100, 0, 0);
   }),
   measureInWindow: jest.fn(function measureInWindow(node, callback) {
-    invariant(
-      typeof node === 'object',
-      'Expected node to be an object, was passed "%s"',
-      typeof node,
-    );
-    invariant(
-      typeof node.viewName === 'string',
-      'Expected node to be a host node.',
-    );
+    if (typeof node !== 'object') {
+      throw new Error(
+        `Expected node to be an object, was passed "${typeof node}"`,
+      );
+    }
+
+    if (typeof node.viewName !== 'string') {
+      throw new Error('Expected node to be a host node.');
+    }
+
     callback(10, 10, 100, 100);
   }),
   measureLayout: jest.fn(function measureLayout(
@@ -154,26 +153,29 @@ const RCTFabricUIManager = {
     fail,
     success,
   ) {
-    invariant(
-      typeof node === 'object',
-      'Expected node to be an object, was passed "%s"',
-      typeof node,
-    );
-    invariant(
-      typeof node.viewName === 'string',
-      'Expected node to be a host node.',
-    );
-    invariant(
-      typeof relativeNode === 'object',
-      'Expected relative node to be an object, was passed "%s"',
-      typeof relativeNode,
-    );
-    invariant(
-      typeof relativeNode.viewName === 'string',
-      'Expected relative node to be a host node.',
-    );
+    if (typeof node !== 'object') {
+      throw new Error(
+        `Expected node to be an object, was passed "${typeof node}"`,
+      );
+    }
+
+    if (typeof node.viewName !== 'string') {
+      throw new Error('Expected node to be a host node.');
+    }
+
+    if (typeof relativeNode !== 'object') {
+      throw new Error(
+        `Expected relative node to be an object, was passed "${typeof relativeNode}"`,
+      );
+    }
+
+    if (typeof relativeNode.viewName !== 'string') {
+      throw new Error('Expected relative node to be a host node.');
+    }
+
     success(1, 1, 100, 100);
   }),
+  setIsJSResponder: jest.fn(),
 };
 
 global.nativeFabricUIManager = RCTFabricUIManager;

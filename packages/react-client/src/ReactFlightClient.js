@@ -15,6 +15,7 @@ import type {
   ModuleMetaData,
   UninitializedModel,
   Response,
+  BundlerConfig,
 } from './ReactFlightClientHostConfig';
 
 import {
@@ -25,6 +26,8 @@ import {
 } from './ReactFlightClientHostConfig';
 
 import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+
+import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 
 export type JSONValue =
   | number
@@ -95,6 +98,7 @@ Chunk.prototype.then = function<T>(resolve: () => mixed) {
 };
 
 export type ResponseBase = {
+  _bundlerConfig: BundlerConfig,
   _chunks: Map<number, SomeChunk<any>>,
   readRoot<T>(): T,
   ...
@@ -327,6 +331,7 @@ export function parseModelTuple(
   value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
 ): any {
   const tuple: [mixed, mixed, mixed, mixed] = (value: any);
+
   if (tuple[0] === REACT_ELEMENT_TYPE) {
     // TODO: Consider having React just directly accept these arrays as elements.
     // Or even change the ReactElement type to be an array.
@@ -335,9 +340,10 @@ export function parseModelTuple(
   return value;
 }
 
-export function createResponse(): ResponseBase {
+export function createResponse(bundlerConfig: BundlerConfig): ResponseBase {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response = {
+    _bundlerConfig: bundlerConfig,
     _chunks: chunks,
     readRoot: readRoot,
   };
@@ -358,6 +364,21 @@ export function resolveModel(
   }
 }
 
+export function resolveProvider(
+  response: Response,
+  id: number,
+  contextName: string,
+): void {
+  const chunks = response._chunks;
+  chunks.set(
+    id,
+    createInitializedChunk(
+      response,
+      getOrCreateServerContext(contextName).Provider,
+    ),
+  );
+}
+
 export function resolveModule(
   response: Response,
   id: number,
@@ -366,7 +387,10 @@ export function resolveModule(
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   const moduleMetaData: ModuleMetaData = parseModel(response, model);
-  const moduleReference = resolveModuleReference(moduleMetaData);
+  const moduleReference = resolveModuleReference(
+    response._bundlerConfig,
+    moduleMetaData,
+  );
 
   // TODO: Add an option to encode modules that are lazy loaded.
   // For now we preload all modules as early as possible since it's likely
@@ -397,6 +421,7 @@ export function resolveError(
   message: string,
   stack: string,
 ): void {
+  // eslint-disable-next-line react-internal/prod-error-codes
   const error = new Error(message);
   error.stack = stack;
   const chunks = response._chunks;

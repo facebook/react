@@ -7,42 +7,47 @@ module.exports = {
   },
   globals: {
     // ES 6
-    Map: true,
-    Set: true,
-    Proxy: true,
-    Symbol: true,
-    WeakMap: true,
-    WeakSet: true,
-    Uint16Array: true,
-    Reflect: true,
+    BigInt: 'readonly',
+    Map: 'readonly',
+    Set: 'readonly',
+    Proxy: 'readonly',
+    Symbol: 'readonly',
+    WeakMap: 'readonly',
+    WeakSet: 'readonly',
+    Uint16Array: 'readonly',
+    Reflect: 'readonly',
+    globalThis: 'readonly',
     // Vendor specific
-    MSApp: true,
-    __REACT_DEVTOOLS_GLOBAL_HOOK__: true,
+    MSApp: 'readonly',
+    __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
     // CommonJS / Node
-    process: true,
-    setImmediate: true,
-    Buffer: true,
+    process: 'readonly',
+    setImmediate: 'readonly',
+    Buffer: 'readonly',
     // Trusted Types
-    trustedTypes: true,
+    trustedTypes: 'readonly',
 
     // Scheduler profiling
-    SharedArrayBuffer: true,
-    Int32Array: true,
-    ArrayBuffer: true,
+    Int32Array: 'readonly',
+    ArrayBuffer: 'readonly',
 
-    TaskController: true,
+    TaskController: 'readonly',
+    reportError: 'readonly',
 
     // Flight
-    Uint8Array: true,
-    Promise: true,
+    Uint8Array: 'readonly',
+    Promise: 'readonly',
 
     // Flight Webpack
-    __webpack_chunk_load__: true,
-    __webpack_require__: true,
+    __webpack_chunk_load__: 'readonly',
+    __webpack_require__: 'readonly',
 
     // jest
-    expect: true,
-    jest: true,
+    expect: 'readonly',
+    jest: 'readonly',
+
+    // act
+    IS_REACT_ACT_ENVIRONMENT: 'readonly',
   },
   parserOptions: {
     ecmaVersion: 5,

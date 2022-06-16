@@ -61,6 +61,12 @@
   justify-content: center;
 }
 
+.LearnMoreRow {
+  margin-top: 1rem;
+  color: var(--color-dim);
+  font-size: var(--font-size-sans-small);
+}
+
 .Header {
   font-size: var(--font-size-sans-large);
   margin-bottom: 0.5rem;
@@ -114,4 +120,16 @@
 
 .Link {
   color: var(--color-button);
+}
+
+.TimelineSearchInputContainer {
+  flex: 1 1;
+  display: flex;
+  align-items: center;
+}
+
+.LearnMoreLink {
+  color: var(--color-link);
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
 }

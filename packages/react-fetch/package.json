@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "react-fetch",
   "description": "Helpers for creating React data sources",
   "version": "0.0.0",
@@ -11,7 +10,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "index.node.js",
     "index.browser.js",

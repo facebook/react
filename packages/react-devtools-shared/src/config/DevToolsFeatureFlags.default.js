@@ -13,4 +13,9 @@
  * It should always be imported from "react-devtools-feature-flags".
  ************************************************************************/
 
-// TODO Add feature flags here...
+export const consoleManagedByDevToolsDuringStrictMode = true;
+export const enableLogger = false;
+export const enableNamedHooksFeature = true;
+export const enableProfilerChangedHookIndices = true;
+export const enableStyleXFeatures = false;
+export const isInternalFacebookBuild = false;

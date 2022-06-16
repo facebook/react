@@ -9,6 +9,7 @@
 
 import {copy} from 'clipboard-js';
 import * as React from 'react';
+import {OptionsContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
@@ -19,22 +20,24 @@ import styles from './InspectedElementSharedStyles.css';
 import {ElementTypeClass} from 'react-devtools-shared/src/types';
 
 import type {InspectedElement} from './types';
-import type {GetInspectedElementPath} from './InspectedElementContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
 
 type Props = {|
   bridge: FrontendBridge,
-  getInspectedElementPath: GetInspectedElementPath,
+  element: Element,
   inspectedElement: InspectedElement,
   store: Store,
 |};
 
 export default function InspectedElementPropsTree({
   bridge,
-  getInspectedElementPath,
+  element,
   inspectedElement,
   store,
 }: Props) {
+  const {readOnly} = React.useContext(OptionsContext);
+
   const {
     canEditFunctionProps,
     canEditFunctionPropsDeletePaths,
@@ -45,7 +48,8 @@ export default function InspectedElementPropsTree({
 
   const canDeletePaths =
     type === ElementTypeClass || canEditFunctionPropsDeletePaths;
-  const canEditValues = type === ElementTypeClass || canEditFunctionProps;
+  const canEditValues =
+    !readOnly && (type === ElementTypeClass || canEditFunctionProps);
   const canRenamePaths =
     type === ElementTypeClass || canEditFunctionPropsRenamePaths;
 
@@ -59,7 +63,9 @@ export default function InspectedElementPropsTree({
   const handleCopy = () => copy(serializeDataForCopy(((props: any): Object)));
 
   return (
-    <div className={styles.InspectedElementTree}>
+    <div
+      className={styles.InspectedElementTree}
+      data-testname="InspectedElementPropsTree">
       <div className={styles.HeaderRow}>
         <div className={styles.Header}>props</div>
         {!isEmpty && (
@@ -78,7 +84,7 @@ export default function InspectedElementPropsTree({
             canEditValues={canEditValues}
             canRenamePaths={canRenamePaths}
             depth={1}
-            getInspectedElementPath={getInspectedElementPath}
+            element={element}
             hidden={false}
             inspectedElement={inspectedElement}
             name={name}

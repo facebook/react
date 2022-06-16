@@ -7,6 +7,7 @@
 
 const ariaProperties = {
   'aria-current': 0, // state
+  'aria-description': 0,
   'aria-details': 0,
   'aria-disabled': 0, // state
   'aria-hidden': 0, // state

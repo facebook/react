@@ -254,6 +254,28 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<span style={style} />, div);
     });
 
+    it('throws with Temporal-like objects as style values', () => {
+      class TemporalLike {
+        valueOf() {
+          // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
+          // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
+          throw new TypeError('prod message');
+        }
+        toString() {
+          return '2020-01-01';
+        }
+      }
+      const style = {fontSize: new TemporalLike()};
+      const div = document.createElement('div');
+      const test = () => ReactDOM.render(<span style={style} />, div);
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'Warning: The provided `fontSize` CSS property is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
     it('should update styles if initially null', () => {
       let styles = null;
       const container = document.createElement('div');
@@ -1130,7 +1152,7 @@ describe('ReactDOMComponent', () => {
 
   describe('createOpenTagMarkup', () => {
     function quoteRegexp(str) {
-      return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
+      return String(str).replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
     function expectToHaveAttribute(actual, expected) {
@@ -1164,7 +1186,7 @@ describe('ReactDOMComponent', () => {
 
   describe('createContentMarkup', () => {
     function quoteRegexp(str) {
-      return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
+      return String(str).replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
     function genMarkup(props) {
@@ -1221,7 +1243,7 @@ describe('ReactDOMComponent', () => {
       }
     });
 
-    it('should not duplicate uppercased selfclosing tags', () => {
+    it('should warn for uppercased selfclosing tags', () => {
       class Container extends React.Component {
         render() {
           return React.createElement('BR', null);
@@ -1237,7 +1259,8 @@ describe('ReactDOMComponent', () => {
           'Use PascalCase for React components, ' +
           'or lowercase for HTML elements.',
       );
-      expect(returnedValue).not.toContain('</BR>');
+      // This includes a duplicate tag because we didn't treat this as self-closing.
+      expect(returnedValue).toContain('</BR>');
     });
 
     it('should warn on upper case HTML tags, not SVG nor custom tags', () => {
@@ -2411,6 +2434,28 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('whatever')).toBe('[object Object]');
     });
 
+    it('allows Temporal-like objects as HTML (they are not coerced to strings first)', function() {
+      class TemporalLike {
+        valueOf() {
+          // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
+          // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
+          throw new TypeError('prod message');
+        }
+        toString() {
+          return '2020-01-01';
+        }
+      }
+
+      // `dangerouslySetInnerHTML` is never coerced to a string, so won't throw
+      // even with a Temporal-like object.
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <div dangerouslySetInnerHTML={{__html: new TemporalLike()}} />,
+        container,
+      );
+      expect(container.firstChild.innerHTML).toEqual('2020-01-01');
+    });
+
     it('allows cased data attributes', function() {
       let el;
       expect(() => {
@@ -2644,9 +2689,13 @@ describe('ReactDOMComponent', () => {
       const container = document.createElement('div');
       ReactDOM.render(<some-custom-element foo={true} />, container);
       const node = container.firstChild;
-      expect(node.getAttribute('foo')).toBe('true');
+      expect(node.getAttribute('foo')).toBe(
+        ReactFeatureFlags.enableCustomElementPropertySupport ? '' : 'true',
+      );
       ReactDOM.render(<some-custom-element foo={false} />, container);
-      expect(node.getAttribute('foo')).toBe('false');
+      expect(node.getAttribute('foo')).toBe(
+        ReactFeatureFlags.enableCustomElementPropertySupport ? null : 'false',
+      );
       ReactDOM.render(<some-custom-element />, container);
       expect(node.hasAttribute('foo')).toBe(false);
       ReactDOM.render(<some-custom-element foo={true} />, container);

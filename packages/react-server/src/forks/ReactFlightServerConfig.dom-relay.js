@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-transport-dom-relay/src/ReactFlightDOMRelayServerHostConfig';
+export * from 'react-server-dom-relay/src/ReactFlightDOMRelayServerHostConfig';

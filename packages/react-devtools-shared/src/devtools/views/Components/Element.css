@@ -73,3 +73,29 @@
 .Badge {
   margin-left: 0.25rem;
 }
+
+.ErrorIcon,
+.ErrorIconContrast,
+.StrictMode,
+.StrictModeContrast,
+.WarningIcon,
+.WarningIconContrast {
+  height: 0.75rem !important;
+  width: 0.75rem !important;
+  margin-left: 0.25rem;
+}
+.ErrorIcon {
+  color: var(--color-console-error-icon);
+}
+.StrictMode {
+  color: var(--color-dimmer);
+}
+.WarningIcon {
+  color: var(--color-console-warning-icon);
+}
+.ErrorIconContrast, .WarningIconContrast {
+  color: var(--color-component-name);
+}
+.StrictModeContrast {
+  color: var(--color-text);
+}

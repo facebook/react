@@ -12,9 +12,12 @@
 let PropTypes;
 let React;
 let ReactDOM;
+let ReactDOMClient;
+let act;
 
 describe('ReactES6Class', () => {
   let container;
+  let root;
   const freeze = function(expectation) {
     Object.freeze(expectation);
     return expectation;
@@ -27,7 +30,10 @@ describe('ReactES6Class', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
+    act = require('jest-react').act;
     container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
     attachedListener = null;
     renderedName = null;
     Inner = class extends React.Component {
@@ -43,11 +49,10 @@ describe('ReactES6Class', () => {
   });
 
   function test(element, expectedTag, expectedClassName) {
-    const instance = ReactDOM.render(element, container);
+    act(() => root.render(element));
     expect(container.firstChild).not.toBeNull();
     expect(container.firstChild.tagName).toBe(expectedTag);
     expect(container.firstChild.className).toBe(expectedClassName);
-    return instance;
   }
 
   it('preserves the name of the class for use in error messages', () => {
@@ -57,10 +62,14 @@ describe('ReactES6Class', () => {
 
   it('throws if no render function is defined', () => {
     class Foo extends React.Component {}
-    expect(() =>
-      expect(() => ReactDOM.render(<Foo />, container)).toThrow(),
-    ).toErrorDev([
-      // A failed component renders twice in DEV
+    expect(() => {
+      expect(() => act(() => root.render(<Foo />))).toThrow();
+    }).toErrorDev([
+      // A failed component renders four times in DEV in concurrent mode
+      'Warning: Foo(...): No `render` method found on the returned component ' +
+        'instance: you may have forgotten to define `render`.',
+      'Warning: Foo(...): No `render` method found on the returned component ' +
+        'instance: you may have forgotten to define `render`.',
       'Warning: Foo(...): No `render` method found on the returned component ' +
         'instance: you may have forgotten to define `render`.',
       'Warning: Foo(...): No `render` method found on the returned component ' +
@@ -107,8 +116,9 @@ describe('ReactES6Class', () => {
         return <span className={this.state.bar} />;
       }
     }
-    const instance = test(<Foo initialValue="foo" />, 'DIV', 'foo');
-    instance.changeState();
+    const ref = React.createRef();
+    test(<Foo initialValue="foo" ref={ref} />, 'DIV', 'foo');
+    act(() => ref.current.changeState());
     test(<Foo />, 'SPAN', 'bar');
   });
 
@@ -137,7 +147,7 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toErrorDev(
+    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
       'Foo: getDerivedStateFromProps() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
     );
@@ -152,7 +162,7 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toErrorDev(
+    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
       'Foo: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
     );
@@ -165,7 +175,7 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toErrorDev(
+    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
       'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
         'and will be ignored. Instead, declare it as an instance method.',
     );
@@ -183,7 +193,7 @@ describe('ReactES6Class', () => {
         return <div className={`${this.state.foo} ${this.state.bar}`} />;
       }
     }
-    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toErrorDev(
+    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
       '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
         'undefined. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `Foo`. ' +
@@ -277,7 +287,9 @@ describe('ReactES6Class', () => {
       }
     }
     test(<Foo initialValue="foo" />, 'SPAN', 'bar');
-    expect(renderCount).toBe(1);
+    // This is broken with deferRenderPhaseUpdateToNextBatch flag on.
+    // We can't use the gate feature here because this test is also in CoffeeScript and TypeScript.
+    expect(renderCount).toBe(global.__WWW__ && !global.__VARIANT__ ? 2 : 1);
   });
 
   it('should warn with non-object in the initial state property', () => {
@@ -326,7 +338,8 @@ describe('ReactES6Class', () => {
       }
     }
     test(<Foo initialValue="foo" />, 'DIV', 'foo');
-    attachedListener();
+
+    act(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -367,7 +380,7 @@ describe('ReactES6Class', () => {
       }
     }
     test(<Foo initialValue="foo" />, 'DIV', 'foo');
-    attachedListener();
+    act(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -416,7 +429,7 @@ describe('ReactES6Class', () => {
       'did-update', freeze({value: 'foo'}), {},
     ]);
     lifeCycles = []; // reset
-    ReactDOM.unmountComponentAtNode(container);
+    act(() => root.unmount());
     expect(lifeCycles).toEqual(['will-unmount']);
   });
 
@@ -520,15 +533,16 @@ describe('ReactES6Class', () => {
   });
 
   it('should throw AND warn when trying to access classic APIs', () => {
-    const instance = test(<Inner name="foo" />, 'DIV', 'foo');
+    const ref = React.createRef();
+    test(<Inner name="foo" ref={ref} />, 'DIV', 'foo');
     expect(() =>
-      expect(() => instance.replaceState({})).toThrow(),
+      expect(() => ref.current.replaceState({})).toThrow(),
     ).toWarnDev(
       'replaceState(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true},
     );
     expect(() =>
-      expect(() => instance.isMounted()).toThrow(),
+      expect(() => ref.current.isMounted()).toThrow(),
     ).toWarnDev(
       'isMounted(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true},
@@ -560,13 +574,15 @@ describe('ReactES6Class', () => {
         return <Inner name="foo" ref="inner" />;
       }
     }
-    const instance = test(<Foo />, 'DIV', 'foo');
-    expect(instance.refs.inner.getName()).toBe('foo');
+    const ref = React.createRef();
+    test(<Foo ref={ref} />, 'DIV', 'foo');
+    expect(ref.current.refs.inner.getName()).toBe('foo');
   });
 
   it('supports drilling through to the DOM using findDOMNode', () => {
-    const instance = test(<Inner name="foo" />, 'DIV', 'foo');
-    const node = ReactDOM.findDOMNode(instance);
+    const ref = React.createRef();
+    test(<Inner name="foo" ref={ref} />, 'DIV', 'foo');
+    const node = ReactDOM.findDOMNode(ref.current);
     expect(node).toBe(container.firstChild);
   });
 });
