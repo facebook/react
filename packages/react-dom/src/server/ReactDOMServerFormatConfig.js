@@ -63,6 +63,7 @@ import {
   prepareToRender as prepareToRenderImpl,
   cleanupAfterRender as cleanupAfterRenderImpl,
   resourcesFromLink,
+  resourcesFromScript,
   DNS_PREFETCH,
   PRECONNECT,
   PREFETCH,
@@ -1254,6 +1255,10 @@ function pushStartGenericElement(
   tag: string,
   responseState: ResponseState,
 ): ReactNodeList {
+  if (tag === 'script') {
+    resourcesFromScript(props);
+  }
+
   target.push(startChunkForTag(tag));
 
   let children = null;

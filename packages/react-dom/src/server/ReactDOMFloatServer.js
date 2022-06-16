@@ -285,7 +285,7 @@ function preinit(href: String, options: PreinitOptions) {
   }
 }
 
-// Construct a resource from Link props.
+// Construct a resource from link props.
 // Returns true if the link was fully described by the resource and the link can omitted from the stream.
 // Returns false if the link should still be emitted to the stream
 export function resourcesFromLink(props: Object): boolean {
@@ -335,6 +335,16 @@ export function resourcesFromLink(props: Object): boolean {
     default:
       return false;
   }
+}
+
+// Construct a resource from script props.
+export function resourcesFromScript(props: Object) {
+  let src = props.src;
+  if (typeof src !== 'string') {
+    return;
+  }
+
+  preload(src, {as: 'script'});
 }
 
 const Dispatcher = {

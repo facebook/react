@@ -577,4 +577,26 @@ describe('ReactDOMServerPreload', () => {
       ['font', 'font', null],
     ]);
   });
+
+  it('captures resources for preloading when rendering a script', async () => {
+    function App() {
+      return (
+        <div>
+          <link rel="next" href="foo" />
+          <script src="bar"></script>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expectLinks([
+      // The preload link appearas first because it was emitted before content
+      ['preload', 'bar', 'script'],
+      ['next', 'foo', null],
+    ]);
+  });
 });
