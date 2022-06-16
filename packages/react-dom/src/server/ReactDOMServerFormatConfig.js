@@ -62,10 +62,17 @@ import {
   type Resource,
   prepareToRender as prepareToRenderImpl,
   cleanupAfterRender as cleanupAfterRenderImpl,
+  DNS_PREFETCH,
   PRECONNECT,
   PREFETCH,
   PRELOAD,
   PREINIT,
+  NO_RESOURCE,
+  HOST_RESOURCE,
+  INITIALIZABLE_RESOURCE,
+  STYLE_RESOURCE,
+  SCRIPT_RESOURCE,
+  FONT_RESOURCE,
 } from './ReactDOMFloatServer';
 
 // Used to distinguish these contexts from ones used in other renderers.
@@ -2125,60 +2132,147 @@ function escapeJSStringsForInstructionScripts(input: string): string {
   });
 }
 
-export function writeResource(destination: Destination, resource: Resource) {
-  console.log('writeResource', resource);
-  switch (resource.as) {
-    case '': {
-      return writeIndeterminantResource(destination, resource);
+export function writeResources(destination: Destination, resources: Resources) {
+  for (let resource of resources.values()) {
+    if (!resource.flushed) {
+      resource.flushed = true;
+      writeResource(destination, resource);
     }
-    case 'style': {
+  }
+}
+
+function writeResource(destination: Destination, resource: Resource) {
+  switch (resource.as) {
+    case HOST_RESOURCE: {
+      return writeHostResource(destination, resource);
+    }
+    case STYLE_RESOURCE: {
       return writeStyleResource(destination, resource);
+    }
+    case SCRIPT_RESOURCE: {
+      return writeScriptResource(destination, resource);
+    }
+    case FONT_RESOURCE: {
+      return writeFontResource(destination, resource);
     }
     default: {
       throw new Error(
-        'writeResource received a resource it did not know how to write',
-        resource,
+        `writeResource received a resource it did not know how to write ${resource}`,
       );
     }
   }
 }
 
+const prefetchDNSStart = stringToPrecomputedChunk(
+  '<link rel="dns-prefetch" href="',
+);
+const preconnectStart = stringToPrecomputedChunk('<link rel="preconnect"');
+const prefetchStart = stringToPrecomputedChunk('<link rel="prefetch" href="');
 const preloadStart = stringToPrecomputedChunk('<link rel="preload"');
-const preloadAsStyle = stringToPrecomputedChunk(' as="style" href="');
-const preloadEnd = stringToPrecomputedChunk('">');
+const preAsStyle = stringToPrecomputedChunk(' as="style" href="');
+const preAsScript = stringToPrecomputedChunk(' as="script" href="');
+const preAsFont = stringToPrecomputedChunk(' as="font" href="');
+const preEnd = stringToPrecomputedChunk('">');
 
 const resourceStyleStart = stringToPrecomputedChunk(
   '<link rel="stylesheet" href="',
 );
 const resourceStyleEnd = stringToPrecomputedChunk('">');
 
-function writeIndeterminantResource(
-  destination: Destination,
-  resource: IndeterminantResource,
-) {
-  console.log('writeIndeterminantResource');
-}
-
-function writeStyleResource(destination: Destination, resource: StyleResource) {
-  if (resource.priority === PRELOAD) {
-    writeChunk(destination, preloadStart);
-    writeChunk(destination, preloadAsStyle);
-    writeChunk(destination, stringToChunk(resource.href));
-    writeChunk(destination, preloadEnd);
-  } else if (resource.priority === PREINIT) {
-    console.log('writing a preinit');
-    writeChunk(destination, resourceStyleStart);
-    writeChunk(destination, stringToChunk(resource.href));
-    writeChunk(destination, resourceStyleEnd);
-    console.log('done');
+function writeHostResource(destination: Destination, resource: Resource) {
+  switch (resource.priority) {
+    case DNS_PREFETCH: {
+      writeChunk(destination, prefetchDNSStart);
+      writeChunk(destination, stringToChunk(resource.href));
+      writeChunk(destination, preEnd);
+      return;
+    }
+    case PRECONNECT: {
+      writeChunk(destination, preconnectStart);
+      writeChunk(destination, stringToChunk(resource.href));
+      writeChunk(destination, preEnd);
+      return;
+    }
+    default: {
+      return;
+    }
   }
 }
 
-export function writeResources(destination: Destination, resources: Resources) {
-  for (let resource of resources.values()) {
-    if (!resource.flushed) {
-      resource.flushed = true;
-      writeResource(destination, resource);
+function writeStyleResource(destination: Destination, resource: Resource) {
+  switch (resource.priority) {
+    case PREFETCH: {
+      writeChunk(destination, prefetchStart);
+      writeChunk(destination, preAsStyle);
+      writeChunk(destination, stringToChunk(resource.href));
+      writeChunk(destination, preEnd);
+      return;
+    }
+    case PRELOAD: {
+      writeChunk(destination, preloadStart);
+      writeChunk(destination, preAsStyle);
+      writeChunk(destination, stringToChunk(resource.href));
+      writeChunk(destination, preEnd);
+      return;
+    }
+    case PREINIT: {
+      writeChunk(destination, resourceStyleStart);
+      writeChunk(destination, stringToChunk(resource.href));
+      writeChunk(destination, resourceStyleEnd);
+      return;
+    }
+    default: {
+      return;
+    }
+  }
+}
+
+function writeScriptResource(destination: Destination, resource: Resource) {
+  switch (resource.priority) {
+    case PREFETCH: {
+      writeChunk(destination, prefetchStart);
+      writeChunk(destination, preAsScript);
+      writeChunk(destination, stringToChunk(resource.href));
+      writeChunk(destination, preEnd);
+      return;
+    }
+    case PRELOAD: {
+      writeChunk(destination, preloadStart);
+      writeChunk(destination, preAsScript);
+      writeChunk(destination, stringToChunk(resource.href));
+      writeChunk(destination, preEnd);
+      return;
+    }
+    case PREINIT: {
+      writeChunk(destination, resourceStyleStart);
+      writeChunk(destination, stringToChunk(resource.href));
+      writeChunk(destination, resourceStyleEnd);
+      return;
+    }
+    default: {
+      return;
+    }
+  }
+}
+
+function writeFontResource(destination: Destination, resource: Resource) {
+  switch (resource.priority) {
+    case PREFETCH: {
+      writeChunk(destination, prefetchStart);
+      writeChunk(destination, preAsFont);
+      writeChunk(destination, stringToChunk(resource.href));
+      writeChunk(destination, preEnd);
+      return;
+    }
+    case PRELOAD: {
+      writeChunk(destination, preloadStart);
+      writeChunk(destination, preAsFont);
+      writeChunk(destination, stringToChunk(resource.href));
+      writeChunk(destination, preEnd);
+      return;
+    }
+    default: {
+      return;
     }
   }
 }

@@ -12,44 +12,53 @@ import {pushDispatcher, popDispatcher} from 'react-dom/ReactDOMDispatcher';
 let currentResponseState = null;
 let currentResourceMap = null;
 
-type CrossOrigin = 'anonymous' | 'use-credentials';
+export const DNS_PREFETCH = 0;
+export const PRECONNECT = 1;
+export const PREFETCH = 2;
+export const PRELOAD = 3;
+export const PREINIT = 4;
+type Priority = 0 | 1 | 2 | 3 | 4;
+
+export const CORS_NONE = 0;
+export const CORS_ANON = 1;
+export const CORS_CREDS = 2;
+type CrossOrigin = 0 | 1 | 2;
+
+export const NO_RESOURCE = /*            */ 0b0000;
+export const HOST_RESOURCE = /*          */ 0b0001;
+
+export const INITIALIZABLE_RESOURCE = /* */ 0b0110;
+export const STYLE_RESOURCE = /*         */ 0b0010;
+export const SCRIPT_RESOURCE = /*        */ 0b0100;
+
+export const FONT_RESOURCE = /*          */ 0b1000;
+type ResourceAsType = number;
+
+const asMap = {
+  style: STYLE_RESOURCE,
+  script: SCRIPT_RESOURCE,
+  font: FONT_RESOURCE,
+};
+
+type Resource = {
+  // "priority" and "as" define the branching for how to flush these resources.
+  // Not all combinations are valid but flow isn't smart enought to allow for disjoint unions
+  // while keeping object allocations and mutations as small as possible in code
+  priority: Priority,
+  as: ResourceAsType,
+  // "href" is the resource location but also the key to define uniquenes of a given resource
+  href: string,
+  // "flushed" is how we track whether we need to emit the resource in the next flush
+  flushed: boolean,
+  // Certain resources have module variants. only applies to 'script' resources
+  module: boolean,
+  crossorigin: CrossOrigin,
+  type: MimeType,
+};
+
 type MimeType = string;
 
-type ResourceMeta = {flushed: boolean, replaced: boolean};
-type ResourceBase = {
-  ...ResourceMeta,
-  priority: Priority,
-  module: boolean,
-  href: string,
-  as: '',
-  type: '',
-  crossorigin: '',
-};
-type IndeterminantResource = ResourceBase;
-type ScriptResource = {...ResourceBase, as: 'script'};
-type StyleResource = {...ResourceBase, as: 'style'};
-type ImageResource = {...ResourceBase, as: 'image'};
-type VideoResource = {...ResourceBase, as: 'video'};
-type AudioResource = {...ResourceBase, as: 'audio'};
-type TrackResource = {...ResourceBase, as: 'track'};
-type FontResource = {
-  ...ResourceBase,
-  as: 'font',
-  type: MimeType,
-  crossorigin: 'anonymous',
-};
-type FetchResource = {...ResourceBase, as: 'fetch'};
-
-export type Resource =
-  | IndeterminantResource
-  | StyleResource
-  | FontResource
-  | FetchResource;
-export type ResourceMap = Map<string, Resource>;
-
-// @TODO deal with reentrancy
 export function prepareToRender(resourceMap: ResourceMap) {
-  console.log('prepareToRender FloatServer', resourceMap);
   currentResourceMap = resourceMap;
 
   pushDispatcher(Dispatcher);
@@ -61,51 +70,198 @@ export function cleanupAfterRender() {
   popDispatcher();
 }
 
-export const DNS_PREFETCH = 0;
-export const PRECONNECT = 1;
-export const PREFETCH = 2;
-export const PRELOAD = 3;
-export const PREINIT = 4;
+type PrefetchDNSOptions = {};
+function prefetchDNS(href: string, options?: PrefetchOptions) {
+  if (currentResourceMap === null) {
+    throw new Error(
+      'prefetchDNS was called while currentResourceMap is null. this is a bug in React',
+    );
+  }
+  let key = href;
+  let currentResource = currentResourceMap.get(key);
+  if (currentResource) {
+    // In this Float function we can avoid checking priority because DNS_PREFETCH is the lowest priority
+    return;
+  } else {
+    const resource: Resource = {
+      priority: DNS_PREFETCH,
+      as: HOST_RESOURCE,
+      href,
+      flushed: false,
+      module: false,
+      crossorigin: CORS_NONE,
+      type: '',
+    };
+    currentResourceMap.set(key, resource);
+  }
+}
 
-type Priority = 0 | 1 | 2 | 3 | 4;
+type PreconnectOptions = {};
+function preconnect(href: string, options?: PreconnectOptions) {
+  if (currentResourceMap === null) {
+    throw new Error(
+      'preconnect was called while currentResourceMap is null. this is a bug in React',
+    );
+  }
+  let key = href;
+  let currentResource = currentResourceMap.get(key);
+  if (currentResource) {
+    if (currentResource.priority >= PRECONNECT) {
+      return;
+    } else {
+      currentResource.priority = PRECONNECT;
+      // We are upgrading from prefetchDNS which also has an "as" of "host" so we don't need to reset it here
+      currentResource.flushed = false;
+    }
+  } else {
+    const resource: Resource = {
+      priority: PRECONNECT,
+      as: HOST_RESOURCE,
+      href,
+      flushed: false,
+      module: false,
+      crossorigin: CORS_NONE,
+      type: '',
+    };
+    currentResourceMap.set(key, resource);
+  }
+}
 
-type PreloadAs = 'style' | 'font';
-type PreloadOptions = {as?: PreloadAs};
-function preload(href: string, options?: PreloadOptions) {
+type PrefetchAs = 'style' | 'font' | 'script';
+type PrefetchOptions = {as: PrefetchAs};
+function prefetch(href: string, options: PrefetchOptions) {
+  if (currentResourceMap === null) {
+    throw new Error(
+      'prefetch was called while currentResourceMap is null. this is a bug in React',
+    );
+  }
+  if (!options) {
+    return;
+  }
+  let as;
+  switch (options.as) {
+    case 'style':
+      as = STYLE_RESOURCE;
+      break;
+    case 'script':
+      as = SCRIPT_RESOURCE;
+      break;
+    case 'font':
+      as = FONT_RESOURCE;
+      break;
+    default:
+      return;
+  }
+  let key = href;
+  let currentResource = currentResourceMap.get(key);
+  if (currentResource) {
+    if (currentResource.priority >= PREFETCH) {
+      return;
+    } else {
+      currentResource.priority = PREFETCH;
+      currentResource.as = as;
+      currentResource.flushed = false;
+      currentResource.crossorigin =
+        options.as === 'font' ? CORS_ANON : CORS_NONE;
+    }
+  } else {
+    const resource: Resource = {
+      priority: PREFETCH,
+      as,
+      href,
+      flushed: false,
+      module: false,
+      crossorigin: options.as === 'font' ? CORS_ANON : CORS_NONE,
+      type: '',
+    };
+    currentResourceMap.set(key, resource);
+  }
+}
+
+type PreloadAs = 'style' | 'font' | 'script';
+type PreloadOptions = {as: PreloadAs};
+function preload(href: string, options: PreloadOptions) {
   if (currentResourceMap === null) {
     throw new Error(
       'preload was called while currentResourceMap is null. this is a bug in React',
     );
   }
-  console.log('currentResourceMap', currentResourceMap);
-  const as = options && typeof options.as === 'string' ? options.as : '';
-  let key = href;
-  if (currentResourceMap.has(key)) {
-    console.log(key, 'already scheduled to be preloaded');
+  if (!options) {
     return;
   }
-  const resource: Resource = {
-    priority: PRELOAD,
-    DEV_actionName: 'preload',
-    flushed: false,
-    module: false,
-    href,
-    as,
-    type: '',
-  };
-  currentResourceMap.set(key, resource);
-  console.log('on server: preload', href);
+  let as;
+  switch (options.as) {
+    case 'style':
+      as = STYLE_RESOURCE;
+      break;
+    case 'script':
+      as = SCRIPT_RESOURCE;
+      break;
+    case 'font':
+      as = FONT_RESOURCE;
+      break;
+    default:
+      return;
+  }
+  let key = href;
+  let currentResource = currentResourceMap.get(key);
+  if (currentResource) {
+    if (currentResource.priority >= PRELOAD) {
+      return;
+    } else {
+      currentResource.priority = PRELOAD;
+      currentResource.as = options.as;
+      currentResource.flushed = false;
+      currentResource.crossorigin = CORS_NONE;
+    }
+  } else {
+    const resource: Resource = {
+      priority: PRELOAD,
+      as,
+      href,
+      flushed: false,
+      module: false,
+      crossorigin: CORS_NONE,
+      type: '',
+    };
+    currentResourceMap.set(key, resource);
+  }
 }
 
-type PreinitAs = 'style' | 'font';
-type PreinitOptions = {as?: PreinitAs};
-function preinit(href: String, options?: PreinitOptions) {
+type PreinitAs = 'style' | 'script';
+type PreinitOptions = {as: PreinitAs};
+function preinit(href: String, options: PreinitOptions) {
+  if (__DEV__) {
+    if (!options || (options.as !== 'style' && options.as !== 'script')) {
+      let reason = !options
+        ? 'no option argument was provided'
+        : !('as' in options)
+        ? `no "as" property was provided in the options argument`
+        : `the "as" type provided was ${String(options.as)}`;
+      throw new Error(
+        `preinit was called without specifying a valid "as" type in the options argument. preinit supports style and script resources only and ${reason}`,
+      );
+    }
+  }
   if (currentResourceMap === null) {
     throw new Error(
       'preinit was called while currentResourceMap is null. this is a bug in React',
     );
   }
-  const as = options && typeof options.as === 'string' ? options.as : '';
+  if (!options) {
+    return;
+  }
+  let as;
+  switch (options.as) {
+    case 'style':
+      as = STYLE_RESOURCE;
+      break;
+    case 'script':
+      as = SCRIPT_RESOURCE;
+      break;
+    default:
+      return;
+  }
   let key = href;
   let currentResource = currentResourceMap.get(key);
   if (currentResource) {
@@ -113,25 +269,28 @@ function preinit(href: String, options?: PreinitOptions) {
       return;
     } else {
       currentResource.priority = PREINIT;
-      currentResource.DEV_actionName = 'preinit';
+      currentResource.as = as;
       currentResource.flushed = false;
+      currentResource.crossorigin = CORS_NONE;
     }
   } else {
     const resource: Resource = {
       priority: PREINIT,
-      DEV_actionName: 'preinit',
+      as,
+      href,
       flushed: false,
       module: false,
-      href,
-      as,
+      crossorigin: CORS_NONE,
       type: '',
     };
     currentResourceMap.set(key, resource);
-    console.log('on server: preinit', href);
   }
 }
 
 const Dispatcher = {
+  prefetchDNS,
+  preconnect,
+  prefetch,
   preload,
   preinit,
 };

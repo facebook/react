@@ -1343,7 +1343,6 @@ export function setupIntersectionObserver(
 }
 
 export function prepareToRender() {
-  console.log('prepareToRender client DOMHostConfig');
   prepareToRenderImpl();
 }
 

@@ -404,7 +404,7 @@ describe('ReactDOMServerPreload', () => {
     ]);
   });
 
-  it('sandbox', async () => {
+  it('late discovered resources flush', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});
       return <div>hi</div>;

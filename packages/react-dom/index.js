@@ -28,4 +28,10 @@ export {
   version,
 } from './src/client/ReactDOM';
 
-export {preload, preinit} from './src/shared/ReactDOMFloat';
+export {
+  prefetchDNS,
+  preconnect,
+  prefetch,
+  preload,
+  preinit,
+} from './src/shared/ReactDOMFloat';
