@@ -4926,21 +4926,21 @@
 ## `hidden` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `hidden=(string)`| (changed)| `<boolean: true>` |
-| `hidden=(empty string)`| (initial)| `<boolean: false>` |
-| `hidden=(array with string)`| (changed)| `<boolean: true>` |
+| `hidden=(string)`| (changed)| `"until-found"` |
+| `hidden=(empty string)`| (changed)| `<boolean: true>` |
+| `hidden=(array with string)`| (changed)| `"until-found"` |
 | `hidden=(empty array)`| (changed)| `<boolean: true>` |
 | `hidden=(object)`| (changed)| `<boolean: true>` |
 | `hidden=(numeric string)`| (changed)| `<boolean: true>` |
 | `hidden=(-1)`| (changed)| `<boolean: true>` |
-| `hidden=(0)`| (initial)| `<boolean: false>` |
+| `hidden=(0)`| (changed)| `<boolean: true>` |
 | `hidden=(integer)`| (changed)| `<boolean: true>` |
-| `hidden=(NaN)`| (initial, warning)| `<boolean: false>` |
+| `hidden=(NaN)`| (changed, warning)| `<boolean: true>` |
 | `hidden=(float)`| (changed)| `<boolean: true>` |
 | `hidden=(true)`| (changed)| `<boolean: true>` |
 | `hidden=(false)`| (initial)| `<boolean: false>` |
-| `hidden=(string 'true')`| (changed, warning)| `<boolean: true>` |
-| `hidden=(string 'false')`| (changed, warning)| `<boolean: true>` |
+| `hidden=(string 'true')`| (changed)| `<boolean: true>` |
+| `hidden=(string 'false')`| (changed)| `<boolean: true>` |
 | `hidden=(string 'on')`| (changed)| `<boolean: true>` |
 | `hidden=(string 'off')`| (changed)| `<boolean: true>` |
 | `hidden=(symbol)`| (initial, warning)| `<boolean: false>` |

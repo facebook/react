@@ -223,7 +223,6 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'disablePictureInPicture':
           case 'disableRemotePlayback':
           case 'formNoValidate':
-          case 'hidden':
           case 'loop':
           case 'noModule':
           case 'noValidate':
@@ -236,6 +235,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'seamless':
           case 'itemScope':
           case 'capture':
+          case 'hidden':
           case 'download': {
             // Boolean properties can accept boolean values
             return true;
@@ -300,7 +300,6 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case 'disablePictureInPicture':
             case 'disableRemotePlayback':
             case 'formNoValidate':
-            case 'hidden':
             case 'loop':
             case 'noModule':
             case 'noValidate':

@@ -1290,7 +1290,6 @@ function pushAttribute(
     case 'disablePictureInPicture':
     case 'disableRemotePlayback':
     case 'formNoValidate':
-    case 'hidden':
     case 'loop':
     case 'noModule':
     case 'noValidate':
@@ -1313,6 +1312,7 @@ function pushAttribute(
       return;
     }
     case 'capture':
+    case 'hidden':
     case 'download': {
       // Overloaded Boolean
       if (value === true) {
@@ -5189,7 +5189,10 @@ function writeStyleResourceAttributeInAttr(
       if (value === false) {
         return;
       }
-      attributeValue = '';
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+      attributeValue = '' + (value: any);
       break;
     }
 
