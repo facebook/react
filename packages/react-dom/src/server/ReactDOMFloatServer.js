@@ -40,7 +40,7 @@ const asMap = {
   font: FONT_RESOURCE,
 };
 
-type Resource = {
+export type Resource = {
   // "priority" and "as" define the branching for how to flush these resources.
   // Not all combinations are valid but flow isn't smart enought to allow for disjoint unions
   // while keeping object allocations and mutations as small as possible in code
@@ -55,6 +55,7 @@ type Resource = {
   crossorigin: CrossOrigin,
   type: MimeType,
 };
+type ResourceMap = Map<string, Resource>;
 
 type MimeType = string;
 
@@ -70,14 +71,22 @@ export function cleanupAfterRender() {
   popDispatcher();
 }
 
-function prefetchDNS(href: string) {
+type CrossOriginOption = boolean | 'anonymous' | 'use-credentials';
+type PrefetchDNSOptions = {crossorigin?: CrossOriginOption};
+function prefetchDNS(href: string, options?: PrefetchDNSOptions) {
   if (currentResourceMap === null) {
     throw new Error(
       'prefetchDNS was called while currentResourceMap is null. this is a bug in React',
     );
   }
-  let key = href;
-  let currentResource = currentResourceMap.get(key);
+  const crossorigin =
+    options && options.crossorigin
+      ? options.crossorigin === 'use-credentials'
+        ? CORS_CREDS
+        : CORS_ANON
+      : CORS_NONE;
+  const key = href + crossorigin;
+  const currentResource = currentResourceMap.get(key);
   if (currentResource) {
     // In this Float function we can avoid checking priority because DNS_PREFETCH is the lowest priority
     return;
@@ -88,7 +97,7 @@ function prefetchDNS(href: string) {
       href,
       flushed: false,
       module: false,
-      crossorigin: CORS_NONE,
+      crossorigin,
       type: '',
     };
     currentResourceMap.set(key, resource);
@@ -208,7 +217,7 @@ function preload(href: string, options: PreloadOptions) {
       return;
     } else {
       currentResource.priority = PRELOAD;
-      currentResource.as = options.as;
+      currentResource.as = as;
       currentResource.flushed = false;
       currentResource.crossorigin = CORS_NONE;
     }
@@ -228,7 +237,7 @@ function preload(href: string, options: PreloadOptions) {
 
 type PreinitAs = 'style' | 'script';
 type PreinitOptions = {as: PreinitAs};
-function preinit(href: String, options: PreinitOptions) {
+function preinit(href: string, options: PreinitOptions) {
   if (__DEV__) {
     if (!options || (options.as !== 'style' && options.as !== 'script')) {
       let reason = !options

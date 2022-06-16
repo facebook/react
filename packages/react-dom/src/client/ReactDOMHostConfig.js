@@ -783,12 +783,12 @@ export function registerSuspenseInstanceRetry(
 
 function getNextHydratable(node) {
   // Skip non-hydratable nodes.
-  for (; node != null; node = node.nextSibling) {
+  for (; node != null; node = ((node: any): Node).nextSibling) {
     const nodeType = node.nodeType;
     if (nodeType === ELEMENT_NODE) {
       if (
-        node.tagName.toLowerCase() === 'link' &&
-        node.getAttribute('rel') === 'preload'
+        ((node: any): HTMLElement).tagName.toLowerCase() === 'link' &&
+        ((node: any): HTMLElement).getAttribute('rel') === 'preload'
       ) {
         continue;
       }

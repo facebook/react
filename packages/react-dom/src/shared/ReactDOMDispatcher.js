@@ -13,7 +13,7 @@ const Dispatcher = {
 
 let stack = [];
 
-function pushDispatcher(dispatcher) {
+function pushDispatcher(dispatcher: any) {
   stack.push(Dispatcher.current);
   Dispatcher.current = dispatcher;
 }

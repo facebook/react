@@ -1134,7 +1134,7 @@ function pushLink(
         case 'children':
         case 'dangerouslySetInnerHTML':
           throw new Error(
-            `${tag} is a self-closing tag and must neither have \`children\` nor ` +
+            `link is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
           );
         // eslint-disable-next-line-no-fallthrough
@@ -2203,7 +2203,7 @@ function writeResource(destination: Destination, resource: Resource) {
     }
     default: {
       throw new Error(
-        `writeResource received a resource it did not know how to write ${resource}`,
+        `writeResource received a resource it did not know how to write. This is a bug in React.`,
       );
     }
   }
