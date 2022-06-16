@@ -103,6 +103,10 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
+// When going from 0 to n hooks, throw "Rendered more/fewer" hooks than expected.
+// This may be an invasive change so we're rolling it out slower.
+export const enableThrowOnMountForHookMismatch = false;
+
 // When a node is unmounted, recurse into the Fiber subtree and clean out
 // references. Each level cleans up more fiber fields than the previous level.
 // As far as we know, React itself doesn't leak, but because the Fiber contains

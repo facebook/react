@@ -3847,6 +3847,43 @@ describe('ReactHooksWithNoopRenderer', () => {
       // expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 4')]);
     });
 
+    it('mount first state', () => {
+      function App(props) {
+        let A;
+        if (props.loadA) {
+          useState(0);
+        } else {
+          A = '[not loaded]';
+        }
+
+        return <Text text={`A: ${A}`} />;
+      }
+
+      ReactNoop.render(<App loadA={false} />);
+      expect(Scheduler).toFlushAndYield(['A: [not loaded]']);
+      expect(ReactNoop.getChildren()).toEqual([span('A: [not loaded]')]);
+
+      ReactNoop.render(<App loadA={true} />);
+      expect(() => {
+        if (gate(flags => flags.enableThrowOnMountForHookMismatch)) {
+          expect(Scheduler).toFlushAndThrow(
+            'Rendered more hooks than during the previous render.',
+          );
+        } else {
+          expect(Scheduler).toFlushAndYield(['A: undefined']);
+        }
+      }).toErrorDev([
+        'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'This will lead to bugs and errors if not fixed. For more information, ' +
+          'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+          '   Previous render            Next render\n' +
+          '   ------------------------------------------------------\n' +
+          '1. undefined                  useState\n' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
+          '    in App (at **)',
+      ]);
+    });
+
     it('unmount state', () => {
       let updateA;
       let updateB;
@@ -3887,6 +3924,132 @@ describe('ReactHooksWithNoopRenderer', () => {
       );
     });
 
+    it('unmount last state', () => {
+      function App(props) {
+        let A;
+        if (props.loadA) {
+          useState(0);
+        } else {
+          A = '[not loaded]';
+        }
+
+        return <Text text={`A: ${A}`} />;
+      }
+
+      ReactNoop.render(<App loadA={true} />);
+      expect(Scheduler).toFlushAndYield(['A: undefined']);
+      expect(ReactNoop.getChildren()).toEqual([span('A: undefined')]);
+      ReactNoop.render(<App loadA={false} />);
+
+      expect(() => {
+        // We don't throw because it would be noisy and require an additional prod check.
+        expect(Scheduler).not.toFlushAndThrow(
+          'Rendered fewer hooks than expected. This may be caused by an ' +
+            'accidental early return statement.',
+        );
+      }).toErrorDev([
+        'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'This will lead to bugs and errors if not fixed. For more information, ' +
+          'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+          '   Previous render            Next render\n' +
+          '   ------------------------------------------------------\n' +
+          '1. useState                   undefined\n' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
+          '    in App (at **)',
+      ]);
+    });
+
+    it('mount effect', () => {
+      function App(props) {
+        if (props.showMore) {
+          useEffect(() => {
+            Scheduler.unstable_yieldValue('Mount A');
+            return () => {
+              Scheduler.unstable_yieldValue('Unmount A');
+            };
+          }, []);
+        }
+
+        return null;
+      }
+
+      ReactNoop.render(<App showMore={false} />);
+      expect(Scheduler).toFlushAndYield([]);
+
+      act(() => {
+        ReactNoop.render(<App showMore={true} />);
+
+        if (gate(flags => flags.enableThrowOnMountForHookMismatch)) {
+          expect(() => {
+            expect(Scheduler).toFlushAndThrow(
+              'Rendered more hooks than during the previous render.',
+            );
+          }).toErrorDev([
+            'Warning: React has detected a change in the order of Hooks called by App. ' +
+              'This will lead to bugs and errors if not fixed. For more information, ' +
+              'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+              '   Previous render            Next render\n' +
+              '   ------------------------------------------------------\n' +
+              '1. undefined                  useEffect\n' +
+              '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
+              '    in App (at **)',
+          ]);
+        } else {
+          expect(() => {
+            expect(Scheduler).toFlushAndYield(['Mount A']);
+          }).toErrorDev([
+            'Warning: React has detected a change in the order of Hooks called by App. ' +
+              'This will lead to bugs and errors if not fixed. For more information, ' +
+              'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+              '   Previous render            Next render\n' +
+              '   ------------------------------------------------------\n' +
+              '1. undefined                  useEffect\n' +
+              '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
+              '    in App (at **)',
+
+            'Warning: Internal React error: Expected static flag was missing. Please notify the React team.\n' +
+              '    in App (at **)',
+          ]);
+        }
+      });
+    });
+
+    it('unmount effect', () => {
+      function App(props) {
+        if (props.showMore) {
+          useEffect(() => {
+            Scheduler.unstable_yieldValue('Mount A');
+            return () => {
+              Scheduler.unstable_yieldValue('Unmount A');
+            };
+          }, []);
+        }
+
+        return null;
+      }
+
+      ReactNoop.render(<App showMore={true} />);
+      expect(Scheduler).toFlushAndYield(['Mount A']);
+
+      ReactNoop.render(<App loadA={false} />);
+      expect(() => {
+        // We don't throw because it would be noisy and require an additional prod check.
+        expect(Scheduler).not.toFlushAndThrow(
+          'Rendered fewer hooks than expected. This may be caused by an ' +
+            'accidental early return statement.',
+        );
+      }).toErrorDev([
+        'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'This will lead to bugs and errors if not fixed. For more information, ' +
+          'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+          '   Previous render            Next render\n' +
+          '   ------------------------------------------------------\n' +
+          '1. useEffect                  undefined\n' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
+          '    in App (at **)',
+      ]);
+    });
+
     it('unmount effects', () => {
       function App(props) {
         useEffect(() => {
@@ -3920,9 +4083,9 @@ describe('ReactHooksWithNoopRenderer', () => {
       act(() => {
         ReactNoop.render(<App showMore={true} />);
         expect(() => {
-          expect(() => {
-            expect(Scheduler).toFlushAndYield([]);
-          }).toThrow('Rendered more hooks than during the previous render');
+          expect(Scheduler).toFlushAndThrow(
+            'Rendered more hooks than during the previous render',
+          );
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +

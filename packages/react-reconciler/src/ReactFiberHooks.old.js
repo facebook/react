@@ -117,6 +117,7 @@ import {
 } from './ReactFiberConcurrentUpdates.old';
 import {getTreeId} from './ReactFiberTreeContext.old';
 import {now} from './Scheduler';
+import {enableThrowOnMountForHookMismatch} from 'shared/ReactFeatureFlags';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -240,11 +241,18 @@ function updateHookTypesDev() {
   if (__DEV__) {
     const hookName = ((currentHookNameInDev: any): HookType);
 
+    hookTypesUpdateIndexDev++;
     if (hookTypesDev !== null) {
-      hookTypesUpdateIndexDev++;
       if (hookTypesDev[hookTypesUpdateIndexDev] !== hookName) {
-        warnOnHookMismatchInDev(hookName);
+        warnOnHookMismatchInDev(
+          hookName,
+          hookTypesUpdateIndexDev,
+          hookTypesDev,
+        );
       }
+    } else {
+      // Going from no hooks -> some hooks.
+      warnOnHookMismatchInDev(hookName, hookTypesUpdateIndexDev, []);
     }
   }
 }
@@ -264,22 +272,45 @@ function checkDepsAreArrayDev(deps: mixed) {
   }
 }
 
-function warnOnHookMismatchInDev(currentHookName: HookType) {
+function warnOnHookMismatchInDev(
+  currentHookName: ?HookType,
+  currentHookIndex: number,
+  expectedHookNames: Array<HookType>,
+) {
   if (__DEV__) {
     const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
     if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
       didWarnAboutMismatchedHooksForComponent.add(componentName);
 
-      if (hookTypesDev !== null) {
-        let table = '';
+      let table = '';
 
-        const secondColumnStart = 30;
+      const secondColumnStart = 30;
 
-        for (let i = 0; i <= ((hookTypesUpdateIndexDev: any): number); i++) {
-          const oldHookName = hookTypesDev[i];
+      if (currentHookIndex === -1 && expectedHookNames.length > 0) {
+        // When going from some hooks to no hooks, currentHookIndex === -1,
+        // so we need to print all of the expected hooks going to undefined.
+        for (let i = 0; i <= expectedHookNames.length - 1; i++) {
+          const oldHookName = expectedHookNames[i];
+          const newHookName = 'undefined';
+
+          let row = `${i + 1}. ${oldHookName}`;
+
+          // Extra space so second column lines up
+          // lol @ IE not supporting String#repeat
+          while (row.length < secondColumnStart) {
+            row += ' ';
+          }
+
+          row += newHookName + '\n';
+
+          table += row;
+        }
+      } else {
+        for (let i = 0; i <= currentHookIndex; i++) {
+          const oldHookName = expectedHookNames[i];
           const newHookName =
             i === ((hookTypesUpdateIndexDev: any): number)
-              ? currentHookName
+              ? currentHookName || 'undefined'
               : oldHookName;
 
           let row = `${i + 1}. ${oldHookName}`;
@@ -294,19 +325,19 @@ function warnOnHookMismatchInDev(currentHookName: HookType) {
 
           table += row;
         }
-
-        console.error(
-          'React has detected a change in the order of Hooks called by %s. ' +
-            'This will lead to bugs and errors if not fixed. ' +
-            'For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
-            '   Previous render            Next render\n' +
-            '   ------------------------------------------------------\n' +
-            '%s' +
-            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n',
-          componentName,
-          table,
-        );
       }
+
+      console.error(
+        'React has detected a change in the order of Hooks called by %s. ' +
+          'This will lead to bugs and errors if not fixed. ' +
+          'For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+          '   Previous render            Next render\n' +
+          '   ------------------------------------------------------\n' +
+          '%s' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n',
+        componentName,
+        table,
+      );
     }
   }
 }
@@ -382,9 +413,8 @@ export function renderWithHooks<Props, SecondArg>(
 
   if (__DEV__) {
     hookTypesDev =
-      current !== null
-        ? ((current._debugHookTypes: any): Array<HookType>)
-        : null;
+      current !== null ? ((current._debugHookTypes: any): Array<HookType>) : [];
+
     hookTypesUpdateIndexDev = -1;
     // Used for hot reloading:
     ignorePreviousDependencies =
@@ -402,31 +432,44 @@ export function renderWithHooks<Props, SecondArg>(
   // didScheduleRenderPhaseUpdate = false;
   // localIdCounter = 0;
 
-  // TODO Warn if no hooks are used at all during mount, then some are used during update.
-  // Currently we will identify the update render as a mount because memoizedState === null.
-  // This is tricky because it's valid for certain types of components (e.g. React.lazy)
-
-  // Using memoizedState to differentiate between mount/update only works if at least one stateful hook is used.
-  // Non-stateful hooks (e.g. context) don't get added to memoizedState,
-  // so memoizedState would be null during updates and mounts.
   if (__DEV__) {
-    if (current !== null && current.memoizedState !== null) {
-      ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
-    } else if (hookTypesDev !== null) {
-      // This dispatcher handles an edge case where a component is updating,
-      // but no stateful hooks have been used.
-      // We want to match the production code behavior (which will use HooksDispatcherOnMount),
-      // but with the extra DEV validation to ensure hooks ordering hasn't changed.
-      // This dispatcher does that.
-      ReactCurrentDispatcher.current = HooksDispatcherOnMountWithHookTypesInDEV;
+    if (current !== null) {
+      if (enableThrowOnMountForHookMismatch && current.mode & ConcurrentMode) {
+        ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
+      } else {
+        // In Legacy Mode, memoizedState is sometimes null even during the
+        // initial mount because of an edge case with React.lazy. Hence the
+        // excessively convoluted logic in this branch.
+        //
+        // TODO: Delete this branch
+        //
+        // Using memoizedState to differentiate between mount/update only works if at least one stateful hook is used.
+        // Non-stateful hooks (e.g. context) don't get added to memoizedState,
+        // so memoizedState would be null during updates and mounts.
+        if (current.memoizedState !== null) {
+          ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
+        } else if (hookTypesDev !== null) {
+          // This dispatcher handles an edge case where a component is updating,
+          // but no stateful hooks have been used.
+          // We want to match the production code behavior (which will use HooksDispatcherOnMount),
+          // but with the extra DEV validation to ensure hooks ordering hasn't changed.
+          // This dispatcher does that.
+          ReactCurrentDispatcher.current = HooksDispatcherOnMountWithHookTypesInDEV;
+        } else {
+          ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV;
+        }
+      }
     } else {
       ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV;
     }
   } else {
     ReactCurrentDispatcher.current =
-      current === null || current.memoizedState === null
-        ? HooksDispatcherOnMount
-        : HooksDispatcherOnUpdate;
+      current !== null &&
+      ((enableThrowOnMountForHookMismatch &&
+        (current.mode & ConcurrentMode) !== NoMode) ||
+        current.memoizedState !== null)
+        ? HooksDispatcherOnUpdate
+        : HooksDispatcherOnMount;
   }
 
   let children = Component(props, secondArg);
@@ -478,11 +521,25 @@ export function renderWithHooks<Props, SecondArg>(
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
   if (__DEV__) {
+    if (
+      current !== null &&
+      (current.mode & ConcurrentMode || current.memoizedState !== null) &&
+      hookTypesDev != null &&
+      hookTypesDev.length > 0 &&
+      hookTypesUpdateIndexDev === -1
+    ) {
+      // If we get here and have hookTypesDev, but the update index hasn't incremented,
+      // then none of the previously mounted hooks have been called, and we need to warn.
+      warnOnHookMismatchInDev(undefined, hookTypesUpdateIndexDev, hookTypesDev);
+    }
+
     workInProgress._debugHookTypes = hookTypesDev;
   }
 
   // This check uses currentHook so that it works the same in DEV and prod bundles.
   // hookTypesDev could catch more cases (e.g. context) but only in DEV bundles.
+  // This doesn't catch going from some hooks to no hooks, but that's not worth
+  // the additional check right now.
   const didRenderTooFewHooks =
     currentHook !== null && currentHook.next !== null;
 
