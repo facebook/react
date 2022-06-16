@@ -602,7 +602,7 @@ describe('ReactHooksInspectionIntegration', () => {
         name: 'Memo',
         value: 2,
         subHooks: [],
-      }
+      },
     ]);
   });
 
