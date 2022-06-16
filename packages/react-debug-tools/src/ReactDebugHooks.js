@@ -314,7 +314,7 @@ function useDeferredValue<T>(value: T): T {
   hookLog.push({
     primitive: 'DeferredValue',
     stackError: new Error(),
-    value: hook !== null ? hook.memoizedState[0] : value,
+    value: hook !== null ? hook.memoizedState : value,
   });
   return value;
 }
