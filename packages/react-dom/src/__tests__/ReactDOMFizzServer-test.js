@@ -3497,6 +3497,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  // @gate enableClientRenderFallbackOnTextMismatch
   it('#24384: Suspending should halt hydration warnings but still emit hydration warnings after unsuspending if mismatches are genuine', async () => {
     const makeApp = () => {
       let resolve, resolved;
@@ -3586,6 +3587,7 @@ describe('ReactDOMFizzServer', () => {
     expect(Scheduler).toFlushAndYield([]);
   });
 
+  // @gate enableClientRenderFallbackOnTextMismatch
   it('only warns once on hydration mismatch while within a suspense boundary', async () => {
     const originalConsoleError = console.error;
     const mockError = jest.fn();
@@ -4661,11 +4663,15 @@ describe('ReactDOMFizzServer', () => {
           },
         });
         expect(Scheduler).toFlushAndYield([]);
-        expect(errors).toEqual([
-          'Text content does not match server-rendered HTML.',
-          'Hydration failed because the initial UI does not match what was rendered on the server.',
-          'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-        ]);
+        expect(errors).toEqual(
+          [
+            gate(flags => flags.enableClientRenderFallbackOnTextMismatch)
+              ? 'Text content does not match server-rendered HTML.'
+              : null,
+            'Hydration failed because the initial UI does not match what was rendered on the server.',
+            'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+          ].filter(Boolean),
+        );
         expect(getVisibleChildren(container)).toEqual(
           <title>{['hello1', 'hello2']}</title>,
         );

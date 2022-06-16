@@ -31,6 +31,9 @@ export const enableSymbolFallbackForWWW = false;
 // internal tests need to be updated. The open source behavior is correct.
 export const skipUnmountedBoundaries = true;
 
+// TODO: Finish rolling out in www
+export const enableClientRenderFallbackOnTextMismatch = true;
+
 // TODO: Need to review this code one more time before landing
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 

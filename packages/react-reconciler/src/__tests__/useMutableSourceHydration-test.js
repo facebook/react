@@ -169,6 +169,7 @@ describe('useMutableSourceHydration', () => {
   });
 
   // @gate enableUseMutableSource
+  // @gate enableClientRenderFallbackOnTextMismatch
   it('should detect a tear before hydrating a component', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
