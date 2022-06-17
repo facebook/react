@@ -71,20 +71,26 @@ export function cleanupAfterRender() {
   popDispatcher();
 }
 
-type CrossOriginOption = boolean | 'anonymous' | 'use-credentials';
-type PrefetchDNSOptions = {crossorigin?: CrossOriginOption};
+type CrossOriginOption = boolean | string | 'use-credentials';
+type PrefetchDNSOptions = {crossOrigin?: CrossOriginOption};
 function prefetchDNS(href: string, options?: PrefetchDNSOptions) {
   if (currentResourceMap === null) {
     throw new Error(
       'prefetchDNS was called while currentResourceMap is null. this is a bug in React',
     );
   }
-  const crossorigin =
-    options && options.crossorigin
-      ? options.crossorigin === 'use-credentials'
-        ? CORS_CREDS
-        : CORS_ANON
-      : CORS_NONE;
+  const crossOriginOption = options ? options.crossOrigin : false;
+  let crossorigin;
+  if (crossOriginOption === 'use-credentials') {
+    crossorigin = CORS_CREDS;
+  } else if (
+    typeof crossOriginOption === 'string' ||
+    crossOriginOption === true
+  ) {
+    crossorigin = CORS_ANON;
+  } else {
+    crossorigin = CORS_NONE;
+  }
   const key = href + crossorigin;
   const currentResource = currentResourceMap.get(key);
   if (currentResource) {
@@ -104,14 +110,27 @@ function prefetchDNS(href: string, options?: PrefetchDNSOptions) {
   }
 }
 
-function preconnect(href: string) {
+type PreconnectOptions = {crossOrigin?: CrossOriginOption};
+function preconnect(href: string, options?: PreconnectOptions) {
   if (currentResourceMap === null) {
     throw new Error(
       'preconnect was called while currentResourceMap is null. this is a bug in React',
     );
   }
-  let key = href;
-  let currentResource = currentResourceMap.get(key);
+  const crossOriginOption = options ? options.crossOrigin : false;
+  let crossorigin;
+  if (crossOriginOption === 'use-credentials') {
+    crossorigin = CORS_CREDS;
+  } else if (
+    typeof crossOriginOption === 'string' ||
+    crossOriginOption === true
+  ) {
+    crossorigin = CORS_ANON;
+  } else {
+    crossorigin = CORS_NONE;
+  }
+  const key = href + crossorigin;
+  const currentResource = currentResourceMap.get(key);
   if (currentResource) {
     if (currentResource.priority >= PRECONNECT) {
       return;
@@ -127,7 +146,7 @@ function preconnect(href: string) {
       href,
       flushed: false,
       module: false,
-      crossorigin: CORS_NONE,
+      crossorigin,
       type: '',
     };
     currentResourceMap.set(key, resource);
@@ -135,7 +154,7 @@ function preconnect(href: string) {
 }
 
 type PrefetchAs = 'style' | 'font' | 'script';
-type PrefetchOptions = {as: PrefetchAs};
+type PrefetchOptions = {as: PrefetchAs, crossOrigin?: CrossOriginOption};
 function prefetch(href: string, options: PrefetchOptions) {
   if (currentResourceMap === null) {
     throw new Error(
@@ -159,8 +178,22 @@ function prefetch(href: string, options: PrefetchOptions) {
     default:
       return;
   }
-  let key = href;
-  let currentResource = currentResourceMap.get(key);
+  const crossOriginOption = options.crossOrigin;
+  let crossorigin;
+  if (as === FONT_RESOURCE) {
+    crossorigin = CORS_ANON;
+  } else if (crossOriginOption === 'use-credentials') {
+    crossorigin = CORS_CREDS;
+  } else if (
+    typeof crossOriginOption === 'string' ||
+    crossOriginOption === true
+  ) {
+    crossorigin = CORS_ANON;
+  } else {
+    crossorigin = CORS_NONE;
+  }
+  const key = href + crossorigin;
+  const currentResource = currentResourceMap.get(key);
   if (currentResource) {
     if (currentResource.priority >= PREFETCH) {
       return;
@@ -168,8 +201,6 @@ function prefetch(href: string, options: PrefetchOptions) {
       currentResource.priority = PREFETCH;
       currentResource.as = as;
       currentResource.flushed = false;
-      currentResource.crossorigin =
-        options.as === 'font' ? CORS_ANON : CORS_NONE;
     }
   } else {
     const resource: Resource = {
@@ -178,7 +209,7 @@ function prefetch(href: string, options: PrefetchOptions) {
       href,
       flushed: false,
       module: false,
-      crossorigin: options.as === 'font' ? CORS_ANON : CORS_NONE,
+      crossorigin,
       type: '',
     };
     currentResourceMap.set(key, resource);
@@ -186,7 +217,7 @@ function prefetch(href: string, options: PrefetchOptions) {
 }
 
 type PreloadAs = 'style' | 'font' | 'script';
-type PreloadOptions = {as: PreloadAs};
+type PreloadOptions = {as: PreloadAs, crossOrigin?: CrossOriginOption};
 function preload(href: string, options: PreloadOptions) {
   if (currentResourceMap === null) {
     throw new Error(
@@ -210,8 +241,22 @@ function preload(href: string, options: PreloadOptions) {
     default:
       return;
   }
-  let key = href;
-  let currentResource = currentResourceMap.get(key);
+  const crossOriginOption = options.crossOrigin;
+  let crossorigin;
+  if (as === FONT_RESOURCE) {
+    crossorigin = CORS_ANON;
+  } else if (crossOriginOption === 'use-credentials') {
+    crossorigin = CORS_CREDS;
+  } else if (
+    typeof crossOriginOption === 'string' ||
+    crossOriginOption === true
+  ) {
+    crossorigin = CORS_ANON;
+  } else {
+    crossorigin = CORS_NONE;
+  }
+  const key = href + crossorigin;
+  const currentResource = currentResourceMap.get(key);
   if (currentResource) {
     if (currentResource.priority >= PRELOAD) {
       return;
@@ -219,7 +264,6 @@ function preload(href: string, options: PreloadOptions) {
       currentResource.priority = PRELOAD;
       currentResource.as = as;
       currentResource.flushed = false;
-      currentResource.crossorigin = CORS_NONE;
     }
   } else {
     const resource: Resource = {
@@ -228,7 +272,7 @@ function preload(href: string, options: PreloadOptions) {
       href,
       flushed: false,
       module: false,
-      crossorigin: CORS_NONE,
+      crossorigin,
       type: '',
     };
     currentResourceMap.set(key, resource);
@@ -236,7 +280,7 @@ function preload(href: string, options: PreloadOptions) {
 }
 
 type PreinitAs = 'style' | 'script';
-type PreinitOptions = {as: PreinitAs};
+type PreinitOptions = {as: PreinitAs, crossOrigin?: CrossOriginOption};
 function preinit(href: string, options: PreinitOptions) {
   if (__DEV__) {
     if (!options || (options.as !== 'style' && options.as !== 'script')) {
@@ -269,8 +313,20 @@ function preinit(href: string, options: PreinitOptions) {
     default:
       return;
   }
-  let key = href;
-  let currentResource = currentResourceMap.get(key);
+  const crossOriginOption = options.crossOrigin;
+  let crossorigin;
+  if (crossOriginOption === 'use-credentials') {
+    crossorigin = CORS_CREDS;
+  } else if (
+    typeof crossOriginOption === 'string' ||
+    crossOriginOption === true
+  ) {
+    crossorigin = CORS_ANON;
+  } else {
+    crossorigin = CORS_NONE;
+  }
+  const key = href + crossorigin;
+  const currentResource = currentResourceMap.get(key);
   if (currentResource) {
     if (currentResource.priority >= PREINIT) {
       return;
@@ -278,7 +334,6 @@ function preinit(href: string, options: PreinitOptions) {
       currentResource.priority = PREINIT;
       currentResource.as = as;
       currentResource.flushed = false;
-      currentResource.crossorigin = CORS_NONE;
     }
   } else {
     const resource: Resource = {
@@ -287,7 +342,7 @@ function preinit(href: string, options: PreinitOptions) {
       href,
       flushed: false,
       module: false,
-      crossorigin: CORS_NONE,
+      crossorigin,
       type: '',
     };
     currentResourceMap.set(key, resource);
@@ -304,19 +359,27 @@ export function resourcesFromLink(props: Object): boolean {
     return false;
   }
 
+  let crossOrigin = props.hasOwnProperty('crossOrigin')
+    ? props.crossOrigin
+    : false;
+
   switch (rel) {
     case 'dns-prefetch': {
-      prefetchDNS(href);
+      crossOrigin == null || crossOrigin === false
+        ? prefetchDNS(href)
+        : prefetchDNS(href, {crossOrigin});
       return true;
     }
     case 'preconnect': {
-      preconnect(href);
+      crossOrigin == null || crossOrigin === false
+        ? preconnect(href)
+        : preconnect(href, {crossOrigin});
       return true;
     }
     case 'prefetch': {
       let as = props.as;
       if (as === 'style' || as === 'script' || as === 'font') {
-        prefetch(href, {as});
+        prefetch(href, {as, crossOrigin});
         return true;
       }
       return false;
@@ -324,21 +387,21 @@ export function resourcesFromLink(props: Object): boolean {
     case 'preload': {
       let as = props.as;
       if (as === 'style' || as === 'script' || as === 'font') {
-        preload(href, {as});
+        preload(href, {as, crossOrigin});
         return true;
       }
       return false;
     }
     case 'stylesheet': {
-      preload(href, {as: 'style'});
+      preload(href, {as: 'style', crossOrigin});
       return false;
     }
     case 'script': {
-      preload(href, {as: 'script'});
+      preload(href, {as: 'script', crossOrigin});
       return false;
     }
     case 'font': {
-      preload(href, {as: 'font'});
+      preload(href, {as: 'font', crossOrigin});
       return false;
     }
     default:
@@ -353,7 +416,11 @@ export function resourcesFromScript(props: Object) {
     return;
   }
 
-  preload(src, {as: 'script'});
+  let crossOrigin = props.hasOwnProperty('crossOrigin')
+    ? props.crossOrigin
+    : false;
+
+  preload(src, {as: 'script', crossOrigin});
 }
 
 const Dispatcher = {

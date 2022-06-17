@@ -94,11 +94,18 @@ describe('ReactDOMServerPreload', () => {
   function expectLinks(toBeLinks) {
     let allLinksInDoc = Array.from(document.getElementsByTagName('link'));
     let mappedLinks = allLinksInDoc.map(docLink => {
-      return [
-        docLink.rel,
-        docLink.getAttribute('href'),
-        docLink.getAttribute('as'),
-      ];
+      const descriptor = [docLink.rel, docLink.getAttribute('href')];
+      if (docLink.hasAttribute('as')) {
+        descriptor.push(docLink.getAttribute('as'));
+      }
+      if (docLink.hasAttribute('crossorigin')) {
+        descriptor.push(
+          docLink.getAttribute('crossorigin') === 'use-credentials'
+            ? 'use-credentials'
+            : 'anonymous',
+        );
+      }
+      return descriptor;
     });
     expect(mappedLinks).toEqual(toBeLinks);
   }
@@ -109,6 +116,13 @@ describe('ReactDOMServerPreload', () => {
       script.tagName.toLowerCase(),
       script.getAttribute('data-src'),
     ];
+    if (script.hasAttribute('crossorigin')) {
+      expected.push(
+        script.getAttribute('crossorigin') === 'use-credentials'
+          ? 'use-credentials'
+          : 'anonymous',
+      );
+    }
     expect(expected).toEqual(toBeScript);
   }
 
@@ -160,15 +174,27 @@ describe('ReactDOMServerPreload', () => {
         (CSPnonce === null || node.getAttribute('nonce') === CSPnonce)
       ) {
         const script = document.createElement('script');
-        let originalSrc = node.getAttribute('src');
-        if (originalSrc) {
-          script.dataset.src = originalSrc;
+        if (node.hasAttribute('src')) {
+          script.setAttribute('data-src', node.getAttribute('src'));
+        }
+        if (node.hasAttribute('crossorigin')) {
+          script.setAttribute('crossorigin', node.getAttribute('crossorigin'));
+        }
+        if (node.hasAttribute('async')) {
+          script.setAttribute('async', node.getAttribute('async'));
         }
         script.textContent = node.textContent;
         fakeBody.removeChild(node);
         container.appendChild(script);
       } else {
         container.appendChild(node);
+      }
+    }
+    let scripts = document.getElementsByTagName('script');
+    for (let script of scripts) {
+      let srcAttr = script.getAttribute('src');
+      if (srcAttr != null) {
+        script.dataset.src = srcAttr;
       }
     }
   }
@@ -403,7 +429,7 @@ describe('ReactDOMServerPreload', () => {
       pipe(writable);
     });
     expectLinks([
-      ['stylesheet', 'foo', null],
+      ['stylesheet', 'foo'],
       ['preload', 'bar', 'style'],
     ]);
 
@@ -411,9 +437,9 @@ describe('ReactDOMServerPreload', () => {
       resolveText('bar');
     });
     expectLinks([
-      ['stylesheet', 'foo', null],
+      ['stylesheet', 'foo'],
       ['preload', 'bar', 'style'],
-      ['stylesheet', 'bar', null],
+      ['stylesheet', 'bar'],
     ]);
   });
 
@@ -438,12 +464,12 @@ describe('ReactDOMServerPreload', () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
       pipe(writable);
     });
-    expectLinks([['stylesheet', 'foo', null]]);
+    expectLinks([['stylesheet', 'foo']]);
 
     await act(async () => {
       resolveText('foo');
     });
-    expectLinks([['stylesheet', 'foo', null]]);
+    expectLinks([['stylesheet', 'foo']]);
   });
 
   it('supports prefetching DNS', async () => {
@@ -457,7 +483,7 @@ describe('ReactDOMServerPreload', () => {
       pipe(writable);
     });
 
-    expectLinks([['dns-prefetch', 'foo', null]]);
+    expectLinks([['dns-prefetch', 'foo']]);
   });
 
   it('supports preconnecting', async () => {
@@ -471,7 +497,7 @@ describe('ReactDOMServerPreload', () => {
       pipe(writable);
     });
 
-    expectLinks([['preconnect', 'foo', null]]);
+    expectLinks([['preconnect', 'foo']]);
   });
 
   it('supports prefetching', async () => {
@@ -488,7 +514,7 @@ describe('ReactDOMServerPreload', () => {
     });
 
     expectLinks([
-      ['prefetch', 'foo', 'font'],
+      ['prefetch', 'foo', 'font', 'anonymous'],
       ['prefetch', 'bar', 'style'],
       ['prefetch', 'baz', 'script'],
     ]);
@@ -508,7 +534,7 @@ describe('ReactDOMServerPreload', () => {
     });
 
     expectLinks([
-      ['preload', 'foo', 'font'],
+      ['preload', 'foo', 'font', 'anonymous'],
       ['preload', 'bar', 'style'],
       ['preload', 'baz', 'script'],
     ]);
@@ -526,7 +552,7 @@ describe('ReactDOMServerPreload', () => {
       pipe(writable);
     });
 
-    expectLinks([['stylesheet', 'foo', null]]);
+    expectLinks([['stylesheet', 'foo']]);
     expectScript('bar', ['script', 'bar']);
   });
 
@@ -557,24 +583,24 @@ describe('ReactDOMServerPreload', () => {
     expectLinks([
       // We don't start with the rel foo because it is not a resource and is emitted withe content
       // We start with a list of resources in order that they were discovered
-      ['dns-prefetch', 'dns-prefetch', null],
-      ['preconnect', 'preconnect', null],
+      ['dns-prefetch', 'dns-prefetch'],
+      ['preconnect', 'preconnect'],
       ['prefetch', 'prefetchstyle', 'style'],
       ['prefetch', 'prefetchscript', 'script'],
-      ['prefetch', 'prefetchfont', 'font'],
+      ['prefetch', 'prefetchfont', 'font', 'anonymous'],
       ['preload', 'preloadstyle', 'style'],
       ['preload', 'preloadscript', 'script'],
-      ['preload', 'preloadfont', 'font'],
+      ['preload', 'preloadfont', 'font', 'anonymous'],
       // We Also get resources that were identified when we referred to an external resource directly
       ['preload', 'stylesheet', 'style'],
-      ['preload', 'font', 'font'],
+      ['preload', 'font', 'font', 'anonymous'],
       // Finally we get links that were emitted as part of the content. Notice that for hint links
       // like preconnect or preload we omit them here because they are fully represented by the resource
       // emitted above. For direct resource references like stylesheets and fonts we emitted a preload but
       // we still also need the resource as well
-      ['foo', 'this link is not a resource', null],
-      ['stylesheet', 'stylesheet', null],
-      ['font', 'font', null],
+      ['foo', 'this link is not a resource'],
+      ['stylesheet', 'stylesheet'],
+      ['font', 'font'],
     ]);
   });
 
@@ -596,7 +622,332 @@ describe('ReactDOMServerPreload', () => {
     expectLinks([
       // The preload link appearas first because it was emitted before content
       ['preload', 'bar', 'script'],
-      ['next', 'foo', null],
+      ['next', 'foo'],
     ]);
+  });
+
+  for (let mode of ['dns-prefetch', 'preconnect', 'prefetch', 'preload']) {
+    let needsAs = mode === 'prefetch' || mode === 'preload';
+    if (needsAs) {
+      for (let as of ['style', 'script', 'font']) {
+        it(`supports crossorigin on ${mode} links as ${as}`, async () => {
+          function App() {
+            return (
+              <div>
+                <link rel={mode} as={as} href="foo0" />
+                <link rel={mode} as={as} href="foo1" crossOrigin="" />
+                <link rel={mode} as={as} href="foo2" crossOrigin="false" />
+                <link
+                  rel={mode}
+                  as={as}
+                  href="foo3"
+                  crossOrigin="some-random-value"
+                />
+                <link rel={mode} as={as} href="foo4" crossOrigin="anonymous" />
+                <link
+                  rel={mode}
+                  as={as}
+                  href="foo5"
+                  crossOrigin="use-credentials"
+                />
+              </div>
+            );
+          }
+
+          await act(async () => {
+            const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+            pipe(writable);
+          });
+
+          if (as === 'font') {
+            expectLinks([
+              [mode, 'foo0', as, 'anonymous'],
+              [mode, 'foo1', as, 'anonymous'],
+              [mode, 'foo2', as, 'anonymous'],
+              [mode, 'foo3', as, 'anonymous'],
+              [mode, 'foo4', as, 'anonymous'],
+              [mode, 'foo5', as, 'anonymous'],
+            ]);
+          } else {
+            expectLinks([
+              [mode, 'foo0', as],
+              [mode, 'foo1', as, 'anonymous'],
+              [mode, 'foo2', as, 'anonymous'],
+              [mode, 'foo3', as, 'anonymous'],
+              [mode, 'foo4', as, 'anonymous'],
+              [mode, 'foo5', as, 'use-credentials'],
+            ]);
+          }
+        });
+      }
+    } else {
+      it(`supports crossorigin on ${mode} links`, async () => {
+        function App() {
+          return (
+            <div>
+              <link rel={mode} href="foo0" />
+              <link rel={mode} href="foo1" crossOrigin="" />
+              <link rel={mode} href="foo2" crossOrigin="false" />
+              <link rel={mode} href="foo3" crossOrigin="some-random-value" />
+              <link rel={mode} href="foo4" crossOrigin="anonymous" />
+              <link rel={mode} href="foo5" crossOrigin="use-credentials" />
+            </div>
+          );
+        }
+
+        await act(async () => {
+          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+          pipe(writable);
+        });
+
+        expectLinks([
+          [mode, 'foo0'],
+          [mode, 'foo1', 'anonymous'],
+          [mode, 'foo2', 'anonymous'],
+          [mode, 'foo3', 'anonymous'],
+          [mode, 'foo4', 'anonymous'],
+          [mode, 'foo5', 'use-credentials'],
+        ]);
+      });
+    }
+
+    if (needsAs) {
+      for (let as of ['style', 'script', 'font']) {
+        let method = mode === 'dns-prefetch' ? 'prefetchDNS' : mode;
+        it(`supports crossorigin with ReactDOM.${method} as ${as}`, async () => {
+          function App() {
+            let options = {as};
+            ReactDOM[method]('foo0', {as});
+            ReactDOM[method]('foo1', {as, crossOrigin: undefined});
+            ReactDOM[method]('foo2', {as, crossOrigin: null});
+            ReactDOM[method]('foo3', {as, crossOrigin: false});
+            ReactDOM[method]('foo4', {as, crossOrigin: true});
+            ReactDOM[method]('foo5', {as, crossOrigin: ''});
+            ReactDOM[method]('foo6', {as, crossOrigin: 'somevalue'});
+            ReactDOM[method]('foo7', {as, crossOrigin: 'anonymous'});
+            ReactDOM[method]('foo8', {
+              as,
+              crossOrigin: 'use-credentials',
+            });
+            return <div>hello</div>;
+          }
+
+          await act(async () => {
+            const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+            pipe(writable);
+          });
+
+          if (as === 'font') {
+            expectLinks([
+              [mode, 'foo0', as, 'anonymous'],
+              [mode, 'foo1', as, 'anonymous'],
+              [mode, 'foo2', as, 'anonymous'],
+              [mode, 'foo3', as, 'anonymous'],
+              [mode, 'foo4', as, 'anonymous'],
+              [mode, 'foo5', as, 'anonymous'],
+              [mode, 'foo6', as, 'anonymous'],
+              [mode, 'foo7', as, 'anonymous'],
+              [mode, 'foo8', as, 'anonymous'],
+            ]);
+          } else {
+            expectLinks([
+              [mode, 'foo0', as],
+              [mode, 'foo1', as],
+              [mode, 'foo2', as],
+              [mode, 'foo3', as],
+              [mode, 'foo4', as, 'anonymous'],
+              [mode, 'foo5', as, 'anonymous'],
+              [mode, 'foo6', as, 'anonymous'],
+              [mode, 'foo7', as, 'anonymous'],
+              [mode, 'foo8', as, 'use-credentials'],
+            ]);
+          }
+        });
+      }
+    } else {
+      let method = mode === 'dns-prefetch' ? 'prefetchDNS' : mode;
+      it(`supports crossorigin with ReactDOM.${method}`, async () => {
+        function App() {
+          ReactDOM[method]('foo0');
+          ReactDOM[method]('foo1', {});
+          ReactDOM[method]('foo2', {crossOrigin: undefined});
+          ReactDOM[method]('foo3', {crossOrigin: null});
+          ReactDOM[method]('foo4', {crossOrigin: false});
+          ReactDOM[method]('foo5', {crossOrigin: true});
+          ReactDOM[method]('foo6', {crossOrigin: ''});
+          ReactDOM[method]('foo7', {crossOrigin: 'somevalue'});
+          ReactDOM[method]('foo8', {crossOrigin: 'anonymous'});
+          ReactDOM[method]('foo9', {
+            crossOrigin: 'use-credentials',
+          });
+          return <div>hello</div>;
+        }
+
+        await act(async () => {
+          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+          pipe(writable);
+        });
+
+        expectLinks([
+          [mode, 'foo0'],
+          [mode, 'foo1'],
+          [mode, 'foo2'],
+          [mode, 'foo3'],
+          [mode, 'foo4'],
+          [mode, 'foo5', 'anonymous'],
+          [mode, 'foo6', 'anonymous'],
+          [mode, 'foo7', 'anonymous'],
+          [mode, 'foo8', 'anonymous'],
+          [mode, 'foo9', 'use-credentials'],
+        ]);
+      });
+    }
+  }
+
+  for (let relType of ['stylesheet', 'font']) {
+    it(`supports crossorigin on ${relType} links`, async () => {
+      let as = relType === 'stylesheet' ? 'style' : relType;
+      function App() {
+        return (
+          <div>
+            <link rel={relType} href="foo0" />
+            <link rel={relType} href="foo1" crossOrigin="" />
+            <link rel={relType} href="foo2" crossOrigin="false" />
+            <link rel={relType} href="foo3" crossOrigin="some-random-value" />
+            <link rel={relType} href="foo4" crossOrigin="anonymous" />
+            <link rel={relType} href="foo5" crossOrigin="use-credentials" />
+          </div>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      if (relType === 'font') {
+        expectLinks([
+          ['preload', 'foo0', as, 'anonymous'],
+          ['preload', 'foo1', as, 'anonymous'],
+          ['preload', 'foo2', as, 'anonymous'],
+          ['preload', 'foo3', as, 'anonymous'],
+          ['preload', 'foo4', as, 'anonymous'],
+          ['preload', 'foo5', as, 'anonymous'],
+          [relType, 'foo0'],
+          [relType, 'foo1', 'anonymous'],
+          [relType, 'foo2', 'anonymous'],
+          [relType, 'foo3', 'anonymous'],
+          [relType, 'foo4', 'anonymous'],
+          [relType, 'foo5', 'use-credentials'],
+        ]);
+      } else {
+        expectLinks([
+          ['preload', 'foo0', as],
+          ['preload', 'foo1', as, 'anonymous'],
+          ['preload', 'foo2', as, 'anonymous'],
+          ['preload', 'foo3', as, 'anonymous'],
+          ['preload', 'foo4', as, 'anonymous'],
+          ['preload', 'foo5', as, 'use-credentials'],
+          [relType, 'foo0'],
+          [relType, 'foo1', 'anonymous'],
+          [relType, 'foo2', 'anonymous'],
+          [relType, 'foo3', 'anonymous'],
+          [relType, 'foo4', 'anonymous'],
+          [relType, 'foo5', 'use-credentials'],
+        ]);
+      }
+    });
+  }
+
+  it(`supports crossorigin on scripts`, async () => {
+    const as = 'script';
+    function App() {
+      return (
+        <div>
+          <script src="foo0" />
+          <script src="foo1" crossOrigin="" />
+          <script src="foo2" crossOrigin="false" />
+          <script src="foo3" crossOrigin="some-random-value" />
+          <script src="foo4" crossOrigin="anonymous" />
+          <script src="foo5" crossOrigin="use-credentials" />
+        </div>
+      );
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expectLinks([
+      ['preload', 'foo0', as],
+      ['preload', 'foo1', as, 'anonymous'],
+      ['preload', 'foo2', as, 'anonymous'],
+      ['preload', 'foo3', as, 'anonymous'],
+      ['preload', 'foo4', as, 'anonymous'],
+      ['preload', 'foo5', as, 'use-credentials'],
+    ]);
+  });
+
+  it('supports crossorigin on ReactDOM.preinit for style', async () => {
+    function App() {
+      ReactDOM.preinit('foo0', {as: 'style'});
+      ReactDOM.preinit('foo1', {as: 'style', crossOrigin: undefined});
+      ReactDOM.preinit('foo2', {as: 'style', crossOrigin: null});
+      ReactDOM.preinit('foo3', {as: 'style', crossOrigin: false});
+      ReactDOM.preinit('foo4', {as: 'style', crossOrigin: true});
+      ReactDOM.preinit('foo5', {as: 'style', crossOrigin: ''});
+      ReactDOM.preinit('foo6', {as: 'style', crossOrigin: 'somevalue'});
+      ReactDOM.preinit('foo7', {as: 'style', crossOrigin: 'anonymous'});
+      ReactDOM.preinit('foo8', {as: 'style', crossOrigin: 'use-credentials'});
+      return <div>hello</div>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expectLinks([
+      ['stylesheet', 'foo0'],
+      ['stylesheet', 'foo1'],
+      ['stylesheet', 'foo2'],
+      ['stylesheet', 'foo3'],
+      ['stylesheet', 'foo4', 'anonymous'],
+      ['stylesheet', 'foo5', 'anonymous'],
+      ['stylesheet', 'foo6', 'anonymous'],
+      ['stylesheet', 'foo7', 'anonymous'],
+      ['stylesheet', 'foo8', 'use-credentials'],
+    ]);
+  });
+
+  it('supports crossorigin on ReactDOM.preinit for script', async () => {
+    function App() {
+      ReactDOM.preinit('foo0', {as: 'script'});
+      ReactDOM.preinit('foo1', {as: 'script', crossOrigin: undefined});
+      ReactDOM.preinit('foo2', {as: 'script', crossOrigin: null});
+      ReactDOM.preinit('foo3', {as: 'script', crossOrigin: false});
+      ReactDOM.preinit('foo4', {as: 'script', crossOrigin: true});
+      ReactDOM.preinit('foo5', {as: 'script', crossOrigin: ''});
+      ReactDOM.preinit('foo6', {as: 'script', crossOrigin: 'somevalue'});
+      ReactDOM.preinit('foo7', {as: 'script', crossOrigin: 'anonymous'});
+      ReactDOM.preinit('foo8', {as: 'script', crossOrigin: 'use-credentials'});
+      return <div>hello</div>;
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expectScript('foo0', ['script', 'foo0']);
+    expectScript('foo1', ['script', 'foo1']);
+    expectScript('foo2', ['script', 'foo2']);
+    expectScript('foo3', ['script', 'foo3']);
+    expectScript('foo4', ['script', 'foo4', 'anonymous']);
+    expectScript('foo5', ['script', 'foo5', 'anonymous']);
+    expectScript('foo6', ['script', 'foo6', 'anonymous']);
+    expectScript('foo7', ['script', 'foo7', 'anonymous']);
+    expectScript('foo8', ['script', 'foo8', 'use-credentials']);
   });
 });

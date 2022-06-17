@@ -75,6 +75,9 @@ import {
   STYLE_RESOURCE,
   SCRIPT_RESOURCE,
   FONT_RESOURCE,
+  CORS_NONE,
+  CORS_ANON,
+  CORS_CREDS,
 } from './ReactDOMFloatServer';
 
 // Used to distinguish these contexts from ones used in other renderers.
@@ -2217,15 +2220,21 @@ const preconnectStart = stringToPrecomputedChunk(
 );
 const prefetchStart = stringToPrecomputedChunk('<link rel="prefetch"');
 const preloadStart = stringToPrecomputedChunk('<link rel="preload"');
+
 const preAsStyle = stringToPrecomputedChunk(' as="style" href="');
 const preAsScript = stringToPrecomputedChunk(' as="script" href="');
 const preAsFont = stringToPrecomputedChunk(' as="font" href="');
-const preEnd = stringToPrecomputedChunk('">');
+
+const crossOriginAnon = stringToPrecomputedChunk('" crossorigin="');
+const crossOriginCredentials = stringToPrecomputedChunk(
+  '" crossorigin="use-credentials',
+);
+
+const linkEnd = stringToPrecomputedChunk('">');
 
 const initStyleStart = stringToPrecomputedChunk(
   '<link rel="stylesheet" href="',
 );
-const initStyleEnd = stringToPrecomputedChunk('">');
 
 const initScriptStart = stringToPrecomputedChunk('<script src="');
 const initScriptEnd = stringToPrecomputedChunk('" async=""></script>');
@@ -2238,7 +2247,12 @@ function writeHostResource(destination: Destination, resource: Resource) {
         destination,
         stringToChunk(escapeTextForBrowser(resource.href)),
       );
-      writeChunk(destination, preEnd);
+      if (resource.crossorigin === CORS_ANON) {
+        writeChunk(destination, crossOriginAnon);
+      } else if (resource.crossorigin === CORS_CREDS) {
+        writeChunk(destination, crossOriginCredentials);
+      }
+      writeChunk(destination, linkEnd);
       return;
     }
     case PRECONNECT: {
@@ -2247,7 +2261,12 @@ function writeHostResource(destination: Destination, resource: Resource) {
         destination,
         stringToChunk(escapeTextForBrowser(resource.href)),
       );
-      writeChunk(destination, preEnd);
+      if (resource.crossorigin === CORS_ANON) {
+        writeChunk(destination, crossOriginAnon);
+      } else if (resource.crossorigin === CORS_CREDS) {
+        writeChunk(destination, crossOriginCredentials);
+      }
+      writeChunk(destination, linkEnd);
       return;
     }
     default: {
@@ -2261,66 +2280,64 @@ function writeStyleResource(destination: Destination, resource: Resource) {
     case PREFETCH: {
       writeChunk(destination, prefetchStart);
       writeChunk(destination, preAsStyle);
-      writeChunk(
-        destination,
-        stringToChunk(escapeTextForBrowser(resource.href)),
-      );
-      writeChunk(destination, preEnd);
-      return;
+      break;
     }
     case PRELOAD: {
       writeChunk(destination, preloadStart);
       writeChunk(destination, preAsStyle);
-      writeChunk(
-        destination,
-        stringToChunk(escapeTextForBrowser(resource.href)),
-      );
-      writeChunk(destination, preEnd);
-      return;
+      break;
     }
     case PREINIT: {
       writeChunk(destination, initStyleStart);
-      writeChunk(
-        destination,
-        stringToChunk(escapeTextForBrowser(resource.href)),
-      );
-      writeChunk(destination, initStyleEnd);
-      return;
+      break;
     }
     default: {
       return;
     }
   }
+  writeChunk(destination, stringToChunk(escapeTextForBrowser(resource.href)));
+  if (resource.crossorigin === CORS_ANON) {
+    writeChunk(destination, crossOriginAnon);
+  } else if (resource.crossorigin === CORS_CREDS) {
+    writeChunk(destination, crossOriginCredentials);
+  }
+  writeChunk(destination, linkEnd);
 }
 
 function writeScriptResource(destination: Destination, resource: Resource) {
-  switch (resource.priority) {
+  const priority = resource.priority;
+  switch (priority) {
     case PREFETCH: {
       writeChunk(destination, prefetchStart);
       writeChunk(destination, preAsScript);
-      writeChunk(
-        destination,
-        stringToChunk(escapeTextForBrowser(resource.href)),
-      );
-      writeChunk(destination, preEnd);
-      return;
+      break;
     }
     case PRELOAD: {
       writeChunk(destination, preloadStart);
       writeChunk(destination, preAsScript);
-      writeChunk(
-        destination,
-        stringToChunk(escapeTextForBrowser(resource.href)),
-      );
-      writeChunk(destination, preEnd);
-      return;
+      break;
     }
     case PREINIT: {
       writeChunk(destination, initScriptStart);
-      writeChunk(
-        destination,
-        stringToChunk(escapeTextForBrowser(resource.href)),
-      );
+      break;
+    }
+    default: {
+      return;
+    }
+  }
+  writeChunk(destination, stringToChunk(escapeTextForBrowser(resource.href)));
+  if (resource.crossorigin === CORS_ANON) {
+    writeChunk(destination, crossOriginAnon);
+  } else if (resource.crossorigin === CORS_CREDS) {
+    writeChunk(destination, crossOriginCredentials);
+  }
+  switch (priority) {
+    case PREFETCH:
+    case PRELOAD: {
+      writeChunk(destination, linkEnd);
+      return;
+    }
+    case PREINIT: {
       writeChunk(destination, initScriptEnd);
       return;
     }
@@ -2334,28 +2351,28 @@ function writeFontResource(destination: Destination, resource: Resource) {
   switch (resource.priority) {
     case PREFETCH: {
       writeChunk(destination, prefetchStart);
-      writeChunk(destination, preAsFont);
-      writeChunk(
-        destination,
-        stringToChunk(escapeTextForBrowser(resource.href)),
-      );
-      writeChunk(destination, preEnd);
-      return;
+
+      break;
     }
     case PRELOAD: {
       writeChunk(destination, preloadStart);
-      writeChunk(destination, preAsFont);
-      writeChunk(
-        destination,
-        stringToChunk(escapeTextForBrowser(resource.href)),
-      );
-      writeChunk(destination, preEnd);
-      return;
+      break;
     }
     default: {
       return;
     }
   }
+  writeChunk(destination, preAsFont);
+  writeChunk(destination, stringToChunk(escapeTextForBrowser(resource.href)));
+  // @TODO we can simplify this logic because font resources are always constructed in CORS_ANON mode
+  // I left it here for now because we could choose to enforce that invariant here rather that in
+  // in the resource construction logic
+  if (resource.crossorigin === CORS_ANON) {
+    writeChunk(destination, crossOriginAnon);
+  } else if (resource.crossorigin === CORS_CREDS) {
+    writeChunk(destination, crossOriginCredentials);
+  }
+  writeChunk(destination, linkEnd);
 }
 
 export function prepareToRender(resources: Resources) {
