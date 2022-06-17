@@ -77,8 +77,8 @@ export function appendChild(
   parentInstance: Instance | Container,
   child: Instance | TextInstance,
 ): void {
-  if (__DEV__) {
-    if (!isArray(parentInstance.children)) {
+  if (!isArray(parentInstance.children)) {
+    if (__DEV__) {
       console.error(
         'An invalid container has been provided. ' +
           'This may indicate that another renderer is being used in addition to the test renderer. ' +
