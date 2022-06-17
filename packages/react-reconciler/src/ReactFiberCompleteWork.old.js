@@ -1581,9 +1581,18 @@ function completeWork(
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
-        // Bubble subtree flags before so we can set the flag property
         popTracingMarker(workInProgress);
         bubbleProperties(workInProgress);
+
+        if (
+          current === null ||
+          (workInProgress.subtreeFlags & Visibility) !== NoFlags
+        ) {
+          // If any of our suspense children toggle visibility, this means that
+          // the pending boundaries array needs to be updated, which we only
+          // do in the passive phase.
+          workInProgress.flags |= Passive;
+        }
       }
       return null;
     }
