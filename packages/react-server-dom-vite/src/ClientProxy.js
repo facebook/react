@@ -32,7 +32,8 @@ export const FN_RSC_ERROR =
   'Functions exported from client components cannot be called or used as constructors from a server component.';
 
 export function isRsc() {
-  return !!ReactSharedInternals.ReactCurrentDispatcher.current.isRsc;
+  const currentDispatcher = ReactSharedInternals.ReactCurrentDispatcher.current;
+  return !!(currentDispatcher && currentDispatcher.isRsc);
 }
 
 function createModuleReference(id, value, name, isDefault) {
