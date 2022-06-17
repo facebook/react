@@ -35,8 +35,9 @@ export default function ReactFlightVitePlugin({
 }: PluginOptions = {}) {
   let config;
   let server;
-  let globImporterPath;
   let resolveAlias;
+  let globImporterPath;
+  const allClientBoundaries = new Set();
 
   return {
     name: 'vite-plugin-react-server-components',
@@ -182,7 +183,7 @@ export default function ReactFlightVitePlugin({
             .map(
               glob =>
                 // Mark the globs to modify the result after Vite resolves them.
-                `/* HASH_BEGIN */ ` +
+                `\n/* HASH_BEGIN */ ` +
                 `import.meta.glob('${normalizePath(glob)}') /* HASH_END */`,
             )
             .join(', ')});`;
@@ -197,7 +198,18 @@ export default function ReactFlightVitePlugin({
 
         if (config.command === 'serve') {
           globImporterPath = id;
-          return injectGlobs(findClientBoundaries(server.moduleGraph));
+
+          // When mixing client and server components from the same
+          // facade file, the module graph can break and miss certain
+          // import connections (bug in Vite?) due to HMR. Instead of
+          // creating a new list of discovered components from scratch,
+          // reuse the already discovered ones and simply add new ones
+          // to the list without removing anything.
+          findClientBoundaries(server.moduleGraph).forEach(boundary =>
+            allClientBoundaries.add(boundary),
+          );
+
+          return injectGlobs(Array.from(allClientBoundaries));
         }
 
         if (!serverBuildEntries) {
