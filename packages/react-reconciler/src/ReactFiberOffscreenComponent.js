@@ -8,6 +8,7 @@
  */
 
 import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
+import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SpawnedCachePool} from './ReactFiberCacheComponent.new';
 import type {
@@ -38,6 +39,7 @@ export type OffscreenState = {|
 
 export type OffscreenQueue = {|
   transitions: Array<Transition> | null,
+  tracingMarkers: Array<Fiber> | null,
 |} | null;
 
 export type OffscreenInstance = {|

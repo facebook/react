@@ -19,6 +19,7 @@ import type {
   OffscreenProps,
   OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
 
 import {
   createRootStrictEffectsByDefault,
@@ -757,6 +758,11 @@ export function createFiberFromTracingMarker(
   const fiber = createFiber(TracingMarkerComponent, pendingProps, key, mode);
   fiber.elementType = REACT_TRACING_MARKER_TYPE;
   fiber.lanes = lanes;
+  const tracingMarkerInstance: TracingMarkerInstance = {
+    transitions: null,
+    pendingSuspenseBoundaries: null,
+  };
+  fiber.stateNode = tracingMarkerInstance;
   return fiber;
 }
 

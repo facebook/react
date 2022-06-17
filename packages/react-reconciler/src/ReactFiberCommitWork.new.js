@@ -138,6 +138,7 @@ import {
   restorePendingUpdaters,
   addTransitionStartCallbackToPendingTransition,
   addTransitionCompleteCallbackToPendingTransition,
+  addMarkerCompleteCallbackToPendingTransition,
   setIsRunningInsertionEffect,
 } from './ReactFiberWorkLoop.new';
 import {
@@ -2913,6 +2914,7 @@ function commitPassiveMountOnFiber(
               instance.transitions = prevTransitions = new Set();
             }
 
+            // TODO(luna): Combine the root code with the tracing marker code
             if (transitions !== null) {
               transitions.forEach(transition => {
                 // Add all the transitions saved in the update queue during
@@ -2930,6 +2932,23 @@ function commitPassiveMountOnFiber(
                 instance.pendingMarkers.add(
                   rootIncompleteTransitions.get(transition),
                 );
+              });
+            }
+
+            const tracingMarkers = queue.tracingMarkers;
+            if (tracingMarkers !== null) {
+              tracingMarkers.forEach(marker => {
+                const markerInstance = marker.stateNode;
+                // There should only be a few tracing marker transitions because
+                // they should be only associated with the transition that
+                // caused them
+                markerInstance.transitions.forEach(transition => {
+                  if (instance.transitions.has(transition)) {
+                    instance.pendingMarkers.add(
+                      markerInstance.pendingSuspenseBoundaries,
+                    );
+                  }
+                });
               });
             }
           }
@@ -2964,6 +2983,28 @@ function commitPassiveMountOnFiber(
           if (previousCache != null) {
             releaseCache(previousCache);
           }
+        }
+      }
+      break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        // Get the transitions that were initiatized during the render
+        // and add a start transition callback for each of them
+        const instance = finishedWork.stateNode;
+        if (
+          instance.pendingSuspenseBoundaries === null ||
+          instance.pendingSuspenseBoundaries.size === 0
+        ) {
+          instance.transitions.forEach(transition => {
+            addMarkerCompleteCallbackToPendingTransition({
+              transitionName: transition.name,
+              startTime: transition.startTime,
+              markerName: finishedWork.memoizedProps.name,
+            });
+          });
+          instance.transitions = null;
+          instance.pendingSuspenseBoundaries = null;
         }
       }
       break;
