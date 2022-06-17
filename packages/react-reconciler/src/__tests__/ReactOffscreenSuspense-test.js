@@ -86,7 +86,7 @@ describe('ReactOffscreen', () => {
     return text;
   }
 
-  // @gate experimental || www
+  // @gate enableOffscreen
   test('detect updates to a hidden tree during a concurrent event', async () => {
     // This is a pretty complex test case. It relates to how we detect if an
     // update is made to a hidden tree: when scheduling the update, we walk up
