@@ -90,8 +90,10 @@ import type {Lanes, Lane} from './ReactFiberLane.old';
 import {
   NoLane,
   NoLanes,
+  OffscreenLane,
   isSubsetOfLanes,
   mergeLanes,
+  removeLanes,
   isTransitionLane,
   intersectLanes,
   markRootEntangled,
@@ -108,6 +110,7 @@ import {StrictLegacyMode} from './ReactTypeOfMode';
 import {
   markSkippedUpdateLanes,
   isUnsafeClassRenderPhaseUpdate,
+  getWorkInProgressRootRenderLanes,
 } from './ReactFiberWorkLoop.old';
 import {
   enqueueConcurrentClassUpdate,
@@ -132,7 +135,6 @@ export type Update<State> = {|
 
 export type SharedQueue<State> = {|
   pending: Update<State> | null,
-  interleaved: Update<State> | null,
   lanes: Lanes,
 |};
 
@@ -172,7 +174,6 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     lastBaseUpdate: null,
     shared: {
       pending: null,
-      interleaved: null,
       lanes: NoLanes,
     },
     effects: null,
@@ -525,9 +526,23 @@ export function processUpdateQueue<State>(
 
     let update = firstBaseUpdate;
     do {
-      const updateLane = update.lane;
+      // TODO: Don't need this field anymore
       const updateEventTime = update.eventTime;
-      if (!isSubsetOfLanes(renderLanes, updateLane)) {
+
+      // An extra OffscreenLane bit is added to updates that were made to
+      // a hidden tree, so that we can distinguish them from updates that were
+      // already there when the tree was hidden.
+      const updateLane = removeLanes(update.lane, OffscreenLane);
+      const isHiddenUpdate = updateLane !== update.lane;
+
+      // Check if this update was made while the tree was hidden. If so, then
+      // it's not a "base" update and we should disregard the extra base lanes
+      // that were added to renderLanes when we entered the Offscreen tree.
+      const shouldSkipUpdate = isHiddenUpdate
+        ? !isSubsetOfLanes(getWorkInProgressRootRenderLanes(), updateLane)
+        : !isSubsetOfLanes(renderLanes, updateLane);
+
+      if (shouldSkipUpdate) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
@@ -622,17 +637,7 @@ export function processUpdateQueue<State>(
     queue.firstBaseUpdate = newFirstBaseUpdate;
     queue.lastBaseUpdate = newLastBaseUpdate;
 
-    // Interleaved updates are stored on a separate queue. We aren't going to
-    // process them during this render, but we do need to track which lanes
-    // are remaining.
-    const lastInterleaved = queue.shared.interleaved;
-    if (lastInterleaved !== null) {
-      let interleaved = lastInterleaved;
-      do {
-        newLanes = mergeLanes(newLanes, interleaved.lane);
-        interleaved = ((interleaved: any).next: Update<State>);
-      } while (interleaved !== lastInterleaved);
-    } else if (firstBaseUpdate === null) {
+    if (firstBaseUpdate === null) {
       // `queue.lanes` is used for entangling transitions. We can set it back to
       // zero once the queue is empty.
       queue.shared.lanes = NoLanes;
