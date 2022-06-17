@@ -675,7 +675,6 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
-        transitions: null,
       };
       workInProgress.memoizedState = nextState;
       if (enableCache) {
@@ -709,7 +708,6 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: nextBaseLanes,
         cachePool: spawnedCachePool,
-        transitions: null,
       };
       workInProgress.memoizedState = nextState;
       workInProgress.updateQueue = null;
@@ -745,7 +743,6 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
-        transitions: null,
       };
       workInProgress.memoizedState = nextState;
       // Push the lanes that were skipped when we bailed out.
@@ -780,13 +777,10 @@ function updateOffscreenComponent(
       }
 
       let transitions = null;
-      if (
-        workInProgress.memoizedState !== null &&
-        workInProgress.memoizedState.transitions !== null
-      ) {
+      if (enableTransitionTracing) {
         // We have now gone from hidden to visible, so any transitions should
         // be added to the stack to get added to any Offscreen/suspense children
-        transitions = workInProgress.memoizedState.transitions;
+        transitions = workInProgress.stateNode.transitions;
       }
 
       pushTransition(workInProgress, prevCachePool, transitions);
@@ -1323,8 +1317,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
       element: nextChildren,
       isDehydrated: false,
       cache: nextState.cache,
-      pendingSuspenseBoundaries: nextState.pendingSuspenseBoundaries,
-      transitions: nextState.transitions,
+      incompleteTransitions: nextState.incompleteTransitions,
     };
     const updateQueue: UpdateQueue<RootState> = (workInProgress.updateQueue: any);
     // `baseState` can always be the last state because the root doesn't
@@ -1920,7 +1913,6 @@ function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
   return {
     baseLanes: renderLanes,
     cachePool: getSuspendedCache(),
-    transitions: null,
   };
 }
 
@@ -1955,7 +1947,6 @@ function updateSuspenseOffscreenState(
   return {
     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
     cachePool,
-    transitions: prevOffscreenState.transitions,
   };
 }
 
