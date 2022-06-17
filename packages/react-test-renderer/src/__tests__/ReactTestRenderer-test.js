@@ -39,14 +39,12 @@ describe('ReactTestRenderer', () => {
     });
   });
 
-    it('should warn and throw if used to update render a ReactDOM portal', () => {
-      const App = () => {
-        return (
-          <div />
-        );
-      };
+  it('should warn and throw if used to update render a ReactDOM portal', () => {
+    const App = () => {
+      return <div />;
+    };
 
-      const root = ReactTestRenderer.create(<App />);
+    const root = ReactTestRenderer.create(<App />);
     expect(() => {
       expect(() => {
         const container = document.createElement('div');

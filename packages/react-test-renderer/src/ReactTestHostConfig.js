@@ -88,8 +88,8 @@ export function appendChild(
     }
     throw new Error(
       'An invalid container has been provided. Expected children property to be Array, but got ' +
-      typeof parentInstance.children
-    )
+        typeof parentInstance.children,
+    );
   }
   const index = parentInstance.children.indexOf(child);
   if (index !== -1) {
@@ -118,8 +118,8 @@ export function removeChild(
   if (!isArray(parentInstance.children)) {
     throw new Error(
       'An invalid container has been provided. Expected children property to be Array, but got ' +
-      typeof parentInstance.children
-    )
+        typeof parentInstance.children,
+    );
   }
   const index = parentInstance.children.indexOf(child);
   parentInstance.children.splice(index, 1);
