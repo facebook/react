@@ -310,3 +310,4 @@ export function writeClientRenderBoundaryInstruction(
 
 export function prepareToRender() {}
 export function cleanupAfterRender() {}
+export function createResources() {}

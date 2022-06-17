@@ -57,7 +57,6 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
-import {Dispatcher} from 'react-dom/ReactDOMDispatcher';
 import {
   type Resource,
   prepareToRender as prepareToRenderImpl,
@@ -69,13 +68,9 @@ import {
   PREFETCH,
   PRELOAD,
   PREINIT,
-  NO_RESOURCE,
-  HOST_RESOURCE,
-  INITIALIZABLE_RESOURCE,
   STYLE_RESOURCE,
   SCRIPT_RESOURCE,
   FONT_RESOURCE,
-  CORS_NONE,
   CORS_ANON,
   CORS_CREDS,
 } from './ReactDOMFloatServer';
@@ -1137,7 +1132,7 @@ function pushLink(
         case 'children':
         case 'dangerouslySetInnerHTML':
           throw new Error(
-            `link is a self-closing tag and must neither have \`children\` nor ` +
+            `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
           );
         // eslint-disable-next-line-no-fallthrough

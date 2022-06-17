@@ -14,7 +14,9 @@ function prefetchDNS() {
   if (dispatcher) {
     dispatcher.prefetchDNS.apply(this, arguments);
   } else {
-    console.log('no prefetchDNS dispatcher');
+    throw new Error(
+      `${'prefetchDNS'} was called while no react-dom dispatcher exists. If you called this method outside of rendering refactor your code to call it while rendering. If it was called while React was rendering this is a bug in React.`,
+    );
   }
 }
 
@@ -23,7 +25,9 @@ function preconnect() {
   if (dispatcher) {
     dispatcher.preconnect.apply(this, arguments);
   } else {
-    console.log('no preconnect dispatcher');
+    throw new Error(
+      `${'preconnect'} was called while no react-dom dispatcher exists. If you called this method outside of rendering refactor your code to call it while rendering. If it was called while React was rendering this is a bug in React.`,
+    );
   }
 }
 
@@ -32,7 +36,9 @@ function prefetch() {
   if (dispatcher) {
     dispatcher.prefetch.apply(this, arguments);
   } else {
-    console.log('no prefetch dispatcher');
+    throw new Error(
+      `${'prefetch'} was called while no react-dom dispatcher exists. If you called this method outside of rendering refactor your code to call it while rendering. If it was called while React was rendering this is a bug in React.`,
+    );
   }
 }
 
@@ -41,7 +47,9 @@ function preload() {
   if (dispatcher) {
     dispatcher.preload.apply(this, arguments);
   } else {
-    console.log('no preload dispatcher');
+    throw new Error(
+      `${'preload'} was called while no react-dom dispatcher exists. If you called this method outside of rendering refactor your code to call it while rendering. If it was called while React was rendering this is a bug in React.`,
+    );
   }
 }
 
@@ -50,7 +58,9 @@ function preinit() {
   if (dispatcher) {
     dispatcher.preinit.apply(this, arguments);
   } else {
-    console.log('no preinit dispatcher');
+    throw new Error(
+      `${'preinit'} was called while no react-dom dispatcher exists. If you called this method outside of rendering refactor your code to call it while rendering. If it was called while React was rendering this is a bug in React.`,
+    );
   }
 }
 

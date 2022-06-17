@@ -185,5 +185,8 @@ export function writeEndClientRenderedSuspenseBoundary(
   return writeEndClientRenderedSuspenseBoundaryImpl(destination, responseState);
 }
 
+export function writeResources() {}
+
 export function prepareToRender() {}
 export function cleanupAfterRender() {}
+export function createResources() {}

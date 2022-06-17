@@ -51,6 +51,8 @@ type Destination = {
   stack: Array<Segment | Instance | SuspenseInstance>,
 };
 
+type Resources = null;
+
 const POP = Buffer.from('/', 'utf8');
 
 function write(destination: Destination, buffer: Uint8Array): void {
@@ -261,6 +263,15 @@ const ReactNoopServer = ReactFizzServer({
   ): boolean {
     boundary.status = 'client-render';
   },
+
+  writeResources() {},
+
+  createResources(): Resources {
+    return null;
+  },
+
+  prepareToRender() {},
+  cleanupAfterRender() {},
 });
 
 type Options = {

@@ -11,7 +11,7 @@ const Dispatcher = {
   current: null,
 };
 
-let stack = [];
+const stack = [];
 
 function pushDispatcher(dispatcher: any) {
   stack.push(Dispatcher.current);

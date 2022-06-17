@@ -477,6 +477,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     logRecoverableError() {
       // no-op
     },
+
+    prepareToRender() {},
+    cleanupAfterRender() {},
   };
 
   const hostConfig = useMutation
