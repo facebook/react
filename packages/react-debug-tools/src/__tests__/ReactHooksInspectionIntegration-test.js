@@ -546,6 +546,7 @@ describe('ReactHooksInspectionIntegration', () => {
     function Foo(props) {
       React.useTransition();
       const memoizedValue = React.useMemo(() => 'hello', []);
+      React.useMemo(() => 'not used', []);
       return <div>{memoizedValue}</div>;
     }
     const renderer = ReactTestRenderer.create(<Foo />);
@@ -564,6 +565,13 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'hello',
+        subHooks: [],
+      },
+      {
+        id: 2,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'not used',
         subHooks: [],
       },
     ]);
@@ -1020,6 +1028,7 @@ describe('ReactHooksInspectionIntegration', () => {
         () => {},
       );
       React.useMemo(() => 'memo', []);
+      React.useMemo(() => 'not used', []);
       return <div />;
     }
     const renderer = ReactTestRenderer.create(<Foo />);
@@ -1040,6 +1049,13 @@ describe('ReactHooksInspectionIntegration', () => {
         value: 'memo',
         subHooks: [],
       },
+      {
+        id: 2,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'not used',
+        subHooks: [],
+      },
     ]);
   });
 
@@ -1051,6 +1067,7 @@ describe('ReactHooksInspectionIntegration', () => {
         () => 'snapshot',
       );
       React.useMemo(() => 'memo', []);
+      React.useMemo(() => 'not used', []);
       return value;
     }
 
@@ -1070,6 +1087,13 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'memo',
+        subHooks: [],
+      },
+      {
+        id: 2,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'not used',
         subHooks: [],
       },
     ]);
