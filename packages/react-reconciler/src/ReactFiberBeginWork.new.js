@@ -778,11 +778,9 @@ function updateOffscreenComponent(
 
       let transitions = null;
       if (enableTransitionTracing) {
-        if (workInProgress.stateNode.transitions !== null) {
-          // We have now gone from hidden to visible, so any transitions should
-          // be added to the stack to get added to any Offscreen/suspense children
-          transitions = workInProgress.stateNode.transitions;
-        }
+        // We have now gone from hidden to visible, so any transitions should
+        // be added to the stack to get added to any Offscreen/suspense children
+        transitions = workInProgress.stateNode.transitions;
       }
 
       pushTransition(workInProgress, prevCachePool, transitions);

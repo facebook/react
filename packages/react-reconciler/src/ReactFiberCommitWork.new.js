@@ -2903,6 +2903,7 @@ function commitPassiveMountOnFiber(
             // and sets in the commit phase as we need to use them. We only
             // instantiate them in the fallback phase on an as needed basis
             if (rootMemoizedState.incompleteTransitions === null) {
+              // TODO(luna): Move this to the fiber root
               rootMemoizedState.incompleteTransitions = rootIncompleteTransitions = new Map();
             }
             if (instance.pendingMarkers === null) {
