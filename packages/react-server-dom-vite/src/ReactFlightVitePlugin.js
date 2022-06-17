@@ -517,8 +517,13 @@ function augmentModuleGraph(
       if (resolveAlias) {
         const resolvedAliasPath = resolveAlias(modPath, 'rsc_importer', {});
         if (resolvedAliasPath && resolvedAliasPath.id) {
-          modPath = normalizePath(path.join(root, resolvedAliasPath.id));
+          modPath = resolvedAliasPath.id;
         }
+      }
+
+      if (modPath && modPath.startsWith('/src/')) {
+        // Vite default alias
+        modPath = normalizePath(path.join(root, modPath));
       }
 
       const resolvedPath = resolveModPath(modPath, dirname);
