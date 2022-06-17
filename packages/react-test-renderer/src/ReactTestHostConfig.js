@@ -115,7 +115,7 @@ export function removeChild(
   parentInstance: Instance | Container,
   child: Instance | TextInstance,
 ): void {
-  if (!Array.isArray(parentInstance.children)) {
+  if (!isArray(parentInstance.children)) {
     throw new Error(
       'An invalid container has been provided. Expected children property to be Array, but got ' +
       typeof(parentInstance.children)
