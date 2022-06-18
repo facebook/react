@@ -86,7 +86,7 @@ export type ReactModel =
 
 type ReactModelObject = {+[key: string]: ReactModel};
 
-type Segment = {
+type Task = {
   id: number,
   model: ReactModel,
   ping: () => void,
@@ -101,7 +101,7 @@ export type Request = {
   cache: Map<Function, mixed>,
   nextChunkId: number,
   pendingChunks: number,
-  pingedSegments: Array<Segment>,
+  pingedTasks: Array<Task>,
   completedModuleChunks: Array<Chunk>,
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
@@ -132,7 +132,7 @@ export function createRequest(
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
 ): Request {
-  const pingedSegments = [];
+  const pingedTasks = [];
   const request = {
     status: OPEN,
     fatalError: null,
@@ -141,7 +141,7 @@ export function createRequest(
     cache: new Map(),
     nextChunkId: 0,
     pendingChunks: 0,
-    pingedSegments: pingedSegments,
+    pingedTasks: pingedTasks,
     completedModuleChunks: [],
     completedJSONChunks: [],
     completedErrorChunks: [],
@@ -157,8 +157,8 @@ export function createRequest(
   };
   request.pendingChunks++;
   const rootContext = createRootContext(context);
-  const rootSegment = createSegment(request, model, rootContext);
-  pingedSegments.push(rootSegment);
+  const rootTask = createTask(request, model, rootContext);
+  pingedTasks.push(rootTask);
   return request;
 }
 
@@ -251,27 +251,27 @@ function attemptResolveElement(
   );
 }
 
-function pingSegment(request: Request, segment: Segment): void {
-  const pingedSegments = request.pingedSegments;
-  pingedSegments.push(segment);
-  if (pingedSegments.length === 1) {
+function pingTask(request: Request, task: Task): void {
+  const pingedTasks = request.pingedTasks;
+  pingedTasks.push(task);
+  if (pingedTasks.length === 1) {
     scheduleWork(() => performWork(request));
   }
 }
 
-function createSegment(
+function createTask(
   request: Request,
   model: ReactModel,
   context: ContextSnapshot,
-): Segment {
+): Task {
   const id = request.nextChunkId++;
-  const segment = {
+  const task = {
     id,
     model,
     context,
-    ping: () => pingSegment(request, segment),
+    ping: () => pingTask(request, task),
   };
-  return segment;
+  return task;
 }
 
 function serializeByValueID(id: number): string {
@@ -518,12 +518,12 @@ export function resolveModelToJSON(
       }
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-        // Something suspended, we'll need to create a new segment and resolve it later.
+        // Something suspended, we'll need to create a new task and resolve it later.
         request.pendingChunks++;
-        const newSegment = createSegment(request, value, getActiveContext());
-        const ping = newSegment.ping;
+        const newTask = createTask(request, value, getActiveContext());
+        const ping = newTask.ping;
         x.then(ping, ping);
-        return serializeByRefID(newSegment.id);
+        return serializeByRefID(newTask.id);
       } else {
         logRecoverableError(request, x);
         // Something errored. We'll still send everything we have up until this point.
@@ -790,10 +790,10 @@ function emitProviderChunk(
   request.completedJSONChunks.push(processedChunk);
 }
 
-function retrySegment(request: Request, segment: Segment): void {
-  switchContext(segment.context);
+function retryTask(request: Request, task: Task): void {
+  switchContext(task.context);
   try {
-    let value = segment.model;
+    let value = task.model;
     while (
       typeof value === 'object' &&
       value !== null &&
@@ -802,9 +802,9 @@ function retrySegment(request: Request, segment: Segment): void {
       // TODO: Concatenate keys of parents onto children.
       const element: React$Element<any> = (value: any);
       // Attempt to render the server component.
-      // Doing this here lets us reuse this same segment if the next component
+      // Doing this here lets us reuse this same task if the next component
       // also suspends.
-      segment.model = value;
+      task.model = value;
       value = attemptResolveElement(
         element.type,
         element.key,
@@ -812,18 +812,18 @@ function retrySegment(request: Request, segment: Segment): void {
         element.props,
       );
     }
-    const processedChunk = processModelChunk(request, segment.id, value);
+    const processedChunk = processModelChunk(request, task.id, value);
     request.completedJSONChunks.push(processedChunk);
   } catch (x) {
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       // Something suspended again, let's pick it back up later.
-      const ping = segment.ping;
+      const ping = task.ping;
       x.then(ping, ping);
       return;
     } else {
       logRecoverableError(request, x);
       // This errored, we need to serialize this error to the
-      emitErrorChunk(request, segment.id, x);
+      emitErrorChunk(request, task.id, x);
     }
   }
 }
@@ -836,11 +836,11 @@ function performWork(request: Request): void {
   prepareToUseHooksForRequest(request);
 
   try {
-    const pingedSegments = request.pingedSegments;
-    request.pingedSegments = [];
-    for (let i = 0; i < pingedSegments.length; i++) {
-      const segment = pingedSegments[i];
-      retrySegment(request, segment);
+    const pingedTasks = request.pingedTasks;
+    request.pingedTasks = [];
+    for (let i = 0; i < pingedTasks.length; i++) {
+      const task = pingedTasks[i];
+      retryTask(request, task);
     }
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
