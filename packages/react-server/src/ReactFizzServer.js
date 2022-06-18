@@ -1530,7 +1530,7 @@ function abortTaskSoft(task: Task): void {
   finishedTask(request, boundary, segment);
 }
 
-function abortTask(task: Task, request: Request, reason: mixed): void {
+function abortTask(task: Task, request: Request, error: mixed): void {
   // This aborts the task and aborts the parent that it blocks, putting it into
   // client rendered mode.
   const boundary = task.blockedBoundary;
@@ -1541,35 +1541,30 @@ function abortTask(task: Task, request: Request, reason: mixed): void {
     request.allPendingTasks--;
     // We didn't complete the root so we have nothing to show. We can close
     // the request;
-    if (request.status !== CLOSED) {
-      request.status = CLOSED;
-      if (request.destination !== null) {
-        close(request.destination);
-      }
+    if (request.status !== CLOSING && request.status !== CLOSED) {
+      logRecoverableError(request, error);
+      fatalError(request, error);
     }
   } else {
     boundary.pendingTasks--;
 
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
-      let error =
-        reason === undefined
-          ? new Error('The render was aborted by the server without a reason.')
-          : reason;
       boundary.errorDigest = request.onError(error);
       if (__DEV__) {
         const errorPrefix =
           'The server did not finish this Suspense boundary: ';
+        let errorMessage;
         if (error && typeof error.message === 'string') {
-          error = errorPrefix + error.message;
+          errorMessage = errorPrefix + error.message;
         } else {
           // eslint-disable-next-line react-internal/safe-string-coercion
-          error = errorPrefix + String(error);
+          errorMessage = errorPrefix + String(error);
         }
         const previousTaskInDev = currentTaskInDEV;
         currentTaskInDEV = task;
         try {
-          captureBoundaryErrorDetailsDev(boundary, error);
+          captureBoundaryErrorDetailsDev(boundary, errorMessage);
         } finally {
           currentTaskInDEV = previousTaskInDev;
         }
@@ -1582,7 +1577,7 @@ function abortTask(task: Task, request: Request, reason: mixed): void {
     // If this boundary was still pending then we haven't already cancelled its fallbacks.
     // We'll need to abort the fallbacks, which will also error that parent boundary.
     boundary.fallbackAbortableTasks.forEach(fallbackTask =>
-      abortTask(fallbackTask, request, reason),
+      abortTask(fallbackTask, request, error),
     );
     boundary.fallbackAbortableTasks.clear();
 
@@ -2178,8 +2173,14 @@ export function startFlowing(request: Request, destination: Destination): void {
 export function abort(request: Request, reason: mixed): void {
   try {
     const abortableTasks = request.abortableTasks;
-    abortableTasks.forEach(task => abortTask(task, request, reason));
-    abortableTasks.clear();
+    if (abortableTasks.size > 0) {
+      const error =
+        reason === undefined
+          ? new Error('The render was aborted by the server without a reason.')
+          : reason;
+      abortableTasks.forEach(task => abortTask(task, request, error));
+      abortableTasks.clear();
+    }
     if (request.destination !== null) {
       flushCompletedQueues(request, request.destination);
     }
