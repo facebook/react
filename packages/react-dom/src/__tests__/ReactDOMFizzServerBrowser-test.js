@@ -17,7 +17,7 @@ let React;
 let ReactDOMFizzServer;
 let Suspense;
 
-describe('ReactDOMFizzServer', () => {
+describe('ReactDOMFizzServerBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -209,6 +209,113 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
+  it('should reject if aborting before the shell is complete', async () => {
+    const errors = [];
+    const controller = new AbortController();
+    const promise = ReactDOMFizzServer.renderToReadableStream(
+      <div>
+        <InfiniteSuspend />
+      </div>,
+      {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+        },
+      },
+    );
+
+    await jest.runAllTimers();
+
+    const theReason = new Error('aborted for reasons');
+    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
+    // The abort call itself should set this property but since we are testing in node we
+    // set it here manually
+    controller.signal.reason = theReason;
+    controller.abort(theReason);
+
+    let caughtError = null;
+    try {
+      await promise;
+    } catch (error) {
+      caughtError = error;
+    }
+    expect(caughtError).toBe(theReason);
+    expect(errors).toEqual(['aborted for reasons']);
+  });
+
+  it('should be able to abort before something suspends', async () => {
+    const errors = [];
+    const controller = new AbortController();
+    function App() {
+      controller.abort();
+      return (
+        <Suspense fallback={<div>Loading</div>}>
+          <InfiniteSuspend />
+        </Suspense>
+      );
+    }
+    const streamPromise = ReactDOMFizzServer.renderToReadableStream(
+      <div>
+        <App />
+      </div>,
+      {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+        },
+      },
+    );
+
+    let caughtError = null;
+    try {
+      await streamPromise;
+    } catch (error) {
+      caughtError = error;
+    }
+    expect(caughtError.message).toBe(
+      'The render was aborted by the server without a reason.',
+    );
+    expect(errors).toEqual([
+      'The render was aborted by the server without a reason.',
+    ]);
+  });
+
+  it('should reject if passing an already aborted signal', async () => {
+    const errors = [];
+    const controller = new AbortController();
+    const theReason = new Error('aborted for reasons');
+    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
+    // The abort call itself should set this property but since we are testing in node we
+    // set it here manually
+    controller.signal.reason = theReason;
+    controller.abort(theReason);
+
+    const promise = ReactDOMFizzServer.renderToReadableStream(
+      <div>
+        <Suspense fallback={<div>Loading</div>}>
+          <InfiniteSuspend />
+        </Suspense>
+      </div>,
+      {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+        },
+      },
+    );
+
+    // Technically we could still continue rendering the shell but currently the
+    // semantics mean that we also abort any pending CPU work.
+    let caughtError = null;
+    try {
+      await promise;
+    } catch (error) {
+      caughtError = error;
+    }
+    expect(caughtError).toBe(theReason);
+    expect(errors).toEqual(['aborted for reasons']);
+  });
+
   it('should not continue rendering after the reader cancels', async () => {
     let hasLoaded = false;
     let resolve;
@@ -226,7 +333,7 @@ describe('ReactDOMFizzServer', () => {
     const stream = await ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
-          <Wait /> />
+          <Wait />
         </Suspense>
       </div>,
       {
@@ -296,7 +403,7 @@ describe('ReactDOMFizzServer', () => {
     expect(result).toMatchInlineSnapshot(`"<div>${str2049}</div>"`);
   });
 
-  it('Supports custom abort reasons with a string', async () => {
+  it('supports custom abort reasons with a string', async () => {
     const promise = new Promise(r => {});
     function Wait() {
       throw promise;
@@ -337,7 +444,7 @@ describe('ReactDOMFizzServer', () => {
     expect(errors).toEqual(['foobar', 'foobar']);
   });
 
-  it('Supports custom abort reasons with an Error', async () => {
+  it('supports custom abort reasons with an Error', async () => {
     const promise = new Promise(r => {});
     function Wait() {
       throw promise;

@@ -96,11 +96,15 @@ function renderToReadableStream(
     );
     if (options && options.signal) {
       const signal = options.signal;
-      const listener = () => {
+      if (signal.aborted) {
         abort(request, (signal: any).reason);
-        signal.removeEventListener('abort', listener);
-      };
-      signal.addEventListener('abort', listener);
+      } else {
+        const listener = () => {
+          abort(request, (signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
     }
     startWork(request);
   });
