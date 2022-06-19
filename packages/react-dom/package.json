@@ -32,6 +32,9 @@
     "server.js",
     "server.browser.js",
     "server.node.js",
+    "static.js",
+    "static.browser.js",
+    "static.node.js",
     "test-utils.js",
     "unstable_testing.js",
     "cjs/",
@@ -48,6 +51,14 @@
     },
     "./server.browser": "./server.browser.js",
     "./server.node": "./server.node.js",
+    "./static": {
+      "deno": "./static.browser.js",
+      "worker": "./static.browser.js",
+      "browser": "./static.browser.js",
+      "default": "./static.node.js"
+    },
+    "./static.browser": "./static.browser.js",
+    "./static.node": "./static.node.js",
     "./profiling": "./profiling.js",
     "./test-utils": "./test-utils.js",
     "./unstable_testing": "./unstable_testing.js",
@@ -55,7 +66,8 @@
     "./package.json": "./package.json"
   },
   "browser": {
-    "./server.js": "./server.browser.js"
+    "./server.js": "./server.browser.js",
+    "./static.js": "./static.browser.js"
   },
   "browserify": {
     "transform": [
