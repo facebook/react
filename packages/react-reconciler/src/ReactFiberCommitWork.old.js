@@ -1066,10 +1066,7 @@ function reappearLayoutEffectsOnFiber(node: Fiber) {
   }
 }
 
-function commitTransitionProgress(
-  finishedRoot: FiberRoot,
-  offscreenFiber: Fiber,
-) {
+function commitTransitionProgress(offscreenFiber: Fiber) {
   if (enableTransitionTracing) {
     // This function adds suspense boundaries to the root
     // or tracing marker's pendingSuspenseBoundaries map.
@@ -1094,12 +1091,7 @@ function commitTransitionProgress(
     const wasHidden = prevState !== null;
     const isHidden = nextState !== null;
 
-    const rootState: RootState = finishedRoot.current.memoizedState;
-    // TODO(luna) move pendingSuspenseBoundaries and transitions from
-    // HostRoot fiber to FiberRoot
-    const rootPendingBoundaries = rootState.pendingSuspenseBoundaries;
-    const rootTransitions = rootState.transitions;
-
+    const pendingMarkers = offscreenInstance.pendingMarkers;
     // If there is a name on the suspense boundary, store that in
     // the pending boundaries.
     let name = null;
@@ -1112,38 +1104,26 @@ function commitTransitionProgress(
       name = parent.memoizedProps.unstable_name;
     }
 
-    if (rootPendingBoundaries !== null) {
-      if (previousFiber === null) {
-        // Initial mount
-        if (isHidden) {
-          rootPendingBoundaries.set(offscreenInstance, {
+    if (!wasHidden && isHidden) {
+      // The suspense boundaries was just hidden. Add the boundary
+      // to the pending boundary set if it's there
+      if (pendingMarkers !== null) {
+        pendingMarkers.forEach(pendingBoundaries => {
+          pendingBoundaries.set(offscreenInstance, {
             name,
           });
-        }
-      } else {
-        if (wasHidden && !isHidden) {
-          // The suspense boundary went from hidden to visible. Remove
-          // the boundary from the pending suspense boundaries set
-          // if it's there
-          if (rootPendingBoundaries.has(offscreenInstance)) {
-            rootPendingBoundaries.delete(offscreenInstance);
-
-            if (rootPendingBoundaries.size === 0 && rootTransitions !== null) {
-              rootTransitions.forEach(transition => {
-                addTransitionCompleteCallbackToPendingTransition({
-                  transitionName: transition.name,
-                  startTime: transition.startTime,
-                });
-              });
-            }
+        });
+      }
+    } else if (wasHidden && !isHidden) {
+      // The suspense boundary went from hidden to visible. Remove
+      // the boundary from the pending suspense boundaries set
+      // if it's there
+      if (pendingMarkers !== null) {
+        pendingMarkers.forEach(pendingBoundaries => {
+          if (pendingBoundaries.has(offscreenInstance)) {
+            pendingBoundaries.delete(offscreenInstance);
           }
-        } else if (!wasHidden && isHidden) {
-          // The suspense boundaries was just hidden. Add the boundary
-          // to the pending boundary set if it's there
-          rootPendingBoundaries.set(offscreenInstance, {
-            name,
-          });
-        }
+        });
       }
     }
   }
@@ -2830,45 +2810,46 @@ function commitPassiveMountOnFiber(
         // Get the transitions that were initiatized during the render
         // and add a start transition callback for each of them
         const state = finishedWork.memoizedState;
-        // TODO Since it's a mutable field, this should live on the FiberRoot
-        if (state.transitions === null) {
-          state.transitions = new Set([]);
-        }
-        const pendingTransitions = state.transitions;
-        const pendingSuspenseBoundaries = state.pendingSuspenseBoundaries;
-
+        let incompleteTransitions = state.incompleteTransitions;
         // Initial render
         if (committedTransitions !== null) {
+          if (state.incompleteTransitions === null) {
+            state.incompleteTransitions = incompleteTransitions = new Map();
+          }
+
           committedTransitions.forEach(transition => {
             addTransitionStartCallbackToPendingTransition({
               transitionName: transition.name,
               startTime: transition.startTime,
             });
-            pendingTransitions.add(transition);
+
+            if (!incompleteTransitions.has(transition)) {
+              incompleteTransitions.set(transition, null);
+            }
           });
 
-          if (
-            pendingSuspenseBoundaries === null ||
-            pendingSuspenseBoundaries.size === 0
-          ) {
-            pendingTransitions.forEach(transition => {
+          clearTransitionsForLanes(finishedRoot, committedLanes);
+        }
+
+        if (incompleteTransitions !== null) {
+          incompleteTransitions.forEach((pendingBoundaries, transition) => {
+            if (pendingBoundaries === null || pendingBoundaries.size === 0) {
               addTransitionCompleteCallbackToPendingTransition({
                 transitionName: transition.name,
                 startTime: transition.startTime,
               });
-            });
-          }
-
-          clearTransitionsForLanes(finishedRoot, committedLanes);
+              incompleteTransitions.delete(transition);
+            }
+          });
         }
 
         // If there are no more pending suspense boundaries we
         // clear the transitions because they are all complete.
         if (
-          pendingSuspenseBoundaries === null ||
-          pendingSuspenseBoundaries.size === 0
+          incompleteTransitions === null ||
+          incompleteTransitions.size === 0
         ) {
-          state.transitions = null;
+          state.incompleteTransitions = null;
         }
       }
       break;
@@ -2909,39 +2890,59 @@ function commitPassiveMountOnFiber(
         const isFallback = finishedWork.memoizedState;
         const queue = (finishedWork.updateQueue: any);
         const rootMemoizedState = finishedRoot.current.memoizedState;
+        const instance = finishedWork.stateNode;
 
         if (queue !== null) {
-          // We have one instance of the pendingSuspenseBoundaries map.
-          // We only need one because we update it during the commit phase.
-          // We instantiate a new Map if we haven't already
-          if (rootMemoizedState.pendingSuspenseBoundaries === null) {
-            rootMemoizedState.pendingSuspenseBoundaries = new Map();
-          }
-
           if (isFallback) {
             const transitions = queue.transitions;
-            let prevTransitions = finishedWork.memoizedState.transitions;
-            // Add all the transitions saved in the update queue during
-            // the render phase (ie the transitions associated with this boundary)
-            // into the transitions set.
-            if (transitions !== null) {
-              if (prevTransitions === null) {
-                // We only have one instance of the transitions set
-                // because we update it only during the commit phase. We
-                // will create the set on a as needed basis in the commit phase
-                finishedWork.memoizedState.transitions = prevTransitions = new Set();
-              }
+            let prevTransitions = instance.transitions;
+            let rootIncompleteTransitions =
+              rootMemoizedState.incompleteTransitions;
 
+            // We lazily instantiate transition tracing relevant maps
+            // and sets in the commit phase as we need to use them. We only
+            // instantiate them in the fallback phase on an as needed basis
+            if (rootMemoizedState.incompleteTransitions === null) {
+              // TODO(luna): Move this to the fiber root
+              rootMemoizedState.incompleteTransitions = rootIncompleteTransitions = new Map();
+            }
+            if (instance.pendingMarkers === null) {
+              instance.pendingMarkers = new Set();
+            }
+            if (transitions !== null && prevTransitions === null) {
+              instance.transitions = prevTransitions = new Set();
+            }
+
+            if (transitions !== null) {
               transitions.forEach(transition => {
+                // Add all the transitions saved in the update queue during
+                // the render phase (ie the transitions associated with this boundary)
+                // into the transitions set.
                 prevTransitions.add(transition);
+
+                // Add the root transition's pending suspense boundary set to
+                // the queue's marker set. We will iterate through the marker
+                // set when we toggle state on the suspense boundary and
+                // add or remove the pending suspense boundaries as needed.
+                if (!rootIncompleteTransitions.has(transition)) {
+                  rootIncompleteTransitions.set(transition, new Map());
+                }
+                instance.pendingMarkers.add(
+                  rootIncompleteTransitions.get(transition),
+                );
               });
             }
           }
+
+          commitTransitionProgress(finishedWork);
+
+          if (
+            instance.pendingMarkers === null ||
+            instance.pendingMarkers.size === 0
+          ) {
+            finishedWork.updateQueue = null;
+          }
         }
-
-        commitTransitionProgress(finishedRoot, finishedWork);
-
-        finishedWork.updateQueue = null;
       }
 
       break;

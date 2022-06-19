@@ -114,6 +114,14 @@ export function processModelChunk(
   return ['J', id, json];
 }
 
+export function processReferenceChunk(
+  request: Request,
+  id: number,
+  reference: string,
+): Chunk {
+  return ['J', id, reference];
+}
+
 export function processModuleChunk(
   request: Request,
   id: number,

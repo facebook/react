@@ -15,12 +15,14 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  abort,
 } from 'react-server/src/ReactFlightServer';
 
 type Options = {
-  onError?: (error: mixed) => void,
-  context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
+  signal?: AbortSignal,
+  context?: Array<[string, ServerContextJSONValue]>,
+  onError?: (error: mixed) => void,
 };
 
 function renderToReadableStream(
@@ -35,6 +37,18 @@ function renderToReadableStream(
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
   );
+  if (options && options.signal) {
+    const signal = options.signal;
+    if (signal.aborted) {
+      abort(request, (signal: any).reason);
+    } else {
+      const listener = () => {
+        abort(request, (signal: any).reason);
+        signal.removeEventListener('abort', listener);
+      };
+      signal.addEventListener('abort', listener);
+    }
+  }
   const stream = new ReadableStream(
     {
       type: 'bytes',

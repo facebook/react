@@ -14,14 +14,16 @@ global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStr
 global.TextEncoder = require('util').TextEncoder;
 
 let React;
-let ReactDOMFizzServer;
+let ReactDOMFizzStatic;
 let Suspense;
 
-describe('ReactDOMFizzServerBrowser', () => {
+describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOMFizzServer = require('react-dom/server.browser');
+    if (__EXPERIMENTAL__) {
+      ReactDOMFizzStatic = require('react-dom/static.browser');
+    }
     Suspense = React.Suspense;
   });
 
@@ -34,54 +36,53 @@ describe('ReactDOMFizzServerBrowser', () => {
     throw theInfinitePromise;
   }
 
-  async function readResult(stream) {
+  async function readContent(stream) {
     const reader = stream.getReader();
-    let result = '';
+    let content = '';
     while (true) {
       const {done, value} = await reader.read();
       if (done) {
-        return result;
+        return content;
       }
-      result += Buffer.from(value).toString('utf8');
+      content += Buffer.from(value).toString('utf8');
     }
   }
 
-  it('should call renderToReadableStream', async () => {
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
-      <div>hello world</div>,
-    );
-    const result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
+  // @gate experimental
+  it('should call prerender', async () => {
+    const result = await ReactDOMFizzStatic.prerender(<div>hello world</div>);
+    const prelude = await readContent(result.prelude);
+    expect(prelude).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
+  // @gate experimental
   it('should emit DOCTYPE at the root of the document', async () => {
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
+    const result = await ReactDOMFizzStatic.prerender(
       <html>
         <body>hello world</body>
       </html>,
     );
-    const result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(
+    const prelude = await readContent(result.prelude);
+    expect(prelude).toMatchInlineSnapshot(
       `"<!DOCTYPE html><html><body>hello world</body></html>"`,
     );
   });
 
+  // @gate experimental
   it('should emit bootstrap script src at the end', async () => {
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
-      <div>hello world</div>,
-      {
-        bootstrapScriptContent: 'INIT();',
-        bootstrapScripts: ['init.js'],
-        bootstrapModules: ['init.mjs'],
-      },
-    );
-    const result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(
+    const result = await ReactDOMFizzStatic.prerender(<div>hello world</div>, {
+      bootstrapScriptContent: 'INIT();',
+      bootstrapScripts: ['init.js'],
+      bootstrapModules: ['init.mjs'],
+    });
+    const prelude = await readContent(result.prelude);
+    expect(prelude).toMatchInlineSnapshot(
       `"<div>hello world</div><script>INIT();</script><script src=\\"init.js\\" async=\\"\\"></script><script type=\\"module\\" src=\\"init.mjs\\" async=\\"\\"></script>"`,
     );
   });
 
-  it('emits all HTML as one unit if we wait until the end to start', async () => {
+  // @gate experimental
+  it('emits all HTML as one unit', async () => {
     let hasLoaded = false;
     let resolve;
     const promise = new Promise(r => (resolve = r));
@@ -91,8 +92,7 @@ describe('ReactDOMFizzServerBrowser', () => {
       }
       return 'Done';
     }
-    let isComplete = false;
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
+    const resultPromise = ReactDOMFizzStatic.prerender(
       <div>
         <Suspense fallback="Loading">
           <Wait />
@@ -100,29 +100,25 @@ describe('ReactDOMFizzServerBrowser', () => {
       </div>,
     );
 
-    stream.allReady.then(() => (isComplete = true));
-
     await jest.runAllTimers();
-    expect(isComplete).toBe(false);
+
     // Resolve the loading.
     hasLoaded = true;
     await resolve();
 
-    await jest.runAllTimers();
-
-    expect(isComplete).toBe(true);
-
-    const result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(
+    const result = await resultPromise;
+    const prelude = await readContent(result.prelude);
+    expect(prelude).toMatchInlineSnapshot(
       `"<div><!--$-->Done<!-- --><!--/$--></div>"`,
     );
   });
 
+  // @gate experimental
   it('should reject the promise when an error is thrown at the root', async () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzServer.renderToReadableStream(
+      await ReactDOMFizzStatic.prerender(
         <div>
           <Throw />
         </div>,
@@ -139,11 +135,12 @@ describe('ReactDOMFizzServerBrowser', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
+  // @gate experimental
   it('should reject the promise when an error is thrown inside a fallback', async () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzServer.renderToReadableStream(
+      await ReactDOMFizzStatic.prerender(
         <div>
           <Suspense fallback={<Throw />}>
             <InfiniteSuspend />
@@ -162,9 +159,10 @@ describe('ReactDOMFizzServerBrowser', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
+  // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
+    const result = await ReactDOMFizzStatic.prerender(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <Throw />
@@ -177,15 +175,16 @@ describe('ReactDOMFizzServerBrowser', () => {
       },
     );
 
-    const result = await readResult(stream);
-    expect(result).toContain('Loading');
+    const prelude = await readContent(result.prelude);
+    expect(prelude).toContain('Loading');
     expect(reportedErrors).toEqual([theError]);
   });
 
+  // @gate experimental
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     const errors = [];
     const controller = new AbortController();
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
+    const resultPromise = ReactDOMFizzStatic.prerender(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <InfiniteSuspend />
@@ -199,20 +198,25 @@ describe('ReactDOMFizzServerBrowser', () => {
       },
     );
 
+    await jest.runAllTimers();
+
     controller.abort();
 
-    const result = await readResult(stream);
-    expect(result).toContain('Loading');
+    const result = await resultPromise;
+
+    const prelude = await readContent(result.prelude);
+    expect(prelude).toContain('Loading');
 
     expect(errors).toEqual([
       'The render was aborted by the server without a reason.',
     ]);
   });
 
+  // @gate experimental
   it('should reject if aborting before the shell is complete', async () => {
     const errors = [];
     const controller = new AbortController();
-    const promise = ReactDOMFizzServer.renderToReadableStream(
+    const promise = ReactDOMFizzStatic.prerender(
       <div>
         <InfiniteSuspend />
       </div>,
@@ -243,6 +247,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     expect(errors).toEqual(['aborted for reasons']);
   });
 
+  // @gate experimental
   it('should be able to abort before something suspends', async () => {
     const errors = [];
     const controller = new AbortController();
@@ -254,7 +259,7 @@ describe('ReactDOMFizzServerBrowser', () => {
         </Suspense>
       );
     }
-    const streamPromise = ReactDOMFizzServer.renderToReadableStream(
+    const streamPromise = ReactDOMFizzStatic.prerender(
       <div>
         <App />
       </div>,
@@ -280,6 +285,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     ]);
   });
 
+  // @gate experimental
   it('should reject if passing an already aborted signal', async () => {
     const errors = [];
     const controller = new AbortController();
@@ -290,7 +296,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     controller.signal.reason = theReason;
     controller.abort(theReason);
 
-    const promise = ReactDOMFizzServer.renderToReadableStream(
+    const promise = ReactDOMFizzStatic.prerender(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <InfiniteSuspend />
@@ -316,93 +322,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     expect(errors).toEqual(['aborted for reasons']);
   });
 
-  it('should not continue rendering after the reader cancels', async () => {
-    let hasLoaded = false;
-    let resolve;
-    let isComplete = false;
-    let rendered = false;
-    const promise = new Promise(r => (resolve = r));
-    function Wait() {
-      if (!hasLoaded) {
-        throw promise;
-      }
-      rendered = true;
-      return 'Done';
-    }
-    const errors = [];
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
-      <div>
-        <Suspense fallback={<div>Loading</div>}>
-          <Wait />
-        </Suspense>
-      </div>,
-      {
-        onError(x) {
-          errors.push(x.message);
-        },
-      },
-    );
-
-    stream.allReady.then(() => (isComplete = true));
-
-    expect(rendered).toBe(false);
-    expect(isComplete).toBe(false);
-
-    const reader = stream.getReader();
-    reader.cancel();
-
-    expect(errors).toEqual([
-      'The render was aborted by the server without a reason.',
-    ]);
-
-    hasLoaded = true;
-    resolve();
-
-    await jest.runAllTimers();
-
-    expect(rendered).toBe(false);
-    expect(isComplete).toBe(true);
-  });
-
-  it('should stream large contents that might overlow individual buffers', async () => {
-    const str492 = `(492) This string is intentionally 492 bytes long because we want to make sure we process chunks that will overflow buffer boundaries. It will repeat to fill out the bytes required (inclusive of this prompt):: foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux q :: total count (492)`;
-    const str2049 = `(2049) This string is intentionally 2049 bytes long because we want to make sure we process chunks that will overflow buffer boundaries. It will repeat to fill out the bytes required (inclusive of this prompt):: foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy  :: total count (2049)`;
-
-    // this specific layout is somewhat contrived to exercise the landing on
-    // an exact view boundary. it's not critical to test this edge case but
-    // since we are setting up a test in general for larger chunks I contrived it
-    // as such for now. I don't think it needs to be maintained if in the future
-    // the view sizes change or become dynamic becasue of the use of byobRequest
-    let stream;
-    stream = await ReactDOMFizzServer.renderToReadableStream(
-      <>
-        <div>
-          <span>{''}</span>
-        </div>
-        <div>{str492}</div>
-        <div>{str492}</div>
-      </>,
-    );
-
-    let result;
-    result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(
-      `"<div><span></span></div><div>${str492}</div><div>${str492}</div>"`,
-    );
-
-    // this size 2049 was chosen to be a couple base 2 orders larger than the current view
-    // size. if the size changes in the future hopefully this will still exercise
-    // a chunk that is too large for the view size.
-    stream = await ReactDOMFizzServer.renderToReadableStream(
-      <>
-        <div>{str2049}</div>
-      </>,
-    );
-
-    result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(`"<div>${str2049}</div>"`);
-  });
-
+  // @gate experimental
   it('supports custom abort reasons with a string', async () => {
     const promise = new Promise(r => {});
     function Wait() {
@@ -427,7 +347,7 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     const errors = [];
     const controller = new AbortController();
-    await ReactDOMFizzServer.renderToReadableStream(<App />, {
+    const resultPromise = ReactDOMFizzStatic.prerender(<App />, {
       signal: controller.signal,
       onError(x) {
         errors.push(x);
@@ -441,9 +361,12 @@ describe('ReactDOMFizzServerBrowser', () => {
     controller.signal.reason = 'foobar';
     controller.abort('foobar');
 
+    await resultPromise;
+
     expect(errors).toEqual(['foobar', 'foobar']);
   });
 
+  // @gate experimental
   it('supports custom abort reasons with an Error', async () => {
     const promise = new Promise(r => {});
     function Wait() {
@@ -468,7 +391,7 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     const errors = [];
     const controller = new AbortController();
-    await ReactDOMFizzServer.renderToReadableStream(<App />, {
+    const resultPromise = ReactDOMFizzStatic.prerender(<App />, {
       signal: controller.signal,
       onError(x) {
         errors.push(x.message);
@@ -481,6 +404,8 @@ describe('ReactDOMFizzServerBrowser', () => {
     // set it here manually
     controller.signal.reason = new Error('uh oh');
     controller.abort(new Error('uh oh'));
+
+    await resultPromise;
 
     expect(errors).toEqual(['uh oh', 'uh oh']);
   });

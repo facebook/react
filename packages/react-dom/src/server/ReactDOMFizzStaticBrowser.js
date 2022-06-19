@@ -26,7 +26,6 @@ import {
 type Options = {|
   identifierPrefix?: string,
   namespaceURI?: string,
-  nonce?: string,
   bootstrapScriptContent?: string,
   bootstrapScripts?: Array<string>,
   bootstrapModules?: Array<string>,
@@ -35,53 +34,39 @@ type Options = {|
   onError?: (error: mixed) => ?string,
 |};
 
-// TODO: Move to sub-classing ReadableStream.
-type ReactDOMServerReadableStream = ReadableStream & {
-  allReady: Promise<void>,
-};
+type StaticResult = {|
+  prelude: ReadableStream,
+|};
 
-function renderToReadableStream(
+function prerender(
   children: ReactNodeList,
   options?: Options,
-): Promise<ReactDOMServerReadableStream> {
+): Promise<StaticResult> {
   return new Promise((resolve, reject) => {
-    let onFatalError;
-    let onAllReady;
-    const allReady = new Promise((res, rej) => {
-      onAllReady = res;
-      onFatalError = rej;
-    });
+    const onFatalError = reject;
 
-    function onShellReady() {
-      const stream: ReactDOMServerReadableStream = (new ReadableStream(
+    function onAllReady() {
+      const stream = new ReadableStream(
         {
           type: 'bytes',
           pull(controller) {
             startFlowing(request, controller);
           },
-          cancel(reason) {
-            abort(request);
-          },
         },
         // $FlowFixMe size() methods are not allowed on byte streams.
         {highWaterMark: 0},
-      ): any);
-      // TODO: Move to sub-classing ReadableStream.
-      stream.allReady = allReady;
-      resolve(stream);
-    }
-    function onShellError(error: mixed) {
-      // If the shell errors the caller of `renderToReadableStream` won't have access to `allReady`.
-      // However, `allReady` will be rejected by `onFatalError` as well.
-      // So we need to catch the duplicate, uncatchable fatal error in `allReady` to prevent a `UnhandledPromiseRejection`.
-      allReady.catch(() => {});
-      reject(error);
+      );
+
+      const result = {
+        prelude: stream,
+      };
+      resolve(result);
     }
     const request = createRequest(
       children,
       createResponseState(
         options ? options.identifierPrefix : undefined,
-        options ? options.nonce : undefined,
+        undefined,
         options ? options.bootstrapScriptContent : undefined,
         options ? options.bootstrapScripts : undefined,
         options ? options.bootstrapModules : undefined,
@@ -90,8 +75,8 @@ function renderToReadableStream(
       options ? options.progressiveChunkSize : undefined,
       options ? options.onError : undefined,
       onAllReady,
-      onShellReady,
-      onShellError,
+      undefined,
+      undefined,
       onFatalError,
     );
     if (options && options.signal) {
@@ -110,4 +95,4 @@ function renderToReadableStream(
   });
 }
 
-export {renderToReadableStream, ReactVersion as version};
+export {prerender, ReactVersion as version};

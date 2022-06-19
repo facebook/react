@@ -310,15 +310,11 @@ function useTransition(): [
 }
 
 function useDeferredValue<T>(value: T): T {
-  // useDeferredValue() composes multiple hooks internally.
-  // Advance the current hook index the same number of times
-  // so that subsequent hooks have the right memoized state.
-  nextHook(); // State
-  nextHook(); // Effect
+  const hook = nextHook();
   hookLog.push({
     primitive: 'DeferredValue',
     stackError: new Error(),
-    value,
+    value: hook !== null ? hook.memoizedState : value,
   });
   return value;
 }
