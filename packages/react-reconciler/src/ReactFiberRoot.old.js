@@ -15,10 +15,6 @@ import type {
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent.old';
-import type {
-  PendingSuspenseBoundaries,
-  Transition,
-} from './ReactFiberTracingMarkerComponent.old';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.old';
@@ -45,13 +41,6 @@ export type RootState = {
   element: any,
   isDehydrated: boolean,
   cache: Cache,
-  // Transitions on the root can be represented as a bunch of tracing markers.
-  // Each entangled group of transitions can be treated as a tracing marker.
-  // It will have a set of pending suspense boundaries. These transitions
-  // are considered complete when the pending suspense boundaries set is
-  // empty. We can represent this as a Map of transitions to suspense
-  // boundary sets
-  incompleteTransitions: Map<Transition, PendingSuspenseBoundaries> | null,
 };
 
 function FiberRootNode(
@@ -107,6 +96,7 @@ function FiberRootNode(
     for (let i = 0; i < TotalLanes; i++) {
       transitionLanesMap.push(null);
     }
+    this.incompleteTransitions = null;
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
@@ -192,7 +182,6 @@ export function createFiberRoot(
       element: initialChildren,
       isDehydrated: hydrate,
       cache: initialCache,
-      incompleteTransitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
   } else {
@@ -200,7 +189,6 @@ export function createFiberRoot(
       element: initialChildren,
       isDehydrated: hydrate,
       cache: (null: any), // not enabled yet
-      incompleteTransitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
   }
