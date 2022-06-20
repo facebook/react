@@ -1,7 +1,6 @@
 #!/bin/sh
 #
 # To enable this hook, symlink or copy this file to .git/hooks/pre-commit.
-
 # Redirect output to stderr.
 exec 1>&2
 
