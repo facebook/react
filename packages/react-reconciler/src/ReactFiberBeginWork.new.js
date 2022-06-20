@@ -1317,7 +1317,6 @@ function updateHostRoot(current, workInProgress, renderLanes) {
       element: nextChildren,
       isDehydrated: false,
       cache: nextState.cache,
-      incompleteTransitions: nextState.incompleteTransitions,
     };
     const updateQueue: UpdateQueue<RootState> = (workInProgress.updateQueue: any);
     // `baseState` can always be the last state because the root doesn't
