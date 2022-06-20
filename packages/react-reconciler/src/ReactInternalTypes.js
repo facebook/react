@@ -26,11 +26,11 @@ import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
+// Doing this because there's a merge conflict because of the way sync-reconciler-fork
+// is implemented
+import type {PendingSuspenseBoundaries} from './ReactFiberTracingMarkerComponent.new';
+import type {Transition} from './ReactFiberTracingMarkerComponent.new';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
-import type {
-  Transition,
-  PendingSuspenseBoundaries,
-} from './ReactFiberTracingMarkerComponent.new';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
