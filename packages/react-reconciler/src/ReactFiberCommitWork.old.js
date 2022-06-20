@@ -2901,7 +2901,6 @@ function commitPassiveMountOnFiber(
             // and sets in the commit phase as we need to use them. We only
             // instantiate them in the fallback phase on an as needed basis
             if (rootIncompleteTransitions === null) {
-              // TODO(luna): Move this to the fiber root
               finishedRoot.incompleteTransitions = rootIncompleteTransitions = new Map();
             }
             if (instance.pendingMarkers === null) {
@@ -2922,12 +2921,14 @@ function commitPassiveMountOnFiber(
                 // the queue's marker set. We will iterate through the marker
                 // set when we toggle state on the suspense boundary and
                 // add or remove the pending suspense boundaries as needed.
-                if (!rootIncompleteTransitions.has(transition)) {
-                  rootIncompleteTransitions.set(transition, new Map());
+                if (rootIncompleteTransitions !== null) {
+                  if (!rootIncompleteTransitions.has(transition)) {
+                    rootIncompleteTransitions.set(transition, new Map());
+                  }
+                  instance.pendingMarkers.add(
+                    rootIncompleteTransitions.get(transition),
+                  );
                 }
-                instance.pendingMarkers.add(
-                  rootIncompleteTransitions.get(transition),
-                );
               });
             }
           }
