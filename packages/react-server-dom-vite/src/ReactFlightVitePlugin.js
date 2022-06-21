@@ -151,6 +151,10 @@ export default function ReactFlightVitePlugin({
       // Add more information for this module in the graph.
       // It will be used later to discover client boundaries.
       if (server && options.ssr && /\.[jt]sx?($|\?)/.test(id)) {
+        const {
+          meta: {imports: importsPre = []} = {},
+        } = server.moduleGraph.getModuleById(id);
+
         augmentModuleGraph(
           server.moduleGraph,
           id,
@@ -158,6 +162,21 @@ export default function ReactFlightVitePlugin({
           config.root,
           resolveAlias,
         );
+
+        if (globImporterPath && !/\/node_modules\//.test(id)) {
+          const {
+            meta: {imports: importsPost = []} = {},
+          } = server.moduleGraph.getModuleById(id);
+          const importsPrePaths = importsPre.map(i => i.from + i.variables);
+
+          if (
+            !importsPost.every(i =>
+              importsPrePaths.includes(i.from + i.variables),
+            )
+          ) {
+            invalidateGlobImporter();
+          }
+        }
       }
 
       /**
