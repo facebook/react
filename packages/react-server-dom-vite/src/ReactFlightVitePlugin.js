@@ -474,7 +474,6 @@ function isDirectImportInServer(
   // the original module before marking it as client boundary.
   return currentMod.meta.imports.some(
     imp =>
-      imp.action === 'import' &&
       imp.from === accModInfo.file &&
       (imp.variables || []).some(([name]) => accModInfo.exports.includes(name)),
   );
