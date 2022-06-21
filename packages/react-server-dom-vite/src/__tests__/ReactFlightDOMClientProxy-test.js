@@ -17,6 +17,10 @@ const name = 'Counter';
 
 const mockedDispatcher = {isRsc: true};
 
+jest.mock('../ViteImportMeta', () => {
+  return {META_HOT: null};
+});
+
 jest.mock('react', () => {
   const actualModule = jest.requireActual('react');
   return {

@@ -39,12 +39,26 @@ export default function ReactFlightVitePlugin({
   let globImporterPath;
   const allClientBoundaries = new Set();
 
+  function invalidateGlobImporter() {
+    if (globImporterPath && server) {
+      server.watcher.emit('change', globImporterPath);
+    }
+  }
+
   return {
     name: 'vite-plugin-react-server-components',
     enforce: 'pre',
 
     configureServer(_server: any) {
       server = _server;
+
+      const seenModules = {};
+      server.ws.on('rsc:cc404', data => {
+        if (!seenModules[data.id]) {
+          seenModules[data.id] = true;
+          invalidateGlobImporter();
+        }
+      });
     },
 
     async configResolved(_config: any) {
@@ -123,11 +137,10 @@ export default function ReactFlightVitePlugin({
         if (!moduleNode.meta) moduleNode.meta = {};
         if (!moduleNode.meta.isClientComponent) {
           moduleNode.meta.isClientComponent = true;
-          if (globImporterPath) {
-            // Invalidate glob importer file to account for the
-            // newly discovered client component.
-            server.watcher.emit('change', globImporterPath);
-          }
+
+          // Invalidate glob importer file to account for the
+          // newly discovered client component.
+          invalidateGlobImporter();
         }
       }
 

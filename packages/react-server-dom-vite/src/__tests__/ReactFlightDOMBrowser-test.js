@@ -9,6 +9,10 @@
 
 'use strict';
 
+jest.mock('../ViteImportMeta', () => {
+  return {META_HOT: null};
+});
+
 // Polyfills for test environment
 global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;

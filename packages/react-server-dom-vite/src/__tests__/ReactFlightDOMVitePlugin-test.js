@@ -11,6 +11,10 @@
 
 let proxyClientComponent, getComponentId;
 
+jest.mock('../ViteImportMeta', () => {
+  return {META_HOT: null};
+});
+
 describe('ReactFlightVitePlugin', () => {
   beforeEach(() => {
     jest.resetModules();

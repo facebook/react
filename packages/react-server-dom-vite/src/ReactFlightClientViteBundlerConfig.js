@@ -9,6 +9,7 @@
 
 import type {BundlerConfig} from './ReactFlightServerViteBundlerConfig';
 export type {BundlerConfig} from './ReactFlightServerViteBundlerConfig';
+import {META_HOT} from './ViteImportMeta';
 
 export opaque type ModuleMetaData = {
   id: string,
@@ -40,9 +41,14 @@ function importClientComponent(moduleId: string): Promise<any> {
   const modImport = allClientComponents[moduleId];
 
   if (!modImport) {
-    return Promise.reject(
-      new Error(`Could not find client component ${moduleId}`),
-    );
+    const error = new Error(`Could not find client component ${moduleId}`);
+
+    if (META_HOT) {
+      META_HOT.send('rsc:cc404', {id: moduleId});
+      return new Promise((_, reject) => setTimeout(() => reject(error), 200));
+    }
+
+    return Promise.reject(error);
   }
 
   return typeof modImport === 'function'
