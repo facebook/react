@@ -164,7 +164,10 @@ import {transferActualDuration} from './ReactProfilerTimer.old';
 import {popCacheProvider} from './ReactFiberCacheComponent.old';
 import {popTreeContext} from './ReactFiberTreeContext.old';
 import {popRootTransition, popTransition} from './ReactFiberTransition.old';
-import {popTracingMarker} from './ReactFiberTracingMarkerComponent.old';
+import {
+  popMarkerInstance,
+  popRootMarkerInstance,
+} from './ReactFiberTracingMarkerComponent.old';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -900,6 +903,11 @@ function completeWork(
         }
         popCacheProvider(workInProgress, cache);
       }
+
+      if (enableTransitionTracing) {
+        popRootMarkerInstance(workInProgress);
+      }
+
       popRootTransition(workInProgress, fiberRoot, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -1579,7 +1587,9 @@ function completeWork(
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
-        popTracingMarker(workInProgress);
+        if (workInProgress.stateNode !== null) {
+          popMarkerInstance(workInProgress);
+        }
         bubbleProperties(workInProgress);
 
         if (

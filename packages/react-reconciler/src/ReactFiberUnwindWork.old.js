@@ -49,7 +49,10 @@ import {popCacheProvider} from './ReactFiberCacheComponent.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 import {popTreeContext} from './ReactFiberTreeContext.old';
 import {popRootTransition, popTransition} from './ReactFiberTransition.old';
-import {popTracingMarker} from './ReactFiberTracingMarkerComponent.old';
+import {
+  popMarkerInstance,
+  popRootMarkerInstance,
+} from './ReactFiberTracingMarkerComponent.old';
 
 function unwindWork(
   current: Fiber | null,
@@ -86,6 +89,11 @@ function unwindWork(
         const cache: Cache = workInProgress.memoizedState.cache;
         popCacheProvider(workInProgress, cache);
       }
+
+      if (enableTransitionTracing) {
+        popRootMarkerInstance(workInProgress);
+      }
+
       popRootTransition(workInProgress, root, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -162,7 +170,9 @@ function unwindWork(
       return null;
     case TracingMarkerComponent:
       if (enableTransitionTracing) {
-        popTracingMarker(workInProgress);
+        if (workInProgress.stateNode !== null) {
+          popMarkerInstance(workInProgress);
+        }
       }
       return null;
     default:
@@ -194,6 +204,11 @@ function unwindInterruptedWork(
         const cache: Cache = interruptedWork.memoizedState.cache;
         popCacheProvider(interruptedWork, cache);
       }
+
+      if (enableTransitionTracing) {
+        popRootMarkerInstance(interruptedWork);
+      }
+
       popRootTransition(interruptedWork, root, renderLanes);
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
@@ -230,7 +245,9 @@ function unwindInterruptedWork(
       break;
     case TracingMarkerComponent:
       if (enableTransitionTracing) {
-        popTracingMarker(interruptedWork);
+        if (interruptedWork.stateNode !== null) {
+          popMarkerInstance(interruptedWork);
+        }
       }
       break;
     default:

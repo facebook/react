@@ -13,6 +13,7 @@ import type {StackCursor} from './ReactFiberStack.old';
 
 import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 import {createCursor, push, pop} from './ReactFiberStack.old';
+import {getWorkInProgressTransitions} from './ReactFiberWorkLoop.old';
 
 export type SuspenseInfo = {name: string | null};
 
@@ -100,31 +101,75 @@ export function processTransitionCallbacks(
 // tracing marker can be logged as complete
 // This code lives separate from the ReactFiberTransition code because
 // we push and pop on the tracing marker, not the suspense boundary
-const tracingMarkerStack: StackCursor<Array<Fiber> | null> = createCursor(null);
+const markerInstanceStack: StackCursor<Array<TracingMarkerInstance> | null> = createCursor(
+  null,
+);
 
-export function pushTracingMarker(workInProgress: Fiber): void {
+export function pushRootMarkerInstance(workInProgress: Fiber): void {
   if (enableTransitionTracing) {
-    if (tracingMarkerStack.current === null) {
-      push(tracingMarkerStack, [workInProgress], workInProgress);
+    const transitions = getWorkInProgressTransitions();
+    const root = workInProgress.stateNode;
+    let incompleteTransitions = root.incompleteTransitions;
+    if (transitions !== null) {
+      if (incompleteTransitions === null) {
+        root.incompleteTransitions = incompleteTransitions = new Map();
+      }
+
+      transitions.forEach(transition => {
+        incompleteTransitions.set(transition, new Map());
+      });
+    }
+
+    if (incompleteTransitions === null) {
+      push(markerInstanceStack, null, workInProgress);
+    } else {
+      const markerInstances = [];
+      incompleteTransitions.forEach((pendingSuspenseBoundaries, transition) => {
+        markerInstances.push({
+          transitions: new Set([transition]),
+          pendingSuspenseBoundaries,
+        });
+      });
+      push(markerInstanceStack, markerInstances, workInProgress);
+    }
+  }
+}
+
+export function popRootMarkerInstance(workInProgress: Fiber) {
+  if (enableTransitionTracing) {
+    pop(markerInstanceStack, workInProgress);
+  }
+}
+
+export function pushMarkerInstance(
+  workInProgress: Fiber,
+  transitions: Set<Transition> | null,
+  pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
+): void {
+  if (enableTransitionTracing) {
+    const markerInstance = {transitions, pendingSuspenseBoundaries};
+
+    if (markerInstanceStack.current === null) {
+      push(markerInstanceStack, [markerInstance], workInProgress);
     } else {
       push(
-        tracingMarkerStack,
-        tracingMarkerStack.current.concat(workInProgress),
+        markerInstanceStack,
+        markerInstanceStack.current.concat(markerInstance),
         workInProgress,
       );
     }
   }
 }
 
-export function popTracingMarker(workInProgress: Fiber): void {
+export function popMarkerInstance(workInProgress: Fiber): void {
   if (enableTransitionTracing) {
-    pop(tracingMarkerStack, workInProgress);
+    pop(markerInstanceStack, workInProgress);
   }
 }
 
-export function getTracingMarkers(): Array<Fiber> | null {
+export function getMarkerInstances(): Array<TracingMarkerInstance> | null {
   if (enableTransitionTracing) {
-    return tracingMarkerStack.current;
+    return markerInstanceStack.current;
   }
   return null;
 }
