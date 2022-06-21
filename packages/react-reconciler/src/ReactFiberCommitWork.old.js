@@ -2809,12 +2809,12 @@ function commitPassiveMountOnFiber(
       if (enableTransitionTracing) {
         // Get the transitions that were initiatized during the render
         // and add a start transition callback for each of them
-        const state = finishedWork.memoizedState;
-        let incompleteTransitions = state.incompleteTransitions;
+        const root = finishedWork.stateNode;
+        let incompleteTransitions = root.incompleteTransitions;
         // Initial render
         if (committedTransitions !== null) {
-          if (state.incompleteTransitions === null) {
-            state.incompleteTransitions = incompleteTransitions = new Map();
+          if (incompleteTransitions === null) {
+            root.incompleteTransitions = incompleteTransitions = new Map();
           }
 
           committedTransitions.forEach(transition => {
@@ -2849,7 +2849,7 @@ function commitPassiveMountOnFiber(
           incompleteTransitions === null ||
           incompleteTransitions.size === 0
         ) {
-          state.incompleteTransitions = null;
+          root.incompleteTransitions = null;
         }
       }
       break;
@@ -2889,22 +2889,19 @@ function commitPassiveMountOnFiber(
       if (enableTransitionTracing) {
         const isFallback = finishedWork.memoizedState;
         const queue = (finishedWork.updateQueue: any);
-        const rootMemoizedState = finishedRoot.current.memoizedState;
         const instance = finishedWork.stateNode;
 
         if (queue !== null) {
           if (isFallback) {
             const transitions = queue.transitions;
             let prevTransitions = instance.transitions;
-            let rootIncompleteTransitions =
-              rootMemoizedState.incompleteTransitions;
+            let rootIncompleteTransitions = finishedRoot.incompleteTransitions;
 
             // We lazily instantiate transition tracing relevant maps
             // and sets in the commit phase as we need to use them. We only
             // instantiate them in the fallback phase on an as needed basis
-            if (rootMemoizedState.incompleteTransitions === null) {
-              // TODO(luna): Move this to the fiber root
-              rootMemoizedState.incompleteTransitions = rootIncompleteTransitions = new Map();
+            if (rootIncompleteTransitions === null) {
+              finishedRoot.incompleteTransitions = rootIncompleteTransitions = new Map();
             }
             if (instance.pendingMarkers === null) {
               instance.pendingMarkers = new Set();
@@ -2924,12 +2921,14 @@ function commitPassiveMountOnFiber(
                 // the queue's marker set. We will iterate through the marker
                 // set when we toggle state on the suspense boundary and
                 // add or remove the pending suspense boundaries as needed.
-                if (!rootIncompleteTransitions.has(transition)) {
-                  rootIncompleteTransitions.set(transition, new Map());
+                if (rootIncompleteTransitions !== null) {
+                  if (!rootIncompleteTransitions.has(transition)) {
+                    rootIncompleteTransitions.set(transition, new Map());
+                  }
+                  instance.pendingMarkers.add(
+                    rootIncompleteTransitions.get(transition),
+                  );
                 }
-                instance.pendingMarkers.add(
-                  rootIncompleteTransitions.get(transition),
-                );
               });
             }
           }

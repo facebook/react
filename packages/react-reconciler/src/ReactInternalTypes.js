@@ -26,6 +26,9 @@ import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
+// Doing this because there's a merge conflict because of the way sync-reconciler-fork
+// is implemented
+import type {PendingSuspenseBoundaries} from './ReactFiberTracingMarkerComponent.new';
 import type {Transition} from './ReactFiberTracingMarkerComponent.new';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
 
@@ -326,6 +329,13 @@ export type TransitionTracingCallbacks = {
 type TransitionTracingOnlyFiberRootProperties = {|
   transitionCallbacks: null | TransitionTracingCallbacks,
   transitionLanes: Array<Array<Transition> | null>,
+  // Transitions on the root can be represented as a bunch of tracing markers.
+  // Each entangled group of transitions can be treated as a tracing marker.
+  // It will have a set of pending suspense boundaries. These transitions
+  // are considered complete when the pending suspense boundaries set is
+  // empty. We can represent this as a Map of transitions to suspense
+  // boundary sets
+  incompleteTransitions: Map<Transition, PendingSuspenseBoundaries> | null,
 |};
 
 // Exported FiberRoot type includes all properties,
