@@ -18,6 +18,7 @@ import path from 'path';
 
 type PluginOptions = {
   serverBuildEntries: string[],
+  optimizeBoundaries: boolean | 'build',
   isServerComponentImporterAllowed?: (
     importer: string,
     source: string,
@@ -31,6 +32,7 @@ const isClientComponent = id => /\.client\.[jt]sx?($|\?)/.test(id);
 
 export default function ReactFlightVitePlugin({
   serverBuildEntries,
+  optimizeBoundaries = 'build',
   isServerComponentImporterAllowed = importer => false,
 }: PluginOptions = {}) {
   let config;
@@ -151,10 +153,6 @@ export default function ReactFlightVitePlugin({
       // Add more information for this module in the graph.
       // It will be used later to discover client boundaries.
       if (server && options.ssr && /\.[jt]sx?($|\?)/.test(id)) {
-        const {
-          meta: {imports: importsPre = []} = {},
-        } = server.moduleGraph.getModuleById(id);
-
         augmentModuleGraph(
           server.moduleGraph,
           id,
@@ -162,21 +160,6 @@ export default function ReactFlightVitePlugin({
           config.root,
           resolveAlias,
         );
-
-        if (globImporterPath && !/\/node_modules\//.test(id)) {
-          const {
-            meta: {imports: importsPost = []} = {},
-          } = server.moduleGraph.getModuleById(id);
-          const importsPrePaths = importsPre.map(i => i.from + i.variables);
-
-          if (
-            !importsPost.every(i =>
-              importsPrePaths.includes(i.from + i.variables),
-            )
-          ) {
-            invalidateGlobImporter();
-          }
-        }
       }
 
       /**
@@ -237,9 +220,10 @@ export default function ReactFlightVitePlugin({
           // creating a new list of discovered components from scratch,
           // reuse the already discovered ones and simply add new ones
           // to the list without removing anything.
-          findClientBoundaries(server.moduleGraph).forEach(boundary =>
-            allClientBoundaries.add(boundary),
-          );
+          findClientBoundaries(
+            server.moduleGraph,
+            optimizeBoundaries === true,
+          ).forEach(boundary => allClientBoundaries.add(boundary));
 
           return injectGlobs(Array.from(allClientBoundaries));
         }
@@ -250,9 +234,10 @@ export default function ReactFlightVitePlugin({
           );
         }
 
-        return findClientBoundariesForClientBuild(serverBuildEntries).then(
-          injectGlobs,
-        );
+        return findClientBoundariesForClientBuild(
+          serverBuildEntries,
+          optimizeBoundaries !== false,
+        ).then(injectGlobs);
       }
     },
   };
@@ -322,7 +307,7 @@ export async function proxyClientComponent(filepath: string, src?: string) {
   return {code: proxyCode, moduleSideEffects: false};
 }
 
-function findClientBoundaries(moduleGraph: any) {
+function findClientBoundaries(moduleGraph: any, optimizeBoundaries = false) {
   const clientBoundaries = [];
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
@@ -331,7 +316,10 @@ function findClientBoundaries(moduleGraph: any) {
       moduleNode => moduleNode.meta && moduleNode.meta.isClientComponent,
     );
 
-    if (clientModule && isDirectImportInServer(clientModule)) {
+    if (
+      clientModule &&
+      (!optimizeBoundaries || isDirectImportInServer(clientModule))
+    ) {
       clientBoundaries.push(clientModule.file);
     }
   }
@@ -339,7 +327,10 @@ function findClientBoundaries(moduleGraph: any) {
   return clientBoundaries;
 }
 
-async function findClientBoundariesForClientBuild(serverEntries: string[]) {
+async function findClientBoundariesForClientBuild(
+  serverEntries: string[],
+  optimizeBoundaries: boolean,
+) {
   // Viteception
   const server = await createServer({
     clearScreen: false,
@@ -356,7 +347,7 @@ async function findClientBoundariesForClientBuild(serverEntries: string[]) {
 
   await server.close();
 
-  return findClientBoundaries(server.moduleGraph);
+  return findClientBoundaries(server.moduleGraph, optimizeBoundaries);
 }
 
 const hashImportsPlugin = {
