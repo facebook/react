@@ -259,8 +259,9 @@ import {
   getPendingTransitions,
 } from './ReactFiberTransition.old';
 import {
-  getTracingMarkers,
-  pushTracingMarker,
+  getMarkerInstances,
+  pushMarkerInstance,
+  pushRootMarkerInstance,
 } from './ReactFiberTracingMarkerComponent.old';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -909,7 +910,14 @@ function updateTracingMarkerComponent(
     }
   }
 
-  pushTracingMarker(workInProgress);
+  const instance = workInProgress.stateNode;
+  if (instance !== null) {
+    pushMarkerInstance(
+      workInProgress,
+      instance.transitions,
+      instance.pendingSuspenseBoundaries,
+    );
+  }
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
@@ -1312,6 +1320,10 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   const nextState: RootState = workInProgress.memoizedState;
   const root: FiberRoot = workInProgress.stateNode;
   pushRootTransition(workInProgress, root, renderLanes);
+
+  if (enableTransitionTracing) {
+    pushRootMarkerInstance(workInProgress);
+  }
 
   if (enableCache) {
     const nextCache: Cache = nextState.cache;
@@ -2114,10 +2126,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         const currentTransitions = getPendingTransitions();
         if (currentTransitions !== null) {
           // If there are no transitions, we don't need to keep track of tracing markers
-          const currentTracingMarkers = getTracingMarkers();
+          const parentMarkerInstances = getMarkerInstances();
           const primaryChildUpdateQueue: OffscreenQueue = {
             transitions: currentTransitions,
-            tracingMarkers: currentTracingMarkers,
+            markerInstances: parentMarkerInstances,
           };
           primaryChildFragment.updateQueue = primaryChildUpdateQueue;
         }
@@ -2200,10 +2212,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       if (enableTransitionTracing) {
         const currentTransitions = getPendingTransitions();
         if (currentTransitions !== null) {
-          const currentTracingMarkers = getTracingMarkers();
+          const parentMarkerInstances = getMarkerInstances();
           const primaryChildUpdateQueue: OffscreenQueue = {
             transitions: currentTransitions,
-            tracingMarkers: currentTracingMarkers,
+            markerInstances: parentMarkerInstances,
           };
           primaryChildFragment.updateQueue = primaryChildUpdateQueue;
         }
@@ -3510,6 +3522,10 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       const root: FiberRoot = workInProgress.stateNode;
       pushRootTransition(workInProgress, root, renderLanes);
 
+      if (enableTransitionTracing) {
+        pushRootMarkerInstance(workInProgress);
+      }
+
       if (enableCache) {
         const cache: Cache = current.memoizedState.cache;
         pushCacheProvider(workInProgress, cache);
@@ -3702,7 +3718,14 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
-        pushTracingMarker(workInProgress);
+        const instance: TracingMarkerInstance = workInProgress.stateNode;
+        if (instance !== null) {
+          pushMarkerInstance(
+            workInProgress,
+            instance.transitions,
+            instance.pendingSuspenseBoundaries,
+          );
+        }
       }
     }
   }
