@@ -9,7 +9,7 @@
 
 import type {BundlerConfig} from './ReactFlightServerViteBundlerConfig';
 export type {BundlerConfig} from './ReactFlightServerViteBundlerConfig';
-import {META_HOT} from './ViteImportMeta';
+import {META_HOT, META_ENV_DEV} from './ViteImportMeta';
 
 export opaque type ModuleMetaData = {
   id: string,
@@ -33,7 +33,7 @@ const allClientComponents: any = {
 
 // Mock client component imports during testing
 declare var jest: {};
-if (typeof jest !== 'undefined') {
+if (META_ENV_DEV && typeof jest !== 'undefined') {
   global.allClientComponents = allClientComponents;
 }
 

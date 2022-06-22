@@ -12,7 +12,7 @@
 let proxyClientComponent, getComponentId;
 
 jest.mock('../ViteImportMeta', () => {
-  return {META_HOT: null};
+  return {META_HOT: null, META_ENV_DEV: true};
 });
 
 describe('ReactFlightVitePlugin', () => {

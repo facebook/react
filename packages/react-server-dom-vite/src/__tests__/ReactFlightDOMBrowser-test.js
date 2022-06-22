@@ -10,7 +10,7 @@
 'use strict';
 
 jest.mock('../ViteImportMeta', () => {
-  return {META_HOT: null};
+  return {META_HOT: null, META_ENV_DEV: true};
 });
 
 // Polyfills for test environment
