@@ -131,6 +131,9 @@ export function describeNativeComponentFrame(
       } catch (x) {
         control = x;
       }
+      // TODO(luna): This will currently only throw if the function component
+      // tries to access React/ReactDOM/props. We should probably make this throw
+      // in simple components too
       fn();
     }
   } catch (sample) {

@@ -9,6 +9,15 @@
 
 'use strict';
 
+function normalizeCodeLocInfo(str) {
+  return (
+    typeof str === 'string' &&
+    str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+      return '\n    in ' + name + ' (at **)';
+    })
+  );
+}
+
 describe('Timeline profiler', () => {
   let React;
   let ReactDOMClient;
@@ -1175,6 +1184,18 @@ describe('Timeline profiler', () => {
         if (timelineData) {
           expect(timelineData).toHaveLength(1);
 
+          // normalize the location for component stack source
+          // for snapshot testing
+          timelineData.forEach(data => {
+            data.schedulingEvents.forEach(event => {
+              if (event.componentStack) {
+                event.componentStack = normalizeCodeLocInfo(
+                  event.componentStack,
+                );
+              }
+            });
+          });
+
           return timelineData[0];
         } else {
           return null;
@@ -1256,6 +1277,8 @@ describe('Timeline profiler', () => {
           Array [
             Object {
               "componentName": "Example",
+              "componentStack": "
+              in Example (at **)",
               "lanes": "0b0000000000000000000000000000100",
               "timestamp": 10,
               "type": "schedule-state-update",
@@ -1263,6 +1286,8 @@ describe('Timeline profiler', () => {
             },
             Object {
               "componentName": "Example",
+              "componentStack": "
+              in Example (at **)",
               "lanes": "0b0000000000000000000000001000000",
               "timestamp": 10,
               "type": "schedule-state-update",
@@ -1270,6 +1295,8 @@ describe('Timeline profiler', () => {
             },
             Object {
               "componentName": "Example",
+              "componentStack": "
+              in Example (at **)",
               "lanes": "0b0000000000000000000000001000000",
               "timestamp": 10,
               "type": "schedule-state-update",
@@ -1277,6 +1304,8 @@ describe('Timeline profiler', () => {
             },
             Object {
               "componentName": "Example",
+              "componentStack": "
+              in Example (at **)",
               "lanes": "0b0000000000000000000000000010000",
               "timestamp": 10,
               "type": "schedule-state-update",
@@ -1614,6 +1643,8 @@ describe('Timeline profiler', () => {
             },
             Object {
               "componentName": "Example",
+              "componentStack": "
+              in Example (at **)",
               "lanes": "0b0000000000000000000000000000001",
               "timestamp": 20,
               "type": "schedule-state-update",
@@ -1741,6 +1772,8 @@ describe('Timeline profiler', () => {
             },
             Object {
               "componentName": "Example",
+              "componentStack": "
+              in Example (at **)",
               "lanes": "0b0000000000000000000000000010000",
               "timestamp": 10,
               "type": "schedule-state-update",
@@ -1872,6 +1905,8 @@ describe('Timeline profiler', () => {
             },
             Object {
               "componentName": "Example",
+              "componentStack": "
+              in Example (at **)",
               "lanes": "0b0000000000000000000000000000001",
               "timestamp": 21,
               "type": "schedule-state-update",
@@ -1934,6 +1969,8 @@ describe('Timeline profiler', () => {
             },
             Object {
               "componentName": "Example",
+              "componentStack": "
+              in Example (at **)",
               "lanes": "0b0000000000000000000000000010000",
               "timestamp": 21,
               "type": "schedule-state-update",
@@ -1982,6 +2019,8 @@ describe('Timeline profiler', () => {
             },
             Object {
               "componentName": "Example",
+              "componentStack": "
+              in Example (at **)",
               "lanes": "0b0000000000000000000000000010000",
               "timestamp": 20,
               "type": "schedule-state-update",
@@ -2065,6 +2104,8 @@ describe('Timeline profiler', () => {
             },
             Object {
               "componentName": "ErrorBoundary",
+              "componentStack": "
+              in ErrorBoundary (at **)",
               "lanes": "0b0000000000000000000000000000001",
               "timestamp": 20,
               "type": "schedule-state-update",
@@ -2177,6 +2218,8 @@ describe('Timeline profiler', () => {
             },
             Object {
               "componentName": "ErrorBoundary",
+              "componentStack": "
+              in ErrorBoundary (at **)",
               "lanes": "0b0000000000000000000000000000001",
               "timestamp": 30,
               "type": "schedule-state-update",
@@ -2439,6 +2482,52 @@ describe('Timeline profiler', () => {
               },
             ],
           }
+        `);
+      });
+
+      it('should generate component stacks for state update', async () => {
+        function CommponentWithChildren({initialRender}) {
+          Scheduler.unstable_yieldValue('Render ComponentWithChildren');
+          return <Child initialRender={initialRender} />;
+        }
+
+        function Child({initialRender}) {
+          const [didRender, setDidRender] = React.useState(initialRender);
+          if (!didRender) {
+            setDidRender(true);
+          }
+          Scheduler.unstable_yieldValue('Render Child');
+          return null;
+        }
+
+        renderRootHelper(<CommponentWithChildren initialRender={false} />);
+
+        expect(Scheduler).toFlushAndYield([
+          'Render ComponentWithChildren',
+          'Render Child',
+          'Render Child',
+        ]);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Child",
+              "componentStack": "
+              in Child (at **)
+              in CommponentWithChildren (at **)",
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+          ]
         `);
       });
     });

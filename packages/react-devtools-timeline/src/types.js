@@ -51,6 +51,7 @@ export type ReactScheduleRenderEvent = {|
 |};
 export type ReactScheduleStateUpdateEvent = {|
   ...BaseReactScheduleEvent,
+  +componentStack?: string,
   +type: 'schedule-state-update',
 |};
 export type ReactScheduleForceUpdateEvent = {|
