@@ -971,8 +971,8 @@ export function didNotMatchHydratedContainerTextInstance(
   textInstance: TextInstance,
   text: string,
   isConcurrentMode: boolean,
+  shouldWarnDev: boolean,
 ) {
-  const shouldWarnDev = true;
   checkForUnmatchedText(
     textInstance.nodeValue,
     text,
@@ -988,9 +988,9 @@ export function didNotMatchHydratedTextInstance(
   textInstance: TextInstance,
   text: string,
   isConcurrentMode: boolean,
+  shouldWarnDev: boolean,
 ) {
   if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    const shouldWarnDev = true;
     checkForUnmatchedText(
       textInstance.nodeValue,
       text,
