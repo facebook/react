@@ -21,7 +21,7 @@ import {
   describeClassComponentFrame,
 } from './DevToolsComponentStackFrame';
 
-function describeFiber(
+export function describeFiber(
   workTagMap: WorkTagMap,
   workInProgress: Fiber,
   currentDispatcherRef: CurrentDispatcherRef,
