@@ -4154,10 +4154,6 @@ describe('ReactDOMFizzServer', () => {
       });
     });
 
-    function P({text}) {
-      return <p>{text}</p>;
-    }
-
     function App({isClient}) {
       return (
         <div>
