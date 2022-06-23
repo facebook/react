@@ -6,6 +6,9 @@
  *
  * @flow
  */
+
+import {normalizeCodeLocInfo} from './utils';
+
 let React;
 let ReactDOMClient;
 let act;
@@ -59,15 +62,6 @@ describe('console', () => {
     act = utils.act;
     legacyRender = utils.legacyRender;
   });
-
-  function normalizeCodeLocInfo(str) {
-    return (
-      str &&
-      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
-        return '\n    in ' + name + ' (at **)';
-      })
-    );
-  }
 
   // @reactVersion >=18.0
   it('should not patch console methods that are not explicitly overridden', () => {
