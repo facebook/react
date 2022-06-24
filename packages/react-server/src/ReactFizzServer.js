@@ -205,6 +205,7 @@ export opaque type Request = {
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>,
+  lazyTasks: Array<Task>, // Tasks that will only be worked on if all other tasks are complete.
   // Queues to flush in order of priority
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
@@ -255,6 +256,7 @@ export function createRequest(
   responseState: ResponseState,
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
+  defaultHead: ReactNodeList,
   onError: void | ((error: mixed) => ?string),
   onAllReady: void | (() => void),
   onShellReady: void | (() => void),
@@ -281,6 +283,7 @@ export function createRequest(
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
+    lazyTasks: [],
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
@@ -317,7 +320,7 @@ export function createRequest(
     rootContextSnapshot,
     emptyTreeContext,
   );
-  createHeadBoundary(request, rootTask);
+  createHeadBoundary(request, rootTask, defaultHead);
   pingedTasks.push(rootTask);
   return request;
 }
@@ -640,18 +643,45 @@ function renderBackupSuspenseBoundary(
   popComponentStackInDEV(task);
 }
 
-function createHeadBoundary(request: Request, task: Task): void {
+function createHeadBoundary(
+  request: Request,
+  task: Task,
+  defaultHead: ReactNodeList,
+): void {
   if (request.headBoundary !== null) {
     throw new Error(
       'createHeadBoundary was called when a head boundary already exists',
     );
   }
-  const parentBoundary = task.blockedBoundary;
-  const parentSegment = task.blockedSegment;
+  const defaultHeadAbortSet: Set<Task> = new Set();
+  const headBoundary = createSuspenseBoundary(request, defaultHeadAbortSet);
 
-  const fallbackAbortSet: Set<Task> = new Set();
-  const headBoundary = createSuspenseBoundary(request, fallbackAbortSet);
-  const insertionIndex = parentSegment.chunks.length;
+  if (defaultHead !== undefined) {
+    const defaultHeadSegment = createPendingSegment(
+      request,
+      0,
+      headBoundary,
+      getHeadFormatContext(),
+      // The head boundary can only be preceeded by <html> or nothing
+      false,
+      false,
+    );
+
+    const defaultHeadFallbackTask = createTask(
+      request,
+      defaultHead,
+      null,
+      defaultHeadSegment,
+      defaultHeadAbortSet,
+      task.legacyContext,
+      task.context,
+      task.treeContext,
+    );
+    if (__DEV__) {
+      defaultHeadFallbackTask.componentStack = task.componentStack;
+    }
+    request.lazyTasks.push(defaultHeadFallbackTask);
+  }
 
   const headSegment = createPendingSegment(
     request,
@@ -691,6 +721,12 @@ function renderHead(
     renderHostElement(request, task, type, props);
     headSegment.status = COMPLETED;
     headBoundary.completedSegments.push(headSegment);
+    headBoundary.fallbackAbortableTasks.forEach(abortableTask => {
+      if (abortableTask !== task) {
+        abortTaskSoft.call(request, abortableTask);
+      }
+    });
+    headBoundary.fallbackAbortableTasks.clear();
   } catch (error) {
     headSegment.status = ERRORED;
     headBoundary.forceClientRender = true;
@@ -1856,11 +1892,21 @@ export function performWork(request: Request): void {
   try {
     const pingedTasks = request.pingedTasks;
     let i;
-    for (i = 0; i < pingedTasks.length; i++) {
-      const task = pingedTasks[i];
-      retryTask(request, task);
-    }
-    pingedTasks.splice(0, i);
+    do {
+      for (i = 0; i < pingedTasks.length; i++) {
+        const task = pingedTasks[i];
+        retryTask(request, task);
+      }
+      pingedTasks.splice(0, i);
+      const lazyTasks = request.lazyTasks;
+      if (lazyTasks.length === request.allPendingTasks) {
+        for (i = 0; i < lazyTasks.length; i++) {
+          const task = lazyTasks[i];
+          retryTask(request, task);
+        }
+        lazyTasks.splice(0, i);
+      }
+    } while (pingedTasks.length);
     if (request.destination !== null) {
       flushCompletedQueues(request, request.destination);
     }
@@ -2147,13 +2193,6 @@ function flushCompletedQueues(
     // until the sink tells us to stop. When we should stop, we still finish writing
     // that item fully and then yield. At that point we remove the already completed
     // items up until the point we completed them.
-    let i;
-    let prelude = request.prelude;
-    for (i = 0; i < prelude.length; i++) {
-      // we expect the prelude to be tiny and will ignore backpressure
-      writeChunk(destination, prelude[i]);
-    }
-    prelude.length = 0;
 
     // Resources can be written anytime after we have flushed the headSegment
     if (request.headSegment === null) {
@@ -2162,8 +2201,16 @@ function flushCompletedQueues(
 
     // TODO: It's kind of unfortunate to keep checking this array after we've already
     // emitted the root.
+    let i;
     const completedRootSegment = request.completedRootSegment;
     if (completedRootSegment !== null) {
+      let prelude = request.prelude;
+      for (i = 0; i < prelude.length; i++) {
+        // we expect the prelude to be tiny and will ignore backpressure
+        writeChunk(destination, prelude[i]);
+      }
+      prelude.length = 0;
+
       const headSegment = request.headSegment;
       if (headSegment !== null && headSegment.status === COMPLETED) {
         writeResources(destination, request.resources);

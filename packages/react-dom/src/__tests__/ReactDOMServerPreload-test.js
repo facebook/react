@@ -1239,4 +1239,132 @@ describe('ReactDOMServerPreload', () => {
       </html>,
     );
   });
+
+  it('renders a defaultHead if no <head> is found', async () => {
+    function App() {
+      return (
+        <>
+          <div>hello world</div>
+        </>
+      );
+    }
+
+    await actIntoEmptyDocument(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        defaultHead: (
+          <head>
+            <title>default title</title>
+            <link rel="stylesheet" href="foo" />
+          </head>
+        ),
+      });
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="style" href="foo" />
+          <title>default title</title>
+          <link rel="stylesheet" href="foo" />
+        </head>
+        <body>
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('ignores the defaultHead if a <head> is found', async () => {
+    function App() {
+      return (
+        <>
+          <div>hello world</div>
+          <head>
+            <title>the actual title</title>
+            <link rel="stylesheet" href="bar" />
+          </head>
+        </>
+      );
+    }
+
+    await actIntoEmptyDocument(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        defaultHead: (
+          <head>
+            <title>default title</title>
+            <link rel="stylesheet" href="foo" />
+          </head>
+        ),
+      });
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="style" href="bar" />
+          <title>the actual title</title>
+          <link rel="stylesheet" href="bar" />
+        </head>
+        <body>
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('ignores the defaultHead if a <head> is found even if the head is found in a suspended segment', async () => {
+    function Head({children}) {
+      readText('head');
+      return <head>{children}</head>;
+    }
+    function App() {
+      return (
+        <>
+          <div>hello world</div>
+          <Head>
+            <title>the actual title</title>
+            <link rel="stylesheet" href="bar" />
+          </Head>
+        </>
+      );
+    }
+
+    await actIntoEmptyDocument(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        defaultHead: (
+          <head>
+            <title>default title</title>
+            <link rel="stylesheet" href="foo" />
+          </head>
+        ),
+      });
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <html>
+        <head />
+        <body />
+      </html>,
+    );
+
+    await actIntoEmptyDocument(async () => {
+      resolveText('head');
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="style" href="bar" />
+          <title>the actual title</title>
+          <link rel="stylesheet" href="bar" />
+        </head>
+        <body>
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+  });
 });
