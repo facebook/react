@@ -156,6 +156,7 @@ const possibleStandardNames = {
   type: 'type',
   usemap: 'useMap',
   value: 'value',
+  valueasdate, 'valueAsDate', 
   width: 'width',
   wmode: 'wmode',
   wrap: 'wrap',

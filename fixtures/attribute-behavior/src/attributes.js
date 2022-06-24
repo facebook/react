@@ -2096,6 +2096,12 @@ const attributes = [
     type: 'number',
     extraProps: {onChange() {}},
   },
+  {
+    name: 'valueAsDate',
+    tagName: 'input',
+    type: 'date',
+    extraProps: {onChange() {}},
+  },
   {name: 'value', tagName: 'textarea', extraProps: {onChange() {}}},
   {
     name: 'value',
