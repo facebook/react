@@ -18,6 +18,7 @@ let ReactDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
 let SuspenseList;
+let TextDecoder;
 let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
 let PropTypes;
@@ -47,6 +48,7 @@ describe('ReactDOMServerPreload', () => {
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
     }
+    TextDecoder = require('util').TextDecoder;
 
     PropTypes = require('prop-types');
 
@@ -167,6 +169,7 @@ describe('ReactDOMServerPreload', () => {
     buffer = '';
     const fakeBody = document.createElement('body');
     fakeBody.innerHTML = bufferedContent;
+    let appender = container === document ? document.body : container;
     while (fakeBody.firstChild) {
       const node = fakeBody.firstChild;
       if (
@@ -185,9 +188,9 @@ describe('ReactDOMServerPreload', () => {
         }
         script.textContent = node.textContent;
         fakeBody.removeChild(node);
-        container.appendChild(script);
+        appender.appendChild(script);
       } else {
-        container.appendChild(node);
+        appender.appendChild(node);
       }
     }
     let scripts = document.getElementsByTagName('script');
@@ -197,6 +200,30 @@ describe('ReactDOMServerPreload', () => {
         script.dataset.src = srcAttr;
       }
     }
+  }
+
+  async function actIntoEmptyDocument(callback) {
+    await callback();
+    // Await one turn around the event loop.
+    // This assumes that we'll flush everything we have so far.
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+    if (hasErrored) {
+      throw fatalError;
+    }
+    // JSDOM doesn't support stream HTML parser so we need to give it a proper fragment.
+    // We also want to execute any scripts that are embedded.
+    // We assume that we have now received a proper fragment of HTML.
+    const bufferedContent = buffer;
+    // Test Environment
+    const jsdom = new JSDOM(bufferedContent, {
+      runScripts: 'dangerously',
+    });
+    window = jsdom.window;
+    document = jsdom.window.document;
+    container = document;
+    buffer = '';
   }
 
   function getVisibleChildren(element) {
@@ -949,5 +976,267 @@ describe('ReactDOMServerPreload', () => {
     expectScript('foo6', ['script', 'foo6', 'anonymous']);
     expectScript('foo7', ['script', 'foo7', 'anonymous']);
     expectScript('foo8', ['script', 'foo8', 'use-credentials']);
+  });
+
+  it('calls onPreload with resources before streaming starts if provided', async () => {
+    function AsyncTextWithResource({text}) {
+      let asyncText = readText(text);
+      return (
+        <>
+          <link rel="stylesheet" href="baz" />
+          {asyncText}
+        </>
+      );
+    }
+
+    function App() {
+      return (
+        <html>
+          <head>
+            <link rel="external" href="mcguffin" />
+            <title>a title</title>
+          </head>
+          <body>
+            <link rel="stylesheet" href="foo" />
+            hello
+            <Suspense fallback="waiting...">
+              <link rel="stylesheet" href="bar" />
+              <AsyncTextWithResource text="world" />
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    const onPreload = jest.fn((chunk: mixed) => {
+      if (typeof chunk === 'string') {
+        preloads.push(chunk);
+      } else {
+        preloads.push(textDecoder.decode(chunk));
+      }
+    });
+
+    const textDecoder = new TextDecoder();
+    const preambles = [];
+    const preloads = [];
+    await actIntoEmptyDocument(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        onPreload,
+      });
+      pipe(writable);
+    });
+
+    expect(preloads).toEqual([
+      '<link rel="preload" as="style" href="foo">',
+      '<link rel="preload" as="style" href="bar">',
+    ]);
+    preloads.length = 0;
+
+    await act(async () => {
+      await resolveText('world');
+    });
+
+    expect(preloads).toEqual([]);
+    expectLinks([
+      ['external', 'mcguffin'],
+      ['stylesheet', 'foo'],
+      ['stylesheet', 'bar'],
+      ['stylesheet', 'baz'],
+      ['preload', 'baz', 'style'],
+    ]);
+
+    expect(onPreload).toBeCalledTimes(2);
+  });
+
+  it('emits resources at the top of the head when it flushes if no onPreload is provided', async () => {
+    function AsyncTextWithResource({text}) {
+      let asyncText = readText(text);
+      return (
+        <>
+          <link rel="stylesheet" href="baz" />
+          {asyncText}
+        </>
+      );
+    }
+
+    function App() {
+      return (
+        <html>
+          <head>
+            <link rel="external" href="mcguffin" />
+            <title>a title</title>
+          </head>
+          <body>
+            <link rel="stylesheet" href="foo" />
+            hello
+            <Suspense fallback="waiting...">
+              <link rel="stylesheet" href="bar" />
+              <AsyncTextWithResource text="world" />
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    await actIntoEmptyDocument(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {});
+      pipe(writable);
+    });
+
+    await act(async () => {
+      await resolveText('world');
+    });
+
+    expectLinks([
+      ['preload', 'foo', 'style'],
+      ['preload', 'bar', 'style'],
+      ['external', 'mcguffin'],
+      ['stylesheet', 'foo'],
+      ['stylesheet', 'bar'],
+      ['stylesheet', 'baz'],
+      ['preload', 'baz', 'style'],
+    ]);
+  });
+
+  it('emits resources even when the head suspends', async () => {
+    function Html({children}) {
+      readText('html');
+      return <html>{children}</html>;
+    }
+
+    function Head({children}) {
+      readText('head');
+      return <head>{children}</head>;
+    }
+
+    function Body({children}) {
+      readText('body');
+      return <body>{children}</body>;
+    }
+
+    function HeadResource({text}) {
+      readText(text);
+      return <link rel="stylesheet" href={text} />;
+    }
+
+    function BodyResource({text}) {
+      readText(text);
+      return (
+        <>
+          <link rel="stylesheet" href={text} />
+          <div>{text}</div>
+        </>
+      );
+    }
+
+    function App() {
+      return (
+        <Html>
+          <Head>
+            <HeadResource text="headfoo" />
+            <title>a title</title>
+          </Head>
+          <Body>
+            <BodyResource text="bodyfoo" />
+            <BodyResource text="bodybar" />
+          </Body>
+        </Html>
+      );
+    }
+
+    await actIntoEmptyDocument(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {});
+      await new Promise(resolve => {
+        setImmediate(resolve);
+      });
+      resolveText('html');
+      resolveText('head');
+      resolveText('body');
+      resolveText('headfoo');
+      resolveText('bodyfoo');
+      resolveText('bodybar');
+      pipe(writable);
+    });
+
+    expectLinks([
+      ['preload', 'headfoo', 'style'],
+      ['preload', 'bodyfoo', 'style'],
+      ['preload', 'bodybar', 'style'],
+      ['stylesheet', 'headfoo'],
+      ['stylesheet', 'bodyfoo'],
+      ['stylesheet', 'bodybar'],
+    ]);
+  });
+
+  it('writes to the <head> from anywhere including in the <body>', async () => {
+    function Head({children}) {
+      readText('head');
+      return <head>{children}</head>;
+    }
+
+    function HeadResource({text}) {
+      readText(text);
+      return <link rel="stylesheet" href={text} />;
+    }
+
+    function BodyResource({text}) {
+      readText(text);
+      return (
+        <>
+          <link rel="stylesheet" href={text} />
+          <div>{text}</div>
+        </>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <BodyResource text="foo" />
+          <BodyResource text="bar" />
+          <Head>
+            <title>a title</title>
+          </Head>
+        </div>
+      );
+    }
+
+    await actIntoEmptyDocument(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {});
+      await new Promise(resolve => {
+        setImmediate(resolve);
+      });
+      resolveText('foo');
+      resolveText('bar');
+      pipe(writable);
+      await new Promise(resolve => {
+        setImmediate(resolve);
+      });
+      resolveText('head');
+    });
+
+    expectLinks([
+      ['preload', 'foo', 'style'],
+      ['preload', 'bar', 'style'],
+      ['stylesheet', 'foo'],
+      ['stylesheet', 'bar'],
+    ]);
+    expect(getVisibleChildren(container)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="style" href="foo" />
+          <link rel="preload" as="style" href="bar" />
+          <title>a title</title>
+        </head>
+        <body>
+          <div>
+            <link rel="stylesheet" href="foo" />
+            <div>foo</div>
+            <link rel="stylesheet" href="bar" />
+            <div>bar</div>
+          </div>
+        </body>
+      </html>,
+    );
   });
 });

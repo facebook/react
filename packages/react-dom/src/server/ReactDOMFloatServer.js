@@ -11,6 +11,7 @@ import {pushDispatcher, popDispatcher} from 'react-dom/ReactDOMDispatcher';
 
 let currentResponseState = null;
 let currentResourceMap = null;
+let currentOnPreload = null;
 
 export const DNS_PREFETCH = 0;
 export const PRECONNECT = 1;
@@ -59,14 +60,19 @@ type ResourceMap = Map<string, Resource>;
 
 type MimeType = string;
 
-export function prepareToRender(resourceMap: ResourceMap) {
+export function prepareToRender(
+  resourceMap: ResourceMap,
+  onPreload: ?(chunk: mixed) => void,
+) {
   currentResourceMap = resourceMap;
+  currentOnPreload = onPreload || null;
 
   pushDispatcher(Dispatcher);
 }
 
 export function cleanupAfterRender() {
   currentResourceMap = null;
+  currentOnPreload = null;
 
   popDispatcher();
 }
@@ -276,6 +282,11 @@ function preload(href: string, options: PreloadOptions) {
       type: '',
     };
     currentResourceMap.set(key, resource);
+  }
+  if (typeof currentOnPreload === 'function') {
+    let resource = currentResourceMap.get(key);
+    currentOnPreload(resource);
+    resource.flushed = true;
   }
 }
 

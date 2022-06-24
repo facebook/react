@@ -182,17 +182,19 @@ export function createResponseState(
 // modes. We only include the variants as they matter for the sake of our purposes.
 // We don't actually provide the namespace therefore we use constants instead of the string.
 const ROOT_HTML_MODE = 0; // Used for the root most element tag.
-export const HTML_MODE = 1;
-const SVG_MODE = 2;
-const MATHML_MODE = 3;
-const HTML_TABLE_MODE = 4;
-const HTML_TABLE_BODY_MODE = 5;
-const HTML_TABLE_ROW_MODE = 6;
-const HTML_COLGROUP_MODE = 7;
+const BEFORE_HEAD_MODE = 1;
+const BEFORE_BODY_MODE = 2;
+export const HTML_MODE = 3;
+const SVG_MODE = 4;
+const MATHML_MODE = 5;
+const HTML_TABLE_MODE = 6;
+const HTML_TABLE_BODY_MODE = 7;
+const HTML_TABLE_ROW_MODE = 8;
+const HTML_COLGROUP_MODE = 9;
 // We have a greater than HTML_TABLE_MODE check elsewhere. If you add more cases here, make sure it
 // still makes sense
 
-type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 // Lets us keep track of contextual state and pick it back up after suspending.
 export type FormatContext = {
@@ -218,6 +220,10 @@ export function createRootFormatContext(namespaceURI?: string): FormatContext {
       ? MATHML_MODE
       : ROOT_HTML_MODE;
   return createFormatContext(insertionMode, null);
+}
+
+export function isHeadElement(type: string): boolean {
+  return type === 'head';
 }
 
 export function getChildFormatContext(
@@ -255,11 +261,66 @@ export function getChildFormatContext(
     // entered plain HTML again.
     return createFormatContext(HTML_MODE, null);
   }
-  if (parentContext.insertionMode === ROOT_HTML_MODE) {
-    // We've emitted the root and is now in plain HTML mode.
-    return createFormatContext(HTML_MODE, null);
+  // This is somewhat convoluted but all three of these insertionModes represent a kind of Root-like type.
+  // Due to 'late-head' semantics where you can render a <head> anywhere in the tree and have it show up
+  // in head-position we never set the insertionMode to BEFORE_HEAD_MODE directly here since it will be
+  // managed by specialized head code-paths. Regardless of what mode we are in if we just pushed an <html>
+  // we need to advance to the next best guess root mode which is BEFORE_BODY_MODE
+  switch (parentContext.insertionMode) {
+    case ROOT_HTML_MODE:
+    case BEFORE_HEAD_MODE:
+    case BEFORE_BODY_MODE: {
+      if (type === 'html') {
+        return createFormatContext(BEFORE_BODY_MODE, null);
+      }
+      return createFormatContext(HTML_MODE, null);
+    }
   }
   return parentContext;
+}
+
+export function getHeadFormatContext(): FormatContext {
+  return createFormatContext(BEFORE_HEAD_MODE, null);
+}
+
+export function reifyRootFormatContext(
+  currentFormatContext: FormatContext,
+  type: string,
+): FormatContext {
+  switch (currentFormatContext.insertionMode) {
+    // We intentionally fallthrough to check additional type conditionals
+    case ROOT_HTML_MODE: {
+      if (type === 'html') return currentFormatContext;
+    }
+    // eslint-disable-next-line-no-fallthrough
+    case BEFORE_HEAD_MODE: {
+      // We cannot directly return currentFormatContext because we may have
+      // fallen through from the above branch
+      if (type === 'head') return createFormatContext(BEFORE_HEAD_MODE, null);
+    }
+    // eslint-disable-next-line-no-fallthrough
+    case BEFORE_BODY_MODE: {
+      if (type === 'body') return createFormatContext(BEFORE_BODY_MODE, null);
+      return createFormatContext(HTML_MODE, null);
+    }
+  }
+  return currentFormatContext;
+}
+
+export function isPreludeMode(
+  currentFormatContext: FormatContext,
+): FormatContext {
+  const mode = currentFormatContext.insertionMode;
+  return mode === ROOT_HTML_MODE || mode === BEFORE_HEAD_MODE;
+}
+
+export function isPostludeMode(
+  currentFormatContext: FormatContext,
+): FormatContext {
+  const mode = currentFormatContext.insertionMode;
+  // We check BEFORE_BODY_MODE here because we only write to the postlude on closing
+  // tags and this is really semantically equivalent to BEFORE_BODY_END_TAG_MODE
+  return mode === BEFORE_BODY_MODE || mode === ROOT_HTML_MODE;
 }
 
 export type SuspenseBoundaryID = null | PrecomputedChunk;
@@ -1828,6 +1889,8 @@ export function writeStartSegment(
 ): boolean {
   switch (formatContext.insertionMode) {
     case ROOT_HTML_MODE:
+    case BEFORE_HEAD_MODE:
+    case BEFORE_BODY_MODE:
     case HTML_MODE: {
       writeChunk(destination, startSegmentHTML);
       writeChunk(destination, responseState.segmentPrefix);
@@ -1885,6 +1948,8 @@ export function writeEndSegment(
 ): boolean {
   switch (formatContext.insertionMode) {
     case ROOT_HTML_MODE:
+    case BEFORE_HEAD_MODE:
+    case BEFORE_BODY_MODE:
     case HTML_MODE: {
       return writeChunkAndReturn(destination, endSegmentHTML);
     }
@@ -2317,8 +2382,29 @@ function writeInitializingResource(
   }
 }
 
-export function prepareToRender(resources: Resources) {
-  prepareToRenderImpl(resources);
+export function prepareToRender(
+  resources: Resources,
+  onPreloadChunk: ?(chunk: mixed) => void,
+) {
+  let onPreloadResource = null;
+  if (onPreloadChunk) {
+    onPreloadResource = (resource: Resource) => {
+      onPreloadChunk(
+        stringToChunk(
+          `<link rel="preload" as="${
+            resource.as === STYLE_RESOURCE
+              ? 'style'
+              : resource.as === SCRIPT_RESOURCE
+              ? 'script'
+              : resource.as === FONT_RESOURCE
+              ? 'font'
+              : ''
+          }" href="${resource.href}">`,
+        ),
+      );
+    };
+  }
+  prepareToRenderImpl(resources, onPreloadResource);
 }
 
 export function cleanupAfterRender() {

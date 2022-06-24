@@ -65,6 +65,11 @@ import {
   prepareToRender,
   cleanupAfterRender,
   createResources,
+  isHeadElement,
+  reifyRootFormatContext,
+  isPreludeMode,
+  isPostludeMode,
+  getHeadFormatContext,
 } from './ReactServerFormatConfig';
 import {
   constructClassInstance,
@@ -255,6 +260,7 @@ export function createRequest(
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
+  onPreload: void | ((chunk: mixed) => void),
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
@@ -278,11 +284,16 @@ export function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
+    prelude: [],
+    postlude: [],
+    headBoundary: null,
+    headSegment: null,
     onError: onError === undefined ? defaultErrorHandler : onError,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
     onShellError: onShellError === undefined ? noop : onShellError,
     onFatalError: onFatalError === undefined ? noop : onFatalError,
+    onPreload,
   };
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(
@@ -306,6 +317,7 @@ export function createRequest(
     rootContextSnapshot,
     emptyTreeContext,
   );
+  createHeadBoundary(request, rootTask);
   pingedTasks.push(rootTask);
   return request;
 }
@@ -628,6 +640,71 @@ function renderBackupSuspenseBoundary(
   popComponentStackInDEV(task);
 }
 
+function createHeadBoundary(request: Request, task: Task): void {
+  if (request.headBoundary !== null) {
+    throw new Error(
+      'createHeadBoundary was called when a head boundary already exists',
+    );
+  }
+  const parentBoundary = task.blockedBoundary;
+  const parentSegment = task.blockedSegment;
+
+  const fallbackAbortSet: Set<Task> = new Set();
+  const headBoundary = createSuspenseBoundary(request, fallbackAbortSet);
+  const insertionIndex = parentSegment.chunks.length;
+
+  const headSegment = createPendingSegment(
+    request,
+    0,
+    null,
+    getHeadFormatContext(),
+    // The head boundary can only be preceeded by <html> or nothing
+    false,
+    false,
+  );
+  headSegment.parentFlushed = true;
+
+  request.headBoundary = headBoundary;
+  request.headSegment = headSegment;
+}
+
+function renderHead(
+  request: Request,
+  task: Task,
+  type: string,
+  props: Object,
+): void {
+  if (request.headSegment.status === COMPLETED) {
+    throw new Error(
+      'a <head> was already rendered. You can only render one <head> at a time',
+    );
+  }
+  pushBuiltInComponentStackInDEV(task, type);
+
+  const previousBoundary = task.blockedBoundary;
+  const previousSegment = task.blockedSegment;
+
+  const headBoundary = (task.blockedBoundary = request.headBoundary);
+  const headSegment = (task.blockedSegment = request.headSegment);
+
+  try {
+    renderHostElement(request, task, type, props);
+    headSegment.status = COMPLETED;
+    headBoundary.completedSegments.push(headSegment);
+  } catch (error) {
+    headSegment.status = ERRORED;
+    headBoundary.forceClientRender = true;
+    headBoundary.errorDigest = logRecoverableError(request, error);
+    if (__DEV__) {
+      captureBoundaryErrorDetailsDev(headBoundary, error);
+    }
+  } finally {
+    task.blockedBoundary = previousBoundary;
+    task.blockedSegment = previousSegment;
+    popComponentStackInDEV(task);
+  }
+}
+
 function renderHostElement(
   request: Request,
   task: Task,
@@ -636,8 +713,16 @@ function renderHostElement(
 ): void {
   pushBuiltInComponentStackInDEV(task, type);
   const segment = task.blockedSegment;
+
+  // We start with assuming a root context but we can't know for certain if that is right
+  // until we see the first host element.
+  // @TODO move rootFormatContext construction to here
+  segment.formatContext = reifyRootFormatContext(segment.formatContext, type);
+
+  const isPrelude = isPreludeMode(segment.formatContext);
+  let target = isPrelude ? request.prelude : segment.chunks;
   const children = pushStartInstance(
-    segment.chunks,
+    target,
     type,
     props,
     request.responseState,
@@ -646,6 +731,7 @@ function renderHostElement(
   segment.lastPushedText = false;
   const prevContext = segment.formatContext;
   segment.formatContext = getChildFormatContext(prevContext, type, props);
+
   // We use the non-destructive form because if something suspends, we still
   // need to pop back up and finish this subtree of HTML.
   renderNode(request, task, children);
@@ -653,7 +739,9 @@ function renderHostElement(
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
   segment.formatContext = prevContext;
-  pushEndInstance(segment.chunks, type, props);
+  const isPostlude = isPostludeMode(segment.formatContext);
+  target = isPostlude ? request.postlude : segment.chunks;
+  pushEndInstance(target, type, props);
   segment.lastPushedText = false;
   popComponentStackInDEV(task);
 }
@@ -1087,7 +1175,11 @@ function renderElement(
     }
   }
   if (typeof type === 'string') {
-    renderHostElement(request, task, type, props);
+    if (isHeadElement(type)) {
+      renderHead(request, task, type, props);
+    } else {
+      renderHostElement(request, task, type, props);
+    }
     return;
   }
 
@@ -1639,6 +1731,8 @@ function finishedTask(
     if (request.pendingRootTasks === 0) {
       // We have completed the shell so the shell can't error anymore.
       request.onShellError = noop;
+      // We have completed the shell so we will emit further resources in the stream
+      request.onPreload = null;
       const onShellReady = request.onShellReady;
       onShellReady();
     }
@@ -1697,7 +1791,7 @@ function finishedTask(
 }
 
 function retryTask(request: Request, task: Task): void {
-  prepareToRender(request.resources);
+  prepareToRender(request.resources, request.onPreload);
   const segment = task.blockedSegment;
   if (segment.status !== PENDING) {
     // We completed this by other means before we had a chance to retry it.
@@ -1814,6 +1908,7 @@ function flushSubtree(
       const chunks = segment.chunks;
       let chunkIdx = 0;
       const children = segment.children;
+
       for (let childIdx = 0; childIdx < children.length; childIdx++) {
         const nextChild = children[childIdx];
         // Write all the chunks up until the next child.
@@ -2045,28 +2140,51 @@ function flushCompletedQueues(
   request: Request,
   destination: Destination,
 ): void {
+  let allComplete = false;
   beginWriting(destination);
   try {
     // The structure of this is to go through each queue one by one and write
     // until the sink tells us to stop. When we should stop, we still finish writing
     // that item fully and then yield. At that point we remove the already completed
     // items up until the point we completed them.
+    let i;
+    let prelude = request.prelude;
+    for (i = 0; i < prelude.length; i++) {
+      // we expect the prelude to be tiny and will ignore backpressure
+      writeChunk(destination, prelude[i]);
+    }
+    prelude.length = 0;
 
-    writeResources(destination, request.resources);
+    // Resources can be written anytime after we have flushed the headSegment
+    if (request.headSegment === null) {
+      writeResources(destination, request.resources);
+    }
+
     // TODO: It's kind of unfortunate to keep checking this array after we've already
     // emitted the root.
     const completedRootSegment = request.completedRootSegment;
-    if (completedRootSegment !== null && request.pendingRootTasks === 0) {
-      flushSegment(request, destination, completedRootSegment);
-      request.completedRootSegment = null;
-      writeCompletedRoot(destination, request.responseState);
+    if (completedRootSegment !== null) {
+      const headSegment = request.headSegment;
+      if (headSegment !== null && headSegment.status === COMPLETED) {
+        writeResources(destination, request.resources);
+        flushSegment(request, destination, headSegment);
+        request.headBoundary = null;
+        request.headSegment = null;
+      }
+      if (request.pendingRootTasks === 0) {
+        writeResources(destination, request.resources);
+        flushSegment(request, destination, completedRootSegment);
+        request.completedRootSegment = null;
+        writeCompletedRoot(destination, request.responseState);
+        request.headBoundary = null;
+        request.headSegment = null;
+      }
     }
 
     // We emit client rendering instructions for already emitted boundaries first.
     // This is so that we can signal to the client to start client rendering them as
     // soon as possible.
     const clientRenderedBoundaries = request.clientRenderedBoundaries;
-    let i;
     for (i = 0; i < clientRenderedBoundaries.length; i++) {
       const boundary = clientRenderedBoundaries[i];
       if (!flushClientRenderedBoundary(request, destination, boundary)) {
@@ -2128,9 +2246,8 @@ function flushCompletedQueues(
       }
     }
     largeBoundaries.splice(0, i);
-  } finally {
-    completeWriting(destination);
-    flushBuffered(destination);
+
+    // Finally we check if there is no remaining work and flush the postlude
     if (
       request.allPendingTasks === 0 &&
       request.pingedTasks.length === 0 &&
@@ -2139,6 +2256,18 @@ function flushCompletedQueues(
       // We don't need to check any partially completed segments because
       // either they have pending task or they're complete.
     ) {
+      allComplete = true;
+      let postlude = request.postlude;
+      for (i = 0; i < postlude.length; i++) {
+        // we expect the postlude to be tiny and will ignore backpressure
+        writeChunk(destination, postlude[i]);
+      }
+      postlude.length = 0;
+    }
+  } finally {
+    completeWriting(destination);
+    flushBuffered(destination);
+    if (allComplete) {
       if (__DEV__) {
         if (request.abortableTasks.size !== 0) {
           console.error(
