@@ -4146,7 +4146,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  it('Hydration warnings for mismatched text with multiple text nodes caused by suspending should be suppressed', async () => {
+  it('hydration warnings for mismatched text with multiple text nodes caused by suspending should be suppressed', async () => {
     let resolve;
     const Lazy = React.lazy(() => {
       return new Promise(r => {
