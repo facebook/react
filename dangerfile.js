@@ -84,9 +84,10 @@ const header = `
   | Name | +/- | Base | Current | +/- gzip | Base gzip | Current gzip |
   | ---- | --- | ---- | ------- | -------- | --------- | ------------ |`;
 
-function row(result) {
+function row(result, baseSha, headSha) {
+  const diffViewUrl = `https://react-builds.vercel.app/commits/${headSha}/files/${result.path}?compare=${baseSha}`;
   // prettier-ignore
-  return `| ${result.path} | **${change(result.change)}** | ${kbs(result.baseSize)} | ${kbs(result.headSize)} | ${change(result.changeGzip)} | ${kbs(result.baseSizeGzip)} | ${kbs(result.headSizeGzip)}`;
+  return `| [${result.path}](${diffViewUrl}) | **${change(result.change)}** | ${kbs(result.baseSize)} | ${kbs(result.headSize)} | ${change(result.changeGzip)} | ${kbs(result.baseSizeGzip)} | ${kbs(result.headSizeGzip)}`;
 }
 
 (async function() {
@@ -196,7 +197,7 @@ function row(result) {
           artifactPath
       );
     }
-    criticalResults.push(row(result));
+    criticalResults.push(row(result, baseSha, headSha));
   }
 
   let significantResults = [];
@@ -212,7 +213,7 @@ function row(result) {
       // Skip critical artifacts. We added those earlier, in a fixed order.
       !CRITICAL_ARTIFACT_PATHS.has(result.path)
     ) {
-      criticalResults.push(row(result));
+      criticalResults.push(row(result, baseSha, headSha));
     }
 
     // Do the same for results that exceed the significant threshold. These
@@ -224,7 +225,7 @@ function row(result) {
       result.change === Infinity ||
       result.change === -1
     ) {
-      significantResults.push(row(result));
+      significantResults.push(row(result, baseSha, headSha));
     }
   }
 
