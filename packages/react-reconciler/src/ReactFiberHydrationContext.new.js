@@ -508,6 +508,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
             textContent,
             // TODO: Delete this argument when we remove the legacy root API.
             isConcurrentMode,
+            shouldWarnIfMismatchDev,
           );
           break;
         }
@@ -525,6 +526,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
             textContent,
             // TODO: Delete this argument when we remove the legacy root API.
             isConcurrentMode,
+            shouldWarnIfMismatchDev,
           );
           break;
         }

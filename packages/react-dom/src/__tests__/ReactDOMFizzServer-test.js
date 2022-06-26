@@ -4146,6 +4146,54 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('hydration warnings for mismatched text with multiple text nodes caused by suspending should be suppressed', async () => {
+    let resolve;
+    const Lazy = React.lazy(() => {
+      return new Promise(r => {
+        resolve = r;
+      });
+    });
+
+    function App({isClient}) {
+      return (
+        <div>
+          {isClient ? <Lazy /> : <p>lazy</p>}
+          <p>some {'text'}</p>
+        </div>
+      );
+    }
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        errors.push(error.message);
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>lazy</p>
+        <p>some {'text'}</p>
+      </div>,
+    );
+
+    resolve({default: () => <p>lazy</p>});
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>lazy</p>
+        <p>some {'text'}</p>
+      </div>,
+    );
+  });
+
   describe('text separators', () => {
     // To force performWork to start before resolving AsyncText but before piping we need to wait until
     // after scheduleWork which currently uses setImmediate to delay performWork
