@@ -3,6 +3,7 @@
 const {esNextPaths} = require('./scripts/shared/pathsByLanguageVersion');
 
 module.exports = {
+  arrowParens: 'avoid',
   bracketSpacing: false,
   singleQuote: true,
   bracketSameLine: true,
