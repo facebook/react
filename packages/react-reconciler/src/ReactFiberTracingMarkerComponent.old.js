@@ -107,15 +107,27 @@ const markerInstanceStack: StackCursor<Array<TracingMarkerInstance> | null> = cr
 
 export function pushRootMarkerInstance(workInProgress: Fiber): void {
   if (enableTransitionTracing) {
+    // On the root, every transition gets mapped to it's own map of
+    // suspense boundaries. The transition is marked as complete when
+    // the suspense boundaries map is empty. We do this because every
+    // transition completes at different times and depends on different
+    // suspense boundaries to complete. We store all the transitions
+    // along with its map of suspense boundaries in the root incomplete
+    // transitions map. Each entry in this map functions like a tracing
+    // marker does, so we can push it onto the marker instance stack
     const transitions = getWorkInProgressTransitions();
     const root = workInProgress.stateNode;
     let incompleteTransitions = root.incompleteTransitions;
     if (transitions !== null) {
+      // Create a mapping from transition to suspense boundaries
+      // We instantiate this lazily, only if transitions exist
       if (incompleteTransitions === null) {
         root.incompleteTransitions = incompleteTransitions = new Map();
       }
 
       transitions.forEach(transition => {
+        // We need to create a new map here because we only have access to the
+        // object instance in the commit phase
         incompleteTransitions.set(transition, new Map());
       });
     }
@@ -124,6 +136,9 @@ export function pushRootMarkerInstance(workInProgress: Fiber): void {
       push(markerInstanceStack, null, workInProgress);
     } else {
       const markerInstances = [];
+      // For ever transition on the suspense boundary, we push the transition
+      // along with its map of pending suspense boundaries onto the marker
+      // instance stack.
       incompleteTransitions.forEach((pendingSuspenseBoundaries, transition) => {
         markerInstances.push({
           transitions: new Set([transition]),
@@ -143,12 +158,9 @@ export function popRootMarkerInstance(workInProgress: Fiber) {
 
 export function pushMarkerInstance(
   workInProgress: Fiber,
-  transitions: Set<Transition> | null,
-  pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
+  markerInstance: TracingMarkerInstance,
 ): void {
   if (enableTransitionTracing) {
-    const markerInstance = {transitions, pendingSuspenseBoundaries};
-
     if (markerInstanceStack.current === null) {
       push(markerInstanceStack, [markerInstance], workInProgress);
     } else {
