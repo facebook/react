@@ -35,6 +35,7 @@ import type {
 } from './ReactFiberCacheComponent.old';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {RootState} from './ReactFiberRoot.old';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old';
 import {
   enableSuspenseAvoidThisFallback,
   enableCPUSuspense,
@@ -255,9 +256,12 @@ import {
   getSuspendedCache,
   pushTransition,
   getOffscreenDeferredCache,
-  getSuspendedTransitions,
+  getPendingTransitions,
 } from './ReactFiberTransition.old';
-import {pushTracingMarker} from './ReactFiberTracingMarkerComponent.old';
+import {
+  getTracingMarkers,
+  pushTracingMarker,
+} from './ReactFiberTracingMarkerComponent.old';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -889,6 +893,20 @@ function updateTracingMarkerComponent(
 ) {
   if (!enableTransitionTracing) {
     return null;
+  }
+
+  // TODO: (luna) Only update the tracing marker if it's newly rendered or it's name changed.
+  // A tracing marker is only associated with the transitions that rendered
+  // or updated it, so we can create a new set of transitions each time
+  if (current === null) {
+    const currentTransitions = getPendingTransitions();
+    if (currentTransitions !== null) {
+      const markerInstance: TracingMarkerInstance = {
+        transitions: new Set(currentTransitions),
+        pendingSuspenseBoundaries: new Map(),
+      };
+      workInProgress.stateNode = markerInstance;
+    }
   }
 
   pushTracingMarker(workInProgress);
@@ -2093,10 +2111,13 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
       if (enableTransitionTracing) {
-        const currentTransitions = getSuspendedTransitions();
+        const currentTransitions = getPendingTransitions();
         if (currentTransitions !== null) {
+          // If there are no transitions, we don't need to keep track of tracing markers
+          const currentTracingMarkers = getTracingMarkers();
           const primaryChildUpdateQueue: OffscreenQueue = {
             transitions: currentTransitions,
+            tracingMarkers: currentTracingMarkers,
           };
           primaryChildFragment.updateQueue = primaryChildUpdateQueue;
         }
@@ -2177,10 +2198,12 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           ? mountSuspenseOffscreenState(renderLanes)
           : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
       if (enableTransitionTracing) {
-        const currentTransitions = getSuspendedTransitions();
+        const currentTransitions = getPendingTransitions();
         if (currentTransitions !== null) {
+          const currentTracingMarkers = getTracingMarkers();
           const primaryChildUpdateQueue: OffscreenQueue = {
             transitions: currentTransitions,
+            tracingMarkers: currentTracingMarkers,
           };
           primaryChildFragment.updateQueue = primaryChildUpdateQueue;
         }

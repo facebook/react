@@ -39,6 +39,11 @@ export type BatchConfigTransition = {
   _updatedFibers?: Set<Fiber>,
 };
 
+export type TracingMarkerInstance = {|
+  pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
+  transitions: Set<Transition> | null,
+|} | null;
+
 export type PendingSuspenseBoundaries = Map<OffscreenInstance, SuspenseInfo>;
 
 export function processTransitionCallbacks(
