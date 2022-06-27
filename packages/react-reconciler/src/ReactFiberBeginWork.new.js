@@ -912,11 +912,7 @@ function updateTracingMarkerComponent(
 
   const instance = workInProgress.stateNode;
   if (instance !== null) {
-    pushMarkerInstance(
-      workInProgress,
-      instance.transitions,
-      instance.pendingSuspenseBoundaries,
-    );
+    pushMarkerInstance(workInProgress, instance);
   }
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
@@ -3712,11 +3708,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       if (enableTransitionTracing) {
         const instance: TracingMarkerInstance = workInProgress.stateNode;
         if (instance !== null) {
-          pushMarkerInstance(
-            workInProgress,
-            instance.transitions,
-            instance.pendingSuspenseBoundaries,
-          );
+          pushMarkerInstance(workInProgress, instance);
         }
       }
     }
