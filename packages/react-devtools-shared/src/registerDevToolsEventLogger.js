@@ -17,7 +17,7 @@ let missedEvents = [];
 
 export function registerDevToolsEventLogger(
   surface: string,
-  getURL: ?() => string | ?() => Promise<string>,
+  getURL: ?() => string | ?(() => Promise<string>),
 ): void {
   async function logEvent(event: LogEvent) {
     if (enableLogger) {
