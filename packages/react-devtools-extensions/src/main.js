@@ -245,6 +245,10 @@ function createPanelIfReactLoaded() {
           }
         };
 
+        const viewSourceLineFunction = (url, line) => {
+          chrome.devtools.panels.openResource(url, line);
+        };
+
         let debugIDCounter = 0;
 
         // For some reason in Firefox, chrome.runtime.sendMessage() from a content script
@@ -381,6 +385,7 @@ function createPanelIfReactLoaded() {
               warnIfUnsupportedVersionDetected: true,
               viewAttributeSourceFunction,
               viewElementSourceFunction,
+              viewSourceLineFunction,
             }),
           );
         };

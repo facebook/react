@@ -17,6 +17,7 @@ import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
 import RootSelector from './RootSelector';
 import {Timeline} from 'react-devtools-timeline/src/Timeline';
+import SidebarEventInfo from './SidebarEventInfo';
 import RecordToggle from './RecordToggle';
 import ReloadAndProfileButton from './ReloadAndProfileButton';
 import ProfilingImportExportButtons from './ProfilingImportExportButtons';
@@ -102,6 +103,9 @@ function Profiler(_: {||}) {
           }
         }
         break;
+      case 'timeline':
+        sidebar = <SidebarEventInfo />;
+        break;
       default:
         break;
     }
@@ -145,9 +149,7 @@ function Profiler(_: {||}) {
             <ModalDialog />
           </div>
         </div>
-        {isLegacyProfilerSelected && (
-          <div className={styles.RightColumn}>{sidebar}</div>
-        )}
+        <div className={styles.RightColumn}>{sidebar}</div>
         <SettingsModal />
       </div>
     </SettingsModalContextController>
