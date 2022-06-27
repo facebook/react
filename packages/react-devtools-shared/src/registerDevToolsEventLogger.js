@@ -28,7 +28,7 @@ export function registerDevToolsEventLogger(
             event: event,
             context: {
               surface,
-              pageUrl: getURL != null ? await getURL() : null,
+              page_url: getURL != null ? await getURL() : null,
               version: process.env.DEVTOOLS_VERSION,
             },
           },
