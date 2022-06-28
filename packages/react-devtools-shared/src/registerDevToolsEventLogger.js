@@ -15,9 +15,15 @@ import {enableLogger} from 'react-devtools-feature-flags';
 let loggingIFrame = null;
 let missedEvents = [];
 
+type LoggerContext = {|
+  page_url: ?string,
+|};
+
 export function registerDevToolsEventLogger(
   surface: string,
-  getURL: ?() => string | ?(() => Promise<string>),
+  fetchAdditionalContext: ?() =>
+    | LoggerContext
+    | ?(() => Promise<LoggerContext>),
 ): void {
   async function logEvent(event: LogEvent) {
     if (enableLogger) {
@@ -28,8 +34,10 @@ export function registerDevToolsEventLogger(
             event: event,
             context: {
               surface,
-              page_url: getURL != null ? await getURL() : null,
               version: process.env.DEVTOOLS_VERSION,
+              ...(fetchAdditionalContext != null
+                ? await fetchAdditionalContext()
+                : {}),
             },
           },
           '*',
