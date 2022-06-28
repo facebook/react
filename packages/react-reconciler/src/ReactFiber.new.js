@@ -734,6 +734,9 @@ export function createFiberFromLegacyHidden(
   const fiber = createFiber(LegacyHiddenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_LEGACY_HIDDEN_TYPE;
   fiber.lanes = lanes;
+  // Adding a stateNode for legacy hidden because it's currently using
+  // the offscreen implementation, which depends on a state node
+  fiber.stateNode = {};
   return fiber;
 }
 

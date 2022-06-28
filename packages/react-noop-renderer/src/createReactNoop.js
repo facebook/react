@@ -806,6 +806,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           false,
           '',
           onRecoverableError,
+          null,
         );
         roots.set(rootID, root);
       }
@@ -859,6 +860,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         '',
         onRecoverableError,
+        null,
       );
       return {
         _Scheduler: Scheduler,
