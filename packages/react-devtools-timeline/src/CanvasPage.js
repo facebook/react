@@ -63,6 +63,7 @@ import useContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/useCo
 import {getBatchRange} from './utils/getBatchRange';
 import {MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL} from './view-base/constants';
 import {TimelineSearchContext} from './TimelineSearchContext';
+import {ProfilerContext} from 'react-devtools-shared/src/devtools/views/Profiler/ProfilerContext';
 
 import styles from './CanvasPage.css';
 
@@ -528,6 +529,8 @@ function AutoSizedCanvas({
     ref: canvasRef,
   });
 
+  const {selectCommitIndex} = useContext(ProfilerContext);
+
   useEffect(() => {
     const {current: userTimingMarksView} = userTimingMarksViewRef;
     if (userTimingMarksView) {
@@ -562,6 +565,9 @@ function AutoSizedCanvas({
             schedulingEvent,
           });
         }
+      };
+      schedulingEventsView.onClick = (schedulingEvent, eventIndex) => {
+        selectCommitIndex(eventIndex);
       };
     }
 

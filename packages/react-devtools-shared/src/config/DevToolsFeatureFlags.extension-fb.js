@@ -19,6 +19,7 @@ export const enableNamedHooksFeature = true;
 export const enableProfilerChangedHookIndices = true;
 export const enableStyleXFeatures = true;
 export const isInternalFacebookBuild = true;
+export const enableProfilerComponentTree = true;
 
 /************************************************************************
  * Do not edit the code below.
