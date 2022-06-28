@@ -12,6 +12,7 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {Cache} from './ReactFiberCacheComponent.new';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 import {
@@ -245,7 +246,9 @@ function unwindInterruptedWork(
       break;
     case TracingMarkerComponent:
       if (enableTransitionTracing) {
-        if (interruptedWork.stateNode !== null) {
+        const instance: TracingMarkerInstance | null =
+          interruptedWork.stateNode;
+        if (instance !== null) {
           popMarkerInstance(interruptedWork);
         }
       }
