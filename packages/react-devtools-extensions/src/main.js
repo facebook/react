@@ -127,7 +127,7 @@ function createPanelIfReactLoaded() {
 
       registerDevToolsEventLogger('extension', async () => {
         const tab = await getCurrentTab();
-        return tab.url;
+        return tab?.url;
       });
 
       function initBridgeAndStore() {
