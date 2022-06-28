@@ -117,36 +117,26 @@ export function pushRootMarkerInstance(workInProgress: Fiber): void {
     // marker does, so we can push it onto the marker instance stack
     const transitions = getWorkInProgressTransitions();
     const root = workInProgress.stateNode;
-    let incompleteTransitions = root.incompleteTransitions;
+
     if (transitions !== null) {
-      // Create a mapping from transition to suspense boundaries
-      // We instantiate this lazily, only if transitions exist
-      if (incompleteTransitions === null) {
-        root.incompleteTransitions = incompleteTransitions = new Map();
-      }
-
       transitions.forEach(transition => {
-        // We need to create a new map here because we only have access to the
-        // object instance in the commit phase
-        incompleteTransitions.set(transition, new Map());
+        if (!root.incompleteTransitions.has(transition)) {
+          root.incompleteTransitions.set(transition, {
+            transitions: new Set([transition]),
+            pendingSuspenseBoundaries: null,
+          });
+        }
       });
     }
 
-    if (incompleteTransitions === null) {
-      push(markerInstanceStack, null, workInProgress);
-    } else {
-      const markerInstances = [];
-      // For ever transition on the suspense boundary, we push the transition
-      // along with its map of pending suspense boundaries onto the marker
-      // instance stack.
-      incompleteTransitions.forEach((pendingSuspenseBoundaries, transition) => {
-        markerInstances.push({
-          transitions: new Set([transition]),
-          pendingSuspenseBoundaries,
-        });
-      });
-      push(markerInstanceStack, markerInstances, workInProgress);
-    }
+    const markerInstances = [];
+    // For ever transition on the suspense boundary, we push the transition
+    // along with its map of pending suspense boundaries onto the marker
+    // instance stack.
+    root.incompleteTransitions.forEach(markerInstance => {
+      markerInstances.push(markerInstance);
+    });
+    push(markerInstanceStack, markerInstances, workInProgress);
   }
 }
 

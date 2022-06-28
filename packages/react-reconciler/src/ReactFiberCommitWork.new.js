@@ -2819,30 +2819,25 @@ function commitPassiveMountOnFiber(
               transitionName: transition.name,
               startTime: transition.startTime,
             });
-
-            if (!incompleteTransitions.has(transition)) {
-              incompleteTransitions.set(transition, null);
-            }
           });
 
           clearTransitionsForLanes(finishedRoot, committedLanes);
         }
 
-        if (incompleteTransitions !== null) {
-          incompleteTransitions.forEach((pendingBoundaries, transition) => {
-            if (pendingBoundaries === null || pendingBoundaries.size === 0) {
+        incompleteTransitions.forEach(
+          ({pendingSuspenseBoundaries}, transition) => {
+            if (
+              pendingSuspenseBoundaries === null ||
+              pendingSuspenseBoundaries.size === 0
+            ) {
               addTransitionCompleteCallbackToPendingTransition({
                 transitionName: transition.name,
                 startTime: transition.startTime,
               });
               incompleteTransitions.delete(transition);
             }
-          });
-
-          if (incompleteTransitions.size === 0) {
-            root.incompleteTransitions = null;
-          }
-        }
+          },
+        );
 
         clearTransitionsForLanes(finishedRoot, committedLanes);
       }
@@ -2908,6 +2903,10 @@ function commitPassiveMountOnFiber(
             const markerInstances = queue.markerInstances;
             if (markerInstances !== null) {
               markerInstances.forEach(markerInstance => {
+                if (markerInstance.pendingSuspenseBoundaries === null) {
+                  markerInstance.pendingSuspenseBoundaries = new Map();
+                }
+
                 const markerTransitions = markerInstance.transitions;
                 // There should only be a few tracing marker transitions because
                 // they should be only associated with the transition that
