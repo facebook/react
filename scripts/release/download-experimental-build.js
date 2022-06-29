@@ -19,11 +19,11 @@ const run = async () => {
 
     const params = await parseParams();
     params.cwd = join(__dirname, '..', '..');
-    params.packages = await getPublicPackages(true);
+    params.packages = getPublicPackages(true);
 
     await downloadBuildArtifacts(params);
 
-    printSummary(params);
+    await printSummary(params);
   } catch (error) {
     handleError(error);
   }

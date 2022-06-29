@@ -70,7 +70,7 @@ describe('isomorphic act()', () => {
   // @gate __DEV__
   test('return value – async callback', async () => {
     const returnValue = await act(async () => {
-      return await Promise.resolve('hi');
+      return Promise.resolve('hi');
     });
     expect(returnValue).toEqual('hi');
   });
@@ -79,7 +79,7 @@ describe('isomorphic act()', () => {
   test('return value – async callback, nested', async () => {
     const returnValue = await act(async () => {
       return await act(async () => {
-        return await Promise.resolve('hi');
+        return Promise.resolve('hi');
       });
     });
     expect(returnValue).toEqual('hi');
