@@ -240,7 +240,7 @@ export type TimelineDataExport = {|
   thrownErrors: ThrownError[],
 |};
 
-export type ReactHoverContextInfo = {|
+export type ReactEventInfo = {|
   componentMeasure: ReactComponentMeasure | null,
   flamechartStackFrame: FlamechartStackFrame | null,
   measure: ReactMeasure | null,

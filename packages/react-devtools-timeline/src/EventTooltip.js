@@ -13,7 +13,7 @@ import type {
   NativeEvent,
   NetworkMeasure,
   ReactComponentMeasure,
-  ReactHoverContextInfo,
+  ReactEventInfo,
   ReactMeasure,
   TimelineData,
   SchedulingEvent,
@@ -35,7 +35,7 @@ type Props = {|
   canvasRef: {|current: HTMLCanvasElement | null|},
   data: TimelineData,
   height: number,
-  hoveredEvent: ReactHoverContextInfo | null,
+  hoveredEvent: ReactEventInfo | null,
   origin: Point,
   width: number,
 |};
