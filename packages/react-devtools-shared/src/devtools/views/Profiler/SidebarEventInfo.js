@@ -22,7 +22,7 @@ export type Props = {||};
 
 export default function SidebarEventInfo(_: Props) {
   const {profilingData, selectedCommitIndex} = useContext(ProfilerContext);
-  const {viewSourceLineFunction} = useContext(ViewSourceContext);
+  const {viewUrlSourceFunction} = useContext(ViewSourceContext);
 
   const {stack} = useMemo(() => {
     if (
@@ -55,8 +55,8 @@ export default function SidebarEventInfo(_: Props) {
       const hasSource = source != null;
 
       const onClick = () => {
-        if (viewSourceLineFunction != null && source != null) {
-          viewSourceLineFunction(...source);
+        if (viewUrlSourceFunction != null && source != null) {
+          viewUrlSourceFunction(...source);
         }
       };
 

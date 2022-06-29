@@ -255,8 +255,8 @@ function createPanelIfReactLoaded() {
           }
         };
 
-        const viewSourceLineFunction = (url, line) => {
-          chrome.devtools.panels.openResource(url, line);
+        const viewUrlSourceFunction = (url, line, col) => {
+          chrome.devtools.panels.openResource(url, line, col);
         };
 
         let debugIDCounter = 0;
@@ -395,7 +395,7 @@ function createPanelIfReactLoaded() {
               warnIfUnsupportedVersionDetected: true,
               viewAttributeSourceFunction,
               viewElementSourceFunction,
-              viewSourceLineFunction,
+              viewUrlSourceFunction,
             }),
           );
         };

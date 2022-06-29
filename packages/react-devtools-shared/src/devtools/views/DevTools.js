@@ -58,7 +58,7 @@ export type ViewElementSource = (
   id: number,
   inspectedElement: InspectedElement,
 ) => void;
-export type ViewSourceLine = (url: string, row: number, column: number) => void;
+export type ViewUrlSource = (url: string, row: number, column: number) => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
@@ -79,7 +79,7 @@ export type Props = {|
   warnIfUnsupportedVersionDetected?: boolean,
   viewAttributeSourceFunction?: ?ViewAttributeSource,
   viewElementSourceFunction?: ?ViewElementSource,
-  viewSourceLineFunction?: ?ViewSourceLine,
+  viewUrlSourceFunction?: ?ViewUrlSource,
   readOnly?: boolean,
   hideSettings?: boolean,
   hideToggleErrorAction?: boolean,
@@ -139,7 +139,7 @@ export default function DevTools({
   warnIfUnsupportedVersionDetected = false,
   viewAttributeSourceFunction,
   viewElementSourceFunction,
-  viewSourceLineFunction,
+  viewUrlSourceFunction,
   readOnly,
   hideSettings,
   hideToggleErrorAction,
@@ -205,11 +205,11 @@ export default function DevTools({
 
   const viewSource = useMemo(
     () => ({
-      viewSourceLineFunction: viewSourceLineFunction || null,
+      viewUrlSourceFunction: viewUrlSourceFunction || null,
       // todo(blakef): Add inspect(...) method here and remove viewElementSource
       // to consolidate source code inspection.
     }),
-    [viewSourceLineFunction],
+    [viewUrlSourceFunction],
   );
 
   const contextMenu = useMemo(
