@@ -9,10 +9,10 @@
 
 import {createContext} from 'react';
 
-import type {ViewSourceLine} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {ViewUrlSource} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 export type Context = {|
-  viewSourceLineFunction: ViewSourceLine | null,
+  viewUrlSourceFunction: ViewUrlSource | null,
 |};
 
 const ViewSourceContext = createContext<Context>(((null: any): Context));
