@@ -29,6 +29,7 @@ import type {
 } from './ReactFiberSuspenseComponent.old';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old';
 import type {Cache} from './ReactFiberCacheComponent.old';
 import {
   enableSuspenseAvoidThisFallback,
@@ -1587,7 +1588,8 @@ function completeWork(
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
-        if (workInProgress.stateNode !== null) {
+        const instance: TracingMarkerInstance | null = workInProgress.stateNode;
+        if (instance !== null) {
           popMarkerInstance(workInProgress);
         }
         bubbleProperties(workInProgress);
