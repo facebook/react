@@ -27,6 +27,7 @@ import type {
   OffscreenProps,
   OffscreenState,
   OffscreenQueue,
+  OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
 import type {
   Cache,
@@ -785,7 +786,10 @@ function updateOffscreenComponent(
       if (enableTransitionTracing) {
         // We have now gone from hidden to visible, so any transitions should
         // be added to the stack to get added to any Offscreen/suspense children
-        transitions = workInProgress.stateNode.transitions;
+        const instance: OffscreenInstance | null = workInProgress.stateNode;
+        if (instance !== null && instance.transitions != null) {
+          transitions = Array.from(instance.transitions);
+        }
       }
 
       pushTransition(workInProgress, prevCachePool, transitions);
@@ -910,7 +914,7 @@ function updateTracingMarkerComponent(
     }
   }
 
-  const instance = workInProgress.stateNode;
+  const instance: TracingMarkerInstance | null = workInProgress.stateNode;
   if (instance !== null) {
     pushMarkerInstance(workInProgress, instance);
   }
@@ -3714,7 +3718,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
-        const instance: TracingMarkerInstance = workInProgress.stateNode;
+        const instance: TracingMarkerInstance | null = workInProgress.stateNode;
         if (instance !== null) {
           pushMarkerInstance(workInProgress, instance);
         }
