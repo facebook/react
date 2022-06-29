@@ -213,6 +213,69 @@ describe('ReactInteractionTracing', () => {
   });
 
   // @gate enableTransitionTracing
+  it('multiple updates in transition callback should only result in one transitionStart/transitionComplete call', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    let navigateToPageTwo;
+    let setText;
+    function App() {
+      const [navigate, setNavigate] = useState(false);
+      const [text, _setText] = useState('hide');
+      navigateToPageTwo = () => setNavigate(true);
+      setText = () => _setText('show');
+
+      return (
+        <div>
+          {navigate ? (
+            <Text text={`Page Two: ${text}`} />
+          ) : (
+            <Text text={`Page One: ${text}`} />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot({transitionCallbacks});
+    await act(async () => {
+      root.render(<App />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield(['Page One: hide']);
+
+      await act(async () => {
+        startTransition(
+          () => {
+            navigateToPageTwo();
+            setText();
+          },
+          {name: 'page transition'},
+        );
+
+        ReactNoop.expire(1000);
+        await advanceTimers(1000);
+
+        expect(Scheduler).toFlushAndYield([
+          'Page Two: show',
+          'onTransitionStart(page transition, 1000)',
+          'onTransitionComplete(page transition, 1000, 2000)',
+        ]);
+      });
+    });
+  });
+
+  // @gate enableTransitionTracing
   it('should correctly trace interactions for async roots', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {

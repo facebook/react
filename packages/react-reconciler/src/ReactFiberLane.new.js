@@ -846,9 +846,9 @@ export function addTransitionToLanesMap(
     const index = laneToIndex(lane);
     let transitions = transitionLanesMap[index];
     if (transitions === null) {
-      transitions = [];
+      transitions = new Set();
     }
-    transitions.push(transition);
+    transitions.add(transition);
 
     transitionLanesMap[index] = transitions;
   }

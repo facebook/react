@@ -328,7 +328,7 @@ export type TransitionTracingCallbacks = {
 // The following fields are only used in transition tracing in Profile builds
 type TransitionTracingOnlyFiberRootProperties = {|
   transitionCallbacks: null | TransitionTracingCallbacks,
-  transitionLanes: Array<Array<Transition> | null>,
+  transitionLanes: Array<Set<Transition> | null>,
   // Transitions on the root can be represented as a bunch of tracing markers.
   // Each entangled group of transitions can be treated as a tracing marker.
   // It will have a set of pending suspense boundaries. These transitions
