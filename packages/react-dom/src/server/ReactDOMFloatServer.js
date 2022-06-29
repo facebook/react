@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {pushDispatcher, popDispatcher} from 'react-dom/ReactDOMDispatcher';
+import {pushDispatcher, popDispatcher} from '../shared/ReactDOMDispatcher';
 
 let currentResponseState = null;
 let currentResourceMap = null;

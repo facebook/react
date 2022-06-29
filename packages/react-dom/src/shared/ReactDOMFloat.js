@@ -7,10 +7,10 @@
  * @flow
  */
 
-import {Dispatcher} from 'react-dom/ReactDOMDispatcher';
+import {__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED as Internals} from '../client/ReactDOM';
 
 function prefetchDNS() {
-  const dispatcher = Dispatcher.current;
+  const dispatcher = Internals.floatDispatcher.current;
   if (dispatcher) {
     dispatcher.prefetchDNS.apply(this, arguments);
   } else {
@@ -21,7 +21,7 @@ function prefetchDNS() {
 }
 
 function preconnect() {
-  const dispatcher = Dispatcher.current;
+  const dispatcher = Internals.floatDispatcher.current;
   if (dispatcher) {
     dispatcher.preconnect.apply(this, arguments);
   } else {
@@ -32,7 +32,7 @@ function preconnect() {
 }
 
 function prefetch() {
-  const dispatcher = Dispatcher.current;
+  const dispatcher = Internals.floatDispatcher.current;
   if (dispatcher) {
     dispatcher.prefetch.apply(this, arguments);
   } else {
@@ -43,7 +43,7 @@ function prefetch() {
 }
 
 function preload() {
-  const dispatcher = Dispatcher.current;
+  const dispatcher = Internals.floatDispatcher.current;
   if (dispatcher) {
     dispatcher.preload.apply(this, arguments);
   } else {
@@ -54,7 +54,7 @@ function preload() {
 }
 
 function preinit() {
-  const dispatcher = Dispatcher.current;
+  const dispatcher = Internals.floatDispatcher.current;
   if (dispatcher) {
     dispatcher.preinit.apply(this, arguments);
   } else {

@@ -28,6 +28,7 @@ import {
   isValidContainer,
 } from './ReactDOMRoot';
 import {createEventHandle} from './ReactDOMEventHandle';
+import {Dispatcher} from '../shared/ReactDOMDispatcher';
 
 import {
   batchedUpdates,
@@ -145,6 +146,7 @@ const Internals = {
     restoreStateIfNeeded,
     batchedUpdates,
   ],
+  floatDispatcher: Dispatcher,
 };
 
 function createRoot(
