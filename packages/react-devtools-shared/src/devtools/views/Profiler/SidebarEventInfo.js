@@ -7,80 +7,73 @@
  * @flow
  */
 
+import type {SchedulingEvent} from 'react-devtools-timeline/src/types';
+
 import * as React from 'react';
-import {isStateUpdateEvent} from 'react-devtools-timeline/src/utils/flow';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import ViewSourceContext from '../Components/ViewSourceContext';
-import {useContext, useMemo} from 'react';
-import {ProfilerContext} from './ProfilerContext';
+import {useContext} from 'react';
+import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils';
 
 import styles from './SidebarEventInfo.css';
 
 export type Props = {||};
 
-export default function SidebarEventInfo(_: Props) {
-  const {profilingData, selectedCommitIndex} = useContext(ProfilerContext);
+function SchedulingEventInfo({eventInfo}: {eventInfo: SchedulingEvent}) {
   const {viewUrlSourceFunction} = useContext(ViewSourceContext);
 
-  const {stack} = useMemo(() => {
-    if (
-      selectedCommitIndex == null ||
-      profilingData == null ||
-      profilingData.timelineData.length === 0
-    ) {
-      return {};
+  const componentStack = eventInfo.componentStack
+    ? stackToComponentSources(eventInfo.componentStack)
+    : null;
+
+  const viewSource = source => {
+    if (viewUrlSourceFunction != null && source != null) {
+      viewUrlSourceFunction(...source);
     }
-    const {schedulingEvents} = profilingData.timelineData[0];
-
-    const event = schedulingEvents[selectedCommitIndex];
-    if (!isStateUpdateEvent(event)) {
-      return {};
-    }
-
-    let componentStack = null;
-    if (event.componentStack) {
-      componentStack = stackToComponentSources(event.componentStack);
-    }
-
-    return {
-      stack: componentStack,
-    };
-  }, [profilingData, selectedCommitIndex]);
-
-  let components;
-  if (stack) {
-    components = stack.map(([displayName, source], index) => {
-      const hasSource = source != null;
-
-      const onClick = () => {
-        if (viewUrlSourceFunction != null && source != null) {
-          viewUrlSourceFunction(...source);
-        }
-      };
-
-      return (
-        <li key={index} className={styles.ListItem} data-source={hasSource}>
-          <label className={styles.Label}>
-            <Button className={styles.Button} onClick={onClick}>
-              {displayName}
-            </Button>
-            {hasSource && (
-              <ButtonIcon className={styles.Source} type="view-source" />
-            )}
-          </label>
-        </li>
-      );
-    });
-  }
+  };
 
   return (
+    <div className={styles.Content} tabIndex={0}>
+      {componentStack ? (
+        <ol className={styles.List}>
+          {componentStack.map(([displayName, source], index) => {
+            const hasSource = source != null;
+
+            return (
+              <li
+                key={index}
+                className={styles.ListItem}
+                data-source={hasSource}>
+                <label className={styles.Label}>
+                  <Button
+                    className={styles.Button}
+                    onClick={() => viewSource(source)}>
+                    {displayName}
+                  </Button>
+                  {hasSource && (
+                    <ButtonIcon className={styles.Source} type="view-source" />
+                  )}
+                </label>
+              </li>
+            );
+          })}
+        </ol>
+      ) : null}
+    </div>
+  );
+}
+
+export default function SidebarEventInfo(_: Props) {
+  const {selectedEvent} = useContext(TimelineContext);
+  // (TODO) Refactor in next PR so this supports multiple types of events
+  return selectedEvent ? (
     <>
       <div className={styles.Toolbar}>Event Component Tree</div>
-      <div className={styles.Content} tabIndex={0}>
-        <ol className={styles.List}>{components}</ol>
-      </div>
+      {selectedEvent.schedulingEvent ? (
+        <SchedulingEventInfo eventInfo={selectedEvent.schedulingEvent} />
+      ) : null}
     </>
-  );
+  ) : null;
 }
