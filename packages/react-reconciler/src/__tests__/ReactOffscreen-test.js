@@ -474,8 +474,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span>Hi</span>);
   });
 
-  // Only works in new reconciler
-  // @gate variant
+  // @gate experimental || www
   it('revealing a hidden tree at high priority does not cause tearing', async () => {
     // When revealing an offscreen tree, we need to include updates that were
     // previously deferred because the tree was hidden, even if they are lower

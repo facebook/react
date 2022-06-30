@@ -86,8 +86,7 @@ describe('ReactOffscreen', () => {
     return text;
   }
 
-  // Only works in new reconciler
-  // @gate variant
+  // @gate experimental || www
   test('detect updates to a hidden tree during a concurrent event', async () => {
     // This is a pretty complex test case. It relates to how we detect if an
     // update is made to a hidden tree: when scheduling the update, we walk up
@@ -168,7 +167,7 @@ describe('ReactOffscreen', () => {
       // In the same render, also hide the offscreen tree.
       root.render(<App show={false} />);
 
-      expect(Scheduler).toFlushAndYieldThrough([
+      expect(Scheduler).toFlushUntilNextPaint([
         // The outer update will commit, but the inner update is deferred until
         // a later render.
         'Outer: 1',

@@ -1522,17 +1522,15 @@ function completeWork(
         // at offscreen priority.
         if (includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane))) {
           bubbleProperties(workInProgress);
-          if (supportsMutation) {
-            // Check if there was an insertion or update in the hidden subtree.
-            // If so, we need to hide those nodes in the commit phase, so
-            // schedule a visibility effect.
-            if (
-              (!enableLegacyHidden ||
-                workInProgress.tag !== LegacyHiddenComponent) &&
-              workInProgress.subtreeFlags & (Placement | Update)
-            ) {
-              workInProgress.flags |= Visibility;
-            }
+          // Check if there was an insertion or update in the hidden subtree.
+          // If so, we need to hide those nodes in the commit phase, so
+          // schedule a visibility effect.
+          if (
+            (!enableLegacyHidden ||
+              workInProgress.tag !== LegacyHiddenComponent) &&
+            workInProgress.subtreeFlags & (Placement | Update)
+          ) {
+            workInProgress.flags |= Visibility;
           }
         }
       }

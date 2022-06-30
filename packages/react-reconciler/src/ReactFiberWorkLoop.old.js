@@ -200,6 +200,7 @@ import {
 import {
   enqueueConcurrentRenderForLane,
   finishQueueingConcurrentUpdates,
+  getConcurrentlyUpdatedLanes,
 } from './ReactFiberConcurrentUpdates.old';
 
 import {
@@ -446,6 +447,10 @@ let isRunningInsertionEffect = false;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
+}
+
+export function getWorkInProgressRootRenderLanes(): Lanes {
+  return workInProgressRootRenderLanes;
 }
 
 export function requestEventTime() {
@@ -2074,9 +2079,15 @@ function commitRootImpl(
   root.callbackNode = null;
   root.callbackPriority = NoLane;
 
-  // Update the first and last pending times on this root. The new first
-  // pending time is whatever is left on the root fiber.
+  // Check which lanes no longer have any work scheduled on them, and mark
+  // those as finished.
   let remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
+
+  // Make sure to account for lanes that were updated by a concurrent event
+  // during the render phase; don't mark them as finished.
+  const concurrentlyUpdatedLanes = getConcurrentlyUpdatedLanes();
+  remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
+
   markRootFinished(root, remainingLanes);
 
   if (root === workInProgressRoot) {
@@ -2795,7 +2806,9 @@ function jnd(timeElapsed: number) {
 export function throwIfInfiniteUpdateLoopDetected() {
   if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
     nestedUpdateCount = 0;
+    nestedPassiveUpdateCount = 0;
     rootWithNestedUpdates = null;
+    rootWithPassiveNestedUpdates = null;
 
     throw new Error(
       'Maximum update depth exceeded. This can happen when a component ' +

@@ -74,6 +74,8 @@ function FiberRootNode(
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);
 
+  this.hiddenUpdates = createLaneMap(null);
+
   this.identifierPrefix = identifierPrefix;
   this.onRecoverableError = onRecoverableError;
 
