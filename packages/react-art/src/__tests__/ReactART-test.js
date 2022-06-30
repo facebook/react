@@ -126,7 +126,7 @@ describe('ReactART', () => {
     TestComponent.defaultProps = {
       width: 150,
       height: 200,
-    }
+    };
   });
 
   afterEach(() => {
