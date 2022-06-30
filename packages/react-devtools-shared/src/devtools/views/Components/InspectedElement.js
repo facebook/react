@@ -1,3 +1,5 @@
+/* global chrome */
+
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -222,10 +224,21 @@ export default function InspectedElementWrapper(_: Props) {
       return;
     }
 
-    const url = new URL(editorURL);
-    url.href = url.href.replace('{path}', source.fileName);
-    url.href = url.href.replace('{line}', String(source.lineNumber));
-    window.open(url);
+    let url = editorURL;
+    url = url.replace('{path}', source.fileName);
+    url = url.replace('{line}', String(source.lineNumber));
+    if (url.startsWith('http')) {
+      // fix https://github.com/facebook/react/issues/24795
+      fetch(url);
+    } else {
+      // fix https://github.com/facebook/react/issues/24731
+      chrome.runtime.sendMessage({
+        payload: {
+          type: 'openInEditorByNewTab',
+          url,
+        },
+      });
+    }
   }, [inspectedElement, editorURL]);
 
   if (element === null) {

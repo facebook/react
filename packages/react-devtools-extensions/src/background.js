@@ -139,5 +139,16 @@ chrome.runtime.onMessage.addListener((request, sender) => {
           break;
       }
     }
+  } else {
+    switch (request.payload?.type) {
+      case 'openInEditorByNewTab':
+        // Open the file in the editor by new tab.
+        // fix https://github.com/facebook/react/issues/24731
+        chrome.tabs.create({
+          url: request.payload.url,
+          active: true,
+        });
+        break;
+    }
   }
 });
