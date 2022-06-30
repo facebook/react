@@ -20,18 +20,15 @@
 }
 
 .ListItem {
-  margin: 0;
+  flex: 1 1;
+  margin: 0 0 0.5rem;
 }
 
 .Label {
-  display: flex;
-  justify-content: space-between;
-
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight: bold;
-}
-
-[data-source="true"]:hover .Label > .Button {
-  background-color: var(--color-background-hover);
+  flex: 1 1;
 }
 
 .Value {
@@ -39,32 +36,31 @@
   font-size: var(--font-size-monospace-normal);
 }
 
-.NothingSelected {
-  display: flex;
+.Row {  
+  display: flex;  
+  flex-direction: row;  
   align-items: center;
-  justify-content: center;
-  height: 100%;
+  border-top: 1px solid var(--color-border);
+} 
+
+.UnclickableSource,
+.ClickableSource {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sans-normal);
+}
+
+.UnclickableSource {
   color: var(--color-dim);
 }
 
-.Button {
-  display: flex;
-  flex: 1;
-
-  max-width: 95%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.ClickableSource {
+  color: var(--color-text);
 }
 
-[data-source="true"] .Button {
-  cursor: pointer;
-}
-
-
-.Button > span {
-  display: block;
-  text-align: left;
-}
-
-.Source {
+.ClickableSource:focus,
+.ClickableSource:hover {
+  background-color: var(--color-background-hover);
 }
