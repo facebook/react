@@ -28,6 +28,7 @@ import type {
   SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent.new';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import {
   enableSuspenseAvoidThisFallback,
@@ -164,7 +165,10 @@ import {transferActualDuration} from './ReactProfilerTimer.new';
 import {popCacheProvider} from './ReactFiberCacheComponent.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
 import {popRootTransition, popTransition} from './ReactFiberTransition.new';
-import {popTracingMarker} from './ReactFiberTracingMarkerComponent.new';
+import {
+  popMarkerInstance,
+  popRootMarkerInstance,
+} from './ReactFiberTracingMarkerComponent.new';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -900,6 +904,11 @@ function completeWork(
         }
         popCacheProvider(workInProgress, cache);
       }
+
+      if (enableTransitionTracing) {
+        popRootMarkerInstance(workInProgress);
+      }
+
       popRootTransition(workInProgress, fiberRoot, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -1579,7 +1588,10 @@ function completeWork(
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
-        popTracingMarker(workInProgress);
+        const instance: TracingMarkerInstance | null = workInProgress.stateNode;
+        if (instance !== null) {
+          popMarkerInstance(workInProgress);
+        }
         bubbleProperties(workInProgress);
 
         if (

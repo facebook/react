@@ -736,7 +736,12 @@ export function createFiberFromLegacyHidden(
   fiber.lanes = lanes;
   // Adding a stateNode for legacy hidden because it's currently using
   // the offscreen implementation, which depends on a state node
-  fiber.stateNode = {};
+  const instance: OffscreenInstance = {
+    isHidden: false,
+    pendingMarkers: null,
+    transitions: null,
+  };
+  fiber.stateNode = instance;
   return fiber;
 }
 

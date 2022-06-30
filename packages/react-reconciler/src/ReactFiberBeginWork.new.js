@@ -27,6 +27,7 @@ import type {
   OffscreenProps,
   OffscreenState,
   OffscreenQueue,
+  OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
 import type {
   Cache,
@@ -262,8 +263,9 @@ import {
   getPendingTransitions,
 } from './ReactFiberTransition.new';
 import {
-  getTracingMarkers,
-  pushTracingMarker,
+  getMarkerInstances,
+  pushMarkerInstance,
+  pushRootMarkerInstance,
 } from './ReactFiberTracingMarkerComponent.new';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -779,7 +781,10 @@ function updateOffscreenComponent(
       if (enableTransitionTracing) {
         // We have now gone from hidden to visible, so any transitions should
         // be added to the stack to get added to any Offscreen/suspense children
-        transitions = workInProgress.stateNode.transitions;
+        const instance: OffscreenInstance | null = workInProgress.stateNode;
+        if (instance !== null && instance.transitions != null) {
+          transitions = Array.from(instance.transitions);
+        }
       }
 
       pushTransition(workInProgress, prevCachePool, transitions);
@@ -909,7 +914,10 @@ function updateTracingMarkerComponent(
     }
   }
 
-  pushTracingMarker(workInProgress);
+  const instance: TracingMarkerInstance | null = workInProgress.stateNode;
+  if (instance !== null) {
+    pushMarkerInstance(workInProgress, instance);
+  }
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
@@ -1312,6 +1320,10 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   const nextState: RootState = workInProgress.memoizedState;
   const root: FiberRoot = workInProgress.stateNode;
   pushRootTransition(workInProgress, root, renderLanes);
+
+  if (enableTransitionTracing) {
+    pushRootMarkerInstance(workInProgress);
+  }
 
   if (enableCache) {
     const nextCache: Cache = nextState.cache;
@@ -2098,10 +2110,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         const currentTransitions = getPendingTransitions();
         if (currentTransitions !== null) {
           // If there are no transitions, we don't need to keep track of tracing markers
-          const currentTracingMarkers = getTracingMarkers();
+          const parentMarkerInstances = getMarkerInstances();
           const primaryChildUpdateQueue: OffscreenQueue = {
             transitions: currentTransitions,
-            tracingMarkers: currentTracingMarkers,
+            markerInstances: parentMarkerInstances,
           };
           primaryChildFragment.updateQueue = primaryChildUpdateQueue;
         }
@@ -2188,10 +2200,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       if (enableTransitionTracing) {
         const currentTransitions = getPendingTransitions();
         if (currentTransitions !== null) {
-          const currentTracingMarkers = getTracingMarkers();
+          const parentMarkerInstances = getMarkerInstances();
           const primaryChildUpdateQueue: OffscreenQueue = {
             transitions: currentTransitions,
-            tracingMarkers: currentTracingMarkers,
+            markerInstances: parentMarkerInstances,
           };
           primaryChildFragment.updateQueue = primaryChildUpdateQueue;
         }
@@ -3509,6 +3521,10 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       const root: FiberRoot = workInProgress.stateNode;
       pushRootTransition(workInProgress, root, renderLanes);
 
+      if (enableTransitionTracing) {
+        pushRootMarkerInstance(workInProgress);
+      }
+
       if (enableCache) {
         const cache: Cache = current.memoizedState.cache;
         pushCacheProvider(workInProgress, cache);
@@ -3694,7 +3710,10 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
-        pushTracingMarker(workInProgress);
+        const instance: TracingMarkerInstance | null = workInProgress.stateNode;
+        if (instance !== null) {
+          pushMarkerInstance(workInProgress, instance);
+        }
       }
     }
   }
