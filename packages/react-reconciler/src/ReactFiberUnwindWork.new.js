@@ -12,7 +12,6 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {Cache} from './ReactFiberCacheComponent.new';
-import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 import {
@@ -53,10 +52,7 @@ import {popCacheProvider} from './ReactFiberCacheComponent.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
 import {popRootTransition, popTransition} from './ReactFiberTransition.new';
-import {
-  popMarkerInstance,
-  popRootMarkerInstance,
-} from './ReactFiberTracingMarkerComponent.new';
+import {popTracingMarker} from './ReactFiberTracingMarkerComponent.new';
 
 function unwindWork(
   current: Fiber | null,
@@ -93,11 +89,6 @@ function unwindWork(
         const cache: Cache = workInProgress.memoizedState.cache;
         popCacheProvider(workInProgress, cache);
       }
-
-      if (enableTransitionTracing) {
-        popRootMarkerInstance(workInProgress);
-      }
-
       popRootTransition(workInProgress, root, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -174,9 +165,7 @@ function unwindWork(
       return null;
     case TracingMarkerComponent:
       if (enableTransitionTracing) {
-        if (workInProgress.stateNode !== null) {
-          popMarkerInstance(workInProgress);
-        }
+        popTracingMarker(workInProgress);
       }
       return null;
     default:
@@ -208,11 +197,6 @@ function unwindInterruptedWork(
         const cache: Cache = interruptedWork.memoizedState.cache;
         popCacheProvider(interruptedWork, cache);
       }
-
-      if (enableTransitionTracing) {
-        popRootMarkerInstance(interruptedWork);
-      }
-
       popRootTransition(interruptedWork, root, renderLanes);
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
@@ -249,11 +233,7 @@ function unwindInterruptedWork(
       break;
     case TracingMarkerComponent:
       if (enableTransitionTracing) {
-        const instance: TracingMarkerInstance | null =
-          interruptedWork.stateNode;
-        if (instance !== null) {
-          popMarkerInstance(interruptedWork);
-        }
+        popTracingMarker(interruptedWork);
       }
       break;
     default:

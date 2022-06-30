@@ -2811,35 +2811,47 @@ function commitPassiveMountOnFiber(
         // Get the transitions that were initiatized during the render
         // and add a start transition callback for each of them
         const root = finishedWork.stateNode;
-        const incompleteTransitions = root.incompleteTransitions;
+        let incompleteTransitions = root.incompleteTransitions;
         // Initial render
         if (committedTransitions !== null) {
+          if (incompleteTransitions === null) {
+            root.incompleteTransitions = incompleteTransitions = new Map();
+          }
+
           committedTransitions.forEach(transition => {
             addTransitionStartCallbackToPendingTransition({
               transitionName: transition.name,
               startTime: transition.startTime,
             });
+
+            if (!incompleteTransitions.has(transition)) {
+              incompleteTransitions.set(transition, null);
+            }
           });
 
           clearTransitionsForLanes(finishedRoot, committedLanes);
         }
 
-        incompleteTransitions.forEach(
-          ({pendingSuspenseBoundaries}, transition) => {
-            if (
-              pendingSuspenseBoundaries === null ||
-              pendingSuspenseBoundaries.size === 0
-            ) {
+        if (incompleteTransitions !== null) {
+          incompleteTransitions.forEach((pendingBoundaries, transition) => {
+            if (pendingBoundaries === null || pendingBoundaries.size === 0) {
               addTransitionCompleteCallbackToPendingTransition({
                 transitionName: transition.name,
                 startTime: transition.startTime,
               });
               incompleteTransitions.delete(transition);
             }
-          },
-        );
+          });
+        }
 
-        clearTransitionsForLanes(finishedRoot, committedLanes);
+        // If there are no more pending suspense boundaries we
+        // clear the transitions because they are all complete.
+        if (
+          incompleteTransitions === null ||
+          incompleteTransitions.size === 0
+        ) {
+          root.incompleteTransitions = null;
+        }
       }
       break;
     }
@@ -2884,6 +2896,14 @@ function commitPassiveMountOnFiber(
           if (isFallback) {
             const transitions = queue.transitions;
             let prevTransitions = instance.transitions;
+            let rootIncompleteTransitions = finishedRoot.incompleteTransitions;
+
+            // We lazily instantiate transition tracing relevant maps
+            // and sets in the commit phase as we need to use them. We only
+            // instantiate them in the fallback phase on an as needed basis
+            if (rootIncompleteTransitions === null) {
+              finishedRoot.incompleteTransitions = rootIncompleteTransitions = new Map();
+            }
             if (instance.pendingMarkers === null) {
               instance.pendingMarkers = new Set();
             }
@@ -2891,43 +2911,56 @@ function commitPassiveMountOnFiber(
               instance.transitions = prevTransitions = new Set();
             }
 
+            // TODO(luna): Combine the root code with the tracing marker code
             if (transitions !== null) {
               transitions.forEach(transition => {
                 // Add all the transitions saved in the update queue during
                 // the render phase (ie the transitions associated with this boundary)
                 // into the transitions set.
                 prevTransitions.add(transition);
+
+                // Add the root transition's pending suspense boundary set to
+                // the queue's marker set. We will iterate through the marker
+                // set when we toggle state on the suspense boundary and
+                // add or remove the pending suspense boundaries as needed.
+                if (rootIncompleteTransitions !== null) {
+                  if (!rootIncompleteTransitions.has(transition)) {
+                    rootIncompleteTransitions.set(transition, new Map());
+                  }
+                  instance.pendingMarkers.add(
+                    rootIncompleteTransitions.get(transition),
+                  );
+                }
               });
             }
 
-            const markerInstances = queue.markerInstances;
-            if (markerInstances !== null) {
-              markerInstances.forEach(markerInstance => {
-                if (markerInstance.pendingSuspenseBoundaries === null) {
-                  markerInstance.pendingSuspenseBoundaries = new Map();
-                }
-
-                const markerTransitions = markerInstance.transitions;
+            const tracingMarkers = queue.tracingMarkers;
+            if (tracingMarkers !== null) {
+              tracingMarkers.forEach(marker => {
+                const markerInstance = marker.stateNode;
                 // There should only be a few tracing marker transitions because
                 // they should be only associated with the transition that
                 // caused them
-                if (markerTransitions !== null) {
-                  markerTransitions.forEach(transition => {
-                    if (instance.transitions.has(transition)) {
-                      instance.pendingMarkers.add(
-                        markerInstance.pendingSuspenseBoundaries,
-                      );
-                    }
-                  });
-                }
+                markerInstance.transitions.forEach(transition => {
+                  if (instance.transitions.has(transition)) {
+                    instance.pendingMarkers.add(
+                      markerInstance.pendingSuspenseBoundaries,
+                    );
+                  }
+                });
               });
             }
           }
 
-          finishedWork.updateQueue = null;
-        }
+          commitTransitionProgress(finishedWork);
 
-        commitTransitionProgress(finishedWork);
+          if (
+            instance.pendingMarkers === null ||
+            instance.pendingMarkers.size === 0
+          ) {
+            finishedWork.updateQueue = null;
+          }
+        }
       }
 
       break;

@@ -27,7 +27,6 @@ import type {
   OffscreenProps,
   OffscreenState,
   OffscreenQueue,
-  OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
 import type {
   Cache,
@@ -260,9 +259,8 @@ import {
   getPendingTransitions,
 } from './ReactFiberTransition.old';
 import {
-  getMarkerInstances,
-  pushMarkerInstance,
-  pushRootMarkerInstance,
+  getTracingMarkers,
+  pushTracingMarker,
 } from './ReactFiberTracingMarkerComponent.old';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -786,10 +784,7 @@ function updateOffscreenComponent(
       if (enableTransitionTracing) {
         // We have now gone from hidden to visible, so any transitions should
         // be added to the stack to get added to any Offscreen/suspense children
-        const instance: OffscreenInstance | null = workInProgress.stateNode;
-        if (instance !== null && instance.transitions != null) {
-          transitions = Array.from(instance.transitions);
-        }
+        transitions = workInProgress.stateNode.transitions;
       }
 
       pushTransition(workInProgress, prevCachePool, transitions);
@@ -914,10 +909,7 @@ function updateTracingMarkerComponent(
     }
   }
 
-  const instance: TracingMarkerInstance | null = workInProgress.stateNode;
-  if (instance !== null) {
-    pushMarkerInstance(workInProgress, instance);
-  }
+  pushTracingMarker(workInProgress);
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
@@ -1320,10 +1312,6 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   const nextState: RootState = workInProgress.memoizedState;
   const root: FiberRoot = workInProgress.stateNode;
   pushRootTransition(workInProgress, root, renderLanes);
-
-  if (enableTransitionTracing) {
-    pushRootMarkerInstance(workInProgress);
-  }
 
   if (enableCache) {
     const nextCache: Cache = nextState.cache;
@@ -2126,10 +2114,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         const currentTransitions = getPendingTransitions();
         if (currentTransitions !== null) {
           // If there are no transitions, we don't need to keep track of tracing markers
-          const parentMarkerInstances = getMarkerInstances();
+          const currentTracingMarkers = getTracingMarkers();
           const primaryChildUpdateQueue: OffscreenQueue = {
             transitions: currentTransitions,
-            markerInstances: parentMarkerInstances,
+            tracingMarkers: currentTracingMarkers,
           };
           primaryChildFragment.updateQueue = primaryChildUpdateQueue;
         }
@@ -2212,10 +2200,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       if (enableTransitionTracing) {
         const currentTransitions = getPendingTransitions();
         if (currentTransitions !== null) {
-          const parentMarkerInstances = getMarkerInstances();
+          const currentTracingMarkers = getTracingMarkers();
           const primaryChildUpdateQueue: OffscreenQueue = {
             transitions: currentTransitions,
-            markerInstances: parentMarkerInstances,
+            tracingMarkers: currentTracingMarkers,
           };
           primaryChildFragment.updateQueue = primaryChildUpdateQueue;
         }
@@ -3522,10 +3510,6 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       const root: FiberRoot = workInProgress.stateNode;
       pushRootTransition(workInProgress, root, renderLanes);
 
-      if (enableTransitionTracing) {
-        pushRootMarkerInstance(workInProgress);
-      }
-
       if (enableCache) {
         const cache: Cache = current.memoizedState.cache;
         pushCacheProvider(workInProgress, cache);
@@ -3718,10 +3702,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
-        const instance: TracingMarkerInstance | null = workInProgress.stateNode;
-        if (instance !== null) {
-          pushMarkerInstance(workInProgress, instance);
-        }
+        pushTracingMarker(workInProgress);
       }
     }
   }
