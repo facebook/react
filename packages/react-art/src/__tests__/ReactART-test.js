@@ -78,6 +78,7 @@ describe('ReactART', () => {
     Shape = ReactART.Shape;
     Surface = ReactART.Surface;
 
+
     TestComponent = class extends React.Component {
       group = React.createRef();
 
@@ -113,7 +114,7 @@ describe('ReactART', () => {
         const c = <Group key="c" />;
 
         return (
-          <Surface width={150} height={200}>
+          <Surface width={this.props.width} height={this.props.height}>
             <Group ref={this.group}>
               {this.props.flipped ? [b, a, c] : [a, b, c]}
             </Group>
@@ -121,6 +122,11 @@ describe('ReactART', () => {
         );
       }
     };
+
+    TestComponent.defaultProps = {
+      width: 150,
+      height: 200,
+    }
   });
 
   afterEach(() => {
@@ -163,6 +169,30 @@ describe('ReactART', () => {
 
     const realNode = ReactDOM.findDOMNode(instance);
     testDOMNodeStructure(realNode, expectedStructure);
+  });
+
+  it('should be able to resize the component', () => {
+    const instance = ReactDOM.render(
+      <TestComponent width={200} />,
+      container,
+    );
+
+    const expectedStructure = {
+      nodeName: 'svg',
+      width: '200',
+    };
+
+    const realNode = ReactDOM.findDOMNode(instance);
+    testDOMNodeStructure(realNode, expectedStructure);
+
+    ReactDOM.render(<TestComponent width={300} />, container);
+
+    const expectedNewStructure = {
+      nodeName: 'svg',
+      width: '300',
+    };
+
+    testDOMNodeStructure(realNode, expectedNewStructure);
   });
 
   it('should be able to reorder components', () => {
