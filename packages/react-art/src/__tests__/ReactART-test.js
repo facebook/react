@@ -78,7 +78,6 @@ describe('ReactART', () => {
     Shape = ReactART.Shape;
     Surface = ReactART.Surface;
 
-
     TestComponent = class extends React.Component {
       group = React.createRef();
 
@@ -172,10 +171,7 @@ describe('ReactART', () => {
   });
 
   it('should be able to resize the component', () => {
-    const instance = ReactDOM.render(
-      <TestComponent width={200} />,
-      container,
-    );
+    const instance = ReactDOM.render(<TestComponent width={200} />, container);
 
     const expectedStructure = {
       nodeName: 'svg',
