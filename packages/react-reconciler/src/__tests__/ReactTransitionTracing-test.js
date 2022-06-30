@@ -168,6 +168,12 @@ describe('ReactInteractionTracing', () => {
           `onTransitionStart(${name}, ${startTime})`,
         );
       },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
       onTransitionComplete: (name, startTime, endTime) => {
         Scheduler.unstable_yieldValue(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
@@ -283,6 +289,12 @@ describe('ReactInteractionTracing', () => {
           `onTransitionStart(${name}, ${startTime})`,
         );
       },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
       onTransitionComplete: (name, startTime, endTime) => {
         Scheduler.unstable_yieldValue(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
@@ -301,7 +313,7 @@ describe('ReactInteractionTracing', () => {
           {navigate ? (
             <Suspense
               fallback={<Text text="Loading..." />}
-              name="suspense page">
+              unstable_name="suspense page">
               <AsyncText text="Page Two" />
             </Suspense>
           ) : (
@@ -330,6 +342,7 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Page Two]',
         'Loading...',
         'onTransitionStart(page transition, 1000)',
+        'onTransitionProgress(page transition, 1000, 2000, [suspense page])',
       ]);
 
       ReactNoop.expire(1000);
@@ -338,6 +351,7 @@ describe('ReactInteractionTracing', () => {
 
       expect(Scheduler).toFlushAndYield([
         'Page Two',
+        'onTransitionProgress(page transition, 1000, 3000, [])',
         'onTransitionComplete(page transition, 1000, 3000)',
       ]);
     });
@@ -351,6 +365,12 @@ describe('ReactInteractionTracing', () => {
           `onTransitionStart(${name}, ${startTime})`,
         );
       },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
       onTransitionComplete: (name, startTime, endTime) => {
         Scheduler.unstable_yieldValue(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
@@ -377,13 +397,15 @@ describe('ReactInteractionTracing', () => {
           {navigate ? (
             <>
               {showText ? (
-                <Suspense fallback={<Text text="Show Text Loading..." />}>
+                <Suspense
+                  unstable_name="show text"
+                  fallback={<Text text="Show Text Loading..." />}>
                   <AsyncText text="Show Text" />
                 </Suspense>
               ) : null}
               <Suspense
                 fallback={<Text text="Loading..." />}
-                name="suspense page">
+                unstable_name="suspense page">
                 <AsyncText text="Page Two" />
               </Suspense>
             </>
@@ -410,6 +432,7 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Page Two]',
         'Loading...',
         'onTransitionStart(page transition, 1000)',
+        'onTransitionProgress(page transition, 1000, 1000, [suspense page])',
       ]);
 
       await resolveText('Page Two');
@@ -417,6 +440,7 @@ describe('ReactInteractionTracing', () => {
       await advanceTimers(1000);
       expect(Scheduler).toFlushAndYield([
         'Page Two',
+        'onTransitionProgress(page transition, 1000, 2000, [])',
         'onTransitionComplete(page transition, 1000, 2000)',
       ]);
 
@@ -426,6 +450,7 @@ describe('ReactInteractionTracing', () => {
         'Show Text Loading...',
         'Page Two',
         'onTransitionStart(text transition, 2000)',
+        'onTransitionProgress(text transition, 2000, 2000, [show text])',
       ]);
 
       await resolveText('Show Text');
@@ -433,6 +458,7 @@ describe('ReactInteractionTracing', () => {
       await advanceTimers(1000);
       expect(Scheduler).toFlushAndYield([
         'Show Text',
+        'onTransitionProgress(text transition, 2000, 3000, [])',
         'onTransitionComplete(text transition, 2000, 3000)',
       ]);
     });
@@ -446,6 +472,12 @@ describe('ReactInteractionTracing', () => {
           `onTransitionStart(${name}, ${startTime})`,
         );
       },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
       onTransitionComplete: (name, startTime, endTime) => {
         Scheduler.unstable_yieldValue(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
@@ -470,13 +502,15 @@ describe('ReactInteractionTracing', () => {
           {navigate ? (
             <>
               {showText ? (
-                <Suspense fallback={<Text text="Show Text Loading..." />}>
+                <Suspense
+                  unstable_name="show text"
+                  fallback={<Text text="Show Text Loading..." />}>
                   <AsyncText text="Show Text" />
                 </Suspense>
               ) : null}
               <Suspense
                 fallback={<Text text="Loading..." />}
-                name="suspense page">
+                unstable_name="suspense page">
                 <AsyncText text="Page Two" />
               </Suspense>
             </>
@@ -505,6 +539,7 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Page Two]',
         'Loading...',
         'onTransitionStart(page transition, 1000)',
+        'onTransitionProgress(page transition, 1000, 2000, [suspense page])',
       ]);
     });
 
@@ -517,6 +552,7 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Page Two]',
         'Loading...',
         'onTransitionStart(show text, 2000)',
+        'onTransitionProgress(show text, 2000, 2000, [show text])',
       ]);
     });
 
@@ -527,6 +563,7 @@ describe('ReactInteractionTracing', () => {
 
       expect(Scheduler).toFlushAndYield([
         'Page Two',
+        'onTransitionProgress(page transition, 1000, 3000, [])',
         'onTransitionComplete(page transition, 1000, 3000)',
       ]);
 
@@ -536,7 +573,288 @@ describe('ReactInteractionTracing', () => {
 
       expect(Scheduler).toFlushAndYield([
         'Show Text',
+        'onTransitionProgress(show text, 2000, 4000, [])',
         'onTransitionComplete(show text, 2000, 4000)',
+      ]);
+    });
+  });
+
+  // @gate enableTransitionTracing
+  it('trace interaction with nested and sibling suspense boundaries', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    let navigateToPageTwo;
+    function App() {
+      const [navigate, setNavigate] = useState(false);
+      navigateToPageTwo = () => {
+        setNavigate(true);
+      };
+
+      return (
+        <div>
+          {navigate ? (
+            <>
+              <Suspense
+                fallback={<Text text="Loading..." />}
+                unstable_name="suspense page">
+                <AsyncText text="Page Two" />
+                <Suspense
+                  unstable_name="show text one"
+                  fallback={<Text text="Show Text One Loading..." />}>
+                  <AsyncText text="Show Text One" />
+                </Suspense>
+                <div>
+                  <Suspense
+                    unstable_name="show text two"
+                    fallback={<Text text="Show Text Two Loading..." />}>
+                    <AsyncText text="Show Text Two" />
+                  </Suspense>
+                </div>
+              </Suspense>
+            </>
+          ) : (
+            <Text text="Page One" />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot({transitionCallbacks});
+    await act(async () => {
+      root.render(<App />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield(['Page One']);
+    });
+
+    await act(async () => {
+      startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Page Two]',
+        'Suspend [Show Text One]',
+        'Show Text One Loading...',
+        'Suspend [Show Text Two]',
+        'Show Text Two Loading...',
+        'Loading...',
+        'onTransitionStart(page transition, 1000)',
+        'onTransitionProgress(page transition, 1000, 2000, [suspense page])',
+      ]);
+
+      resolveText('Page Two');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Page Two',
+        'Suspend [Show Text One]',
+        'Show Text One Loading...',
+        'Suspend [Show Text Two]',
+        'Show Text Two Loading...',
+        'onTransitionProgress(page transition, 1000, 3000, [show text one, show text two])',
+      ]);
+
+      resolveText('Show Text One');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Show Text One',
+        'onTransitionProgress(page transition, 1000, 4000, [show text two])',
+      ]);
+
+      resolveText('Show Text Two');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Show Text Two',
+        'onTransitionProgress(page transition, 1000, 5000, [])',
+        'onTransitionComplete(page transition, 1000, 5000)',
+      ]);
+    });
+  });
+
+  // @gate enableTransitionTracing
+  it('trace interactions with the same child suspense boundaries', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    let setNavigate;
+    let setShowTextOne;
+    let setShowTextTwo;
+    function App() {
+      const [navigate, _setNavigate] = useState(false);
+      const [showTextOne, _setShowTextOne] = useState(false);
+      const [showTextTwo, _setShowTextTwo] = useState(false);
+
+      setNavigate = () => _setNavigate(true);
+      setShowTextOne = () => _setShowTextOne(true);
+      setShowTextTwo = () => _setShowTextTwo(true);
+
+      return (
+        <div>
+          {navigate ? (
+            <>
+              <Suspense
+                fallback={<Text text="Loading..." />}
+                unstable_name="suspense page">
+                <AsyncText text="Page Two" />
+                {/* showTextOne is entangled with navigate */}
+                {showTextOne ? (
+                  <Suspense
+                    unstable_name="show text one"
+                    fallback={<Text text="Show Text One Loading..." />}>
+                    <AsyncText text="Show Text One" />
+                  </Suspense>
+                ) : null}
+                <Suspense fallback={<Text text="Show Text Loading..." />}>
+                  <AsyncText text="Show Text" />
+                </Suspense>
+                {/* showTextTwo's suspense boundaries shouldn't stop navigate's suspense boundaries
+                 from completing */}
+                {showTextTwo ? (
+                  <Suspense
+                    unstable_name="show text two"
+                    fallback={<Text text="Show Text Two Loading..." />}>
+                    <AsyncText text="Show Text Two" />
+                  </Suspense>
+                ) : null}
+              </Suspense>
+            </>
+          ) : (
+            <Text text="Page One" />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot({transitionCallbacks});
+    await act(async () => {
+      root.render(<App />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield(['Page One']);
+    });
+
+    await act(async () => {
+      startTransition(() => setNavigate(), {name: 'navigate'});
+      startTransition(() => setShowTextOne(), {name: 'show text one'});
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Page Two]',
+        'Suspend [Show Text One]',
+        'Show Text One Loading...',
+        'Suspend [Show Text]',
+        'Show Text Loading...',
+        'Loading...',
+        'onTransitionStart(navigate, 1000)',
+        'onTransitionStart(show text one, 1000)',
+        'onTransitionProgress(navigate, 1000, 2000, [suspense page])',
+        'onTransitionProgress(show text one, 1000, 2000, [suspense page])',
+      ]);
+
+      resolveText('Page Two');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'Page Two',
+        'Suspend [Show Text One]',
+        'Show Text One Loading...',
+        'Suspend [Show Text]',
+        'Show Text Loading...',
+        'onTransitionProgress(navigate, 1000, 3000, [show text one, <null>])',
+        'onTransitionProgress(show text one, 1000, 3000, [show text one, <null>])',
+      ]);
+
+      startTransition(() => setShowTextTwo(), {name: 'show text two'});
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Page Two',
+        'Suspend [Show Text One]',
+        'Show Text One Loading...',
+        'Suspend [Show Text]',
+        'Show Text Loading...',
+        'Suspend [Show Text Two]',
+        'Show Text Two Loading...',
+        'onTransitionStart(show text two, 3000)',
+        'onTransitionProgress(show text two, 3000, 4000, [show text two])',
+      ]);
+
+      // This should not cause navigate to finish because it's entangled with
+      // show text one
+      resolveText('Show Text');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Show Text',
+        'onTransitionProgress(navigate, 1000, 5000, [show text one])',
+        'onTransitionProgress(show text one, 1000, 5000, [show text one])',
+      ]);
+
+      // This should not cause show text two to finish but nothing else
+      resolveText('Show Text Two');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'Show Text Two',
+        'onTransitionProgress(show text two, 3000, 6000, [])',
+        'onTransitionComplete(show text two, 3000, 6000)',
+      ]);
+
+      // This should cause everything to finish
+      resolveText('Show Text One');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Show Text One',
+        'onTransitionProgress(navigate, 1000, 7000, [])',
+        'onTransitionProgress(show text one, 1000, 7000, [])',
+        'onTransitionComplete(navigate, 1000, 7000)',
+        'onTransitionComplete(show text one, 1000, 7000)',
       ]);
     });
   });
