@@ -138,6 +138,7 @@ import {
   enqueuePendingPassiveProfilerEffect,
   restorePendingUpdaters,
   addTransitionStartCallbackToPendingTransition,
+  addTransitionProgressCallbackToPendingTransition,
   addTransitionCompleteCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
   setIsRunningInsertionEffect,
@@ -1110,10 +1111,17 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
       // The suspense boundaries was just hidden. Add the boundary
       // to the pending boundary set if it's there
       if (pendingMarkers !== null) {
-        pendingMarkers.forEach(pendingBoundaries => {
-          pendingBoundaries.set(offscreenInstance, {
-            name,
-          });
+        pendingMarkers.forEach(markerInstance => {
+          const pendingBoundaries = markerInstance.pendingSuspenseBoundaries;
+          if (
+            pendingBoundaries !== null &&
+            !pendingBoundaries.has(offscreenInstance)
+          ) {
+            pendingBoundaries.set(offscreenInstance, {
+              name,
+            });
+            markerInstance.hasUpdate = true;
+          }
         });
       }
     } else if (wasHidden && !isHidden) {
@@ -1121,9 +1129,14 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
       // the boundary from the pending suspense boundaries set
       // if it's there
       if (pendingMarkers !== null) {
-        pendingMarkers.forEach(pendingBoundaries => {
-          if (pendingBoundaries.has(offscreenInstance)) {
+        pendingMarkers.forEach(markerInstance => {
+          const pendingBoundaries = markerInstance.pendingSuspenseBoundaries;
+          if (
+            pendingBoundaries !== null &&
+            pendingBoundaries.has(offscreenInstance)
+          ) {
             pendingBoundaries.delete(offscreenInstance);
+            markerInstance.hasUpdate = true;
           }
         });
       }
@@ -2867,17 +2880,20 @@ function commitPassiveMountOnFiber(
           clearTransitionsForLanes(finishedRoot, committedLanes);
         }
 
-        incompleteTransitions.forEach(
-          ({pendingSuspenseBoundaries}, transition) => {
-            if (
-              pendingSuspenseBoundaries === null ||
-              pendingSuspenseBoundaries.size === 0
-            ) {
-              addTransitionCompleteCallbackToPendingTransition(transition);
-              incompleteTransitions.delete(transition);
-            }
-          },
-        );
+        incompleteTransitions.forEach((markerInstance, transition) => {
+          const pendingBoundaries = markerInstance.pendingSuspenseBoundaries;
+          if (markerInstance.hasUpdate) {
+            addTransitionProgressCallbackToPendingTransition({
+              transition,
+              pending: pendingBoundaries || [],
+            });
+            markerInstance.hasUpdate = false;
+          }
+          if (pendingBoundaries === null || pendingBoundaries.size === 0) {
+            addTransitionCompleteCallbackToPendingTransition(transition);
+            incompleteTransitions.delete(transition);
+          }
+        });
 
         clearTransitionsForLanes(finishedRoot, committedLanes);
       }
@@ -2954,9 +2970,7 @@ function commitPassiveMountOnFiber(
                         instance.pendingMarkers = new Set();
                       }
 
-                      instance.pendingMarkers.add(
-                        markerInstance.pendingSuspenseBoundaries,
-                      );
+                      instance.pendingMarkers.add(markerInstance);
                     }
                   });
                 }

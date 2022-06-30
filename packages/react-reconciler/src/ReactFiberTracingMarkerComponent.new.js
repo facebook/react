@@ -22,8 +22,14 @@ export type MarkerTransition = {
   name: string,
 };
 
+export type TransitionProgress = {
+  transition: Transition,
+  pending: PendingSuspenseBoundaries,
+};
+
 export type PendingTransitionCallbacks = {
   transitionStart: Array<Transition> | null,
+  transitionProgress: Array<TransitionProgress> | null,
   transitionComplete: Array<Transition> | null,
   markerComplete: Array<MarkerTransition> | null,
 };
@@ -42,6 +48,7 @@ export type BatchConfigTransition = {
 export type TracingMarkerInstance = {|
   pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
   transitions: Set<Transition> | null,
+  hasUpdate: boolean,
 |};
 
 export type PendingSuspenseBoundaries = Map<OffscreenInstance, SuspenseInfo>;
@@ -73,6 +80,19 @@ export function processTransitionCallbacks(
               endTime,
             );
           }
+        });
+      }
+
+      const transitionProgress = pendingTransitions.transitionProgress;
+      const onTransitionProgress = callbacks.onTransitionProgress;
+      if (onTransitionProgress != null && transitionProgress !== null) {
+        transitionProgress.forEach(({transition, pending}) => {
+          onTransitionProgress(
+            transition.name,
+            transition.startTime,
+            endTime,
+            Array.from(pending.values()),
+          );
         });
       }
 
@@ -117,10 +137,12 @@ export function pushRootMarkerInstance(workInProgress: Fiber): void {
     if (transitions !== null) {
       transitions.forEach(transition => {
         if (!root.incompleteTransitions.has(transition)) {
-          root.incompleteTransitions.set(transition, {
+          const markerInstance: TracingMarkerInstance = {
             transitions: new Set([transition]),
             pendingSuspenseBoundaries: null,
-          });
+            hasUpdate: true,
+          };
+          root.incompleteTransitions.set(transition, markerInstance);
         }
       });
     }
