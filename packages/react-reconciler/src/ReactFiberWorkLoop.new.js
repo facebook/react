@@ -11,7 +11,6 @@ import type {Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import type {StackCursor} from './ReactFiberStack.new';
 import type {Flags} from './ReactFiberFlags';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {EventPriority} from './ReactEventPriorities.new';
@@ -193,11 +192,6 @@ import {
   type CapturedValue,
 } from './ReactCapturedValue';
 import {
-  push as pushToStack,
-  pop as popFromStack,
-  createCursor,
-} from './ReactFiberStack.new';
-import {
   enqueueConcurrentRenderForLane,
   finishQueueingConcurrentUpdates,
   getConcurrentlyUpdatedLanes,
@@ -285,26 +279,20 @@ let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
-// Stack that allows components to change the render lanes for its subtree
-// This is a superset of the lanes we started working on at the root. The only
-// case where it's different from `workInProgressRootRenderLanes` is when we
-// enter a subtree that is hidden and needs to be unhidden: Suspense and
-// Offscreen component.
+// A contextual version of workInProgressRootRenderLanes. It is a superset of
+// the lanes that we started working on at the root. When we enter a subtree
+// that is currently hidden, we add the lanes that would have committed if
+// the hidden tree hadn't been deferred. This is modified by the
+// HiddenContext module.
 //
 // Most things in the work loop should deal with workInProgressRootRenderLanes.
-// Most things in begin/complete phases should deal with subtreeRenderLanes.
-export let subtreeRenderLanes: Lanes = NoLanes;
-const subtreeRenderLanesCursor: StackCursor<Lanes> = createCursor(NoLanes);
+// Most things in begin/complete phases should deal with renderLanes.
+export let renderLanes: Lanes = NoLanes;
 
 // Whether to root completed, errored, suspended, etc.
 let workInProgressRootExitStatus: RootExitStatus = RootInProgress;
 // A fatal error, if one is thrown
 let workInProgressRootFatalError: mixed = null;
-// "Included" lanes refer to lanes that were worked on during this render. It's
-// slightly different than `renderLanes` because `renderLanes` can change as you
-// enter and exit an Offscreen tree. This value is the combination of all render
-// lanes for the entire render phase.
-let workInProgressRootIncludedLanes: Lanes = NoLanes;
 // The work left over by components that were visited during this render. Only
 // includes unprocessed updates, not work in bailed out children.
 let workInProgressRootSkippedLanes: Lanes = NoLanes;
@@ -1455,18 +1443,16 @@ export function flushControlled(fn: () => mixed): void {
   }
 }
 
-export function pushRenderLanes(fiber: Fiber, lanes: Lanes) {
-  pushToStack(subtreeRenderLanesCursor, subtreeRenderLanes, fiber);
-  subtreeRenderLanes = mergeLanes(subtreeRenderLanes, lanes);
-  workInProgressRootIncludedLanes = mergeLanes(
-    workInProgressRootIncludedLanes,
-    lanes,
-  );
+// This is called by the HiddenContext module when we enter or leave a
+// hidden subtree. The stack logic is managed there because that's the only
+// place that ever modifies it. Which module it lives in doesn't matter for
+// performance because this function will get inlined regardless
+export function setRenderLanes(subtreeRenderLanes: Lanes) {
+  renderLanes = subtreeRenderLanes;
 }
 
-export function popRenderLanes(fiber: Fiber) {
-  subtreeRenderLanes = subtreeRenderLanesCursor.current;
-  popFromStack(subtreeRenderLanesCursor, fiber);
+export function getRenderLanes(): Lanes {
+  return renderLanes;
 }
 
 function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
@@ -1497,7 +1483,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressRoot = root;
   const rootWorkInProgress = createWorkInProgress(root.current, null);
   workInProgress = rootWorkInProgress;
-  workInProgressRootRenderLanes = subtreeRenderLanes = workInProgressRootIncludedLanes = lanes;
+  workInProgressRootRenderLanes = renderLanes = lanes;
   workInProgressRootExitStatus = RootInProgress;
   workInProgressRootFatalError = null;
   workInProgressRootSkippedLanes = NoLanes;
@@ -1864,10 +1850,10 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   let next;
   if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
     startProfilerTimer(unitOfWork);
-    next = beginWork(current, unitOfWork, subtreeRenderLanes);
+    next = beginWork(current, unitOfWork, renderLanes);
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
   } else {
-    next = beginWork(current, unitOfWork, subtreeRenderLanes);
+    next = beginWork(current, unitOfWork, renderLanes);
   }
 
   resetCurrentDebugFiberInDEV();
@@ -1901,10 +1887,10 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         !enableProfilerTimer ||
         (completedWork.mode & ProfileMode) === NoMode
       ) {
-        next = completeWork(current, completedWork, subtreeRenderLanes);
+        next = completeWork(current, completedWork, renderLanes);
       } else {
         startProfilerTimer(completedWork);
-        next = completeWork(current, completedWork, subtreeRenderLanes);
+        next = completeWork(current, completedWork, renderLanes);
         // Update render duration assuming we didn't error.
         stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
       }
@@ -1919,7 +1905,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
       // This fiber did not complete because something threw. Pop values off
       // the stack without entering the complete phase. If this is a boundary,
       // capture values if possible.
-      const next = unwindWork(current, completedWork, subtreeRenderLanes);
+      const next = unwindWork(current, completedWork, renderLanes);
 
       // Because this fiber did not complete, don't reset its lanes.
 

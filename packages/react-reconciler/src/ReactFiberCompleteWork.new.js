@@ -27,7 +27,6 @@ import type {
   SuspenseState,
   SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent.new';
-import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import {
@@ -109,14 +108,17 @@ import {
 } from './ReactFiberHostContext.new';
 import {
   suspenseStackCursor,
-  InvisibleParentSuspenseContext,
-  hasSuspenseContext,
-  popSuspenseContext,
-  pushSuspenseContext,
-  setShallowSuspenseContext,
+  popSuspenseListContext,
+  popSuspenseHandler,
+  pushSuspenseListContext,
+  setShallowSuspenseListContext,
   ForceSuspenseFallback,
-  setDefaultShallowSuspenseContext,
+  setDefaultShallowSuspenseListContext,
 } from './ReactFiberSuspenseContext.new';
+import {
+  popHiddenContext,
+  isCurrentTreeHidden,
+} from './ReactFiberHiddenContext.new';
 import {findFirstSuspended} from './ReactFiberSuspenseComponent.new';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -146,9 +148,7 @@ import {
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
-  popRenderLanes,
   getRenderTargetTime,
-  subtreeRenderLanes,
   getWorkInProgressTransitions,
 } from './ReactFiberWorkLoop.new';
 import {
@@ -1077,7 +1077,7 @@ function completeWork(
       return null;
     }
     case SuspenseComponent: {
-      popSuspenseContext(workInProgress);
+      popSuspenseHandler(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
 
       // Special path for dehydrated boundaries. We may eventually move this
@@ -1186,25 +1186,23 @@ function completeWork(
             // If this render already had a ping or lower pri updates,
             // and this is the first time we know we're going to suspend we
             // should be able to immediately restart from within throwException.
-            const hasInvisibleChildContext =
-              current === null &&
-              (workInProgress.memoizedProps.unstable_avoidThisFallback !==
-                true ||
-                !enableSuspenseAvoidThisFallback);
-            if (
-              hasInvisibleChildContext ||
-              hasSuspenseContext(
-                suspenseStackCursor.current,
-                (InvisibleParentSuspenseContext: SuspenseContext),
-              )
-            ) {
-              // If this was in an invisible tree or a new render, then showing
-              // this boundary is ok.
-              renderDidSuspend();
-            } else {
-              // Otherwise, we're going to have to hide content so we should
-              // suspend for longer if possible.
+
+            // Check if this is a "bad" fallback state or a good one. A bad
+            // fallback state is one that we only show as a last resort; if this
+            // is a transition, we'll block it from displaying, and wait for
+            // more data to arrive.
+            const isBadFallback =
+              // It's bad to switch to a fallback if content is already visible
+              (current !== null && !prevDidTimeout && !isCurrentTreeHidden()) ||
+              // Experimental: Some fallbacks are always bad
+              (enableSuspenseAvoidThisFallback &&
+                workInProgress.memoizedProps.unstable_avoidThisFallback ===
+                  true);
+
+            if (isBadFallback) {
               renderDidSuspendDelayIfPossible();
+            } else {
+              renderDidSuspend();
             }
           }
         }
@@ -1266,7 +1264,7 @@ function completeWork(
       return null;
     }
     case SuspenseListComponent: {
-      popSuspenseContext(workInProgress);
+      popSuspenseListContext(workInProgress);
 
       const renderState: null | SuspenseListRenderState =
         workInProgress.memoizedState;
@@ -1332,11 +1330,11 @@ function completeWork(
                 workInProgress.subtreeFlags = NoFlags;
                 resetChildFibers(workInProgress, renderLanes);
 
-                // Set up the Suspense Context to force suspense and immediately
-                // rerender the children.
-                pushSuspenseContext(
+                // Set up the Suspense List Context to force suspense and
+                // immediately rerender the children.
+                pushSuspenseListContext(
                   workInProgress,
-                  setShallowSuspenseContext(
+                  setShallowSuspenseListContext(
                     suspenseStackCursor.current,
                     ForceSuspenseFallback,
                   ),
@@ -1459,14 +1457,16 @@ function completeWork(
         // setting it the first time we go from not suspended to suspended.
         let suspenseContext = suspenseStackCursor.current;
         if (didSuspendAlready) {
-          suspenseContext = setShallowSuspenseContext(
+          suspenseContext = setShallowSuspenseListContext(
             suspenseContext,
             ForceSuspenseFallback,
           );
         } else {
-          suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
+          suspenseContext = setDefaultShallowSuspenseListContext(
+            suspenseContext,
+          );
         }
-        pushSuspenseContext(workInProgress, suspenseContext);
+        pushSuspenseListContext(workInProgress, suspenseContext);
         // Do a pass over the next row.
         // Don't bubble properties in this case.
         return next;
@@ -1499,7 +1499,7 @@ function completeWork(
     }
     case OffscreenComponent:
     case LegacyHiddenComponent: {
-      popRenderLanes(workInProgress);
+      popHiddenContext(workInProgress);
       const nextState: OffscreenState | null = workInProgress.memoizedState;
       const nextIsHidden = nextState !== null;
 
@@ -1520,7 +1520,7 @@ function completeWork(
       } else {
         // Don't bubble properties for hidden children unless we're rendering
         // at offscreen priority.
-        if (includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane))) {
+        if (includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
           bubbleProperties(workInProgress);
           // Check if there was an insertion or update in the hidden subtree.
           // If so, we need to hide those nodes in the commit phase, so

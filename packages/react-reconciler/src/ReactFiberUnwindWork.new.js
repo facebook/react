@@ -36,7 +36,11 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.new';
-import {popSuspenseContext} from './ReactFiberSuspenseContext.new';
+import {
+  popSuspenseListContext,
+  popSuspenseHandler,
+} from './ReactFiberSuspenseContext.new';
+import {popHiddenContext} from './ReactFiberHiddenContext.new';
 import {resetHydrationState} from './ReactFiberHydrationContext.new';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -44,7 +48,6 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext.new';
 import {popProvider} from './ReactFiberNewContext.new';
-import {popRenderLanes} from './ReactFiberWorkLoop.new';
 import {popCacheProvider} from './ReactFiberCacheComponent.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
@@ -109,7 +112,7 @@ function unwindWork(
       return null;
     }
     case SuspenseComponent: {
-      popSuspenseContext(workInProgress);
+      popSuspenseHandler(workInProgress);
       const suspenseState: null | SuspenseState = workInProgress.memoizedState;
       if (suspenseState !== null && suspenseState.dehydrated !== null) {
         if (workInProgress.alternate === null) {
@@ -137,7 +140,7 @@ function unwindWork(
       return null;
     }
     case SuspenseListComponent: {
-      popSuspenseContext(workInProgress);
+      popSuspenseListContext(workInProgress);
       // SuspenseList doesn't actually catch anything. It should've been
       // caught by a nested boundary. If not, it should bubble through.
       return null;
@@ -151,7 +154,7 @@ function unwindWork(
       return null;
     case OffscreenComponent:
     case LegacyHiddenComponent:
-      popRenderLanes(workInProgress);
+      popHiddenContext(workInProgress);
       popTransition(workInProgress, current);
       return null;
     case CacheComponent:
@@ -208,10 +211,10 @@ function unwindInterruptedWork(
       popHostContainer(interruptedWork);
       break;
     case SuspenseComponent:
-      popSuspenseContext(interruptedWork);
+      popSuspenseHandler(interruptedWork);
       break;
     case SuspenseListComponent:
-      popSuspenseContext(interruptedWork);
+      popSuspenseListContext(interruptedWork);
       break;
     case ContextProvider:
       const context: ReactContext<any> = interruptedWork.type._context;
@@ -219,7 +222,7 @@ function unwindInterruptedWork(
       break;
     case OffscreenComponent:
     case LegacyHiddenComponent:
-      popRenderLanes(interruptedWork);
+      popHiddenContext(interruptedWork);
       popTransition(interruptedWork, current);
       break;
     case CacheComponent:
