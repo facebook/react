@@ -306,6 +306,7 @@ function getFallbackBeforeInputChars(
   domEventName: DOMEventName,
   nativeEvent: any,
 ): ?string {
+
   // If we are currently composing (IME) and using a fallback to do so,
   // try to extract the composed characters from the fallback object.
   // If composition event is available, we extract a string only at
@@ -360,6 +361,11 @@ function getFallbackBeforeInputChars(
         }
       }
       return null;
+
+    // Firefox fires the 'input' event when a user types an incorrectly spelled 
+    // word and uses the spellchecker to correct it
+    case 'input':
+      return nativeEvent.data
     case 'compositionend':
       return useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)
         ? null

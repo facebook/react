@@ -122,6 +122,10 @@ describe('BeforeInputEventPlugin', () => {
       eventSimulatorArgs: ['textInput', {data: 'abcß'}],
     },
     {
+      eventSimulator: simulateEvent,
+      eventSimulatorArgs: ['input', {data: 'test string'}],
+    },
+    {
       eventSimulator: simulateKeyboardEvent,
       eventSimulatorArgs: ['keypress', {which: keyCode('a')}],
     },
