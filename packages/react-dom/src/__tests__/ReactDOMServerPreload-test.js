@@ -21,7 +21,6 @@ let SuspenseList;
 let TextDecoder;
 let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
-let PropTypes;
 let textCache;
 let window;
 let document;
@@ -49,22 +48,6 @@ describe('ReactDOMServerPreload', () => {
       SuspenseList = React.SuspenseList;
     }
     TextDecoder = require('util').TextDecoder;
-
-    PropTypes = require('prop-types');
-
-    if (gate(flags => flags.source)) {
-      // The `with-selector` module composes the main `use-sync-external-store`
-      // entrypoint. In the compiled artifacts, this is resolved to the `shim`
-      // implementation by our build config, but when running the tests against
-      // the source files, we need to tell Jest how to resolve it. Because this
-      // is a source module, this mock has no affect on the build tests.
-      jest.mock('use-sync-external-store/src/useSyncExternalStore', () =>
-        jest.requireActual('react'),
-      );
-    }
-    useSyncExternalStore = React.useSyncExternalStore;
-    useSyncExternalStoreWithSelector = require('use-sync-external-store/with-selector')
-      .useSyncExternalStoreWithSelector;
 
     textCache = new Map();
 

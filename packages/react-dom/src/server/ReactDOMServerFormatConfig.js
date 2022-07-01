@@ -162,7 +162,6 @@ export function createResponseState(
       );
     }
   }
-  const resourceMap: Map<string, Resource> = new Map();
   return {
     bootstrapChunks: bootstrapChunks,
     startInlineScript: inlineScriptWithNonce,
@@ -174,7 +173,6 @@ export function createResponseState(
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
-    resourceMap,
   };
 }
 

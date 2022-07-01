@@ -80,6 +80,7 @@ describe('ReactDOMFizzServer', () => {
     writable.setEncoding('utf8');
     writable.on('data', chunk => {
       buffer += chunk;
+      console.log('buffer', buffer);
     });
     writable.on('error', error => {
       hasErrored = true;
@@ -261,7 +262,7 @@ describe('ReactDOMFizzServer', () => {
     return <As>{readText(text)}</As>;
   }
 
-  it('should asynchronously load a lazy component', async () => {
+  fit('should asynchronously load a lazy component', async () => {
     let resolveA;
     const LazyA = React.lazy(() => {
       return new Promise(r => {
@@ -301,6 +302,12 @@ describe('ReactDOMFizzServer', () => {
       );
       pipe(writable);
     });
+    await act(async () => {
+      console.log('before advanceTimers');
+      jest.advanceTimersByTime(100);
+      console.log('after advanceTimers');
+    });
+
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <div>Loading...</div>

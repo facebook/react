@@ -204,8 +204,9 @@ export opaque type Request = {
   resources: Resources,
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
   abortableTasks: Set<Task>,
-  pingedTasks: Array<Task>,
-  lazyTasks: Array<Task>, // Tasks that will only be worked on if all other tasks are complete.
+  pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
+  idleTasks: Array<Task>, // Lower prioirty tasks that should be worked on if no higher priority tasks exist.
+  backupTasks: Array<Task>, // Tasks that will only be worked on if all other tasks are complete.
   // Queues to flush in order of priority
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
@@ -277,13 +278,15 @@ export function createRequest(
     status: OPEN,
     fatalError: null,
     nextSegmentId: 0,
+    newPendingTasks: false,
     allPendingTasks: 0,
     pendingRootTasks: 0,
     resources,
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
-    lazyTasks: [],
+    idleTasks: [],
+    backupTasks: [],
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
@@ -621,7 +624,7 @@ function renderSuspenseBoundary(
   }
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
-  request.pingedTasks.push(suspendedFallbackTask);
+  request.idleTasks.push(suspendedFallbackTask);
 
   popComponentStackInDEV(task);
 }
@@ -680,7 +683,7 @@ function createHeadBoundary(
     if (__DEV__) {
       defaultHeadFallbackTask.componentStack = task.componentStack;
     }
-    request.lazyTasks.push(defaultHeadFallbackTask);
+    request.backupTasks.push(defaultHeadFallbackTask);
   }
 
   const headSegment = createPendingSegment(
@@ -1564,6 +1567,7 @@ function spawnNewSuspendedTask(
     }
   }
   const ping = newTask.ping;
+  request.newPendingTasks = true;
   x.then(ping, ping);
 }
 
@@ -1876,6 +1880,14 @@ function retryTask(request: Request, task: Task): void {
 }
 
 export function performWork(request: Request): void {
+  console.log(
+    'performWork',
+    request.pendingRootTasks,
+    request.allPendingTasks,
+    request.pingedTasks,
+    request.idleTasks,
+    request.backupTasks,
+  );
   if (request.status === CLOSED) {
     return;
   }
@@ -1890,6 +1902,7 @@ export function performWork(request: Request): void {
   const prevResponseState = currentResponseState;
   setCurrentResponseState(request.responseState);
   try {
+    request.newPendingTasks = false;
     const pingedTasks = request.pingedTasks;
     let i;
     do {
@@ -1898,22 +1911,66 @@ export function performWork(request: Request): void {
         retryTask(request, task);
       }
       pingedTasks.splice(0, i);
-      const lazyTasks = request.lazyTasks;
-      if (lazyTasks.length === request.allPendingTasks) {
-        for (i = 0; i < lazyTasks.length; i++) {
-          const task = lazyTasks[i];
-          retryTask(request, task);
+      if (request.newPendingTasks) {
+        console.log(
+          'we have a new pending after completing pingedTasks so performWork will be called again',
+        );
+        i++;
+        setTimeout(() => performWork(request), 0);
+        break;
+      }
+
+      const idleTasks = request.idleTasks;
+      console.log('rendering idleTasks', request.allPendingTasks, idleTasks);
+      for (i = 0; i < idleTasks.length; i++) {
+        console.log(i);
+        const task = idleTasks[i];
+        retryTask(request, task);
+        if (request.newPendingTasks) {
+          console.log(
+            'we have a new pending task so performWork will be called again',
+          );
+          i++;
+          setTimeout(() => performWork(request), 0);
+          break;
         }
-        lazyTasks.splice(0, i);
+      }
+      idleTasks.splice(0, i);
+
+      const backupTasks = request.backupTasks;
+      if (backupTasks.length === request.allPendingTasks) {
+        console.log('rendering backupTasks', backupTasks);
+        for (i = 0; i < backupTasks.length; i++) {
+          const task = backupTasks[i];
+          retryTask(request, task);
+          if (request.newPendingTasks) {
+            console.log(
+              'we have a new pending task so performWork will be called again',
+            );
+            i++;
+            setTimeout(() => performWork(request), 0);
+            break;
+          }
+        }
+        backupTasks.splice(0, i);
       }
     } while (pingedTasks.length);
     if (request.destination !== null) {
+      console.log('going to flushCompletedQueues');
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
     logRecoverableError(request, error);
     fatalError(request, error);
   } finally {
+    console.log(
+      'performWork finally: ',
+      request.pendingRootTasks,
+      request.allPendingTasks,
+      request.pingedTasks,
+      request.idleTasks,
+      request.backupTasks,
+    );
     setCurrentResponseState(prevResponseState);
     ReactCurrentDispatcher.current = prevDispatcher;
     if (__DEV__) {
@@ -2219,6 +2276,9 @@ function flushCompletedQueues(
         request.headSegment = null;
       }
       if (request.pendingRootTasks === 0) {
+        console.log(
+          'request.pendingRootTasks is empty, we can flush the root segment',
+        );
         writeResources(destination, request.resources);
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
