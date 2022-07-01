@@ -360,6 +360,11 @@ function getFallbackBeforeInputChars(
         }
       }
       return null;
+
+    // Firefox fires the 'input' event when a user types an incorrectly spelled
+    // word and uses the spellchecker to correct it
+    case 'input':
+      return nativeEvent.data;
     case 'compositionend':
       return useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)
         ? null
