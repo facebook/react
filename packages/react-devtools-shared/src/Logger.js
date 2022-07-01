@@ -33,7 +33,7 @@ export type LogEvent =
       +inspected_element_number_of_hooks: number | null,
     |};
 
-export type LogFunction = LogEvent => void;
+export type LogFunction = LogEvent => void | Promise<void>;
 
 let logFunctions: Array<LogFunction> = [];
 export const logEvent: LogFunction =

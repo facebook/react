@@ -34,6 +34,7 @@ export {
   startTransition,
   startTransition as unstable_startTransition, // TODO: Remove once call sights updated to startTransition
   unstable_Cache,
+  unstable_TracingMarker,
   unstable_DebugTracingMode,
   unstable_LegacyHidden,
   unstable_Offscreen,

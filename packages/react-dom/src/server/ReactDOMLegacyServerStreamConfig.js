@@ -24,7 +24,6 @@ export function flushBuffered(destination: Destination) {}
 
 export function beginWriting(destination: Destination) {}
 
-let prevWasCommentSegmenter = false;
 export function writeChunk(
   destination: Destination,
   chunk: Chunk | PrecomputedChunk,
@@ -36,16 +35,6 @@ export function writeChunkAndReturn(
   destination: Destination,
   chunk: Chunk | PrecomputedChunk,
 ): boolean {
-  if (prevWasCommentSegmenter) {
-    prevWasCommentSegmenter = false;
-    if (chunk[0] !== '<') {
-      destination.push('<!-- -->');
-    }
-  }
-  if (chunk === '<!-- -->') {
-    prevWasCommentSegmenter = true;
-    return true;
-  }
   return destination.push(chunk);
 }
 

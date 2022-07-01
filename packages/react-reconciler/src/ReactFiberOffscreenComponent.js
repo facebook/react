@@ -10,7 +10,11 @@
 import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SpawnedCachePool} from './ReactFiberCacheComponent.new';
-import type {Transition} from './ReactFiberTracingMarkerComponent.new';
+import type {
+  Transition,
+  PendingSuspenseBoundaries,
+  TracingMarkerInstance,
+} from './ReactFiberTracingMarkerComponent.new';
 
 export type OffscreenProps = {|
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum
@@ -31,11 +35,15 @@ export type OffscreenState = {|
   // order to unhide the component.
   baseLanes: Lanes,
   cachePool: SpawnedCachePool | null,
-  transitions: Set<Transition> | null,
 |};
 
 export type OffscreenQueue = {|
   transitions: Array<Transition> | null,
+  markerInstances: Array<TracingMarkerInstance> | null,
 |} | null;
 
-export type OffscreenInstance = {};
+export type OffscreenInstance = {|
+  isHidden: boolean,
+  pendingMarkers: Set<PendingSuspenseBoundaries> | null,
+  transitions: Set<Transition> | null,
+|};

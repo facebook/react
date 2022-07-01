@@ -512,6 +512,99 @@ describe('ReactFlight', () => {
     );
   });
 
+  describe('Hooks', () => {
+    function DivWithId({children}) {
+      const id = React.useId();
+      return <div prop={id}>{children}</div>;
+    }
+
+    it('should support useId', () => {
+      function App() {
+        return (
+          <>
+            <DivWithId />
+            <DivWithId />
+          </>
+        );
+      }
+
+      const transport = ReactNoopFlightServer.render(<App />);
+      act(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <div prop=":S1:" />
+          <div prop=":S2:" />
+        </>,
+      );
+    });
+
+    it('accepts an identifier prefix that prefixes generated ids', () => {
+      function App() {
+        return (
+          <>
+            <DivWithId />
+            <DivWithId />
+          </>
+        );
+      }
+
+      const transport = ReactNoopFlightServer.render(<App />, {
+        identifierPrefix: 'foo',
+      });
+      act(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <div prop=":fooS1:" />
+          <div prop=":fooS2:" />
+        </>,
+      );
+    });
+
+    it('[TODO] it does not warn if you render a server element passed to a client module reference twice on the client when using useId', async () => {
+      // @TODO Today if you render a server component with useId and pass it to a client component and that client component renders the element in two or more
+      // places the id used on the server will be duplicated in the client. This is a deviation from the guarantees useId makes for Fizz/Client and is a consequence
+      // of the fact that the server component is actually rendered on the server and is reduced to a set of host elements before being passed to the Client component
+      // so the output passed to the Client has no knowledge of the useId use. In the future we would like to add a DEV warning when this happens. For now
+      // we just accept that it is a nuance of useId in Flight
+      function App() {
+        const id = React.useId();
+        const div = <div prop={id}>{id}</div>;
+        return <ClientDoublerModuleRef el={div} />;
+      }
+
+      function ClientDoubler({el}) {
+        Scheduler.unstable_yieldValue('ClientDoubler');
+        return (
+          <>
+            {el}
+            {el}
+          </>
+        );
+      }
+
+      const ClientDoublerModuleRef = moduleReference(ClientDoubler);
+
+      const transport = ReactNoopFlightServer.render(<App />);
+      expect(Scheduler).toHaveYielded([]);
+
+      act(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+
+      expect(Scheduler).toHaveYielded(['ClientDoubler']);
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <div prop=":S1:">:S1:</div>
+          <div prop=":S1:">:S1:</div>
+        </>,
+      );
+    });
+  });
+
   describe('ServerContext', () => {
     // @gate enableServerContext
     it('supports basic createServerContext usage', () => {
@@ -759,15 +852,14 @@ describe('ReactFlight', () => {
       function Bar() {
         return <span>{React.useContext(ServerContext)}</span>;
       }
-      const transport = ReactNoopFlightServer.render(<Bar />, {}, [
-        ['ServerContext', 'Override'],
-      ]);
+      const transport = ReactNoopFlightServer.render(<Bar />, {
+        context: [['ServerContext', 'Override']],
+      });
 
       act(() => {
         const flightModel = ReactNoopFlightClient.read(transport);
         ReactNoop.render(flightModel);
       });
-
       expect(ReactNoop).toMatchRenderedOutput(<span>Override</span>);
     });
 

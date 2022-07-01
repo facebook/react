@@ -187,10 +187,6 @@ You can leave it empty.
 
 This method is called for a container that's used as a portal target. Usually you can leave it empty.
 
-#### `now()`
-
-You can proxy this to `performance.now()` or its equivalent in your environment.
-
 #### `scheduleTimeout(fn, delay)`
 
 You can proxy this to `setTimeout` or its equivalent in your environment.

@@ -30,7 +30,6 @@ import {
   enableUseRefAccessWarning,
   enableStrictEffects,
   enableLazyContextPropagation,
-  enableSuspenseLayoutEffectSemantics,
   enableUseMutableSource,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
@@ -44,6 +43,7 @@ import {
 import {
   NoLane,
   SyncLane,
+  OffscreenLane,
   NoLanes,
   isSubsetOfLanes,
   includesBlockingLane,
@@ -83,11 +83,11 @@ import {
 } from './ReactHookEffectTags';
 import {
   getWorkInProgressRoot,
+  getWorkInProgressRootRenderLanes,
   scheduleUpdateOnFiber,
   requestUpdateLane,
   requestEventTime,
   markSkippedUpdateLanes,
-  isInterleavedUpdate,
 } from './ReactFiberWorkLoop.new';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -111,14 +111,18 @@ import {
   createUpdate as createLegacyQueueUpdate,
   enqueueUpdate as enqueueLegacyQueueUpdate,
   entangleTransitions as entangleLegacyQueueTransitions,
-} from './ReactUpdateQueue.new';
-import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
+} from './ReactFiberClassUpdateQueue.new';
+import {
+  enqueueConcurrentHookUpdate,
+  enqueueConcurrentHookUpdateAndEagerlyBailout,
+  enqueueConcurrentRenderForLane,
+} from './ReactFiberConcurrentUpdates.new';
 import {getTreeId} from './ReactFiberTreeContext.new';
 import {now} from './Scheduler';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
-type Update<S, A> = {|
+export type Update<S, A> = {|
   lane: Lane,
   action: A,
   hasEagerState: boolean,
@@ -128,7 +132,6 @@ type Update<S, A> = {|
 
 export type UpdateQueue<S, A> = {|
   pending: Update<S, A> | null,
-  interleaved: Update<S, A> | null,
   lanes: Lanes,
   dispatch: (A => mixed) | null,
   lastRenderedReducer: ((S, A) => S) | null,
@@ -738,7 +741,6 @@ function mountReducer<S, I, A>(
   hook.memoizedState = hook.baseState = initialState;
   const queue: UpdateQueue<S, A> = {
     pending: null,
-    interleaved: null,
     lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: reducer,
@@ -810,8 +812,20 @@ function updateReducer<S, I, A>(
     let newBaseQueueLast = null;
     let update = first;
     do {
-      const updateLane = update.lane;
-      if (!isSubsetOfLanes(renderLanes, updateLane)) {
+      // An extra OffscreenLane bit is added to updates that were made to
+      // a hidden tree, so that we can distinguish them from updates that were
+      // already there when the tree was hidden.
+      const updateLane = removeLanes(update.lane, OffscreenLane);
+      const isHiddenUpdate = updateLane !== update.lane;
+
+      // Check if this update was made while the tree was hidden. If so, then
+      // it's not a "base" update and we should disregard the extra base lanes
+      // that were added to renderLanes when we entered the Offscreen tree.
+      const shouldSkipUpdate = isHiddenUpdate
+        ? !isSubsetOfLanes(getWorkInProgressRootRenderLanes(), updateLane)
+        : !isSubsetOfLanes(renderLanes, updateLane);
+
+      if (shouldSkipUpdate) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
@@ -885,22 +899,7 @@ function updateReducer<S, I, A>(
     queue.lastRenderedState = newState;
   }
 
-  // Interleaved updates are stored on a separate queue. We aren't going to
-  // process them during this render, but we do need to track which lanes
-  // are remaining.
-  const lastInterleaved = queue.interleaved;
-  if (lastInterleaved !== null) {
-    let interleaved = lastInterleaved;
-    do {
-      const interleavedLane = interleaved.lane;
-      currentlyRenderingFiber.lanes = mergeLanes(
-        currentlyRenderingFiber.lanes,
-        interleavedLane,
-      );
-      markSkippedUpdateLanes(interleavedLane);
-      interleaved = ((interleaved: any).next: Update<S, A>);
-    } while (interleaved !== lastInterleaved);
-  } else if (baseQueue === null) {
+  if (baseQueue === null) {
     // `queue.lanes` is used for entangling transitions. We can set it back to
     // zero once the queue is empty.
     queue.lanes = NoLanes;
@@ -1208,7 +1207,6 @@ function useMutableSource<Source, Snapshot>(
     // including any interleaving updates that occur.
     const newQueue: UpdateQueue<Snapshot, BasicStateAction<Snapshot>> = {
       pending: null,
-      interleaved: null,
       lanes: NoLanes,
       dispatch: null,
       lastRenderedReducer: basicStateReducer,
@@ -1497,7 +1495,10 @@ function checkIfSnapshotChanged(inst) {
 }
 
 function forceStoreRerender(fiber) {
-  scheduleUpdateOnFiber(fiber, SyncLane, NoTimestamp);
+  const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+  if (root !== null) {
+    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+  }
 }
 
 function mountState<S>(
@@ -1511,7 +1512,6 @@ function mountState<S>(
   hook.memoizedState = hook.baseState = initialState;
   const queue: UpdateQueue<S, BasicStateAction<S>> = {
     pending: null,
-    interleaved: null,
     lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: basicStateReducer,
@@ -1748,10 +1748,7 @@ function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  let fiberFlags: Flags = UpdateEffect;
-  if (enableSuspenseLayoutEffectSemantics) {
-    fiberFlags |= LayoutStaticEffect;
-  }
+  let fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
   if (
     __DEV__ &&
     enableStrictEffects &&
@@ -1818,10 +1815,7 @@ function mountImperativeHandle<T>(
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
-  let fiberFlags: Flags = UpdateEffect;
-  if (enableSuspenseLayoutEffectSemantics) {
-    fiberFlags |= LayoutStaticEffect;
-  }
+  let fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
   if (
     __DEV__ &&
     enableStrictEffects &&
@@ -2153,10 +2147,13 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
     switch (provider.tag) {
       case CacheComponent:
       case HostRoot: {
+        // Schedule an update on the cache boundary to trigger a refresh.
         const lane = requestUpdateLane(provider);
         const eventTime = requestEventTime();
-        const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+        const refreshUpdate = createLegacyQueueUpdate(eventTime, lane);
+        const root = enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         if (root !== null) {
+          scheduleUpdateOnFiber(root, provider, lane, eventTime);
           entangleLegacyQueueTransitions(root, provider, lane);
         }
 
@@ -2170,13 +2167,10 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
           seededCache.data.set(seedKey, seedValue);
         }
 
-        // Schedule an update on the cache boundary to trigger a refresh.
-        const refreshUpdate = createLegacyQueueUpdate(eventTime, lane);
         const payload = {
           cache: seededCache,
         };
         refreshUpdate.payload = payload;
-        enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         return;
       }
     }
@@ -2213,10 +2207,10 @@ function dispatchReducerAction<S, A>(
   if (isRenderPhaseUpdate(fiber)) {
     enqueueRenderPhaseUpdate(queue, update);
   } else {
-    enqueueUpdate(fiber, queue, update, lane);
-    const eventTime = requestEventTime();
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitionUpdate(root, queue, lane);
     }
   }
@@ -2252,8 +2246,6 @@ function dispatchSetState<S, A>(
   if (isRenderPhaseUpdate(fiber)) {
     enqueueRenderPhaseUpdate(queue, update);
   } else {
-    enqueueUpdate(fiber, queue, update, lane);
-
     const alternate = fiber.alternate;
     if (
       fiber.lanes === NoLanes &&
@@ -2283,6 +2275,8 @@ function dispatchSetState<S, A>(
             // It's still possible that we'll need to rebase this update later,
             // if the component re-renders for a different reason and by that
             // time the reducer has changed.
+            // TODO: Do we still need to entangle transitions in this case?
+            enqueueConcurrentHookUpdateAndEagerlyBailout(fiber, queue, update);
             return;
           }
         } catch (error) {
@@ -2294,9 +2288,11 @@ function dispatchSetState<S, A>(
         }
       }
     }
-    const eventTime = requestEventTime();
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
+      const eventTime = requestEventTime();
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitionUpdate(root, queue, lane);
     }
   }
@@ -2331,38 +2327,7 @@ function enqueueRenderPhaseUpdate<S, A>(
   queue.pending = update;
 }
 
-function enqueueUpdate<S, A>(
-  fiber: Fiber,
-  queue: UpdateQueue<S, A>,
-  update: Update<S, A>,
-  lane: Lane,
-) {
-  if (isInterleavedUpdate(fiber, lane)) {
-    const interleaved = queue.interleaved;
-    if (interleaved === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-      // At the end of the current render, this queue's interleaved updates will
-      // be transferred to the pending queue.
-      pushInterleavedQueue(queue);
-    } else {
-      update.next = interleaved.next;
-      interleaved.next = update;
-    }
-    queue.interleaved = update;
-  } else {
-    const pending = queue.pending;
-    if (pending === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-    } else {
-      update.next = pending.next;
-      pending.next = update;
-    }
-    queue.pending = update;
-  }
-}
-
+// TODO: Move to ReactFiberConcurrentUpdates?
 function entangleTransitionUpdate<S, A>(
   root: FiberRoot,
   queue: UpdateQueue<S, A>,

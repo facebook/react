@@ -19,6 +19,7 @@ import type {
 } from './ReactFiberHostConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {TreeContext} from './ReactFiberTreeContext.new';
+import type {CapturedValue} from './ReactCapturedValue';
 
 import {
   HostComponent,
@@ -86,7 +87,7 @@ let isHydrating: boolean = false;
 let didSuspendOrErrorDEV: boolean = false;
 
 // Hydration errors that were thrown inside this boundary
-let hydrationErrors: Array<mixed> | null = null;
+let hydrationErrors: Array<CapturedValue<mixed>> | null = null;
 
 function warnIfHydrating() {
   if (__DEV__) {
@@ -507,6 +508,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
             textContent,
             // TODO: Delete this argument when we remove the legacy root API.
             isConcurrentMode,
+            shouldWarnIfMismatchDev,
           );
           break;
         }
@@ -524,6 +526,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
             textContent,
             // TODO: Delete this argument when we remove the legacy root API.
             isConcurrentMode,
+            shouldWarnIfMismatchDev,
           );
           break;
         }
@@ -680,7 +683,7 @@ function getIsHydrating(): boolean {
   return isHydrating;
 }
 
-export function queueHydrationError(error: mixed): void {
+export function queueHydrationError(error: CapturedValue<mixed>): void {
   if (hydrationErrors === null) {
     hydrationErrors = [error];
   } else {

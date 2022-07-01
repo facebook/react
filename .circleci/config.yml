@@ -122,24 +122,48 @@ jobs:
           paths:
             - build
 
-  get_base_build:
+  download_build:
+    docker: *docker
+    environment: *environment
+    parameters:
+      revision:
+        type: string
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Download artifacts for revision
+          command: |
+              git fetch origin main
+              cd ./scripts/release && yarn && cd ../../
+              scripts/release/download-experimental-build.js --commit=<< parameters.revision >> --allowBrokenCI
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build
+
+  download_base_build_for_sizebot:
     docker: *docker
     environment: *environment
     steps:
       - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
       - run:
           name: Download artifacts for base revision
-          # TODO: We can't use the normal download-build script here because it
-          # depends on the CircleCI artifacts API, which was recently changed to
-          # require authorization. And we can't pass an authorization token
-          # without possibly leaking it to the public, since we run sizebot on
-          # PRs from external contributors. As a temporary workaround, this job
-          # will pull the artifacts from a public mirror that I set up. But we
-          # should find some other solution so we don't have to maintain
-          # the mirror.
           command: |
-            curl -L --retry 60 --retry-delay 10 --retry-max-time 600 https://react-builds.vercel.app/api/commits/$(git merge-base HEAD origin/main)/artifacts/build.tgz | tar -xz
-            mv ./build ./base-build
+              git fetch origin main
+              cd ./scripts/release && yarn && cd ../../
+              scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main) --allowBrokenCI
+              mv ./build ./base-build
+      - run:
+          # TODO: The `download-experimental-build` script copies the npm
+          # packages into the `node_modules` directory. This is a historical
+          # quirk of how the release script works. Let's pretend they
+          # don't exist.
+          name: Delete extraneous files
+          command: rm -rf ./base-build/node_modules
 
       - persist_to_workspace:
           root: .
@@ -219,6 +243,57 @@ jobs:
             RELEASE_CHANNEL: experimental
           command: ./scripts/circleci/run_devtools_e2e_tests.js
 
+  run_devtools_tests_for_versions:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      version:
+        type: string
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Install nested packages from Yarn cache
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
+      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
+
+  run_devtools_e2e_tests_for_versions:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      version:
+        type: string
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Install nested packages from Yarn cache
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run:
+          name: Playwright install deps
+          command: |
+            npx playwright install
+            sudo npx playwright install-deps
+      - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >>
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: ./scripts/circleci/run_devtools_e2e_tests.js << parameters.version >>
+      - run:
+          name: Cleanup build regression folder
+          command: rm -r ./build-regression
+      - store_artifacts:
+          path: ./tmp/screenshots
+
   yarn_lint_build:
     docker: *docker
     environment: *environment
@@ -254,7 +329,7 @@ jobs:
           name: Search build artifacts for unminified errors
           command: |
             yarn extract-errors
-            git diff || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
+            git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
 
   yarn_test:
     docker: *docker
@@ -353,10 +428,23 @@ jobs:
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
+          name: Fetch revisions that contain an intentional fork
+          # This will fetch each revision listed in the `forked-revisions` file,
+          # which may be necessary if it's not part of main. For example, it
+          # may have been part of a PR branch that was squashed on merge.
+          command: |
+            cut -d " " -f 1 scripts/merge-fork/forked-revisions | xargs -r git fetch origin
+      - run:
+          name: Revert forked revisions
+          # This will revert the changes without committing. At the end, it's
+          # expected that both forks will be identical.
+          command: |
+            cut -d " " -f 1 scripts/merge-fork/forked-revisions | xargs -r git revert --no-commit
+      - run:
           name: Confirm reconciler forks are the same
           command: |
             yarn replace-fork
-            git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, disable this CI check." && false)
+            git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, add the commit SHA to scripts/merge-fork/forked-revisions." && false)
 
 
 workflows:
@@ -441,7 +529,7 @@ workflows:
                 # - "-r=www-modern --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
-      - get_base_build:
+      - download_base_build_for_sizebot:
           filters:
             branches:
               ignore:
@@ -454,7 +542,7 @@ workflows:
               ignore:
                 - main
           requires:
-            - get_base_build
+            - download_base_build_for_sizebot
             - yarn_build_combined
       - yarn_lint_build:
           requires:
@@ -490,6 +578,48 @@ workflows:
       - test_fuzz:
           requires:
             - setup
+
+  devtools_regression_tests:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
+    triggers:
+      - schedule:
+          # DevTools regression tests run once a day
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - setup
+      - download_build:
+          requires:
+            - setup
+          revision: << pipeline.git.revision >>
+      - build_devtools_and_process_artifacts:
+          requires:
+            - download_build
+      - run_devtools_tests_for_versions:
+          requires:
+            - build_devtools_and_process_artifacts
+          matrix:
+            parameters:
+              version:
+                - "16.0"
+                - "16.5" # schedule package
+                - "16.8" # hooks
+                - "17.0"
+                - "18.0"
+      - run_devtools_e2e_tests_for_versions:
+          requires:
+            - build_devtools_and_process_artifacts
+          matrix:
+            parameters:
+              version:
+                - "16.0"
+                - "16.5" # schedule package
+                - "16.8" # hooks
+                - "17.0"
+                - "18.0"
 
   # Used to publish a prerelease manually via the command line
   publish_preleases:

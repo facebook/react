@@ -1,6 +1,6 @@
 {
   "name": "jest-react",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "description": "Jest matchers and utilities for testing React components.",
   "main": "index.js",
   "repository": {
@@ -20,8 +20,8 @@
   "homepage": "https://reactjs.org/",
   "peerDependencies": {
     "jest": "^23.0.1 || ^24.0.0 || ^25.1.0",
-    "react": "^18.1.0",
-    "react-test-renderer": "^18.1.0"
+    "react": "^18.2.0",
+    "react-test-renderer": "^18.2.0"
   },
   "files": [
     "LICENSE",

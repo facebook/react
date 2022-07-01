@@ -6,6 +6,9 @@
  *
  * @flow
  */
+
+import {normalizeCodeLocInfo} from './utils';
+
 let React;
 let ReactDOMClient;
 let act;
@@ -60,15 +63,7 @@ describe('console', () => {
     legacyRender = utils.legacyRender;
   });
 
-  function normalizeCodeLocInfo(str) {
-    return (
-      str &&
-      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
-        return '\n    in ' + name + ' (at **)';
-      })
-    );
-  }
-
+  // @reactVersion >=18.0
   it('should not patch console methods that are not explicitly overridden', () => {
     expect(fakeConsole.error).not.toBe(mockError);
     expect(fakeConsole.info).toBe(mockInfo);
@@ -76,6 +71,7 @@ describe('console', () => {
     expect(fakeConsole.warn).not.toBe(mockWarn);
   });
 
+  // @reactVersion >=18.0
   it('should patch the console when appendComponentStack is enabled', () => {
     unpatchConsole();
 
@@ -92,6 +88,7 @@ describe('console', () => {
     expect(fakeConsole.warn).not.toBe(mockWarn);
   });
 
+  // @reactVersion >=18.0
   it('should patch the console when breakOnConsoleErrors is enabled', () => {
     unpatchConsole();
 
@@ -108,6 +105,7 @@ describe('console', () => {
     expect(fakeConsole.warn).not.toBe(mockWarn);
   });
 
+  // @reactVersion >=18.0
   it('should patch the console when showInlineWarningsAndErrors is enabled', () => {
     unpatchConsole();
 
@@ -124,6 +122,7 @@ describe('console', () => {
     expect(fakeConsole.warn).not.toBe(mockWarn);
   });
 
+  // @reactVersion >=18.0
   it('should only patch the console once', () => {
     const {error, warn} = fakeConsole;
 
@@ -137,6 +136,7 @@ describe('console', () => {
     expect(fakeConsole.warn).toBe(warn);
   });
 
+  // @reactVersion >=18.0
   it('should un-patch when requested', () => {
     expect(fakeConsole.error).not.toBe(mockError);
     expect(fakeConsole.warn).not.toBe(mockWarn);
@@ -147,6 +147,7 @@ describe('console', () => {
     expect(fakeConsole.warn).toBe(mockWarn);
   });
 
+  // @reactVersion >=18.0
   it('should pass through logs when there is no current fiber', () => {
     expect(mockLog).toHaveBeenCalledTimes(0);
     expect(mockWarn).toHaveBeenCalledTimes(0);
@@ -165,6 +166,7 @@ describe('console', () => {
     expect(mockError.mock.calls[0][0]).toBe('error');
   });
 
+  // @reactVersion >=18.0
   it('should not append multiple stacks', () => {
     global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
 
@@ -187,6 +189,7 @@ describe('console', () => {
     expect(mockError.mock.calls[0][1]).toBe('\n    in Child (at fake.js:123)');
   });
 
+  // @reactVersion >=18.0
   it('should append component stacks to errors and warnings logged during render', () => {
     global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
 
@@ -222,6 +225,7 @@ describe('console', () => {
     );
   });
 
+  // @reactVersion >=18.0
   it('should append component stacks to errors and warnings logged from effects', () => {
     const Intermediate = ({children}) => children;
     const Parent = ({children}) => (
@@ -274,6 +278,7 @@ describe('console', () => {
     );
   });
 
+  // @reactVersion >=18.0
   it('should append component stacks to errors and warnings logged from commit hooks', () => {
     global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
 
@@ -332,6 +337,7 @@ describe('console', () => {
     );
   });
 
+  // @reactVersion >=18.0
   it('should append component stacks to errors and warnings logged from gDSFP', () => {
     const Intermediate = ({children}) => children;
     const Parent = ({children}) => (
@@ -371,6 +377,7 @@ describe('console', () => {
     );
   });
 
+  // @reactVersion >=18.0
   it('should append stacks after being uninstalled and reinstalled', () => {
     global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
 
@@ -410,6 +417,7 @@ describe('console', () => {
     );
   });
 
+  // @reactVersion >=18.0
   it('should be resilient to prepareStackTrace', () => {
     global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
 
@@ -459,6 +467,7 @@ describe('console', () => {
     );
   });
 
+  // @reactVersion >=18.0
   it('should correctly log Symbols', () => {
     const Component = ({children}) => {
       fakeConsole.warn('Symbol:', Symbol(''));
@@ -753,6 +762,7 @@ describe('console error', () => {
     legacyRender = utils.legacyRender;
   });
 
+  // @reactVersion >=18.0
   it('error in console log throws without interfering with logging', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);

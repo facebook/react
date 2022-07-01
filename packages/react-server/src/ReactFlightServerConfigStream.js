@@ -99,6 +99,16 @@ export function processModelChunk(
   return stringToChunk(row);
 }
 
+export function processReferenceChunk(
+  request: Request,
+  id: number,
+  reference: string,
+): Chunk {
+  const json = stringify(reference);
+  const row = serializeRowHeader('J', id) + json + '\n';
+  return stringToChunk(row);
+}
+
 export function processModuleChunk(
   request: Request,
   id: number,

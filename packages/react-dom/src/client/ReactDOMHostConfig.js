@@ -672,9 +672,8 @@ export function clearContainer(container: Container): void {
   if (container.nodeType === ELEMENT_NODE) {
     ((container: any): Element).textContent = '';
   } else if (container.nodeType === DOCUMENT_NODE) {
-    const body = ((container: any): Document).body;
-    if (body != null) {
-      body.textContent = '';
+    if (container.documentElement) {
+      container.removeChild(container.documentElement);
     }
   }
 }
@@ -729,6 +728,45 @@ export function isSuspenseInstancePending(instance: SuspenseInstance) {
 
 export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
   return instance.data === SUSPENSE_FALLBACK_START_DATA;
+}
+
+export function getSuspenseInstanceFallbackErrorDetails(
+  instance: SuspenseInstance,
+): {digest: ?string, message?: string, stack?: string} {
+  const dataset =
+    instance.nextSibling && ((instance.nextSibling: any): HTMLElement).dataset;
+  let digest, message, stack;
+  if (dataset) {
+    digest = dataset.dgst;
+    if (__DEV__) {
+      message = dataset.msg;
+      stack = dataset.stck;
+    }
+  }
+  if (__DEV__) {
+    return {
+      message,
+      digest,
+      stack,
+    };
+  } else {
+    // Object gets DCE'd if constructed in tail position and matches callsite destructuring
+    return {
+      digest,
+    };
+  }
+
+  // let value = {message: undefined, hash: undefined};
+  // const nextSibling = instance.nextSibling;
+  // if (nextSibling) {
+  //   const dataset = ((nextSibling: any): HTMLTemplateElement).dataset;
+  //   value.message = dataset.msg;
+  //   value.hash = dataset.hash;
+  //   if (__DEV__) {
+  //     value.stack = dataset.stack;
+  //   }
+  // }
+  // return value;
 }
 
 export function registerSuspenseInstanceRetry(
@@ -933,8 +971,8 @@ export function didNotMatchHydratedContainerTextInstance(
   textInstance: TextInstance,
   text: string,
   isConcurrentMode: boolean,
+  shouldWarnDev: boolean,
 ) {
-  const shouldWarnDev = true;
   checkForUnmatchedText(
     textInstance.nodeValue,
     text,
@@ -950,9 +988,9 @@ export function didNotMatchHydratedTextInstance(
   textInstance: TextInstance,
   text: string,
   isConcurrentMode: boolean,
+  shouldWarnDev: boolean,
 ) {
   if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    const shouldWarnDev = true;
     checkForUnmatchedText(
       textInstance.nodeValue,
       text,

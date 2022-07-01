@@ -23,6 +23,7 @@ import type {
   TimelineData,
   SearchRegExpStateChangeCallback,
   ViewState,
+  ReactEventInfo,
 } from './types';
 import type {RefObject} from 'shared/ReactTypes';
 
@@ -33,6 +34,8 @@ export type Context = {|
   searchInputContainerRef: RefObject,
   setFile: (file: File | null) => void,
   viewState: ViewState,
+  selectEvent: ReactEventInfo => void,
+  selectedEvent: ReactEventInfo,
 |};
 
 const TimelineContext = createContext<Context>(((null: any): Context));
@@ -121,6 +124,8 @@ function TimelineContextController({children}: Props) {
     return state;
   }, [file]);
 
+  const [selectedEvent, selectEvent] = useState<ReactEventInfo | null>(null);
+
   const value = useMemo(
     () => ({
       file,
@@ -129,8 +134,18 @@ function TimelineContextController({children}: Props) {
       searchInputContainerRef,
       setFile,
       viewState,
+      selectEvent,
+      selectedEvent,
     }),
-    [file, inMemoryTimelineData, isTimelineSupported, setFile, viewState],
+    [
+      file,
+      inMemoryTimelineData,
+      isTimelineSupported,
+      setFile,
+      viewState,
+      selectEvent,
+      selectedEvent,
+    ],
   );
 
   return (

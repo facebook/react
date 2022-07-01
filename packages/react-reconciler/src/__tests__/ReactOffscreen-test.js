@@ -6,6 +6,8 @@ let LegacyHidden;
 let Offscreen;
 let useState;
 let useLayoutEffect;
+let useEffect;
+let startTransition;
 
 describe('ReactOffscreen', () => {
   beforeEach(() => {
@@ -19,6 +21,8 @@ describe('ReactOffscreen', () => {
     Offscreen = React.unstable_Offscreen;
     useState = React.useState;
     useLayoutEffect = React.useLayoutEffect;
+    useEffect = React.useEffect;
+    startTransition = React.startTransition;
   });
 
   function Text(props) {
@@ -26,7 +30,7 @@ describe('ReactOffscreen', () => {
     return <span prop={props.text} />;
   }
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('unstable-defer-without-hiding should never toggle the visibility of its children', async () => {
     function App({mode}) {
       return (
@@ -176,8 +180,7 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate experimental || www
-  // @gate enableSuspenseLayoutEffectSemantics
+  // @gate enableOffscreen
   it('mounts without layout effects when hidden', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
@@ -215,8 +218,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
   });
 
-  // @gate experimental || www
-  // @gate enableSuspenseLayoutEffectSemantics
+  // @gate enableOffscreen
   it('mounts/unmounts layout effects when visibility changes (starting visible)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
@@ -262,8 +264,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
   });
 
-  // @gate experimental || www
-  // @gate enableSuspenseLayoutEffectSemantics
+  // @gate enableOffscreen
   it('mounts/unmounts layout effects when visibility changes (starting hidden)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
@@ -310,9 +311,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
   });
 
-  // @gate experimental || www
-  // @gate enableSuspenseLayoutEffectSemantics
-  // @gate enableFlipOffscreenUnhideOrder
+  // @gate enableOffscreen
   it('hides children of offscreen after layout effects are destroyed', async () => {
     const root = ReactNoop.createRoot();
     function Child({text}) {
@@ -351,7 +350,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('does not toggle effects for LegacyHidden component', async () => {
     // LegacyHidden is meant to be the same as offscreen except it doesn't
     // do anything to effects. Only used by www, as a temporary migration step.
@@ -399,7 +398,7 @@ describe('ReactOffscreen', () => {
     expect(Scheduler).toHaveYielded(['Unmount layout']);
   });
 
-  // @gate experimental || www
+  // @gate enableOffscreen
   it('hides new insertions into an already hidden tree', async () => {
     const root = ReactNoop.createRoot();
     await act(async () => {
@@ -429,7 +428,7 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate experimental || www
+  // @gate enableOffscreen
   it('hides updated nodes inside an already hidden tree', async () => {
     const root = ReactNoop.createRoot();
     await act(async () => {
@@ -473,5 +472,172 @@ describe('ReactOffscreen', () => {
     });
     // Now it's visible
     expect(root).toMatchRenderedOutput(<span>Hi</span>);
+  });
+
+  // @gate enableOffscreen
+  it('revealing a hidden tree at high priority does not cause tearing', async () => {
+    // When revealing an offscreen tree, we need to include updates that were
+    // previously deferred because the tree was hidden, even if they are lower
+    // priority than the current render. However, we should *not* include low
+    // priority updates that are entangled with updates outside of the hidden
+    // tree, because that can cause tearing.
+    //
+    // This test covers a scenario where an update multiple updates inside a
+    // hidden tree share the same lane, but are processed at different times
+    // because of the timing of when they were scheduled.
+
+    let setInner;
+    function Child({outer}) {
+      const [inner, _setInner] = useState(0);
+      setInner = _setInner;
+
+      useEffect(() => {
+        // Inner and outer values are always updated simultaneously, so they
+        // should always be consistent.
+        if (inner !== outer) {
+          Scheduler.unstable_yieldValue(
+            'Tearing! Inner and outer are inconsistent!',
+          );
+        } else {
+          Scheduler.unstable_yieldValue('Inner and outer are consistent');
+        }
+      }, [inner, outer]);
+
+      return <Text text={'Inner: ' + inner} />;
+    }
+
+    let setOuter;
+    function App({show}) {
+      const [outer, _setOuter] = useState(0);
+      setOuter = _setOuter;
+      return (
+        <>
+          <Text text={'Outer: ' + outer} />
+          <Offscreen mode={show ? 'visible' : 'hidden'}>
+            <Child outer={outer} />
+          </Offscreen>
+        </>
+      );
+    }
+
+    // Render a hidden tree
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App show={false} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Outer: 0',
+      'Inner: 0',
+      'Inner and outer are consistent',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Outer: 0" />
+        <span hidden={true} prop="Inner: 0" />
+      </>,
+    );
+
+    await act(async () => {
+      // Update a value both inside and outside the hidden tree. These values
+      // must always be consistent.
+      setOuter(1);
+      setInner(1);
+      // Only the outer updates finishes because the inner update is inside a
+      // hidden tree. The outer update is deferred to a later render.
+      expect(Scheduler).toFlushUntilNextPaint(['Outer: 1']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="Outer: 1" />
+          <span hidden={true} prop="Inner: 0" />
+        </>,
+      );
+
+      // Before the inner update can finish, we receive another pair of updates.
+      setOuter(2);
+      setInner(2);
+
+      // Also, before either of these new updates are processed, the hidden
+      // tree is revealed at high priority.
+      ReactNoop.flushSync(() => {
+        root.render(<App show={true} />);
+      });
+
+      expect(Scheduler).toHaveYielded([
+        'Outer: 1',
+
+        // There are two pending updates on Inner, but only the first one
+        // is processed, even though they share the same lane. If the second
+        // update were erroneously processed, then Inner would be inconsistent
+        // with Outer.
+        'Inner: 1',
+
+        'Inner and outer are consistent',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="Outer: 1" />
+          <span prop="Inner: 1" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded([
+      'Outer: 2',
+      'Inner: 2',
+      'Inner and outer are consistent',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Outer: 2" />
+        <span prop="Inner: 2" />
+      </>,
+    );
+  });
+
+  // @gate enableOffscreen
+  it('regression: Offscreen instance is sometimes null during setState', async () => {
+    let setState;
+    function Child() {
+      const [state, _setState] = useState('Initial');
+      setState = _setState;
+      return <Text text={state} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<Offscreen hidden={false} />);
+    });
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput(null);
+
+    await act(async () => {
+      // Partially render a component
+      startTransition(() => {
+        root.render(
+          <Offscreen hidden={false}>
+            <Child />
+            <Text text="Sibling" />
+          </Offscreen>,
+        );
+      });
+      expect(Scheduler).toFlushAndYieldThrough(['Initial']);
+
+      // Before it finishes rendering, the whole tree gets deleted
+      ReactNoop.flushSync(() => {
+        root.render(null);
+      });
+
+      // Something attempts to update the never-mounted component. When this
+      // regression test was written, we would walk up the component's return
+      // path and reach an unmounted Offscreen component fiber. Its `stateNode`
+      // would be null because it was nulled out when it was deleted, but there
+      // was no null check before we accessed it. A weird edge case but we must
+      // account for it.
+      expect(() => {
+        setState('Updated');
+      }).toErrorDev(
+        "Can't perform a React state update on a component that hasn't mounted yet",
+      );
+    });
+    expect(root).toMatchRenderedOutput(null);
   });
 });

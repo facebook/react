@@ -7,6 +7,7 @@ const coffee = require('coffee-script');
 
 const tsPreprocessor = require('./typescript/preprocessor');
 const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
+const {getDevToolsPlugins} = require('./devtools/preprocessor.js');
 
 const pathToBabel = path.join(
   require.resolve('@babel/core'),
@@ -82,6 +83,9 @@ module.exports = {
       const plugins = (isTestFile ? testOnlyPlugins : sourceOnlyPlugins).concat(
         babelOptions.plugins
       );
+      if (isTestFile && isInDevToolsPackages) {
+        plugins.push(...getDevToolsPlugins(filePath));
+      }
       return babel.transform(
         src,
         Object.assign(
@@ -89,6 +93,9 @@ module.exports = {
           babelOptions,
           {
             plugins,
+            sourceMaps: process.env.JEST_ENABLE_SOURCE_MAPS
+              ? process.env.JEST_ENABLE_SOURCE_MAPS
+              : false,
           }
         )
       );
