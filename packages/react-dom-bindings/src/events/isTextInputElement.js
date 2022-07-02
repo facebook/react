@@ -29,13 +29,13 @@ const supportedInputTypes: {[key: string]: true | void, ...} = {
 };
 
 function isTextInputElement(elem: Element | Text | null): boolean {
-  const nodeName = elem && elem.nodeName.toLowerCase();
+  const localName = elem && elem.nodeName.toLowerCase();
 
-  if (nodeName === 'input') {
+  if (localName === 'input') {
     return !!supportedInputTypes[((elem: any): HTMLInputElement).type];
   }
 
-  if (nodeName === 'textarea') {
+  if (localName === 'textarea') {
     return true;
   }
 

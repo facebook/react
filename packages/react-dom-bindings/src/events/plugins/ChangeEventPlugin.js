@@ -230,9 +230,9 @@ function shouldUseClickEvent(elem: Element | Text | null) {
   // Use the `click` event to detect changes to checkbox and radio inputs.
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
-  const nodeName = elem !== null && elem.nodeName.toLowerCase();
+  const localName = elem !== null && elem.nodeName.toLowerCase();
   return (
-    nodeName === 'input' &&
+    localName === 'input' &&
     ((elem: any).type === 'checkbox' || (elem: any).type === 'radio')
   );
 }
