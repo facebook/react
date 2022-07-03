@@ -32,6 +32,11 @@ ESLintTester.setDefaultConfig({
 const tests = {
   valid: [
     `
+      App.View = () => {
+        useHook();
+      }
+    `,
+    `
       // Valid because components can use hooks.
       function ComponentWithHook() {
         useHook();

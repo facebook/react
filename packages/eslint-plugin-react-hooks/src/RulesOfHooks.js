@@ -47,8 +47,11 @@ function isHook(node) {
  */
 
 function isComponentName(node) {
-  if (node.type === 'Identifier') {
-    return !/^[a-z]/.test(node.name);
+  const testName = name => !/^[a-z]/.test(name);
+  if (node.type === 'MemberExpression') {
+    return testName(node.property.name);
+  } else if (node.type === 'Identifier') {
+    return testName(node.name);
   } else {
     return false;
   }
