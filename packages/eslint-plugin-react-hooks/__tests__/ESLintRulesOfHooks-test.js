@@ -414,6 +414,12 @@ const tests = {
   ],
   invalid: [
     {
+      code: `App.view = () => {
+        useHook();
+      }`,
+      errors: [functionError('useHook', 'App.view')],
+    },
+    {
       code: `
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
