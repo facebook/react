@@ -162,10 +162,24 @@ function unwindWork(
       popProvider(context, workInProgress);
       return null;
     case OffscreenComponent:
-    case LegacyHiddenComponent:
+    case LegacyHiddenComponent: {
+      popSuspenseHandler(workInProgress);
       popHiddenContext(workInProgress);
       popTransition(workInProgress, current);
+      const flags = workInProgress.flags;
+      if (flags & ShouldCapture) {
+        workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
+        // Captured a suspense effect. Re-render the boundary.
+        if (
+          enableProfilerTimer &&
+          (workInProgress.mode & ProfileMode) !== NoMode
+        ) {
+          transferActualDuration(workInProgress);
+        }
+        return workInProgress;
+      }
       return null;
+    }
     case CacheComponent:
       if (enableCache) {
         const cache: Cache = workInProgress.memoizedState.cache;
@@ -238,6 +252,7 @@ function unwindInterruptedWork(
       break;
     case OffscreenComponent:
     case LegacyHiddenComponent:
+      popSuspenseHandler(interruptedWork);
       popHiddenContext(interruptedWork);
       popTransition(interruptedWork, current);
       break;

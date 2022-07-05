@@ -14,7 +14,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
 import {createCursor, push, pop} from './ReactFiberStack.new';
 import {isCurrentTreeHidden} from './ReactFiberHiddenContext.new';
-import {SuspenseComponent} from './ReactWorkTags';
+import {SuspenseComponent, OffscreenComponent} from './ReactWorkTags';
 
 // The Suspense handler is the boundary that should capture if something
 // suspends, i.e. it's the nearest `catch` block on the stack.
@@ -77,6 +77,19 @@ export function pushFallbackTreeSuspenseHandler(fiber: Fiber): void {
   // We're about to render the fallback. If something in the fallback suspends,
   // it's akin to throwing inside of a `catch` block. This boundary should not
   // capture. Reuse the existing handler on the stack.
+  reuseSuspenseHandlerOnStack(fiber);
+}
+
+export function pushOffscreenSuspenseHandler(fiber: Fiber): void {
+  if (fiber.tag === OffscreenComponent) {
+    push(suspenseHandlerStackCursor, fiber, fiber);
+  } else {
+    // This is a LegacyHidden component.
+    reuseSuspenseHandlerOnStack(fiber);
+  }
+}
+
+export function reuseSuspenseHandlerOnStack(fiber: Fiber) {
   push(suspenseHandlerStackCursor, getSuspenseHandler(), fiber);
 }
 

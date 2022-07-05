@@ -20,6 +20,7 @@ import type {
   MarkerTransitionObject,
   Transition,
 } from './ReactFiberTracingMarkerComponent.new';
+import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -96,6 +97,7 @@ import {
   ClassComponent,
   SuspenseComponent,
   SuspenseListComponent,
+  OffscreenComponent,
   FunctionComponent,
   ForwardRef,
   MemoComponent,
@@ -2748,6 +2750,11 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
     case SuspenseListComponent:
       retryCache = boundaryFiber.stateNode;
       break;
+    case OffscreenComponent: {
+      const instance: OffscreenInstance = boundaryFiber.stateNode;
+      retryCache = instance.retryCache;
+      break;
+    }
     default:
       throw new Error(
         'Pinged unknown suspense boundary type. ' +

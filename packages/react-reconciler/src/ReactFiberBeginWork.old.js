@@ -2130,6 +2130,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           const primaryChildUpdateQueue: OffscreenQueue = {
             transitions: currentTransitions,
             markerInstances: parentMarkerInstances,
+            wakeables: null,
           };
           primaryChildFragment.updateQueue = primaryChildUpdateQueue;
         }
@@ -2216,6 +2217,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           const primaryChildUpdateQueue: OffscreenQueue = {
             transitions: currentTransitions,
             markerInstances: parentMarkerInstances,
+            wakeables: null,
           };
           primaryChildFragment.updateQueue = primaryChildUpdateQueue;
         }

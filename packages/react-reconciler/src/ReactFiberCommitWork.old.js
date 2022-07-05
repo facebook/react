@@ -2878,7 +2878,7 @@ function commitPassiveMountOnFiber(
 
       if (enableTransitionTracing) {
         const isFallback = finishedWork.memoizedState;
-        const queue: OffscreenQueue = (finishedWork.updateQueue: any);
+        const queue: OffscreenQueue | null = (finishedWork.updateQueue: any);
         const instance: OffscreenInstance = finishedWork.stateNode;
 
         if (queue !== null) {

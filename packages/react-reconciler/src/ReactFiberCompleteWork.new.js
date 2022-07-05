@@ -1508,6 +1508,7 @@ function completeWork(
     }
     case OffscreenComponent:
     case LegacyHiddenComponent: {
+      popSuspenseHandler(workInProgress);
       popHiddenContext(workInProgress);
       const nextState: OffscreenState | null = workInProgress.memoizedState;
       const nextIsHidden = nextState !== null;
@@ -1529,7 +1530,11 @@ function completeWork(
       } else {
         // Don't bubble properties for hidden children unless we're rendering
         // at offscreen priority.
-        if (includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
+        if (
+          includesSomeLane(renderLanes, (OffscreenLane: Lane)) &&
+          // Also don't bubble if the tree suspended
+          (workInProgress.flags & DidCapture) === NoLanes
+        ) {
           bubbleProperties(workInProgress);
           // Check if there was an insertion or update in the hidden subtree.
           // If so, we need to hide those nodes in the commit phase, so
@@ -1542,6 +1547,12 @@ function completeWork(
             workInProgress.flags |= Visibility;
           }
         }
+      }
+
+      if (workInProgress.updateQueue !== null) {
+        // Schedule an effect to attach Suspense retry listeners
+        // TODO: Move to passive phase
+        workInProgress.flags |= Update;
       }
 
       if (enableCache) {

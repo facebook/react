@@ -419,5 +419,6 @@
   "431": "React elements are not allowed in ServerContext",
   "432": "The render was aborted by the server without a reason.",
   "433": "useId can only be used while React is rendering",
-  "434": "`dangerouslySetInnerHTML` does not make sense on <title>."
+  "434": "`dangerouslySetInnerHTML` does not make sense on <title>.",
+  "435": "Unexpected Suspense handler tag (%s). This is a bug in React."
 }
