@@ -864,6 +864,61 @@ describe('ReactFlight', () => {
     });
 
     // @gate enableServerContext
+    it('should not ignore the first server context argument in subsequent renders', async () => {
+      let ServerContextOne = React.createServerContext('One', 'defaultOne');
+      let ServerContextTwo = React.createServerContext('Two', 'defaultTwo');
+
+      function App() {
+        let v1 = React.useContext(ServerContextOne);
+        let v2 = React.useContext(ServerContextTwo);
+        return (
+          <>
+            <p>{v1}</p>
+            <p>{v2}</p>
+          </>
+        );
+      }
+
+      let transport;
+      transport = ReactNoopFlightServer.render(<App />, {
+        context: [
+          ['One', 'One'],
+          ['Two', 'Two'],
+        ],
+      });
+      act(() => {
+        const serverModel = ReactNoopFlightClient.read(transport);
+        ReactNoop.render(serverModel);
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <p>One</p>
+          <p>Two</p>
+        </>,
+      );
+
+      transport = ReactNoopFlightServer.render(<App />, {
+        context: [
+          ['One', 'One'],
+          ['Two', 'Two'],
+        ],
+      });
+      act(() => {
+        const serverModel = ReactNoopFlightClient.read(transport);
+        ReactNoop.render(serverModel);
+      });
+
+      // Before fixing, the first value would regress to 'defaultOne'
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <p>One</p>
+          <p>Two</p>
+        </>,
+      );
+    });
+
+    // @gate enableServerContext
     it('sets default initial value when defined lazily on server or client', async () => {
       let ServerContext;
       function inlineLazyServerContextInitialization() {
