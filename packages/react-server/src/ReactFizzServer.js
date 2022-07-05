@@ -200,6 +200,7 @@ export opaque type Request = {
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>,
+  idleTasks: Array<Task>,
   // Queues to flush in order of priority
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
