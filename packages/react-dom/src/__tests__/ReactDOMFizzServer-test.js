@@ -4201,7 +4201,7 @@ describe('ReactDOMFizzServer', () => {
 
   it('fallbacks are rendered behind higher priority tasks', async () => {
     function YieldAsyncText({text}) {
-      let value = readText(text);
+      const value = readText(text);
       Scheduler.unstable_yieldValue(value);
       return <span>{value}</span>;
     }

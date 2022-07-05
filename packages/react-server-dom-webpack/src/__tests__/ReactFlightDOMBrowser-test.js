@@ -499,6 +499,10 @@ describe('ReactFlightDOMBrowser', () => {
       return <ClientComponentOnTheClient />;
     }
 
+    function ClientRoot({response}) {
+      return response.readRoot();
+    }
+
     try {
       // For this test we use real timers because the interaction between
       // the readRoot call and idleTasks makes it incredibly cumbersome to
@@ -516,12 +520,8 @@ describe('ReactFlightDOMBrowser', () => {
         moduleMap: translationMap,
       });
 
-      function ClientRoot() {
-        return response.readRoot();
-      }
-
       const ssrStream = await ReactDOMServer.renderToReadableStream(
-        <ClientRoot />,
+        <ClientRoot response={response} />,
       );
       const result = await readResult(ssrStream);
       expect(result).toEqual('<span>Client Component</span>');
