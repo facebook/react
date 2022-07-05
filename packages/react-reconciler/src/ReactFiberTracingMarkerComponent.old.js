@@ -17,16 +17,15 @@ import {getWorkInProgressTransitions} from './ReactFiberWorkLoop.old';
 
 export type SuspenseInfo = {name: string | null};
 
-export type TransitionObject = {
-  transitionName: string,
-  startTime: number,
+export type MarkerTransition = {
+  transition: Transition,
+  name: string,
 };
 
-export type MarkerTransitionObject = TransitionObject & {markerName: string};
 export type PendingTransitionCallbacks = {
-  transitionStart: Array<TransitionObject> | null,
-  transitionComplete: Array<TransitionObject> | null,
-  markerComplete: Array<MarkerTransitionObject> | null,
+  transitionStart: Array<Transition> | null,
+  transitionComplete: Array<Transition> | null,
+  markerComplete: Array<MarkerTransition> | null,
 };
 
 export type Transition = {
@@ -58,22 +57,19 @@ export function processTransitionCallbacks(
       if (transitionStart !== null) {
         transitionStart.forEach(transition => {
           if (callbacks.onTransitionStart != null) {
-            callbacks.onTransitionStart(
-              transition.transitionName,
-              transition.startTime,
-            );
+            callbacks.onTransitionStart(transition.name, transition.startTime);
           }
         });
       }
 
       const markerComplete = pendingTransitions.markerComplete;
       if (markerComplete !== null) {
-        markerComplete.forEach(transition => {
+        markerComplete.forEach(marker => {
           if (callbacks.onMarkerComplete != null) {
             callbacks.onMarkerComplete(
-              transition.transitionName,
-              transition.markerName,
-              transition.startTime,
+              marker.transition.name,
+              marker.name,
+              marker.transition.startTime,
               endTime,
             );
           }
@@ -85,7 +81,7 @@ export function processTransitionCallbacks(
         transitionComplete.forEach(transition => {
           if (callbacks.onTransitionComplete != null) {
             callbacks.onTransitionComplete(
-              transition.transitionName,
+              transition.name,
               transition.startTime,
               endTime,
             );
