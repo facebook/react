@@ -62,6 +62,7 @@ describe('ReactFlightDOMBrowser', () => {
   async function waitForSuspense(fn) {
     while (true) {
       try {
+        jest.runAllTimers();
         return fn();
       } catch (promise) {
         if (typeof promise.then === 'function') {
@@ -498,23 +499,35 @@ describe('ReactFlightDOMBrowser', () => {
       return <ClientComponentOnTheClient />;
     }
 
-    const stream = ReactServerDOMWriter.renderToReadableStream(
-      <App />,
-      webpackMap,
-    );
-    const response = ReactServerDOMReader.createFromReadableStream(stream, {
-      moduleMap: translationMap,
-    });
+    try {
+      // For this test we use real timers because the interaction between
+      // the readRoot call and idleTasks makes it incredibly cumbersome to
+      // drive both renderers. If we want to avoid using real timers we can
+      // call readRoot out of band and await the thrown promise before
+      // calling jest.advanceAllTimers but this approach is simpler and works
+      // for this test case
+      jest.useRealTimers();
 
-    function ClientRoot() {
-      return response.readRoot();
+      const stream = ReactServerDOMWriter.renderToReadableStream(
+        <App />,
+        webpackMap,
+      );
+      const response = ReactServerDOMReader.createFromReadableStream(stream, {
+        moduleMap: translationMap,
+      });
+
+      function ClientRoot() {
+        return response.readRoot();
+      }
+
+      const ssrStream = await ReactDOMServer.renderToReadableStream(
+        <ClientRoot />,
+      );
+      const result = await readResult(ssrStream);
+      expect(result).toEqual('<span>Client Component</span>');
+    } finally {
+      jest.useFakeTimers();
     }
-
-    const ssrStream = await ReactDOMServer.renderToReadableStream(
-      <ClientRoot />,
-    );
-    const result = await readResult(ssrStream);
-    expect(result).toEqual('<span>Client Component</span>');
   });
 
   it('should be able to complete after aborting and throw the reason client-side', async () => {

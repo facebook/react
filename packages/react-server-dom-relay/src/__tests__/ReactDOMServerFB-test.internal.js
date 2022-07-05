@@ -183,6 +183,11 @@ describe('ReactDOMServerFB', () => {
       },
     );
 
+    // Now that fallback tasks are deprioritized they don't render
+    // synchronously during the first performWork pass if something
+    // Suspends. The second call to renderNextChunk gets the output
+    // of the Suspense boundary slot + fallback
+    ReactDOMServer.renderNextChunk(stream);
     const partial = ReactDOMServer.renderNextChunk(stream);
     expect(partial).toContain('Loading');
 

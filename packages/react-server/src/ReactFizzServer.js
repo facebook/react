@@ -142,9 +142,14 @@ type SuspenseBoundary = {
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
 };
 
+const DEFAULT_PRIORITY = 0;
+const IDLE_PRIORITY = 1;
+type TaskPriority = 0 | 1;
+
 export type Task = {
   node: ReactNodeList,
   ping: () => void,
+  priority: TaskPriority,
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment, // the segment we'll write to
   abortSet: Set<Task>, // the abortable set that this task belongs to
@@ -189,6 +194,7 @@ export opaque type Request = {
   status: 0 | 1 | 2,
   fatalError: mixed,
   nextSegmentId: number,
+  hasNewPendingTasks: boolean, // true when a new pending task is created. resets to false on each performWork
   allPendingTasks: number, // when it reaches zero, we can close the connection.
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
@@ -262,11 +268,13 @@ export function createRequest(
     status: OPEN,
     fatalError: null,
     nextSegmentId: 0,
+    hasNewPendingTasks: false,
     allPendingTasks: 0,
     pendingRootTasks: 0,
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
+    idleTasks: [],
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
@@ -291,6 +299,7 @@ export function createRequest(
   const rootTask = createTask(
     request,
     children,
+    DEFAULT_PRIORITY,
     null,
     rootSegment,
     abortSet,
@@ -303,9 +312,11 @@ export function createRequest(
 }
 
 function pingTask(request: Request, task: Task): void {
-  const pingedTasks = request.pingedTasks;
-  pingedTasks.push(task);
-  if (pingedTasks.length === 1) {
+  const priority = task.priority;
+  const queue =
+    priority === IDLE_PRIORITY ? request.idleTasks : request.pingedTasks;
+  queue.push(task);
+  if (queue.length === 1) {
     scheduleWork(() => performWork(request));
   }
 }
@@ -330,6 +341,7 @@ function createSuspenseBoundary(
 function createTask(
   request: Request,
   node: ReactNodeList,
+  priority: TaskPriority,
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment,
   abortSet: Set<Task>,
@@ -346,6 +358,7 @@ function createTask(
   const task: Task = ({
     node,
     ping: () => pingTask(request, task),
+    priority,
     blockedBoundary,
     blockedSegment,
     abortSet,
@@ -586,6 +599,7 @@ function renderSuspenseBoundary(
   const suspendedFallbackTask = createTask(
     request,
     fallback,
+    IDLE_PRIORITY,
     parentBoundary,
     boundarySegment,
     fallbackAbortSet,
@@ -598,7 +612,7 @@ function renderSuspenseBoundary(
   }
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
-  request.pingedTasks.push(suspendedFallbackTask);
+  request.idleTasks.push(suspendedFallbackTask);
 
   popComponentStackInDEV(task);
 }
@@ -1413,6 +1427,7 @@ function spawnNewSuspendedTask(
   const newTask = createTask(
     request,
     task.node,
+    task.priority,
     task.blockedBoundary,
     newSegment,
     task.abortSet,
@@ -1420,6 +1435,7 @@ function spawnNewSuspendedTask(
     task.context,
     task.treeContext,
   );
+  request.hasNewPendingTasks = true;
   if (__DEV__) {
     if (task.componentStack !== null) {
       // We pop one task off the stack because the node that suspended will be tried again,
@@ -1749,7 +1765,9 @@ export function performWork(request: Request): void {
   }
   const prevResponseState = currentResponseState;
   setCurrentResponseState(request.responseState);
+  let yieldedForPendingTasks = false;
   try {
+    request.hasNewPendingTasks = false;
     const pingedTasks = request.pingedTasks;
     let i;
     for (i = 0; i < pingedTasks.length; i++) {
@@ -1757,6 +1775,18 @@ export function performWork(request: Request): void {
       retryTask(request, task);
     }
     pingedTasks.splice(0, i);
+
+    const idleTasks = request.idleTasks;
+    for (i = 0; i < idleTasks.length; i++) {
+      if (request.hasNewPendingTasks) {
+        yieldedForPendingTasks = true;
+        break;
+      }
+      const task = idleTasks[i];
+      retryTask(request, task);
+    }
+    idleTasks.splice(0, i);
+
     if (request.destination !== null) {
       flushCompletedQueues(request, request.destination);
     }
@@ -1778,6 +1808,9 @@ export function performWork(request: Request): void {
       // context again. However, when we're inside a synchronous loop like this
       // we'll to restore the context to what it was before returning.
       switchContext(prevContext);
+    }
+    if (yieldedForPendingTasks) {
+      scheduleWork(() => performWork(request));
     }
   }
 }

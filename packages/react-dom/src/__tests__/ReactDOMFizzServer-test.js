@@ -113,11 +113,16 @@ describe('ReactDOMFizzServer', () => {
 
   async function act(callback) {
     await callback();
-    // Await one turn around the event loop.
+    // Await a few turns around the event loop.
     // This assumes that we'll flush everything we have so far.
-    await new Promise(resolve => {
-      setImmediate(resolve);
-    });
+    // Since Fizz yields for high priority work the number of loops may
+    // need to be higher to get everything to flush depending on the
+    // particular implementation of any given test.
+    for (let i = 0; i < 3; i++) {
+      await new Promise(resolve => {
+        setImmediate(resolve);
+      });
+    }
     if (hasErrored) {
       throw fatalError;
     }
@@ -4192,6 +4197,121 @@ describe('ReactDOMFizzServer', () => {
         <p>some {'text'}</p>
       </div>,
     );
+  });
+
+  it('fallbacks are rendered behind higher priority tasks', async () => {
+    function YieldAsyncText({text}) {
+      let value = readText(text);
+      Scheduler.unstable_yieldValue(value);
+      return <span>{value}</span>;
+    }
+
+    function Fallback({children, id}) {
+      Scheduler.unstable_yieldValue('Fallback' + id);
+      return children;
+    }
+
+    function Resolve({text}) {
+      resolveText(text);
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense
+            fallback={
+              <Fallback id={0}>
+                <YieldAsyncText text="fallbacktext" />
+              </Fallback>
+            }>
+            <YieldAsyncText text="foo0" />
+          </Suspense>
+          <Suspense
+            fallback={
+              <Fallback id={1}>
+                <YieldAsyncText text="fallbacktext" />
+              </Fallback>
+            }>
+            <YieldAsyncText text="foo1" />
+          </Suspense>
+          <Suspense
+            fallback={
+              <Fallback id={2}>
+                <Resolve text="foo3" />
+                <YieldAsyncText text="fallbacktext" />
+              </Fallback>
+            }>
+            <YieldAsyncText text="foo2" />
+          </Suspense>
+          <Suspense
+            fallback={
+              <Fallback id={3}>
+                <YieldAsyncText text="fallbacktext" />
+              </Fallback>
+            }>
+            <YieldAsyncText text="foo3" />
+          </Suspense>
+          <Suspense
+            fallback={
+              <Fallback id={4}>
+                <YieldAsyncText text="fallbacktext" />
+              </Fallback>
+            }>
+            <YieldAsyncText text="foo4" />
+          </Suspense>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      // by awaiting a setImmediate we allow all 5 boundaries to suspend
+      // causing each to have a fallback task enqueued
+      await new Promise(resolve => {
+        setImmediate(resolve);
+      });
+      // resolve a couple text values with microtask ticks in between
+      await 1;
+      await resolveText('foo0');
+      // pipe timing is arbitrary
+      await pipe(writable);
+      await resolveText('foo1');
+    });
+
+    expect(Scheduler).toHaveYielded([
+      // foo0 and foo1 resolve and abort their fallback task
+      'foo0',
+      'foo1',
+      // Fallback2 starts because yielding does not result in foo2 pinging
+      'Fallback2',
+      // Fallback2 resulted in foo3 pinging (see <Resolve> in App) so
+      // instead of continuing with idleTasks we yield and work on pingedTasks
+      // foo3 resolves and aborts it's fallback task
+      'foo3',
+      // Fallback4 starts because nothing else has resolved and we get the fallback value
+      'Fallback4',
+    ]);
+
+    await act(async () => {
+      // The fallbacktext ping enqueues to idleTasks becasue it is inside a fallback
+      await resolveText('fallbacktext');
+      await resolveText('foo2');
+    });
+
+    expect(Scheduler).toHaveYielded([
+      // foo2 is worked on before fallbacktext becasue it is higher priority
+      'foo2',
+      // We only see one fallbacktext because foo2 aborted the descendant
+      // fallback tasks from Fallback2 and so there is only one fallback task
+      // still active, for Fallback4
+      'fallbacktext',
+    ]);
+
+    await act(async () => {
+      await resolveText('foo4');
+    });
+
+    expect(Scheduler).toHaveYielded(['foo4']);
   });
 
   describe('text separators', () => {
