@@ -17,7 +17,13 @@ import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {EventPriority} from './ReactEventPriorities.old';
 import type {
   PendingTransitionCallbacks,
+<<<<<<< HEAD
   MarkerTransition,
+=======
+  TransitionObject,
+  MarkerTransitionObject,
+  TransitionProgress,
+>>>>>>> 1f1184300 (old)
   Transition,
 } from './ReactFiberTracingMarkerComponent.old';
 
@@ -349,6 +355,7 @@ export function addTransitionStartCallbackToPendingTransition(
     if (currentPendingTransitionCallbacks === null) {
       currentPendingTransitionCallbacks = {
         transitionStart: [],
+        transitionProgress: null,
         transitionComplete: null,
         markerComplete: null,
       };
@@ -369,6 +376,7 @@ export function addMarkerCompleteCallbackToPendingTransition(
     if (currentPendingTransitionCallbacks === null) {
       currentPendingTransitionCallbacks = {
         transitionStart: null,
+        transitionProgress: null,
         transitionComplete: null,
         markerComplete: [],
       };
@@ -382,6 +390,27 @@ export function addMarkerCompleteCallbackToPendingTransition(
   }
 }
 
+export function addTransitionProgressCallbackToPendingTransition(
+  transition: TransitionProgress,
+) {
+  if (enableTransitionTracing) {
+    if (currentPendingTransitionCallbacks === null) {
+      currentPendingTransitionCallbacks = {
+        transitionStart: null,
+        transitionProgress: [],
+        transitionComplete: null,
+        markerComplete: null,
+      };
+    }
+
+    if (currentPendingTransitionCallbacks.transitionProgress === null) {
+      currentPendingTransitionCallbacks.transitionProgress = [];
+    }
+
+    currentPendingTransitionCallbacks.transitionProgress.push(transition);
+  }
+}
+
 export function addTransitionCompleteCallbackToPendingTransition(
   transition: Transition,
 ) {
@@ -389,6 +418,7 @@ export function addTransitionCompleteCallbackToPendingTransition(
     if (currentPendingTransitionCallbacks === null) {
       currentPendingTransitionCallbacks = {
         transitionStart: null,
+        transitionProgress: null,
         transitionComplete: [],
         markerComplete: null,
       };

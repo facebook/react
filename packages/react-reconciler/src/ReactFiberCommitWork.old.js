@@ -138,6 +138,7 @@ import {
   enqueuePendingPassiveProfilerEffect,
   restorePendingUpdaters,
   addTransitionStartCallbackToPendingTransition,
+  addTransitionProgressCallbackToPendingTransition,
   addTransitionCompleteCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
   setIsRunningInsertionEffect,
@@ -1110,10 +1111,17 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
       // The suspense boundaries was just hidden. Add the boundary
       // to the pending boundary set if it's there
       if (pendingMarkers !== null) {
-        pendingMarkers.forEach(pendingBoundaries => {
-          pendingBoundaries.set(offscreenInstance, {
-            name,
-          });
+        pendingMarkers.forEach(markerInstance => {
+          const pendingBoundaries = markerInstance.pendingSuspenseBoundaries;
+          if (
+            pendingBoundaries !== null &&
+            !pendingBoundaries.has(offscreenInstance)
+          ) {
+            pendingBoundaries.set(offscreenInstance, {
+              name,
+            });
+            markerInstance.hasUpdate = true;
+          }
         });
       }
     } else if (wasHidden && !isHidden) {
@@ -1121,9 +1129,14 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
       // the boundary from the pending suspense boundaries set
       // if it's there
       if (pendingMarkers !== null) {
-        pendingMarkers.forEach(pendingBoundaries => {
-          if (pendingBoundaries.has(offscreenInstance)) {
+        pendingMarkers.forEach(markerInstance => {
+          const pendingBoundaries = markerInstance.pendingSuspenseBoundaries;
+          if (
+            pendingBoundaries !== null &&
+            pendingBoundaries.has(offscreenInstance)
+          ) {
             pendingBoundaries.delete(offscreenInstance);
+            markerInstance.hasUpdate = true;
           }
         });
       }
@@ -2822,6 +2835,7 @@ function commitPassiveMountOnFiber(
           clearTransitionsForLanes(finishedRoot, committedLanes);
         }
 
+<<<<<<< HEAD
         incompleteTransitions.forEach(
           ({pendingSuspenseBoundaries}, transition) => {
             if (
@@ -2833,6 +2847,25 @@ function commitPassiveMountOnFiber(
             }
           },
         );
+=======
+        incompleteTransitions.forEach((markerInstance, transition) => {
+          const pendingBoundaries = markerInstance.pendingSuspenseBoundaries;
+          if (markerInstance.hasUpdate) {
+            addTransitionProgressCallbackToPendingTransition({
+              transition,
+              pending: pendingBoundaries || [],
+            });
+            markerInstance.hasUpdate = false;
+          }
+          if (pendingBoundaries === null || pendingBoundaries.size === 0) {
+            addTransitionCompleteCallbackToPendingTransition({
+              transitionName: transition.name,
+              startTime: transition.startTime,
+            });
+            incompleteTransitions.delete(transition);
+          }
+        });
+>>>>>>> 1f1184300 (old)
 
         clearTransitionsForLanes(finishedRoot, committedLanes);
       }
@@ -2900,10 +2933,25 @@ function commitPassiveMountOnFiber(
                 if (markerTransitions !== null) {
                   markerTransitions.forEach(transition => {
                     if (instance.transitions === null) {
+<<<<<<< HEAD
                       instance.transitions = new Set();
                     } else if (instance.transitions.has(transition)) {
                       if (markerInstance.pendingSuspenseBoundaries === null) {
                         markerInstance.pendingSuspenseBoundaries = new Map();
+=======
+                      // TODO: What if instance.transitions is null?
+                    } else {
+                      if (instance.transitions.has(transition)) {
+                        if (
+                          instance.pendingMarkers === null ||
+                          markerInstance.pendingSuspenseBoundaries === null
+                        ) {
+                          // TODO: What if instance.pendingMarkers is null?
+                          // TODO: What if markerInstance.pendingSuspenseBoundaries is null?
+                        } else {
+                          instance.pendingMarkers.add(markerInstance);
+                        }
+>>>>>>> 1f1184300 (old)
                       }
                       if (instance.pendingMarkers === null) {
                         instance.pendingMarkers = new Set();
