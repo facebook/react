@@ -25,6 +25,7 @@ import type {Wakeable} from 'shared/ReactTypes';
 import type {
   OffscreenState,
   OffscreenInstance,
+  OffscreenQueue,
 } from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
@@ -2877,8 +2878,8 @@ function commitPassiveMountOnFiber(
 
       if (enableTransitionTracing) {
         const isFallback = finishedWork.memoizedState;
-        const queue = (finishedWork.updateQueue: any);
-        const instance = finishedWork.stateNode;
+        const queue: OffscreenQueue = (finishedWork.updateQueue: any);
+        const instance: OffscreenInstance = finishedWork.stateNode;
 
         if (queue !== null) {
           if (isFallback) {
@@ -2896,7 +2897,11 @@ function commitPassiveMountOnFiber(
                 // Add all the transitions saved in the update queue during
                 // the render phase (ie the transitions associated with this boundary)
                 // into the transitions set.
-                prevTransitions.add(transition);
+                if (prevTransitions === null) {
+                  // TODO: What if prevTransitions is null?
+                } else {
+                  prevTransitions.add(transition);
+                }
               });
             }
 
@@ -2913,10 +2918,22 @@ function commitPassiveMountOnFiber(
                 // caused them
                 if (markerTransitions !== null) {
                   markerTransitions.forEach(transition => {
-                    if (instance.transitions.has(transition)) {
-                      instance.pendingMarkers.add(
-                        markerInstance.pendingSuspenseBoundaries,
-                      );
+                    if (instance.transitions === null) {
+                      // TODO: What if instance.transitions is null?
+                    } else {
+                      if (instance.transitions.has(transition)) {
+                        if (
+                          instance.pendingMarkers === null ||
+                          markerInstance.pendingSuspenseBoundaries === null
+                        ) {
+                          // TODO: What if instance.pendingMarkers is null?
+                          // TODO: What if markerInstance.pendingSuspenseBoundaries is null?
+                        } else {
+                          instance.pendingMarkers.add(
+                            markerInstance.pendingSuspenseBoundaries,
+                          );
+                        }
+                      }
                     }
                   });
                 }
