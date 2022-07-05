@@ -864,7 +864,7 @@ describe('ReactFlight', () => {
     });
 
     // @gate enableServerContext
-    it('should not ignore the first server context argument in subsequent renders', async () => {
+    it('#24849: should not ignore the first server context argument in subsequent renders', async () => {
       let ServerContextOne = React.createServerContext('One', 'defaultOne');
       let ServerContextTwo = React.createServerContext('Two', 'defaultTwo');
 
