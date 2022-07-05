@@ -43,7 +43,7 @@ export type BatchConfigTransition = {
 export type TracingMarkerInstance = {|
   pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
   transitions: Set<Transition> | null,
-|} | null;
+|};
 
 export type PendingSuspenseBoundaries = Map<OffscreenInstance, SuspenseInfo>;
 
