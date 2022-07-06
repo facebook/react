@@ -13,6 +13,7 @@ describe('Store', () => {
   let ReactDOMClient;
   let agent;
   let act;
+  let actAsync;
   let bridge;
   let getRendererID;
   let legacyRender;
@@ -30,6 +31,7 @@ describe('Store', () => {
 
     const utils = require('./utils');
     act = utils.act;
+    actAsync = utils.actAsync;
     getRendererID = utils.getRendererID;
     legacyRender = utils.legacyRender;
     withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
@@ -2063,6 +2065,48 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(`[root]`);
       expect(store.errorCount).toBe(0);
       expect(store.warningCount).toBe(0);
+    });
+
+    // Regression test for https://github.com/facebook/react/issues/23202
+    // @reactVersion >= 18.0
+    it('suspense boundary children should not double unmount and error', async () => {
+      async function fakeImport(result) {
+        return {default: result};
+      }
+
+      const ChildA = () => null;
+      const ChildB = () => null;
+
+      const LazyChildA = React.lazy(() => fakeImport(ChildA));
+      const LazyChildB = React.lazy(() => fakeImport(ChildB));
+
+      function App({renderA}) {
+        return (
+          <React.Suspense>
+            {renderA ? <LazyChildA /> : <LazyChildB />}
+          </React.Suspense>
+        );
+      }
+
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await actAsync(() => root.render(<App renderA={true} />));
+
+      expect(store).toMatchInlineSnapshot(`
+          [root]
+            ▾ <App>
+              ▾ <Suspense>
+                  <ChildA>
+        `);
+
+      await actAsync(() => root.render(<App renderA={false} />));
+
+      expect(store).toMatchInlineSnapshot(`
+          [root]
+            ▾ <App>
+              ▾ <Suspense>
+                  <ChildB>
+        `);
     });
   });
 });
