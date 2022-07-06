@@ -2923,34 +2923,21 @@ function commitPassiveMountOnFiber(
         if (queue !== null) {
           if (isFallback) {
             const transitions = queue.transitions;
-            let prevTransitions = instance.transitions;
-            if (instance.pendingMarkers === null) {
-              instance.pendingMarkers = new Set();
-            }
-            if (transitions !== null && prevTransitions === null) {
-              instance.transitions = prevTransitions = new Set();
-            }
-
             if (transitions !== null) {
               transitions.forEach(transition => {
                 // Add all the transitions saved in the update queue during
                 // the render phase (ie the transitions associated with this boundary)
                 // into the transitions set.
-                if (prevTransitions === null) {
-                  // TODO: What if prevTransitions is null?
-                } else {
-                  prevTransitions.add(transition);
+                if (instance.transitions === null) {
+                  instance.transitions = new Set();
                 }
+                instance.transitions.add(transition);
               });
             }
 
             const markerInstances = queue.markerInstances;
             if (markerInstances !== null) {
               markerInstances.forEach(markerInstance => {
-                if (markerInstance.pendingSuspenseBoundaries === null) {
-                  markerInstance.pendingSuspenseBoundaries = new Map();
-                }
-
                 const markerTransitions = markerInstance.transitions;
                 // There should only be a few tracing marker transitions because
                 // they should be only associated with the transition that
@@ -2958,21 +2945,18 @@ function commitPassiveMountOnFiber(
                 if (markerTransitions !== null) {
                   markerTransitions.forEach(transition => {
                     if (instance.transitions === null) {
-                      // TODO: What if instance.transitions is null?
-                    } else {
-                      if (instance.transitions.has(transition)) {
-                        if (
-                          instance.pendingMarkers === null ||
-                          markerInstance.pendingSuspenseBoundaries === null
-                        ) {
-                          // TODO: What if instance.pendingMarkers is null?
-                          // TODO: What if markerInstance.pendingSuspenseBoundaries is null?
-                        } else {
-                          instance.pendingMarkers.add(
-                            markerInstance.pendingSuspenseBoundaries,
-                          );
-                        }
+                      instance.transitions = new Set();
+                    } else if (instance.transitions.has(transition)) {
+                      if (markerInstance.pendingSuspenseBoundaries === null) {
+                        markerInstance.pendingSuspenseBoundaries = new Map();
                       }
+                      if (instance.pendingMarkers === null) {
+                        instance.pendingMarkers = new Set();
+                      }
+
+                      instance.pendingMarkers.add(
+                        markerInstance.pendingSuspenseBoundaries,
+                      );
                     }
                   });
                 }
