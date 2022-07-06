@@ -1603,10 +1603,15 @@ function completeWork(
         if (instance !== null) {
           popMarkerInstance(workInProgress);
         }
+
+        if (workInProgress.updateQueue !== null) {
+          markUpdate(workInProgress);
+        }
+
         bubbleProperties(workInProgress);
 
         if (
-          current === null ||
+          workInProgress.updateQueue !== null ||
           (workInProgress.subtreeFlags & Visibility) !== NoFlags
         ) {
           // If any of our suspense children toggle visibility, this means that

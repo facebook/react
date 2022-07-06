@@ -51,6 +51,10 @@ export type TracingMarkerInstance = {|
   hasUpdate: boolean,
 |};
 
+export type TracingMarkerQueue = {|
+  transitions: Set<Transition> | null,
+|};
+
 export type PendingSuspenseBoundaries = Map<OffscreenInstance, SuspenseInfo>;
 
 export function processTransitionCallbacks(

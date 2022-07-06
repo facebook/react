@@ -36,7 +36,10 @@ import type {
 } from './ReactFiberCacheComponent.new';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import type {RootState} from './ReactFiberRoot.new';
-import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
+import type {
+  TracingMarkerInstance,
+  TracingMarkerQueue,
+} from './ReactFiberTracingMarkerComponent.new';
 import {
   enableCPUSuspense,
   enableUseMutableSource,
@@ -968,20 +971,23 @@ function updateTracingMarkerComponent(
   if (!enableTransitionTracing) {
     return null;
   }
+  const prevName = current !== null ? current.memoizedProps.name : null;
+  const nextName = workInProgress.pendingProps.name;
 
-  // TODO: (luna) Only update the tracing marker if it's newly rendered or it's name changed.
+  // Update the tracing marker if it's newly rendered or it's name changed.
   // A tracing marker is only associated with the transitions that rendered
   // or updated it, so we can create a new set of transitions each time
-  if (current === null) {
-    const currentTransitions = getPendingTransitions();
-    if (currentTransitions !== null) {
-      const markerInstance: TracingMarkerInstance = {
-        transitions: new Set(currentTransitions),
-        pendingSuspenseBoundaries: new Map(),
-        hasUpdate: false,
-      };
-      workInProgress.stateNode = markerInstance;
-    }
+  // TODO: If the name changed, all current transitions on the tracing marker
+  // are canceled
+  if (current === null || prevName !== nextName) {
+    const transitions = getPendingTransitions();
+    // We store the new transitions associated with the Tracing Marker
+    // on the update queue because we can't modify the instance object in the
+    // render phase
+    const updateQueue: TracingMarkerQueue | null = {
+      transitions: transitions ? new Set(transitions) : null,
+    };
+    workInProgress.updateQueue = updateQueue;
   }
 
   const instance: TracingMarkerInstance | null = workInProgress.stateNode;

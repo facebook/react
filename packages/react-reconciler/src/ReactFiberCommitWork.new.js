@@ -30,7 +30,11 @@ import type {
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import type {RootState} from './ReactFiberRoot.new';
-import type {Transition} from './ReactFiberTracingMarkerComponent.new';
+import type {
+  Transition,
+  TracingMarkerQueue,
+  TracingMarkerInstance,
+} from './ReactFiberTracingMarkerComponent.new';
 
 import {
   enableCreateEventHandleAPI,
@@ -2451,6 +2455,29 @@ function commitMutationEffectsOnFiber(
       }
       return;
     }
+    case TracingMarkerComponent: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      commitReconciliationEffects(finishedWork);
+
+      if (enableTransitionTracing) {
+        // If there is an update on the Tracing Marker, this means that any
+        // previous transitions associated with the marker are cancelled
+        // We want to clear them (and create a new pending suspense boundaries
+        // map) before we modify the suspense boundaries map so the information
+        // on the tracing marker is accurate in the passive phase.
+        const queue: TracingMarkerQueue | null = (finishedWork.updateQueue: any);
+        const instance: TracingMarkerInstance = finishedWork.stateNode;
+        if (queue !== null) {
+          instance.transitions = queue.transitions;
+          instance.hasUpdate = queue.transitions !== null;
+          instance.pendingSuspenseBoundaries =
+            queue.transitions !== null ? new Map() : null;
+
+          finishedWork.updateQueue = null;
+        }
+      }
+      return;
+    }
     default: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
@@ -3012,18 +3039,20 @@ function commitPassiveMountOnFiber(
         // Get the transitions that were initiatized during the render
         // and add a start transition callback for each of them
         const instance = finishedWork.stateNode;
-        if (
-          instance.pendingSuspenseBoundaries === null ||
-          instance.pendingSuspenseBoundaries.size === 0
-        ) {
-          instance.transitions.forEach(transition => {
-            addMarkerCompleteCallbackToPendingTransition({
-              transition,
-              name: finishedWork.memoizedProps.name,
+        if (instance.transitions !== null) {
+          if (
+            instance.pendingSuspenseBoundaries === null ||
+            instance.pendingSuspenseBoundaries.size === 0
+          ) {
+            instance.transitions.forEach(transition => {
+              addMarkerCompleteCallbackToPendingTransition({
+                transition,
+                name: finishedWork.memoizedProps.name,
+              });
             });
-          });
-          instance.transitions = null;
-          instance.pendingSuspenseBoundaries = null;
+            instance.transitions = null;
+            instance.pendingSuspenseBoundaries = null;
+          }
         }
       }
       break;

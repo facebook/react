@@ -1061,7 +1061,7 @@ describe('ReactInteractionTracing', () => {
   });
 
   // @gate enableTransitionTracing
-  it.skip('marker interaction cancelled when name changes', async () => {
+  it('marker interaction cancelled when name changes', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
         Scheduler.unstable_yieldValue(
@@ -1124,7 +1124,6 @@ describe('ReactInteractionTracing', () => {
       ReactNoop.expire(1000);
       await advanceTimers(1000);
       setMarkerNameFn();
-
       expect(Scheduler).toFlushAndYield(['Suspend [Page Two]', 'Loading...']);
       ReactNoop.expire(1000);
       await advanceTimers(1000);
@@ -1139,7 +1138,7 @@ describe('ReactInteractionTracing', () => {
   });
 
   // @gate enableTransitionTracing
-  it.skip('marker changes to new interaction when name changes', async () => {
+  it('marker changes to new interaction when name changes', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
         Scheduler.unstable_yieldValue(
@@ -1193,30 +1192,34 @@ describe('ReactInteractionTracing', () => {
       expect(Scheduler).toFlushAndYield(['Page One']);
 
       startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
       expect(Scheduler).toFlushAndYield([
         'Suspend [Page Two]',
         'Loading...',
         'onTransitionStart(page transition, 1000)',
       ]);
 
+      startTransition(() => setMarkerNameFn(), {name: 'marker transition'});
       ReactNoop.expire(1000);
       await advanceTimers(1000);
-      startTransition(() => setMarkerNameFn(), {name: 'marker transition'});
 
       expect(Scheduler).toFlushAndYield([
         'Suspend [Page Two]',
         'Loading...',
         'onTransitionStart(marker transition, 2000)',
+        'onMarkerComplete(marker transition, new marker, 2000, 3000)',
+        'onTransitionComplete(marker transition, 2000, 3000)',
       ]);
+      resolveText('Page Two');
       ReactNoop.expire(1000);
       await advanceTimers(1000);
-      resolveText('Page Two');
 
       // Marker complete is not called because the marker name changed
       expect(Scheduler).toFlushAndYield([
         'Page Two',
-        'onMarkerComplete(new marker, 2000, 3000)',
-        'onTransitionComplete(page transition, 1000, 3000)',
+        'onTransitionComplete(page transition, 1000, 4000)',
       ]);
     });
   });
