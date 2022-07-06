@@ -2816,10 +2816,7 @@ function commitPassiveMountOnFiber(
         // Initial render
         if (committedTransitions !== null) {
           committedTransitions.forEach(transition => {
-            addTransitionStartCallbackToPendingTransition({
-              transitionName: transition.name,
-              startTime: transition.startTime,
-            });
+            addTransitionStartCallbackToPendingTransition(transition);
           });
 
           clearTransitionsForLanes(finishedRoot, committedLanes);
@@ -2831,10 +2828,7 @@ function commitPassiveMountOnFiber(
               pendingSuspenseBoundaries === null ||
               pendingSuspenseBoundaries.size === 0
             ) {
-              addTransitionCompleteCallbackToPendingTransition({
-                transitionName: transition.name,
-                startTime: transition.startTime,
-              });
+              addTransitionCompleteCallbackToPendingTransition(transition);
               incompleteTransitions.delete(transition);
             }
           },
@@ -2981,9 +2975,8 @@ function commitPassiveMountOnFiber(
         ) {
           instance.transitions.forEach(transition => {
             addMarkerCompleteCallbackToPendingTransition({
-              transitionName: transition.name,
-              startTime: transition.startTime,
-              markerName: finishedWork.memoizedProps.name,
+              transition,
+              name: finishedWork.memoizedProps.name,
             });
           });
           instance.transitions = null;

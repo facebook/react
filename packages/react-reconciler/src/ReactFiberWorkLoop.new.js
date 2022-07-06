@@ -16,8 +16,7 @@ import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {EventPriority} from './ReactEventPriorities.new';
 import type {
   PendingTransitionCallbacks,
-  TransitionObject,
-  MarkerTransitionObject,
+  MarkerTransition,
   Transition,
 } from './ReactFiberTracingMarkerComponent.new';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
@@ -334,7 +333,7 @@ export function getWorkInProgressTransitions() {
 let currentPendingTransitionCallbacks: PendingTransitionCallbacks | null = null;
 
 export function addTransitionStartCallbackToPendingTransition(
-  transition: TransitionObject,
+  transition: Transition,
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {
@@ -354,7 +353,7 @@ export function addTransitionStartCallbackToPendingTransition(
 }
 
 export function addMarkerCompleteCallbackToPendingTransition(
-  transition: MarkerTransitionObject,
+  transition: MarkerTransition,
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {
@@ -374,7 +373,7 @@ export function addMarkerCompleteCallbackToPendingTransition(
 }
 
 export function addTransitionCompleteCallbackToPendingTransition(
-  transition: TransitionObject,
+  transition: Transition,
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {
