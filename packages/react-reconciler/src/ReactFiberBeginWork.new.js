@@ -981,6 +981,15 @@ function updateTracingMarkerComponent(
       };
       workInProgress.stateNode = markerInstance;
     }
+  } else {
+    if (__DEV__) {
+      if (current.memoizedProps.name !== workInProgress.pendingProps.name) {
+        console.error(
+          'Changing the name of a tracing marker after mount is not supported. ' +
+            'To remount the tracing marker, pass it a new key.',
+        );
+      }
+    }
   }
 
   const instance: TracingMarkerInstance | null = workInProgress.stateNode;
