@@ -3044,14 +3044,16 @@ function commitPassiveMountOnFiber(
           instance.pendingSuspenseBoundaries === null ||
           instance.pendingSuspenseBoundaries.size === 0
         ) {
-          instance.transitions.forEach(transition => {
-            addMarkerCompleteCallbackToPendingTransition({
-              transition,
-              name: finishedWork.memoizedProps.name,
+          if (instance.transitions !== null) {
+            instance.transitions.forEach(transition => {
+              addMarkerCompleteCallbackToPendingTransition({
+                transition,
+                name: finishedWork.memoizedProps.name,
+              });
             });
-          });
-          instance.transitions = null;
-          instance.pendingSuspenseBoundaries = null;
+            instance.transitions = null;
+            instance.pendingSuspenseBoundaries = null;
+          }
         }
       }
       break;
