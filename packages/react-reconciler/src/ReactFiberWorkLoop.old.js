@@ -342,6 +342,7 @@ export function addTransitionStartCallbackToPendingTransition(
         transitionStart: [],
         transitionProgress: null,
         transitionComplete: null,
+        markerProgress: null,
         markerComplete: null,
       };
     }
@@ -354,6 +355,33 @@ export function addTransitionStartCallbackToPendingTransition(
   }
 }
 
+export function addMarkerProgressCallbackToPendingTransition(
+  markerName: string,
+  transitions: Set<Transition>,
+  pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
+) {
+  if (enableTransitionTracing) {
+    if (currentPendingTransitionCallbacks === null) {
+      currentPendingTransitionCallbacks = {
+        transitionStart: null,
+        transitionProgress: null,
+        transitionComplete: null,
+        markerProgress: new Map(),
+        markerComplete: null,
+      };
+    }
+
+    if (currentPendingTransitionCallbacks.markerProgress === null) {
+      currentPendingTransitionCallbacks.markerProgress = new Map();
+    }
+
+    currentPendingTransitionCallbacks.markerProgress.set(markerName, {
+      pendingSuspenseBoundaries,
+      transitions,
+    });
+  }
+}
+
 export function addMarkerCompleteCallbackToPendingTransition(
   transition: MarkerTransition,
 ) {
@@ -363,6 +391,7 @@ export function addMarkerCompleteCallbackToPendingTransition(
         transitionStart: null,
         transitionProgress: null,
         transitionComplete: null,
+        markerProgress: null,
         markerComplete: [],
       };
     }
@@ -385,6 +414,7 @@ export function addTransitionProgressCallbackToPendingTransition(
         transitionStart: null,
         transitionProgress: new Map(),
         transitionComplete: null,
+        markerProgress: null,
         markerComplete: null,
       };
     }
@@ -409,6 +439,7 @@ export function addTransitionCompleteCallbackToPendingTransition(
         transitionStart: null,
         transitionProgress: null,
         transitionComplete: [],
+        markerProgress: null,
         markerComplete: null,
       };
     }
