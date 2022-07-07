@@ -19,7 +19,6 @@ let Suspense;
 let SuspenseList;
 let act;
 let IdleEventPriority;
-let usingPartialRenderer;
 
 function normalizeCodeLocInfo(strOrErr) {
   if (strOrErr && strOrErr.replace) {
@@ -110,8 +109,6 @@ describe('ReactDOMServerPartialHydration', () => {
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
     }
-
-    usingPartialRenderer = global.__WWW__ && !__EXPERIMENTAL__;
 
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
   });
@@ -1671,8 +1668,7 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    // we exclude fb bundles with partial renderer
-    if (__DEV__ && !usingPartialRenderer) {
+    if (__DEV__) {
       expect(Scheduler).toFlushAndYield([
         'The server did not finish this Suspense boundary: The server used' +
           ' "renderToString" which does not support Suspense. If you intended' +
@@ -1745,8 +1741,7 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    // we exclude fb bundles with partial renderer
-    if (__DEV__ && !usingPartialRenderer) {
+    if (__DEV__) {
       expect(Scheduler).toFlushAndYield([
         'The server did not finish this Suspense boundary: The server used' +
           ' "renderToString" which does not support Suspense. If you intended' +
@@ -1824,8 +1819,7 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    // we exclude fb bundles with partial renderer
-    if (__DEV__ && !usingPartialRenderer) {
+    if (__DEV__) {
       expect(Scheduler).toFlushAndYield([
         'The server did not finish this Suspense boundary: The server used' +
           ' "renderToString" which does not support Suspense. If you intended' +
@@ -2154,8 +2148,7 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     suspend = true;
-    // we exclude fb bundles with partial renderer
-    if (__DEV__ && !usingPartialRenderer) {
+    if (__DEV__) {
       expect(Scheduler).toFlushAndYield([
         'The server did not finish this Suspense boundary: The server used' +
           ' "renderToString" which does not support Suspense. If you intended' +
@@ -2229,8 +2222,7 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    // we exclude fb bundles with partial renderer
-    if (__DEV__ && !usingPartialRenderer) {
+    if (__DEV__) {
       expect(Scheduler).toFlushAndYield([
         'The server did not finish this Suspense boundary: The server used' +
           ' "renderToString" which does not support Suspense. If you intended' +
