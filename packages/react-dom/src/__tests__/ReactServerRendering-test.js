@@ -14,7 +14,6 @@ let React;
 let ReactDOMServer;
 let PropTypes;
 let ReactCurrentDispatcher;
-let useingPartialRenderer;
 
 describe('ReactDOMServer', () => {
   beforeEach(() => {
@@ -25,8 +24,6 @@ describe('ReactDOMServer', () => {
     ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .ReactCurrentDispatcher;
-
-    useingPartialRenderer = global.__WWW__ && !__EXPERIMENTAL__;
   });
 
   describe('renderToString', () => {
@@ -576,11 +573,7 @@ describe('ReactDOMServer', () => {
           <Suspender />
         </React.Suspense>,
       );
-      if (useingPartialRenderer) {
-        expect(response).toEqual('<!--$!-->fallback<!--/$-->');
-      } else {
-        expect(response).toEqual('fallback');
-      }
+      expect(response).toEqual('fallback');
     });
   });
 
