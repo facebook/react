@@ -17,6 +17,7 @@ import type {EventPriority} from './ReactEventPriorities.old';
 import type {
   PendingTransitionCallbacks,
   MarkerTransition,
+  PendingSuspenseBoundaries,
   Transition,
 } from './ReactFiberTracingMarkerComponent.old';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
@@ -339,6 +340,7 @@ export function addTransitionStartCallbackToPendingTransition(
     if (currentPendingTransitionCallbacks === null) {
       currentPendingTransitionCallbacks = {
         transitionStart: [],
+        transitionProgress: null,
         transitionComplete: null,
         markerComplete: null,
       };
@@ -359,6 +361,7 @@ export function addMarkerCompleteCallbackToPendingTransition(
     if (currentPendingTransitionCallbacks === null) {
       currentPendingTransitionCallbacks = {
         transitionStart: null,
+        transitionProgress: null,
         transitionComplete: null,
         markerComplete: [],
       };
@@ -372,6 +375,31 @@ export function addMarkerCompleteCallbackToPendingTransition(
   }
 }
 
+export function addTransitionProgressCallbackToPendingTransition(
+  transition: Transition,
+  boundaries: PendingSuspenseBoundaries,
+) {
+  if (enableTransitionTracing) {
+    if (currentPendingTransitionCallbacks === null) {
+      currentPendingTransitionCallbacks = {
+        transitionStart: null,
+        transitionProgress: new Map(),
+        transitionComplete: null,
+        markerComplete: null,
+      };
+    }
+
+    if (currentPendingTransitionCallbacks.transitionProgress === null) {
+      currentPendingTransitionCallbacks.transitionProgress = new Map();
+    }
+
+    currentPendingTransitionCallbacks.transitionProgress.set(
+      transition,
+      boundaries,
+    );
+  }
+}
+
 export function addTransitionCompleteCallbackToPendingTransition(
   transition: Transition,
 ) {
@@ -379,6 +407,7 @@ export function addTransitionCompleteCallbackToPendingTransition(
     if (currentPendingTransitionCallbacks === null) {
       currentPendingTransitionCallbacks = {
         transitionStart: null,
+        transitionProgress: null,
         transitionComplete: [],
         markerComplete: null,
       };

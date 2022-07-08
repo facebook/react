@@ -12,7 +12,6 @@ import type {Lanes} from './ReactFiberLane.old';
 import type {SpawnedCachePool} from './ReactFiberCacheComponent.new';
 import type {
   Transition,
-  PendingSuspenseBoundaries,
   TracingMarkerInstance,
 } from './ReactFiberTracingMarkerComponent.new';
 
@@ -45,7 +44,7 @@ export type OffscreenQueue = {|
 
 export type OffscreenInstance = {|
   isHidden: boolean,
-  pendingMarkers: Set<PendingSuspenseBoundaries> | null,
+  pendingMarkers: Set<TracingMarkerInstance> | null,
   transitions: Set<Transition> | null,
   retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,
 |};
