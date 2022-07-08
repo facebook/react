@@ -977,7 +977,7 @@ function updateTracingMarkerComponent(
     if (currentTransitions !== null) {
       const markerInstance: TracingMarkerInstance = {
         transitions: new Set(currentTransitions),
-        pendingSuspenseBoundaries: new Map(),
+        pendingBoundaries: new Map(),
         name: workInProgress.pendingProps.name,
       };
       workInProgress.stateNode = markerInstance;

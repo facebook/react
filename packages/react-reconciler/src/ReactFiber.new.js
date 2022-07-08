@@ -770,7 +770,7 @@ export function createFiberFromTracingMarker(
   fiber.lanes = lanes;
   const tracingMarkerInstance: TracingMarkerInstance = {
     transitions: null,
-    pendingSuspenseBoundaries: null,
+    pendingBoundaries: null,
   };
   fiber.stateNode = tracingMarkerInstance;
   return fiber;
