@@ -893,6 +893,12 @@ function commitLayoutEffectOnFiber(
           // TODO: revisit this when we implement resuming.
           commitCallbacks(updateQueue, instance);
         }
+
+        if (finishedWork.flags & Ref) {
+          if (!offscreenSubtreeWasHidden) {
+            commitAttachRef(finishedWork);
+          }
+        }
         break;
       }
       case HostRoot: {
@@ -930,6 +936,11 @@ function commitLayoutEffectOnFiber(
           commitMount(instance, type, props, finishedWork);
         }
 
+        if (finishedWork.flags & Ref) {
+          if (!offscreenSubtreeWasHidden) {
+            commitAttachRef(finishedWork);
+          }
+        }
         break;
       }
       case HostText: {
@@ -1018,20 +1029,6 @@ function commitLayoutEffectOnFiber(
           'This unit of work tag should not have side-effects. This error is ' +
             'likely caused by a bug in React. Please file an issue.',
         );
-    }
-  }
-
-  if (!offscreenSubtreeWasHidden) {
-    if (enableScopeAPI) {
-      // TODO: This is a temporary solution that allowed us to transition away
-      // from React Flare on www.
-      if (finishedWork.flags & Ref && finishedWork.tag !== ScopeComponent) {
-        commitAttachRef(finishedWork);
-      }
-    } else {
-      if (finishedWork.flags & Ref) {
-        commitAttachRef(finishedWork);
-      }
     }
   }
 }
