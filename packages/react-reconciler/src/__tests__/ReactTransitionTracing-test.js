@@ -1060,6 +1060,86 @@ describe('ReactInteractionTracing', () => {
   });
 
   // @gate enableTransitionTracing
+  it('warns when marker name changes', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+    function App({markerName, markerKey}) {
+      return (
+        <React.unstable_TracingMarker name={markerName} key={markerKey}>
+          <Text text={markerName} />
+        </React.unstable_TracingMarker>
+      );
+    }
+
+    const root = ReactNoop.createRoot({transitionCallbacks});
+    await act(async () => {
+      startTransition(
+        () => root.render(<App markerName="one" markerKey="key" />),
+        {
+          name: 'transition one',
+        },
+      );
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'one',
+        'onTransitionStart(transition one, 0)',
+        'onMarkerComplete(transition one, one, 0, 1000)',
+        'onTransitionComplete(transition one, 0, 1000)',
+      ]);
+      startTransition(
+        () => root.render(<App markerName="two" markerKey="key" />),
+        {
+          name: 'transition two',
+        },
+      );
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(() => {
+        // onMarkerComplete shouldn't be called for transitions with
+        // new keys
+        expect(Scheduler).toFlushAndYield([
+          'two',
+          'onTransitionStart(transition two, 1000)',
+          'onTransitionComplete(transition two, 1000, 2000)',
+        ]);
+      }).toErrorDev(
+        'Changing the name of a tracing marker after mount is not supported.',
+      );
+      startTransition(
+        () => root.render(<App markerName="three" markerKey="new key" />),
+        {
+          name: 'transition three',
+        },
+      );
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      // This should not warn and onMarkerComplete should be called
+      expect(Scheduler).toFlushAndYield([
+        'three',
+        'onTransitionStart(transition three, 2000)',
+        'onMarkerComplete(transition three, three, 2000, 3000)',
+        'onTransitionComplete(transition three, 2000, 3000)',
+      ]);
+    });
+  });
+
+  // @gate enableTransitionTracing
   it.skip('marker interaction cancelled when name changes', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
