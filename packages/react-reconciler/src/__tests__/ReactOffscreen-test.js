@@ -640,4 +640,60 @@ describe('ReactOffscreen', () => {
     });
     expect(root).toMatchRenderedOutput(null);
   });
+
+  // @gate enableOffscreen
+  it('class component setState callbacks do not fire until tree is visible', async () => {
+    const root = ReactNoop.createRoot();
+
+    let child;
+    class Child extends React.Component {
+      state = {text: 'A'};
+      render() {
+        child = this;
+        return <Text text={this.state.text} />;
+      }
+    }
+
+    // Initial render
+    await act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['A']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="A" />);
+
+    // Schedule an update to a hidden class component. The update will finish
+    // rendering in the background, but the callback shouldn't fire yet, because
+    // the component isn't visible.
+    await act(async () => {
+      child.setState({text: 'B'}, () => {
+        Scheduler.unstable_yieldValue('B update finished');
+      });
+    });
+    expect(Scheduler).toHaveYielded(['B']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="B" />);
+
+    // Now reveal the hidden component. Simultaneously, schedule another
+    // update with a callback to the same component. When the component is
+    // revealed, both the B callback and C callback should fire, in that order.
+    await act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <Child />
+        </Offscreen>,
+      );
+      child.setState({text: 'C'}, () => {
+        Scheduler.unstable_yieldValue('C update finished');
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      'C',
+      'B update finished',
+      'C update finished',
+    ]);
+    expect(root).toMatchRenderedOutput(<span prop="C" />);
+  });
 });

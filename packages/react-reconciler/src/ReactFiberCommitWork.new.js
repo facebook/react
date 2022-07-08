@@ -75,6 +75,7 @@ import {
   ChildDeletion,
   Snapshot,
   Update,
+  Callback,
   Ref,
   Hydrating,
   Passive,
@@ -100,7 +101,11 @@ import {
   startPassiveEffectTimer,
 } from './ReactProfilerTimer.new';
 import {ConcurrentMode, NoMode, ProfileMode} from './ReactTypeOfMode';
-import {commitUpdateQueue} from './ReactFiberClassUpdateQueue.new';
+import {
+  deferHiddenCallbacks,
+  commitHiddenCallbacks,
+  commitCallbacks,
+} from './ReactFiberClassUpdateQueue.new';
 import {
   getPublicInstance,
   supportsMutation,
@@ -854,7 +859,7 @@ function commitLayoutEffectOnFiber(
         const updateQueue: UpdateQueue<
           *,
         > | null = (finishedWork.updateQueue: any);
-        if (updateQueue !== null) {
+        if (finishedWork.flags & Callback && updateQueue !== null) {
           if (__DEV__) {
             if (
               finishedWork.type === finishedWork.elementType &&
@@ -885,7 +890,7 @@ function commitLayoutEffectOnFiber(
           // We could update instance props and state here,
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
-          commitUpdateQueue(finishedWork, updateQueue, instance);
+          commitCallbacks(updateQueue, instance);
         }
         break;
       }
@@ -895,7 +900,7 @@ function commitLayoutEffectOnFiber(
         const updateQueue: UpdateQueue<
           *,
         > | null = (finishedWork.updateQueue: any);
-        if (updateQueue !== null) {
+        if (finishedWork.flags & Callback && updateQueue !== null) {
           let instance = null;
           if (finishedWork.child !== null) {
             switch (finishedWork.child.tag) {
@@ -907,7 +912,7 @@ function commitLayoutEffectOnFiber(
                 break;
             }
           }
-          commitUpdateQueue(finishedWork, updateQueue, instance);
+          commitCallbacks(updateQueue, instance);
         }
         break;
       }
@@ -1059,6 +1064,10 @@ function reappearLayoutEffectsOnFiber(node: Fiber) {
         safelyCallComponentDidMount(node, node.return, instance);
       }
       safelyAttachRef(node, node.return);
+      const updateQueue: UpdateQueue<*> | null = (node.updateQueue: any);
+      if (updateQueue !== null) {
+        commitHiddenCallbacks(updateQueue, instance);
+      }
       break;
     }
     case HostComponent: {
@@ -2155,6 +2164,15 @@ function commitMutationEffectsOnFiber(
           safelyDetachRef(current, current.return);
         }
       }
+
+      if (flags & Callback && offscreenSubtreeIsHidden) {
+        const updateQueue: UpdateQueue<
+          *,
+        > | null = (finishedWork.updateQueue: any);
+        if (updateQueue !== null) {
+          deferHiddenCallbacks(updateQueue);
+        }
+      }
       return;
     }
     case HostComponent: {
@@ -2341,16 +2359,21 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case OffscreenComponent: {
+      const newState: OffscreenState | null = finishedWork.memoizedState;
+      const isHidden = newState !== null;
       const wasHidden = current !== null && current.memoizedState !== null;
 
       if (finishedWork.mode & ConcurrentMode) {
         // Before committing the children, track on the stack whether this
         // offscreen subtree was already hidden, so that we don't unmount the
         // effects again.
+        const prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden;
         const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || isHidden;
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || wasHidden;
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
       } else {
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       }
@@ -2359,8 +2382,6 @@ function commitMutationEffectsOnFiber(
 
       if (flags & Visibility) {
         const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
-        const newState: OffscreenState | null = finishedWork.memoizedState;
-        const isHidden = newState !== null;
         const offscreenBoundary: Fiber = finishedWork;
 
         // Track the current state on the Offscreen instance so we can
