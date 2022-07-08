@@ -1217,7 +1217,7 @@ function renderNodeDestructive(
   if (__DEV__) {
     // In Dev we wrap renderNodeDestructiveImpl in a try / catch so we can capture
     // a component stack at the right place in the tree. We don't do this in renderNode
-    // becuase it is not called at every layer of the tree and we may lose frames
+    // because it is not called at every layer of the tree and we may lose frames
     try {
       return renderNodeDestructiveImpl(request, task, node);
     } catch (x) {
