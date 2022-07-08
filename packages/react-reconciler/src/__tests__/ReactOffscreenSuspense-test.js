@@ -90,8 +90,6 @@ describe('ReactOffscreen', () => {
     return text;
   }
 
-  // Only works in new reconciler
-  // @gate variant
   // @gate enableOffscreen
   test('basic example of suspending inside hidden tree', async () => {
     const root = ReactNoop.createRoot();
@@ -172,8 +170,6 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // Only works in new reconciler
-  // @gate variant
   // @gate experimental || www
   test("suspending inside currently hidden tree that's switching to visible", async () => {
     const root = ReactNoop.createRoot();
@@ -233,8 +229,6 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // Only works in new reconciler
-  // @gate variant
   // @gate enableOffscreen
   test("suspending inside currently visible tree that's switching to hidden", async () => {
     const root = ReactNoop.createRoot();
@@ -354,8 +348,6 @@ describe('ReactOffscreen', () => {
     });
   });
 
-  // Only works in new reconciler
-  // @gate variant
   // @gate experimental || www
   test('updates at multiple priorities that suspend inside hidden tree', async () => {
     let setText;
