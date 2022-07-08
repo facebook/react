@@ -1962,40 +1962,65 @@ function commitSuspenseHydrationCallbacks(
   }
 }
 
-function attachSuspenseRetryListeners(finishedWork: Fiber) {
+function getRetryCache(finishedWork) {
+  // TODO: Unify the interface for the retry cache so we don't have to switch
+  // on the tag like this.
+  switch (finishedWork.tag) {
+    case SuspenseComponent:
+    case SuspenseListComponent: {
+      let retryCache = finishedWork.stateNode;
+      if (retryCache === null) {
+        retryCache = finishedWork.stateNode = new PossiblyWeakSet();
+      }
+      return retryCache;
+    }
+    case OffscreenComponent: {
+      const instance: OffscreenInstance = finishedWork.stateNode;
+      let retryCache = instance.retryCache;
+      if (retryCache === null) {
+        retryCache = instance.retryCache = new PossiblyWeakSet();
+      }
+      return retryCache;
+    }
+    default: {
+      throw new Error(
+        `Unexpected Suspense handler tag (${finishedWork.tag}). This is a ` +
+          'bug in React.',
+      );
+    }
+  }
+}
+
+function attachSuspenseRetryListeners(
+  finishedWork: Fiber,
+  wakeables: Set<Wakeable>,
+) {
   // If this boundary just timed out, then it will have a set of wakeables.
   // For each wakeable, attach a listener so that when it resolves, React
   // attempts to re-render the boundary in the primary (pre-timeout) state.
-  const wakeables: Set<Wakeable> | null = (finishedWork.updateQueue: any);
-  if (wakeables !== null) {
-    finishedWork.updateQueue = null;
-    let retryCache = finishedWork.stateNode;
-    if (retryCache === null) {
-      retryCache = finishedWork.stateNode = new PossiblyWeakSet();
-    }
-    wakeables.forEach(wakeable => {
-      // Memoize using the boundary fiber to prevent redundant listeners.
-      const retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
-      if (!retryCache.has(wakeable)) {
-        retryCache.add(wakeable);
+  const retryCache = getRetryCache(finishedWork);
+  wakeables.forEach(wakeable => {
+    // Memoize using the boundary fiber to prevent redundant listeners.
+    const retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
+    if (!retryCache.has(wakeable)) {
+      retryCache.add(wakeable);
 
-        if (enableUpdaterTracking) {
-          if (isDevToolsPresent) {
-            if (inProgressLanes !== null && inProgressRoot !== null) {
-              // If we have pending work still, associate the original updaters with it.
-              restorePendingUpdaters(inProgressRoot, inProgressLanes);
-            } else {
-              throw Error(
-                'Expected finished root and lanes to be set. This is a bug in React.',
-              );
-            }
+      if (enableUpdaterTracking) {
+        if (isDevToolsPresent) {
+          if (inProgressLanes !== null && inProgressRoot !== null) {
+            // If we have pending work still, associate the original updaters with it.
+            restorePendingUpdaters(inProgressRoot, inProgressLanes);
+          } else {
+            throw Error(
+              'Expected finished root and lanes to be set. This is a bug in React.',
+            );
           }
         }
-
-        wakeable.then(retry, retry);
       }
-    });
-  }
+
+      wakeable.then(retry, retry);
+    }
+  });
 }
 
 // This function detects when a Suspense boundary goes from visible to hidden.
@@ -2325,7 +2350,11 @@ function commitMutationEffectsOnFiber(
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
-        attachSuspenseRetryListeners(finishedWork);
+        const wakeables: Set<Wakeable> | null = (finishedWork.updateQueue: any);
+        if (wakeables !== null) {
+          finishedWork.updateQueue = null;
+          attachSuspenseRetryListeners(finishedWork, wakeables);
+        }
       }
       return;
     }
@@ -2383,6 +2412,18 @@ function commitMutationEffectsOnFiber(
           hideOrUnhideAllChildren(offscreenBoundary, isHidden);
         }
       }
+
+      // TODO: Move to passive phase
+      if (flags & Update) {
+        const offscreenQueue: OffscreenQueue | null = (finishedWork.updateQueue: any);
+        if (offscreenQueue !== null) {
+          const wakeables = offscreenQueue.wakeables;
+          if (wakeables !== null) {
+            offscreenQueue.wakeables = null;
+            attachSuspenseRetryListeners(finishedWork, wakeables);
+          }
+        }
+      }
       return;
     }
     case SuspenseListComponent: {
@@ -2390,7 +2431,11 @@ function commitMutationEffectsOnFiber(
       commitReconciliationEffects(finishedWork);
 
       if (flags & Update) {
-        attachSuspenseRetryListeners(finishedWork);
+        const wakeables: Set<Wakeable> | null = (finishedWork.updateQueue: any);
+        if (wakeables !== null) {
+          finishedWork.updateQueue = null;
+          attachSuspenseRetryListeners(finishedWork, wakeables);
+        }
       }
       return;
     }
