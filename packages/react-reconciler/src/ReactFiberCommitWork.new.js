@@ -3060,19 +3060,18 @@ function commitPassiveMountOnFiber(
         // and add a start transition callback for each of them
         const instance = finishedWork.stateNode;
         if (
-          instance.pendingSuspenseBoundaries === null ||
-          instance.pendingSuspenseBoundaries.size === 0
+          instance.transitions !== null &&
+          (instance.pendingSuspenseBoundaries === null ||
+            instance.pendingSuspenseBoundaries.size === 0)
         ) {
-          if (instance.transitions !== null) {
-            instance.transitions.forEach(transition => {
-              addMarkerCompleteCallbackToPendingTransition({
-                transition,
-                name: finishedWork.memoizedProps.name,
-              });
+          instance.transitions.forEach(transition => {
+            addMarkerCompleteCallbackToPendingTransition({
+              transition,
+              name: finishedWork.memoizedProps.name,
             });
-            instance.transitions = null;
-            instance.pendingSuspenseBoundaries = null;
-          }
+          });
+          instance.transitions = null;
+          instance.pendingSuspenseBoundaries = null;
         }
       }
       break;
