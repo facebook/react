@@ -4203,4 +4203,60 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
     expect(Scheduler).toHaveYielded(['Unmount Child']);
   });
+
+  it('should resume the suspending component when work loop yields immediately after catching wakeable and when wakeable pings before resuming the work loop', async () => {
+    let cachedFoo;
+    let cachedBar;
+    const resolveCbs = new Set();
+    function useFoo() {
+      if (!cachedFoo) {
+        throw new Promise(resolve =>
+          setTimeout(() => resolve((cachedFoo = 'foo')), 50),
+        );
+      }
+      return cachedFoo;
+    }
+    function useBar() {
+      if (!cachedBar) {
+        const p = {
+          then(cb) {
+            resolveCbs.add(cb);
+            // uncomment to make this test pass
+            // if (cachedBar) {
+            //   p.resolve();
+            // }
+          },
+          resolve() {
+            resolveCbs.forEach(cb => cb());
+          },
+        };
+        Scheduler.unstable_forceYield();
+        cachedBar = 'bar';
+        p.resolve();
+        throw p;
+      }
+      return cachedBar;
+    }
+    function ResuspendingComponent() {
+      const foo = useFoo();
+      const bar = useBar();
+      Scheduler.unstable_yieldValue([foo, bar]);
+      return foo + bar;
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={<span>Loading...</span>}>
+          <ResuspendingComponent />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    expect(Scheduler).toHaveYielded([['foo', 'bar']]);
+  });
 });

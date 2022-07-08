@@ -420,6 +420,10 @@ function cancelHostTimeout(): void {
 }
 
 function shouldYieldToHost(): boolean {
+  if (forcedYield) {
+    forcedYield = false;
+    return true;
+  }
   if (
     (expectedNumberOfYields === 0 && yieldedValues === null) ||
     (expectedNumberOfYields !== -1 &&
@@ -637,7 +641,13 @@ export {
   unstable_advanceTime,
   reset,
   setDisableYieldValue as unstable_setDisableYieldValue,
+  forceYield as unstable_forceYield,
 };
+
+let forcedYield = false;
+function forceYield() {
+  forcedYield = true;
+}
 
 export const unstable_Profiling = enableProfiling
   ? {
