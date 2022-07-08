@@ -711,11 +711,12 @@ function commitLayoutEffectOnFiber(
   finishedWork: Fiber,
   committedLanes: Lanes,
 ): void {
-  if ((finishedWork.flags & LayoutMask) !== NoFlags) {
-    switch (finishedWork.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent: {
+  const flags = finishedWork.flags;
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case SimpleMemoComponent: {
+      if (flags & Update) {
         if (!offscreenSubtreeWasHidden) {
           // At this point layout effects have already been destroyed (during mutation phase).
           // This is done to prevent sibling component effects from interfering with each other,
@@ -739,128 +740,128 @@ function commitLayoutEffectOnFiber(
             commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
           }
         }
-        break;
       }
-      case ClassComponent: {
-        const instance = finishedWork.stateNode;
-        if (finishedWork.flags & Update) {
-          if (!offscreenSubtreeWasHidden) {
-            if (current === null) {
-              // We could update instance props and state here,
-              // but instead we rely on them being set during last render.
-              // TODO: revisit this when we implement resuming.
-              if (__DEV__) {
-                if (
-                  finishedWork.type === finishedWork.elementType &&
-                  !didWarnAboutReassigningProps
-                ) {
-                  if (instance.props !== finishedWork.memoizedProps) {
-                    console.error(
-                      'Expected %s props to match memoized props before ' +
-                        'componentDidMount. ' +
-                        'This might either be because of a bug in React, or because ' +
-                        'a component reassigns its own `this.props`. ' +
-                        'Please file an issue.',
-                      getComponentNameFromFiber(finishedWork) || 'instance',
-                    );
-                  }
-                  if (instance.state !== finishedWork.memoizedState) {
-                    console.error(
-                      'Expected %s state to match memoized state before ' +
-                        'componentDidMount. ' +
-                        'This might either be because of a bug in React, or because ' +
-                        'a component reassigns its own `this.state`. ' +
-                        'Please file an issue.',
-                      getComponentNameFromFiber(finishedWork) || 'instance',
-                    );
-                  }
+      break;
+    }
+    case ClassComponent: {
+      if (flags & Update) {
+        if (!offscreenSubtreeWasHidden) {
+          const instance = finishedWork.stateNode;
+          if (current === null) {
+            // We could update instance props and state here,
+            // but instead we rely on them being set during last render.
+            // TODO: revisit this when we implement resuming.
+            if (__DEV__) {
+              if (
+                finishedWork.type === finishedWork.elementType &&
+                !didWarnAboutReassigningProps
+              ) {
+                if (instance.props !== finishedWork.memoizedProps) {
+                  console.error(
+                    'Expected %s props to match memoized props before ' +
+                      'componentDidMount. ' +
+                      'This might either be because of a bug in React, or because ' +
+                      'a component reassigns its own `this.props`. ' +
+                      'Please file an issue.',
+                    getComponentNameFromFiber(finishedWork) || 'instance',
+                  );
+                }
+                if (instance.state !== finishedWork.memoizedState) {
+                  console.error(
+                    'Expected %s state to match memoized state before ' +
+                      'componentDidMount. ' +
+                      'This might either be because of a bug in React, or because ' +
+                      'a component reassigns its own `this.state`. ' +
+                      'Please file an issue.',
+                    getComponentNameFromFiber(finishedWork) || 'instance',
+                  );
                 }
               }
-              if (
-                enableProfilerTimer &&
-                enableProfilerCommitHooks &&
-                finishedWork.mode & ProfileMode
-              ) {
-                try {
-                  startLayoutEffectTimer();
-                  instance.componentDidMount();
-                } finally {
-                  recordLayoutEffectDuration(finishedWork);
-                }
-              } else {
+            }
+            if (
+              enableProfilerTimer &&
+              enableProfilerCommitHooks &&
+              finishedWork.mode & ProfileMode
+            ) {
+              try {
+                startLayoutEffectTimer();
                 instance.componentDidMount();
+              } finally {
+                recordLayoutEffectDuration(finishedWork);
               }
             } else {
-              const prevProps =
-                finishedWork.elementType === finishedWork.type
-                  ? current.memoizedProps
-                  : resolveDefaultProps(
-                      finishedWork.type,
-                      current.memoizedProps,
-                    );
-              const prevState = current.memoizedState;
-              // We could update instance props and state here,
-              // but instead we rely on them being set during last render.
-              // TODO: revisit this when we implement resuming.
-              if (__DEV__) {
-                if (
-                  finishedWork.type === finishedWork.elementType &&
-                  !didWarnAboutReassigningProps
-                ) {
-                  if (instance.props !== finishedWork.memoizedProps) {
-                    console.error(
-                      'Expected %s props to match memoized props before ' +
-                        'componentDidUpdate. ' +
-                        'This might either be because of a bug in React, or because ' +
-                        'a component reassigns its own `this.props`. ' +
-                        'Please file an issue.',
-                      getComponentNameFromFiber(finishedWork) || 'instance',
-                    );
-                  }
-                  if (instance.state !== finishedWork.memoizedState) {
-                    console.error(
-                      'Expected %s state to match memoized state before ' +
-                        'componentDidUpdate. ' +
-                        'This might either be because of a bug in React, or because ' +
-                        'a component reassigns its own `this.state`. ' +
-                        'Please file an issue.',
-                      getComponentNameFromFiber(finishedWork) || 'instance',
-                    );
-                  }
+              instance.componentDidMount();
+            }
+          } else {
+            const prevProps =
+              finishedWork.elementType === finishedWork.type
+                ? current.memoizedProps
+                : resolveDefaultProps(finishedWork.type, current.memoizedProps);
+            const prevState = current.memoizedState;
+            // We could update instance props and state here,
+            // but instead we rely on them being set during last render.
+            // TODO: revisit this when we implement resuming.
+            if (__DEV__) {
+              if (
+                finishedWork.type === finishedWork.elementType &&
+                !didWarnAboutReassigningProps
+              ) {
+                if (instance.props !== finishedWork.memoizedProps) {
+                  console.error(
+                    'Expected %s props to match memoized props before ' +
+                      'componentDidUpdate. ' +
+                      'This might either be because of a bug in React, or because ' +
+                      'a component reassigns its own `this.props`. ' +
+                      'Please file an issue.',
+                    getComponentNameFromFiber(finishedWork) || 'instance',
+                  );
+                }
+                if (instance.state !== finishedWork.memoizedState) {
+                  console.error(
+                    'Expected %s state to match memoized state before ' +
+                      'componentDidUpdate. ' +
+                      'This might either be because of a bug in React, or because ' +
+                      'a component reassigns its own `this.state`. ' +
+                      'Please file an issue.',
+                    getComponentNameFromFiber(finishedWork) || 'instance',
+                  );
                 }
               }
-              if (
-                enableProfilerTimer &&
-                enableProfilerCommitHooks &&
-                finishedWork.mode & ProfileMode
-              ) {
-                try {
-                  startLayoutEffectTimer();
-                  instance.componentDidUpdate(
-                    prevProps,
-                    prevState,
-                    instance.__reactInternalSnapshotBeforeUpdate,
-                  );
-                } finally {
-                  recordLayoutEffectDuration(finishedWork);
-                }
-              } else {
+            }
+            if (
+              enableProfilerTimer &&
+              enableProfilerCommitHooks &&
+              finishedWork.mode & ProfileMode
+            ) {
+              try {
+                startLayoutEffectTimer();
                 instance.componentDidUpdate(
                   prevProps,
                   prevState,
                   instance.__reactInternalSnapshotBeforeUpdate,
                 );
+              } finally {
+                recordLayoutEffectDuration(finishedWork);
               }
+            } else {
+              instance.componentDidUpdate(
+                prevProps,
+                prevState,
+                instance.__reactInternalSnapshotBeforeUpdate,
+              );
             }
           }
         }
+      }
 
+      if (flags & Callback) {
         // TODO: I think this is now always non-null by the time it reaches the
         // commit phase. Consider removing the type check.
         const updateQueue: UpdateQueue<
           *,
         > | null = (finishedWork.updateQueue: any);
-        if (finishedWork.flags & Callback && updateQueue !== null) {
+        if (updateQueue !== null) {
+          const instance = finishedWork.stateNode;
           if (__DEV__) {
             if (
               finishedWork.type === finishedWork.elementType &&
@@ -893,21 +894,23 @@ function commitLayoutEffectOnFiber(
           // TODO: revisit this when we implement resuming.
           commitCallbacks(updateQueue, instance);
         }
-
-        if (finishedWork.flags & Ref) {
-          if (!offscreenSubtreeWasHidden) {
-            commitAttachRef(finishedWork);
-          }
-        }
-        break;
       }
-      case HostRoot: {
+
+      if (flags & Ref) {
+        if (!offscreenSubtreeWasHidden) {
+          commitAttachRef(finishedWork);
+        }
+      }
+      break;
+    }
+    case HostRoot: {
+      if (flags & Callback) {
         // TODO: I think this is now always non-null by the time it reaches the
         // commit phase. Consider removing the type check.
         const updateQueue: UpdateQueue<
           *,
         > | null = (finishedWork.updateQueue: any);
-        if (finishedWork.flags & Callback && updateQueue !== null) {
+        if (updateQueue !== null) {
           let instance = null;
           if (finishedWork.child !== null) {
             switch (finishedWork.child.tag) {
@@ -921,9 +924,11 @@ function commitLayoutEffectOnFiber(
           }
           commitCallbacks(updateQueue, instance);
         }
-        break;
       }
-      case HostComponent: {
+      break;
+    }
+    case HostComponent: {
+      if (flags & Update) {
         const instance: Instance = finishedWork.stateNode;
 
         // Renderers may schedule work to be done after host components are mounted
@@ -935,24 +940,26 @@ function commitLayoutEffectOnFiber(
           const props = finishedWork.memoizedProps;
           commitMount(instance, type, props, finishedWork);
         }
+      }
 
-        if (finishedWork.flags & Ref) {
-          if (!offscreenSubtreeWasHidden) {
-            commitAttachRef(finishedWork);
-          }
+      if (flags & Ref) {
+        if (!offscreenSubtreeWasHidden) {
+          commitAttachRef(finishedWork);
         }
-        break;
       }
-      case HostText: {
-        // We have no life-cycles associated with text.
-        break;
-      }
-      case HostPortal: {
-        // We have no life-cycles associated with portals.
-        break;
-      }
-      case Profiler: {
-        if (enableProfilerTimer) {
+      break;
+    }
+    case HostText: {
+      // We have no life-cycles associated with text.
+      break;
+    }
+    case HostPortal: {
+      // We have no life-cycles associated with portals.
+      break;
+    }
+    case Profiler: {
+      if (enableProfilerTimer) {
+        if (flags & Update) {
           const {onCommit, onRender} = finishedWork.memoizedProps;
           const {effectDuration} = finishedWork.stateNode;
 
@@ -1009,27 +1016,29 @@ function commitLayoutEffectOnFiber(
             }
           }
         }
-        break;
       }
-      case SuspenseComponent: {
-        commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
-        break;
-      }
-      case SuspenseListComponent:
-      case IncompleteClassComponent:
-      case ScopeComponent:
-      case OffscreenComponent:
-      case LegacyHiddenComponent:
-      case TracingMarkerComponent: {
-        break;
-      }
-
-      default:
-        throw new Error(
-          'This unit of work tag should not have side-effects. This error is ' +
-            'likely caused by a bug in React. Please file an issue.',
-        );
+      break;
     }
+    case SuspenseComponent: {
+      if (flags & Update) {
+        commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+      }
+      break;
+    }
+    case SuspenseListComponent:
+    case IncompleteClassComponent:
+    case ScopeComponent:
+    case OffscreenComponent:
+    case LegacyHiddenComponent:
+    case TracingMarkerComponent: {
+      break;
+    }
+
+    default:
+      throw new Error(
+        'This unit of work tag should not have side-effects. This error is ' +
+          'likely caused by a bug in React. Please file an issue.',
+      );
   }
 }
 
