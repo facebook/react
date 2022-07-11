@@ -41,7 +41,7 @@ export type LogEvent =
   | {|
       +event_name: 'inspect-native-element',
     |}
-    | {|
+  | {|
       +event_name: 'profiling-start',
     |};
 
