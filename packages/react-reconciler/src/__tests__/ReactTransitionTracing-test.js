@@ -160,6 +160,7 @@ describe('ReactInteractionTracing', () => {
     return Promise.resolve().then(() => {});
   }
 
+  // @gate enableTransitionTracing
   it(' should not call callbacks when transition is not defined', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
@@ -227,6 +228,15 @@ describe('ReactInteractionTracing', () => {
 
         // Doesn't call transition or marker code
         expect(Scheduler).toFlushAndYield(['Page Two']);
+
+        startTransition(() => root.render(<App navigate={false} />), {
+          name: 'transition',
+        });
+        expect(Scheduler).toFlushAndYield([
+          'Page One',
+          'onTransitionStart(transition, 2000)',
+          'onTransitionComplete(transition, 2000, 2000)',
+        ]);
       });
     });
   });
