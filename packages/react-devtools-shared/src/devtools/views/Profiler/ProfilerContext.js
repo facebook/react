@@ -192,7 +192,10 @@ function ProfilerContextController({children}: Props) {
   }
 
   const startProfiling = useCallback(
-    () => store.profilerStore.startProfiling(),
+    () => {
+      logEvent({event_name: 'profiling-start'});
+      store.profilerStore.startProfiling();
+    },
     [store],
   );
   const stopProfiling = useCallback(() => store.profilerStore.stopProfiling(), [

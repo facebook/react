@@ -31,6 +31,18 @@ export type LogEvent =
       +duration_ms: number,
       +inspected_element_display_name: string | null,
       +inspected_element_number_of_hooks: number | null,
+    |}
+  | {|
+      +event_name: 'select-element-in-tree',
+    |}
+  | {|
+      +event_name: 'select-element-in-owner-view',
+    |}
+  | {|
+      +event_name: 'inspect-native-element',
+    |}
+    | {|
+      +event_name: 'profiling-start',
     |};
 
 export type LogFunction = LogEvent => void | Promise<void>;
