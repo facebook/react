@@ -240,6 +240,14 @@ export default function ReactFlightVitePlugin({
         ).then(injectGlobs);
       }
     },
+
+    handleHotUpdate({modules}) {
+      if (modules.some(mod => mod.meta && mod.meta.isClientComponent)) {
+        return modules.filter(mod => !mod.meta || !mod.meta.ssr);
+      }
+
+      return modules;
+    },
   };
 }
 
@@ -576,5 +584,10 @@ function augmentModuleGraph(
     currentModule.meta = {};
   }
 
-  Object.assign(currentModule.meta, {isFacade, namedExports, imports});
+  Object.assign(currentModule.meta, {
+    isFacade,
+    namedExports,
+    imports,
+    ssr: true,
+  });
 }
