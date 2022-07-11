@@ -160,6 +160,77 @@ describe('ReactInteractionTracing', () => {
     return Promise.resolve().then(() => {});
   }
 
+  it(' should not call callbacks when transition is not defined', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
+        );
+      },
+      onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App({navigate}) {
+      return (
+        <div>
+          {navigate ? (
+            <React.unstable_TracingMarker name="marker">
+              <Text text="Page Two" />
+            </React.unstable_TracingMarker>
+          ) : (
+            <Text text="Page One" />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot({transitionCallbacks});
+    await act(async () => {
+      root.render(<App navigate={false} />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield(['Page One']);
+
+      await act(async () => {
+        startTransition(() => root.render(<App navigate={true} />));
+
+        ReactNoop.expire(1000);
+        await advanceTimers(1000);
+
+        // Doesn't call transition or marker code
+        expect(Scheduler).toFlushAndYield(['Page Two']);
+      });
+    });
+  });
+
   // @gate enableTransitionTracing
   it('should correctly trace basic interaction', async () => {
     const transitionCallbacks = {
