@@ -2884,20 +2884,18 @@ function commitPassiveMountEffects_complete(
   while (nextEffect !== null) {
     const fiber = nextEffect;
 
-    if ((fiber.flags & Passive) !== NoFlags) {
-      setCurrentDebugFiberInDEV(fiber);
-      try {
-        commitPassiveMountOnFiber(
-          root,
-          fiber,
-          committedLanes,
-          committedTransitions,
-        );
-      } catch (error) {
-        captureCommitPhaseError(fiber, fiber.return, error);
-      }
-      resetCurrentDebugFiberInDEV();
+    setCurrentDebugFiberInDEV(fiber);
+    try {
+      commitPassiveMountOnFiber(
+        root,
+        fiber,
+        committedLanes,
+        committedTransitions,
+      );
+    } catch (error) {
+      captureCommitPhaseError(fiber, fiber.return, error);
     }
+    resetCurrentDebugFiberInDEV();
 
     if (fiber === subtreeRoot) {
       nextEffect = null;
@@ -2921,176 +2919,187 @@ function commitPassiveMountOnFiber(
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
 ): void {
+  const flags = finishedWork.flags;
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent: {
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        finishedWork.mode & ProfileMode
-      ) {
-        startPassiveEffectTimer();
-        try {
+      if (flags & Passive) {
+        if (
+          enableProfilerTimer &&
+          enableProfilerCommitHooks &&
+          finishedWork.mode & ProfileMode
+        ) {
+          startPassiveEffectTimer();
+          try {
+            commitHookEffectListMount(
+              HookPassive | HookHasEffect,
+              finishedWork,
+            );
+          } finally {
+            recordPassiveEffectDuration(finishedWork);
+          }
+        } else {
           commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork);
-        } finally {
-          recordPassiveEffectDuration(finishedWork);
         }
-      } else {
-        commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork);
       }
       break;
     }
     case HostRoot: {
-      if (enableCache) {
-        let previousCache: Cache | null = null;
-        if (finishedWork.alternate !== null) {
-          previousCache = finishedWork.alternate.memoizedState.cache;
-        }
-        const nextCache = finishedWork.memoizedState.cache;
-        // Retain/release the root cache.
-        // Note that on initial mount, previousCache and nextCache will be the same
-        // and this retain won't occur. To counter this, we instead retain the HostRoot's
-        // initial cache when creating the root itself (see createFiberRoot() in
-        // ReactFiberRoot.js). Subsequent updates that change the cache are reflected
-        // here, such that previous/next caches are retained correctly.
-        if (nextCache !== previousCache) {
-          retainCache(nextCache);
-          if (previousCache != null) {
-            releaseCache(previousCache);
+      if (flags & Passive) {
+        if (enableCache) {
+          let previousCache: Cache | null = null;
+          if (finishedWork.alternate !== null) {
+            previousCache = finishedWork.alternate.memoizedState.cache;
+          }
+          const nextCache = finishedWork.memoizedState.cache;
+          // Retain/release the root cache.
+          // Note that on initial mount, previousCache and nextCache will be the same
+          // and this retain won't occur. To counter this, we instead retain the HostRoot's
+          // initial cache when creating the root itself (see createFiberRoot() in
+          // ReactFiberRoot.js). Subsequent updates that change the cache are reflected
+          // here, such that previous/next caches are retained correctly.
+          if (nextCache !== previousCache) {
+            retainCache(nextCache);
+            if (previousCache != null) {
+              releaseCache(previousCache);
+            }
           }
         }
-      }
 
-      if (enableTransitionTracing) {
-        // Get the transitions that were initiatized during the render
-        // and add a start transition callback for each of them
-        const root = finishedWork.stateNode;
-        const incompleteTransitions = root.incompleteTransitions;
-        // Initial render
-        if (committedTransitions !== null) {
-          committedTransitions.forEach(transition => {
-            addTransitionStartCallbackToPendingTransition(transition);
+        if (enableTransitionTracing) {
+          // Get the transitions that were initiatized during the render
+          // and add a start transition callback for each of them
+          const root = finishedWork.stateNode;
+          const incompleteTransitions = root.incompleteTransitions;
+          // Initial render
+          if (committedTransitions !== null) {
+            committedTransitions.forEach(transition => {
+              addTransitionStartCallbackToPendingTransition(transition);
+            });
+
+            clearTransitionsForLanes(finishedRoot, committedLanes);
+          }
+
+          incompleteTransitions.forEach((markerInstance, transition) => {
+            const pendingBoundaries = markerInstance.pendingBoundaries;
+            if (pendingBoundaries === null || pendingBoundaries.size === 0) {
+              addTransitionCompleteCallbackToPendingTransition(transition);
+              incompleteTransitions.delete(transition);
+            }
           });
 
           clearTransitionsForLanes(finishedRoot, committedLanes);
         }
-
-        incompleteTransitions.forEach((markerInstance, transition) => {
-          const pendingBoundaries = markerInstance.pendingBoundaries;
-          if (pendingBoundaries === null || pendingBoundaries.size === 0) {
-            addTransitionCompleteCallbackToPendingTransition(transition);
-            incompleteTransitions.delete(transition);
-          }
-        });
-
-        clearTransitionsForLanes(finishedRoot, committedLanes);
       }
       break;
     }
     case LegacyHiddenComponent:
     case OffscreenComponent: {
-      if (enableCache) {
-        let previousCache: Cache | null = null;
-        if (
-          finishedWork.alternate !== null &&
-          finishedWork.alternate.memoizedState !== null &&
-          finishedWork.alternate.memoizedState.cachePool !== null
-        ) {
-          previousCache = finishedWork.alternate.memoizedState.cachePool.pool;
-        }
-        let nextCache: Cache | null = null;
-        if (
-          finishedWork.memoizedState !== null &&
-          finishedWork.memoizedState.cachePool !== null
-        ) {
-          nextCache = finishedWork.memoizedState.cachePool.pool;
-        }
-        // Retain/release the cache used for pending (suspended) nodes.
-        // Note that this is only reached in the non-suspended/visible case:
-        // when the content is suspended/hidden, the retain/release occurs
-        // via the parent Suspense component (see case above).
-        if (nextCache !== previousCache) {
-          if (nextCache != null) {
-            retainCache(nextCache);
+      if (flags & Passive) {
+        if (enableCache) {
+          let previousCache: Cache | null = null;
+          if (
+            finishedWork.alternate !== null &&
+            finishedWork.alternate.memoizedState !== null &&
+            finishedWork.alternate.memoizedState.cachePool !== null
+          ) {
+            previousCache = finishedWork.alternate.memoizedState.cachePool.pool;
           }
-          if (previousCache != null) {
-            releaseCache(previousCache);
+          let nextCache: Cache | null = null;
+          if (
+            finishedWork.memoizedState !== null &&
+            finishedWork.memoizedState.cachePool !== null
+          ) {
+            nextCache = finishedWork.memoizedState.cachePool.pool;
           }
-        }
-      }
-
-      if (enableTransitionTracing) {
-        const isFallback = finishedWork.memoizedState;
-        const queue: OffscreenQueue | null = (finishedWork.updateQueue: any);
-        const instance: OffscreenInstance = finishedWork.stateNode;
-
-        if (queue !== null) {
-          if (isFallback) {
-            const transitions = queue.transitions;
-            if (transitions !== null) {
-              transitions.forEach(transition => {
-                // Add all the transitions saved in the update queue during
-                // the render phase (ie the transitions associated with this boundary)
-                // into the transitions set.
-                if (instance.transitions === null) {
-                  instance.transitions = new Set();
-                }
-                instance.transitions.add(transition);
-              });
+          // Retain/release the cache used for pending (suspended) nodes.
+          // Note that this is only reached in the non-suspended/visible case:
+          // when the content is suspended/hidden, the retain/release occurs
+          // via the parent Suspense component (see case above).
+          if (nextCache !== previousCache) {
+            if (nextCache != null) {
+              retainCache(nextCache);
             }
-
-            const markerInstances = queue.markerInstances;
-            if (markerInstances !== null) {
-              markerInstances.forEach(markerInstance => {
-                const markerTransitions = markerInstance.transitions;
-                // There should only be a few tracing marker transitions because
-                // they should be only associated with the transition that
-                // caused them
-                if (markerTransitions !== null) {
-                  markerTransitions.forEach(transition => {
-                    if (instance.transitions === null) {
-                      instance.transitions = new Set();
-                    } else if (instance.transitions.has(transition)) {
-                      if (markerInstance.pendingBoundaries === null) {
-                        markerInstance.pendingBoundaries = new Map();
-                      }
-                      if (instance.pendingMarkers === null) {
-                        instance.pendingMarkers = new Set();
-                      }
-
-                      instance.pendingMarkers.add(markerInstance);
-                    }
-                  });
-                }
-              });
+            if (previousCache != null) {
+              releaseCache(previousCache);
             }
           }
-
-          finishedWork.updateQueue = null;
         }
 
-        commitTransitionProgress(finishedWork);
-      }
+        if (enableTransitionTracing) {
+          const isFallback = finishedWork.memoizedState;
+          const queue: OffscreenQueue | null = (finishedWork.updateQueue: any);
+          const instance: OffscreenInstance = finishedWork.stateNode;
 
+          if (queue !== null) {
+            if (isFallback) {
+              const transitions = queue.transitions;
+              if (transitions !== null) {
+                transitions.forEach(transition => {
+                  // Add all the transitions saved in the update queue during
+                  // the render phase (ie the transitions associated with this boundary)
+                  // into the transitions set.
+                  if (instance.transitions === null) {
+                    instance.transitions = new Set();
+                  }
+                  instance.transitions.add(transition);
+                });
+              }
+
+              const markerInstances = queue.markerInstances;
+              if (markerInstances !== null) {
+                markerInstances.forEach(markerInstance => {
+                  const markerTransitions = markerInstance.transitions;
+                  // There should only be a few tracing marker transitions because
+                  // they should be only associated with the transition that
+                  // caused them
+                  if (markerTransitions !== null) {
+                    markerTransitions.forEach(transition => {
+                      if (instance.transitions === null) {
+                        instance.transitions = new Set();
+                      } else if (instance.transitions.has(transition)) {
+                        if (markerInstance.pendingBoundaries === null) {
+                          markerInstance.pendingBoundaries = new Map();
+                        }
+                        if (instance.pendingMarkers === null) {
+                          instance.pendingMarkers = new Set();
+                        }
+
+                        instance.pendingMarkers.add(markerInstance);
+                      }
+                    });
+                  }
+                });
+              }
+            }
+
+            finishedWork.updateQueue = null;
+          }
+
+          commitTransitionProgress(finishedWork);
+        }
+      }
       break;
     }
     case CacheComponent: {
-      if (enableCache) {
-        let previousCache: Cache | null = null;
-        if (finishedWork.alternate !== null) {
-          previousCache = finishedWork.alternate.memoizedState.cache;
-        }
-        const nextCache = finishedWork.memoizedState.cache;
-        // Retain/release the cache. In theory the cache component
-        // could be "borrowing" a cache instance owned by some parent,
-        // in which case we could avoid retaining/releasing. But it
-        // is non-trivial to determine when that is the case, so we
-        // always retain/release.
-        if (nextCache !== previousCache) {
-          retainCache(nextCache);
-          if (previousCache != null) {
-            releaseCache(previousCache);
+      if (flags & Passive) {
+        if (enableCache) {
+          let previousCache: Cache | null = null;
+          if (finishedWork.alternate !== null) {
+            previousCache = finishedWork.alternate.memoizedState.cache;
+          }
+          const nextCache = finishedWork.memoizedState.cache;
+          // Retain/release the cache. In theory the cache component
+          // could be "borrowing" a cache instance owned by some parent,
+          // in which case we could avoid retaining/releasing. But it
+          // is non-trivial to determine when that is the case, so we
+          // always retain/release.
+          if (nextCache !== previousCache) {
+            retainCache(nextCache);
+            if (previousCache != null) {
+              releaseCache(previousCache);
+            }
           }
         }
       }
@@ -3098,20 +3107,24 @@ function commitPassiveMountOnFiber(
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
-        // Get the transitions that were initiatized during the render
-        // and add a start transition callback for each of them
-        const instance = finishedWork.stateNode;
-        if (
-          instance.transitions !== null &&
-          (instance.pendingBoundaries === null ||
-            instance.pendingBoundaries.size === 0)
-        ) {
-          addMarkerCompleteCallbackToPendingTransition(
-            finishedWork.memoizedProps.name,
-            instance.transitions,
-          );
-          instance.transitions = null;
-          instance.pendingBoundaries = null;
+        if (flags & Passive) {
+          // Get the transitions that were initiatized during the render
+          // and add a start transition callback for each of them
+          const instance = finishedWork.stateNode;
+          if (
+            instance.transitions !== null &&
+            (instance.pendingBoundaries === null ||
+              instance.pendingBoundaries.size === 0)
+          ) {
+            instance.transitions.forEach(transition => {
+              addMarkerCompleteCallbackToPendingTransition(
+                finishedWork.memoizedProps.name,
+                instance.transitions,
+              );
+            });
+            instance.transitions = null;
+            instance.pendingBoundaries = null;
+          }
         }
       }
       break;
