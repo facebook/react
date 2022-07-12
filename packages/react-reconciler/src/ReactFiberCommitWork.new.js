@@ -2843,70 +2843,37 @@ export function commitPassiveMountEffects(
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
 ): void {
-  nextEffect = finishedWork;
-  commitPassiveMountEffects_begin(
-    finishedWork,
+  setCurrentDebugFiberInDEV(finishedWork);
+  commitPassiveMountOnFiber(
     root,
+    finishedWork,
     committedLanes,
     committedTransitions,
   );
+  resetCurrentDebugFiberInDEV();
 }
 
-function commitPassiveMountEffects_begin(
-  subtreeRoot: Fiber,
+function recursivelyTraversePassiveMountEffects(
   root: FiberRoot,
+  parentFiber: Fiber,
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
 ) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    const firstChild = fiber.child;
-    if ((fiber.subtreeFlags & PassiveMask) !== NoFlags && firstChild !== null) {
-      firstChild.return = fiber;
-      nextEffect = firstChild;
-    } else {
-      commitPassiveMountEffects_complete(
-        subtreeRoot,
+  const prevDebugFiber = getCurrentDebugFiberInDEV();
+  if (parentFiber.subtreeFlags & PassiveMask) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      setCurrentDebugFiberInDEV(child);
+      commitPassiveMountOnFiber(
         root,
+        child,
         committedLanes,
         committedTransitions,
       );
+      child = child.sibling;
     }
   }
-}
-
-function commitPassiveMountEffects_complete(
-  subtreeRoot: Fiber,
-  root: FiberRoot,
-  committedLanes: Lanes,
-  committedTransitions: Array<Transition> | null,
-) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-
-    setCurrentDebugFiberInDEV(fiber);
-    commitPassiveMountOnFiber(
-      root,
-      fiber,
-      committedLanes,
-      committedTransitions,
-    );
-    resetCurrentDebugFiberInDEV();
-
-    if (fiber === subtreeRoot) {
-      nextEffect = null;
-      return;
-    }
-
-    const sibling = fiber.sibling;
-    if (sibling !== null) {
-      sibling.return = fiber.return;
-      nextEffect = sibling;
-      return;
-    }
-
-    nextEffect = fiber.return;
-  }
+  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 function commitPassiveMountOnFiber(
@@ -2920,6 +2887,12 @@ function commitPassiveMountOnFiber(
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent: {
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+      );
       if (flags & Passive) {
         if (
           enableProfilerTimer &&
@@ -2950,6 +2923,12 @@ function commitPassiveMountOnFiber(
       break;
     }
     case HostRoot: {
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+      );
       if (flags & Passive) {
         if (enableCache) {
           let previousCache: Cache | null = null;
@@ -3000,6 +2979,12 @@ function commitPassiveMountOnFiber(
     }
     case LegacyHiddenComponent:
     case OffscreenComponent: {
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+      );
       if (flags & Passive) {
         if (enableCache) {
           let previousCache: Cache | null = null;
@@ -3087,6 +3072,12 @@ function commitPassiveMountOnFiber(
       break;
     }
     case CacheComponent: {
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+      );
       if (flags & Passive) {
         if (enableCache) {
           let previousCache: Cache | null = null;
@@ -3111,6 +3102,12 @@ function commitPassiveMountOnFiber(
     }
     case TracingMarkerComponent: {
       if (enableTransitionTracing) {
+        recursivelyTraversePassiveMountEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions,
+        );
         if (flags & Passive) {
           // Get the transitions that were initiatized during the render
           // and add a start transition callback for each of them
@@ -3130,7 +3127,18 @@ function commitPassiveMountOnFiber(
             instance.pendingBoundaries = null;
           }
         }
+        break;
       }
+      // Intentional fallthrough to next branch
+    }
+    // eslint-disable-next-line-no-fallthrough
+    default: {
+      recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+      );
       break;
     }
   }
