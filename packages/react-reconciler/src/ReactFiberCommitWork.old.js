@@ -2885,16 +2885,12 @@ function commitPassiveMountEffects_complete(
     const fiber = nextEffect;
 
     setCurrentDebugFiberInDEV(fiber);
-    try {
-      commitPassiveMountOnFiber(
-        root,
-        fiber,
-        committedLanes,
-        committedTransitions,
-      );
-    } catch (error) {
-      captureCommitPhaseError(fiber, fiber.return, error);
-    }
+    commitPassiveMountOnFiber(
+      root,
+      fiber,
+      committedLanes,
+      committedTransitions,
+    );
     resetCurrentDebugFiberInDEV();
 
     if (fiber === subtreeRoot) {
@@ -2936,11 +2932,19 @@ function commitPassiveMountOnFiber(
               HookPassive | HookHasEffect,
               finishedWork,
             );
-          } finally {
-            recordPassiveEffectDuration(finishedWork);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
+          recordPassiveEffectDuration(finishedWork);
         } else {
-          commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork);
+          try {
+            commitHookEffectListMount(
+              HookPassive | HookHasEffect,
+              finishedWork,
+            );
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
       }
       break;
