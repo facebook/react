@@ -146,6 +146,7 @@ import {
   addTransitionProgressCallbackToPendingTransition,
   addTransitionCompleteCallbackToPendingTransition,
   addMarkerProgressCallbackToPendingTransition,
+  addMarkerIncompleteCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
   setIsRunningInsertionEffect,
 } from './ReactFiberWorkLoop.new';
@@ -2967,7 +2968,9 @@ function commitPassiveMountOnFiber(
           incompleteTransitions.forEach((markerInstance, transition) => {
             const pendingBoundaries = markerInstance.pendingBoundaries;
             if (pendingBoundaries === null || pendingBoundaries.size === 0) {
-              addTransitionCompleteCallbackToPendingTransition(transition);
+              if (markerInstance.deletions === null) {
+                addTransitionCompleteCallbackToPendingTransition(transition);
+              }
               incompleteTransitions.delete(transition);
             }
           });
@@ -3101,30 +3104,62 @@ function commitPassiveMountOnFiber(
       break;
     }
     case TracingMarkerComponent: {
-      if (enableTransitionTracing) {
-        recursivelyTraversePassiveMountEffects(
-          finishedRoot,
-          finishedWork,
-          committedLanes,
-          committedTransitions,
-        );
-        if (flags & Passive) {
+      if (flags & Passive) {
+        if (enableTransitionTracing) {
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions,
+          );
           // Get the transitions that were initiatized during the render
           // and add a start transition callback for each of them
           const instance = finishedWork.stateNode;
-          if (
-            instance.transitions !== null &&
-            (instance.pendingBoundaries === null ||
-              instance.pendingBoundaries.size === 0)
-          ) {
-            instance.transitions.forEach(transition => {
-              addMarkerCompleteCallbackToPendingTransition(
-                finishedWork.memoizedProps.name,
-                instance.transitions,
-              );
-            });
-            instance.transitions = null;
-            instance.pendingBoundaries = null;
+          if (instance.transitions !== null) {
+            if (finishedWork.alternate !== null) {
+              const prevName = finishedWork.alternate.memoizedProps.name;
+              const nextName = finishedWork.memoizedProps.name;
+
+              // The transition should be marked as incomplete if the name changed
+              if (prevName !== nextName) {
+                if (!instance.deletions) {
+                  instance.deletions = [];
+
+                  addMarkerIncompleteCallbackToPendingTransition(
+                    prevName,
+                    instance.transitions,
+                    instance.deletions,
+                  );
+                }
+
+                const deletion = {
+                  type: 'marker',
+                  name: prevName,
+                  newName: nextName,
+                  // we'll filter the transitions that need to have this deletion
+                  // during the callback stage
+                  transitions: instance.transitions,
+                };
+
+                instance.deletions.push(deletion);
+              }
+            }
+
+            if (
+              instance.transitions !== null &&
+              (instance.pendingBoundaries === null ||
+                instance.pendingBoundaries.size === 0)
+            ) {
+              if (instance.deletions === null) {
+                addMarkerCompleteCallbackToPendingTransition(
+                  finishedWork.memoizedProps.name,
+                  instance.transitions,
+                );
+              }
+              instance.transitions = null;
+              instance.pendingBoundaries = null;
+              instance.deletions = null;
+            }
           }
         }
         break;

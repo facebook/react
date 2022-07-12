@@ -1605,8 +1605,11 @@ function completeWork(
         }
         bubbleProperties(workInProgress);
 
+        const prevName = current !== null ? current.memoizedProps.name : null;
+        const nextName = workInProgress.memoizedProps.name;
         if (
           current === null ||
+          prevName !== nextName ||
           (workInProgress.subtreeFlags & Visibility) !== NoFlags
         ) {
           // If any of our suspense children toggle visibility, this means that
