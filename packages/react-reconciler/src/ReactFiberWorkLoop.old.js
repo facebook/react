@@ -16,8 +16,7 @@ import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {EventPriority} from './ReactEventPriorities.old';
 import type {
   PendingTransitionCallbacks,
-  MarkerTransition,
-  PendingSuspenseBoundaries,
+  PendingBoundaries,
   Transition,
 } from './ReactFiberTracingMarkerComponent.old';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
@@ -358,7 +357,7 @@ export function addTransitionStartCallbackToPendingTransition(
 export function addMarkerProgressCallbackToPendingTransition(
   markerName: string,
   transitions: Set<Transition>,
-  pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
+  pendingBoundaries: PendingBoundaries | null,
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {
@@ -376,14 +375,15 @@ export function addMarkerProgressCallbackToPendingTransition(
     }
 
     currentPendingTransitionCallbacks.markerProgress.set(markerName, {
-      pendingSuspenseBoundaries,
+      pendingBoundaries,
       transitions,
     });
   }
 }
 
 export function addMarkerCompleteCallbackToPendingTransition(
-  transition: MarkerTransition,
+  markerName: string,
+  transitions: Set<Transition>,
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {
@@ -392,21 +392,24 @@ export function addMarkerCompleteCallbackToPendingTransition(
         transitionProgress: null,
         transitionComplete: null,
         markerProgress: null,
-        markerComplete: [],
+        markerComplete: new Map(),
       };
     }
 
     if (currentPendingTransitionCallbacks.markerComplete === null) {
-      currentPendingTransitionCallbacks.markerComplete = [];
+      currentPendingTransitionCallbacks.markerComplete = new Map();
     }
 
-    currentPendingTransitionCallbacks.markerComplete.push(transition);
+    currentPendingTransitionCallbacks.markerComplete.set(
+      markerName,
+      transitions,
+    );
   }
 }
 
 export function addTransitionProgressCallbackToPendingTransition(
   transition: Transition,
-  boundaries: PendingSuspenseBoundaries,
+  boundaries: PendingBoundaries,
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {

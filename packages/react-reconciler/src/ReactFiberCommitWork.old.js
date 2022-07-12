@@ -1210,7 +1210,7 @@ function reappearLayoutEffectsOnFiber(node: Fiber) {
 function commitTransitionProgress(offscreenFiber: Fiber) {
   if (enableTransitionTracing) {
     // This function adds suspense boundaries to the root
-    // or tracing marker's pendingSuspenseBoundaries map.
+    // or tracing marker's pendingBoundaries map.
     // When a suspense boundary goes from a resolved to a fallback
     // state we add the boundary to the map, and when it goes from
     // a fallback to a resolved state, we remove the boundary from
@@ -1250,7 +1250,7 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
       // to the pending boundary set if it's there
       if (pendingMarkers !== null) {
         pendingMarkers.forEach(markerInstance => {
-          const pendingBoundaries = markerInstance.pendingSuspenseBoundaries;
+          const pendingBoundaries = markerInstance.pendingBoundaries;
           const transitions = markerInstance.transitions;
           if (
             pendingBoundaries !== null &&
@@ -1284,7 +1284,7 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
       // if it's there
       if (pendingMarkers !== null) {
         pendingMarkers.forEach(markerInstance => {
-          const pendingBoundaries = markerInstance.pendingSuspenseBoundaries;
+          const pendingBoundaries = markerInstance.pendingBoundaries;
           const transitions = markerInstance.transitions;
           if (
             pendingBoundaries !== null &&
@@ -2977,7 +2977,7 @@ function commitPassiveMountOnFiber(
         }
 
         incompleteTransitions.forEach((markerInstance, transition) => {
-          const pendingBoundaries = markerInstance.pendingSuspenseBoundaries;
+          const pendingBoundaries = markerInstance.pendingBoundaries;
           if (pendingBoundaries === null || pendingBoundaries.size === 0) {
             addTransitionCompleteCallbackToPendingTransition(transition);
             incompleteTransitions.delete(transition);
@@ -3052,8 +3052,8 @@ function commitPassiveMountOnFiber(
                     if (instance.transitions === null) {
                       instance.transitions = new Set();
                     } else if (instance.transitions.has(transition)) {
-                      if (markerInstance.pendingSuspenseBoundaries === null) {
-                        markerInstance.pendingSuspenseBoundaries = new Map();
+                      if (markerInstance.pendingBoundaries === null) {
+                        markerInstance.pendingBoundaries = new Map();
                       }
                       if (instance.pendingMarkers === null) {
                         instance.pendingMarkers = new Set();
@@ -3103,17 +3103,15 @@ function commitPassiveMountOnFiber(
         const instance = finishedWork.stateNode;
         if (
           instance.transitions !== null &&
-          (instance.pendingSuspenseBoundaries === null ||
-            instance.pendingSuspenseBoundaries.size === 0)
+          (instance.pendingBoundaries === null ||
+            instance.pendingBoundaries.size === 0)
         ) {
-          instance.transitions.forEach(transition => {
-            addMarkerCompleteCallbackToPendingTransition({
-              transition,
-              name: finishedWork.memoizedProps.name,
-            });
-          });
+          addMarkerCompleteCallbackToPendingTransition(
+            finishedWork.memoizedProps.name,
+            instance.transitions,
+          );
           instance.transitions = null;
-          instance.pendingSuspenseBoundaries = null;
+          instance.pendingBoundaries = null;
         }
       }
       break;
