@@ -1,11 +1,11 @@
 'use strict';
 
 const rollup = require('rollup');
-const babel = require('rollup-plugin-babel');
+const babel = require('@rollup/plugin-babel').babel;
 const closure = require('./plugins/closure-plugin');
-const commonjs = require('rollup-plugin-commonjs');
+const commonjs = require('@rollup/plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
-const replace = require('rollup-plugin-replace');
+const replace = require('@rollup/plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
 const resolve = require('rollup-plugin-node-resolve');
@@ -20,7 +20,7 @@ const useForks = require('./plugins/use-forks-plugin');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
-const codeFrame = require('babel-code-frame');
+const codeFrame = require('@babel/code-frame');
 const Wrappers = require('./wrappers');
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
@@ -154,6 +154,7 @@ function getBabelConfig(
     exclude: '/**/node_modules/**',
     babelrc: false,
     configFile: false,
+    babelHelpers: 'bundled',
     presets: [],
     plugins: [...babelPlugins],
   };
@@ -196,6 +197,7 @@ function getRollupOutputOptions(
     globals,
     freeze: !isProduction,
     interop: false,
+    exports: 'auto',
     name: globalName,
     sourcemap: false,
     esModule: false,
@@ -356,14 +358,17 @@ function getPlugins(
     },
     // Turn __DEV__ and process.env checks into constants.
     replace({
-      __DEV__: isProduction ? 'false' : 'true',
-      __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
-      __UMD__: isUMDBundle ? 'true' : 'false',
-      'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
-      __EXPERIMENTAL__,
-      // Enable forked reconciler.
-      // NOTE: I did not put much thought into how to configure this.
-      __VARIANT__: bundle.enableNewReconciler === true,
+      preventAssignment: false,
+      values: {
+        __DEV__: isProduction ? 'false' : 'true',
+        __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
+        __UMD__: isUMDBundle ? 'true' : 'false',
+        'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
+        __EXPERIMENTAL__,
+        // Enable forked reconciler.
+        // NOTE: I did not put much thought into how to configure this.
+        __VARIANT__: bundle.enableNewReconciler === true,
+      },
     }),
     // The CommonJS plugin *only* exists to pull "art" into "react-art".
     // I'm going to port "art" to ES modules to avoid this problem.
@@ -533,14 +538,14 @@ async function createBundle(bundle, bundleType) {
   }
 
   const importSideEffects = Modules.getImportSideEffects();
-  const pureExternalModules = Object.keys(importSideEffects).filter(
+  const moduleSideEffects = Object.keys(importSideEffects).filter(
     module => !importSideEffects[module]
   );
 
   const rollupConfig = {
     input: resolvedEntry,
     treeshake: {
-      pureExternalModules,
+      moduleSideEffects,
     },
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
@@ -571,12 +576,13 @@ async function createBundle(bundle, bundleType) {
       bundleType,
       bundle.global,
       bundle.moduleType,
-      pureExternalModules,
+      moduleSideEffects,
       bundle
     ),
     output: {
       externalLiveBindings: false,
       freeze: false,
+      exports: 'auto',
       interop: false,
       esModule: false,
     },
