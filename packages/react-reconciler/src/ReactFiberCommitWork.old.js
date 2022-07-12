@@ -733,11 +733,19 @@ function commitLayoutEffectOnFiber(
                 HookLayout | HookHasEffect,
                 finishedWork,
               );
-            } finally {
-              recordLayoutEffectDuration(finishedWork);
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
+            recordLayoutEffectDuration(finishedWork);
           } else {
-            commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
+            try {
+              commitHookEffectListMount(
+                HookLayout | HookHasEffect,
+                finishedWork,
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
+            }
           }
         }
       }
@@ -786,11 +794,24 @@ function commitLayoutEffectOnFiber(
               try {
                 startLayoutEffectTimer();
                 instance.componentDidMount();
-              } finally {
-                recordLayoutEffectDuration(finishedWork);
+              } catch (error) {
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error,
+                );
               }
+              recordLayoutEffectDuration(finishedWork);
             } else {
-              instance.componentDidMount();
+              try {
+                instance.componentDidMount();
+              } catch (error) {
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error,
+                );
+              }
             }
           } else {
             const prevProps =
@@ -840,15 +861,28 @@ function commitLayoutEffectOnFiber(
                   prevState,
                   instance.__reactInternalSnapshotBeforeUpdate,
                 );
-              } finally {
-                recordLayoutEffectDuration(finishedWork);
+              } catch (error) {
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error,
+                );
               }
+              recordLayoutEffectDuration(finishedWork);
             } else {
-              instance.componentDidUpdate(
-                prevProps,
-                prevState,
-                instance.__reactInternalSnapshotBeforeUpdate,
-              );
+              try {
+                instance.componentDidUpdate(
+                  prevProps,
+                  prevState,
+                  instance.__reactInternalSnapshotBeforeUpdate,
+                );
+              } catch (error) {
+                captureCommitPhaseError(
+                  finishedWork,
+                  finishedWork.return,
+                  error,
+                );
+              }
             }
           }
         }
@@ -892,13 +926,21 @@ function commitLayoutEffectOnFiber(
           // We could update instance props and state here,
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
-          commitCallbacks(updateQueue, instance);
+          try {
+            commitCallbacks(updateQueue, instance);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
       }
 
       if (flags & Ref) {
         if (!offscreenSubtreeWasHidden) {
-          commitAttachRef(finishedWork);
+          try {
+            commitAttachRef(finishedWork);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
       }
       break;
@@ -922,7 +964,11 @@ function commitLayoutEffectOnFiber(
                 break;
             }
           }
-          commitCallbacks(updateQueue, instance);
+          try {
+            commitCallbacks(updateQueue, instance);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
       }
       break;
@@ -938,13 +984,21 @@ function commitLayoutEffectOnFiber(
         if (current === null && finishedWork.flags & Update) {
           const type = finishedWork.type;
           const props = finishedWork.memoizedProps;
-          commitMount(instance, type, props, finishedWork);
+          try {
+            commitMount(instance, type, props, finishedWork);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
       }
 
       if (flags & Ref) {
         if (!offscreenSubtreeWasHidden) {
-          commitAttachRef(finishedWork);
+          try {
+            commitAttachRef(finishedWork);
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
+          }
         }
       }
       break;
@@ -960,60 +1014,64 @@ function commitLayoutEffectOnFiber(
     case Profiler: {
       if (enableProfilerTimer) {
         if (flags & Update) {
-          const {onCommit, onRender} = finishedWork.memoizedProps;
-          const {effectDuration} = finishedWork.stateNode;
+          try {
+            const {onCommit, onRender} = finishedWork.memoizedProps;
+            const {effectDuration} = finishedWork.stateNode;
 
-          const commitTime = getCommitTime();
+            const commitTime = getCommitTime();
 
-          let phase = current === null ? 'mount' : 'update';
-          if (enableProfilerNestedUpdatePhase) {
-            if (isCurrentUpdateNested()) {
-              phase = 'nested-update';
+            let phase = current === null ? 'mount' : 'update';
+            if (enableProfilerNestedUpdatePhase) {
+              if (isCurrentUpdateNested()) {
+                phase = 'nested-update';
+              }
             }
-          }
 
-          if (typeof onRender === 'function') {
-            onRender(
-              finishedWork.memoizedProps.id,
-              phase,
-              finishedWork.actualDuration,
-              finishedWork.treeBaseDuration,
-              finishedWork.actualStartTime,
-              commitTime,
-            );
-          }
-
-          if (enableProfilerCommitHooks) {
-            if (typeof onCommit === 'function') {
-              onCommit(
+            if (typeof onRender === 'function') {
+              onRender(
                 finishedWork.memoizedProps.id,
                 phase,
-                effectDuration,
+                finishedWork.actualDuration,
+                finishedWork.treeBaseDuration,
+                finishedWork.actualStartTime,
                 commitTime,
               );
             }
 
-            // Schedule a passive effect for this Profiler to call onPostCommit hooks.
-            // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
-            // because the effect is also where times bubble to parent Profilers.
-            enqueuePendingPassiveProfilerEffect(finishedWork);
-
-            // Propagate layout effect durations to the next nearest Profiler ancestor.
-            // Do not reset these values until the next render so DevTools has a chance to read them first.
-            let parentFiber = finishedWork.return;
-            outer: while (parentFiber !== null) {
-              switch (parentFiber.tag) {
-                case HostRoot:
-                  const root = parentFiber.stateNode;
-                  root.effectDuration += effectDuration;
-                  break outer;
-                case Profiler:
-                  const parentStateNode = parentFiber.stateNode;
-                  parentStateNode.effectDuration += effectDuration;
-                  break outer;
+            if (enableProfilerCommitHooks) {
+              if (typeof onCommit === 'function') {
+                onCommit(
+                  finishedWork.memoizedProps.id,
+                  phase,
+                  effectDuration,
+                  commitTime,
+                );
               }
-              parentFiber = parentFiber.return;
+
+              // Schedule a passive effect for this Profiler to call onPostCommit hooks.
+              // This effect should be scheduled even if there is no onPostCommit callback for this Profiler,
+              // because the effect is also where times bubble to parent Profilers.
+              enqueuePendingPassiveProfilerEffect(finishedWork);
+
+              // Propagate layout effect durations to the next nearest Profiler ancestor.
+              // Do not reset these values until the next render so DevTools has a chance to read them first.
+              let parentFiber = finishedWork.return;
+              outer: while (parentFiber !== null) {
+                switch (parentFiber.tag) {
+                  case HostRoot:
+                    const root = parentFiber.stateNode;
+                    root.effectDuration += effectDuration;
+                    break outer;
+                  case Profiler:
+                    const parentStateNode = parentFiber.stateNode;
+                    parentStateNode.effectDuration += effectDuration;
+                    break outer;
+                }
+                parentFiber = parentFiber.return;
+              }
             }
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
         }
       }
@@ -1021,7 +1079,11 @@ function commitLayoutEffectOnFiber(
     }
     case SuspenseComponent: {
       if (flags & Update) {
-        commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+        try {
+          commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
       }
       break;
     }
@@ -2617,11 +2679,7 @@ function commitLayoutMountEffects_complete(
     if ((fiber.flags & LayoutMask) !== NoFlags) {
       const current = fiber.alternate;
       setCurrentDebugFiberInDEV(fiber);
-      try {
-        commitLayoutEffectOnFiber(root, current, fiber, committedLanes);
-      } catch (error) {
-        captureCommitPhaseError(fiber, fiber.return, error);
-      }
+      commitLayoutEffectOnFiber(root, current, fiber, committedLanes);
       resetCurrentDebugFiberInDEV();
     }
 
