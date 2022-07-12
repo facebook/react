@@ -28,8 +28,10 @@ import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
 // Doing this because there's a merge conflict because of the way sync-reconciler-fork
 // is implemented
-import type {PendingSuspenseBoundaries} from './ReactFiberTracingMarkerComponent.new';
-import type {Transition} from './ReactFiberTracingMarkerComponent.new';
+import type {
+  TracingMarkerInstance,
+  Transition,
+} from './ReactFiberTracingMarkerComponent.new';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
 
 // Unwind Circular: moved from ReactFiberHooks.old
@@ -335,7 +337,7 @@ type TransitionTracingOnlyFiberRootProperties = {|
   // are considered complete when the pending suspense boundaries set is
   // empty. We can represent this as a Map of transitions to suspense
   // boundary sets
-  incompleteTransitions: Map<Transition, PendingSuspenseBoundaries>,
+  incompleteTransitions: Map<Array<Transition>, TracingMarkerInstance>,
 |};
 
 // Exported FiberRoot type includes all properties,
