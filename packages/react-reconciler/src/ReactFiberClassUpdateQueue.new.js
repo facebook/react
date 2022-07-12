@@ -85,32 +85,43 @@
 // resources, but the final state is always the same.
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane.old';
+import type {Lanes, Lane} from './ReactFiberLane.new';
 
 import {
   NoLane,
   NoLanes,
+  OffscreenLane,
   isSubsetOfLanes,
   mergeLanes,
+  removeLanes,
   isTransitionLane,
   intersectLanes,
   markRootEntangled,
-} from './ReactFiberLane.old';
+} from './ReactFiberLane.new';
 import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
-} from './ReactFiberNewContext.old';
-import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
+} from './ReactFiberNewContext.new';
+import {
+  Callback,
+  Visibility,
+  ShouldCapture,
+  DidCapture,
+} from './ReactFiberFlags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {
   markSkippedUpdateLanes,
-  isInterleavedUpdate,
-} from './ReactFiberWorkLoop.old';
-import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
-import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
+  isUnsafeClassRenderPhaseUpdate,
+  getWorkInProgressRootRenderLanes,
+} from './ReactFiberWorkLoop.new';
+import {
+  enqueueConcurrentClassUpdate,
+  unsafe_markUpdateLaneFromFiberToRoot,
+} from './ReactFiberConcurrentUpdates.new';
+import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.new';
 
 import assign from 'shared/assign';
 
@@ -129,8 +140,8 @@ export type Update<State> = {|
 
 export type SharedQueue<State> = {|
   pending: Update<State> | null,
-  interleaved: Update<State> | null,
   lanes: Lanes,
+  hiddenCallbacks: Array<() => mixed> | null,
 |};
 
 export type UpdateQueue<State> = {|
@@ -138,7 +149,7 @@ export type UpdateQueue<State> = {|
   firstBaseUpdate: Update<State> | null,
   lastBaseUpdate: Update<State> | null,
   shared: SharedQueue<State>,
-  effects: Array<Update<State>> | null,
+  callbacks: Array<() => mixed> | null,
 |};
 
 export const UpdateState = 0;
@@ -169,10 +180,10 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     lastBaseUpdate: null,
     shared: {
       pending: null,
-      interleaved: null,
       lanes: NoLanes,
+      hiddenCallbacks: null,
     },
-    effects: null,
+    callbacks: null,
   };
   fiber.updateQueue = queue;
 }
@@ -190,7 +201,7 @@ export function cloneUpdateQueue<State>(
       firstBaseUpdate: currentQueue.firstBaseUpdate,
       lastBaseUpdate: currentQueue.lastBaseUpdate,
       shared: currentQueue.shared,
-      effects: currentQueue.effects,
+      callbacks: null,
     };
     workInProgress.updateQueue = clone;
   }
@@ -214,39 +225,14 @@ export function enqueueUpdate<State>(
   fiber: Fiber,
   update: Update<State>,
   lane: Lane,
-) {
+): FiberRoot | null {
   const updateQueue = fiber.updateQueue;
   if (updateQueue === null) {
     // Only occurs if the fiber has been unmounted.
-    return;
+    return null;
   }
 
   const sharedQueue: SharedQueue<State> = (updateQueue: any).shared;
-
-  if (isInterleavedUpdate(fiber, lane)) {
-    const interleaved = sharedQueue.interleaved;
-    if (interleaved === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-      // At the end of the current render, this queue's interleaved updates will
-      // be transferred to the pending queue.
-      pushInterleavedQueue(sharedQueue);
-    } else {
-      update.next = interleaved.next;
-      interleaved.next = update;
-    }
-    sharedQueue.interleaved = update;
-  } else {
-    const pending = sharedQueue.pending;
-    if (pending === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-    } else {
-      update.next = pending.next;
-      pending.next = update;
-    }
-    sharedQueue.pending = update;
-  }
 
   if (__DEV__) {
     if (
@@ -261,6 +247,28 @@ export function enqueueUpdate<State>(
       );
       didWarnUpdateInsideUpdate = true;
     }
+  }
+
+  if (isUnsafeClassRenderPhaseUpdate(fiber)) {
+    // This is an unsafe render phase update. Add directly to the update
+    // queue so we can process it immediately during the current render.
+    const pending = sharedQueue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    sharedQueue.pending = update;
+
+    // Update the childLanes even though we're most likely already rendering
+    // this fiber. This is for backwards compatibility in the case where you
+    // update a different component during render phase than the one that is
+    // currently renderings (a pattern that is accompanied by a warning).
+    return unsafe_markUpdateLaneFromFiberToRoot(fiber, lane);
+  } else {
+    return enqueueConcurrentClassUpdate(fiber, sharedQueue, update, lane);
   }
 }
 
@@ -325,7 +333,9 @@ export function enqueueCapturedUpdate<State>(
 
             tag: update.tag,
             payload: update.payload,
-            callback: update.callback,
+            // When this update is rebased, we should not fire its
+            // callback again.
+            callback: null,
 
             next: null,
           };
@@ -354,7 +364,7 @@ export function enqueueCapturedUpdate<State>(
         firstBaseUpdate: newFirst,
         lastBaseUpdate: newLast,
         shared: currentQueue.shared,
-        effects: currentQueue.effects,
+        callbacks: currentQueue.callbacks,
       };
       workInProgress.updateQueue = queue;
       return;
@@ -525,9 +535,23 @@ export function processUpdateQueue<State>(
 
     let update = firstBaseUpdate;
     do {
-      const updateLane = update.lane;
+      // TODO: Don't need this field anymore
       const updateEventTime = update.eventTime;
-      if (!isSubsetOfLanes(renderLanes, updateLane)) {
+
+      // An extra OffscreenLane bit is added to updates that were made to
+      // a hidden tree, so that we can distinguish them from updates that were
+      // already there when the tree was hidden.
+      const updateLane = removeLanes(update.lane, OffscreenLane);
+      const isHiddenUpdate = updateLane !== update.lane;
+
+      // Check if this update was made while the tree was hidden. If so, then
+      // it's not a "base" update and we should disregard the extra base lanes
+      // that were added to renderLanes when we entered the Offscreen tree.
+      const shouldSkipUpdate = isHiddenUpdate
+        ? !isSubsetOfLanes(getWorkInProgressRootRenderLanes(), updateLane)
+        : !isSubsetOfLanes(renderLanes, updateLane);
+
+      if (shouldSkipUpdate) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
@@ -562,7 +586,10 @@ export function processUpdateQueue<State>(
 
             tag: update.tag,
             payload: update.payload,
-            callback: update.callback,
+
+            // When this update is rebased, we should not fire its
+            // callback again.
+            callback: null,
 
             next: null,
           };
@@ -579,18 +606,16 @@ export function processUpdateQueue<State>(
           instance,
         );
         const callback = update.callback;
-        if (
-          callback !== null &&
-          // If the update was already committed, we should not queue its
-          // callback again.
-          update.lane !== NoLane
-        ) {
+        if (callback !== null) {
           workInProgress.flags |= Callback;
-          const effects = queue.effects;
-          if (effects === null) {
-            queue.effects = [update];
+          if (isHiddenUpdate) {
+            workInProgress.flags |= Visibility;
+          }
+          const callbacks = queue.callbacks;
+          if (callbacks === null) {
+            queue.callbacks = [callback];
           } else {
-            effects.push(update);
+            callbacks.push(callback);
           }
         }
       }
@@ -622,17 +647,7 @@ export function processUpdateQueue<State>(
     queue.firstBaseUpdate = newFirstBaseUpdate;
     queue.lastBaseUpdate = newLastBaseUpdate;
 
-    // Interleaved updates are stored on a separate queue. We aren't going to
-    // process them during this render, but we do need to track which lanes
-    // are remaining.
-    const lastInterleaved = queue.shared.interleaved;
-    if (lastInterleaved !== null) {
-      let interleaved = lastInterleaved;
-      do {
-        newLanes = mergeLanes(newLanes, interleaved.lane);
-        interleaved = ((interleaved: any).next: Update<State>);
-      } while (interleaved !== lastInterleaved);
-    } else if (firstBaseUpdate === null) {
+    if (firstBaseUpdate === null) {
       // `queue.lanes` is used for entangling transitions. We can set it back to
       // zero once the queue is empty.
       queue.shared.lanes = NoLanes;
@@ -674,22 +689,51 @@ export function checkHasForceUpdateAfterProcessing(): boolean {
   return hasForceUpdate;
 }
 
-export function commitUpdateQueue<State>(
-  finishedWork: Fiber,
-  finishedQueue: UpdateQueue<State>,
-  instance: any,
+export function deferHiddenCallbacks<State>(
+  updateQueue: UpdateQueue<State>,
 ): void {
-  // Commit the effects
-  const effects = finishedQueue.effects;
-  finishedQueue.effects = null;
-  if (effects !== null) {
-    for (let i = 0; i < effects.length; i++) {
-      const effect = effects[i];
-      const callback = effect.callback;
-      if (callback !== null) {
-        effect.callback = null;
-        callCallback(callback, instance);
-      }
+  // When an update finishes on a hidden component, its callback should not
+  // be fired until/unless the component is made visible again. Stash the
+  // callback on the shared queue object so it can be fired later.
+  const newHiddenCallbacks = updateQueue.callbacks;
+  if (newHiddenCallbacks !== null) {
+    const existingHiddenCallbacks = updateQueue.shared.hiddenCallbacks;
+    if (existingHiddenCallbacks === null) {
+      updateQueue.shared.hiddenCallbacks = newHiddenCallbacks;
+    } else {
+      updateQueue.shared.hiddenCallbacks = existingHiddenCallbacks.concat(
+        newHiddenCallbacks,
+      );
+    }
+  }
+}
+
+export function commitHiddenCallbacks<State>(
+  updateQueue: UpdateQueue<State>,
+  context: any,
+): void {
+  // This component is switching from hidden -> visible. Commit any callbacks
+  // that were previously deferred.
+  const hiddenCallbacks = updateQueue.shared.hiddenCallbacks;
+  if (hiddenCallbacks !== null) {
+    updateQueue.shared.hiddenCallbacks = null;
+    for (let i = 0; i < hiddenCallbacks.length; i++) {
+      const callback = hiddenCallbacks[i];
+      callCallback(callback, context);
+    }
+  }
+}
+
+export function commitCallbacks<State>(
+  updateQueue: UpdateQueue<State>,
+  context: any,
+): void {
+  const callbacks = updateQueue.callbacks;
+  if (callbacks !== null) {
+    updateQueue.callbacks = null;
+    for (let i = 0; i < callbacks.length; i++) {
+      const callback = callbacks[i];
+      callCallback(callback, context);
     }
   }
 }

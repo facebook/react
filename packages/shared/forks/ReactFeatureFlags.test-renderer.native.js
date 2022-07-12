@@ -43,7 +43,6 @@ export const enableFilterEmptyStringAttributesDOM = false;
 export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = false;
 export const deletedTreeCleanUpLevel = 3;
-export const enableSuspenseLayoutEffectSemantics = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = false;

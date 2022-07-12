@@ -16,6 +16,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  abort,
 } from 'react-server/src/ReactFlightServer';
 
 function createDrainHandler(destination, request) {
@@ -24,9 +25,12 @@ function createDrainHandler(destination, request) {
 
 type Options = {
   onError?: (error: mixed) => void,
+  context?: Array<[string, ServerContextJSONValue]>,
+  identifierPrefix?: string,
 };
 
 type PipeableStream = {|
+  abort(reason: mixed): void,
   pipe<T: Writable>(destination: T): T,
 |};
 
@@ -34,13 +38,13 @@ function renderToPipeableStream(
   model: ReactModel,
   webpackMap: BundlerConfig,
   options?: Options,
-  context?: Array<[string, ServerContextJSONValue]>,
 ): PipeableStream {
   const request = createRequest(
     model,
     webpackMap,
     options ? options.onError : undefined,
-    context,
+    options ? options.context : undefined,
+    options ? options.identifierPrefix : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -55,6 +59,9 @@ function renderToPipeableStream(
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
       return destination;
+    },
+    abort(reason: mixed) {
+      abort(request, reason);
     },
   };
 }

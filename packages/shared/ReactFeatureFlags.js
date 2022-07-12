@@ -31,14 +31,6 @@ export const enableSymbolFallbackForWWW = false;
 // internal tests need to be updated. The open source behavior is correct.
 export const skipUnmountedBoundaries = true;
 
-// Destroy layout effects for components that are hidden because something
-// suspended in an update and recreate them when they are shown again (after the
-// suspended boundary has resolved). Note that this should be an uncommon use
-// case and can be avoided by using the transition API.
-//
-// TODO: Finish rolling out in www
-export const enableSuspenseLayoutEffectSemantics = true;
-
 // TODO: Finish rolling out in www
 export const enableClientRenderFallbackOnTextMismatch = true;
 

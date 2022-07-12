@@ -15,9 +15,10 @@ export type CapturedValue<T> = {|
   value: T,
   source: Fiber | null,
   stack: string | null,
+  digest: string | null,
 |};
 
-export function createCapturedValue<T>(
+export function createCapturedValueAtFiber<T>(
   value: T,
   source: Fiber,
 ): CapturedValue<T> {
@@ -27,5 +28,19 @@ export function createCapturedValue<T>(
     value,
     source,
     stack: getStackByFiberInDevAndProd(source),
+    digest: null,
+  };
+}
+
+export function createCapturedValue<T>(
+  value: T,
+  digest: ?string,
+  stack: ?string,
+): CapturedValue<T> {
+  return {
+    value,
+    source: null,
+    stack: stack != null ? stack : null,
+    digest: digest != null ? digest : null,
   };
 }

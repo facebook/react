@@ -153,6 +153,7 @@ function filterOutEntrypoints(name) {
   let packageJSON = JSON.parse(readFileSync(jsonPath));
   let files = packageJSON.files;
   let exportsJSON = packageJSON.exports;
+  let browserJSON = packageJSON.browser;
   if (!Array.isArray(files)) {
     throw new Error('expected all package.json files to contain a files field');
   }
@@ -188,6 +189,9 @@ function filterOutEntrypoints(name) {
         } else {
           delete exportsJSON['./' + filename.replace(/\.js$/, '')];
         }
+      }
+      if (browserJSON) {
+        delete browserJSON['./' + filename];
       }
     }
 

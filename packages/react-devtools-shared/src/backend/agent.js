@@ -309,17 +309,31 @@ export default class Agent extends EventEmitter<{|
     return renderer.getInstanceAndStyle(id);
   }
 
-  getIDForNode(node: Object): number | null {
+  getBestMatchingRendererInterface(node: Object): RendererInterface | null {
+    let bestMatch = null;
     for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
-
-      try {
-        const id = renderer.getFiberIDForNative(node, true);
-        if (id !== null) {
-          return id;
+      const fiber = renderer.getFiberForNative(node);
+      if (fiber !== null) {
+        // check if fiber.stateNode is matching the original hostInstance
+        if (fiber.stateNode === node) {
+          return renderer;
+        } else if (bestMatch === null) {
+          bestMatch = renderer;
         }
+      }
+    }
+    // if an exact match is not found, return the first valid renderer as fallback
+    return bestMatch;
+  }
+
+  getIDForNode(node: Object): number | null {
+    const rendererInterface = this.getBestMatchingRendererInterface(node);
+    if (rendererInterface != null) {
+      try {
+        return rendererInterface.getFiberIDForNative(node, true);
       } catch (error) {
         // Some old React versions might throw if they can't find a match.
         // If so we should ignore it...

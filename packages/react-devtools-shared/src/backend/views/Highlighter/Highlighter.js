@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type Agent from 'react-devtools-shared/src/backend/agent';
+
 import Overlay from './Overlay';
 
 const SHOW_DURATION = 2000;
@@ -26,6 +28,7 @@ export function hideOverlay() {
 export function showOverlay(
   elements: Array<HTMLElement> | null,
   componentName: string | null,
+  agent: Agent,
   hideAfterTimeout: boolean,
 ) {
   // TODO (npm-packages) Detect RN and support it somehow
@@ -42,7 +45,7 @@ export function showOverlay(
   }
 
   if (overlay === null) {
-    overlay = new Overlay();
+    overlay = new Overlay(agent);
   }
 
   overlay.inspect(elements, componentName);

@@ -13,7 +13,7 @@ import type {
   NativeEvent,
   NetworkMeasure,
   ReactComponentMeasure,
-  ReactHoverContextInfo,
+  ReactEventInfo,
   ReactMeasure,
   TimelineData,
   SchedulingEvent,
@@ -24,7 +24,12 @@ import type {
 } from './types';
 
 import * as React from 'react';
-import {formatDuration, formatTimestamp, trimString} from './utils/formatting';
+import {
+  formatDuration,
+  formatTimestamp,
+  trimString,
+  getSchedulingEventLabel,
+} from './utils/formatting';
 import {getBatchRange} from './utils/getBatchRange';
 import useSmartTooltip from './utils/useSmartTooltip';
 import styles from './EventTooltip.css';
@@ -35,23 +40,10 @@ type Props = {|
   canvasRef: {|current: HTMLCanvasElement | null|},
   data: TimelineData,
   height: number,
-  hoveredEvent: ReactHoverContextInfo | null,
+  hoveredEvent: ReactEventInfo | null,
   origin: Point,
   width: number,
 |};
-
-function getSchedulingEventLabel(event: SchedulingEvent): string | null {
-  switch (event.type) {
-    case 'schedule-render':
-      return 'render scheduled';
-    case 'schedule-state-update':
-      return 'state update scheduled';
-    case 'schedule-force-update':
-      return 'force update scheduled';
-    default:
-      return null;
-  }
-}
 
 function getReactMeasureLabel(type): string | null {
   switch (type) {

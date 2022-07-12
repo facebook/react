@@ -11,6 +11,8 @@ import type {
   Lane,
   Lanes,
   DevToolsProfilingHooks,
+  WorkTagMap,
+  CurrentDispatcherRef,
 } from 'react-devtools-shared/src/backend/types';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {Wakeable} from 'shared/ReactTypes';
@@ -22,6 +24,8 @@ import type {
   ReactMeasureType,
   TimelineData,
   SuspenseEvent,
+  SchedulingEvent,
+  ReactScheduleStateUpdateEvent,
 } from 'react-devtools-timeline/src/types';
 
 import isArray from 'shared/isArray';
@@ -29,6 +33,7 @@ import {
   REACT_TOTAL_NUM_LANES,
   SCHEDULING_PROFILER_VERSION,
 } from 'react-devtools-timeline/src/constants';
+import {describeFiber} from './DevToolsFiberComponentStack';
 
 // Add padding to the start/stop time of the profile.
 // This makes the UI nicer to use.
@@ -98,17 +103,22 @@ export function createProfilingHooks({
   getDisplayNameForFiber,
   getIsProfiling,
   getLaneLabelMap,
+  workTagMap,
+  currentDispatcherRef,
   reactVersion,
 }: {|
   getDisplayNameForFiber: (fiber: Fiber) => string | null,
   getIsProfiling: () => boolean,
   getLaneLabelMap?: () => Map<Lane, string> | null,
+  currentDispatcherRef?: CurrentDispatcherRef,
+  workTagMap: WorkTagMap,
   reactVersion: string,
 |}): Response {
   let currentBatchUID: BatchUID = 0;
   let currentReactComponentMeasure: ReactComponentMeasure | null = null;
   let currentReactMeasuresStack: Array<ReactMeasure> = [];
   let currentTimelineData: TimelineData | null = null;
+  let currentFiberStacks: Map<SchedulingEvent, Array<Fiber>> = new Map();
   let isProfiling: boolean = false;
   let nextRenderShouldStartNewBatch: boolean = false;
 
@@ -774,6 +784,16 @@ export function createProfilingHooks({
     }
   }
 
+  function getParentFibers(fiber: Fiber): Array<Fiber> {
+    const parents = [];
+    let parent = fiber;
+    while (parent !== null) {
+      parents.push(parent);
+      parent = parent.return;
+    }
+    return parents;
+  }
+
   function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
     if (isProfiling || supportsUserTimingV3) {
       const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
@@ -781,13 +801,17 @@ export function createProfilingHooks({
       if (isProfiling) {
         // TODO (timeline) Record and cache component stack
         if (currentTimelineData) {
-          currentTimelineData.schedulingEvents.push({
+          const event: ReactScheduleStateUpdateEvent = {
             componentName,
+            // Store the parent fibers so we can post process
+            // them after we finish profiling
             lanes: laneToLanesArray(lane),
             timestamp: getRelativeTime(),
             type: 'schedule-state-update',
             warning: null,
-          });
+          };
+          currentFiberStacks.set(event, getParentFibers(fiber));
+          currentTimelineData.schedulingEvents.push(event);
         }
       }
 
@@ -831,6 +855,7 @@ export function createProfilingHooks({
         currentBatchUID = 0;
         currentReactComponentMeasure = null;
         currentReactMeasuresStack = [];
+        currentFiberStacks = new Map();
         currentTimelineData = {
           // Session wide metadata; only collected once.
           internalModuleSourceToRanges,
@@ -858,6 +883,30 @@ export function createProfilingHooks({
           snapshotHeight: 0,
         };
         nextRenderShouldStartNewBatch = true;
+      } else {
+        // Postprocess Profile data
+        if (currentTimelineData !== null) {
+          currentTimelineData.schedulingEvents.forEach(event => {
+            if (event.type === 'schedule-state-update') {
+              // TODO(luna): We can optimize this by creating a map of
+              // fiber to component stack instead of generating the stack
+              // for every fiber every time
+              const fiberStack = currentFiberStacks.get(event);
+              if (fiberStack && currentDispatcherRef != null) {
+                event.componentStack = fiberStack.reduce((trace, fiber) => {
+                  return (
+                    trace +
+                    describeFiber(workTagMap, fiber, currentDispatcherRef)
+                  );
+                }, '');
+              }
+            }
+          });
+        }
+
+        // Clear the current fiber stacks so we don't hold onto the fibers
+        // in memory after profiling finishes
+        currentFiberStacks.clear();
       }
     }
   }

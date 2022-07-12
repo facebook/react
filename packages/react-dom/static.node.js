@@ -8,9 +8,6 @@
  */
 
 export {
-  renderToString,
-  renderToStaticMarkup,
-  renderToNodeStream,
-  renderToStaticNodeStream,
+  prerenderToNodeStreams,
   version,
-} from './ReactDOMServerLegacyPartialRendererBrowser';
+} from './src/server/ReactDOMFizzStaticNode';

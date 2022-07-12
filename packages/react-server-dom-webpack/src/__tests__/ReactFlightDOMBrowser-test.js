@@ -24,8 +24,10 @@ global.__webpack_require__ = function(id) {
 let act;
 let React;
 let ReactDOMClient;
+let ReactDOMServer;
 let ReactServerDOMWriter;
 let ReactServerDOMReader;
+let Suspense;
 
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
@@ -35,8 +37,10 @@ describe('ReactFlightDOMBrowser', () => {
     act = require('jest-react').act;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
+    ReactDOMServer = require('react-dom/server.browser');
     ReactServerDOMWriter = require('react-server-dom-webpack/writer.browser.server');
     ReactServerDOMReader = require('react-server-dom-webpack');
+    Suspense = React.Suspense;
   });
 
   function moduleReference(moduleExport) {
@@ -69,6 +73,18 @@ describe('ReactFlightDOMBrowser', () => {
     }
   }
 
+  async function readResult(stream) {
+    const reader = stream.getReader();
+    let result = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        return result;
+      }
+      result += Buffer.from(value).toString('utf8');
+    }
+  }
+
   function makeDelayedText(Model) {
     let error, _resolve, _reject;
     let promise = new Promise((resolve, reject) => {
@@ -92,6 +108,11 @@ describe('ReactFlightDOMBrowser', () => {
       return <Model>{children}</Model>;
     }
     return [DelayedText, _resolve, _reject];
+  }
+
+  const theInfinitePromise = new Promise(() => {});
+  function InfiniteSuspend() {
+    throw theInfinitePromise;
   }
 
   it('should resolve HTML using W3C streams', async () => {
@@ -166,7 +187,6 @@ describe('ReactFlightDOMBrowser', () => {
 
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
-    const {Suspense} = React;
 
     // Client Components
 
@@ -342,8 +362,6 @@ describe('ReactFlightDOMBrowser', () => {
   });
 
   it('should close the stream upon completion when rendering to W3C streams', async () => {
-    const {Suspense} = React;
-
     // Model
     function Text({children}) {
       return children;
@@ -452,5 +470,114 @@ describe('ReactFlightDOMBrowser', () => {
 
     // Final pending chunk is written; stream should be closed.
     expect(isDone).toBeTruthy();
+  });
+
+  it('should allow an alternative module mapping to be used for SSR', async () => {
+    function ClientComponent() {
+      return <span>Client Component</span>;
+    }
+    // The Client build may not have the same IDs as the Server bundles for the same
+    // component.
+    const ClientComponentOnTheClient = moduleReference(ClientComponent);
+    const ClientComponentOnTheServer = moduleReference(ClientComponent);
+
+    // In the SSR bundle this module won't exist. We simulate this by deleting it.
+    const clientId = webpackMap[ClientComponentOnTheClient.filepath].default.id;
+    delete webpackModules[clientId];
+
+    // Instead, we have to provide a translation from the client meta data to the SSR
+    // meta data.
+    const ssrMetaData = webpackMap[ClientComponentOnTheServer.filepath].default;
+    const translationMap = {
+      [clientId]: {
+        d: ssrMetaData,
+      },
+    };
+
+    function App() {
+      return <ClientComponentOnTheClient />;
+    }
+
+    const stream = ReactServerDOMWriter.renderToReadableStream(
+      <App />,
+      webpackMap,
+    );
+    const response = ReactServerDOMReader.createFromReadableStream(stream, {
+      moduleMap: translationMap,
+    });
+
+    function ClientRoot() {
+      return response.readRoot();
+    }
+
+    const ssrStream = await ReactDOMServer.renderToReadableStream(
+      <ClientRoot />,
+    );
+    const result = await readResult(ssrStream);
+    expect(result).toEqual('<span>Client Component</span>');
+  });
+
+  it('should be able to complete after aborting and throw the reason client-side', async () => {
+    const reportedErrors = [];
+
+    class ErrorBoundary extends React.Component {
+      state = {hasError: false, error: null};
+      static getDerivedStateFromError(error) {
+        return {
+          hasError: true,
+          error,
+        };
+      }
+      render() {
+        if (this.state.hasError) {
+          return this.props.fallback(this.state.error);
+        }
+        return this.props.children;
+      }
+    }
+
+    const controller = new AbortController();
+    const stream = ReactServerDOMWriter.renderToReadableStream(
+      <div>
+        <InfiniteSuspend />
+      </div>,
+      webpackMap,
+      {
+        signal: controller.signal,
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
+    );
+    const response = ReactServerDOMReader.createFromReadableStream(stream);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App({res}) {
+      return res.readRoot();
+    }
+
+    await act(async () => {
+      root.render(
+        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+          <Suspense fallback={<p>(loading)</p>}>
+            <App res={response} />
+          </Suspense>
+        </ErrorBoundary>,
+      );
+    });
+    expect(container.innerHTML).toBe('<p>(loading)</p>');
+
+    await act(async () => {
+      // @TODO this is a hack to work around lack of support for abortSignal.reason in node
+      // The abort call itself should set this property but since we are testing in node we
+      // set it here manually
+      controller.signal.reason = 'for reasons';
+      controller.abort('for reasons');
+    });
+    expect(container.innerHTML).toBe('<p>Error: for reasons</p>');
+
+    expect(reportedErrors).toEqual(['for reasons']);
   });
 });

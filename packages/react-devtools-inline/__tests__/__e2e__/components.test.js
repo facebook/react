@@ -210,7 +210,6 @@ test.describe('Components', () => {
     let count = await getComponentSearchResultsCount();
     expect(count).toBe('1 | 4');
 
-    await focusComponentSearch();
     page.keyboard.insertText('Item');
     count = await getComponentSearchResultsCount();
     expect(count).toBe('1 | 3');

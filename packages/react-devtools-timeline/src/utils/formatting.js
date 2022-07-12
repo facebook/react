@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {SchedulingEvent} from '../types';
+
 import prettyMilliseconds from 'pretty-ms';
 
 export function formatTimestamp(ms: number) {
@@ -27,4 +29,17 @@ export function trimString(string: string, length: number): string {
     return `${string.substr(0, length - 1)}…`;
   }
   return string;
+}
+
+export function getSchedulingEventLabel(event: SchedulingEvent): string | null {
+  switch (event.type) {
+    case 'schedule-render':
+      return 'render scheduled';
+    case 'schedule-state-update':
+      return 'state update scheduled';
+    case 'schedule-force-update':
+      return 'force update scheduled';
+    default:
+      return null;
+  }
 }
