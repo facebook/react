@@ -26,6 +26,7 @@ export type PendingTransitionCallbacks = {
   transitionStart: Array<Transition> | null,
   transitionProgress: Map<Transition, PendingSuspenseBoundaries> | null,
   transitionComplete: Array<Transition> | null,
+  markerProgress: Map<string, TracingMarkerInstance> | null,
   markerComplete: Array<MarkerTransition> | null,
 };
 
@@ -43,6 +44,7 @@ export type BatchConfigTransition = {
 export type TracingMarkerInstance = {|
   pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
   transitions: Set<Transition> | null,
+  name?: string,
 |};
 
 export type PendingSuspenseBoundaries = Map<OffscreenInstance, SuspenseInfo>;
@@ -59,6 +61,28 @@ export function processTransitionCallbacks(
         transitionStart.forEach(transition => {
           if (callbacks.onTransitionStart != null) {
             callbacks.onTransitionStart(transition.name, transition.startTime);
+          }
+        });
+      }
+
+      const markerProgress = pendingTransitions.markerProgress;
+      const onMarkerProgress = callbacks.onMarkerProgress;
+      if (onMarkerProgress != null && markerProgress !== null) {
+        markerProgress.forEach((markerInstance, markerName) => {
+          if (markerInstance.transitions !== null) {
+            const pending =
+              markerInstance.pendingSuspenseBoundaries !== null
+                ? Array.from(markerInstance.pendingSuspenseBoundaries.values())
+                : [];
+            markerInstance.transitions.forEach(transition => {
+              onMarkerProgress(
+                transition.name,
+                markerName,
+                transition.startTime,
+                endTime,
+                pending,
+              );
+            });
           }
         });
       }

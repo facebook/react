@@ -145,6 +145,7 @@ import {
   addTransitionStartCallbackToPendingTransition,
   addTransitionProgressCallbackToPendingTransition,
   addTransitionCompleteCallbackToPendingTransition,
+  addMarkerProgressCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
   setIsRunningInsertionEffect,
 } from './ReactFiberWorkLoop.new';
@@ -1250,6 +1251,7 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
       if (pendingMarkers !== null) {
         pendingMarkers.forEach(markerInstance => {
           const pendingBoundaries = markerInstance.pendingSuspenseBoundaries;
+          const transitions = markerInstance.transitions;
           if (
             pendingBoundaries !== null &&
             !pendingBoundaries.has(offscreenInstance)
@@ -1257,13 +1259,21 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
             pendingBoundaries.set(offscreenInstance, {
               name,
             });
-            if (markerInstance.transitions !== null) {
-              markerInstance.transitions.forEach(transition => {
-                addTransitionProgressCallbackToPendingTransition(
-                  transition,
+            if (transitions !== null) {
+              if (markerInstance.name) {
+                addMarkerProgressCallbackToPendingTransition(
+                  markerInstance.name,
+                  transitions,
                   pendingBoundaries,
                 );
-              });
+              } else {
+                transitions.forEach(transition => {
+                  addTransitionProgressCallbackToPendingTransition(
+                    transition,
+                    pendingBoundaries,
+                  );
+                });
+              }
             }
           }
         });
@@ -1275,18 +1285,27 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
       if (pendingMarkers !== null) {
         pendingMarkers.forEach(markerInstance => {
           const pendingBoundaries = markerInstance.pendingSuspenseBoundaries;
+          const transitions = markerInstance.transitions;
           if (
             pendingBoundaries !== null &&
             pendingBoundaries.has(offscreenInstance)
           ) {
             pendingBoundaries.delete(offscreenInstance);
-            if (markerInstance.transitions !== null) {
-              markerInstance.transitions.forEach(transition => {
-                addTransitionProgressCallbackToPendingTransition(
-                  transition,
+            if (transitions !== null) {
+              if (markerInstance.name) {
+                addMarkerProgressCallbackToPendingTransition(
+                  markerInstance.name,
+                  transitions,
                   pendingBoundaries,
                 );
-              });
+              } else {
+                transitions.forEach(transition => {
+                  addTransitionProgressCallbackToPendingTransition(
+                    transition,
+                    pendingBoundaries,
+                  );
+                });
+              }
             }
           }
         });
@@ -3083,19 +3102,18 @@ function commitPassiveMountOnFiber(
         // and add a start transition callback for each of them
         const instance = finishedWork.stateNode;
         if (
-          instance.pendingSuspenseBoundaries === null ||
-          instance.pendingSuspenseBoundaries.size === 0
+          instance.transitions !== null &&
+          (instance.pendingSuspenseBoundaries === null ||
+            instance.pendingSuspenseBoundaries.size === 0)
         ) {
-          if (instance.transitions !== null) {
-            instance.transitions.forEach(transition => {
-              addMarkerCompleteCallbackToPendingTransition({
-                transition,
-                name: finishedWork.memoizedProps.name,
-              });
+          instance.transitions.forEach(transition => {
+            addMarkerCompleteCallbackToPendingTransition({
+              transition,
+              name: finishedWork.memoizedProps.name,
             });
-            instance.transitions = null;
-            instance.pendingSuspenseBoundaries = null;
-          }
+          });
+          instance.transitions = null;
+          instance.pendingSuspenseBoundaries = null;
         }
       }
       break;

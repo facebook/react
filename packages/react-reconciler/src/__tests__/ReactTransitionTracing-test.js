@@ -941,7 +941,91 @@ describe('ReactInteractionTracing', () => {
   });
 
   // @gate enableTransitionTracing
-  it('should correctly trace interactions for tracing markers complete', async () => {
+  it('should correctly trace basic interaction with tracing markers', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
+        );
+      },
+      onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    let navigateToPageTwo;
+    function App() {
+      const [navigate, setNavigate] = useState(false);
+      navigateToPageTwo = () => {
+        setNavigate(true);
+      };
+
+      return (
+        <div>
+          {navigate ? (
+            <React.unstable_TracingMarker name="marker two" key="marker two">
+              <Text text="Page Two" />
+            </React.unstable_TracingMarker>
+          ) : (
+            <React.unstable_TracingMarker name="marker one">
+              <Text text="Page One" />
+            </React.unstable_TracingMarker>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot({transitionCallbacks});
+    await act(async () => {
+      root.render(<App />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield(['Page One']);
+
+      await act(async () => {
+        startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+
+        ReactNoop.expire(1000);
+        await advanceTimers(1000);
+
+        expect(Scheduler).toFlushAndYield([
+          'Page Two',
+          'onTransitionStart(page transition, 1000)',
+          'onMarkerComplete(page transition, marker two, 1000, 2000)',
+          'onTransitionComplete(page transition, 1000, 2000)',
+        ]);
+      });
+    });
+  });
+
+  // @gate enableTransitionTracing
+  it('should correctly trace interactions for tracing markers', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
         Scheduler.unstable_yieldValue(
@@ -951,6 +1035,18 @@ describe('ReactInteractionTracing', () => {
       onTransitionComplete: (name, startTime, endTime) => {
         Scheduler.unstable_yieldValue(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
@@ -971,13 +1067,13 @@ describe('ReactInteractionTracing', () => {
           {navigate ? (
             <Suspense
               fallback={<Text text="Loading..." />}
-              name="suspense page">
+              unstable_name="suspense page">
               <AsyncText text="Page Two" />
               <React.unstable_TracingMarker name="sync marker" />
               <React.unstable_TracingMarker name="async marker">
                 <Suspense
                   fallback={<Text text="Loading..." />}
-                  name="marker suspense">
+                  unstable_name="marker suspense">
                   <AsyncText text="Marker Text" />
                 </Suspense>
               </React.unstable_TracingMarker>
@@ -1020,6 +1116,7 @@ describe('ReactInteractionTracing', () => {
         'Page Two',
         'Suspend [Marker Text]',
         'Loading...',
+        'onMarkerProgress(page transition, async marker, 1000, 3000, [marker suspense])',
         'onMarkerComplete(page transition, sync marker, 1000, 3000)',
       ]);
 
@@ -1029,6 +1126,7 @@ describe('ReactInteractionTracing', () => {
 
       expect(Scheduler).toFlushAndYield([
         'Marker Text',
+        'onMarkerProgress(page transition, async marker, 1000, 4000, [])',
         'onMarkerComplete(page transition, async marker, 1000, 4000)',
         'onTransitionComplete(page transition, 1000, 4000)',
       ]);
@@ -1046,6 +1144,18 @@ describe('ReactInteractionTracing', () => {
       onTransitionComplete: (name, startTime, endTime) => {
         Scheduler.unstable_yieldValue(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
@@ -1066,14 +1176,20 @@ describe('ReactInteractionTracing', () => {
         <div>
           {navigate ? (
             <React.unstable_TracingMarker name="outer marker">
-              <Suspense fallback={<Text text="Outer..." />}>
+              <Suspense
+                fallback={<Text text="Outer..." />}
+                unstable_name="outer">
                 <AsyncText text="Outer Text" />
-                <Suspense fallback={<Text text="Inner One..." />}>
+                <Suspense
+                  fallback={<Text text="Inner One..." />}
+                  unstable_name="inner one">
                   <React.unstable_TracingMarker name="marker one">
                     <AsyncText text="Inner Text One" />
                   </React.unstable_TracingMarker>
                 </Suspense>
-                <Suspense fallback={<Text text="Inner Two..." />}>
+                <Suspense
+                  fallback={<Text text="Inner Two..." />}
+                  unstable_name="inner two">
                   <React.unstable_TracingMarker name="marker two">
                     <AsyncText text="Inner Text Two" />
                   </React.unstable_TracingMarker>
@@ -1110,6 +1226,7 @@ describe('ReactInteractionTracing', () => {
         'Inner Two...',
         'Outer...',
         'onTransitionStart(page transition, 1000)',
+        'onMarkerProgress(page transition, outer marker, 1000, 2000, [outer])',
       ]);
 
       ReactNoop.expire(1000);
@@ -1125,6 +1242,7 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Inner Text One]',
         'Inner One...',
         'Inner Text Two',
+        'onMarkerProgress(page transition, outer marker, 1000, 4000, [inner one])',
         'onMarkerComplete(page transition, marker two, 1000, 4000)',
       ]);
 
@@ -1133,6 +1251,7 @@ describe('ReactInteractionTracing', () => {
       await resolveText('Inner Text One');
       expect(Scheduler).toFlushAndYield([
         'Inner Text One',
+        'onMarkerProgress(page transition, outer marker, 1000, 5000, [])',
         'onMarkerComplete(page transition, marker one, 1000, 5000)',
         'onMarkerComplete(page transition, outer marker, 1000, 5000)',
         'onTransitionComplete(page transition, 1000, 5000)',
@@ -1233,6 +1352,18 @@ describe('ReactInteractionTracing', () => {
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
+        );
+      },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
         Scheduler.unstable_yieldValue(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
@@ -1279,6 +1410,7 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Page Two]',
         'Loading...',
         'onTransitionStart(page transition, 1000)',
+        'onMarkerProgress(page transition, old marker, 1000, 1000, [<null>])',
       ]);
 
       ReactNoop.expire(1000);
@@ -1311,6 +1443,18 @@ describe('ReactInteractionTracing', () => {
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
         );
       },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
+        );
+      },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
         Scheduler.unstable_yieldValue(
           `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
@@ -1357,6 +1501,7 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Page Two]',
         'Loading...',
         'onTransitionStart(page transition, 1000)',
+        'onMarkerProgress(page transition, old marker, 1000, 2000, [<null>])',
       ]);
 
       ReactNoop.expire(1000);
@@ -1367,6 +1512,9 @@ describe('ReactInteractionTracing', () => {
         'Suspend [Page Two]',
         'Loading...',
         'onTransitionStart(marker transition, 2000)',
+        'onMarkerProgress(marker transition, new marker, 2000, 3000, [])',
+        'onMarkerComplete(marker transition, new marker, 2000, 3000)',
+        'onTransitionComplete(marker transition, 2000, 3000)',
       ]);
       ReactNoop.expire(1000);
       await advanceTimers(1000);
