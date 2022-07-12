@@ -716,6 +716,11 @@ function commitLayoutEffectOnFiber(
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent: {
+      recursivelyTraverseLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+      );
       if (flags & Update) {
         if (!offscreenSubtreeWasHidden) {
           // At this point layout effects have already been destroyed (during mutation phase).
@@ -752,6 +757,11 @@ function commitLayoutEffectOnFiber(
       break;
     }
     case ClassComponent: {
+      recursivelyTraverseLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+      );
       if (flags & Update) {
         if (!offscreenSubtreeWasHidden) {
           const instance = finishedWork.stateNode;
@@ -946,6 +956,11 @@ function commitLayoutEffectOnFiber(
       break;
     }
     case HostRoot: {
+      recursivelyTraverseLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+      );
       if (flags & Callback) {
         // TODO: I think this is now always non-null by the time it reaches the
         // commit phase. Consider removing the type check.
@@ -974,6 +989,11 @@ function commitLayoutEffectOnFiber(
       break;
     }
     case HostComponent: {
+      recursivelyTraverseLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+      );
       if (flags & Update) {
         const instance: Instance = finishedWork.stateNode;
 
@@ -1003,15 +1023,12 @@ function commitLayoutEffectOnFiber(
       }
       break;
     }
-    case HostText: {
-      // We have no life-cycles associated with text.
-      break;
-    }
-    case HostPortal: {
-      // We have no life-cycles associated with portals.
-      break;
-    }
     case Profiler: {
+      recursivelyTraverseLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+      );
       if (enableProfilerTimer) {
         if (flags & Update) {
           try {
@@ -1078,6 +1095,11 @@ function commitLayoutEffectOnFiber(
       break;
     }
     case SuspenseComponent: {
+      recursivelyTraverseLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+      );
       if (flags & Update) {
         try {
           commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
@@ -1087,20 +1109,58 @@ function commitLayoutEffectOnFiber(
       }
       break;
     }
-    case SuspenseListComponent:
-    case IncompleteClassComponent:
-    case ScopeComponent:
-    case OffscreenComponent:
-    case LegacyHiddenComponent:
-    case TracingMarkerComponent: {
+    case OffscreenComponent: {
+      const isModernRoot = (finishedWork.mode & ConcurrentMode) !== NoMode;
+      if (isModernRoot) {
+        const isHidden = finishedWork.memoizedState !== null;
+        const newOffscreenSubtreeIsHidden =
+          isHidden || offscreenSubtreeIsHidden;
+        if (newOffscreenSubtreeIsHidden) {
+          // The Offscreen tree is hidden. Skip over its layout effects.
+        } else {
+          // The Offscreen tree is visible.
+
+          const wasHidden = current !== null && current.memoizedState !== null;
+          const newOffscreenSubtreeWasHidden =
+            wasHidden || offscreenSubtreeWasHidden;
+          const prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden;
+          const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+          offscreenSubtreeIsHidden = newOffscreenSubtreeIsHidden;
+          offscreenSubtreeWasHidden = newOffscreenSubtreeWasHidden;
+
+          if (offscreenSubtreeWasHidden && !prevOffscreenSubtreeWasHidden) {
+            // This is the root of a reappearing boundary. Turn its layout
+            // effects back on.
+            // TODO: Convert this to use recursion
+            nextEffect = finishedWork;
+            reappearLayoutEffects_begin(finishedWork);
+          }
+
+          recursivelyTraverseLayoutEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+          );
+          offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
+          offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+        }
+      } else {
+        recursivelyTraverseLayoutEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+        );
+      }
       break;
     }
-
-    default:
-      throw new Error(
-        'This unit of work tag should not have side-effects. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
+    default: {
+      recursivelyTraverseLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
       );
+      break;
+    }
   }
 }
 
@@ -2591,112 +2651,30 @@ export function commitLayoutEffects(
 ): void {
   inProgressLanes = committedLanes;
   inProgressRoot = root;
-  nextEffect = finishedWork;
 
-  commitLayoutEffects_begin(finishedWork, root, committedLanes);
+  const current = finishedWork.alternate;
+  commitLayoutEffectOnFiber(root, current, finishedWork, committedLanes);
 
   inProgressLanes = null;
   inProgressRoot = null;
 }
 
-function commitLayoutEffects_begin(
-  subtreeRoot: Fiber,
+function recursivelyTraverseLayoutEffects(
   root: FiberRoot,
-  committedLanes: Lanes,
+  parentFiber: Fiber,
+  lanes: Lanes,
 ) {
-  // Suspense layout effects semantics don't change for legacy roots.
-  const isModernRoot = (subtreeRoot.mode & ConcurrentMode) !== NoMode;
-
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    const firstChild = fiber.child;
-
-    if (fiber.tag === OffscreenComponent && isModernRoot) {
-      // Keep track of the current Offscreen stack's state.
-      const isHidden = fiber.memoizedState !== null;
-      const newOffscreenSubtreeIsHidden = isHidden || offscreenSubtreeIsHidden;
-      if (newOffscreenSubtreeIsHidden) {
-        // The Offscreen tree is hidden. Skip over its layout effects.
-        commitLayoutMountEffects_complete(subtreeRoot, root, committedLanes);
-        continue;
-      } else {
-        // TODO (Offscreen) Also check: subtreeFlags & LayoutMask
-        const current = fiber.alternate;
-        const wasHidden = current !== null && current.memoizedState !== null;
-        const newOffscreenSubtreeWasHidden =
-          wasHidden || offscreenSubtreeWasHidden;
-        const prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden;
-        const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
-
-        // Traverse the Offscreen subtree with the current Offscreen as the root.
-        offscreenSubtreeIsHidden = newOffscreenSubtreeIsHidden;
-        offscreenSubtreeWasHidden = newOffscreenSubtreeWasHidden;
-
-        if (offscreenSubtreeWasHidden && !prevOffscreenSubtreeWasHidden) {
-          // This is the root of a reappearing boundary. Turn its layout effects
-          // back on.
-          nextEffect = fiber;
-          reappearLayoutEffects_begin(fiber);
-        }
-
-        let child = firstChild;
-        while (child !== null) {
-          nextEffect = child;
-          commitLayoutEffects_begin(
-            child, // New root; bubble back up to here and stop.
-            root,
-            committedLanes,
-          );
-          child = child.sibling;
-        }
-
-        // Restore Offscreen state and resume in our-progress traversal.
-        nextEffect = fiber;
-        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
-        offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
-        commitLayoutMountEffects_complete(subtreeRoot, root, committedLanes);
-
-        continue;
-      }
-    }
-
-    if ((fiber.subtreeFlags & LayoutMask) !== NoFlags && firstChild !== null) {
-      firstChild.return = fiber;
-      nextEffect = firstChild;
-    } else {
-      commitLayoutMountEffects_complete(subtreeRoot, root, committedLanes);
+  const prevDebugFiber = getCurrentDebugFiberInDEV();
+  if (parentFiber.subtreeFlags & LayoutMask) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      setCurrentDebugFiberInDEV(child);
+      const current = child.alternate;
+      commitLayoutEffectOnFiber(root, current, child, lanes);
+      child = child.sibling;
     }
   }
-}
-
-function commitLayoutMountEffects_complete(
-  subtreeRoot: Fiber,
-  root: FiberRoot,
-  committedLanes: Lanes,
-) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    if ((fiber.flags & LayoutMask) !== NoFlags) {
-      const current = fiber.alternate;
-      setCurrentDebugFiberInDEV(fiber);
-      commitLayoutEffectOnFiber(root, current, fiber, committedLanes);
-      resetCurrentDebugFiberInDEV();
-    }
-
-    if (fiber === subtreeRoot) {
-      nextEffect = null;
-      return;
-    }
-
-    const sibling = fiber.sibling;
-    if (sibling !== null) {
-      sibling.return = fiber.return;
-      nextEffect = sibling;
-      return;
-    }
-
-    nextEffect = fiber.return;
-  }
+  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 function disappearLayoutEffects_begin(subtreeRoot: Fiber) {
