@@ -7,64 +7,28 @@
  * @flow
  */
 
-import type {
-  MutableSource,
-  MutableSourceGetSnapshotFn,
-  MutableSourceSubscribeFn,
-  ReactContext,
-  StartTransitionOptions,
-} from 'shared/ReactTypes';
-import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane.old';
-import type {HookFlags} from './ReactHookEffectTags';
-import type {FiberRoot} from './ReactInternalTypes';
-import type {Cache} from './ReactFiberCacheComponent.old';
-import type {Flags} from './ReactFiberFlags';
-
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {CacheComponent, HostRoot} from './ReactWorkTags';
+import {CacheContext, createCache} from './ReactFiberCacheComponent.old';
 import {
-  enableDebugTracing,
-  enableSchedulingProfiler,
-  enableNewReconciler,
-  enableCache,
-  enableUseRefAccessWarning,
-  enableStrictEffects,
-  enableLazyContextPropagation,
-  enableUseMutableSource,
-  enableTransitionTracing,
-} from 'shared/ReactFeatureFlags';
-
-import {
-  NoMode,
   ConcurrentMode,
   DebugTracingMode,
+  NoMode,
   StrictEffectsMode,
 } from './ReactTypeOfMode';
 import {
-  NoLane,
-  SyncLane,
-  OffscreenLane,
-  NoLanes,
-  isSubsetOfLanes,
-  includesBlockingLane,
-  includesOnlyNonUrgentLanes,
-  claimNextTransitionLane,
-  mergeLanes,
-  removeLanes,
-  intersectLanes,
-  isTransitionLane,
-  markRootEntangled,
-  markRootMutableRead,
-  NoTimestamp,
-} from './ReactFiberLane.old';
-import {
   ContinuousEventPriority,
   getCurrentUpdatePriority,
-  setCurrentUpdatePriority,
   higherEventPriority,
+  setCurrentUpdatePriority,
 } from './ReactEventPriorities.old';
-import {readContext, checkIfContextChanged} from './ReactFiberNewContext.old';
-import {HostRoot, CacheComponent} from './ReactWorkTags';
+import type {Dispatcher, Fiber, HookType} from './ReactInternalTypes';
+import {
+  HasEffect as HookHasEffect,
+  Insertion as HookInsertion,
+  Layout as HookLayout,
+  Passive as HookPassive,
+} from './ReactHookEffectTags';
+import type {Lane, Lanes} from './ReactFiberLane.old';
 import {
   LayoutStatic as LayoutStaticEffect,
   MountLayoutDev as MountLayoutDevEffect,
@@ -72,52 +36,86 @@ import {
   Passive as PassiveEffect,
   PassiveStatic as PassiveStaticEffect,
   StaticMask as StaticMaskEffect,
-  Update as UpdateEffect,
   StoreConsistency,
+  Update as UpdateEffect,
 } from './ReactFiberFlags';
+import type {
+  MutableSource,
+  MutableSourceGetSnapshotFn,
+  MutableSourceSubscribeFn,
+  ReactContext,
+  StartTransitionOptions,
+} from 'shared/ReactTypes';
 import {
-  HasEffect as HookHasEffect,
-  Layout as HookLayout,
-  Passive as HookPassive,
-  Insertion as HookInsertion,
-} from './ReactHookEffectTags';
+  NoLane,
+  NoLanes,
+  NoTimestamp,
+  OffscreenLane,
+  SyncLane,
+  claimNextTransitionLane,
+  includesBlockingLane,
+  includesOnlyNonUrgentLanes,
+  intersectLanes,
+  isSubsetOfLanes,
+  isTransitionLane,
+  markRootEntangled,
+  markRootMutableRead,
+  mergeLanes,
+  removeLanes,
+} from './ReactFiberLane.old';
+import {checkIfContextChanged, readContext} from './ReactFiberNewContext.old';
 import {
-  getWorkInProgressRoot,
-  getWorkInProgressRootRenderLanes,
-  scheduleUpdateOnFiber,
-  requestUpdateLane,
-  requestEventTime,
-  markSkippedUpdateLanes,
-} from './ReactFiberWorkLoop.old';
-
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import is from 'shared/objectIs';
-import isArray from 'shared/isArray';
-import {
-  markWorkInProgressReceivedUpdate,
   checkIfWorkInProgressReceivedUpdate,
+  markWorkInProgressReceivedUpdate,
 } from './ReactFiberBeginWork.old';
-import {getIsHydrating} from './ReactFiberHydrationContext.old';
-import {
-  getWorkInProgressVersion,
-  markSourceAsDirty,
-  setWorkInProgressVersion,
-  warnAboutMultipleRenderersDEV,
-} from './ReactMutableSource.old';
-import {logStateUpdateScheduled} from './DebugTracing';
-import {markStateUpdateScheduled} from './ReactFiberDevToolsHook.old';
-import {createCache, CacheContext} from './ReactFiberCacheComponent.old';
 import {
   createUpdate as createLegacyQueueUpdate,
   enqueueUpdate as enqueueLegacyQueueUpdate,
   entangleTransitions as entangleLegacyQueueTransitions,
 } from './ReactFiberClassUpdateQueue.old';
 import {
+  enableCache,
+  enableDebugTracing,
+  enableLazyContextPropagation,
+  enableNewReconciler,
+  enableSchedulingProfiler,
+  enableStrictEffects,
+  enableTransitionTracing,
+  enableUseMutableSource,
+  enableUseRefAccessWarning,
+} from 'shared/ReactFeatureFlags';
+import {
   enqueueConcurrentHookUpdate,
   enqueueConcurrentHookUpdateAndEagerlyBailout,
   enqueueConcurrentRenderForLane,
 } from './ReactFiberConcurrentUpdates.old';
+import {
+  getWorkInProgressRoot,
+  getWorkInProgressRootRenderLanes,
+  markSkippedUpdateLanes,
+  requestEventTime,
+  requestUpdateLane,
+  scheduleUpdateOnFiber,
+} from './ReactFiberWorkLoop.old';
+import {
+  getWorkInProgressVersion,
+  markSourceAsDirty,
+  setWorkInProgressVersion,
+  warnAboutMultipleRenderersDEV,
+} from './ReactMutableSource.old';
+
+import type {Cache} from './ReactFiberCacheComponent.old';
+import type {FiberRoot} from './ReactInternalTypes';
+import type {Flags} from './ReactFiberFlags';
+import type {HookFlags} from './ReactHookEffectTags';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import {getIsHydrating} from './ReactFiberHydrationContext.old';
 import {getTreeId} from './ReactFiberTreeContext.old';
+import is from 'shared/objectIs';
+import isArray from 'shared/isArray';
+import {logStateUpdateScheduled} from './DebugTracing';
+import {markStateUpdateScheduled} from './ReactFiberDevToolsHook.old';
 import {now} from './Scheduler';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
@@ -674,13 +672,13 @@ function updateWorkInProgressHook(): Hook {
   let nextWorkInProgressHook: null | Hook;
   if (workInProgressHook === null) {
     nextWorkInProgressHook = currentlyRenderingFiber.memoizedState;
+  } else {
+    nextWorkInProgressHook = workInProgressHook.next;
   }
 
   if (nextWorkInProgressHook !== null) {
     // There's already a work-in-progress. Reuse it.
     workInProgressHook = nextWorkInProgressHook;
-    nextWorkInProgressHook = workInProgressHook.next;
-
     currentHook = nextCurrentHook;
   } else {
     // Clone from the current hook.
