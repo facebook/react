@@ -674,8 +674,6 @@ function updateWorkInProgressHook(): Hook {
   let nextWorkInProgressHook: null | Hook;
   if (workInProgressHook === null) {
     nextWorkInProgressHook = currentlyRenderingFiber.memoizedState;
-  } else {
-    nextWorkInProgressHook = workInProgressHook.next;
   }
 
   if (nextWorkInProgressHook !== null) {
