@@ -9,7 +9,7 @@ const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
-const resolve = require('rollup-plugin-node-resolve');
+const resolve = require('@rollup/plugin-node-resolve');
 const fs = require('fs');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
@@ -343,7 +343,7 @@ function getPlugins(
     forbidFBJSImports(),
     // Use Node resolution mechanism.
     resolve({
-      skip: externals,
+      // skip: externals, // TODO: options.skip was removed in @rollup/plugin-node-resolve 3.0.0
     }),
     // Remove license headers from individual modules
     stripBanner({
