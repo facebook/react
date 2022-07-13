@@ -2565,13 +2565,8 @@ function commitMutationEffectsOnFiber(
         if (isHidden) {
           if (!wasHidden) {
             if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
-              nextEffect = offscreenBoundary;
-              let offscreenChild = offscreenBoundary.child;
-              while (offscreenChild !== null) {
-                nextEffect = offscreenChild;
-                disappearLayoutEffects_begin(offscreenChild);
-                offscreenChild = offscreenChild.sibling;
-              }
+              // Disappear the layout effects of all the children
+              recursivelyTraverseDisappearLayoutEffects(offscreenBoundary);
             }
           }
         } else {
@@ -2696,87 +2691,85 @@ function recursivelyTraverseLayoutEffects(
   setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
-function disappearLayoutEffects_begin(subtreeRoot: Fiber) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    const firstChild = fiber.child;
+function disappearLayoutEffects(finishedWork: Fiber) {
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case MemoComponent:
+    case SimpleMemoComponent: {
+      // TODO (Offscreen) Check: flags & LayoutStatic
+      if (
+        enableProfilerTimer &&
+        enableProfilerCommitHooks &&
+        finishedWork.mode & ProfileMode
+      ) {
+        try {
+          startLayoutEffectTimer();
+          commitHookEffectListUnmount(
+            HookLayout,
+            finishedWork,
+            finishedWork.return,
+          );
+        } finally {
+          recordLayoutEffectDuration(finishedWork);
+        }
+      } else {
+        commitHookEffectListUnmount(
+          HookLayout,
+          finishedWork,
+          finishedWork.return,
+        );
+      }
 
-    // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
-    switch (fiber.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case MemoComponent:
-      case SimpleMemoComponent: {
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          fiber.mode & ProfileMode
-        ) {
-          try {
-            startLayoutEffectTimer();
-            commitHookEffectListUnmount(HookLayout, fiber, fiber.return);
-          } finally {
-            recordLayoutEffectDuration(fiber);
-          }
-        } else {
-          commitHookEffectListUnmount(HookLayout, fiber, fiber.return);
-        }
-        break;
-      }
-      case ClassComponent: {
-        // TODO (Offscreen) Check: flags & RefStatic
-        safelyDetachRef(fiber, fiber.return);
-
-        const instance = fiber.stateNode;
-        if (typeof instance.componentWillUnmount === 'function') {
-          safelyCallComponentWillUnmount(fiber, fiber.return, instance);
-        }
-        break;
-      }
-      case HostComponent: {
-        safelyDetachRef(fiber, fiber.return);
-        break;
-      }
-      case OffscreenComponent: {
-        // Check if this is a
-        const isHidden = fiber.memoizedState !== null;
-        if (isHidden) {
-          // Nested Offscreen tree is already hidden. Don't disappear
-          // its effects.
-          disappearLayoutEffects_complete(subtreeRoot);
-          continue;
-        }
-        break;
-      }
+      recursivelyTraverseDisappearLayoutEffects(finishedWork);
+      break;
     }
+    case ClassComponent: {
+      // TODO (Offscreen) Check: flags & RefStatic
+      safelyDetachRef(finishedWork, finishedWork.return);
 
-    // TODO (Offscreen) Check: subtreeFlags & LayoutStatic
-    if (firstChild !== null) {
-      firstChild.return = fiber;
-      nextEffect = firstChild;
-    } else {
-      disappearLayoutEffects_complete(subtreeRoot);
+      const instance = finishedWork.stateNode;
+      if (typeof instance.componentWillUnmount === 'function') {
+        safelyCallComponentWillUnmount(
+          finishedWork,
+          finishedWork.return,
+          instance,
+        );
+      }
+
+      recursivelyTraverseDisappearLayoutEffects(finishedWork);
+      break;
+    }
+    case HostComponent: {
+      // TODO (Offscreen) Check: flags & RefStatic
+      safelyDetachRef(finishedWork, finishedWork.return);
+
+      recursivelyTraverseDisappearLayoutEffects(finishedWork);
+      break;
+    }
+    case OffscreenComponent: {
+      const isHidden = finishedWork.memoizedState !== null;
+      if (isHidden) {
+        // Nested Offscreen tree is already hidden. Don't disappear
+        // its effects.
+      } else {
+        recursivelyTraverseDisappearLayoutEffects(finishedWork);
+      }
+      break;
+    }
+    default: {
+      recursivelyTraverseDisappearLayoutEffects(finishedWork);
+      break;
     }
   }
 }
 
-function disappearLayoutEffects_complete(subtreeRoot: Fiber) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-
-    if (fiber === subtreeRoot) {
-      nextEffect = null;
-      return;
-    }
-
-    const sibling = fiber.sibling;
-    if (sibling !== null) {
-      sibling.return = fiber.return;
-      nextEffect = sibling;
-      return;
-    }
-
-    nextEffect = fiber.return;
+function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
+  // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
+  let child = parentFiber.child;
+  while (child !== null) {
+    disappearLayoutEffects(child);
+    child = child.sibling;
   }
 }
 
