@@ -55,7 +55,7 @@
     "os-name": "^3.1.0",
     "parse-filepath": "^1.0.2",
     "raw-loader": "^3.1.0",
-    "rollup": "^1.19.4",
+    "rollup": "^2.76.0",
     "rollup-plugin-babel": "^4.0.1",
     "rollup-plugin-commonjs": "^9.3.4",
     "rollup-plugin-node-resolve": "^2.1.1",
