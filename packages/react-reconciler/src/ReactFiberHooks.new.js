@@ -681,7 +681,7 @@ function updateWorkInProgressHook(): Hook {
   if (nextWorkInProgressHook !== null) {
     // There's already a work-in-progress. Reuse it.
     workInProgressHook = nextWorkInProgressHook;
-    nextWorkInProgressHook = workInProgressHook.next;
+    //nextWorkInProgressHook = workInProgressHook.next;
 
     currentHook = nextCurrentHook;
   } else {
