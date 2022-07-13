@@ -68,7 +68,7 @@ type TextInstance = {|
 |};
 type HostContext = Object;
 type CreateRootOptions = {
-  transitionCallbacks?: TransitionTracingCallbacks,
+  unstable_transitionCallbacks?: TransitionTracingCallbacks,
   ...
 };
 
@@ -828,8 +828,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         '',
         onRecoverableError,
-        options && options.transitionCallbacks
-          ? options.transitionCallbacks
+        options && options.unstable_transitionCallbacks
+          ? options.unstable_transitionCallbacks
           : null,
       );
       return {

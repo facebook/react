@@ -26,9 +26,9 @@ export type RootType = {
 export type CreateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
+  unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
-  transitionCallbacks?: TransitionTracingCallbacks,
   ...
 };
 
@@ -216,8 +216,8 @@ export function createRoot(
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
-    if (options.transitionCallbacks !== undefined) {
-      transitionCallbacks = options.transitionCallbacks;
+    if (options.unstable_transitionCallbacks !== undefined) {
+      transitionCallbacks = options.unstable_transitionCallbacks;
     }
   }
 
