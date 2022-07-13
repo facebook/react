@@ -369,11 +369,13 @@ function getPlugins(
     // Turn __DEV__ and process.env checks into constants.
     replace({
       preventAssignment: true,
-      __DEV__: isProduction ? 'false' : 'true',
-      __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
-      __UMD__: isUMDBundle ? 'true' : 'false',
-      'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
-      __EXPERIMENTAL__,
+      values: {
+        __DEV__: isProduction ? 'false' : 'true',
+        __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
+        __UMD__: isUMDBundle ? 'true' : 'false',
+        'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
+        __EXPERIMENTAL__,
+      },
     }),
     // The CommonJS plugin *only* exists to pull "art" into "react-art".
     // I'm going to port "art" to ES modules to avoid this problem.
