@@ -91,7 +91,7 @@
     "rimraf": "^3.0.0",
     "rollup": "^2.76.0",
     "rollup-plugin-prettier": "^3.0.0",
-    "rollup-plugin-strip-banner": "^0.2.0",
+    "rollup-plugin-strip-banner": "^2.0.0",
     "semver": "^7.1.1",
     "targz": "^1.0.1",
     "through2": "^3.0.1",
