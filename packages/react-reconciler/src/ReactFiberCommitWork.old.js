@@ -45,6 +45,7 @@ import {
   enableUpdaterTracking,
   enableCache,
   enableTransitionTracing,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -53,6 +54,7 @@ import {
   HostRoot,
   HostComponent,
   HostText,
+  HostResource,
   HostPortal,
   Profiler,
   SuspenseComponent,
@@ -111,6 +113,7 @@ import {
   supportsMutation,
   supportsPersistence,
   supportsHydration,
+  supportsResources,
   commitMount,
   commitUpdate,
   resetTextContent,
@@ -135,6 +138,9 @@ import {
   prepareScopeUpdate,
   prepareForCommit,
   beforeActiveInstanceBlur,
+  acquireResource,
+  releaseResource,
+  insertPendingResources,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -1819,6 +1825,18 @@ function commitDeletionEffectsOnFiber(
       }
       return;
     }
+    case HostResource: {
+      if (supportsMutation) {
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber,
+        );
+        const resource = deletedFiber.stateNode;
+        releaseResource(resource);
+      }
+      return;
+    }
     case DehydratedFragment: {
       if (enableSuspenseCallback) {
         const hydrationCallbacks = finishedRoot.hydrationCallbacks;
@@ -2149,6 +2167,9 @@ export function commitMutationEffects(
 
   setCurrentDebugFiberInDEV(finishedWork);
   commitMutationEffectsOnFiber(finishedWork, root, committedLanes);
+  if (supportsResources && enableFloat) {
+    insertPendingResources(root.resourceHost);
+  }
   setCurrentDebugFiberInDEV(finishedWork);
 
   inProgressLanes = null;
@@ -2362,6 +2383,32 @@ function commitMutationEffectsOnFiber(
           } catch (error) {
             captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
+        }
+      }
+      return;
+    }
+    case HostResource: {
+      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      commitReconciliationEffects(finishedWork);
+      if (flags & Update) {
+        if (supportsResources && supportsMutation) {
+          if (current !== null) {
+            const oldResource = current.stateNode;
+            if (oldResource) {
+              releaseResource(oldResource);
+            }
+          }
+          // We only acquire the resource in commit because acquisition is a mutation
+          // and we only want to do that during mutationEffects. We could refactor
+          // this to acquire without mutation in render and then use Update flags to
+          // do the insertion in commit but this seems simpler for now.
+          finishedWork.stateNode = acquireResource(
+            finishedWork.type,
+            finishedWork.memoizedProps,
+            // For HostResource memoizedState holds the rootContainerInstance
+            finishedWork.memoizedState,
+            root.resourceHost,
+          );
         }
       }
       return;

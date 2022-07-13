@@ -116,6 +116,9 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 // aggressiveness.
 export const deletedTreeCleanUpLevel = 3;
 
+// enables preloading apis for React-dom server/client
+export const enableFloat = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
@@ -254,6 +257,3 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableProfilerNestedUpdateScheduledHook = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
-
-// enables preloading apis for React-dom server/client
-export const enableFloat = true;

@@ -36,9 +36,7 @@ describe('ReactDOMServerPreload', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     // ReactDOMClient = require('react-dom/client');
-    if (__EXPERIMENTAL__) {
-      ReactDOMFizzServer = require('react-dom/server');
-    }
+    ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
     // TextDecoder = require('util').TextDecoder;

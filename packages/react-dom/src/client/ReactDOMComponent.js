@@ -257,7 +257,7 @@ export function checkForUnmatchedText(
   }
 }
 
-function getOwnerDocumentFromRootContainer(
+export function getOwnerDocumentFromRootContainer(
   rootContainerElement: Element | Document | DocumentFragment,
 ): Document {
   return rootContainerElement.nodeType === DOCUMENT_NODE
@@ -481,6 +481,22 @@ export function createTextNode(
   return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
     text,
   );
+}
+
+export function setInitialResourceProperties(
+  domElement: Element,
+  tag: string,
+  props: Object,
+  rootContainerElement: Element | Document | DocumentFragment,
+): void {
+  if (__DEV__) {
+    // @TODO replace with resource specific validation
+    validatePropertiesInDevelopment(tag, props);
+  }
+
+  assertValidProps(tag, props);
+
+  setInitialDOMProperties(tag, domElement, rootContainerElement, props, false);
 }
 
 export function setInitialProperties(

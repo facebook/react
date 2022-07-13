@@ -82,8 +82,10 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
+  supportsResources,
   prepareToRender,
   cleanupAfterRender,
+  hoistStaticResource,
 } from './ReactFiberHostConfig';
 
 import {
@@ -904,7 +906,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 // goes through Scheduler.
 function performConcurrentWorkOnRoot(root, didTimeout) {
   try {
-    if (enableFloat) {
+    if (supportsResources && enableFloat) {
       prepareToRender();
     }
 
@@ -1044,7 +1046,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     }
     return null;
   } finally {
-    if (enableFloat) {
+    if (supportsResources && enableFloat) {
       cleanupAfterRender();
     }
   }
@@ -2245,6 +2247,10 @@ function commitRootImpl(
 
     // The next phase is the mutation phase, where we mutate the host tree.
     commitMutationEffects(root, finishedWork, lanes);
+
+    if (supportsResources && enableFloat) {
+      hoistStaticResource(root.containerInfo);
+    }
 
     if (enableCreateEventHandleAPI) {
       if (shouldFireAfterActiveInstanceBlur) {

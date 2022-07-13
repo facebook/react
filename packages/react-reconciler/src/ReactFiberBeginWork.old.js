@@ -55,6 +55,7 @@ import {
   HostRoot,
   HostComponent,
   HostText,
+  HostResource,
   HostPortal,
   ForwardRef,
   Fragment,
@@ -1566,6 +1567,27 @@ function updateHostComponent(
   markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
+}
+
+function updateHostResource(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  const nextProps = workInProgress.pendingProps;
+
+  const nextChildren = nextProps.children;
+
+  if (__DEV__) {
+    if (nextChildren != null) {
+      console.error(
+        'A "%s" element is being treated like a HostResource but it contains children. HostResources should not have any children',
+        workInProgress.type,
+      );
+    }
+  }
+  markRef(current, workInProgress);
+  return null;
 }
 
 function updateHostText(current, workInProgress) {
@@ -3976,6 +3998,8 @@ function beginWork(
       return updateHostComponent(current, workInProgress, renderLanes);
     case HostText:
       return updateHostText(current, workInProgress);
+    case HostResource:
+      return updateHostResource(current, workInProgress, renderLanes);
     case SuspenseComponent:
       return updateSuspenseComponent(current, workInProgress, renderLanes);
     case HostPortal:

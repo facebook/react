@@ -204,6 +204,8 @@ type BaseFiberRootProperties = {|
 
   // Any additional information from the host associated with this root.
   containerInfo: any,
+  // Used only by Hosts that support Resources
+  resourceHost: any,
   // Used only by persistent updates.
   pendingChildren: any,
   // The currently active root fiber. This is the mutable root of the tree.

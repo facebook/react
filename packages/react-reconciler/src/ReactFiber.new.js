@@ -21,6 +21,7 @@ import type {
 } from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
 
+import {supportsResources, isResource} from './ReactFiberHostConfig';
 import {
   createRootStrictEffectsByDefault,
   enableCache,
@@ -32,6 +33,7 @@ import {
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -41,6 +43,7 @@ import {
   HostRoot,
   HostComponent,
   HostText,
+  HostResource,
   HostPortal,
   ForwardRef,
   Fragment,
@@ -489,7 +492,15 @@ export function createFiberFromTypeAndProps(
       }
     }
   } else if (typeof type === 'string') {
-    fiberTag = HostComponent;
+    if (supportsResources && enableFloat) {
+      if (isResource(type)) {
+        fiberTag = HostResource;
+      } else {
+        fiberTag = HostComponent;
+      }
+    } else {
+      fiberTag = HostComponent;
+    }
   } else {
     getTag: switch (type) {
       case REACT_FRAGMENT_TYPE:

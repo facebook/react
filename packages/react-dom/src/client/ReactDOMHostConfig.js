@@ -64,9 +64,15 @@ import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
+import {
+  resourceFromElement,
+  reconcileHydratedResources,
+  prepareToHydrateResources,
+} from './ReactDOMFloatResources';
 
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
@@ -108,6 +114,7 @@ export type Container =
   | (Element & {_reactRootContainer?: FiberRoot, ...})
   | (Document & {_reactRootContainer?: FiberRoot, ...})
   | (DocumentFragment & {_reactRootContainer?: FiberRoot, ...});
+export type ResourceHost = Element | Document | DocumentFragment;
 export type Instance = Element;
 export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
@@ -275,6 +282,7 @@ export function createInstance(
   );
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
+
   return domElement;
 }
 
@@ -781,11 +789,12 @@ function getNextHydratable(node) {
   for (; node != null; node = ((node: any): Node).nextSibling) {
     const nodeType = node.nodeType;
     if (nodeType === ELEMENT_NODE) {
-      if (
-        ((node: any): HTMLElement).tagName.toLowerCase() === 'link' &&
-        ((node: any): HTMLElement).getAttribute('rel') === 'preload'
-      ) {
-        continue;
+      if (enableFloat) {
+        // @TODO replace with isResource logic
+        if (((node: any): HTMLElement).tagName.toLowerCase() === 'link') {
+          resourceFromElement(((node: any): HTMLElement));
+          continue;
+        }
       }
       break;
     } else if (nodeType === TEXT_NODE) {
@@ -1336,3 +1345,30 @@ export function setupIntersectionObserver(
     },
   };
 }
+
+// -------------------
+//     Resources
+// -------------------
+
+export const supportsResources = true;
+
+export function prepareToRender() {
+  prepareToHydrateResources();
+}
+
+export function cleanupAfterRender() {}
+
+export function isResource(type: string) {
+  return type === 'link';
+}
+
+export function hoistStaticResource(rootContainerInstance: Container) {
+  reconcileHydratedResources(rootContainerInstance);
+}
+
+export {
+  acquireResource,
+  releaseResource,
+  getRootResourceHost,
+  insertPendingResources,
+} from './ReactDOMFloatResources';

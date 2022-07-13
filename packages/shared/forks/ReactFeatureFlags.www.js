@@ -109,7 +109,7 @@ export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 export const enableSymbolFallbackForWWW = true;
 
-export const enableFloat = true;
+export const enableFloat = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

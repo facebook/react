@@ -660,13 +660,7 @@ function renderHostElement(
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
   segment.formatContext = prevContext;
-  pushEndInstance(
-    segment.chunks,
-    request.postlude,
-    type,
-    props,
-    segment.formatContext,
-  );
+  pushEndInstance(segment.chunks, request.postlude, type, props);
   segment.lastPushedText = false;
   popComponentStackInDEV(task);
 }

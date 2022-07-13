@@ -16,7 +16,12 @@ import type {
 import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent.old';
 
-import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
+import {
+  noTimeout,
+  supportsHydration,
+  supportsResources,
+  getRootResourceHost,
+} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.old';
 import {
   NoLane,
@@ -32,6 +37,7 @@ import {
   enableProfilerTimer,
   enableUpdaterTracking,
   enableTransitionTracing,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
@@ -112,6 +118,10 @@ function FiberRootNode(
     for (let i = 0; i < TotalLanes; i++) {
       pendingUpdatersLaneMap.push(new Set());
     }
+  }
+
+  if (supportsResources && enableFloat && tag === ConcurrentRoot) {
+    this.resourceHost = getRootResourceHost(containerInfo, hydrate);
   }
 
   if (__DEV__) {

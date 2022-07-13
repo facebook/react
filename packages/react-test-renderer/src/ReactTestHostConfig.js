@@ -46,6 +46,7 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoResources';
 
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
@@ -318,6 +319,3 @@ export function detachDeletedInstance(node: Instance): void {
 export function logRecoverableError(error: mixed): void {
   // noop
 }
-
-export function prepareToRender() {}
-export function cleanupAfterRender() {}

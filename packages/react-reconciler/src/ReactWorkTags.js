@@ -33,7 +33,8 @@ export type WorkTag =
   | 22
   | 23
   | 24
-  | 25;
+  | 25
+  | 26;
 
 export const FunctionComponent = 0;
 export const ClassComponent = 1;
@@ -60,3 +61,4 @@ export const OffscreenComponent = 22;
 export const LegacyHiddenComponent = 23;
 export const CacheComponent = 24;
 export const TracingMarkerComponent = 25;
+export const HostResource = 26;

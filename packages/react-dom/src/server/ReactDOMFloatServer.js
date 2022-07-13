@@ -59,7 +59,6 @@ export function prepareToRender(resourceMap: ResourceMap) {
 }
 
 export function cleanupAfterRender() {
-  return;
   currentResourceMap = null;
 
   popDispatcher();

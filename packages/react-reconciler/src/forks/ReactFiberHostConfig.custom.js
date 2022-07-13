@@ -59,6 +59,7 @@ export const warnsIfNotActing = $$$hostConfig.warnsIfNotActing;
 export const supportsMutation = $$$hostConfig.supportsMutation;
 export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
+export const supportsResources = $$$hostConfig.supportsResources;
 export const getInstanceFromNode = $$$hostConfig.getInstanceFromNode;
 export const beforeActiveInstanceBlur = $$$hostConfig.beforeActiveInstanceBlur;
 export const afterActiveInstanceBlur = $$$hostConfig.afterActiveInstanceBlur;
@@ -186,5 +187,16 @@ export const didNotFindHydratableTextInstance =
 export const didNotFindHydratableSuspenseInstance =
   $$$hostConfig.didNotFindHydratableSuspenseInstance;
 export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
+
+// -------------------
+//     Resources
+//     (optional)
+// -------------------
 export const prepareToRender = $$$hostConfig.prepareToRender;
 export const cleanupAfterRender = $$$hostConfig.cleanupAfterRender;
+export const isResource = $$$hostConfig.isResource;
+export const hoistStaticResource = $$$hostConfig.hoistStaticResource;
+export const acquireResource = $$$hostConfig.acquireResource;
+export const releaseResource = $$$hostConfig.releaseResource;
+export const getRootResourceHost = $$$hostConfig.getRootResourceHost;
+export const insertPendingResources = $$$hostConfig.insertPendingResources;
