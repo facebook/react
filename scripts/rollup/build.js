@@ -368,6 +368,7 @@ function getPlugins(
     },
     // Turn __DEV__ and process.env checks into constants.
     replace({
+      preventAssignment: true,
       __DEV__: isProduction ? 'false' : 'true',
       __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
       __UMD__: isUMDBundle ? 'true' : 'false',
