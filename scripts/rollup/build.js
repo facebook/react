@@ -1,7 +1,7 @@
 'use strict';
 
 const rollup = require('rollup');
-const babel = require('rollup-plugin-babel');
+const babel = require('@rollup/plugin-babel');
 const closure = require('./plugins/closure-plugin');
 const commonjs = require('rollup-plugin-commonjs');
 const flowRemoveTypes = require('flow-remove-types');
@@ -146,6 +146,7 @@ function getBabelConfig(
     configFile: false,
     presets: [],
     plugins: [...babelPlugins],
+    babelHelpers: 'bundled',
   };
   if (isDevelopment) {
     options.plugins.push(

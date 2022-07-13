@@ -10,7 +10,7 @@ const {
 const {emptyDirSync} = require('fs-extra');
 const {resolve} = require('path');
 const rollup = require('rollup');
-const babel = require('rollup-plugin-babel');
+const babel = require('@rollup/plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
 const jsx = require('acorn-jsx');
 const rollupResolve = require('rollup-plugin-node-resolve');
@@ -323,7 +323,11 @@ async function bundle() {
     plugins: [
       rollupResolve(),
       commonjs(),
-      babel({presets: ['@babel/preset-react'], sourceMap: true}),
+      babel({
+        babelHelpers: 'bundled',
+        presets: ['@babel/preset-react'],
+        sourceMap: true,
+      }),
     ],
     external: ['react'],
   });
