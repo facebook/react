@@ -212,7 +212,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       root.render(<App navigate={false} />);
       ReactNoop.expire(1000);
@@ -276,7 +278,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       root.render(<App />);
       ReactNoop.expire(1000);
@@ -333,7 +337,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       root.render(<App />);
       ReactNoop.expire(1000);
@@ -404,7 +410,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       root.render(<App />);
       ReactNoop.expire(1000);
@@ -497,7 +505,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       root.render(<App />);
       ReactNoop.expire(1000);
@@ -602,7 +612,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       root.render(<App />);
       ReactNoop.expire(1000);
@@ -717,7 +729,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       root.render(<App />);
       ReactNoop.expire(1000);
@@ -846,7 +860,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       root.render(<App />);
       ReactNoop.expire(1000);
@@ -1000,7 +1016,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       root.render(<App />);
       ReactNoop.expire(1000);
@@ -1085,7 +1103,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       root.render(<App />);
       ReactNoop.expire(1000);
@@ -1203,7 +1223,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       root.render(<App />);
       ReactNoop.expire(1000);
@@ -1286,7 +1308,9 @@ describe('ReactInteractionTracing', () => {
       );
     }
 
-    const root = ReactNoop.createRoot({transitionCallbacks});
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
     await act(async () => {
       startTransition(
         () => root.render(<App markerName="one" markerKey="key" />),
