@@ -1132,11 +1132,12 @@ function commitLayoutEffectOnFiber(
           if (offscreenSubtreeWasHidden && !prevOffscreenSubtreeWasHidden) {
             // This is the root of a reappearing boundary. Turn its layout
             // effects back on.
-            // TODO: Convert this to use recursion
-            nextEffect = finishedWork;
-            reappearLayoutEffects_begin(finishedWork);
+            recursivelyTraverseReappearLayoutEffects(finishedWork);
           }
 
+          // TODO: We shouldn't traverse twice when reappearing layout effects.
+          // Move this into the else block of the above if statement, and modify
+          // reappearLayoutEffects to fire regular layout effects, too.
           recursivelyTraverseLayoutEffects(
             finishedRoot,
             finishedWork,
@@ -1160,48 +1161,6 @@ function commitLayoutEffectOnFiber(
         finishedWork,
         committedLanes,
       );
-      break;
-    }
-  }
-}
-
-function reappearLayoutEffectsOnFiber(node: Fiber) {
-  // Turn on layout effects in a tree that previously disappeared.
-  // TODO (Offscreen) Check: flags & LayoutStatic
-  switch (node.tag) {
-    case FunctionComponent:
-    case ForwardRef:
-    case SimpleMemoComponent: {
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        node.mode & ProfileMode
-      ) {
-        try {
-          startLayoutEffectTimer();
-          safelyCallCommitHookLayoutEffectListMount(node, node.return);
-        } finally {
-          recordLayoutEffectDuration(node);
-        }
-      } else {
-        safelyCallCommitHookLayoutEffectListMount(node, node.return);
-      }
-      break;
-    }
-    case ClassComponent: {
-      const instance = node.stateNode;
-      if (typeof instance.componentDidMount === 'function') {
-        safelyCallComponentDidMount(node, node.return, instance);
-      }
-      safelyAttachRef(node, node.return);
-      const updateQueue: UpdateQueue<*> | null = (node.updateQueue: any);
-      if (updateQueue !== null) {
-        commitHiddenCallbacks(updateQueue, instance);
-      }
-      break;
-    }
-    case HostComponent: {
-      safelyAttachRef(node, node.return);
       break;
     }
   }
@@ -2773,60 +2732,89 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
   }
 }
 
-function reappearLayoutEffects_begin(subtreeRoot: Fiber) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    const firstChild = fiber.child;
+function reappearLayoutEffects(finishedWork: Fiber) {
+  // Turn on layout effects in a tree that previously disappeared.
+  // TODO (Offscreen) Check: flags & LayoutStatic
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case SimpleMemoComponent: {
+      recursivelyTraverseReappearLayoutEffects(finishedWork);
 
-    if (fiber.tag === OffscreenComponent) {
-      const isHidden = fiber.memoizedState !== null;
+      // TODO: Check for LayoutStatic flag
+      if (
+        enableProfilerTimer &&
+        enableProfilerCommitHooks &&
+        finishedWork.mode & ProfileMode
+      ) {
+        try {
+          startLayoutEffectTimer();
+          safelyCallCommitHookLayoutEffectListMount(
+            finishedWork,
+            finishedWork.return,
+          );
+        } finally {
+          recordLayoutEffectDuration(finishedWork);
+        }
+      } else {
+        safelyCallCommitHookLayoutEffectListMount(
+          finishedWork,
+          finishedWork.return,
+        );
+      }
+      break;
+    }
+    case ClassComponent: {
+      recursivelyTraverseReappearLayoutEffects(finishedWork);
+
+      const instance = finishedWork.stateNode;
+      // TODO: Check for LayoutStatic flag
+      if (typeof instance.componentDidMount === 'function') {
+        safelyCallComponentDidMount(
+          finishedWork,
+          finishedWork.return,
+          instance,
+        );
+      }
+      // TODO: Check for RefStatic flag
+      safelyAttachRef(finishedWork, finishedWork.return);
+      const updateQueue: UpdateQueue<
+        *,
+      > | null = (finishedWork.updateQueue: any);
+      if (updateQueue !== null) {
+        commitHiddenCallbacks(updateQueue, instance);
+      }
+      break;
+    }
+    case HostComponent: {
+      recursivelyTraverseReappearLayoutEffects(finishedWork);
+
+      // TODO: Check for RefStatic flag
+      safelyAttachRef(finishedWork, finishedWork.return);
+      break;
+    }
+    case OffscreenComponent: {
+      const isHidden = finishedWork.memoizedState !== null;
       if (isHidden) {
         // Nested Offscreen tree is still hidden. Don't re-appear its effects.
-        reappearLayoutEffects_complete(subtreeRoot);
-        continue;
+      } else {
+        recursivelyTraverseReappearLayoutEffects(finishedWork);
       }
+      break;
     }
-
-    // TODO (Offscreen) Check: subtreeFlags & LayoutStatic
-    if (firstChild !== null) {
-      // This node may have been reused from a previous render, so we can't
-      // assume its return pointer is correct.
-      firstChild.return = fiber;
-      nextEffect = firstChild;
-    } else {
-      reappearLayoutEffects_complete(subtreeRoot);
+    default: {
+      recursivelyTraverseReappearLayoutEffects(finishedWork);
+      break;
     }
   }
 }
 
-function reappearLayoutEffects_complete(subtreeRoot: Fiber) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-
-    // TODO (Offscreen) Check: flags & LayoutStatic
-    setCurrentDebugFiberInDEV(fiber);
-    try {
-      reappearLayoutEffectsOnFiber(fiber);
-    } catch (error) {
-      captureCommitPhaseError(fiber, fiber.return, error);
-    }
-    resetCurrentDebugFiberInDEV();
-
-    if (fiber === subtreeRoot) {
-      nextEffect = null;
-      return;
-    }
-
-    const sibling = fiber.sibling;
-    if (sibling !== null) {
-      // This node may have been reused from a previous render, so we can't
-      // assume its return pointer is correct.
-      sibling.return = fiber.return;
-      nextEffect = sibling;
-      return;
-    }
-
-    nextEffect = fiber.return;
+function recursivelyTraverseReappearLayoutEffects(parentFiber: Fiber) {
+  // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
+  let child = parentFiber.child;
+  while (child !== null) {
+    reappearLayoutEffects(child);
+    child = child.sibling;
   }
 }
 
