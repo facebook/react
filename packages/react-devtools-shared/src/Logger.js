@@ -39,7 +39,10 @@ export type LogEvent =
       +event_name: 'select-element-in-owner-view',
     |}
   | {|
-      +event_name: 'inspect-native-element',
+      +event_name: 'inspect-element-button-clicked',
+    |}
+  | {|
+      +event_name: 'inspect-element-success',
     |}
   | {|
       +event_name: 'profiling-start',

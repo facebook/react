@@ -23,7 +23,7 @@ export default function InspectHostNodesToggle() {
       setIsInspecting(isChecked);
 
       if (isChecked) {
-        logEvent({event_name: 'inspect-native-element'});
+        logEvent({event_name: 'inspect-element-button-clicked'});
         bridge.send('startInspectingNative');
       } else {
         bridge.send('stopInspectingNative', false);
