@@ -104,7 +104,8 @@ export default function Tree(props: Props) {
     function handleStopInspectingNative(didSelectNode) {
       if (didSelectNode && focusTargetRef.current !== null) {
         logEvent({event_name: 'inspect-element-success'});
-        focusTargetRef.current?.focus();
+        // $FlowFixMe no need to re-check for null
+        focusTargetRef.current.focus();
       }
     }
     bridge.addListener('stopInspectingNative', handleStopInspectingNative);
