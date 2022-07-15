@@ -40,6 +40,7 @@ export type HydrateRootOptions = {
   // Options for all roots
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
+  unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
   ...
@@ -282,6 +283,7 @@ export function hydrateRoot(
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
   let onRecoverableError = defaultOnRecoverableError;
+  let transitionCallbacks = null;
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -298,6 +300,9 @@ export function hydrateRoot(
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
+    if (options.unstable_transitionCallbacks !== undefined) {
+      transitionCallbacks = options.unstable_transitionCallbacks;
+    }
   }
 
   const root = createHydrationContainer(
@@ -310,8 +315,7 @@ export function hydrateRoot(
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
-    // TODO(luna) Support hydration later
-    null,
+    transitionCallbacks,
   );
   markContainerAsRoot(root.current, container);
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
