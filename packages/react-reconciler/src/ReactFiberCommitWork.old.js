@@ -225,18 +225,6 @@ const callComponentWillUnmountWithTimer = function(current, instance) {
   }
 };
 
-// Capture errors so they don't interrupt mounting.
-function safelyCallCommitHookLayoutEffectListMount(
-  current: Fiber,
-  nearestMountedAncestor: Fiber | null,
-) {
-  try {
-    commitHookEffectListMount(HookLayout, current);
-  } catch (error) {
-    captureCommitPhaseError(current, nearestMountedAncestor, error);
-  }
-}
-
 // Capture errors so they don't interrupt unmounting.
 function safelyCallComponentWillUnmount(
   current: Fiber,
@@ -245,19 +233,6 @@ function safelyCallComponentWillUnmount(
 ) {
   try {
     callComponentWillUnmountWithTimer(current, instance);
-  } catch (error) {
-    captureCommitPhaseError(current, nearestMountedAncestor, error);
-  }
-}
-
-// Capture errors so they don't interrupt mounting.
-function safelyCallComponentDidMount(
-  current: Fiber,
-  nearestMountedAncestor: Fiber | null,
-  instance: any,
-) {
-  try {
-    instance.componentDidMount();
   } catch (error) {
     captureCommitPhaseError(current, nearestMountedAncestor, error);
   }
@@ -706,7 +681,7 @@ export function commitPassiveEffectDurations(
   }
 }
 
-function commitHookLayoutEffects(finishedWork: Fiber) {
+function commitHookLayoutEffects(finishedWork: Fiber, hookFlags: HookFlags) {
   // At this point layout effects have already been destroyed (during mutation phase).
   // This is done to prevent sibling component effects from interfering with each other,
   // e.g. a destroy function in one component should never override a ref set
@@ -718,14 +693,14 @@ function commitHookLayoutEffects(finishedWork: Fiber) {
   ) {
     try {
       startLayoutEffectTimer();
-      commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
+      commitHookEffectListMount(hookFlags, finishedWork);
     } catch (error) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
     recordLayoutEffectDuration(finishedWork);
   } else {
     try {
-      commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
+      commitHookEffectListMount(hookFlags, finishedWork);
     } catch (error) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
@@ -853,7 +828,7 @@ function commitClassLayoutLifecycles(
   }
 }
 
-function commitClassCallbacks(finishedWork: Fiber, current: Fiber | null) {
+function commitClassCallbacks(finishedWork: Fiber) {
   // TODO: I think this is now always non-null by the time it reaches the
   // commit phase. Consider removing the type check.
   const updateQueue: UpdateQueue<*> | null = (finishedWork.updateQueue: any);
@@ -897,7 +872,7 @@ function commitClassCallbacks(finishedWork: Fiber, current: Fiber | null) {
   }
 }
 
-function commitHostComponentMount(finishedWork: Fiber, current: Fiber | null) {
+function commitHostComponentMount(finishedWork: Fiber) {
   const type = finishedWork.type;
   const props = finishedWork.memoizedProps;
   const instance: Instance = finishedWork.stateNode;
@@ -978,6 +953,8 @@ function commitLayoutEffectOnFiber(
   finishedWork: Fiber,
   committedLanes: Lanes,
 ): void {
+  // When updating this function, also update reappearLayoutEffects, which does
+  // most of the same things when an offscreen tree goes from hidden -> visible.
   const flags = finishedWork.flags;
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -989,9 +966,7 @@ function commitLayoutEffectOnFiber(
         committedLanes,
       );
       if (flags & Update) {
-        if (!offscreenSubtreeWasHidden) {
-          commitHookLayoutEffects(finishedWork);
-        }
+        commitHookLayoutEffects(finishedWork, HookLayout | HookHasEffect);
       }
       break;
     }
@@ -1002,19 +977,15 @@ function commitLayoutEffectOnFiber(
         committedLanes,
       );
       if (flags & Update) {
-        if (!offscreenSubtreeWasHidden) {
-          commitClassLayoutLifecycles(finishedWork, current);
-        }
+        commitClassLayoutLifecycles(finishedWork, current);
       }
 
       if (flags & Callback) {
-        commitClassCallbacks(finishedWork, current);
+        commitClassCallbacks(finishedWork);
       }
 
       if (flags & Ref) {
-        if (!offscreenSubtreeWasHidden) {
-          safelyAttachRef(finishedWork, finishedWork.return);
-        }
+        safelyAttachRef(finishedWork, finishedWork.return);
       }
       break;
     }
@@ -1063,13 +1034,11 @@ function commitLayoutEffectOnFiber(
       // These effects should only be committed when components are first mounted,
       // aka when there is no current/alternate.
       if (current === null && flags & Update) {
-        commitHostComponentMount(finishedWork, current);
+        commitHostComponentMount(finishedWork);
       }
 
       if (flags & Ref) {
-        if (!offscreenSubtreeWasHidden) {
-          safelyAttachRef(finishedWork, finishedWork.return);
-        }
+        safelyAttachRef(finishedWork, finishedWork.return);
       }
       break;
     }
@@ -1117,19 +1086,25 @@ function commitLayoutEffectOnFiber(
           offscreenSubtreeWasHidden = newOffscreenSubtreeWasHidden;
 
           if (offscreenSubtreeWasHidden && !prevOffscreenSubtreeWasHidden) {
-            // This is the root of a reappearing boundary. Turn its layout
-            // effects back on.
-            recursivelyTraverseReappearLayoutEffects(finishedWork);
+            // This is the root of a reappearing boundary. As we continue
+            // traversing the layout effects, we must also re-mount layout
+            // effects that were unmounted when the Offscreen subtree was
+            // hidden. So this is a superset of the normal commitLayoutEffects.
+            const includeWorkInProgressEffects =
+              (finishedWork.subtreeFlags & LayoutMask) !== NoFlags;
+            recursivelyTraverseReappearLayoutEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+              includeWorkInProgressEffects,
+            );
+          } else {
+            recursivelyTraverseLayoutEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+            );
           }
-
-          // TODO: We shouldn't traverse twice when reappearing layout effects.
-          // Move this into the else block of the above if statement, and modify
-          // reappearLayoutEffects to fire regular layout effects, too.
-          recursivelyTraverseLayoutEffects(
-            finishedRoot,
-            finishedWork,
-            committedLanes,
-          );
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
         }
@@ -2723,90 +2698,177 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
   }
 }
 
-function reappearLayoutEffects(finishedWork: Fiber) {
+function reappearLayoutEffects(
+  finishedRoot: FiberRoot,
+  current: Fiber | null,
+  finishedWork: Fiber,
+  committedLanes: Lanes,
+  // This function visits both newly finished work and nodes that were re-used
+  // from a previously committed tree. We cannot check non-static flags if the
+  // node was reused.
+  includeWorkInProgressEffects: boolean,
+) {
   // Turn on layout effects in a tree that previously disappeared.
-  // TODO (Offscreen) Check: flags & LayoutStatic
+  const flags = finishedWork.flags;
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent: {
-      recursivelyTraverseReappearLayoutEffects(finishedWork);
-
-      // TODO: Check for LayoutStatic flag
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        finishedWork.mode & ProfileMode
-      ) {
-        try {
-          startLayoutEffectTimer();
-          safelyCallCommitHookLayoutEffectListMount(
-            finishedWork,
-            finishedWork.return,
-          );
-        } finally {
-          recordLayoutEffectDuration(finishedWork);
-        }
-      } else {
-        safelyCallCommitHookLayoutEffectListMount(
-          finishedWork,
-          finishedWork.return,
-        );
-      }
+      recursivelyTraverseReappearLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        includeWorkInProgressEffects,
+      );
+      // TODO: Check flags & LayoutStatic
+      commitHookLayoutEffects(finishedWork, HookLayout);
       break;
     }
     case ClassComponent: {
-      recursivelyTraverseReappearLayoutEffects(finishedWork);
+      recursivelyTraverseReappearLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        includeWorkInProgressEffects,
+      );
 
-      const instance = finishedWork.stateNode;
       // TODO: Check for LayoutStatic flag
+      const instance = finishedWork.stateNode;
       if (typeof instance.componentDidMount === 'function') {
-        safelyCallComponentDidMount(
-          finishedWork,
-          finishedWork.return,
-          instance,
-        );
+        try {
+          instance.componentDidMount();
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
       }
-      // TODO: Check for RefStatic flag
-      safelyAttachRef(finishedWork, finishedWork.return);
+
+      // Commit any callbacks that would have fired while the component
+      // was hidden.
       const updateQueue: UpdateQueue<
         *,
       > | null = (finishedWork.updateQueue: any);
       if (updateQueue !== null) {
         commitHiddenCallbacks(updateQueue, instance);
       }
-      break;
-    }
-    case HostComponent: {
-      recursivelyTraverseReappearLayoutEffects(finishedWork);
 
-      // TODO: Check for RefStatic flag
+      // If this is newly finished work, check for setState callbacks
+      if (includeWorkInProgressEffects && flags & Callback) {
+        commitClassCallbacks(finishedWork);
+      }
+
+      // TODO: Check flags & RefStatic
       safelyAttachRef(finishedWork, finishedWork.return);
       break;
     }
+    // Unlike commitLayoutEffectsOnFiber, we don't need to handle HostRoot
+    // because this function only visits nodes that are inside an
+    // Offscreen fiber.
+    // case HostRoot: {
+    //  ...
+    // }
+    case HostComponent: {
+      recursivelyTraverseReappearLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        includeWorkInProgressEffects,
+      );
+
+      // Renderers may schedule work to be done after host components are mounted
+      // (eg DOM renderer may schedule auto-focus for inputs and form controls).
+      // These effects should only be committed when components are first mounted,
+      // aka when there is no current/alternate.
+      if (includeWorkInProgressEffects && current === null && flags & Update) {
+        commitHostComponentMount(finishedWork);
+      }
+
+      // TODO: Check flags & Ref
+      safelyAttachRef(finishedWork, finishedWork.return);
+      break;
+    }
+    case Profiler: {
+      recursivelyTraverseReappearLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        includeWorkInProgressEffects,
+      );
+      // TODO: Figure out how Profiler updates should work with Offscreen
+      if (includeWorkInProgressEffects && flags & Update) {
+        commitProfilerUpdate(finishedWork, current);
+      }
+      break;
+    }
+    case SuspenseComponent: {
+      recursivelyTraverseReappearLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        includeWorkInProgressEffects,
+      );
+
+      // TODO: Figure out how Suspense hydration callbacks should work
+      // with Offscreen.
+      if (includeWorkInProgressEffects && flags & Update) {
+        commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+      }
+      break;
+    }
     case OffscreenComponent: {
-      const isHidden = finishedWork.memoizedState !== null;
+      const offscreenState: OffscreenState = finishedWork.memoizedState;
+      const isHidden = offscreenState !== null;
       if (isHidden) {
         // Nested Offscreen tree is still hidden. Don't re-appear its effects.
       } else {
-        recursivelyTraverseReappearLayoutEffects(finishedWork);
+        recursivelyTraverseReappearLayoutEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          includeWorkInProgressEffects,
+        );
       }
       break;
     }
     default: {
-      recursivelyTraverseReappearLayoutEffects(finishedWork);
+      recursivelyTraverseReappearLayoutEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        includeWorkInProgressEffects,
+      );
       break;
     }
   }
 }
 
-function recursivelyTraverseReappearLayoutEffects(parentFiber: Fiber) {
+function recursivelyTraverseReappearLayoutEffects(
+  finishedRoot: FiberRoot,
+  parentFiber: Fiber,
+  committedLanes: Lanes,
+  includeWorkInProgressEffects: boolean,
+) {
+  // This function visits both newly finished work and nodes that were re-used
+  // from a previously committed tree. We cannot check non-static flags if the
+  // node was reused.
+  const childShouldIncludeWorkInProgressEffects =
+    includeWorkInProgressEffects &&
+    (parentFiber.subtreeFlags & LayoutMask) !== NoFlags;
+
   // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
+  const prevDebugFiber = getCurrentDebugFiberInDEV();
   let child = parentFiber.child;
   while (child !== null) {
-    reappearLayoutEffects(child);
+    const current = child.alternate;
+    reappearLayoutEffects(
+      finishedRoot,
+      current,
+      child,
+      committedLanes,
+      childShouldIncludeWorkInProgressEffects,
+    );
     child = child.sibling;
   }
+  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 export function commitPassiveMountEffects(

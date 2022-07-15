@@ -696,4 +696,175 @@ describe('ReactOffscreen', () => {
     ]);
     expect(root).toMatchRenderedOutput(<span prop="C" />);
   });
+
+  // @gate enableOffscreen
+  it('does not call componentDidUpdate when reappearing a hidden class component', async () => {
+    class Child extends React.Component {
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('componentDidMount');
+      }
+      componentDidUpdate() {
+        Scheduler.unstable_yieldValue('componentDidUpdate');
+      }
+      componentWillUnmount() {
+        Scheduler.unstable_yieldValue('componentWillUnmount');
+      }
+      render() {
+        return 'Child';
+      }
+    }
+
+    // Initial mount
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['componentDidMount']);
+
+    // Hide the class component
+    await act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['componentWillUnmount']);
+
+    // Reappear the class component. componentDidMount should fire, not
+    // componentDidUpdate.
+    await act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['componentDidMount']);
+  });
+
+  // @gate enableOffscreen
+  it(
+    'when reusing old components (hidden -> visible), layout effects fire ' +
+      'with same timing as if it were brand new',
+    async () => {
+      function Child({label}) {
+        useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('Mount ' + label);
+          return () => {
+            Scheduler.unstable_yieldValue('Unmount ' + label);
+          };
+        }, [label]);
+        return label;
+      }
+
+      // Initial mount
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(
+          <Offscreen mode="visible">
+            <Child key="B" label="B" />
+          </Offscreen>,
+        );
+      });
+      expect(Scheduler).toHaveYielded(['Mount B']);
+
+      // Hide the component
+      await act(async () => {
+        root.render(
+          <Offscreen mode="hidden">
+            <Child key="B" label="B" />
+          </Offscreen>,
+        );
+      });
+      expect(Scheduler).toHaveYielded(['Unmount B']);
+
+      // Reappear the component and also add some new siblings.
+      await act(async () => {
+        root.render(
+          <Offscreen mode="visible">
+            <Child key="A" label="A" />
+            <Child key="B" label="B" />
+            <Child key="C" label="C" />
+          </Offscreen>,
+        );
+      });
+      // B's effect should fire in between A and C even though it's been reused
+      // from a previous render. In other words, it's the same order as if all
+      // three siblings were brand new.
+      expect(Scheduler).toHaveYielded(['Mount A', 'Mount B', 'Mount C']);
+    },
+  );
+
+  // @gate enableOffscreen
+  it(
+    'when reusing old components (hidden -> visible), layout effects fire ' +
+      'with same timing as if it were brand new (includes setState callback)',
+    async () => {
+      class Child extends React.Component {
+        componentDidMount() {
+          Scheduler.unstable_yieldValue('Mount ' + this.props.label);
+        }
+        componentWillUnmount() {
+          Scheduler.unstable_yieldValue('Unmount ' + this.props.label);
+        }
+        render() {
+          return this.props.label;
+        }
+      }
+
+      // Initial mount
+      const bRef = React.createRef();
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(
+          <Offscreen mode="visible">
+            <Child key="B" ref={bRef} label="B" />
+          </Offscreen>,
+        );
+      });
+      expect(Scheduler).toHaveYielded(['Mount B']);
+
+      // We're going to schedule an update on a hidden component, so stash a
+      // reference to its setState before the ref gets detached
+      const setStateB = bRef.current.setState.bind(bRef.current);
+
+      // Hide the component
+      await act(async () => {
+        root.render(
+          <Offscreen mode="hidden">
+            <Child key="B" ref={bRef} label="B" />
+          </Offscreen>,
+        );
+      });
+      expect(Scheduler).toHaveYielded(['Unmount B']);
+
+      // Reappear the component and also add some new siblings.
+      await act(async () => {
+        setStateB(null, () => {
+          Scheduler.unstable_yieldValue('setState callback B');
+        });
+        root.render(
+          <Offscreen mode="visible">
+            <Child key="A" label="A" />
+            <Child key="B" ref={bRef} label="B" />
+            <Child key="C" label="C" />
+          </Offscreen>,
+        );
+      });
+      // B's effect should fire in between A and C even though it's been reused
+      // from a previous render. In other words, it's the same order as if all
+      // three siblings were brand new.
+      expect(Scheduler).toHaveYielded([
+        'Mount A',
+        'Mount B',
+        'setState callback B',
+        'Mount C',
+      ]);
+    },
+  );
 });
