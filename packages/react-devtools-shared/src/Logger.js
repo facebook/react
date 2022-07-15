@@ -33,10 +33,7 @@ export type LogEvent =
       +inspected_element_number_of_hooks: number | null,
     |}
   | {|
-      +event_name: 'select-element-in-tree',
-    |}
-  | {|
-      +event_name: 'select-element-in-owner-view',
+      +event_name: 'select-element',
     |}
   | {|
       +event_name: 'inspect-element-button-clicked',

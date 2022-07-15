@@ -77,7 +77,7 @@ export default function Element({data, index, style}: Props) {
 
   const handleClick = ({metaKey}) => {
     if (id !== null) {
-      logEvent({event_name: 'select-element-in-tree'});
+      logEvent({event_name: 'select-element'});
       dispatch({
         type: 'SELECT_ELEMENT_BY_ID',
         payload: metaKey ? null : id,
