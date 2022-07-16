@@ -108,8 +108,10 @@ export function getWrappedDisplayName(
   wrapperName: string,
   fallbackName?: string,
 ): string {
-  const functionName = getDisplayName(innerType, fallbackName);
-  return (outerType: any).displayName || `${wrapperName}(${functionName})`;
+  return (
+    (outerType: any).displayName ||
+    `${wrapperName}(${getDisplayName(innerType, fallbackName)})`
+  );
 }
 
 export function getDisplayName(
