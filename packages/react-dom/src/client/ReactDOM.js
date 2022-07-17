@@ -72,6 +72,8 @@ import {
   restoreStateIfNeeded,
 } from '../events/ReactDOMControlledComponent';
 
+declare var HIDE_DOWNLOAD_REACT_DEVTOOLS_TIP: any;
+
 setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptDiscreteHydration(attemptDiscreteHydration);
 setAttemptContinuousHydration(attemptContinuousHydration);
@@ -229,7 +231,13 @@ const foundDevTools = injectIntoDevTools({
 });
 
 if (__DEV__) {
-  if (!foundDevTools && canUseDOM && window.top === window.self) {
+  if (
+    !foundDevTools &&
+    canUseDOM &&
+    window.top === window.self &&
+    (typeof HIDE_DOWNLOAD_REACT_DEVTOOLS_TIP === 'undefined' ||
+      !HIDE_DOWNLOAD_REACT_DEVTOOLS_TIP)
+  ) {
     // If we're in Chrome or Firefox, provide a download link if not installed.
     if (
       (navigator.userAgent.indexOf('Chrome') > -1 &&

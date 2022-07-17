@@ -18,6 +18,7 @@ module.exports = {
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
+    HIDE_DOWNLOAD_REACT_DEVTOOLS_TIP: 'readonly',
     // CommonJS / Node
     process: 'readonly',
     setImmediate: 'readonly',

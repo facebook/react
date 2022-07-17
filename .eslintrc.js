@@ -276,5 +276,6 @@ module.exports = {
     gate: 'readonly',
     trustedTypes: 'readonly',
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
+    HIDE_DOWNLOAD_REACT_DEVTOOLS_TIP: 'readonly',
   },
 };
