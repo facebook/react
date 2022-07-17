@@ -978,7 +978,7 @@ const attributes = [
   {name: 'initialChecked', read: getAttribute('initialchecked')},
   {name: 'initialValue', read: getAttribute('initialvalue')},
   {name: 'inlist', read: getAttribute('inlist')},
-  {name: 'inputMode', tagName: 'input', read: getAttribute('inputmode')}, // TODO: Should use property but it's not implemented in Chrome
+  {name: 'inputMode', tagName: 'input', overrideStringValue: 'numeric'},
   {name: 'integrity', tagName: 'script'},
   {
     name: 'intercept',

@@ -1,4 +1,4 @@
-## `about` (on `<div>` inside `<div>`)
+﻿## `about` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `about=(string)`| (changed)| `"a string"` |
@@ -5526,27 +5526,27 @@
 ## `inputMode` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `inputMode=(string)`| (changed)| `"a string"` |
-| `inputMode=(empty string)`| (changed)| `<empty string>` |
-| `inputMode=(array with string)`| (changed)| `"string"` |
-| `inputMode=(empty array)`| (changed)| `<empty string>` |
-| `inputMode=(object)`| (changed)| `"result of toString()"` |
-| `inputMode=(numeric string)`| (changed)| `"42"` |
-| `inputMode=(-1)`| (changed)| `"-1"` |
-| `inputMode=(0)`| (changed)| `"0"` |
-| `inputMode=(integer)`| (changed)| `"1"` |
-| `inputMode=(NaN)`| (changed, warning)| `"NaN"` |
-| `inputMode=(float)`| (changed)| `"99.99"` |
-| `inputMode=(true)`| (initial, warning)| `<null>` |
-| `inputMode=(false)`| (initial, warning)| `<null>` |
-| `inputMode=(string 'true')`| (changed)| `"true"` |
-| `inputMode=(string 'false')`| (changed)| `"false"` |
-| `inputMode=(string 'on')`| (changed)| `"on"` |
-| `inputMode=(string 'off')`| (changed)| `"off"` |
-| `inputMode=(symbol)`| (initial, warning)| `<null>` |
-| `inputMode=(function)`| (initial, warning)| `<null>` |
-| `inputMode=(null)`| (initial)| `<null>` |
-| `inputMode=(undefined)`| (initial)| `<null>` |
+| `inputMode=(string)`| (changed)| `"numeric"` |
+| `inputMode=(empty string)`| (initial)| `<empty string>` |
+| `inputMode=(array with string)`| (changed)| `"numeric"` |
+| `inputMode=(empty array)`| (initial)| `<empty string>` |
+| `inputMode=(object)`| (initial)| `<empty string>` |
+| `inputMode=(numeric string)`| (initial)| `<empty string>` |
+| `inputMode=(-1)`| (initial)| `<empty string>` |
+| `inputMode=(0)`| (initial)| `<empty string>` |
+| `inputMode=(integer)`| (initial)| `<empty string>` |
+| `inputMode=(NaN)`| (initial, warning)| `<empty string>` |
+| `inputMode=(float)`| (initial)| `<empty string>` |
+| `inputMode=(true)`| (initial, warning)| `<empty string>` |
+| `inputMode=(false)`| (initial, warning)| `<empty string>` |
+| `inputMode=(string 'true')`| (initial)| `<empty string>` |
+| `inputMode=(string 'false')`| (initial)| `<empty string>` |
+| `inputMode=(string 'on')`| (initial)| `<empty string>` |
+| `inputMode=(string 'off')`| (initial)| `<empty string>` |
+| `inputMode=(symbol)`| (initial, warning)| `<empty string>` |
+| `inputMode=(function)`| (initial, warning)| `<empty string>` |
+| `inputMode=(null)`| (initial)| `<empty string>` |
+| `inputMode=(undefined)`| (initial)| `<empty string>` |
 
 ## `integrity` (on `<script>` inside `<div>`)
 | Test Case | Flags | Result |
