@@ -968,6 +968,7 @@ const attributes = [
     containerTagName: 'svg',
     tagName: 'feBlend',
   },
+  {name: 'inert'},
   {
     name: 'in2',
     read: getSVGProperty('in2'),
