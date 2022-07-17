@@ -648,6 +648,31 @@
 | `aria-=(null)`| (initial, warning)| `<null>` |
 | `aria-=(undefined)`| (initial, warning)| `<null>` |
 
+## `aria-hidden` (on `<div>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `aria-hidden=(string)`| (changed)| `"a string"` |
+| `aria-hidden=(empty string)`| (changed)| `<empty string>` |
+| `aria-hidden=(array with string)`| (changed)| `"string"` |
+| `aria-hidden=(empty array)`| (changed)| `<empty string>` |
+| `aria-hidden=(object)`| (changed)| `"result of toString()"` |
+| `aria-hidden=(numeric string)`| (changed)| `"42"` |
+| `aria-hidden=(-1)`| (changed)| `"-1"` |
+| `aria-hidden=(0)`| (changed)| `"0"` |
+| `aria-hidden=(integer)`| (changed)| `"1"` |
+| `aria-hidden=(NaN)`| (changed)| `"NaN"` |
+| `aria-hidden=(float)`| (changed)| `"99.99"` |
+| `aria-hidden=(true)`| (changed)| `"true"` |
+| `aria-hidden=(false)`| (changed)| `"false"` |
+| `aria-hidden=(string 'true')`| (changed)| `"true"` |
+| `aria-hidden=(string 'false')`| (changed)| `"false"` |
+| `aria-hidden=(string 'on')`| (changed)| `"on"` |
+| `aria-hidden=(string 'off')`| (changed)| `"off"` |
+| `aria-hidden=(symbol)`| (initial)| `<null>` |
+| `aria-hidden=(function)`| (initial)| `<null>` |
+| `aria-hidden=(null)`| (initial)| `<null>` |
+| `aria-hidden=(undefined)`| (initial)| `<null>` |
+
 ## `aria-invalidattribute` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |

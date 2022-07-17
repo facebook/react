@@ -119,6 +119,7 @@ const attributes = [
   },
   {name: 'aria', read: getAttribute('aria')},
   {name: 'aria-', read: getAttribute('aria-')},
+  {name: 'aria-hidden', read: getProperty('ariaHidden')},
   {name: 'aria-invalidattribute', read: getAttribute('aria-invalidattribute')},
   {name: 'as', tagName: 'link'},
   {
