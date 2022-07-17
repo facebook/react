@@ -905,7 +905,7 @@ const attributes = [
     read: getSVGProperty('height'),
     overrideStringValue: '100%',
   },
-  {name: 'hidden'},
+  {name: 'hidden', overrideStringValue: 'until-found'},
   {name: 'high', tagName: 'meter'},
   {
     name: 'horiz-adv-x',
