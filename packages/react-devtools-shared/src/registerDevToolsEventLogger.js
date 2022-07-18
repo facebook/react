@@ -35,7 +35,7 @@ export function registerDevToolsEventLogger(
             context: {
               surface,
               version: process.env.DEVTOOLS_VERSION,
-              metadata: metadata != null ? JSON.stringify(metadata) : {},
+              metadata: metadata != null ? JSON.stringify(metadata) : '',
               ...(fetchAdditionalContext != null
                 ? await fetchAdditionalContext()
                 : {}),
