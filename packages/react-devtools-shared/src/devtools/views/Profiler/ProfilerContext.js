@@ -192,14 +192,6 @@ function ProfilerContextController({children}: Props) {
     });
   }
 
-  const startProfiling = useCallback(() => {
-    logEvent({event_name: 'profiling-start'});
-    store.profilerStore.startProfiling();
-  }, [store]);
-  const stopProfiling = useCallback(() => store.profilerStore.stopProfiling(), [
-    store,
-  ]);
-
   const [
     isCommitFilterEnabled,
     setIsCommitFilterEnabled,
@@ -216,6 +208,14 @@ function ProfilerContextController({children}: Props) {
     'React::DevTools::Profiler::defaultTab',
     'flame-chart',
   );
+
+  const startProfiling = useCallback(() => {
+    logEvent({event_name: 'profiling-start'}, {current_tab: selectedTabID});
+    store.profilerStore.startProfiling();
+  }, [store, selectedTabID]);
+  const stopProfiling = useCallback(() => store.profilerStore.stopProfiling(), [
+    store,
+  ]);
 
   if (isProfiling) {
     batchedUpdates(() => {
