@@ -39,9 +39,6 @@ export type LogEvent =
       +event_name: 'inspect-element-button-clicked',
     |}
   | {|
-      +event_name: 'inspect-element-success',
-    |}
-  | {|
       +event_name: 'profiling-start',
     |};
 
