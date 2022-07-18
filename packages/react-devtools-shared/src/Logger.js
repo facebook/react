@@ -42,12 +42,12 @@ export type LogEvent =
       +event_name: 'profiling-start',
     |};
 
-export type LogFunction = (LogEvent, Object) => void | Promise<void>;
+export type LogFunction = (LogEvent, ?Object) => void | Promise<void>;
 
 let logFunctions: Array<LogFunction> = [];
 export const logEvent: LogFunction =
   enableLogger === true
-    ? function logEvent(event: LogEvent, metadata: Object): void {
+    ? function logEvent(event: LogEvent, metadata: ?Object): void {
         logFunctions.forEach(log => {
           log(event, metadata);
         });
