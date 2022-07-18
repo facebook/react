@@ -33,6 +33,7 @@ import {
   storeAsGlobal as storeAsGlobalAPI,
 } from 'react-devtools-shared/src/backendAPI';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 import styles from './InspectedElementView.css';
 
@@ -301,14 +302,13 @@ function OwnerView({
     clearHighlightNativeElement,
   } = useHighlightNativeElement();
 
-  const handleClick = useCallback(
-    () =>
-      dispatch({
-        type: 'SELECT_ELEMENT_BY_ID',
-        payload: id,
-      }),
-    [dispatch, id],
-  );
+  const handleClick = useCallback(() => {
+    logEvent({event_name: 'select-element'});
+    dispatch({
+      type: 'SELECT_ELEMENT_BY_ID',
+      payload: id,
+    });
+  }, [dispatch, id]);
 
   const onMouseEnter = () => highlightNativeElement(id);
 

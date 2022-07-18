@@ -16,6 +16,7 @@ import {
   TreeStateContext,
 } from '../Components/TreeContext';
 import {StoreContext} from '../context';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 import type {ProfilingDataFrontend} from './types';
 
@@ -191,10 +192,10 @@ function ProfilerContextController({children}: Props) {
     });
   }
 
-  const startProfiling = useCallback(
-    () => store.profilerStore.startProfiling(),
-    [store],
-  );
+  const startProfiling = useCallback(() => {
+    logEvent({event_name: 'profiling-start'});
+    store.profilerStore.startProfiling();
+  }, [store]);
   const stopProfiling = useCallback(() => store.profilerStore.stopProfiling(), [
     store,
   ]);

@@ -12,6 +12,7 @@ import {useCallback, useContext, useEffect, useState} from 'react';
 import {BridgeContext} from '../context';
 import Toggle from '../Toggle';
 import ButtonIcon from '../ButtonIcon';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 export default function InspectHostNodesToggle() {
   const [isInspecting, setIsInspecting] = useState(false);
@@ -22,6 +23,7 @@ export default function InspectHostNodesToggle() {
       setIsInspecting(isChecked);
 
       if (isChecked) {
+        logEvent({event_name: 'inspect-element-button-clicked'});
         bridge.send('startInspectingNative');
       } else {
         bridge.send('stopInspectingNative', false);

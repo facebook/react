@@ -36,6 +36,7 @@ import {clearErrorsAndWarnings as clearErrorsAndWarningsAPI} from 'react-devtool
 import styles from './Tree.css';
 import ButtonIcon from '../ButtonIcon';
 import Button from '../Button';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 // Never indent more than this number of pixels (even if we have the room).
 const DEFAULT_INDENTATION_SIZE = 12;
@@ -103,6 +104,7 @@ export default function Tree(props: Props) {
     function handleStopInspectingNative(didSelectNode) {
       if (didSelectNode && focusTargetRef.current !== null) {
         focusTargetRef.current.focus();
+        logEvent({event_name: 'select-element'});
       }
     }
     bridge.addListener('stopInspectingNative', handleStopInspectingNative);

@@ -17,6 +17,7 @@ import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 import {StoreContext} from '../context';
 import {useSubscription} from '../hooks';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 import type {ItemData} from './Tree';
 import type {Element as ElementType} from './types';
@@ -76,6 +77,7 @@ export default function Element({data, index, style}: Props) {
 
   const handleClick = ({metaKey}) => {
     if (id !== null) {
+      logEvent({event_name: 'select-element'});
       dispatch({
         type: 'SELECT_ELEMENT_BY_ID',
         payload: metaKey ? null : id,
