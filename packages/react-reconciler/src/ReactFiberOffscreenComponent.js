@@ -42,8 +42,15 @@ export type OffscreenQueue = {|
   wakeables: Set<Wakeable> | null,
 |};
 
+type OffscreenVisibility = number;
+
+export const OffscreenVisible = /*                     */ 0b01;
+
+// TODO
+// export const OffscreenPassiveEffectsConnected = /*     */ 0b01;
+
 export type OffscreenInstance = {|
-  isHidden: boolean,
+  visibility: OffscreenVisibility,
   pendingMarkers: Set<TracingMarkerInstance> | null,
   transitions: Set<Transition> | null,
   retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,

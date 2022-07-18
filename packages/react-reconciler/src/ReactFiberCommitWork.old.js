@@ -173,6 +173,7 @@ import {
 } from './ReactFiberDevToolsHook.old';
 import {releaseCache, retainCache} from './ReactFiberCacheComponent.old';
 import {clearTransitionsForLanes} from './ReactFiberLane.old';
+import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -2424,14 +2425,8 @@ function commitMutationEffectsOnFiber(
       const offscreenFiber: Fiber = (finishedWork.child: any);
 
       if (offscreenFiber.flags & Visibility) {
-        const offscreenInstance: OffscreenInstance = offscreenFiber.stateNode;
         const newState: OffscreenState | null = offscreenFiber.memoizedState;
         const isHidden = newState !== null;
-
-        // Track the current state on the Offscreen instance so we can
-        // read it during an event
-        offscreenInstance.isHidden = isHidden;
-
         if (isHidden) {
           const wasHidden =
             offscreenFiber.alternate !== null &&
@@ -2485,7 +2480,11 @@ function commitMutationEffectsOnFiber(
 
         // Track the current state on the Offscreen instance so we can
         // read it during an event
-        offscreenInstance.isHidden = isHidden;
+        if (isHidden) {
+          offscreenInstance.visibility &= ~OffscreenVisible;
+        } else {
+          offscreenInstance.visibility |= OffscreenVisible;
+        }
 
         if (isHidden) {
           if (!wasHidden) {
