@@ -30,7 +30,10 @@ import type {
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.old';
 import type {RootState} from './ReactFiberRoot.old';
-import type {Transition} from './ReactFiberTracingMarkerComponent.old';
+import type {
+  Transition,
+  TracingMarkerInstance,
+} from './ReactFiberTracingMarkerComponent.old';
 
 import {
   enableCreateEventHandleAPI,
@@ -2063,6 +2066,20 @@ function commitDeletionEffectsOnFiber(
         const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
         offscreenSubtreeWasHidden =
           prevOffscreenSubtreeWasHidden || deletedFiber.memoizedState !== null;
+
+        if (enableTransitionTracing) {
+          // We need to mark this fiber's parents as deleted
+          const instance: OffscreenInstance = deletedFiber.stateNode;
+          const markers = instance.pendingMarkers;
+          if (markers !== null) {
+            markers.forEach(marker => {
+              if (marker.pendingBoundaries.has(instance)) {
+                marker.pendingBoundaries.delete(instance);
+              }
+            });
+          }
+        }
+
         recursivelyTraverseDeletionEffects(
           finishedRoot,
           nearestMountedAncestor,
@@ -2077,6 +2094,58 @@ function commitDeletionEffectsOnFiber(
         );
       }
       break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        // We need to mark this fiber's parents as deleted
+        const instance: TracingMarkerInstance = deletedFiber.stateNode;
+        const markers = instance.parents;
+        if (instance.transitions !== null) {
+          if (instance.deletions === null) {
+            instance.deletions = [];
+          }
+          instance.deletions.push({
+            type: 'marker',
+            name: deletedFiber.memoizedProps.name,
+            transitions: instance.transitions,
+          });
+
+          addMarkerIncompleteCallbackToPendingTransition(
+            instance.name,
+            instance.transitions,
+            instance.deletions,
+          );
+
+          if (markers !== null) {
+            markers.forEach(marker => {
+              if (marker.deletions === null) {
+                marker.deletions = [];
+
+                if (marker.name !== null) {
+                  addMarkerIncompleteCallbackToPendingTransition(
+                    marker.name,
+                    instance.transitions,
+                    marker.deletions,
+                  );
+                }
+              }
+
+              marker.deletions.push({
+                type: 'marker',
+                name: deletedFiber.memoizedProps.name,
+                transitions: instance.transitions,
+              });
+            });
+          }
+        }
+      }
+
+      recursivelyTraverseDeletionEffects(
+        finishedRoot,
+        nearestMountedAncestor,
+        deletedFiber,
+      );
+      return;
     }
     default: {
       recursivelyTraverseDeletionEffects(
@@ -3104,14 +3173,14 @@ function commitPassiveMountOnFiber(
       break;
     }
     case TracingMarkerComponent: {
-      if (flags & Passive) {
-        if (enableTransitionTracing) {
-          recursivelyTraversePassiveMountEffects(
-            finishedRoot,
-            finishedWork,
-            committedLanes,
-            committedTransitions,
-          );
+      if (enableTransitionTracing) {
+        recursivelyTraversePassiveMountEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions,
+        );
+        if (flags & Passive) {
           // Get the transitions that were initiatized during the render
           // and add a start transition callback for each of them
           const instance = finishedWork.stateNode;
@@ -3159,6 +3228,8 @@ function commitPassiveMountOnFiber(
               instance.transitions = null;
               instance.pendingBoundaries = null;
               instance.deletions = null;
+              instance.parents = null;
+              instance.name = null;
             }
           }
         }

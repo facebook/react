@@ -772,6 +772,7 @@ export function createFiberFromTracingMarker(
     transitions: null,
     pendingBoundaries: null,
     deletions: null,
+    parents: null,
     name: pendingProps.name,
   };
   fiber.stateNode = tracingMarkerInstance;

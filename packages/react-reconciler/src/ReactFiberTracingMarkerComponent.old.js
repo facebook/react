@@ -47,6 +47,7 @@ export type TracingMarkerInstance = {|
   pendingBoundaries: PendingBoundaries | null,
   transitions: Set<Transition> | null,
   deletions: Array<TransitionDeletion> | null,
+  parents: Array<TracingMarkerInstance> | null,
   name: string | null,
 |};
 
@@ -212,6 +213,7 @@ export function pushRootMarkerInstance(workInProgress: Fiber): void {
             transitions: new Set([transition]),
             pendingBoundaries: null,
             deletions: null,
+            parents: null,
             name: null,
           };
           root.incompleteTransitions.set(transition, markerInstance);

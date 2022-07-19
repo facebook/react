@@ -974,11 +974,14 @@ function updateTracingMarkerComponent(
   // or updated it, so we can create a new set of transitions each time
   if (current === null) {
     const currentTransitions = getPendingTransitions();
+    // TODO: What if the parent markers change?
+    const parents = getMarkerInstances();
     if (currentTransitions !== null) {
       const markerInstance: TracingMarkerInstance = {
         transitions: new Set(currentTransitions),
         pendingBoundaries: new Map(),
         name: workInProgress.pendingProps.name,
+        parents,
         deletions: null,
       };
       workInProgress.stateNode = markerInstance;
