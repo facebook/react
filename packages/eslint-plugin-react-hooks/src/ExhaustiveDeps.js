@@ -1161,7 +1161,8 @@ export default {
       const callback = node.arguments[callbackIndex];
       const reactiveHook = node.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
-      const declaredDependenciesNode = node.arguments[callbackIndex + 1];
+      const declaredDependenciesNode =
+        node.arguments[Math.max(callbackIndex + 1, node.arguments.length - 1)];
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
       // Check whether a callback is supplied. If there is no callback supplied
