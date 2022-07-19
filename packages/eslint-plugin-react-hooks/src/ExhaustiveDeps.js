@@ -32,6 +32,9 @@ export default {
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
+          checkAsyncFor: {
+            type: 'string',
+          },
         },
       },
     ],
@@ -51,9 +54,16 @@ export default {
         context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
       false;
 
+    const checkAsyncFor = new RegExp(
+      context.options && context.options[0] && context.options[0].checkAsyncFor
+        ? context.options[0].checkAsyncFor
+        : '.*',
+    );
+
     const options = {
       additionalHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
+      checkAsyncFor,
     };
 
     function reportProblem(problem) {
@@ -97,7 +107,11 @@ export default {
       reactiveHookName,
       isEffect,
     ) {
-      if (isEffect && node.async) {
+      if (
+        isEffect &&
+        node.async &&
+        options.checkAsyncFor.test(reactiveHookName)
+      ) {
         reportProblem({
           node: node,
           message:
