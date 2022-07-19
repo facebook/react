@@ -25,7 +25,7 @@ export function registerDevToolsEventLogger(
     | LoggerContext
     | ?(() => Promise<LoggerContext>),
 ): void {
-  async function logEvent(event: LogEvent) {
+  async function logEvent(event: LogEvent, metadata: ?Object) {
     if (enableLogger) {
       if (loggingIFrame != null) {
         loggingIFrame.contentWindow.postMessage(
@@ -35,6 +35,7 @@ export function registerDevToolsEventLogger(
             context: {
               surface,
               version: process.env.DEVTOOLS_VERSION,
+              metadata: metadata != null ? JSON.stringify(metadata) : '',
               ...(fetchAdditionalContext != null
                 ? await fetchAdditionalContext()
                 : {}),
