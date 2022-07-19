@@ -2073,6 +2073,33 @@ function commitDeletionEffectsOnFiber(
           const markers = instance.pendingMarkers;
           if (markers !== null) {
             markers.forEach(marker => {
+              if (marker.deletions === null) {
+                marker.deletions = [];
+
+                if (marker.name !== null) {
+                  addMarkerIncompleteCallbackToPendingTransition(
+                    marker.name,
+                    instance.transitions,
+                    marker.deletions,
+                  );
+                }
+              }
+
+              let name = null;
+              const parent = deletedFiber.return;
+              if (
+                parent !== null &&
+                parent.tag === SuspenseComponent &&
+                parent.memoizedProps.unstable_name
+              ) {
+                name = parent.memoizedProps.unstable_name;
+              }
+              marker.deletions.push({
+                type: 'suspense',
+                name,
+                transitions: instance.transitions,
+              });
+
               if (marker.pendingBoundaries.has(instance)) {
                 marker.pendingBoundaries.delete(instance);
               }
@@ -3139,6 +3166,11 @@ function commitPassiveMountOnFiber(
           }
 
           commitTransitionProgress(finishedWork);
+
+          if (!isFallback) {
+            instance.transitions = null;
+            instance.pendingMarkers = null;
+          }
         }
       }
       break;
