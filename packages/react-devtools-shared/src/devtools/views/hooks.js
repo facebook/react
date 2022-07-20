@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {LogEvent} from 'react-devtools-shared/src/Logger';
+import type {LoggerEvent} from 'react-devtools-shared/src/Logger';
 
 import throttle from 'lodash.throttle';
 import {
@@ -147,7 +147,7 @@ export function useIsOverflowing(
 export function useLocalStorage<T>(
   key: string,
   initialValue: T | (() => T),
-  event?: LogEvent,
+  loggerEvent?: LoggerEvent,
 ): [T, (value: T | (() => T)) => void] {
   const getValueFromLocalStorage = useCallback(() => {
     try {
@@ -178,8 +178,8 @@ export function useLocalStorage<T>(
         // Notify listeners that this setting has changed.
         window.dispatchEvent(new Event(key));
 
-        if (event != null) {
-          logEvent(event, {
+        if (loggerEvent != null) {
+          logEvent(loggerEvent, {
             source: 'localStorage setter',
             key,
             value: valueToStore,

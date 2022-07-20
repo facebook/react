@@ -9,7 +9,7 @@
 
 import {enableLogger} from 'react-devtools-feature-flags';
 
-export type LogEvent =
+export type LoggerEvent =
   | {|
       +event_name: 'loaded-dev-tools',
     |}
@@ -48,12 +48,12 @@ export type LogEvent =
       +event_name: 'settings-changed',
     |};
 
-export type LogFunction = (LogEvent, ?Object) => void | Promise<void>;
+export type LogFunction = (LoggerEvent, ?Object) => void | Promise<void>;
 
 let logFunctions: Array<LogFunction> = [];
 export const logEvent: LogFunction =
   enableLogger === true
-    ? function logEvent(event: LogEvent, metadata: ?Object): void {
+    ? function logEvent(event: LoggerEvent, metadata: ?Object): void {
         logFunctions.forEach(log => {
           log(event, metadata);
         });

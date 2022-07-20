@@ -7,7 +7,7 @@
  * @flow strict-local
  */
 
-import type {LogEvent} from 'react-devtools-shared/src/Logger';
+import type {LoggerEvent} from 'react-devtools-shared/src/Logger';
 
 import {registerEventLogger} from 'react-devtools-shared/src/Logger';
 import {enableLogger} from 'react-devtools-feature-flags';
@@ -25,7 +25,7 @@ export function registerDevToolsEventLogger(
     | LoggerContext
     | ?(() => Promise<LoggerContext>),
 ): void {
-  async function logEvent(event: LogEvent, metadata: ?Object) {
+  async function logEvent(event: LoggerEvent, metadata: ?Object) {
     if (enableLogger) {
       if (loggingIFrame != null) {
         loggingIFrame.contentWindow.postMessage(
