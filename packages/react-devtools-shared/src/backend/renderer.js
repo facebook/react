@@ -837,7 +837,7 @@ export function attach(
     name: string,
     fiber: Fiber,
     parentFiber: ?Fiber,
-    extraString?: string = '',
+    extraString?: string,
   ): void => {
     if (__DEBUG__) {
       const displayName =

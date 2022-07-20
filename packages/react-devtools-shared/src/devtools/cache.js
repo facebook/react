@@ -136,7 +136,7 @@ function accessResult<Input, Key, Value>(
 export function createResource<Input, Key, Value>(
   fetch: Input => Thenable<Value>,
   hashInput: Input => Key,
-  config?: Config = {},
+  config?: Config,
 ): Resource<Input, Key, Value> {
   const resource = {
     clear(): void {

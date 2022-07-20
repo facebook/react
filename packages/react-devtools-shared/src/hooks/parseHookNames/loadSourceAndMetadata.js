@@ -314,7 +314,7 @@ function extractAndLoadSourceMapJSON(
 
 function fetchFile(
   url: string,
-  markName?: string = 'fetchFile',
+  markName?: string,
 ): Promise<string> {
   return withCallbackPerfMeasurements(`${markName}("${url}")`, done => {
     return new Promise((resolve, reject) => {

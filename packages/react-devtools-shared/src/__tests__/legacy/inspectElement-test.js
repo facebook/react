@@ -26,7 +26,7 @@ describe('InspectedElementContext', () => {
 
   async function read(
     id: number,
-    path?: Array<string | number> = null,
+    path?: Array<string | number>,
   ): Promise<Object> {
     const rendererID = ((store.getRendererIDForElement(id): any): number);
     const promise = backendAPI

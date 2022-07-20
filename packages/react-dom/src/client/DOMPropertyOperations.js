@@ -148,6 +148,7 @@ export function getValueForAttribute(
  * @param {DOMElement} node
  * @param {string} name
  * @param {*} value
+ * @param isCustomComponentTag | boolean
  */
 export function setValueForProperty(
   node: Element,

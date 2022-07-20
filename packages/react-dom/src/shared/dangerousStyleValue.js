@@ -15,6 +15,7 @@ import {checkCSSPropertyStringCoercion} from 'shared/CheckStringCoercion';
  *
  * @param {string} name CSS property name such as `topMargin`.
  * @param {*} value CSS property value such as `10px`.
+ * @param isCustomProperty
  * @return {string} Normalized style value with dimensions applied.
  */
 function dangerousStyleValue(name, value, isCustomProperty) {

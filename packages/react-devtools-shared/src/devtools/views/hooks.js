@@ -203,7 +203,7 @@ export function useLocalStorage<T>(
 export function useModalDismissSignal(
   modalRef: {current: HTMLDivElement | null, ...},
   dismissCallback: () => void,
-  dismissOnClickOutside?: boolean = true,
+  dismissOnClickOutside?: boolean,
 ): void {
   useEffect(() => {
     if (modalRef.current === null) {

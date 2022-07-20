@@ -20,8 +20,9 @@ const {register} = ReactNativeViewConfigRegistry;
  * Use this method for view configs that are loaded from UIManager.
  * Use createReactNativeComponentClass() for view configs defined within JavaScript.
  *
- * @param {string} config iOS View configuration.
  * @private
+ * @param name
+ * @param callback
  */
 const createReactNativeComponentClass = function(
   name: string,

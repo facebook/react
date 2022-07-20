@@ -19,7 +19,7 @@ import type {
 function unmemoizedGetBatchRange(
   batchUID: BatchUID,
   data: TimelineData,
-  minStartTime?: number = 0,
+  minStartTime?: number,
 ): [Milliseconds, Milliseconds] {
   const measures = data.batchUIDToMeasuresMap.get(batchUID);
   if (measures == null || measures.length === 0) {

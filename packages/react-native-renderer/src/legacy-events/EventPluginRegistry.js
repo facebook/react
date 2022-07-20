@@ -84,7 +84,8 @@ function recomputePluginOrdering(): void {
  * Publishes an event so that it can be dispatched by the supplied plugin.
  *
  * @param {object} dispatchConfig Dispatch configuration for the event.
- * @param {object} PluginModule Plugin publishing the event.
+ * @param pluginModule
+ * @param eventName
  * @return {boolean} True if the event was successfully published.
  * @private
  */

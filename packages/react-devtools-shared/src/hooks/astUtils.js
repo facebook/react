@@ -40,7 +40,7 @@ const AST_NODE_TYPES = Object.freeze({
 function checkNodeLocation(
   path: NodePath,
   line: number,
-  column?: number | null = null,
+  column?: number | null,
 ): boolean {
   const {start, end} = path.node.loc;
 
