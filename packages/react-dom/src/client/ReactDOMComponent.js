@@ -257,7 +257,7 @@ export function checkForUnmatchedText(
   }
 }
 
-export function getOwnerDocumentFromRootContainer(
+function getOwnerDocumentFromRootContainer(
   rootContainerElement: Element | Document | DocumentFragment,
 ): Document {
   return rootContainerElement.nodeType === DOCUMENT_NODE

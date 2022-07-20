@@ -40,6 +40,7 @@ import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old
 import {
   enableCPUSuspense,
   enableUseMutableSource,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 
 import checkPropTypes from 'shared/checkPropTypes';
@@ -161,6 +162,7 @@ import {
   getSuspenseInstanceFallbackErrorDetails,
   registerSuspenseInstanceRetry,
   supportsHydration,
+  supportsResources,
   isPrimaryRenderer,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
@@ -1574,19 +1576,20 @@ function updateHostResource(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  const nextProps = workInProgress.pendingProps;
+  if (supportsResources && enableFloat) {
+    const nextProps = workInProgress.pendingProps;
+    const nextChildren = nextProps.children;
 
-  const nextChildren = nextProps.children;
-
-  if (__DEV__) {
-    if (nextChildren != null) {
-      console.error(
-        'A "%s" element is being treated like a HostResource but it contains children. HostResources should not have any children',
-        workInProgress.type,
-      );
+    if (__DEV__) {
+      if (nextChildren != null) {
+        console.error(
+          'A "%s" element is being treated like a HostResource but it contains children. HostResources should not have any children',
+          workInProgress.type,
+        );
+      }
     }
+    markRef(current, workInProgress);
   }
-  markRef(current, workInProgress);
   return null;
 }
 

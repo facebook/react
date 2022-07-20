@@ -1826,7 +1826,7 @@ function commitDeletionEffectsOnFiber(
       return;
     }
     case HostResource: {
-      if (supportsMutation) {
+      if (supportsResources) {
         recursivelyTraverseDeletionEffects(
           finishedRoot,
           nearestMountedAncestor,
@@ -2167,7 +2167,7 @@ export function commitMutationEffects(
 
   setCurrentDebugFiberInDEV(finishedWork);
   commitMutationEffectsOnFiber(finishedWork, root, committedLanes);
-  if (supportsResources && enableFloat) {
+  if (supportsResources && enableFloat && root.resourceHost) {
     insertPendingResources(root.resourceHost);
   }
   setCurrentDebugFiberInDEV(finishedWork);
@@ -2388,10 +2388,10 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case HostResource: {
-      recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      commitReconciliationEffects(finishedWork);
-      if (flags & Update) {
-        if (supportsResources && supportsMutation) {
+      if (supportsResources && enableFloat) {
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        commitReconciliationEffects(finishedWork);
+        if (flags & Update) {
           if (current !== null) {
             const oldResource = current.stateNode;
             if (oldResource) {

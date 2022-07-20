@@ -114,7 +114,6 @@ export type Container =
   | (Element & {_reactRootContainer?: FiberRoot, ...})
   | (Document & {_reactRootContainer?: FiberRoot, ...})
   | (DocumentFragment & {_reactRootContainer?: FiberRoot, ...});
-export type ResourceHost = Element | Document | DocumentFragment;
 export type Instance = Element;
 export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Container, ResourceHost} from './ReactDOMHostConfig';
+import type {Container} from './ReactDOMHostConfig';
 
 import {createElement, setInitialResourceProperties} from './ReactDOMComponent';
 import {HTML_NAMESPACE} from '../shared/DOMNamespaces';
@@ -16,6 +16,13 @@ import {
   DOCUMENT_FRAGMENT_NODE,
   ELEMENT_NODE,
 } from '../shared/HTMLNodeType';
+
+type ResourceContainer = Element | Document | DocumentFragment;
+
+export type ResourceHost = {
+  map: ResourceMap,
+  container: ResourceContainer,
+};
 
 export type Resource = {
   key: string,
@@ -29,7 +36,9 @@ const CORS_NONE = '';
 const CORS_ANON = 'anonymous';
 const CORS_CREDS = 'use-credentials';
 
-const resourceMap: Map<string, Resource> = new Map();
+type ResourceMap = Map<string, Resource>;
+type MapOfResourceMaps = Map<ResourceContainer, ResourceMap>;
+let resourceMaps: ?MapOfResourceMaps = null;
 const embeddedResourceElementMap: Map<string, Element> = new Map();
 let pendingInsertionFragment: ?DocumentFragment = null;
 
@@ -69,6 +78,8 @@ export function acquireResource(
     crossOrigin = CORS_NONE;
   }
   const key = href + crossOrigin;
+
+  const resourceMap = resourceHost.map;
   let resource = resourceMap.get(key);
   if (!resource) {
     let domElement = embeddedResourceElementMap.get(key);
@@ -126,14 +137,15 @@ export function reconcileHydratedResources(rootContainerInstance: Container) {
 }
 
 function insertResource(element: Element, resourceHost: ResourceHost) {
-  switch (resourceHost.nodeType) {
+  const resourceContainer = resourceHost.container;
+  switch (resourceContainer.nodeType) {
     case DOCUMENT_NODE: {
-      const head = ((resourceHost: any): Document).head;
+      const head = ((resourceContainer: any): Document).head;
       if (!head) {
         // If we do not have a head we are likely in the middle of replacing it on client render.
         // stash the insertions in a fragment. They will be inserted after mutation effects
         if (pendingInsertionFragment === null) {
-          pendingInsertionFragment = ((resourceHost: any): Document).createDocumentFragment();
+          pendingInsertionFragment = ((resourceContainer: any): Document).createDocumentFragment();
         }
         ((pendingInsertionFragment: any): DocumentFragment).append(element);
       } else {
@@ -142,11 +154,11 @@ function insertResource(element: Element, resourceHost: ResourceHost) {
       break;
     }
     case DOCUMENT_FRAGMENT_NODE: {
-      resourceHost.append(element);
+      resourceContainer.append(element);
       break;
     }
     case ELEMENT_NODE: {
-      resourceHost.appendChild(element);
+      resourceContainer.appendChild(element);
       break;
     }
     default: {
@@ -158,9 +170,10 @@ function insertResource(element: Element, resourceHost: ResourceHost) {
 }
 
 export function insertPendingResources(resourceHost: ResourceHost) {
+  const resourceContainer = resourceHost.container;
   if (pendingInsertionFragment !== null) {
-    if (resourceHost.nodeType === DOCUMENT_NODE) {
-      const head = ((resourceHost: any): Document).head;
+    if (resourceContainer.nodeType === DOCUMENT_NODE) {
+      const head = ((resourceContainer: any): Document).head;
       if (!head) {
         pendingInsertionFragment = null;
         throw new Error(
@@ -181,10 +194,15 @@ export function getRootResourceHost(
   rootContainer: Container,
   hydration: boolean,
 ): ResourceHost {
+  if (resourceMaps === null) {
+    resourceMaps = new Map();
+  }
+  let resourceContainer;
   switch (rootContainer.nodeType) {
     case DOCUMENT_NODE:
     case DOCUMENT_FRAGMENT_NODE: {
-      return rootContainer;
+      resourceContainer = rootContainer;
+      break;
     }
     case ELEMENT_NODE: {
       if (hydration) {
@@ -192,13 +210,15 @@ export function getRootResourceHost(
         // possible given the tag type of the container
         const tagName = rootContainer.tagName;
         if (tagName !== 'HTML' && tagName !== 'HEAD') {
-          return rootContainer;
+          resourceContainer = rootContainer;
+          break;
         }
       }
       // If we are not hydrating or we have a container tag name that is incompatible with being
       // a ResourceHost we get the Root Node. Note that this intenitonally does not use ownerDocument
       // because we want to use a shadoRoot if this rootContainer is embedded within one.
-      return rootContainer.getRootNode();
+      resourceContainer = rootContainer.getRootNode();
+      break;
     }
     default: {
       throw new Error(
@@ -206,4 +226,14 @@ export function getRootResourceHost(
       );
     }
   }
+
+  let map = ((resourceMaps: any): MapOfResourceMaps).get(resourceContainer);
+  if (!map) {
+    map = new Map();
+    ((resourceMaps: any): MapOfResourceMaps).set(resourceContainer, map);
+  }
+  return {
+    map,
+    container: resourceContainer,
+  };
 }

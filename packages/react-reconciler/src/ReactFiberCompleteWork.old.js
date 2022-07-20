@@ -93,6 +93,7 @@ import {
   prepareUpdate,
   supportsMutation,
   supportsPersistence,
+  supportsResources,
   cloneInstance,
   cloneHiddenInstance,
   cloneHiddenTextInstance,
@@ -1087,14 +1088,16 @@ function completeWork(
       return null;
     }
     case HostResource: {
-      const rootContainerInstance = getRootHostContainer();
-      workInProgress.memoizedState = rootContainerInstance;
-      if (current !== null && workInProgress.stateNode != null) {
-        // noop for now
-      } else {
-        markUpdate(workInProgress);
+      if (supportsResources) {
+        const rootContainerInstance = getRootHostContainer();
+        workInProgress.memoizedState = rootContainerInstance;
+        if (current !== null && workInProgress.stateNode != null) {
+          // noop for now
+        } else {
+          markUpdate(workInProgress);
+        }
+        bubbleProperties(workInProgress);
       }
-      bubbleProperties(workInProgress);
       return null;
     }
     case SuspenseComponent: {

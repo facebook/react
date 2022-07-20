@@ -572,4 +572,214 @@ describe('ReactDOMResources', () => {
       </html>,
     );
   });
+
+  // @gate enableFloat
+  it('dedupes resources across roots when not using hydration', async () => {
+    function App({extra}) {
+      return (
+        <>
+          <link rel="stylesheet" href="foo" />
+          <div>hello world</div>
+          {extra ? <link rel="stylesheet" href="extra" /> : null}
+          <link rel="stylesheet" href="bar" />
+        </>
+      );
+    }
+
+    await actInto(
+      async () => {},
+      '<!DOCTYPE html><html><head></head><body><div id="container1"></div><div id="container2"></div>',
+      doc => [
+        doc.getElementById('container1'),
+        doc.getElementById('container2'),
+      ],
+    );
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container1" />
+          <div id="container2" />
+        </body>
+      </html>,
+    );
+
+    const root1 = ReactDOMClient.createRoot(container[0]);
+    root1.render(<App />);
+    const root2 = ReactDOMClient.createRoot(container[1]);
+    root2.render(<App extra={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" />
+          <link rel="stylesheet" href="bar" />
+          <link rel="stylesheet" href="extra" />
+        </head>
+        <body>
+          <div id="container1">
+            <div>hello world</div>
+          </div>
+          <div id="container2">
+            <div>hello world</div>
+          </div>
+        </body>
+      </html>,
+    );
+
+    root1.render(<App extra={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document.head)).toEqual([
+      <link rel="stylesheet" href="foo" />,
+      <link rel="stylesheet" href="bar" />,
+      <link rel="stylesheet" href="extra" />,
+    ]);
+
+    root2.render(<App />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document.head)).toEqual([
+      <link rel="stylesheet" href="foo" />,
+      <link rel="stylesheet" href="bar" />,
+      <link rel="stylesheet" href="extra" />,
+    ]);
+
+    root1.render(<App />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document.head)).toEqual([
+      <link rel="stylesheet" href="foo" />,
+      <link rel="stylesheet" href="bar" />,
+    ]);
+  });
+
+  // @gate enableFloat
+  it('tracks resources separately when using hydrationRoots', async () => {
+    function App({extra}) {
+      return (
+        <>
+          <link rel="stylesheet" href="foo" />
+          <div>hello world</div>
+          {extra ? <link rel="stylesheet" href="extra" /> : null}
+          <link rel="stylesheet" href="bar" />
+        </>
+      );
+    }
+
+    const server1 = ReactDOMFizzServer.renderToString(<App />);
+    const server2 = ReactDOMFizzServer.renderToString(<App extra={true} />);
+
+    await actInto(
+      async () => {},
+      `<!DOCTYPE html><html><head></head><body><div id="container1">${server1}</div><div id="container2">${server2}</div>`,
+      doc => [
+        doc.getElementById('container1'),
+        doc.getElementById('container2'),
+      ],
+    );
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container1">
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="bar" />
+            <div>hello world</div>
+          </div>
+          <div id="container2">
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="extra" />
+            <link rel="stylesheet" href="bar" />
+            <div>hello world</div>
+          </div>
+        </body>
+      </html>,
+    );
+
+    const root1 = ReactDOMClient.hydrateRoot(container[0], <App />);
+    const root2 = ReactDOMClient.hydrateRoot(
+      container[1],
+      <App extra={true} />,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container1">
+            <div>hello world</div>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="bar" />
+          </div>
+          <div id="container2">
+            <div>hello world</div>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="extra" />
+            <link rel="stylesheet" href="bar" />
+          </div>
+        </body>
+      </html>,
+    );
+
+    root1.render(<App extra={true} />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container1">
+            <div>hello world</div>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="bar" />
+            <link rel="stylesheet" href="extra" />
+          </div>
+          <div id="container2">
+            <div>hello world</div>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="extra" />
+            <link rel="stylesheet" href="bar" />
+          </div>
+        </body>
+      </html>,
+    );
+
+    root2.render(<App />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container1">
+            <div>hello world</div>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="bar" />
+            <link rel="stylesheet" href="extra" />
+          </div>
+          <div id="container2">
+            <div>hello world</div>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="bar" />
+          </div>
+        </body>
+      </html>,
+    );
+
+    root1.render(<App />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div id="container1">
+            <div>hello world</div>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="bar" />
+          </div>
+          <div id="container2">
+            <div>hello world</div>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="bar" />
+          </div>
+        </body>
+      </html>,
+    );
+  });
 });
