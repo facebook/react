@@ -45,9 +45,7 @@ export type OffscreenQueue = {|
 type OffscreenVisibility = number;
 
 export const OffscreenVisible = /*                     */ 0b01;
-
-// TODO
-// export const OffscreenPassiveEffectsConnected = /*     */ 0b01;
+export const OffscreenPassiveEffectsConnected = /*     */ 0b10;
 
 export type OffscreenInstance = {|
   visibility: OffscreenVisibility,
