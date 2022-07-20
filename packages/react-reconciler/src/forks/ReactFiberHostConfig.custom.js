@@ -195,8 +195,11 @@ export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
 export const prepareToRender = $$$hostConfig.prepareToRender;
 export const cleanupAfterRender = $$$hostConfig.cleanupAfterRender;
 export const isResource = $$$hostConfig.isResource;
-export const hoistStaticResource = $$$hostConfig.hoistStaticResource;
+export const reconcileHydratedResources =
+  $$$hostConfig.reconcileHydratedResources;
 export const acquireResource = $$$hostConfig.acquireResource;
 export const releaseResource = $$$hostConfig.releaseResource;
 export const getRootResourceHost = $$$hostConfig.getRootResourceHost;
 export const insertPendingResources = $$$hostConfig.insertPendingResources;
+export const getResourceKeyFromTypeAndProps =
+  $$$hostConfig.getResourceKeyFromTypeAndProps;

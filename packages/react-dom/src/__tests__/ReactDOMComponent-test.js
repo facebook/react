@@ -1502,7 +1502,6 @@ describe('ReactDOMComponent', () => {
       }
     });
 
-    // @gate !enableFloat
     it('should receive a load event on <link> elements', () => {
       const container = document.createElement('div');
       const onLoad = jest.fn();
@@ -1521,7 +1520,6 @@ describe('ReactDOMComponent', () => {
       expect(onLoad).toHaveBeenCalledTimes(1);
     });
 
-    // @gate !enableFloat
     it('should receive an error event on <link> elements', () => {
       const container = document.createElement('div');
       const onError = jest.fn();

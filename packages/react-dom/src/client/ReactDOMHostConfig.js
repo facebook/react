@@ -15,6 +15,7 @@ import type {
   ObserveVisibleRectsCallback,
 } from 'react-reconciler/src/ReactTestSelectors';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
+import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import {
   precacheFiberNode,
@@ -69,8 +70,8 @@ import {
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {
+  getResourceKeyFromTypeAndProps,
   resourceFromElement,
-  reconcileHydratedResources,
   prepareToHydrateResources,
 } from './ReactDOMFloatResources';
 
@@ -787,16 +788,15 @@ function getNextHydratable(node) {
   // Skip non-hydratable nodes.
   for (; node != null; node = ((node: any): Node).nextSibling) {
     const nodeType = node.nodeType;
-    if (nodeType === ELEMENT_NODE) {
-      if (enableFloat) {
-        // @TODO replace with isResource logic
-        if (((node: any): HTMLElement).tagName.toLowerCase() === 'link') {
-          resourceFromElement(((node: any): HTMLElement));
-          continue;
-        }
-      }
-      break;
-    } else if (nodeType === TEXT_NODE) {
+    if (
+      enableFloat &&
+      nodeType === ELEMENT_NODE &&
+      resourceFromElement(((node: any): HTMLElement))
+    ) {
+      // This node was a resource, we advance to the next node
+      continue;
+    }
+    if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
       break;
     }
     if (nodeType === COMMENT_NODE) {
@@ -1351,23 +1351,22 @@ export function setupIntersectionObserver(
 
 export const supportsResources = true;
 
-export function prepareToRender() {
-  prepareToHydrateResources();
+export function prepareToRender(rootTag: RootTag) {
+  prepareToHydrateResources(rootTag);
 }
 
 export function cleanupAfterRender() {}
 
-export function isResource(type: string) {
-  return type === 'link';
+export function isResource(type: string, props: Props) {
+  return !!getResourceKeyFromTypeAndProps(type, props);
 }
 
-export function hoistStaticResource(rootContainerInstance: Container) {
-  reconcileHydratedResources(rootContainerInstance);
-}
+export {getResourceKeyFromTypeAndProps};
 
 export {
   acquireResource,
   releaseResource,
   getRootResourceHost,
   insertPendingResources,
+  reconcileHydratedResources,
 } from './ReactDOMFloatResources';

@@ -8,7 +8,9 @@
  */
 
 import type {Container} from './ReactDOMHostConfig';
+import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
+import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {createElement, setInitialResourceProperties} from './ReactDOMComponent';
 import {HTML_NAMESPACE} from '../shared/DOMNamespaces';
 import {
@@ -27,7 +29,6 @@ export type ResourceHost = {
 export type Resource = {
   key: string,
   type: string,
-  props: Object,
   count: number,
   instance: Element,
 };
@@ -41,69 +42,35 @@ type MapOfResourceMaps = Map<ResourceContainer, ResourceMap>;
 let resourceMaps: ?MapOfResourceMaps = null;
 const embeddedResourceElementMap: Map<string, Element> = new Map();
 let pendingInsertionFragment: ?DocumentFragment = null;
-
-export function resourceFromElement(domElement: Element): void {
-  const href = domElement.getAttribute('href');
-  const crossOriginAttr = domElement.getAttribute('crossorigin');
-  if (!href) {
-    return;
-  }
-
-  let crossOrigin;
-  if (crossOriginAttr === 'use-credentials') {
-    crossOrigin = CORS_CREDS;
-  } else if (crossOriginAttr === null) {
-    crossOrigin = CORS_NONE;
-  } else {
-    crossOrigin = CORS_ANON;
-  }
-  const key = href + crossOrigin;
-  embeddedResourceElementMap.set(key, domElement);
-}
+let rootIsUsingResources = false;
 
 export function acquireResource(
+  key: string,
   type: string,
   props: Object,
-  rootContainerInstance: Container,
   resourceHost: ResourceHost,
 ): Resource {
-  const href = props.href;
-  let crossOrigin;
-  const crossOriginProp = props.crossOrigin;
-  if (crossOriginProp === 'use-credentials') {
-    crossOrigin = CORS_CREDS;
-  } else if (typeof crossOriginProp === 'string' || crossOriginProp === true) {
-    crossOrigin = CORS_ANON;
-  } else {
-    crossOrigin = CORS_NONE;
-  }
-  const key = href + crossOrigin;
-
-  const resourceMap = resourceHost.map;
+  const {map: resourceMap, container: resourceContainer} = resourceHost;
   let resource = resourceMap.get(key);
   if (!resource) {
     let domElement = embeddedResourceElementMap.get(key);
     if (domElement) {
       embeddedResourceElementMap.delete(key);
     } else {
+      // We cheat somewhat and substitute the resourceHost container instead of the rootContainer.
+      // Sometimes they are the same but even when they are not, the ownerDocument should be.
       domElement = createElement(
         type,
         props,
-        rootContainerInstance,
+        resourceContainer,
         HTML_NAMESPACE,
       );
-      setInitialResourceProperties(
-        domElement,
-        type,
-        props,
-        rootContainerInstance,
-      );
+      setInitialResourceProperties(domElement, type, props, resourceContainer);
     }
     insertResource(domElement, resourceHost);
     resource = {
       key,
       type,
-      props,
       count: 0,
       instance: domElement,
     };
@@ -186,7 +153,8 @@ export function insertPendingResources(resourceHost: ResourceHost) {
   }
 }
 
-export function prepareToHydrateResources() {
+export function prepareToHydrateResources(rootTag: RootTag) {
+  rootIsUsingResources = rootTag === ConcurrentRoot;
   embeddedResourceElementMap.clear();
 }
 
@@ -236,4 +204,66 @@ export function getRootResourceHost(
     map,
     container: resourceContainer,
   };
+}
+
+export function getResourceKeyFromTypeAndProps(
+  type: string,
+  props: Object,
+): ?string {
+  switch (type) {
+    case 'link': {
+      const {rel, href, crossOrigin, referrerPolicy} = props;
+      if (!href) {
+        return undefined;
+      }
+
+      let cors;
+      if (crossOrigin === 'use-credentials') {
+        cors = CORS_CREDS;
+      } else if (typeof crossOrigin === 'string' || crossOrigin === true) {
+        cors = CORS_ANON;
+      } else {
+        cors = CORS_NONE;
+      }
+
+      const referrer =
+        referrerPolicy === 'strict-origin-when-cross-origin'
+          ? ''
+          : referrerPolicy || '';
+
+      // We use new-lines in the key because they are not valid in urls and thus there should
+      // never be a collision between a href with no cors/referrer and another href with particular
+      // cors & referrer.
+      switch (rel) {
+        case 'stylesheet': {
+          return href + '\n' + cors + referrer;
+        }
+        default:
+          return undefined;
+      }
+    }
+    default:
+      return undefined;
+  }
+}
+
+export function resourceFromElement(domElement: Element): boolean {
+  if (rootIsUsingResources) {
+    const type = domElement.tagName.toLowerCase();
+    const props = {
+      rel: domElement.getAttribute('rel'),
+      href: domElement.getAttribute('href'),
+      crossOrigin: domElement.getAttribute('crossorigin'),
+      referrerPolicy: domElement.getAttribute('referrerpolicy'),
+    };
+
+    const key = getResourceKeyFromTypeAndProps(type, props);
+
+    if (key) {
+      embeddedResourceElementMap.set(key, domElement);
+      return true;
+    }
+  }
+
+  return false;
 }

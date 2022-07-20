@@ -492,8 +492,8 @@ export function createFiberFromTypeAndProps(
       }
     }
   } else if (typeof type === 'string') {
-    if (supportsResources && enableFloat) {
-      if (isResource(type)) {
+    if (supportsResources && enableFloat && mode & ConcurrentMode) {
+      if (isResource(type, pendingProps)) {
         fiberTag = HostResource;
       } else {
         fiberTag = HostComponent;

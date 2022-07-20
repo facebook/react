@@ -164,6 +164,7 @@ import {
   supportsHydration,
   supportsResources,
   isPrimaryRenderer,
+  getResourceKeyFromTypeAndProps,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
@@ -1577,17 +1578,23 @@ function updateHostResource(
   renderLanes: Lanes,
 ) {
   if (supportsResources && enableFloat) {
+    const type = workInProgress.type;
     const nextProps = workInProgress.pendingProps;
-    const nextChildren = nextProps.children;
 
+    const nextChildren = nextProps.children;
     if (__DEV__) {
       if (nextChildren != null) {
         console.error(
           'A "%s" element is being treated like a HostResource but it contains children. HostResources should not have any children',
-          workInProgress.type,
+          type,
         );
       }
     }
+
+    workInProgress.memoizedState = getResourceKeyFromTypeAndProps(
+      type,
+      nextProps,
+    );
     markRef(current, workInProgress);
   }
   return null;

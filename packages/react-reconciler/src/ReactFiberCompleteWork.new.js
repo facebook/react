@@ -33,6 +33,7 @@ import type {Cache} from './ReactFiberCacheComponent.new';
 import {
   enableSuspenseAvoidThisFallback,
   enableLegacyHidden,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
@@ -1088,12 +1089,11 @@ function completeWork(
       return null;
     }
     case HostResource: {
-      if (supportsResources) {
-        const rootContainerInstance = getRootHostContainer();
-        workInProgress.memoizedState = rootContainerInstance;
-        if (current !== null && workInProgress.stateNode != null) {
-          // noop for now
-        } else {
+      if (supportsResources && enableFloat) {
+        const previousKey = current !== null ? current.memoizedState : '';
+        const currentKey = workInProgress.memoizedState;
+
+        if (currentKey !== previousKey) {
           markUpdate(workInProgress);
         }
         bubbleProperties(workInProgress);

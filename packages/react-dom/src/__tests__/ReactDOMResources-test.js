@@ -782,4 +782,146 @@ describe('ReactDOMResources', () => {
       </html>,
     );
   });
+
+  describe('link resources', () => {
+    // @gate enableFloat
+    it('keys resources on href, crossOrigin, and referrerPolicy', async () => {
+      await actIntoEmptyDocument(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <head>
+              <link rel="stylesheet" href="foo" />
+              <link rel="stylesheet" href="foo" crossOrigin="" />
+              <link rel="stylesheet" href="foo" crossOrigin="anonymous" />
+              <link rel="stylesheet" href="foo" crossOrigin="use-credentials" />
+            </head>
+            <body>
+              <div>hello world</div>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getVisibleChildren(document.head)).toEqual([
+        <link rel="stylesheet" href="foo" />,
+        <link rel="stylesheet" href="foo" crossorigin="" />,
+        <link rel="stylesheet" href="foo" crossorigin="use-credentials" />,
+      ]);
+
+      const root = ReactDOMClient.hydrateRoot(
+        container,
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="foo" crossOrigin="" />
+            <link rel="stylesheet" href="foo" crossOrigin="anonymous" />
+            <link rel="stylesheet" href="foo" crossOrigin="use-credentials" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document.head)).toEqual([
+        <link rel="stylesheet" href="foo" />,
+        <link rel="stylesheet" href="foo" crossorigin="" />,
+        <link rel="stylesheet" href="foo" crossorigin="use-credentials" />,
+      ]);
+
+      // Add the default referrer. This should not result in a new resource key because it is equivalent to no specified policy
+      root.render(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="foo" crossOrigin="" />
+            <link
+              rel="stylesheet"
+              href="foo"
+              crossOrigin="anonymous"
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+            <link rel="stylesheet" href="foo" crossOrigin="use-credentials" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document.head)).toEqual([
+        <link rel="stylesheet" href="foo" />,
+        <link rel="stylesheet" href="foo" crossorigin="" />,
+        <link rel="stylesheet" href="foo" crossorigin="use-credentials" />,
+      ]);
+
+      // Change the referrerPolicy to something distinct and observe a new resource is emitted
+      root.render(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="foo" crossOrigin="" />
+            <link
+              rel="stylesheet"
+              href="foo"
+              crossOrigin="anonymous"
+              referrerPolicy="no-origin"
+            />
+            <link rel="stylesheet" href="foo" crossOrigin="use-credentials" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document.head)).toEqual([
+        <link rel="stylesheet" href="foo" />,
+        <link rel="stylesheet" href="foo" crossorigin="" />,
+        <link rel="stylesheet" href="foo" crossorigin="use-credentials" />,
+        <link
+          rel="stylesheet"
+          href="foo"
+          crossorigin="anonymous"
+          referrerpolicy="no-origin"
+        />,
+      ]);
+
+      // Update the other "foo" link to match the new referrerPolicy and observe the resource coalescing
+      root.render(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" />
+            <link
+              rel="stylesheet"
+              href="foo"
+              crossOrigin=""
+              referrerPolicy="no-origin"
+            />
+            <link
+              rel="stylesheet"
+              href="foo"
+              crossOrigin="anonymous"
+              referrerPolicy="no-origin"
+            />
+            <link rel="stylesheet" href="foo" crossOrigin="use-credentials" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document.head)).toEqual([
+        <link rel="stylesheet" href="foo" />,
+        <link rel="stylesheet" href="foo" crossorigin="use-credentials" />,
+        <link
+          rel="stylesheet"
+          href="foo"
+          crossorigin="anonymous"
+          referrerpolicy="no-origin"
+        />,
+      ]);
+    });
+  });
 });

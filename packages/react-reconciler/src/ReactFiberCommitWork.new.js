@@ -2403,10 +2403,12 @@ function commitMutationEffectsOnFiber(
           // this to acquire without mutation in render and then use Update flags to
           // do the insertion in commit but this seems simpler for now.
           finishedWork.stateNode = acquireResource(
+            // The precomputed resource Key
+            finishedWork.memoizedState,
+            // Type and Props to construct an element if necessary
             finishedWork.type,
             finishedWork.memoizedProps,
-            // For HostResource memoizedState holds the rootContainerInstance
-            finishedWork.memoizedState,
+            // The resourceMap and resourceContainer
             root.resourceHost,
           );
         }

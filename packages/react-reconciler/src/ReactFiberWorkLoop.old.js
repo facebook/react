@@ -85,7 +85,7 @@ import {
   supportsResources,
   prepareToRender,
   cleanupAfterRender,
-  hoistStaticResource,
+  reconcileHydratedResources,
 } from './ReactFiberHostConfig';
 
 import {
@@ -907,7 +907,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 function performConcurrentWorkOnRoot(root, didTimeout) {
   try {
     if (supportsResources && enableFloat) {
-      prepareToRender();
+      prepareToRender(root.tag);
     }
 
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
@@ -2249,7 +2249,7 @@ function commitRootImpl(
     commitMutationEffects(root, finishedWork, lanes);
 
     if (supportsResources && enableFloat) {
-      hoistStaticResource(root.containerInfo);
+      reconcileHydratedResources(root.containerInfo);
     }
 
     if (enableCreateEventHandleAPI) {
