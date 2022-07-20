@@ -27,7 +27,6 @@ export function registerDevToolsEventLogger(
 ): void {
   async function logEvent(event: LogEvent, metadata: ?Object) {
     if (enableLogger) {
-      console.log(event, metadata);
       if (loggingIFrame != null) {
         loggingIFrame.contentWindow.postMessage(
           {
