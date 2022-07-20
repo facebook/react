@@ -40,7 +40,16 @@ export type LogEvent =
     |}
   | {|
       +event_name: 'profiling-start',
-    |};
+    |}
+  | {|
+      +event_name: 'profiler-tab-changed',
+    |}
+  | {|
+      +event_name: 'settings-changed',
+    |}
+  | {|
+    +event_name: 'settings-change'
+  |};
 
 export type LogFunction = (LogEvent, ?Object) => void | Promise<void>;
 

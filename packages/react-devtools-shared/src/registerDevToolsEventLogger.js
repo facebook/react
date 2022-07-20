@@ -27,6 +27,7 @@ export function registerDevToolsEventLogger(
 ): void {
   async function logEvent(event: LogEvent, metadata: ?Object) {
     if (enableLogger) {
+      console.log(event, metadata);
       if (loggingIFrame != null) {
         loggingIFrame.contentWindow.postMessage(
           {
@@ -44,7 +45,7 @@ export function registerDevToolsEventLogger(
           '*',
         );
       } else {
-        missedEvents.push(event);
+        missedEvents.push({event, metadata});
       }
     }
   }
@@ -56,7 +57,7 @@ export function registerDevToolsEventLogger(
 
     loggingIFrame = iframe;
     if (missedEvents.length > 0) {
-      missedEvents.forEach(logEvent);
+      missedEvents.forEach(({event, metadata}) => logEvent(event, metadata));
       missedEvents = [];
     }
   }
