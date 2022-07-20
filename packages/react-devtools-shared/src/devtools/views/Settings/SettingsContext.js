@@ -72,7 +72,9 @@ function useLocalStorageWithLog<T>(
   key: string,
   initialValue: T | (() => T),
 ): [T, (value: T | (() => T)) => void] {
-  return useLocalStorage<T>(key, initialValue, {event_name: 'settings-change'});
+  return useLocalStorage<T>(key, initialValue, {
+    event_name: 'settings-changed',
+  });
 }
 
 type DocumentElements = Array<HTMLElement>;
@@ -92,7 +94,10 @@ function SettingsContextController({
 }: Props) {
   const bridge = useContext(BridgeContext);
 
-  const [displayDensity, setDisplayDensity] = useLocalStorageWithLog<DisplayDensity>(
+  const [
+    displayDensity,
+    setDisplayDensity,
+  ] = useLocalStorageWithLog<DisplayDensity>(
     'React::DevTools::displayDensity',
     'compact',
   );
@@ -103,7 +108,10 @@ function SettingsContextController({
   const [
     appendComponentStack,
     setAppendComponentStack,
-  ] = useLocalStorageWithLog<boolean>(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY, true);
+  ] = useLocalStorageWithLog<boolean>(
+    LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+    true,
+  );
   const [
     breakOnConsoleErrors,
     setBreakOnConsoleErrors,
@@ -132,7 +140,10 @@ function SettingsContextController({
   const [
     traceUpdatesEnabled,
     setTraceUpdatesEnabled,
-  ] = useLocalStorageWithLog<boolean>(LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY, false);
+  ] = useLocalStorageWithLog<boolean>(
+    LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
+    false,
+  );
 
   const documentElements = useMemo<DocumentElements>(() => {
     const array: Array<HTMLElement> = [

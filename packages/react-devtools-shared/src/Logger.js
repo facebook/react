@@ -46,10 +46,7 @@ export type LogEvent =
     |}
   | {|
       +event_name: 'settings-changed',
-    |}
-  | {|
-    +event_name: 'settings-change'
-  |};
+    |};
 
 export type LogFunction = (LogEvent, ?Object) => void | Promise<void>;
 

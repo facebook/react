@@ -179,7 +179,11 @@ export function useLocalStorage<T>(
         window.dispatchEvent(new Event(key));
 
         if (event != null) {
-          logEvent(event, {source: 'localStorage setter', key, value: valueToStore});
+          logEvent(event, {
+            source: 'localStorage setter',
+            key,
+            value: valueToStore,
+          });
         }
       } catch (error) {
         console.log(error);
