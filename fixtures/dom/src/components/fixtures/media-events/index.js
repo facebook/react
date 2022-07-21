@@ -28,6 +28,7 @@ export default class MediaEvents extends React.Component {
       onTimeUpdate: false,
       onVolumeChange: false,
       onWaiting: false,
+      onMute: true, 
     },
   };
 
