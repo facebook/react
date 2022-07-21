@@ -66,16 +66,16 @@ export function acquireResource(
         HTML_NAMESPACE,
       );
       setInitialResourceProperties(domElement, type, props, resourceContainer);
+      insertResource(domElement, resourceHost);
     }
     resource = {
       key,
       type,
-      count: 0,
+      count: 1,
       instance: domElement,
     };
     resourceMap.set(key, resource);
-  }
-  if (resource.count++ === 0) {
+  } else if (resource.count++ === 0) {
     insertResource(resource.instance, resourceHost);
   }
   return resource;

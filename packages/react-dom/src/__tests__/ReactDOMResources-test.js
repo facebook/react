@@ -442,6 +442,7 @@ describe('ReactDOMResources', () => {
       </html>,
     );
 
+    // The resources are not relocated on hydration so they stay ahead of the hello world div
     ReactDOMClient.hydrateRoot(container, <App />);
     expect(Scheduler).toFlushWithoutYielding();
     expect(getVisibleChildren(document)).toEqual(
@@ -451,9 +452,9 @@ describe('ReactDOMResources', () => {
         </head>
         <body>
           <div id="container">
-            <div>hello world</div>
             <link rel="stylesheet" href="foo" />
             <link rel="stylesheet" href="bar" />
+            <div>hello world</div>
           </div>
         </body>
       </html>,
@@ -705,15 +706,15 @@ describe('ReactDOMResources', () => {
         <head />
         <body>
           <div id="container1">
-            <div>hello world</div>
             <link rel="stylesheet" href="foo" />
             <link rel="stylesheet" href="bar" />
+            <div>hello world</div>
           </div>
           <div id="container2">
-            <div>hello world</div>
             <link rel="stylesheet" href="foo" />
             <link rel="stylesheet" href="extra" />
             <link rel="stylesheet" href="bar" />
+            <div>hello world</div>
           </div>
         </body>
       </html>,
@@ -726,16 +727,16 @@ describe('ReactDOMResources', () => {
         <head />
         <body>
           <div id="container1">
-            <div>hello world</div>
             <link rel="stylesheet" href="foo" />
             <link rel="stylesheet" href="bar" />
+            <div>hello world</div>
             <link rel="stylesheet" href="extra" />
           </div>
           <div id="container2">
-            <div>hello world</div>
             <link rel="stylesheet" href="foo" />
             <link rel="stylesheet" href="extra" />
             <link rel="stylesheet" href="bar" />
+            <div>hello world</div>
           </div>
         </body>
       </html>,
@@ -748,15 +749,15 @@ describe('ReactDOMResources', () => {
         <head />
         <body>
           <div id="container1">
-            <div>hello world</div>
             <link rel="stylesheet" href="foo" />
             <link rel="stylesheet" href="bar" />
+            <div>hello world</div>
             <link rel="stylesheet" href="extra" />
           </div>
           <div id="container2">
-            <div>hello world</div>
             <link rel="stylesheet" href="foo" />
             <link rel="stylesheet" href="bar" />
+            <div>hello world</div>
           </div>
         </body>
       </html>,
@@ -769,14 +770,14 @@ describe('ReactDOMResources', () => {
         <head />
         <body>
           <div id="container1">
-            <div>hello world</div>
             <link rel="stylesheet" href="foo" />
             <link rel="stylesheet" href="bar" />
+            <div>hello world</div>
           </div>
           <div id="container2">
-            <div>hello world</div>
             <link rel="stylesheet" href="foo" />
             <link rel="stylesheet" href="bar" />
+            <div>hello world</div>
           </div>
         </body>
       </html>,
