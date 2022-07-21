@@ -783,6 +783,116 @@ describe('ReactDOMResources', () => {
     );
   });
 
+  it('treats resource eligible elements with data-* attributes as components instead of resources', async () => {
+    await actIntoEmptyDocument(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" />
+            <link rel="stylesheet" href="foo" crossOrigin="" />
+            <link rel="stylesheet" href="foo" crossOrigin="use-credentials" />
+          </head>
+          <body>
+            <link rel="stylesheet" href="foo" crossOrigin="" data-foo="" />
+            <link rel="stylesheet" href="foo" crossOrigin="" data-foo="" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      pipe(writable);
+    });
+    // data attribute links get their own individual representation in the stream because they are treated
+    // like regular HostComponents
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" />
+          <link rel="stylesheet" href="foo" crossorigin="" />
+          <link rel="stylesheet" href="foo" crossorigin="use-credentials" />
+        </head>
+        <body>
+          <link rel="stylesheet" href="foo" crossorigin="" data-foo="" />
+          <link rel="stylesheet" href="foo" crossorigin="" data-foo="" />
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.hydrateRoot(
+      container,
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" />
+          <link rel="stylesheet" href="foo" crossOrigin="" />
+          <link rel="stylesheet" href="foo" crossOrigin="use-credentials" />
+        </head>
+        <body>
+          <link rel="stylesheet" href="foo" crossOrigin="" data-foo="" />
+          <link rel="stylesheet" href="foo" crossOrigin="" data-foo="" />
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" />
+          <link rel="stylesheet" href="foo" crossorigin="" />
+          <link rel="stylesheet" href="foo" crossorigin="use-credentials" />
+        </head>
+        <body>
+          <link rel="stylesheet" href="foo" crossorigin="" data-foo="" />
+          <link rel="stylesheet" href="foo" crossorigin="" data-foo="" />
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+
+    // Drop the foo crossorigin anonymous HostResource that might match if we weren't useing data attributes
+    // It is actually removed from the head because the body representation is a HostComponent and completely
+    // disconnected from the Resource runtime.
+    root.render(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" />
+          <link rel="stylesheet" href="foo" crossOrigin="use-credentials" />
+        </head>
+        <body>
+          <link
+            rel="stylesheet"
+            href="foo"
+            crossOrigin=""
+            data-bar="baz"
+            data-foo=""
+          />
+          <link rel="stylesheet" href="foo" crossOrigin="" data-foo="" />
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" />
+          <link rel="stylesheet" href="foo" crossorigin="use-credentials" />
+        </head>
+        <body>
+          <link
+            rel="stylesheet"
+            href="foo"
+            crossorigin=""
+            data-bar="baz"
+            data-foo=""
+          />
+          <link rel="stylesheet" href="foo" crossorigin="" data-foo="" />
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+  });
+
   describe('link resources', () => {
     // @gate enableFloat
     it('keys resources on href, crossOrigin, and referrerPolicy', async () => {

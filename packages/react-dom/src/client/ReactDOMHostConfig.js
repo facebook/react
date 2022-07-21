@@ -1357,13 +1357,10 @@ export function prepareToRender(rootTag: RootTag) {
 
 export function cleanupAfterRender() {}
 
-export function isResource(type: string, props: Props) {
-  return !!getResourceKeyFromTypeAndProps(type, props);
-}
-
 export {getResourceKeyFromTypeAndProps};
 
 export {
+  isResource,
   acquireResource,
   releaseResource,
   getRootResourceHost,

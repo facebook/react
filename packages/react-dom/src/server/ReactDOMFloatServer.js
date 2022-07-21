@@ -400,11 +400,25 @@ export function resourcesFromLink(props: Object): boolean {
     // }
     case 'stylesheet': {
       preinit(href, {as: 'style', crossOrigin});
-      return true;
+      // If this component is a valid resource, meaning it does not have anything that would
+      // cause it to need to be treated like a component we can omit it and return true here.
+      // If it is in fact a component it will need to be inserted and we return false here.
+      return validateResourceProps(props);
     }
     default:
       return false;
   }
+}
+
+// returns false if props object contains any props which invalidate
+// treating the element entirely as a Resource
+function validateResourceProps(props: Object): boolean {
+  for (const prop in props) {
+    if (prop.toLowerCase().startsWith('data-')) {
+      return false;
+    }
+  }
+  return true;
 }
 
 // Construct a resource from script props.

@@ -67,7 +67,6 @@ export function acquireResource(
       );
       setInitialResourceProperties(domElement, type, props, resourceContainer);
     }
-    insertResource(domElement, resourceHost);
     resource = {
       key,
       type,
@@ -76,7 +75,9 @@ export function acquireResource(
     };
     resourceMap.set(key, resource);
   }
-  resource.count++;
+  if (resource.count++ === 0) {
+    insertResource(resource.instance, resourceHost);
+  }
   return resource;
 }
 
@@ -206,6 +207,20 @@ export function getRootResourceHost(
   };
 }
 
+export function isResource(type: string, props: Object): boolean {
+  const key = getResourceKeyFromTypeAndProps(type, props);
+  if (key) {
+    // This is potentially a Resource. We need to check if props contain
+    // data attributes. Resources do not support data attributes.
+    for (const prop in props) {
+      if (prop.startsWith('data-')) {
+        return false;
+      }
+    }
+  }
+  return !!key;
+}
+
 export function getResourceKeyFromTypeAndProps(
   type: string,
   props: Object,
@@ -213,6 +228,7 @@ export function getResourceKeyFromTypeAndProps(
   switch (type) {
     case 'link': {
       const {rel, href, crossOrigin, referrerPolicy} = props;
+
       if (!href) {
         return undefined;
       }
@@ -247,9 +263,23 @@ export function getResourceKeyFromTypeAndProps(
   }
 }
 
-export function resourceFromElement(domElement: Element): boolean {
+export function resourceFromElement(domElement: HTMLElement): boolean {
   if (rootIsUsingResources) {
+    if (Object.keys(domElement.dataset).length) {
+      // This element has data attributes. Managing data attributes for resources is impractical
+      // because they suggest an intention to query / manipulate DOM Elmenets directly and
+      // turning the React representation into a deduped reference is incongruent with such
+      // intention.
+      return false;
+    }
     const type = domElement.tagName.toLowerCase();
+    // This is really unfortunate that we need to create this intermediate props object.
+    // Originally I tried to just pass the domElement as the props object since jsx prop names
+    // match HTMLElement property names. However interface for the values passed to props more
+    // closely matches attributes. crossOrigin in particular is a pain where the attribute being
+    // missing is supposed to encode no cors but the property returns an empty string. However
+    // when the attribute is the empty string we are supped to be in cors anonymous mode but the property
+    // can also return empty string in this case (at least in JSDOM);
     const props = {
       rel: domElement.getAttribute('rel'),
       href: domElement.getAttribute('href'),
