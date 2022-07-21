@@ -21,6 +21,7 @@ function shim(...args: any) {
 // Hydration (when unsupported)
 export type SuspenseInstance = mixed;
 export const supportsHydration = false;
+export const canSkipHydrateOfImplicitInstance = shim;
 export const canHydrateInstance = shim;
 export const canHydrateTextInstance = shim;
 export const canHydrateSuspenseInstance = shim;

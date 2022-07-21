@@ -127,6 +127,8 @@ export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
 //     Hydration
 //     (optional)
 // -------------------
+export const canSkipHydrateOfImplicitInstance =
+  $$$hostConfig.canSkipHydrateOfImplicitInstance;
 export const canHydrateInstance = $$$hostConfig.canHydrateInstance;
 export const canHydrateTextInstance = $$$hostConfig.canHydrateTextInstance;
 export const canHydrateSuspenseInstance =

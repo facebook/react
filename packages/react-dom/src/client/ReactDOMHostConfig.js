@@ -684,6 +684,10 @@ export function clearContainer(container: Container): void {
 
 export const supportsHydration = true;
 
+export function canSkipHydrateOfImplicitInstance(instance: HydratableInstance) {
+  return instance.nodeType === ELEMENT_NODE && instance.nodeName === 'HEAD';
+}
+
 export function canHydrateInstance(
   instance: HydratableInstance,
   type: string,

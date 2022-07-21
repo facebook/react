@@ -42,6 +42,7 @@ import {
 import {
   shouldSetTextContent,
   supportsHydration,
+  canSkipHydrateOfImplicitInstance,
   canHydrateInstance,
   canHydrateTextInstance,
   canHydrateSuspenseInstance,
@@ -404,41 +405,53 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
     return;
   }
-  let nextInstance = nextHydratableInstance;
-  if (!nextInstance) {
-    if (shouldClientRenderOnMismatch(fiber)) {
-      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
-      throwOnHydrationMismatch(fiber);
-    }
-    // Nothing to hydrate. Make it an insertion.
-    insertNonHydratedInstance((hydrationParentFiber: any), fiber);
-    isHydrating = false;
-    hydrationParentFiber = fiber;
-    return;
-  }
-  const firstAttemptedInstance = nextInstance;
-  if (!tryHydrate(fiber, nextInstance)) {
-    if (shouldClientRenderOnMismatch(fiber)) {
-      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
-      throwOnHydrationMismatch(fiber);
-    }
-    // If we can't hydrate this instance let's try the next one.
-    // We use this as a heuristic. It's based on intuition and not data so it
-    // might be flawed or unnecessary.
-    nextInstance = getNextHydratableSibling(firstAttemptedInstance);
-    const prevHydrationParentFiber: Fiber = (hydrationParentFiber: any);
-    if (!nextInstance || !tryHydrate(fiber, nextInstance)) {
+  while (true) {
+    let nextInstance = nextHydratableInstance;
+    if (!nextInstance) {
+      if (shouldClientRenderOnMismatch(fiber)) {
+        warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+        throwOnHydrationMismatch(fiber);
+      }
       // Nothing to hydrate. Make it an insertion.
       insertNonHydratedInstance((hydrationParentFiber: any), fiber);
       isHydrating = false;
       hydrationParentFiber = fiber;
       return;
     }
-    // We matched the next one, we'll now assume that the first one was
-    // superfluous and we'll delete it. Since we can't eagerly delete it
-    // we'll have to schedule a deletion. To do that, this node needs a dummy
-    // fiber associated with it.
-    deleteHydratableInstance(prevHydrationParentFiber, firstAttemptedInstance);
+    const firstAttemptedInstance = nextInstance;
+    if (!tryHydrate(fiber, nextInstance)) {
+      if (canSkipHydrateOfImplicitInstance(nextInstance)) {
+        // This instance is implicit and needs to remain even when
+        // it is not matched in hydration. We restart the loop with the next sibling.
+        nextHydratableInstance = getNextHydratableSibling(nextInstance);
+        continue;
+      }
+      if (shouldClientRenderOnMismatch(fiber)) {
+        warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+        throwOnHydrationMismatch(fiber);
+      }
+      // If we can't hydrate this instance let's try the next one.
+      // We use this as a heuristic. It's based on intuition and not data so it
+      // might be flawed or unnecessary.
+      nextInstance = getNextHydratableSibling(firstAttemptedInstance);
+      const prevHydrationParentFiber: Fiber = (hydrationParentFiber: any);
+      if (!nextInstance || !tryHydrate(fiber, nextInstance)) {
+        // Nothing to hydrate. Make it an insertion.
+        insertNonHydratedInstance((hydrationParentFiber: any), fiber);
+        isHydrating = false;
+        hydrationParentFiber = fiber;
+        return;
+      }
+      // We matched the next one, we'll now assume that the first one was
+      // superfluous and we'll delete it. Since we can't eagerly delete it
+      // we'll have to schedule a deletion. To do that, this node needs a dummy
+      // fiber associated with it.
+      deleteHydratableInstance(
+        prevHydrationParentFiber,
+        firstAttemptedInstance,
+      );
+    }
+    return;
   }
 }
 

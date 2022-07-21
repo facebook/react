@@ -111,6 +111,28 @@ describe('ReactDOMFizzServer', () => {
       .join('');
   }
 
+  async function actIntoEmptyDocument(callback) {
+    await callback();
+    // Await one turn around the event loop.
+    // This assumes that we'll flush everything we have so far.
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+    if (hasErrored) {
+      throw fatalError;
+    }
+
+    const bufferedContent = buffer;
+    buffer = '';
+
+    const jsdom = new JSDOM(bufferedContent, {
+      runScripts: 'dangerously',
+    });
+    window = jsdom.window;
+    document = jsdom.window.document;
+    container = document;
+  }
+
   async function act(callback) {
     await callback();
     // Await one turn around the event loop.
@@ -324,6 +346,123 @@ describe('ReactDOMFizzServer', () => {
         <div>Hello</div>
         <div>world!</div>
       </div>,
+    );
+  });
+
+  it('ignores implicit head during hydration', async () => {
+    function App() {
+      return (
+        <html>
+          <body>
+            <div>foo</div>
+          </body>
+        </html>
+      );
+    }
+
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    // Simulate a 3rd party script injecting something into the implicit head
+    const link = document.createElement('link');
+    link.href = 'foo';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" />
+        </head>
+        <body>
+          <div>foo</div>
+        </body>
+      </html>,
+    );
+
+    ReactDOMClient.hydrateRoot(container, <App />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" />
+        </head>
+        <body>
+          <div>foo</div>
+        </body>
+      </html>,
+    );
+  });
+
+  // This test is here as a countering affirmative test because of the new implicit head skipping behavior
+  // described in the test above. The semantics of hydrating head aren't really different than any other
+  // element per se except for the fact that unmatched tail nodes in head and body are not dropped like they
+  // are in every other container
+  it('hydrates head when present', async () => {
+    function App({title}) {
+      return (
+        <html>
+          <head>
+            <title>{title}</title>
+          </head>
+          <body>
+            <div>foo</div>
+          </body>
+        </html>
+      );
+    }
+
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App title="a title" />,
+      );
+      pipe(writable);
+    });
+    // Simulate a 3rd party script injecting something into the implicit head
+    const link = document.createElement('link');
+    link.href = 'foo';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <title>a title</title>
+          <link rel="stylesheet" href="foo" />
+        </head>
+        <body>
+          <div>foo</div>
+        </body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.hydrateRoot(container, <App title="a title" />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <title>a title</title>
+          <link rel="stylesheet" href="foo" />
+        </head>
+        <body>
+          <div>foo</div>
+        </body>
+      </html>,
+    );
+
+    root.render(<App title="a new title" />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <title>a new title</title>
+          <link rel="stylesheet" href="foo" />
+        </head>
+        <body>
+          <div>foo</div>
+        </body>
+      </html>,
     );
   });
 
