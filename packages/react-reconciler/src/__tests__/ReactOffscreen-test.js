@@ -876,6 +876,7 @@ describe('ReactOffscreen', () => {
     },
   );
 
+  // @gate enableOffscreen
   it('defer passive effects when prerendering a new Offscreen tree', async () => {
     function Child({label}) {
       useEffect(() => {
@@ -937,6 +938,7 @@ describe('ReactOffscreen', () => {
     ]);
   });
 
+  // @gate enableOffscreen
   it("don't defer passive effects when prerendering in a tree whose effects are already connected", async () => {
     function Child({label}) {
       useEffect(() => {

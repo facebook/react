@@ -3181,13 +3181,12 @@ function commitPassiveMountOnFiber(
               // "Atomic" effects are ones that need to fire on every commit,
               // even during pre-rendering. An example is updating the reference
               // count on cache instances.
-              // TODO: Not yet implemented
-              // recursivelyTraverseAtomicPassiveEffects(
-              //   finishedRoot,
-              //   finishedWork,
-              //   committedLanes,
-              //   committedTransitions,
-              // );
+              recursivelyTraverseAtomicPassiveEffects(
+                finishedRoot,
+                finishedWork,
+                committedLanes,
+                committedTransitions,
+              );
             }
           } else {
             // Legacy Mode: Fire the effects even if the tree is hidden.
@@ -3363,13 +3362,12 @@ function reconnectPassiveEffects(
               // "Atomic" effects are ones that need to fire on every commit,
               // even during pre-rendering. An example is updating the reference
               // count on cache instances.
-              // TODO: Not yet implemented
-              // recursivelyTraverseAtomicPassiveEffects(
-              //   finishedRoot,
-              //   finishedWork,
-              //   committedLanes,
-              //   committedTransitions,
-              // );
+              recursivelyTraverseAtomicPassiveEffects(
+                finishedRoot,
+                finishedWork,
+                committedLanes,
+                committedTransitions,
+              );
             }
           } else {
             // Legacy Mode: Fire the effects even if the tree is hidden.
@@ -3448,6 +3446,101 @@ function reconnectPassiveEffects(
         committedLanes,
         committedTransitions,
         includeWorkInProgressEffects,
+      );
+      break;
+    }
+  }
+}
+
+function recursivelyTraverseAtomicPassiveEffects(
+  finishedRoot: FiberRoot,
+  parentFiber: Fiber,
+  committedLanes: Lanes,
+  committedTransitions: Array<Transition> | null,
+) {
+  // "Atomic" effects are ones that need to fire on every commit, even during
+  // pre-rendering. We call this function when traversing a hidden tree whose
+  // regular effects are currently disconnected.
+  const prevDebugFiber = getCurrentDebugFiberInDEV();
+  // TODO: Add special flag for atomic effects
+  if (parentFiber.subtreeFlags & PassiveMask) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      setCurrentDebugFiberInDEV(child);
+      commitAtomicPassiveEffects(
+        finishedRoot,
+        child,
+        committedLanes,
+        committedTransitions,
+      );
+      child = child.sibling;
+    }
+  }
+  setCurrentDebugFiberInDEV(prevDebugFiber);
+}
+
+function commitAtomicPassiveEffects(
+  finishedRoot: FiberRoot,
+  finishedWork: Fiber,
+  committedLanes: Lanes,
+  committedTransitions: Array<Transition> | null,
+) {
+  // "Atomic" effects are ones that need to fire on every commit, even during
+  // pre-rendering. We call this function when traversing a hidden tree whose
+  // regular effects are currently disconnected.
+  const flags = finishedWork.flags;
+  switch (finishedWork.tag) {
+    case OffscreenComponent: {
+      recursivelyTraverseAtomicPassiveEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+      );
+      if (flags & Passive) {
+        // TODO: Pass `current` as argument to this function
+        const current = finishedWork.alternate;
+        const instance: OffscreenInstance = finishedWork.stateNode;
+        commitOffscreenPassiveMountEffects(current, finishedWork, instance);
+      }
+      break;
+    }
+    case CacheComponent: {
+      recursivelyTraverseAtomicPassiveEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+      );
+      if (flags & Passive) {
+        // TODO: Pass `current` as argument to this function
+        const current = finishedWork.alternate;
+        commitCachePassiveMountEffect(current, finishedWork);
+      }
+      break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        recursivelyTraverseAtomicPassiveEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions,
+        );
+        if (flags & Passive) {
+          commitTracingMarkerPassiveMountEffect(finishedWork);
+        }
+        break;
+      }
+      // Intentional fallthrough to next branch
+    }
+    // eslint-disable-next-line-no-fallthrough
+    default: {
+      recursivelyTraverseAtomicPassiveEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
       );
       break;
     }
