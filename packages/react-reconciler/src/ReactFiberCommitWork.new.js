@@ -3562,16 +3562,12 @@ function recursivelyTraversePassiveUnmountEffects(parentFiber: Fiber): void {
     if (deletions !== null) {
       for (let i = 0; i < deletions.length; i++) {
         const childToDelete = deletions[i];
-        try {
-          // TODO: Convert this to use recursion
-          nextEffect = childToDelete;
-          commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
-            childToDelete,
-            parentFiber,
-          );
-        } catch (error) {
-          captureCommitPhaseError(childToDelete, parentFiber, error);
-        }
+        // TODO: Convert this to use recursion
+        nextEffect = childToDelete;
+        commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
+          childToDelete,
+          parentFiber,
+        );
       }
     }
 
