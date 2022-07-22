@@ -29,3 +29,4 @@ export const releaseResource = shim;
 export const getRootResourceHost = shim;
 export const insertPendingResources = shim;
 export const getResourceKeyFromTypeAndProps = shim;
+export const validateResourceAndProps = shim;

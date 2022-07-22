@@ -172,6 +172,15 @@ describe('ReactDOMResources', () => {
   //   }
   // }
 
+  function normalizeCodeLocInfo(str) {
+    return (
+      str &&
+      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+        return '\n    in ' + name + ' (at **)';
+      })
+    );
+  }
+
   // @gate enableFloat
   it('hoists resources to the head if the container is a Document without hydration', async () => {
     function App() {
@@ -950,7 +959,7 @@ describe('ReactDOMResources', () => {
               rel="stylesheet"
               href="foo"
               crossOrigin="anonymous"
-              referrerPolicy="strict-origin-when-cross-origin"
+              referrerPolicy=""
             />
             <link rel="stylesheet" href="foo" crossOrigin="use-credentials" />
           </head>
@@ -1033,6 +1042,165 @@ describe('ReactDOMResources', () => {
           referrerpolicy="no-origin"
         />,
       ]);
+    });
+
+    // @gate enableFloat
+    it('warns in Dev when two key-matched resources use different values for non-ignored divergent props', async () => {
+      const originalConsoleError = console.error;
+      const mockError = jest.fn();
+      console.error = (...args) => {
+        if (args.length > 1) {
+          if (typeof args[1] === 'object') {
+            mockError(args[0].split('\n')[0]);
+            return;
+          }
+        }
+        mockError(...args.map(normalizeCodeLocInfo));
+      };
+
+      try {
+        await actIntoEmptyDocument(() => {
+          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+            <html>
+              <head />
+              <body>
+                <div>
+                  <link rel="stylesheet" href="foo" media="print" />
+                  <link
+                    rel="stylesheet"
+                    href="foo"
+                    media="screen and (max-width: 600px)"
+                  />
+                  hello world
+                </div>
+              </body>
+            </html>,
+          );
+          pipe(writable);
+        });
+        // The second link matches the key of the first link but disagrees on the media prop. this should warn but also only
+        // emit the first resource representation for that key
+        expect(getVisibleChildren(document)).toEqual(
+          <html>
+            <head>
+              <link rel="stylesheet" href="foo" media="print" />
+            </head>
+            <body>
+              <div>hello world</div>
+            </body>
+          </html>,
+        );
+        if (__DEV__) {
+          expect(mockError.mock.calls).toEqual([
+            [
+              'Warning: A "%s" Resource (%s="%s") was %s with a different "%s" prop than the one used originally.' +
+                ' The original value was "%s" and the new value is "%s". Either the "%s" value should be the same' +
+                ' or this Resource should point to distinct "%s" location.%s',
+              'stylesheet',
+              'href',
+              'foo',
+              'created',
+              'media',
+              'print',
+              'screen and (max-width: 600px)',
+              'media',
+              'href',
+              '\n' +
+                '    in link (at **)\n' +
+                '    in div (at **)\n' +
+                '    in body (at **)\n' +
+                '    in html (at **)',
+            ],
+          ]);
+        }
+        mockError.mock.calls.length = 0;
+
+        const root = ReactDOMClient.hydrateRoot(
+          document,
+          <html>
+            <head />
+            <body>
+              <div>
+                <link rel="stylesheet" href="foo" media="print" />
+                <link
+                  rel="stylesheet"
+                  href="foo"
+                  media="screen and (max-width: 600px)"
+                />
+                hello world
+              </div>
+            </body>
+          </html>,
+        );
+        expect(Scheduler).toFlushWithoutYielding();
+        if (__DEV__) {
+          expect(mockError.mock.calls).toEqual([
+            [
+              'Warning: A "%s" Resource (%s="%s") was %s with a different "%s" prop than the one used originally.' +
+                ' The original value was "%s" and the new value is "%s". Either the "%s" value should be the same' +
+                ' or this Resource should point to distinct "%s" location.%s',
+              'stylesheet',
+              'href',
+              'foo',
+              'created',
+              'media',
+              'print',
+              'screen and (max-width: 600px)',
+              'media',
+              'href',
+              '\n' +
+                '    in div (at **)\n' +
+                '    in body (at **)\n' +
+                '    in html (at **)',
+            ],
+          ]);
+        }
+        mockError.mock.calls.length = 0;
+
+        root.render(
+          <html>
+            <head />
+            <body>
+              <div>
+                <link rel="stylesheet" href="foo" media="print" />
+                <link
+                  rel="stylesheet"
+                  href="foo"
+                  media="print"
+                  integrity="some hash"
+                />
+                hello world
+              </div>
+            </body>
+          </html>,
+        );
+
+        expect(Scheduler).toFlushWithoutYielding();
+        if (__DEV__) {
+          expect(mockError.mock.calls).toEqual([
+            [
+              'Warning: A "%s" Resource (%s="%s") was %s with a different "%s" prop than the one used originally.' +
+                ' The original value was "%s" and the new value is "%s". Either the "%s" value should be the same' +
+                ' or this Resource should point to distinct "%s" location.%s',
+              'stylesheet',
+              'href',
+              'foo',
+              'updated',
+              'integrity',
+              '',
+              'some hash',
+              'integrity',
+              'href',
+              '\n' +
+                '    in div (at **)\n' +
+                '    in body (at **)\n' +
+                '    in html (at **)',
+            ],
+          ]);
+        }
+      } finally {
+        console.error = originalConsoleError;
+      }
     });
   });
 });

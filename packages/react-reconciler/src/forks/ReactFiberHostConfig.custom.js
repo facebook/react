@@ -203,3 +203,4 @@ export const getRootResourceHost = $$$hostConfig.getRootResourceHost;
 export const insertPendingResources = $$$hostConfig.insertPendingResources;
 export const getResourceKeyFromTypeAndProps =
   $$$hostConfig.getResourceKeyFromTypeAndProps;
+export const validateResourceAndProps = $$$hostConfig.validateResourceAndProps;

@@ -61,17 +61,9 @@ import {
   type Resource,
   prepareToRender as prepareToRenderImpl,
   cleanupAfterRender as cleanupAfterRenderImpl,
-  resourcesFromLink,
-  DNS_PREFETCH,
-  PRECONNECT,
-  PREFETCH,
-  PRELOAD,
+  resourceFromLink,
   PREINIT,
   STYLE_RESOURCE,
-  SCRIPT_RESOURCE,
-  FONT_RESOURCE,
-  CORS_ANON,
-  CORS_CREDS,
 } from './ReactDOMFloatServer';
 
 // Used to distinguish these contexts from ones used in other renderers.
@@ -1131,12 +1123,23 @@ function pushLink(
   props: Object,
   responseState: ResponseState,
 ): ReactNodeList {
-  if (resourcesFromLink(props)) {
+  const linkResource = resourceFromLink(props);
+  if (linkResource) {
+    if (linkResource.chunks.length === 0) {
+      pushLinkImpl(linkResource.chunks, props, responseState);
+    }
     // We have converted this link exclusively to a resource and no longer
     // need to emit it
     return null;
   }
+  return pushLinkImpl(target, props, responseState);
+}
 
+function pushLinkImpl(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+): ReactNodeList {
   target.push(startChunkForTag('link'));
 
   for (const propKey in props) {
@@ -2207,28 +2210,6 @@ export function writeResources(destination: Destination, resources: Resources) {
 
 function writeResource(destination: Destination, resource: Resource) {
   switch (resource.priority) {
-    case DNS_PREFETCH: {
-      return writeGenericResource(
-        destination,
-        resource,
-        prefetchDNSStart,
-        linkEnd,
-      );
-    }
-    case PRECONNECT: {
-      return writeGenericResource(
-        destination,
-        resource,
-        preconnectStart,
-        linkEnd,
-      );
-    }
-    case PREFETCH: {
-      return writeAsResource(destination, resource, prefetchStart, linkEnd);
-    }
-    case PRELOAD: {
-      return writeAsResource(destination, resource, preloadStart, linkEnd);
-    }
     case PREINIT: {
       return writeInitializingResource(destination, resource);
     }
@@ -2240,99 +2221,17 @@ function writeResource(destination: Destination, resource: Resource) {
   }
 }
 
-const prefetchDNSStart = stringToPrecomputedChunk(
-  '<link rel="dns-prefetch" href="',
-);
-const preconnectStart = stringToPrecomputedChunk(
-  '<link rel="preconnect" href="',
-);
-const prefetchStart = stringToPrecomputedChunk('<link rel="prefetch"');
-const preloadStart = stringToPrecomputedChunk('<link rel="preload"');
-
-const preAsStyle = stringToPrecomputedChunk(' as="style" href="');
-const preAsScript = stringToPrecomputedChunk(' as="script" href="');
-const preAsFont = stringToPrecomputedChunk(' as="font" href="');
-
-const crossOriginAnon = stringToPrecomputedChunk('" crossorigin="');
-const crossOriginCredentials = stringToPrecomputedChunk(
-  '" crossorigin="use-credentials',
-);
-
-const linkEnd = stringToPrecomputedChunk('">');
-
-const initStyleStart = stringToPrecomputedChunk(
-  '<link rel="stylesheet" href="',
-);
-
-const initScriptStart = stringToPrecomputedChunk('<script src="');
-const initScriptEnd = stringToPrecomputedChunk('" async=""></script>');
-
-function writeGenericResource(
-  destination: Destination,
-  resource: Resource,
-  start: PrecomputedChunk,
-  end: PrecomputedChunk,
-) {
-  writeChunk(destination, start);
-  writeChunk(destination, stringToChunk(escapeTextForBrowser(resource.href)));
-  if (resource.crossorigin === CORS_ANON) {
-    writeChunk(destination, crossOriginAnon);
-  } else if (resource.crossorigin === CORS_CREDS) {
-    writeChunk(destination, crossOriginCredentials);
-  }
-  writeChunk(destination, end);
-}
-
-function writeAsResource(
-  destination: Destination,
-  resource: Resource,
-  start: PrecomputedChunk,
-  end: PrecomputedChunk,
-) {
-  writeChunk(destination, start);
-  switch (resource.as) {
-    case STYLE_RESOURCE: {
-      writeChunk(destination, preAsStyle);
-      break;
-    }
-    case SCRIPT_RESOURCE: {
-      writeChunk(destination, preAsScript);
-      break;
-    }
-    case FONT_RESOURCE: {
-      writeChunk(destination, preAsFont);
-      break;
-    }
-  }
-  writeChunk(destination, stringToChunk(escapeTextForBrowser(resource.href)));
-  if (resource.crossorigin === CORS_ANON) {
-    writeChunk(destination, crossOriginAnon);
-  } else if (resource.crossorigin === CORS_CREDS) {
-    writeChunk(destination, crossOriginCredentials);
-  }
-  writeChunk(destination, end);
-}
-
 function writeInitializingResource(
   destination: Destination,
   resource: Resource,
 ) {
-  switch (resource.as) {
+  switch (resource.type) {
     case STYLE_RESOURCE: {
-      return writeGenericResource(
-        destination,
-        resource,
-        initStyleStart,
-        linkEnd,
-      );
-    }
-    case SCRIPT_RESOURCE: {
-      return writeGenericResource(
-        destination,
-        resource,
-        initScriptStart,
-        initScriptEnd,
-      );
+      const chunks = resource.chunks;
+      for (let i = 0; i < chunks.length; i++) {
+        writeChunk(destination, chunks[i]);
+      }
+      return;
     }
   }
 }

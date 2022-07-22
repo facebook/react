@@ -103,6 +103,7 @@ import {
   finalizeContainerChildren,
   preparePortalMount,
   prepareScopeUpdate,
+  validateResourceAndProps,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -1095,6 +1096,14 @@ function completeWork(
 
         if (currentKey !== previousKey) {
           markUpdate(workInProgress);
+        } else {
+          if (__DEV__ && current !== null && current.stateNode) {
+            validateResourceAndProps(
+              current.stateNode,
+              workInProgress.memoizedProps,
+              false,
+            );
+          }
         }
         bubbleProperties(workInProgress);
       }

@@ -425,5 +425,6 @@
   "437": "writeResource received a resource it did not know how to write. This is a bug in React.",
   "438": "The current renderer does not support Resources. This error is likely caused by a bug in React. Please file an issue.",
   "439": "%s was called with a rootContainer with an unexpected nodeType.",
-  "440": "%s expected the containing Document to have a head element and one was not found."
+  "440": "%s expected the containing Document to have a head element and one was not found.",
+  "441": "%s was called with props that are not valid for a Resource. This is a bug in React."
 }

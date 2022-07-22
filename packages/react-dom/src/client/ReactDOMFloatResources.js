@@ -26,11 +26,15 @@ export type ResourceHost = {
   container: ResourceContainer,
 };
 
+const STYLE_RESOURCE = 'stylesheet';
+
+type ResourceElementType = 'link';
 export type Resource = {
   key: string,
-  type: string,
+  elementType: ResourceElementType,
   count: number,
   instance: Element,
+  props: Object,
 };
 
 const CORS_NONE = '';
@@ -46,7 +50,7 @@ let rootIsUsingResources = false;
 
 export function acquireResource(
   key: string,
-  type: string,
+  elementType: ResourceElementType,
   props: Object,
   resourceHost: ResourceHost,
 ): Resource {
@@ -56,27 +60,42 @@ export function acquireResource(
     let domElement = embeddedResourceElementMap.get(key);
     if (domElement) {
       embeddedResourceElementMap.delete(key);
+      setInitialResourceProperties(
+        domElement,
+        elementType,
+        props,
+        resourceContainer,
+      );
     } else {
       // We cheat somewhat and substitute the resourceHost container instead of the rootContainer.
       // Sometimes they are the same but even when they are not, the ownerDocument should be.
       domElement = createElement(
-        type,
+        elementType,
         props,
         resourceContainer,
         HTML_NAMESPACE,
       );
-      setInitialResourceProperties(domElement, type, props, resourceContainer);
+      setInitialResourceProperties(
+        domElement,
+        elementType,
+        props,
+        resourceContainer,
+      );
       insertResource(domElement, resourceHost);
     }
     resource = {
       key,
-      type,
+      elementType,
       count: 1,
       instance: domElement,
+      props,
     };
     resourceMap.set(key, resource);
   } else if (resource.count++ === 0) {
     insertResource(resource.instance, resourceHost);
+  }
+  if (__DEV__) {
+    validateResourceAndProps(resource, props, true);
   }
   return resource;
 }
@@ -242,17 +261,14 @@ export function getResourceKeyFromTypeAndProps(
         cors = CORS_NONE;
       }
 
-      const referrer =
-        referrerPolicy === 'strict-origin-when-cross-origin'
-          ? ''
-          : referrerPolicy || '';
+      const referrer = referrerPolicy || '';
 
       // We use new-lines in the key because they are not valid in urls and thus there should
       // never be a collision between a href with no cors/referrer and another href with particular
       // cors & referrer.
       switch (rel) {
         case 'stylesheet': {
-          return href + '\n' + cors + referrer;
+          return STYLE_RESOURCE + '\n' + href + '\n' + cors + referrer;
         }
         default:
           return undefined;
@@ -296,4 +312,62 @@ export function resourceFromElement(domElement: HTMLElement): boolean {
   }
 
   return false;
+}
+
+// @TODO figure out how to utilize existing prop validation to do this instead of reinventing
+let warnOnDivergentPropsStylesheet = null;
+if (__DEV__) {
+  warnOnDivergentPropsStylesheet = ['media', 'integrity', 'title'].map(
+    propName => {
+      return {
+        propName,
+        type: 'string',
+      };
+    },
+  );
+}
+
+// This coercion is to normalize across semantically identical values (such as missing being equivalent to empty string)
+// If the user used an improper type for a prop that will be warned on using the normal prop validation mechanism
+function getPropertyValue(props, propertyInfo): any {
+  switch (propertyInfo.type) {
+    case 'string': {
+      return props[propertyInfo.propName] || '';
+    }
+  }
+}
+
+export function validateResourceAndProps(
+  resource: Resource,
+  props: Object,
+  created: boolean,
+) {
+  if (__DEV__) {
+    switch (resource.elementType) {
+      case 'link': {
+        (warnOnDivergentPropsStylesheet: any).forEach(propertyInfo => {
+          const currentProp = getPropertyValue(resource.props, propertyInfo);
+          const nextProp = getPropertyValue(props, propertyInfo);
+          if (currentProp !== nextProp) {
+            const locationPropName = 'href';
+            const propName = propertyInfo.propName;
+            console.error(
+              'A "%s" Resource (%s="%s") was %s with a different "%s" prop than the one used originally.' +
+                ' The original value was "%s" and the new value is "%s". Either the "%s" value should' +
+                ' be the same or this Resource should point to distinct "%s" location.',
+              'stylesheet',
+              locationPropName,
+              props.href,
+              created ? 'created' : 'updated',
+              propName,
+              currentProp,
+              nextProp,
+              propName,
+              locationPropName,
+            );
+          }
+        });
+      }
+    }
+  }
 }

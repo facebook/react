@@ -1366,4 +1366,5 @@ export {
   getRootResourceHost,
   insertPendingResources,
   reconcileHydratedResources,
+  validateResourceAndProps,
 } from './ReactDOMFloatResources';
