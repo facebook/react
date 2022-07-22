@@ -104,7 +104,10 @@ export default function Tree(props: Props) {
     function handleStopInspectingNative(didSelectNode) {
       if (didSelectNode && focusTargetRef.current !== null) {
         focusTargetRef.current.focus();
-        logEvent({event_name: 'select-element'}, {source: 'inspector'});
+        logEvent({
+          event_name: 'select-element',
+          metadata: {source: 'inspector'},
+        });
       }
     }
     bridge.addListener('stopInspectingNative', handleStopInspectingNative);

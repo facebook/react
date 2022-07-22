@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {LoggerEvent} from 'react-devtools-shared/src/Logger';
-
 import throttle from 'lodash.throttle';
 import {
   useCallback,
@@ -24,7 +22,6 @@ import {
 } from 'react-devtools-shared/src/storage';
 import {StoreContext, BridgeContext} from './context';
 import {sanitizeForParse, smartParse, smartStringify} from '../utils';
-import {logEvent} from 'react-devtools-shared/src/Logger';
 
 type ACTION_RESET = {|
   type: 'RESET',
@@ -147,7 +144,7 @@ export function useIsOverflowing(
 export function useLocalStorage<T>(
   key: string,
   initialValue: T | (() => T),
-  loggerEvent?: LoggerEvent,
+  onValueSet?: (any, string) => void,
 ): [T, (value: T | (() => T)) => void] {
   const getValueFromLocalStorage = useCallback(() => {
     try {
@@ -178,12 +175,8 @@ export function useLocalStorage<T>(
         // Notify listeners that this setting has changed.
         window.dispatchEvent(new Event(key));
 
-        if (loggerEvent != null) {
-          logEvent(loggerEvent, {
-            source: 'localStorage setter',
-            key,
-            value: valueToStore,
-          });
+        if (onValueSet != null) {
+          onValueSet(valueToStore, key);
         }
       } catch (error) {
         console.log(error);

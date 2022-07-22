@@ -27,6 +27,7 @@ import {
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 import type {BrowserTheme} from '../DevTools';
 
@@ -72,8 +73,15 @@ function useLocalStorageWithLog<T>(
   key: string,
   initialValue: T | (() => T),
 ): [T, (value: T | (() => T)) => void] {
-  return useLocalStorage<T>(key, initialValue, {
-    event_name: 'settings-changed',
+  return useLocalStorage<T>(key, initialValue, (v, k) => {
+    logEvent({
+      event_name: 'settings-changed',
+      metadata: {
+        source: 'localStorage setter',
+        key: k,
+        value: v,
+      },
+    });
   });
 }
 

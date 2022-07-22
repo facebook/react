@@ -303,7 +303,10 @@ function OwnerView({
   } = useHighlightNativeElement();
 
   const handleClick = useCallback(() => {
-    logEvent({event_name: 'select-element'}, {source: 'owner-view'});
+    logEvent({
+      event_name: 'select-element',
+      metadata: {source: 'owner-view'},
+    });
     dispatch({
       type: 'SELECT_ELEMENT_BY_ID',
       payload: id,

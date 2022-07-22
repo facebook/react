@@ -34,28 +34,42 @@ export type LoggerEvent =
     |}
   | {|
       +event_name: 'select-element',
+      +metadata: {
+        +source: string,
+      },
     |}
   | {|
       +event_name: 'inspect-element-button-clicked',
     |}
   | {|
       +event_name: 'profiling-start',
+      +metadata: {
+        +current_tab: string,
+      },
     |}
   | {|
       +event_name: 'profiler-tab-changed',
+      +metadata: {
+        +tabId: string,
+      },
     |}
   | {|
       +event_name: 'settings-changed',
+      +metadata: {
+        +key: string,
+        +value: any,
+        ...
+      },
     |};
 
-export type LogFunction = (LoggerEvent, ?Object) => void | Promise<void>;
+export type LogFunction = LoggerEvent => void | Promise<void>;
 
 let logFunctions: Array<LogFunction> = [];
 export const logEvent: LogFunction =
   enableLogger === true
-    ? function logEvent(event: LoggerEvent, metadata: ?Object): void {
+    ? function logEvent(event: LoggerEvent): void {
         logFunctions.forEach(log => {
-          log(event, metadata);
+          log(event);
         });
       }
     : function logEvent() {};
