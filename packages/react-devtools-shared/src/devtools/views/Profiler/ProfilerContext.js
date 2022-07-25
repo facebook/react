@@ -207,10 +207,21 @@ function ProfilerContextController({children}: Props) {
   const [selectedTabID, selectTab] = useLocalStorage<TabID>(
     'React::DevTools::Profiler::defaultTab',
     'flame-chart',
+    value => {
+      logEvent({
+        event_name: 'profiler-tab-changed',
+        metadata: {
+          tabId: value,
+        },
+      });
+    },
   );
 
   const startProfiling = useCallback(() => {
-    logEvent({event_name: 'profiling-start'}, {current_tab: selectedTabID});
+    logEvent({
+      event_name: 'profiling-start',
+      metadata: {current_tab: selectedTabID},
+    });
     store.profilerStore.startProfiling();
   }, [store, selectedTabID]);
   const stopProfiling = useCallback(() => store.profilerStore.stopProfiling(), [

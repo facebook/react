@@ -7,7 +7,7 @@
  * @flow strict-local
  */
 
-import type {LogEvent} from 'react-devtools-shared/src/Logger';
+import type {LoggerEvent} from 'react-devtools-shared/src/Logger';
 
 import {registerEventLogger} from 'react-devtools-shared/src/Logger';
 import {enableLogger} from 'react-devtools-feature-flags';
@@ -25,9 +25,14 @@ export function registerDevToolsEventLogger(
     | LoggerContext
     | ?(() => Promise<LoggerContext>),
 ): void {
-  async function logEvent(event: LogEvent, metadata: ?Object) {
+  async function logEvent(event: LoggerEvent) {
     if (enableLogger) {
       if (loggingIFrame != null) {
+        let metadata = null;
+        if (event.metadata != null) {
+          metadata = event.metadata;
+          delete event.metadata;
+        }
         loggingIFrame.contentWindow.postMessage(
           {
             source: 'react-devtools-logging',
@@ -35,7 +40,7 @@ export function registerDevToolsEventLogger(
             context: {
               surface,
               version: process.env.DEVTOOLS_VERSION,
-              metadata: metadata != null ? JSON.stringify(metadata) : '',
+              metadata: metadata !== null ? JSON.stringify(metadata) : '',
               ...(fetchAdditionalContext != null
                 ? await fetchAdditionalContext()
                 : {}),
@@ -56,7 +61,7 @@ export function registerDevToolsEventLogger(
 
     loggingIFrame = iframe;
     if (missedEvents.length > 0) {
-      missedEvents.forEach(logEvent);
+      missedEvents.forEach(event => logEvent(event));
       missedEvents = [];
     }
   }

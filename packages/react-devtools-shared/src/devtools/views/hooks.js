@@ -144,6 +144,7 @@ export function useIsOverflowing(
 export function useLocalStorage<T>(
   key: string,
   initialValue: T | (() => T),
+  onValueSet?: (any, string) => void,
 ): [T, (value: T | (() => T)) => void] {
   const getValueFromLocalStorage = useCallback(() => {
     try {
@@ -173,6 +174,10 @@ export function useLocalStorage<T>(
 
         // Notify listeners that this setting has changed.
         window.dispatchEvent(new Event(key));
+
+        if (onValueSet != null) {
+          onValueSet(valueToStore, key);
+        }
       } catch (error) {
         console.log(error);
       }
