@@ -481,7 +481,7 @@ export default {
                 `React Hook "${context.getSource(hook)}" is called in ` +
                 `function "${context.getSource(codePathFunctionName)}" ` +
                 'that is neither a React function component nor a custom ' +
-                'React Hook Function.' +
+                'React Hook function.' +
                 ' React component names must start with an uppercase letter.' +
                 ' React Hook names must start with the word "use".';
               context.report({node: hook, message});
