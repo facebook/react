@@ -16,6 +16,7 @@ import type {
   ReactNodeList,
   ReactContext,
   ReactProviderType,
+  OffscreenMode,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -107,6 +108,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_SCOPE_TYPE,
+  REACT_OFFSCREEN_TYPE,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -1062,6 +1064,18 @@ function renderLazyComponent(
   popComponentStackInDEV(task);
 }
 
+function renderOffscreen(request: Request, task: Task, props: Object): void {
+  const mode: ?OffscreenMode = (props.mode: any);
+  if (mode === 'hidden') {
+    // A hidden Offscreen boundary is not server rendered. Prerendering happens
+    // on the client.
+  } else {
+    // A visible Offscreen boundary is treated exactly like a fragment: a
+    // pure indirection.
+    renderNodeDestructive(request, task, props.children);
+  }
+}
+
 function renderElement(
   request: Request,
   task: Task,
@@ -1084,20 +1098,25 @@ function renderElement(
   }
 
   switch (type) {
-    // TODO: LegacyHidden acts the same as a fragment. This only works
-    // because we currently assume that every instance of LegacyHidden is
-    // accompanied by a host component wrapper. In the hidden mode, the host
-    // component is given a `hidden` attribute, which ensures that the
-    // initial HTML is not visible. To support the use of LegacyHidden as a
-    // true fragment, without an extra DOM node, we would have to hide the
-    // initial HTML in some other way.
-    // TODO: Add REACT_OFFSCREEN_TYPE here too with the same capability.
+    // LegacyHidden acts the same as a fragment. This only works because we
+    // currently assume that every instance of LegacyHidden is accompanied by a
+    // host component wrapper. In the hidden mode, the host component is given a
+    // `hidden` attribute, which ensures that the initial HTML is not visible.
+    // To support the use of LegacyHidden as a true fragment, without an extra
+    // DOM node, we would have to hide the initial HTML in some other way.
+    // TODO: Delete in LegacyHidden. It's an unstable API only used in the
+    // www build. As a migration step, we could add a special prop to Offscreen
+    // that simulates the old behavior (no hiding, no change to effects).
     case REACT_LEGACY_HIDDEN_TYPE:
     case REACT_DEBUG_TRACING_MODE_TYPE:
     case REACT_STRICT_MODE_TYPE:
     case REACT_PROFILER_TYPE:
     case REACT_FRAGMENT_TYPE: {
       renderNodeDestructive(request, task, props.children);
+      return;
+    }
+    case REACT_OFFSCREEN_TYPE: {
+      renderOffscreen(request, task, props);
       return;
     }
     case REACT_SUSPENSE_LIST_TYPE: {
