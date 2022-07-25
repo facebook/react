@@ -489,7 +489,7 @@ export default {
               // These are dangerous if you have inline requires enabled.
               const message =
                 `React Hook "${context.getSource(hook)}" cannot be called ` +
-                'at the top level. React Hooks must be called in a ' +
+                'outside of a React function. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
               context.report({node: hook, message});
             } else {

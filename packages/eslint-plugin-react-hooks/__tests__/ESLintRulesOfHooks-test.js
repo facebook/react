@@ -1001,7 +1001,7 @@ function genericError(hook) {
 function topLevelError(hook) {
   return {
     message:
-      `React Hook "${hook}" cannot be called at the top level. React Hooks ` +
+      `React Hook "${hook}" cannot be called outside of a React Function. React Hooks ` +
       'must be called in a React function component or a custom React ' +
       'Hook function.',
   };
