@@ -101,6 +101,19 @@ export function getAllEnumerableKeys(
   return keys;
 }
 
+// Mirror https://github.com/facebook/react/blob/7c21bf72ace77094fd1910cc350a548287ef8350/packages/shared/getComponentName.js#L27-L37
+export function getWrappedDisplayName(
+  outerType: mixed,
+  innerType: any,
+  wrapperName: string,
+  fallbackName?: string,
+): string {
+  return (
+    (outerType: any).displayName ||
+    `${wrapperName}(${getDisplayName(innerType, fallbackName)})`
+  );
+}
+
 export function getDisplayName(
   type: Function,
   fallbackName: string = 'Anonymous',
@@ -443,20 +456,6 @@ export function separateDisplayNameAndHOCs(
       break;
     default:
       break;
-  }
-
-  if (type === ElementTypeMemo) {
-    if (hocDisplayNames === null) {
-      hocDisplayNames = ['Memo'];
-    } else {
-      hocDisplayNames.unshift('Memo');
-    }
-  } else if (type === ElementTypeForwardRef) {
-    if (hocDisplayNames === null) {
-      hocDisplayNames = ['ForwardRef'];
-    } else {
-      hocDisplayNames.unshift('ForwardRef');
-    }
   }
 
   return [displayName, hocDisplayNames];
