@@ -16,7 +16,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+import {
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+} from '../../../constants';
 import {useLocalStorage, useSubscription} from '../hooks';
 import {StoreContext} from '../context';
 import Button from '../Button';
@@ -83,10 +86,21 @@ export default function ComponentsSettings(_: {||}) {
     [setParseHookNames],
   );
 
+  const [openInEditorURLPreset, setOpenInEditorURLPreset] = useLocalStorage<
+    'vscode' | 'jetbrain' | 'custom',
+  >(LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET, 'custom');
   const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
     getDefaultOpenInEditorURL(),
   );
+  useEffect(() => {
+    if (openInEditorURLPreset === 'vscode') {
+      setOpenInEditorURL('vscode://file/{path}:{line}');
+    } else if (openInEditorURLPreset === 'jetbrain') {
+      // Jetbrain`s IDE will run local web server on launched.
+      setOpenInEditorURL('http://localhost:63342/api/file/{path}:{line}');
+    }
+  }, [openInEditorURLPreset, setOpenInEditorURL]);
 
   const [componentFilters, setComponentFilters] = useState<
     Array<ComponentFilter>,
@@ -280,15 +294,29 @@ export default function ComponentsSettings(_: {||}) {
 
       <label className={styles.OpenInURLSetting}>
         Open in Editor URL:{' '}
-        <input
-          className={styles.Input}
-          type="text"
-          placeholder={process.env.EDITOR_URL ?? 'vscode://file/{path}:{line}'}
-          value={openInEditorURL}
-          onChange={event => {
-            setOpenInEditorURL(event.target.value);
-          }}
-        />
+        <select
+          className={styles.Select}
+          value={openInEditorURLPreset}
+          onChange={({currentTarget}) =>
+            setOpenInEditorURLPreset(currentTarget.value)
+          }>
+          <option value="vscode">VS Code</option>
+          <option value="jetbrain">Jetbrain</option>
+          <option value="custom">Custom</option>
+        </select>
+        {openInEditorURLPreset === 'custom' && (
+          <input
+            className={styles.Input}
+            type="text"
+            placeholder={
+              process.env.EDITOR_URL ?? 'vscode://file/{path}:{line}'
+            }
+            value={openInEditorURL}
+            onChange={event => {
+              setOpenInEditorURL(event.target.value);
+            }}
+          />
+        )}
       </label>
 
       <div className={styles.Header}>Hide components where...</div>

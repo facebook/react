@@ -225,6 +225,9 @@ export default function InspectedElementWrapper(_: Props) {
     const url = new URL(editorURL);
     url.href = url.href.replace('{path}', source.fileName);
     url.href = url.href.replace('{line}', String(source.lineNumber));
+    // replace encoded path
+    url.href = url.href.replace('%7Bpath%7D', source.fileName);
+    url.href = url.href.replace('%7Bline%7D', String(source.lineNumber));
     window.open(url);
   }, [inspectedElement, editorURL]);
 
