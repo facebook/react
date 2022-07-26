@@ -222,18 +222,17 @@ export function jsx(type, config, maybeKey) {
   // but as an intermediary step, we will use jsxDEV for everything except
   // <div {...props} key="Hi" />, because we aren't currently able to tell if
   // key is explicitly declared to be undefined or not.
-  if (maybeKey !== undefined) {
-    if (__DEV__) {
-      checkKeyStringCoercion(maybeKey);
-    }
-    key = '' + maybeKey;
-  }
-
   if (hasValidKey(config)) {
     if (__DEV__) {
       checkKeyStringCoercion(config.key);
     }
     key = '' + config.key;
+  }
+  else if (maybeKey !== undefined) {
+    if (__DEV__) {
+      checkKeyStringCoercion(maybeKey);
+    }
+    key = '' + maybeKey;
   }
 
   if (hasValidRef(config)) {
