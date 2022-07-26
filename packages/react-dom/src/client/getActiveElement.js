@@ -15,6 +15,6 @@ export default function getActiveElement(doc: ?Document): ?Element {
   try {
     return doc.activeElement || doc.body;
   } catch (e) {
-    return doc?.body || null;
+    return (doc && doc.body) || null;
   }
 }
