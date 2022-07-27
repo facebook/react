@@ -71,7 +71,7 @@ yarn test-build-devtools
 ```
 You can connect tests to a debugger as well if you'd like by running:
 ```sh
-yarn debug-test-build-devtools
+yarn test-build-devtools --debug
 ```
 
 # Finding the right first issue
