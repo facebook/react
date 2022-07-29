@@ -983,7 +983,6 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate enableSuspenseList
-
   it('shows inserted items before pending in a SuspenseList as fallbacks while hydrating', async () => {
     const ref = React.createRef();
 

@@ -32,6 +32,7 @@ import {
   ClassComponent,
   HostComponent,
   HostResource,
+  HostSingleton,
   HostPortal,
   HostText,
   HostRoot,
@@ -202,6 +203,7 @@ function toTree(node: ?Fiber) {
         rendered: childrenToTree(node.child),
       };
     case HostResource:
+    case HostSingleton:
     case HostComponent: {
       return {
         nodeType: 'host',
@@ -308,7 +310,12 @@ class ReactTestInstance {
   }
 
   get instance(): $FlowFixMe {
-    if (this._fiber.tag === HostComponent || this._fiber.tag === HostResource) {
+    const tag = this._fiber.tag;
+    if (
+      tag === HostComponent ||
+      tag === HostResource ||
+      tag === HostSingleton
+    ) {
       return getPublicInstance(this._fiber.stateNode);
     } else {
       return this._fiber.stateNode;

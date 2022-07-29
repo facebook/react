@@ -434,5 +434,10 @@
   "446": "\"resourceRoot\" was expected to exist. This is a bug in React.",
   "447": "While attempting to insert a Resource, React expected the Document to contain a head element but it was not found.",
   "448": "createPortal was called on the server. Portals are not currently supported on the server. Update your program to conditionally call createPortal on the client only.",
-  "449": "flushSync was called on the server. This is likely caused by a function being called during render or in module scope that was intended to be called from an effect or event handler. Update your to not call flushSync no the server."
+  "449": "flushSync was called on the server. This is likely caused by a function being called during render or in module scope that was intended to be called from an effect or event handler. Update your to not call flushSync no the server.",
+  "450": "The current renderer does not support Singletons. This error is likely caused by a bug in React. Please file an issue.",
+  "451": "resolveSingletonInstance was called with an element type that is not supported. This is a bug in React.",
+  "452": "React expected an <html> element (document.documentElement) to exist in the Document but one was not found. React never removes the documentElement for any Document it renders into so the cause is likely in some other script running on this page.",
+  "453": "React expected a <head> element (document.head) to exist in the Document but one was not found. React never removes the head for any Document it renders into so the cause is likely in some other script running on this page.",
+  "454": "React expected a <body> element (document.body) to exist in the Document but one was not found. React never removes the body for any Document it renders into so the cause is likely in some other script running on this page."
 }

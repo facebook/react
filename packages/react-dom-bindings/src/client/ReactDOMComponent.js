@@ -73,6 +73,7 @@ import {
   enableTrustedTypesIntegration,
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
+  enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -312,12 +313,17 @@ function setInitialDOMProperties(
         // textContent on a <textarea> will cause the placeholder to not
         // show within the <textarea> until it has been focused and blurred again.
         // https://github.com/facebook/react/issues/6731#issuecomment-254874553
-        const canSetTextContent = tag !== 'textarea' || nextProp !== '';
+        const canSetTextContent =
+          (!enableHostSingletons || tag !== 'body') &&
+          (tag !== 'textarea' || nextProp !== '');
         if (canSetTextContent) {
           setTextContent(domElement, nextProp);
         }
       } else if (typeof nextProp === 'number') {
-        setTextContent(domElement, '' + nextProp);
+        const canSetTextContent = !enableHostSingletons || tag !== 'body';
+        if (canSetTextContent) {
+          setTextContent(domElement, '' + nextProp);
+        }
       }
     } else if (
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||

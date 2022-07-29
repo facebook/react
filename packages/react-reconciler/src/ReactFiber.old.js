@@ -21,7 +21,12 @@ import type {
 } from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old';
 
-import {supportsResources, isHostResourceType} from './ReactFiberHostConfig';
+import {
+  supportsResources,
+  supportsSingletons,
+  isHostResourceType,
+  isHostSingletonType,
+} from './ReactFiberHostConfig';
 import {
   createRootStrictEffectsByDefault,
   enableCache,
@@ -34,6 +39,7 @@ import {
   enableTransitionTracing,
   enableDebugTracing,
   enableFloat,
+  enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -45,6 +51,7 @@ import {
   HostText,
   HostPortal,
   HostResource,
+  HostSingleton,
   ForwardRef,
   Fragment,
   Mode,
@@ -497,10 +504,23 @@ export function createFiberFromTypeAndProps(
       }
     }
   } else if (typeof type === 'string') {
-    if (enableFloat && supportsResources) {
+    if (
+      enableFloat &&
+      supportsResources &&
+      enableHostSingletons &&
+      supportsSingletons
+    ) {
+      fiberTag = isHostResourceType(type, pendingProps)
+        ? HostResource
+        : isHostSingletonType(type)
+        ? HostSingleton
+        : HostComponent;
+    } else if (enableFloat && supportsResources) {
       fiberTag = isHostResourceType(type, pendingProps)
         ? HostResource
         : HostComponent;
+    } else if (enableHostSingletons && supportsSingletons) {
+      fiberTag = isHostSingletonType(type) ? HostSingleton : HostComponent;
     } else {
       fiberTag = HostComponent;
     }

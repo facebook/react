@@ -34,6 +34,7 @@ import {
   HostPortal,
   HostComponent,
   HostResource,
+  HostSingleton,
   HostText,
   ScopeComponent,
 } from 'react-reconciler/src/ReactWorkTags';
@@ -54,6 +55,7 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableFloat,
+  enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
 import {
   invokeGuardedCallbackAndCatchFirstError,
@@ -626,7 +628,8 @@ export function dispatchEventForPluginEventSystem(
             if (
               parentTag === HostComponent ||
               parentTag === HostText ||
-              (enableFloat ? parentTag === HostResource : false)
+              (enableFloat ? parentTag === HostResource : false) ||
+              (enableHostSingletons ? parentTag === HostSingleton : false)
             ) {
               node = ancestorInst = parentNode;
               continue mainLoop;
@@ -682,7 +685,9 @@ export function accumulateSinglePhaseListeners(
     const {stateNode, tag} = instance;
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (
-      (tag === HostComponent || (enableFloat ? tag === HostResource : false)) &&
+      (tag === HostComponent ||
+        (enableFloat ? tag === HostResource : false) ||
+        (enableHostSingletons ? tag === HostSingleton : false)) &&
       stateNode !== null
     ) {
       lastHostComponent = stateNode;
@@ -796,7 +801,9 @@ export function accumulateTwoPhaseListeners(
     const {stateNode, tag} = instance;
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (
-      (tag === HostComponent || (enableFloat ? tag === HostResource : false)) &&
+      (tag === HostComponent ||
+        (enableFloat ? tag === HostResource : false) ||
+        (enableHostSingletons ? tag === HostSingleton : false)) &&
       stateNode !== null
     ) {
       const currentTarget = stateNode;
@@ -830,7 +837,11 @@ function getParent(inst: Fiber | null): Fiber | null {
     // events to their parent. We could also go through parentNode on the
     // host node but that wouldn't work for React Native and doesn't let us
     // do the portal feature.
-  } while (inst && inst.tag !== HostComponent);
+  } while (
+    inst &&
+    inst.tag !== HostComponent &&
+    (!enableHostSingletons ? true : inst.tag !== HostSingleton)
+  );
   if (inst) {
     return inst;
   }
@@ -897,7 +908,9 @@ function accumulateEnterLeaveListenersForEvent(
       break;
     }
     if (
-      (tag === HostComponent || (enableFloat ? tag === HostResource : false)) &&
+      (tag === HostComponent ||
+        (enableFloat ? tag === HostResource : false) ||
+        (enableHostSingletons ? tag === HostSingleton : false)) &&
       stateNode !== null
     ) {
       const currentTarget = stateNode;
