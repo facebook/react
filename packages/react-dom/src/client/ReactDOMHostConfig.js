@@ -32,6 +32,7 @@ import {
   setInitialProperties,
   diffProperties,
   updateProperties,
+  resetProperties,
   diffHydratedProperties,
   diffHydratedText,
   trapClickOnNonInteractiveElement,
@@ -65,9 +66,15 @@ import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableFloat,
+  enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
-import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
+import {
+  HostComponent,
+  HostSingleton,
+  HostText,
+  HostPortal,
+  HostRoot,
+} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
@@ -111,6 +118,7 @@ export type Container =
   | (Document & {_reactRootContainer?: FiberRoot, ...})
   | (DocumentFragment & {_reactRootContainer?: FiberRoot, ...});
 export type Instance = Element;
+export type InstanceSibling = Node;
 export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
@@ -378,6 +386,32 @@ export const cancelTimeout: any =
 export const noTimeout = -1;
 const localPromise = typeof Promise === 'function' ? Promise : undefined;
 
+export function getInstanceFromNode(node: HTMLElement): null | Object {
+  return getClosestInstanceFromNode(node) || null;
+}
+
+export function preparePortalMount(portalInstance: Instance): void {
+  listenToAllSupportedEvents(portalInstance);
+}
+
+export function prepareScopeUpdate(
+  scopeInstance: ReactScopeInstance,
+  internalInstanceHandle: Object,
+): void {
+  if (enableScopeAPI) {
+    precacheFiberNode(internalInstanceHandle, scopeInstance);
+  }
+}
+
+export function getInstanceFromScope(
+  scopeInstance: ReactScopeInstance,
+): null | Object {
+  if (enableScopeAPI) {
+    return getFiberFromScopeInstance(scopeInstance);
+  }
+  return null;
+}
+
 // -------------------
 //     Microtasks
 // -------------------
@@ -506,7 +540,7 @@ export function appendChildToContainer(
 export function insertBefore(
   parentInstance: Instance,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance | SuspenseInstance,
+  beforeChild: InstanceSibling,
 ): void {
   parentInstance.insertBefore(child, beforeChild);
 }
@@ -514,7 +548,7 @@ export function insertBefore(
 export function insertInContainerBefore(
   container: Container,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance | SuspenseInstance,
+  beforeChild: InstanceSibling,
 ): void {
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).insertBefore(child, beforeChild);
@@ -662,11 +696,30 @@ export function unhideTextInstance(
 }
 
 export function clearContainer(container: Container): void {
-  if (container.nodeType === ELEMENT_NODE) {
-    ((container: any): Element).textContent = '';
-  } else if (container.nodeType === DOCUMENT_NODE) {
-    if (container.documentElement) {
-      container.removeChild(container.documentElement);
+  if (enableHostSingletons) {
+    if (container.nodeType === ELEMENT_NODE) {
+      switch (((container: any): Element).tagName.toLowerCase()) {
+        case 'html':
+        case 'head':
+        case 'body': {
+          clearSingletonInstance(container);
+          break;
+        }
+        default: {
+          ((container: any): Element).textContent = '';
+        }
+      }
+    }
+    // Implicitly if the container is of type Document we rely on the Persistent HostComponent
+    // semantics to clear these nodes appropriately when being placed so no ahead of time
+    // clearing is necessary
+  } else {
+    if (container.nodeType === ELEMENT_NODE) {
+      ((container: any): Element).textContent = '';
+    } else if (container.nodeType === DOCUMENT_NODE) {
+      if (container.documentElement) {
+        container.removeChild(container.documentElement);
+      }
     }
   }
 }
@@ -781,7 +834,7 @@ function getNextHydratable(node) {
   // Skip non-hydratable nodes.
   for (; node != null; node = ((node: any): Node).nextSibling) {
     const nodeType = node.nodeType;
-    if (enableFloat) {
+    if (enableHostSingletons) {
       if (nodeType === ELEMENT_NODE) {
         if (
           ((node: any): Element).tagName === 'LINK' &&
@@ -903,7 +956,7 @@ export function getMatchingResourceInstance(
   props: Props,
   rootHostContainer: Container,
 ): ?Instance {
-  if (enableFloat) {
+  if (enableHostSingletons) {
     switch (type) {
       case 'link': {
         if (typeof (props: any).href !== 'string') {
@@ -1011,6 +1064,8 @@ export function commitHydratedSuspenseInstance(
   retryIfBlockedOn(suspenseInstance);
 }
 
+// @TODO remove this function once float lands and hydrated tail nodes
+// are controlled by HostSingleton fibers
 export function shouldDeleteUnhydratedTailInstances(
   parentType: string,
 ): boolean {
@@ -1215,31 +1270,163 @@ export function errorHydratingContainer(parentContainer: Container): void {
   }
 }
 
-export function getInstanceFromNode(node: HTMLElement): null | Object {
-  return getClosestInstanceFromNode(node) || null;
-}
-
-export function preparePortalMount(portalInstance: Instance): void {
-  listenToAllSupportedEvents(portalInstance);
-}
-
-export function prepareScopeUpdate(
-  scopeInstance: ReactScopeInstance,
-  internalInstanceHandle: Object,
-): void {
-  if (enableScopeAPI) {
-    precacheFiberNode(internalInstanceHandle, scopeInstance);
+export function acquireSingletonInstance(
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
+): Instance {
+  if (__DEV__) {
+    // TODO: take namespace into account when validating.
+    const hostContextDev = ((hostContext: any): HostContextDev);
+    validateDOMNesting(type, null, hostContextDev.ancestorInfo);
+  }
+  const ownerDocument = getOwnerDocumentFromRootContainer(
+    rootContainerInstance,
+  );
+  // For the three persistent Host Components that exist in DOM it is necessary for there to
+  // always be a documentElement. With normal html parsing this will always be the case but
+  // with pathological manipulation the document can end up in a state where no documentElement
+  // exists. We create it here if missing so we can treat it as an invariant.
+  // It is important to note that thi dom mutation and others in this function happen
+  // in render rather than commit. This is tolerable because they only happen in degenerate cases
+  if (!ownerDocument.documentElement) {
+    ownerDocument.append(ownerDocument.createElement('html'));
+  }
+  switch (type) {
+    case 'html': {
+      // We ensure this exists just above
+      return ((ownerDocument.documentElement: any): HTMLHtmlElement);
+    }
+    case 'head': {
+      if (!ownerDocument.head) {
+        ownerDocument.insertBefore(
+          ownerDocument.createElement('head'),
+          ownerDocument.firstChild,
+        );
+      }
+      // We ensure this exists just above
+      return ((ownerDocument.head: any): HTMLHeadElement);
+    }
+    case 'body': {
+      if (!ownerDocument.body) {
+        ownerDocument.appendChild(ownerDocument.createElement('body'));
+      }
+      // We ensure this exists just above
+      return ((ownerDocument.body: any): HTMLBodyElement);
+    }
+    default: {
+      throw new Error(
+        'acquireSingletonInstance was called with an element type that is not supported. This is a bug in React.',
+      );
+    }
   }
 }
 
-export function getInstanceFromScope(
-  scopeInstance: ReactScopeInstance,
-): null | Object {
-  if (enableScopeAPI) {
-    return getFiberFromScopeInstance(scopeInstance);
+export function commitSingletonPlacement(
+  type: string,
+  props: Props,
+  instance: Instance,
+  internalInstanceHandle: Object,
+): void {
+  if (__DEV__) {
+    switch (type) {
+      case 'html':
+      case 'head':
+      case 'body': {
+        break;
+      }
+      default: {
+        console.error(
+          'commitSingletonPlacement was called with an element type that is not supported. This is a bug in React.',
+        );
+      }
+    }
+  }
+
+  clearSingletonInstance(instance);
+  resetProperties(instance, type, props);
+  precacheFiberNode(internalInstanceHandle, instance);
+  updateFiberProps(instance, props);
+}
+
+export function getInsertionEdge(parent: Instance): ?InstanceSibling {
+  if (enableHostSingletons) {
+    let node = null;
+    let nextNode = parent.lastChild;
+    let fallbackNode;
+    while (nextNode != null) {
+      const fiber = getInstanceFromNodeDOMTree(nextNode);
+      if (fiber) {
+        // We intentionally start with fiber rather than fiber.return because we want to
+        // account whether the node we found is the root itself. This comes into play
+        // when you portal into the same element that contains the HostRoot
+        let parentFiber = fiber;
+        while (parentFiber !== null) {
+          if (
+            (parentFiber.tag === HostComponent &&
+              parentFiber.stateNode === parent) ||
+            ((parentFiber.tag === HostPortal || parentFiber.tag === HostRoot) &&
+              parentFiber.stateNode.containerInfo === parent)
+          ) {
+            return node;
+          }
+          if (fallbackNode === undefined && parentFiber.tag === HostRoot) {
+            // When we find out first Fiber Node we capture the preceding Node to use as a fallback
+            // This is because we want to append to sibling fiber trees but prepend non-fiber trees
+            // If we don't end up finding an explicit insertion point based on existing siblings
+            fallbackNode = fallbackNode || node;
+          }
+          parentFiber = parentFiber.return;
+        }
+      }
+
+      node = nextNode;
+      nextNode = nextNode.previousSibling;
+    }
+    // We return the fallbackNode if we found one (the Node following the first React owned Node)
+    // Otherwise we return the first Node in the list of Siblings
+    return fallbackNode !== undefined ? fallbackNode : node;
   }
   return null;
 }
+
+function clearSingletonInstance(instance: Instance) {
+  const tagName = instance.tagName.toLowerCase();
+  switch (tagName) {
+    case 'html': {
+      return;
+    }
+    case 'head':
+    case 'body': {
+      let node = instance.firstChild;
+      while (node) {
+        const nextNode = node.nextSibling;
+        const nodeName = node.nodeName;
+        if (
+          nodeName === 'STYLE' ||
+          (nodeName === 'LINK' &&
+            ((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet')
+        ) {
+          // retain these nodes
+        } else {
+          instance.removeChild(node);
+        }
+        node = nextNode;
+      }
+      return;
+    }
+    default: {
+      throw new Error(
+        'clearSingletonInstance was called with an element type that is not supported. this is a bug in React.',
+      );
+    }
+  }
+}
+
+// -------------------
+//     Test Selectors
+// -------------------
 
 export const supportsTestSelectors = true;
 
@@ -1276,6 +1463,7 @@ export function matchAccessibilityRole(node: Instance, role: string): boolean {
 
 export function getTextContent(fiber: Fiber): string | null {
   switch (fiber.tag) {
+    case HostSingleton:
     case HostComponent:
       let textContent = '';
       const childNodes = fiber.stateNode.childNodes;
@@ -1294,7 +1482,11 @@ export function getTextContent(fiber: Fiber): string | null {
 }
 
 export function isHiddenSubtree(fiber: Fiber): boolean {
-  return fiber.tag === HostComponent && fiber.memoizedProps.hidden === true;
+  return (
+    (fiber.tag === HostComponent ||
+      (enableHostSingletons ? fiber.tag === HostSingleton : false)) &&
+    fiber.memoizedProps.hidden === true
+  );
 }
 
 export function setFocusIfFocusable(node: Instance): boolean {
@@ -1379,3 +1571,21 @@ export function setupIntersectionObserver(
     },
   };
 }
+
+// -------------------
+//     Singletons
+// -------------------
+
+export const supportsSingletons = true;
+
+export function isHostSingletonInstance(
+  instance: Instance | Container,
+): boolean {
+  if (instance.nodeType === ELEMENT_NODE) {
+    return isHostSingletonType(instance.tagName.toLowerCase());
+  }
+  return false;
+}
+
+import {isHostSingletonType} from './ReactDOMComponent';
+export {isHostSingletonType};

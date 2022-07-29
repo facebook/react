@@ -100,6 +100,10 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
+export const enableHostSingletons = __EXPERIMENTAL__;
+
+export const enableFloat = __EXPERIMENTAL__;
+
 // When a node is unmounted, recurse into the Fiber subtree and clean out
 // references. Each level cleans up more fiber fields than the previous level.
 // As far as we know, React itself doesn't leak, but because the Fiber contains
@@ -113,7 +117,6 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 // aggressiveness.
 export const deletedTreeCleanUpLevel = 3;
 
-export const enableFloat = __EXPERIMENTAL__;
 export const enableUseHook = __EXPERIMENTAL__;
 
 // Enables unstable_useMemoCache hook, intended as a compilation target for

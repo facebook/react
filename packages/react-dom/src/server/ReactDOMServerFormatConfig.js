@@ -20,7 +20,7 @@ import {Children} from 'react';
 import {
   enableFilterEmptyStringAttributesDOM,
   enableCustomElementPropertySupport,
-  enableFloat,
+  enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
 
 import type {
@@ -1271,7 +1271,7 @@ function pushStartHead(
   responseState: ResponseState,
 ): ReactNodeList {
   // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target = enableFloat ? preamble : target;
+  target = enableHostSingletons ? preamble : target;
 
   return pushStartGenericElement(target, props, tag, responseState);
 }
@@ -1285,7 +1285,7 @@ function pushStartHtml(
   responseState: ResponseState,
 ): ReactNodeList {
   // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target = enableFloat ? preamble : target;
+  target = enableHostSingletons ? preamble : target;
 
   if (formatContext.insertionMode === ROOT_HTML_MODE) {
     // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
@@ -1663,7 +1663,7 @@ export function pushEndInstance(
     // Postamble end tags
     case 'body':
     case 'html':
-      target = enableFloat ? postamble : target;
+      target = enableHostSingletons ? postamble : target;
     // Intentional fallthrough
     default: {
       target.push(endTag1, stringToChunk(type), endTag2);

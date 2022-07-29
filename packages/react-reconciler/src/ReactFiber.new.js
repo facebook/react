@@ -21,6 +21,7 @@ import type {
 } from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
 
+import {supportsSingletons, isHostSingletonType} from './ReactFiberHostConfig';
 import {
   createRootStrictEffectsByDefault,
   enableCache,
@@ -32,6 +33,7 @@ import {
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
+  enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -42,6 +44,7 @@ import {
   HostComponent,
   HostText,
   HostPortal,
+  HostSingleton,
   ForwardRef,
   Fragment,
   Mode,
@@ -491,7 +494,11 @@ export function createFiberFromTypeAndProps(
       }
     }
   } else if (typeof type === 'string') {
-    fiberTag = HostComponent;
+    if (enableHostSingletons && supportsSingletons) {
+      fiberTag = isHostSingletonType(type) ? HostSingleton : HostComponent;
+    } else {
+      fiberTag = HostComponent;
+    }
   } else {
     getTag: switch (type) {
       case REACT_FRAGMENT_TYPE:

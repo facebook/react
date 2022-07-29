@@ -982,7 +982,6 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate enableSuspenseList
-
   it('shows inserted items before pending in a SuspenseList as fallbacks while hydrating', async () => {
     const ref = React.createRef();
 
@@ -4277,7 +4276,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate enableFloat
+  // @gate enableHostSingletons
   it('emits html and head start tags (the preamble) before other content if rendered in the shell', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -4319,13 +4318,9 @@ describe('ReactDOMFizzServer', () => {
       },
     );
     expect(() => {
-      try {
-        expect(() => {
-          expect(Scheduler).toFlushWithoutYielding();
-        }).toThrow('Invalid insertion of HTML node in #document node.');
-      } catch (e) {
-        console.log('e', e);
-      }
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toThrow('Invalid insertion of TITLE node in #document node.');
     }).toErrorDev(
       [
         'Warning: Expected server HTML to contain a matching <title> in <#document>.',
@@ -4338,13 +4333,18 @@ describe('ReactDOMFizzServer', () => {
       'Hydration failed because the initial UI does not match what was rendered on the server.',
       'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
     ]);
-    expect(getVisibleChildren(document)).toEqual();
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-foo="foo">
+        <head data-bar="bar" />
+        <body />
+      </html>,
+    );
     expect(() => {
       expect(Scheduler).toFlushWithoutYielding();
     }).toThrow('The node to be removed is not a child of this node.');
   });
 
-  // @gate enableFloat
+  // @gate enableHostSingletons
   it('holds back body and html closing tags (the postamble) until all pending tasks are completed', async () => {
     const chunks = [];
     writable.on('data', chunk => {
@@ -4390,7 +4390,7 @@ describe('ReactDOMFizzServer', () => {
     expect(chunks.pop()).toEqual('</body></html>');
   });
 
-  // @gate enableFloat
+  // @gate enableHostSingletons
   it('recognizes stylesheet links as attributes during hydration', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -4498,7 +4498,7 @@ describe('ReactDOMFizzServer', () => {
 
   // Temporarily this test is expected to fail everywhere. When we have resource hoisting
   // it should start to pass and we can adjust the gate accordingly
-  // @gate false && enableFloat
+  // @gate false && enableHostSingletons
   it('should insert missing resources during hydration', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -4546,10 +4546,10 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  // @gate experimental && enableFloat
+  // @gate experimental && enableHostSingletons
   it('fail hydration if a suitable resource cannot be found in the DOM for a given location (href)', async () => {
     gate(flags => {
-      if (!(__EXPERIMENTAL__ && flags.enableFloat)) {
+      if (!(__EXPERIMENTAL__ && flags.enableHostSingletons)) {
         throw new Error('bailing out of test');
       }
     });
@@ -4594,10 +4594,10 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  // @gate experimental && enableFloat
+  // @gate experimental && enableHostSingletons
   it('should error in dev when rendering more than one resource for a given location (href)', async () => {
     gate(flags => {
-      if (!(__EXPERIMENTAL__ && flags.enableFloat)) {
+      if (!(__EXPERIMENTAL__ && flags.enableHostSingletons)) {
         throw new Error('bailing out of test');
       }
     });

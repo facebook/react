@@ -23,7 +23,12 @@ import {
 import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMPluginEventSystem';
 import type {KnownReactSyntheticEvent} from '../ReactSyntheticEventType';
 
-import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
+import {enableHostSingletons} from 'shared/ReactFeatureFlags';
+import {
+  HostComponent,
+  HostSingleton,
+  HostText,
+} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 function registerEvents() {
@@ -103,7 +108,9 @@ function extractEvents(
       const nearestMounted = getNearestMountedFiber(to);
       if (
         to !== nearestMounted ||
-        (to.tag !== HostComponent && to.tag !== HostText)
+        (to.tag !== HostComponent &&
+          to.tag !== HostText &&
+          (!enableHostSingletons ? true : to.tag !== HostSingleton))
       ) {
         to = null;
       }

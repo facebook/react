@@ -120,7 +120,7 @@ import {
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
-  enableFloat,
+  enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -2144,7 +2144,7 @@ function flushCompletedQueues(
     const completedRootSegment = request.completedRootSegment;
     if (completedRootSegment !== null) {
       if (request.pendingRootTasks === 0) {
-        if (enableFloat) {
+        if (enableHostSingletons) {
           const preamble = request.preamble;
           for (i = 0; i < preamble.length; i++) {
             // we expect the preamble to be tiny and will ignore backpressure
@@ -2235,7 +2235,7 @@ function flushCompletedQueues(
       // We don't need to check any partially completed segments because
       // either they have pending task or they're complete.
     ) {
-      if (enableFloat) {
+      if (enableHostSingletons) {
         const postamble = request.postamble;
         for (let i = 0; i < postamble.length; i++) {
           writeChunk(destination, postamble[i]);

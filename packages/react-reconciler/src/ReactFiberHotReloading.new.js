@@ -15,6 +15,7 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import {enableHostSingletons} from 'shared/ReactFeatureFlags';
 import {
   flushSync,
   scheduleUpdateOnFiber,
@@ -29,6 +30,7 @@ import {
   FunctionComponent,
   ForwardRef,
   HostComponent,
+  HostSingleton,
   HostPortal,
   HostRoot,
   MemoComponent,
@@ -39,6 +41,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
+import {supportsSingletons} from './ReactFiberHostConfig';
 
 export type Family = {|
   current: any,
@@ -436,6 +439,7 @@ function findHostInstancesForFiberShallowly(
     let node = fiber;
     while (true) {
       switch (node.tag) {
+        case HostSingleton:
         case HostComponent:
           hostInstances.add(node.stateNode);
           return;
@@ -462,7 +466,12 @@ function findChildHostInstancesForFiberShallowly(
     let node: Fiber = fiber;
     let foundHostInstances = false;
     while (true) {
-      if (node.tag === HostComponent) {
+      if (
+        node.tag === HostComponent ||
+        (enableHostSingletons && supportsSingletons
+          ? node.tag === HostSingleton
+          : false)
+      ) {
         // We got a match.
         foundHostInstances = true;
         hostInstances.add(node.stateNode);

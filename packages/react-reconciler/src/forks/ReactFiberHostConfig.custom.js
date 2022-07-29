@@ -28,6 +28,7 @@ export opaque type Type = mixed; // eslint-disable-line no-undef
 export opaque type Props = mixed; // eslint-disable-line no-undef
 export opaque type Container = mixed; // eslint-disable-line no-undef
 export opaque type Instance = mixed; // eslint-disable-line no-undef
+export type InstanceSibling = Instance; // eslint-disable-line no-undef
 export opaque type TextInstance = mixed; // eslint-disable-line no-undef
 export opaque type SuspenseInstance = mixed; // eslint-disable-line no-undef
 export opaque type HydratableInstance = mixed; // eslint-disable-line no-undef
@@ -186,6 +187,18 @@ export const didNotFindHydratableTextInstance =
 export const didNotFindHydratableSuspenseInstance =
   $$$hostConfig.didNotFindHydratableSuspenseInstance;
 export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
+// @TODO remove these when Resources supports Hydration indirectly
 export const isHydratableResource = $$$hostConfig.isHydratableResource;
 export const getMatchingResourceInstance =
   $$$hostConfig.getMatchingResourceInstance;
+
+// -------------------
+//     Resources
+//     (optional)
+// -------------------
+export const supportsSingletons = $$$hostConfig.supportsSingletons;
+export const commitSingletonPlacement = $$$hostConfig.commitSingletonPlacement;
+export const acquireSingletonInstance = $$$hostConfig.acquireSingletonInstance;
+export const getInsertionEdge = $$$hostConfig.getInsertionEdge;
+export const isHostSingletonInstance = $$$hostConfig.isHostSingletonInstance;
+export const isHostSingletonType = $$$hostConfig.isHostSingletonType;

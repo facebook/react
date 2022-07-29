@@ -23,6 +23,7 @@ import type {CapturedValue} from './ReactCapturedValue';
 
 import {
   HostComponent,
+  HostSingleton,
   HostText,
   HostRoot,
   SuspenseComponent,
@@ -34,7 +35,7 @@ import {
   NoFlags,
   DidCapture,
 } from './ReactFiberFlags';
-import {enableFloat} from 'shared/ReactFeatureFlags';
+import {enableHostSingletons} from 'shared/ReactFeatureFlags';
 
 import {
   createFiberFromHostInstanceForDeletion,
@@ -43,6 +44,7 @@ import {
 import {
   shouldSetTextContent,
   supportsHydration,
+  supportsSingletons,
   canHydrateInstance,
   canHydrateTextInstance,
   canHydrateSuspenseInstance,
@@ -166,6 +168,7 @@ function warnUnhydratedInstance(
         );
         break;
       }
+      case HostSingleton:
       case HostComponent: {
         const isConcurrentMode = (returnFiber.mode & ConcurrentMode) !== NoMode;
         didNotHydrateInstance(
@@ -222,6 +225,7 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
       case HostRoot: {
         const parentContainer = returnFiber.stateNode.containerInfo;
         switch (fiber.tag) {
+          case HostSingleton:
           case HostComponent:
             const type = fiber.type;
             const props = fiber.pendingProps;
@@ -246,11 +250,13 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
         }
         break;
       }
+      case HostSingleton:
       case HostComponent: {
         const parentType = returnFiber.type;
         const parentProps = returnFiber.memoizedProps;
         const parentInstance = returnFiber.stateNode;
         switch (fiber.tag) {
+          case HostSingleton:
           case HostComponent: {
             const type = fiber.type;
             const props = fiber.pendingProps;
@@ -297,6 +303,7 @@ function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
         const parentInstance = suspenseState.dehydrated;
         if (parentInstance !== null)
           switch (fiber.tag) {
+            case HostSingleton:
             case HostComponent:
               const type = fiber.type;
               const props = fiber.pendingProps;
@@ -333,6 +340,7 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
 
 function tryHydrate(fiber, nextInstance) {
   switch (fiber.tag) {
+    case HostSingleton:
     case HostComponent: {
       const type = fiber.type;
       const props = fiber.pendingProps;
@@ -408,7 +416,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
     return;
   }
-  if (enableFloat) {
+  if (enableHostSingletons && supportsSingletons) {
     if (
       fiber.tag === HostComponent &&
       isHydratableResource(fiber.type, fiber.pendingProps)
@@ -527,6 +535,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
           );
           break;
         }
+        case HostSingleton:
         case HostComponent: {
           const parentType = returnFiber.type;
           const parentProps = returnFiber.memoizedProps;
@@ -602,7 +611,10 @@ function popToNextHostParent(fiber: Fiber): void {
     parent !== null &&
     parent.tag !== HostComponent &&
     parent.tag !== HostRoot &&
-    parent.tag !== SuspenseComponent
+    parent.tag !== SuspenseComponent &&
+    (!(enableHostSingletons && supportsSingletons)
+      ? true
+      : parent.tag !== HostSingleton)
   ) {
     parent = parent.return;
   }
@@ -614,7 +626,8 @@ function popHydrationState(fiber: Fiber): boolean {
     return false;
   }
   if (
-    enableFloat &&
+    enableHostSingletons &&
+    supportsSingletons &&
     isHydrating &&
     isHydratableResource(fiber.type, fiber.memoizedProps)
   ) {
@@ -651,16 +664,35 @@ function popHydrationState(fiber: Fiber): boolean {
     return false;
   }
 
-  // If we have any remaining hydratable nodes, we need to delete them now.
-  // We only do this deeper than head and body since they tend to have random
-  // other nodes in them. We also ignore components with pure text content in
-  // side of them. We also don't delete anything inside the root container.
-  if (
-    fiber.tag !== HostRoot &&
-    (fiber.tag !== HostComponent ||
-      (shouldDeleteUnhydratedTailInstances(fiber.type) &&
-        !shouldSetTextContent(fiber.type, fiber.memoizedProps)))
-  ) {
+  let shouldClear = false;
+  if (enableHostSingletons && supportsSingletons) {
+    // With float we never clear the Root, or Singleton instances. We also do not clear Instances
+    // that have singlton text content
+    if (
+      fiber.tag !== HostRoot &&
+      fiber.tag !== HostSingleton &&
+      !(
+        fiber.tag === HostComponent &&
+        shouldSetTextContent(fiber.type, fiber.memoizedProps)
+      )
+    ) {
+      shouldClear = true;
+    }
+  } else {
+    // If we have any remaining hydratable nodes, we need to delete them now.
+    // We only do this deeper than head and body since they tend to have random
+    // other nodes in them. We also ignore components with pure text content in
+    // side of them. We also don't delete anything inside the root container.
+    if (
+      fiber.tag !== HostRoot &&
+      (fiber.tag !== HostComponent ||
+        (shouldDeleteUnhydratedTailInstances(fiber.type) &&
+          !shouldSetTextContent(fiber.type, fiber.memoizedProps)))
+    ) {
+      shouldClear = true;
+    }
+  }
+  if (shouldClear) {
     let nextInstance = nextHydratableInstance;
     if (nextInstance) {
       if (shouldClientRenderOnMismatch(fiber)) {

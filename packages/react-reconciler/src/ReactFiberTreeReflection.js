@@ -13,10 +13,12 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {enableHostSingletons} from 'shared/ReactFeatureFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
   ClassComponent,
   HostComponent,
+  HostSingleton,
   HostRoot,
   HostPortal,
   HostText,
@@ -273,7 +275,11 @@ export function findCurrentHostFiber(parent: Fiber): Fiber | null {
 
 function findCurrentHostFiberImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
-  if (node.tag === HostComponent || node.tag === HostText) {
+  if (
+    node.tag === HostComponent ||
+    node.tag === HostText ||
+    (enableHostSingletons && node.tag === HostSingleton)
+  ) {
     return node;
   }
 
@@ -298,7 +304,11 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
 
 function findCurrentHostFiberWithNoPortalsImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
-  if (node.tag === HostComponent || node.tag === HostText) {
+  if (
+    node.tag === HostComponent ||
+    node.tag === HostText ||
+    (enableHostSingletons && node.tag === HostSingleton)
+  ) {
     return node;
   }
 

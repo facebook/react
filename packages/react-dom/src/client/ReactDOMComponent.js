@@ -73,7 +73,7 @@ import {
   enableTrustedTypesIntegration,
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
-  enableFloat,
+  enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -481,6 +481,18 @@ export function createTextNode(
   return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
     text,
   );
+}
+
+export function resetProperties(
+  domElement: Element,
+  tag: string,
+  rawProps: Object,
+): void {
+  const attributes = domElement.attributes;
+  while (attributes.length) {
+    domElement.removeAttribute(attributes[0].name);
+  }
+  setInitialProperties(domElement, tag, rawProps);
 }
 
 export function setInitialProperties(
@@ -1020,7 +1032,7 @@ export function diffHydratedProperties(
       if (rawProps[SUPPRESS_HYDRATION_WARNING] === true) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
-        enableFloat &&
+        enableHostSingletons &&
         tag === 'link' &&
         rawProps.rel === 'stylesheet' &&
         propKey === 'precedence'
@@ -1304,4 +1316,8 @@ export function restoreControlledState(
       ReactDOMSelectRestoreControlledState(domElement, props);
       return;
   }
+}
+
+export function isHostSingletonType(type: string): boolean {
+  return type === 'html' || type === 'head' || type === 'body';
 }

@@ -32,6 +32,7 @@ import {
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import {
   HostComponent,
+  HostSingleton,
   ClassComponent,
   HostRoot,
   SuspenseComponent,
@@ -405,6 +406,7 @@ export function getPublicRootInstance(
     return null;
   }
   switch (containerFiber.child.tag) {
+    case HostSingleton:
     case HostComponent:
       return getPublicInstance(containerFiber.child.stateNode);
     default:

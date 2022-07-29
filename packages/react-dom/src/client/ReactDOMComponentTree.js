@@ -23,14 +23,18 @@ import type {
 
 import {
   HostComponent,
+  HostSingleton,
   HostText,
   HostRoot,
   SuspenseComponent,
 } from 'react-reconciler/src/ReactWorkTags';
 
-import {getParentSuspenseInstance} from './ReactDOMHostConfig';
+import {
+  getParentSuspenseInstance,
+  supportsSingletons,
+} from './ReactDOMHostConfig';
 
-import {enableScopeAPI} from 'shared/ReactFeatureFlags';
+import {enableScopeAPI, enableHostSingletons} from 'shared/ReactFeatureFlags';
 
 const randomKey = Math.random()
   .toString(36)
@@ -166,7 +170,10 @@ export function getInstanceFromNode(node: Node): Fiber | null {
       inst.tag === HostComponent ||
       inst.tag === HostText ||
       inst.tag === SuspenseComponent ||
-      inst.tag === HostRoot
+      inst.tag === HostRoot ||
+      (enableHostSingletons && supportsSingletons
+        ? inst.tag === HostSingleton
+        : false)
     ) {
       return inst;
     } else {
@@ -181,7 +188,13 @@ export function getInstanceFromNode(node: Node): Fiber | null {
  * DOM node.
  */
 export function getNodeFromInstance(inst: Fiber): Instance | TextInstance {
-  if (inst.tag === HostComponent || inst.tag === HostText) {
+  if (
+    inst.tag === HostComponent ||
+    inst.tag === HostText ||
+    (enableHostSingletons && supportsSingletons
+      ? inst.tag === HostSingleton
+      : false)
+  ) {
     // In Fiber this, is just the state node right now. We assume it will be
     // a host component or host text.
     return inst.stateNode;

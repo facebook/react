@@ -9,6 +9,7 @@
 
 import type {
   Instance,
+  InstanceSibling,
   TextInstance,
   SuspenseInstance,
   Container,
@@ -48,6 +49,7 @@ import {
   enableUpdaterTracking,
   enableCache,
   enableTransitionTracing,
+  enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -55,6 +57,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
+  HostSingleton,
   HostText,
   HostPortal,
   Profiler,
@@ -70,7 +73,6 @@ import {
   CacheComponent,
   TracingMarkerComponent,
 } from './ReactWorkTags';
-import {detachDeletedInstance} from './ReactFiberHostConfig';
 import {
   NoFlags,
   ContentReset,
@@ -114,6 +116,7 @@ import {
   supportsMutation,
   supportsPersistence,
   supportsHydration,
+  supportsSingletons,
   commitMount,
   commitUpdate,
   resetTextContent,
@@ -138,6 +141,10 @@ import {
   prepareScopeUpdate,
   prepareForCommit,
   beforeActiveInstanceBlur,
+  detachDeletedInstance,
+  commitSingletonPlacement as commitSingletonPlacementImpl,
+  isHostSingletonInstance,
+  getInsertionEdge,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -478,6 +485,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
         break;
       }
       case HostComponent:
+      case HostSingleton:
       case HostText:
       case HostPortal:
       case IncompleteClassComponent:
@@ -1014,6 +1022,7 @@ function commitLayoutEffectOnFiber(
           let instance = null;
           if (finishedWork.child !== null) {
             switch (finishedWork.child.tag) {
+              case HostSingleton:
               case HostComponent:
                 instance = getPublicInstance(finishedWork.child.stateNode);
                 break;
@@ -1031,6 +1040,7 @@ function commitLayoutEffectOnFiber(
       }
       break;
     }
+    case HostSingleton:
     case HostComponent: {
       recursivelyTraverseLayoutEffects(
         finishedRoot,
@@ -1409,7 +1419,12 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
     // children to find all the terminal nodes.
     let node: Fiber = finishedWork;
     while (true) {
-      if (node.tag === HostComponent) {
+      if (
+        node.tag === HostComponent ||
+        (enableHostSingletons && supportsSingletons
+          ? node.tag === HostSingleton
+          : false)
+      ) {
         if (hostSubtreeRoot === null) {
           hostSubtreeRoot = node;
           try {
@@ -1481,6 +1496,7 @@ function commitAttachRef(finishedWork: Fiber) {
     const instance = finishedWork.stateNode;
     let instanceToUse;
     switch (finishedWork.tag) {
+      case HostSingleton:
       case HostComponent:
         instanceToUse = getPublicInstance(instance);
         break;
@@ -1613,6 +1629,10 @@ function detachFiberAfterEffects(fiber: Fiber) {
     // tree, which has its own pointers to children, parents, and siblings.
     // The other host nodes also point back to fibers, so we should detach that
     // one, too.
+    // @TODO for HostSingletons we cannot safely detatch the statenode because
+    // it might actually be pointing to a different fiber. The right thing to do
+    // is probably detach if the stateNode is pointing to this fiber or its alternate
+    // but for now we will leave them dangling to consider the impact
     if (fiber.tag === HostComponent) {
       const hostInstance: Instance = fiber.stateNode;
       if (hostInstance !== null) {
@@ -1685,7 +1705,10 @@ function isHostParent(fiber: Fiber): boolean {
   return (
     fiber.tag === HostComponent ||
     fiber.tag === HostRoot ||
-    fiber.tag === HostPortal
+    fiber.tag === HostPortal ||
+    (enableHostSingletons && supportsSingletons
+      ? fiber.tag === HostSingleton
+      : false)
   );
 }
 
@@ -1710,7 +1733,10 @@ function getHostSibling(fiber: Fiber): ?Instance {
     while (
       node.tag !== HostComponent &&
       node.tag !== HostText &&
-      node.tag !== DehydratedFragment
+      node.tag !== DehydratedFragment &&
+      (!(enableHostSingletons && supportsSingletons)
+        ? true
+        : node.tag !== HostSingleton)
     ) {
       // If it is not host node and, we might have a host node inside it.
       // Try to search down until we find one.
@@ -1735,6 +1761,30 @@ function getHostSibling(fiber: Fiber): ?Instance {
   }
 }
 
+function commitSingletonPlacement(finishedWork: Fiber): void {
+  if (!supportsSingletons) {
+    return;
+  }
+  if (enableHostSingletons) {
+    // We get back the singleton Instance from placement and need to capture it as the stateNode
+    // for the Fiber.
+    commitSingletonPlacementImpl(
+      finishedWork.type,
+      finishedWork.memoizedProps,
+      finishedWork.stateNode,
+      finishedWork,
+    );
+    const parent = finishedWork.stateNode;
+    const before = getInsertionEdge(parent);
+    let child = finishedWork.child;
+    while (child !== null) {
+      insertOrAppendPlacementNode(child, before, parent);
+      child = child.sibling;
+    }
+  }
+  return;
+}
+
 function commitPlacement(finishedWork: Fiber): void {
   if (!supportsMutation) {
     return;
@@ -1743,8 +1793,21 @@ function commitPlacement(finishedWork: Fiber): void {
   // Recursively insert all host nodes into the parent.
   const parentFiber = getHostParentFiber(finishedWork);
 
-  // Note: these two variables *must* always be updated together.
   switch (parentFiber.tag) {
+    case HostSingleton: {
+      if (enableHostSingletons && supportsSingletons) {
+        const parent: Instance = parentFiber.stateNode;
+        let before = getHostSibling(finishedWork);
+        if (before === null) {
+          before = getInsertionEdge(parent);
+        }
+        // We only have the top Fiber that was inserted but we need to recurse down its
+        // children to find all the terminal nodes.
+        insertOrAppendPlacementNode(finishedWork, before, parent);
+        break;
+      }
+    }
+    // eslint-disable-next-line no-fallthrough
     case HostComponent: {
       const parent: Instance = parentFiber.stateNode;
       if (parentFiber.flags & ContentReset) {
@@ -1763,7 +1826,13 @@ function commitPlacement(finishedWork: Fiber): void {
     case HostRoot:
     case HostPortal: {
       const parent: Container = parentFiber.stateNode.containerInfo;
-      const before = getHostSibling(finishedWork);
+      let before = getHostSibling(finishedWork);
+      if (enableHostSingletons && supportsSingletons && before === null) {
+        if (isHostSingletonInstance(parent)) {
+          // isHostSingletonInstance refines parent to an Instance type
+          before = getInsertionEdge(((parent: any): Instance));
+        }
+      }
       insertOrAppendPlacementNodeIntoContainer(finishedWork, before, parent);
       break;
     }
@@ -1778,7 +1847,7 @@ function commitPlacement(finishedWork: Fiber): void {
 
 function insertOrAppendPlacementNodeIntoContainer(
   node: Fiber,
-  before: ?Instance,
+  before: ?InstanceSibling,
   parent: Container,
 ): void {
   const {tag} = node;
@@ -1790,10 +1859,14 @@ function insertOrAppendPlacementNodeIntoContainer(
     } else {
       appendChildToContainer(parent, stateNode);
     }
-  } else if (tag === HostPortal) {
+  } else if (
+    tag === HostPortal ||
+    (enableHostSingletons && supportsSingletons ? tag === HostSingleton : false)
+  ) {
     // If the insertion itself is a portal, then we don't want to traverse
     // down its children. Instead, we'll get insertions from each child in
     // the portal directly.
+    // If the insertion is a HostSingleton then it will be placed independently
   } else {
     const child = node.child;
     if (child !== null) {
@@ -1809,7 +1882,7 @@ function insertOrAppendPlacementNodeIntoContainer(
 
 function insertOrAppendPlacementNode(
   node: Fiber,
-  before: ?Instance,
+  before: ?InstanceSibling,
   parent: Instance,
 ): void {
   const {tag} = node;
@@ -1821,10 +1894,14 @@ function insertOrAppendPlacementNode(
     } else {
       appendChild(parent, stateNode);
     }
-  } else if (tag === HostPortal) {
+  } else if (
+    tag === HostPortal ||
+    (enableHostSingletons && supportsSingletons ? tag === HostSingleton : false)
+  ) {
     // If the insertion itself is a portal, then we don't want to traverse
     // down its children. Instead, we'll get insertions from each child in
     // the portal directly.
+    // If the insertion is a HostSingleton then it will be placed independently
   } else {
     const child = node.child;
     if (child !== null) {
@@ -1872,6 +1949,7 @@ function commitDeletionEffects(
     let parent = returnFiber;
     findParent: while (parent !== null) {
       switch (parent.tag) {
+        case HostSingleton:
         case HostComponent: {
           hostParent = parent.stateNode;
           hostParentIsContainer = false;
@@ -1932,6 +2010,34 @@ function commitDeletionEffectsOnFiber(
   // into their subtree. There are simpler cases in the inner switch
   // that don't modify the stack.
   switch (deletedFiber.tag) {
+    case HostSingleton: {
+      if (enableHostSingletons && supportsSingletons) {
+        if (!offscreenSubtreeWasHidden) {
+          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        }
+
+        if (supportsMutation) {
+          const prevHostParent = hostParent;
+          const prevHostParentIsContainer = hostParentIsContainer;
+          hostParent = deletedFiber.stateNode;
+          recursivelyTraverseDeletionEffects(
+            finishedRoot,
+            nearestMountedAncestor,
+            deletedFiber,
+          );
+          hostParent = prevHostParent;
+          hostParentIsContainer = prevHostParentIsContainer;
+        } else {
+          recursivelyTraverseDeletionEffects(
+            finishedRoot,
+            nearestMountedAncestor,
+            deletedFiber,
+          );
+        }
+        return;
+      }
+    }
+    // eslint-disable-next-line no-fallthrough
     case HostComponent: {
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
@@ -2427,6 +2533,7 @@ function commitMutationEffectsOnFiber(
       }
       return;
     }
+    case HostSingleton:
     case HostComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
@@ -2719,7 +2826,15 @@ function commitReconciliationEffects(finishedWork: Fiber) {
   const flags = finishedWork.flags;
   if (flags & Placement) {
     try {
-      commitPlacement(finishedWork);
+      if (
+        enableHostSingletons &&
+        supportsSingletons &&
+        finishedWork.tag === HostSingleton
+      ) {
+        commitSingletonPlacement(finishedWork);
+      } else {
+        commitPlacement(finishedWork);
+      }
     } catch (error) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }
@@ -2812,6 +2927,7 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
       break;
     }
+    case HostSingleton:
     case HostComponent: {
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
@@ -2910,6 +3026,7 @@ export function reappearLayoutEffects(
     // case HostRoot: {
     //  ...
     // }
+    case HostSingleton:
     case HostComponent: {
       recursivelyTraverseReappearLayoutEffects(
         finishedRoot,

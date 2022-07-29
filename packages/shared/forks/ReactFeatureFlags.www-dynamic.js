@@ -59,6 +59,6 @@ export const disableNativeComponentFrames = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableStrictEffects = false;
 export const allowConcurrentByDefault = true;
-export const enableFloat = false;
+export const enableHostSingletons = false;
 // You probably *don't* want to add more hardcoded ones.
 // Instead, try to add them above with the __VARIANT__ value.
