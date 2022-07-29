@@ -1115,4 +1115,148 @@ describe('ReactOffscreen', () => {
       'Mount More 2',
     ]);
   });
+
+  // @gate enableOffscreen
+  it('does not mount effects when prerendering a nested Offscreen boundary', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showOuter, showInner}) {
+      return (
+        <Offscreen mode={showOuter ? 'visible' : 'hidden'}>
+          {useMemo(
+            () => (
+              <div>
+                <Child label="Outer" />
+                {showInner ? (
+                  <Offscreen mode="visible">
+                    <div>
+                      <Child label="Inner" />
+                    </div>
+                  </Offscreen>
+                ) : null}
+              </div>
+            ),
+            [showInner],
+          )}
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Prerender the outer contents. No effects should mount.
+    await act(async () => {
+      root.render(<App showOuter={false} showInner={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['Outer']);
+    expect(root).toMatchRenderedOutput(
+      <div hidden={true}>
+        <span prop="Outer" />
+      </div>,
+    );
+
+    // Prerender the inner contents. No effects should mount.
+    await act(async () => {
+      root.render(<App showOuter={false} showInner={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Outer', 'Inner']);
+    expect(root).toMatchRenderedOutput(
+      <div hidden={true}>
+        <span prop="Outer" />
+        <div>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
+
+    // Reveal the prerendered tree
+    await act(async () => {
+      root.render(<App showOuter={true} showInner={true} />);
+    });
+    // The effects fire, but the tree is not re-rendered because it already
+    // prerendered.
+    expect(Scheduler).toHaveYielded(['Mount Outer', 'Mount Inner']);
+    expect(root).toMatchRenderedOutput(
+      <div>
+        <span prop="Outer" />
+        <div>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
+  });
+
+  // @gate enableOffscreen
+  it('reveal an outer Offscreen boundary without revealing an inner one', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showOuter, showInner}) {
+      return (
+        <Offscreen mode={showOuter ? 'visible' : 'hidden'}>
+          {useMemo(
+            () => (
+              <div>
+                <Child label="Outer" />
+                <Offscreen mode={showInner ? 'visible' : 'hidden'}>
+                  <div>
+                    <Child label="Inner" />
+                  </div>
+                </Offscreen>
+              </div>
+            ),
+            [showInner],
+          )}
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Prerender the whole tree.
+    await act(async () => {
+      root.render(<App showOuter={false} showInner={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['Outer', 'Inner']);
+    // Both the inner and the outer tree should be hidden. Hiding the inner tree
+    // is arguably redundant, but the advantage of hiding both is that later you
+    // can reveal the outer tree without having to examine the inner one.
+    expect(root).toMatchRenderedOutput(
+      <div hidden={true}>
+        <span prop="Outer" />
+        <div hidden={true}>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
+
+    // Reveal the outer contents. The inner tree remains hidden.
+    await act(async () => {
+      root.render(<App showOuter={true} showInner={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['Mount Outer']);
+    expect(root).toMatchRenderedOutput(
+      <div>
+        <span prop="Outer" />
+        <div hidden={true}>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
+  });
 });
