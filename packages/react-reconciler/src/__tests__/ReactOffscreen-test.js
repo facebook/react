@@ -7,6 +7,7 @@ let Offscreen;
 let useState;
 let useLayoutEffect;
 let useEffect;
+let useMemo;
 let startTransition;
 
 describe('ReactOffscreen', () => {
@@ -22,6 +23,7 @@ describe('ReactOffscreen', () => {
     useState = React.useState;
     useLayoutEffect = React.useLayoutEffect;
     useEffect = React.useEffect;
+    useMemo = React.useMemo;
     startTransition = React.startTransition;
   });
 
@@ -939,7 +941,122 @@ describe('ReactOffscreen', () => {
   });
 
   // @gate enableOffscreen
-  it("don't defer passive effects when prerendering in a tree whose effects are already connected", async () => {
+  it('passive effects are connected and disconnected when the visibility changes', async () => {
+    function Child({step}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue(`Commit mount [${step}]`);
+        return () => {
+          Scheduler.unstable_yieldValue(`Commit unmount [${step}]`);
+        };
+      }, [step]);
+      return <Text text={step} />;
+    }
+
+    function App({show, step}) {
+      return (
+        <Offscreen mode={show ? 'visible' : 'hidden'}>
+          {useMemo(
+            () => (
+              <Child step={step} />
+            ),
+            [step],
+          )}
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App show={true} step={1} />);
+    });
+    expect(Scheduler).toHaveYielded([1, 'Commit mount [1]']);
+    expect(root).toMatchRenderedOutput(<span prop={1} />);
+
+    // Hide the tree. This will unmount the effect.
+    await act(async () => {
+      root.render(<App show={false} step={1} />);
+    });
+    expect(Scheduler).toHaveYielded(['Commit unmount [1]']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
+
+    // Update.
+    await act(async () => {
+      root.render(<App show={false} step={2} />);
+    });
+    // The update is prerendered but no effects are fired
+    expect(Scheduler).toHaveYielded([2]);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop={2} />);
+
+    // Reveal the tree.
+    await act(async () => {
+      root.render(<App show={true} step={2} />);
+    });
+    // The update doesn't render because it was already prerendered, but we do
+    // fire the effect.
+    expect(Scheduler).toHaveYielded(['Commit mount [2]']);
+    expect(root).toMatchRenderedOutput(<span prop={2} />);
+  });
+
+  // @gate enableOffscreen
+  it('passive effects are unmounted on hide in the same order as during a deletion: parent before child', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount Child');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount Child');
+        };
+      }, []);
+      return <div>Hi</div>;
+    }
+    function Parent() {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount Parent');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount Parent');
+        };
+      }, []);
+      return <Child />;
+    }
+
+    function App({show}) {
+      return (
+        <Offscreen mode={show ? 'visible' : 'hidden'}>
+          <Parent />
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App show={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Mount Child', 'Mount Parent']);
+
+    // First demonstrate what happens during a normal deletion
+    await act(async () => {
+      root.render(null);
+    });
+    expect(Scheduler).toHaveYielded(['Unmount Parent', 'Unmount Child']);
+
+    // Now redo the same thing but hide instead of deleting
+    await act(async () => {
+      root.render(<App show={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Mount Child', 'Mount Parent']);
+    await act(async () => {
+      root.render(<App show={false} />);
+    });
+    // The order is the same as during a deletion: parent before child
+    expect(Scheduler).toHaveYielded(['Unmount Parent', 'Unmount Child']);
+  });
+
+  // TODO: As of now, there's no way to hide a tree without also unmounting its
+  // effects. (Except for Suspense, which has its own tests associated with it.)
+  // Re-enable this test once we add this ability. For example, we'll likely add
+  // either an option or a heuristic to mount passive effects inside a hidden
+  // tree after a delay.
+  // @gate enableOffscreen
+  it.skip("don't defer passive effects when prerendering in a tree whose effects are already connected", async () => {
     function Child({label}) {
       useEffect(() => {
         Scheduler.unstable_yieldValue('Mount ' + label);
@@ -997,5 +1114,149 @@ describe('ReactOffscreen', () => {
       'Unmount More 1',
       'Mount More 2',
     ]);
+  });
+
+  // @gate enableOffscreen
+  it('does not mount effects when prerendering a nested Offscreen boundary', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showOuter, showInner}) {
+      return (
+        <Offscreen mode={showOuter ? 'visible' : 'hidden'}>
+          {useMemo(
+            () => (
+              <div>
+                <Child label="Outer" />
+                {showInner ? (
+                  <Offscreen mode="visible">
+                    <div>
+                      <Child label="Inner" />
+                    </div>
+                  </Offscreen>
+                ) : null}
+              </div>
+            ),
+            [showInner],
+          )}
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Prerender the outer contents. No effects should mount.
+    await act(async () => {
+      root.render(<App showOuter={false} showInner={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['Outer']);
+    expect(root).toMatchRenderedOutput(
+      <div hidden={true}>
+        <span prop="Outer" />
+      </div>,
+    );
+
+    // Prerender the inner contents. No effects should mount.
+    await act(async () => {
+      root.render(<App showOuter={false} showInner={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Outer', 'Inner']);
+    expect(root).toMatchRenderedOutput(
+      <div hidden={true}>
+        <span prop="Outer" />
+        <div>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
+
+    // Reveal the prerendered tree
+    await act(async () => {
+      root.render(<App showOuter={true} showInner={true} />);
+    });
+    // The effects fire, but the tree is not re-rendered because it already
+    // prerendered.
+    expect(Scheduler).toHaveYielded(['Mount Outer', 'Mount Inner']);
+    expect(root).toMatchRenderedOutput(
+      <div>
+        <span prop="Outer" />
+        <div>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
+  });
+
+  // @gate enableOffscreen
+  it('reveal an outer Offscreen boundary without revealing an inner one', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showOuter, showInner}) {
+      return (
+        <Offscreen mode={showOuter ? 'visible' : 'hidden'}>
+          {useMemo(
+            () => (
+              <div>
+                <Child label="Outer" />
+                <Offscreen mode={showInner ? 'visible' : 'hidden'}>
+                  <div>
+                    <Child label="Inner" />
+                  </div>
+                </Offscreen>
+              </div>
+            ),
+            [showInner],
+          )}
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Prerender the whole tree.
+    await act(async () => {
+      root.render(<App showOuter={false} showInner={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['Outer', 'Inner']);
+    // Both the inner and the outer tree should be hidden. Hiding the inner tree
+    // is arguably redundant, but the advantage of hiding both is that later you
+    // can reveal the outer tree without having to examine the inner one.
+    expect(root).toMatchRenderedOutput(
+      <div hidden={true}>
+        <span prop="Outer" />
+        <div hidden={true}>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
+
+    // Reveal the outer contents. The inner tree remains hidden.
+    await act(async () => {
+      root.render(<App showOuter={true} showInner={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['Mount Outer']);
+    expect(root).toMatchRenderedOutput(
+      <div>
+        <span prop="Outer" />
+        <div hidden={true}>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
   });
 });

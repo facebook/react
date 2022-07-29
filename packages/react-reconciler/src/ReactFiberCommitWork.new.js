@@ -3553,6 +3553,60 @@ export function commitPassiveUnmountEffects(finishedWork: Fiber): void {
   resetCurrentDebugFiberInDEV();
 }
 
+function detachAlternateSiblings(parentFiber: Fiber) {
+  if (deletedTreeCleanUpLevel >= 1) {
+    // A fiber was deleted from this parent fiber, but it's still part of the
+    // previous (alternate) parent fiber's list of children. Because children
+    // are a linked list, an earlier sibling that's still alive will be
+    // connected to the deleted fiber via its `alternate`:
+    //
+    //   live fiber --alternate--> previous live fiber --sibling--> deleted
+    //   fiber
+    //
+    // We can't disconnect `alternate` on nodes that haven't been deleted yet,
+    // but we can disconnect the `sibling` and `child` pointers.
+
+    const previousFiber = parentFiber.alternate;
+    if (previousFiber !== null) {
+      let detachedChild = previousFiber.child;
+      if (detachedChild !== null) {
+        previousFiber.child = null;
+        do {
+          const detachedSibling = detachedChild.sibling;
+          detachedChild.sibling = null;
+          detachedChild = detachedSibling;
+        } while (detachedChild !== null);
+      }
+    }
+  }
+}
+
+function commitHookPassiveUnmountEffects(
+  finishedWork: Fiber,
+  nearestMountedAncestor,
+  hookFlags: HookFlags,
+) {
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    finishedWork.mode & ProfileMode
+  ) {
+    startPassiveEffectTimer();
+    commitHookEffectListUnmount(
+      hookFlags,
+      finishedWork,
+      nearestMountedAncestor,
+    );
+    recordPassiveEffectDuration(finishedWork);
+  } else {
+    commitHookEffectListUnmount(
+      hookFlags,
+      finishedWork,
+      nearestMountedAncestor,
+    );
+  }
+}
+
 function recursivelyTraversePassiveUnmountEffects(parentFiber: Fiber): void {
   // Deletions effects can be scheduled on any fiber type. They need to happen
   // before the children effects have fired.
@@ -3562,44 +3616,15 @@ function recursivelyTraversePassiveUnmountEffects(parentFiber: Fiber): void {
     if (deletions !== null) {
       for (let i = 0; i < deletions.length; i++) {
         const childToDelete = deletions[i];
-        try {
-          // TODO: Convert this to use recursion
-          nextEffect = childToDelete;
-          commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
-            childToDelete,
-            parentFiber,
-          );
-        } catch (error) {
-          captureCommitPhaseError(childToDelete, parentFiber, error);
-        }
+        // TODO: Convert this to use recursion
+        nextEffect = childToDelete;
+        commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
+          childToDelete,
+          parentFiber,
+        );
       }
     }
-
-    if (deletedTreeCleanUpLevel >= 1) {
-      // A fiber was deleted from this parent fiber, but it's still part of
-      // the previous (alternate) parent fiber's list of children. Because
-      // children are a linked list, an earlier sibling that's still alive
-      // will be connected to the deleted fiber via its `alternate`:
-      //
-      //   live fiber
-      //   --alternate--> previous live fiber
-      //   --sibling--> deleted fiber
-      //
-      // We can't disconnect `alternate` on nodes that haven't been deleted
-      // yet, but we can disconnect the `sibling` and `child` pointers.
-      const previousFiber = parentFiber.alternate;
-      if (previousFiber !== null) {
-        let detachedChild = previousFiber.child;
-        if (detachedChild !== null) {
-          previousFiber.child = null;
-          do {
-            const detachedSibling = detachedChild.sibling;
-            detachedChild.sibling = null;
-            detachedChild = detachedSibling;
-          } while (detachedChild !== null);
-        }
-      }
-    }
+    detachAlternateSiblings(parentFiber);
   }
 
   const prevDebugFiber = getCurrentDebugFiberInDEV();
@@ -3622,35 +3647,106 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
     case SimpleMemoComponent: {
       recursivelyTraversePassiveUnmountEffects(finishedWork);
       if (finishedWork.flags & Passive) {
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          finishedWork.mode & ProfileMode
-        ) {
-          startPassiveEffectTimer();
-          commitHookEffectListUnmount(
-            HookPassive | HookHasEffect,
-            finishedWork,
-            finishedWork.return,
-          );
-          recordPassiveEffectDuration(finishedWork);
-        } else {
-          commitHookEffectListUnmount(
-            HookPassive | HookHasEffect,
-            finishedWork,
-            finishedWork.return,
-          );
-        }
+        commitHookPassiveUnmountEffects(
+          finishedWork,
+          finishedWork.return,
+          HookPassive | HookHasEffect,
+        );
       }
       break;
     }
-    // TODO: Disconnect passive effects when a tree is hidden, perhaps after
-    // a delay.
-    // case OffscreenComponent: {
-    //   ...
-    // }
+    case OffscreenComponent: {
+      const instance: OffscreenInstance = finishedWork.stateNode;
+      const nextState: OffscreenState | null = finishedWork.memoizedState;
+
+      const isHidden = nextState !== null;
+
+      if (
+        isHidden &&
+        instance.visibility & OffscreenPassiveEffectsConnected &&
+        // For backwards compatibility, don't unmount when a tree suspends. In
+        // the future we may change this to unmount after a delay.
+        (finishedWork.return === null ||
+          finishedWork.return.tag !== SuspenseComponent)
+      ) {
+        // The effects are currently connected. Disconnect them.
+        // TODO: Add option or heuristic to delay before disconnecting the
+        // effects. Then if the tree reappears before the delay has elapsed, we
+        // can skip toggling the effects entirely.
+        instance.visibility &= ~OffscreenPassiveEffectsConnected;
+        recursivelyTraverseDisconnectPassiveEffects(finishedWork);
+      } else {
+        recursivelyTraversePassiveUnmountEffects(finishedWork);
+      }
+
+      break;
+    }
     default: {
       recursivelyTraversePassiveUnmountEffects(finishedWork);
+      break;
+    }
+  }
+}
+
+function recursivelyTraverseDisconnectPassiveEffects(parentFiber: Fiber): void {
+  // Deletions effects can be scheduled on any fiber type. They need to happen
+  // before the children effects have fired.
+  const deletions = parentFiber.deletions;
+
+  if ((parentFiber.flags & ChildDeletion) !== NoFlags) {
+    if (deletions !== null) {
+      for (let i = 0; i < deletions.length; i++) {
+        const childToDelete = deletions[i];
+        // TODO: Convert this to use recursion
+        nextEffect = childToDelete;
+        commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
+          childToDelete,
+          parentFiber,
+        );
+      }
+    }
+    detachAlternateSiblings(parentFiber);
+  }
+
+  const prevDebugFiber = getCurrentDebugFiberInDEV();
+  // TODO: Check PassiveStatic flag
+  let child = parentFiber.child;
+  while (child !== null) {
+    setCurrentDebugFiberInDEV(child);
+    disconnectPassiveEffect(child);
+    child = child.sibling;
+  }
+  setCurrentDebugFiberInDEV(prevDebugFiber);
+}
+
+function disconnectPassiveEffect(finishedWork: Fiber): void {
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case SimpleMemoComponent: {
+      // TODO: Check PassiveStatic flag
+      commitHookPassiveUnmountEffects(
+        finishedWork,
+        finishedWork.return,
+        HookPassive,
+      );
+      // When disconnecting passive effects, we fire the effects in the same
+      // order as during a deletiong: parent before child
+      recursivelyTraverseDisconnectPassiveEffects(finishedWork);
+      break;
+    }
+    case OffscreenComponent: {
+      const instance: OffscreenInstance = finishedWork.stateNode;
+      if (instance.visibility & OffscreenPassiveEffectsConnected) {
+        instance.visibility &= ~OffscreenPassiveEffectsConnected;
+        recursivelyTraverseDisconnectPassiveEffects(finishedWork);
+      } else {
+        // The effects are already disconnected.
+      }
+      break;
+    }
+    default: {
+      recursivelyTraverseDisconnectPassiveEffects(finishedWork);
       break;
     }
   }
@@ -3728,25 +3824,11 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent: {
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        current.mode & ProfileMode
-      ) {
-        startPassiveEffectTimer();
-        commitHookEffectListUnmount(
-          HookPassive,
-          current,
-          nearestMountedAncestor,
-        );
-        recordPassiveEffectDuration(current);
-      } else {
-        commitHookEffectListUnmount(
-          HookPassive,
-          current,
-          nearestMountedAncestor,
-        );
-      }
+      commitHookPassiveUnmountEffects(
+        current,
+        nearestMountedAncestor,
+        HookPassive,
+      );
       break;
     }
     // TODO: run passive unmount effects when unmounting a root.
