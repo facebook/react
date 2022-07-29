@@ -12,12 +12,6 @@ aliases:
       name: Restore yarn cache
       key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
 
-  - &restore_node_modules
-    restore_cache:
-      name: Restore node_modules cache
-      keys:
-        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
-
   - &TEST_PARALLELISM 20
 
   - &attach_workspace
@@ -33,6 +27,17 @@ parameters:
   prerelease_commit_sha:
     type: string
     default: ''
+
+commands:
+  checkout_with_cache:
+    description: "Checkout and restore cache produced by the setup"
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - restore_cache:
+          name: Restore node_modules cache
+          keys:
+            - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
 
 jobs:
   setup:
@@ -71,9 +76,7 @@ jobs:
     environment: *environment
 
     steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
       - run: ./scripts/circleci/check_license.sh
@@ -86,9 +89,7 @@ jobs:
     parallelism: 5
 
     steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run: node ./scripts/tasks/flow-ci
 
   scrape_warning_messages:
@@ -96,9 +97,7 @@ jobs:
     environment: *environment
 
     steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           command: |
             mkdir -p ./build
@@ -113,9 +112,7 @@ jobs:
     environment: *environment
     parallelism: 40
     steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run: yarn build-combined
       - persist_to_workspace:
           root: .
@@ -129,9 +126,7 @@ jobs:
       revision:
         type: string
     steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Download artifacts for revision
           command: |
@@ -147,9 +142,7 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Download artifacts for base revision
           command: |
@@ -174,11 +167,7 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
       - run: tar -zcvf ./build.tgz ./build
@@ -193,12 +182,8 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - attach_workspace:
-          at: .
+      - checkout_with_cache
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
       - run:
           command: node ./scripts/tasks/danger
 
@@ -206,11 +191,7 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Install Packages
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -225,11 +206,7 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Install Packages
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -251,11 +228,7 @@ jobs:
       version:
         type: string
     steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Install nested packages from Yarn cache
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -270,11 +243,7 @@ jobs:
       version:
         type: string
     steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Install nested packages from Yarn cache
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -298,22 +267,14 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run: yarn lint-build
 
   yarn_check_release_dependencies:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run: yarn check-release-dependencies
 
 
@@ -321,10 +282,7 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Search build artifacts for unminified errors
           command: |
@@ -339,9 +297,7 @@ jobs:
       args:
         type: string
     steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run: yarn test <<parameters.args>> --ci
 
   yarn_test_build:
@@ -352,11 +308,7 @@ jobs:
       args:
         type: string
     steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Install nested packages from Yarn cache
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -366,11 +318,7 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Run DOM fixture tests
           environment:
@@ -385,9 +333,7 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Run fuzz tests
           command: |
@@ -405,9 +351,7 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Run publish script
           command: |
@@ -424,9 +368,7 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
+      - checkout_with_cache
       - run:
           name: Fetch revisions that contain an intentional fork
           # This will fetch each revision listed in the `forked-revisions` file,
