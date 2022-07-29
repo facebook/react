@@ -173,6 +173,10 @@ import {
 } from './ReactFiberDevToolsHook.old';
 import {releaseCache, retainCache} from './ReactFiberCacheComponent.old';
 import {clearTransitionsForLanes} from './ReactFiberLane.old';
+import {
+  OffscreenVisible,
+  OffscreenPassiveEffectsConnected,
+} from './ReactFiberOffscreenComponent';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -2424,14 +2428,8 @@ function commitMutationEffectsOnFiber(
       const offscreenFiber: Fiber = (finishedWork.child: any);
 
       if (offscreenFiber.flags & Visibility) {
-        const offscreenInstance: OffscreenInstance = offscreenFiber.stateNode;
         const newState: OffscreenState | null = offscreenFiber.memoizedState;
         const isHidden = newState !== null;
-
-        // Track the current state on the Offscreen instance so we can
-        // read it during an event
-        offscreenInstance.isHidden = isHidden;
-
         if (isHidden) {
           const wasHidden =
             offscreenFiber.alternate !== null &&
@@ -2485,7 +2483,11 @@ function commitMutationEffectsOnFiber(
 
         // Track the current state on the Offscreen instance so we can
         // read it during an event
-        offscreenInstance.isHidden = isHidden;
+        if (isHidden) {
+          offscreenInstance.visibility &= ~OffscreenVisible;
+        } else {
+          offscreenInstance.visibility |= OffscreenVisible;
+        }
 
         if (isHidden) {
           if (!wasHidden) {
@@ -2871,6 +2873,167 @@ function recursivelyTraverseReappearLayoutEffects(
   setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
+function commitHookPassiveMountEffects(
+  finishedWork: Fiber,
+  hookFlags: HookFlags,
+) {
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    finishedWork.mode & ProfileMode
+  ) {
+    startPassiveEffectTimer();
+    try {
+      commitHookEffectListMount(hookFlags, finishedWork);
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
+    }
+    recordPassiveEffectDuration(finishedWork);
+  } else {
+    try {
+      commitHookEffectListMount(hookFlags, finishedWork);
+    } catch (error) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error);
+    }
+  }
+}
+
+function commitOffscreenPassiveMountEffects(
+  current: Fiber | null,
+  finishedWork: Fiber,
+  instance: OffscreenInstance,
+) {
+  if (enableCache) {
+    let previousCache: Cache | null = null;
+    if (
+      current !== null &&
+      current.memoizedState !== null &&
+      current.memoizedState.cachePool !== null
+    ) {
+      previousCache = current.memoizedState.cachePool.pool;
+    }
+    let nextCache: Cache | null = null;
+    if (
+      finishedWork.memoizedState !== null &&
+      finishedWork.memoizedState.cachePool !== null
+    ) {
+      nextCache = finishedWork.memoizedState.cachePool.pool;
+    }
+    // Retain/release the cache used for pending (suspended) nodes.
+    // Note that this is only reached in the non-suspended/visible case:
+    // when the content is suspended/hidden, the retain/release occurs
+    // via the parent Suspense component (see case above).
+    if (nextCache !== previousCache) {
+      if (nextCache != null) {
+        retainCache(nextCache);
+      }
+      if (previousCache != null) {
+        releaseCache(previousCache);
+      }
+    }
+  }
+
+  if (enableTransitionTracing) {
+    // TODO: Pre-rendering should not be counted as part of a transition. We
+    // may add separate logs for pre-rendering, but it's not part of the
+    // primary metrics.
+    const offscreenState: OffscreenState = finishedWork.memoizedState;
+    const queue: OffscreenQueue | null = (finishedWork.updateQueue: any);
+
+    const isHidden = offscreenState !== null;
+    if (queue !== null) {
+      if (isHidden) {
+        const transitions = queue.transitions;
+        if (transitions !== null) {
+          transitions.forEach(transition => {
+            // Add all the transitions saved in the update queue during
+            // the render phase (ie the transitions associated with this boundary)
+            // into the transitions set.
+            if (instance.transitions === null) {
+              instance.transitions = new Set();
+            }
+            instance.transitions.add(transition);
+          });
+        }
+
+        const markerInstances = queue.markerInstances;
+        if (markerInstances !== null) {
+          markerInstances.forEach(markerInstance => {
+            const markerTransitions = markerInstance.transitions;
+            // There should only be a few tracing marker transitions because
+            // they should be only associated with the transition that
+            // caused them
+            if (markerTransitions !== null) {
+              markerTransitions.forEach(transition => {
+                if (instance.transitions === null) {
+                  instance.transitions = new Set();
+                } else if (instance.transitions.has(transition)) {
+                  if (markerInstance.pendingBoundaries === null) {
+                    markerInstance.pendingBoundaries = new Map();
+                  }
+                  if (instance.pendingMarkers === null) {
+                    instance.pendingMarkers = new Set();
+                  }
+
+                  instance.pendingMarkers.add(markerInstance);
+                }
+              });
+            }
+          });
+        }
+      }
+
+      finishedWork.updateQueue = null;
+    }
+
+    commitTransitionProgress(finishedWork);
+  }
+}
+
+function commitCachePassiveMountEffect(
+  current: Fiber | null,
+  finishedWork: Fiber,
+) {
+  if (enableCache) {
+    let previousCache: Cache | null = null;
+    if (finishedWork.alternate !== null) {
+      previousCache = finishedWork.alternate.memoizedState.cache;
+    }
+    const nextCache = finishedWork.memoizedState.cache;
+    // Retain/release the cache. In theory the cache component
+    // could be "borrowing" a cache instance owned by some parent,
+    // in which case we could avoid retaining/releasing. But it
+    // is non-trivial to determine when that is the case, so we
+    // always retain/release.
+    if (nextCache !== previousCache) {
+      retainCache(nextCache);
+      if (previousCache != null) {
+        releaseCache(previousCache);
+      }
+    }
+  }
+}
+
+function commitTracingMarkerPassiveMountEffect(finishedWork: Fiber) {
+  // Get the transitions that were initiatized during the render
+  // and add a start transition callback for each of them
+  const instance = finishedWork.stateNode;
+  if (
+    instance.transitions !== null &&
+    (instance.pendingBoundaries === null ||
+      instance.pendingBoundaries.size === 0)
+  ) {
+    instance.transitions.forEach(transition => {
+      addMarkerCompleteCallbackToPendingTransition(
+        finishedWork.memoizedProps.name,
+        instance.transitions,
+      );
+    });
+    instance.transitions = null;
+    instance.pendingBoundaries = null;
+  }
+}
+
 export function commitPassiveMountEffects(
   root: FiberRoot,
   finishedWork: Fiber,
@@ -2916,6 +3079,9 @@ function commitPassiveMountOnFiber(
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
 ): void {
+  // When updating this function, also update reconnectPassiveEffects, which does
+  // most of the same things when an offscreen tree goes from hidden -> visible,
+  // or when toggling effects inside a hidden tree.
   const flags = finishedWork.flags;
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -2928,31 +3094,10 @@ function commitPassiveMountOnFiber(
         committedTransitions,
       );
       if (flags & Passive) {
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          finishedWork.mode & ProfileMode
-        ) {
-          startPassiveEffectTimer();
-          try {
-            commitHookEffectListMount(
-              HookPassive | HookHasEffect,
-              finishedWork,
-            );
-          } catch (error) {
-            captureCommitPhaseError(finishedWork, finishedWork.return, error);
-          }
-          recordPassiveEffectDuration(finishedWork);
-        } else {
-          try {
-            commitHookEffectListMount(
-              HookPassive | HookHasEffect,
-              finishedWork,
-            );
-          } catch (error) {
-            captureCommitPhaseError(finishedWork, finishedWork.return, error);
-          }
-        }
+        commitHookPassiveMountEffects(
+          finishedWork,
+          HookPassive | HookHasEffect,
+        );
       }
       break;
     }
@@ -3013,95 +3158,78 @@ function commitPassiveMountOnFiber(
     }
     case LegacyHiddenComponent:
     case OffscreenComponent: {
-      recursivelyTraversePassiveMountEffects(
-        finishedRoot,
-        finishedWork,
-        committedLanes,
-        committedTransitions,
-      );
+      // TODO: Pass `current` as argument to this function
+      const instance: OffscreenInstance = finishedWork.stateNode;
+      const nextState: OffscreenState | null = finishedWork.memoizedState;
+
+      const isHidden = nextState !== null;
+
+      if (isHidden) {
+        if (instance.visibility & OffscreenPassiveEffectsConnected) {
+          // The effects are currently connected. Update them.
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions,
+          );
+        } else {
+          if (finishedWork.mode & ConcurrentMode) {
+            // The effects are currently disconnected. Since the tree is hidden,
+            // don't connect them. This also applies to the initial render.
+            if (enableCache || enableTransitionTracing) {
+              // "Atomic" effects are ones that need to fire on every commit,
+              // even during pre-rendering. An example is updating the reference
+              // count on cache instances.
+              recursivelyTraverseAtomicPassiveEffects(
+                finishedRoot,
+                finishedWork,
+                committedLanes,
+                committedTransitions,
+              );
+            }
+          } else {
+            // Legacy Mode: Fire the effects even if the tree is hidden.
+            instance.visibility |= OffscreenPassiveEffectsConnected;
+            recursivelyTraversePassiveMountEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+              committedTransitions,
+            );
+          }
+        }
+      } else {
+        // Tree is visible
+        if (instance.visibility & OffscreenPassiveEffectsConnected) {
+          // The effects are currently connected. Update them.
+          recursivelyTraversePassiveMountEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions,
+          );
+        } else {
+          // The effects are currently disconnected. Reconnect them, while also
+          // firing effects inside newly mounted trees. This also applies to
+          // the initial render.
+          instance.visibility |= OffscreenPassiveEffectsConnected;
+
+          const includeWorkInProgressEffects =
+            (finishedWork.subtreeFlags & PassiveMask) !== NoFlags;
+          recursivelyTraverseReconnectPassiveEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions,
+            includeWorkInProgressEffects,
+          );
+        }
+      }
+
       if (flags & Passive) {
-        if (enableCache) {
-          let previousCache: Cache | null = null;
-          if (
-            finishedWork.alternate !== null &&
-            finishedWork.alternate.memoizedState !== null &&
-            finishedWork.alternate.memoizedState.cachePool !== null
-          ) {
-            previousCache = finishedWork.alternate.memoizedState.cachePool.pool;
-          }
-          let nextCache: Cache | null = null;
-          if (
-            finishedWork.memoizedState !== null &&
-            finishedWork.memoizedState.cachePool !== null
-          ) {
-            nextCache = finishedWork.memoizedState.cachePool.pool;
-          }
-          // Retain/release the cache used for pending (suspended) nodes.
-          // Note that this is only reached in the non-suspended/visible case:
-          // when the content is suspended/hidden, the retain/release occurs
-          // via the parent Suspense component (see case above).
-          if (nextCache !== previousCache) {
-            if (nextCache != null) {
-              retainCache(nextCache);
-            }
-            if (previousCache != null) {
-              releaseCache(previousCache);
-            }
-          }
-        }
-
-        if (enableTransitionTracing) {
-          const isFallback = finishedWork.memoizedState;
-          const queue: OffscreenQueue | null = (finishedWork.updateQueue: any);
-          const instance: OffscreenInstance = finishedWork.stateNode;
-
-          if (queue !== null) {
-            if (isFallback) {
-              const transitions = queue.transitions;
-              if (transitions !== null) {
-                transitions.forEach(transition => {
-                  // Add all the transitions saved in the update queue during
-                  // the render phase (ie the transitions associated with this boundary)
-                  // into the transitions set.
-                  if (instance.transitions === null) {
-                    instance.transitions = new Set();
-                  }
-                  instance.transitions.add(transition);
-                });
-              }
-
-              const markerInstances = queue.markerInstances;
-              if (markerInstances !== null) {
-                markerInstances.forEach(markerInstance => {
-                  const markerTransitions = markerInstance.transitions;
-                  // There should only be a few tracing marker transitions because
-                  // they should be only associated with the transition that
-                  // caused them
-                  if (markerTransitions !== null) {
-                    markerTransitions.forEach(transition => {
-                      if (instance.transitions === null) {
-                        instance.transitions = new Set();
-                      } else if (instance.transitions.has(transition)) {
-                        if (markerInstance.pendingBoundaries === null) {
-                          markerInstance.pendingBoundaries = new Map();
-                        }
-                        if (instance.pendingMarkers === null) {
-                          instance.pendingMarkers = new Set();
-                        }
-
-                        instance.pendingMarkers.add(markerInstance);
-                      }
-                    });
-                  }
-                });
-              }
-            }
-
-            finishedWork.updateQueue = null;
-          }
-
-          commitTransitionProgress(finishedWork);
-        }
+        const current = finishedWork.alternate;
+        commitOffscreenPassiveMountEffects(current, finishedWork, instance);
       }
       break;
     }
@@ -3113,24 +3241,9 @@ function commitPassiveMountOnFiber(
         committedTransitions,
       );
       if (flags & Passive) {
-        if (enableCache) {
-          let previousCache: Cache | null = null;
-          if (finishedWork.alternate !== null) {
-            previousCache = finishedWork.alternate.memoizedState.cache;
-          }
-          const nextCache = finishedWork.memoizedState.cache;
-          // Retain/release the cache. In theory the cache component
-          // could be "borrowing" a cache instance owned by some parent,
-          // in which case we could avoid retaining/releasing. But it
-          // is non-trivial to determine when that is the case, so we
-          // always retain/release.
-          if (nextCache !== previousCache) {
-            retainCache(nextCache);
-            if (previousCache != null) {
-              releaseCache(previousCache);
-            }
-          }
-        }
+        // TODO: Pass `current` as argument to this function
+        const current = finishedWork.alternate;
+        commitCachePassiveMountEffect(current, finishedWork);
       }
       break;
     }
@@ -3143,23 +3256,7 @@ function commitPassiveMountOnFiber(
           committedTransitions,
         );
         if (flags & Passive) {
-          // Get the transitions that were initiatized during the render
-          // and add a start transition callback for each of them
-          const instance = finishedWork.stateNode;
-          if (
-            instance.transitions !== null &&
-            (instance.pendingBoundaries === null ||
-              instance.pendingBoundaries.size === 0)
-          ) {
-            instance.transitions.forEach(transition => {
-              addMarkerCompleteCallbackToPendingTransition(
-                finishedWork.memoizedProps.name,
-                instance.transitions,
-              );
-            });
-            instance.transitions = null;
-            instance.pendingBoundaries = null;
-          }
+          commitTracingMarkerPassiveMountEffect(finishedWork);
         }
         break;
       }
@@ -3168,6 +3265,278 @@ function commitPassiveMountOnFiber(
     // eslint-disable-next-line-no-fallthrough
     default: {
       recursivelyTraversePassiveMountEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+      );
+      break;
+    }
+  }
+}
+
+function recursivelyTraverseReconnectPassiveEffects(
+  finishedRoot: FiberRoot,
+  parentFiber: Fiber,
+  committedLanes: Lanes,
+  committedTransitions: Array<Transition> | null,
+  includeWorkInProgressEffects: boolean,
+) {
+  // This function visits both newly finished work and nodes that were re-used
+  // from a previously committed tree. We cannot check non-static flags if the
+  // node was reused.
+  const childShouldIncludeWorkInProgressEffects =
+    includeWorkInProgressEffects &&
+    (parentFiber.subtreeFlags & PassiveMask) !== NoFlags;
+
+  // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
+  const prevDebugFiber = getCurrentDebugFiberInDEV();
+  let child = parentFiber.child;
+  while (child !== null) {
+    reconnectPassiveEffects(
+      finishedRoot,
+      child,
+      committedLanes,
+      committedTransitions,
+      childShouldIncludeWorkInProgressEffects,
+    );
+    child = child.sibling;
+  }
+  setCurrentDebugFiberInDEV(prevDebugFiber);
+}
+
+function reconnectPassiveEffects(
+  finishedRoot: FiberRoot,
+  finishedWork: Fiber,
+  committedLanes: Lanes,
+  committedTransitions: Array<Transition> | null,
+  // This function visits both newly finished work and nodes that were re-used
+  // from a previously committed tree. We cannot check non-static flags if the
+  // node was reused.
+  includeWorkInProgressEffects: boolean,
+) {
+  const flags = finishedWork.flags;
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case SimpleMemoComponent: {
+      recursivelyTraverseReconnectPassiveEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+        includeWorkInProgressEffects,
+      );
+      // TODO: Check for PassiveStatic flag
+      commitHookPassiveMountEffects(finishedWork, HookPassive);
+      break;
+    }
+    // Unlike commitPassiveMountOnFiber, we don't need to handle HostRoot
+    // because this function only visits nodes that are inside an
+    // Offscreen fiber.
+    // case HostRoot: {
+    //  ...
+    // }
+    case LegacyHiddenComponent:
+    case OffscreenComponent: {
+      const instance: OffscreenInstance = finishedWork.stateNode;
+      const nextState: OffscreenState | null = finishedWork.memoizedState;
+
+      const isHidden = nextState !== null;
+
+      if (isHidden) {
+        if (instance.visibility & OffscreenPassiveEffectsConnected) {
+          // The effects are currently connected. Update them.
+          recursivelyTraverseReconnectPassiveEffects(
+            finishedRoot,
+            finishedWork,
+            committedLanes,
+            committedTransitions,
+            includeWorkInProgressEffects,
+          );
+        } else {
+          if (finishedWork.mode & ConcurrentMode) {
+            // The effects are currently disconnected. Since the tree is hidden,
+            // don't connect them. This also applies to the initial render.
+            if (enableCache || enableTransitionTracing) {
+              // "Atomic" effects are ones that need to fire on every commit,
+              // even during pre-rendering. An example is updating the reference
+              // count on cache instances.
+              recursivelyTraverseAtomicPassiveEffects(
+                finishedRoot,
+                finishedWork,
+                committedLanes,
+                committedTransitions,
+              );
+            }
+          } else {
+            // Legacy Mode: Fire the effects even if the tree is hidden.
+            instance.visibility |= OffscreenPassiveEffectsConnected;
+            recursivelyTraverseReconnectPassiveEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+              committedTransitions,
+              includeWorkInProgressEffects,
+            );
+          }
+        }
+      } else {
+        // Tree is visible
+
+        // Since we're already inside a reconnecting tree, it doesn't matter
+        // whether the effects are currently connected. In either case, we'll
+        // continue traversing the tree and firing all the effects.
+        //
+        // We do need to set the "connected" flag on the instance, though.
+        instance.visibility |= OffscreenPassiveEffectsConnected;
+
+        recursivelyTraverseReconnectPassiveEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions,
+          includeWorkInProgressEffects,
+        );
+      }
+
+      if (includeWorkInProgressEffects && flags & Passive) {
+        // TODO: Pass `current` as argument to this function
+        const current: Fiber | null = finishedWork.alternate;
+        commitOffscreenPassiveMountEffects(current, finishedWork, instance);
+      }
+      break;
+    }
+    case CacheComponent: {
+      recursivelyTraverseReconnectPassiveEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+        includeWorkInProgressEffects,
+      );
+      if (includeWorkInProgressEffects && flags & Passive) {
+        // TODO: Pass `current` as argument to this function
+        const current = finishedWork.alternate;
+        commitCachePassiveMountEffect(current, finishedWork);
+      }
+      break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        recursivelyTraverseReconnectPassiveEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions,
+          includeWorkInProgressEffects,
+        );
+        if (includeWorkInProgressEffects && flags & Passive) {
+          commitTracingMarkerPassiveMountEffect(finishedWork);
+        }
+        break;
+      }
+      // Intentional fallthrough to next branch
+    }
+    // eslint-disable-next-line-no-fallthrough
+    default: {
+      recursivelyTraverseReconnectPassiveEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+        includeWorkInProgressEffects,
+      );
+      break;
+    }
+  }
+}
+
+function recursivelyTraverseAtomicPassiveEffects(
+  finishedRoot: FiberRoot,
+  parentFiber: Fiber,
+  committedLanes: Lanes,
+  committedTransitions: Array<Transition> | null,
+) {
+  // "Atomic" effects are ones that need to fire on every commit, even during
+  // pre-rendering. We call this function when traversing a hidden tree whose
+  // regular effects are currently disconnected.
+  const prevDebugFiber = getCurrentDebugFiberInDEV();
+  // TODO: Add special flag for atomic effects
+  if (parentFiber.subtreeFlags & PassiveMask) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      setCurrentDebugFiberInDEV(child);
+      commitAtomicPassiveEffects(
+        finishedRoot,
+        child,
+        committedLanes,
+        committedTransitions,
+      );
+      child = child.sibling;
+    }
+  }
+  setCurrentDebugFiberInDEV(prevDebugFiber);
+}
+
+function commitAtomicPassiveEffects(
+  finishedRoot: FiberRoot,
+  finishedWork: Fiber,
+  committedLanes: Lanes,
+  committedTransitions: Array<Transition> | null,
+) {
+  // "Atomic" effects are ones that need to fire on every commit, even during
+  // pre-rendering. We call this function when traversing a hidden tree whose
+  // regular effects are currently disconnected.
+  const flags = finishedWork.flags;
+  switch (finishedWork.tag) {
+    case OffscreenComponent: {
+      recursivelyTraverseAtomicPassiveEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+      );
+      if (flags & Passive) {
+        // TODO: Pass `current` as argument to this function
+        const current = finishedWork.alternate;
+        const instance: OffscreenInstance = finishedWork.stateNode;
+        commitOffscreenPassiveMountEffects(current, finishedWork, instance);
+      }
+      break;
+    }
+    case CacheComponent: {
+      recursivelyTraverseAtomicPassiveEffects(
+        finishedRoot,
+        finishedWork,
+        committedLanes,
+        committedTransitions,
+      );
+      if (flags & Passive) {
+        // TODO: Pass `current` as argument to this function
+        const current = finishedWork.alternate;
+        commitCachePassiveMountEffect(current, finishedWork);
+      }
+      break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        recursivelyTraverseAtomicPassiveEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions,
+        );
+        if (flags & Passive) {
+          commitTracingMarkerPassiveMountEffect(finishedWork);
+        }
+        break;
+      }
+      // Intentional fallthrough to next branch
+    }
+    // eslint-disable-next-line-no-fallthrough
+    default: {
+      recursivelyTraverseAtomicPassiveEffects(
         finishedRoot,
         finishedWork,
         committedLanes,
@@ -3275,6 +3644,11 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
       }
       break;
     }
+    // TODO: Disconnect passive effects when a tree is hidden, perhaps after
+    // a delay.
+    // case OffscreenComponent: {
+    //   ...
+    // }
     default: {
       recursivelyTraversePassiveUnmountEffects(finishedWork);
       break;

@@ -61,6 +61,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
 } from './ReactWorkTags';
+import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
@@ -717,7 +718,7 @@ export function createFiberFromOffscreen(
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
   const primaryChildInstance: OffscreenInstance = {
-    isHidden: false,
+    visibility: OffscreenVisible,
     pendingMarkers: null,
     retryCache: null,
     transitions: null,
@@ -738,7 +739,7 @@ export function createFiberFromLegacyHidden(
   // Adding a stateNode for legacy hidden because it's currently using
   // the offscreen implementation, which depends on a state node
   const instance: OffscreenInstance = {
-    isHidden: false,
+    visibility: OffscreenVisible,
     pendingMarkers: null,
     transitions: null,
     retryCache: null,

@@ -31,6 +31,7 @@ import {
 } from './ReactFiberLane.old';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {HostRoot, OffscreenComponent} from './ReactWorkTags';
+import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 
 export type ConcurrentUpdate = {
   next: ConcurrentUpdate,
@@ -217,7 +218,10 @@ function markUpdateLaneFromFiberToRoot(
       // account for it. (There may be other cases that we haven't discovered,
       // too.)
       const offscreenInstance: OffscreenInstance | null = parent.stateNode;
-      if (offscreenInstance !== null && offscreenInstance.isHidden) {
+      if (
+        offscreenInstance !== null &&
+        !(offscreenInstance.visibility & OffscreenVisible)
+      ) {
         isHidden = true;
       }
     }

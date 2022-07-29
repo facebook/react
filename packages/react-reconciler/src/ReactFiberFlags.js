@@ -87,7 +87,7 @@ export const MutationMask =
 export const LayoutMask = Update | Callback | Ref | Visibility;
 
 // TODO: Split into PassiveMountMask and PassiveUnmountMask
-export const PassiveMask = Passive | ChildDeletion;
+export const PassiveMask = Passive | Visibility | ChildDeletion;
 
 // Union of tags that don't get reset on clones.
 // This allows certain concepts to persist without recalculating them,

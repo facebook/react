@@ -486,22 +486,29 @@ describe('ReactOffscreen', () => {
     // hidden tree share the same lane, but are processed at different times
     // because of the timing of when they were scheduled.
 
+    // This functions checks whether the "outer" and "inner" states are
+    // consistent in the rendered output.
+    let currentOuter = null;
+    let currentInner = null;
+    function areOuterAndInnerConsistent() {
+      return (
+        currentOuter === null ||
+        currentInner === null ||
+        currentOuter === currentInner
+      );
+    }
+
     let setInner;
-    function Child({outer}) {
+    function Child() {
       const [inner, _setInner] = useState(0);
       setInner = _setInner;
 
       useEffect(() => {
-        // Inner and outer values are always updated simultaneously, so they
-        // should always be consistent.
-        if (inner !== outer) {
-          Scheduler.unstable_yieldValue(
-            'Tearing! Inner and outer are inconsistent!',
-          );
-        } else {
-          Scheduler.unstable_yieldValue('Inner and outer are consistent');
-        }
-      }, [inner, outer]);
+        currentInner = inner;
+        return () => {
+          currentInner = null;
+        };
+      }, [inner]);
 
       return <Text text={'Inner: ' + inner} />;
     }
@@ -510,11 +517,19 @@ describe('ReactOffscreen', () => {
     function App({show}) {
       const [outer, _setOuter] = useState(0);
       setOuter = _setOuter;
+
+      useEffect(() => {
+        currentOuter = outer;
+        return () => {
+          currentOuter = null;
+        };
+      }, [outer]);
+
       return (
         <>
           <Text text={'Outer: ' + outer} />
           <Offscreen mode={show ? 'visible' : 'hidden'}>
-            <Child outer={outer} />
+            <Child />
           </Offscreen>
         </>
       );
@@ -525,17 +540,14 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App show={false} />);
     });
-    expect(Scheduler).toHaveYielded([
-      'Outer: 0',
-      'Inner: 0',
-      'Inner and outer are consistent',
-    ]);
+    expect(Scheduler).toHaveYielded(['Outer: 0', 'Inner: 0']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Outer: 0" />
         <span hidden={true} prop="Inner: 0" />
       </>,
     );
+    expect(areOuterAndInnerConsistent()).toBe(true);
 
     await act(async () => {
       // Update a value both inside and outside the hidden tree. These values
@@ -570,8 +582,6 @@ describe('ReactOffscreen', () => {
         // update were erroneously processed, then Inner would be inconsistent
         // with Outer.
         'Inner: 1',
-
-        'Inner and outer are consistent',
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -579,18 +589,16 @@ describe('ReactOffscreen', () => {
           <span prop="Inner: 1" />
         </>,
       );
+      expect(areOuterAndInnerConsistent()).toBe(true);
     });
-    expect(Scheduler).toHaveYielded([
-      'Outer: 2',
-      'Inner: 2',
-      'Inner and outer are consistent',
-    ]);
+    expect(Scheduler).toHaveYielded(['Outer: 2', 'Inner: 2']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Outer: 2" />
         <span prop="Inner: 2" />
       </>,
     );
+    expect(areOuterAndInnerConsistent()).toBe(true);
   });
 
   // @gate enableOffscreen
@@ -867,4 +875,127 @@ describe('ReactOffscreen', () => {
       ]);
     },
   );
+
+  // @gate enableOffscreen
+  it('defer passive effects when prerendering a new Offscreen tree', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showMore}) {
+      return (
+        <>
+          <Child label="Shell" />
+          <Offscreen mode={showMore ? 'visible' : 'hidden'}>
+            <Child label="More" />
+          </Offscreen>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Mount the app without showing the extra content
+    await act(async () => {
+      root.render(<App showMore={false} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      // First mount the outer visible shell
+      'Shell',
+      'Mount Shell',
+
+      // Then prerender the hidden extra context. The passive effects in the
+      // hidden tree should not fire
+      'More',
+      // Does not fire
+      // 'Mount More',
+    ]);
+    // The hidden content has been prerendered
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Shell" />
+        <span hidden={true} prop="More" />
+      </>,
+    );
+
+    // Reveal the prerendered tree
+    await act(async () => {
+      root.render(<App showMore={true} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Shell',
+      'More',
+
+      // Mount the passive effects in the newly revealed tree, the ones that
+      // were skipped during pre-rendering.
+      'Mount More',
+    ]);
+  });
+
+  // @gate enableOffscreen
+  it("don't defer passive effects when prerendering in a tree whose effects are already connected", async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showMore, step}) {
+      return (
+        <>
+          <Child label={'Shell ' + step} />
+          <Offscreen mode={showMore ? 'visible' : 'hidden'}>
+            <Child label={'More ' + step} />
+          </Offscreen>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Mount the app, including the extra content
+    await act(async () => {
+      root.render(<App showMore={true} step={1} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Shell 1',
+      'More 1',
+      'Mount Shell 1',
+      'Mount More 1',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Shell 1" />
+        <span prop="More 1" />
+      </>,
+    );
+
+    // Hide the extra content. while also updating one of its props
+    await act(async () => {
+      root.render(<App showMore={false} step={2} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      // First update the outer visible shell
+      'Shell 2',
+      'Unmount Shell 1',
+      'Mount Shell 2',
+
+      // Then prerender the update to the hidden content. Since the effects
+      // are already connected inside the hidden tree, we don't defer updates
+      // to them.
+      'More 2',
+      'Unmount More 1',
+      'Mount More 2',
+    ]);
+  });
 });
