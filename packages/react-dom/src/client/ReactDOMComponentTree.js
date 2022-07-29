@@ -23,6 +23,7 @@ import type {
 
 import {
   HostComponent,
+  HostSingleton,
   HostText,
   HostRoot,
   SuspenseComponent,
@@ -30,7 +31,7 @@ import {
 
 import {getParentSuspenseInstance} from './ReactDOMHostConfig';
 
-import {enableScopeAPI} from 'shared/ReactFeatureFlags';
+import {enableScopeAPI, enableFloat} from 'shared/ReactFeatureFlags';
 
 const randomKey = Math.random()
   .toString(36)
@@ -166,7 +167,8 @@ export function getInstanceFromNode(node: Node): Fiber | null {
       inst.tag === HostComponent ||
       inst.tag === HostText ||
       inst.tag === SuspenseComponent ||
-      inst.tag === HostRoot
+      inst.tag === HostRoot ||
+      (enableFloat && inst.tag === HostSingleton)
     ) {
       return inst;
     } else {
@@ -181,7 +183,11 @@ export function getInstanceFromNode(node: Node): Fiber | null {
  * DOM node.
  */
 export function getNodeFromInstance(inst: Fiber): Instance | TextInstance {
-  if (inst.tag === HostComponent || inst.tag === HostText) {
+  if (
+    inst.tag === HostComponent ||
+    inst.tag === HostText ||
+    (enableFloat && inst.tag === HostSingleton)
+  ) {
     // In Fiber this, is just the state node right now. We assume it will be
     // a host component or host text.
     return inst.stateNode;

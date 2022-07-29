@@ -103,6 +103,8 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
+export const enableFloat = __EXPERIMENTAL__;
+
 // When a node is unmounted, recurse into the Fiber subtree and clean out
 // references. Each level cleans up more fiber fields than the previous level.
 // As far as we know, React itself doesn't leak, but because the Fiber contains
@@ -115,8 +117,6 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 // It's an enum so that we can experiment with different levels of
 // aggressiveness.
 export const deletedTreeCleanUpLevel = 3;
-
-export const enableFloat = __EXPERIMENTAL__;
 
 // -----------------------------------------------------------------------------
 // Chopping Block

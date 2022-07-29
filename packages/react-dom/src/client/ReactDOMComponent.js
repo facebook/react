@@ -308,7 +308,10 @@ function setInitialDOMProperties(
         setInnerHTML(domElement, nextHtml);
       }
     } else if (propKey === CHILDREN) {
-      if (typeof nextProp === 'string') {
+      if (enableFloat && isHostSingletonType(tag)) {
+        // Host Singletons may contain non-react children so we cannot treat singleton Text
+        // children as properties
+      } else if (typeof nextProp === 'string') {
         // Avoid setting initial textContent when the text is empty. In IE11 setting
         // textContent on a <textarea> will cause the placeholder to not
         // show within the <textarea> until it has been focused and blurred again.
@@ -481,6 +484,18 @@ export function createTextNode(
   return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
     text,
   );
+}
+
+export function resetProperties(
+  domElement: Element,
+  tag: string,
+  rawProps: Object,
+): void {
+  const attributes = domElement.attributes;
+  while (attributes.length) {
+    domElement.removeAttribute(attributes[0].name);
+  }
+  setInitialProperties(domElement, tag, rawProps);
 }
 
 export function setInitialProperties(
@@ -754,7 +769,10 @@ export function diffProperties(
         // inserted already.
       }
     } else if (propKey === CHILDREN) {
-      if (typeof nextProp === 'string' || typeof nextProp === 'number') {
+      if (enableFloat && isHostSingletonType(tag)) {
+        // Singletons may have non-react children so we cannot treat singleton Text children
+        // as a directy property to update. These Text nodes will have their own fiber
+      } else if (typeof nextProp === 'string' || typeof nextProp === 'number') {
         (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
       }
     } else if (
@@ -971,7 +989,10 @@ export function diffHydratedProperties(
       // even listeners these nodes might be wired up to.
       // TODO: Warn if there is more than a single textNode as a child.
       // TODO: Should we use domElement.firstChild.nodeValue to compare?
-      if (typeof nextProp === 'string') {
+      if (enableFloat && isHostSingletonType(tag)) {
+        // For HostSingletons there may be non-react children that we need to leave in place. These
+        // fibers will have their own Text fiber as a child and can be hydrated separately
+      } else if (typeof nextProp === 'string') {
         if (domElement.textContent !== nextProp) {
           if (rawProps[SUPPRESS_HYDRATION_WARNING] !== true) {
             checkForUnmatchedText(
@@ -1304,4 +1325,8 @@ export function restoreControlledState(
       ReactDOMSelectRestoreControlledState(domElement, props);
       return;
   }
+}
+
+export function isHostSingletonType(type: string): boolean {
+  return type === 'html' || type === 'head' || type === 'body';
 }

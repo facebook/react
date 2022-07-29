@@ -33,6 +33,7 @@ import type {Cache} from './ReactFiberCacheComponent.new';
 import {
   enableSuspenseAvoidThisFallback,
   enableLegacyHidden,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
@@ -45,6 +46,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
+  HostSingleton,
   HostText,
   HostPortal,
   ContextProvider,
@@ -92,6 +94,7 @@ import {
   prepareUpdate,
   supportsMutation,
   supportsPersistence,
+  supportsResources,
   cloneInstance,
   cloneHiddenInstance,
   cloneHiddenTextInstance,
@@ -224,10 +227,14 @@ if (supportsMutation) {
     while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
-      } else if (node.tag === HostPortal) {
+      } else if (
+        node.tag === HostPortal ||
+        (enableFloat && node.tag === HostSingleton)
+      ) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
+        // If we have a HostSingleton it will be placed independently
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -999,9 +1006,7 @@ function completeWork(
             currentHostContext,
             workInProgress,
           );
-
           appendAllChildren(instance, workInProgress, false, false);
-
           workInProgress.stateNode = instance;
 
           // Certain renderers require commit-time effects for initial mount.
@@ -1026,6 +1031,81 @@ function completeWork(
       }
       bubbleProperties(workInProgress);
       return null;
+    }
+    case HostSingleton: {
+      if (enableFloat && supportsResources) {
+        popHostContext(workInProgress);
+        const rootContainerInstance = getRootHostContainer();
+        const type = workInProgress.type;
+        if (current !== null && workInProgress.stateNode != null) {
+          updateHostComponent(current, workInProgress, type, newProps);
+
+          if (current.ref !== workInProgress.ref) {
+            markRef(workInProgress);
+          }
+        } else {
+          if (!newProps) {
+            if (workInProgress.stateNode === null) {
+              throw new Error(
+                'We must have new props for new mounts. This error is likely ' +
+                  'caused by a bug in React. Please file an issue.',
+              );
+            }
+
+            // This can happen when we abort work.
+            bubbleProperties(workInProgress);
+            return null;
+          }
+
+          const currentHostContext = getHostContext();
+          // TODO: Move createInstance to beginWork and keep it on a context
+          // "stack" as the parent. Then append children as we go in beginWork
+          // or completeWork depending on whether we want to add them top->down or
+          // bottom->up. Top->down is faster in IE11.
+          const wasHydrated = popHydrationState(workInProgress);
+          if (wasHydrated) {
+            // TODO: Move this and createInstance step into the beginPhase
+            // to consolidate.
+            if (
+              prepareToHydrateHostInstance(workInProgress, currentHostContext)
+            ) {
+              // If changes to the hydrated node need to be applied at the
+              // commit-phase we mark this as such.
+              markUpdate(workInProgress);
+            }
+          } else {
+            const instance = createInstance(
+              type,
+              newProps,
+              rootContainerInstance,
+              currentHostContext,
+              workInProgress,
+            );
+
+            workInProgress.flags |= Placement;
+            workInProgress.stateNode = instance;
+            if (
+              finalizeInitialChildren(
+                instance,
+                type,
+                newProps,
+                currentHostContext,
+              )
+            ) {
+              markUpdate(workInProgress);
+            }
+          }
+
+          if (workInProgress.ref !== null) {
+            // If there is a ref on a host node we need to schedule a callback
+            markRef(workInProgress);
+          }
+        }
+        bubbleProperties(workInProgress);
+        return null;
+      } else {
+        return null;
+      }
     }
     case HostText: {
       const newText = newProps;

@@ -32,6 +32,7 @@ import {
   setInitialProperties,
   diffProperties,
   updateProperties,
+  resetProperties,
   diffHydratedProperties,
   diffHydratedText,
   trapClickOnNonInteractiveElement,
@@ -67,7 +68,13 @@ import {
   enableScopeAPI,
   enableFloat,
 } from 'shared/ReactFeatureFlags';
-import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
+import {
+  HostComponent,
+  HostSingleton,
+  HostText,
+  HostPortal,
+  HostRoot,
+} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
@@ -111,6 +118,7 @@ export type Container =
   | (Document & {_reactRootContainer?: FiberRoot, ...})
   | (DocumentFragment & {_reactRootContainer?: FiberRoot, ...});
 export type Instance = Element;
+export type InstanceSibling = Node;
 export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
@@ -378,6 +386,32 @@ export const cancelTimeout: any =
 export const noTimeout = -1;
 const localPromise = typeof Promise === 'function' ? Promise : undefined;
 
+export function getInstanceFromNode(node: HTMLElement): null | Object {
+  return getClosestInstanceFromNode(node) || null;
+}
+
+export function preparePortalMount(portalInstance: Instance): void {
+  listenToAllSupportedEvents(portalInstance);
+}
+
+export function prepareScopeUpdate(
+  scopeInstance: ReactScopeInstance,
+  internalInstanceHandle: Object,
+): void {
+  if (enableScopeAPI) {
+    precacheFiberNode(internalInstanceHandle, scopeInstance);
+  }
+}
+
+export function getInstanceFromScope(
+  scopeInstance: ReactScopeInstance,
+): null | Object {
+  if (enableScopeAPI) {
+    return getFiberFromScopeInstance(scopeInstance);
+  }
+  return null;
+}
+
 // -------------------
 //     Microtasks
 // -------------------
@@ -506,7 +540,7 @@ export function appendChildToContainer(
 export function insertBefore(
   parentInstance: Instance,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance | SuspenseInstance,
+  beforeChild: InstanceSibling,
 ): void {
   parentInstance.insertBefore(child, beforeChild);
 }
@@ -514,7 +548,7 @@ export function insertBefore(
 export function insertInContainerBefore(
   container: Container,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance | SuspenseInstance,
+  beforeChild: InstanceSibling,
 ): void {
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).insertBefore(child, beforeChild);
@@ -663,12 +697,23 @@ export function unhideTextInstance(
 
 export function clearContainer(container: Container): void {
   if (container.nodeType === ELEMENT_NODE) {
-    ((container: any): Element).textContent = '';
-  } else if (container.nodeType === DOCUMENT_NODE) {
-    if (container.documentElement) {
-      container.removeChild(container.documentElement);
+    switch (((container: any): Element).tagName.toLowerCase()) {
+      case 'html': {
+        break;
+      }
+      case 'head':
+      case 'body': {
+        resetSingletonInstance(container);
+        break;
+      }
+      default: {
+        ((container: any): Element).textContent = '';
+      }
     }
   }
+  // Implicitly if the container is of type Document we rely on the Persistent HostComponent
+  // semantics to clear these nodes appropriately when being placed so no ahead of time
+  // clearing is necessary
 }
 
 // -------------------
@@ -1011,6 +1056,8 @@ export function commitHydratedSuspenseInstance(
   retryIfBlockedOn(suspenseInstance);
 }
 
+// @TODO remove this function once float lands and hydrated tail nodes
+// are controlled by HostSingleton fibers
 export function shouldDeleteUnhydratedTailInstances(
   parentType: string,
 ): boolean {
@@ -1215,31 +1262,118 @@ export function errorHydratingContainer(parentContainer: Container): void {
   }
 }
 
-export function getInstanceFromNode(node: HTMLElement): null | Object {
-  return getClosestInstanceFromNode(node) || null;
-}
-
-export function preparePortalMount(portalInstance: Instance): void {
-  listenToAllSupportedEvents(portalInstance);
-}
-
-export function prepareScopeUpdate(
-  scopeInstance: ReactScopeInstance,
+export function commitSingletonPlacement(
+  type: string,
+  props: Props,
+  fallbackInstance: Instance,
   internalInstanceHandle: Object,
-): void {
-  if (enableScopeAPI) {
-    precacheFiberNode(internalInstanceHandle, scopeInstance);
+): Element {
+  const ownerDocument = fallbackInstance.ownerDocument;
+  // For the three persistent Host Components that exist in DOM it is necessary for there to
+  // always be a documentElement. This should always be the case but for the sake of correctness
+  // we check and construct one if one does not yet exist.
+  // Additionally we assume HTML document here because the only persistent host elements are when using
+  // this kind of document
+  if (!ownerDocument.documentElement) {
+    ownerDocument.append(ownerDocument.createElement('html'));
+  }
+  const documentElement: HTMLHtmlElement = (ownerDocument.documentElement: any);
+  switch (type) {
+    case 'html': {
+      resetProperties(documentElement, type, props);
+      precacheFiberNode(internalInstanceHandle, documentElement);
+      updateFiberProps(documentElement, props);
+      return documentElement;
+    }
+    case 'head':
+    case 'body': {
+      // $FlowIssue Flow doens't know that body and head are the properties being accessed here
+      let element = ownerDocument[type];
+      if (element) {
+        resetSingletonInstance(element);
+        resetProperties(element, type, props);
+        precacheFiberNode(internalInstanceHandle, element);
+        updateFiberProps(element, props);
+      } else {
+        element = fallbackInstance;
+        if (type === 'head' && ownerDocument.body) {
+          insertBefore(documentElement, element, ownerDocument.body);
+        } else {
+          appendChild(documentElement, element);
+        }
+      }
+      return element;
+    }
+    default: {
+      throw new Error(
+        'commitSingletonPlacement was called with an element type that is not supported. This is a bug in React.',
+      );
+    }
   }
 }
 
-export function getInstanceFromScope(
-  scopeInstance: ReactScopeInstance,
-): null | Object {
-  if (enableScopeAPI) {
-    return getFiberFromScopeInstance(scopeInstance);
+export function getInsertionEdge(parent: Instance): ?InstanceSibling {
+  if (enableFloat) {
+    let node = null;
+    let nextNode = parent.lastChild;
+    let fallbackNode;
+    while (nextNode != null) {
+      const fiber = getInstanceFromNodeDOMTree(nextNode);
+      if (fiber) {
+        // We intentionally start with fiber rather than fiber.return because we want to
+        // account whether the node we found is the root itself. This comes into play
+        // when you portal into the same element that contains the HostRoot
+        let parentFiber = fiber;
+        while (parentFiber !== null) {
+          if (
+            (parentFiber.tag === HostComponent &&
+              parentFiber.stateNode === parent) ||
+            ((parentFiber.tag === HostPortal || parentFiber.tag === HostRoot) &&
+              parentFiber.stateNode.containerInfo === parent)
+          ) {
+            return node;
+          }
+          if (fallbackNode === undefined && parentFiber.tag === HostRoot) {
+            // When we find out first Fiber Node we capture the preceding Node to use as a fallback
+            // This is because we want to append to sibling fiber trees but prepend non-fiber trees
+            // If we don't end up finding an explicit insertion point based on existing siblings
+            fallbackNode = fallbackNode || node;
+          }
+          parentFiber = parentFiber.return;
+        }
+      }
+
+      node = nextNode;
+      nextNode = nextNode.previousSibling;
+    }
+    // We return the fallbackNode if we found one (the Node following the first React owned Node)
+    // Otherwise we return the first Node in the list of Siblings
+    return fallbackNode !== undefined ? fallbackNode : node;
   }
   return null;
 }
+
+function resetSingletonInstance(instance: Element) {
+  let node = instance.firstChild;
+  while (node) {
+    const nextNode = node.nextSibling;
+    const nodeName = node.nodeName.toLowerCase();
+    if (
+      nodeName === STYLE ||
+      (nodeName === 'link' &&
+        ((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet')
+    ) {
+      // retain these nodes
+    } else {
+      instance.removeChild(node);
+    }
+    node = nextNode;
+  }
+}
+
+// -------------------
+//     Test Selectors
+// -------------------
 
 export const supportsTestSelectors = true;
 
@@ -1276,6 +1410,7 @@ export function matchAccessibilityRole(node: Instance, role: string): boolean {
 
 export function getTextContent(fiber: Fiber): string | null {
   switch (fiber.tag) {
+    case HostSingleton:
     case HostComponent:
       let textContent = '';
       const childNodes = fiber.stateNode.childNodes;
@@ -1294,7 +1429,11 @@ export function getTextContent(fiber: Fiber): string | null {
 }
 
 export function isHiddenSubtree(fiber: Fiber): boolean {
-  return fiber.tag === HostComponent && fiber.memoizedProps.hidden === true;
+  return (
+    (fiber.tag === HostComponent ||
+      (enableFloat && fiber.tag === HostSingleton)) &&
+    fiber.memoizedProps.hidden === true
+  );
 }
 
 export function setFocusIfFocusable(node: Instance): boolean {
@@ -1379,3 +1518,21 @@ export function setupIntersectionObserver(
     },
   };
 }
+
+// -------------------
+//     Resources
+// -------------------
+
+export const supportsResources = true;
+
+export function isHostSingletonInstance(
+  instance: Instance | Container,
+): boolean {
+  if (instance.nodeType === ELEMENT_NODE) {
+    return isHostSingletonType(instance.tagName.toLowerCase());
+  }
+  return false;
+}
+
+import {isHostSingletonType} from './ReactDOMComponent';
+export {isHostSingletonType};

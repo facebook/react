@@ -37,10 +37,6 @@ import type {
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import type {RootState} from './ReactFiberRoot.new';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
-import {
-  enableCPUSuspense,
-  enableUseMutableSource,
-} from 'shared/ReactFeatureFlags';
 
 import checkPropTypes from 'shared/checkPropTypes';
 import {
@@ -54,6 +50,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
+  HostSingleton,
   HostText,
   HostPortal,
   ForwardRef,
@@ -104,6 +101,9 @@ import {
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableLegacyHidden,
+  enableCPUSuspense,
+  enableUseMutableSource,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -1567,6 +1567,27 @@ function updateHostComponent(
 
   markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
+
+function updateHostSingleton(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  pushHostContext(workInProgress);
+
+  if (current === null) {
+    tryToClaimNextHydratableInstance(workInProgress);
+  }
+
+  markRef(current, workInProgress);
+  reconcileChildren(
+    current,
+    workInProgress,
+    workInProgress.pendingProps.children,
+    renderLanes,
+  );
   return workInProgress.child;
 }
 
@@ -3641,6 +3662,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       resetHydrationState();
       break;
     case HostComponent:
+    case HostSingleton:
       pushHostContext(workInProgress);
       break;
     case ClassComponent: {
@@ -3976,6 +3998,12 @@ function beginWork(
       return updateHostRoot(current, workInProgress, renderLanes);
     case HostComponent:
       return updateHostComponent(current, workInProgress, renderLanes);
+    case HostSingleton:
+      if (enableFloat) {
+        return updateHostSingleton(current, workInProgress, renderLanes);
+      } else {
+        return null;
+      }
     case HostText:
       return updateHostText(current, workInProgress);
     case SuspenseComponent:

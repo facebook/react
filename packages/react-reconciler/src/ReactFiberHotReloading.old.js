@@ -15,6 +15,7 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import {enableFloat} from 'shared/ReactFeatureFlags';
 import {
   flushSync,
   scheduleUpdateOnFiber,
@@ -29,6 +30,7 @@ import {
   FunctionComponent,
   ForwardRef,
   HostComponent,
+  HostSingleton,
   HostPortal,
   HostRoot,
   MemoComponent,
@@ -435,6 +437,7 @@ function findHostInstancesForFiberShallowly(
     let node = fiber;
     while (true) {
       switch (node.tag) {
+        case HostSingleton:
         case HostComponent:
           hostInstances.add(node.stateNode);
           return;
@@ -461,7 +464,10 @@ function findChildHostInstancesForFiberShallowly(
     let node: Fiber = fiber;
     let foundHostInstances = false;
     while (true) {
-      if (node.tag === HostComponent) {
+      if (
+        node.tag === HostComponent ||
+        (enableFloat && node.tag === HostSingleton)
+      ) {
         // We got a match.
         foundHostInstances = true;
         hostInstances.add(node.stateNode);
