@@ -75,7 +75,7 @@ jobs:
     docker: *docker
     environment: *environment
 
-    steps:
+    steps:      
       - checkout_with_cache
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
@@ -168,6 +168,8 @@ jobs:
     environment: *environment
     steps:
       - checkout_with_cache
+      - attach_workspace:
+          at: .
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
       - run: tar -zcvf ./build.tgz ./build
@@ -183,6 +185,8 @@ jobs:
     environment: *environment
     steps:
       - checkout_with_cache
+      - attach_workspace:
+          at: .
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
       - run:
           command: node ./scripts/tasks/danger
@@ -192,6 +196,8 @@ jobs:
     environment: *environment
     steps:
       - checkout_with_cache
+      - attach_workspace:
+          at: .
       - run:
           name: Install Packages
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -207,6 +213,8 @@ jobs:
     environment: *environment
     steps:
       - checkout_with_cache
+      - attach_workspace:
+          at: .
       - run:
           name: Install Packages
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -229,6 +237,8 @@ jobs:
         type: string
     steps:
       - checkout_with_cache
+      - attach_workspace:
+          at: .
       - run:
           name: Install nested packages from Yarn cache
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -244,6 +254,8 @@ jobs:
         type: string
     steps:
       - checkout_with_cache
+      - attach_workspace:
+          at: .
       - run:
           name: Install nested packages from Yarn cache
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -268,6 +280,8 @@ jobs:
     environment: *environment
     steps:
       - checkout_with_cache
+      - attach_workspace:
+          at: .
       - run: yarn lint-build
 
   yarn_check_release_dependencies:
@@ -275,6 +289,8 @@ jobs:
     environment: *environment
     steps:
       - checkout_with_cache
+      - attach_workspace:
+          at: .
       - run: yarn check-release-dependencies
 
 
@@ -283,6 +299,7 @@ jobs:
     environment: *environment
     steps:
       - checkout_with_cache
+      - attach_workspace: *attach_workspace
       - run:
           name: Search build artifacts for unminified errors
           command: |
@@ -309,6 +326,8 @@ jobs:
         type: string
     steps:
       - checkout_with_cache
+      - attach_workspace:
+          at: .
       - run:
           name: Install nested packages from Yarn cache
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -319,6 +338,8 @@ jobs:
     environment: *environment
     steps:
       - checkout_with_cache
+      - attach_workspace:
+          at: .
       - run:
           name: Run DOM fixture tests
           environment:
