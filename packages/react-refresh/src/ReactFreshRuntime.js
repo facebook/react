@@ -506,6 +506,18 @@ export function injectIntoGlobalHook(globalObject: any): void {
     // Do the same for any already injected roots.
     // This is useful if ReactDOM has already been initialized.
     // https://github.com/facebook/react/issues/17626
+
+    /**
+     * hook object is existed, but didn't have `renderers` property
+     * it will make react app cannot startup
+     * so, we need to check it and initialize it,
+     * make sure it has the `renderers` property to avoid startup errors
+     * https://github.com/facebook/react/issues/25019
+     */
+    if (!hook.renderers) {
+      hook.renderers = new Map()
+    }
+
     hook.renderers.forEach((injected, id) => {
       if (
         typeof injected.scheduleRefresh === 'function' &&
