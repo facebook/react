@@ -12,6 +12,7 @@ const {
   NPM_PACKAGES,
 } = require('./configuration');
 
+//loger
 const logger = createLogger({
   storagePath: join(__dirname, '.progress-estimator'),
 });
