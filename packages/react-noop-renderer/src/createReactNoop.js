@@ -276,11 +276,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NO_CONTEXT;
     },
 
-    getChildHostContext(
-      parentHostContext: HostContext,
-      type: string,
-      rootcontainerInstance: Container,
-    ) {
+    getChildHostContext(parentHostContext: HostContext, type: string) {
       if (type === 'offscreen') {
         return parentHostContext;
       }

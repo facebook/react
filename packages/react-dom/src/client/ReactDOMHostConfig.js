@@ -181,7 +181,6 @@ export function getRootHostContext(
 export function getChildHostContext(
   parentHostContext: HostContext,
   type: string,
-  rootContainerInstance: Container,
 ): HostContext {
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
@@ -289,10 +288,9 @@ export function finalizeInitialChildren(
   domElement: Instance,
   type: string,
   props: Props,
-  rootContainerInstance: Container,
   hostContext: HostContext,
 ): boolean {
-  setInitialProperties(domElement, type, props, rootContainerInstance);
+  setInitialProperties(domElement, type, props);
   switch (type) {
     case 'button':
     case 'input':
@@ -311,7 +309,6 @@ export function prepareUpdate(
   type: string,
   oldProps: Props,
   newProps: Props,
-  rootContainerInstance: Container,
   hostContext: HostContext,
 ): null | Array<mixed> {
   if (__DEV__) {
@@ -329,13 +326,7 @@ export function prepareUpdate(
       validateDOMNesting(null, string, ownAncestorInfo);
     }
   }
-  return diffProperties(
-    domElement,
-    type,
-    oldProps,
-    newProps,
-    rootContainerInstance,
-  );
+  return diffProperties(domElement, type, oldProps, newProps);
 }
 
 export function shouldSetTextContent(type: string, props: Props): boolean {
@@ -828,7 +819,6 @@ export function hydrateInstance(
   instance: Instance,
   type: string,
   props: Props,
-  rootContainerInstance: Container,
   hostContext: HostContext,
   internalInstanceHandle: Object,
   shouldWarnDev: boolean,
@@ -855,7 +845,6 @@ export function hydrateInstance(
     type,
     props,
     parentNamespace,
-    rootContainerInstance,
     isConcurrentMode,
     shouldWarnDev,
   );

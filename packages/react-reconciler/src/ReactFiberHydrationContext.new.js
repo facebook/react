@@ -444,7 +444,6 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
 
 function prepareToHydrateHostInstance(
   fiber: Fiber,
-  rootContainerInstance: Container,
   hostContext: HostContext,
 ): boolean {
   if (!supportsHydration) {
@@ -460,7 +459,6 @@ function prepareToHydrateHostInstance(
     instance,
     fiber.type,
     fiber.memoizedProps,
-    rootContainerInstance,
     hostContext,
     fiber,
     shouldWarnIfMismatchDev,
