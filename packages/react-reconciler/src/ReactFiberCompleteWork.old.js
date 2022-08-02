@@ -255,7 +255,6 @@ if (supportsMutation) {
     workInProgress: Fiber,
     type: Type,
     newProps: Props,
-    rootContainerInstance: Container,
   ) {
     // If we have an alternate, that means this is an update and we need to
     // schedule a side-effect to do the updates.
@@ -280,7 +279,6 @@ if (supportsMutation) {
       type,
       oldProps,
       newProps,
-      rootContainerInstance,
       currentHostContext,
     );
     // TODO: Type this specific to this type of component.
@@ -458,7 +456,6 @@ if (supportsMutation) {
     workInProgress: Fiber,
     type: Type,
     newProps: Props,
-    rootContainerInstance: Container,
   ) {
     const currentInstance = current.stateNode;
     const oldProps = current.memoizedProps;
@@ -480,7 +477,6 @@ if (supportsMutation) {
         type,
         oldProps,
         newProps,
-        rootContainerInstance,
         currentHostContext,
       );
     }
@@ -501,13 +497,7 @@ if (supportsMutation) {
       recyclableInstance,
     );
     if (
-      finalizeInitialChildren(
-        newInstance,
-        type,
-        newProps,
-        rootContainerInstance,
-        currentHostContext,
-      )
+      finalizeInitialChildren(newInstance, type, newProps, currentHostContext)
     ) {
       markUpdate(workInProgress);
     }
@@ -555,7 +545,6 @@ if (supportsMutation) {
     workInProgress: Fiber,
     type: Type,
     newProps: Props,
-    rootContainerInstance: Container,
   ) {
     // Noop
   };
@@ -964,16 +953,9 @@ function completeWork(
     }
     case HostComponent: {
       popHostContext(workInProgress);
-      const rootContainerInstance = getRootHostContainer();
       const type = workInProgress.type;
       if (current !== null && workInProgress.stateNode != null) {
-        updateHostComponent(
-          current,
-          workInProgress,
-          type,
-          newProps,
-          rootContainerInstance,
-        );
+        updateHostComponent(current, workInProgress, type, newProps);
 
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
@@ -1002,17 +984,14 @@ function completeWork(
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
           if (
-            prepareToHydrateHostInstance(
-              workInProgress,
-              rootContainerInstance,
-              currentHostContext,
-            )
+            prepareToHydrateHostInstance(workInProgress, currentHostContext)
           ) {
             // If changes to the hydrated node need to be applied at the
             // commit-phase we mark this as such.
             markUpdate(workInProgress);
           }
         } else {
+          const rootContainerInstance = getRootHostContainer();
           const instance = createInstance(
             type,
             newProps,
@@ -1033,7 +1012,6 @@ function completeWork(
               instance,
               type,
               newProps,
-              rootContainerInstance,
               currentHostContext,
             )
           ) {
