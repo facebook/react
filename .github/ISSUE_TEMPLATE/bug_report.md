@@ -15,6 +15,9 @@ labels: 'Status: Unconfirmed'
 React version:
 
 ## Steps To Reproduce
+<!--
+Provide the steps to reproduce so that people can reproduce it for testing.
+-->
 
 1.
 2.
@@ -22,7 +25,7 @@ React version:
 <!--
   Your bug will get fixed much faster if we can run your code and it doesn't
   have dependencies other than React. Issues without reproduction steps or
-  code examples may be immediately closed as not actionable.
+  code examples may be immediately closed as not reproducible.
 -->
 
 Link to code example:
@@ -37,5 +40,12 @@ Link to code example:
 
 ## The current behavior
 
+<!--
+Please provide the current behavior that is happening (the bug's behavior, what does it do?)
+-->
+
 
 ## The expected behavior
+<!--
+Please provide the expected behavior that should happen (what do you expect when the bug is fixed?)
+-->
