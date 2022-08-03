@@ -16,6 +16,7 @@ let act;
 let getCacheForType;
 let useState;
 let Suspense;
+let Offscreen;
 let startTransition;
 
 let caches;
@@ -34,6 +35,7 @@ describe('ReactInteractionTracing', () => {
     useState = React.useState;
     startTransition = React.startTransition;
     Suspense = React.Suspense;
+    Offscreen = React.unstable_Offscreen;
 
     getCacheForType = React.unstable_getCacheForType;
 
@@ -1361,5 +1363,75 @@ describe('ReactInteractionTracing', () => {
         'onTransitionComplete(transition three, 2000, 3000)',
       ]);
     });
+  });
+
+  // @gate enableTransitionTracing
+  it('offscreen trees should not stop transition from completing', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App() {
+      return (
+        <React.unstable_TracingMarker name="marker">
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text="Text" />
+          </Suspense>
+          <Offscreen mode="hidden">
+            <Suspense fallback={<Text text="Hidden Loading..." />}>
+              <AsyncText text="Hidden Text" />
+            </Suspense>
+          </Offscreen>
+        </React.unstable_TracingMarker>
+      );
+    }
+
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+    await act(() => {
+      startTransition(() => root.render(<App />), {name: 'transition'});
+      ReactNoop.expire(1000);
+      advanceTimers(1000);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Suspend [Text]',
+      'Loading...',
+      'Suspend [Hidden Text]',
+      'Hidden Loading...',
+      'onTransitionStart(transition, 0)',
+    ]);
+
+    await act(() => {
+      resolveText('Text');
+      ReactNoop.expire(1000);
+      advanceTimers(1000);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Text',
+      'onMarkerComplete(transition, marker, 0, 2000)',
+      'onTransitionComplete(transition, 0, 2000)',
+    ]);
+
+    await act(() => {
+      resolveText('Hidden Text');
+      ReactNoop.expire(1000);
+      advanceTimers(1000);
+    });
+    expect(Scheduler).toHaveYielded(['Hidden Text']);
   });
 });
