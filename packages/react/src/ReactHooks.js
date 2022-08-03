@@ -157,8 +157,6 @@ export function useDebugValue<T>(
   }
 }
 
-export const emptyObject = {};
-
 export function useTransition(): [
   boolean,
   (callback: () => void, options?: StartTransitionOptions) => void,
