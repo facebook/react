@@ -1729,4 +1729,126 @@ describe('ReactInteractionTracing', () => {
       'onTransitionComplete(transition, 0, 2000)',
     ]);
   });
+
+  // @gate enableTransitionTracing
+  it('offscreen unhides during a transition', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
+        );
+      },
+      onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App({outer, inner}) {
+      return (
+        <Offscreen mode={outer ? 'visible' : 'hidden'}>
+          <React.unstable_TracingMarker name="marker">
+            <Suspense
+              unstable_name="outer"
+              fallback={<Text text="Outer Loading..." />}>
+              <AsyncText text="Outer" />
+            </Suspense>
+            <Offscreen mode={inner ? 'visible' : 'hidden'}>
+              <Suspense
+                unstable_name="inner"
+                fallback={<Text text="Inner Loading..." />}>
+                <AsyncText text="Inner" />
+              </Suspense>
+            </Offscreen>
+          </React.unstable_TracingMarker>
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+    startTransition(() => root.render(<App outer={false} inner={false} />), {
+      name: 'transition',
+    });
+    ReactNoop.expire(1000);
+
+    expect(Scheduler).toFlushAndYield([
+      'Suspend [Outer]',
+      'Outer Loading...',
+      'Suspend [Inner]',
+      'Inner Loading...',
+      'onTransitionStart(transition, 0)',
+      'onTransitionComplete(transition, 0, 1000)',
+    ]);
+
+    startTransition(() => root.render(<App outer={true} inner={false} />), {
+      name: 'transition',
+    });
+
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+
+    expect(Scheduler).toFlushAndYield([
+      'Suspend [Outer]',
+      'Outer Loading...',
+      'Suspend [Inner]',
+      'Inner Loading...',
+      'onTransitionStart(transition, 1000)',
+      // Marker went from hidden to shown
+      'onMarkerProgress(transition, marker, 1000, 2000, [outer])',
+      'onTransitionProgress(transition, 1000, 2000, [outer])',
+    ]);
+
+    // TODO: If we hide here inside it shouldn't be complete
+    root.render(<App outer={true} inner={true} />);
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+    expect(Scheduler).toFlushAndYield([
+      'Suspend [Outer]',
+      'Outer Loading...',
+      'Suspend [Inner]',
+      'Inner Loading...',
+    ]);
+
+    await resolveText('Inner');
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+    expect(Scheduler).toFlushAndYield(['Inner']);
+
+    await resolveText('Outer');
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+    expect(Scheduler).toFlushAndYield([
+      'Outer',
+      'onMarkerProgress(transition, marker, 1000, 5000, [])',
+      'onMarkerComplete(transition, marker, 1000, 5000)',
+      'onTransitionProgress(transition, 1000, 5000, [])',
+      'onTransitionComplete(transition, 1000, 5000)',
+    ]);
+  });
 });

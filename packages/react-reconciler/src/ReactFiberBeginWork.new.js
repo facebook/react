@@ -972,7 +972,10 @@ function updateTracingMarkerComponent(
   // TODO: (luna) Only update the tracing marker if it's newly rendered or it's name changed.
   // A tracing marker is only associated with the transitions that rendered
   // or updated it, so we can create a new set of transitions each time
-  if (current === null) {
+  if (
+    current === null ||
+    current.memoizedProps.name === workInProgress.pendingProps.name
+  ) {
     const currentTransitions = getPendingTransitions();
     if (currentTransitions !== null) {
       const markerInstance: TracingMarkerInstance = {
@@ -984,12 +987,10 @@ function updateTracingMarkerComponent(
     }
   } else {
     if (__DEV__) {
-      if (current.memoizedProps.name !== workInProgress.pendingProps.name) {
-        console.error(
-          'Changing the name of a tracing marker after mount is not supported. ' +
-            'To remount the tracing marker, pass it a new key.',
-        );
-      }
+      console.error(
+        'Changing the name of a tracing marker after mount is not supported. ' +
+          'To remount the tracing marker, pass it a new key.',
+      );
     }
   }
 
