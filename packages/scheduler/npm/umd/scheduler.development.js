@@ -54,6 +54,13 @@
     );
   }
 
+  function unstable_requestYield() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_requestYield.apply(
+      this,
+      arguments
+    );
+  }
+
   function unstable_runWithPriority() {
     return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_runWithPriority.apply(
       this,
@@ -116,6 +123,7 @@
     unstable_cancelCallback: unstable_cancelCallback,
     unstable_shouldYield: unstable_shouldYield,
     unstable_requestPaint: unstable_requestPaint,
+    unstable_requestYield: unstable_requestYield,
     unstable_runWithPriority: unstable_runWithPriority,
     unstable_next: unstable_next,
     unstable_wrapCallback: unstable_wrapCallback,

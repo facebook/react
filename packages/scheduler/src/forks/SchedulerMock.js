@@ -608,6 +608,11 @@ function requestPaint() {
   needsPaint = true;
 }
 
+function requestYield() {
+  // Force a yield at the next opportunity.
+  shouldYieldForPaint = needsPaint = true;
+}
+
 export {
   ImmediatePriority as unstable_ImmediatePriority,
   UserBlockingPriority as unstable_UserBlockingPriority,
@@ -622,6 +627,7 @@ export {
   unstable_getCurrentPriorityLevel,
   shouldYieldToHost as unstable_shouldYield,
   requestPaint as unstable_requestPaint,
+  requestYield as unstable_requestYield,
   unstable_continueExecution,
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,
