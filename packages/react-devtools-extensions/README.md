@@ -15,6 +15,13 @@ DevTools depends on local versions of several NPM packages<sup>1</sup> also in t
 
 <sup>1</sup> Note that at this time, an _experimental_ build is required because DevTools depends on the `createRoot` API.
 
+#### Install dependencies
+In order to complete all necessary steps, run the following command from the root of the repository:
+
+```sh
+yarn install
+```
+
 #### Build from source
 To build dependencies from source, run the following command from the root of the repository:
 ```sh
