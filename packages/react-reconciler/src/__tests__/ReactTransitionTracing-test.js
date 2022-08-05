@@ -23,6 +23,17 @@ let caches;
 let seededCache;
 
 describe('ReactInteractionTracing', () => {
+  function stringifyDeletions(deletions) {
+    return deletions
+      .map(
+        d =>
+          `{${Object.keys(d)
+            .map(key => `${key}: ${d[key]}`)
+            .sort()
+            .join(', ')}}`,
+      )
+      .join(', ');
+  }
   beforeEach(() => {
     jest.resetModules();
 
@@ -1284,6 +1295,410 @@ describe('ReactInteractionTracing', () => {
   });
 
   // @gate enableTransitionTracing
+  it.skip('warn and calls marker incomplete if name changes before transition completes', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
+        );
+      },
+      onMarkerIncomplete: (
+        transitionName,
+        markerName,
+        startTime,
+        deletions,
+      ) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerIncomplete(${transitionName}, ${markerName}, ${startTime}, [${stringifyDeletions(
+            deletions,
+          )}])`,
+        );
+      },
+      onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App({navigate, markerName}) {
+      return (
+        <div>
+          {navigate ? (
+            <React.unstable_TracingMarker name={markerName}>
+              <Suspense fallback={<Text text="Loading..." />}>
+                <AsyncText text="Page Two" />
+              </Suspense>
+            </React.unstable_TracingMarker>
+          ) : (
+            <Text text="Page One" />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+    await act(async () => {
+      root.render(<App navigate={false} markerName="marker one" />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield(['Page One']);
+
+      startTransition(
+        () => root.render(<App navigate={true} markerName="marker one" />),
+        {
+          name: 'transition one',
+        },
+      );
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Page Two]',
+        'Loading...',
+        'onTransitionStart(transition one, 1000)',
+        'onMarkerProgress(transition one, marker one, 1000, 2000, [<null>])',
+        'onTransitionProgress(transition one, 1000, 2000, [<null>])',
+      ]);
+
+      root.render(<App navigate={true} markerName="marker two" />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(() =>
+        expect(Scheduler).toFlushAndYield([
+          'Suspend [Page Two]',
+          'Loading...',
+          'onMarkerIncomplete(transition one, marker one, 1000, [{endTime: 3000, name: marker one, newName: marker two, type: marker}])',
+        ]),
+      ).toErrorDev('');
+
+      resolveText('Page Two');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'Page Two',
+        'onMarkerProgress(transition one, marker one, 1000, 4000, [])',
+        'onTransitionProgress(transition one, 1000, 4000, [])',
+        'onTransitionComplete(transition one, 1000, 4000)',
+      ]);
+    });
+  });
+
+  // @gate enableTransitionTracing
+  it('marker incomplete for tree with parent and sibling tracing markers', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
+        );
+      },
+      onMarkerIncomplete: (
+        transitionName,
+        markerName,
+        startTime,
+        deletions,
+      ) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerIncomplete(${transitionName}, ${markerName}, ${startTime}, [${stringifyDeletions(
+            deletions,
+          )}])`,
+        );
+      },
+      onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App({navigate, showMarker}) {
+      return (
+        <div>
+          {navigate ? (
+            <React.unstable_TracingMarker name="parent">
+              {showMarker ? (
+                <React.unstable_TracingMarker name="marker one">
+                  <Suspense
+                    unstable_name="suspense page"
+                    fallback={<Text text="Loading..." />}>
+                    <AsyncText text="Page Two" />
+                  </Suspense>
+                </React.unstable_TracingMarker>
+              ) : (
+                <Suspense
+                  unstable_name="suspense page"
+                  fallback={<Text text="Loading..." />}>
+                  <AsyncText text="Page Two" />
+                </Suspense>
+              )}
+              <React.unstable_TracingMarker name="sibling">
+                <Suspense
+                  unstable_name="suspense sibling"
+                  fallback={<Text text="Sibling Loading..." />}>
+                  <AsyncText text="Sibling Text" />
+                </Suspense>
+              </React.unstable_TracingMarker>
+            </React.unstable_TracingMarker>
+          ) : (
+            <Text text="Page One" />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+    await act(async () => {
+      root.render(<App navigate={false} showMarker={true} />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield(['Page One']);
+
+      startTransition(
+        () => root.render(<App navigate={true} showMarker={true} />),
+        {
+          name: 'transition one',
+        },
+      );
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Page Two]',
+        'Loading...',
+        'Suspend [Sibling Text]',
+        'Sibling Loading...',
+        'onTransitionStart(transition one, 1000)',
+        'onMarkerProgress(transition one, parent, 1000, 2000, [suspense page, suspense sibling])',
+        'onMarkerProgress(transition one, marker one, 1000, 2000, [suspense page])',
+        'onMarkerProgress(transition one, sibling, 1000, 2000, [suspense sibling])',
+        'onTransitionProgress(transition one, 1000, 2000, [suspense page, suspense sibling])',
+      ]);
+      root.render(<App navigate={true} showMarker={false} />);
+
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Page Two]',
+        'Loading...',
+        'Suspend [Sibling Text]',
+        'Sibling Loading...',
+        'onMarkerIncomplete(transition one, marker one, 1000, [{endTime: 3000, name: marker one, type: marker}])',
+        'onMarkerIncomplete(transition one, parent, 1000, [{endTime: 3000, name: marker one, type: marker}])',
+      ]);
+
+      root.render(<App navigate={true} showMarker={true} />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Page Two]',
+        'Loading...',
+        'Suspend [Sibling Text]',
+        'Sibling Loading...',
+      ]);
+    });
+
+    resolveText('Page Two');
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+    expect(Scheduler).toFlushAndYield(['Page Two']);
+
+    resolveText('Sibling Text');
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+    expect(Scheduler).toFlushAndYield([
+      'Sibling Text',
+      'onMarkerProgress(transition one, parent, 1000, 6000, [])',
+      'onMarkerProgress(transition one, sibling, 1000, 6000, [])',
+      // Calls markerComplete and transitionComplete for all parents
+      'onMarkerComplete(transition one, sibling, 1000, 6000)',
+      'onTransitionProgress(transition one, 1000, 6000, [])',
+    ]);
+  });
+
+  // @gate enableTransitionTracing
+  it('marker gets deleted', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
+        );
+      },
+      onMarkerIncomplete: (
+        transitionName,
+        markerName,
+        startTime,
+        deletions,
+      ) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerIncomplete(${transitionName}, ${markerName}, ${startTime}, [${stringifyDeletions(
+            deletions,
+          )}])`,
+        );
+      },
+      onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App({navigate, deleteOne}) {
+      return (
+        <div>
+          {navigate ? (
+            <React.unstable_TracingMarker name="parent">
+              {!deleteOne ? (
+                <div>
+                  <React.unstable_TracingMarker name="one">
+                    <Suspense
+                      unstable_name="suspense one"
+                      fallback={<Text text="Loading One..." />}>
+                      <AsyncText text="Page One" />
+                    </Suspense>
+                  </React.unstable_TracingMarker>
+                </div>
+              ) : null}
+              <React.unstable_TracingMarker name="two">
+                <Suspense
+                  unstable_name="suspense two"
+                  fallback={<Text text="Loading Two..." />}>
+                  <AsyncText text="Page Two" />
+                </Suspense>
+              </React.unstable_TracingMarker>
+            </React.unstable_TracingMarker>
+          ) : (
+            <Text text="Page One" />
+          )}
+        </div>
+      );
+    }
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+    await act(async () => {
+      root.render(<App navigate={false} deleteOne={false} />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield(['Page One']);
+
+      startTransition(
+        () => root.render(<App navigate={true} deleteOne={false} />),
+        {
+          name: 'transition',
+        },
+      );
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Page One]',
+        'Loading One...',
+        'Suspend [Page Two]',
+        'Loading Two...',
+        'onTransitionStart(transition, 1000)',
+        'onMarkerProgress(transition, parent, 1000, 2000, [suspense one, suspense two])',
+        'onMarkerProgress(transition, one, 1000, 2000, [suspense one])',
+        'onMarkerProgress(transition, two, 1000, 2000, [suspense two])',
+        'onTransitionProgress(transition, 1000, 2000, [suspense one, suspense two])',
+      ]);
+
+      root.render(<App navigate={true} deleteOne={true} />);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'Suspend [Page Two]',
+        'Loading Two...',
+        'onMarkerIncomplete(transition, one, 1000, [{endTime: 3000, name: one, type: marker}])',
+        'onMarkerIncomplete(transition, parent, 1000, [{endTime: 3000, name: one, type: marker}])',
+      ]);
+
+      await resolveText('Page Two');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield([
+        'Page Two',
+        // Marker progress will still get called after incomplete but not marker complete
+        'onMarkerProgress(transition, parent, 1000, 4000, [])',
+        'onMarkerProgress(transition, two, 1000, 4000, [])',
+        'onMarkerComplete(transition, two, 1000, 4000)',
+        // Transition progress will still get called after incomplete but not transition complete
+        'onTransitionProgress(transition, 1000, 4000, [])',
+      ]);
+    });
+  });
+
+  // @gate enableTransitionTracing
   it('warns when marker name changes', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
@@ -1294,6 +1709,18 @@ describe('ReactInteractionTracing', () => {
       onTransitionComplete: (name, startTime, endTime) => {
         Scheduler.unstable_yieldValue(
           `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerIncomplete: (
+        transitionName,
+        markerName,
+        startTime,
+        deletions,
+      ) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerIncomplete(${transitionName}, ${markerName}, ${startTime}, [${stringifyDeletions(
+            deletions,
+          )}])`,
         );
       },
       onMarkerComplete: (transitioName, markerName, startTime, endTime) => {

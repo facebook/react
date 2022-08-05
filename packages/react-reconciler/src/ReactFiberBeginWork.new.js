@@ -981,6 +981,7 @@ function updateTracingMarkerComponent(
         transitions: new Set(currentTransitions),
         pendingBoundaries: new Map(),
         name: workInProgress.pendingProps.name,
+        aborts: null,
       };
       workInProgress.stateNode = markerInstance;
     }

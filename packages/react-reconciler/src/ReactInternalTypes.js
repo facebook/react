@@ -292,7 +292,6 @@ export type TransitionTracingCallbacks = {
     deletions: Array<{
       type: string,
       name?: string,
-      newName?: string,
       endTime: number,
     }>,
   ) => void,
@@ -315,7 +314,6 @@ export type TransitionTracingCallbacks = {
     deletions: Array<{
       type: string,
       name?: string,
-      newName?: string,
       endTime: number,
     }>,
   ) => void,

@@ -21,7 +21,14 @@ export type PendingTransitionCallbacks = {
   transitionStart: Array<Transition> | null,
   transitionProgress: Map<Transition, PendingBoundaries> | null,
   transitionComplete: Array<Transition> | null,
-  markerProgress: Map<string, TracingMarkerInstance> | null,
+  markerProgress: Map<
+    string,
+    {pendingBoundaries: PendingBoundaries, transitions: Set<Transition>},
+  > | null,
+  markerIncomplete: Map<
+    string,
+    {aborts: Array<TransitionAbort>, transitions: Set<Transition>},
+  > | null,
   markerComplete: Map<string, Set<Transition>> | null,
 };
 
@@ -38,9 +45,15 @@ export type BatchConfigTransition = {
 
 export type TracingMarkerInstance = {|
   tag?: TracingMarkerTag,
-  pendingBoundaries: PendingBoundaries | null,
   transitions: Set<Transition> | null,
-  name?: string,
+  pendingBoundaries: PendingBoundaries | null,
+  aborts: Array<TransitionAbort> | null,
+  name: string | null,
+|};
+
+export type TransitionAbort = {|
+  reason: 'error' | 'unknown' | 'marker' | 'suspense',
+  name?: string | null,
 |};
 
 export const TransitionRoot = 0;
@@ -69,6 +82,7 @@ export function processTransitionCallbacks(
       if (onMarkerProgress != null && markerProgress !== null) {
         markerProgress.forEach((markerInstance, markerName) => {
           if (markerInstance.transitions !== null) {
+            // TODO: Clone the suspense object so users can't modify it
             const pending =
               markerInstance.pendingBoundaries !== null
                 ? Array.from(markerInstance.pendingBoundaries.values())
@@ -101,6 +115,31 @@ export function processTransitionCallbacks(
         });
       }
 
+      const markerIncomplete = pendingTransitions.markerIncomplete;
+      const onMarkerIncomplete = callbacks.onMarkerIncomplete;
+      if (onMarkerIncomplete != null && markerIncomplete !== null) {
+        markerIncomplete.forEach(({transitions, aborts}, markerName) => {
+          transitions.forEach(transition => {
+            const filteredAborts = [];
+            aborts.forEach(deletion => {
+              const filteredDeletion = getFilteredDeletion(deletion, endTime);
+              if (filteredDeletion !== null) {
+                filteredAborts.push(filteredDeletion);
+              }
+            });
+
+            if (filteredAborts.length > 0) {
+              onMarkerIncomplete(
+                transition.name,
+                markerName,
+                transition.startTime,
+                filteredAborts,
+              );
+            }
+          });
+        });
+      }
+
       const transitionProgress = pendingTransitions.transitionProgress;
       const onTransitionProgress = callbacks.onTransitionProgress;
       if (onTransitionProgress != null && transitionProgress !== null) {
@@ -121,6 +160,21 @@ export function processTransitionCallbacks(
           onTransitionComplete(transition.name, transition.startTime, endTime),
         );
       }
+    }
+  }
+}
+
+function getFilteredDeletion(abort: TransitionAbort, endTime: number) {
+  switch (abort.reason) {
+    case 'marker': {
+      return {
+        type: 'marker',
+        name: abort.name,
+        endTime,
+      };
+    }
+    default: {
+      return null;
     }
   }
 }
@@ -154,6 +208,8 @@ export function pushRootMarkerInstance(workInProgress: Fiber): void {
             tag: TransitionRoot,
             transitions: new Set([transition]),
             pendingBoundaries: null,
+            aborts: null,
+            name: null,
           };
           root.incompleteTransitions.set(transition, markerInstance);
         }
