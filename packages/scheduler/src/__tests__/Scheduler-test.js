@@ -18,6 +18,8 @@ let performance;
 let cancelCallback;
 let scheduleCallback;
 let requestPaint;
+let requestYield;
+let shouldYield;
 let NormalPriority;
 
 // The Scheduler implementation uses browser APIs like `MessageChannel` and
@@ -42,6 +44,8 @@ describe('SchedulerBrowser', () => {
     scheduleCallback = Scheduler.unstable_scheduleCallback;
     NormalPriority = Scheduler.unstable_NormalPriority;
     requestPaint = Scheduler.unstable_requestPaint;
+    requestYield = Scheduler.unstable_requestYield;
+    shouldYield = Scheduler.unstable_shouldYield;
   });
 
   afterEach(() => {
@@ -473,6 +477,51 @@ describe('SchedulerBrowser', () => {
       'Task with paint',
       // This time we yielded quickly (5ms) because we requested a paint.
       'Yield at 5ms',
+    ]);
+  });
+
+  it('requestYield forces a yield immediately', () => {
+    scheduleCallback(NormalPriority, () => {
+      runtime.log('Original Task');
+      runtime.log('shouldYield: ' + shouldYield());
+      runtime.log('requestYield');
+      requestYield();
+      runtime.log('shouldYield: ' + shouldYield());
+      return () => {
+        runtime.log('Continuation Task');
+        runtime.log('shouldYield: ' + shouldYield());
+        runtime.log('Advance time past frame deadline');
+        runtime.advanceTime(10000);
+        runtime.log('shouldYield: ' + shouldYield());
+      };
+    });
+    runtime.assertLog(['Post Message']);
+
+    runtime.fireMessageEvent();
+    runtime.assertLog([
+      'Message Event',
+      'Original Task',
+      'shouldYield: false',
+      'requestYield',
+      // Immediately after calling requestYield, shouldYield starts
+      // returning true, even though no time has elapsed in the frame
+      'shouldYield: true',
+
+      // The continuation should be scheduled in a separate macrotask.
+      'Post Message',
+    ]);
+
+    // No time has elapsed
+    expect(performance.now()).toBe(0);
+
+    // Subsequent tasks work as normal
+    runtime.fireMessageEvent();
+    runtime.assertLog([
+      'Message Event',
+      'Continuation Task',
+      'shouldYield: false',
+      'Advance time past frame deadline',
+      'shouldYield: true',
     ]);
   });
 });

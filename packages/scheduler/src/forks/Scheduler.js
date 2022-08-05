@@ -495,6 +495,11 @@ function requestPaint() {
   // Since we yield every frame regardless, `requestPaint` has no effect.
 }
 
+function requestYield() {
+  // Force a yield at the next opportunity.
+  startTime = -99999;
+}
+
 function forceFrameRate(fps) {
   if (fps < 0 || fps > 125) {
     // Using console['error'] to evade Babel and ESLint
@@ -598,8 +603,6 @@ function cancelHostTimeout() {
   taskTimeoutID = -1;
 }
 
-const unstable_requestPaint = requestPaint;
-
 export {
   ImmediatePriority as unstable_ImmediatePriority,
   UserBlockingPriority as unstable_UserBlockingPriority,
@@ -613,7 +616,8 @@ export {
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
   shouldYieldToHost as unstable_shouldYield,
-  unstable_requestPaint,
+  requestPaint as unstable_requestPaint,
+  requestYield as unstable_requestYield,
   unstable_continueExecution,
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,

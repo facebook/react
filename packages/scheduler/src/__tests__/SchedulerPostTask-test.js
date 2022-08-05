@@ -22,6 +22,8 @@ let NormalPriority;
 let UserBlockingPriority;
 let LowPriority;
 let IdlePriority;
+let shouldYield;
+let requestYield;
 
 // The Scheduler postTask implementation uses a new postTask browser API to
 // schedule work on the main thread. This test suite mocks all browser methods
@@ -44,6 +46,8 @@ describe('SchedulerPostTask', () => {
     NormalPriority = Scheduler.unstable_NormalPriority;
     LowPriority = Scheduler.unstable_LowPriority;
     IdlePriority = Scheduler.unstable_IdlePriority;
+    shouldYield = Scheduler.unstable_shouldYield;
+    requestYield = Scheduler.unstable_requestYield;
   });
 
   afterEach(() => {
@@ -294,6 +298,51 @@ describe('SchedulerPostTask', () => {
       'D',
       'Task 4 Fired',
       'E',
+    ]);
+  });
+
+  it('requestYield forces a yield immediately', () => {
+    scheduleCallback(NormalPriority, () => {
+      runtime.log('Original Task');
+      runtime.log('shouldYield: ' + shouldYield());
+      runtime.log('requestYield');
+      requestYield();
+      runtime.log('shouldYield: ' + shouldYield());
+      return () => {
+        runtime.log('Continuation Task');
+        runtime.log('shouldYield: ' + shouldYield());
+        runtime.log('Advance time past frame deadline');
+        runtime.advanceTime(10000);
+        runtime.log('shouldYield: ' + shouldYield());
+      };
+    });
+    runtime.assertLog(['Post Task 0 [user-visible]']);
+
+    runtime.flushTasks();
+    runtime.assertLog([
+      'Task 0 Fired',
+      'Original Task',
+      'shouldYield: false',
+      'requestYield',
+      // Immediately after calling requestYield, shouldYield starts
+      // returning true, even though no time has elapsed in the frame
+      'shouldYield: true',
+
+      // The continuation should be scheduled in a separate macrotask.
+      'Post Task 1 [user-visible]',
+    ]);
+
+    // No time has elapsed
+    expect(performance.now()).toBe(0);
+
+    // Subsequent tasks work as normal
+    runtime.flushTasks();
+    runtime.assertLog([
+      'Task 1 Fired',
+      'Continuation Task',
+      'shouldYield: false',
+      'Advance time past frame deadline',
+      'shouldYield: true',
     ]);
   });
 });

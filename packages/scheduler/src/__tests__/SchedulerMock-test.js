@@ -725,5 +725,39 @@ describe('Scheduler', () => {
       scheduleCallback(ImmediatePriority, 42);
       expect(Scheduler).toFlushWithoutYielding();
     });
+
+    it('requestYield forces a yield immediately', () => {
+      scheduleCallback(NormalPriority, () => {
+        Scheduler.unstable_yieldValue('Original Task');
+        Scheduler.unstable_yieldValue(
+          'shouldYield: ' + Scheduler.unstable_shouldYield(),
+        );
+        Scheduler.unstable_yieldValue('requestYield');
+        Scheduler.unstable_requestYield();
+        Scheduler.unstable_yieldValue(
+          'shouldYield: ' + Scheduler.unstable_shouldYield(),
+        );
+        return () => {
+          Scheduler.unstable_yieldValue('Continuation Task');
+          Scheduler.unstable_yieldValue(
+            'shouldYield: ' + Scheduler.unstable_shouldYield(),
+          );
+          Scheduler.unstable_yieldValue('Advance time past frame deadline');
+          Scheduler.unstable_yieldValue(
+            'shouldYield: ' + Scheduler.unstable_shouldYield(),
+          );
+        };
+      });
+
+      // The continuation should be scheduled in a separate macrotask.
+      expect(Scheduler).toFlushUntilNextPaint([
+        'Original Task',
+        'shouldYield: false',
+        'requestYield',
+        // Immediately after calling requestYield, shouldYield starts
+        // returning true
+        'shouldYield: true',
+      ]);
+    });
   });
 });
