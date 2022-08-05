@@ -173,6 +173,13 @@ function getFilteredDeletion(abort: TransitionAbort, endTime: number) {
         endTime,
       };
     }
+    case 'suspense': {
+      return {
+        type: 'suspense',
+        name: abort.name,
+        endTime,
+      };
+    }
     default: {
       return null;
     }

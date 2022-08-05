@@ -2100,12 +2100,21 @@ function commitDeletionEffectsOnFiber(
         if (enableTransitionTracing) {
           // We need to mark this fiber's parents as deleted
           const instance: OffscreenInstance = deletedFiber.stateNode;
-          const markers = instance.pendingMarkers;
-          if (markers !== null) {
-            markers.forEach(marker => {
-              if (marker.pendingBoundaries.has(instance)) {
-                marker.pendingBoundaries.delete(instance);
-              }
+          const transitions = instance.transitions;
+          if (transitions !== null) {
+            let name = null;
+            const parent = deletedFiber.return;
+            if (
+              parent !== null &&
+              parent.tag === SuspenseComponent &&
+              parent.memoizedProps.unstable_name
+            ) {
+              name = parent.memoizedProps.unstable_name;
+            }
+
+            abortParentMarkerTransitions(deletedFiber, nearestMountedAncestor, {
+              reason: 'suspense',
+              name,
             });
           }
         }

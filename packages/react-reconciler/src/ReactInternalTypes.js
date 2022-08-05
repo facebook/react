@@ -291,7 +291,7 @@ export type TransitionTracingCallbacks = {
     startTime: number,
     deletions: Array<{
       type: string,
-      name?: string,
+      name?: string | null,
       endTime: number,
     }>,
   ) => void,
@@ -313,7 +313,7 @@ export type TransitionTracingCallbacks = {
     startTime: number,
     deletions: Array<{
       type: string,
-      name?: string,
+      name?: string | null,
       endTime: number,
     }>,
   ) => void,
