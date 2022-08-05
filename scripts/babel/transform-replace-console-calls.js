@@ -11,7 +11,7 @@ const helperModuleImports = require('@babel/helper-module-imports');
 module.exports = function replaceConsoleCalls(babel) {
   let consoleErrors = new WeakMap();
   function getConsoleError(path, file) {
-    if (!consoleErrors.has(file)) {
+    if (consoleErrors.has(file)) {
       consoleErrors.set(
         file,
         helperModuleImports.addNamed(
