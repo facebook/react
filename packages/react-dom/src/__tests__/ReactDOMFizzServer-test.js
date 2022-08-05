@@ -128,6 +128,8 @@ describe('ReactDOMFizzServer', () => {
     buffer = '';
     const fakeBody = document.createElement('body');
     fakeBody.innerHTML = bufferedContent;
+    const parent =
+      container.nodeName === '#document' ? container.body : container;
     while (fakeBody.firstChild) {
       const node = fakeBody.firstChild;
       if (
@@ -137,11 +139,35 @@ describe('ReactDOMFizzServer', () => {
         const script = document.createElement('script');
         script.textContent = node.textContent;
         fakeBody.removeChild(node);
-        container.appendChild(script);
+        parent.appendChild(script);
       } else {
-        container.appendChild(node);
+        parent.appendChild(node);
       }
     }
+  }
+
+  async function actIntoEmptyDocument(callback) {
+    await callback();
+    // Await one turn around the event loop.
+    // This assumes that we'll flush everything we have so far.
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+    if (hasErrored) {
+      throw fatalError;
+    }
+    // JSDOM doesn't support stream HTML parser so we need to give it a proper fragment.
+    // We also want to execute any scripts that are embedded.
+    // We assume that we have now received a proper fragment of HTML.
+    const bufferedContent = buffer;
+    // Test Environment
+    const jsdom = new JSDOM(bufferedContent, {
+      runScripts: 'dangerously',
+    });
+    window = jsdom.window;
+    document = jsdom.window.document;
+    container = document;
+    buffer = '';
   }
 
   function getVisibleChildren(element) {
@@ -4192,6 +4218,113 @@ describe('ReactDOMFizzServer', () => {
         <p>some {'text'}</p>
       </div>,
     );
+  });
+
+  it('emits html and head start tags (the preamble) before other content if rendered in the shell', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <>
+          <title data-baz="baz">a title</title>
+          <html data-foo="foo">
+            <head data-bar="bar" />
+            <body>a body</body>
+          </html>
+        </>,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-foo="foo">
+        <head data-bar="bar">
+          <title data-baz="baz">a title</title>
+        </head>
+        <body>a body</body>
+      </html>,
+    );
+
+    // Hydrate the same thing on the client. We expect this to still fail because <title> is not a Resource
+    // and is unmatched on hydration
+    const errors = [];
+    const root = ReactDOMClient.hydrateRoot(
+      document,
+      <>
+        <title data-baz="baz">a title</title>
+        <html data-foo="foo">
+          <head data-bar="bar" />
+          <body>a body</body>
+        </html>
+      </>,
+      {
+        onRecoverableError: (err, errInfo) => {
+          errors.push(err.message);
+        },
+      },
+    );
+    expect(() => {
+      try {
+        expect(() => {
+          expect(Scheduler).toFlushWithoutYielding();
+        }).toThrow('Invalid insertion of HTML node in #document node.');
+      } catch (e) {
+        console.log('e', e);
+      }
+    }).toErrorDev(
+      [
+        'Warning: Expected server HTML to contain a matching <title> in <#document>.',
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+        'Warning: validateDOMNesting(...): <title> cannot appear as a child of <#document>',
+      ],
+      {withoutStack: 1},
+    );
+    expect(errors).toEqual([
+      'Hydration failed because the initial UI does not match what was rendered on the server.',
+      'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+    ]);
+  });
+
+  it('holds back body and html closing tags (the postamble) until all pending tasks are completed', async () => {
+    const chunks = [];
+    writable.on('data', chunk => {
+      chunks.push(chunk);
+    });
+
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <head />
+          <body>
+            first
+            <Suspense>
+              <AsyncText text="second" />
+            </Suspense>
+          </body>
+        </html>,
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>{'first'}</body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('second');
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          {'first'}
+          {'second'}
+        </body>
+      </html>,
+    );
+
+    expect(chunks.pop()).toEqual('</body></html>');
   });
 
   describe('text separators', () => {

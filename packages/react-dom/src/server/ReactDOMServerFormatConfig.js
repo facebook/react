@@ -242,6 +242,26 @@ export function getChildFormatContext(
   return parentContext;
 }
 
+export function isPreambleInsertion(type: string): boolean {
+  switch (type) {
+    case 'html':
+    case 'head': {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isPostambleInsertion(type: string): boolean {
+  switch (type) {
+    case 'body':
+    case 'html': {
+      return true;
+    }
+  }
+  return false;
+}
+
 export type SuspenseBoundaryID = null | PrecomputedChunk;
 
 export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID: SuspenseBoundaryID = null;
@@ -1405,11 +1425,13 @@ const DOCTYPE: PrecomputedChunk = stringToPrecomputedChunk('<!DOCTYPE html>');
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
+  preamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
 ): ReactNodeList {
+  target = isPreambleInsertion(type) ? preamble : target;
   if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
@@ -1521,9 +1543,11 @@ const endTag2 = stringToPrecomputedChunk('>');
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
+  postamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {
+  target = isPostambleInsertion(type) ? postamble : target;
   switch (type) {
     // Omitted close tags
     // TODO: Instead of repeating this switch we could try to pass a flag from above.
