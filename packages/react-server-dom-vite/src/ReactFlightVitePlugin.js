@@ -50,7 +50,13 @@ export default function ReactFlightVitePlugin({
   return {
     name: 'vite-plugin-react-server-components',
     enforce: 'pre',
-
+    buildStart() {
+      // Let other plugins differentiate between pure SSR and RSC builds
+      if (config?.build?.ssr) process.env.VITE_RSC_BUILD = 'true';
+    },
+    buildEnd() {
+      if (config?.build?.ssr) delete process.env.VITE_RSC_BUILD;
+    },
     configureServer(_server: any) {
       server = _server;
 
