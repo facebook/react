@@ -7,11 +7,13 @@
  * @flow
  */
 
+import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
+
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import type {Flags} from './ReactFiberFlags';
+import {PlacementDEV} from './ReactFiberFlags';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {EventPriority} from './ReactEventPriorities.new';
 import type {
@@ -90,7 +92,13 @@ import {
 } from './ReactFiber.new';
 import {isRootDehydrated} from './ReactFiberShellHydration';
 import {didSuspendOrErrorWhileHydratingDEV} from './ReactFiberHydrationContext.new';
-import {NoMode, ProfileMode, ConcurrentMode} from './ReactTypeOfMode';
+import {
+  NoMode,
+  ProfileMode,
+  ConcurrentMode,
+  StrictLegacyMode,
+  StrictEffectsMode,
+} from './ReactTypeOfMode';
 import {
   HostRoot,
   IndeterminateComponent,
@@ -104,7 +112,7 @@ import {
   SimpleMemoComponent,
   Profiler,
 } from './ReactWorkTags';
-import {LegacyRoot} from './ReactRootTags';
+import {ConcurrentRoot, LegacyRoot} from './ReactRootTags';
 import {
   NoFlags,
   Incomplete,
@@ -115,8 +123,6 @@ import {
   MutationMask,
   LayoutMask,
   PassiveMask,
-  MountPassiveDev,
-  MountLayoutDev,
 } from './ReactFiberFlags';
 import {
   NoLanes,
@@ -176,11 +182,12 @@ import {
   commitPassiveEffectDurations,
   commitPassiveMountEffects,
   commitPassiveUnmountEffects,
-  invokeLayoutEffectMountInDEV,
-  invokePassiveEffectMountInDEV,
-  invokeLayoutEffectUnmountInDEV,
-  invokePassiveEffectUnmountInDEV,
+  disappearLayoutEffects,
+  reconnectPassiveEffects,
+  reappearLayoutEffects,
+  disconnectPassiveEffect,
   reportUncaughtErrorInDEV,
+  setEnableProfilingDEV,
 } from './ReactFiberCommitWork.new';
 import {enqueueUpdate} from './ReactFiberClassUpdateQueue.new';
 import {resetContextDependencies} from './ReactFiberNewContext.new';
@@ -2422,7 +2429,7 @@ function commitRootImpl(
 
   if (__DEV__ && enableStrictEffects) {
     if (!rootDidHavePassiveEffects) {
-      commitDoubleInvokeEffectsInDEV(root.current, false);
+      commitDoubleInvokeEffectsInDEV(root, false);
     }
   }
 
@@ -2639,7 +2646,7 @@ function flushPassiveEffectsImpl() {
   }
 
   if (__DEV__ && enableStrictEffects) {
-    commitDoubleInvokeEffectsInDEV(root.current, true);
+    commitDoubleInvokeEffectsInDEV(root, true);
   }
 
   executionContext = prevExecutionContext;
@@ -2993,64 +3000,72 @@ function flushRenderPhaseStrictModeWarningsInDEV() {
   }
 }
 
-function commitDoubleInvokeEffectsInDEV(
+function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+  root: FiberRoot,
   fiber: Fiber,
   hasPassiveEffects: boolean,
+  doubleInvokeEffects: boolean,
 ) {
-  if (__DEV__ && enableStrictEffects) {
-    // TODO (StrictEffects) Should we set a marker on the root if it contains strict effects
-    // so we don't traverse unnecessarily? similar to subtreeFlags but just at the root level.
-    // Maybe not a big deal since this is DEV only behavior.
+  if (fiber.type === REACT_STRICT_MODE_TYPE) {
+    doubleInvokeEffects = true;
+  }
 
-    setCurrentDebugFiberInDEV(fiber);
-    invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectUnmountInDEV);
-    if (hasPassiveEffects) {
-      invokeEffectsInDev(
-        fiber,
-        MountPassiveDev,
-        invokePassiveEffectUnmountInDEV,
-      );
+  if (fiber.flags & PlacementDEV || fiber.tag === OffscreenComponent) {
+    if (doubleInvokeEffects) {
+      disappearLayoutEffects(fiber);
     }
+    if (hasPassiveEffects && doubleInvokeEffects) {
+      disconnectPassiveEffect(fiber);
+    }
+    if (doubleInvokeEffects) {
+      reappearLayoutEffects(root, fiber.alternate, fiber, NoLanes, false);
+    }
+    if (hasPassiveEffects && doubleInvokeEffects) {
+      reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+    }
+  } else if (fiber.child !== null) {
+    recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+      root,
+      fiber.child,
+      hasPassiveEffects,
+      doubleInvokeEffects,
+    );
+  }
 
-    invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectMountInDEV);
-    if (hasPassiveEffects) {
-      invokeEffectsInDev(fiber, MountPassiveDev, invokePassiveEffectMountInDEV);
-    }
-    resetCurrentDebugFiberInDEV();
+  if (fiber.sibling !== null) {
+    recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+      root,
+      fiber.sibling,
+      hasPassiveEffects,
+      doubleInvokeEffects,
+    );
   }
 }
 
-function invokeEffectsInDev(
-  firstChild: Fiber,
-  fiberFlags: Flags,
-  invokeEffectFn: (fiber: Fiber) => void,
-): void {
+function commitDoubleInvokeEffectsInDEV(
+  root: FiberRoot,
+  hasPassiveEffects: boolean,
+) {
   if (__DEV__ && enableStrictEffects) {
-    // We don't need to re-check StrictEffectsMode here.
-    // This function is only called if that check has already passed.
+    let doubleInvokeEffects = true;
 
-    let current = firstChild;
-    let subtreeRoot = null;
-    while (current !== null) {
-      const primarySubtreeFlag = current.subtreeFlags & fiberFlags;
-      if (
-        current !== subtreeRoot &&
-        current.child !== null &&
-        primarySubtreeFlag !== NoFlags
-      ) {
-        current = current.child;
-      } else {
-        if ((current.flags & fiberFlags) !== NoFlags) {
-          invokeEffectFn(current);
-        }
-
-        if (current.sibling !== null) {
-          current = current.sibling;
-        } else {
-          current = subtreeRoot = current.return;
-        }
-      }
+    if (root.tag === LegacyRoot && !(root.current.mode & StrictLegacyMode)) {
+      doubleInvokeEffects = false;
     }
+    if (
+      root.tag === ConcurrentRoot &&
+      !(root.current.mode & (StrictLegacyMode | StrictEffectsMode))
+    ) {
+      doubleInvokeEffects = false;
+    }
+    setEnableProfilingDEV(false);
+    recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+      root,
+      root.current,
+      hasPassiveEffects,
+      doubleInvokeEffects,
+    );
+    setEnableProfilingDEV(true);
   }
 }
 

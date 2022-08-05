@@ -40,7 +40,6 @@ import {
   enableSchedulingProfiler,
   enableSuspenseCallback,
   enableScopeAPI,
-  enableStrictEffects,
   deletedTreeCleanUpLevel,
   enableUpdaterTracking,
   enableCache,
@@ -199,6 +198,7 @@ let nextEffect: Fiber | null = null;
 // Used for Profiling builds to track updaters.
 let inProgressLanes: Lanes | null = null;
 let inProgressRoot: FiberRoot | null = null;
+let enableProfilingDEV = true;
 
 export function reportUncaughtErrorInDEV(error: mixed) {
   // Wrapping each small part of the commit phase into a guarded
@@ -220,7 +220,8 @@ const callComponentWillUnmountWithTimer = function(current, instance) {
   if (
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
-    current.mode & ProfileMode
+    current.mode & ProfileMode &&
+    enableProfilingDEV
   ) {
     try {
       startLayoutEffectTimer();
@@ -264,7 +265,8 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
         if (
           enableProfilerTimer &&
           enableProfilerCommitHooks &&
-          current.mode & ProfileMode
+          current.mode & ProfileMode &&
+          enableProfilingDEV
         ) {
           try {
             startLayoutEffectTimer();
@@ -641,7 +643,7 @@ export function commitPassiveEffectDurations(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
 ): void {
-  if (enableProfilerTimer && enableProfilerCommitHooks) {
+  if (enableProfilerTimer && enableProfilerCommitHooks && enableProfilingDEV) {
     // Only Profilers with work in their subtree will have an Update effect scheduled.
     if ((finishedWork.flags & Update) !== NoFlags) {
       switch (finishedWork.tag) {
@@ -697,7 +699,8 @@ function commitHookLayoutEffects(finishedWork: Fiber, hookFlags: HookFlags) {
   if (
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
-    finishedWork.mode & ProfileMode
+    finishedWork.mode & ProfileMode &&
+    enableProfilingDEV
   ) {
     try {
       startLayoutEffectTimer();
@@ -754,7 +757,8 @@ function commitClassLayoutLifecycles(
     if (
       enableProfilerTimer &&
       enableProfilerCommitHooks &&
-      finishedWork.mode & ProfileMode
+      finishedWork.mode & ProfileMode &&
+      enableProfilingDEV
     ) {
       try {
         startLayoutEffectTimer();
@@ -809,7 +813,8 @@ function commitClassLayoutLifecycles(
     if (
       enableProfilerTimer &&
       enableProfilerCommitHooks &&
-      finishedWork.mode & ProfileMode
+      finishedWork.mode & ProfileMode &&
+      enableProfilingDEV
     ) {
       try {
         startLayoutEffectTimer();
@@ -892,7 +897,7 @@ function commitHostComponentMount(finishedWork: Fiber) {
 }
 
 function commitProfilerUpdate(finishedWork: Fiber, current: Fiber | null) {
-  if (enableProfilerTimer) {
+  if (enableProfilerTimer && enableProfilingDEV) {
     try {
       const {onCommit, onRender} = finishedWork.memoizedProps;
       const {effectDuration} = finishedWork.stateNode;
@@ -1344,7 +1349,8 @@ function commitAttachRef(finishedWork: Fiber) {
       if (
         enableProfilerTimer &&
         enableProfilerCommitHooks &&
-        finishedWork.mode & ProfileMode
+        finishedWork.mode & ProfileMode &&
+        enableProfilingDEV
       ) {
         try {
           startLayoutEffectTimer();
@@ -1387,7 +1393,8 @@ function commitDetachRef(current: Fiber) {
       if (
         enableProfilerTimer &&
         enableProfilerCommitHooks &&
-        current.mode & ProfileMode
+        current.mode & ProfileMode &&
+        enableProfilingDEV
       ) {
         try {
           startLayoutEffectTimer();
@@ -1917,7 +1924,8 @@ function commitDeletionEffectsOnFiber(
                   if (
                     enableProfilerTimer &&
                     enableProfilerCommitHooks &&
-                    deletedFiber.mode & ProfileMode
+                    deletedFiber.mode & ProfileMode &&
+                    enableProfilingDEV
                   ) {
                     startLayoutEffectTimer();
                     safelyCallDestroy(
@@ -2240,7 +2248,8 @@ function commitMutationEffectsOnFiber(
         if (
           enableProfilerTimer &&
           enableProfilerCommitHooks &&
-          finishedWork.mode & ProfileMode
+          finishedWork.mode & ProfileMode &&
+          enableProfilingDEV
         ) {
           try {
             startLayoutEffectTimer();
@@ -2627,7 +2636,7 @@ function recursivelyTraverseLayoutEffects(
   setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
-function disappearLayoutEffects(finishedWork: Fiber) {
+export function disappearLayoutEffects(finishedWork: Fiber) {
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -2637,7 +2646,8 @@ function disappearLayoutEffects(finishedWork: Fiber) {
       if (
         enableProfilerTimer &&
         enableProfilerCommitHooks &&
-        finishedWork.mode & ProfileMode
+        finishedWork.mode & ProfileMode &&
+        enableProfilingDEV
       ) {
         try {
           startLayoutEffectTimer();
@@ -2709,7 +2719,7 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
   }
 }
 
-function reappearLayoutEffects(
+export function reappearLayoutEffects(
   finishedRoot: FiberRoot,
   current: Fiber | null,
   finishedWork: Fiber,
@@ -2879,7 +2889,8 @@ function commitHookPassiveMountEffects(
   if (
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
-    finishedWork.mode & ProfileMode
+    finishedWork.mode & ProfileMode &&
+    enableProfilingDEV
   ) {
     startPassiveEffectTimer();
     try {
@@ -3304,7 +3315,7 @@ function recursivelyTraverseReconnectPassiveEffects(
   setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
-function reconnectPassiveEffects(
+export function reconnectPassiveEffects(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
   committedLanes: Lanes,
@@ -3588,7 +3599,8 @@ function commitHookPassiveUnmountEffects(
   if (
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
-    finishedWork.mode & ProfileMode
+    finishedWork.mode & ProfileMode &&
+    enableProfilingDEV
   ) {
     startPassiveEffectTimer();
     commitHookEffectListUnmount(
@@ -3718,7 +3730,7 @@ function recursivelyTraverseDisconnectPassiveEffects(parentFiber: Fiber): void {
   setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
-function disconnectPassiveEffect(finishedWork: Fiber): void {
+export function disconnectPassiveEffect(finishedWork: Fiber): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -3870,112 +3882,10 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
   }
 }
 
-// TODO: Reuse reappearLayoutEffects traversal here?
-function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
-    // We don't need to re-check StrictEffectsMode here.
-    // This function is only called if that check has already passed.
-    switch (fiber.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent: {
-        try {
-          commitHookEffectListMount(HookLayout | HookHasEffect, fiber);
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
-        }
-        break;
-      }
-      case ClassComponent: {
-        const instance = fiber.stateNode;
-        try {
-          instance.componentDidMount();
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
-        }
-        break;
-      }
-    }
+export function setEnableProfilingDEV(_enableProfilingDEV: boolean) {
+  if (__DEV__) {
+    enableProfilingDEV = _enableProfilingDEV;  
   }
 }
 
-function invokePassiveEffectMountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
-    // We don't need to re-check StrictEffectsMode here.
-    // This function is only called if that check has already passed.
-    switch (fiber.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent: {
-        try {
-          commitHookEffectListMount(HookPassive | HookHasEffect, fiber);
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
-        }
-        break;
-      }
-    }
-  }
-}
-
-function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
-    // We don't need to re-check StrictEffectsMode here.
-    // This function is only called if that check has already passed.
-    switch (fiber.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent: {
-        try {
-          commitHookEffectListUnmount(
-            HookLayout | HookHasEffect,
-            fiber,
-            fiber.return,
-          );
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
-        }
-        break;
-      }
-      case ClassComponent: {
-        const instance = fiber.stateNode;
-        if (typeof instance.componentWillUnmount === 'function') {
-          safelyCallComponentWillUnmount(fiber, fiber.return, instance);
-        }
-        break;
-      }
-    }
-  }
-}
-
-function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
-    // We don't need to re-check StrictEffectsMode here.
-    // This function is only called if that check has already passed.
-    switch (fiber.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent: {
-        try {
-          commitHookEffectListUnmount(
-            HookPassive | HookHasEffect,
-            fiber,
-            fiber.return,
-          );
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
-        }
-      }
-    }
-  }
-}
-
-export {
-  commitPlacement,
-  commitAttachRef,
-  commitDetachRef,
-  invokeLayoutEffectMountInDEV,
-  invokeLayoutEffectUnmountInDEV,
-  invokePassiveEffectMountInDEV,
-  invokePassiveEffectUnmountInDEV,
-};
+export {commitPlacement, commitAttachRef, commitDetachRef};
