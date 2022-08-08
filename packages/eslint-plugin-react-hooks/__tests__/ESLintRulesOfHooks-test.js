@@ -1000,31 +1000,31 @@ const tests = {
       `,
       errors: [conditionalError('hooks.useFoo', true)],
     },
-    {
-      code: `
-        function createHooks() {
-          return {
-            foo: {
-              useQuery: () => {
-                data: 'foo.useQuery'
-              },
-            }
-          };
-        }
-        const hooks = createHooks();
+    // {
+    //   code: `
+    //     function createHooks() {
+    //       return {
+    //         foo: {
+    //           useQuery: () => {
+    //             data: 'foo.useQuery'
+    //           },
+    //         }
+    //       };
+    //     }
+    //     const hooks = createHooks();
 
-        const MyComponent = () => {
-          if (a) {
-            return;
-          }
-          const query = hooks.foo.useQuery();
+    //     const MyComponent = () => {
+    //       if (a) {
+    //         return;
+    //       }
+    //       const query = hooks.foo.useQuery();
 
-          return <>{query.data}</>;
-        }
-      `,
-      errors: [conditionalError('hooks.useFoo.useQuery')],
-      only: true,
-    },
+    //       return <>{query.data}</>;
+    //     }
+    //   `,
+    //   errors: [conditionalError('hooks.useFoo.useQuery')],
+    //   only: true,
+    // },
   ],
 };
 
