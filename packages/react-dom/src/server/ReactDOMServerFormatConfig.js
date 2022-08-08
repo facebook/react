@@ -20,6 +20,7 @@ import {Children} from 'react';
 import {
   enableFilterEmptyStringAttributesDOM,
   enableCustomElementPropertySupport,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 
 import type {
@@ -1076,6 +1077,52 @@ function pushStartTextArea(
   return null;
 }
 
+function pushLink(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+): ReactNodeList {
+  const isStylesheet = props.rel === 'stylesheet';
+  target.push(startChunkForTag('link'));
+
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+        case 'dangerouslySetInnerHTML':
+          throw new Error(
+            `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
+              'use `dangerouslySetInnerHTML`.',
+          );
+        case 'precedence': {
+          if (isStylesheet) {
+            if (propValue === true || typeof propValue === 'string') {
+              pushAttribute(target, responseState, 'data-rprec', propValue);
+            } else if (__DEV__) {
+              throw new Error(
+                `the "precedence" prop for links to stylehseets expects to receive a string but received something of type "${typeof propValue}" instead.`,
+              );
+            }
+            break;
+          }
+          // intentionally fall through
+        }
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+
+  target.push(endOfStartTagSelfClosing);
+  return null;
+}
+
 function pushSelfClosing(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -1425,13 +1472,14 @@ const DOCTYPE: PrecomputedChunk = stringToPrecomputedChunk('<!DOCTYPE html>');
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  preamble: Array<Chunk | PrecomputedChunk>,
+  preamble: ?Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
 ): ReactNodeList {
-  target = isPreambleInsertion(type) ? preamble : target;
+  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
+  target = enableFloat && isPreambleInsertion(type) ? (preamble: any) : target;
   if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
@@ -1483,6 +1531,8 @@ export function pushStartInstance(
       return pushStartMenuItem(target, props, responseState);
     case 'title':
       return pushStartTitle(target, props, responseState);
+    case 'link':
+      return pushLink(target, props, responseState);
     // Newline eating tags
     case 'listing':
     case 'pre': {
@@ -1497,7 +1547,6 @@ export function pushStartInstance(
     case 'hr':
     case 'img':
     case 'keygen':
-    case 'link':
     case 'meta':
     case 'param':
     case 'source':
@@ -1543,11 +1592,13 @@ const endTag2 = stringToPrecomputedChunk('>');
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  postamble: Array<Chunk | PrecomputedChunk>,
+  postamble: ?Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {
-  target = isPostambleInsertion(type) ? postamble : target;
+  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
+  target =
+    enableFloat && isPostambleInsertion(type) ? (postamble: any) : target;
   switch (type) {
     // Omitted close tags
     // TODO: Instead of repeating this switch we could try to pass a flag from above.

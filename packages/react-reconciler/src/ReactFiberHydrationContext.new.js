@@ -34,6 +34,7 @@ import {
   NoFlags,
   DidCapture,
 } from './ReactFiberFlags';
+import {enableFloat} from 'shared/ReactFeatureFlags';
 
 import {
   createFiberFromHostInstanceForDeletion,
@@ -45,7 +46,9 @@ import {
   canHydrateInstance,
   canHydrateTextInstance,
   canHydrateSuspenseInstance,
+  isHydratableResource,
   getNextHydratableSibling,
+  getMatchingResourceInstance,
   getFirstHydratableChild,
   getFirstHydratableChildWithinContainer,
   getFirstHydratableChildWithinSuspenseInstance,
@@ -75,6 +78,7 @@ import {
   restoreSuspendedTreeContext,
 } from './ReactFiberTreeContext.new';
 import {queueRecoverableErrors} from './ReactFiberWorkLoop.new';
+import {getRootHostContainer} from './ReactFiberHostContext.new';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -404,6 +408,22 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
     return;
   }
+  if (enableFloat) {
+    if (
+      fiber.tag === HostComponent &&
+      isHydratableResource(fiber.type, fiber.pendingProps)
+    ) {
+      const resourceInstance = getMatchingResourceInstance(
+        fiber.type,
+        fiber.pendingProps,
+        getRootHostContainer(),
+      );
+      if (resourceInstance) {
+        fiber.stateNode = resourceInstance;
+        return;
+      }
+    }
+  }
   let nextInstance = nextHydratableInstance;
   if (!nextInstance) {
     if (shouldClientRenderOnMismatch(fiber)) {
@@ -595,6 +615,9 @@ function popToNextHostParent(fiber: Fiber): void {
 function popHydrationState(fiber: Fiber): boolean {
   if (!supportsHydration) {
     return false;
+  }
+  if (enableFloat && isHydratableResource(fiber.type, fiber.memoizedProps)) {
+    return !!fiber.stateNode;
   }
   if (fiber !== hydrationParentFiber) {
     // We're deeper than the current hydration context, inside an inserted

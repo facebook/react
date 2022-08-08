@@ -4220,6 +4220,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  // @gate enableFloat
   it('emits html and head start tags (the preamble) before other content if rendered in the shell', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -4245,7 +4246,7 @@ describe('ReactDOMFizzServer', () => {
     // Hydrate the same thing on the client. We expect this to still fail because <title> is not a Resource
     // and is unmatched on hydration
     const errors = [];
-    const root = ReactDOMClient.hydrateRoot(
+    ReactDOMClient.hydrateRoot(
       document,
       <>
         <title data-baz="baz">a title</title>
@@ -4280,8 +4281,13 @@ describe('ReactDOMFizzServer', () => {
       'Hydration failed because the initial UI does not match what was rendered on the server.',
       'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
     ]);
+    expect(getVisibleChildren(document)).toEqual();
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toThrow('The node to be removed is not a child of this node.');
   });
 
+  // @gate enableFloat
   it('holds back body and html closing tags (the postamble) until all pending tasks are completed', async () => {
     const chunks = [];
     writable.on('data', chunk => {
@@ -4325,6 +4331,119 @@ describe('ReactDOMFizzServer', () => {
     );
 
     expect(chunks.pop()).toEqual('</body></html>');
+  });
+
+  // @gate enableFloat
+  it('recognizes stylesheet links as attributes during hydration', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <>
+          <link rel="stylesheet" href="foo" precedence="default" />
+          <html>
+            <head>
+              <link rel="author" precedence="this is a nonsense prop" />
+            </head>
+            <body>a body</body>
+          </html>
+        </>,
+      );
+      pipe(writable);
+    });
+    // precedence for stylesheets is mapped to a valid data attribute that is recognized on the client
+    // as opting this node into resource semantics. the use of precedence on the author link is just a
+    // non standard attribute which React allows but is not given any special treatment.
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-rprec="default" />
+          <link rel="author" precedence="this is a nonsense prop" />
+        </head>
+        <body>a body</body>
+      </html>,
+    );
+
+    // It hydrates successfully
+    ReactDOMClient.hydrateRoot(
+      document,
+      <>
+        <link rel="stylesheet" href="foo" precedence="default" />
+        <html>
+          <head>
+            <link rel="author" precedence="this is a nonsense prop" />
+          </head>
+          <body>a body</body>
+        </html>
+      </>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-rprec="default" />
+          <link rel="author" precedence="this is a nonsense prop" />
+        </head>
+        <body>a body</body>
+      </html>,
+    );
+  });
+
+  // @gate __DEV__ && enableFloat
+  it('should error in dev when rendering more than one resource for a given location (href)', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <>
+          <link rel="stylesheet" href="foo" precedence="low" />
+          <link rel="stylesheet" href="foo" precedence="high" />
+          <html>
+            <head />
+            <body>a body</body>
+          </html>
+        </>,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-rprec="low" />
+          <link rel="stylesheet" href="foo" data-rprec="high" />
+        </head>
+        <body>a body</body>
+      </html>,
+    );
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(
+      document,
+      <>
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" precedence="low" />
+            <link rel="stylesheet" href="foo" precedence="high" />
+          </head>
+          <body>a body</body>
+        </html>
+      </>,
+      {
+        onRecoverableError(err, errInfo) {
+          errors.push(err.message);
+        },
+      },
+    );
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toErrorDev(
+      [
+        'An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+      ],
+      {withoutStack: true},
+    );
+    expect(errors).toEqual([
+      'Stylesheet resources need a unique representation in the DOM while hydrating and more than one matching DOM Node was found. To fix, ensure you are only rendering one stylesheet link with an href attribute of "foo".',
+      'Stylesheet resources need a unique representation in the DOM while hydrating and more than one matching DOM Node was found. To fix, ensure you are only rendering one stylesheet link with an href attribute of "foo".',
+      'Hydration failed because the initial UI does not match what was rendered on the server.',
+      'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+    ]);
   });
 
   describe('text separators', () => {
