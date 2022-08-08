@@ -426,8 +426,8 @@ const tests = {
 
         return <>{query.data}</>;
       }
-      `
-    }
+      `,
+    },
   ],
   invalid: [
     {

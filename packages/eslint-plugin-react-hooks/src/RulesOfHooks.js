@@ -22,7 +22,7 @@ function isHookName(s) {
 /**
  * Namespaces that are not considered hooks
  */
-const nonHookNamespaces = ['jest']
+const nonHookNamespaces = ['jest'];
 
 /**
  * We consider hooks to be a hook name identifier or a member expression
@@ -30,6 +30,11 @@ const nonHookNamespaces = ['jest']
  */
 
 function isHook(node) {
+  console.log('isHook', {
+    type: node.type,
+    name: node.name,
+    ishookName: isHookName(node.name),
+  });
   if (node.type === 'Identifier') {
     return isHookName(node.name);
   } else if (
@@ -38,7 +43,7 @@ function isHook(node) {
     isHook(node.property)
   ) {
     const obj = node.object;
-    return obj.type === 'Identifier' && !nonHookNamespaces.includes(obj.name)
+    return obj.type === 'Identifier' && !nonHookNamespaces.includes(obj.name);
   } else {
     return false;
   }
@@ -165,7 +170,7 @@ export default {
          */
 
         function countPathsFromStart(segment, pathHistory) {
-          const { cache } = countPathsFromStart;
+          const {cache} = countPathsFromStart;
           let paths = cache.get(segment.id);
           const pathList = new Set(pathHistory);
 
@@ -236,7 +241,7 @@ export default {
          */
 
         function countPathsToEnd(segment, pathHistory) {
-          const { cache } = countPathsToEnd;
+          const {cache} = countPathsToEnd;
           let paths = cache.get(segment.id);
           const pathList = new Set(pathHistory);
 
@@ -300,7 +305,7 @@ export default {
          */
 
         function shortestPathLengthToStart(segment) {
-          const { cache } = shortestPathLengthToStart;
+          const {cache} = shortestPathLengthToStart;
           let length = cache.get(segment.id);
 
           // If `length` is null then we found a cycle! Return infinity since
@@ -355,7 +360,7 @@ export default {
         );
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
-          isHook(codePathFunctionName)
+            isHook(codePathFunctionName)
           : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode);
 
         // Compute the earliest finalizer level using information from the
@@ -463,9 +468,9 @@ export default {
                   'same order in every component render.' +
                   (possiblyHasEarlyReturn
                     ? ' Did you accidentally call a React Hook after an' +
-                    ' early return?'
+                      ' early return?'
                     : '');
-                context.report({ node: hook, message });
+                context.report({node: hook, message});
               }
             } else if (
               codePathNode.parent &&
@@ -478,7 +483,7 @@ export default {
                 `React Hook "${context.getSource(hook)}" cannot be called ` +
                 'in a class component. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
-              context.report({ node: hook, message });
+              context.report({node: hook, message});
             } else if (codePathFunctionName) {
               // Custom message if we found an invalid function name.
               const message =
@@ -488,14 +493,14 @@ export default {
                 'React Hook function.' +
                 ' React component names must start with an uppercase letter.' +
                 ' React Hook names must start with the word "use".';
-              context.report({ node: hook, message });
+              context.report({node: hook, message});
             } else if (codePathNode.type === 'Program') {
               // These are dangerous if you have inline requires enabled.
               const message =
                 `React Hook "${context.getSource(hook)}" cannot be called ` +
                 'at the top level. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
-              context.report({ node: hook, message });
+              context.report({node: hook, message});
             } else {
               // Assume in all other cases the user called a hook in some
               // random function callback. This should usually be true for
@@ -507,7 +512,7 @@ export default {
                   `React Hook "${context.getSource(hook)}" cannot be called ` +
                   'inside a callback. React Hooks must be called in a ' +
                   'React function component or a custom React Hook function.';
-                context.report({ node: hook, message });
+                context.report({node: hook, message});
               }
             }
           }
