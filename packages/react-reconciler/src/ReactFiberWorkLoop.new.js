@@ -280,6 +280,12 @@ let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
+// When this is true, the work-in-progress fiber just suspended (or errored) and
+// we've yet to unwind the stack. In some cases, we may yield to the main thread
+// after this happens. If the fiber is pinged before we resume, we can retry
+// immediately instead of unwinding the stack.
+let workInProgressIsSuspended: boolean = false;
+
 // A contextual version of workInProgressRootRenderLanes. It is a superset of
 // the lanes that we started working on at the root. When we enter a subtree
 // that is currently hidden, we add the lanes that would have committed if
@@ -1548,6 +1554,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   const rootWorkInProgress = createWorkInProgress(root.current, null);
   workInProgress = rootWorkInProgress;
   workInProgressRootRenderLanes = renderLanes = lanes;
+  workInProgressIsSuspended = false;
   workInProgressRootExitStatus = RootInProgress;
   workInProgressRootFatalError = null;
   workInProgressRootSkippedLanes = NoLanes;
@@ -1632,7 +1639,11 @@ function handleError(root, thrownValue): void {
         thrownValue,
         workInProgressRootRenderLanes,
       );
-      completeUnitOfWork(erroredWork);
+      // Setting this to `true` tells the work loop to unwind the stack instead
+      // of entering the begin phase. It's called "suspended" because it usually
+      // happens because of Suspense, but it also applies to errors. Think of it
+      // as suspending the execution of the work loop.
+      workInProgressIsSuspended = true;
     } catch (yetAnotherThrownValue) {
       // Something in the return path also threw.
       thrownValue = yetAnotherThrownValue;
@@ -1810,7 +1821,14 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
 // The work loop is an extremely hot path. Tell Closure not to inline it.
 /** @noinline */
 function workLoopSync() {
-  // Already timed out, so perform work without checking if we need to yield.
+  // Perform work without checking if we need to yield between fiber.
+
+  if (workInProgressIsSuspended && workInProgress !== null) {
+    // The current work-in-progress was already attempted. We need to unwind
+    // it before we continue the normal work loop.
+    resumeSuspendedUnitOfWork(workInProgress);
+  }
+
   while (workInProgress !== null) {
     performUnitOfWork(workInProgress);
   }
@@ -1899,6 +1917,13 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 /** @noinline */
 function workLoopConcurrent() {
   // Perform work until Scheduler asks us to yield
+
+  if (workInProgressIsSuspended && workInProgress !== null) {
+    // The current work-in-progress was already attempted. We need to unwind
+    // it before we continue the normal work loop.
+    resumeSuspendedUnitOfWork(workInProgress);
+  }
+
   while (workInProgress !== null && !shouldYield()) {
     performUnitOfWork(workInProgress);
   }
@@ -1930,6 +1955,14 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   }
 
   ReactCurrentOwner.current = null;
+}
+
+function resumeSuspendedUnitOfWork(unitOfWork: Fiber): void {
+  // This is a fork of performUnitOfWork specifcally for resuming a fiber that
+  // just suspended. It's a separate function to keep the additional logic out
+  // of the work loop's hot path.
+  workInProgressIsSuspended = false;
+  completeUnitOfWork(unitOfWork);
 }
 
 function completeUnitOfWork(unitOfWork: Fiber): void {
