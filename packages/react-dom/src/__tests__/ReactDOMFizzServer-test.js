@@ -4375,16 +4375,34 @@ describe('ReactDOMFizzServer', () => {
         </html>
       </>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
-    expect(getVisibleChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-rprec="default" />
-          <link rel="author" precedence="this is a nonsense prop" />
-        </head>
-        <body>a body</body>
-      </html>,
-    );
+    // We manually capture uncaught errors b/c Jest does not play well with errors thrown in
+    // microtasks after the test completes even when it is expecting to fail (e.g. when the gate is false)
+    // We need to flush the scheduler at the end even if there was an earlier throw otherwise this test will
+    // fail even when failure is expected. This is primarily caused by invokeGuardedCallback replaying commit
+    // phase errors which get rethrown in a microtask
+    const uncaughtErrors = [];
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-rprec="default" />
+            <link rel="author" precedence="this is a nonsense prop" />
+          </head>
+          <body>a body</body>
+        </html>,
+      );
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+    if (uncaughtErrors.length > 0) {
+      throw uncaughtErrors[0];
+    }
   });
 
   // @gate __DEV__ && enableFloat
