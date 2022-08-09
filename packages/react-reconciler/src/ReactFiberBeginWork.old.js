@@ -89,6 +89,7 @@ import {
   StaticMask,
   ShouldCapture,
   ForceClientRender,
+  Passive,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -979,10 +980,17 @@ function updateTracingMarkerComponent(
       const markerInstance: TracingMarkerInstance = {
         tag: TransitionTracingMarker,
         transitions: new Set(currentTransitions),
-        pendingBoundaries: new Map(),
+        pendingBoundaries: null,
         name: workInProgress.pendingProps.name,
+        aborts: null,
       };
       workInProgress.stateNode = markerInstance;
+
+      // We call the marker complete callback when all child suspense boundaries resolve.
+      // We do this in the commit phase on Offscreen. If the marker has no child suspense
+      // boundaries, we need to schedule a passive effect to make sure we call the marker
+      // complete callback.
+      workInProgress.flags |= Passive;
     }
   } else {
     if (__DEV__) {
