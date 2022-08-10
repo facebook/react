@@ -3859,7 +3859,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Suspend! [A2]',
         'Loading...',
         'Suspend! [B2]',
-        'Loading...',
       ]);
       expect(root).toMatchRenderedOutput(
         <>

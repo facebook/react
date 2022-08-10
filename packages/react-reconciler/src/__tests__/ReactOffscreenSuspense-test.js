@@ -485,22 +485,33 @@ describe('ReactOffscreen', () => {
       // In the same render, also hide the offscreen tree.
       root.render(<App show={false} />);
 
-      expect(Scheduler).toFlushUntilNextPaint([
-        // The outer update will commit, but the inner update is deferred until
-        // a later render.
-        'Outer: 1',
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        expect(Scheduler).toFlushUntilNextPaint([
+          // The outer update will commit, but the inner update is deferred until
+          // a later render.
+          'Outer: 1',
 
-        // Something suspended. This means we won't commit immediately; there
-        // will be an async gap between render and commit. In this test, we will
-        // use this property to schedule a concurrent update. The fact that
-        // we're using Suspense to schedule a concurrent update is not directly
-        // relevant to the test — we could also use time slicing, but I've
-        // chosen to use Suspense the because implementation details of time
-        // slicing are more volatile.
-        'Suspend! [Async: 1]',
+          // Something suspended. This means we won't commit immediately; there
+          // will be an async gap between render and commit. In this test, we will
+          // use this property to schedule a concurrent update. The fact that
+          // we're using Suspense to schedule a concurrent update is not directly
+          // relevant to the test — we could also use time slicing, but I've
+          // chosen to use Suspense the because implementation details of time
+          // slicing are more volatile.
+          'Suspend! [Async: 1]',
 
-        'Loading...',
-      ]);
+          'Loading...',
+        ]);
+      } else {
+        // When default updates are time sliced, React yields before preparing
+        // the fallback.
+        expect(Scheduler).toFlushUntilNextPaint([
+          'Outer: 1',
+          'Suspend! [Async: 1]',
+        ]);
+        expect(Scheduler).toFlushUntilNextPaint(['Loading...']);
+      }
+
       // Assert that we haven't committed quite yet
       expect(root).toMatchRenderedOutput(
         <>

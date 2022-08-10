@@ -357,7 +357,7 @@ function throwException(
   sourceFiber: Fiber,
   value: mixed,
   rootRenderLanes: Lanes,
-) {
+): Wakeable | null {
   // The source fiber did not complete.
   sourceFiber.flags |= Incomplete;
 
@@ -459,7 +459,7 @@ function throwException(
       if (suspenseBoundary.mode & ConcurrentMode) {
         attachPingListener(root, wakeable, rootRenderLanes);
       }
-      return;
+      return wakeable;
     } else {
       // No boundary was found. Unless this is a sync update, this is OK.
       // We can suspend and wait for more data to arrive.
@@ -474,7 +474,7 @@ function throwException(
         // This case also applies to initial hydration.
         attachPingListener(root, wakeable, rootRenderLanes);
         renderDidSuspendDelayIfPossible();
-        return;
+        return wakeable;
       }
 
       // This is a sync/discrete update. We treat this case like an error
@@ -517,7 +517,7 @@ function throwException(
         // Even though the user may not be affected by this error, we should
         // still log it so it can be fixed.
         queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
-        return;
+        return null;
       }
     } else {
       // Otherwise, fall through to the error path.
@@ -540,7 +540,7 @@ function throwException(
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
         const update = createRootErrorUpdate(workInProgress, errorInfo, lane);
         enqueueCapturedUpdate(workInProgress, update);
-        return;
+        return null;
       }
       case ClassComponent:
         // Capture and retry
@@ -564,7 +564,7 @@ function throwException(
             lane,
           );
           enqueueCapturedUpdate(workInProgress, update);
-          return;
+          return null;
         }
         break;
       default:
@@ -572,6 +572,7 @@ function throwException(
     }
     workInProgress = workInProgress.return;
   } while (workInProgress !== null);
+  return null;
 }
 
 export {throwException, createRootErrorUpdate, createClassErrorUpdate};

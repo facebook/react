@@ -1573,7 +1573,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   return rootWorkInProgress;
 }
 
-function handleError(root, thrownValue): void {
+function handleError(root, thrownValue): Wakeable | null {
   do {
     let erroredWork = workInProgress;
     try {
@@ -1599,7 +1599,7 @@ function handleError(root, thrownValue): void {
         // intentionally not calling those, we need set it here.
         // TODO: Consider calling `unwindWork` to pop the contexts.
         workInProgress = null;
-        return;
+        return null;
       }
 
       if (enableProfilerTimer && erroredWork.mode & ProfileMode) {
@@ -1632,7 +1632,7 @@ function handleError(root, thrownValue): void {
         }
       }
 
-      throwException(
+      const maybeWakeable = throwException(
         root,
         erroredWork.return,
         erroredWork,
@@ -1644,6 +1644,9 @@ function handleError(root, thrownValue): void {
       // happens because of Suspense, but it also applies to errors. Think of it
       // as suspending the execution of the work loop.
       workInProgressIsSuspended = true;
+
+      // Return to the normal work loop.
+      return maybeWakeable;
     } catch (yetAnotherThrownValue) {
       // Something in the return path also threw.
       thrownValue = yetAnotherThrownValue;
@@ -1657,8 +1660,6 @@ function handleError(root, thrownValue): void {
       }
       continue;
     }
-    // Return to the normal work loop.
-    return;
   } while (true);
 }
 
@@ -1878,7 +1879,13 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
       workLoopConcurrent();
       break;
     } catch (thrownValue) {
-      handleError(root, thrownValue);
+      const maybeWakeable = handleError(root, thrownValue);
+      if (maybeWakeable !== null) {
+        // If this fiber just suspended, it's possible the data is already
+        // cached. Yield to the the main thread to give it a chance to ping. If
+        // it does, we can retry immediately without unwinding the stack.
+        break;
+      }
     }
   } while (true);
   resetContextDependencies();
