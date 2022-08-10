@@ -726,37 +726,53 @@ describe('Scheduler', () => {
       expect(Scheduler).toFlushWithoutYielding();
     });
 
-    it('requestYield forces a yield immediately', () => {
+    it('toFlushUntilNextPaint stops if a continuation is returned', () => {
       scheduleCallback(NormalPriority, () => {
         Scheduler.unstable_yieldValue('Original Task');
-        Scheduler.unstable_yieldValue(
-          'shouldYield: ' + Scheduler.unstable_shouldYield(),
-        );
-        Scheduler.unstable_yieldValue('requestYield');
-        Scheduler.unstable_requestYield();
-        Scheduler.unstable_yieldValue(
-          'shouldYield: ' + Scheduler.unstable_shouldYield(),
-        );
+        Scheduler.unstable_yieldValue('shouldYield: ' + shouldYield());
+        Scheduler.unstable_yieldValue('Return a continuation');
         return () => {
           Scheduler.unstable_yieldValue('Continuation Task');
-          Scheduler.unstable_yieldValue(
-            'shouldYield: ' + Scheduler.unstable_shouldYield(),
-          );
-          Scheduler.unstable_yieldValue('Advance time past frame deadline');
-          Scheduler.unstable_yieldValue(
-            'shouldYield: ' + Scheduler.unstable_shouldYield(),
-          );
         };
       });
 
-      // The continuation should be scheduled in a separate macrotask.
       expect(Scheduler).toFlushUntilNextPaint([
         'Original Task',
+        // Immediately before returning a continuation, `shouldYield` returns
+        // false, which means there must be time remaining in the frame.
         'shouldYield: false',
-        'requestYield',
-        // Immediately after calling requestYield, shouldYield starts
-        // returning true
-        'shouldYield: true',
+        'Return a continuation',
+
+        // The continuation should not flush yet.
+      ]);
+
+      // No time has elapsed
+      expect(Scheduler.unstable_now()).toBe(0);
+
+      // Continue the task
+      expect(Scheduler).toFlushAndYield(['Continuation Task']);
+    });
+
+    it("toFlushAndYield keeps flushing even if there's a continuation", () => {
+      scheduleCallback(NormalPriority, () => {
+        Scheduler.unstable_yieldValue('Original Task');
+        Scheduler.unstable_yieldValue('shouldYield: ' + shouldYield());
+        Scheduler.unstable_yieldValue('Return a continuation');
+        return () => {
+          Scheduler.unstable_yieldValue('Continuation Task');
+        };
+      });
+
+      expect(Scheduler).toFlushAndYield([
+        'Original Task',
+        // Immediately before returning a continuation, `shouldYield` returns
+        // false, which means there must be time remaining in the frame.
+        'shouldYield: false',
+        'Return a continuation',
+
+        // The continuation should flush immediately, even though the task
+        // yielded a continuation.
+        'Continuation Task',
       ]);
     });
   });

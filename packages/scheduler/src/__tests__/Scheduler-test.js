@@ -18,7 +18,6 @@ let performance;
 let cancelCallback;
 let scheduleCallback;
 let requestPaint;
-let requestYield;
 let shouldYield;
 let NormalPriority;
 
@@ -44,7 +43,6 @@ describe('SchedulerBrowser', () => {
     scheduleCallback = Scheduler.unstable_scheduleCallback;
     NormalPriority = Scheduler.unstable_NormalPriority;
     requestPaint = Scheduler.unstable_requestPaint;
-    requestYield = Scheduler.unstable_requestYield;
     shouldYield = Scheduler.unstable_shouldYield;
   });
 
@@ -480,19 +478,13 @@ describe('SchedulerBrowser', () => {
     ]);
   });
 
-  it('requestYield forces a yield immediately', () => {
+  it('yielding continues in a new task regardless of how much time is remaining', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Original Task');
       runtime.log('shouldYield: ' + shouldYield());
-      runtime.log('requestYield');
-      requestYield();
-      runtime.log('shouldYield: ' + shouldYield());
+      runtime.log('Return a continuation');
       return () => {
         runtime.log('Continuation Task');
-        runtime.log('shouldYield: ' + shouldYield());
-        runtime.log('Advance time past frame deadline');
-        runtime.advanceTime(10000);
-        runtime.log('shouldYield: ' + shouldYield());
       };
     });
     runtime.assertLog(['Post Message']);
@@ -501,27 +493,20 @@ describe('SchedulerBrowser', () => {
     runtime.assertLog([
       'Message Event',
       'Original Task',
+      // Immediately before returning a continuation, `shouldYield` returns
+      // false, which means there must be time remaining in the frame.
       'shouldYield: false',
-      'requestYield',
-      // Immediately after calling requestYield, shouldYield starts
-      // returning true, even though no time has elapsed in the frame
-      'shouldYield: true',
+      'Return a continuation',
 
-      // The continuation should be scheduled in a separate macrotask.
+      // The continuation should be scheduled in a separate macrotask even
+      // though there's time remaining.
       'Post Message',
     ]);
 
     // No time has elapsed
     expect(performance.now()).toBe(0);
 
-    // Subsequent tasks work as normal
     runtime.fireMessageEvent();
-    runtime.assertLog([
-      'Message Event',
-      'Continuation Task',
-      'shouldYield: false',
-      'Advance time past frame deadline',
-      'shouldYield: true',
-    ]);
+    runtime.assertLog(['Message Event', 'Continuation Task']);
   });
 });

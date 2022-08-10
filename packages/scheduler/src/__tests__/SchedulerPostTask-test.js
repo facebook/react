@@ -23,7 +23,6 @@ let UserBlockingPriority;
 let LowPriority;
 let IdlePriority;
 let shouldYield;
-let requestYield;
 
 // The Scheduler postTask implementation uses a new postTask browser API to
 // schedule work on the main thread. This test suite mocks all browser methods
@@ -47,7 +46,6 @@ describe('SchedulerPostTask', () => {
     LowPriority = Scheduler.unstable_LowPriority;
     IdlePriority = Scheduler.unstable_IdlePriority;
     shouldYield = Scheduler.unstable_shouldYield;
-    requestYield = Scheduler.unstable_requestYield;
   });
 
   afterEach(() => {
@@ -301,19 +299,13 @@ describe('SchedulerPostTask', () => {
     ]);
   });
 
-  it('requestYield forces a yield immediately', () => {
+  it('yielding continues in a new task regardless of how much time is remaining', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Original Task');
       runtime.log('shouldYield: ' + shouldYield());
-      runtime.log('requestYield');
-      requestYield();
-      runtime.log('shouldYield: ' + shouldYield());
+      runtime.log('Return a continuation');
       return () => {
         runtime.log('Continuation Task');
-        runtime.log('shouldYield: ' + shouldYield());
-        runtime.log('Advance time past frame deadline');
-        runtime.advanceTime(10000);
-        runtime.log('shouldYield: ' + shouldYield());
       };
     });
     runtime.assertLog(['Post Task 0 [user-visible]']);
@@ -322,27 +314,20 @@ describe('SchedulerPostTask', () => {
     runtime.assertLog([
       'Task 0 Fired',
       'Original Task',
+      // Immediately before returning a continuation, `shouldYield` returns
+      // false, which means there must be time remaining in the frame.
       'shouldYield: false',
-      'requestYield',
-      // Immediately after calling requestYield, shouldYield starts
-      // returning true, even though no time has elapsed in the frame
-      'shouldYield: true',
+      'Return a continuation',
 
-      // The continuation should be scheduled in a separate macrotask.
+      // The continuation should be scheduled in a separate macrotask even
+      // though there's time remaining.
       'Post Task 1 [user-visible]',
     ]);
 
     // No time has elapsed
     expect(performance.now()).toBe(0);
 
-    // Subsequent tasks work as normal
     runtime.flushTasks();
-    runtime.assertLog([
-      'Task 1 Fired',
-      'Continuation Task',
-      'shouldYield: false',
-      'Advance time past frame deadline',
-      'shouldYield: true',
-    ]);
+    runtime.assertLog(['Task 1 Fired', 'Continuation Task']);
   });
 });

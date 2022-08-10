@@ -195,9 +195,21 @@ function workLoop(hasTimeRemaining, initialTime) {
       const continuationCallback = callback(didUserCallbackTimeout);
       currentTime = getCurrentTime();
       if (typeof continuationCallback === 'function') {
+        // If a continuation is returned, immediately yield to the main thread
+        // regardless of how much time is left in the current time slice.
         currentTask.callback = continuationCallback;
         if (enableProfiling) {
           markTaskYield(currentTask, currentTime);
+        }
+        advanceTimers(currentTime);
+
+        if (shouldYieldForPaint) {
+          needsPaint = true;
+          return true;
+        } else {
+          // If `shouldYieldForPaint` is false, we keep flushing synchronously
+          // without yielding to the main thread. This is the behavior of the
+          // `toFlushAndYield` and `toFlushAndYieldThrough` testing helpers .
         }
       } else {
         if (enableProfiling) {
@@ -207,8 +219,8 @@ function workLoop(hasTimeRemaining, initialTime) {
         if (currentTask === peek(taskQueue)) {
           pop(taskQueue);
         }
+        advanceTimers(currentTime);
       }
-      advanceTimers(currentTime);
     } else {
       pop(taskQueue);
     }
@@ -608,11 +620,6 @@ function requestPaint() {
   needsPaint = true;
 }
 
-function requestYield() {
-  // Force a yield at the next opportunity.
-  shouldYieldForPaint = needsPaint = true;
-}
-
 export {
   ImmediatePriority as unstable_ImmediatePriority,
   UserBlockingPriority as unstable_UserBlockingPriority,
@@ -627,7 +634,6 @@ export {
   unstable_getCurrentPriorityLevel,
   shouldYieldToHost as unstable_shouldYield,
   requestPaint as unstable_requestPaint,
-  requestYield as unstable_requestYield,
   unstable_continueExecution,
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,
