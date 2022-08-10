@@ -129,7 +129,7 @@ To use the latest build from CI, run the following command from the root of the 
 You can test the standalone DevTools by running the following:
 
 * **First, complete the prerequisite steps above! If you don't do it, none of the steps below will work.**
-* Then, run `yarn start:backend` and `yarn start:standalone` in `../react-devtools-core`
-* Run `yarn start` in this folder
+* Then, run `yarn start:backend` and `yarn start:standalone` in `packages/react-devtools-core`
+* Run `yarn start` in `packages/react-devtools`
 * Refresh the app after it has recompiled a change
 * For React Native, copy `react-devtools-core` to its `node_modules` to test your changes.
