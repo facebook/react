@@ -11,4 +11,4 @@ cd packages/react-devtools-shell
 yarn start
 ```
 
-Once you set both up, you can view the test harness with inlined devtools in browser at http://localhost:8080/
+Once you set both up, you can view the test harness with inlined devtools in browser at http://localhost:8080/.
