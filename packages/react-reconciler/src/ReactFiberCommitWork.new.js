@@ -147,6 +147,8 @@ import {
   addMarkerProgressCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
   setIsRunningInsertionEffect,
+  getExecutionContext,
+  CommitContext,
 } from './ReactFiberWorkLoop.new';
 import {
   NoFlags as NoHookEffect,
@@ -198,7 +200,6 @@ let nextEffect: Fiber | null = null;
 // Used for Profiling builds to track updaters.
 let inProgressLanes: Lanes | null = null;
 let inProgressRoot: FiberRoot | null = null;
-let enableProfilingDEV = true;
 
 export function reportUncaughtErrorInDEV(error: mixed) {
   // Wrapping each small part of the commit phase into a guarded
@@ -221,7 +222,7 @@ const callComponentWillUnmountWithTimer = function(current, instance) {
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
     current.mode & ProfileMode &&
-    enableProfilingDEV
+    getExecutionContext() & CommitContext
   ) {
     try {
       startLayoutEffectTimer();
@@ -266,7 +267,7 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
           enableProfilerTimer &&
           enableProfilerCommitHooks &&
           current.mode & ProfileMode &&
-          enableProfilingDEV
+          getExecutionContext() & CommitContext
         ) {
           try {
             startLayoutEffectTimer();
@@ -643,7 +644,11 @@ export function commitPassiveEffectDurations(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
 ): void {
-  if (enableProfilerTimer && enableProfilerCommitHooks && enableProfilingDEV) {
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    getExecutionContext() & CommitContext
+  ) {
     // Only Profilers with work in their subtree will have an Update effect scheduled.
     if ((finishedWork.flags & Update) !== NoFlags) {
       switch (finishedWork.tag) {
@@ -700,7 +705,7 @@ function commitHookLayoutEffects(finishedWork: Fiber, hookFlags: HookFlags) {
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
     finishedWork.mode & ProfileMode &&
-    enableProfilingDEV
+    getExecutionContext() & CommitContext
   ) {
     try {
       startLayoutEffectTimer();
@@ -758,7 +763,7 @@ function commitClassLayoutLifecycles(
       enableProfilerTimer &&
       enableProfilerCommitHooks &&
       finishedWork.mode & ProfileMode &&
-      enableProfilingDEV
+      getExecutionContext() & CommitContext
     ) {
       try {
         startLayoutEffectTimer();
@@ -814,7 +819,7 @@ function commitClassLayoutLifecycles(
       enableProfilerTimer &&
       enableProfilerCommitHooks &&
       finishedWork.mode & ProfileMode &&
-      enableProfilingDEV
+      getExecutionContext() & CommitContext
     ) {
       try {
         startLayoutEffectTimer();
@@ -897,7 +902,7 @@ function commitHostComponentMount(finishedWork: Fiber) {
 }
 
 function commitProfilerUpdate(finishedWork: Fiber, current: Fiber | null) {
-  if (enableProfilerTimer && enableProfilingDEV) {
+  if (enableProfilerTimer && getExecutionContext() & CommitContext) {
     try {
       const {onCommit, onRender} = finishedWork.memoizedProps;
       const {effectDuration} = finishedWork.stateNode;
@@ -1350,7 +1355,7 @@ function commitAttachRef(finishedWork: Fiber) {
         enableProfilerTimer &&
         enableProfilerCommitHooks &&
         finishedWork.mode & ProfileMode &&
-        enableProfilingDEV
+        getExecutionContext() & CommitContext
       ) {
         try {
           startLayoutEffectTimer();
@@ -1394,7 +1399,7 @@ function commitDetachRef(current: Fiber) {
         enableProfilerTimer &&
         enableProfilerCommitHooks &&
         current.mode & ProfileMode &&
-        enableProfilingDEV
+        getExecutionContext() & CommitContext
       ) {
         try {
           startLayoutEffectTimer();
@@ -1925,7 +1930,7 @@ function commitDeletionEffectsOnFiber(
                     enableProfilerTimer &&
                     enableProfilerCommitHooks &&
                     deletedFiber.mode & ProfileMode &&
-                    enableProfilingDEV
+                    getExecutionContext() & CommitContext
                   ) {
                     startLayoutEffectTimer();
                     safelyCallDestroy(
@@ -2249,7 +2254,7 @@ function commitMutationEffectsOnFiber(
           enableProfilerTimer &&
           enableProfilerCommitHooks &&
           finishedWork.mode & ProfileMode &&
-          enableProfilingDEV
+          getExecutionContext() & CommitContext
         ) {
           try {
             startLayoutEffectTimer();
@@ -2647,7 +2652,7 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
         enableProfilerTimer &&
         enableProfilerCommitHooks &&
         finishedWork.mode & ProfileMode &&
-        enableProfilingDEV
+        getExecutionContext() & CommitContext
       ) {
         try {
           startLayoutEffectTimer();
@@ -2890,7 +2895,7 @@ function commitHookPassiveMountEffects(
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
     finishedWork.mode & ProfileMode &&
-    enableProfilingDEV
+    getExecutionContext() & CommitContext
   ) {
     startPassiveEffectTimer();
     try {
@@ -3600,7 +3605,7 @@ function commitHookPassiveUnmountEffects(
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
     finishedWork.mode & ProfileMode &&
-    enableProfilingDEV
+    getExecutionContext() & CommitContext
   ) {
     startPassiveEffectTimer();
     commitHookEffectListUnmount(
@@ -3879,12 +3884,6 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
       }
       break;
     }
-  }
-}
-
-export function setEnableProfilingDEV(_enableProfilingDEV: boolean) {
-  if (__DEV__) {
-    enableProfilingDEV = _enableProfilingDEV;  
   }
 }
 

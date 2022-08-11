@@ -13,7 +13,6 @@ import type {Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
-import {PlacementDEV} from './ReactFiberFlags';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {EventPriority} from './ReactEventPriorities.old';
 import type {
@@ -123,6 +122,7 @@ import {
   MutationMask,
   LayoutMask,
   PassiveMask,
+  PlacementDEV,
 } from './ReactFiberFlags';
 import {
   NoLanes,
@@ -187,7 +187,6 @@ import {
   reappearLayoutEffects,
   disconnectPassiveEffect,
   reportUncaughtErrorInDEV,
-  setEnableProfilingDEV,
 } from './ReactFiberCommitWork.old';
 import {enqueueUpdate} from './ReactFiberClassUpdateQueue.old';
 import {resetContextDependencies} from './ReactFiberNewContext.old';
@@ -274,7 +273,7 @@ type ExecutionContext = number;
 export const NoContext = /*             */ 0b000;
 const BatchedContext = /*               */ 0b001;
 const RenderContext = /*                */ 0b010;
-const CommitContext = /*                */ 0b100;
+export const CommitContext = /*         */ 0b100;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const RootInProgress = 0;
@@ -3058,14 +3057,12 @@ function commitDoubleInvokeEffectsInDEV(
     ) {
       doubleInvokeEffects = false;
     }
-    setEnableProfilingDEV(false);
     recursivelyTraverseAndDoubleInvokeEffectsInDEV(
       root,
       root.current,
       hasPassiveEffects,
       doubleInvokeEffects,
     );
-    setEnableProfilingDEV(true);
   }
 }
 

@@ -187,7 +187,6 @@ import {
   reappearLayoutEffects,
   disconnectPassiveEffect,
   reportUncaughtErrorInDEV,
-  setEnableProfilingDEV,
 } from './ReactFiberCommitWork.new';
 import {enqueueUpdate} from './ReactFiberClassUpdateQueue.new';
 import {resetContextDependencies} from './ReactFiberNewContext.new';
@@ -274,7 +273,7 @@ type ExecutionContext = number;
 export const NoContext = /*             */ 0b000;
 const BatchedContext = /*               */ 0b001;
 const RenderContext = /*                */ 0b010;
-const CommitContext = /*                */ 0b100;
+export const CommitContext = /*         */ 0b100;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const RootInProgress = 0;
@@ -3058,14 +3057,12 @@ function commitDoubleInvokeEffectsInDEV(
     ) {
       doubleInvokeEffects = false;
     }
-    setEnableProfilingDEV(false);
     recursivelyTraverseAndDoubleInvokeEffectsInDEV(
       root,
       root.current,
       hasPassiveEffects,
       doubleInvokeEffects,
     );
-    setEnableProfilingDEV(true);
   }
 }
 
