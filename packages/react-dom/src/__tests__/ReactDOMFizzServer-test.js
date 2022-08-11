@@ -4489,8 +4489,13 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  // @gate enableFloat
+  // @gate experimental && enableFloat
   it('fail hydration if a suitable resource cannot be found in the DOM for a given location (href)', async () => {
+    gate(flags => {
+      if (!(__EXPERIMENTAL__ && flags.enableFloat)) {
+        throw new Error('bailing out of test');
+      }
+    });
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <html>
@@ -4532,8 +4537,13 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  // @gate enableFloat
+  // @gate experimental && enableFloat
   it('should error in dev when rendering more than one resource for a given location (href)', async () => {
+    gate(flags => {
+      if (!(__EXPERIMENTAL__ && flags.enableFloat)) {
+        throw new Error('bailing out of test');
+      }
+    });
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <>
