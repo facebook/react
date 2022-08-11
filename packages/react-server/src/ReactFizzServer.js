@@ -2060,7 +2060,6 @@ function flushCompletedQueues(
   request: Request,
   destination: Destination,
 ): void {
-  let allComplete = false;
   beginWriting(destination);
   try {
     // The structure of this is to go through each queue one by one and write
@@ -2159,7 +2158,8 @@ function flushCompletedQueues(
       }
     }
     largeBoundaries.splice(0, i);
-
+  } finally {
+    let allComplete = false;
     if (
       request.allPendingTasks === 0 &&
       request.pingedTasks.length === 0 &&
@@ -2173,13 +2173,12 @@ function flushCompletedQueues(
         const postamble: Array<
           Chunk | PrecomputedChunk,
         > = (request.postamble: any);
-        for (i = 0; i < postamble.length; i++) {
+        for (let i = 0; i < postamble.length; i++) {
           writeChunk(destination, postamble[i]);
         }
         postamble.length = 0;
       }
     }
-  } finally {
     completeWriting(destination);
     flushBuffered(destination);
     if (allComplete) {

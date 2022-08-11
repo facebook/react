@@ -243,7 +243,7 @@ export function getChildFormatContext(
   return parentContext;
 }
 
-export function isPreambleInsertion(type: string): boolean {
+function isPreambleInsertion(type: string): boolean {
   switch (type) {
     case 'html':
     case 'head': {
@@ -253,7 +253,7 @@ export function isPreambleInsertion(type: string): boolean {
   return false;
 }
 
-export function isPostambleInsertion(type: string): boolean {
+function isPostambleInsertion(type: string): boolean {
   switch (type) {
     case 'body':
     case 'html': {
@@ -1256,6 +1256,39 @@ function pushStartTitle(
   return children;
 }
 
+function pushStartHead(
+  target: Array<Chunk | PrecomputedChunk>,
+  preamble: ?Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  tag: string,
+  responseState: ResponseState,
+): ReactNodeList {
+  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
+  target = enableFloat && isPreambleInsertion(tag) ? (preamble: any) : target;
+
+  return pushStartGenericElement(target, props, tag, responseState);
+}
+
+function pushStartHtml(
+  target: Array<Chunk | PrecomputedChunk>,
+  preamble: ?Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  tag: string,
+  formatContext: FormatContext,
+  responseState: ResponseState,
+): ReactNodeList {
+  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
+  target = enableFloat && isPreambleInsertion(tag) ? (preamble: any) : target;
+
+  if (formatContext.insertionMode === ROOT_HTML_MODE) {
+    // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
+    // then we also emit the DOCTYPE as part of the root content as a convenience for
+    // rendering the whole document.
+    target.push(DOCTYPE);
+  }
+  return pushStartGenericElement(target, props, tag, responseState);
+}
+
 function pushStartGenericElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -1478,8 +1511,6 @@ export function pushStartInstance(
   responseState: ResponseState,
   formatContext: FormatContext,
 ): ReactNodeList {
-  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target = enableFloat && isPreambleInsertion(type) ? (preamble: any) : target;
   if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
@@ -1566,14 +1597,18 @@ export function pushStartInstance(
     case 'missing-glyph': {
       return pushStartGenericElement(target, props, type, responseState);
     }
+    // Preamble start tags
+    case 'head':
+      return pushStartHead(target, preamble, props, type, responseState);
     case 'html': {
-      if (formatContext.insertionMode === ROOT_HTML_MODE) {
-        // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
-        // then we also emit the DOCTYPE as part of the root content as a convenience for
-        // rendering the whole document.
-        target.push(DOCTYPE);
-      }
-      return pushStartGenericElement(target, props, type, responseState);
+      return pushStartHtml(
+        target,
+        preamble,
+        props,
+        type,
+        formatContext,
+        responseState,
+      );
     }
     default: {
       if (type.indexOf('-') === -1 && typeof props.is !== 'string') {
@@ -1596,9 +1631,6 @@ export function pushEndInstance(
   type: string,
   props: Object,
 ): void {
-  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target =
-    enableFloat && isPostambleInsertion(type) ? (postamble: any) : target;
   switch (type) {
     // Omitted close tags
     // TODO: Instead of repeating this switch we could try to pass a flag from above.
@@ -1621,6 +1653,13 @@ export function pushEndInstance(
       // No close tag needed.
       break;
     }
+    // Postamble end tags
+    case 'body':
+    case 'html':
+      // Preamble type is nullable for feature off cases but is guaranteed when feature is on
+      target =
+        enableFloat && isPostambleInsertion(type) ? (postamble: any) : target;
+    // Intentional fallthrough
     default: {
       target.push(endTag1, stringToChunk(type), endTag2);
     }

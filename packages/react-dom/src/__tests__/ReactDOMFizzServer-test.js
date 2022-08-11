@@ -4363,7 +4363,7 @@ describe('ReactDOMFizzServer', () => {
     );
 
     // It hydrates successfully
-    ReactDOMClient.hydrateRoot(
+    const root = ReactDOMClient.hydrateRoot(
       document,
       <>
         <link rel="stylesheet" href="foo" precedence="default" />
@@ -4400,7 +4400,91 @@ describe('ReactDOMFizzServer', () => {
     } catch (e) {
       uncaughtErrors.push(e);
     }
+
+    root.render(
+      <>
+        <link rel="stylesheet" href="foo" precedence="default" data-bar="bar" />
+        <html>
+          <head />
+          <body>a body</body>
+        </html>
+      </>,
+    );
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="foo"
+              data-rprec="default"
+              data-bar="bar"
+            />
+          </head>
+          <body>a body</body>
+        </html>,
+      );
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+
     if (uncaughtErrors.length > 0) {
+      throw uncaughtErrors[0];
+    }
+  });
+
+  // Temporarily this test is expected to fail everywhere. When we have resource hoisting
+  // it should start to pass and we can adjust the gate accordingly
+  // @gate false && enableFloat
+  it('should insert missing resources during hydration', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <body>foo</body>
+        </html>,
+      );
+      pipe(writable);
+    });
+
+    const uncaughtErrors = [];
+    ReactDOMClient.hydrateRoot(
+      document,
+      <>
+        <link rel="stylesheet" href="foo" precedence="foo" />
+        <html>
+          <head />
+          <body>foo</body>
+        </html>
+      </>,
+    );
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" precedence="foo" />
+          </head>
+          <body>foo</body>
+        </html>,
+      );
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+
+    // need to flush again to get the invoke guarded callback error to throw in microtask
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+
+    if (uncaughtErrors.length) {
       throw uncaughtErrors[0];
     }
   });
@@ -4450,18 +4534,11 @@ describe('ReactDOMFizzServer', () => {
     );
     expect(() => {
       expect(Scheduler).toFlushWithoutYielding();
-    }).toErrorDev(
-      [
-        'An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-      ],
-      {withoutStack: true},
-    );
-    expect(errors).toEqual([
-      'Stylesheet resources need a unique representation in the DOM while hydrating and more than one matching DOM Node was found. To fix, ensure you are only rendering one stylesheet link with an href attribute of "foo".',
-      'Stylesheet resources need a unique representation in the DOM while hydrating and more than one matching DOM Node was found. To fix, ensure you are only rendering one stylesheet link with an href attribute of "foo".',
-      'Hydration failed because the initial UI does not match what was rendered on the server.',
-      'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+    }).toErrorDev([
+      'Warning: Stylesheet resources need a unique representation in the DOM while hydrating and more than one matching DOM Node was found. To fix, ensure you are only rendering one stylesheet link with an href attribute of "foo"',
+      'Warning: Stylesheet resources need a unique representation in the DOM while hydrating and more than one matching DOM Node was found. To fix, ensure you are only rendering one stylesheet link with an href attribute of "foo"',
     ]);
+    expect(errors).toEqual([]);
   });
 
   describe('text separators', () => {

@@ -920,12 +920,11 @@ export function getMatchingResourceInstance(
             rootHostContainer,
           ).querySelectorAll(selector);
           if (allLinks.length > 1) {
-            throw new Error(
+            console.error(
               'Stylesheet resources need a unique representation in the DOM while hydrating' +
                 ' and more than one matching DOM Node was found. To fix, ensure you are only' +
-                ' rendering one stylesheet link with an href attribute of "' +
-                (props: any).href +
-                '".',
+                ' rendering one stylesheet link with an href attribute of "%s".',
+              (props: any).href,
             );
           }
         }
