@@ -157,6 +157,8 @@ const app = makeConfig(
     'multi-devtools': './src/multi/devtools.js',
     'multi-right': './src/multi/right.js',
     'e2e-regression': './src/e2e-regression/app.js',
+    'perf-regression-app': './src/perf-regression/app.js',
+    'perf-regression-devtools': './src/perf-regression/devtools.js',
   },
   {
     react: resolve(builtModulesDir, 'react'),
