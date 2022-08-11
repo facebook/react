@@ -46,6 +46,7 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
     useMutableSource: unsupported,
     useSyncExternalStore: unsupported,
     useCacheRefresh: unsupported,
+    useMemoCache: unsupported,
   };
   // Not using async/await because we don't compile it.
   return new Promise((resolve, reject) => {
