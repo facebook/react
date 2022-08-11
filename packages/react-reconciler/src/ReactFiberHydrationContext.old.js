@@ -413,15 +413,12 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
       fiber.tag === HostComponent &&
       isHydratableResource(fiber.type, fiber.pendingProps)
     ) {
-      const resourceInstance = getMatchingResourceInstance(
+      fiber.stateNode = getMatchingResourceInstance(
         fiber.type,
         fiber.pendingProps,
         getRootHostContainer(),
       );
-      if (resourceInstance) {
-        fiber.stateNode = resourceInstance;
-        return;
-      }
+      return;
     }
   }
   let nextInstance = nextHydratableInstance;
@@ -616,8 +613,29 @@ function popHydrationState(fiber: Fiber): boolean {
   if (!supportsHydration) {
     return false;
   }
-  if (enableFloat && isHydratableResource(fiber.type, fiber.memoizedProps)) {
-    return !!fiber.stateNode;
+  if (
+    enableFloat &&
+    isHydrating &&
+    isHydratableResource(fiber.type, fiber.memoizedProps)
+  ) {
+    if (fiber.stateNode === null) {
+      if (__DEV__) {
+        const rel = fiber.memoizedProps.rel
+          ? `rel="${fiber.memoizedProps.rel}" `
+          : '';
+        const href = fiber.memoizedProps.href
+          ? `href="${fiber.memoizedProps.href}"`
+          : '';
+        console.error(
+          'A matching Hydratable Resource was not found in the DOM for <%s %s%s>.',
+          fiber.type,
+          rel,
+          href,
+        );
+      }
+      throwOnHydrationMismatch(fiber);
+    }
+    return true;
   }
   if (fiber !== hydrationParentFiber) {
     // We're deeper than the current hydration context, inside an inserted

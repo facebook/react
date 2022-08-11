@@ -4489,7 +4489,50 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  // @gate __DEV__ && enableFloat
+  // @gate enableFloat
+  it('fail hydration if a suitable resource cannot be found in the DOM for a given location (href)', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <head />
+          <body>a body</body>
+        </html>,
+      );
+      pipe(writable);
+    });
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(
+      document,
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" precedence="low" />
+        </head>
+        <body>a body</body>
+      </html>,
+      {
+        onRecoverableError(err, errInfo) {
+          errors.push(err.message);
+        },
+      },
+    );
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toErrorDev(
+      [
+        'Warning: A matching Hydratable Resource was not found in the DOM for <link rel="stylesheet" href="foo" >',
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+      ],
+      {withoutStack: 1},
+    );
+    expect(errors).toEqual([
+      'Hydration failed because the initial UI does not match what was rendered on the server.',
+      'Hydration failed because the initial UI does not match what was rendered on the server.',
+      'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+    ]);
+  });
+
+  // @gate enableFloat
   it('should error in dev when rendering more than one resource for a given location (href)', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
