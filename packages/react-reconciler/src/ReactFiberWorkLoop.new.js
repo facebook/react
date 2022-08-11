@@ -13,7 +13,6 @@ import type {Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import {PlacementDEV} from './ReactFiberFlags';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {EventPriority} from './ReactEventPriorities.new';
 import type {
@@ -123,6 +122,7 @@ import {
   MutationMask,
   LayoutMask,
   PassiveMask,
+  PlacementDEV,
 } from './ReactFiberFlags';
 import {
   NoLanes,
