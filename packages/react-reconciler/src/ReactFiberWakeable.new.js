@@ -18,6 +18,9 @@ import type {
 let suspendedThenable: Thenable<mixed> | null = null;
 let adHocSuspendCount: number = 0;
 
+let usedThenables: Array<Thenable<any> | void> | null = null;
+let lastUsedThenable: Thenable<any> | null = null;
+
 const MAX_AD_HOC_SUSPEND_COUNT = 50;
 
 export function isTrackingSuspendedThenable() {
@@ -39,7 +42,15 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
   // TODO: Get rid of the Wakeable type? It's superseded by UntrackedThenable.
   const thenable: Thenable<mixed> = (wakeable: any);
 
-  adHocSuspendCount++;
+  if (thenable !== lastUsedThenable) {
+    // If this wakeable was not just `use`-d, it must be an ad hoc wakeable
+    // that was thrown by an older Suspense implementation. Keep a count of
+    // these so that we can detect an infinite ping loop.
+    // TODO: Once `use` throws an opaque signal instead of the actual thenable,
+    // a better way to count ad hoc suspends is whether an actual thenable
+    // is caught by the work loop.
+    adHocSuspendCount++;
+  }
   suspendedThenable = thenable;
 
   // We use an expando to track the status and result of a thenable so that we
@@ -86,9 +97,14 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
   }
 }
 
-export function resetWakeableState() {
+export function resetWakeableStateAfterEachAttempt() {
   suspendedThenable = null;
   adHocSuspendCount = 0;
+  lastUsedThenable = null;
+}
+
+export function resetThenableStateOnCompletion() {
+  usedThenables = null;
 }
 
 export function throwIfInfinitePingLoopDetected() {
@@ -97,4 +113,24 @@ export function throwIfInfinitePingLoopDetected() {
     // component suspends too many times in a row. This should be thrown from
     // the render phase so that it gets the component stack.
   }
+}
+
+export function trackUsedThenable<T>(thenable: Thenable<T>, index: number) {
+  if (usedThenables === null) {
+    usedThenables = [];
+  }
+  usedThenables[index] = thenable;
+  lastUsedThenable = thenable;
+}
+
+export function getPreviouslyUsedThenableAtIndex<T>(
+  index: number,
+): Thenable<T> | null {
+  if (usedThenables !== null) {
+    const thenable = usedThenables[index];
+    if (thenable !== undefined) {
+      return thenable;
+    }
+  }
+  return null;
 }
