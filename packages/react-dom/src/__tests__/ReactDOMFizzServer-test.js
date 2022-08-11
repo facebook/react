@@ -4525,7 +4525,7 @@ describe('ReactDOMFizzServer', () => {
       expect(Scheduler).toFlushWithoutYielding();
     }).toErrorDev(
       [
-        'Warning: A matching Hydratable Resource was not found in the DOM for <link rel="stylesheet" href="foo" >',
+        'Warning: A matching Hydratable Resource was not found in the DOM for <link rel="stylesheet" href="foo">',
         'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
       ],
       {withoutStack: 1},
