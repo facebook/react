@@ -3,7 +3,6 @@
 // This test harness mounts each test app as a separate root to test multi-root applications.
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import {createRoot} from 'react-dom/client';
 import App from './apps/index';
 

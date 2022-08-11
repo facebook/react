@@ -1,5 +1,4 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import {createRoot} from 'react-dom/client';
 import {
   activate as activateBackend,
@@ -47,8 +46,6 @@ function init(
     activateBackend(contentWindow);
   });
 }
-
-const iframe = document.getElementById('iframe');
 
 init(
   'dist/perf-regression-app.js',
