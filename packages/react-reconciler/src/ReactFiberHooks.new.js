@@ -13,6 +13,7 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
+  Usable,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
@@ -32,6 +33,7 @@ import {
   enableLazyContextPropagation,
   enableUseMutableSource,
   enableTransitionTracing,
+  enableUseHook,
   enableUseMemoCacheHook,
 } from 'shared/ReactFeatureFlags';
 
@@ -720,6 +722,10 @@ function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
     lastEffect: null,
     stores: null,
   };
+}
+
+function use<T>(usable: Usable<T>): T {
+  throw new Error('Not implemented.');
 }
 
 function useMemoCache(size: number): Array<any> {
@@ -2421,6 +2427,9 @@ if (enableCache) {
   (ContextOnlyDispatcher: Dispatcher).getCacheForType = getCacheForType;
   (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
 }
+if (enableUseHook) {
+  (ContextOnlyDispatcher: Dispatcher).use = throwInvalidHookError;
+}
 if (enableUseMemoCacheHook) {
   (ContextOnlyDispatcher: Dispatcher).useMemoCache = throwInvalidHookError;
 }
@@ -2451,6 +2460,9 @@ if (enableCache) {
   (HooksDispatcherOnMount: Dispatcher).getCacheSignal = getCacheSignal;
   (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
+}
+if (enableUseHook) {
+  (HooksDispatcherOnMount: Dispatcher).use = use;
 }
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnMount: Dispatcher).useMemoCache = useMemoCache;
@@ -2485,6 +2497,9 @@ if (enableCache) {
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useMemoCache = useMemoCache;
 }
+if (enableUseHook) {
+  (HooksDispatcherOnUpdate: Dispatcher).use = use;
+}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -2512,6 +2527,9 @@ if (enableCache) {
   (HooksDispatcherOnRerender: Dispatcher).getCacheSignal = getCacheSignal;
   (HooksDispatcherOnRerender: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
+}
+if (enableUseHook) {
+  (HooksDispatcherOnRerender: Dispatcher).use = use;
 }
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnRerender: Dispatcher).useMemoCache = useMemoCache;
@@ -2691,6 +2709,9 @@ if (__DEV__) {
       return mountRefresh();
     };
   }
+  if (enableUseHook) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).use = use;
+  }
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
@@ -2835,6 +2856,9 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountRefresh();
     };
+  }
+  if (enableUseHook) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).use = use;
   }
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useMemoCache = useMemoCache;
@@ -2981,6 +3005,9 @@ if (__DEV__) {
       return updateRefresh();
     };
   }
+  if (enableUseHook) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).use = use;
+  }
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
@@ -3126,6 +3153,9 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateRefresh();
     };
+  }
+  if (enableUseHook) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).use = use;
   }
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache = useMemoCache;
@@ -3287,6 +3317,14 @@ if (__DEV__) {
       currentHookNameInDev = 'useCacheRefresh';
       mountHookTypesDev();
       return mountRefresh();
+    };
+  }
+  if (enableUseHook) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).use = function<T>(
+      usable: Usable<T>,
+    ): T {
+      warnInvalidHookAccess();
+      return use(usable);
     };
   }
   if (enableUseMemoCacheHook) {
@@ -3456,6 +3494,14 @@ if (__DEV__) {
       return updateRefresh();
     };
   }
+  if (enableUseHook) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).use = function<T>(
+      usable: Usable<T>,
+    ): T {
+      warnInvalidHookAccess();
+      return use(usable);
+    };
+  }
   if (enableUseMemoCacheHook) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = function(
       size: number,
@@ -3622,6 +3668,14 @@ if (__DEV__) {
       currentHookNameInDev = 'useCacheRefresh';
       updateHookTypesDev();
       return updateRefresh();
+    };
+  }
+  if (enableUseHook) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).use = function<T>(
+      usable: Usable<T>,
+    ): T {
+      warnInvalidHookAccess();
+      return use(usable);
     };
   }
   if (enableUseMemoCacheHook) {

@@ -53,6 +53,7 @@ export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
 export const enableFloat = false;
+export const enableUseHook = true;
 export const enableUseMemoCacheHook = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.

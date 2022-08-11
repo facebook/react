@@ -55,6 +55,7 @@ import {
   useDeferredValue,
   useId,
   useCacheRefresh,
+  use,
   useMemoCache,
 } from './ReactHooks';
 import {
@@ -128,6 +129,7 @@ export {
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
   REACT_CACHE_TYPE as unstable_Cache,
+  use as experimental_use,
   useMemoCache as unstable_useMemoCache,
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
