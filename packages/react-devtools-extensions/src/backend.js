@@ -7,6 +7,10 @@
 'use strict';
 
 let welcomeHasInitialized = false;
+const _window = {
+  addEventListener: window.addEventListener.bind(window),
+  removeEventListener: window.removeEventListener.bind(window),
+};
 
 function welcome(event) {
   if (
@@ -83,7 +87,7 @@ function setup(hook) {
     },
   });
 
-  const agent = new Agent(bridge);
+  const agent = new Agent(bridge, _window);
   agent.addListener('shutdown', () => {
     // If we received 'shutdown' from `agent`, we assume the `bridge` is already shutting down,
     // and that caused the 'shutdown' event on the `agent`, so we don't need to call `bridge.shutdown()` here.
