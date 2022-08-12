@@ -501,6 +501,18 @@ export function appendChildToContainer(
   }
 }
 
+export function insertAfter(
+  parentInstance: Instance,
+  child: Instance | TextInstance,
+  afterChild: Instance | TextInstance | SuspenseInstance,
+): void {
+  let insertionNode = afterChild.nextSibling;
+  if (afterChild.nodeType === COMMENT_NODE) {
+    console.log('inserting after a Suspense instance', afterChild);
+  }
+  parentInstance.insertBefore(child, insertionNode);
+}
+
 export function insertBefore(
   parentInstance: Instance,
   child: Instance | TextInstance,

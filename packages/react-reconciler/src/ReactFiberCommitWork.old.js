@@ -117,6 +117,7 @@ import {
   commitTextUpdate,
   appendChild,
   appendChildToContainer,
+  insertAfter,
   insertBefore,
   insertInContainerBefore,
   removeChild,
@@ -1589,6 +1590,62 @@ function getHostSibling(fiber: Fiber): ?Instance {
   }
 }
 
+function getHostPrecedingSiblingFromFiber(
+  parentFiber: Fiber,
+  fiber: Fiber,
+): ?Instance {
+  let node: Fiber = fiber;
+  while (node.return !== parentFiber) {
+    node = node.return;
+  }
+  return getHostPrecedingSiblingBefore(parentFiber, node);
+}
+
+function getHostPrecedingSiblingBefore(
+  parentFiber: Fiber,
+  beforeFiber: ?Fiber,
+): ?Instance {
+  let lastInstance = null;
+  let parent = parentFiber;
+  let node = null;
+  let nextNode = parent.child;
+  // If beforeFiber is not null it needs to be guaranteed to be a sibling of parentFiber.child;
+  // console.log('getHostPrecedingSiblingBefore', parentFiber);
+  // console.log('beforeFiber', beforeFiber);
+  // console.log('node', node);
+  // console.log('nextNode', nextNode);
+  while (nextNode !== beforeFiber) {
+    // console.log('nextNode', nextNode);
+    let tempNextNode = nextNode;
+    nextNode = nextNode.sibling;
+    // reverse the sibling pointer of the nextNode we just left
+    tempNextNode.sibling = node;
+    node = tempNextNode;
+  }
+
+  while (node !== null) {
+    if (lastInstance === null) {
+      if (
+        node.tag === HostComponent ||
+        node.tag === HostText ||
+        node.tag === DehydratedFragment
+      ) {
+        lastInstance = node.stateNode;
+      } else {
+        lastInstance = getHostPrecedingSiblingBefore(node, null);
+      }
+    }
+    let tempNode = node;
+    // Node now points to it's previous sibling
+    node = node.sibling;
+    // What was the node is patched up to point to its next sibling
+    tempNode.sibling = nextNode;
+    nextNode = tempNode;
+  }
+
+  return lastInstance;
+}
+
 function commitPlacement(finishedWork: Fiber): void {
   if (!supportsMutation) {
     return;
@@ -1608,10 +1665,13 @@ function commitPlacement(finishedWork: Fiber): void {
         parentFiber.flags &= ~ContentReset;
       }
 
-      const before = getHostSibling(finishedWork);
+      const precedingInstance = getHostPrecedingSiblingFromFiber(
+        parentFiber,
+        finishedWork,
+      );
       // We only have the top Fiber that was inserted but we need to recurse down its
       // children to find all the terminal nodes.
-      insertOrAppendPlacementNode(finishedWork, before, parent);
+      insertOrAppendPlacementNodeAfter(finishedWork, precedingInstance, parent);
       break;
     }
     case HostRoot:
@@ -1655,6 +1715,37 @@ function insertOrAppendPlacementNodeIntoContainer(
       let sibling = child.sibling;
       while (sibling !== null) {
         insertOrAppendPlacementNodeIntoContainer(sibling, before, parent);
+        sibling = sibling.sibling;
+      }
+    }
+  }
+}
+
+function insertOrAppendPlacementNodeAfter(
+  node: Fiber,
+  after: ?Instance,
+  parent: Instance,
+): void {
+  const {tag} = node;
+  const isHost = tag === HostComponent || tag === HostText;
+  if (isHost) {
+    const stateNode = node.stateNode;
+    if (after) {
+      insertAfter(parent, stateNode, after);
+    } else {
+      appendChild(parent, stateNode);
+    }
+  } else if (tag === HostPortal) {
+    // If the insertion itself is a portal, then we don't want to traverse
+    // down its children. Instead, we'll get insertions from each child in
+    // the portal directly.
+  } else {
+    const child = node.child;
+    if (child !== null) {
+      insertOrAppendPlacementNodeAfter(child, after, parent);
+      let sibling = child.sibling;
+      while (sibling !== null) {
+        insertOrAppendPlacementNodeAfter(sibling, after, parent);
         sibling = sibling.sibling;
       }
     }
