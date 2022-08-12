@@ -98,7 +98,7 @@ describe('utils', () => {
 
     // @reactVersion >= 16.0
     it('should return NotImplementedInDevtools for an element with invalid symbol type', () => {
-      const element = createElement(Symbol('foo'));
+      const element = Symbol('foo');
       expect(getDisplayNameForReactElement(element)).toEqual(
         'NotImplementedInDevtools',
       );
