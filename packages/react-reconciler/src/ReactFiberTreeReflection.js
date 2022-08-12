@@ -13,7 +13,6 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableFloat} from 'shared/ReactFeatureFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
   ClassComponent,
@@ -24,7 +23,6 @@ import {
   SuspenseComponent,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
-import {supportsHydration, isHydratableResource} from './ReactFiberHostConfig';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -276,15 +274,7 @@ export function findCurrentHostFiber(parent: Fiber): Fiber | null {
 function findCurrentHostFiberImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
   if (node.tag === HostComponent || node.tag === HostText) {
-    if (
-      enableFloat &&
-      supportsHydration &&
-      isHydratableResource(node.type, node.memoizedProps)
-    ) {
-      // This is a crude opt out of Resources from this search algorithm
-    } else {
-      return node;
-    }
+    return node;
   }
 
   let child = node.child;
@@ -309,15 +299,7 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
 function findCurrentHostFiberWithNoPortalsImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
   if (node.tag === HostComponent || node.tag === HostText) {
-    if (
-      enableFloat &&
-      supportsHydration &&
-      isHydratableResource(node.type, node.memoizedProps)
-    ) {
-      // This is a crude opt out of Resources from this search algorithm
-    } else {
-      return node;
-    }
+    return node;
   }
 
   let child = node.child;
