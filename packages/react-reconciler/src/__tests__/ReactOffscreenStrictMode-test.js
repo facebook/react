@@ -13,10 +13,6 @@ describe('ReactOffscreenStrictMode', () => {
     Offscreen = React.unstable_Offscreen;
     ReactNoop = require('react-noop-renderer');
     act = require('jest-react').act;
-
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableStrictEffects = __DEV__;
-    ReactFeatureFlags.createRootStrictEffectsByDefault = __DEV__;
   });
 
   function Component({label}) {
@@ -35,14 +31,15 @@ describe('ReactOffscreenStrictMode', () => {
     return <span>label</span>;
   }
 
-  // @gate enableOffscreen
-  // @gate __DEV__
+  // @gate __DEV__ && enableStrictEffects && enableOffscreen
   it('should trigger strict effects when offscreen is visible', () => {
     act(() => {
       ReactNoop.render(
-        <Offscreen mode="visible">
-          <Component label="A" />
-        </Offscreen>,
+        <React.StrictMode>
+          <Offscreen mode="visible">
+            <Component label="A" />
+          </Offscreen>
+        </React.StrictMode>,
       );
     });
 
@@ -58,14 +55,15 @@ describe('ReactOffscreenStrictMode', () => {
     ]);
   });
 
-  // @gate enableOffscreen
-  // @gate __DEV__
+  // @gate __DEV__ && enableStrictEffects && enableOffscreen
   it('should not trigger strict effects when offscreen is hidden', () => {
     act(() => {
       ReactNoop.render(
-        <Offscreen mode="hidden">
-          <Component label="A" />
-        </Offscreen>,
+        <React.StrictMode>
+          <Offscreen mode="hidden">
+            <Component label="A" />
+          </Offscreen>
+        </React.StrictMode>,
       );
     });
 
@@ -75,9 +73,11 @@ describe('ReactOffscreenStrictMode', () => {
 
     act(() => {
       ReactNoop.render(
-        <Offscreen mode="visible">
-          <Component label="A" />
-        </Offscreen>,
+        <React.StrictMode>
+          <Offscreen mode="visible">
+            <Component label="A" />
+          </Offscreen>
+        </React.StrictMode>,
       );
     });
 
