@@ -46,19 +46,29 @@ describe('ReactDOMFizzServerBrowser', () => {
     }
   }
 
+  async function act(callback) {
+    try {
+      return callback();
+    } finally {
+      jest.runAllTimers();
+    }
+  }
+
   it('should call renderToReadableStream', async () => {
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
-      <div>hello world</div>,
+    const stream = await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(<div>hello world</div>),
     );
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
   it('should emit DOCTYPE at the root of the document', async () => {
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
-      <html>
-        <body>hello world</body>
-      </html>,
+    const stream = await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(
+        <html>
+          <body>hello world</body>
+        </html>,
+      ),
     );
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
@@ -67,13 +77,12 @@ describe('ReactDOMFizzServerBrowser', () => {
   });
 
   it('should emit bootstrap script src at the end', async () => {
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
-      <div>hello world</div>,
-      {
+    const stream = await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(<div>hello world</div>, {
         bootstrapScriptContent: 'INIT();',
         bootstrapScripts: ['init.js'],
         bootstrapModules: ['init.mjs'],
-      },
+      }),
     );
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
@@ -92,12 +101,14 @@ describe('ReactDOMFizzServerBrowser', () => {
       return 'Done';
     }
     let isComplete = false;
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
-      <div>
-        <Suspense fallback="Loading">
-          <Wait />
-        </Suspense>
-      </div>,
+    const stream = await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(
+        <div>
+          <Suspense fallback="Loading">
+            <Wait />
+          </Suspense>
+        </div>,
+      ),
     );
 
     stream.allReady.then(() => (isComplete = true));
@@ -122,15 +133,17 @@ describe('ReactDOMFizzServerBrowser', () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzServer.renderToReadableStream(
-        <div>
-          <Throw />
-        </div>,
-        {
-          onError(x) {
-            reportedErrors.push(x);
+      await act(() =>
+        ReactDOMFizzServer.renderToReadableStream(
+          <div>
+            <Throw />
+          </div>,
+          {
+            onError(x) {
+              reportedErrors.push(x);
+            },
           },
-        },
+        ),
       );
     } catch (error) {
       caughtError = error;
@@ -143,17 +156,19 @@ describe('ReactDOMFizzServerBrowser', () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzServer.renderToReadableStream(
-        <div>
-          <Suspense fallback={<Throw />}>
-            <InfiniteSuspend />
-          </Suspense>
-        </div>,
-        {
-          onError(x) {
-            reportedErrors.push(x);
+      await act(() =>
+        ReactDOMFizzServer.renderToReadableStream(
+          <div>
+            <Suspense fallback={<Throw />}>
+              <InfiniteSuspend />
+            </Suspense>
+          </div>,
+          {
+            onError(x) {
+              reportedErrors.push(x);
+            },
           },
-        },
+        ),
       );
     } catch (error) {
       caughtError = error;
@@ -164,17 +179,19 @@ describe('ReactDOMFizzServerBrowser', () => {
 
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
-      <div>
-        <Suspense fallback={<div>Loading</div>}>
-          <Throw />
-        </Suspense>
-      </div>,
-      {
-        onError(x) {
-          reportedErrors.push(x);
+    const stream = await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(
+        <div>
+          <Suspense fallback={<div>Loading</div>}>
+            <Throw />
+          </Suspense>
+        </div>,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
         },
-      },
+      ),
     );
 
     const result = await readResult(stream);
@@ -185,18 +202,20 @@ describe('ReactDOMFizzServerBrowser', () => {
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     const errors = [];
     const controller = new AbortController();
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
-      <div>
-        <Suspense fallback={<div>Loading</div>}>
-          <InfiniteSuspend />
-        </Suspense>
-      </div>,
-      {
-        signal: controller.signal,
-        onError(x) {
-          errors.push(x.message);
+    const stream = await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(
+        <div>
+          <Suspense fallback={<div>Loading</div>}>
+            <InfiniteSuspend />
+          </Suspense>
+        </div>,
+        {
+          signal: controller.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
         },
-      },
+      ),
     );
 
     controller.abort();
@@ -268,6 +287,7 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     let caughtError = null;
     try {
+      jest.runAllTimers();
       await streamPromise;
     } catch (error) {
       caughtError = error;
@@ -330,17 +350,19 @@ describe('ReactDOMFizzServerBrowser', () => {
       return 'Done';
     }
     const errors = [];
-    const stream = await ReactDOMFizzServer.renderToReadableStream(
-      <div>
-        <Suspense fallback={<div>Loading</div>}>
-          <Wait />
-        </Suspense>
-      </div>,
-      {
-        onError(x) {
-          errors.push(x.message);
+    const stream = await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(
+        <div>
+          <Suspense fallback={<div>Loading</div>}>
+            <Wait />
+          </Suspense>
+        </div>,
+        {
+          onError(x) {
+            errors.push(x.message);
+          },
         },
-      },
+      ),
     );
 
     stream.allReady.then(() => (isComplete = true));
@@ -374,14 +396,16 @@ describe('ReactDOMFizzServerBrowser', () => {
     // as such for now. I don't think it needs to be maintained if in the future
     // the view sizes change or become dynamic becasue of the use of byobRequest
     let stream;
-    stream = await ReactDOMFizzServer.renderToReadableStream(
-      <>
-        <div>
-          <span>{''}</span>
-        </div>
-        <div>{str492}</div>
-        <div>{str492}</div>
-      </>,
+    stream = await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(
+        <>
+          <div>
+            <span>{''}</span>
+          </div>
+          <div>{str492}</div>
+          <div>{str492}</div>
+        </>,
+      ),
     );
 
     let result;
@@ -393,10 +417,12 @@ describe('ReactDOMFizzServerBrowser', () => {
     // this size 2049 was chosen to be a couple base 2 orders larger than the current view
     // size. if the size changes in the future hopefully this will still exercise
     // a chunk that is too large for the view size.
-    stream = await ReactDOMFizzServer.renderToReadableStream(
-      <>
-        <div>{str2049}</div>
-      </>,
+    stream = await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(
+        <>
+          <div>{str2049}</div>
+        </>,
+      ),
     );
 
     result = await readResult(stream);
@@ -427,13 +453,15 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     const errors = [];
     const controller = new AbortController();
-    await ReactDOMFizzServer.renderToReadableStream(<App />, {
-      signal: controller.signal,
-      onError(x) {
-        errors.push(x);
-        return 'a digest';
-      },
-    });
+    await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(<App />, {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x);
+          return 'a digest';
+        },
+      }),
+    );
 
     // @TODO this is a hack to work around lack of support for abortSignal.reason in node
     // The abort call itself should set this property but since we are testing in node we
@@ -468,13 +496,15 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     const errors = [];
     const controller = new AbortController();
-    await ReactDOMFizzServer.renderToReadableStream(<App />, {
-      signal: controller.signal,
-      onError(x) {
-        errors.push(x.message);
-        return 'a digest';
-      },
-    });
+    await act(() =>
+      ReactDOMFizzServer.renderToReadableStream(<App />, {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+          return 'a digest';
+        },
+      }),
+    );
 
     // @TODO this is a hack to work around lack of support for abortSignal.reason in node
     // The abort call itself should set this property but since we are testing in node we

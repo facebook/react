@@ -48,19 +48,31 @@ describe('ReactDOMFizzStaticBrowser', () => {
     }
   }
 
+  async function act(callback) {
+    try {
+      return callback();
+    } finally {
+      jest.runAllTimers();
+    }
+  }
+
   // @gate experimental
   it('should call prerender', async () => {
-    const result = await ReactDOMFizzStatic.prerender(<div>hello world</div>);
+    const result = await act(() =>
+      ReactDOMFizzStatic.prerender(<div>hello world</div>),
+    );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
   // @gate experimental
   it('should emit DOCTYPE at the root of the document', async () => {
-    const result = await ReactDOMFizzStatic.prerender(
-      <html>
-        <body>hello world</body>
-      </html>,
+    const result = await act(() =>
+      ReactDOMFizzStatic.prerender(
+        <html>
+          <body>hello world</body>
+        </html>,
+      ),
     );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(
@@ -70,11 +82,13 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
   // @gate experimental
   it('should emit bootstrap script src at the end', async () => {
-    const result = await ReactDOMFizzStatic.prerender(<div>hello world</div>, {
-      bootstrapScriptContent: 'INIT();',
-      bootstrapScripts: ['init.js'],
-      bootstrapModules: ['init.mjs'],
-    });
+    const result = await act(() =>
+      ReactDOMFizzStatic.prerender(<div>hello world</div>, {
+        bootstrapScriptContent: 'INIT();',
+        bootstrapScripts: ['init.js'],
+        bootstrapModules: ['init.mjs'],
+      }),
+    );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(
       `"<div>hello world</div><script>INIT();</script><script src=\\"init.js\\" async=\\"\\"></script><script type=\\"module\\" src=\\"init.mjs\\" async=\\"\\"></script>"`,
@@ -105,6 +119,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     // Resolve the loading.
     hasLoaded = true;
     await resolve();
+    jest.runAllTimers();
 
     const result = await resultPromise;
     const prelude = await readContent(result.prelude);
@@ -118,15 +133,17 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzStatic.prerender(
-        <div>
-          <Throw />
-        </div>,
-        {
-          onError(x) {
-            reportedErrors.push(x);
+      await act(() =>
+        ReactDOMFizzStatic.prerender(
+          <div>
+            <Throw />
+          </div>,
+          {
+            onError(x) {
+              reportedErrors.push(x);
+            },
           },
-        },
+        ),
       );
     } catch (error) {
       caughtError = error;
@@ -140,17 +157,19 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzStatic.prerender(
-        <div>
-          <Suspense fallback={<Throw />}>
-            <InfiniteSuspend />
-          </Suspense>
-        </div>,
-        {
-          onError(x) {
-            reportedErrors.push(x);
+      await act(() =>
+        ReactDOMFizzStatic.prerender(
+          <div>
+            <Suspense fallback={<Throw />}>
+              <InfiniteSuspend />
+            </Suspense>
+          </div>,
+          {
+            onError(x) {
+              reportedErrors.push(x);
+            },
           },
-        },
+        ),
       );
     } catch (error) {
       caughtError = error;
@@ -162,17 +181,19 @@ describe('ReactDOMFizzStaticBrowser', () => {
   // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
-    const result = await ReactDOMFizzStatic.prerender(
-      <div>
-        <Suspense fallback={<div>Loading</div>}>
-          <Throw />
-        </Suspense>
-      </div>,
-      {
-        onError(x) {
-          reportedErrors.push(x);
+    const result = await act(() =>
+      ReactDOMFizzStatic.prerender(
+        <div>
+          <Suspense fallback={<div>Loading</div>}>
+            <Throw />
+          </Suspense>
+        </div>,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
         },
-      },
+      ),
     );
 
     const prelude = await readContent(result.prelude);
@@ -273,6 +294,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     let caughtError = null;
     try {
+      jest.runAllTimers();
       await streamPromise;
     } catch (error) {
       caughtError = error;
@@ -314,6 +336,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     // semantics mean that we also abort any pending CPU work.
     let caughtError = null;
     try {
+      jest.runAllTimers();
       await promise;
     } catch (error) {
       caughtError = error;
@@ -354,6 +377,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
         return 'a digest';
       },
     });
+    jest.runAllTimers();
 
     // @TODO this is a hack to work around lack of support for abortSignal.reason in node
     // The abort call itself should set this property but since we are testing in node we
@@ -398,6 +422,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
         return 'a digest';
       },
     });
+    jest.runAllTimers();
 
     // @TODO this is a hack to work around lack of support for abortSignal.reason in node
     // The abort call itself should set this property but since we are testing in node we
