@@ -67,6 +67,7 @@ describe('ReactStrictMode', () => {
     );
   });
 
+  // @gate enableStrictEffects
   it('should invoke precommit lifecycle methods twice', () => {
     let log = [];
     let shouldComponentUpdate = false;
@@ -115,6 +116,8 @@ describe('ReactStrictMode', () => {
         'getDerivedStateFromProps',
         'render',
         'render',
+        'componentDidMount',
+        'componentWillUnmount',
         'componentDidMount',
       ]);
     } else {
