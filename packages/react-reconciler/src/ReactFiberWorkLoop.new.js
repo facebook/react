@@ -3001,42 +3001,44 @@ function flushRenderPhaseStrictModeWarningsInDEV() {
 
 function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
   root: FiberRoot,
-  fiber: Fiber,
+  parentFiber: Fiber,
+  isInStrictMode: boolean,
   hasPassiveEffects: boolean,
-  doubleInvokeEffects: boolean,
 ) {
-  if (fiber.type === REACT_STRICT_MODE_TYPE) {
-    doubleInvokeEffects = true;
+  let child = parentFiber.child;
+  while (child !== null) {
+    doubleInvokeEffectsInDEV(root, child, isInStrictMode, hasPassiveEffects);
+    child = child.sibling;
   }
+}
 
+function doubleInvokeEffectsInDEV(
+  root: FiberRoot,
+  fiber: Fiber,
+  parentIsInStrictMode: boolean,
+  hasPassiveEffects: boolean,
+) {
+  const isStrictModeFiber = fiber.type === REACT_STRICT_MODE_TYPE;
+  const isInStrictMode = parentIsInStrictMode || isStrictModeFiber;
   if (fiber.flags & PlacementDEV || fiber.tag === OffscreenComponent) {
-    if (doubleInvokeEffects) {
+    if (isInStrictMode) {
       disappearLayoutEffects(fiber);
     }
-    if (hasPassiveEffects && doubleInvokeEffects) {
+    if (hasPassiveEffects && isInStrictMode) {
       disconnectPassiveEffect(fiber);
     }
-    if (doubleInvokeEffects) {
-      reappearLayoutEffects(root, fiber.alternate, fiber, NoLanes, false);
+    if (isInStrictMode) {
+      reappearLayoutEffects(root, fiber.alternate, fiber, false);
     }
-    if (hasPassiveEffects && doubleInvokeEffects) {
+    if (hasPassiveEffects && isInStrictMode) {
       reconnectPassiveEffects(root, fiber, NoLanes, null, false);
     }
-  } else if (fiber.child !== null) {
+  } else {
     recursivelyTraverseAndDoubleInvokeEffectsInDEV(
       root,
-      fiber.child,
+      fiber,
+      isInStrictMode,
       hasPassiveEffects,
-      doubleInvokeEffects,
-    );
-  }
-
-  if (fiber.sibling !== null) {
-    recursivelyTraverseAndDoubleInvokeEffectsInDEV(
-      root,
-      fiber.sibling,
-      hasPassiveEffects,
-      doubleInvokeEffects,
     );
   }
 }
@@ -3060,8 +3062,8 @@ function commitDoubleInvokeEffectsInDEV(
     recursivelyTraverseAndDoubleInvokeEffectsInDEV(
       root,
       root.current,
-      hasPassiveEffects,
       doubleInvokeEffects,
+      hasPassiveEffects,
     );
   }
 }
