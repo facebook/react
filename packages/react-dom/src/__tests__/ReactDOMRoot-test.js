@@ -358,6 +358,7 @@ describe('ReactDOMRoot', () => {
     );
   });
 
+  // @gate !enableFloat
   it('warns if updating a root that has had its contents removed', async () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
