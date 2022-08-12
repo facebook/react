@@ -28,19 +28,13 @@ import {
   enableNewReconciler,
   enableCache,
   enableUseRefAccessWarning,
-  enableStrictEffects,
   enableLazyContextPropagation,
   enableUseMutableSource,
   enableTransitionTracing,
   enableUseMemoCacheHook,
 } from 'shared/ReactFeatureFlags';
 
-import {
-  NoMode,
-  ConcurrentMode,
-  DebugTracingMode,
-  StrictEffectsMode,
-} from './ReactTypeOfMode';
+import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   NoLane,
   SyncLane,
@@ -68,8 +62,6 @@ import {readContext, checkIfContextChanged} from './ReactFiberNewContext.old';
 import {HostRoot, CacheComponent} from './ReactWorkTags';
 import {
   LayoutStatic as LayoutStaticEffect,
-  MountLayoutDev as MountLayoutDevEffect,
-  MountPassiveDev as MountPassiveDevEffect,
   Passive as PassiveEffect,
   PassiveStatic as PassiveStaticEffect,
   StaticMask as StaticMaskEffect,
@@ -570,22 +562,7 @@ export function bailoutHooks(
   lanes: Lanes,
 ) {
   workInProgress.updateQueue = current.updateQueue;
-  // TODO: Don't need to reset the flags here, because they're reset in the
-  // complete phase (bubbleProperties).
-  if (
-    __DEV__ &&
-    enableStrictEffects &&
-    (workInProgress.mode & StrictEffectsMode) !== NoMode
-  ) {
-    workInProgress.flags &= ~(
-      MountPassiveDevEffect |
-      MountLayoutDevEffect |
-      PassiveEffect |
-      UpdateEffect
-    );
-  } else {
-    workInProgress.flags &= ~(PassiveEffect | UpdateEffect);
-  }
+  workInProgress.flags &= ~(PassiveEffect | UpdateEffect);
   current.lanes = removeLanes(current.lanes, lanes);
 }
 
@@ -1707,25 +1684,12 @@ function mountEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  if (
-    __DEV__ &&
-    enableStrictEffects &&
-    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
-  ) {
-    return mountEffectImpl(
-      MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
-      HookPassive,
-      create,
-      deps,
-    );
-  } else {
-    return mountEffectImpl(
-      PassiveEffect | PassiveStaticEffect,
-      HookPassive,
-      create,
-      deps,
-    );
-  }
+  return mountEffectImpl(
+    PassiveEffect | PassiveStaticEffect,
+    HookPassive,
+    create,
+    deps,
+  );
 }
 
 function updateEffect(
@@ -1753,14 +1717,7 @@ function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  let fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
-  if (
-    __DEV__ &&
-    enableStrictEffects &&
-    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
-  ) {
-    fiberFlags |= MountLayoutDevEffect;
-  }
+  const fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
   return mountEffectImpl(fiberFlags, HookLayout, create, deps);
 }
 
@@ -1820,14 +1777,7 @@ function mountImperativeHandle<T>(
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
-  let fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
-  if (
-    __DEV__ &&
-    enableStrictEffects &&
-    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
-  ) {
-    fiberFlags |= MountLayoutDevEffect;
-  }
+  const fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
   return mountEffectImpl(
     fiberFlags,
     HookLayout,
