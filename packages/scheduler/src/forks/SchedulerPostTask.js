@@ -67,11 +67,6 @@ export function unstable_requestPaint() {
   // Since we yield every frame regardless, `requestPaint` has no effect.
 }
 
-export function unstable_requestYield() {
-  // Force a yield at the next opportunity.
-  deadline = -99999;
-}
-
 type SchedulerCallback<T> = (
   didTimeout_DEPRECATED: boolean,
 ) =>

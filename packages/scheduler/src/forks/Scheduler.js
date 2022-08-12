@@ -212,10 +212,14 @@ function workLoop(hasTimeRemaining, initialTime) {
       const continuationCallback = callback(didUserCallbackTimeout);
       currentTime = getCurrentTime();
       if (typeof continuationCallback === 'function') {
+        // If a continuation is returned, immediately yield to the main thread
+        // regardless of how much time is left in the current time slice.
         currentTask.callback = continuationCallback;
         if (enableProfiling) {
           markTaskYield(currentTask, currentTime);
         }
+        advanceTimers(currentTime);
+        return true;
       } else {
         if (enableProfiling) {
           markTaskCompleted(currentTask, currentTime);
@@ -224,8 +228,8 @@ function workLoop(hasTimeRemaining, initialTime) {
         if (currentTask === peek(taskQueue)) {
           pop(taskQueue);
         }
+        advanceTimers(currentTime);
       }
-      advanceTimers(currentTime);
     } else {
       pop(taskQueue);
     }
@@ -495,11 +499,6 @@ function requestPaint() {
   // Since we yield every frame regardless, `requestPaint` has no effect.
 }
 
-function requestYield() {
-  // Force a yield at the next opportunity.
-  startTime = -99999;
-}
-
 function forceFrameRate(fps) {
   if (fps < 0 || fps > 125) {
     // Using console['error'] to evade Babel and ESLint
@@ -617,7 +616,6 @@ export {
   unstable_getCurrentPriorityLevel,
   shouldYieldToHost as unstable_shouldYield,
   requestPaint as unstable_requestPaint,
-  requestYield as unstable_requestYield,
   unstable_continueExecution,
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,
