@@ -2081,7 +2081,6 @@ function flushCompletedQueues(
             // we expect the preamble to be tiny and will ignore backpressure
             writeChunk(destination, preamble[i]);
           }
-          preamble.length = 0;
         }
 
         flushSegment(request, destination, completedRootSegment);
@@ -2159,7 +2158,6 @@ function flushCompletedQueues(
     }
     largeBoundaries.splice(0, i);
   } finally {
-    let allComplete = false;
     if (
       request.allPendingTasks === 0 &&
       request.pingedTasks.length === 0 &&
@@ -2168,7 +2166,6 @@ function flushCompletedQueues(
       // We don't need to check any partially completed segments because
       // either they have pending task or they're complete.
     ) {
-      allComplete = true;
       if (enableFloat) {
         const postamble: Array<
           Chunk | PrecomputedChunk,
@@ -2176,12 +2173,9 @@ function flushCompletedQueues(
         for (let i = 0; i < postamble.length; i++) {
           writeChunk(destination, postamble[i]);
         }
-        postamble.length = 0;
       }
-    }
-    completeWriting(destination);
-    flushBuffered(destination);
-    if (allComplete) {
+      completeWriting(destination);
+      flushBuffered(destination);
       if (__DEV__) {
         if (request.abortableTasks.size !== 0) {
           console.error(
@@ -2191,6 +2185,9 @@ function flushCompletedQueues(
       }
       // We're done.
       close(destination);
+    } else {
+      completeWriting(destination);
+      flushBuffered(destination);
     }
   }
 }

@@ -243,26 +243,6 @@ export function getChildFormatContext(
   return parentContext;
 }
 
-function isPreambleInsertion(type: string): boolean {
-  switch (type) {
-    case 'html':
-    case 'head': {
-      return true;
-    }
-  }
-  return false;
-}
-
-function isPostambleInsertion(type: string): boolean {
-  switch (type) {
-    case 'body':
-    case 'html': {
-      return true;
-    }
-  }
-  return false;
-}
-
 export type SuspenseBoundaryID = null | PrecomputedChunk;
 
 export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID: SuspenseBoundaryID = null;
@@ -1264,7 +1244,7 @@ function pushStartHead(
   responseState: ResponseState,
 ): ReactNodeList {
   // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target = enableFloat && isPreambleInsertion(tag) ? (preamble: any) : target;
+  target = enableFloat ? (preamble: any) : target;
 
   return pushStartGenericElement(target, props, tag, responseState);
 }
@@ -1278,7 +1258,7 @@ function pushStartHtml(
   responseState: ResponseState,
 ): ReactNodeList {
   // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target = enableFloat && isPreambleInsertion(tag) ? (preamble: any) : target;
+  target = enableFloat ? (preamble: any) : target;
 
   if (formatContext.insertionMode === ROOT_HTML_MODE) {
     // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
@@ -1657,8 +1637,7 @@ export function pushEndInstance(
     case 'body':
     case 'html':
       // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-      target =
-        enableFloat && isPostambleInsertion(type) ? (postamble: any) : target;
+      target = enableFloat ? (postamble: any) : target;
     // Intentional fallthrough
     default: {
       target.push(endTag1, stringToChunk(type), endTag2);
