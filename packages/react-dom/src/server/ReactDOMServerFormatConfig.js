@@ -20,6 +20,7 @@ import {Children} from 'react';
 import {
   enableFilterEmptyStringAttributesDOM,
   enableCustomElementPropertySupport,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 
 import type {
@@ -1056,6 +1057,52 @@ function pushStartTextArea(
   return null;
 }
 
+function pushLink(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+): ReactNodeList {
+  const isStylesheet = props.rel === 'stylesheet';
+  target.push(startChunkForTag('link'));
+
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+        case 'dangerouslySetInnerHTML':
+          throw new Error(
+            `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
+              'use `dangerouslySetInnerHTML`.',
+          );
+        case 'precedence': {
+          if (isStylesheet) {
+            if (propValue === true || typeof propValue === 'string') {
+              pushAttribute(target, responseState, 'data-rprec', propValue);
+            } else if (__DEV__) {
+              throw new Error(
+                `the "precedence" prop for links to stylehseets expects to receive a string but received something of type "${typeof propValue}" instead.`,
+              );
+            }
+            break;
+          }
+          // intentionally fall through
+        }
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+
+  target.push(endOfStartTagSelfClosing);
+  return null;
+}
+
 function pushSelfClosing(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -1187,6 +1234,39 @@ function pushStartTitle(
     }
   }
   return children;
+}
+
+function pushStartHead(
+  target: Array<Chunk | PrecomputedChunk>,
+  preamble: ?Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  tag: string,
+  responseState: ResponseState,
+): ReactNodeList {
+  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
+  target = enableFloat ? (preamble: any) : target;
+
+  return pushStartGenericElement(target, props, tag, responseState);
+}
+
+function pushStartHtml(
+  target: Array<Chunk | PrecomputedChunk>,
+  preamble: ?Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  tag: string,
+  formatContext: FormatContext,
+  responseState: ResponseState,
+): ReactNodeList {
+  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
+  target = enableFloat ? (preamble: any) : target;
+
+  if (formatContext.insertionMode === ROOT_HTML_MODE) {
+    // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
+    // then we also emit the DOCTYPE as part of the root content as a convenience for
+    // rendering the whole document.
+    target.push(DOCTYPE);
+  }
+  return pushStartGenericElement(target, props, tag, responseState);
 }
 
 function pushStartGenericElement(
@@ -1405,6 +1485,7 @@ const DOCTYPE: PrecomputedChunk = stringToPrecomputedChunk('<!DOCTYPE html>');
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
+  preamble: ?Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
@@ -1461,6 +1542,8 @@ export function pushStartInstance(
       return pushStartMenuItem(target, props, responseState);
     case 'title':
       return pushStartTitle(target, props, responseState);
+    case 'link':
+      return pushLink(target, props, responseState);
     // Newline eating tags
     case 'listing':
     case 'pre': {
@@ -1475,7 +1558,6 @@ export function pushStartInstance(
     case 'hr':
     case 'img':
     case 'keygen':
-    case 'link':
     case 'meta':
     case 'param':
     case 'source':
@@ -1495,14 +1577,18 @@ export function pushStartInstance(
     case 'missing-glyph': {
       return pushStartGenericElement(target, props, type, responseState);
     }
+    // Preamble start tags
+    case 'head':
+      return pushStartHead(target, preamble, props, type, responseState);
     case 'html': {
-      if (formatContext.insertionMode === ROOT_HTML_MODE) {
-        // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
-        // then we also emit the DOCTYPE as part of the root content as a convenience for
-        // rendering the whole document.
-        target.push(DOCTYPE);
-      }
-      return pushStartGenericElement(target, props, type, responseState);
+      return pushStartHtml(
+        target,
+        preamble,
+        props,
+        type,
+        formatContext,
+        responseState,
+      );
     }
     default: {
       if (type.indexOf('-') === -1 && typeof props.is !== 'string') {
@@ -1521,6 +1607,7 @@ const endTag2 = stringToPrecomputedChunk('>');
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
+  postamble: ?Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {
@@ -1546,6 +1633,12 @@ export function pushEndInstance(
       // No close tag needed.
       break;
     }
+    // Postamble end tags
+    case 'body':
+    case 'html':
+      // Preamble type is nullable for feature off cases but is guaranteed when feature is on
+      target = enableFloat ? (postamble: any) : target;
+    // Intentional fallthrough
     default: {
       target.push(endTag1, stringToChunk(type), endTag2);
     }

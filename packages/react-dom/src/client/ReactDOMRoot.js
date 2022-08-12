@@ -15,6 +15,7 @@ import type {
 
 import {queueExplicitHydrationTarget} from '../events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {enableFloat} from 'shared/ReactFeatureFlags';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -118,7 +119,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = functio
 
     const container = root.containerInfo;
 
-    if (container.nodeType !== COMMENT_NODE) {
+    if (!enableFloat && container.nodeType !== COMMENT_NODE) {
       const hostInstance = findHostInstanceWithNoPortals(root.current);
       if (hostInstance) {
         if (hostInstance.parentNode !== container) {

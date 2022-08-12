@@ -117,6 +117,7 @@ import {
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -200,6 +201,8 @@ export opaque type Request = {
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
+  +preamble: ?Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted before any segment chunks.
+  +postamble: ?Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted after segments, waiting for all pending root tasks to finish
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
   // Returning null/undefined will cause a defualt error message in production
@@ -272,6 +275,8 @@ export function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
+    preamble: enableFloat ? [] : null,
+    postamble: enableFloat ? [] : null,
     onError: onError === undefined ? defaultErrorHandler : onError,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
@@ -632,6 +637,7 @@ function renderHostElement(
   const segment = task.blockedSegment;
   const children = pushStartInstance(
     segment.chunks,
+    request.preamble,
     type,
     props,
     request.responseState,
@@ -647,7 +653,7 @@ function renderHostElement(
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
   segment.formatContext = prevContext;
-  pushEndInstance(segment.chunks, type, props);
+  pushEndInstance(segment.chunks, request.postamble, type, props);
   segment.lastPushedText = false;
   popComponentStackInDEV(task);
 }
@@ -2063,20 +2069,33 @@ function flushCompletedQueues(
 
     // TODO: Emit preloading.
 
-    // TODO: It's kind of unfortunate to keep checking this array after we've already
-    // emitted the root.
+    let i;
     const completedRootSegment = request.completedRootSegment;
-    if (completedRootSegment !== null && request.pendingRootTasks === 0) {
-      flushSegment(request, destination, completedRootSegment);
-      request.completedRootSegment = null;
-      writeCompletedRoot(destination, request.responseState);
+    if (completedRootSegment !== null) {
+      if (request.pendingRootTasks === 0) {
+        if (enableFloat) {
+          const preamble: Array<
+            Chunk | PrecomputedChunk,
+          > = (request.preamble: any);
+          for (i = 0; i < preamble.length; i++) {
+            // we expect the preamble to be tiny and will ignore backpressure
+            writeChunk(destination, preamble[i]);
+          }
+        }
+
+        flushSegment(request, destination, completedRootSegment);
+        request.completedRootSegment = null;
+        writeCompletedRoot(destination, request.responseState);
+      } else {
+        // We haven't flushed the root yet so we don't need to check boundaries further down
+        return;
+      }
     }
 
     // We emit client rendering instructions for already emitted boundaries first.
     // This is so that we can signal to the client to start client rendering them as
     // soon as possible.
     const clientRenderedBoundaries = request.clientRenderedBoundaries;
-    let i;
     for (i = 0; i < clientRenderedBoundaries.length; i++) {
       const boundary = clientRenderedBoundaries[i];
       if (!flushClientRenderedBoundary(request, destination, boundary)) {
@@ -2139,8 +2158,6 @@ function flushCompletedQueues(
     }
     largeBoundaries.splice(0, i);
   } finally {
-    completeWriting(destination);
-    flushBuffered(destination);
     if (
       request.allPendingTasks === 0 &&
       request.pingedTasks.length === 0 &&
@@ -2149,6 +2166,16 @@ function flushCompletedQueues(
       // We don't need to check any partially completed segments because
       // either they have pending task or they're complete.
     ) {
+      if (enableFloat) {
+        const postamble: Array<
+          Chunk | PrecomputedChunk,
+        > = (request.postamble: any);
+        for (let i = 0; i < postamble.length; i++) {
+          writeChunk(destination, postamble[i]);
+        }
+      }
+      completeWriting(destination);
+      flushBuffered(destination);
       if (__DEV__) {
         if (request.abortableTasks.size !== 0) {
           console.error(
@@ -2158,6 +2185,9 @@ function flushCompletedQueues(
       }
       // We're done.
       close(destination);
+    } else {
+      completeWriting(destination);
+      flushBuffered(destination);
     }
   }
 }

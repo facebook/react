@@ -40,6 +40,7 @@ import {
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
+  getOwnerDocumentFromRootContainer,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -64,6 +65,7 @@ import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
@@ -675,6 +677,14 @@ export function clearContainer(container: Container): void {
 
 export const supportsHydration = true;
 
+export function isHydratableResource(type: string, props: Props) {
+  return (
+    type === 'link' &&
+    typeof (props: any).precedence === 'string' &&
+    (props: any).rel === 'stylesheet'
+  );
+}
+
 export function canHydrateInstance(
   instance: HydratableInstance,
   type: string,
@@ -769,10 +779,25 @@ export function registerSuspenseInstanceRetry(
 
 function getNextHydratable(node) {
   // Skip non-hydratable nodes.
-  for (; node != null; node = node.nextSibling) {
+  for (; node != null; node = ((node: any): Node).nextSibling) {
     const nodeType = node.nodeType;
-    if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
-      break;
+    if (enableFloat) {
+      if (nodeType === ELEMENT_NODE) {
+        if (
+          ((node: any): Element).tagName === 'LINK' &&
+          ((node: any): Element).hasAttribute('data-rprec')
+        ) {
+          continue;
+        }
+        break;
+      }
+      if (nodeType === TEXT_NODE) {
+        break;
+      }
+    } else {
+      if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
+        break;
+      }
     }
     if (nodeType === COMMENT_NODE) {
       const nodeData = (node: any).data;
@@ -871,6 +896,43 @@ export function hydrateSuspenseInstance(
   internalInstanceHandle: Object,
 ) {
   precacheFiberNode(internalInstanceHandle, suspenseInstance);
+}
+
+export function getMatchingResourceInstance(
+  type: string,
+  props: Props,
+  rootHostContainer: Container,
+): ?Instance {
+  if (enableFloat) {
+    switch (type) {
+      case 'link': {
+        if (typeof (props: any).href !== 'string') {
+          return null;
+        }
+        const selector = `link[rel="stylesheet"][data-rprec][href="${
+          (props: any).href
+        }"]`;
+        const link = getOwnerDocumentFromRootContainer(
+          rootHostContainer,
+        ).querySelector(selector);
+        if (__DEV__) {
+          const allLinks = getOwnerDocumentFromRootContainer(
+            rootHostContainer,
+          ).querySelectorAll(selector);
+          if (allLinks.length > 1) {
+            console.error(
+              'Stylesheet resources need a unique representation in the DOM while hydrating' +
+                ' and more than one matching DOM Node was found. To fix, ensure you are only' +
+                ' rendering one stylesheet link with an href attribute of "%s".',
+              (props: any).href,
+            );
+          }
+        }
+        return link;
+      }
+    }
+  }
+  return null;
 }
 
 export function getNextHydratableInstanceAfterSuspenseInstance(
