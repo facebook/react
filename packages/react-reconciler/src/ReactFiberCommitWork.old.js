@@ -1131,109 +1131,109 @@ function commitLayoutEffectOnFiber(
   }
 }
 
-function commitTransitionProgress(offscreenFiber: Fiber) {
-  if (enableTransitionTracing) {
-    // This function adds suspense boundaries to the root
-    // or tracing marker's pendingBoundaries map.
-    // When a suspense boundary goes from a resolved to a fallback
-    // state we add the boundary to the map, and when it goes from
-    // a fallback to a resolved state, we remove the boundary from
-    // the map.
+function commitTransitionOnOffscreenHide(offscreenFiber: Fiber) {
+  // This function adds suspense boundaries to the root
+  // or tracing marker's pendingBoundaries map.
+  // When a suspense boundary goes from a resolved to a fallback
+  // state we add the boundary to the map,
 
-    // We use stateNode on the Offscreen component as a stable object
-    // that doesnt change from render to render. This way we can
-    // distinguish between different Offscreen instances (vs. the same
-    // Offscreen instance with different fibers)
+  // We use stateNode on the Offscreen component as a stable object
+  // that doesnt change from render to render. This way we can
+  // distinguish between different Offscreen instances (vs. the same
+  // Offscreen instance with different fibers)
+  if (enableTransitionTracing) {
+    const offscreenInstance: OffscreenInstance = offscreenFiber.stateNode;
+    const pendingMarkers = offscreenInstance.pendingMarkers;
+    // Add the boundary to the pending boundary set if it's there
+    if (pendingMarkers !== null) {
+      // If there is a name on the suspense boundary, store that in
+      // the pending boundaries.
+      let name = null;
+      const parent = offscreenFiber.return;
+      if (
+        parent !== null &&
+        parent.tag === SuspenseComponent &&
+        parent.memoizedProps.unstable_name
+      ) {
+        name = parent.memoizedProps.unstable_name;
+      }
+
+      pendingMarkers.forEach(markerInstance => {
+        const pendingBoundaries = markerInstance.pendingBoundaries;
+        const transitions = markerInstance.transitions;
+        if (
+          pendingBoundaries !== null &&
+          !pendingBoundaries.has(offscreenInstance)
+        ) {
+          pendingBoundaries.set(offscreenInstance, {
+            name,
+          });
+          if (transitions !== null) {
+            if (markerInstance.name) {
+              addMarkerProgressCallbackToPendingTransition(
+                markerInstance.name,
+                transitions,
+                pendingBoundaries,
+              );
+            } else {
+              transitions.forEach(transition => {
+                addTransitionProgressCallbackToPendingTransition(
+                  transition,
+                  pendingBoundaries,
+                );
+              });
+            }
+          }
+        }
+      });
+    }
+  }
+}
+
+function commitTransitionOnOffscreenShow(offscreenFiber: Fiber) {
+  // This function removes suspense boundaries to the root
+  // or tracing marker's pendingBoundaries map.
+  // When a suspense boundary goes from a fallback to a resolved state,
+  // we remove the boundary from the map.
+
+  // We use stateNode on the Offscreen component as a stable object
+  // that doesnt change from render to render. This way we can
+  // distinguish between different Offscreen instances (vs. the same
+  // Offscreen instance with different fibers)
+  if (enableTransitionTracing) {
     const offscreenInstance: OffscreenInstance = offscreenFiber.stateNode;
 
-    let prevState: SuspenseState | null = null;
-    const previousFiber = offscreenFiber.alternate;
-    if (previousFiber !== null && previousFiber.memoizedState !== null) {
-      prevState = previousFiber.memoizedState;
-    }
-    const nextState: SuspenseState | null = offscreenFiber.memoizedState;
-
-    const wasHidden = prevState !== null;
-    const isHidden = nextState !== null;
-
     const pendingMarkers = offscreenInstance.pendingMarkers;
-    // If there is a name on the suspense boundary, store that in
-    // the pending boundaries.
-    let name = null;
-    const parent = offscreenFiber.return;
-    if (
-      parent !== null &&
-      parent.tag === SuspenseComponent &&
-      parent.memoizedProps.unstable_name
-    ) {
-      name = parent.memoizedProps.unstable_name;
-    }
-
-    if (!wasHidden && isHidden) {
-      // The suspense boundaries was just hidden. Add the boundary
-      // to the pending boundary set if it's there
-      if (pendingMarkers !== null) {
-        pendingMarkers.forEach(markerInstance => {
-          const pendingBoundaries = markerInstance.pendingBoundaries;
-          const transitions = markerInstance.transitions;
-          if (
-            pendingBoundaries !== null &&
-            !pendingBoundaries.has(offscreenInstance)
-          ) {
-            pendingBoundaries.set(offscreenInstance, {
-              name,
-            });
-            if (transitions !== null) {
-              if (markerInstance.name) {
-                addMarkerProgressCallbackToPendingTransition(
-                  markerInstance.name,
-                  transitions,
-                  pendingBoundaries,
-                );
-              } else {
-                transitions.forEach(transition => {
-                  addTransitionProgressCallbackToPendingTransition(
-                    transition,
-                    pendingBoundaries,
-                  );
-                });
-              }
-            }
-          }
-        });
-      }
-    } else if (wasHidden && !isHidden) {
-      // The suspense boundary went from hidden to visible. Remove
+    if (pendingMarkers !== null) {
+      // The suspense boundary is visible. Remove
       // the boundary from the pending suspense boundaries set
       // if it's there
-      if (pendingMarkers !== null) {
-        pendingMarkers.forEach(markerInstance => {
-          const pendingBoundaries = markerInstance.pendingBoundaries;
-          const transitions = markerInstance.transitions;
-          if (
-            pendingBoundaries !== null &&
-            pendingBoundaries.has(offscreenInstance)
-          ) {
-            pendingBoundaries.delete(offscreenInstance);
-            if (transitions !== null) {
-              if (markerInstance.name) {
-                addMarkerProgressCallbackToPendingTransition(
-                  markerInstance.name,
-                  transitions,
+      pendingMarkers.forEach(markerInstance => {
+        const pendingBoundaries = markerInstance.pendingBoundaries;
+        const transitions = markerInstance.transitions;
+        if (
+          pendingBoundaries !== null &&
+          pendingBoundaries.has(offscreenInstance)
+        ) {
+          pendingBoundaries.delete(offscreenInstance);
+          if (transitions !== null) {
+            if (markerInstance.name) {
+              addMarkerProgressCallbackToPendingTransition(
+                markerInstance.name,
+                transitions,
+                pendingBoundaries,
+              );
+            } else {
+              transitions.forEach(transition => {
+                addTransitionProgressCallbackToPendingTransition(
+                  transition,
                   pendingBoundaries,
                 );
-              } else {
-                transitions.forEach(transition => {
-                  addTransitionProgressCallbackToPendingTransition(
-                    transition,
-                    pendingBoundaries,
-                  );
-                });
-              }
+              });
             }
           }
-        });
-      }
+        }
+      });
     }
   }
 }
@@ -2922,6 +2922,14 @@ function commitOffscreenPassiveMountEffects(
     }
   }
 
+  commitOffscreenTransitionPassiveMountEffects(current, finishedWork, instance);
+}
+
+function commitOffscreenTransitionPassiveMountEffects(
+  current: Fiber | null,
+  finishedWork: Fiber,
+  instance: OffscreenInstance,
+) {
   if (enableTransitionTracing) {
     // TODO: Pre-rendering should not be counted as part of a transition. We
     // may add separate logs for pre-rendering, but it's not part of the
@@ -2930,8 +2938,8 @@ function commitOffscreenPassiveMountEffects(
     const queue: OffscreenQueue | null = (finishedWork.updateQueue: any);
 
     const isHidden = offscreenState !== null;
-    if (queue !== null) {
-      if (isHidden) {
+    if (isHidden) {
+      if (queue !== null) {
         const transitions = queue.transitions;
         if (transitions !== null) {
           transitions.forEach(transition => {
@@ -2970,12 +2978,14 @@ function commitOffscreenPassiveMountEffects(
             }
           });
         }
+        finishedWork.updateQueue = null;
       }
-
-      finishedWork.updateQueue = null;
+      commitTransitionOnOffscreenHide(finishedWork);
     }
 
-    commitTransitionProgress(finishedWork);
+    if (!isHidden) {
+      commitTransitionOnOffscreenShow(finishedWork);
+    }
   }
 }
 
@@ -3370,6 +3380,21 @@ function reconnectPassiveEffects(
             );
           }
         }
+
+        // If a suspense boundary in the offscreen tree is hidden, we need
+        // to add it to its parent marker instances, so we will always need
+        // to call this, even if there is no Passive marker on it
+        if (
+          finishedWork.return !== null &&
+          finishedWork.return.tag === SuspenseComponent
+        ) {
+          const current: Fiber | null = finishedWork.alternate;
+          commitOffscreenTransitionPassiveMountEffects(
+            current,
+            finishedWork,
+            instance,
+          );
+        }
       } else {
         // Tree is visible
 
@@ -3726,7 +3751,40 @@ function disconnectPassiveEffect(finishedWork: Fiber): void {
     }
     case OffscreenComponent: {
       const instance: OffscreenInstance = finishedWork.stateNode;
-      if (instance.visibility & OffscreenPassiveEffectsConnected) {
+      if (
+        enableTransitionTracing &&
+        finishedWork.return !== null &&
+        finishedWork.return.tag === SuspenseComponent
+      ) {
+        const isHidden = finishedWork.memoizedState !== null;
+        if (isHidden && instance.pendingMarkers !== null) {
+          instance.pendingMarkers.forEach(
+            ({transitions, pendingBoundaries, name}) => {
+              if (transitions !== null && pendingBoundaries !== null) {
+                if (pendingBoundaries.has(instance)) {
+                  pendingBoundaries.delete(instance);
+                }
+
+                if (name) {
+                  addMarkerProgressCallbackToPendingTransition(
+                    name,
+                    transitions,
+                    pendingBoundaries,
+                  );
+                } else {
+                  transitions.forEach(transition => {
+                    addTransitionProgressCallbackToPendingTransition(
+                      transition,
+                      pendingBoundaries,
+                    );
+                  });
+                }
+              }
+            },
+          );
+        }
+      } else if (instance.visibility & OffscreenPassiveEffectsConnected) {
+        // If the boundary is shown we don't have to do this
         instance.visibility &= ~OffscreenPassiveEffectsConnected;
         recursivelyTraverseDisconnectPassiveEffects(finishedWork);
       } else {
