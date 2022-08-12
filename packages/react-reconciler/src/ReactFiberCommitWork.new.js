@@ -177,6 +177,10 @@ import {
   OffscreenVisible,
   OffscreenPassiveEffectsConnected,
 } from './ReactFiberOffscreenComponent';
+import {
+  TransitionRoot,
+  TransitionTracingMarker,
+} from './ReactFiberTracingMarkerComponent.new';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -1184,13 +1188,16 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
               name,
             });
             if (transitions !== null) {
-              if (markerInstance.name) {
+              if (
+                markerInstance.tag === TransitionTracingMarker &&
+                markerInstance.name !== undefined
+              ) {
                 addMarkerProgressCallbackToPendingTransition(
                   markerInstance.name,
                   transitions,
                   pendingBoundaries,
                 );
-              } else {
+              } else if (markerInstance.tag === TransitionRoot) {
                 transitions.forEach(transition => {
                   addTransitionProgressCallbackToPendingTransition(
                     transition,
@@ -1216,13 +1223,16 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
           ) {
             pendingBoundaries.delete(offscreenInstance);
             if (transitions !== null) {
-              if (markerInstance.name) {
+              if (
+                markerInstance.tag === TransitionTracingMarker &&
+                markerInstance.name !== undefined
+              ) {
                 addMarkerProgressCallbackToPendingTransition(
                   markerInstance.name,
                   transitions,
                   pendingBoundaries,
                 );
-              } else {
+              } else if (markerInstance.tag === TransitionRoot) {
                 transitions.forEach(transition => {
                   addTransitionProgressCallbackToPendingTransition(
                     transition,

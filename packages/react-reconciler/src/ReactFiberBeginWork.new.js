@@ -268,6 +268,7 @@ import {
   getMarkerInstances,
   pushMarkerInstance,
   pushRootMarkerInstance,
+  TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent.new';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -976,6 +977,7 @@ function updateTracingMarkerComponent(
     const currentTransitions = getPendingTransitions();
     if (currentTransitions !== null) {
       const markerInstance: TracingMarkerInstance = {
+        tag: TransitionTracingMarker,
         transitions: new Set(currentTransitions),
         pendingBoundaries: new Map(),
         name: workInProgress.pendingProps.name,

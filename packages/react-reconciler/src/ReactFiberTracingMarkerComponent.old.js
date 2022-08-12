@@ -37,10 +37,15 @@ export type BatchConfigTransition = {
 };
 
 export type TracingMarkerInstance = {|
+  tag?: TracingMarkerTag,
   pendingBoundaries: PendingBoundaries | null,
   transitions: Set<Transition> | null,
   name?: string,
 |};
+
+export const TransitionRoot = 0;
+export const TransitionTracingMarker = 1;
+export type TracingMarkerTag = 0 | 1;
 
 export type PendingBoundaries = Map<OffscreenInstance, SuspenseInfo>;
 
@@ -146,6 +151,7 @@ export function pushRootMarkerInstance(workInProgress: Fiber): void {
       transitions.forEach(transition => {
         if (!root.incompleteTransitions.has(transition)) {
           const markerInstance: TracingMarkerInstance = {
+            tag: TransitionRoot,
             transitions: new Set([transition]),
             pendingBoundaries: null,
           };
