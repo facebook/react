@@ -45,23 +45,21 @@ describe('ReactWakeable', () => {
       );
     }
 
+    const root = ReactNoop.createRoot();
     await act(async () => {
       startTransition(() => {
-        ReactNoop.render(<App />);
+        root.render(<App />);
       });
-
-      // React will yield when the async component suspends.
-      expect(Scheduler).toFlushUntilNextPaint(['Suspend!']);
-
-      // Wait for microtasks to resolve
-      // TODO: The async form of `act` should automatically yield to microtasks
-      // when a continuation is returned, the way Scheduler does.
-      await null;
-
-      expect(Scheduler).toHaveYielded(['Resolve in microtask']);
     });
 
-    // Finished rendering without unwinding the stack.
-    expect(Scheduler).toHaveYielded(['Async']);
+    expect(Scheduler).toHaveYielded([
+      // React will yield when the async component suspends.
+      'Suspend!',
+      'Resolve in microtask',
+
+      // Finished rendering without unwinding the stack or preparing a fallback.
+      'Async',
+    ]);
+    expect(root).toMatchRenderedOutput('Async');
   });
 });
