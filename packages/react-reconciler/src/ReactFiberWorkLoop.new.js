@@ -174,6 +174,7 @@ import {
   throwException,
   createRootErrorUpdate,
   createClassErrorUpdate,
+  attachPingListener,
 } from './ReactFiberThrow.new';
 import {
   commitBeforeMutationEffects,
@@ -257,6 +258,7 @@ import {
   trackSuspendedWakeable,
   suspendedWakeableWasPinged,
   attemptToPingSuspendedWakeable,
+  isTrackingSuspendedWakeable,
 } from './ReactFiberWakeable.new';
 
 const ceil = Math.ceil;
@@ -298,6 +300,7 @@ let workInProgressRootRenderLanes: Lanes = NoLanes;
 // after this happens. If the fiber is pinged before we resume, we can retry
 // immediately instead of unwinding the stack.
 let workInProgressIsSuspended: boolean = false;
+let workInProgressThrownValue: mixed = null;
 
 // A contextual version of workInProgressRootRenderLanes. It is a superset of
 // the lanes that we started working on at the root. When we enter a subtree
@@ -1569,6 +1572,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgress = rootWorkInProgress;
   workInProgressRootRenderLanes = renderLanes = lanes;
   workInProgressIsSuspended = false;
+  workInProgressThrownValue = null;
   workInProgressRootExitStatus = RootInProgress;
   workInProgressRootFatalError = null;
   workInProgressRootSkippedLanes = NoLanes;
@@ -1587,94 +1591,72 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   return rootWorkInProgress;
 }
 
-function handleError(root, thrownValue): Wakeable | null {
-  do {
-    let erroredWork = workInProgress;
-    try {
-      // Reset module-level state that was set during the render phase.
-      resetContextDependencies();
-      resetHooksAfterThrow();
-      resetCurrentDebugFiberInDEV();
-      // TODO: I found and added this missing line while investigating a
-      // separate issue. Write a regression test using string refs.
-      ReactCurrentOwner.current = null;
+function handleThrow(root, thrownValue): void {
+  // Reset module-level state that was set during the render phase.
+  resetContextDependencies();
+  resetHooksAfterThrow();
+  resetCurrentDebugFiberInDEV();
+  // TODO: I found and added this missing line while investigating a
+  // separate issue. Write a regression test using string refs.
+  ReactCurrentOwner.current = null;
 
-      if (erroredWork === null || erroredWork.return === null) {
-        // Expected to be working on a non-root fiber. This is a fatal error
-        // because there's no ancestor that can handle it; the root is
-        // supposed to capture all errors that weren't caught by an error
-        // boundary.
-        workInProgressRootExitStatus = RootFatalErrored;
-        workInProgressRootFatalError = thrownValue;
-        // Set `workInProgress` to null. This represents advancing to the next
-        // sibling, or the parent if there are no siblings. But since the root
-        // has no siblings nor a parent, we set it to null. Usually this is
-        // handled by `completeUnitOfWork` or `unwindWork`, but since we're
-        // intentionally not calling those, we need set it here.
-        // TODO: Consider calling `unwindWork` to pop the contexts.
-        workInProgress = null;
-        return null;
-      }
+  // Setting this to `true` tells the work loop to unwind the stack instead
+  // of entering the begin phase. It's called "suspended" because it usually
+  // happens because of Suspense, but it also applies to errors. Think of it
+  // as suspending the execution of the work loop.
+  workInProgressIsSuspended = true;
+  workInProgressThrownValue = thrownValue;
 
-      if (enableProfilerTimer && erroredWork.mode & ProfileMode) {
-        // Record the time spent rendering before an error was thrown. This
-        // avoids inaccurate Profiler durations in the case of a
-        // suspended render.
-        stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true);
-      }
+  const erroredWork = workInProgress;
+  if (erroredWork === null) {
+    // This is a fatal error
+    workInProgressRootExitStatus = RootFatalErrored;
+    workInProgressRootFatalError = thrownValue;
+    return;
+  }
 
-      if (enableSchedulingProfiler) {
-        markComponentRenderStopped();
+  const isWakeable =
+    thrownValue !== null &&
+    typeof thrownValue === 'object' &&
+    typeof thrownValue.then === 'function';
 
-        if (
-          thrownValue !== null &&
-          typeof thrownValue === 'object' &&
-          typeof thrownValue.then === 'function'
-        ) {
-          const wakeable: Wakeable = (thrownValue: any);
-          markComponentSuspended(
-            erroredWork,
-            wakeable,
-            workInProgressRootRenderLanes,
-          );
-        } else {
-          markComponentErrored(
-            erroredWork,
-            thrownValue,
-            workInProgressRootRenderLanes,
-          );
-        }
-      }
+  if (enableProfilerTimer && erroredWork.mode & ProfileMode) {
+    // Record the time spent rendering before an error was thrown. This
+    // avoids inaccurate Profiler durations in the case of a
+    // suspended render.
+    stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true);
+  }
 
-      const maybeWakeable = throwException(
-        root,
-        erroredWork.return,
+  if (enableSchedulingProfiler) {
+    markComponentRenderStopped();
+    if (isWakeable) {
+      const wakeable: Wakeable = (thrownValue: any);
+      markComponentSuspended(
+        erroredWork,
+        wakeable,
+        workInProgressRootRenderLanes,
+      );
+    } else {
+      markComponentErrored(
         erroredWork,
         thrownValue,
         workInProgressRootRenderLanes,
       );
-      // Setting this to `true` tells the work loop to unwind the stack instead
-      // of entering the begin phase. It's called "suspended" because it usually
-      // happens because of Suspense, but it also applies to errors. Think of it
-      // as suspending the execution of the work loop.
-      workInProgressIsSuspended = true;
-
-      // Return to the normal work loop.
-      return maybeWakeable;
-    } catch (yetAnotherThrownValue) {
-      // Something in the return path also threw.
-      thrownValue = yetAnotherThrownValue;
-      if (workInProgress === erroredWork && erroredWork !== null) {
-        // If this boundary has already errored, then we had trouble processing
-        // the error. Bubble it to the next boundary.
-        erroredWork = erroredWork.return;
-        workInProgress = erroredWork;
-      } else {
-        erroredWork = workInProgress;
-      }
-      continue;
     }
-  } while (true);
+  }
+
+  if (isWakeable) {
+    const wakeable: Wakeable = (thrownValue: any);
+    // Attach the ping listener now, before we yield to the main thread.
+    // TODO: We don't need to attach a real ping listener here — we only need
+    // to confirm that this wakeable's status will be updated when it resolves.
+    // That logic isn't implemented until a later commit, though, so I'll leave
+    // this until then.
+    if (root.tag !== LegacyRoot) {
+      attachPingListener(root, wakeable, workInProgressRootRenderLanes);
+      trackSuspendedWakeable(wakeable);
+    }
+  }
 }
 
 function pushDispatcher() {
@@ -1800,7 +1782,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
       workLoopSync();
       break;
     } catch (thrownValue) {
-      handleError(root, thrownValue);
+      handleThrow(root, thrownValue);
     }
   } while (true);
   resetContextDependencies();
@@ -1838,10 +1820,15 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
 function workLoopSync() {
   // Perform work without checking if we need to yield between fiber.
 
-  if (workInProgressIsSuspended && workInProgress !== null) {
+  if (workInProgressIsSuspended) {
     // The current work-in-progress was already attempted. We need to unwind
     // it before we continue the normal work loop.
-    resumeSuspendedUnitOfWork(workInProgress);
+    const thrownValue = workInProgressThrownValue;
+    workInProgressIsSuspended = false;
+    workInProgressThrownValue = null;
+    if (workInProgress !== null) {
+      resumeSuspendedUnitOfWork(workInProgress, thrownValue);
+    }
   }
 
   while (workInProgress !== null) {
@@ -1893,12 +1880,11 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
       workLoopConcurrent();
       break;
     } catch (thrownValue) {
-      const maybeWakeable = handleError(root, thrownValue);
-      if (maybeWakeable !== null) {
+      handleThrow(root, thrownValue);
+      if (isTrackingSuspendedWakeable()) {
         // If this fiber just suspended, it's possible the data is already
         // cached. Yield to the the main thread to give it a chance to ping. If
         // it does, we can retry immediately without unwinding the stack.
-        trackSuspendedWakeable(maybeWakeable);
         break;
       }
     }
@@ -1940,10 +1926,15 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 function workLoopConcurrent() {
   // Perform work until Scheduler asks us to yield
 
-  if (workInProgressIsSuspended && workInProgress !== null) {
+  if (workInProgressIsSuspended) {
     // The current work-in-progress was already attempted. We need to unwind
     // it before we continue the normal work loop.
-    resumeSuspendedUnitOfWork(workInProgress);
+    const thrownValue = workInProgressThrownValue;
+    workInProgressIsSuspended = false;
+    workInProgressThrownValue = null;
+    if (workInProgress !== null) {
+      resumeSuspendedUnitOfWork(workInProgress, thrownValue);
+    }
   }
 
   while (workInProgress !== null && !shouldYield()) {
@@ -1979,27 +1970,71 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   ReactCurrentOwner.current = null;
 }
 
-function resumeSuspendedUnitOfWork(unitOfWork: Fiber): void {
+function resumeSuspendedUnitOfWork(
+  unitOfWork: Fiber,
+  thrownValue: mixed,
+): void {
   // This is a fork of performUnitOfWork specifcally for resuming a fiber that
   // just suspended. In some cases, we may choose to retry the fiber immediately
   // instead of unwinding the stack. It's a separate function to keep the
   // additional logic out of the work loop's hot path.
 
-  if (!suspendedWakeableWasPinged()) {
+  const wasPinged = suspendedWakeableWasPinged();
+  resetWakeableState();
+
+  if (!wasPinged) {
     // The wakeable wasn't pinged. Return to the normal work loop. This will
     // unwind the stack, and potentially result in showing a fallback.
-    workInProgressIsSuspended = false;
-    resetWakeableState();
+
+    const returnFiber = unitOfWork.return;
+    if (returnFiber === null || workInProgressRoot === null) {
+      // Expected to be working on a non-root fiber. This is a fatal error
+      // because there's no ancestor that can handle it; the root is
+      // supposed to capture all errors that weren't caught by an error
+      // boundary.
+      workInProgressRootExitStatus = RootFatalErrored;
+      workInProgressRootFatalError = thrownValue;
+      // Set `workInProgress` to null. This represents advancing to the next
+      // sibling, or the parent if there are no siblings. But since the root
+      // has no siblings nor a parent, we set it to null. Usually this is
+      // handled by `completeUnitOfWork` or `unwindWork`, but since we're
+      // intentionally not calling those, we need set it here.
+      // TODO: Consider calling `unwindWork` to pop the contexts.
+      workInProgress = null;
+      return;
+    }
+
+    try {
+      // Find and mark the nearest Suspense or error boundary that can handle
+      // this "exception".
+      throwException(
+        workInProgressRoot,
+        returnFiber,
+        unitOfWork,
+        thrownValue,
+        workInProgressRootRenderLanes,
+      );
+    } catch (error) {
+      // We had trouble processing the error. An example of this happening is
+      // when accessing the `componentDidCatch` property of an error boundary
+      // throws an error. A weird edge case. There's a regression test for this.
+      // To prevent an infinite loop, bubble the error up to the next parent.
+      workInProgress = returnFiber;
+      throw error;
+    }
+
+    // Return to the normal work loop.
     completeUnitOfWork(unitOfWork);
     return;
   }
 
   // The work-in-progress was immediately pinged. Instead of unwinding the
-  // stack and potentially showing a fallback, reset the fiber and try rendering
-  // it again.
+  // stack and potentially showing a fallback, unwind only the last stack frame,
+  // reset the fiber, and try rendering it again.
+  const current = unitOfWork.alternate;
+  unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
   unitOfWork = workInProgress = resetWorkInProgress(unitOfWork, renderLanes);
 
-  const current = unitOfWork.alternate;
   setCurrentDebugFiberInDEV(unitOfWork);
 
   let next;
@@ -2011,10 +2046,8 @@ function resumeSuspendedUnitOfWork(unitOfWork: Fiber): void {
     next = beginWork(current, unitOfWork, renderLanes);
   }
 
-  // The begin phase finished successfully without suspending. Reset the state
-  // used to track the fiber while it was suspended. Then return to the normal
-  // work loop.
-  workInProgressIsSuspended = false;
+  // The begin phase finished successfully without suspending. Return to the
+  // normal work loop.
   resetWakeableState();
 
   resetCurrentDebugFiberInDEV();
@@ -3138,7 +3171,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         throw originalError;
       }
 
-      // Keep this code in sync with handleError; any changes here must have
+      // Keep this code in sync with handleThrow; any changes here must have
       // corresponding changes there.
       resetContextDependencies();
       resetHooksAfterThrow();

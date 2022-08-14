@@ -159,7 +159,11 @@ function createClassErrorUpdate(
   return update;
 }
 
-function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: Lanes) {
+export function attachPingListener(
+  root: FiberRoot,
+  wakeable: Wakeable,
+  lanes: Lanes,
+) {
   // Attach a ping listener
   //
   // The data might resolve before we have a chance to commit the fallback. Or,
@@ -357,7 +361,7 @@ function throwException(
   sourceFiber: Fiber,
   value: mixed,
   rootRenderLanes: Lanes,
-): Wakeable | null {
+): void {
   // The source fiber did not complete.
   sourceFiber.flags |= Incomplete;
 
@@ -459,7 +463,7 @@ function throwException(
       if (suspenseBoundary.mode & ConcurrentMode) {
         attachPingListener(root, wakeable, rootRenderLanes);
       }
-      return wakeable;
+      return;
     } else {
       // No boundary was found. Unless this is a sync update, this is OK.
       // We can suspend and wait for more data to arrive.
@@ -474,7 +478,7 @@ function throwException(
         // This case also applies to initial hydration.
         attachPingListener(root, wakeable, rootRenderLanes);
         renderDidSuspendDelayIfPossible();
-        return wakeable;
+        return;
       }
 
       // This is a sync/discrete update. We treat this case like an error
@@ -517,7 +521,7 @@ function throwException(
         // Even though the user may not be affected by this error, we should
         // still log it so it can be fixed.
         queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
-        return null;
+        return;
       }
     } else {
       // Otherwise, fall through to the error path.
@@ -540,7 +544,7 @@ function throwException(
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
         const update = createRootErrorUpdate(workInProgress, errorInfo, lane);
         enqueueCapturedUpdate(workInProgress, update);
-        return null;
+        return;
       }
       case ClassComponent:
         // Capture and retry
@@ -564,7 +568,7 @@ function throwException(
             lane,
           );
           enqueueCapturedUpdate(workInProgress, update);
-          return null;
+          return;
         }
         break;
       default:
@@ -572,7 +576,6 @@ function throwException(
     }
     workInProgress = workInProgress.return;
   } while (workInProgress !== null);
-  return null;
 }
 
 export {throwException, createRootErrorUpdate, createClassErrorUpdate};

@@ -15,6 +15,10 @@ let adHocSuspendCount: number = 0;
 
 const MAX_AD_HOC_SUSPEND_COUNT = 50;
 
+export function isTrackingSuspendedWakeable() {
+  return suspendedWakeable !== null;
+}
+
 export function suspendedWakeableWasPinged() {
   return wasPinged;
 }

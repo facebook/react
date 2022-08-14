@@ -62,4 +62,35 @@ describe('ReactWakeable', () => {
     ]);
     expect(root).toMatchRenderedOutput('Async');
   });
+
+  test('if suspended fiber is pinged in a microtask, it does not block a transition from completing', async () => {
+    let resolved = false;
+    function Async() {
+      if (resolved) {
+        return <Text text="Async" />;
+      }
+      Scheduler.unstable_yieldValue('Suspend!');
+      throw Promise.resolve().then(() => {
+        Scheduler.unstable_yieldValue('Resolve in microtask');
+        resolved = true;
+      });
+    }
+
+    function App() {
+      return <Async />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      'Suspend!',
+      'Resolve in microtask',
+      'Async',
+    ]);
+    expect(root).toMatchRenderedOutput('Async');
+  });
 });
