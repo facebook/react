@@ -93,4 +93,44 @@ describe('ReactWakeable', () => {
     ]);
     expect(root).toMatchRenderedOutput('Async');
   });
+
+  test('does not infinite loop if already resolved thenable is thrown', async () => {
+    // An already resolved promise should never be thrown. Since it already
+    // resolved, we shouldn't bother trying to render again — doing so would
+    // likely lead to an infinite loop. This scenario should only happen if a
+    // userspace Suspense library makes an implementation mistake.
+
+    // Create an already resolved thenable
+    const thenable = {
+      then(ping) {},
+      status: 'fulfilled',
+      value: null,
+    };
+
+    let i = 0;
+    function Async() {
+      if (i++ > 50) {
+        throw new Error('Infinite loop detected');
+      }
+      Scheduler.unstable_yieldValue('Suspend!');
+      // This thenable should never be thrown because it already resolved.
+      // But if it is thrown, React should handle it gracefully.
+      throw thenable;
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Async />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['Suspend!', 'Loading...']);
+    expect(root).toMatchRenderedOutput('Loading...');
+  });
 });

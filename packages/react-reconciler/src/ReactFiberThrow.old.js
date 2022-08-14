@@ -159,11 +159,7 @@ function createClassErrorUpdate(
   return update;
 }
 
-export function attachPingListener(
-  root: FiberRoot,
-  wakeable: Wakeable,
-  lanes: Lanes,
-) {
+function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: Lanes) {
   // Attach a ping listener
   //
   // The data might resolve before we have a chance to commit the fallback. Or,

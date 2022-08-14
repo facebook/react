@@ -174,7 +174,6 @@ import {
   throwException,
   createRootErrorUpdate,
   createClassErrorUpdate,
-  attachPingListener,
 } from './ReactFiberThrow.new';
 import {
   commitBeforeMutationEffects,
@@ -256,9 +255,8 @@ import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent.new
 import {
   resetWakeableState,
   trackSuspendedWakeable,
-  suspendedWakeableWasPinged,
-  attemptToPingSuspendedWakeable,
-  isTrackingSuspendedWakeable,
+  suspendedThenableDidResolve,
+  isTrackingSuspendedThenable,
 } from './ReactFiberWakeable.new';
 
 const ceil = Math.ceil;
@@ -1647,15 +1645,8 @@ function handleThrow(root, thrownValue): void {
 
   if (isWakeable) {
     const wakeable: Wakeable = (thrownValue: any);
-    // Attach the ping listener now, before we yield to the main thread.
-    // TODO: We don't need to attach a real ping listener here — we only need
-    // to confirm that this wakeable's status will be updated when it resolves.
-    // That logic isn't implemented until a later commit, though, so I'll leave
-    // this until then.
-    if (root.tag !== LegacyRoot) {
-      attachPingListener(root, wakeable, workInProgressRootRenderLanes);
-      trackSuspendedWakeable(wakeable);
-    }
+
+    trackSuspendedWakeable(wakeable);
   }
 }
 
@@ -1881,7 +1872,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
       break;
     } catch (thrownValue) {
       handleThrow(root, thrownValue);
-      if (isTrackingSuspendedWakeable()) {
+      if (isTrackingSuspendedThenable()) {
         // If this fiber just suspended, it's possible the data is already
         // cached. Yield to the the main thread to give it a chance to ping. If
         // it does, we can retry immediately without unwinding the stack.
@@ -1979,11 +1970,11 @@ function resumeSuspendedUnitOfWork(
   // instead of unwinding the stack. It's a separate function to keep the
   // additional logic out of the work loop's hot path.
 
-  const wasPinged = suspendedWakeableWasPinged();
+  const wasPinged = suspendedThenableDidResolve();
   resetWakeableState();
 
   if (!wasPinged) {
-    // The wakeable wasn't pinged. Return to the normal work loop. This will
+    // The thenable wasn't pinged. Return to the normal work loop. This will
     // unwind the stack, and potentially result in showing a fallback.
 
     const returnFiber = unitOfWork.return;
@@ -2873,31 +2864,26 @@ export function pingSuspendedRoot(
     // Received a ping at the same priority level at which we're currently
     // rendering. We might want to restart this render. This should mirror
     // the logic of whether or not a root suspends once it completes.
-    const didPingSuspendedWakeable = attemptToPingSuspendedWakeable(wakeable);
-    if (didPingSuspendedWakeable) {
-      // Successfully pinged the in-progress fiber. Don't unwind the stack.
-    } else {
-      // TODO: If we're rendering sync either due to Sync, Batched or expired,
-      // we should probably never restart.
+    // TODO: If we're rendering sync either due to Sync, Batched or expired,
+    // we should probably never restart.
 
-      // If we're suspended with delay, or if it's a retry, we'll always suspend
-      // so we can always restart.
-      if (
-        workInProgressRootExitStatus === RootSuspendedWithDelay ||
-        (workInProgressRootExitStatus === RootSuspended &&
-          includesOnlyRetries(workInProgressRootRenderLanes) &&
-          now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
-      ) {
-        // Restart from the root.
-        prepareFreshStack(root, NoLanes);
-      } else {
-        // Even though we can't restart right now, we might get an
-        // opportunity later. So we mark this render as having a ping.
-        workInProgressRootPingedLanes = mergeLanes(
-          workInProgressRootPingedLanes,
-          pingedLanes,
-        );
-      }
+    // If we're suspended with delay, or if it's a retry, we'll always suspend
+    // so we can always restart.
+    if (
+      workInProgressRootExitStatus === RootSuspendedWithDelay ||
+      (workInProgressRootExitStatus === RootSuspended &&
+        includesOnlyRetries(workInProgressRootRenderLanes) &&
+        now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
+    ) {
+      // Restart from the root.
+      prepareFreshStack(root, NoLanes);
+    } else {
+      // Even though we can't restart right now, we might get an
+      // opportunity later. So we mark this render as having a ping.
+      workInProgressRootPingedLanes = mergeLanes(
+        workInProgressRootPingedLanes,
+        pingedLanes,
+      );
     }
   }
 
