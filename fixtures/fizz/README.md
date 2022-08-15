@@ -1,6 +1,6 @@
 # Fizz Fixtures
 
-A set of basic tests for Fizz primarily focussed on baseline perfomrance of legacy renderToString and streaming implementations.
+A set of basic tests for Fizz primarily focussed on baseline performance of legacy renderToString and streaming implementations.
 
 ## Setup
 
