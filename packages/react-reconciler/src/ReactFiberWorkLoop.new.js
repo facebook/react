@@ -3021,6 +3021,7 @@ function doubleInvokeEffectsInDEV(
   const isStrictModeFiber = fiber.type === REACT_STRICT_MODE_TYPE;
   const isInStrictMode = parentIsInStrictMode || isStrictModeFiber;
   if (fiber.flags & PlacementDEV || fiber.tag === OffscreenComponent) {
+    setCurrentDebugFiberInDEV(fiber);
     if (isInStrictMode) {
       disappearLayoutEffects(fiber);
     }
@@ -3033,6 +3034,7 @@ function doubleInvokeEffectsInDEV(
     if (hasPassiveEffects && isInStrictMode) {
       reconnectPassiveEffects(root, fiber, NoLanes, null, false);
     }
+    resetCurrentDebugFiberInDEV();
   } else {
     recursivelyTraverseAndDoubleInvokeEffectsInDEV(
       root,
