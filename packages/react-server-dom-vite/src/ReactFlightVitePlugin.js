@@ -243,6 +243,7 @@ export default function ReactFlightVitePlugin({
         return findClientBoundariesForClientBuild(
           serverBuildEntries,
           optimizeBoundaries !== false,
+          config.root,
         ).then(injectGlobs);
       }
     },
@@ -344,9 +345,11 @@ function findClientBoundaries(moduleGraph: any, optimizeBoundaries = false) {
 async function findClientBoundariesForClientBuild(
   serverEntries: string[],
   optimizeBoundaries: boolean,
+  root: string,
 ) {
   // Viteception
   const server = await createServer({
+    root,
     clearScreen: false,
     server: {middlewareMode: 'ssr'},
   });
