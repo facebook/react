@@ -3390,6 +3390,61 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
+  it('accepts an integrity property for bootstrapScripts and bootstrapModules', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+        {
+          bootstrapScripts: [
+            'foo',
+            {
+              src: 'bar',
+            },
+            {
+              src: 'baz',
+              integrity: 'qux',
+            },
+          ],
+          bootstrapModules: [
+            'quux',
+            {
+              src: 'corge',
+            },
+            {
+              src: 'grault',
+              integrity: 'garply',
+            },
+          ],
+        },
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+    expect(
+      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
+    ).toEqual([
+      '<script src="foo" async=""></script>',
+      '<script src="bar" async=""></script>',
+      '<script src="baz" integrity="qux" async=""></script>',
+      '<script type="module" src="quux" async=""></script>',
+      '<script type="module" src="corge" async=""></script>',
+      '<script type="module" src="grault" integrity="garply" async=""></script>',
+    ]);
+  });
+
   describe('bootstrapScriptContent escaping', () => {
     it('the "S" in "</?[Ss]cript" strings are replaced with unicode escaped lowercase s or S depending on case, preserving case sensitivity of nearby characters', async () => {
       window.__test_outlet = '';
