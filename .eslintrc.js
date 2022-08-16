@@ -124,7 +124,7 @@ module.exports = {
 
   overrides: [
     {
-      // By default, anything error message that appears the packages directory
+      // By default, any error message that appears in the packages directory
       // must have a corresponding error code. The exceptions are defined
       // in the next override entry.
       files: ['packages/**/*.js'],
