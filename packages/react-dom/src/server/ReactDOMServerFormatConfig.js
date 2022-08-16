@@ -1084,7 +1084,7 @@ function pushLink(
               pushAttribute(target, responseState, 'data-rprec', propValue);
             } else if (__DEV__) {
               throw new Error(
-                `the "precedence" prop for links to stylehseets expects to receive a string but received something of type "${typeof propValue}" instead.`,
+                `the "precedence" prop for links to stylesheets expects to receive a string but received something of type "${typeof propValue}" instead.`,
               );
             }
             break;
@@ -1238,27 +1238,27 @@ function pushStartTitle(
 
 function pushStartHead(
   target: Array<Chunk | PrecomputedChunk>,
-  preamble: ?Array<Chunk | PrecomputedChunk>,
+  preamble: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
   responseState: ResponseState,
 ): ReactNodeList {
   // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target = enableFloat ? (preamble: any) : target;
+  target = enableFloat ? preamble : target;
 
   return pushStartGenericElement(target, props, tag, responseState);
 }
 
 function pushStartHtml(
   target: Array<Chunk | PrecomputedChunk>,
-  preamble: ?Array<Chunk | PrecomputedChunk>,
+  preamble: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
   formatContext: FormatContext,
   responseState: ResponseState,
 ): ReactNodeList {
   // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target = enableFloat ? (preamble: any) : target;
+  target = enableFloat ? preamble : target;
 
   if (formatContext.insertionMode === ROOT_HTML_MODE) {
     // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
@@ -1485,7 +1485,7 @@ const DOCTYPE: PrecomputedChunk = stringToPrecomputedChunk('<!DOCTYPE html>');
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  preamble: ?Array<Chunk | PrecomputedChunk>,
+  preamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
@@ -1607,7 +1607,7 @@ const endTag2 = stringToPrecomputedChunk('>');
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  postamble: ?Array<Chunk | PrecomputedChunk>,
+  postamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {
@@ -1636,8 +1636,7 @@ export function pushEndInstance(
     // Postamble end tags
     case 'body':
     case 'html':
-      // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-      target = enableFloat ? (postamble: any) : target;
+      target = enableFloat ? postamble : target;
     // Intentional fallthrough
     default: {
       target.push(endTag1, stringToChunk(type), endTag2);

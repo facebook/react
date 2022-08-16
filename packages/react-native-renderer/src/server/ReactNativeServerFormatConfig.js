@@ -137,7 +137,7 @@ export function pushTextInstance(
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  preamble: ?Array<Chunk | PrecomputedChunk>,
+  preamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
@@ -154,7 +154,7 @@ export function pushStartInstance(
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  postamble: ?Array<Chunk | PrecomputedChunk>,
+  postamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {

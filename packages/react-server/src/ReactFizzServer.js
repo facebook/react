@@ -201,8 +201,8 @@ export opaque type Request = {
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
-  +preamble: ?Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted before any segment chunks.
-  +postamble: ?Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted after segments, waiting for all pending root tasks to finish
+  +preamble: Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted before any segment chunks.
+  +postamble: Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted after segments, waiting for all pending root tasks to finish
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
   // Returning null/undefined will cause a defualt error message in production
@@ -275,8 +275,8 @@ export function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
-    preamble: enableFloat ? [] : null,
-    postamble: enableFloat ? [] : null,
+    preamble: [],
+    postamble: [],
     onError: onError === undefined ? defaultErrorHandler : onError,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
@@ -2074,9 +2074,7 @@ function flushCompletedQueues(
     if (completedRootSegment !== null) {
       if (request.pendingRootTasks === 0) {
         if (enableFloat) {
-          const preamble: Array<
-            Chunk | PrecomputedChunk,
-          > = (request.preamble: any);
+          const preamble = request.preamble;
           for (i = 0; i < preamble.length; i++) {
             // we expect the preamble to be tiny and will ignore backpressure
             writeChunk(destination, preamble[i]);
@@ -2167,9 +2165,7 @@ function flushCompletedQueues(
       // either they have pending task or they're complete.
     ) {
       if (enableFloat) {
-        const postamble: Array<
-          Chunk | PrecomputedChunk,
-        > = (request.postamble: any);
+        const postamble = request.postamble;
         for (let i = 0; i < postamble.length; i++) {
           writeChunk(destination, postamble[i]);
         }
