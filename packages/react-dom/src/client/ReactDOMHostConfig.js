@@ -696,24 +696,34 @@ export function unhideTextInstance(
 }
 
 export function clearContainer(container: Container): void {
-  if (container.nodeType === ELEMENT_NODE) {
-    switch (((container: any): Element).tagName.toLowerCase()) {
-      case 'html': {
-        break;
+  if (enableFloat) {
+    if (container.nodeType === ELEMENT_NODE) {
+      switch (((container: any): Element).tagName.toLowerCase()) {
+        case 'html': {
+          break;
+        }
+        case 'head':
+        case 'body': {
+          resetSingletonInstance(container);
+          break;
+        }
+        default: {
+          ((container: any): Element).textContent = '';
+        }
       }
-      case 'head':
-      case 'body': {
-        resetSingletonInstance(container);
-        break;
-      }
-      default: {
-        ((container: any): Element).textContent = '';
+    }
+    // Implicitly if the container is of type Document we rely on the Persistent HostComponent
+    // semantics to clear these nodes appropriately when being placed so no ahead of time
+    // clearing is necessary
+  } else {
+    if (container.nodeType === ELEMENT_NODE) {
+      ((container: any): Element).textContent = '';
+    } else if (container.nodeType === DOCUMENT_NODE) {
+      if (container.documentElement) {
+        container.removeChild(container.documentElement);
       }
     }
   }
-  // Implicitly if the container is of type Document we rely on the Persistent HostComponent
-  // semantics to clear these nodes appropriately when being placed so no ahead of time
-  // clearing is necessary
 }
 
 // -------------------
