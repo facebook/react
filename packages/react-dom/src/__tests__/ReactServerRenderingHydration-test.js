@@ -603,7 +603,6 @@ describe('ReactDOMServerHydration', () => {
     expect(customElement.obj).toBe(undefined);
   });
 
-  // @gate experimental || !www || !__DEV__
   it('refers users to apis that support Suspense when something suspends', () => {
     const theInfinitePromise = new Promise(() => {});
     function InfiniteSuspend() {
@@ -649,7 +648,6 @@ describe('ReactDOMServerHydration', () => {
     }
   });
 
-  // @gate experimental || !www || !__DEV__
   it('refers users to apis that support Suspense when something suspends (browser)', () => {
     const theInfinitePromise = new Promise(() => {});
     function InfiniteSuspend() {

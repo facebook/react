@@ -128,7 +128,6 @@ export function getRootHostContext(
 export function getChildHostContext(
   parentHostContext: HostContext,
   type: string,
-  rootContainerInstance: Container,
 ): HostContext {
   return NO_CONTEXT;
 }

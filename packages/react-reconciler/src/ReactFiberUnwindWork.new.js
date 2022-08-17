@@ -12,6 +12,7 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {Cache} from './ReactFiberCacheComponent.new';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 import {
@@ -36,7 +37,11 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.new';
-import {popSuspenseContext} from './ReactFiberSuspenseContext.new';
+import {
+  popSuspenseListContext,
+  popSuspenseHandler,
+} from './ReactFiberSuspenseContext.new';
+import {popHiddenContext} from './ReactFiberHiddenContext.new';
 import {resetHydrationState} from './ReactFiberHydrationContext.new';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -44,12 +49,14 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext.new';
 import {popProvider} from './ReactFiberNewContext.new';
-import {popRenderLanes} from './ReactFiberWorkLoop.new';
 import {popCacheProvider} from './ReactFiberCacheComponent.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
 import {popRootTransition, popTransition} from './ReactFiberTransition.new';
-import {popTracingMarker} from './ReactFiberTracingMarkerComponent.new';
+import {
+  popMarkerInstance,
+  popRootMarkerInstance,
+} from './ReactFiberTracingMarkerComponent.new';
 
 function unwindWork(
   current: Fiber | null,
@@ -86,6 +93,11 @@ function unwindWork(
         const cache: Cache = workInProgress.memoizedState.cache;
         popCacheProvider(workInProgress, cache);
       }
+
+      if (enableTransitionTracing) {
+        popRootMarkerInstance(workInProgress);
+      }
+
       popRootTransition(workInProgress, root, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -109,7 +121,7 @@ function unwindWork(
       return null;
     }
     case SuspenseComponent: {
-      popSuspenseContext(workInProgress);
+      popSuspenseHandler(workInProgress);
       const suspenseState: null | SuspenseState = workInProgress.memoizedState;
       if (suspenseState !== null && suspenseState.dehydrated !== null) {
         if (workInProgress.alternate === null) {
@@ -137,7 +149,7 @@ function unwindWork(
       return null;
     }
     case SuspenseListComponent: {
-      popSuspenseContext(workInProgress);
+      popSuspenseListContext(workInProgress);
       // SuspenseList doesn't actually catch anything. It should've been
       // caught by a nested boundary. If not, it should bubble through.
       return null;
@@ -150,10 +162,24 @@ function unwindWork(
       popProvider(context, workInProgress);
       return null;
     case OffscreenComponent:
-    case LegacyHiddenComponent:
-      popRenderLanes(workInProgress);
+    case LegacyHiddenComponent: {
+      popSuspenseHandler(workInProgress);
+      popHiddenContext(workInProgress);
       popTransition(workInProgress, current);
+      const flags = workInProgress.flags;
+      if (flags & ShouldCapture) {
+        workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
+        // Captured a suspense effect. Re-render the boundary.
+        if (
+          enableProfilerTimer &&
+          (workInProgress.mode & ProfileMode) !== NoMode
+        ) {
+          transferActualDuration(workInProgress);
+        }
+        return workInProgress;
+      }
       return null;
+    }
     case CacheComponent:
       if (enableCache) {
         const cache: Cache = workInProgress.memoizedState.cache;
@@ -162,7 +188,9 @@ function unwindWork(
       return null;
     case TracingMarkerComponent:
       if (enableTransitionTracing) {
-        popTracingMarker(workInProgress);
+        if (workInProgress.stateNode !== null) {
+          popMarkerInstance(workInProgress);
+        }
       }
       return null;
     default:
@@ -194,6 +222,11 @@ function unwindInterruptedWork(
         const cache: Cache = interruptedWork.memoizedState.cache;
         popCacheProvider(interruptedWork, cache);
       }
+
+      if (enableTransitionTracing) {
+        popRootMarkerInstance(interruptedWork);
+      }
+
       popRootTransition(interruptedWork, root, renderLanes);
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
@@ -208,10 +241,10 @@ function unwindInterruptedWork(
       popHostContainer(interruptedWork);
       break;
     case SuspenseComponent:
-      popSuspenseContext(interruptedWork);
+      popSuspenseHandler(interruptedWork);
       break;
     case SuspenseListComponent:
-      popSuspenseContext(interruptedWork);
+      popSuspenseListContext(interruptedWork);
       break;
     case ContextProvider:
       const context: ReactContext<any> = interruptedWork.type._context;
@@ -219,7 +252,8 @@ function unwindInterruptedWork(
       break;
     case OffscreenComponent:
     case LegacyHiddenComponent:
-      popRenderLanes(interruptedWork);
+      popSuspenseHandler(interruptedWork);
+      popHiddenContext(interruptedWork);
       popTransition(interruptedWork, current);
       break;
     case CacheComponent:
@@ -230,7 +264,11 @@ function unwindInterruptedWork(
       break;
     case TracingMarkerComponent:
       if (enableTransitionTracing) {
-        popTracingMarker(interruptedWork);
+        const instance: TracingMarkerInstance | null =
+          interruptedWork.stateNode;
+        if (instance !== null) {
+          popMarkerInstance(interruptedWork);
+        }
       }
       break;
     default:

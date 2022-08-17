@@ -11,16 +11,15 @@ import type {Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
-import type {StackCursor} from './ReactFiberStack.old';
 import type {Flags} from './ReactFiberFlags';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {EventPriority} from './ReactEventPriorities.old';
 import type {
   PendingTransitionCallbacks,
-  TransitionObject,
-  MarkerTransitionObject,
+  PendingBoundaries,
   Transition,
 } from './ReactFiberTracingMarkerComponent.old';
+import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -87,6 +86,7 @@ import {
 import {
   createWorkInProgress,
   assignFiberPropertiesInDEV,
+  resetWorkInProgress,
 } from './ReactFiber.old';
 import {isRootDehydrated} from './ReactFiberShellHydration';
 import {didSuspendOrErrorWhileHydratingDEV} from './ReactFiberHydrationContext.old';
@@ -97,6 +97,7 @@ import {
   ClassComponent,
   SuspenseComponent,
   SuspenseListComponent,
+  OffscreenComponent,
   FunctionComponent,
   ForwardRef,
   MemoComponent,
@@ -193,13 +194,9 @@ import {
   type CapturedValue,
 } from './ReactCapturedValue';
 import {
-  push as pushToStack,
-  pop as popFromStack,
-  createCursor,
-} from './ReactFiberStack.old';
-import {
   enqueueConcurrentRenderForLane,
   finishQueueingConcurrentUpdates,
+  getConcurrentlyUpdatedLanes,
 } from './ReactFiberConcurrentUpdates.old';
 
 import {
@@ -249,6 +246,12 @@ import {
   isConcurrentActEnvironment,
 } from './ReactFiberAct.old';
 import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent.old';
+import {
+  resetWakeableState,
+  trackSuspendedWakeable,
+  suspendedWakeableWasPinged,
+  attemptToPingSuspendedWakeable,
+} from './ReactFiberWakeable.old';
 
 const ceil = Math.ceil;
 
@@ -284,26 +287,26 @@ let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
-// Stack that allows components to change the render lanes for its subtree
-// This is a superset of the lanes we started working on at the root. The only
-// case where it's different from `workInProgressRootRenderLanes` is when we
-// enter a subtree that is hidden and needs to be unhidden: Suspense and
-// Offscreen component.
+// When this is true, the work-in-progress fiber just suspended (or errored) and
+// we've yet to unwind the stack. In some cases, we may yield to the main thread
+// after this happens. If the fiber is pinged before we resume, we can retry
+// immediately instead of unwinding the stack.
+let workInProgressIsSuspended: boolean = false;
+
+// A contextual version of workInProgressRootRenderLanes. It is a superset of
+// the lanes that we started working on at the root. When we enter a subtree
+// that is currently hidden, we add the lanes that would have committed if
+// the hidden tree hadn't been deferred. This is modified by the
+// HiddenContext module.
 //
 // Most things in the work loop should deal with workInProgressRootRenderLanes.
-// Most things in begin/complete phases should deal with subtreeRenderLanes.
-export let subtreeRenderLanes: Lanes = NoLanes;
-const subtreeRenderLanesCursor: StackCursor<Lanes> = createCursor(NoLanes);
+// Most things in begin/complete phases should deal with renderLanes.
+export let renderLanes: Lanes = NoLanes;
 
 // Whether to root completed, errored, suspended, etc.
 let workInProgressRootExitStatus: RootExitStatus = RootInProgress;
 // A fatal error, if one is thrown
 let workInProgressRootFatalError: mixed = null;
-// "Included" lanes refer to lanes that were worked on during this render. It's
-// slightly different than `renderLanes` because `renderLanes` can change as you
-// enter and exit an Offscreen tree. This value is the combination of all render
-// lanes for the entire render phase.
-let workInProgressRootIncludedLanes: Lanes = NoLanes;
 // The work left over by components that were visited during this render. Only
 // includes unprocessed updates, not work in bailed out children.
 let workInProgressRootSkippedLanes: Lanes = NoLanes;
@@ -343,13 +346,15 @@ export function getWorkInProgressTransitions() {
 let currentPendingTransitionCallbacks: PendingTransitionCallbacks | null = null;
 
 export function addTransitionStartCallbackToPendingTransition(
-  transition: TransitionObject,
+  transition: Transition,
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {
       currentPendingTransitionCallbacks = {
         transitionStart: [],
+        transitionProgress: null,
         transitionComplete: null,
+        markerProgress: null,
         markerComplete: null,
       };
     }
@@ -362,34 +367,95 @@ export function addTransitionStartCallbackToPendingTransition(
   }
 }
 
-export function addMarkerCompleteCallbackToPendingTransition(
-  transition: MarkerTransitionObject,
+export function addMarkerProgressCallbackToPendingTransition(
+  markerName: string,
+  transitions: Set<Transition>,
+  pendingBoundaries: PendingBoundaries | null,
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {
       currentPendingTransitionCallbacks = {
         transitionStart: null,
+        transitionProgress: null,
         transitionComplete: null,
-        markerComplete: [],
+        markerProgress: new Map(),
+        markerComplete: null,
+      };
+    }
+
+    if (currentPendingTransitionCallbacks.markerProgress === null) {
+      currentPendingTransitionCallbacks.markerProgress = new Map();
+    }
+
+    currentPendingTransitionCallbacks.markerProgress.set(markerName, {
+      pendingBoundaries,
+      transitions,
+    });
+  }
+}
+
+export function addMarkerCompleteCallbackToPendingTransition(
+  markerName: string,
+  transitions: Set<Transition>,
+) {
+  if (enableTransitionTracing) {
+    if (currentPendingTransitionCallbacks === null) {
+      currentPendingTransitionCallbacks = {
+        transitionStart: null,
+        transitionProgress: null,
+        transitionComplete: null,
+        markerProgress: null,
+        markerComplete: new Map(),
       };
     }
 
     if (currentPendingTransitionCallbacks.markerComplete === null) {
-      currentPendingTransitionCallbacks.markerComplete = [];
+      currentPendingTransitionCallbacks.markerComplete = new Map();
     }
 
-    currentPendingTransitionCallbacks.markerComplete.push(transition);
+    currentPendingTransitionCallbacks.markerComplete.set(
+      markerName,
+      transitions,
+    );
   }
 }
 
-export function addTransitionCompleteCallbackToPendingTransition(
-  transition: TransitionObject,
+export function addTransitionProgressCallbackToPendingTransition(
+  transition: Transition,
+  boundaries: PendingBoundaries,
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {
       currentPendingTransitionCallbacks = {
         transitionStart: null,
+        transitionProgress: new Map(),
+        transitionComplete: null,
+        markerProgress: null,
+        markerComplete: null,
+      };
+    }
+
+    if (currentPendingTransitionCallbacks.transitionProgress === null) {
+      currentPendingTransitionCallbacks.transitionProgress = new Map();
+    }
+
+    currentPendingTransitionCallbacks.transitionProgress.set(
+      transition,
+      boundaries,
+    );
+  }
+}
+
+export function addTransitionCompleteCallbackToPendingTransition(
+  transition: Transition,
+) {
+  if (enableTransitionTracing) {
+    if (currentPendingTransitionCallbacks === null) {
+      currentPendingTransitionCallbacks = {
+        transitionStart: null,
+        transitionProgress: null,
         transitionComplete: [],
+        markerProgress: null,
         markerComplete: null,
       };
     }
@@ -446,6 +512,10 @@ let isRunningInsertionEffect = false;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
+}
+
+export function getWorkInProgressRootRenderLanes(): Lanes {
+  return workInProgressRootRenderLanes;
 }
 
 export function requestEventTime() {
@@ -618,7 +688,7 @@ export function scheduleUpdateOnFiber(
 
     if (enableTransitionTracing) {
       const transition = ReactCurrentBatchConfig.transition;
-      if (transition !== null) {
+      if (transition !== null && transition.name != null) {
         if (transition.startTime === -1) {
           transition.startTime = now();
         }
@@ -1450,18 +1520,16 @@ export function flushControlled(fn: () => mixed): void {
   }
 }
 
-export function pushRenderLanes(fiber: Fiber, lanes: Lanes) {
-  pushToStack(subtreeRenderLanesCursor, subtreeRenderLanes, fiber);
-  subtreeRenderLanes = mergeLanes(subtreeRenderLanes, lanes);
-  workInProgressRootIncludedLanes = mergeLanes(
-    workInProgressRootIncludedLanes,
-    lanes,
-  );
+// This is called by the HiddenContext module when we enter or leave a
+// hidden subtree. The stack logic is managed there because that's the only
+// place that ever modifies it. Which module it lives in doesn't matter for
+// performance because this function will get inlined regardless
+export function setRenderLanes(subtreeRenderLanes: Lanes) {
+  renderLanes = subtreeRenderLanes;
 }
 
-export function popRenderLanes(fiber: Fiber) {
-  subtreeRenderLanes = subtreeRenderLanesCursor.current;
-  popFromStack(subtreeRenderLanesCursor, fiber);
+export function getRenderLanes(): Lanes {
+  return renderLanes;
 }
 
 function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
@@ -1488,11 +1556,13 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       );
       interruptedWork = interruptedWork.return;
     }
+    resetWakeableState();
   }
   workInProgressRoot = root;
   const rootWorkInProgress = createWorkInProgress(root.current, null);
   workInProgress = rootWorkInProgress;
-  workInProgressRootRenderLanes = subtreeRenderLanes = workInProgressRootIncludedLanes = lanes;
+  workInProgressRootRenderLanes = renderLanes = lanes;
+  workInProgressIsSuspended = false;
   workInProgressRootExitStatus = RootInProgress;
   workInProgressRootFatalError = null;
   workInProgressRootSkippedLanes = NoLanes;
@@ -1511,7 +1581,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   return rootWorkInProgress;
 }
 
-function handleError(root, thrownValue): void {
+function handleError(root, thrownValue): Wakeable | null {
   do {
     let erroredWork = workInProgress;
     try {
@@ -1537,7 +1607,7 @@ function handleError(root, thrownValue): void {
         // intentionally not calling those, we need set it here.
         // TODO: Consider calling `unwindWork` to pop the contexts.
         workInProgress = null;
-        return;
+        return null;
       }
 
       if (enableProfilerTimer && erroredWork.mode & ProfileMode) {
@@ -1570,14 +1640,21 @@ function handleError(root, thrownValue): void {
         }
       }
 
-      throwException(
+      const maybeWakeable = throwException(
         root,
         erroredWork.return,
         erroredWork,
         thrownValue,
         workInProgressRootRenderLanes,
       );
-      completeUnitOfWork(erroredWork);
+      // Setting this to `true` tells the work loop to unwind the stack instead
+      // of entering the begin phase. It's called "suspended" because it usually
+      // happens because of Suspense, but it also applies to errors. Think of it
+      // as suspending the execution of the work loop.
+      workInProgressIsSuspended = true;
+
+      // Return to the normal work loop.
+      return maybeWakeable;
     } catch (yetAnotherThrownValue) {
       // Something in the return path also threw.
       thrownValue = yetAnotherThrownValue;
@@ -1591,8 +1668,6 @@ function handleError(root, thrownValue): void {
       }
       continue;
     }
-    // Return to the normal work loop.
-    return;
   } while (true);
 }
 
@@ -1755,7 +1830,14 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
 // The work loop is an extremely hot path. Tell Closure not to inline it.
 /** @noinline */
 function workLoopSync() {
-  // Already timed out, so perform work without checking if we need to yield.
+  // Perform work without checking if we need to yield between fiber.
+
+  if (workInProgressIsSuspended && workInProgress !== null) {
+    // The current work-in-progress was already attempted. We need to unwind
+    // it before we continue the normal work loop.
+    resumeSuspendedUnitOfWork(workInProgress);
+  }
+
   while (workInProgress !== null) {
     performUnitOfWork(workInProgress);
   }
@@ -1805,7 +1887,14 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
       workLoopConcurrent();
       break;
     } catch (thrownValue) {
-      handleError(root, thrownValue);
+      const maybeWakeable = handleError(root, thrownValue);
+      if (maybeWakeable !== null) {
+        // If this fiber just suspended, it's possible the data is already
+        // cached. Yield to the the main thread to give it a chance to ping. If
+        // it does, we can retry immediately without unwinding the stack.
+        trackSuspendedWakeable(maybeWakeable);
+        break;
+      }
     }
   } while (true);
   resetContextDependencies();
@@ -1844,6 +1933,13 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 /** @noinline */
 function workLoopConcurrent() {
   // Perform work until Scheduler asks us to yield
+
+  if (workInProgressIsSuspended && workInProgress !== null) {
+    // The current work-in-progress was already attempted. We need to unwind
+    // it before we continue the normal work loop.
+    resumeSuspendedUnitOfWork(workInProgress);
+  }
+
   while (workInProgress !== null && !shouldYield()) {
     performUnitOfWork(workInProgress);
   }
@@ -1859,11 +1955,61 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   let next;
   if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
     startProfilerTimer(unitOfWork);
-    next = beginWork(current, unitOfWork, subtreeRenderLanes);
+    next = beginWork(current, unitOfWork, renderLanes);
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
   } else {
-    next = beginWork(current, unitOfWork, subtreeRenderLanes);
+    next = beginWork(current, unitOfWork, renderLanes);
   }
+
+  resetCurrentDebugFiberInDEV();
+  unitOfWork.memoizedProps = unitOfWork.pendingProps;
+  if (next === null) {
+    // If this doesn't spawn new work, complete the current work.
+    completeUnitOfWork(unitOfWork);
+  } else {
+    workInProgress = next;
+  }
+
+  ReactCurrentOwner.current = null;
+}
+
+function resumeSuspendedUnitOfWork(unitOfWork: Fiber): void {
+  // This is a fork of performUnitOfWork specifcally for resuming a fiber that
+  // just suspended. In some cases, we may choose to retry the fiber immediately
+  // instead of unwinding the stack. It's a separate function to keep the
+  // additional logic out of the work loop's hot path.
+
+  if (!suspendedWakeableWasPinged()) {
+    // The wakeable wasn't pinged. Return to the normal work loop. This will
+    // unwind the stack, and potentially result in showing a fallback.
+    workInProgressIsSuspended = false;
+    resetWakeableState();
+    completeUnitOfWork(unitOfWork);
+    return;
+  }
+
+  // The work-in-progress was immediately pinged. Instead of unwinding the
+  // stack and potentially showing a fallback, reset the fiber and try rendering
+  // it again.
+  unitOfWork = workInProgress = resetWorkInProgress(unitOfWork, renderLanes);
+
+  const current = unitOfWork.alternate;
+  setCurrentDebugFiberInDEV(unitOfWork);
+
+  let next;
+  if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
+    startProfilerTimer(unitOfWork);
+    next = beginWork(current, unitOfWork, renderLanes);
+    stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
+  } else {
+    next = beginWork(current, unitOfWork, renderLanes);
+  }
+
+  // The begin phase finished successfully without suspending. Reset the state
+  // used to track the fiber while it was suspended. Then return to the normal
+  // work loop.
+  workInProgressIsSuspended = false;
+  resetWakeableState();
 
   resetCurrentDebugFiberInDEV();
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
@@ -1896,10 +2042,10 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         !enableProfilerTimer ||
         (completedWork.mode & ProfileMode) === NoMode
       ) {
-        next = completeWork(current, completedWork, subtreeRenderLanes);
+        next = completeWork(current, completedWork, renderLanes);
       } else {
         startProfilerTimer(completedWork);
-        next = completeWork(current, completedWork, subtreeRenderLanes);
+        next = completeWork(current, completedWork, renderLanes);
         // Update render duration assuming we didn't error.
         stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
       }
@@ -1914,7 +2060,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
       // This fiber did not complete because something threw. Pop values off
       // the stack without entering the complete phase. If this is a boundary,
       // capture values if possible.
-      const next = unwindWork(current, completedWork, subtreeRenderLanes);
+      const next = unwindWork(current, completedWork, renderLanes);
 
       // Because this fiber did not complete, don't reset its lanes.
 
@@ -2074,9 +2220,15 @@ function commitRootImpl(
   root.callbackNode = null;
   root.callbackPriority = NoLane;
 
-  // Update the first and last pending times on this root. The new first
-  // pending time is whatever is left on the root fiber.
+  // Check which lanes no longer have any work scheduled on them, and mark
+  // those as finished.
   let remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
+
+  // Make sure to account for lanes that were updated by a concurrent event
+  // during the render phase; don't mark them as finished.
+  const concurrentlyUpdatedLanes = getConcurrentlyUpdatedLanes();
+  remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
+
   markRootFinished(root, remainingLanes);
 
   if (root === workInProgressRoot) {
@@ -2682,27 +2834,31 @@ export function pingSuspendedRoot(
     // Received a ping at the same priority level at which we're currently
     // rendering. We might want to restart this render. This should mirror
     // the logic of whether or not a root suspends once it completes.
-
-    // TODO: If we're rendering sync either due to Sync, Batched or expired,
-    // we should probably never restart.
-
-    // If we're suspended with delay, or if it's a retry, we'll always suspend
-    // so we can always restart.
-    if (
-      workInProgressRootExitStatus === RootSuspendedWithDelay ||
-      (workInProgressRootExitStatus === RootSuspended &&
-        includesOnlyRetries(workInProgressRootRenderLanes) &&
-        now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
-    ) {
-      // Restart from the root.
-      prepareFreshStack(root, NoLanes);
+    const didPingSuspendedWakeable = attemptToPingSuspendedWakeable(wakeable);
+    if (didPingSuspendedWakeable) {
+      // Successfully pinged the in-progress fiber. Don't unwind the stack.
     } else {
-      // Even though we can't restart right now, we might get an
-      // opportunity later. So we mark this render as having a ping.
-      workInProgressRootPingedLanes = mergeLanes(
-        workInProgressRootPingedLanes,
-        pingedLanes,
-      );
+      // TODO: If we're rendering sync either due to Sync, Batched or expired,
+      // we should probably never restart.
+
+      // If we're suspended with delay, or if it's a retry, we'll always suspend
+      // so we can always restart.
+      if (
+        workInProgressRootExitStatus === RootSuspendedWithDelay ||
+        (workInProgressRootExitStatus === RootSuspended &&
+          includesOnlyRetries(workInProgressRootRenderLanes) &&
+          now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
+      ) {
+        // Restart from the root.
+        prepareFreshStack(root, NoLanes);
+      } else {
+        // Even though we can't restart right now, we might get an
+        // opportunity later. So we mark this render as having a ping.
+        workInProgressRootPingedLanes = mergeLanes(
+          workInProgressRootPingedLanes,
+          pingedLanes,
+        );
+      }
     }
   }
 
@@ -2751,6 +2907,11 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
     case SuspenseListComponent:
       retryCache = boundaryFiber.stateNode;
       break;
+    case OffscreenComponent: {
+      const instance: OffscreenInstance = boundaryFiber.stateNode;
+      retryCache = instance.retryCache;
+      break;
+    }
     default:
       throw new Error(
         'Pinged unknown suspense boundary type. ' +
@@ -2795,7 +2956,9 @@ function jnd(timeElapsed: number) {
 export function throwIfInfiniteUpdateLoopDetected() {
   if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
     nestedUpdateCount = 0;
+    nestedPassiveUpdateCount = 0;
     rootWithNestedUpdates = null;
+    rootWithPassiveNestedUpdates = null;
 
     throw new Error(
       'Maximum update depth exceeded. This can happen when a component ' +

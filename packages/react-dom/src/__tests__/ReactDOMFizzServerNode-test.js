@@ -15,7 +15,7 @@ let React;
 let ReactDOMFizzServer;
 let Suspense;
 
-describe('ReactDOMFizzServer', () => {
+describe('ReactDOMFizzServerNode', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -166,7 +166,6 @@ describe('ReactDOMFizzServer', () => {
       <div>
         <Throw />
       </div>,
-
       {
         onError(x) {
           reportedErrors.push(x);
@@ -232,7 +231,6 @@ describe('ReactDOMFizzServer', () => {
           <Throw />
         </Suspense>
       </div>,
-
       {
         onError(x) {
           reportedErrors.push(x);
@@ -288,7 +286,6 @@ describe('ReactDOMFizzServer', () => {
           <InfiniteSuspend />
         </Suspense>
       </div>,
-
       {
         onError(x) {
           errors.push(x.message);
@@ -315,6 +312,49 @@ describe('ReactDOMFizzServer', () => {
     expect(isCompleteCalls).toBe(1);
   });
 
+  it('should fail the shell if you abort before work has begun', async () => {
+    let isCompleteCalls = 0;
+    const errors = [];
+    const shellErrors = [];
+    const {writable, output, completed} = getTestWritable();
+    const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
+      <div>
+        <Suspense fallback={<div>Loading</div>}>
+          <InfiniteSuspend />
+        </Suspense>
+      </div>,
+      {
+        onError(x) {
+          errors.push(x.message);
+        },
+        onShellError(x) {
+          shellErrors.push(x.message);
+        },
+        onAllReady() {
+          isCompleteCalls++;
+        },
+      },
+    );
+    pipe(writable);
+
+    // Currently we delay work so if we abort, we abort the remaining CPU
+    // work as well.
+
+    // Abort before running the timers that perform the work
+    const theReason = new Error('uh oh');
+    abort(theReason);
+
+    jest.runAllTimers();
+
+    await completed;
+
+    expect(errors).toEqual(['uh oh']);
+    expect(shellErrors).toEqual(['uh oh']);
+    expect(output.error).toBe(theReason);
+    expect(output.result).toBe('');
+    expect(isCompleteCalls).toBe(0);
+  });
+
   it('should be able to complete by abort when the fallback is also suspended', async () => {
     let isCompleteCalls = 0;
     const errors = [];
@@ -327,7 +367,6 @@ describe('ReactDOMFizzServer', () => {
           </Suspense>
         </Suspense>
       </div>,
-
       {
         onError(x) {
           errors.push(x.message);

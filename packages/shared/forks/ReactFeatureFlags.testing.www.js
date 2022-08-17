@@ -41,6 +41,7 @@ export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
+export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = !__EXPERIMENTAL__;
 export const enableFilterEmptyStringAttributesDOM = false;
@@ -70,6 +71,7 @@ export const enableUseMutableSource = true;
 export const enableTransitionTracing = false;
 export const enableSymbolFallbackForWWW = false;
 
+export const enableFloat = false;
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;

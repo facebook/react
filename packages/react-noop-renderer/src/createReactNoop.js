@@ -68,7 +68,7 @@ type TextInstance = {|
 |};
 type HostContext = Object;
 type CreateRootOptions = {
-  transitionCallbacks?: TransitionTracingCallbacks,
+  unstable_transitionCallbacks?: TransitionTracingCallbacks,
   ...
 };
 
@@ -276,11 +276,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NO_CONTEXT;
     },
 
-    getChildHostContext(
-      parentHostContext: HostContext,
-      type: string,
-      rootcontainerInstance: Container,
-    ) {
+    getChildHostContext(parentHostContext: HostContext, type: string) {
       if (type === 'offscreen') {
         return parentHostContext;
       }
@@ -806,6 +802,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           false,
           '',
           onRecoverableError,
+          null,
         );
         roots.set(rootID, root);
       }
@@ -827,8 +824,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         '',
         onRecoverableError,
-        options && options.transitionCallbacks
-          ? options.transitionCallbacks
+        options && options.unstable_transitionCallbacks
+          ? options.unstable_transitionCallbacks
           : null,
       );
       return {
@@ -859,6 +856,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         '',
         onRecoverableError,
+        null,
       );
       return {
         _Scheduler: Scheduler,

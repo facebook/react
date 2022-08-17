@@ -32,6 +32,8 @@ export const {
   enableLazyContextPropagation,
   enableSyncDefaultUpdates,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+  enableClientRenderFallbackOnTextMismatch,
+  enableTransitionTracing,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -50,6 +52,7 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
+export const enableFloat = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler =
@@ -104,8 +107,6 @@ export const enableServerContext = true;
 export const enableUseMutableSource = true;
 
 export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
-
-export const enableTransitionTracing = false;
 
 export const enableSymbolFallbackForWWW = true;
 // Flow magic to verify the exports of this file match the original version.

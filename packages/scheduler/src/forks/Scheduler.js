@@ -212,10 +212,14 @@ function workLoop(hasTimeRemaining, initialTime) {
       const continuationCallback = callback(didUserCallbackTimeout);
       currentTime = getCurrentTime();
       if (typeof continuationCallback === 'function') {
+        // If a continuation is returned, immediately yield to the main thread
+        // regardless of how much time is left in the current time slice.
         currentTask.callback = continuationCallback;
         if (enableProfiling) {
           markTaskYield(currentTask, currentTime);
         }
+        advanceTimers(currentTime);
+        return true;
       } else {
         if (enableProfiling) {
           markTaskCompleted(currentTask, currentTime);
@@ -224,8 +228,8 @@ function workLoop(hasTimeRemaining, initialTime) {
         if (currentTask === peek(taskQueue)) {
           pop(taskQueue);
         }
+        advanceTimers(currentTime);
       }
-      advanceTimers(currentTime);
     } else {
       pop(taskQueue);
     }
@@ -598,8 +602,6 @@ function cancelHostTimeout() {
   taskTimeoutID = -1;
 }
 
-const unstable_requestPaint = requestPaint;
-
 export {
   ImmediatePriority as unstable_ImmediatePriority,
   UserBlockingPriority as unstable_UserBlockingPriority,
@@ -613,7 +615,7 @@ export {
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
   shouldYieldToHost as unstable_shouldYield,
-  unstable_requestPaint,
+  requestPaint as unstable_requestPaint,
   unstable_continueExecution,
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,

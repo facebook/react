@@ -16,6 +16,7 @@ import type {
   ReactNodeList,
   ReactContext,
   ReactProviderType,
+  OffscreenMode,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -107,6 +108,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_SCOPE_TYPE,
+  REACT_OFFSCREEN_TYPE,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -115,6 +117,7 @@ import {
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -198,6 +201,8 @@ export opaque type Request = {
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
+  +preamble: Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted before any segment chunks.
+  +postamble: Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted after segments, waiting for all pending root tasks to finish
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
   // Returning null/undefined will cause a defualt error message in production
@@ -270,6 +275,8 @@ export function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
+    preamble: [],
+    postamble: [],
     onError: onError === undefined ? defaultErrorHandler : onError,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
@@ -630,6 +637,7 @@ function renderHostElement(
   const segment = task.blockedSegment;
   const children = pushStartInstance(
     segment.chunks,
+    request.preamble,
     type,
     props,
     request.responseState,
@@ -645,7 +653,7 @@ function renderHostElement(
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
   segment.formatContext = prevContext;
-  pushEndInstance(segment.chunks, type, props);
+  pushEndInstance(segment.chunks, request.postamble, type, props);
   segment.lastPushedText = false;
   popComponentStackInDEV(task);
 }
@@ -1062,6 +1070,18 @@ function renderLazyComponent(
   popComponentStackInDEV(task);
 }
 
+function renderOffscreen(request: Request, task: Task, props: Object): void {
+  const mode: ?OffscreenMode = (props.mode: any);
+  if (mode === 'hidden') {
+    // A hidden Offscreen boundary is not server rendered. Prerendering happens
+    // on the client.
+  } else {
+    // A visible Offscreen boundary is treated exactly like a fragment: a
+    // pure indirection.
+    renderNodeDestructive(request, task, props.children);
+  }
+}
+
 function renderElement(
   request: Request,
   task: Task,
@@ -1084,20 +1104,25 @@ function renderElement(
   }
 
   switch (type) {
-    // TODO: LegacyHidden acts the same as a fragment. This only works
-    // because we currently assume that every instance of LegacyHidden is
-    // accompanied by a host component wrapper. In the hidden mode, the host
-    // component is given a `hidden` attribute, which ensures that the
-    // initial HTML is not visible. To support the use of LegacyHidden as a
-    // true fragment, without an extra DOM node, we would have to hide the
-    // initial HTML in some other way.
-    // TODO: Add REACT_OFFSCREEN_TYPE here too with the same capability.
+    // LegacyHidden acts the same as a fragment. This only works because we
+    // currently assume that every instance of LegacyHidden is accompanied by a
+    // host component wrapper. In the hidden mode, the host component is given a
+    // `hidden` attribute, which ensures that the initial HTML is not visible.
+    // To support the use of LegacyHidden as a true fragment, without an extra
+    // DOM node, we would have to hide the initial HTML in some other way.
+    // TODO: Delete in LegacyHidden. It's an unstable API only used in the
+    // www build. As a migration step, we could add a special prop to Offscreen
+    // that simulates the old behavior (no hiding, no change to effects).
     case REACT_LEGACY_HIDDEN_TYPE:
     case REACT_DEBUG_TRACING_MODE_TYPE:
     case REACT_STRICT_MODE_TYPE:
     case REACT_PROFILER_TYPE:
     case REACT_FRAGMENT_TYPE: {
       renderNodeDestructive(request, task, props.children);
+      return;
+    }
+    case REACT_OFFSCREEN_TYPE: {
+      renderOffscreen(request, task, props);
       return;
     }
     case REACT_SUSPENSE_LIST_TYPE: {
@@ -1530,7 +1555,7 @@ function abortTaskSoft(task: Task): void {
   finishedTask(request, boundary, segment);
 }
 
-function abortTask(task: Task, request: Request, reason: mixed): void {
+function abortTask(task: Task, request: Request, error: mixed): void {
   // This aborts the task and aborts the parent that it blocks, putting it into
   // client rendered mode.
   const boundary = task.blockedBoundary;
@@ -1541,35 +1566,30 @@ function abortTask(task: Task, request: Request, reason: mixed): void {
     request.allPendingTasks--;
     // We didn't complete the root so we have nothing to show. We can close
     // the request;
-    if (request.status !== CLOSED) {
-      request.status = CLOSED;
-      if (request.destination !== null) {
-        close(request.destination);
-      }
+    if (request.status !== CLOSING && request.status !== CLOSED) {
+      logRecoverableError(request, error);
+      fatalError(request, error);
     }
   } else {
     boundary.pendingTasks--;
 
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
-      let error =
-        reason === undefined
-          ? new Error('The render was aborted by the server without a reason.')
-          : reason;
       boundary.errorDigest = request.onError(error);
       if (__DEV__) {
         const errorPrefix =
           'The server did not finish this Suspense boundary: ';
+        let errorMessage;
         if (error && typeof error.message === 'string') {
-          error = errorPrefix + error.message;
+          errorMessage = errorPrefix + error.message;
         } else {
           // eslint-disable-next-line react-internal/safe-string-coercion
-          error = errorPrefix + String(error);
+          errorMessage = errorPrefix + String(error);
         }
         const previousTaskInDev = currentTaskInDEV;
         currentTaskInDEV = task;
         try {
-          captureBoundaryErrorDetailsDev(boundary, error);
+          captureBoundaryErrorDetailsDev(boundary, errorMessage);
         } finally {
           currentTaskInDEV = previousTaskInDev;
         }
@@ -1582,7 +1602,7 @@ function abortTask(task: Task, request: Request, reason: mixed): void {
     // If this boundary was still pending then we haven't already cancelled its fallbacks.
     // We'll need to abort the fallbacks, which will also error that parent boundary.
     boundary.fallbackAbortableTasks.forEach(fallbackTask =>
-      abortTask(fallbackTask, request, reason),
+      abortTask(fallbackTask, request, error),
     );
     boundary.fallbackAbortableTasks.clear();
 
@@ -2049,20 +2069,31 @@ function flushCompletedQueues(
 
     // TODO: Emit preloading.
 
-    // TODO: It's kind of unfortunate to keep checking this array after we've already
-    // emitted the root.
+    let i;
     const completedRootSegment = request.completedRootSegment;
-    if (completedRootSegment !== null && request.pendingRootTasks === 0) {
-      flushSegment(request, destination, completedRootSegment);
-      request.completedRootSegment = null;
-      writeCompletedRoot(destination, request.responseState);
+    if (completedRootSegment !== null) {
+      if (request.pendingRootTasks === 0) {
+        if (enableFloat) {
+          const preamble = request.preamble;
+          for (i = 0; i < preamble.length; i++) {
+            // we expect the preamble to be tiny and will ignore backpressure
+            writeChunk(destination, preamble[i]);
+          }
+        }
+
+        flushSegment(request, destination, completedRootSegment);
+        request.completedRootSegment = null;
+        writeCompletedRoot(destination, request.responseState);
+      } else {
+        // We haven't flushed the root yet so we don't need to check boundaries further down
+        return;
+      }
     }
 
     // We emit client rendering instructions for already emitted boundaries first.
     // This is so that we can signal to the client to start client rendering them as
     // soon as possible.
     const clientRenderedBoundaries = request.clientRenderedBoundaries;
-    let i;
     for (i = 0; i < clientRenderedBoundaries.length; i++) {
       const boundary = clientRenderedBoundaries[i];
       if (!flushClientRenderedBoundary(request, destination, boundary)) {
@@ -2125,8 +2156,6 @@ function flushCompletedQueues(
     }
     largeBoundaries.splice(0, i);
   } finally {
-    completeWriting(destination);
-    flushBuffered(destination);
     if (
       request.allPendingTasks === 0 &&
       request.pingedTasks.length === 0 &&
@@ -2135,6 +2164,14 @@ function flushCompletedQueues(
       // We don't need to check any partially completed segments because
       // either they have pending task or they're complete.
     ) {
+      if (enableFloat) {
+        const postamble = request.postamble;
+        for (let i = 0; i < postamble.length; i++) {
+          writeChunk(destination, postamble[i]);
+        }
+      }
+      completeWriting(destination);
+      flushBuffered(destination);
       if (__DEV__) {
         if (request.abortableTasks.size !== 0) {
           console.error(
@@ -2144,6 +2181,9 @@ function flushCompletedQueues(
       }
       // We're done.
       close(destination);
+    } else {
+      completeWriting(destination);
+      flushBuffered(destination);
     }
   }
 }
@@ -2178,8 +2218,14 @@ export function startFlowing(request: Request, destination: Destination): void {
 export function abort(request: Request, reason: mixed): void {
   try {
     const abortableTasks = request.abortableTasks;
-    abortableTasks.forEach(task => abortTask(task, request, reason));
-    abortableTasks.clear();
+    if (abortableTasks.size > 0) {
+      const error =
+        reason === undefined
+          ? new Error('The render was aborted by the server without a reason.')
+          : reason;
+      abortableTasks.forEach(task => abortTask(task, request, error));
+      abortableTasks.clear();
+    }
     if (request.destination !== null) {
       flushCompletedQueues(request, request.destination);
     }

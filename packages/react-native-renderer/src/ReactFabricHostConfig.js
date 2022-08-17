@@ -404,7 +404,6 @@ export function finalizeInitialChildren(
   parentInstance: Instance,
   type: string,
   props: Props,
-  rootContainerInstance: Container,
   hostContext: HostContext,
 ): boolean {
   return false;
@@ -419,7 +418,6 @@ export function getRootHostContext(
 export function getChildHostContext(
   parentHostContext: HostContext,
   type: string,
-  rootContainerInstance: Container,
 ): HostContext {
   const prevIsInAParentText = parentHostContext.isInAParentText;
   const isInAParentText =
@@ -453,7 +451,6 @@ export function prepareUpdate(
   type: string,
   oldProps: Props,
   newProps: Props,
-  rootContainerInstance: Container,
   hostContext: HostContext,
 ): null | Object {
   const viewConfig = instance.canonical.viewConfig;

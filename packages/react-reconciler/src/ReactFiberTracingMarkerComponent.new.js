@@ -13,19 +13,16 @@ import type {StackCursor} from './ReactFiberStack.new';
 
 import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 import {createCursor, push, pop} from './ReactFiberStack.new';
+import {getWorkInProgressTransitions} from './ReactFiberWorkLoop.new';
 
 export type SuspenseInfo = {name: string | null};
 
-export type TransitionObject = {
-  transitionName: string,
-  startTime: number,
-};
-
-export type MarkerTransitionObject = TransitionObject & {markerName: string};
 export type PendingTransitionCallbacks = {
-  transitionStart: Array<TransitionObject> | null,
-  transitionComplete: Array<TransitionObject> | null,
-  markerComplete: Array<MarkerTransitionObject> | null,
+  transitionStart: Array<Transition> | null,
+  transitionProgress: Map<Transition, PendingBoundaries> | null,
+  transitionComplete: Array<Transition> | null,
+  markerProgress: Map<string, TracingMarkerInstance> | null,
+  markerComplete: Map<string, Set<Transition>> | null,
 };
 
 export type Transition = {
@@ -39,7 +36,18 @@ export type BatchConfigTransition = {
   _updatedFibers?: Set<Fiber>,
 };
 
-export type PendingSuspenseBoundaries = Map<OffscreenInstance, SuspenseInfo>;
+export type TracingMarkerInstance = {|
+  tag?: TracingMarkerTag,
+  pendingBoundaries: PendingBoundaries | null,
+  transitions: Set<Transition> | null,
+  name?: string,
+|};
+
+export const TransitionRoot = 0;
+export const TransitionTracingMarker = 1;
+export type TracingMarkerTag = 0 | 1;
+
+export type PendingBoundaries = Map<OffscreenInstance, SuspenseInfo>;
 
 export function processTransitionCallbacks(
   pendingTransitions: PendingTransitionCallbacks,
@@ -49,42 +57,69 @@ export function processTransitionCallbacks(
   if (enableTransitionTracing) {
     if (pendingTransitions !== null) {
       const transitionStart = pendingTransitions.transitionStart;
-      if (transitionStart !== null) {
-        transitionStart.forEach(transition => {
-          if (callbacks.onTransitionStart != null) {
-            callbacks.onTransitionStart(
-              transition.transitionName,
-              transition.startTime,
-            );
+      const onTransitionStart = callbacks.onTransitionStart;
+      if (transitionStart !== null && onTransitionStart != null) {
+        transitionStart.forEach(transition =>
+          onTransitionStart(transition.name, transition.startTime),
+        );
+      }
+
+      const markerProgress = pendingTransitions.markerProgress;
+      const onMarkerProgress = callbacks.onMarkerProgress;
+      if (onMarkerProgress != null && markerProgress !== null) {
+        markerProgress.forEach((markerInstance, markerName) => {
+          if (markerInstance.transitions !== null) {
+            const pending =
+              markerInstance.pendingBoundaries !== null
+                ? Array.from(markerInstance.pendingBoundaries.values())
+                : [];
+            markerInstance.transitions.forEach(transition => {
+              onMarkerProgress(
+                transition.name,
+                markerName,
+                transition.startTime,
+                endTime,
+                pending,
+              );
+            });
           }
         });
       }
 
       const markerComplete = pendingTransitions.markerComplete;
-      if (markerComplete !== null) {
-        markerComplete.forEach(transition => {
-          if (callbacks.onMarkerComplete != null) {
-            callbacks.onMarkerComplete(
-              transition.transitionName,
-              transition.markerName,
+      const onMarkerComplete = callbacks.onMarkerComplete;
+      if (markerComplete !== null && onMarkerComplete != null) {
+        markerComplete.forEach((transitions, markerName) => {
+          transitions.forEach(transition => {
+            onMarkerComplete(
+              transition.name,
+              markerName,
               transition.startTime,
               endTime,
             );
-          }
+          });
+        });
+      }
+
+      const transitionProgress = pendingTransitions.transitionProgress;
+      const onTransitionProgress = callbacks.onTransitionProgress;
+      if (onTransitionProgress != null && transitionProgress !== null) {
+        transitionProgress.forEach((pending, transition) => {
+          onTransitionProgress(
+            transition.name,
+            transition.startTime,
+            endTime,
+            Array.from(pending.values()),
+          );
         });
       }
 
       const transitionComplete = pendingTransitions.transitionComplete;
-      if (transitionComplete !== null) {
-        transitionComplete.forEach(transition => {
-          if (callbacks.onTransitionComplete != null) {
-            callbacks.onTransitionComplete(
-              transition.transitionName,
-              transition.startTime,
-              endTime,
-            );
-          }
-        });
+      const onTransitionComplete = callbacks.onTransitionComplete;
+      if (transitionComplete !== null && onTransitionComplete != null) {
+        transitionComplete.forEach(transition =>
+          onTransitionComplete(transition.name, transition.startTime, endTime),
+        );
       }
     }
   }
@@ -95,31 +130,79 @@ export function processTransitionCallbacks(
 // tracing marker can be logged as complete
 // This code lives separate from the ReactFiberTransition code because
 // we push and pop on the tracing marker, not the suspense boundary
-const tracingMarkerStack: StackCursor<Array<Fiber> | null> = createCursor(null);
+const markerInstanceStack: StackCursor<Array<TracingMarkerInstance> | null> = createCursor(
+  null,
+);
 
-export function pushTracingMarker(workInProgress: Fiber): void {
+export function pushRootMarkerInstance(workInProgress: Fiber): void {
   if (enableTransitionTracing) {
-    if (tracingMarkerStack.current === null) {
-      push(tracingMarkerStack, [workInProgress], workInProgress);
+    // On the root, every transition gets mapped to it's own map of
+    // suspense boundaries. The transition is marked as complete when
+    // the suspense boundaries map is empty. We do this because every
+    // transition completes at different times and depends on different
+    // suspense boundaries to complete. We store all the transitions
+    // along with its map of suspense boundaries in the root incomplete
+    // transitions map. Each entry in this map functions like a tracing
+    // marker does, so we can push it onto the marker instance stack
+    const transitions = getWorkInProgressTransitions();
+    const root = workInProgress.stateNode;
+
+    if (transitions !== null) {
+      transitions.forEach(transition => {
+        if (!root.incompleteTransitions.has(transition)) {
+          const markerInstance: TracingMarkerInstance = {
+            tag: TransitionRoot,
+            transitions: new Set([transition]),
+            pendingBoundaries: null,
+          };
+          root.incompleteTransitions.set(transition, markerInstance);
+        }
+      });
+    }
+
+    const markerInstances = [];
+    // For ever transition on the suspense boundary, we push the transition
+    // along with its map of pending suspense boundaries onto the marker
+    // instance stack.
+    root.incompleteTransitions.forEach(markerInstance => {
+      markerInstances.push(markerInstance);
+    });
+    push(markerInstanceStack, markerInstances, workInProgress);
+  }
+}
+
+export function popRootMarkerInstance(workInProgress: Fiber) {
+  if (enableTransitionTracing) {
+    pop(markerInstanceStack, workInProgress);
+  }
+}
+
+export function pushMarkerInstance(
+  workInProgress: Fiber,
+  markerInstance: TracingMarkerInstance,
+): void {
+  if (enableTransitionTracing) {
+    if (markerInstanceStack.current === null) {
+      push(markerInstanceStack, [markerInstance], workInProgress);
     } else {
       push(
-        tracingMarkerStack,
-        tracingMarkerStack.current.concat(workInProgress),
+        markerInstanceStack,
+        markerInstanceStack.current.concat(markerInstance),
         workInProgress,
       );
     }
   }
 }
 
-export function popTracingMarker(workInProgress: Fiber): void {
+export function popMarkerInstance(workInProgress: Fiber): void {
   if (enableTransitionTracing) {
-    pop(tracingMarkerStack, workInProgress);
+    pop(markerInstanceStack, workInProgress);
   }
 }
 
-export function getTracingMarkers(): Array<Fiber> | null {
+export function getMarkerInstances(): Array<TracingMarkerInstance> | null {
   if (enableTransitionTracing) {
-    return tracingMarkerStack.current;
+    return markerInstanceStack.current;
   }
   return null;
 }

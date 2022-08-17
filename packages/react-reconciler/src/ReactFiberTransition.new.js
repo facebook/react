@@ -149,7 +149,7 @@ export function popTransition(workInProgress: Fiber, current: Fiber | null) {
   }
 }
 
-export function getSuspendedTransitions(): Array<Transition> | null {
+export function getPendingTransitions(): Array<Transition> | null {
   if (!enableTransitionTracing) {
     return null;
   }

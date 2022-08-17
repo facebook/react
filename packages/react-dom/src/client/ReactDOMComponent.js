@@ -72,6 +72,8 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import {
   enableTrustedTypesIntegration,
   enableCustomElementPropertySupport,
+  enableClientRenderFallbackOnTextMismatch,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -249,14 +251,14 @@ export function checkForUnmatchedText(
     }
   }
 
-  if (isConcurrentMode) {
+  if (isConcurrentMode && enableClientRenderFallbackOnTextMismatch) {
     // In concurrent roots, we throw when there's a text mismatch and revert to
     // client rendering, up to the nearest Suspense boundary.
     throw new Error('Text content does not match server-rendered HTML.');
   }
 }
 
-function getOwnerDocumentFromRootContainer(
+export function getOwnerDocumentFromRootContainer(
   rootContainerElement: Element | Document | DocumentFragment,
 ): Document {
   return rootContainerElement.nodeType === DOCUMENT_NODE
@@ -282,7 +284,6 @@ export function trapClickOnNonInteractiveElement(node: HTMLElement) {
 function setInitialDOMProperties(
   tag: string,
   domElement: Element,
-  rootContainerElement: Element | Document | DocumentFragment,
   nextProps: Object,
   isCustomComponentTag: boolean,
 ): void {
@@ -486,7 +487,6 @@ export function setInitialProperties(
   domElement: Element,
   tag: string,
   rawProps: Object,
-  rootContainerElement: Element | Document | DocumentFragment,
 ): void {
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
@@ -570,13 +570,7 @@ export function setInitialProperties(
 
   assertValidProps(tag, props);
 
-  setInitialDOMProperties(
-    tag,
-    domElement,
-    rootContainerElement,
-    props,
-    isCustomComponentTag,
-  );
+  setInitialDOMProperties(tag, domElement, props, isCustomComponentTag);
 
   switch (tag) {
     case 'input':
@@ -612,7 +606,6 @@ export function diffProperties(
   tag: string,
   lastRawProps: Object,
   nextRawProps: Object,
-  rootContainerElement: Element | Document | DocumentFragment,
 ): null | Array<mixed> {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, nextRawProps);
@@ -865,7 +858,6 @@ export function diffHydratedProperties(
   tag: string,
   rawProps: Object,
   parentNamespace: string,
-  rootContainerElement: Element | Document | DocumentFragment,
   isConcurrentMode: boolean,
   shouldWarnDev: boolean,
 ): null | Array<mixed> {
@@ -1027,6 +1019,17 @@ export function diffHydratedProperties(
           : getPropertyInfo(propKey);
       if (rawProps[SUPPRESS_HYDRATION_WARNING] === true) {
         // Don't bother comparing. We're ignoring all these warnings.
+      } else if (
+        enableFloat &&
+        tag === 'link' &&
+        rawProps.rel === 'stylesheet' &&
+        propKey === 'precedence'
+      ) {
+        // @TODO this is a temporary rule while we haven't implemented HostResources yet. This is used to allow
+        // for hydrating Resources (at the moment, stylesheets with a precedence prop) by using a data attribute.
+        // When we implement HostResources there will be no hydration directly so this code can be deleted
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.delete('data-rprec');
       } else if (
         propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
         propKey === SUPPRESS_HYDRATION_WARNING ||

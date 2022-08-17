@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {normalizeCodeLocInfo} from './utils';
+
 describe('Timeline profiler', () => {
   let React;
   let ReactDOM;
@@ -2134,6 +2136,15 @@ describe('Timeline profiler', () => {
       const data = store.profilerStore.profilingData?.timelineData;
       expect(data).toHaveLength(1);
       const timelineData = data[0];
+
+      // normalize the location for component stack source
+      // for snapshot testing
+      timelineData.schedulingEvents.forEach(event => {
+        if (event.componentStack) {
+          event.componentStack = normalizeCodeLocInfo(event.componentStack);
+        }
+      });
+
       expect(timelineData).toMatchInlineSnapshot(`
         Object {
           "batchUIDToMeasuresMap": Map {
@@ -2415,6 +2426,8 @@ describe('Timeline profiler', () => {
             },
             Object {
               "componentName": "App",
+              "componentStack": "
+            in App (at **)",
               "lanes": "0b0000000000000000000000000010000",
               "timestamp": 10,
               "type": "schedule-state-update",

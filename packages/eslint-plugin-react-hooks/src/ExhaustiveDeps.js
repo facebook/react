@@ -352,7 +352,7 @@ export default {
       const currentRefsInEffectCleanup = new Map();
 
       // Is this reference inside a cleanup function for this effect node?
-      // We can check by traversing scopes upwards  from the reference, and checking
+      // We can check by traversing scopes upwards from the reference, and checking
       // if the last "return () => " we encounter is located directly inside the effect.
       function isInsideEffectCleanup(reference) {
         let curScope = reference.from;

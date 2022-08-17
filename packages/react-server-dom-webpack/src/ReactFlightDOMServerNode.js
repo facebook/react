@@ -16,6 +16,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  abort,
 } from 'react-server/src/ReactFlightServer';
 
 function createDrainHandler(destination, request) {
@@ -29,6 +30,7 @@ type Options = {
 };
 
 type PipeableStream = {|
+  abort(reason: mixed): void,
   pipe<T: Writable>(destination: T): T,
 |};
 
@@ -57,6 +59,9 @@ function renderToPipeableStream(
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
       return destination;
+    },
+    abort(reason: mixed) {
+      abort(request, reason);
     },
   };
 }

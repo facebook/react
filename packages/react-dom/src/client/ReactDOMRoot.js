@@ -15,6 +15,7 @@ import type {
 
 import {queueExplicitHydrationTarget} from '../events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {enableFloat} from 'shared/ReactFeatureFlags';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -26,9 +27,9 @@ export type RootType = {
 export type CreateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
+  unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
-  transitionCallbacks?: TransitionTracingCallbacks,
   ...
 };
 
@@ -40,6 +41,7 @@ export type HydrateRootOptions = {
   // Options for all roots
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
+  unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
   ...
@@ -117,7 +119,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = functio
 
     const container = root.containerInfo;
 
-    if (container.nodeType !== COMMENT_NODE) {
+    if (!enableFloat && container.nodeType !== COMMENT_NODE) {
       const hostInstance = findHostInstanceWithNoPortals(root.current);
       if (hostInstance) {
         if (hostInstance.parentNode !== container) {
@@ -216,8 +218,8 @@ export function createRoot(
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
-    if (options.transitionCallbacks !== undefined) {
-      transitionCallbacks = options.transitionCallbacks;
+    if (options.unstable_transitionCallbacks !== undefined) {
+      transitionCallbacks = options.unstable_transitionCallbacks;
     }
   }
 
@@ -282,6 +284,7 @@ export function hydrateRoot(
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
   let onRecoverableError = defaultOnRecoverableError;
+  let transitionCallbacks = null;
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -298,6 +301,9 @@ export function hydrateRoot(
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
+    if (options.unstable_transitionCallbacks !== undefined) {
+      transitionCallbacks = options.unstable_transitionCallbacks;
+    }
   }
 
   const root = createHydrationContainer(
@@ -310,8 +316,7 @@ export function hydrateRoot(
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
-    // TODO(luna) Support hydration later
-    null,
+    transitionCallbacks,
   );
   markContainerAsRoot(root.current, container);
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.

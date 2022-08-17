@@ -30,6 +30,7 @@ import {
 import {
   deletePathInObject,
   getDisplayName,
+  getWrappedDisplayName,
   getDefaultComponentFilters,
   getInObject,
   getUID,
@@ -451,10 +452,11 @@ export function getInternalReactConstants(
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
       case ForwardRef:
-        // Mirror https://github.com/facebook/react/blob/7c21bf72ace77094fd1910cc350a548287ef8350/packages/shared/getComponentName.js#L27-L37
-        return (
-          (type && type.displayName) ||
-          getDisplayName(resolvedType, 'Anonymous')
+        return getWrappedDisplayName(
+          elementType,
+          resolvedType,
+          'ForwardRef',
+          'Anonymous',
         );
       case HostRoot:
         const fiberRoot = fiber.stateNode;
@@ -475,10 +477,12 @@ export function getInternalReactConstants(
         return 'Lazy';
       case MemoComponent:
       case SimpleMemoComponent:
-        return (
-          (elementType && elementType.displayName) ||
-          (type && type.displayName) ||
-          getDisplayName(resolvedType, 'Anonymous')
+        // Display name in React does not use `Memo` as a wrapper but fallback name.
+        return getWrappedDisplayName(
+          elementType,
+          resolvedType,
+          'Memo',
+          'Anonymous',
         );
       case SuspenseComponent:
         return 'Suspense';
@@ -660,6 +664,8 @@ export function attach(
       getDisplayNameForFiber,
       getIsProfiling: () => isProfiling,
       getLaneLabelMap,
+      currentDispatcherRef: renderer.currentDispatcherRef,
+      workTagMap: ReactTypeOfWork,
       reactVersion: version,
     });
 
@@ -2630,14 +2636,15 @@ export function attach(
   }
 
   function handleCommitFiberUnmount(fiber) {
-    // Flush any pending Fibers that we are untracking before processing the new commit.
-    // If we don't do this, we might end up double-deleting Fibers in some cases (like Legacy Suspense).
-    untrackFibers();
-
-    // This is not recursive.
-    // We can't traverse fibers after unmounting so instead
-    // we rely on React telling us about each unmount.
-    recordUnmount(fiber, false);
+    // If the untrackFiberSet already has the unmounted Fiber, this means we've already
+    // recordedUnmount, so we don't need to do it again. If we don't do this, we might
+    // end up double-deleting Fibers in some cases (like Legacy Suspense).
+    if (!untrackFibersSet.has(fiber)) {
+      // This is not recursive.
+      // We can't traverse fibers after unmounting so instead
+      // we rely on React telling us about each unmount.
+      recordUnmount(fiber, false);
+    }
   }
 
   function handlePostCommitFiberRoot(root) {

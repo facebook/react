@@ -11,7 +11,6 @@ let React;
 let ReactDOMClient;
 let ReactDOMServer;
 let act;
-let usingPartialRenderer;
 
 const util = require('util');
 const realConsoleError = console.error;
@@ -25,8 +24,6 @@ describe('ReactDOMServerHydration', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     act = require('react-dom/test-utils').act;
-
-    usingPartialRenderer = global.__WWW__ && !__EXPERIMENTAL__;
 
     console.error = jest.fn();
     container = document.createElement('div');
@@ -86,7 +83,8 @@ describe('ReactDOMServerHydration', () => {
           </div>
         );
       }
-      expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+      if (gate(flags => flags.enableClientRenderFallbackOnTextMismatch)) {
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           Array [
             "Warning: Text content did not match. Server: \\"server\\" Client: \\"client\\"
               in main (at **)
@@ -97,6 +95,16 @@ describe('ReactDOMServerHydration', () => {
             "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
           ]
         `);
+      } else {
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+          Array [
+            "Warning: Text content did not match. Server: \\"server\\" Client: \\"client\\"
+              in main (at **)
+              in div (at **)
+              in Mismatch (at **)",
+          ]
+        `);
+      }
     });
 
     // @gate __DEV__
@@ -346,7 +354,8 @@ describe('ReactDOMServerHydration', () => {
         function Mismatch({isClient}) {
           return <div className="parent">{isClient && 'only'}</div>;
         }
-        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+        if (gate(flags => flags.enableClientRenderFallbackOnTextMismatch)) {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Warning: Text content did not match. Server: \\"\\" Client: \\"only\\"
                 in div (at **)
@@ -356,6 +365,15 @@ describe('ReactDOMServerHydration', () => {
               "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
             ]
           `);
+        } else {
+          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+            Array [
+              "Warning: Text content did not match. Server: \\"\\" Client: \\"only\\"
+                in div (at **)
+                in Mismatch (at **)",
+            ]
+          `);
+        }
       });
 
       // @gate __DEV__
@@ -710,15 +728,13 @@ describe('ReactDOMServerHydration', () => {
           );
         }
 
-        // @TODO FB bundles use a different renderer that does not serialize errors to the client
-        const mismatchEl = usingPartialRenderer ? '<p>' : '<template>';
         // @TODO changes made to sending Fizz errors to client led to the insertion of templates in client rendered
         // suspense boundaries. This leaks in this test becuase the client rendered suspense boundary appears like
         // unhydrated tail nodes and this template is the first match. When we add special case handling for client
         // rendered suspense boundaries this test will likely change again
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
-              "Warning: Did not expect server HTML to contain a ${mismatchEl} in <div>.
+              "Warning: Did not expect server HTML to contain a <template> in <div>.
                 in div (at **)
                 in Mismatch (at **)",
               "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
@@ -798,21 +814,12 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        // We gate this assertion becuase fb-classic uses PartialRenderer for renderToString and it does not
-        // serialize server errors and send to client
-        if (usingPartialRenderer) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Caught [The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.]",
-            ]
-          `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Caught [The server did not finish this Suspense boundary: The server used \\"renderToString\\" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to \\"renderToPipeableStream\\" which supports Suspense on the server]",
             ]
           `);
-        }
       });
 
       // @gate __DEV__
@@ -833,21 +840,12 @@ describe('ReactDOMServerHydration', () => {
             </div>
           );
         }
-        // We gate this assertion becuase fb-classic uses PartialRenderer for renderToString and it does not
-        // serialize server errors and send to client
-        if (usingPartialRenderer) {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-            Array [
-              "Caught [The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.]",
-            ]
-          `);
-        } else {
-          expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             Array [
               "Caught [The server did not finish this Suspense boundary: The server used \\"renderToString\\" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to \\"renderToPipeableStream\\" which supports Suspense on the server]",
             ]
           `);
-        }
       });
     });
 

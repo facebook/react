@@ -8,6 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {BootstrapScriptDescriptor} from './ReactDOMServerFormatConfig';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -28,8 +29,8 @@ type Options = {|
   namespaceURI?: string,
   nonce?: string,
   bootstrapScriptContent?: string,
-  bootstrapScripts?: Array<string>,
-  bootstrapModules?: Array<string>,
+  bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
+  bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
@@ -96,11 +97,15 @@ function renderToReadableStream(
     );
     if (options && options.signal) {
       const signal = options.signal;
-      const listener = () => {
+      if (signal.aborted) {
         abort(request, (signal: any).reason);
-        signal.removeEventListener('abort', listener);
-      };
-      signal.addEventListener('abort', listener);
+      } else {
+        const listener = () => {
+          abort(request, (signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
     }
     startWork(request);
   });

@@ -15,10 +15,6 @@ import type {
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
-import type {
-  PendingSuspenseBoundaries,
-  Transition,
-} from './ReactFiberTracingMarkerComponent.new';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.new';
@@ -45,8 +41,6 @@ export type RootState = {
   element: any,
   isDehydrated: boolean,
   cache: Cache,
-  pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
-  transitions: Set<Transition> | null,
 };
 
 function FiberRootNode(
@@ -98,6 +92,7 @@ function FiberRootNode(
     this.hydrationCallbacks = null;
   }
 
+  this.incompleteTransitions = new Map();
   if (enableTransitionTracing) {
     this.transitionCallbacks = null;
     const transitionLanesMap = (this.transitionLanes = []);
@@ -189,8 +184,6 @@ export function createFiberRoot(
       element: initialChildren,
       isDehydrated: hydrate,
       cache: initialCache,
-      transitions: null,
-      pendingSuspenseBoundaries: null,
     };
     uninitializedFiber.memoizedState = initialState;
   } else {
@@ -198,8 +191,6 @@ export function createFiberRoot(
       element: initialChildren,
       isDehydrated: hydrate,
       cache: (null: any), // not enabled yet
-      transitions: null,
-      pendingSuspenseBoundaries: null,
     };
     uninitializedFiber.memoizedState = initialState;
   }
