@@ -35,7 +35,6 @@ export function showOverlay(
   agent: Agent,
   hideAfterTimeout: boolean,
 ) {
-  // TODO (npm-packages) Detect RN and support it somehow
   if (window.document == null) {
     if (elements != null && elements[0] != null) {
       agent.emit('showNativeHighlight', elements[0]);
