@@ -7215,6 +7215,54 @@ const tests = {
     {
       code: normalizeIndent`
         function Component() {
+          const [foo = {}] = bar;
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const {foo = {}} = bar;
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+          "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+          "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const {baz: {foo = {}}} = bar;
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+          "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+          "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ], 
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
           const foo = bar ?? {};
           useMemo(() => foo, [foo]);
         }
