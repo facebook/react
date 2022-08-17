@@ -1529,11 +1529,12 @@ function scanForConstructions({
       if (
         node.type === 'Variable' &&
         node.node.type === 'VariableDeclarator' &&
-        (node.node.id.type === 'ArrayPattern' || node.node.id.type === 'ObjectPattern') &&
+        (node.node.id.type === 'ArrayPattern' ||
+          node.node.id.type === 'ObjectPattern') &&
         node.name != null &&
         node.name.parent != null &&
         node.name.parent.type === 'AssignmentPattern'
-        ) {
+      ) {
         const constantExpressionType = getConstructionExpressionType(
           node.name.parent.right,
         );

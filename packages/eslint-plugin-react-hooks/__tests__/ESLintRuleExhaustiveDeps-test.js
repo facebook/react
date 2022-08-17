@@ -7238,8 +7238,8 @@ const tests = {
       errors: [
         {
           message:
-          "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-          "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
+            "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7254,11 +7254,11 @@ const tests = {
       errors: [
         {
           message:
-          "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-          "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
+            "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
-      ], 
+      ],
     },
     {
       code: normalizeIndent`
