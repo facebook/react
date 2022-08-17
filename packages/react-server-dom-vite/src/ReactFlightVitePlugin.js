@@ -496,29 +496,36 @@ function isDirectImportInServer(
   );
 }
 
-function resolveModPath(
-  modPath: string,
-  dirname: string,
-  retryExtension?: string,
-) {
-  let absolutePath = '';
-  try {
-    absolutePath = modPath.startsWith('.')
-      ? normalizePath(path.resolve(dirname, modPath))
-      : modPath;
+const RESOLVE_EXTENSIONS = [
+  '',
+  '.js',
+  '.ts',
+  '.jsx',
+  '.tsx',
+  '/index',
+  '/index.js',
+  '/index.ts',
+  '/index.jsx',
+  '/index.tsx',
+];
 
-    return normalizePath(
-      require.resolve(absolutePath + (retryExtension || '')),
-    );
-  } catch (error) {
-    if (!/\.[jt]sx?$/.test(absolutePath) && retryExtension !== '.tsx') {
-      // Node cannot infer .[jt]sx extensions.
-      // Append them here and retry a couple of times.
-      return resolveModPath(
-        absolutePath,
-        dirname,
-        retryExtension ? '.tsx' : '.jsx',
-      );
+// Resolve relative paths  and aliases. Examples:
+// - import {XYZ} from '~/components' => import {XYZ} from '<absolute>/src/components/index.ts'
+// - import {XYZ} from '/src/component.client' => import {XYZ} from '<absolute>/src/component.client.jsx'`
+function resolveModPath(modPath: string, dirname: string) {
+  const extensions = /\.[jt]sx?$/.test(modPath) ? [''] : RESOLVE_EXTENSIONS;
+
+  for (let i = 0; i < extensions.length; i++) {
+    const extension = extensions[i];
+
+    try {
+      const absolutePath = modPath.startsWith('.')
+        ? normalizePath(path.resolve(dirname, modPath))
+        : modPath;
+
+      return normalizePath(require.resolve(absolutePath + extension));
+    } catch (error) {
+      // Do not throw, this is likely a virtual module or another exception
     }
   }
 }
