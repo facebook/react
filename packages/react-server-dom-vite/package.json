@@ -54,8 +54,8 @@
     "node": ">=0.10.0"
   },
   "peerDependencies": {
-    "react": "^17.0.0",
-    "vite": "^2.7.1"
+    "react": "^17.0.0 || ^18.0.0",
+    "vite": "^2.7.1 || ^3.0.7"
   },
   "dependencies": {
     "es-module-lexer": "^0.9.3",

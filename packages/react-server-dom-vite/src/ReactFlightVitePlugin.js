@@ -10,11 +10,14 @@
 // $FlowFixMe[module-missing]
 import {init, parse} from 'es-module-lexer';
 import MagicString from 'magic-string';
-// $FlowFixMe[module-missing]
-import {normalizePath, transformWithEsbuild, createServer} from 'vite';
 
 import {promises as fs} from 'fs';
 import path from 'path';
+
+// $FlowFixMe[module-missing]
+import * as vite from 'vite';
+const {normalizePath, transformWithEsbuild, createServer} = vite;
+const isVite3 = vite.version && vite.version.startsWith('3.');
 
 type PluginOptions = {
   serverBuildEntries: string[],
@@ -351,7 +354,8 @@ async function findClientBoundariesForClientBuild(
   const server = await createServer({
     root,
     clearScreen: false,
-    server: {middlewareMode: 'ssr'},
+    server: {middlewareMode: isVite3 ? true : 'ssr', hmr: false},
+    appType: 'custom',
   });
 
   try {
@@ -380,7 +384,8 @@ const hashImportsPlugin = {
         function(_, imports) {
           return imports
             .trim()
-            .replace(/"([^"]+?)":/gm, function(__, relativePath) {
+            .replace(/"([^"]+?)":/gm, function(all, relativePath) {
+              if (relativePath === '__VITE_PRELOAD__') return all;
               const absolutePath = path.resolve(
                 path.dirname(id.split('?')[0]),
                 relativePath,
