@@ -32,6 +32,10 @@ export default {
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
+          ignoreThisDependency: {
+            type: 'string',
+            enum: ['never', 'props', 'always'],
+          },
         },
       },
     ],
@@ -51,9 +55,16 @@ export default {
         context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
       false;
 
+    const ignoreThisDependency =
+      (context.options &&
+        context.options[0] &&
+        context.options[0].ignoreThisDependency) ||
+      'never';
+
     const options = {
       additionalHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
+      ignoreThisDependency,
     };
 
     function reportProblem(problem) {
@@ -234,14 +245,7 @@ export default {
             if (id.elements[1] === resolved.identifiers[0]) {
               if (name === 'useState') {
                 const references = resolved.references;
-                let writeCount = 0;
                 for (let i = 0; i < references.length; i++) {
-                  if (references[i].isWrite()) {
-                    writeCount++;
-                  }
-                  if (writeCount > 1) {
-                    return false;
-                  }
                   setStateCallSites.set(
                     references[i].identifier,
                     id.elements[0],
@@ -328,7 +332,7 @@ export default {
             pureScopes.has(ref.resolved.scope) &&
             // Stable values are fine though,
             // although we won't check functions deeper.
-            !memoizedIsStableKnownHookValue(ref.resolved)
+            !memoizedIsStablecKnownHookValue(ref.resolved)
           ) {
             return false;
           }
@@ -339,7 +343,7 @@ export default {
       }
 
       // Remember such values. Avoid re-running extra checks on them.
-      const memoizedIsStableKnownHookValue = memoizeWithWeakMap(
+      const memoizedIsStablecKnownHookValue = memoizeWithWeakMap(
         isStableKnownHookValue,
         stableKnownValueCache,
       );
@@ -352,7 +356,7 @@ export default {
       const currentRefsInEffectCleanup = new Map();
 
       // Is this reference inside a cleanup function for this effect node?
-      // We can check by traversing scopes upwards from the reference, and checking
+      // We can check by traversing scopes upwards  from the reference, and checking
       // if the last "return () => " we encounter is located directly inside the effect.
       function isInsideEffectCleanup(reference) {
         let curScope = reference.from;
@@ -391,7 +395,10 @@ export default {
             node,
             reference.identifier,
           );
-          const dependencyNode = getDependency(referenceNode);
+          const dependencyNode = getDependency(
+            referenceNode,
+            ignoreThisDependency,
+          );
           const dependency = analyzePropertyChain(
             dependencyNode,
             optionalChains,
@@ -442,7 +449,7 @@ export default {
           if (!dependencies.has(dependency)) {
             const resolved = reference.resolved;
             const isStable =
-              memoizedIsStableKnownHookValue(resolved) ||
+              memoizedIsStablecKnownHookValue(resolved) ||
               memoizedIsFunctionWithoutCapturedValues(resolved);
             dependencies.set(dependency, {
               isStable,
@@ -682,7 +689,7 @@ export default {
             maybeID.type === 'MemberExpression' ||
             maybeID.type === 'OptionalMemberExpression' ||
             maybeID.type === 'ChainExpression'
-          ) {
+            ) {
             maybeID = maybeID.object || maybeID.expression.object;
           }
           const isDeclaredInComponent = !componentScope.through.some(
@@ -1282,12 +1289,12 @@ export default {
 
 // The meat of the logic.
 function collectRecommendations({
-  dependencies,
-  declaredDependencies,
-  stableDependencies,
-  externalDependencies,
-  isEffect,
-}) {
+                                  dependencies,
+                                  declaredDependencies,
+                                  stableDependencies,
+                                  externalDependencies,
+                                  isEffect,
+                                }) {
   // Our primary data structure.
   // It is a logical representation of property chains:
   // `props` -> `props.foo` -> `props.foo.bar` -> `props.foo.bar.baz`
@@ -1496,11 +1503,11 @@ function getConstructionExpressionType(node) {
 // Finds variables declared as dependencies
 // that would invalidate on every render.
 function scanForConstructions({
-  declaredDependencies,
-  declaredDependenciesNode,
-  componentScope,
-  scope,
-}) {
+                                declaredDependencies,
+                                declaredDependenciesNode,
+                                componentScope,
+                                scope,
+                              }) {
   const constructions = declaredDependencies
     .map(({key}) => {
       const ref = componentScope.variables.find(v => v.name === key);
@@ -1583,13 +1590,25 @@ function scanForConstructions({
 }
 
 /**
- * Assuming () means the passed/returned node:
- * (props) => (props)
- * props.(foo) => (props.foo)
- * props.foo.(bar) => (props).foo.bar
- * props.foo.bar.(baz) => (props).foo.bar.baz
+ * Assuming {} means the passed/returned node:
+ * {props} => {props}
+ * {props}.foo => {props.foo}
+ * {props}.foo.bar => {props.foo.bar}
+ * {props}.foo.bar.baz => {props.foo.bar.baz}
+ *
+ * if ignoreThisDependency is never
+ * {props}.doSomething() => {props}.doSomething()
+ * {foo}.bar.doSomething() => {foo.bar}.doSomething()
+ *
+ * if ignoreThisDependency is props
+ * {props}.doSomething() => {props.doSomething}()
+ * {foo}.bar.doSomething() => {foo.bar}.doSomething()
+ *
+ * if ignoreThisDependency is always
+ * {props}.doSomething() => {props.doSomething}()
+ * {foo}.bar.doSomething() => {foo.bar.doSomething}()
  */
-function getDependency(node) {
+function getDependency(node, ignoreThisDependency) {
   if (
     (node.parent.type === 'MemberExpression' ||
       node.parent.type === 'OptionalMemberExpression') &&
@@ -1597,13 +1616,15 @@ function getDependency(node) {
     node.parent.property.name !== 'current' &&
     !node.parent.computed &&
     !(
+      ignoreThisDependency !== 'always' &&
+      !(ignoreThisDependency === 'props' && node.name === 'props') &&
       node.parent.parent != null &&
       (node.parent.parent.type === 'CallExpression' ||
         node.parent.parent.type === 'OptionalCallExpression') &&
       node.parent.parent.callee === node.parent
     )
   ) {
-    return getDependency(node.parent);
+    return getDependency(node.parent, ignoreThisDependency);
   } else if (
     // Note: we don't check OptionalMemberExpression because it can't be LHS.
     node.type === 'MemberExpression' &&

@@ -243,7 +243,6 @@ const tests = {
             console.log(props.foo);
             console.log(props.bar);
           }, [props, props.foo]);
-
           let color = someFunc();
           useEffect(() => {
             console.log(props.foo.bar.baz);
@@ -610,7 +609,6 @@ const tests = {
           const [isPending4, startTransition4] = React.useTransition();
           const mySetState = useCallback(() => {}, []);
           let myDispatch = useCallback(() => {}, []);
-
           useEffect(() => {
             // Known to be static
             console.log(definitelyRef1.current);
@@ -625,7 +623,6 @@ const tests = {
             startTransition2();
             startTransition3();
             startTransition4();
-
             // Dynamic
             console.log(state1);
             console.log(state2);
@@ -637,7 +634,6 @@ const tests = {
             console.log(isPending4);
             mySetState();
             myDispatch();
-
             // Not sure; assume dynamic
             maybeSetState();
             maybeDispatch();
@@ -646,11 +642,9 @@ const tests = {
             state1, state2, state3, state4, state5, state6,
             maybeRef1, maybeRef2,
             isPending2, isPending4,
-
             // Not sure; assume dynamic
             mySetState, myDispatch,
             maybeSetState, maybeDispatch
-
             // In this test, we don't specify static deps.
             // That should be okay.
           ]);
@@ -663,18 +657,14 @@ const tests = {
           const definitelyRef1 = useRef();
           const definitelyRef2 = useRef();
           const maybeRef1 = useSomeOtherRefyThing();
-
           const [state1, setState1] = useState();
           const [state2, setState2] = React.useState();
           const [state3, dispatch1] = useReducer();
           const [state4, dispatch2] = React.useReducer();
-
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
-
           const mySetState = useCallback(() => {}, []);
           let myDispatch = useCallback(() => {}, []);
-
           useEffect(() => {
             // Known to be static
             console.log(definitelyRef1.current);
@@ -685,7 +675,6 @@ const tests = {
             setState2();
             dispatch1();
             dispatch2();
-
             // Dynamic
             console.log(state1);
             console.log(state2);
@@ -695,7 +684,6 @@ const tests = {
             console.log(state6);
             mySetState();
             myDispatch();
-
             // Not sure; assume dynamic
             maybeSetState();
             maybeDispatch();
@@ -703,11 +691,9 @@ const tests = {
             // Dynamic
             state1, state2, state3, state4, state5, state6,
             maybeRef1, maybeRef2,
-
             // Not sure; assume dynamic
             mySetState, myDispatch,
             maybeSetState, maybeDispatch,
-
             // In this test, we specify static deps.
             // That should be okay too!
             definitelyRef1, definitelyRef2, setState1, setState2, dispatch1, dispatch2
@@ -1034,7 +1020,6 @@ const tests = {
         function MyComponent(props) {
           let [, setState] = useState();
           let [, dispatch] = React.useReducer();
-
           function handleNext1(value) {
             let value2 = value * 100;
             setState(value2);
@@ -1083,30 +1068,12 @@ const tests = {
       code: normalizeIndent`
         function Counter() {
           const [count, setCount] = useState(0);
-
           useEffect(() => {
             let id = setInterval(() => {
               setCount(c => c + 1);
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
-          return <h1>{count}</h1>;
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function Counter(unstableProp) {
-          let [count, setCount] = useState(0);
-          setCount = unstableProp
-          useEffect(() => {
-            let id = setInterval(() => {
-              setCount(c => c + 1);
-            }, 1000);
-            return () => clearInterval(id);
-          }, [setCount]);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -1115,18 +1082,15 @@ const tests = {
       code: normalizeIndent`
         function Counter() {
           const [count, setCount] = useState(0);
-
           function tick() {
             setCount(c => c + 1);
           }
-
           useEffect(() => {
             let id = setInterval(() => {
               tick();
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -1139,14 +1103,12 @@ const tests = {
               return state + 1;
             }
           }, 0);
-
           useEffect(() => {
             let id = setInterval(() => {
               dispatch('inc');
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -1159,16 +1121,13 @@ const tests = {
               return state + 1;
             }
           }, 0);
-
           const tick = () => {
             dispatch('inc');
           };
-
           useEffect(() => {
             let id = setInterval(tick, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -1213,18 +1172,15 @@ const tests = {
       code: normalizeIndent`
         function Counter() {
           let [count, setCount] = useState(0);
-
           function increment(x) {
             return x + 1;
           }
-
           useEffect(() => {
             let id = setInterval(() => {
               setCount(increment);
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -1233,18 +1189,15 @@ const tests = {
       code: normalizeIndent`
         function Counter() {
           let [count, setCount] = useState(0);
-
           function increment(x) {
             return x + 1;
           }
-
           useEffect(() => {
             let id = setInterval(() => {
               setCount(count => increment(count));
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -1254,14 +1207,12 @@ const tests = {
         import increment from './increment';
         function Counter() {
           let [count, setCount] = useState(0);
-
           useEffect(() => {
             let id = setInterval(() => {
               setCount(count => count + increment);
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -1271,14 +1222,12 @@ const tests = {
         function withStuff(increment) {
           return function Counter() {
             let [count, setCount] = useState(0);
-
             useEffect(() => {
               let id = setInterval(() => {
                 setCount(count => count + increment);
               }, 1000);
               return () => clearInterval(id);
             }, []);
-
             return <h1>{count}</h1>;
           }
         }
@@ -1452,6 +1401,31 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => props.someEffect(), [props.someEffect]);
+        }
+      `,
+      options: [{ignoreThisDependency: 'always'}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const foo = {bar: () => null}
+          useEffect(() => foo.bar(), [foo.bar]);
+        }
+      `,
+      options: [{ignoreThisDependency: 'always'}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => props.someEffect(), [props.someEffect]);
+        }
+      `,
+      options: [{ignoreThisDependency: 'props'}],
+    },
   ],
   invalid: [
     {
@@ -1590,48 +1564,6 @@ const tests = {
                   useEffect(() => {
                     console.log(local);
                   }, [local]);
-                }
-              `,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      code: normalizeIndent`
-        function Counter(unstableProp) {
-          let [count, setCount] = useState(0);
-          setCount = unstableProp
-          useEffect(() => {
-            let id = setInterval(() => {
-              setCount(c => c + 1);
-            }, 1000);
-            return () => clearInterval(id);
-          }, []);
-
-          return <h1>{count}</h1>;
-        }
-      `,
-      errors: [
-        {
-          message:
-            "React Hook useEffect has a missing dependency: 'setCount'. " +
-            'Either include it or remove the dependency array.',
-          suggestions: [
-            {
-              desc: 'Update the dependencies array to be: [setCount]',
-              output: normalizeIndent`
-                function Counter(unstableProp) {
-                  let [count, setCount] = useState(0);
-                  setCount = unstableProp
-                  useEffect(() => {
-                    let id = setInterval(() => {
-                      setCount(c => c + 1);
-                    }, 1000);
-                    return () => clearInterval(id);
-                  }, [setCount]);
-        
-                  return <h1>{count}</h1>;
                 }
               `,
             },
@@ -2258,7 +2190,7 @@ const tests = {
       errors: [
         {
           message:
-            // Don't assume user meant `foo` because it's not used in the effect.
+          // Don't assume user meant `foo` because it's not used in the effect.
             "The 'foo' literal is not a valid dependency because it never changes. " +
             'You can safely remove it.',
           // TODO: provide suggestion.
@@ -4433,7 +4365,7 @@ const tests = {
       errors: [
         {
           message:
-            // value2
+          // value2
             `Assignments to the 'value2' variable from inside React Hook useEffect ` +
             `will be lost after each render. To preserve the value over time, ` +
             `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
@@ -4442,7 +4374,7 @@ const tests = {
         },
         {
           message:
-            // value
+          // value
             `Assignments to the 'value' variable from inside React Hook useEffect ` +
             `will be lost after each render. To preserve the value over time, ` +
             `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
@@ -4451,7 +4383,7 @@ const tests = {
         },
         {
           message:
-            // value4
+          // value4
             `Assignments to the 'value4' variable from inside React Hook useEffect ` +
             `will be lost after each render. To preserve the value over time, ` +
             `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
@@ -4460,7 +4392,7 @@ const tests = {
         },
         {
           message:
-            // asyncValue
+          // asyncValue
             `Assignments to the 'asyncValue' variable from inside React Hook useEffect ` +
             `will be lost after each render. To preserve the value over time, ` +
             `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
@@ -4494,7 +4426,7 @@ const tests = {
       errors: [
         {
           message:
-            // value
+          // value
             `Assignments to the 'value' variable from inside React Hook useEffect ` +
             `will be lost after each render. To preserve the value over time, ` +
             `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
@@ -4503,7 +4435,7 @@ const tests = {
         },
         {
           message:
-            // value2
+          // value2
             `Assignments to the 'value2' variable from inside React Hook useEffect ` +
             `will be lost after each render. To preserve the value over time, ` +
             `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
@@ -4512,7 +4444,7 @@ const tests = {
         },
         {
           message:
-            // asyncValue
+          // asyncValue
             `Assignments to the 'asyncValue' variable from inside React Hook useEffect ` +
             `will be lost after each render. To preserve the value over time, ` +
             `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
@@ -4690,9 +4622,9 @@ const tests = {
       `,
       errors: [
         `The ref value 'myRef.current' will likely have changed by the time ` +
-          `this effect cleanup function runs. If this ref points to a node ` +
-          `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
-          `and use that variable in the cleanup function.`,
+        `this effect cleanup function runs. If this ref points to a node ` +
+        `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+        `and use that variable in the cleanup function.`,
       ],
       options: [{additionalHooks: 'useLayoutEffect_SAFE_FOR_SSR'}],
     },
@@ -4773,7 +4705,6 @@ const tests = {
     {
       code: normalizeIndent`
         import MutableStore from 'store';
-
         function MyComponent() {
           useEffect(() => {
             console.log(MutableStore.hello);
@@ -4792,7 +4723,6 @@ const tests = {
               desc: 'Update the dependencies array to be: []',
               output: normalizeIndent`
                 import MutableStore from 'store';
-
                 function MyComponent() {
                   useEffect(() => {
                     console.log(MutableStore.hello);
@@ -4808,7 +4738,6 @@ const tests = {
       code: normalizeIndent`
         import MutableStore from 'store';
         let z = {};
-
         function MyComponent(props) {
           let x = props.foo;
           {
@@ -4833,7 +4762,6 @@ const tests = {
               output: normalizeIndent`
                 import MutableStore from 'store';
                 let z = {};
-
                 function MyComponent(props) {
                   let x = props.foo;
                   {
@@ -4853,7 +4781,6 @@ const tests = {
       code: normalizeIndent`
         import MutableStore from 'store';
         let z = {};
-
         function MyComponent(props) {
           let x = props.foo;
           {
@@ -4880,7 +4807,6 @@ const tests = {
               output: normalizeIndent`
                 import MutableStore from 'store';
                 let z = {};
-
                 function MyComponent(props) {
                   let x = props.foo;
                   {
@@ -4900,7 +4826,6 @@ const tests = {
       code: normalizeIndent`
         import MutableStore from 'store';
         let z = {};
-
         function MyComponent(props) {
           let x = props.foo;
           {
@@ -4925,7 +4850,6 @@ const tests = {
               output: normalizeIndent`
                 import MutableStore from 'store';
                 let z = {};
-
                 function MyComponent(props) {
                   let x = props.foo;
                   {
@@ -4945,7 +4869,6 @@ const tests = {
       code: normalizeIndent`
         import MutableStore from 'store';
         let z = {};
-
         function MyComponent(props) {
           let x = props.foo;
           {
@@ -4970,7 +4893,6 @@ const tests = {
               output: normalizeIndent`
                 import MutableStore from 'store';
                 let z = {};
-
                 function MyComponent(props) {
                   let x = props.foo;
                   {
@@ -4993,7 +4915,6 @@ const tests = {
           let [, setState] = useState();
           let [, dispatch] = React.useReducer();
           let taint = props.foo;
-
           function handleNext1(value) {
             let value2 = value * taint;
             setState(value2);
@@ -5031,7 +4952,6 @@ const tests = {
                   let [, setState] = useState();
                   let [, dispatch] = React.useReducer();
                   let taint = props.foo;
-
                   function handleNext1(value) {
                     let value2 = value * taint;
                     setState(value2);
@@ -5071,7 +4991,6 @@ const tests = {
                   let [, setState] = useState();
                   let [, dispatch] = React.useReducer();
                   let taint = props.foo;
-
                   function handleNext1(value) {
                     let value2 = value * taint;
                     setState(value2);
@@ -5111,7 +5030,6 @@ const tests = {
                   let [, setState] = useState();
                   let [, dispatch] = React.useReducer();
                   let taint = props.foo;
-
                   function handleNext1(value) {
                     let value2 = value * taint;
                     setState(value2);
@@ -5148,10 +5066,8 @@ const tests = {
           let [, setState] = useState();
           let [, dispatch] = React.useReducer();
           let taint = props.foo;
-
           // Shouldn't affect anything
           function handleChange() {}
-
           function handleNext1(value) {
             let value2 = value * taint;
             setState(value2);
@@ -5189,10 +5105,8 @@ const tests = {
                   let [, setState] = useState();
                   let [, dispatch] = React.useReducer();
                   let taint = props.foo;
-
                   // Shouldn't affect anything
                   function handleChange() {}
-
                   function handleNext1(value) {
                     let value2 = value * taint;
                     setState(value2);
@@ -5232,10 +5146,8 @@ const tests = {
                   let [, setState] = useState();
                   let [, dispatch] = React.useReducer();
                   let taint = props.foo;
-
                   // Shouldn't affect anything
                   function handleChange() {}
-
                   function handleNext1(value) {
                     let value2 = value * taint;
                     setState(value2);
@@ -5275,10 +5187,8 @@ const tests = {
                   let [, setState] = useState();
                   let [, dispatch] = React.useReducer();
                   let taint = props.foo;
-
                   // Shouldn't affect anything
                   function handleChange() {}
-
                   function handleNext1(value) {
                     let value2 = value * taint;
                     setState(value2);
@@ -5315,10 +5225,8 @@ const tests = {
           let [, setState] = useState();
           let [, dispatch] = React.useReducer();
           let taint = props.foo;
-
           // Shouldn't affect anything
           const handleChange = () => {};
-
           function handleNext1(value) {
             let value2 = value * taint;
             setState(value2);
@@ -5356,10 +5264,8 @@ const tests = {
                   let [, setState] = useState();
                   let [, dispatch] = React.useReducer();
                   let taint = props.foo;
-
                   // Shouldn't affect anything
                   const handleChange = () => {};
-
                   function handleNext1(value) {
                     let value2 = value * taint;
                     setState(value2);
@@ -5399,10 +5305,8 @@ const tests = {
                   let [, setState] = useState();
                   let [, dispatch] = React.useReducer();
                   let taint = props.foo;
-
                   // Shouldn't affect anything
                   const handleChange = () => {};
-
                   function handleNext1(value) {
                     let value2 = value * taint;
                     setState(value2);
@@ -5442,10 +5346,8 @@ const tests = {
                   let [, setState] = useState();
                   let [, dispatch] = React.useReducer();
                   let taint = props.foo;
-
                   // Shouldn't affect anything
                   const handleChange = () => {};
-
                   function handleNext1(value) {
                     let value2 = value * taint;
                     setState(value2);
@@ -5479,11 +5381,9 @@ const tests = {
       code: normalizeIndent`
         function MyComponent(props) {
           let [, setState] = useState();
-
           function handleNext(value) {
             setState(value);
           }
-
           useEffect(() => {
             return Store.subscribe(handleNext);
           }, [handleNext]);
@@ -5508,11 +5408,9 @@ const tests = {
       code: normalizeIndent`
         function MyComponent(props) {
           let [, setState] = useState();
-
           const handleNext = (value) => {
             setState(value);
           };
-
           useEffect(() => {
             return Store.subscribe(handleNext);
           }, [handleNext]);
@@ -5540,15 +5438,12 @@ const tests = {
       code: normalizeIndent`
         function MyComponent(props) {
           let [, setState] = useState();
-
           const handleNext = (value) => {
             setState(value);
           };
-
           useEffect(() => {
             return Store.subscribe(handleNext);
           }, [handleNext]);
-
           return <div onClick={handleNext} />;
         }
       `,
@@ -5567,15 +5462,12 @@ const tests = {
               output: normalizeIndent`
                 function MyComponent(props) {
                   let [, setState] = useState();
-
                   const handleNext = useCallback((value) => {
                     setState(value);
                   });
-
                   useEffect(() => {
                     return Store.subscribe(handleNext);
                   }, [handleNext]);
-
                   return <div onClick={handleNext} />;
                 }
               `,
@@ -5986,13 +5878,11 @@ const tests = {
         function MyComponent(props) {
           let [, setState] = useState();
           let taint = props.foo;
-
           function handleNext(value) {
             let value2 = value * taint;
             setState(value2);
             console.log('hello');
           }
-
           useEffect(() => {
             return Store.subscribe(handleNext);
           }, [handleNext]);
@@ -6013,14 +5903,12 @@ const tests = {
       code: normalizeIndent`
         function Counter() {
           let [count, setCount] = useState(0);
-
           useEffect(() => {
             let id = setInterval(() => {
               setCount(count + 1);
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -6037,14 +5925,12 @@ const tests = {
               output: normalizeIndent`
                 function Counter() {
                   let [count, setCount] = useState(0);
-
                   useEffect(() => {
                     let id = setInterval(() => {
                       setCount(count + 1);
                     }, 1000);
                     return () => clearInterval(id);
                   }, [count]);
-
                   return <h1>{count}</h1>;
                 }
               `,
@@ -6058,14 +5944,12 @@ const tests = {
         function Counter() {
           let [count, setCount] = useState(0);
           let [increment, setIncrement] = useState(0);
-
           useEffect(() => {
             let id = setInterval(() => {
               setCount(count + increment);
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -6083,14 +5967,12 @@ const tests = {
                 function Counter() {
                   let [count, setCount] = useState(0);
                   let [increment, setIncrement] = useState(0);
-
                   useEffect(() => {
                     let id = setInterval(() => {
                       setCount(count + increment);
                     }, 1000);
                     return () => clearInterval(id);
                   }, [count, increment]);
-
                   return <h1>{count}</h1>;
                 }
               `,
@@ -6104,14 +5986,12 @@ const tests = {
         function Counter() {
           let [count, setCount] = useState(0);
           let [increment, setIncrement] = useState(0);
-
           useEffect(() => {
             let id = setInterval(() => {
               setCount(count => count + increment);
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -6129,14 +6009,12 @@ const tests = {
                 function Counter() {
                   let [count, setCount] = useState(0);
                   let [increment, setIncrement] = useState(0);
-
                   useEffect(() => {
                     let id = setInterval(() => {
                       setCount(count => count + increment);
                     }, 1000);
                     return () => clearInterval(id);
                   }, [increment]);
-
                   return <h1>{count}</h1>;
                 }
               `,
@@ -6150,14 +6028,12 @@ const tests = {
         function Counter() {
           let [count, setCount] = useState(0);
           let increment = useCustomHook();
-
           useEffect(() => {
             let id = setInterval(() => {
               setCount(count => count + increment);
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -6176,14 +6052,12 @@ const tests = {
                 function Counter() {
                   let [count, setCount] = useState(0);
                   let increment = useCustomHook();
-
                   useEffect(() => {
                     let id = setInterval(() => {
                       setCount(count => count + increment);
                     }, 1000);
                     return () => clearInterval(id);
                   }, [increment]);
-
                   return <h1>{count}</h1>;
                 }
               `,
@@ -6196,18 +6070,15 @@ const tests = {
       code: normalizeIndent`
         function Counter({ step }) {
           let [count, setCount] = useState(0);
-
           function increment(x) {
             return x + step;
           }
-
           useEffect(() => {
             let id = setInterval(() => {
               setCount(count => increment(count));
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -6225,18 +6096,15 @@ const tests = {
               output: normalizeIndent`
                 function Counter({ step }) {
                   let [count, setCount] = useState(0);
-
                   function increment(x) {
                     return x + step;
                   }
-
                   useEffect(() => {
                     let id = setInterval(() => {
                       setCount(count => increment(count));
                     }, 1000);
                     return () => clearInterval(id);
                   }, [increment]);
-
                   return <h1>{count}</h1>;
                 }
               `,
@@ -6249,18 +6117,15 @@ const tests = {
       code: normalizeIndent`
         function Counter({ step }) {
           let [count, setCount] = useState(0);
-
           function increment(x) {
             return x + step;
           }
-
           useEffect(() => {
             let id = setInterval(() => {
               setCount(count => increment(count));
             }, 1000);
             return () => clearInterval(id);
           }, [increment]);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -6279,14 +6144,12 @@ const tests = {
       code: normalizeIndent`
         function Counter({ increment }) {
           let [count, setCount] = useState(0);
-
           useEffect(() => {
             let id = setInterval(() => {
               setCount(count => count + increment);
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -6303,14 +6166,12 @@ const tests = {
               output: normalizeIndent`
                 function Counter({ increment }) {
                   let [count, setCount] = useState(0);
-
                   useEffect(() => {
                     let id = setInterval(() => {
                       setCount(count => count + increment);
                     }, 1000);
                     return () => clearInterval(id);
                   }, [increment]);
-
                   return <h1>{count}</h1>;
                 }
               `,
@@ -6323,18 +6184,15 @@ const tests = {
       code: normalizeIndent`
         function Counter() {
           const [count, setCount] = useState(0);
-
           function tick() {
             setCount(count + 1);
           }
-
           useEffect(() => {
             let id = setInterval(() => {
               tick();
             }, 1000);
             return () => clearInterval(id);
           }, []);
-
           return <h1>{count}</h1>;
         }
       `,
@@ -6353,18 +6211,15 @@ const tests = {
               output: normalizeIndent`
                 function Counter() {
                   const [count, setCount] = useState(0);
-
                   function tick() {
                     setCount(count + 1);
                   }
-
                   useEffect(() => {
                     let id = setInterval(() => {
                       tick();
                     }, 1000);
                     return () => clearInterval(id);
                   }, [tick]);
-
                   return <h1>{count}</h1>;
                 }
               `,
@@ -7627,6 +7482,33 @@ const tests = {
         },
       ],
     },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const foo = {bar: () => null}
+          useEffect(() => foo.bar(), [foo.bar]);
+        }
+      `,
+      options: [{ignoreThisDependency: 'props'}],
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [foo, foo.bar]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  const foo = {bar: () => null}
+                  useEffect(() => foo.bar(), [foo, foo.bar]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
   ],
 };
 
@@ -7684,7 +7566,6 @@ const testsTypescript = {
       code: normalizeIndent`
         function MyComponent() {
           const [state, setState] = React.useState<number>(0);
-
           useEffect(() => {
             const someNumber: typeof state = 2;
             setState(prevState => prevState + someNumber);
@@ -7775,7 +7656,6 @@ const testsTypescript = {
       code: normalizeIndent`
         function MyComponent() {
           const pizza = {};
-
           useEffect(() => ({
             crust: pizza.crust,
             toppings: pizza?.toppings,
@@ -7794,7 +7674,6 @@ const testsTypescript = {
               output: normalizeIndent`
                 function MyComponent() {
                   const pizza = {};
-
                   useEffect(() => ({
                     crust: pizza.crust,
                     toppings: pizza?.toppings,
@@ -7810,7 +7689,6 @@ const testsTypescript = {
       code: normalizeIndent`
         function MyComponent() {
           const pizza = {};
-
           useEffect(() => ({
             crust: pizza?.crust,
             density: pizza.crust.density,
@@ -7828,7 +7706,6 @@ const testsTypescript = {
               output: normalizeIndent`
                 function MyComponent() {
                   const pizza = {};
-
                   useEffect(() => ({
                     crust: pizza?.crust,
                     density: pizza.crust.density,
@@ -7844,7 +7721,6 @@ const testsTypescript = {
       code: normalizeIndent`
         function MyComponent() {
           const pizza = {};
-
           useEffect(() => ({
             crust: pizza.crust,
             density: pizza?.crust.density,
@@ -7862,7 +7738,6 @@ const testsTypescript = {
               output: normalizeIndent`
                 function MyComponent() {
                   const pizza = {};
-
                   useEffect(() => ({
                     crust: pizza.crust,
                     density: pizza?.crust.density,
@@ -7878,7 +7753,6 @@ const testsTypescript = {
       code: normalizeIndent`
         function MyComponent() {
           const pizza = {};
-
           useEffect(() => ({
             crust: pizza?.crust,
             density: pizza?.crust.density,
@@ -7896,7 +7770,6 @@ const testsTypescript = {
               output: normalizeIndent`
                 function MyComponent() {
                   const pizza = {};
-
                   useEffect(() => ({
                     crust: pizza?.crust,
                     density: pizza?.crust.density,
@@ -7976,7 +7849,6 @@ const testsTypescript = {
       code: normalizeIndent`
         function MyComponent() {
           const [state, setState] = React.useState<number>(0);
-
           useEffect(() => {
             const someNumber: typeof state = 2;
             setState(prevState => prevState + someNumber + state);
@@ -7996,7 +7868,6 @@ const testsTypescript = {
               output: normalizeIndent`
               function MyComponent() {
                 const [state, setState] = React.useState<number>(0);
-
                 useEffect(() => {
                   const someNumber: typeof state = 2;
                   setState(prevState => prevState + someNumber + state);
@@ -8012,7 +7883,6 @@ const testsTypescript = {
       code: normalizeIndent`
         function MyComponent() {
           const [state, setState] = React.useState<number>(0);
-
           useMemo(() => {
             const someNumber: typeof state = 2;
             console.log(someNumber);
@@ -8030,7 +7900,6 @@ const testsTypescript = {
               output: normalizeIndent`
                 function MyComponent() {
                   const [state, setState] = React.useState<number>(0);
-
                   useMemo(() => {
                     const someNumber: typeof state = 2;
                     console.log(someNumber);
