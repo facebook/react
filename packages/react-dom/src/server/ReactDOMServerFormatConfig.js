@@ -82,7 +82,6 @@ const endInlineScript = stringToPrecomputedChunk('</script>');
 
 const startScriptSrc = stringToPrecomputedChunk('<script src="');
 const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
-const scriptIntegirty = stringToPrecomputedChunk('" integrity="');
 const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
 /**
@@ -105,17 +104,13 @@ const scriptRegex = /(<\/|<)(s)(cript)/gi;
 const scriptReplacer = (match, prefix, s, suffix) =>
   `${prefix}${s === 's' ? '\\u0073' : '\\u0053'}${suffix}`;
 
-export type BootstrapScriptDescriptor = {
-  src: string,
-  integrity?: string,
-};
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(
   identifierPrefix: string | void,
   nonce: string | void,
   bootstrapScriptContent: string | void,
-  bootstrapScripts: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
-  bootstrapModules: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
+  bootstrapScripts: Array<string> | void,
+  bootstrapModules: Array<string> | void,
 ): ResponseState {
   const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
   const inlineScriptWithNonce =
@@ -134,42 +129,20 @@ export function createResponseState(
   }
   if (bootstrapScripts !== undefined) {
     for (let i = 0; i < bootstrapScripts.length; i++) {
-      const scriptConfig = bootstrapScripts[i];
-      const src =
-        typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
-      const integrity =
-        typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
       bootstrapChunks.push(
         startScriptSrc,
-        stringToChunk(escapeTextForBrowser(src)),
+        stringToChunk(escapeTextForBrowser(bootstrapScripts[i])),
+        endAsyncScript,
       );
-      if (integrity) {
-        bootstrapChunks.push(
-          scriptIntegirty,
-          stringToChunk(escapeTextForBrowser(integrity)),
-        );
-      }
-      bootstrapChunks.push(endAsyncScript);
     }
   }
   if (bootstrapModules !== undefined) {
     for (let i = 0; i < bootstrapModules.length; i++) {
-      const scriptConfig = bootstrapModules[i];
-      const src =
-        typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
-      const integrity =
-        typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
       bootstrapChunks.push(
         startModuleSrc,
-        stringToChunk(escapeTextForBrowser(src)),
+        stringToChunk(escapeTextForBrowser(bootstrapModules[i])),
+        endAsyncScript,
       );
-      if (integrity) {
-        bootstrapChunks.push(
-          scriptIntegirty,
-          stringToChunk(escapeTextForBrowser(integrity)),
-        );
-      }
-      bootstrapChunks.push(endAsyncScript);
     }
   }
   return {

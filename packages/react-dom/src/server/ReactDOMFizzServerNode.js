@@ -9,7 +9,6 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
-import type {BootstrapScriptDescriptor} from './ReactDOMServerFormatConfig';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -39,8 +38,8 @@ type Options = {|
   namespaceURI?: string,
   nonce?: string,
   bootstrapScriptContent?: string,
-  bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
-  bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
+  bootstrapScripts?: Array<string>,
+  bootstrapModules?: Array<string>,
   progressiveChunkSize?: number,
   onShellReady?: () => void,
   onShellError?: (error: mixed) => void,
