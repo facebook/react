@@ -30,6 +30,7 @@ import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
+  _Window,
   InstanceAndStyle,
   NativeType,
   OwnersList,
@@ -155,7 +156,7 @@ export default class Agent extends EventEmitter<{|
   _persistedSelectionMatch: PathMatch | null = null;
   _traceUpdatesEnabled: boolean = false;
 
-  constructor(bridge: BackendBridge) {
+  constructor(bridge: BackendBridge, _window?: _Window) {
     super();
 
     if (
@@ -244,7 +245,7 @@ export default class Agent extends EventEmitter<{|
     bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
     bridge.send('isSynchronousXHRSupported', isSynchronousXHRSupported());
 
-    setupHighlighter(bridge, this);
+    setupHighlighter(bridge, this, _window);
     setupTraceUpdates(this);
   }
 

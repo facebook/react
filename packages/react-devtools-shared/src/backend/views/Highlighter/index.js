@@ -13,6 +13,7 @@ import Agent from 'react-devtools-shared/src/backend/agent';
 import {hideOverlay, showOverlay} from './Highlighter';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
+import type {_Window} from 'react-devtools-shared/src/backend/types';
 
 // This plug-in provides in-page highlighting of the selected element.
 // It is used by the browser extension and the standalone DevTools shell (when connected to a browser).
@@ -24,6 +25,7 @@ let iframesListeningTo: Set<HTMLIFrameElement> = new Set();
 export default function setupHighlighter(
   bridge: BackendBridge,
   agent: Agent,
+  _window?: _Window,
 ): void {
   bridge.addListener(
     'clearNativeElementHighlight',
@@ -40,14 +42,21 @@ export default function setupHighlighter(
 
   function registerListenersOnWindow(window) {
     // This plug-in may run in non-DOM environments (e.g. React Native).
-    if (window && typeof window.addEventListener === 'function') {
-      window.addEventListener('click', onClick, true);
-      window.addEventListener('mousedown', onMouseEvent, true);
-      window.addEventListener('mouseover', onMouseEvent, true);
-      window.addEventListener('mouseup', onMouseEvent, true);
-      window.addEventListener('pointerdown', onPointerDown, true);
-      window.addEventListener('pointerover', onPointerOver, true);
-      window.addEventListener('pointerup', onPointerUp, true);
+    let addEventListener = null;
+    if (_window) {
+      addEventListener = _window.addEventListener;
+    } else if (window && typeof window.addEventListener === 'function') {
+      addEventListener = window.addEventListener;
+    }
+
+    if (addEventListener !== null) {
+      addEventListener('click', onClick, true);
+      addEventListener('mousedown', onMouseEvent, true);
+      addEventListener('mouseover', onMouseEvent, true);
+      addEventListener('mouseup', onMouseEvent, true);
+      addEventListener('pointerdown', onPointerDown, true);
+      addEventListener('pointerover', onPointerOver, true);
+      addEventListener('pointerup', onPointerUp, true);
     }
   }
 
@@ -66,14 +75,21 @@ export default function setupHighlighter(
 
   function removeListenersOnWindow(window) {
     // This plug-in may run in non-DOM environments (e.g. React Native).
-    if (window && typeof window.removeEventListener === 'function') {
-      window.removeEventListener('click', onClick, true);
-      window.removeEventListener('mousedown', onMouseEvent, true);
-      window.removeEventListener('mouseover', onMouseEvent, true);
-      window.removeEventListener('mouseup', onMouseEvent, true);
-      window.removeEventListener('pointerdown', onPointerDown, true);
-      window.removeEventListener('pointerover', onPointerOver, true);
-      window.removeEventListener('pointerup', onPointerUp, true);
+    let removeEventListener = null;
+    if (_window) {
+      removeEventListener = _window.removeEventListener;
+    } else if (window && typeof window.removeEventListener === 'function') {
+      removeEventListener = window.removeEventListener;
+    }
+
+    if (removeEventListener !== null) {
+      removeEventListener('click', onClick, true);
+      removeEventListener('mousedown', onMouseEvent, true);
+      removeEventListener('mouseover', onMouseEvent, true);
+      removeEventListener('mouseup', onMouseEvent, true);
+      removeEventListener('pointerdown', onPointerDown, true);
+      removeEventListener('pointerover', onPointerOver, true);
+      removeEventListener('pointerup', onPointerUp, true);
     }
   }
 
