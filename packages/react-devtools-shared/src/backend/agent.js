@@ -144,6 +144,8 @@ type PersistedSelection = {|
 export default class Agent extends EventEmitter<{|
   hideNativeHighlight: [],
   showNativeHighlight: [NativeType],
+  startInspectingNative: [],
+  stopInspectingNative: [],
   shutdown: [],
   traceUpdates: [Set<NativeType>],
 |}> {

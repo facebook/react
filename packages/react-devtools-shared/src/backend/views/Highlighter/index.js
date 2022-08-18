@@ -48,6 +48,8 @@ export default function setupHighlighter(
       window.addEventListener('pointerdown', onPointerDown, true);
       window.addEventListener('pointerover', onPointerOver, true);
       window.addEventListener('pointerup', onPointerUp, true);
+    } else {
+      agent.emit('startInspectingNative');
     }
   }
 
@@ -74,6 +76,8 @@ export default function setupHighlighter(
       window.removeEventListener('pointerdown', onPointerDown, true);
       window.removeEventListener('pointerover', onPointerOver, true);
       window.removeEventListener('pointerup', onPointerUp, true);
+    } else {
+      agent.emit('stopInspectingNative');
     }
   }
 
