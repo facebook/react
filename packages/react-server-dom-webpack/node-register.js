@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './src/ReactFlightWebpackNodeRegister';
+module.exports = require('./src/ReactFlightWebpackNodeRegister');

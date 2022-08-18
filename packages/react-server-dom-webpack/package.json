@@ -35,6 +35,7 @@
     "./writer.browser.server": "./writer.browser.server.js",
     "./node-loader": "./esm/react-server-dom-webpack-node-loader.js",
     "./node-register": "./node-register.js",
+    "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "main": "index.js",

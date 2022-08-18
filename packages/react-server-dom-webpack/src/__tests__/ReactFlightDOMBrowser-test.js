@@ -14,13 +14,9 @@ global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStr
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
-let webpackModuleIdx = 0;
-let webpackModules = {};
-let webpackMap = {};
-global.__webpack_require__ = function(id) {
-  return webpackModules[id];
-};
-
+let clientExports;
+let webpackMap;
+let webpackModules;
 let act;
 let React;
 let ReactDOMClient;
@@ -32,9 +28,11 @@ let Suspense;
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
-    webpackModules = {};
-    webpackMap = {};
     act = require('jest-react').act;
+    const WebpackMock = require('./utils/WebpackMock');
+    clientExports = WebpackMock.clientExports;
+    webpackMap = WebpackMock.webpackMap;
+    webpackModules = WebpackMock.webpackModules;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server.browser');
@@ -42,22 +40,6 @@ describe('ReactFlightDOMBrowser', () => {
     ReactServerDOMReader = require('react-server-dom-webpack');
     Suspense = React.Suspense;
   });
-
-  function moduleReference(moduleExport) {
-    const idx = webpackModuleIdx++;
-    webpackModules[idx] = {
-      d: moduleExport,
-    };
-    webpackMap['path/' + idx] = {
-      default: {
-        id: '' + idx,
-        chunks: [],
-        name: 'd',
-      },
-    };
-    const MODULE_TAG = Symbol.for('react.module.reference');
-    return {$$typeof: MODULE_TAG, filepath: 'path/' + idx, name: 'default'};
-  }
 
   async function waitForSuspense(fn) {
     while (true) {
@@ -249,7 +231,7 @@ describe('ReactFlightDOMBrowser', () => {
       return <div>{games}</div>;
     }
 
-    const MyErrorBoundaryClient = moduleReference(MyErrorBoundary);
+    const MyErrorBoundaryClient = clientExports(MyErrorBoundary);
 
     function ProfileContent() {
       return (
@@ -478,19 +460,19 @@ describe('ReactFlightDOMBrowser', () => {
     }
     // The Client build may not have the same IDs as the Server bundles for the same
     // component.
-    const ClientComponentOnTheClient = moduleReference(ClientComponent);
-    const ClientComponentOnTheServer = moduleReference(ClientComponent);
+    const ClientComponentOnTheClient = clientExports(ClientComponent);
+    const ClientComponentOnTheServer = clientExports(ClientComponent);
 
     // In the SSR bundle this module won't exist. We simulate this by deleting it.
-    const clientId = webpackMap[ClientComponentOnTheClient.filepath].default.id;
+    const clientId = webpackMap[ClientComponentOnTheClient.filepath]['*'].id;
     delete webpackModules[clientId];
 
     // Instead, we have to provide a translation from the client meta data to the SSR
     // meta data.
-    const ssrMetaData = webpackMap[ClientComponentOnTheServer.filepath].default;
+    const ssrMetaData = webpackMap[ClientComponentOnTheServer.filepath]['*'];
     const translationMap = {
       [clientId]: {
-        d: ssrMetaData,
+        '*': ssrMetaData,
       },
     };
 
