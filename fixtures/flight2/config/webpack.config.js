@@ -726,31 +726,31 @@ module.exports = function(webpackEnv) {
             infrastructure: 'silent',
           },
         }),
-      !disableESLintPlugin &&
-        new ESLintPlugin({
-          // Plugin options
-          extensions: ['js', 'mjs', 'jsx', 'ts', 'tsx'],
-          formatter: require.resolve('react-dev-utils/eslintFormatter'),
-          eslintPath: require.resolve('eslint'),
-          failOnError: !(isEnvDevelopment && emitErrorsAsWarnings),
-          context: paths.appSrc,
-          cache: true,
-          cacheLocation: path.resolve(
-            paths.appNodeModules,
-            '.cache/.eslintcache'
-          ),
-          // ESLint class options
-          cwd: paths.appPath,
-          resolvePluginsRelativeTo: __dirname,
-          baseConfig: {
-            extends: [require.resolve('eslint-config-react-app/base')],
-            rules: {
-              ...(!hasJsxRuntime && {
-                'react/react-in-jsx-scope': 'error',
-              }),
-            },
-          },
-        }),
+      // !disableESLintPlugin &&
+      //   new ESLintPlugin({
+      //     // Plugin options
+      //     extensions: ['js', 'mjs', 'jsx', 'ts', 'tsx'],
+      //     formatter: require.resolve('react-dev-utils/eslintFormatter'),
+      //     eslintPath: require.resolve('eslint'),
+      //     failOnError: !(isEnvDevelopment && emitErrorsAsWarnings),
+      //     context: paths.appSrc,
+      //     cache: true,
+      //     cacheLocation: path.resolve(
+      //       paths.appNodeModules,
+      //       '.cache/.eslintcache'
+      //     ),
+      //     // ESLint class options
+      //     cwd: paths.appPath,
+      //     resolvePluginsRelativeTo: __dirname,
+      //     baseConfig: {
+      //       extends: [require.resolve('eslint-config-react-app/base')],
+      //       rules: {
+      //         ...(!hasJsxRuntime && {
+      //           'react/react-in-jsx-scope': 'error',
+      //         }),
+      //       },
+      //     },
+      //   }),
       // Fork Start
       new ReactFlightWebpackPlugin({isServer: false}),
       // Fork End

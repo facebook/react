@@ -7,7 +7,7 @@
  * @flow
  */
 
-import acorn from 'acorn';
+import {acorn} from 'acorn';
 
 type ResolveContext = {
   conditions: Array<string>,
