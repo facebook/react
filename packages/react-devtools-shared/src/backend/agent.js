@@ -657,6 +657,10 @@ export default class Agent extends EventEmitter<{|
     this._bridge.send('profilingStatus', this._isProfiling);
   };
 
+  stopInspectingNative = (selected: boolean) => {
+    this._bridge.send('stopInspectingNative', selected);
+  };
+
   storeAsGlobal = ({count, id, path, rendererID}: StoreAsGlobalParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
