@@ -78,6 +78,9 @@ export const Dispatcher: DispatcherType = {
   useCacheRefresh(): <T>(?() => T, ?T) => void {
     return unsupportedRefresh;
   },
+  useMemoCache(size: number): Array<any> {
+    return new Array(size);
+  },
 };
 
 function unsupportedHook(): void {

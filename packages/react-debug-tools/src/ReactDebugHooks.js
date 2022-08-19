@@ -175,6 +175,13 @@ function useCacheRefresh(): () => void {
   return () => {};
 }
 
+function useMemoCache(size: number): Array<any> {
+  const hook = nextHook();
+  const value = hook !== null ? hook.memoizedState[0] : new Array(size);
+  hookLog.push({primitive: 'MemoCache', stackError: new Error(), value});
+  return value;
+}
+
 function useLayoutEffect(
   create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
@@ -334,6 +341,7 @@ const Dispatcher: DispatcherType = {
   getCacheForType,
   readContext,
   useCacheRefresh,
+  useMemoCache,
   useCallback,
   useContext,
   useEffect,
