@@ -1452,6 +1452,18 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          const onStuff = useEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onStuff();
+          }, []);
+        }
+      `,
+    },
   ],
   invalid: [
     {
