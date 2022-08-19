@@ -17,7 +17,6 @@ import type {
   MutableSource,
   StartTransitionOptions,
   Wakeable,
-  Usable,
 } from 'shared/ReactTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
@@ -356,7 +355,6 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {|
-  use?: <T>(Usable<T>) => T,
   getCacheSignal?: () => AbortSignal,
   getCacheForType?: <T>(resourceType: () => T) => T,
   readContext<T>(context: ReactContext<T>): T,

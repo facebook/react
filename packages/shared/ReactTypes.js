@@ -189,6 +189,3 @@ export type OffscreenMode =
 export type StartTransitionOptions = {
   name?: string,
 };
-
-// TODO: Add Context support
-export type Usable<T> = Thenable<T>;
