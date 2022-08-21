@@ -43,14 +43,14 @@ function siftUp(heap, node, i) {
     const parent = heap[parentIndex];
     if (compare(parent, node) > 0) {
       // The parent is larger. Swap positions.
-      heap[parentIndex] = node;
       heap[index] = parent;
       index = parentIndex;
     } else {
       // The parent is smaller. Exit.
-      return;
+      break;
     }
   }
+  heap[index] = node;
 }
 
 function siftDown(heap, node, i) {
@@ -58,31 +58,23 @@ function siftDown(heap, node, i) {
   const length = heap.length;
   const halfLength = length >>> 1;
   while (index < halfLength) {
-    const leftIndex = (index + 1) * 2 - 1;
-    const left = heap[leftIndex];
-    const rightIndex = leftIndex + 1;
-    const right = heap[rightIndex];
-
-    // If the left or right node is smaller, swap with the smaller of those.
-    if (compare(left, node) < 0) {
-      if (rightIndex < length && compare(right, left) < 0) {
-        heap[index] = right;
-        heap[rightIndex] = node;
-        index = rightIndex;
-      } else {
-        heap[index] = left;
-        heap[leftIndex] = node;
-        index = leftIndex;
-      }
-    } else if (rightIndex < length && compare(right, node) < 0) {
-      heap[index] = right;
-      heap[rightIndex] = node;
-      index = rightIndex;
+    let childIndex = (index + 1) * 2 - 1;
+    if (
+      childIndex + 1 < length &&
+      compare(heap[childIndex + 1], heap[childIndex]) < 0
+    ) {
+      childIndex += 1;
+    }
+    const childNode = heap[childIndex];
+    if (compare(childNode, node) < 0) {
+      heap[index] = childNode;
+      index = childIndex;
     } else {
       // Neither child is smaller. Exit.
-      return;
+      break;
     }
   }
+  heap[index] = node;
 }
 
 function compare(a, b) {
