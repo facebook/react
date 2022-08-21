@@ -144,6 +144,8 @@ type PersistedSelection = {|
 export default class Agent extends EventEmitter<{|
   hideNativeHighlight: [],
   showNativeHighlight: [NativeType],
+  startInspectingNative: [],
+  stopInspectingNative: [],
   shutdown: [],
   traceUpdates: [Set<NativeType>],
 |}> {
@@ -653,6 +655,10 @@ export default class Agent extends EventEmitter<{|
       renderer.stopProfiling();
     }
     this._bridge.send('profilingStatus', this._isProfiling);
+  };
+
+  stopInspectingNative = (selected: boolean) => {
+    this._bridge.send('stopInspectingNative', selected);
   };
 
   storeAsGlobal = ({count, id, path, rendererID}: StoreAsGlobalParams) => {
