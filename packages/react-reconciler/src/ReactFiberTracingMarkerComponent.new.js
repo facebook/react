@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {TransitionTracingCallbacks, Fiber} from './ReactInternalTypes';
+import type {TransitionTracingCallbacks, Fiber, FiberRoot} from './ReactInternalTypes';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 import type {StackCursor} from './ReactFiberStack.new';
 
@@ -43,6 +43,7 @@ export type BatchConfigTransition = {
   _updatedFibers?: Set<Fiber>,
 };
 
+// TODO: Is there a way to not include the tag or name here?
 export type TracingMarkerInstance = {|
   tag?: TracingMarkerTag,
   transitions: Set<Transition> | null,
@@ -121,10 +122,27 @@ export function processTransitionCallbacks(
         markerIncomplete.forEach(({transitions, aborts}, markerName) => {
           transitions.forEach(transition => {
             const filteredAborts = [];
-            aborts.forEach(deletion => {
-              const filteredDeletion = getFilteredDeletion(deletion, endTime);
-              if (filteredDeletion !== null) {
-                filteredAborts.push(filteredDeletion);
+            aborts.forEach(abort => {
+              switch (abort.reason) {
+                case 'marker': {
+                  filteredAborts.push({
+                    type: 'marker',
+                    name: abort.name,
+                    endTime,
+                  });
+                  break;
+                }
+                case 'suspense': {
+                  filteredAborts.push({
+                    type: 'suspense',
+                    name: abort.name,
+                    endTime,
+                  });
+                  break;
+                }
+                default: {
+                  break;
+                }
               }
             });
 
@@ -164,28 +182,6 @@ export function processTransitionCallbacks(
   }
 }
 
-function getFilteredDeletion(abort: TransitionAbort, endTime: number) {
-  switch (abort.reason) {
-    case 'marker': {
-      return {
-        type: 'marker',
-        name: abort.name,
-        endTime,
-      };
-    }
-    case 'suspense': {
-      return {
-        type: 'suspense',
-        name: abort.name,
-        endTime,
-      };
-    }
-    default: {
-      return null;
-    }
-  }
-}
-
 // For every tracing marker, store a pointer to it. We will later access it
 // to get the set of suspense boundaries that need to resolve before the
 // tracing marker can be logged as complete
@@ -206,7 +202,7 @@ export function pushRootMarkerInstance(workInProgress: Fiber): void {
     // transitions map. Each entry in this map functions like a tracing
     // marker does, so we can push it onto the marker instance stack
     const transitions = getWorkInProgressTransitions();
-    const root = workInProgress.stateNode;
+    const root: FiberRoot = workInProgress.stateNode;
 
     if (transitions !== null) {
       transitions.forEach(transition => {
