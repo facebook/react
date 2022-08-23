@@ -403,6 +403,7 @@ export type Dispatcher = {|
   ): T,
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
+  useMemoCache?: (size: number) => Array<any>,
 
   unstable_isNewReconciler?: boolean,
 |};

@@ -118,6 +118,10 @@ export const deletedTreeCleanUpLevel = 3;
 
 export const enableFloat = __EXPERIMENTAL__;
 
+// Enables unstable_useMemoCache hook, intended as a compilation target for
+// auto-memoization.
+export const enableUseMemoCacheHook = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
