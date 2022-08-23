@@ -149,6 +149,7 @@ import {
   setIsRunningInsertionEffect,
   getExecutionContext,
   CommitContext,
+  NoContext,
 } from './ReactFiberWorkLoop.old';
 import {
   NoFlags as NoHookEffect,
@@ -201,12 +202,12 @@ let nextEffect: Fiber | null = null;
 let inProgressLanes: Lanes | null = null;
 let inProgressRoot: FiberRoot | null = null;
 
-function shouldProfile(current: Fiber): Boolean {
+function shouldProfile(current: Fiber): boolean {
   return (
     enableProfilerTimer &&
     enableProfilerCommitHooks &&
-    current.mode & ProfileMode &&
-    getExecutionContext() & CommitContext
+    (current.mode & ProfileMode) !== NoMode &&
+    (getExecutionContext() & CommitContext) !== NoContext
   );
 }
 
