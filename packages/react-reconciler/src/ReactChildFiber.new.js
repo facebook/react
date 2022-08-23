@@ -13,7 +13,12 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import {Placement, ChildDeletion, Forked} from './ReactFiberFlags';
+import {
+  Placement,
+  ChildDeletion,
+  Forked,
+  PlacementDEV,
+} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -343,7 +348,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       const oldIndex = current.index;
       if (oldIndex < lastPlacedIndex) {
         // This is a move.
-        newFiber.flags |= Placement;
+        newFiber.flags |= Placement | PlacementDEV;
         return lastPlacedIndex;
       } else {
         // This item can stay in place.
@@ -351,7 +356,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       }
     } else {
       // This is an insertion.
-      newFiber.flags |= Placement;
+      newFiber.flags |= Placement | PlacementDEV;
       return lastPlacedIndex;
     }
   }
@@ -360,7 +365,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     // This is simpler for the single child case. We only need to do a
     // placement for inserting new children.
     if (shouldTrackSideEffects && newFiber.alternate === null) {
-      newFiber.flags |= Placement;
+      newFiber.flags |= Placement | PlacementDEV;
     }
     return newFiber;
   }
