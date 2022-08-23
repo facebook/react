@@ -208,7 +208,7 @@ export class VerticalScrollView extends View {
 
     const newState = translateState({
       state: this._scrollState,
-      delta: interaction.payload.event.movementY,
+      delta: movementY,
       containerLength: this.frame.size.height,
     });
     this._setScrollState(newState);

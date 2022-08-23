@@ -401,7 +401,7 @@
   "413": "Expected finished root and lanes to be set. This is a bug in React.",
   "414": "Did not expect this call in production. This is a bug in React. Please file an issue.",
   "415": "Error parsing the data. It's probably an error code or network corruption.",
-  "416": "This environment don't support binary chunks.",
+  "416": "This environment doesn't support binary chunks.",
   "417": "React currently only supports piping to one writable stream.",
   "418": "Hydration failed because the initial UI does not match what was rendered on the server.",
   "419": "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.",

@@ -94,7 +94,7 @@ export function processBinaryChunk(
   chunk: Uint8Array,
 ): void {
   if (!supportsBinaryStreams) {
-    throw new Error("This environment don't support binary chunks.");
+    throw new Error("This environment doesn't support binary chunks.");
   }
   const stringDecoder = response._stringDecoder;
   let linebreak = chunk.indexOf(10); // newline

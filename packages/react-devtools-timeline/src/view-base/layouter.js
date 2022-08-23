@@ -65,7 +65,7 @@ export const verticallyStackedLayout: Layouter = (layout, containerFrame) => {
     const desiredSize = layoutInfo.view.desiredSize();
     const height = desiredSize
       ? desiredSize.height
-      : containerFrame.origin.y + containerFrame.size.height - currentY;
+      : containerFrame.size.height;
     const proposedFrame = {
       origin: {x: containerFrame.origin.x, y: currentY},
       size: {width: containerFrame.size.width, height},
