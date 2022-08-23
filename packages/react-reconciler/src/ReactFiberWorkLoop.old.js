@@ -2428,7 +2428,7 @@ function commitRootImpl(
 
   if (__DEV__ && enableStrictEffects) {
     if (!rootDidHavePassiveEffects) {
-      commitDoubleInvokeEffectsInDEV(root, false);
+      commitDoubleInvokeEffectsInDEV(root);
     }
   }
 
@@ -2645,7 +2645,7 @@ function flushPassiveEffectsImpl() {
   }
 
   if (__DEV__ && enableStrictEffects) {
-    commitDoubleInvokeEffectsInDEV(root, true);
+    commitDoubleInvokeEffectsInDEV(root);
   }
 
   executionContext = prevExecutionContext;
@@ -3003,12 +3003,11 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
   root: FiberRoot,
   parentFiber: Fiber,
   isInStrictMode: boolean,
-  hasPassiveEffects: boolean,
 ) {
   if (parentFiber.subtreeFlags & PlacementDEV) {
     let child = parentFiber.child;
     while (child !== null) {
-      doubleInvokeEffectsInDEV(root, child, isInStrictMode, hasPassiveEffects);
+      doubleInvokeEffectsInDEV(root, child, isInStrictMode);
       child = child.sibling;
     }
   }
@@ -3018,7 +3017,6 @@ function doubleInvokeEffectsInDEV(
   root: FiberRoot,
   fiber: Fiber,
   parentIsInStrictMode: boolean,
-  hasPassiveEffects: boolean,
 ) {
   const isStrictModeFiber = fiber.type === REACT_STRICT_MODE_TYPE;
   const isInStrictMode = parentIsInStrictMode || isStrictModeFiber;
@@ -3026,31 +3024,17 @@ function doubleInvokeEffectsInDEV(
     setCurrentDebugFiberInDEV(fiber);
     if (isInStrictMode) {
       disappearLayoutEffects(fiber);
-    }
-    if (hasPassiveEffects && isInStrictMode) {
       disconnectPassiveEffect(fiber);
-    }
-    if (isInStrictMode) {
       reappearLayoutEffects(root, fiber.alternate, fiber, false);
-    }
-    if (hasPassiveEffects && isInStrictMode) {
       reconnectPassiveEffects(root, fiber, NoLanes, null, false);
     }
     resetCurrentDebugFiberInDEV();
   } else {
-    recursivelyTraverseAndDoubleInvokeEffectsInDEV(
-      root,
-      fiber,
-      isInStrictMode,
-      hasPassiveEffects,
-    );
+    recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, fiber, isInStrictMode);
   }
 }
 
-function commitDoubleInvokeEffectsInDEV(
-  root: FiberRoot,
-  hasPassiveEffects: boolean,
-) {
+function commitDoubleInvokeEffectsInDEV(root: FiberRoot) {
   if (__DEV__ && enableStrictEffects) {
     let doubleInvokeEffects = true;
 
@@ -3067,7 +3051,6 @@ function commitDoubleInvokeEffectsInDEV(
       root,
       root.current,
       doubleInvokeEffects,
-      hasPassiveEffects,
     );
   }
 }
