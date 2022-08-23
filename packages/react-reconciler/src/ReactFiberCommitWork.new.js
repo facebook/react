@@ -201,6 +201,15 @@ let nextEffect: Fiber | null = null;
 let inProgressLanes: Lanes | null = null;
 let inProgressRoot: FiberRoot | null = null;
 
+function shouldProfile(current: Fiber): Boolean {
+  return (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    current.mode & ProfileMode &&
+    getExecutionContext() & CommitContext
+  );
+}
+
 export function reportUncaughtErrorInDEV(error: mixed) {
   // Wrapping each small part of the commit phase into a guarded
   // callback is a bit too slow (https://github.com/facebook/react/pull/21666).
@@ -218,12 +227,7 @@ export function reportUncaughtErrorInDEV(error: mixed) {
 const callComponentWillUnmountWithTimer = function(current, instance) {
   instance.props = current.memoizedProps;
   instance.state = current.memoizedState;
-  if (
-    enableProfilerTimer &&
-    enableProfilerCommitHooks &&
-    current.mode & ProfileMode &&
-    getExecutionContext() & CommitContext
-  ) {
+  if (shouldProfile(current)) {
     try {
       startLayoutEffectTimer();
       instance.componentWillUnmount();
@@ -263,12 +267,7 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
     if (typeof ref === 'function') {
       let retVal;
       try {
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          current.mode & ProfileMode &&
-          getExecutionContext() & CommitContext
-        ) {
+        if (shouldProfile(current)) {
           try {
             startLayoutEffectTimer();
             retVal = ref(null);
@@ -701,12 +700,7 @@ function commitHookLayoutEffects(finishedWork: Fiber, hookFlags: HookFlags) {
   // This is done to prevent sibling component effects from interfering with each other,
   // e.g. a destroy function in one component should never override a ref set
   // by a create function in another component during the same commit.
-  if (
-    enableProfilerTimer &&
-    enableProfilerCommitHooks &&
-    finishedWork.mode & ProfileMode &&
-    getExecutionContext() & CommitContext
-  ) {
+  if (shouldProfile(finishedWork)) {
     try {
       startLayoutEffectTimer();
       commitHookEffectListMount(hookFlags, finishedWork);
@@ -759,12 +753,7 @@ function commitClassLayoutLifecycles(
         }
       }
     }
-    if (
-      enableProfilerTimer &&
-      enableProfilerCommitHooks &&
-      finishedWork.mode & ProfileMode &&
-      getExecutionContext() & CommitContext
-    ) {
+    if (shouldProfile(finishedWork)) {
       try {
         startLayoutEffectTimer();
         instance.componentDidMount();
@@ -815,12 +804,7 @@ function commitClassLayoutLifecycles(
         }
       }
     }
-    if (
-      enableProfilerTimer &&
-      enableProfilerCommitHooks &&
-      finishedWork.mode & ProfileMode &&
-      getExecutionContext() & CommitContext
-    ) {
+    if (shouldProfile(finishedWork)) {
       try {
         startLayoutEffectTimer();
         instance.componentDidUpdate(
@@ -1351,12 +1335,7 @@ function commitAttachRef(finishedWork: Fiber) {
     }
     if (typeof ref === 'function') {
       let retVal;
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        finishedWork.mode & ProfileMode &&
-        getExecutionContext() & CommitContext
-      ) {
+      if (shouldProfile(finishedWork)) {
         try {
           startLayoutEffectTimer();
           retVal = ref(instanceToUse);
@@ -1395,12 +1374,7 @@ function commitDetachRef(current: Fiber) {
   const currentRef = current.ref;
   if (currentRef !== null) {
     if (typeof currentRef === 'function') {
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        current.mode & ProfileMode &&
-        getExecutionContext() & CommitContext
-      ) {
+      if (shouldProfile(current)) {
         try {
           startLayoutEffectTimer();
           currentRef(null);
@@ -1926,12 +1900,7 @@ function commitDeletionEffectsOnFiber(
                     markComponentLayoutEffectUnmountStarted(deletedFiber);
                   }
 
-                  if (
-                    enableProfilerTimer &&
-                    enableProfilerCommitHooks &&
-                    deletedFiber.mode & ProfileMode &&
-                    getExecutionContext() & CommitContext
-                  ) {
+                  if (shouldProfile(deletedFiber)) {
                     startLayoutEffectTimer();
                     safelyCallDestroy(
                       deletedFiber,
@@ -2250,12 +2219,7 @@ function commitMutationEffectsOnFiber(
         // This prevents sibling component effects from interfering with each other,
         // e.g. a destroy function in one component should never override a ref set
         // by a create function in another component during the same commit.
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          finishedWork.mode & ProfileMode &&
-          getExecutionContext() & CommitContext
-        ) {
+        if (shouldProfile(finishedWork)) {
           try {
             startLayoutEffectTimer();
             commitHookEffectListUnmount(
@@ -2648,12 +2612,7 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
     case MemoComponent:
     case SimpleMemoComponent: {
       // TODO (Offscreen) Check: flags & LayoutStatic
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        finishedWork.mode & ProfileMode &&
-        getExecutionContext() & CommitContext
-      ) {
+      if (shouldProfile(finishedWork)) {
         try {
           startLayoutEffectTimer();
           commitHookEffectListUnmount(
@@ -2891,12 +2850,7 @@ function commitHookPassiveMountEffects(
   finishedWork: Fiber,
   hookFlags: HookFlags,
 ) {
-  if (
-    enableProfilerTimer &&
-    enableProfilerCommitHooks &&
-    finishedWork.mode & ProfileMode &&
-    getExecutionContext() & CommitContext
-  ) {
+  if (shouldProfile(finishedWork)) {
     startPassiveEffectTimer();
     try {
       commitHookEffectListMount(hookFlags, finishedWork);
@@ -3601,12 +3555,7 @@ function commitHookPassiveUnmountEffects(
   nearestMountedAncestor,
   hookFlags: HookFlags,
 ) {
-  if (
-    enableProfilerTimer &&
-    enableProfilerCommitHooks &&
-    finishedWork.mode & ProfileMode &&
-    getExecutionContext() & CommitContext
-  ) {
+  if (shouldProfile(finishedWork)) {
     startPassiveEffectTimer();
     commitHookEffectListUnmount(
       hookFlags,
