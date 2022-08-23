@@ -3004,12 +3004,10 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
   parentFiber: Fiber,
   isInStrictMode: boolean,
 ) {
-  if (parentFiber.subtreeFlags & PlacementDEV) {
-    let child = parentFiber.child;
-    while (child !== null) {
-      doubleInvokeEffectsInDEV(root, child, isInStrictMode);
-      child = child.sibling;
-    }
+  let child = parentFiber.child;
+  while (child !== null) {
+    doubleInvokeEffectsInDEV(root, child, isInStrictMode);
+    child = child.sibling;
   }
 }
 
