@@ -54,7 +54,7 @@ export default function setupHighlighter(
   }
 
   function stopInspectingNative() {
-    hideOverlay();
+    hideOverlay(agent);
     removeListenersOnWindow(window);
     iframesListeningTo.forEach(function(frame) {
       try {
@@ -82,7 +82,7 @@ export default function setupHighlighter(
   }
 
   function clearNativeElementHighlight() {
-    hideOverlay();
+    hideOverlay(agent);
   }
 
   function highlightNativeElement({
@@ -129,7 +129,7 @@ export default function setupHighlighter(
         bridge.send('syncSelectionToNativeElementsPanel');
       }
     } else {
-      hideOverlay();
+      hideOverlay(agent);
     }
   }
 
