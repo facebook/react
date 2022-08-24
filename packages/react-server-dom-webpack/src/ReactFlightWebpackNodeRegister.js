@@ -57,7 +57,7 @@ module.exports = function register() {
     },
   };
 
-  (require: any).extensions['.client.js'] = function(module, path) {
+  Module._extensions['.client.js'] = function(module, path) {
     const moduleId = url.pathToFileURL(path).href;
     const moduleReference: {[string]: any} = {
       $$typeof: MODULE_REFERENCE,
