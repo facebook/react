@@ -52,6 +52,19 @@ exports.clientExports = function clientExports(moduleExports) {
       name: '*',
     },
   };
+  if (typeof moduleExports.then === 'function') {
+    moduleExports.then(asyncModuleExports => {
+      for (const name in asyncModuleExports) {
+        webpackMap[path] = {
+          [name]: {
+            id: idx,
+            chunks: [],
+            name: name,
+          },
+        };
+      }
+    });
+  }
   for (const name in moduleExports) {
     webpackMap[path] = {
       [name]: {

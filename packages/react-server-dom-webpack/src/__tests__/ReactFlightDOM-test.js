@@ -237,6 +237,83 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
+  it('should unwrap async module references', async () => {
+    const AsyncModule = Promise.resolve(function AsyncModule({text}) {
+      return 'Async: ' + text;
+    });
+
+    const AsyncModule2 = Promise.resolve({
+      exportName: 'Module',
+    });
+
+    function Print({response}) {
+      return <p>{response.readRoot()}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const AsyncModuleRef = await clientExports(AsyncModule);
+    const AsyncModuleRef2 = await clientExports(AsyncModule2);
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>Async: Module</p>');
+  });
+
+  it('should be able to import a name called "then"', async () => {
+    const thenExports = {
+      then: function then() {
+        return 'and then';
+      },
+    };
+
+    function Print({response}) {
+      return <p>{response.readRoot()}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const ThenRef = clientExports(thenExports).then;
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <ThenRef />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>and then</p>');
+  });
+
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 

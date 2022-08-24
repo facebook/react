@@ -20,12 +20,14 @@ export type ModuleReference<T> = {
   $$typeof: Symbol,
   filepath: string,
   name: string,
+  async: boolean,
 };
 
 export type ModuleMetaData = {
   id: string,
   chunks: Array<string>,
   name: string,
+  async: boolean,
 };
 
 export type ModuleKey = string;
@@ -33,7 +35,12 @@ export type ModuleKey = string;
 const MODULE_TAG = Symbol.for('react.module.reference');
 
 export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
-  return reference.filepath + '#' + reference.name;
+  return (
+    reference.filepath +
+    '#' +
+    reference.name +
+    (reference.async ? '#async' : '')
+  );
 }
 
 export function isModuleReference(reference: Object): boolean {
@@ -44,5 +51,16 @@ export function resolveModuleMetaData<T>(
   config: BundlerConfig,
   moduleReference: ModuleReference<T>,
 ): ModuleMetaData {
-  return config[moduleReference.filepath][moduleReference.name];
+  const resolvedModuleData =
+    config[moduleReference.filepath][moduleReference.name];
+  if (moduleReference.async) {
+    return {
+      id: resolvedModuleData.id,
+      chunks: resolvedModuleData.chunks,
+      name: resolvedModuleData.name,
+      async: true,
+    };
+  } else {
+    return resolvedModuleData;
+  }
 }
