@@ -2640,6 +2640,11 @@
   resolved "https://registry.yarnpkg.com/@types/normalize-package-data/-/normalize-package-data-2.4.0.tgz#e486d0d97396d79beedd0a6e33f4534ff6b4973e"
   integrity sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==
 
+"@types/prettier@^1.0.0 || ^2.0.0":
+  version "2.6.3"
+  resolved "https://registry.yarnpkg.com/@types/prettier/-/prettier-2.6.3.tgz#68ada76827b0010d0db071f739314fa429943d0a"
+  integrity sha512-ymZk3LEC/fsut+/Q5qejp6R9O1rMxz3XaRHDV6kX8MrGAhOSPqVARbDi+EZvInBpw+BnCX3TD240byVkOfQsHg==
+
 "@types/prettier@^2.0.0":
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/@types/prettier/-/prettier-2.2.3.tgz#ef65165aea2924c9359205bf748865b8881753c0"
@@ -6234,10 +6239,10 @@ diff-sequences@^27.0.6:
   resolved "https://registry.yarnpkg.com/diff-sequences/-/diff-sequences-27.0.6.tgz#3305cb2e55a033924054695cc66019fd7f8e5723"
   integrity sha512-ag6wfpBFyNXZ0p8pcuIDS//D8H062ZQJ3fzYxjpmeKjnz8W4pekL3AI8VohmyZmsWW2PWaHgjsmqR6L13101VQ==
 
-diff@4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/diff/-/diff-4.0.1.tgz#0c667cb467ebbb5cea7f14f135cc2dba7780a8ff"
-  integrity sha512-s2+XdvhPCOF01LRQBC8hf4vhbVmI2CGS5aZnxLJlT5FtdhPCDFq80q++zK2KlrVorVDdL5BOGZ/VfLrVtYNF+Q==
+diff@5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/diff/-/diff-5.0.0.tgz#7ed6ad76d859d030787ec35855f5b1daf31d852b"
+  integrity sha512-/VTCrvm5Z0JGty/BWHljh+BAiw3IK+2j87NGMu8Nwc/f48WoDAC395uomO9ZD117ZOBaHmkX1oyLvkVM/aIT3w==
 
 diff@^4.0.1:
   version "4.0.2"
@@ -6842,12 +6847,10 @@ eslint-config-fbjs@^3.1.1:
   resolved "https://registry.yarnpkg.com/eslint-config-fbjs/-/eslint-config-fbjs-3.1.1.tgz#f5b4c1df888693672116f000527a8df25d61b888"
   integrity sha512-Vpyqz+ZcyLyiUGUdUfiQmZnxiQ4Nj/KDRKed/Y5qSm+xHbQJ5zcZUQwLUMWHQicpDHewsdXwlpUAblvy1DtGvg==
 
-eslint-config-prettier@^6.9.0:
-  version "6.9.0"
-  resolved "https://registry.yarnpkg.com/eslint-config-prettier/-/eslint-config-prettier-6.9.0.tgz#430d24822e82f7deb1e22a435bfa3999fae4ad64"
-  integrity sha512-k4E14HBtcLv0uqThaI6I/n1LEqROp8XaPu6SO9Z32u5NlGRC07Enu1Bh2KEFw4FNHbekH8yzbIU9kUGxbiGmCA==
-  dependencies:
-    get-stdin "^6.0.0"
+eslint-config-prettier@^8.5.0:
+  version "8.5.0"
+  resolved "https://registry.yarnpkg.com/eslint-config-prettier/-/eslint-config-prettier-8.5.0.tgz#5a81680ec934beca02c7b1a61cf8ca34b66feab1"
+  integrity sha512-obmWKLUNCnhtQRKc+tmnYuQl0pFU1ibYJQ5BGhTVB08bHe9wC8qUeG7c08dj9XX+AuPj1YSGSQIHl1pnDHZR0Q==
 
 eslint-plugin-babel@^5.3.0:
   version "5.3.0"
@@ -11188,12 +11191,12 @@ magic-string@0.19.1:
   dependencies:
     vlq "^0.2.1"
 
-magic-string@0.25.1:
-  version "0.25.1"
-  resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.25.1.tgz#b1c248b399cd7485da0fe7385c2fc7011843266e"
-  integrity sha512-sCuTz6pYom8Rlt4ISPFn6wuFodbKMIHUMv4Qko9P17dpxb7s52KJTmRuZZqHdGmLCK9AOcDare039nRIcfdkEg==
+magic-string@0.25.7:
+  version "0.25.7"
+  resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.25.7.tgz#3f497d6fd34c669c6798dcb821f2ef31f5445051"
+  integrity sha512-4CrMT5DOHTDk4HYDlzmwu4FVCcIYI8gauveasrdCu2IKIFOJ3f0v/8MDGJCDL9oD2ppz/Av1b0Nj345H9M+XIA==
   dependencies:
-    sourcemap-codec "^1.4.1"
+    sourcemap-codec "^1.4.4"
 
 magic-string@^0.25.2:
   version "0.25.6"
@@ -13224,10 +13227,10 @@ preserve@^0.2.0:
   resolved "https://registry.yarnpkg.com/preserve/-/preserve-0.2.0.tgz#815ed1f6ebc65926f865b310c0713bcb3315ce4b"
   integrity sha1-gV7R9uvGWSb4ZbMQwHE7yzMVzks=
 
-prettier@1.19.1, prettier@^1.0.0:
-  version "1.19.1"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.19.1.tgz#f7d7f5ff8a9cd872a7be4ca142095956a60797cb"
-  integrity sha512-s7PoyDv/II1ObgQunCbB9PdLmUcBZcnWOcxDh7O0N/UwDEsHyqkW+Qh28jW+mVuCdx7gLB0BotYI1Y6uI9iyew==
+prettier@2.7.1:
+  version "2.7.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.7.1.tgz#e235806850d057f97bb08368a4f7d899f7760c64"
+  integrity sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==
 
 pretty-error@^2.1.1:
   version "2.1.1"
@@ -14277,18 +14280,18 @@ rollup-plugin-node-resolve@^2.1.1:
     builtin-modules "^1.1.0"
     resolve "^1.1.6"
 
-rollup-plugin-prettier@^0.6.0:
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-prettier/-/rollup-plugin-prettier-0.6.0.tgz#3b53b4ac2def23f150f496cff9106f4042a4ade1"
-  integrity sha512-BgfyZ1biKcAaRNzfUyG/CeI5dFn+WsygK7kYjuXM6aL4m3t/53ZpJI2ZSMAeaKj6w2dj3CkOYbT0gulwh2SvKA==
+rollup-plugin-prettier@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-prettier/-/rollup-plugin-prettier-2.2.2.tgz#733c25a3cea2ce65b14635729bd1eb3a2a147ebc"
+  integrity sha512-dj5RhTuW8vTVrjxGsKy7rO/ywhKgo8Wihm776e/Po0ZYj/Yu4kr+B6vmnYmZ46Y1kslE1UGoXvBygwmlJ0ifrw==
   dependencies:
-    diff "4.0.1"
+    "@types/prettier" "^1.0.0 || ^2.0.0"
+    diff "5.0.0"
     lodash.hasin "4.5.2"
     lodash.isempty "4.4.0"
     lodash.isnil "4.0.0"
     lodash.omitby "4.6.0"
-    magic-string "0.25.1"
-    prettier "^1.0.0"
+    magic-string "0.25.7"
 
 rollup-plugin-replace@^2.2.0:
   version "2.2.0"
@@ -14991,7 +14994,7 @@ source-map@^0.7.3:
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.7.3.tgz#5302f8169031735226544092e64981f751750383"
   integrity sha512-CkCj6giN3S+n9qrYiBTX5gystlENnRW5jZeNLHpe6aue+SrHcG5VYwujhW9s4dY31mEGsxBDrHR6oI69fTXsaQ==
 
-sourcemap-codec@^1.4.1, sourcemap-codec@^1.4.4, sourcemap-codec@^1.4.8:
+sourcemap-codec@^1.4.4, sourcemap-codec@^1.4.8:
   version "1.4.8"
   resolved "https://registry.yarnpkg.com/sourcemap-codec/-/sourcemap-codec-1.4.8.tgz#ea804bd94857402e6992d05a38ef1ae35a9ab4c4"
   integrity sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==

@@ -3,9 +3,10 @@
 const {esNextPaths} = require('./scripts/shared/pathsByLanguageVersion');
 
 module.exports = {
+  arrowParens: 'avoid',
   bracketSpacing: false,
   singleQuote: true,
-  jsxBracketSameLine: true,
+  bracketSameLine: true,
   trailingComma: 'es5',
   printWidth: 80,
   parser: 'babel',
