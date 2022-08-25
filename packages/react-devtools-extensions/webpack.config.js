@@ -56,6 +56,7 @@ module.exports = {
     main: './src/main.js',
     panel: './src/panel.js',
     renderer: './src/renderer.js',
+    'hook-exec': './src/hook-exec.js',
   },
   output: {
     path: __dirname + '/build',

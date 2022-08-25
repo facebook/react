@@ -1,18 +1,20 @@
 /* global chrome */
 
 import nullthrows from 'nullthrows';
-import {installHook} from 'react-devtools-shared/src/hook';
 import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 
-function injectCode(code) {
+function injectCode(src) {
+  console.log('injectCode', src);
   const script = document.createElement('script');
-  script.textContent = code;
+  script.src = src;
+  script.onload = () => {
+    script.remove()
+  }
 
   // This script runs before the <head> element is created,
   // so we add the script to <html> instead.
   nullthrows(document.documentElement).appendChild(script);
-  nullthrows(script.parentNode).removeChild(script);
 }
 
 let lastDetectionResult;
@@ -96,38 +98,9 @@ window.addEventListener('pageshow', function({target}) {
   chrome.runtime.sendMessage(lastDetectionResult);
 });
 
-const detectReact = `
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on('renderer', function({reactBuildType}) {
-  window.postMessage({
-    source: 'react-devtools-detector',
-    reactBuildType,
-  }, '*');
-});
-`;
-const saveNativeValues = `
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeObjectCreate = Object.create;
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeMap = Map;
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeWeakMap = WeakMap;
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeSet = Set;
-`;
-
 // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
 if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
-  const rendererURL = chrome.runtime.getURL('build/renderer.js');
-  let rendererCode;
-
-  // We need to inject in time to catch the initial mount.
-  // This means we need to synchronously read the renderer code itself,
-  // and synchronously inject it into the page.
-  // There are very few ways to actually do this.
-  // This seems to be the best approach.
-  const request = new XMLHttpRequest();
-  request.addEventListener('load', function() {
-    rendererCode = this.responseText;
-  });
-  request.open('GET', rendererURL, false);
-  request.send();
-  injectCode(rendererCode);
+  injectCode(chrome.runtime.getURL('build/renderer.js'));
 }
 
 // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
@@ -138,13 +111,7 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
 switch (document.contentType) {
   case 'text/html':
   case 'application/xhtml+xml': {
-    injectCode(
-      ';(' +
-        installHook.toString() +
-        '(window))' +
-        saveNativeValues +
-        detectReact,
-    );
+    injectCode(chrome.runtime.getURL('build/hook-exec.js'));
     break;
   }
 }
