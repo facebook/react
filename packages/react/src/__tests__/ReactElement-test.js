@@ -9,25 +9,15 @@
 
 'use strict';
 
-import {enableSymbolFallbackForWWW} from 'shared/ReactFeatureFlags';
-
 let React;
 let ReactDOM;
 let ReactTestUtils;
 
 describe('ReactElement', () => {
   let ComponentClass;
-  let originalSymbol;
 
   beforeEach(() => {
     jest.resetModules();
-
-    if (enableSymbolFallbackForWWW) {
-      // Delete the native Symbol if we have one to ensure we test the
-      // unpolyfilled environment.
-      originalSymbol = global.Symbol;
-      global.Symbol = undefined;
-    }
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -39,17 +29,6 @@ describe('ReactElement', () => {
         return React.createElement('div');
       }
     };
-  });
-
-  afterEach(() => {
-    if (enableSymbolFallbackForWWW) {
-      global.Symbol = originalSymbol;
-    }
-  });
-
-  // @gate enableSymbolFallbackForWWW
-  it('uses the fallback value when in an environment without Symbol', () => {
-    expect((<div />).$$typeof).toBe(0xeac7);
   });
 
   it('returns a complete element according to spec', () => {
@@ -303,42 +282,6 @@ describe('ReactElement', () => {
 
   // NOTE: We're explicitly not using JSX here. This is intended to test
   // classic JS without JSX.
-  // @gate enableSymbolFallbackForWWW
-  it('identifies valid elements', () => {
-    class Component extends React.Component {
-      render() {
-        return React.createElement('div');
-      }
-    }
-
-    expect(React.isValidElement(React.createElement('div'))).toEqual(true);
-    expect(React.isValidElement(React.createElement(Component))).toEqual(true);
-
-    expect(React.isValidElement(null)).toEqual(false);
-    expect(React.isValidElement(true)).toEqual(false);
-    expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement('string')).toEqual(false);
-    if (!__EXPERIMENTAL__) {
-      let factory;
-      expect(() => {
-        factory = React.createFactory('div');
-      }).toWarnDev(
-        'Warning: React.createFactory() is deprecated and will be removed in a ' +
-          'future major release. Consider using JSX or use React.createElement() ' +
-          'directly instead.',
-        {withoutStack: true},
-      );
-      expect(React.isValidElement(factory)).toEqual(false);
-    }
-    expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
-
-    const jsonElement = JSON.stringify(React.createElement('div'));
-    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(true);
-  });
-
-  // NOTE: We're explicitly not using JSX here. This is intended to test
-  // classic JS without JSX.
   it('is indistinguishable from a plain object', () => {
     const element = React.createElement('div', {className: 'foo'});
     const object = {};
@@ -450,95 +393,5 @@ describe('ReactElement', () => {
     }
     const test = ReactTestUtils.renderIntoDocument(<Test value={+undefined} />);
     expect(test.props.value).toBeNaN();
-  });
-
-  // NOTE: We're explicitly not using JSX here. This is intended to test
-  // classic JS without JSX.
-  // @gate !enableSymbolFallbackForWWW
-  it('identifies elements, but not JSON, if Symbols are supported', () => {
-    class Component extends React.Component {
-      render() {
-        return React.createElement('div');
-      }
-    }
-
-    expect(React.isValidElement(React.createElement('div'))).toEqual(true);
-    expect(React.isValidElement(React.createElement(Component))).toEqual(true);
-
-    expect(React.isValidElement(null)).toEqual(false);
-    expect(React.isValidElement(true)).toEqual(false);
-    expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement('string')).toEqual(false);
-    if (!__EXPERIMENTAL__) {
-      let factory;
-      expect(() => {
-        factory = React.createFactory('div');
-      }).toWarnDev(
-        'Warning: React.createFactory() is deprecated and will be removed in a ' +
-          'future major release. Consider using JSX or use React.createElement() ' +
-          'directly instead.',
-        {withoutStack: true},
-      );
-      expect(React.isValidElement(factory)).toEqual(false);
-    }
-    expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
-
-    const jsonElement = JSON.stringify(React.createElement('div'));
-    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
-  });
-
-  // NOTE: We're explicitly not using JSX here. This is intended to test
-  // classic JS without JSX.
-  it('identifies elements, but not JSON, if Symbols are supported (with polyfill)', () => {
-    // Rudimentary polyfill
-    // Once all jest engines support Symbols natively we can swap this to test
-    // WITH native Symbols by default.
-    const REACT_ELEMENT_TYPE = function() {}; // fake Symbol
-    const OTHER_SYMBOL = function() {}; // another fake Symbol
-    global.Symbol = function(name) {
-      return OTHER_SYMBOL;
-    };
-    global.Symbol.for = function(key) {
-      if (key === 'react.element') {
-        return REACT_ELEMENT_TYPE;
-      }
-      return OTHER_SYMBOL;
-    };
-
-    jest.resetModules();
-
-    React = require('react');
-
-    class Component extends React.Component {
-      render() {
-        return React.createElement('div');
-      }
-    }
-
-    expect(React.isValidElement(React.createElement('div'))).toEqual(true);
-    expect(React.isValidElement(React.createElement(Component))).toEqual(true);
-
-    expect(React.isValidElement(null)).toEqual(false);
-    expect(React.isValidElement(true)).toEqual(false);
-    expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement('string')).toEqual(false);
-    if (!__EXPERIMENTAL__) {
-      let factory;
-      expect(() => {
-        factory = React.createFactory('div');
-      }).toWarnDev(
-        'Warning: React.createFactory() is deprecated and will be removed in a ' +
-          'future major release. Consider using JSX or use React.createElement() ' +
-          'directly instead.',
-        {withoutStack: true},
-      );
-      expect(React.isValidElement(factory)).toEqual(false);
-    }
-    expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
-
-    const jsonElement = JSON.stringify(React.createElement('div'));
-    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
 });

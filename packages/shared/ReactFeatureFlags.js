@@ -24,9 +24,6 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 // like migrating internal callers or performance testing.
 // -----------------------------------------------------------------------------
 
-// This is blocked on adding a symbol polyfill to www.
-export const enableSymbolFallbackForWWW = false;
-
 // This rolled out to 10% public in www, so we should be able to land, but some
 // internal tests need to be updated. The open source behavior is correct.
 export const skipUnmountedBoundaries = true;
