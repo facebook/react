@@ -195,6 +195,10 @@ function attemptResolveElement(
     );
   }
   if (typeof type === 'function') {
+    if (isModuleReference(type)) {
+      // This is a reference to a client component.
+      return [REACT_ELEMENT_TYPE, type, key, props];
+    }
     // This is a server-side component.
     return type(props);
   } else if (typeof type === 'string') {
@@ -293,6 +297,52 @@ function serializeByValueID(id: number): string {
 
 function serializeByRefID(id: number): string {
   return '@' + id.toString(16);
+}
+
+function serializeModuleReference(
+  request: Request,
+  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  key: string,
+  moduleReference: ModuleReference<any>,
+): string {
+  const moduleKey: ModuleKey = getModuleKey(moduleReference);
+  const writtenModules = request.writtenModules;
+  const existingId = writtenModules.get(moduleKey);
+  if (existingId !== undefined) {
+    if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
+      // If we're encoding the "type" of an element, we can refer
+      // to that by a lazy reference instead of directly since React
+      // knows how to deal with lazy values. This lets us suspend
+      // on this component rather than its parent until the code has
+      // loaded.
+      return serializeByRefID(existingId);
+    }
+    return serializeByValueID(existingId);
+  }
+  try {
+    const moduleMetaData: ModuleMetaData = resolveModuleMetaData(
+      request.bundlerConfig,
+      moduleReference,
+    );
+    request.pendingChunks++;
+    const moduleId = request.nextChunkId++;
+    emitModuleChunk(request, moduleId, moduleMetaData);
+    writtenModules.set(moduleKey, moduleId);
+    if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
+      // If we're encoding the "type" of an element, we can refer
+      // to that by a lazy reference instead of directly since React
+      // knows how to deal with lazy values. This lets us suspend
+      // on this component rather than its parent until the code has
+      // loaded.
+      return serializeByRefID(moduleId);
+    }
+    return serializeByValueID(moduleId);
+  } catch (x) {
+    request.pendingChunks++;
+    const errorId = request.nextChunkId++;
+    emitErrorChunk(request, errorId, x);
+    return serializeByValueID(errorId);
+  }
 }
 
 function escapeStringValue(value: string): string {
@@ -561,45 +611,7 @@ export function resolveModelToJSON(
 
   if (typeof value === 'object') {
     if (isModuleReference(value)) {
-      const moduleReference: ModuleReference<any> = (value: any);
-      const moduleKey: ModuleKey = getModuleKey(moduleReference);
-      const writtenModules = request.writtenModules;
-      const existingId = writtenModules.get(moduleKey);
-      if (existingId !== undefined) {
-        if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
-          // If we're encoding the "type" of an element, we can refer
-          // to that by a lazy reference instead of directly since React
-          // knows how to deal with lazy values. This lets us suspend
-          // on this component rather than its parent until the code has
-          // loaded.
-          return serializeByRefID(existingId);
-        }
-        return serializeByValueID(existingId);
-      }
-      try {
-        const moduleMetaData: ModuleMetaData = resolveModuleMetaData(
-          request.bundlerConfig,
-          moduleReference,
-        );
-        request.pendingChunks++;
-        const moduleId = request.nextChunkId++;
-        emitModuleChunk(request, moduleId, moduleMetaData);
-        writtenModules.set(moduleKey, moduleId);
-        if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
-          // If we're encoding the "type" of an element, we can refer
-          // to that by a lazy reference instead of directly since React
-          // knows how to deal with lazy values. This lets us suspend
-          // on this component rather than its parent until the code has
-          // loaded.
-          return serializeByRefID(moduleId);
-        }
-        return serializeByValueID(moduleId);
-      } catch (x) {
-        request.pendingChunks++;
-        const errorId = request.nextChunkId++;
-        emitErrorChunk(request, errorId, x);
-        return serializeByValueID(errorId);
-      }
+      return serializeModuleReference(request, parent, key, (value: any));
     } else if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
       const providerKey = ((value: any): ReactProviderType<any>)._context
         ._globalName;
@@ -673,6 +685,9 @@ export function resolveModelToJSON(
   }
 
   if (typeof value === 'function') {
+    if (isModuleReference(value)) {
+      return serializeModuleReference(request, parent, key, (value: any));
+    }
     if (/^on[A-Z]/.test(key)) {
       throw new Error(
         'Event handlers cannot be passed to client component props. ' +
