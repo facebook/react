@@ -144,6 +144,7 @@ function FiberNode(
   this.updateQueue = null;
   this.memoizedState = null;
   this.dependencies = null;
+  this.memoCache = null;
 
   this.mode = mode;
 
@@ -310,6 +311,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   workInProgress.memoizedProps = current.memoizedProps;
   workInProgress.memoizedState = current.memoizedState;
   workInProgress.updateQueue = current.updateQueue;
+  workInProgress.memoCache = current.memoCache;
 
   // Clone the dependencies object. This is mutated during the render phase, so
   // it cannot be shared with the current fiber.

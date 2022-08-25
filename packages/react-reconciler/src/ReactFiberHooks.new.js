@@ -399,6 +399,13 @@ export function renderWithHooks<Props, SecondArg>(
       current !== null && current.type !== workInProgress.type;
   }
 
+  const memoCache = workInProgress.memoCache;
+  if (memoCache !== null) {
+    // Clone memo cache prior to rendering to avoid corruption in case of error
+    memoCache.previous = memoCache.current;
+    memoCache.current = [...memoCache.current];
+  }
+
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
   workInProgress.lanes = NoLanes;
@@ -469,6 +476,20 @@ export function renderWithHooks<Props, SecondArg>(
       workInProgressHook = null;
 
       workInProgress.updateQueue = null;
+
+      if (memoCache !== null) {
+        // Re-clone the cache, setting state in the middle of rendering can leave the cache
+        // in an invalid state
+        const previous = memoCache.previous;
+        if (previous !== null) {
+          memoCache.current = [...previous];
+        } else {
+          console.warn(
+            'Expected a previous memo cache instance to have been cached prior to render. This is a bug in React.',
+          );
+          memoCache.current = new Array(memoCache.current.length);
+        }
+      }
 
       if (__DEV__) {
         // Also validate hook order for cascading updates.
@@ -583,7 +604,7 @@ export function bailoutHooks(
   current.lanes = removeLanes(current.lanes, lanes);
 }
 
-export function resetHooksAfterThrow(): void {
+export function resetHooksAfterThrow(erroredWork: Fiber | null): void {
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
@@ -606,6 +627,23 @@ export function resetHooksAfterThrow(): void {
       hook = hook.next;
     }
     didScheduleRenderPhaseUpdate = false;
+  }
+
+  // The current memo cache may be in an inconsistent state, reset to the previous
+  // version of the cache.
+  if (erroredWork != null) {
+    const memoCache = erroredWork.memoCache;
+    if (memoCache !== null) {
+      if (memoCache.previous === null) {
+        console.warn(
+          'Expected a previous useMemoCache to be present if rendering of a memoized component errored. This is likely a bug in React',
+        );
+      }
+      memoCache.current =
+        memoCache.previous !== null
+          ? [...memoCache.previous]
+          : new Array(memoCache.current.length);
+    }
   }
 
   renderLanes = NoLanes;
@@ -787,7 +825,14 @@ function use<T>(usable: Usable<T>): T {
 }
 
 function useMemoCache(size: number): Array<any> {
-  throw new Error('Not implemented.');
+  let memoCache = currentlyRenderingFiber.memoCache;
+  if (memoCache === null) {
+    memoCache = currentlyRenderingFiber.memoCache = {
+      current: new Array(size),
+      previous: null,
+    };
+  }
+  return memoCache.current;
 }
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {

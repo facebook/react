@@ -68,6 +68,11 @@ export type Dependencies = {
   ...
 };
 
+export type MemoCache = {
+  current: Array<any>,
+  previous: Array<any> | null,
+};
+
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
 export type Fiber = {
@@ -127,6 +132,9 @@ export type Fiber = {
 
   // A queue of state updates and callbacks.
   updateQueue: mixed,
+
+  // useMemoCache storage
+  memoCache: MemoCache | null,
 
   // The state used to create the output
   memoizedState: any,
