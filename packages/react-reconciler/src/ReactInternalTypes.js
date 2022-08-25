@@ -291,8 +291,7 @@ export type TransitionTracingCallbacks = {
     startTime: number,
     deletions: Array<{
       type: string,
-      name?: string,
-      newName?: string,
+      name?: string | null,
       endTime: number,
     }>,
   ) => void,
@@ -314,8 +313,7 @@ export type TransitionTracingCallbacks = {
     startTime: number,
     deletions: Array<{
       type: string,
-      name?: string,
-      newName?: string,
+      name?: string | null,
       endTime: number,
     }>,
   ) => void,
@@ -337,7 +335,7 @@ type TransitionTracingOnlyFiberRootProperties = {|
   // are considered complete when the pending suspense boundaries set is
   // empty. We can represent this as a Map of transitions to suspense
   // boundary sets
-  incompleteTransitions: Map<Array<Transition>, TracingMarkerInstance>,
+  incompleteTransitions: Map<Transition, TracingMarkerInstance>,
 |};
 
 // Exported FiberRoot type includes all properties,

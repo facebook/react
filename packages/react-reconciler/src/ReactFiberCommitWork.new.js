@@ -30,7 +30,11 @@ import type {
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import type {RootState} from './ReactFiberRoot.new';
-import type {Transition} from './ReactFiberTracingMarkerComponent.new';
+import type {
+  Transition,
+  TracingMarkerInstance,
+  TransitionAbort,
+} from './ReactFiberTracingMarkerComponent.new';
 
 import {
   enableCreateEventHandleAPI,
@@ -145,6 +149,7 @@ import {
   addTransitionProgressCallbackToPendingTransition,
   addTransitionCompleteCallbackToPendingTransition,
   addMarkerProgressCallbackToPendingTransition,
+  addMarkerIncompleteCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
   setIsRunningInsertionEffect,
   getExecutionContext,
@@ -1130,6 +1135,141 @@ function commitLayoutEffectOnFiber(
   }
 }
 
+function abortRootTransitions(
+  root: FiberRoot,
+  abort: TransitionAbort,
+  deletedTransitions: Set<Transition>,
+  deletedOffscreenInstance: OffscreenInstance | null,
+  isInDeletedTree: boolean,
+) {
+  if (enableTransitionTracing) {
+    const rootTransitions = root.incompleteTransitions;
+    deletedTransitions.forEach(transition => {
+      if (rootTransitions.has(transition)) {
+        const transitionInstance: TracingMarkerInstance = (rootTransitions.get(
+          transition,
+        ): any);
+        if (transitionInstance.aborts === null) {
+          transitionInstance.aborts = [];
+        }
+        transitionInstance.aborts.push(abort);
+
+        if (deletedOffscreenInstance !== null) {
+          if (
+            transitionInstance.pendingBoundaries !== null &&
+            transitionInstance.pendingBoundaries.has(deletedOffscreenInstance)
+          ) {
+            transitionInstance.pendingBoundaries.delete(
+              deletedOffscreenInstance,
+            );
+          }
+        }
+      }
+    });
+  }
+}
+
+function abortTracingMarkerTransitions(
+  abortedFiber: Fiber,
+  abort: TransitionAbort,
+  deletedTransitions: Set<Transition>,
+  deletedOffscreenInstance: OffscreenInstance | null,
+  isInDeletedTree: boolean,
+) {
+  if (enableTransitionTracing) {
+    const markerInstance: TracingMarkerInstance = abortedFiber.stateNode;
+    const markerTransitions = markerInstance.transitions;
+    const pendingBoundaries = markerInstance.pendingBoundaries;
+    if (markerTransitions !== null) {
+      // TODO: Refactor this code. Is there a way to move this code to
+      // the deletions phase instead of calculating it here while making sure
+      // complete is called appropriately?
+      deletedTransitions.forEach(transition => {
+        // If one of the transitions on the tracing marker is a transition
+        // that was in an aborted subtree, we will abort that tracing marker
+        if (
+          abortedFiber !== null &&
+          markerTransitions.has(transition) &&
+          (markerInstance.aborts === null ||
+            !markerInstance.aborts.includes(abort))
+        ) {
+          if (markerInstance.transitions !== null) {
+            if (markerInstance.aborts === null) {
+              markerInstance.aborts = [abort];
+              addMarkerIncompleteCallbackToPendingTransition(
+                abortedFiber.memoizedProps.name,
+                markerInstance.transitions,
+                markerInstance.aborts,
+              );
+            } else {
+              markerInstance.aborts.push(abort);
+            }
+
+            // We only want to call onTransitionProgress when the marker hasn't been
+            // deleted
+            if (
+              deletedOffscreenInstance !== null &&
+              !isInDeletedTree &&
+              pendingBoundaries !== null &&
+              pendingBoundaries.has(deletedOffscreenInstance)
+            ) {
+              pendingBoundaries.delete(deletedOffscreenInstance);
+
+              addMarkerProgressCallbackToPendingTransition(
+                abortedFiber.memoizedProps.name,
+                deletedTransitions,
+                pendingBoundaries,
+              );
+            }
+          }
+        }
+      });
+    }
+  }
+}
+
+function abortParentMarkerTransitionsForDeletedFiber(
+  abortedFiber: Fiber,
+  abort: TransitionAbort,
+  deletedTransitions: Set<Transition>,
+  deletedOffscreenInstance: OffscreenInstance | null,
+  isInDeletedTree: boolean,
+) {
+  if (enableTransitionTracing) {
+    // Find all pending markers that are waiting on child suspense boundaries in the
+    // aborted subtree and cancels them
+    let fiber = abortedFiber;
+    while (fiber !== null) {
+      switch (fiber.tag) {
+        case TracingMarkerComponent:
+          abortTracingMarkerTransitions(
+            fiber,
+            abort,
+            deletedTransitions,
+            deletedOffscreenInstance,
+            isInDeletedTree,
+          );
+          break;
+        case HostRoot:
+          const root = fiber.stateNode;
+          abortRootTransitions(
+            root,
+            abort,
+            deletedTransitions,
+            deletedOffscreenInstance,
+            isInDeletedTree,
+          );
+
+          break;
+        default:
+          break;
+      }
+
+      fiber = fiber.return;
+    }
+  }
+}
+
 function commitTransitionProgress(offscreenFiber: Fiber) {
   if (enableTransitionTracing) {
     // This function adds suspense boundaries to the root
@@ -1175,6 +1315,7 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
         pendingMarkers.forEach(markerInstance => {
           const pendingBoundaries = markerInstance.pendingBoundaries;
           const transitions = markerInstance.transitions;
+          const markerName = markerInstance.name;
           if (
             pendingBoundaries !== null &&
             !pendingBoundaries.has(offscreenInstance)
@@ -1185,10 +1326,10 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
             if (transitions !== null) {
               if (
                 markerInstance.tag === TransitionTracingMarker &&
-                markerInstance.name !== undefined
+                markerName !== null
               ) {
                 addMarkerProgressCallbackToPendingTransition(
-                  markerInstance.name,
+                  markerName,
                   transitions,
                   pendingBoundaries,
                 );
@@ -1212,6 +1353,7 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
         pendingMarkers.forEach(markerInstance => {
           const pendingBoundaries = markerInstance.pendingBoundaries;
           const transitions = markerInstance.transitions;
+          const markerName = markerInstance.name;
           if (
             pendingBoundaries !== null &&
             pendingBoundaries.has(offscreenInstance)
@@ -1220,13 +1362,27 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
             if (transitions !== null) {
               if (
                 markerInstance.tag === TransitionTracingMarker &&
-                markerInstance.name !== undefined
+                markerName !== null
               ) {
                 addMarkerProgressCallbackToPendingTransition(
-                  markerInstance.name,
+                  markerName,
                   transitions,
                   pendingBoundaries,
                 );
+
+                // If there are no more unresolved suspense boundaries, the interaction
+                // is considered finished
+                if (pendingBoundaries.size === 0) {
+                  if (markerInstance.aborts === null) {
+                    addMarkerCompleteCallbackToPendingTransition(
+                      markerName,
+                      transitions,
+                    );
+                  }
+                  markerInstance.transitions = null;
+                  markerInstance.pendingBoundaries = null;
+                  markerInstance.aborts = null;
+                }
               } else if (markerInstance.tag === TransitionRoot) {
                 transitions.forEach(transition => {
                   addTransitionProgressCallbackToPendingTransition(
@@ -1737,6 +1893,7 @@ function commitDeletionEffects(
           'a bug in React. Please file an issue.',
       );
     }
+
     commitDeletionEffectsOnFiber(root, returnFiber, deletedFiber);
     hostParent = null;
     hostParentIsContainer = false;
@@ -1979,6 +2136,7 @@ function commitDeletionEffectsOnFiber(
         const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
         offscreenSubtreeWasHidden =
           prevOffscreenSubtreeWasHidden || deletedFiber.memoizedState !== null;
+
         recursivelyTraverseDeletionEffects(
           finishedRoot,
           nearestMountedAncestor,
@@ -2957,6 +3115,12 @@ function commitOffscreenPassiveMountEffects(
     }
 
     commitTransitionProgress(finishedWork);
+
+    // TODO: Refactor this into an if/else branch
+    if (!isHidden) {
+      instance.transitions = null;
+      instance.pendingMarkers = null;
+    }
   }
 }
 
@@ -2987,20 +3151,18 @@ function commitCachePassiveMountEffect(
 function commitTracingMarkerPassiveMountEffect(finishedWork: Fiber) {
   // Get the transitions that were initiatized during the render
   // and add a start transition callback for each of them
+  // We will only call this on initial mount of the tracing marker
+  // only if there are no suspense children
   const instance = finishedWork.stateNode;
-  if (
-    instance.transitions !== null &&
-    (instance.pendingBoundaries === null ||
-      instance.pendingBoundaries.size === 0)
-  ) {
-    instance.transitions.forEach(transition => {
-      addMarkerCompleteCallbackToPendingTransition(
-        finishedWork.memoizedProps.name,
-        instance.transitions,
-      );
-    });
+  if (instance.transitions !== null && instance.pendingBoundaries === null) {
+    addMarkerCompleteCallbackToPendingTransition(
+      finishedWork.memoizedProps.name,
+      instance.transitions,
+    );
     instance.transitions = null;
     instance.pendingBoundaries = null;
+    instance.aborts = null;
+    instance.name = null;
   }
 }
 
@@ -3102,7 +3264,7 @@ function commitPassiveMountOnFiber(
         if (enableTransitionTracing) {
           // Get the transitions that were initiatized during the render
           // and add a start transition callback for each of them
-          const root = finishedWork.stateNode;
+          const root: FiberRoot = finishedWork.stateNode;
           const incompleteTransitions = root.incompleteTransitions;
           // Initial render
           if (committedTransitions !== null) {
@@ -3116,7 +3278,9 @@ function commitPassiveMountOnFiber(
           incompleteTransitions.forEach((markerInstance, transition) => {
             const pendingBoundaries = markerInstance.pendingBoundaries;
             if (pendingBoundaries === null || pendingBoundaries.size === 0) {
-              addTransitionCompleteCallbackToPendingTransition(transition);
+              if (markerInstance.aborts === null) {
+                addTransitionCompleteCallbackToPendingTransition(transition);
+              }
               incompleteTransitions.delete(transition);
             }
           });
@@ -3489,21 +3653,6 @@ function commitAtomicPassiveEffects(
       }
       break;
     }
-    case TracingMarkerComponent: {
-      if (enableTransitionTracing) {
-        recursivelyTraverseAtomicPassiveEffects(
-          finishedRoot,
-          finishedWork,
-          committedLanes,
-          committedTransitions,
-        );
-        if (flags & Passive) {
-          commitTracingMarkerPassiveMountEffect(finishedWork);
-        }
-        break;
-      }
-      // Intentional fallthrough to next branch
-    }
     // eslint-disable-next-line-no-fallthrough
     default: {
       recursivelyTraverseAtomicPassiveEffects(
@@ -3827,10 +3976,78 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
       }
       break;
     }
+    case SuspenseComponent: {
+      if (enableTransitionTracing) {
+        // We need to mark this fiber's parents as deleted
+        const offscreenFiber: Fiber = (current.child: any);
+        const instance: OffscreenInstance = offscreenFiber.stateNode;
+        const transitions = instance.transitions;
+        if (transitions !== null) {
+          const abortReason = {
+            reason: 'suspense',
+            name: current.memoizedProps.unstable_name || null,
+          };
+          if (
+            current.memoizedState === null ||
+            current.memoizedState.dehydrated === null
+          ) {
+            abortParentMarkerTransitionsForDeletedFiber(
+              offscreenFiber,
+              abortReason,
+              transitions,
+              instance,
+              true,
+            );
+
+            if (nearestMountedAncestor !== null) {
+              abortParentMarkerTransitionsForDeletedFiber(
+                nearestMountedAncestor,
+                abortReason,
+                transitions,
+                instance,
+                false,
+              );
+            }
+          }
+        }
+      }
+      break;
+    }
     case CacheComponent: {
       if (enableCache) {
         const cache = current.memoizedState.cache;
         releaseCache(cache);
+      }
+      break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        // We need to mark this fiber's parents as deleted
+        const instance: TracingMarkerInstance = current.stateNode;
+        const transitions = instance.transitions;
+        if (transitions !== null) {
+          const abortReason = {
+            reason: 'marker',
+            name: current.memoizedProps.name,
+          };
+          abortParentMarkerTransitionsForDeletedFiber(
+            current,
+            abortReason,
+            transitions,
+            null,
+            true,
+          );
+
+          if (nearestMountedAncestor !== null) {
+            abortParentMarkerTransitionsForDeletedFiber(
+              nearestMountedAncestor,
+              abortReason,
+              transitions,
+              null,
+              false,
+            );
+          }
+        }
       }
       break;
     }

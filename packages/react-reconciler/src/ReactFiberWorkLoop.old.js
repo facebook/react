@@ -19,6 +19,7 @@ import type {
   PendingTransitionCallbacks,
   PendingBoundaries,
   Transition,
+  TransitionAbort,
 } from './ReactFiberTracingMarkerComponent.old';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 
@@ -361,6 +362,7 @@ export function addTransitionStartCallbackToPendingTransition(
         transitionProgress: null,
         transitionComplete: null,
         markerProgress: null,
+        markerIncomplete: null,
         markerComplete: null,
       };
     }
@@ -376,7 +378,7 @@ export function addTransitionStartCallbackToPendingTransition(
 export function addMarkerProgressCallbackToPendingTransition(
   markerName: string,
   transitions: Set<Transition>,
-  pendingBoundaries: PendingBoundaries | null,
+  pendingBoundaries: PendingBoundaries,
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {
@@ -385,6 +387,7 @@ export function addMarkerProgressCallbackToPendingTransition(
         transitionProgress: null,
         transitionComplete: null,
         markerProgress: new Map(),
+        markerIncomplete: null,
         markerComplete: null,
       };
     }
@@ -400,6 +403,34 @@ export function addMarkerProgressCallbackToPendingTransition(
   }
 }
 
+export function addMarkerIncompleteCallbackToPendingTransition(
+  markerName: string,
+  transitions: Set<Transition>,
+  aborts: Array<TransitionAbort>,
+) {
+  if (enableTransitionTracing) {
+    if (currentPendingTransitionCallbacks === null) {
+      currentPendingTransitionCallbacks = {
+        transitionStart: null,
+        transitionProgress: null,
+        transitionComplete: null,
+        markerProgress: null,
+        markerIncomplete: new Map(),
+        markerComplete: null,
+      };
+    }
+
+    if (currentPendingTransitionCallbacks.markerIncomplete === null) {
+      currentPendingTransitionCallbacks.markerIncomplete = new Map();
+    }
+
+    currentPendingTransitionCallbacks.markerIncomplete.set(markerName, {
+      transitions,
+      aborts,
+    });
+  }
+}
+
 export function addMarkerCompleteCallbackToPendingTransition(
   markerName: string,
   transitions: Set<Transition>,
@@ -411,6 +442,7 @@ export function addMarkerCompleteCallbackToPendingTransition(
         transitionProgress: null,
         transitionComplete: null,
         markerProgress: null,
+        markerIncomplete: null,
         markerComplete: new Map(),
       };
     }
@@ -437,6 +469,7 @@ export function addTransitionProgressCallbackToPendingTransition(
         transitionProgress: new Map(),
         transitionComplete: null,
         markerProgress: null,
+        markerIncomplete: null,
         markerComplete: null,
       };
     }
@@ -462,6 +495,7 @@ export function addTransitionCompleteCallbackToPendingTransition(
         transitionProgress: null,
         transitionComplete: [],
         markerProgress: null,
+        markerIncomplete: null,
         markerComplete: null,
       };
     }
