@@ -68,7 +68,6 @@ export const enableServerContext = false;
 export const enableUseMutableSource = false;
 
 export const enableTransitionTracing = false;
-export const enableSymbolFallbackForWWW = false;
 
 export const enableFloat = false;
 // Flow magic to verify the exports of this file match the original version.

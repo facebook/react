@@ -9,8 +9,6 @@
 
 'use strict';
 
-import {enableSymbolFallbackForWWW} from 'shared/ReactFeatureFlags';
-
 let React;
 let ReactDOM;
 let ReactTestUtils;
@@ -22,29 +20,14 @@ let JSXDEVRuntime;
 // A lot of these tests are pulled from ReactElement-test because
 // this api is meant to be backwards compatible.
 describe('ReactElement.jsx', () => {
-  let originalSymbol;
-
   beforeEach(() => {
     jest.resetModules();
-
-    if (enableSymbolFallbackForWWW) {
-      // Delete the native Symbol if we have one to ensure we test the
-      // unpolyfilled environment.
-      originalSymbol = global.Symbol;
-      global.Symbol = undefined;
-    }
 
     React = require('react');
     JSXRuntime = require('react/jsx-runtime');
     JSXDEVRuntime = require('react/jsx-dev-runtime');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-  });
-
-  afterEach(() => {
-    if (enableSymbolFallbackForWWW) {
-      global.Symbol = originalSymbol;
-    }
   });
 
   it('allows static methods to be called using the type property', () => {
@@ -57,48 +40,6 @@ describe('ReactElement.jsx', () => {
 
     const element = JSXRuntime.jsx(StaticMethodComponentClass, {});
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
-  });
-
-  // @gate enableSymbolFallbackForWWW
-  it('identifies valid elements', () => {
-    class Component extends React.Component {
-      render() {
-        return JSXRuntime.jsx('div', {});
-      }
-    }
-
-    expect(React.isValidElement(JSXRuntime.jsx('div', {}))).toEqual(true);
-    expect(React.isValidElement(JSXRuntime.jsx(Component, {}))).toEqual(true);
-    expect(
-      React.isValidElement(JSXRuntime.jsx(JSXRuntime.Fragment, {})),
-    ).toEqual(true);
-    if (__DEV__) {
-      expect(React.isValidElement(JSXDEVRuntime.jsxDEV('div', {}))).toEqual(
-        true,
-      );
-    }
-
-    expect(React.isValidElement(null)).toEqual(false);
-    expect(React.isValidElement(true)).toEqual(false);
-    expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement('string')).toEqual(false);
-    if (!__EXPERIMENTAL__) {
-      let factory;
-      expect(() => {
-        factory = React.createFactory('div');
-      }).toWarnDev(
-        'Warning: React.createFactory() is deprecated and will be removed in a ' +
-          'future major release. Consider using JSX or use React.createElement() ' +
-          'directly instead.',
-        {withoutStack: true},
-      );
-      expect(React.isValidElement(factory)).toEqual(false);
-    }
-    expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
-
-    const jsonElement = JSON.stringify(JSXRuntime.jsx('div', {}));
-    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(true);
   });
 
   it('is indistinguishable from a plain object', () => {
@@ -292,101 +233,6 @@ describe('ReactElement.jsx', () => {
         'value within the child component, you should pass it as a different ' +
         'prop. (https://reactjs.org/link/special-props)',
     );
-  });
-
-  // @gate !enableSymbolFallbackForWWW
-  it('identifies elements, but not JSON, if Symbols are supported', () => {
-    class Component extends React.Component {
-      render() {
-        return JSXRuntime.jsx('div', {});
-      }
-    }
-
-    expect(React.isValidElement(JSXRuntime.jsx('div', {}))).toEqual(true);
-    expect(React.isValidElement(JSXRuntime.jsx(Component, {}))).toEqual(true);
-    expect(
-      React.isValidElement(JSXRuntime.jsx(JSXRuntime.Fragment, {})),
-    ).toEqual(true);
-    if (__DEV__) {
-      expect(React.isValidElement(JSXDEVRuntime.jsxDEV('div', {}))).toEqual(
-        true,
-      );
-    }
-
-    expect(React.isValidElement(null)).toEqual(false);
-    expect(React.isValidElement(true)).toEqual(false);
-    expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement('string')).toEqual(false);
-    if (!__EXPERIMENTAL__) {
-      let factory;
-      expect(() => {
-        factory = React.createFactory('div');
-      }).toWarnDev(
-        'Warning: React.createFactory() is deprecated and will be removed in a ' +
-          'future major release. Consider using JSX or use React.createElement() ' +
-          'directly instead.',
-        {withoutStack: true},
-      );
-      expect(React.isValidElement(factory)).toEqual(false);
-    }
-    expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
-
-    const jsonElement = JSON.stringify(JSXRuntime.jsx('div', {}));
-    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
-  });
-
-  it('identifies elements, but not JSON, if Symbols are polyfilled', () => {
-    // Rudimentary polyfill
-    // Once all jest engines support Symbols natively we can swap this to test
-    // WITH native Symbols by default.
-    const REACT_ELEMENT_TYPE = function() {}; // fake Symbol
-    const OTHER_SYMBOL = function() {}; // another fake Symbol
-    global.Symbol = function(name) {
-      return OTHER_SYMBOL;
-    };
-    global.Symbol.for = function(key) {
-      if (key === 'react.element') {
-        return REACT_ELEMENT_TYPE;
-      }
-      return OTHER_SYMBOL;
-    };
-
-    jest.resetModules();
-
-    React = require('react');
-    JSXRuntime = require('react/jsx-runtime');
-
-    class Component extends React.Component {
-      render() {
-        return JSXRuntime.jsx('div');
-      }
-    }
-
-    expect(React.isValidElement(JSXRuntime.jsx('div', {}))).toEqual(true);
-    expect(React.isValidElement(JSXRuntime.jsx(Component, {}))).toEqual(true);
-
-    expect(React.isValidElement(null)).toEqual(false);
-    expect(React.isValidElement(true)).toEqual(false);
-    expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement('string')).toEqual(false);
-    if (!__EXPERIMENTAL__) {
-      let factory;
-      expect(() => {
-        factory = React.createFactory('div');
-      }).toWarnDev(
-        'Warning: React.createFactory() is deprecated and will be removed in a ' +
-          'future major release. Consider using JSX or use React.createElement() ' +
-          'directly instead.',
-        {withoutStack: true},
-      );
-      expect(React.isValidElement(factory)).toEqual(false);
-    }
-    expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
-
-    const jsonElement = JSON.stringify(JSXRuntime.jsx('div', {}));
-    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
 
   it('should warn when unkeyed children are passed to jsx', () => {
