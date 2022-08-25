@@ -67,6 +67,7 @@ export const prepareScopeUpdate = $$$hostConfig.prepareScopeUpdate;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
 export const detachDeletedInstance = $$$hostConfig.detachDeletedInstance;
+export const requestPostPaintCallback = $$$hostConfig.requestPostPaintCallback;
 
 // -------------------
 //      Microtasks
