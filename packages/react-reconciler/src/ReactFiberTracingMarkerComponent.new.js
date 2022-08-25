@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {TransitionTracingCallbacks, Fiber, FiberRoot} from './ReactInternalTypes';
+import type {
+  TransitionTracingCallbacks,
+  Fiber,
+  FiberRoot,
+} from './ReactInternalTypes';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 import type {StackCursor} from './ReactFiberStack.new';
 
