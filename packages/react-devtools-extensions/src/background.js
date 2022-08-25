@@ -78,7 +78,7 @@ function setIconAndPopup(reactBuildType, tabId) {
         '32': chrome.runtime.getURL(`icons/32-${reactBuildType}.png`),
         '48': chrome.runtime.getURL(`icons/48-${reactBuildType}.png`),
         '128': chrome.runtime.getURL(`icons/128-${reactBuildType}.png`),
-      }
+      },
     });
     chrome.browserAction.setPopup({
       tabId: tabId,

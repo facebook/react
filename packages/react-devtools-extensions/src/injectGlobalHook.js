@@ -5,12 +5,11 @@ import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 
 function injectCode(src) {
-  console.log('injectCode', src);
   const script = document.createElement('script');
   script.src = src;
   script.onload = () => {
-    script.remove()
-  }
+    script.remove();
+  };
 
   // This script runs before the <head> element is created,
   // so we add the script to <html> instead.

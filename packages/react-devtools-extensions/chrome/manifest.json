@@ -21,7 +21,6 @@
     "default_popup": "popups/disabled.html"
   },
   "devtools_page": "main.html",
-
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
