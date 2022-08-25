@@ -403,7 +403,11 @@ export function markStarvedLanesAsExpired(
   // Iterate through the pending lanes and check if we've reached their
   // expiration time. If so, we'll assume the update is being starved and mark
   // it as expired to force it to finish.
-  let lanes = pendingLanes;
+  //
+  // We exclude retry lanes because those must always be time sliced, in order
+  // to unwrap uncached promises.
+  // TODO: Write a test for this
+  let lanes = pendingLanes & ~RetryLanes;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
@@ -435,7 +439,15 @@ export function getHighestPriorityPendingLanes(root: FiberRoot) {
   return getHighestPriorityLanes(root.pendingLanes);
 }
 
-export function getLanesToRetrySynchronouslyOnError(root: FiberRoot): Lanes {
+export function getLanesToRetrySynchronouslyOnError(
+  root: FiberRoot,
+  originallyAttemptedLanes: Lanes,
+): Lanes {
+  if (root.errorRecoveryDisabledLanes & originallyAttemptedLanes) {
+    // The error recovery mechanism is disabled until these lanes are cleared.
+    return NoLanes;
+  }
+
   const everythingButOffscreen = root.pendingLanes & ~OffscreenLane;
   if (everythingButOffscreen !== NoLanes) {
     return everythingButOffscreen;
@@ -645,6 +657,8 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.mutableReadLanes &= remainingLanes;
 
   root.entangledLanes &= remainingLanes;
+
+  root.errorRecoveryDisabledLanes &= remainingLanes;
 
   const entanglements = root.entanglements;
   const eventTimes = root.eventTimes;

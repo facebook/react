@@ -17,6 +17,7 @@ import type {
   MutableSource,
   StartTransitionOptions,
   Wakeable,
+  Usable,
 } from 'shared/ReactTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
@@ -238,6 +239,7 @@ type BaseFiberRootProperties = {|
   pingedLanes: Lanes,
   expiredLanes: Lanes,
   mutableReadLanes: Lanes,
+  errorRecoveryDisabledLanes: Lanes,
 
   finishedLanes: Lanes,
 
@@ -353,6 +355,7 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {|
+  use?: <T>(Usable<T>) => T,
   getCacheSignal?: () => AbortSignal,
   getCacheForType?: <T>(resourceType: () => T) => T,
   readContext<T>(context: ReactContext<T>): T,

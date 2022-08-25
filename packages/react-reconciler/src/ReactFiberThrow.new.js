@@ -57,7 +57,7 @@ import {
   onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
-  pingSuspendedRoot,
+  attachPingListener,
   restorePendingUpdaters,
 } from './ReactFiberWorkLoop.new';
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext.new';
@@ -77,8 +77,6 @@ import {
   markDidThrowWhileHydratingDEV,
   queueHydrationError,
 } from './ReactFiberHydrationContext.new';
-
-const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
 function createRootErrorUpdate(
   fiber: Fiber,
@@ -157,46 +155,6 @@ function createClassErrorUpdate(
     };
   }
   return update;
-}
-
-function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: Lanes) {
-  // Attach a ping listener
-  //
-  // The data might resolve before we have a chance to commit the fallback. Or,
-  // in the case of a refresh, we'll never commit a fallback. So we need to
-  // attach a listener now. When it resolves ("pings"), we can decide whether to
-  // try rendering the tree again.
-  //
-  // Only attach a listener if one does not already exist for the lanes
-  // we're currently rendering (which acts like a "thread ID" here).
-  //
-  // We only need to do this in concurrent mode. Legacy Suspense always
-  // commits fallbacks synchronously, so there are no pings.
-  let pingCache = root.pingCache;
-  let threadIDs;
-  if (pingCache === null) {
-    pingCache = root.pingCache = new PossiblyWeakMap();
-    threadIDs = new Set();
-    pingCache.set(wakeable, threadIDs);
-  } else {
-    threadIDs = pingCache.get(wakeable);
-    if (threadIDs === undefined) {
-      threadIDs = new Set();
-      pingCache.set(wakeable, threadIDs);
-    }
-  }
-  if (!threadIDs.has(lanes)) {
-    // Memoize using the thread ID to prevent redundant listeners.
-    threadIDs.add(lanes);
-    const ping = pingSuspendedRoot.bind(null, root, wakeable, lanes);
-    if (enableUpdaterTracking) {
-      if (isDevToolsPresent) {
-        // If we have pending work still, restore the original updaters
-        restorePendingUpdaters(root, lanes);
-      }
-    }
-    wakeable.then(ping, ping);
-  }
 }
 
 function resetSuspendedComponent(sourceFiber: Fiber, rootRenderLanes: Lanes) {
@@ -357,7 +315,7 @@ function throwException(
   sourceFiber: Fiber,
   value: mixed,
   rootRenderLanes: Lanes,
-): Wakeable | null {
+): void {
   // The source fiber did not complete.
   sourceFiber.flags |= Incomplete;
 
@@ -459,7 +417,7 @@ function throwException(
       if (suspenseBoundary.mode & ConcurrentMode) {
         attachPingListener(root, wakeable, rootRenderLanes);
       }
-      return wakeable;
+      return;
     } else {
       // No boundary was found. Unless this is a sync update, this is OK.
       // We can suspend and wait for more data to arrive.
@@ -474,7 +432,7 @@ function throwException(
         // This case also applies to initial hydration.
         attachPingListener(root, wakeable, rootRenderLanes);
         renderDidSuspendDelayIfPossible();
-        return wakeable;
+        return;
       }
 
       // This is a sync/discrete update. We treat this case like an error
@@ -517,7 +475,7 @@ function throwException(
         // Even though the user may not be affected by this error, we should
         // still log it so it can be fixed.
         queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
-        return null;
+        return;
       }
     } else {
       // Otherwise, fall through to the error path.
@@ -540,7 +498,7 @@ function throwException(
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
         const update = createRootErrorUpdate(workInProgress, errorInfo, lane);
         enqueueCapturedUpdate(workInProgress, update);
-        return null;
+        return;
       }
       case ClassComponent:
         // Capture and retry
@@ -564,7 +522,7 @@ function throwException(
             lane,
           );
           enqueueCapturedUpdate(workInProgress, update);
-          return null;
+          return;
         }
         break;
       default:
@@ -572,7 +530,6 @@ function throwException(
     }
     workInProgress = workInProgress.return;
   } while (workInProgress !== null);
-  return null;
 }
 
 export {throwException, createRootErrorUpdate, createClassErrorUpdate};

@@ -70,6 +70,7 @@ function FiberRootNode(
   this.expiredLanes = NoLanes;
   this.mutableReadLanes = NoLanes;
   this.finishedLanes = NoLanes;
+  this.errorRecoveryDisabledLanes = NoLanes;
 
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);

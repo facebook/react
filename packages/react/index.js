@@ -49,6 +49,7 @@ export {
   createMutableSource,
   createRef,
   createServerContext,
+  experimental_use,
   forwardRef,
   isValidElement,
   lazy,

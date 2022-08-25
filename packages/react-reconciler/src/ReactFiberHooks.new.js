@@ -13,6 +13,8 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
+  Usable,
+  Thenable,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
@@ -32,6 +34,7 @@ import {
   enableLazyContextPropagation,
   enableUseMutableSource,
   enableTransitionTracing,
+  enableUseHook,
   enableUseMemoCacheHook,
 } from 'shared/ReactFeatureFlags';
 
@@ -120,6 +123,10 @@ import {
 } from './ReactFiberConcurrentUpdates.new';
 import {getTreeId} from './ReactFiberTreeContext.new';
 import {now} from './Scheduler';
+import {
+  trackUsedThenable,
+  getPreviouslyUsedThenableAtIndex,
+} from './ReactFiberWakeable.new';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -205,6 +212,9 @@ let didScheduleRenderPhaseUpdate: boolean = false;
 let didScheduleRenderPhaseUpdateDuringThisPass: boolean = false;
 // Counts the number of useId hooks in this component.
 let localIdCounter: number = 0;
+// Counts number of `use`-d thenables
+let thenableIndexCounter: number = 0;
+
 // Used for ids that are generated completely client-side (i.e. not during
 // hydration). This counter is global, so client ids are not stable across
 // render attempts.
@@ -403,6 +413,7 @@ export function renderWithHooks<Props, SecondArg>(
 
   // didScheduleRenderPhaseUpdate = false;
   // localIdCounter = 0;
+  // thenableIndexCounter = 0;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
   // Currently we will identify the update render as a mount because memoizedState === null.
@@ -441,6 +452,7 @@ export function renderWithHooks<Props, SecondArg>(
     do {
       didScheduleRenderPhaseUpdateDuringThisPass = false;
       localIdCounter = 0;
+      thenableIndexCounter = 0;
 
       if (numberOfReRenders >= RE_RENDER_LIMIT) {
         throw new Error(
@@ -524,6 +536,7 @@ export function renderWithHooks<Props, SecondArg>(
   didScheduleRenderPhaseUpdate = false;
   // This is reset by checkDidRenderIdHook
   // localIdCounter = 0;
+  thenableIndexCounter = 0;
 
   if (didRenderTooFewHooks) {
     throw new Error(
@@ -631,6 +644,7 @@ export function resetHooksAfterThrow(): void {
 
   didScheduleRenderPhaseUpdateDuringThisPass = false;
   localIdCounter = 0;
+  thenableIndexCounter = 0;
 }
 
 function mountWorkInProgressHook(): Hook {
@@ -720,6 +734,73 @@ function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
     lastEffect: null,
     stores: null,
   };
+}
+
+function use<T>(usable: Usable<T>): T {
+  if (
+    usable !== null &&
+    typeof usable === 'object' &&
+    typeof usable.then === 'function'
+  ) {
+    // This is a thenable.
+    const thenable: Thenable<T> = (usable: any);
+
+    // Track the position of the thenable within this fiber.
+    const index = thenableIndexCounter;
+    thenableIndexCounter += 1;
+
+    switch (thenable.status) {
+      case 'fulfilled': {
+        const fulfilledValue: T = thenable.value;
+        return fulfilledValue;
+      }
+      case 'rejected': {
+        const rejectedError = thenable.reason;
+        throw rejectedError;
+      }
+      default: {
+        const prevThenableAtIndex: Thenable<T> | null = getPreviouslyUsedThenableAtIndex(
+          index,
+        );
+        if (prevThenableAtIndex !== null) {
+          switch (prevThenableAtIndex.status) {
+            case 'fulfilled': {
+              const fulfilledValue: T = prevThenableAtIndex.value;
+              return fulfilledValue;
+            }
+            case 'rejected': {
+              const rejectedError: mixed = prevThenableAtIndex.reason;
+              throw rejectedError;
+            }
+            default: {
+              // The thenable still hasn't resolved. Suspend with the same
+              // thenable as last time to avoid redundant listeners.
+              throw prevThenableAtIndex;
+            }
+          }
+        } else {
+          // This is the first time something has been used at this index.
+          // Stash the thenable at the current index so we can reuse it during
+          // the next attempt.
+          trackUsedThenable(thenable, index);
+
+          // Suspend.
+          // TODO: Throwing here is an implementation detail that allows us to
+          // unwind the call stack. But we shouldn't allow it to leak into
+          // userspace. Throw an opaque placeholder value instead of the
+          // actual thenable. If it doesn't get captured by the work loop, log
+          // a warning, because that means something in userspace must have
+          // caught it.
+          throw thenable;
+        }
+      }
+    }
+  }
+
+  // TODO: Add support for Context
+
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  throw new Error('An unsupported type was passed to use(): ' + String(usable));
 }
 
 function useMemoCache(size: number): Array<any> {
@@ -2421,6 +2502,9 @@ if (enableCache) {
   (ContextOnlyDispatcher: Dispatcher).getCacheForType = getCacheForType;
   (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
 }
+if (enableUseHook) {
+  (ContextOnlyDispatcher: Dispatcher).use = throwInvalidHookError;
+}
 if (enableUseMemoCacheHook) {
   (ContextOnlyDispatcher: Dispatcher).useMemoCache = throwInvalidHookError;
 }
@@ -2451,6 +2535,9 @@ if (enableCache) {
   (HooksDispatcherOnMount: Dispatcher).getCacheSignal = getCacheSignal;
   (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
+}
+if (enableUseHook) {
+  (HooksDispatcherOnMount: Dispatcher).use = use;
 }
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnMount: Dispatcher).useMemoCache = useMemoCache;
@@ -2485,6 +2572,9 @@ if (enableCache) {
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useMemoCache = useMemoCache;
 }
+if (enableUseHook) {
+  (HooksDispatcherOnUpdate: Dispatcher).use = use;
+}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -2512,6 +2602,9 @@ if (enableCache) {
   (HooksDispatcherOnRerender: Dispatcher).getCacheSignal = getCacheSignal;
   (HooksDispatcherOnRerender: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
+}
+if (enableUseHook) {
+  (HooksDispatcherOnRerender: Dispatcher).use = use;
 }
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnRerender: Dispatcher).useMemoCache = useMemoCache;
@@ -2691,6 +2784,9 @@ if (__DEV__) {
       return mountRefresh();
     };
   }
+  if (enableUseHook) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).use = use;
+  }
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
@@ -2835,6 +2931,9 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountRefresh();
     };
+  }
+  if (enableUseHook) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).use = use;
   }
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useMemoCache = useMemoCache;
@@ -2981,6 +3080,9 @@ if (__DEV__) {
       return updateRefresh();
     };
   }
+  if (enableUseHook) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).use = use;
+  }
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
@@ -3126,6 +3228,9 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateRefresh();
     };
+  }
+  if (enableUseHook) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).use = use;
   }
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache = useMemoCache;
@@ -3287,6 +3392,14 @@ if (__DEV__) {
       currentHookNameInDev = 'useCacheRefresh';
       mountHookTypesDev();
       return mountRefresh();
+    };
+  }
+  if (enableUseHook) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).use = function<T>(
+      usable: Usable<T>,
+    ): T {
+      warnInvalidHookAccess();
+      return use(usable);
     };
   }
   if (enableUseMemoCacheHook) {
@@ -3456,6 +3569,14 @@ if (__DEV__) {
       return updateRefresh();
     };
   }
+  if (enableUseHook) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).use = function<T>(
+      usable: Usable<T>,
+    ): T {
+      warnInvalidHookAccess();
+      return use(usable);
+    };
+  }
   if (enableUseMemoCacheHook) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = function(
       size: number,
@@ -3622,6 +3743,14 @@ if (__DEV__) {
       currentHookNameInDev = 'useCacheRefresh';
       updateHookTypesDev();
       return updateRefresh();
+    };
+  }
+  if (enableUseHook) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).use = function<T>(
+      usable: Usable<T>,
+    ): T {
+      warnInvalidHookAccess();
+      return use(usable);
     };
   }
   if (enableUseMemoCacheHook) {
