@@ -303,4 +303,81 @@ describe('ReactCache', () => {
     expect(Text).toBeCalledTimes(3);
     expect(data).toBe(data1); // confirm that the cache persisted across renders
   });
+
+  // @gate experimental || www
+  test('update component and custom hook with caches', async () => {
+    let setX;
+    let forceUpdate;
+    function Component(props) {
+      const cache = useMemoCache(4);
+
+      // x is used to produce a `data` object passed to the child
+      const [x, _setX] = useState(0);
+      setX = _setX;
+      const c_x = x !== cache[0];
+      cache[0] = x;
+
+      // n is passed as-is to the child as a cache breaker
+      const [n, setN] = useState(0);
+      forceUpdate = () => setN(n => n + 1);
+      const c_n = n !== cache[1];
+      cache[1] = n;
+
+      let _data;
+      if (c_x) {
+        _data = cache[2] = {text: `Count ${x}`};
+      } else {
+        _data = cache[2];
+      }
+      const data = useData(_data);
+      if (c_x || c_n) {
+        return (cache[3] = <Text data={data} n={n} />);
+      } else {
+        return cache[3];
+      }
+    }
+    function useData(data) {
+      const cache = useMemoCache(2);
+      const c_data = data !== cache[0];
+      cache[0] = data;
+      let nextData;
+      if (c_data) {
+        nextData = cache[1] = {text: data.text.toLowerCase()};
+      } else {
+        nextData = cache[1];
+      }
+      return cache[1];
+    }
+    let data;
+    const Text = jest.fn(function Text(props) {
+      data = props.data;
+      return data.text;
+    });
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<Component />);
+    });
+    expect(root).toMatchRenderedOutput('count 0');
+    expect(Text).toBeCalledTimes(1);
+    let data0 = data;
+
+    // Changing x should reset the data object
+    await act(async () => {
+      setX(1);
+    });
+    expect(root).toMatchRenderedOutput('count 1');
+    expect(Text).toBeCalledTimes(2);
+    expect(data).not.toBe(data0);
+    const data1 = data;
+
+    // Forcing an unrelated update shouldn't recreate the
+    // data object.
+    await act(async () => {
+      forceUpdate();
+    });
+    expect(root).toMatchRenderedOutput('count 1');
+    expect(Text).toBeCalledTimes(3);
+    expect(data).toBe(data1); // confirm that the cache persisted across renders
+  });
 });
