@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Thenable} from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import type {
@@ -43,47 +43,47 @@ const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
 
-type PendingChunk = {
+type PendingChunk<T> = {
   status: 'pending',
-  value: null | Array<() => mixed>,
-  reason: null,
+  value: null | Array<(T) => mixed>,
+  reason: null | Array<(mixed) => mixed>,
   _response: Response,
-  then(resolve: () => mixed): void,
+  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
 };
-type ResolvedModelChunk = {
+type ResolvedModelChunk<T> = {
   status: 'resolved_model',
   value: UninitializedModel,
   reason: null,
   _response: Response,
-  then(resolve: () => mixed): void,
+  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
 };
 type ResolvedModuleChunk<T> = {
   status: 'resolved_module',
   value: ModuleReference<T>,
   reason: null,
   _response: Response,
-  then(resolve: () => mixed): void,
+  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
 };
 type InitializedChunk<T> = {
   status: 'fulfilled',
   value: T,
   reason: null,
   _response: Response,
-  then(resolve: () => mixed): void,
+  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
 };
-type ErroredChunk = {
+type ErroredChunk<T> = {
   status: 'rejected',
   value: null,
   reason: Error,
   _response: Response,
-  then(resolve: () => mixed): void,
+  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
 };
 type SomeChunk<T> =
-  | PendingChunk
-  | ResolvedModelChunk
+  | PendingChunk<T>
+  | ResolvedModelChunk<T>
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
-  | ErroredChunk;
+  | ErroredChunk<T>;
 
 function Chunk(status: any, value: any, reason: any, response: Response) {
   this.status = status;
@@ -91,15 +91,38 @@ function Chunk(status: any, value: any, reason: any, response: Response) {
   this.reason = reason;
   this._response = response;
 }
-Chunk.prototype.then = function<T>(resolve: () => mixed) {
+Chunk.prototype.then = function<T>(
+  resolve: (value: T) => mixed,
+  reject: (reason: mixed) => mixed,
+) {
   const chunk: SomeChunk<T> = this;
-  if (chunk.status === PENDING) {
-    if (chunk.value === null) {
-      chunk.value = [];
-    }
-    chunk.value.push(resolve);
-  } else {
-    resolve();
+  switch (chunk.status) {
+    case INITIALIZED:
+      resolve(chunk.value);
+      break;
+    case RESOLVED_MODEL:
+      resolve(initializeModelChunk(chunk));
+      break;
+    case RESOLVED_MODULE:
+      resolve(initializeModuleChunk(chunk));
+      break;
+    case PENDING:
+      if (resolve) {
+        if (chunk.value === null) {
+          chunk.value = [];
+        }
+        chunk.value.push(resolve);
+      }
+      if (reject) {
+        if (chunk.reason === null) {
+          chunk.reason = [];
+        }
+        chunk.reason.push(reject);
+      }
+      break;
+    case ERRORED:
+      reject(chunk.reason);
+      break;
   }
 };
 
@@ -122,7 +145,7 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
       return initializeModuleChunk(chunk);
     case PENDING:
       // eslint-disable-next-line no-throw-literal
-      throw (chunk: Wakeable);
+      throw (chunk: Thenable<T>);
     default:
       throw chunk.reason;
   }
@@ -134,12 +157,15 @@ function readRoot<T>(): T {
   return readChunk(chunk);
 }
 
-function createPendingChunk(response: Response): PendingChunk {
+function createPendingChunk<T>(response: Response): PendingChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(PENDING, null, null, response);
 }
 
-function createErrorChunk(response: Response, error: Error): ErroredChunk {
+function createErrorChunk<T>(
+  response: Response,
+  error: Error,
+): ErroredChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(ERRORED, null, error, response);
 }
@@ -152,12 +178,10 @@ function createInitializedChunk<T>(
   return new Chunk(INITIALIZED, value, null, response);
 }
 
-function wakeChunk(listeners: null | Array<() => mixed>) {
-  if (listeners !== null) {
-    for (let i = 0; i < listeners.length; i++) {
-      const listener = listeners[i];
-      listener();
-    }
+function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T) {
+  for (let i = 0; i < listeners.length; i++) {
+    const listener = listeners[i];
+    listener(value);
   }
 }
 
@@ -166,17 +190,19 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: Error): void {
     // We already resolved. We didn't expect to see this.
     return;
   }
-  const listeners = chunk.value;
-  const erroredChunk: ErroredChunk = (chunk: any);
+  const listeners = chunk.reason;
+  const erroredChunk: ErroredChunk<T> = (chunk: any);
   erroredChunk.status = ERRORED;
   erroredChunk.reason = error;
-  wakeChunk(listeners);
+  if (listeners !== null) {
+    wakeChunk(listeners, error);
+  }
 }
 
-function createResolvedModelChunk(
+function createResolvedModelChunk<T>(
   response: Response,
   value: UninitializedModel,
-): ResolvedModelChunk {
+): ResolvedModelChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODEL, value, null, response);
 }
@@ -198,10 +224,15 @@ function resolveModelChunk<T>(
     return;
   }
   const listeners = chunk.value;
-  const resolvedChunk: ResolvedModelChunk = (chunk: any);
+  const resolvedChunk: ResolvedModelChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODEL;
   resolvedChunk.value = value;
-  wakeChunk(listeners);
+  if (listeners !== null) {
+    // This is unfortunate that we're reading this eagerly if
+    // we already have listeners attached since they might no
+    // longer be rendered or might not be the highest pri.
+    wakeChunk(listeners, initializeModelChunk(resolvedChunk));
+  }
 }
 
 function resolveModuleChunk<T>(
@@ -216,10 +247,12 @@ function resolveModuleChunk<T>(
   const resolvedChunk: ResolvedModuleChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODULE;
   resolvedChunk.value = value;
-  wakeChunk(listeners);
+  if (listeners !== null) {
+    wakeChunk(listeners, initializeModuleChunk(resolvedChunk));
+  }
 }
 
-function initializeModelChunk<T>(chunk: ResolvedModelChunk): T {
+function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): T {
   const value: T = parseModel(chunk._response, chunk.value);
   const initializedChunk: InitializedChunk<T> = (chunk: any);
   initializedChunk.status = INITIALIZED;
