@@ -37,39 +37,44 @@ export type JSONValue =
   | {+[key: string]: JSONValue}
   | $ReadOnlyArray<JSONValue>;
 
-const PENDING = 0;
-const RESOLVED_MODEL = 1;
-const RESOLVED_MODULE = 2;
-const INITIALIZED = 3;
-const ERRORED = 4;
+const PENDING = 'pending';
+const RESOLVED_MODEL = 'resolved_model';
+const RESOLVED_MODULE = 'resolved_module';
+const INITIALIZED = 'fulfilled';
+const ERRORED = 'rejected';
 
 type PendingChunk = {
-  _status: 0,
-  _value: null | Array<() => mixed>,
+  status: 'pending',
+  value: null | Array<() => mixed>,
+  reason: null,
   _response: Response,
   then(resolve: () => mixed): void,
 };
 type ResolvedModelChunk = {
-  _status: 1,
-  _value: UninitializedModel,
+  status: 'resolved_model',
+  value: UninitializedModel,
+  reason: null,
   _response: Response,
   then(resolve: () => mixed): void,
 };
 type ResolvedModuleChunk<T> = {
-  _status: 2,
-  _value: ModuleReference<T>,
+  status: 'resolved_module',
+  value: ModuleReference<T>,
+  reason: null,
   _response: Response,
   then(resolve: () => mixed): void,
 };
 type InitializedChunk<T> = {
-  _status: 3,
-  _value: T,
+  status: 'fulfilled',
+  value: T,
+  reason: null,
   _response: Response,
   then(resolve: () => mixed): void,
 };
 type ErroredChunk = {
-  _status: 4,
-  _value: Error,
+  status: 'rejected',
+  value: null,
+  reason: Error,
   _response: Response,
   then(resolve: () => mixed): void,
 };
@@ -80,18 +85,19 @@ type SomeChunk<T> =
   | InitializedChunk<T>
   | ErroredChunk;
 
-function Chunk(status: any, value: any, response: Response) {
-  this._status = status;
-  this._value = value;
+function Chunk(status: any, value: any, reason: any, response: Response) {
+  this.status = status;
+  this.value = value;
+  this.reason = reason;
   this._response = response;
 }
 Chunk.prototype.then = function<T>(resolve: () => mixed) {
   const chunk: SomeChunk<T> = this;
-  if (chunk._status === PENDING) {
-    if (chunk._value === null) {
-      chunk._value = [];
+  if (chunk.status === PENDING) {
+    if (chunk.value === null) {
+      chunk.value = [];
     }
-    chunk._value.push(resolve);
+    chunk.value.push(resolve);
   } else {
     resolve();
   }
@@ -107,9 +113,9 @@ export type ResponseBase = {
 export type {Response};
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
-  switch (chunk._status) {
+  switch (chunk.status) {
     case INITIALIZED:
-      return chunk._value;
+      return chunk.value;
     case RESOLVED_MODEL:
       return initializeModelChunk(chunk);
     case RESOLVED_MODULE:
@@ -118,7 +124,7 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
       // eslint-disable-next-line no-throw-literal
       throw (chunk: Wakeable);
     default:
-      throw chunk._value;
+      throw chunk.reason;
   }
 }
 
@@ -130,12 +136,12 @@ function readRoot<T>(): T {
 
 function createPendingChunk(response: Response): PendingChunk {
   // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(PENDING, null, response);
+  return new Chunk(PENDING, null, null, response);
 }
 
 function createErrorChunk(response: Response, error: Error): ErroredChunk {
   // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(ERRORED, error, response);
+  return new Chunk(ERRORED, null, error, response);
 }
 
 function createInitializedChunk<T>(
@@ -143,7 +149,7 @@ function createInitializedChunk<T>(
   value: T,
 ): InitializedChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(INITIALIZED, value, response);
+  return new Chunk(INITIALIZED, value, null, response);
 }
 
 function wakeChunk(listeners: null | Array<() => mixed>) {
@@ -156,14 +162,14 @@ function wakeChunk(listeners: null | Array<() => mixed>) {
 }
 
 function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: Error): void {
-  if (chunk._status !== PENDING) {
+  if (chunk.status !== PENDING) {
     // We already resolved. We didn't expect to see this.
     return;
   }
-  const listeners = chunk._value;
+  const listeners = chunk.value;
   const erroredChunk: ErroredChunk = (chunk: any);
-  erroredChunk._status = ERRORED;
-  erroredChunk._value = error;
+  erroredChunk.status = ERRORED;
+  erroredChunk.reason = error;
   wakeChunk(listeners);
 }
 
@@ -172,7 +178,7 @@ function createResolvedModelChunk(
   value: UninitializedModel,
 ): ResolvedModelChunk {
   // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODEL, value, response);
+  return new Chunk(RESOLVED_MODEL, value, null, response);
 }
 
 function createResolvedModuleChunk<T>(
@@ -180,21 +186,21 @@ function createResolvedModuleChunk<T>(
   value: ModuleReference<T>,
 ): ResolvedModuleChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODULE, value, response);
+  return new Chunk(RESOLVED_MODULE, value, null, response);
 }
 
 function resolveModelChunk<T>(
   chunk: SomeChunk<T>,
   value: UninitializedModel,
 ): void {
-  if (chunk._status !== PENDING) {
+  if (chunk.status !== PENDING) {
     // We already resolved. We didn't expect to see this.
     return;
   }
-  const listeners = chunk._value;
+  const listeners = chunk.value;
   const resolvedChunk: ResolvedModelChunk = (chunk: any);
-  resolvedChunk._status = RESOLVED_MODEL;
-  resolvedChunk._value = value;
+  resolvedChunk.status = RESOLVED_MODEL;
+  resolvedChunk.value = value;
   wakeChunk(listeners);
 }
 
@@ -202,30 +208,30 @@ function resolveModuleChunk<T>(
   chunk: SomeChunk<T>,
   value: ModuleReference<T>,
 ): void {
-  if (chunk._status !== PENDING) {
+  if (chunk.status !== PENDING) {
     // We already resolved. We didn't expect to see this.
     return;
   }
-  const listeners = chunk._value;
+  const listeners = chunk.value;
   const resolvedChunk: ResolvedModuleChunk<T> = (chunk: any);
-  resolvedChunk._status = RESOLVED_MODULE;
-  resolvedChunk._value = value;
+  resolvedChunk.status = RESOLVED_MODULE;
+  resolvedChunk.value = value;
   wakeChunk(listeners);
 }
 
 function initializeModelChunk<T>(chunk: ResolvedModelChunk): T {
-  const value: T = parseModel(chunk._response, chunk._value);
+  const value: T = parseModel(chunk._response, chunk.value);
   const initializedChunk: InitializedChunk<T> = (chunk: any);
-  initializedChunk._status = INITIALIZED;
-  initializedChunk._value = value;
+  initializedChunk.status = INITIALIZED;
+  initializedChunk.value = value;
   return value;
 }
 
 function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): T {
-  const value: T = requireModule(chunk._value);
+  const value: T = requireModule(chunk.value);
   const initializedChunk: InitializedChunk<T> = (chunk: any);
-  initializedChunk._status = INITIALIZED;
-  initializedChunk._value = value;
+  initializedChunk.status = INITIALIZED;
+  initializedChunk.value = value;
   return value;
 }
 
