@@ -150,7 +150,7 @@ export type InspectorData = $ReadOnly<{|
 export type TouchedViewDataAtPoint = $ReadOnly<{|
   pointerY: number,
   touchedViewTag?: number,
-  closestInstance?: Object,
+  closestInstance?: mixed,
   frame: $ReadOnly<{|
     top: number,
     left: number,
