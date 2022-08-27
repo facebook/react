@@ -83,7 +83,7 @@
       }
 
       function Shell({ data }) {
-        let model = data.readRoot();
+        let model = React.experimental_use(data);
         return <div>
           <Suspense fallback="...">
             <h1>{model.title}</h1>

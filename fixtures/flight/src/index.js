@@ -6,7 +6,7 @@ import ReactServerDOMReader from 'react-server-dom-webpack';
 let data = ReactServerDOMReader.createFromFetch(fetch('http://localhost:3001'));
 
 function Content() {
-  return data.readRoot();
+  return React.experimental_use(data);
 }
 
 ReactDOM.render(
