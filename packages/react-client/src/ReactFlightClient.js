@@ -347,6 +347,7 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
 export function parseModelString(
   response: Response,
   parentObject: Object,
+  key: string,
   value: string,
 ): any {
   switch (value[0]) {
