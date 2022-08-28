@@ -10,7 +10,10 @@ function compile(flags) {
   return new Promise((resolve, reject) => {
     const closureCompiler = new ClosureCompiler(flags);
     closureCompiler.run(function (exitCode, stdOut, stdErr) {
-      if (!stdErr) {
+      if (exitCode === 0) {
+        if (stdErr) {
+          console.warn(stdErr.toString());
+        }
         resolve(stdOut);
       } else {
         reject(new Error(stdErr));
