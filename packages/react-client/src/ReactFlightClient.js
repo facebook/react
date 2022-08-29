@@ -99,15 +99,20 @@ Chunk.prototype.then = function<T>(
   reject: (reason: mixed) => mixed,
 ) {
   const chunk: SomeChunk<T> = this;
+  // If we have resolved content, we try to initialize it first which
+  // might put us back into one of the other states.
+  switch (chunk.status) {
+    case RESOLVED_MODEL:
+      initializeModelChunk(chunk);
+      break;
+    case RESOLVED_MODULE:
+      initializeModuleChunk(chunk);
+      break;
+  }
+  // The status might have changed after initialization.
   switch (chunk.status) {
     case INITIALIZED:
       resolve(chunk.value);
-      break;
-    case RESOLVED_MODEL:
-      resolve(initializeModelChunk(chunk));
-      break;
-    case RESOLVED_MODULE:
-      resolve(initializeModuleChunk(chunk));
       break;
     case PENDING:
       if (resolve) {
@@ -123,7 +128,7 @@ Chunk.prototype.then = function<T>(
         chunk.reason.push(reject);
       }
       break;
-    case ERRORED:
+    default:
       reject(chunk.reason);
       break;
   }
@@ -139,13 +144,20 @@ export type ResponseBase = {
 export type {Response};
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
+  // If we have resolved content, we try to initialize it first which
+  // might put us back into one of the other states.
+  switch (chunk.status) {
+    case RESOLVED_MODEL:
+      initializeModelChunk(chunk);
+      break;
+    case RESOLVED_MODULE:
+      initializeModuleChunk(chunk);
+      break;
+  }
+  // The status might have changed after initialization.
   switch (chunk.status) {
     case INITIALIZED:
       return chunk.value;
-    case RESOLVED_MODEL:
-      return initializeModelChunk(chunk);
-    case RESOLVED_MODULE:
-      return initializeModuleChunk(chunk);
     case PENDING:
       // eslint-disable-next-line no-throw-literal
       throw (chunk: Thenable<T>);
@@ -181,10 +193,31 @@ function createInitializedChunk<T>(
   return new Chunk(INITIALIZED, value, null, response);
 }
 
-function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T) {
+function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T): void {
   for (let i = 0; i < listeners.length; i++) {
     const listener = listeners[i];
     listener(value);
+  }
+}
+
+function wakeChunkIfInitialized<T>(
+  chunk: SomeChunk<T>,
+  resolveListeners: Array<(T) => mixed>,
+  rejectListeners: null | Array<(mixed) => mixed>,
+): void {
+  switch (chunk.status) {
+    case INITIALIZED:
+      wakeChunk(resolveListeners, chunk.value);
+      break;
+    case PENDING:
+      chunk.value = resolveListeners;
+      chunk.reason = rejectListeners;
+      break;
+    case ERRORED:
+      if (rejectListeners) {
+        wakeChunk(rejectListeners, chunk.reason);
+      }
+      break;
   }
 }
 
@@ -226,15 +259,18 @@ function resolveModelChunk<T>(
     // We already resolved. We didn't expect to see this.
     return;
   }
-  const listeners = chunk.value;
+  const resolveListeners = chunk.value;
+  const rejectListeners = chunk.reason;
   const resolvedChunk: ResolvedModelChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODEL;
   resolvedChunk.value = value;
-  if (listeners !== null) {
+  if (resolveListeners !== null) {
     // This is unfortunate that we're reading this eagerly if
     // we already have listeners attached since they might no
     // longer be rendered or might not be the highest pri.
-    wakeChunk(listeners, initializeModelChunk(resolvedChunk));
+    initializeModelChunk(resolvedChunk);
+    // The status might have changed after initialization.
+    wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
   }
 }
 
@@ -246,29 +282,45 @@ function resolveModuleChunk<T>(
     // We already resolved. We didn't expect to see this.
     return;
   }
-  const listeners = chunk.value;
+  const resolveListeners = chunk.value;
+  const rejectListeners = chunk.reason;
   const resolvedChunk: ResolvedModuleChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODULE;
   resolvedChunk.value = value;
-  if (listeners !== null) {
-    wakeChunk(listeners, initializeModuleChunk(resolvedChunk));
+  if (resolveListeners !== null) {
+    initializeModuleChunk(resolvedChunk);
+    wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
   }
 }
 
-function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): T {
-  const value: T = parseModel(chunk._response, chunk.value);
-  const initializedChunk: InitializedChunk<T> = (chunk: any);
-  initializedChunk.status = INITIALIZED;
-  initializedChunk.value = value;
-  return value;
+function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
+  try {
+    const value: T = parseModel(chunk._response, chunk.value);
+    const initializedChunk: InitializedChunk<T> = (chunk: any);
+    initializedChunk.status = INITIALIZED;
+    initializedChunk.value = value;
+  } catch (error) {
+    if (typeof error.then === 'function') {
+      // TODO: Remove this once we remove readChunk from the model init
+      throw error;
+    }
+    const erroredChunk: ErroredChunk<T> = (chunk: any);
+    erroredChunk.status = ERRORED;
+    erroredChunk.reason = error;
+  }
 }
 
-function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): T {
-  const value: T = requireModule(chunk.value);
-  const initializedChunk: InitializedChunk<T> = (chunk: any);
-  initializedChunk.status = INITIALIZED;
-  initializedChunk.value = value;
-  return value;
+function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): void {
+  try {
+    const value: T = requireModule(chunk.value);
+    const initializedChunk: InitializedChunk<T> = (chunk: any);
+    initializedChunk.status = INITIALIZED;
+    initializedChunk.value = value;
+  } catch (error) {
+    const erroredChunk: ErroredChunk<T> = (chunk: any);
+    erroredChunk.status = ERRORED;
+    erroredChunk.reason = error;
+  }
 }
 
 // Report that any missing chunks in the model is now going to throw this
