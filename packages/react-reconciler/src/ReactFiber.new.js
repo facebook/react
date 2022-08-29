@@ -853,6 +853,7 @@ export function assignFiberPropertiesInDEV(
   target.pendingProps = source.pendingProps;
   target.memoizedProps = source.memoizedProps;
   target.updateQueue = source.updateQueue;
+  target.memoCache = source.memoCache;
   target.memoizedState = source.memoizedState;
   target.dependencies = source.dependencies;
   target.mode = source.mode;
