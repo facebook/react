@@ -399,12 +399,14 @@ export function renderWithHooks<Props, SecondArg>(
       current !== null && current.type !== workInProgress.type;
   }
 
+  // Reset the memoCache index and create a backup copy in case of a setState during render
+  // or error, either of which can leave the cache in an inconsistent state
   const memoCache = workInProgress.memoCache;
   let previousMemoCache = null;
   if (memoCache !== null) {
-    // Clone the cache to allow resetting to the most recent version in case of a setstate during render
-    previousMemoCache = memoCache.data.map(data => data.slice());
+    previousMemoCache = memoCache.data.map(array => array.slice());
     if (workInProgress.alternate != null) {
+      // Backup to the alternate fiber in case the component throws
       workInProgress.alternate.memoCache = {
         data: previousMemoCache,
         index: 0,
@@ -485,9 +487,8 @@ export function renderWithHooks<Props, SecondArg>(
       workInProgress.updateQueue = null;
 
       if (memoCache !== null) {
-        // Setting state during render could leave the cache in a partially filled,
-        // and therefore inconsistent, state. Reset to the previous value to ensure
-        // the cache is consistent.
+        // Setting state during render could leave the cache in an inconsistent state,
+        // reset to the previous state before re-rendering.
         if (previousMemoCache !== null) {
           memoCache.data = previousMemoCache.map(data => data.slice());
         } else {
@@ -644,10 +645,13 @@ export function resetHooksAfterThrow(erroredWork: Fiber | null): void {
   if (erroredWork != null) {
     const memoCache = erroredWork.memoCache;
     if (memoCache !== null) {
+      // Unless this is the first render of a component, the alternate will have a
+      // consistent view of the memo cache that we can restore to
       const alternateMemoCache = erroredWork.alternate?.memoCache ?? null;
       if (alternateMemoCache !== null) {
-        memoCache.data = alternateMemoCache.data.map(data => data.slice());
+        memoCache.data = alternateMemoCache.data.map(array => array.slice());
       } else {
+        // Just in case, fall back to clearing the memo cache
         memoCache.data.length = 0;
       }
       memoCache.index = 0;
