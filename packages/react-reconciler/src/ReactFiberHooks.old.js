@@ -399,6 +399,20 @@ export function renderWithHooks<Props, SecondArg>(
       current !== null && current.type !== workInProgress.type;
   }
 
+  const memoCache = workInProgress.memoCache;
+  let previousMemoCache = null;
+  if (memoCache !== null) {
+    // Clone the cache to allow resetting to the most recent version in case of a setstate during render
+    previousMemoCache = memoCache.data.map(data => data.slice());
+    if (workInProgress.alternate != null) {
+      workInProgress.alternate.memoCache = {
+        data: previousMemoCache,
+        index: 0,
+      };
+    }
+    memoCache.index = 0;
+  }
+
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
   workInProgress.lanes = NoLanes;
@@ -469,6 +483,23 @@ export function renderWithHooks<Props, SecondArg>(
       workInProgressHook = null;
 
       workInProgress.updateQueue = null;
+
+      if (memoCache !== null) {
+        // Setting state during render could leave the cache in a partially filled,
+        // and therefore inconsistent, state. Reset to the previous value to ensure
+        // the cache is consistent.
+        if (previousMemoCache !== null) {
+          memoCache.data = previousMemoCache.map(data => data.slice());
+        } else {
+          if (__DEV__) {
+            console.warn(
+              'Expected a previous memo cache to exist if the fiber previously called useMemoCache(). This is a bug in React.',
+            );
+          }
+          memoCache.data.length = 0;
+        }
+        memoCache.index = 0;
+      }
 
       if (__DEV__) {
         // Also validate hook order for cascading updates.
@@ -583,7 +614,7 @@ export function bailoutHooks(
   current.lanes = removeLanes(current.lanes, lanes);
 }
 
-export function resetHooksAfterThrow(): void {
+export function resetHooksAfterThrow(erroredWork: Fiber | null): void {
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
@@ -606,6 +637,21 @@ export function resetHooksAfterThrow(): void {
       hook = hook.next;
     }
     didScheduleRenderPhaseUpdate = false;
+  }
+
+  // The current memo cache may be in an inconsistent state, reset to the previous
+  // version of the cache from the alternate.
+  if (erroredWork != null) {
+    const memoCache = erroredWork.memoCache;
+    if (memoCache !== null) {
+      const alternateMemoCache = erroredWork.alternate?.memoCache ?? null;
+      if (alternateMemoCache !== null) {
+        memoCache.data = alternateMemoCache.data.map(data => data.slice());
+      } else {
+        memoCache.data.length = 0;
+      }
+      memoCache.index = 0;
+    }
   }
 
   renderLanes = NoLanes;
@@ -787,7 +833,25 @@ function use<T>(usable: Usable<T>): T {
 }
 
 function useMemoCache(size: number): Array<any> {
-  throw new Error('Not implemented.');
+  let memoCache = currentlyRenderingFiber.memoCache;
+  if (memoCache === null) {
+    memoCache = currentlyRenderingFiber.memoCache = {
+      data: [],
+      index: 0,
+    };
+  }
+  let data = memoCache.data[memoCache.index];
+  if (data === undefined) {
+    data = memoCache.data[memoCache.index] = new Array(size);
+  } else if (data.length !== size) {
+    if (__DEV__) {
+      console.warn(
+        'Expected each useMemoCache to receive a consistent size argument, found different sizes',
+      );
+    }
+  }
+  memoCache.index++;
+  return data;
 }
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {

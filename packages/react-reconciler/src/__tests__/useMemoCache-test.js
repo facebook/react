@@ -1,14 +1,6 @@
 let React;
 let ReactNoop;
-let Cache;
-let getCacheSignal;
-let getCacheForType;
-let Scheduler;
 let act;
-let Suspense;
-let Offscreen;
-let useCacheRefresh;
-let startTransition;
 let useState;
 let useMemoCache;
 let ErrorBoundary;
@@ -19,15 +11,7 @@ describe('ReactCache', () => {
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    Cache = React.unstable_Cache;
-    Scheduler = require('scheduler');
     act = require('jest-react').act;
-    Suspense = React.Suspense;
-    Offscreen = React.unstable_Offscreen;
-    getCacheSignal = React.unstable_getCacheSignal;
-    getCacheForType = React.unstable_getCacheForType;
-    useCacheRefresh = React.unstable_useCacheRefresh;
-    startTransition = React.startTransition;
     useState = React.useState;
     useMemoCache = React.unstable_useMemoCache;
 
@@ -87,7 +71,7 @@ describe('ReactCache', () => {
 
       // n is passed as-is to the child as a cache breaker
       const [n, setN] = useState(0);
-      forceUpdate = () => setN(n => n + 1);
+      forceUpdate = () => setN(a => a + 1);
       const c_n = n !== cache[1];
       cache[1] = n;
 
@@ -115,7 +99,7 @@ describe('ReactCache', () => {
     });
     expect(root).toMatchRenderedOutput('Count 0');
     expect(Text).toBeCalledTimes(1);
-    let data0 = data;
+    const data0 = data;
 
     // Changing x should reset the data object
     await act(async () => {
@@ -191,7 +175,7 @@ describe('ReactCache', () => {
     });
     expect(root).toMatchRenderedOutput('Count 0');
     expect(Text).toBeCalledTimes(1);
-    let data0 = data;
+    const data0 = data;
 
     // Simultaneously trigger an update to x (should create a new data value)
     // and trigger the setState+early return. The runtime should reset the cache
@@ -278,7 +262,7 @@ describe('ReactCache', () => {
     });
     expect(root).toMatchRenderedOutput('Count 0');
     expect(Text).toBeCalledTimes(1);
-    let data0 = data;
+    const data0 = data;
 
     // Simultaneously trigger an update to x (should create a new data value)
     // and trigger the setState+early return. The runtime should reset the cache
@@ -319,7 +303,7 @@ describe('ReactCache', () => {
 
       // n is passed as-is to the child as a cache breaker
       const [n, setN] = useState(0);
-      forceUpdate = () => setN(n => n + 1);
+      forceUpdate = () => setN(a => a + 1);
       const c_n = n !== cache[1];
       cache[1] = n;
 
@@ -346,7 +330,7 @@ describe('ReactCache', () => {
       } else {
         nextData = cache[1];
       }
-      return cache[1];
+      return nextData;
     }
     let data;
     const Text = jest.fn(function Text(props) {
@@ -360,7 +344,7 @@ describe('ReactCache', () => {
     });
     expect(root).toMatchRenderedOutput('count 0');
     expect(Text).toBeCalledTimes(1);
-    let data0 = data;
+    const data0 = data;
 
     // Changing x should reset the data object
     await act(async () => {

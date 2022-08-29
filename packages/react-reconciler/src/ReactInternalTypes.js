@@ -69,8 +69,8 @@ export type Dependencies = {
 };
 
 export type MemoCache = {
-  current: Array<any>,
-  previous: Array<any> | null,
+  data: Array<Array<any>>,
+  index: number,
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can

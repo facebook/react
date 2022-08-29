@@ -1696,7 +1696,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
 function handleThrow(root, thrownValue): void {
   // Reset module-level state that was set during the render phase.
   resetContextDependencies();
-  resetHooksAfterThrow();
+  resetHooksAfterThrow(workInProgress);
   resetCurrentDebugFiberInDEV();
   // TODO: I found and added this missing line while investigating a
   // separate issue. Write a regression test using string refs.
@@ -3347,7 +3347,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       // Keep this code in sync with handleThrow; any changes here must have
       // corresponding changes there.
       resetContextDependencies();
-      resetHooksAfterThrow();
+      resetHooksAfterThrow(unitOfWork);
       // Don't reset current debug fiber, since we're about to work on the
       // same fiber again.
 

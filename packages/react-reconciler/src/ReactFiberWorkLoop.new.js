@@ -3347,7 +3347,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       // Keep this code in sync with handleThrow; any changes here must have
       // corresponding changes there.
       resetContextDependencies();
-      resetHooksAfterThrow(current);
+      resetHooksAfterThrow(unitOfWork);
       // Don't reset current debug fiber, since we're about to work on the
       // same fiber again.
 

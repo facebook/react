@@ -400,10 +400,17 @@ export function renderWithHooks<Props, SecondArg>(
   }
 
   const memoCache = workInProgress.memoCache;
+  let previousMemoCache = null;
   if (memoCache !== null) {
-    // Clone memo cache prior to rendering to avoid corruption in case of error
-    memoCache.previous = memoCache.current;
-    memoCache.current = [...memoCache.current];
+    // Clone the cache to allow resetting to the most recent version in case of a setstate during render
+    previousMemoCache = memoCache.data.map(data => data.slice());
+    if (workInProgress.alternate != null) {
+      workInProgress.alternate.memoCache = {
+        data: previousMemoCache,
+        index: 0,
+      };
+    }
+    memoCache.index = 0;
   }
 
   workInProgress.memoizedState = null;
@@ -478,17 +485,20 @@ export function renderWithHooks<Props, SecondArg>(
       workInProgress.updateQueue = null;
 
       if (memoCache !== null) {
-        // Re-clone the cache, setting state in the middle of rendering can leave the cache
-        // in an invalid state
-        const previous = memoCache.previous;
-        if (previous !== null) {
-          memoCache.current = [...previous];
+        // Setting state during render could leave the cache in a partially filled,
+        // and therefore inconsistent, state. Reset to the previous value to ensure
+        // the cache is consistent.
+        if (previousMemoCache !== null) {
+          memoCache.data = previousMemoCache.map(data => data.slice());
         } else {
-          console.warn(
-            'Expected a previous memo cache instance to have been cached prior to render. This is a bug in React.',
-          );
-          memoCache.current = new Array(memoCache.current.length);
+          if (__DEV__) {
+            console.warn(
+              'Expected a previous memo cache to exist if the fiber previously called useMemoCache(). This is a bug in React.',
+            );
+          }
+          memoCache.data.length = 0;
         }
+        memoCache.index = 0;
       }
 
       if (__DEV__) {
@@ -630,19 +640,17 @@ export function resetHooksAfterThrow(erroredWork: Fiber | null): void {
   }
 
   // The current memo cache may be in an inconsistent state, reset to the previous
-  // version of the cache.
+  // version of the cache from the alternate.
   if (erroredWork != null) {
     const memoCache = erroredWork.memoCache;
     if (memoCache !== null) {
-      if (memoCache.previous === null) {
-        console.warn(
-          'Expected a previous useMemoCache to be present if rendering of a memoized component errored. This is likely a bug in React',
-        );
+      const alternateMemoCache = erroredWork.alternate?.memoCache ?? null;
+      if (alternateMemoCache !== null) {
+        memoCache.data = alternateMemoCache.data.map(data => data.slice());
+      } else {
+        memoCache.data.length = 0;
       }
-      memoCache.current =
-        memoCache.previous !== null
-          ? [...memoCache.previous]
-          : new Array(memoCache.current.length);
+      memoCache.index = 0;
     }
   }
 
@@ -828,11 +836,22 @@ function useMemoCache(size: number): Array<any> {
   let memoCache = currentlyRenderingFiber.memoCache;
   if (memoCache === null) {
     memoCache = currentlyRenderingFiber.memoCache = {
-      current: new Array(size),
-      previous: null,
+      data: [],
+      index: 0,
     };
   }
-  return memoCache.current;
+  let data = memoCache.data[memoCache.index];
+  if (data === undefined) {
+    data = memoCache.data[memoCache.index] = new Array(size);
+  } else if (data.length !== size) {
+    if (__DEV__) {
+      console.warn(
+        'Expected each useMemoCache to receive a consistent size argument, found different sizes',
+      );
+    }
+  }
+  memoCache.index++;
+  return data;
 }
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
