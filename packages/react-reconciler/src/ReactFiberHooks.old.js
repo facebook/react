@@ -647,7 +647,8 @@ export function resetHooksAfterThrow(erroredWork: Fiber | null): void {
     if (memoCache !== null) {
       // Unless this is the first render of a component, the alternate will have a
       // consistent view of the memo cache that we can restore to
-      const alternateMemoCache = erroredWork.alternate?.memoCache ?? null;
+      const alternate = erroredWork.alternate;
+      const alternateMemoCache = alternate != null ? alternate.memoCache : null;
       if (alternateMemoCache !== null) {
         memoCache.data = alternateMemoCache.data.map(array => array.slice());
       } else {
