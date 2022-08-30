@@ -40,7 +40,7 @@ import {
   LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
-  LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+  LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
   LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
   LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
 } from './constants';
@@ -343,7 +343,7 @@ export function saveComponentFilters(
 
 export function getAppendComponentStack(): boolean {
   try {
-    const raw = localStorageGetItem(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY);
+    const raw = localStorageGetItem(LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY);
     if (raw != null) {
       return JSON.parse(raw);
     }
@@ -353,7 +353,7 @@ export function getAppendComponentStack(): boolean {
 
 export function setAppendComponentStack(value: boolean): void {
   localStorageSetItem(
-    LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+    LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
     JSON.stringify(value),
   );
 }
