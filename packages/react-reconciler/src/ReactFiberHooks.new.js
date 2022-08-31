@@ -401,18 +401,16 @@ export function renderWithHooks<Props, SecondArg>(
 
   // Reset the memoCache index and create a backup copy in case of a setState during render
   // or error, either of which can leave the cache in an inconsistent state
-  const memoCache = workInProgress.memoCache;
   let previousMemoCache = null;
-  if (memoCache !== null) {
-    previousMemoCache = memoCache.data.map(array => array.slice());
-    if (workInProgress.alternate != null) {
-      // Backup to the alternate fiber in case the component throws
-      workInProgress.alternate.memoCache = {
-        data: previousMemoCache,
+  if (enableUseMemoCacheHook) {
+    previousMemoCache = workInProgress.memoCache;
+    if (previousMemoCache !== null) {
+      const memoCache = {
+        data: previousMemoCache.data.map(array => array.slice()),
         index: 0,
       };
+      workInProgress.memoCache = memoCache;
     }
-    memoCache.index = 0;
   }
 
   workInProgress.memoizedState = null;
@@ -486,20 +484,15 @@ export function renderWithHooks<Props, SecondArg>(
 
       workInProgress.updateQueue = null;
 
-      if (memoCache !== null) {
-        // Setting state during render could leave the cache in an inconsistent state,
-        // reset to the previous state before re-rendering.
+      if (enableUseMemoCacheHook) {
         if (previousMemoCache !== null) {
-          memoCache.data = previousMemoCache.map(data => data.slice());
-        } else {
-          if (__DEV__) {
-            console.warn(
-              'Expected a previous memo cache to exist if the fiber previously called useMemoCache(). This is a bug in React.',
-            );
-          }
-          memoCache.data.length = 0;
+          // Setting state during render could leave the cache in an inconsistent state,
+          // reset to the previous state before re-rendering.
+          workInProgress.memoCache = {
+            data: previousMemoCache.data.map(array => array.slice()),
+            index: 0,
+          };
         }
-        memoCache.index = 0;
       }
 
       if (__DEV__) {
@@ -640,22 +633,15 @@ export function resetHooksAfterThrow(erroredWork: Fiber | null): void {
     didScheduleRenderPhaseUpdate = false;
   }
 
-  // The current memo cache may be in an inconsistent state, reset to the previous
-  // version of the cache from the alternate.
-  if (erroredWork != null) {
-    const memoCache = erroredWork.memoCache;
-    if (memoCache !== null) {
-      // Unless this is the first render of a component, the alternate will have a
-      // consistent view of the memo cache that we can restore to
-      const alternate = erroredWork.alternate;
-      const alternateMemoCache = alternate != null ? alternate.memoCache : null;
-      if (alternateMemoCache !== null) {
-        memoCache.data = alternateMemoCache.data.map(array => array.slice());
-      } else {
-        // Just in case, fall back to clearing the memo cache
-        memoCache.data.length = 0;
+  if (enableUseMemoCacheHook) {
+    if (erroredWork != null) {
+      const memoCache = erroredWork.memoCache;
+      if (memoCache !== null) {
+        // The memo cache may be in an inconsistent state, reset to the version from
+        // the alternate if available, or clear the cache completely.
+        const alternate = erroredWork.alternate;
+        erroredWork.memoCache = alternate != null ? alternate.memoCache : null;
       }
-      memoCache.index = 0;
     }
   }
 
