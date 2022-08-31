@@ -343,7 +343,9 @@ export function saveComponentFilters(
 
 export function getAppendComponentStack(): boolean {
   try {
-    const raw = localStorageGetItem(LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY);
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
+    );
     if (raw != null) {
       return JSON.parse(raw);
     }
