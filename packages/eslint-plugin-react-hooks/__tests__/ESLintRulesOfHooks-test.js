@@ -406,6 +406,17 @@ const tests = {
         const [myState, setMyState] = useState(null);
       }
     `,
+    `
+      // Valid, but should be invalid. '_useHook' is currently recognized as a component.
+      function Component(props) {
+        if (cond) {
+          _useHook();
+        }
+      }
+      function _useHook() {
+        useState(null);
+      }
+    `,
   ],
   invalid: [
     {
