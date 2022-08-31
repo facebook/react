@@ -39,7 +39,7 @@ const stablePackages = {
   scheduler: '0.24.0',
 };
 
-// These packages do not exist in the @next or @latest channel, only
+// These packages don't exist in the @next or @latest channel, only
 // @experimental. We don't use semver, just the commit sha, so this is just a
 // list of package names instead of a map.
 const experimentalPackages = [
