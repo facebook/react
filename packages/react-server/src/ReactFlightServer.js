@@ -902,7 +902,7 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   // has a single value referencing the error.
   const ref = serializeByValueID(errorId);
   const processedChunk = processReferenceChunk(request, task.id, ref);
-  request.completedJSONChunks.push(processedChunk);
+  request.completedErrorChunks.push(processedChunk);
 }
 
 function flushCompletedChunks(

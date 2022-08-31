@@ -312,6 +312,11 @@ export function parseModelString(
       } else {
         const id = parseInt(value.substring(1), 16);
         const chunk = getChunk(response, id);
+        if (chunk._status === PENDING) {
+          throw new Error(
+            "We didn't expect to see a forward reference. This is a bug in the React Server.",
+          );
+        }
         return readChunk(chunk);
       }
     }
