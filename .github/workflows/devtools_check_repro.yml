@@ -5,6 +5,10 @@ on:
   issue_comment:
     types: [created, edited]
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   check-repro:
     runs-on: ubuntu-latest
