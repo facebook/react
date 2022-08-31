@@ -110,8 +110,7 @@ export function getWrappedDisplayName(
 ): string {
   const displayName = (outerType: any).displayName;
   return (
-    displayName ||
-    `${wrapperName}(${getDisplayName(innerType, fallbackName)})`
+    displayName || `${wrapperName}(${getDisplayName(innerType, fallbackName)})`
   );
 }
 
