@@ -1,4 +1,4 @@
-## Next Release
+## 5.0.0 (next release)
 
 * **New Violations:** Component names now need to start with an uppercase letter instead of a non-lowercase letter. This means `_Button` or `_component` are no longer valid. ([@kassens](https://github.com/kassens)) in [#25162](https://github.com/facebook/react/pull/25162)
 
