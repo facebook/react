@@ -406,17 +406,6 @@ const tests = {
         const [myState, setMyState] = useState(null);
       }
     `,
-    `
-      // Valid, but should be invalid. '_useHook' is currently recognized as a component.
-      function Component(props) {
-        if (cond) {
-          _useHook();
-        }
-      }
-      function _useHook() {
-        useState(null);
-      }
-    `,
   ],
   invalid: [
     {
@@ -650,6 +639,21 @@ const tests = {
       `,
       errors: [
         functionError('useHookInsideNormalFunction', 'normalFunctionWithHook'),
+      ],
+    },
+    {
+      code: `
+        // These are neither functions nor hooks.
+        function _normalFunctionWithHook() {
+          useHookInsideNormalFunction();
+        }
+        function _useNotAHook() {
+          useHookInsideNormalFunction();
+        }
+      `,
+      errors: [
+        functionError('useHookInsideNormalFunction', '_normalFunctionWithHook'),
+        functionError('useHookInsideNormalFunction', '_useNotAHook'),
       ],
     },
     {

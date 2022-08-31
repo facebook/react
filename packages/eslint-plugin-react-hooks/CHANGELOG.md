@@ -1,3 +1,9 @@
+## Next Release
+
+* **New Violations:** Component names now need to start with an uppercase letter. `_Button` or `_component` are no longer valid. ([@kassens](https://github.com/kassens)) in [#25162](https://github.com/facebook/react/pull/25162)
+
+## 4.6.0
+
 ## 4.5.0
 
 * Fix false positive error with large number of branches. ([@scyron6](https://github.com/scyron6) in [#24287](https://github.com/facebook/react/pull/24287))
