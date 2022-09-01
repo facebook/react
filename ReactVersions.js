@@ -25,7 +25,7 @@ const ReactVersion = '18.3.0';
 const nextChannelLabel = 'next';
 
 const stablePackages = {
-  'eslint-plugin-react-hooks': '4.7.0',
+  'eslint-plugin-react-hooks': '5.0.0',
   'jest-react': '0.15.0',
   react: ReactVersion,
   'react-art': ReactVersion,
