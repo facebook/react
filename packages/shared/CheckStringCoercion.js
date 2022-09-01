@@ -26,6 +26,7 @@ function typeName(value: mixed): string {
       (hasToStringTag && (value: any)[Symbol.toStringTag]) ||
       (value: any).constructor.name ||
       'Object';
+    // $FlowFixMe
     return type;
   }
 }

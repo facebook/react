@@ -683,6 +683,7 @@ function handleRenderFunctionError(error: any): void {
   // TODO: refactor this if we ever combine the devtools and debug tools packages
   wrapperError.name = 'ReactDebugToolsRenderError';
   // this stage-4 proposal is not supported by all environments yet.
+  // $FlowFixMe Flow doesn't have this type yet.
   wrapperError.cause = error;
   throw wrapperError;
 }

@@ -166,7 +166,9 @@ let lastMouseEvent;
 function updateMouseMovementPolyfillState(event) {
   if (event !== lastMouseEvent) {
     if (lastMouseEvent && event.type === 'mousemove') {
+      // $FlowFixMe assuming this is a number
       lastMovementX = event.screenX - lastMouseEvent.screenX;
+      // $FlowFixMe assuming this is a number
       lastMovementY = event.screenY - lastMouseEvent.screenY;
     } else {
       lastMovementX = 0;
@@ -367,7 +369,9 @@ function getEventKey(nativeEvent) {
 
     // FireFox implements `key` but returns `MozPrintableKey` for all
     // printable characters (normalized to `Unidentified`), ignore it.
-    const key = normalizeKey[nativeEvent.key] || nativeEvent.key;
+    const key =
+      // $FlowFixMe unable to index with a `mixed` value
+      normalizeKey[nativeEvent.key] || nativeEvent.key;
     if (key !== 'Unidentified') {
       return key;
     }
@@ -375,7 +379,10 @@ function getEventKey(nativeEvent) {
 
   // Browser does not implement `key`, polyfill as much of it as we can.
   if (nativeEvent.type === 'keypress') {
-    const charCode = getEventCharCode(nativeEvent);
+    const charCode = getEventCharCode(
+      // $FlowFixMe unable to narrow to `KeyboardEvent`
+      nativeEvent,
+    );
 
     // The enter-key is technically both printable and non-printable and can
     // thus be captured by `keypress`, no other non-printable key should.
@@ -384,6 +391,7 @@ function getEventKey(nativeEvent) {
   if (nativeEvent.type === 'keydown' || nativeEvent.type === 'keyup') {
     // While user keyboard layout determines the actual meaning of each
     // `keyCode` value, almost all function keys have a universal value.
+    // $FlowFixMe unable to index with a `mixed` value
     return translateToKey[nativeEvent.keyCode] || 'Unidentified';
   }
   return '';
@@ -441,7 +449,10 @@ const KeyboardEventInterface = {
     // KeyPress is deprecated, but its replacement is not yet final and not
     // implemented in any major browser. Only KeyPress has charCode.
     if (event.type === 'keypress') {
-      return getEventCharCode(event);
+      return getEventCharCode(
+        // $FlowFixMe unable to narrow to `KeyboardEvent`
+        event,
+      );
     }
     return 0;
   },
@@ -462,7 +473,10 @@ const KeyboardEventInterface = {
     // `which` is an alias for either `keyCode` or `charCode` depending on the
     // type of the event.
     if (event.type === 'keypress') {
-      return getEventCharCode(event);
+      return getEventCharCode(
+        // $FlowFixMe unable to narrow to `KeyboardEvent`
+        event,
+      );
     }
     if (event.type === 'keydown' || event.type === 'keyup') {
       return event.keyCode;
@@ -538,7 +552,8 @@ const WheelEventInterface = {
       ? event.deltaX
       : // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
       'wheelDeltaX' in event
-      ? -event.wheelDeltaX
+      ? // $FlowFixMe assuming this is a number
+        -event.wheelDeltaX
       : 0;
   },
   deltaY(event) {
@@ -546,10 +561,12 @@ const WheelEventInterface = {
       ? event.deltaY
       : // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).
       'wheelDeltaY' in event
-      ? -event.wheelDeltaY
+      ? // $FlowFixMe assuming this is a number
+        -event.wheelDeltaY
       : // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
       'wheelDelta' in event
-      ? -event.wheelDelta
+      ? // $FlowFixMe assuming this is a number
+        -event.wheelDelta
       : 0;
   },
   deltaZ: 0,

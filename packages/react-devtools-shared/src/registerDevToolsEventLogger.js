@@ -31,6 +31,7 @@ export function registerDevToolsEventLogger(
         let metadata = null;
         if (event.metadata != null) {
           metadata = event.metadata;
+          // $FlowFixMe: metadata is not writable and nullable
           delete event.metadata;
         }
         loggingIFrame.contentWindow.postMessage(
@@ -42,7 +43,8 @@ export function registerDevToolsEventLogger(
               version: process.env.DEVTOOLS_VERSION,
               metadata: metadata !== null ? JSON.stringify(metadata) : '',
               ...(fetchAdditionalContext != null
-                ? await fetchAdditionalContext()
+                ? // $FlowFixMe
+                  await fetchAdditionalContext()
                 : {}),
             },
           },

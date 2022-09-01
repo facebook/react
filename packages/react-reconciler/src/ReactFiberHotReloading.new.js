@@ -62,7 +62,7 @@ export type FindHostInstancesForRefresh = (
 ) => Set<Instance>;
 
 let resolveFamily: RefreshHandler | null = null;
-// $FlowFixMe Flow gets confused by a WeakSet feature check below.
+// $FlowFixMe Flow got confused by a feature check below.
 let failedBoundaries: WeakSet<Fiber> | null = null;
 
 export const setRefreshHandler = (handler: RefreshHandler | null): void => {
@@ -222,6 +222,7 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
       return;
     }
     if (failedBoundaries === null) {
+      // $FlowFixMe Flow got confused by the feature check above.
       failedBoundaries = new WeakSet();
     }
     failedBoundaries.add(fiber);

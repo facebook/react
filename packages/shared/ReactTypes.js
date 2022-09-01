@@ -24,7 +24,7 @@ export type ReactNodeList = ReactEmpty | React$Node;
 export type ReactText = string | number;
 
 export type ReactProvider<T> = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   type: ReactProviderType<T>,
   key: null | string,
   ref: null,
@@ -37,13 +37,13 @@ export type ReactProvider<T> = {
 };
 
 export type ReactProviderType<T> = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   _context: ReactContext<T>,
   ...
 };
 
 export type ReactConsumer<T> = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   type: ReactContext<T>,
   key: null | string,
   ref: null,
@@ -55,7 +55,7 @@ export type ReactConsumer<T> = {
 };
 
 export type ReactContext<T> = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   Consumer: ReactContext<T>,
   Provider: ReactProviderType<T>,
   _currentValue: T,
@@ -85,7 +85,7 @@ export type ServerContextJSONValue =
 export type ReactServerContext<T: any> = ReactContext<T>;
 
 export type ReactPortal = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   key: null | string,
   containerInfo: any,
   children: ReactNodeList,
@@ -99,7 +99,7 @@ export type RefObject = {|
 |};
 
 export type ReactScope = {|
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
 |};
 
 export type ReactScopeQuery = (

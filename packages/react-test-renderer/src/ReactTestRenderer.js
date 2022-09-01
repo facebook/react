@@ -65,7 +65,7 @@ type ReactTestRendererJSON = {|
   type: string,
   props: {[propName: string]: any, ...},
   children: null | Array<ReactTestRendererNode>,
-  $$typeof?: Symbol, // Optional because we add it with defineProperty().
+  $$typeof?: symbol, // Optional because we add it with defineProperty().
 |};
 type ReactTestRendererNode = ReactTestRendererJSON | string;
 

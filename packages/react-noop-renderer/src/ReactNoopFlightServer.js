@@ -53,7 +53,7 @@ const ReactNoopFlightServer = ReactFlightServer({
   },
   resolveModuleMetaData(
     config: void,
-    reference: {$$typeof: Symbol, value: any},
+    reference: {$$typeof: symbol, value: any},
   ) {
     return saveModule(reference.value);
   },

@@ -39,7 +39,7 @@ if (typeof Symbol === 'function' && Symbol.for) {
   TEXT_TYPE = symbolFor('selector.text');
 }
 
-type Type = Symbol | number;
+type Type = symbol | number;
 
 type ComponentSelector = {|
   $$typeof: Type,

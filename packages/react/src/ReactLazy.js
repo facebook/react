@@ -43,7 +43,7 @@ type Payload<T> =
   | RejectedPayload;
 
 export type LazyComponent<T, P> = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   _payload: P,
   _init: (payload: P) => T,
 };

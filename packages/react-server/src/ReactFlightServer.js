@@ -113,7 +113,7 @@ export type Request = {
   completedModuleChunks: Array<Chunk>,
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
-  writtenSymbols: Map<Symbol, number>,
+  writtenSymbols: Map<symbol, number>,
   writtenModules: Map<ModuleKey, number>,
   writtenProviders: Map<string, number>,
   identifierPrefix: string,
@@ -197,12 +197,14 @@ function attemptResolveElement(
   if (typeof type === 'function') {
     if (isModuleReference(type)) {
       // This is a reference to a client component.
+      // $FlowFixMe unsure how this return type is supposed to match ReactModel
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     // This is a server-side component.
     return type(props);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
+    // $FlowFixMe unsure how this return type is supposed to match ReactModel
     return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (typeof type === 'symbol') {
     if (type === REACT_FRAGMENT_TYPE) {
@@ -214,10 +216,12 @@ function attemptResolveElement(
     }
     // This might be a built-in React component. We'll let the client decide.
     // Any built-in works as long as its props are serializable.
+    // $FlowFixMe unsure how this return type is supposed to match ReactModel
     return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (type != null && typeof type === 'object') {
     if (isModuleReference(type)) {
       // This is a reference to a client component.
+      // $FlowFixMe unsure how this return type is supposed to match ReactModel
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     switch (type.$$typeof) {
@@ -250,6 +254,7 @@ function attemptResolveElement(
             );
           }
         }
+        // $FlowFixMe unsure how this return type is supposed to match ReactModel
         return [
           REACT_ELEMENT_TYPE,
           type,
