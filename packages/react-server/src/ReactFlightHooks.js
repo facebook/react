@@ -26,7 +26,9 @@ export function resetHooksForRequest() {
 function readContext<T>(context: ReactServerContext<T>): T {
   if (__DEV__) {
     if (context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
-      console.error('Only ServerContext is supported in Flight');
+      console.error(
+        'Only createServerContext is supported in Server Components.',
+      );
     }
     if (currentCache === null) {
       console.error(
