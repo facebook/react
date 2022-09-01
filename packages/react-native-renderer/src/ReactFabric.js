@@ -97,6 +97,7 @@ function findHostInstance_DEPRECATED<TElementType: ElementType>(
     return (hostInstance: any).canonical;
   }
   // $FlowFixMe[incompatible-return]
+  // $FlowFixMe[incompatible-exact]
   return hostInstance;
 }
 
