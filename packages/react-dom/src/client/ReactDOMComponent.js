@@ -420,7 +420,7 @@ export function createElement(
       const firstChild = ((div.firstChild: any): HTMLScriptElement);
       domElement = div.removeChild(firstChild);
     } else if (typeof props.is === 'string') {
-      // $FlowIssue `createElement` should be updated for Web Components
+      // $FlowFixMe `createElement` should be updated for Web Components
       domElement = ownerDocument.createElement(type, {is: props.is});
     } else {
       // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.

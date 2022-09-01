@@ -23,12 +23,12 @@ export function isLegacyActEnvironment(fiber: Fiber) {
     // to false.
 
     const isReactActEnvironmentGlobal =
-      // $FlowExpectedError – Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
+      // $FlowFixMe – Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
       typeof IS_REACT_ACT_ENVIRONMENT !== 'undefined'
         ? IS_REACT_ACT_ENVIRONMENT
         : undefined;
 
-    // $FlowExpectedError - Flow doesn't know about jest
+    // $FlowFixMe - Flow doesn't know about jest
     const jestIsDefined = typeof jest !== 'undefined';
     return (
       warnsIfNotActing && jestIsDefined && isReactActEnvironmentGlobal !== false
@@ -40,7 +40,7 @@ export function isLegacyActEnvironment(fiber: Fiber) {
 export function isConcurrentActEnvironment() {
   if (__DEV__) {
     const isReactActEnvironmentGlobal =
-      // $FlowExpectedError – Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
+      // $FlowFixMe – Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
       typeof IS_REACT_ACT_ENVIRONMENT !== 'undefined'
         ? IS_REACT_ACT_ENVIRONMENT
         : undefined;

@@ -47,14 +47,14 @@ const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 // We never remove these associations.
 // It's OK to reference families, but use WeakMap/Set for types.
 const allFamiliesByID: Map<string, Family> = new Map();
-const allFamiliesByType: // $FlowIssue
+const allFamiliesByType: // $FlowFixMe
 WeakMap<any, Family> | Map<any, Family> = new PossiblyWeakMap();
-const allSignaturesByType: // $FlowIssue
+const allSignaturesByType: // $FlowFixMe
 WeakMap<any, Signature> | Map<any, Signature> = new PossiblyWeakMap();
 // This WeakMap is read by React, so we only put families
 // that have actually been edited here. This keeps checks fast.
-// $FlowIssue
-const updatedFamiliesByType: // $FlowIssue
+// $FlowFixMe
+const updatedFamiliesByType: // $FlowFixMe
 WeakMap<any, Family> | Map<any, Family> = new PossiblyWeakMap();
 
 // This is cleared on every performReactRefresh() call.
@@ -74,8 +74,8 @@ const failedRoots: Set<FiberRoot> = new Set();
 // In environments that support WeakMap, we also remember the last element for every root.
 // It needs to be weak because we do this even for roots that failed to mount.
 // If there is no WeakMap, we won't attempt to do retrying.
-// $FlowIssue
-const rootElements: WeakMap<any, ReactNodeList> | null = // $FlowIssue
+// $FlowFixMe
+const rootElements: WeakMap<any, ReactNodeList> | null = // $FlowFixMe
   typeof WeakMap === 'function' ? new WeakMap() : null;
 
 let isPerformingRefresh = false;
