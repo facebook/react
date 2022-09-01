@@ -16,7 +16,7 @@
  */
 
 function isHookName(s) {
-  return /^use[A-Z0-9].*$/.test(s);
+  return /^use[A-Z0-9]/.test(s);
 }
 
 /**
@@ -42,16 +42,11 @@ function isHook(node) {
 
 /**
  * Checks if the node is a React component name. React component names must
- * always start with a non-lowercase letter. So `MyComponent` or `_MyComponent`
- * are valid component names for instance.
+ * always start with an uppercase letter.
  */
 
 function isComponentName(node) {
-  if (node.type === 'Identifier') {
-    return !/^[a-z]/.test(node.name);
-  } else {
-    return false;
-  }
+  return node.type === 'Identifier' && /^[A-Z]/.test(node.name);
 }
 
 function isReactFunction(node, functionName) {
