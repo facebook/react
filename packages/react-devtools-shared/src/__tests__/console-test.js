@@ -45,8 +45,8 @@ describe('console', () => {
       info: mockInfo,
       log: mockLog,
       warn: mockWarn,
-      mockGroup: mockGroup,
-      mockGroupCollapsed: mockGroupCollapsed,
+      group: mockGroup,
+      groupCollapsed: mockGroupCollapsed,
     };
 
     Console.dangerous_setTargetConsoleForTesting(fakeConsole);
@@ -76,8 +76,8 @@ describe('console', () => {
     expect(fakeConsole.info).toBe(mockInfo);
     expect(fakeConsole.log).toBe(mockLog);
     expect(fakeConsole.warn).not.toBe(mockWarn);
-    expect(fakeConsole.group).not.toBe(mockGroup);
-    expect(fakeConsole.groupCollapsed).not.toBe(mockGroupCollapsed);
+    expect(fakeConsole.group).toBe(mockGroup);
+    expect(fakeConsole.groupCollapsed).toBe(mockGroupCollapsed);
   });
 
   // @reactVersion >=18.0
@@ -501,8 +501,8 @@ describe('console', () => {
       fakeConsole.warn('warn');
       fakeConsole.error('error');
       fakeConsole.info('info');
-      fakeConsole.mockGroup('group');
-      fakeConsole.mockGroupCollapsed('groupCollapsed');
+      fakeConsole.group('group');
+      fakeConsole.groupCollapsed('groupCollapsed');
       return <div />;
     }
 
@@ -547,7 +547,7 @@ describe('console', () => {
     expect(mockInfo.mock.calls[1]).toHaveLength(3);
     expect(mockInfo.mock.calls[1]).toEqual([
       '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_ERROR_COLOR}`,
+      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
       'info',
     ]);
 
@@ -557,7 +557,7 @@ describe('console', () => {
     expect(mockGroup.mock.calls[1]).toHaveLength(3);
     expect(mockGroup.mock.calls[1]).toEqual([
       '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_ERROR_COLOR}`,
+      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
       'group',
     ]);
 
@@ -567,7 +567,7 @@ describe('console', () => {
     expect(mockGroupCollapsed.mock.calls[1]).toHaveLength(3);
     expect(mockGroupCollapsed.mock.calls[1]).toEqual([
       '%c%s',
-      `color: ${process.env.DARK_MODE_DIMMED_ERROR_COLOR}`,
+      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
       'groupCollapsed',
     ]);
   });
@@ -580,12 +580,16 @@ describe('console', () => {
     const root = ReactDOMClient.createRoot(container);
 
     function App() {
+      console.log(
+        'CALL',
+        global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__,
+      );
       fakeConsole.log('log');
       fakeConsole.warn('warn');
       fakeConsole.error('error');
       fakeConsole.info('info');
-      fakeConsole.mockGroup('group');
-      fakeConsole.mockGroupCollapsed('groupCollapsed');
+      fakeConsole.group('group');
+      fakeConsole.groupCollapsed('groupCollapsed');
       return <div />;
     }
 
@@ -791,6 +795,8 @@ describe('console error', () => {
     // because Jest itself has hooks into it as does our test env setup.
     mockError = jest.fn();
     mockInfo = jest.fn();
+    mockGroup = jest.fn();
+    mockGroupCollapsed = jest.fn();
     mockLog = jest.fn();
     mockWarn = jest.fn();
     fakeConsole = {
@@ -798,6 +804,8 @@ describe('console error', () => {
       info: mockInfo,
       log: mockLog,
       warn: mockWarn,
+      group: mockGroup,
+      groupCollapsed: mockGroupCollapsed,
     };
 
     Console.dangerous_setTargetConsoleForTesting(fakeConsole);
