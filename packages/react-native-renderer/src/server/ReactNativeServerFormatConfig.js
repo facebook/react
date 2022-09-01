@@ -60,6 +60,7 @@ SUSPENSE_UPDATE_TO_CLIENT_RENDER[0] = SUSPENSE_UPDATE_TO_CLIENT_RENDER_TAG;
 // Per response,
 export type ResponseState = {
   nextSuspenseID: number,
+  ...
 };
 
 // Allows us to keep track of what we've already written so we can refer back to it.

@@ -33,11 +33,13 @@ type Options = {
   bootstrapModules: Array<string>,
   progressiveChunkSize?: number,
   onError: (error: mixed) => void,
+  ...
 };
 
 opaque type Stream = {
   destination: Destination,
   request: Request,
+  ...
 };
 
 function renderToStream(children: ReactNodeList, options: Options): Stream {

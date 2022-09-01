@@ -26,6 +26,7 @@ type ContextNode<T> = {
   context: ReactContext<T>,
   parentValue: T,
   value: T,
+  ...
 };
 
 // The structure of a context snapshot is an implementation of this file.

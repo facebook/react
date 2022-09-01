@@ -47,6 +47,7 @@ type ClientReferenceSearchPath = {
   recursive?: boolean,
   include: RegExp,
   exclude?: RegExp,
+  ...
 };
 
 type ClientReferencePath = string | ClientReferenceSearchPath;
@@ -56,6 +57,7 @@ type Options = {
   clientReferences?: ClientReferencePath | $ReadOnlyArray<ClientReferencePath>,
   chunkName?: string,
   manifestFilename?: string,
+  ...
 };
 
 const PLUGIN_NAME = 'React Server Plugin';

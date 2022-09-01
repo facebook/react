@@ -37,6 +37,7 @@
 
 [lints]
 untyped-type-import=error
+implicit-inexact-object=error
 
 [options]
 server.max_workers=4

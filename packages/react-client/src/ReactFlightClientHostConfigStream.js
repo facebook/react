@@ -14,6 +14,7 @@ export type Response = ResponseBase & {
   _partialRow: string,
   _fromJSON: (key: string, value: JSONValue) => any,
   _stringDecoder: StringDecoder,
+  ...
 };
 
 export type UninitializedModel = string;

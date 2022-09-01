@@ -42,6 +42,7 @@ export type ResponseState = {
   sentClientRenderFunction: boolean,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
+  ...
 };
 
 export function createResponseState(

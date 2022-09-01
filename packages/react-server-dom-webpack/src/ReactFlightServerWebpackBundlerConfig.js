@@ -10,7 +10,9 @@
 type WebpackMap = {
   [filepath: string]: {
     [name: string]: ModuleMetaData,
+    ...,
   },
+  ...,
 };
 
 export type BundlerConfig = WebpackMap;
@@ -21,6 +23,7 @@ export type ModuleReference<T> = {
   filepath: string,
   name: string,
   async: boolean,
+  ...
 };
 
 export type ModuleMetaData = {
@@ -28,6 +31,7 @@ export type ModuleMetaData = {
   chunks: Array<string>,
   name: string,
   async: boolean,
+  ...
 };
 
 export type ModuleKey = string;

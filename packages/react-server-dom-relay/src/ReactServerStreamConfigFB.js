@@ -12,6 +12,7 @@ export type Destination = {
   done: boolean,
   fatal: boolean,
   error: mixed,
+  ...
 };
 
 export type PrecomputedChunk = string;

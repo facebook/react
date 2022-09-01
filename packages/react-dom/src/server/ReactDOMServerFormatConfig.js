@@ -108,6 +108,7 @@ const scriptReplacer = (match, prefix, s, suffix) =>
 export type BootstrapScriptDescriptor = {
   src: string,
   integrity?: string,
+  ...
 };
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(
@@ -206,6 +207,7 @@ type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type FormatContext = {
   insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
+  ...
 };
 
 function createFormatContext(

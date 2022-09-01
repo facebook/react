@@ -103,6 +103,7 @@ function warnNoop(
 type InternalInstance = {
   queue: null | Array<Object>,
   replace: boolean,
+  ...
 };
 
 const classComponentUpdater = {

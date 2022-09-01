@@ -23,6 +23,7 @@ type Options = {
   signal?: AbortSignal,
   context?: Array<[string, ServerContextJSONValue]>,
   onError?: (error: mixed) => void,
+  ...
 };
 
 function renderToReadableStream(

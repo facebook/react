@@ -29,6 +29,7 @@ type ContextNode<T: ServerContextJSONValue> = {
   context: ReactServerContext<T>,
   parentValue: T,
   value: T,
+  ...
 };
 
 // The structure of a context snapshot is an implementation of this file.

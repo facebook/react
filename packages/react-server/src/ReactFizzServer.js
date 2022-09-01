@@ -129,6 +129,7 @@ const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
 type LegacyContext = {
   [key: string]: any,
+  ...,
 };
 
 type SuspenseBoundary = {
@@ -143,6 +144,7 @@ type SuspenseBoundary = {
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
   byteSize: number, // used to determine whether to inline children boundaries.
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
+  ...
 };
 
 export type Task = {
@@ -155,6 +157,7 @@ export type Task = {
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
   componentStack: null | ComponentStackNode, // DEV-only component stack
+  ...
 };
 
 const PENDING = 0;
@@ -179,6 +182,7 @@ type Segment = {
   // used to discern when text separator boundaries are needed
   lastPushedText: boolean,
   textEmbedded: boolean,
+  ...
 };
 
 const OPEN = 0;
@@ -218,6 +222,7 @@ export opaque type Request = {
   // emit a different response to the stream instead.
   onShellError: (error: mixed) => void,
   onFatalError: (error: mixed) => void,
+  ...
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive

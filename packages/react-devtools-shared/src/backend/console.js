@@ -157,6 +157,7 @@ export function patch({
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
   browserTheme: BrowserTheme,
+  ...
 }): void {
   // Settings may change after we've patched the console.
   // Using a shared ref allows the patch function to read the latest values.

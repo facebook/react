@@ -86,6 +86,7 @@ type DragState = {
   commitIndex: number,
   left: number,
   sizeIncrement: number,
+  ...
 };
 
 function List({

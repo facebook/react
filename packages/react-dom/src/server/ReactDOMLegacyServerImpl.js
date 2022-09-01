@@ -25,6 +25,7 @@ import {
 
 type ServerOptions = {
   identifierPrefix?: string,
+  ...
 };
 
 function onError() {

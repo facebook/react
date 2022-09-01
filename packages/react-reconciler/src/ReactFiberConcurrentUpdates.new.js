@@ -36,10 +36,12 @@ import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 export type ConcurrentUpdate = {
   next: ConcurrentUpdate,
   lane: Lane,
+  ...
 };
 
 type ConcurrentQueue = {
   pending: ConcurrentUpdate | null,
+  ...
 };
 
 // If a render is in progress, and we receive an update from a concurrent event,

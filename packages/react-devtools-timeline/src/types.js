@@ -21,6 +21,7 @@ export type ErrorStackFrame = {
   fileName: string,
   lineNumber: number,
   columnNumber: number,
+  ...
 };
 
 export type Milliseconds = number;

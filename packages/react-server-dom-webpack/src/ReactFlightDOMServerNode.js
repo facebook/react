@@ -27,6 +27,7 @@ type Options = {
   onError?: (error: mixed) => void,
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
+  ...
 };
 
 type PipeableStream = {|

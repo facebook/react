@@ -114,6 +114,7 @@ type InternalEventListeners = {
     options: EventListenerOptions,
     invalidated: boolean,
   |}[],
+  ...,
 };
 
 // TODO: Remove this conditional once all changes have propagated.

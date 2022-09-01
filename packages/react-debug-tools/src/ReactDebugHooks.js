@@ -54,6 +54,7 @@ let primitiveStackCache: null | Map<string, Array<any>> = null;
 type Hook = {
   memoizedState: any,
   next: Hook | null,
+  ...
 };
 
 function getPrimitiveStackCache(): Map<string, Array<any>> {
@@ -376,6 +377,7 @@ export type HookSource = {
   columnNumber: number | null,
   fileName: string | null,
   functionName: string | null,
+  ...
 };
 
 export type HooksNode = {

@@ -74,18 +74,22 @@ export type ViewConfig = $ReadOnly<{
         captured: string,
         bubbled: string,
         skipBubbling?: ?boolean,
+        ...
       }>,
+      ...
     }>,
     ...,
   }>,
   directEventTypes?: $ReadOnly<{
     [eventName: string]: $ReadOnly<{
       registrationName: string,
+      ...
     }>,
     ...,
   }>,
   uiViewClassName: string,
   validAttributes: AttributeConfiguration,
+  ...
 }>;
 
 export type PartialViewConfig = $ReadOnly<{
@@ -93,6 +97,7 @@ export type PartialViewConfig = $ReadOnly<{
   directEventTypes?: $PropertyType<ViewConfig, 'directEventTypes'>,
   uiViewClassName: string,
   validAttributes?: PartialAttributeConfiguration,
+  ...
 }>;
 
 export type NativeMethods = $ReadOnly<{|

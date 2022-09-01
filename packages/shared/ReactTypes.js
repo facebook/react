@@ -80,7 +80,7 @@ export type ServerContextJSONValue =
   | number
   | null
   | $ReadOnlyArray<ServerContextJSONValue>
-  | {+[key: string]: ServerContextJSONValue};
+  | {+[key: string]: ServerContextJSONValue, ...};
 
 export type ReactServerContext<T: any> = ReactContext<T>;
 
@@ -211,6 +211,7 @@ export type OffscreenMode =
 
 export type StartTransitionOptions = {
   name?: string,
+  ...
 };
 
 // TODO: Add Context support

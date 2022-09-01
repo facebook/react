@@ -227,6 +227,7 @@ export function installHook(target: any): DevToolsHook | null {
   }: {
     hideConsoleLogsInStrictMode: boolean,
     browserTheme: BrowserTheme,
+    ...
   }) {
     const overrideConsoleMethods = [
       'error',

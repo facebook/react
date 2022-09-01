@@ -40,6 +40,7 @@ function clampLength({
   minContentLength: number,
   maxContentLength: number,
   containerLength: number,
+  ...
 }): ScrollState {
   return {
     offset: state.offset,
@@ -67,6 +68,7 @@ export function clampState({
   minContentLength: number,
   maxContentLength: number,
   containerLength: number,
+  ...
 }): ScrollState {
   return clampOffset(
     clampLength({
@@ -87,6 +89,7 @@ export function translateState({
   state: ScrollState,
   delta: number,
   containerLength: number,
+  ...
 }): ScrollState {
   return clampOffset(
     {
@@ -127,6 +130,7 @@ export function zoomState({
   minContentLength: number,
   maxContentLength: number,
   containerLength: number,
+  ...
 }): ScrollState {
   // Length and offset must be computed separately, so that if the length is
   // clamped the offset will still be correct (unless it gets clamped too).
@@ -173,6 +177,7 @@ export function moveStateToRange({
   minContentLength: number,
   maxContentLength: number,
   containerLength: number,
+  ...
 }): ScrollState {
   // Length and offset must be computed separately, so that if the length is
   // clamped the offset will still be correct (unless it gets clamped too).

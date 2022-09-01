@@ -91,7 +91,7 @@ export type ReactModel =
   | Iterable<ReactModel>
   | ReactModelObject;
 
-type ReactModelObject = {+[key: string]: ReactModel};
+type ReactModelObject = {+[key: string]: ReactModel, ...};
 
 const PENDING = 0;
 const COMPLETED = 1;
@@ -105,6 +105,7 @@ type Task = {
   ping: () => void,
   context: ContextSnapshot,
   thenableState: ThenableState | null,
+  ...
 };
 
 export type Request = {
@@ -127,6 +128,7 @@ export type Request = {
   identifierCount: number,
   onError: (error: mixed) => void,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
+  ...
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
@@ -324,7 +326,9 @@ function serializeByRefID(id: number): string {
 
 function serializeModuleReference(
   request: Request,
-  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  parent:
+    | {+[key: string | number]: ReactModel, ...}
+    | $ReadOnlyArray<ReactModel>,
   key: string,
   moduleReference: ModuleReference<any>,
 ): string {
@@ -465,7 +469,7 @@ function describeValueForErrorMessage(value: ReactModel): string {
 
 function describeObjectForErrorMessage(
   objectOrArray:
-    | {+[key: string | number]: ReactModel}
+    | {+[key: string | number]: ReactModel, ...}
     | $ReadOnlyArray<ReactModel>,
   expandedName?: string,
 ): string {
@@ -495,7 +499,7 @@ function describeObjectForErrorMessage(
     return str;
   } else {
     let str = '{';
-    const object: {+[key: string | number]: ReactModel} = objectOrArray;
+    const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
     const names = Object.keys(object);
     for (let i = 0; i < names.length; i++) {
       if (i > 0) {
@@ -528,7 +532,9 @@ let isInsideContextValue = false;
 
 export function resolveModelToJSON(
   request: Request,
-  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  parent:
+    | {+[key: string | number]: ReactModel, ...}
+    | $ReadOnlyArray<ReactModel>,
   key: string,
   value: ReactModel,
 ): ReactJSONValue {

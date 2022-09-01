@@ -42,6 +42,7 @@ export type RootState = {
   element: any,
   isDehydrated: boolean,
   cache: Cache,
+  ...
 };
 
 function FiberRootNode(

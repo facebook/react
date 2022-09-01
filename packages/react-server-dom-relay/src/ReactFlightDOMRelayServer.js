@@ -22,6 +22,7 @@ import {
 type Options = {
   onError?: (error: mixed) => void,
   identifierPrefix?: string,
+  ...
 };
 
 function render(

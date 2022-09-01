@@ -67,6 +67,7 @@ import {Forked, NoFlags} from './ReactFiberFlags';
 export type TreeContext = {
   id: number,
   overflow: string,
+  ...
 };
 
 // TODO: Use the unified fiber stack module instead of this local one?

@@ -25,6 +25,7 @@ export type TooltipFiberData = {|
 
 export type Props = {
   fiberData: ChartNode,
+  ...
 };
 
 export default function HoveredFiberInfo({fiberData}: Props) {

@@ -19,7 +19,7 @@ import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 import {createCursor, push, pop} from './ReactFiberStack.new';
 import {getWorkInProgressTransitions} from './ReactFiberWorkLoop.new';
 
-export type SuspenseInfo = {name: string | null};
+export type SuspenseInfo = {name: string | null, ...};
 
 export type PendingTransitionCallbacks = {
   transitionStart: Array<Transition> | null,
@@ -27,24 +27,27 @@ export type PendingTransitionCallbacks = {
   transitionComplete: Array<Transition> | null,
   markerProgress: Map<
     string,
-    {pendingBoundaries: PendingBoundaries, transitions: Set<Transition>},
+    {pendingBoundaries: PendingBoundaries, transitions: Set<Transition>, ...},
   > | null,
   markerIncomplete: Map<
     string,
-    {aborts: Array<TransitionAbort>, transitions: Set<Transition>},
+    {aborts: Array<TransitionAbort>, transitions: Set<Transition>, ...},
   > | null,
   markerComplete: Map<string, Set<Transition>> | null,
+  ...
 };
 
 export type Transition = {
   name: string,
   startTime: number,
+  ...
 };
 
 export type BatchConfigTransition = {
   name?: string,
   startTime?: number,
   _updatedFibers?: Set<Fiber>,
+  ...
 };
 
 // TODO: Is there a way to not include the tag or name here?

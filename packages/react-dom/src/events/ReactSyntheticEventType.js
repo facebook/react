@@ -31,13 +31,16 @@ type BaseSyntheticEvent = {
   relatedTarget?: mixed,
   type: string,
   currentTarget: null | EventTarget,
+  ...
 };
 
 export type KnownReactSyntheticEvent = BaseSyntheticEvent & {
   _reactName: string,
+  ...
 };
 export type UnknownReactSyntheticEvent = BaseSyntheticEvent & {
   _reactName: null,
+  ...
 };
 
 export type ReactSyntheticEvent =

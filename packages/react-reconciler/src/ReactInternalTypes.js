@@ -258,7 +258,7 @@ type BaseFiberRootProperties = {|
 
   onRecoverableError: (
     error: mixed,
-    errorInfo: {digest?: ?string, componentStack?: ?string},
+    errorInfo: {digest?: ?string, componentStack?: ?string, ...},
   ) => void,
 |};
 
@@ -286,7 +286,7 @@ export type TransitionTracingCallbacks = {
     transitionName: string,
     startTime: number,
     currentTime: number,
-    pending: Array<{name: null | string}>,
+    pending: Array<{name: null | string, ...}>,
   ) => void,
   onTransitionIncomplete?: (
     transitionName: string,
@@ -295,6 +295,7 @@ export type TransitionTracingCallbacks = {
       type: string,
       name?: string | null,
       endTime: number,
+      ...
     }>,
   ) => void,
   onTransitionComplete?: (
@@ -307,7 +308,7 @@ export type TransitionTracingCallbacks = {
     marker: string,
     startTime: number,
     currentTime: number,
-    pending: Array<{name: null | string}>,
+    pending: Array<{name: null | string, ...}>,
   ) => void,
   onMarkerIncomplete?: (
     transitionName: string,
@@ -317,6 +318,7 @@ export type TransitionTracingCallbacks = {
       type: string,
       name?: string | null,
       endTime: number,
+      ...
     }>,
   ) => void,
   onMarkerComplete?: (
@@ -325,6 +327,7 @@ export type TransitionTracingCallbacks = {
     startTime: number,
     endTime: number,
   ) => void,
+  ...
 };
 
 // The following fields are only used in transition tracing in Profile builds

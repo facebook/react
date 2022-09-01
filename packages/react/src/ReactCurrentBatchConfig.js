@@ -11,6 +11,7 @@ import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracing
 
 type BatchConfig = {
   transition: BatchConfigTransition | null,
+  ...
 };
 /**
  * Keeps track of the current batch's configuration such as how long an update

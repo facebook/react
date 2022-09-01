@@ -173,6 +173,7 @@ export function checkForUpdate({
   element: Element,
   refresh: RefreshFunction,
   store: Store,
+  ...
 }): void {
   const {id} = element;
   const rendererID = store.getRendererIDForElement(id);

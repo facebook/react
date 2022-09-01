@@ -119,7 +119,7 @@ type TreeProps = {|
   badgeClassName: string,
   actions: React$Node,
   className: string,
-  clearMessages: () => {},
+  clearMessages: () => void,
   entries: Array<[string, number]>,
   isTransitionPending: boolean,
   label: string,

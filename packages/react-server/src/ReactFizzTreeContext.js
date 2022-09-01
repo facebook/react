@@ -63,6 +63,7 @@
 export type TreeContext = {
   +id: number,
   +overflow: string,
+  ...
 };
 
 export const emptyTreeContext = {

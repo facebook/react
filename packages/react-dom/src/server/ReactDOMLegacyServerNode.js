@@ -17,6 +17,7 @@ import {
 
 type ServerOptions = {
   identifierPrefix?: string,
+  ...
 };
 
 function renderToString(

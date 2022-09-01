@@ -18,16 +18,19 @@ type BuiltInComponentStackNode = {
   tag: 0,
   parent: null | ComponentStackNode,
   type: string,
+  ...
 };
 type FunctionComponentStackNode = {
   tag: 1,
   parent: null | ComponentStackNode,
   type: Function,
+  ...
 };
 type ClassComponentStackNode = {
   tag: 2,
   parent: null | ComponentStackNode,
   type: Function,
+  ...
 };
 export type ComponentStackNode =
   | BuiltInComponentStackNode

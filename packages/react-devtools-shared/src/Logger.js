@@ -36,6 +36,7 @@ export type LoggerEvent =
       +event_name: 'select-element',
       +metadata: {
         +source: string,
+        ...
       },
     |}
   | {|
@@ -45,12 +46,14 @@ export type LoggerEvent =
       +event_name: 'profiling-start',
       +metadata: {
         +current_tab: string,
+        ...
       },
     |}
   | {|
       +event_name: 'profiler-tab-changed',
       +metadata: {
         +tabId: string,
+        ...
       },
     |}
   | {|

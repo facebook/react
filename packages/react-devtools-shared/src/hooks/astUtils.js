@@ -22,6 +22,7 @@ export type SourceFileASTWithHookDetails = {
   sourceFileAST: File,
   line: number,
   source: string,
+  ...
 };
 
 export const NO_HOOK_NAME = '<no-hook>';

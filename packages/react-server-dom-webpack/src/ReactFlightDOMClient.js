@@ -21,6 +21,7 @@ import {
 
 export type Options = {
   moduleMap?: BundlerConfig,
+  ...
 };
 
 function startReadingFromStream(

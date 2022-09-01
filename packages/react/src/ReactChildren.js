@@ -175,6 +175,7 @@ function mapIntoArray(
     if (typeof iteratorFn === 'function') {
       const iterableChildren: Iterable<React$Node> & {
         entries: any,
+        ...
       } = (children: any);
 
       if (__DEV__) {

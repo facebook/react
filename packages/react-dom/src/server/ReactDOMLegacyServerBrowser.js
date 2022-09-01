@@ -13,6 +13,7 @@ import {version, renderToStringImpl} from './ReactDOMLegacyServerImpl';
 
 type ServerOptions = {
   identifierPrefix?: string,
+  ...
 };
 
 function renderToString(

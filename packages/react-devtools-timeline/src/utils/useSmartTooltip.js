@@ -20,6 +20,7 @@ export default function useSmartTooltip({
   canvasRef: {|current: HTMLCanvasElement | null|},
   mouseX: number,
   mouseY: number,
+  ...
 }) {
   const ref = useRef<HTMLElement | null>(null);
 

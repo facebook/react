@@ -128,7 +128,7 @@ function createLstatMap(): Map<string, Array<boolean | Record<mixed>>> {
   return new Map();
 }
 
-export function lstat(path: string, options?: {bigint?: boolean}): mixed {
+export function lstat(path: string, options?: {bigint?: boolean, ...}): mixed {
   checkPathInDev(path);
   let bigint = false;
   if (options && options.bigint) {
@@ -167,7 +167,7 @@ function createReaddirMap(): Map<
 
 export function readdir(
   path: string,
-  options?: string | {encoding?: string, withFileTypes?: boolean},
+  options?: string | {encoding?: string, withFileTypes?: boolean, ...},
 ): mixed {
   checkPathInDev(path);
   let encoding = 'utf8';
@@ -220,6 +220,7 @@ export function readFile(
         // Unsupported:
         flag?: string, // Doesn't make sense except "r"
         signal?: mixed, // We'll have our own signal
+        ...
       },
 ): string | Buffer {
   checkPathInDev(path);
@@ -270,7 +271,7 @@ function createReadlinkMap(): Map<string, Array<string | Record<mixed>>> {
 
 export function readlink(
   path: string,
-  options?: string | {encoding?: string},
+  options?: string | {encoding?: string, ...},
 ): mixed {
   checkPathInDev(path);
   let encoding = 'utf8';
@@ -311,7 +312,7 @@ function createRealpathMap(): Map<string, Array<string | Record<mixed>>> {
 
 export function realpath(
   path: string,
-  options?: string | {encoding?: string},
+  options?: string | {encoding?: string, ...},
 ): mixed {
   checkPathInDev(path);
   let encoding = 'utf8';
@@ -350,7 +351,7 @@ function createStatMap(): Map<string, Array<boolean | Record<mixed>>> {
   return new Map();
 }
 
-export function stat(path: string, options?: {bigint?: boolean}): mixed {
+export function stat(path: string, options?: {bigint?: boolean, ...}): mixed {
   checkPathInDev(path);
   let bigint = false;
   if (options && options.bigint) {
