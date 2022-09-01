@@ -27,7 +27,7 @@ let rendererID;
 describe('console', () => {
   beforeEach(() => {
     const Console = require('react-devtools-shared/src/backend/console');
-    console.log(Console);
+
     patchConsole = Console.patch;
     unpatchConsole = Console.unpatch;
 
