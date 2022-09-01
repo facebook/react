@@ -16,7 +16,7 @@
  */
 
 function isHookName(s) {
-  return /^use[A-Z0-9].*$/.test(s);
+  return /^use[A-Z$0-9].*$/.test(s) || s === "use";
 }
 
 /**
