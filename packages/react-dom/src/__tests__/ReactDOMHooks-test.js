@@ -14,6 +14,7 @@ let ReactDOM;
 let ReactDOMClient;
 let Scheduler;
 let act;
+let ReactFeatureFlags;
 
 describe('ReactDOMHooks', () => {
   let container;
@@ -26,6 +27,7 @@ describe('ReactDOMHooks', () => {
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -145,5 +147,38 @@ describe('ReactDOMHooks', () => {
     });
 
     expect(labelRef.current.innerHTML).toBe('abc');
+  });
+
+  fit('StrictMode + Suspense + subsequent layout StateUpdates causes infinite re-render when another passive effect sets state', () => {
+    ReactFeatureFlags.enableStrictEffects = __DEV__;
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      const [state1, setState1] = React.useState(false);
+      const [state2, setState2] = React.useState(false);
+      React.useLayoutEffect(() => {
+        setState1(true);
+      }, []);
+      React.useLayoutEffect(() => {
+        if (state1) {
+          setState2(true);
+        }
+      }, [state1]);
+
+      const [state3, setState3] = React.useState(false);
+      React.useEffect(() => {
+        setState3(true);
+      }, []);
+      return state3;
+    }
+
+    root.render(
+      <React.StrictMode>
+        <React.Suspense>
+          <App />
+        </React.Suspense>
+      </React.StrictMode>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
   });
 });

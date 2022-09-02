@@ -962,6 +962,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 // This is the entry point for every concurrent task, i.e. anything that
 // goes through Scheduler.
 function performConcurrentWorkOnRoot(root, didTimeout) {
+  console.log('performConcurrentWorkOnRoot');
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     resetNestedUpdateFlag();
   }
@@ -1103,6 +1104,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       root.finishedWork = finishedWork;
       root.finishedLanes = lanes;
       finishConcurrentRender(root, exitStatus, lanes);
+      console.log('finishConcurrentWorkOnRoot');
     }
   }
 
@@ -1409,6 +1411,7 @@ function markRootSuspended(root, suspendedLanes) {
 // This is the entry point for synchronous tasks that don't go
 // through Scheduler
 function performSyncWorkOnRoot(root) {
+  console.log('performSyncWorkOnRoot');
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     syncNestedUpdateFlag();
   }
@@ -1473,7 +1476,7 @@ function performSyncWorkOnRoot(root) {
   // Before exiting, make sure there's a callback scheduled for the next
   // pending level.
   ensureRootIsScheduled(root, now());
-
+  console.log('FinishSyncWorkOnRoot', exitStatus);
   return null;
 }
 
@@ -2553,7 +2556,9 @@ function commitRootImpl(
 
   if (__DEV__ && enableStrictEffects) {
     if (!rootDidHavePassiveEffects) {
+      console.log('--- double invoke effects in dev ---');
       commitDoubleInvokeEffectsInDEV(root);
+      console.log('--- double invoke over           ---');
     }
   }
 
@@ -3170,6 +3175,7 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
   parentFiber: Fiber,
   isInStrictMode: boolean,
 ) {
+  console.log('recursivelyTraverseAndDoubleInvokeEffectsInDEV');
   let child = parentFiber.child;
   while (child !== null) {
     doubleInvokeEffectsInDEV(root, child, isInStrictMode);
@@ -3184,6 +3190,15 @@ function doubleInvokeEffectsInDEV(
 ) {
   const isStrictModeFiber = fiber.type === REACT_STRICT_MODE_TYPE;
   const isInStrictMode = parentIsInStrictMode || isStrictModeFiber;
+  console.log(
+    'doubleInvokeEffectsInDEV',
+    isInStrictMode,
+    fiber.flags & PlacementDEV,
+    fiber.tag === OffscreenComponent,
+    fiber.return.tag === SuspenseComponent
+      ? 'This OffscreenComponent is an indirection from a SuspenseBoundary'
+      : '',
+  );
   if (fiber.flags & PlacementDEV || fiber.tag === OffscreenComponent) {
     setCurrentDebugFiberInDEV(fiber);
     if (isInStrictMode) {

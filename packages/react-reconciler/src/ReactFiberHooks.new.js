@@ -2270,7 +2270,11 @@ function dispatchSetState<S, A>(
   }
 
   const lane = requestUpdateLane(fiber);
-
+  console.log(
+    'dispatchSetState fiber.lanes: %s  update.lane: %s',
+    fiber.lanes,
+    lane,
+  );
   const update: Update<S, A> = {
     lane,
     action,
@@ -2290,6 +2294,7 @@ function dispatchSetState<S, A>(
       // The queue is currently empty, which means we can eagerly compute the
       // next state before entering the render phase. If the new state is the
       // same as the current state, we may be able to bail out entirely.
+      console.log('can possibly avoid rerender');
       const lastRenderedReducer = queue.lastRenderedReducer;
       if (lastRenderedReducer !== null) {
         let prevDispatcher;
@@ -2313,6 +2318,7 @@ function dispatchSetState<S, A>(
             // time the reducer has changed.
             // TODO: Do we still need to entangle transitions in this case?
             enqueueConcurrentHookUpdateAndEagerlyBailout(fiber, queue, update);
+            console.log('state was the same, re-render avoided');
             return;
           }
         } catch (error) {
@@ -2324,6 +2330,7 @@ function dispatchSetState<S, A>(
         }
       }
     }
+    console.log('enqueueing a rerender');
 
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
