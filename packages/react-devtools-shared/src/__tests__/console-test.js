@@ -22,6 +22,23 @@ let patchConsole;
 let unpatchConsole;
 let rendererID;
 
+function renderANoopComponent() {
+  // The first time that `root.render` is called, so is `patchConsole` with default values.
+  // So, to properly test behavior, we need to call `root.render`, then `patchConsole`, then
+  // render whatever we actually want to test.
+  const container = document.createElement('div');
+  const root = ReactDOMClient.createRoot(container);
+  function Noop() {}
+  act(() => root.render(<Noop />));
+
+  // Now, it is as if `patchConsole` had been called with default values of:
+  // appendComponentStack: true
+  // breakOnConsoleErrors: false
+  // showInlineWarningsAndErrors: true
+  // hideConsoleLogsInStrictMode: false
+  // browserTheme: undefined
+}
+
 describe('console', () => {
   beforeEach(() => {
     const Console = require('react-devtools-shared/src/backend/console');
@@ -56,6 +73,8 @@ describe('console', () => {
     };
 
     React = require('react');
+    // Note: the following line will cause `patchConsole` to be called with
+    // default values.
     ReactDOMClient = require('react-dom/client');
 
     const utils = require('./utils');
@@ -168,8 +187,6 @@ describe('console', () => {
 
   // @reactVersion >=18.0
   it('should not append multiple stacks', () => {
-    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
-
     const Child = ({children}) => {
       fakeConsole.warn('warn\n    in Child (at fake.js:123)');
       fakeConsole.error('error', '\n    in Child (at fake.js:123)');
@@ -191,8 +208,6 @@ describe('console', () => {
 
   // @reactVersion >=18.0
   it('should append component stacks to errors and warnings logged during render', () => {
-    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
-
     const Intermediate = ({children}) => children;
     const Parent = ({children}) => (
       <Intermediate>
@@ -280,8 +295,6 @@ describe('console', () => {
 
   // @reactVersion >=18.0
   it('should append component stacks to errors and warnings logged from commit hooks', () => {
-    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
-
     const Intermediate = ({children}) => children;
     const Parent = ({children}) => (
       <Intermediate>
@@ -378,9 +391,7 @@ describe('console', () => {
   });
 
   // @reactVersion >=18.0
-  it('should append stacks after being uninstalled and reinstalled', () => {
-    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
-
+  it('should allow you to change appendComponentStacks by repatching', () => {
     const Child = ({children}) => {
       fakeConsole.warn('warn');
       fakeConsole.error('error');
@@ -390,11 +401,25 @@ describe('console', () => {
     act(() => legacyRender(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(mockError).toHaveBeenCalledTimes(1);
-    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
+
+    patchConsole({
+      appendComponentStack: false,
+      breakOnConsoleErrors: false,
+      showInlineWarningsAndErrors: false,
+    });
+    act(() => legacyRender(<Child />, document.createElement('div')));
+
+    expect(mockWarn).toHaveBeenCalledTimes(2);
+    expect(mockWarn.mock.calls[1]).toHaveLength(1);
+    expect(mockWarn.mock.calls[1][0]).toBe('warn');
+    expect(mockError).toHaveBeenCalledTimes(2);
+    expect(mockError.mock.calls[1]).toHaveLength(1);
+    expect(mockError.mock.calls[1][0]).toBe('error');
 
     patchConsole({
       appendComponentStack: true,
@@ -403,24 +428,22 @@ describe('console', () => {
     });
     act(() => legacyRender(<Child />, document.createElement('div')));
 
-    expect(mockWarn).toHaveBeenCalledTimes(2);
-    expect(mockWarn.mock.calls[1]).toHaveLength(2);
-    expect(mockWarn.mock.calls[1][0]).toBe('warn');
-    expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
+    expect(mockWarn).toHaveBeenCalledTimes(3);
+    expect(mockWarn.mock.calls[2]).toHaveLength(2);
+    expect(mockWarn.mock.calls[2][0]).toBe('warn');
+    expect(normalizeCodeLocInfo(mockWarn.mock.calls[2][1])).toEqual(
       '\n    in Child (at **)',
     );
-    expect(mockError).toHaveBeenCalledTimes(2);
-    expect(mockError.mock.calls[1]).toHaveLength(2);
-    expect(mockError.mock.calls[1][0]).toBe('error');
-    expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
+    expect(mockError).toHaveBeenCalledTimes(3);
+    expect(mockError.mock.calls[2]).toHaveLength(2);
+    expect(mockError.mock.calls[2][0]).toBe('error');
+    expect(normalizeCodeLocInfo(mockError.mock.calls[2][1])).toBe(
       '\n    in Child (at **)',
     );
   });
 
   // @reactVersion >=18.0
   it('should be resilient to prepareStackTrace', () => {
-    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
-
     Error.prepareStackTrace = function(error, callsites) {
       const stack = ['An error occurred:', error.message];
       for (let i = 0; i < callsites.length; i++) {
@@ -481,8 +504,13 @@ describe('console', () => {
   });
 
   it('should double log if hideConsoleLogsInStrictMode is disabled in Strict mode', () => {
-    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
-    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
+    renderANoopComponent();
+
+    patchConsole({
+      appendComponentStack: false,
+      // (This is the default value for hideConsoleLogsInStrictMode)
+      hideConsoleLogsInStrictMode: false,
+    });
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -531,8 +559,12 @@ describe('console', () => {
   });
 
   it('should not double log if hideConsoleLogsInStrictMode is enabled in Strict mode', () => {
-    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
-    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = true;
+    renderANoopComponent();
+
+    patchConsole({
+      appendComponentStack: false,
+      hideConsoleLogsInStrictMode: true,
+    });
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -667,8 +699,12 @@ describe('console', () => {
   });
 
   it('should properly dim component stacks during strict mode double log', () => {
-    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
-    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
+    renderANoopComponent();
+
+    patchConsole({
+      appendComponentStack: true,
+      hideConsoleLogsInStrictMode: false,
+    });
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
