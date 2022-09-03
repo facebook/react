@@ -40,6 +40,8 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
+export const enableUseHook = false;
+export const enableUseMemoCacheHook = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = true;
@@ -69,7 +71,6 @@ export const enableServerContext = false;
 export const enableUseMutableSource = true;
 
 export const enableTransitionTracing = false;
-export const enableSymbolFallbackForWWW = false;
 
 export const enableFloat = false;
 // Flow magic to verify the exports of this file match the original version.

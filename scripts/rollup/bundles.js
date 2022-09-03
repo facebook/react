@@ -408,7 +408,8 @@ const bundles = [
   {
     bundleTypes: [NODE_ES2015],
     moduleType: RENDERER_UTILS,
-    entry: 'react-server-dom-webpack/node-register',
+    entry: 'react-server-dom-webpack/src/ReactFlightWebpackNodeRegister.js',
+    name: 'react-server-dom-webpack-node-register',
     global: 'ReactFlightWebpackNodeRegister',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,

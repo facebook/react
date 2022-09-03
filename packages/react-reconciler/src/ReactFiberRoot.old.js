@@ -15,6 +15,7 @@ import type {
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent.old';
+import type {Container} from './ReactFiberHostConfig';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.old';
@@ -70,6 +71,7 @@ function FiberRootNode(
   this.expiredLanes = NoLanes;
   this.mutableReadLanes = NoLanes;
   this.finishedLanes = NoLanes;
+  this.errorRecoveryDisabledLanes = NoLanes;
 
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);
@@ -127,7 +129,7 @@ function FiberRootNode(
 }
 
 export function createFiberRoot(
-  containerInfo: any,
+  containerInfo: Container,
   tag: RootTag,
   hydrate: boolean,
   initialChildren: ReactNodeList,

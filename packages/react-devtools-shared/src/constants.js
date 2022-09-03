@@ -51,7 +51,7 @@ export const SESSION_STORAGE_RELOAD_AND_PROFILE_KEY =
 export const LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS =
   'React::DevTools::breakOnConsoleErrors';
 
-export const LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY =
+export const LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY =
   'React::DevTools::appendComponentStack';
 
 export const LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY =

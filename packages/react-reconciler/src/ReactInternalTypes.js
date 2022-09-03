@@ -17,6 +17,7 @@ import type {
   MutableSource,
   StartTransitionOptions,
   Wakeable,
+  Usable,
 } from 'shared/ReactTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
@@ -238,6 +239,7 @@ type BaseFiberRootProperties = {|
   pingedLanes: Lanes,
   expiredLanes: Lanes,
   mutableReadLanes: Lanes,
+  errorRecoveryDisabledLanes: Lanes,
 
   finishedLanes: Lanes,
 
@@ -291,8 +293,7 @@ export type TransitionTracingCallbacks = {
     startTime: number,
     deletions: Array<{
       type: string,
-      name?: string,
-      newName?: string,
+      name?: string | null,
       endTime: number,
     }>,
   ) => void,
@@ -314,8 +315,7 @@ export type TransitionTracingCallbacks = {
     startTime: number,
     deletions: Array<{
       type: string,
-      name?: string,
-      newName?: string,
+      name?: string | null,
       endTime: number,
     }>,
   ) => void,
@@ -337,7 +337,7 @@ type TransitionTracingOnlyFiberRootProperties = {|
   // are considered complete when the pending suspense boundaries set is
   // empty. We can represent this as a Map of transitions to suspense
   // boundary sets
-  incompleteTransitions: Map<Array<Transition>, TracingMarkerInstance>,
+  incompleteTransitions: Map<Transition, TracingMarkerInstance>,
 |};
 
 // Exported FiberRoot type includes all properties,
@@ -355,6 +355,7 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {|
+  use?: <T>(Usable<T>) => T,
   getCacheSignal?: () => AbortSignal,
   getCacheForType?: <T>(resourceType: () => T) => T,
   readContext<T>(context: ReactContext<T>): T,
@@ -403,6 +404,7 @@ export type Dispatcher = {|
   ): T,
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
+  useMemoCache?: (size: number) => Array<any>,
 
   unstable_isNewReconciler?: boolean,
 |};

@@ -67,6 +67,7 @@ describe('ReactStrictMode', () => {
     );
   });
 
+  // @gate __DEV__ && !enableStrictEffects
   it('should invoke precommit lifecycle methods twice', () => {
     let log = [];
     let shouldComponentUpdate = false;
@@ -107,24 +108,15 @@ describe('ReactStrictMode', () => {
       container,
     );
 
-    if (__DEV__) {
-      expect(log).toEqual([
-        'constructor',
-        'constructor',
-        'getDerivedStateFromProps',
-        'getDerivedStateFromProps',
-        'render',
-        'render',
-        'componentDidMount',
-      ]);
-    } else {
-      expect(log).toEqual([
-        'constructor',
-        'getDerivedStateFromProps',
-        'render',
-        'componentDidMount',
-      ]);
-    }
+    expect(log).toEqual([
+      'constructor',
+      'constructor',
+      'getDerivedStateFromProps',
+      'getDerivedStateFromProps',
+      'render',
+      'render',
+      'componentDidMount',
+    ]);
 
     log = [];
     shouldComponentUpdate = true;
@@ -135,24 +127,15 @@ describe('ReactStrictMode', () => {
       </React.StrictMode>,
       container,
     );
-    if (__DEV__) {
-      expect(log).toEqual([
-        'getDerivedStateFromProps',
-        'getDerivedStateFromProps',
-        'shouldComponentUpdate',
-        'shouldComponentUpdate',
-        'render',
-        'render',
-        'componentDidUpdate',
-      ]);
-    } else {
-      expect(log).toEqual([
-        'getDerivedStateFromProps',
-        'shouldComponentUpdate',
-        'render',
-        'componentDidUpdate',
-      ]);
-    }
+    expect(log).toEqual([
+      'getDerivedStateFromProps',
+      'getDerivedStateFromProps',
+      'shouldComponentUpdate',
+      'shouldComponentUpdate',
+      'render',
+      'render',
+      'componentDidUpdate',
+    ]);
 
     log = [];
     shouldComponentUpdate = false;
@@ -164,19 +147,12 @@ describe('ReactStrictMode', () => {
       container,
     );
 
-    if (__DEV__) {
-      expect(log).toEqual([
-        'getDerivedStateFromProps',
-        'getDerivedStateFromProps',
-        'shouldComponentUpdate',
-        'shouldComponentUpdate',
-      ]);
-    } else {
-      expect(log).toEqual([
-        'getDerivedStateFromProps',
-        'shouldComponentUpdate',
-      ]);
-    }
+    expect(log).toEqual([
+      'getDerivedStateFromProps',
+      'getDerivedStateFromProps',
+      'shouldComponentUpdate',
+      'shouldComponentUpdate',
+    ]);
   });
 
   it('should invoke setState callbacks twice', () => {

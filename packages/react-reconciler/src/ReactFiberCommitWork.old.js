@@ -30,7 +30,11 @@ import type {
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.old';
 import type {RootState} from './ReactFiberRoot.old';
-import type {Transition} from './ReactFiberTracingMarkerComponent.old';
+import type {
+  Transition,
+  TracingMarkerInstance,
+  TransitionAbort,
+} from './ReactFiberTracingMarkerComponent.old';
 
 import {
   enableCreateEventHandleAPI,
@@ -40,7 +44,6 @@ import {
   enableSchedulingProfiler,
   enableSuspenseCallback,
   enableScopeAPI,
-  enableStrictEffects,
   deletedTreeCleanUpLevel,
   enableUpdaterTracking,
   enableCache,
@@ -146,8 +149,12 @@ import {
   addTransitionProgressCallbackToPendingTransition,
   addTransitionCompleteCallbackToPendingTransition,
   addMarkerProgressCallbackToPendingTransition,
+  addMarkerIncompleteCallbackToPendingTransition,
   addMarkerCompleteCallbackToPendingTransition,
   setIsRunningInsertionEffect,
+  getExecutionContext,
+  CommitContext,
+  NoContext,
 } from './ReactFiberWorkLoop.old';
 import {
   NoFlags as NoHookEffect,
@@ -200,6 +207,15 @@ let nextEffect: Fiber | null = null;
 let inProgressLanes: Lanes | null = null;
 let inProgressRoot: FiberRoot | null = null;
 
+function shouldProfile(current: Fiber): boolean {
+  return (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    (current.mode & ProfileMode) !== NoMode &&
+    (getExecutionContext() & CommitContext) !== NoContext
+  );
+}
+
 export function reportUncaughtErrorInDEV(error: mixed) {
   // Wrapping each small part of the commit phase into a guarded
   // callback is a bit too slow (https://github.com/facebook/react/pull/21666).
@@ -217,11 +233,7 @@ export function reportUncaughtErrorInDEV(error: mixed) {
 const callComponentWillUnmountWithTimer = function(current, instance) {
   instance.props = current.memoizedProps;
   instance.state = current.memoizedState;
-  if (
-    enableProfilerTimer &&
-    enableProfilerCommitHooks &&
-    current.mode & ProfileMode
-  ) {
+  if (shouldProfile(current)) {
     try {
       startLayoutEffectTimer();
       instance.componentWillUnmount();
@@ -261,11 +273,7 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
     if (typeof ref === 'function') {
       let retVal;
       try {
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          current.mode & ProfileMode
-        ) {
+        if (shouldProfile(current)) {
           try {
             startLayoutEffectTimer();
             retVal = ref(null);
@@ -641,7 +649,11 @@ export function commitPassiveEffectDurations(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
 ): void {
-  if (enableProfilerTimer && enableProfilerCommitHooks) {
+  if (
+    enableProfilerTimer &&
+    enableProfilerCommitHooks &&
+    getExecutionContext() & CommitContext
+  ) {
     // Only Profilers with work in their subtree will have an Update effect scheduled.
     if ((finishedWork.flags & Update) !== NoFlags) {
       switch (finishedWork.tag) {
@@ -694,11 +706,7 @@ function commitHookLayoutEffects(finishedWork: Fiber, hookFlags: HookFlags) {
   // This is done to prevent sibling component effects from interfering with each other,
   // e.g. a destroy function in one component should never override a ref set
   // by a create function in another component during the same commit.
-  if (
-    enableProfilerTimer &&
-    enableProfilerCommitHooks &&
-    finishedWork.mode & ProfileMode
-  ) {
+  if (shouldProfile(finishedWork)) {
     try {
       startLayoutEffectTimer();
       commitHookEffectListMount(hookFlags, finishedWork);
@@ -751,11 +759,7 @@ function commitClassLayoutLifecycles(
         }
       }
     }
-    if (
-      enableProfilerTimer &&
-      enableProfilerCommitHooks &&
-      finishedWork.mode & ProfileMode
-    ) {
+    if (shouldProfile(finishedWork)) {
       try {
         startLayoutEffectTimer();
         instance.componentDidMount();
@@ -806,11 +810,7 @@ function commitClassLayoutLifecycles(
         }
       }
     }
-    if (
-      enableProfilerTimer &&
-      enableProfilerCommitHooks &&
-      finishedWork.mode & ProfileMode
-    ) {
+    if (shouldProfile(finishedWork)) {
       try {
         startLayoutEffectTimer();
         instance.componentDidUpdate(
@@ -892,7 +892,7 @@ function commitHostComponentMount(finishedWork: Fiber) {
 }
 
 function commitProfilerUpdate(finishedWork: Fiber, current: Fiber | null) {
-  if (enableProfilerTimer) {
+  if (enableProfilerTimer && getExecutionContext() & CommitContext) {
     try {
       const {onCommit, onRender} = finishedWork.memoizedProps;
       const {effectDuration} = finishedWork.stateNode;
@@ -1135,6 +1135,141 @@ function commitLayoutEffectOnFiber(
   }
 }
 
+function abortRootTransitions(
+  root: FiberRoot,
+  abort: TransitionAbort,
+  deletedTransitions: Set<Transition>,
+  deletedOffscreenInstance: OffscreenInstance | null,
+  isInDeletedTree: boolean,
+) {
+  if (enableTransitionTracing) {
+    const rootTransitions = root.incompleteTransitions;
+    deletedTransitions.forEach(transition => {
+      if (rootTransitions.has(transition)) {
+        const transitionInstance: TracingMarkerInstance = (rootTransitions.get(
+          transition,
+        ): any);
+        if (transitionInstance.aborts === null) {
+          transitionInstance.aborts = [];
+        }
+        transitionInstance.aborts.push(abort);
+
+        if (deletedOffscreenInstance !== null) {
+          if (
+            transitionInstance.pendingBoundaries !== null &&
+            transitionInstance.pendingBoundaries.has(deletedOffscreenInstance)
+          ) {
+            transitionInstance.pendingBoundaries.delete(
+              deletedOffscreenInstance,
+            );
+          }
+        }
+      }
+    });
+  }
+}
+
+function abortTracingMarkerTransitions(
+  abortedFiber: Fiber,
+  abort: TransitionAbort,
+  deletedTransitions: Set<Transition>,
+  deletedOffscreenInstance: OffscreenInstance | null,
+  isInDeletedTree: boolean,
+) {
+  if (enableTransitionTracing) {
+    const markerInstance: TracingMarkerInstance = abortedFiber.stateNode;
+    const markerTransitions = markerInstance.transitions;
+    const pendingBoundaries = markerInstance.pendingBoundaries;
+    if (markerTransitions !== null) {
+      // TODO: Refactor this code. Is there a way to move this code to
+      // the deletions phase instead of calculating it here while making sure
+      // complete is called appropriately?
+      deletedTransitions.forEach(transition => {
+        // If one of the transitions on the tracing marker is a transition
+        // that was in an aborted subtree, we will abort that tracing marker
+        if (
+          abortedFiber !== null &&
+          markerTransitions.has(transition) &&
+          (markerInstance.aborts === null ||
+            !markerInstance.aborts.includes(abort))
+        ) {
+          if (markerInstance.transitions !== null) {
+            if (markerInstance.aborts === null) {
+              markerInstance.aborts = [abort];
+              addMarkerIncompleteCallbackToPendingTransition(
+                abortedFiber.memoizedProps.name,
+                markerInstance.transitions,
+                markerInstance.aborts,
+              );
+            } else {
+              markerInstance.aborts.push(abort);
+            }
+
+            // We only want to call onTransitionProgress when the marker hasn't been
+            // deleted
+            if (
+              deletedOffscreenInstance !== null &&
+              !isInDeletedTree &&
+              pendingBoundaries !== null &&
+              pendingBoundaries.has(deletedOffscreenInstance)
+            ) {
+              pendingBoundaries.delete(deletedOffscreenInstance);
+
+              addMarkerProgressCallbackToPendingTransition(
+                abortedFiber.memoizedProps.name,
+                deletedTransitions,
+                pendingBoundaries,
+              );
+            }
+          }
+        }
+      });
+    }
+  }
+}
+
+function abortParentMarkerTransitionsForDeletedFiber(
+  abortedFiber: Fiber,
+  abort: TransitionAbort,
+  deletedTransitions: Set<Transition>,
+  deletedOffscreenInstance: OffscreenInstance | null,
+  isInDeletedTree: boolean,
+) {
+  if (enableTransitionTracing) {
+    // Find all pending markers that are waiting on child suspense boundaries in the
+    // aborted subtree and cancels them
+    let fiber = abortedFiber;
+    while (fiber !== null) {
+      switch (fiber.tag) {
+        case TracingMarkerComponent:
+          abortTracingMarkerTransitions(
+            fiber,
+            abort,
+            deletedTransitions,
+            deletedOffscreenInstance,
+            isInDeletedTree,
+          );
+          break;
+        case HostRoot:
+          const root = fiber.stateNode;
+          abortRootTransitions(
+            root,
+            abort,
+            deletedTransitions,
+            deletedOffscreenInstance,
+            isInDeletedTree,
+          );
+
+          break;
+        default:
+          break;
+      }
+
+      fiber = fiber.return;
+    }
+  }
+}
+
 function commitTransitionProgress(offscreenFiber: Fiber) {
   if (enableTransitionTracing) {
     // This function adds suspense boundaries to the root
@@ -1180,6 +1315,7 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
         pendingMarkers.forEach(markerInstance => {
           const pendingBoundaries = markerInstance.pendingBoundaries;
           const transitions = markerInstance.transitions;
+          const markerName = markerInstance.name;
           if (
             pendingBoundaries !== null &&
             !pendingBoundaries.has(offscreenInstance)
@@ -1190,10 +1326,10 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
             if (transitions !== null) {
               if (
                 markerInstance.tag === TransitionTracingMarker &&
-                markerInstance.name !== undefined
+                markerName !== null
               ) {
                 addMarkerProgressCallbackToPendingTransition(
-                  markerInstance.name,
+                  markerName,
                   transitions,
                   pendingBoundaries,
                 );
@@ -1217,6 +1353,7 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
         pendingMarkers.forEach(markerInstance => {
           const pendingBoundaries = markerInstance.pendingBoundaries;
           const transitions = markerInstance.transitions;
+          const markerName = markerInstance.name;
           if (
             pendingBoundaries !== null &&
             pendingBoundaries.has(offscreenInstance)
@@ -1225,13 +1362,27 @@ function commitTransitionProgress(offscreenFiber: Fiber) {
             if (transitions !== null) {
               if (
                 markerInstance.tag === TransitionTracingMarker &&
-                markerInstance.name !== undefined
+                markerName !== null
               ) {
                 addMarkerProgressCallbackToPendingTransition(
-                  markerInstance.name,
+                  markerName,
                   transitions,
                   pendingBoundaries,
                 );
+
+                // If there are no more unresolved suspense boundaries, the interaction
+                // is considered finished
+                if (pendingBoundaries.size === 0) {
+                  if (markerInstance.aborts === null) {
+                    addMarkerCompleteCallbackToPendingTransition(
+                      markerName,
+                      transitions,
+                    );
+                  }
+                  markerInstance.transitions = null;
+                  markerInstance.pendingBoundaries = null;
+                  markerInstance.aborts = null;
+                }
               } else if (markerInstance.tag === TransitionRoot) {
                 transitions.forEach(transition => {
                   addTransitionProgressCallbackToPendingTransition(
@@ -1341,11 +1492,7 @@ function commitAttachRef(finishedWork: Fiber) {
     }
     if (typeof ref === 'function') {
       let retVal;
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        finishedWork.mode & ProfileMode
-      ) {
+      if (shouldProfile(finishedWork)) {
         try {
           startLayoutEffectTimer();
           retVal = ref(instanceToUse);
@@ -1384,11 +1531,7 @@ function commitDetachRef(current: Fiber) {
   const currentRef = current.ref;
   if (currentRef !== null) {
     if (typeof currentRef === 'function') {
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        current.mode & ProfileMode
-      ) {
+      if (shouldProfile(current)) {
         try {
           startLayoutEffectTimer();
           currentRef(null);
@@ -1750,6 +1893,7 @@ function commitDeletionEffects(
           'a bug in React. Please file an issue.',
       );
     }
+
     commitDeletionEffectsOnFiber(root, returnFiber, deletedFiber);
     hostParent = null;
     hostParentIsContainer = false;
@@ -1914,11 +2058,7 @@ function commitDeletionEffectsOnFiber(
                     markComponentLayoutEffectUnmountStarted(deletedFiber);
                   }
 
-                  if (
-                    enableProfilerTimer &&
-                    enableProfilerCommitHooks &&
-                    deletedFiber.mode & ProfileMode
-                  ) {
+                  if (shouldProfile(deletedFiber)) {
                     startLayoutEffectTimer();
                     safelyCallDestroy(
                       deletedFiber,
@@ -1996,6 +2136,7 @@ function commitDeletionEffectsOnFiber(
         const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
         offscreenSubtreeWasHidden =
           prevOffscreenSubtreeWasHidden || deletedFiber.memoizedState !== null;
+
         recursivelyTraverseDeletionEffects(
           finishedRoot,
           nearestMountedAncestor,
@@ -2237,11 +2378,7 @@ function commitMutationEffectsOnFiber(
         // This prevents sibling component effects from interfering with each other,
         // e.g. a destroy function in one component should never override a ref set
         // by a create function in another component during the same commit.
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          finishedWork.mode & ProfileMode
-        ) {
+        if (shouldProfile(finishedWork)) {
           try {
             startLayoutEffectTimer();
             commitHookEffectListUnmount(
@@ -2627,18 +2764,14 @@ function recursivelyTraverseLayoutEffects(
   setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
-function disappearLayoutEffects(finishedWork: Fiber) {
+export function disappearLayoutEffects(finishedWork: Fiber) {
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
       // TODO (Offscreen) Check: flags & LayoutStatic
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        finishedWork.mode & ProfileMode
-      ) {
+      if (shouldProfile(finishedWork)) {
         try {
           startLayoutEffectTimer();
           commitHookEffectListUnmount(
@@ -2709,7 +2842,7 @@ function recursivelyTraverseDisappearLayoutEffects(parentFiber: Fiber) {
   }
 }
 
-function reappearLayoutEffects(
+export function reappearLayoutEffects(
   finishedRoot: FiberRoot,
   current: Fiber | null,
   finishedWork: Fiber,
@@ -2876,11 +3009,7 @@ function commitHookPassiveMountEffects(
   finishedWork: Fiber,
   hookFlags: HookFlags,
 ) {
-  if (
-    enableProfilerTimer &&
-    enableProfilerCommitHooks &&
-    finishedWork.mode & ProfileMode
-  ) {
+  if (shouldProfile(finishedWork)) {
     startPassiveEffectTimer();
     try {
       commitHookEffectListMount(hookFlags, finishedWork);
@@ -2986,6 +3115,12 @@ function commitOffscreenPassiveMountEffects(
     }
 
     commitTransitionProgress(finishedWork);
+
+    // TODO: Refactor this into an if/else branch
+    if (!isHidden) {
+      instance.transitions = null;
+      instance.pendingMarkers = null;
+    }
   }
 }
 
@@ -3016,20 +3151,18 @@ function commitCachePassiveMountEffect(
 function commitTracingMarkerPassiveMountEffect(finishedWork: Fiber) {
   // Get the transitions that were initiatized during the render
   // and add a start transition callback for each of them
+  // We will only call this on initial mount of the tracing marker
+  // only if there are no suspense children
   const instance = finishedWork.stateNode;
-  if (
-    instance.transitions !== null &&
-    (instance.pendingBoundaries === null ||
-      instance.pendingBoundaries.size === 0)
-  ) {
-    instance.transitions.forEach(transition => {
-      addMarkerCompleteCallbackToPendingTransition(
-        finishedWork.memoizedProps.name,
-        instance.transitions,
-      );
-    });
+  if (instance.transitions !== null && instance.pendingBoundaries === null) {
+    addMarkerCompleteCallbackToPendingTransition(
+      finishedWork.memoizedProps.name,
+      instance.transitions,
+    );
     instance.transitions = null;
     instance.pendingBoundaries = null;
+    instance.aborts = null;
+    instance.name = null;
   }
 }
 
@@ -3131,7 +3264,7 @@ function commitPassiveMountOnFiber(
         if (enableTransitionTracing) {
           // Get the transitions that were initiatized during the render
           // and add a start transition callback for each of them
-          const root = finishedWork.stateNode;
+          const root: FiberRoot = finishedWork.stateNode;
           const incompleteTransitions = root.incompleteTransitions;
           // Initial render
           if (committedTransitions !== null) {
@@ -3145,7 +3278,9 @@ function commitPassiveMountOnFiber(
           incompleteTransitions.forEach((markerInstance, transition) => {
             const pendingBoundaries = markerInstance.pendingBoundaries;
             if (pendingBoundaries === null || pendingBoundaries.size === 0) {
-              addTransitionCompleteCallbackToPendingTransition(transition);
+              if (markerInstance.aborts === null) {
+                addTransitionCompleteCallbackToPendingTransition(transition);
+              }
               incompleteTransitions.delete(transition);
             }
           });
@@ -3304,7 +3439,7 @@ function recursivelyTraverseReconnectPassiveEffects(
   setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
-function reconnectPassiveEffects(
+export function reconnectPassiveEffects(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
   committedLanes: Lanes,
@@ -3518,21 +3653,6 @@ function commitAtomicPassiveEffects(
       }
       break;
     }
-    case TracingMarkerComponent: {
-      if (enableTransitionTracing) {
-        recursivelyTraverseAtomicPassiveEffects(
-          finishedRoot,
-          finishedWork,
-          committedLanes,
-          committedTransitions,
-        );
-        if (flags & Passive) {
-          commitTracingMarkerPassiveMountEffect(finishedWork);
-        }
-        break;
-      }
-      // Intentional fallthrough to next branch
-    }
     // eslint-disable-next-line-no-fallthrough
     default: {
       recursivelyTraverseAtomicPassiveEffects(
@@ -3585,11 +3705,7 @@ function commitHookPassiveUnmountEffects(
   nearestMountedAncestor,
   hookFlags: HookFlags,
 ) {
-  if (
-    enableProfilerTimer &&
-    enableProfilerCommitHooks &&
-    finishedWork.mode & ProfileMode
-  ) {
+  if (shouldProfile(finishedWork)) {
     startPassiveEffectTimer();
     commitHookEffectListUnmount(
       hookFlags,
@@ -3718,7 +3834,7 @@ function recursivelyTraverseDisconnectPassiveEffects(parentFiber: Fiber): void {
   setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
-function disconnectPassiveEffect(finishedWork: Fiber): void {
+export function disconnectPassiveEffect(finishedWork: Fiber): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -3860,6 +3976,43 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
       }
       break;
     }
+    case SuspenseComponent: {
+      if (enableTransitionTracing) {
+        // We need to mark this fiber's parents as deleted
+        const offscreenFiber: Fiber = (current.child: any);
+        const instance: OffscreenInstance = offscreenFiber.stateNode;
+        const transitions = instance.transitions;
+        if (transitions !== null) {
+          const abortReason = {
+            reason: 'suspense',
+            name: current.memoizedProps.unstable_name || null,
+          };
+          if (
+            current.memoizedState === null ||
+            current.memoizedState.dehydrated === null
+          ) {
+            abortParentMarkerTransitionsForDeletedFiber(
+              offscreenFiber,
+              abortReason,
+              transitions,
+              instance,
+              true,
+            );
+
+            if (nearestMountedAncestor !== null) {
+              abortParentMarkerTransitionsForDeletedFiber(
+                nearestMountedAncestor,
+                abortReason,
+                transitions,
+                instance,
+                false,
+              );
+            }
+          }
+        }
+      }
+      break;
+    }
     case CacheComponent: {
       if (enableCache) {
         const cache = current.memoizedState.cache;
@@ -3867,115 +4020,38 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
       }
       break;
     }
-  }
-}
-
-// TODO: Reuse reappearLayoutEffects traversal here?
-function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
-    // We don't need to re-check StrictEffectsMode here.
-    // This function is only called if that check has already passed.
-    switch (fiber.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent: {
-        try {
-          commitHookEffectListMount(HookLayout | HookHasEffect, fiber);
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
-        }
-        break;
-      }
-      case ClassComponent: {
-        const instance = fiber.stateNode;
-        try {
-          instance.componentDidMount();
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
-        }
-        break;
-      }
-    }
-  }
-}
-
-function invokePassiveEffectMountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
-    // We don't need to re-check StrictEffectsMode here.
-    // This function is only called if that check has already passed.
-    switch (fiber.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent: {
-        try {
-          commitHookEffectListMount(HookPassive | HookHasEffect, fiber);
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
-        }
-        break;
-      }
-    }
-  }
-}
-
-function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
-    // We don't need to re-check StrictEffectsMode here.
-    // This function is only called if that check has already passed.
-    switch (fiber.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent: {
-        try {
-          commitHookEffectListUnmount(
-            HookLayout | HookHasEffect,
-            fiber,
-            fiber.return,
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        // We need to mark this fiber's parents as deleted
+        const instance: TracingMarkerInstance = current.stateNode;
+        const transitions = instance.transitions;
+        if (transitions !== null) {
+          const abortReason = {
+            reason: 'marker',
+            name: current.memoizedProps.name,
+          };
+          abortParentMarkerTransitionsForDeletedFiber(
+            current,
+            abortReason,
+            transitions,
+            null,
+            true,
           );
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
+
+          if (nearestMountedAncestor !== null) {
+            abortParentMarkerTransitionsForDeletedFiber(
+              nearestMountedAncestor,
+              abortReason,
+              transitions,
+              null,
+              false,
+            );
+          }
         }
-        break;
       }
-      case ClassComponent: {
-        const instance = fiber.stateNode;
-        if (typeof instance.componentWillUnmount === 'function') {
-          safelyCallComponentWillUnmount(fiber, fiber.return, instance);
-        }
-        break;
-      }
+      break;
     }
   }
 }
 
-function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
-    // We don't need to re-check StrictEffectsMode here.
-    // This function is only called if that check has already passed.
-    switch (fiber.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent: {
-        try {
-          commitHookEffectListUnmount(
-            HookPassive | HookHasEffect,
-            fiber,
-            fiber.return,
-          );
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
-        }
-      }
-    }
-  }
-}
-
-export {
-  commitPlacement,
-  commitAttachRef,
-  commitDetachRef,
-  invokeLayoutEffectMountInDEV,
-  invokeLayoutEffectUnmountInDEV,
-  invokePassiveEffectMountInDEV,
-  invokePassiveEffectUnmountInDEV,
-};
+export {commitPlacement, commitAttachRef, commitDetachRef};

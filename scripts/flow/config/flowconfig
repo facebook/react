@@ -49,15 +49,5 @@ esproposal.optional_chaining=enable
 
 munge_underscores=false
 
-suppress_type=$FlowIssue
-suppress_type=$FlowFixMe
-suppress_type=$FixMe
-suppress_type=$FlowExpectedError
-
-suppress_comment=\\(.\\|\n\\)*\\$FlowFixMe
-suppress_comment=\\(.\\|\n\\)*\\$FlowIssue
-suppress_comment=\\(.\\|\n\\)*\\$FlowFixedInNextDeploy
-suppress_comment=\\(.\\|\n\\)*\\$FlowExpectedError
-
 [version]
 ^0.97.0

@@ -643,6 +643,21 @@ const tests = {
     },
     {
       code: `
+        // These are neither functions nor hooks.
+        function _normalFunctionWithHook() {
+          useHookInsideNormalFunction();
+        }
+        function _useNotAHook() {
+          useHookInsideNormalFunction();
+        }
+      `,
+      errors: [
+        functionError('useHookInsideNormalFunction', '_normalFunctionWithHook'),
+        functionError('useHookInsideNormalFunction', '_useNotAHook'),
+      ],
+    },
+    {
+      code: `
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function normalFunctionWithConditionalHook() {

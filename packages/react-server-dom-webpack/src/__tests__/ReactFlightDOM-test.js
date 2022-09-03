@@ -17,14 +17,9 @@ global.TextDecoder = require('util').TextDecoder;
 // TODO: we can replace this with FlightServer.act().
 global.setImmediate = cb => cb();
 
-let webpackModuleIdx = 0;
-let webpackModules = {};
-let webpackMap = {};
-global.__webpack_require__ = function(id) {
-  return webpackModules[id];
-};
-
 let act;
+let clientExports;
+let webpackMap;
 let Stream;
 let React;
 let ReactDOMClient;
@@ -35,15 +30,17 @@ let Suspense;
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
-    webpackModules = {};
-    webpackMap = {};
     act = require('jest-react').act;
+    const WebpackMock = require('./utils/WebpackMock');
+    clientExports = WebpackMock.clientExports;
+    webpackMap = WebpackMock.webpackMap;
+
     Stream = require('stream');
     React = require('react');
+    Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
     ReactServerDOMWriter = require('react-server-dom-webpack/writer.node.server');
     ReactServerDOMReader = require('react-server-dom-webpack');
-    Suspense = React.Suspense;
   });
 
   function getTestStream() {
@@ -62,22 +59,6 @@ describe('ReactFlightDOM', () => {
       readable,
       writable,
     };
-  }
-
-  function moduleReference(moduleExport) {
-    const idx = webpackModuleIdx++;
-    webpackModules[idx] = {
-      d: moduleExport,
-    };
-    webpackMap['path/' + idx] = {
-      default: {
-        id: '' + idx,
-        chunks: [],
-        name: 'd',
-      },
-    };
-    const MODULE_TAG = Symbol.for('react.module.reference');
-    return {$$typeof: MODULE_TAG, filepath: 'path/' + idx, name: 'default'};
   }
 
   async function waitForSuspense(fn) {
@@ -256,6 +237,83 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
+  it('should unwrap async module references', async () => {
+    const AsyncModule = Promise.resolve(function AsyncModule({text}) {
+      return 'Async: ' + text;
+    });
+
+    const AsyncModule2 = Promise.resolve({
+      exportName: 'Module',
+    });
+
+    function Print({response}) {
+      return <p>{response.readRoot()}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const AsyncModuleRef = await clientExports(AsyncModule);
+    const AsyncModuleRef2 = await clientExports(AsyncModule2);
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>Async: Module</p>');
+  });
+
+  it('should be able to import a name called "then"', async () => {
+    const thenExports = {
+      then: function then() {
+        return 'and then';
+      },
+    };
+
+    function Print({response}) {
+      return <p>{response.readRoot()}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const ThenRef = clientExports(thenExports).then;
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <ThenRef />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>and then</p>');
+  });
+
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 
@@ -345,7 +403,7 @@ describe('ReactFlightDOM', () => {
       return <div>{games}</div>;
     }
 
-    const MyErrorBoundaryClient = moduleReference(MyErrorBoundary);
+    const MyErrorBoundaryClient = clientExports(MyErrorBoundary);
 
     function ProfileContent() {
       return (
@@ -470,7 +528,7 @@ describe('ReactFlightDOM', () => {
       return <input />;
     }
 
-    const InputClient = moduleReference(Input);
+    const InputClient = clientExports(Input);
 
     // Server
 

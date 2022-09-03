@@ -35,12 +35,18 @@ function startReadingFromStream(
     }
     const buffer: Uint8Array = (value: any);
     processBinaryChunk(response, buffer);
-    return reader.read().then(progress, error);
+    return reader
+      .read()
+      .then(progress)
+      .catch(error);
   }
   function error(e) {
     reportGlobalError(response, e);
   }
-  reader.read().then(progress, error);
+  reader
+    .read()
+    .then(progress)
+    .catch(error);
 }
 
 function createFromReadableStream(

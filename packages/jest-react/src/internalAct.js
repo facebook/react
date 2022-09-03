@@ -23,7 +23,7 @@ import enqueueTask from 'shared/enqueueTask';
 let actingUpdatesScopeDepth = 0;
 
 export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
-  if (Scheduler.unstable_flushAllWithoutAsserting === undefined) {
+  if (Scheduler.unstable_flushUntilNextPaint === undefined) {
     throw Error(
       'This version of `act` requires a special mock build of Scheduler.',
     );
@@ -120,19 +120,31 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
 }
 
 function flushActWork(resolve, reject) {
-  // Flush suspended fallbacks
-  // $FlowFixMe: Flow doesn't know about global Jest object
-  jest.runOnlyPendingTimers();
-  enqueueTask(() => {
+  if (Scheduler.unstable_hasPendingWork()) {
     try {
-      const didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
-      if (didFlushWork) {
-        flushActWork(resolve, reject);
-      } else {
-        resolve();
-      }
+      Scheduler.unstable_flushUntilNextPaint();
     } catch (error) {
       reject(error);
     }
-  });
+
+    // If Scheduler yields while there's still work, it's so that we can
+    // unblock the main thread (e.g. for paint or for microtasks). Yield to
+    // the main thread and continue in a new task.
+    enqueueTask(() => flushActWork(resolve, reject));
+    return;
+  }
+
+  // Once the scheduler queue is empty, run all the timers. The purpose of this
+  // is to force any pending fallbacks to commit. The public version of act does
+  // this with dev-only React runtime logic, but since our internal act needs to
+  // work work production builds of React, we have to cheat.
+  // $FlowFixMe: Flow doesn't know about global Jest object
+  jest.runOnlyPendingTimers();
+  if (Scheduler.unstable_hasPendingWork()) {
+    // Committing a fallback scheduled additional work. Continue flushing.
+    flushActWork(resolve, reject);
+    return;
+  }
+
+  resolve();
 }

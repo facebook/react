@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {TransitionTracingCallbacks, Fiber} from './ReactInternalTypes';
+import type {
+  TransitionTracingCallbacks,
+  Fiber,
+  FiberRoot,
+} from './ReactInternalTypes';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 import type {StackCursor} from './ReactFiberStack.new';
 
@@ -21,7 +25,14 @@ export type PendingTransitionCallbacks = {
   transitionStart: Array<Transition> | null,
   transitionProgress: Map<Transition, PendingBoundaries> | null,
   transitionComplete: Array<Transition> | null,
-  markerProgress: Map<string, TracingMarkerInstance> | null,
+  markerProgress: Map<
+    string,
+    {pendingBoundaries: PendingBoundaries, transitions: Set<Transition>},
+  > | null,
+  markerIncomplete: Map<
+    string,
+    {aborts: Array<TransitionAbort>, transitions: Set<Transition>},
+  > | null,
   markerComplete: Map<string, Set<Transition>> | null,
 };
 
@@ -36,11 +47,18 @@ export type BatchConfigTransition = {
   _updatedFibers?: Set<Fiber>,
 };
 
+// TODO: Is there a way to not include the tag or name here?
 export type TracingMarkerInstance = {|
   tag?: TracingMarkerTag,
-  pendingBoundaries: PendingBoundaries | null,
   transitions: Set<Transition> | null,
-  name?: string,
+  pendingBoundaries: PendingBoundaries | null,
+  aborts: Array<TransitionAbort> | null,
+  name: string | null,
+|};
+
+export type TransitionAbort = {|
+  reason: 'error' | 'unknown' | 'marker' | 'suspense',
+  name?: string | null,
 |};
 
 export const TransitionRoot = 0;
@@ -69,6 +87,7 @@ export function processTransitionCallbacks(
       if (onMarkerProgress != null && markerProgress !== null) {
         markerProgress.forEach((markerInstance, markerName) => {
           if (markerInstance.transitions !== null) {
+            // TODO: Clone the suspense object so users can't modify it
             const pending =
               markerInstance.pendingBoundaries !== null
                 ? Array.from(markerInstance.pendingBoundaries.values())
@@ -97,6 +116,48 @@ export function processTransitionCallbacks(
               transition.startTime,
               endTime,
             );
+          });
+        });
+      }
+
+      const markerIncomplete = pendingTransitions.markerIncomplete;
+      const onMarkerIncomplete = callbacks.onMarkerIncomplete;
+      if (onMarkerIncomplete != null && markerIncomplete !== null) {
+        markerIncomplete.forEach(({transitions, aborts}, markerName) => {
+          transitions.forEach(transition => {
+            const filteredAborts = [];
+            aborts.forEach(abort => {
+              switch (abort.reason) {
+                case 'marker': {
+                  filteredAborts.push({
+                    type: 'marker',
+                    name: abort.name,
+                    endTime,
+                  });
+                  break;
+                }
+                case 'suspense': {
+                  filteredAborts.push({
+                    type: 'suspense',
+                    name: abort.name,
+                    endTime,
+                  });
+                  break;
+                }
+                default: {
+                  break;
+                }
+              }
+            });
+
+            if (filteredAborts.length > 0) {
+              onMarkerIncomplete(
+                transition.name,
+                markerName,
+                transition.startTime,
+                filteredAborts,
+              );
+            }
           });
         });
       }
@@ -145,7 +206,7 @@ export function pushRootMarkerInstance(workInProgress: Fiber): void {
     // transitions map. Each entry in this map functions like a tracing
     // marker does, so we can push it onto the marker instance stack
     const transitions = getWorkInProgressTransitions();
-    const root = workInProgress.stateNode;
+    const root: FiberRoot = workInProgress.stateNode;
 
     if (transitions !== null) {
       transitions.forEach(transition => {
@@ -154,6 +215,8 @@ export function pushRootMarkerInstance(workInProgress: Fiber): void {
             tag: TransitionRoot,
             transitions: new Set([transition]),
             pendingBoundaries: null,
+            aborts: null,
+            name: null,
           };
           root.incompleteTransitions.set(transition, markerInstance);
         }

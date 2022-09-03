@@ -217,6 +217,7 @@ if (__DEV__) {
                 pointerY: locationY,
                 frame: {left: pageX, top: pageY, width, height},
                 touchedViewTag: nativeViewTag,
+                closestInstance,
               });
             },
           );

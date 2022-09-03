@@ -174,12 +174,35 @@ export interface Wakeable {
 // The subset of a Promise that React APIs rely on. This resolves a value.
 // This doesn't require a return value neither from the handler nor the
 // then function.
-export interface Thenable<+R> {
-  then<U>(
-    onFulfill: (value: R) => void | Thenable<U> | U,
-    onReject: (error: mixed) => void | Thenable<U> | U,
-  ): void | Thenable<U>;
+interface ThenableImpl<T> {
+  then(
+    onFulfill: (value: T) => mixed,
+    onReject: (error: mixed) => mixed,
+  ): void | Wakeable;
 }
+interface UntrackedThenable<T> extends ThenableImpl<T> {
+  status?: void;
+}
+
+export interface PendingThenable<T> extends ThenableImpl<T> {
+  status: 'pending';
+}
+
+export interface FulfilledThenable<T> extends ThenableImpl<T> {
+  status: 'fulfilled';
+  value: T;
+}
+
+export interface RejectedThenable<T> extends ThenableImpl<T> {
+  status: 'rejected';
+  reason: mixed;
+}
+
+export type Thenable<T> =
+  | UntrackedThenable<T>
+  | PendingThenable<T>
+  | FulfilledThenable<T>
+  | RejectedThenable<T>;
 
 export type OffscreenMode =
   | 'hidden'
@@ -189,3 +212,6 @@ export type OffscreenMode =
 export type StartTransitionOptions = {
   name?: string,
 };
+
+// TODO: Add Context support
+export type Usable<T> = Thenable<T>;

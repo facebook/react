@@ -517,6 +517,11 @@ function unstable_flushUntilNextPaint(): void {
       isFlushing = false;
     }
   }
+  return false;
+}
+
+function unstable_hasPendingWork(): boolean {
+  return scheduledCallback !== null;
 }
 
 function unstable_flushExpired() {
@@ -644,6 +649,7 @@ export {
   unstable_flushExpired,
   unstable_clearYields,
   unstable_flushUntilNextPaint,
+  unstable_hasPendingWork,
   unstable_flushAll,
   unstable_yieldValue,
   unstable_advanceTime,
