@@ -228,7 +228,15 @@ export function installHook(target: any): DevToolsHook | null {
     hideConsoleLogsInStrictMode: boolean,
     browserTheme: BrowserTheme,
   }) {
-    const overrideConsoleMethods = ['error', 'trace', 'warn', 'log'];
+    const overrideConsoleMethods = [
+      'error',
+      'group',
+      'groupCollapsed',
+      'info',
+      'log',
+      'trace',
+      'warn',
+    ];
 
     if (unpatchFn !== null) {
       // Don't patch twice.
