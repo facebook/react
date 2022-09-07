@@ -80,7 +80,7 @@ if (__DEV__) {
       );
     }
 
-    // $FlowFixMe unable to verify object is writable
+    // $FlowFixMe unable to narrow type from mixed to writable object
     child._store.validated = true;
 
     const componentName = getComponentNameFromFiber(returnFiber) || 'Component';

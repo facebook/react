@@ -62,7 +62,7 @@ export type FindHostInstancesForRefresh = (
 ) => Set<Instance>;
 
 let resolveFamily: RefreshHandler | null = null;
-// $FlowFixMe Flow got confused by a feature check below.
+// $FlowFixMe Flow gets confused by a WeakSet feature check below.
 let failedBoundaries: WeakSet<Fiber> | null = null;
 
 export const setRefreshHandler = (handler: RefreshHandler | null): void => {
