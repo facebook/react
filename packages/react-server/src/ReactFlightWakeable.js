@@ -7,6 +7,12 @@
  * @flow
  */
 
+// Corresponds to ReactFiberWakeable module. Generally, changes to one module
+// should be reflected in the other.
+
+// TODO: Rename this module and the corresponding Fiber one to "Thenable"
+// instead of "Wakeable". Or some other more appropriate name.
+
 import type {
   Wakeable,
   Thenable,
@@ -15,25 +21,13 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
-let suspendedThenable: Thenable<mixed> | null = null;
-let adHocSuspendCount: number = 0;
-
 // TODO: Sparse arrays are bad for performance.
-let usedThenables: Array<Thenable<any> | void> | null = null;
-let lastUsedThenable: Thenable<any> | null = null;
+export opaque type ThenableState = Array<Thenable<any> | void>;
 
-const MAX_AD_HOC_SUSPEND_COUNT = 50;
-
-export function isTrackingSuspendedThenable() {
-  return suspendedThenable !== null;
-}
-
-export function suspendedThenableDidResolve() {
-  if (suspendedThenable !== null) {
-    const status = suspendedThenable.status;
-    return status === 'fulfilled' || status === 'rejected';
-  }
-  return false;
+export function createThenableState(): ThenableState {
+  // The ThenableState is created the first time a component suspends. If it
+  // suspends again, we'll reuse the same state.
+  return [];
 }
 
 export function trackSuspendedWakeable(wakeable: Wakeable) {
@@ -42,17 +36,6 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
   // still pending.
   // TODO: Get rid of the Wakeable type? It's superseded by UntrackedThenable.
   const thenable: Thenable<mixed> = (wakeable: any);
-
-  if (thenable !== lastUsedThenable) {
-    // If this wakeable was not just `use`-d, it must be an ad hoc wakeable
-    // that was thrown by an older Suspense implementation. Keep a count of
-    // these so that we can detect an infinite ping loop.
-    // TODO: Once `use` throws an opaque signal instead of the actual thenable,
-    // a better way to count ad hoc suspends is whether an actual thenable
-    // is caught by the work loop.
-    adHocSuspendCount++;
-  }
-  suspendedThenable = thenable;
 
   // We use an expando to track the status and result of a thenable so that we
   // can synchronously unwrap the value. Think of this as an extension of the
@@ -72,7 +55,6 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
       // this thenable, because if we keep trying it will likely infinite loop
       // without ever resolving.
       // TODO: Log a warning?
-      suspendedThenable = null;
       break;
     default: {
       // TODO: Only instrument the thenable if the status if not defined. If
@@ -101,37 +83,26 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
   }
 }
 
-export function resetWakeableStateAfterEachAttempt() {
-  suspendedThenable = null;
-  adHocSuspendCount = 0;
-  lastUsedThenable = null;
-}
-
-export function resetThenableStateOnCompletion() {
-  usedThenables = null;
-}
-
-export function throwIfInfinitePingLoopDetected() {
-  if (adHocSuspendCount > MAX_AD_HOC_SUSPEND_COUNT) {
-    // TODO: Guard against an infinite loop by throwing an error if the same
-    // component suspends too many times in a row. This should be thrown from
-    // the render phase so that it gets the component stack.
-  }
-}
-
-export function trackUsedThenable<T>(thenable: Thenable<T>, index: number) {
-  if (usedThenables === null) {
-    usedThenables = [];
-  }
-  usedThenables[index] = thenable;
-  lastUsedThenable = thenable;
+export function trackUsedThenable<T>(
+  thenableState: ThenableState,
+  thenable: Thenable<T>,
+  index: number,
+) {
+  // This is only a separate function from trackSuspendedWakeable for symmetry
+  // with Fiber.
+  // TODO: Disallow throwing a thenable directly. It must go through `use` (or
+  // some equivalent for internal Suspense implementations). We can't do this in
+  // Fiber yet because it's a breaking change but we can do it in Server
+  // Components because Server Components aren't released yet.
+  thenableState[index] = thenable;
 }
 
 export function getPreviouslyUsedThenableAtIndex<T>(
+  thenableState: ThenableState | null,
   index: number,
 ): Thenable<T> | null {
-  if (usedThenables !== null) {
-    const thenable = usedThenables[index];
+  if (thenableState !== null) {
+    const thenable = thenableState[index];
     if (thenable !== undefined) {
       return thenable;
     }
