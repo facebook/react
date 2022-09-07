@@ -214,4 +214,4 @@ export type StartTransitionOptions = {
 };
 
 // TODO: Add Context support
-export type Usable<T> = Thenable<T>;
+export type Usable<T> = Thenable<T> | ReactContext<T>;
