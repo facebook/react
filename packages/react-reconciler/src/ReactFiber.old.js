@@ -723,7 +723,11 @@ export function createFiberFromOffscreen(
     pendingMarkers: null,
     retryCache: null,
     transitions: null,
+    detach: () => {},
+    attach: () => {},
+    _isDetached: false,
   };
+
   fiber.stateNode = primaryChildInstance;
   return fiber;
 }
@@ -744,6 +748,13 @@ export function createFiberFromLegacyHidden(
     pendingMarkers: null,
     transitions: null,
     retryCache: null,
+    detach: () => {
+      // noop
+    },
+    attach: () => {
+      // noop
+    },
+    _isDetached: false,
   };
   fiber.stateNode = instance;
   return fiber;

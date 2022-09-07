@@ -18,6 +18,7 @@ import type {
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
+import {NoLanes} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
@@ -29,6 +30,7 @@ import type {
 } from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.old';
+import {scheduleMicrotask} from './ReactFiberHostConfig';
 import type {RootState} from './ReactFiberRoot.old';
 import type {
   Transition,
@@ -154,6 +156,7 @@ import {
   setIsRunningInsertionEffect,
   getExecutionContext,
   CommitContext,
+  RenderContext,
   NoContext,
 } from './ReactFiberWorkLoop.old';
 import {
@@ -1078,7 +1081,9 @@ function commitLayoutEffectOnFiber(
     case OffscreenComponent: {
       const isModernRoot = (finishedWork.mode & ConcurrentMode) !== NoMode;
       if (isModernRoot) {
-        const isHidden = finishedWork.memoizedState !== null;
+        const isHidden =
+          finishedWork.memoizedState !== null ||
+          finishedWork.stateNode._isDetached;
         const newOffscreenSubtreeIsHidden =
           isHidden || offscreenSubtreeIsHidden;
         if (newOffscreenSubtreeIsHidden) {
@@ -1115,6 +1120,46 @@ function commitLayoutEffectOnFiber(
           }
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+        }
+
+        // TODO: figure out the proper place for this.
+        finishedWork.stateNode.detach = () => {
+          const executionContext = getExecutionContext();
+          if (
+            (executionContext & (RenderContext | CommitContext)) !==
+            NoContext
+          ) {
+            scheduleMicrotask(() => {
+              finishedWork.stateNode._isDetached = true;
+              disappearLayoutEffects(finishedWork);
+              disconnectPassiveEffect(finishedWork);
+            });
+          } else {
+            finishedWork.stateNode._isDetached = true;
+            disappearLayoutEffects(finishedWork);
+            disconnectPassiveEffect(finishedWork);
+          }
+        };
+
+        finishedWork.stateNode.attach = () => {
+          // TODO: does not handle when attach is called from effect or when tree is rendered.
+          finishedWork.stateNode._isDetached = false;
+          reappearLayoutEffects(finishedRoot, null, finishedWork, false);
+          reconnectPassiveEffects(
+            finishedRoot,
+            finishedWork,
+            NoLanes,
+            null,
+            false,
+          );
+        };
+
+        if (finishedWork.pendingProps.mode === null) {
+          if (flags & Ref) {
+            safelyAttachRef(finishedWork, finishedWork.return);
+          }
+        } else if (finishedWork.pendingProps.mode !== undefined) {
+          safelyDetachRef(finishedWork, finishedWork.return);
         }
       } else {
         recursivelyTraverseLayoutEffects(
@@ -2651,7 +2696,7 @@ function commitMutationEffectsOnFiber(
           }
         }
 
-        if (supportsMutation) {
+        if (supportsMutation && offscreenInstance._isDetached !== true) {
           // TODO: This needs to run whenever there's an insertion or update
           // inside a hidden Offscreen tree.
           hideOrUnhideAllChildren(offscreenBoundary, isHidden);

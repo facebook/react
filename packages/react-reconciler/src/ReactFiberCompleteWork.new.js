@@ -302,7 +302,6 @@ if (supportsMutation) {
   };
 } else if (supportsPersistence) {
   // Persistent host tree mode
-
   appendAllChildren = function(
     parent: Instance,
     workInProgress: Fiber,
@@ -410,7 +409,14 @@ if (supportsMutation) {
         if (child !== null) {
           child.return = node;
         }
-        appendAllChildrenToContainer(containerChildSet, node, true, true);
+        // Detached tree is hidden from user space.
+        const _needsVisibilityToggle = node.stateNode._isDetached === false;
+        appendAllChildrenToContainer(
+          containerChildSet,
+          node,
+          _needsVisibilityToggle,
+          true,
+        );
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;

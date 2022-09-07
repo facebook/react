@@ -5,6 +5,7 @@ let act;
 let LegacyHidden;
 let Offscreen;
 let useState;
+let useRef;
 let useLayoutEffect;
 let useEffect;
 let useMemo;
@@ -24,6 +25,7 @@ describe('ReactOffscreen', () => {
     useLayoutEffect = React.useLayoutEffect;
     useEffect = React.useEffect;
     useMemo = React.useMemo;
+    useRef = React.useRef;
     startTransition = React.startTransition;
   });
 
@@ -1258,5 +1260,372 @@ describe('ReactOffscreen', () => {
         </div>
       </div>,
     );
+  });
+
+  // @gate enableOffscreen
+  it('defers updates in hidden tree', async () => {
+    let updateChildState;
+    let updateHighPriorityComponentState;
+
+    function Child() {
+      const [state, _stateUpdate] = useState(0);
+      updateChildState = _stateUpdate;
+      const text = 'Child ' + state;
+      return <Text text={text} />;
+    }
+
+    function HighPriorityComponent(props) {
+      const [state, _stateUpdate] = useState(0);
+      updateHighPriorityComponentState = _stateUpdate;
+      const text = 'HighPriorityComponent ' + state;
+      return (
+        <>
+          <Text text={text} />
+          {props.children}
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Mount hidden tree.
+    await act(async () => {
+      root.render(
+        <>
+          <HighPriorityComponent>
+            <Offscreen mode="hidden">
+              <Child />
+            </Offscreen>
+          </HighPriorityComponent>
+        </>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded(['HighPriorityComponent 0', 'Child 0']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="HighPriorityComponent 0" />
+        <span hidden={true} prop="Child 0" />
+      </>,
+    );
+
+    await act(async () => {
+      updateChildState(1);
+      updateHighPriorityComponentState(1);
+      expect(Scheduler).toFlushUntilNextPaint(['HighPriorityComponent 1']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="HighPriorityComponent 1" />
+          <span hidden={true} prop="Child 0" />
+        </>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded(['Child 1']);
+
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="HighPriorityComponent 1" />
+        <span hidden={true} prop="Child 1" />
+      </>,
+    );
+  });
+
+  describe('manual interactivity', () => {
+    // @gate enableOffscreen
+    it('should attach ref only for mode null', async () => {
+      let offscreenRef;
+
+      function App({mode}) {
+        offscreenRef = useRef(null);
+        return (
+          <Offscreen
+            mode={mode}
+            ref={ref => {
+              offscreenRef.current = ref;
+            }}>
+            <div />
+          </Offscreen>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<App mode={null} />);
+      });
+
+      expect(offscreenRef.current).not.toBeNull();
+
+      await act(async () => {
+        root.render(<App mode={'visible'} />);
+      });
+
+      expect(offscreenRef.current).toBeNull();
+
+      await act(async () => {
+        root.render(<App mode={'hidden'} />);
+      });
+
+      expect(offscreenRef.current).toBeNull();
+
+      await act(async () => {
+        root.render(<App mode={null} />);
+      });
+
+      expect(offscreenRef.current).not.toBeNull();
+    });
+
+    // @gate enableOffscreen
+    it('should lower update priority for detached Offscreen', async () => {
+      let updateChildState;
+      let updateHighPriorityComponentState;
+      let offscreenRef;
+
+      function Child() {
+        const [state, _stateUpdate] = useState(0);
+        updateChildState = _stateUpdate;
+        const text = 'Child ' + state;
+        return <Text text={text} />;
+      }
+
+      function HighPriorityComponent(props) {
+        const [state, _stateUpdate] = useState(0);
+        updateHighPriorityComponentState = _stateUpdate;
+        const text = 'HighPriorityComponent ' + state;
+        return (
+          <>
+            <Text text={text} />
+            {props.children}
+          </>
+        );
+      }
+
+      function App() {
+        offscreenRef = useRef(null);
+        return (
+          <>
+            <HighPriorityComponent>
+              <Offscreen mode={null} ref={offscreenRef}>
+                <Child />
+              </Offscreen>
+            </HighPriorityComponent>
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<App />);
+      });
+
+      expect(Scheduler).toHaveYielded(['HighPriorityComponent 0', 'Child 0']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="HighPriorityComponent 0" />
+          <span prop="Child 0" />
+        </>,
+      );
+
+      expect(offscreenRef.current).not.toBeNull();
+      expect(offscreenRef.current.detach).not.toBeNull();
+
+      // Offscreen is attached by default. State updates from offscreen are **not defered**.
+      await act(async () => {
+        updateChildState(1);
+        updateHighPriorityComponentState(1);
+        expect(Scheduler).toFlushUntilNextPaint([
+          'HighPriorityComponent 1',
+          'Child 1',
+        ]);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span prop="HighPriorityComponent 1" />
+            <span prop="Child 1" />
+          </>,
+        );
+      });
+
+      // detaching offscreen.
+      offscreenRef.current.detach();
+
+      // Offscreen is detached. State updates from offscreen are **defered**.
+      await act(async () => {
+        updateChildState(2);
+        updateHighPriorityComponentState(2);
+        expect(Scheduler).toFlushUntilNextPaint(['HighPriorityComponent 2']);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span prop="HighPriorityComponent 2" />
+            <span prop="Child 1" />
+          </>,
+        );
+      });
+
+      expect(Scheduler).toHaveYielded(['Child 2']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="HighPriorityComponent 2" />
+          <span prop="Child 2" />
+        </>,
+      );
+    });
+
+    // @gate enableOffscreen
+    it('defers detachment if called during commit', async () => {
+      let updateChildState;
+      let updateHighPriorityComponentState;
+      let offscreenRef;
+      let nextRenderTriggerDetach = false;
+
+      function Child() {
+        const [state, _stateUpdate] = useState(0);
+        updateChildState = _stateUpdate;
+        const text = 'Child ' + state;
+        return <Text text={text} />;
+      }
+
+      function HighPriorityComponent(props) {
+        const [state, _stateUpdate] = useState(0);
+        updateHighPriorityComponentState = _stateUpdate;
+        const text = 'HighPriorityComponent ' + state;
+        useLayoutEffect(() => {
+          if (nextRenderTriggerDetach) {
+            offscreenRef.current.detach();
+            _stateUpdate(state + 1);
+            updateChildState(state + 1);
+            nextRenderTriggerDetach = false;
+          }
+        });
+        return (
+          <>
+            <Text text={text} />
+            {props.children}
+          </>
+        );
+      }
+
+      function App() {
+        offscreenRef = useRef(null);
+        return (
+          <>
+            <HighPriorityComponent>
+              <Offscreen mode={null} ref={offscreenRef}>
+                <Child />
+              </Offscreen>
+            </HighPriorityComponent>
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<App />);
+      });
+
+      expect(Scheduler).toHaveYielded(['HighPriorityComponent 0', 'Child 0']);
+
+      nextRenderTriggerDetach = true;
+
+      // Offscreen is attached. State updates from offscreen are **not defered**.
+      // Offscreen is detached inside useLayoutEffect;
+      await act(async () => {
+        updateChildState(1);
+        updateHighPriorityComponentState(1);
+        expect(Scheduler).toFlushUntilNextPaint([
+          'HighPriorityComponent 1',
+          'Child 1',
+          'HighPriorityComponent 2',
+          'Child 2',
+        ]);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span prop="HighPriorityComponent 2" />
+            <span prop="Child 2" />
+          </>,
+        );
+      });
+
+      // Offscreen is detached. State updates from offscreen are **defered**.
+      await act(async () => {
+        updateChildState(3);
+        updateHighPriorityComponentState(3);
+        expect(Scheduler).toFlushUntilNextPaint(['HighPriorityComponent 3']);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span prop="HighPriorityComponent 3" />
+            <span prop="Child 2" />
+          </>,
+        );
+      });
+
+      expect(Scheduler).toHaveYielded(['Child 3']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="HighPriorityComponent 3" />
+          <span prop="Child 3" />
+        </>,
+      );
+    });
+
+    // @gate enableOffscreen
+    it('does not mount tree until attach is called', async () => {
+      let offscreenRef;
+      let spanRef;
+
+      function Child() {
+        spanRef = useRef(null);
+        useEffect(() => {
+          Scheduler.unstable_yieldValue('Mount Child');
+          return () => {
+            Scheduler.unstable_yieldValue('Unmount Child');
+          };
+        });
+
+        useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('Mount Layout Child');
+          return () => {
+            Scheduler.unstable_yieldValue('Unmount Layout Child');
+          };
+        });
+
+        return <span ref={spanRef}>Child</span>;
+      }
+
+      function App() {
+        return (
+          <>
+            <Offscreen mode={null} ref={el => (offscreenRef = el)}>
+              <Child />
+            </Offscreen>
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<App />);
+      });
+
+      expect(offscreenRef).not.toBeNull();
+      expect(spanRef.current).not.toBeNull();
+      expect(Scheduler).toHaveYielded(['Mount Layout Child', 'Mount Child']);
+
+      offscreenRef.detach();
+
+      expect(spanRef.current).toBeNull();
+      expect(Scheduler).toHaveYielded([
+        'Unmount Layout Child',
+        'Unmount Child',
+      ]);
+
+      offscreenRef.attach();
+
+      expect(spanRef.current).not.toBeNull();
+      expect(Scheduler).toHaveYielded(['Mount Layout Child', 'Mount Child']);
+    });
   });
 });
