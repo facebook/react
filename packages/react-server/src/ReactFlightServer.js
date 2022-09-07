@@ -81,6 +81,7 @@ export type ReactModel =
   | string
   | boolean
   | number
+  | symbol
   | null
   | Iterable<ReactModel>
   | ReactModelObject;
@@ -197,14 +198,12 @@ function attemptResolveElement(
   if (typeof type === 'function') {
     if (isModuleReference(type)) {
       // This is a reference to a client component.
-      // $FlowFixMe unsure how this return type is supposed to match ReactModel
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     // This is a server-side component.
     return type(props);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
-    // $FlowFixMe unsure how this return type is supposed to match ReactModel
     return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (typeof type === 'symbol') {
     if (type === REACT_FRAGMENT_TYPE) {
@@ -216,12 +215,10 @@ function attemptResolveElement(
     }
     // This might be a built-in React component. We'll let the client decide.
     // Any built-in works as long as its props are serializable.
-    // $FlowFixMe unsure how this return type is supposed to match ReactModel
     return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (type != null && typeof type === 'object') {
     if (isModuleReference(type)) {
       // This is a reference to a client component.
-      // $FlowFixMe unsure how this return type is supposed to match ReactModel
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     switch (type.$$typeof) {
@@ -254,7 +251,6 @@ function attemptResolveElement(
             );
           }
         }
-        // $FlowFixMe unsure how this return type is supposed to match ReactModel
         return [
           REACT_ELEMENT_TYPE,
           type,
@@ -723,12 +719,17 @@ export function resolveModelToJSON(
     if (existingId !== undefined) {
       return serializeByValueID(existingId);
     }
-    const name = value.description;
+    // $FlowFixMe `description` might be undefined
+    const name: string = value.description;
 
+    // $FlowFixMe `name` might be undefined
     if (Symbol.for(name) !== value) {
       throw new Error(
         'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
-          `The symbol Symbol.for(${value.description}) cannot be found among global symbols. ` +
+          `The symbol Symbol.for(${
+            // $FlowFixMe `description` might be undefined
+            value.description
+          }) cannot be found among global symbols. ` +
           `Remove ${describeKeyForErrorMessage(
             key,
           )} from this object, or avoid the entire object: ${describeObjectForErrorMessage(
