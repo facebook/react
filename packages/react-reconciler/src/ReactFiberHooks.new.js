@@ -16,7 +16,12 @@ import type {
   Usable,
   Thenable,
 } from 'shared/ReactTypes';
-import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
+import type {
+  Fiber,
+  Dispatcher,
+  HookType,
+  MemoCache,
+} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {FiberRoot} from './ReactInternalTypes';
@@ -177,6 +182,7 @@ type StoreConsistencyCheck<T> = {
 export type FunctionComponentUpdateQueue = {
   lastEffect: Effect | null,
   stores: Array<StoreConsistencyCheck<any>> | null,
+  memoCache: MemoCache | null,
 };
 
 type BasicStateAction<S> = (S => S) | S;
@@ -399,20 +405,6 @@ export function renderWithHooks<Props, SecondArg>(
       current !== null && current.type !== workInProgress.type;
   }
 
-  // Reset the memoCache index and create a backup copy in case of a setState during render
-  // or error, either of which can leave the cache in an inconsistent state
-  let previousMemoCache = null;
-  if (enableUseMemoCacheHook) {
-    previousMemoCache = workInProgress.memoCache;
-    if (previousMemoCache !== null) {
-      const memoCache = {
-        data: previousMemoCache.data.map(array => array.slice()),
-        index: 0,
-      };
-      workInProgress.memoCache = memoCache;
-    }
-  }
-
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
   workInProgress.lanes = NoLanes;
@@ -483,17 +475,6 @@ export function renderWithHooks<Props, SecondArg>(
       workInProgressHook = null;
 
       workInProgress.updateQueue = null;
-
-      if (enableUseMemoCacheHook) {
-        if (previousMemoCache !== null) {
-          // Setting state during render could leave the cache in an inconsistent state,
-          // reset to the previous state before re-rendering.
-          workInProgress.memoCache = {
-            data: previousMemoCache.data.map(array => array.slice()),
-            index: 0,
-          };
-        }
-      }
 
       if (__DEV__) {
         // Also validate hook order for cascading updates.
@@ -608,7 +589,7 @@ export function bailoutHooks(
   current.lanes = removeLanes(current.lanes, lanes);
 }
 
-export function resetHooksAfterThrow(erroredWork: Fiber | null): void {
+export function resetHooksAfterThrow(): void {
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
@@ -631,18 +612,6 @@ export function resetHooksAfterThrow(erroredWork: Fiber | null): void {
       hook = hook.next;
     }
     didScheduleRenderPhaseUpdate = false;
-  }
-
-  if (enableUseMemoCacheHook) {
-    if (erroredWork != null) {
-      const memoCache = erroredWork.memoCache;
-      if (memoCache !== null) {
-        // The memo cache may be in an inconsistent state, reset to the version from
-        // the alternate if available, or clear the cache completely.
-        const alternate = erroredWork.alternate;
-        erroredWork.memoCache = alternate != null ? alternate.memoCache : null;
-      }
-    }
   }
 
   renderLanes = NoLanes;
@@ -751,6 +720,7 @@ function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
   return {
     lastEffect: null,
     stores: null,
+    memoCache: null,
   };
 }
 
@@ -824,22 +794,48 @@ function use<T>(usable: Usable<T>): T {
 }
 
 function useMemoCache(size: number): Array<any> {
-  let memoCache = currentlyRenderingFiber.memoCache;
+  let memoCache = null;
+  // Fast-path, load memo cache from wip fiber if already prepared
+  let updateQueue: FunctionComponentUpdateQueue | null = (currentlyRenderingFiber.updateQueue: any);
+  if (updateQueue !== null) {
+    memoCache = updateQueue.memoCache;
+  }
+  // Otherwise clone from the current fiber
+  // TODO: not sure how to access the current fiber here other than going through
+  // currentlyRenderingFiber.alternate
   if (memoCache === null) {
-    memoCache = currentlyRenderingFiber.memoCache = {
+    const current: Fiber | null = currentlyRenderingFiber.alternate;
+    if (current !== null) {
+      const currentUpdateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
+      if (currentUpdateQueue !== null) {
+        const currentMemoCache: MemoCache | null = currentUpdateQueue.memoCache;
+        if (currentMemoCache !== null) {
+          memoCache = {
+            data: currentMemoCache.data.map(array => array.slice()),
+            index: 0,
+          };
+        }
+      }
+    }
+  }
+  // Finally fall back to allocating a fresh instance
+  if (memoCache === null) {
+    memoCache = {
       data: [],
       index: 0,
     };
   }
+  if (updateQueue === null) {
+    updateQueue = createFunctionComponentUpdateQueue();
+    currentlyRenderingFiber.updateQueue = updateQueue;
+  }
+  updateQueue.memoCache = memoCache;
+
   let data = memoCache.data[memoCache.index];
   if (data === undefined) {
     data = memoCache.data[memoCache.index] = new Array(size);
   } else if (data.length !== size) {
-    if (__DEV__) {
-      console.warn(
-        'Expected each useMemoCache to receive a consistent size argument, found different sizes',
-      );
-    }
+    // TODO: consider warning or throwing here
   }
   memoCache.index++;
   return data;

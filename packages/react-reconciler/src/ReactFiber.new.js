@@ -32,7 +32,6 @@ import {
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
-  enableUseMemoCacheHook,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -145,9 +144,6 @@ function FiberNode(
   this.updateQueue = null;
   this.memoizedState = null;
   this.dependencies = null;
-  if (enableUseMemoCacheHook) {
-    this.memoCache = null;
-  }
 
   this.mode = mode;
 
@@ -314,9 +310,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   workInProgress.memoizedProps = current.memoizedProps;
   workInProgress.memoizedState = current.memoizedState;
   workInProgress.updateQueue = current.updateQueue;
-  if (enableUseMemoCacheHook) {
-    workInProgress.memoCache = current.memoCache;
-  }
 
   // Clone the dependencies object. This is mutated during the render phase, so
   // it cannot be shared with the current fiber.
@@ -858,9 +851,6 @@ export function assignFiberPropertiesInDEV(
   target.pendingProps = source.pendingProps;
   target.memoizedProps = source.memoizedProps;
   target.updateQueue = source.updateQueue;
-  if (enableUseMemoCacheHook) {
-    target.memoCache = source.memoCache;
-  }
   target.memoizedState = source.memoizedState;
   target.dependencies = source.dependencies;
   target.mode = source.mode;

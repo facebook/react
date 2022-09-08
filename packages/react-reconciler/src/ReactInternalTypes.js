@@ -133,9 +133,6 @@ export type Fiber = {
   // A queue of state updates and callbacks.
   updateQueue: mixed,
 
-  // useMemoCache storage
-  memoCache: MemoCache | null,
-
   // The state used to create the output
   memoizedState: any,
 

@@ -44,7 +44,7 @@ describe('ReactCache', () => {
   test('render component using cache', async () => {
     function Component(props) {
       const cache = useMemoCache(1);
-      expect(cache).toBeInstanceOf(Array);
+      expect(Array.isArray(cache)).toBe(true);
       expect(cache.length).toBe(1);
       expect(cache[0]).toBe(undefined);
       return 'Ok';
