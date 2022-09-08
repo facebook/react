@@ -25,7 +25,7 @@ import {
 import isArray from 'shared/isArray';
 
 class ClientReferenceDependency extends ModuleDependency {
-  constructor(request) {
+  constructor(request: mixed) {
     super(request);
   }
 

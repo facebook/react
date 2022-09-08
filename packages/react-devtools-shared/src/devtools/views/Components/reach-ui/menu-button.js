@@ -19,6 +19,7 @@ import useThemeStyles from '../../useThemeStyles';
 const MenuList = ({children, ...props}: {children: React$Node, ...}) => {
   const style = useThemeStyles();
   return (
+    // $FlowFixMe unsafe spread
     <ReachMenuList style={style} {...props}>
       {children}
     </ReachMenuList>

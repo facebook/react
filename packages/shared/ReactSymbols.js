@@ -40,7 +40,7 @@ export const REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
 const MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';
 
-export function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
+export function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<any> {
   if (maybeIterable === null || typeof maybeIterable !== 'object') {
     return null;
   }

@@ -86,6 +86,7 @@ export type ReactModel =
   | string
   | boolean
   | number
+  | symbol
   | null
   | Iterable<ReactModel>
   | ReactModelObject;
@@ -119,7 +120,7 @@ export type Request = {
   completedModuleChunks: Array<Chunk>,
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
-  writtenSymbols: Map<Symbol, number>,
+  writtenSymbols: Map<symbol, number>,
   writtenModules: Map<ModuleKey, number>,
   writtenProviders: Map<string, number>,
   identifierPrefix: string,
@@ -746,12 +747,17 @@ export function resolveModelToJSON(
     if (existingId !== undefined) {
       return serializeByValueID(existingId);
     }
-    const name = value.description;
+    // $FlowFixMe `description` might be undefined
+    const name: string = value.description;
 
+    // $FlowFixMe `name` might be undefined
     if (Symbol.for(name) !== value) {
       throw new Error(
         'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
-          `The symbol Symbol.for(${value.description}) cannot be found among global symbols. ` +
+          `The symbol Symbol.for(${
+            // $FlowFixMe `description` might be undefined
+            value.description
+          }) cannot be found among global symbols. ` +
           `Remove ${describeKeyForErrorMessage(
             key,
           )} from this object, or avoid the entire object: ${describeObjectForErrorMessage(

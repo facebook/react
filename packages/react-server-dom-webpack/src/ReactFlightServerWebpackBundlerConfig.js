@@ -17,7 +17,7 @@ export type BundlerConfig = WebpackMap;
 
 // eslint-disable-next-line no-unused-vars
 export type ModuleReference<T> = {
-  $$typeof: Symbol,
+  $$typeof: symbol,
   filepath: string,
   name: string,
   async: boolean,

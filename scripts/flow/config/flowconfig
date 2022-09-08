@@ -50,4 +50,4 @@ esproposal.optional_chaining=enable
 munge_underscores=false
 
 [version]
-^0.97.0
+^0.122.0
