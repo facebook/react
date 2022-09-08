@@ -17,7 +17,6 @@ export {
   SuspenseList,
   cloneElement,
   createElement,
-  createMutableSource as unstable_createMutableSource,
   createRef,
   createServerContext,
   experimental_use,
@@ -34,9 +33,7 @@ export {
   useContext,
   useDebugValue,
   useDeferredValue,
-  useDeferredValue as unstable_useDeferredValue,
   useMemo,
-  useMutableSource as unstable_useMutableSource,
   useTransition,
   version,
 } from './React';
