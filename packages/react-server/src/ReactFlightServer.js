@@ -91,7 +91,7 @@ export type ReactModel =
   | Iterable<ReactModel>
   | ReactModelObject;
 
-type ReactModelObject = {|+[key: string]: ReactModel|};
+type ReactModelObject = {+[key: string]: ReactModel, ...};
 
 const PENDING = 0;
 const COMPLETED = 1;
@@ -465,7 +465,7 @@ function describeValueForErrorMessage(value: ReactModel): string {
 
 function describeObjectForErrorMessage(
   objectOrArray:
-    | {|+[key: string | number]: ReactModel|}
+    | {+[key: string | number]: ReactModel, ...}
     | $ReadOnlyArray<ReactModel>,
   expandedName?: string,
 ): string {
@@ -495,7 +495,7 @@ function describeObjectForErrorMessage(
     return str;
   } else {
     let str = '{';
-    const object: {|+[key: string | number]: ReactModel|} = objectOrArray;
+    const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
     const names = Object.keys(object);
     for (let i = 0; i < names.length; i++) {
       if (i > 0) {
@@ -839,6 +839,7 @@ function emitModuleChunk(
   id: number,
   moduleMetaData: ModuleMetaData,
 ): void {
+  // $FlowFixMe ModuleMetaData is not a ReactModel
   const processedChunk = processModuleChunk(request, id, moduleMetaData);
   request.completedModuleChunks.push(processedChunk);
 }

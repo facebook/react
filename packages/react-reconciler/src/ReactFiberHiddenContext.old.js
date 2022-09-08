@@ -17,12 +17,13 @@ import {getRenderLanes, setRenderLanes} from './ReactFiberWorkLoop.old';
 import {NoLanes, mergeLanes} from './ReactFiberLane.old';
 
 // TODO: Remove `renderLanes` context in favor of hidden context
-type HiddenContext = {|
+type HiddenContext = {
   // Represents the lanes that must be included when processing updates in
   // order to reveal the hidden content.
   // TODO: Remove `subtreeLanes` context from work loop in favor of this one.
   baseLanes: number,
-|};
+  ...
+};
 
 // TODO: This isn't being used yet, but it's intended to replace the
 // InvisibleParentContext that is currently managed by SuspenseContext.

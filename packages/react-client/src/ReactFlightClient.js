@@ -129,10 +129,12 @@ function readRoot<T>(): T {
 }
 
 function createPendingChunk(response: Response): PendingChunk {
+  // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(PENDING, null, response);
 }
 
 function createErrorChunk(response: Response, error: Error): ErroredChunk {
+  // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(ERRORED, error, response);
 }
 
@@ -140,6 +142,7 @@ function createInitializedChunk<T>(
   response: Response,
   value: T,
 ): InitializedChunk<T> {
+  // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(INITIALIZED, value, response);
 }
 
@@ -168,6 +171,7 @@ function createResolvedModelChunk(
   response: Response,
   value: UninitializedModel,
 ): ResolvedModelChunk {
+  // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODEL, value, response);
 }
 
@@ -175,6 +179,7 @@ function createResolvedModuleChunk<T>(
   response: Response,
   value: ModuleReference<T>,
 ): ResolvedModuleChunk<T> {
+  // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODULE, value, response);
 }
 
