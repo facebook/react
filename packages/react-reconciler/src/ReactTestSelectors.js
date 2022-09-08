@@ -506,14 +506,14 @@ export function onCommitRoot(): void {
 export type IntersectionObserverOptions = Object;
 
 export type ObserveVisibleRectsCallback = (
-  intersections: Array<{ratio: number, rect: BoundingRect, ...}>,
+  intersections: Array<{|ratio: number, rect: BoundingRect|}>,
 ) => void;
 
 export function observeVisibleRects(
   hostRoot: Instance,
   selectors: Array<Selector>,
   callback: (
-    intersections: Array<{ratio: number, rect: BoundingRect, ...}>,
+    intersections: Array<{|ratio: number, rect: BoundingRect|}>,
   ) => void,
   options?: IntersectionObserverOptions,
 ): {|disconnect: () => void|} {

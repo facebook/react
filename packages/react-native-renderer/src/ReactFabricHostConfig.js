@@ -108,14 +108,13 @@ export type EventListenerRemoveOptions = $ReadOnly<{|
 // TODO?: this will be changed in the future to be w3c-compatible and allow "EventListener" objects as well as functions.
 export type EventListener = Function;
 
-type InternalEventListeners = {
+type InternalEventListeners = {|
   [string]: {|
     listener: EventListener,
     options: EventListenerOptions,
     invalidated: boolean,
   |}[],
-  ...,
-};
+|};
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {

@@ -224,11 +224,10 @@ export function installHook(target: any): DevToolsHook | null {
   function patchConsoleForInitialRenderInStrictMode({
     hideConsoleLogsInStrictMode,
     browserTheme,
-  }: {
+  }: {|
     hideConsoleLogsInStrictMode: boolean,
     browserTheme: BrowserTheme,
-    ...
-  }) {
+  |}) {
     const overrideConsoleMethods = [
       'error',
       'group',
