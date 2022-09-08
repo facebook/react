@@ -20,7 +20,7 @@ function injectCodeSync(src) {
   // This script runs before the <head> element is created,
   // so we add the script to <html> instead.
   nullthrows(document.documentElement).appendChild(script);
-  // nullthrows(script.parentNode).removeChild(script);
+  nullthrows(script.parentNode).removeChild(script);
 }
 
 let lastDetectionResult;
