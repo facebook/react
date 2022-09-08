@@ -9,11 +9,20 @@
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 import type {Request} from './ReactFlightServer';
-import type {ReactServerContext} from 'shared/ReactTypes';
+import type {ReactServerContext, Thenable, Usable} from 'shared/ReactTypes';
+import type {ThenableState} from './ReactFlightWakeable';
 import {REACT_SERVER_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
+import {enableUseHook} from 'shared/ReactFeatureFlags';
+import {
+  getPreviouslyUsedThenableAtIndex,
+  createThenableState,
+  trackUsedThenable,
+} from './ReactFlightWakeable';
 
 let currentRequest = null;
+let thenableIndexCounter = 0;
+let thenableState = null;
 
 export function prepareToUseHooksForRequest(request: Request) {
   currentRequest = request;
@@ -21,6 +30,17 @@ export function prepareToUseHooksForRequest(request: Request) {
 
 export function resetHooksForRequest() {
   currentRequest = null;
+}
+
+export function prepareToUseHooksForComponent(
+  prevThenableState: ThenableState | null,
+) {
+  thenableIndexCounter = 0;
+  thenableState = prevThenableState;
+}
+
+export function getThenableStateAfterSuspending() {
+  return thenableState;
 }
 
 function readContext<T>(context: ReactServerContext<T>): T {
@@ -83,6 +103,7 @@ export const Dispatcher: DispatcherType = {
   useMemoCache(size: number): Array<any> {
     return new Array(size);
   },
+  use: enableUseHook ? use : (unsupportedHook: any),
 };
 
 function unsupportedHook(): void {
@@ -115,4 +136,73 @@ function useId(): string {
   const id = currentRequest.identifierCount++;
   // use 'S' for Flight components to distinguish from 'R' and 'r' in Fizz/Client
   return ':' + currentRequest.identifierPrefix + 'S' + id.toString(32) + ':';
+}
+
+function use<T>(usable: Usable<T>): T {
+  if (usable !== null && typeof usable === 'object') {
+    if (typeof usable.then === 'function') {
+      // This is a thenable.
+      const thenable: Thenable<T> = (usable: any);
+
+      // Track the position of the thenable within this fiber.
+      const index = thenableIndexCounter;
+      thenableIndexCounter += 1;
+
+      switch (thenable.status) {
+        case 'fulfilled': {
+          const fulfilledValue: T = thenable.value;
+          return fulfilledValue;
+        }
+        case 'rejected': {
+          const rejectedError = thenable.reason;
+          throw rejectedError;
+        }
+        default: {
+          const prevThenableAtIndex: Thenable<T> | null = getPreviouslyUsedThenableAtIndex(
+            thenableState,
+            index,
+          );
+          if (prevThenableAtIndex !== null) {
+            switch (prevThenableAtIndex.status) {
+              case 'fulfilled': {
+                const fulfilledValue: T = prevThenableAtIndex.value;
+                return fulfilledValue;
+              }
+              case 'rejected': {
+                const rejectedError: mixed = prevThenableAtIndex.reason;
+                throw rejectedError;
+              }
+              default: {
+                // The thenable still hasn't resolved. Suspend with the same
+                // thenable as last time to avoid redundant listeners.
+                throw prevThenableAtIndex;
+              }
+            }
+          } else {
+            // This is the first time something has been used at this index.
+            // Stash the thenable at the current index so we can reuse it during
+            // the next attempt.
+            if (thenableState === null) {
+              thenableState = createThenableState();
+            }
+            trackUsedThenable(thenableState, thenable, index);
+
+            // Suspend.
+            // TODO: Throwing here is an implementation detail that allows us to
+            // unwind the call stack. But we shouldn't allow it to leak into
+            // userspace. Throw an opaque placeholder value instead of the
+            // actual thenable. If it doesn't get captured by the work loop, log
+            // a warning, because that means something in userspace must have
+            // caught it.
+            throw thenable;
+          }
+        }
+      }
+    } else {
+      // TODO: Add support for Context
+    }
+  }
+
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  throw new Error('An unsupported type was passed to use(): ' + String(usable));
 }
