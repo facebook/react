@@ -91,6 +91,8 @@ function convertModelToJSON(
       }
       return jsonArray;
     } else {
+      /* $FlowFixMe the old version of Flow doesn't have a good way to define
+       * an empty exact object. */
       const jsonObj: {|[key: string]: JSONValue|} = {};
       for (const nextKey in json) {
         if (hasOwnProperty.call(json, nextKey)) {
