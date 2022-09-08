@@ -9,9 +9,10 @@
  */
 
 import {attach} from 'react-devtools-shared/src/backend/renderer';
-import {IS_FIREFOX} from '../utils';
+import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
+import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 
-if (IS_FIREFOX) {
+if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
   Object.defineProperty(
     window,
     '__REACT_DEVTOOLS_ATTACH__',
