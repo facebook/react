@@ -255,8 +255,8 @@ class ReactFabricHostComponent {
     const passive = optionsObj.passive || false;
     const signal = null; // TODO: implement signal/AbortSignal
 
-    // $FlowFixMe the old version of Flow doesn't have a good way to define an
-    // empty exact object.
+    /* $FlowFixMe the old version of Flow doesn't have a good way to define an
+     * empty exact object. */
     const eventListeners: InternalEventListeners = this._eventListeners || {};
     if (this._eventListeners == null) {
       this._eventListeners = eventListeners;
