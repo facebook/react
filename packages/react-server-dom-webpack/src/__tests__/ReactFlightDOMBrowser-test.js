@@ -24,6 +24,7 @@ let ReactDOMServer;
 let ReactServerDOMWriter;
 let ReactServerDOMReader;
 let Suspense;
+let use;
 
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
@@ -39,6 +40,7 @@ describe('ReactFlightDOMBrowser', () => {
     ReactServerDOMWriter = require('react-server-dom-webpack/writer.browser.server');
     ReactServerDOMReader = require('react-server-dom-webpack');
     Suspense = React.Suspense;
+    use = React.experimental_use;
   });
 
   async function waitForSuspense(fn) {
@@ -561,5 +563,150 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('<p>Error: for reasons</p>');
 
     expect(reportedErrors).toEqual(['for reasons']);
+  });
+
+  // @gate enableUseHook
+  it('basic use(promise)', async () => {
+    function Server() {
+      return (
+        use(Promise.resolve('A')) +
+        use(Promise.resolve('B')) +
+        use(Promise.resolve('C'))
+      );
+    }
+
+    const stream = ReactServerDOMWriter.renderToReadableStream(<Server />);
+    const response = ReactServerDOMReader.createFromReadableStream(stream);
+
+    function Client() {
+      return response.readRoot();
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(
+        <Suspense fallback="Loading...">
+          <Client />
+        </Suspense>,
+      );
+    });
+    expect(container.innerHTML).toBe('ABC');
+  });
+
+  // @gate enableUseHook
+  it('use(promise) in multiple components', async () => {
+    function Child({prefix}) {
+      return prefix + use(Promise.resolve('C')) + use(Promise.resolve('D'));
+    }
+
+    function Parent() {
+      return (
+        <Child prefix={use(Promise.resolve('A')) + use(Promise.resolve('B'))} />
+      );
+    }
+
+    const stream = ReactServerDOMWriter.renderToReadableStream(<Parent />);
+    const response = ReactServerDOMReader.createFromReadableStream(stream);
+
+    function Client() {
+      return response.readRoot();
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(
+        <Suspense fallback="Loading...">
+          <Client />
+        </Suspense>,
+      );
+    });
+    expect(container.innerHTML).toBe('ABCD');
+  });
+
+  // @gate enableUseHook
+  it('using a rejected promise will throw', async () => {
+    const promiseA = Promise.resolve('A');
+    const promiseB = Promise.reject(new Error('Oops!'));
+    const promiseC = Promise.resolve('C');
+
+    // Jest/Node will raise an unhandled rejected error unless we await this. It
+    // works fine in the browser, though.
+    await expect(promiseB).rejects.toThrow('Oops!');
+
+    function Server() {
+      return use(promiseA) + use(promiseB) + use(promiseC);
+    }
+
+    const reportedErrors = [];
+    const stream = ReactServerDOMWriter.renderToReadableStream(
+      <Server />,
+      webpackMap,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
+    );
+    const response = ReactServerDOMReader.createFromReadableStream(stream);
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          return this.state.error.message;
+        }
+        return this.props.children;
+      }
+    }
+
+    function Client() {
+      return response.readRoot();
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(
+        <ErrorBoundary>
+          <Client />
+        </ErrorBoundary>,
+      );
+    });
+    expect(container.innerHTML).toBe('Oops!');
+    expect(reportedErrors.length).toBe(1);
+    expect(reportedErrors[0].message).toBe('Oops!');
+  });
+
+  // @gate enableUseHook
+  it("use a promise that's already been instrumented and resolved", async () => {
+    const thenable = {
+      status: 'fulfilled',
+      value: 'Hi',
+      then() {},
+    };
+
+    // This will never suspend because the thenable already resolved
+    function Server() {
+      return use(thenable);
+    }
+
+    const stream = ReactServerDOMWriter.renderToReadableStream(<Server />);
+    const response = ReactServerDOMReader.createFromReadableStream(stream);
+
+    function Client() {
+      return response.readRoot();
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Client />);
+    });
+    expect(container.innerHTML).toBe('Hi');
   });
 });
