@@ -91,7 +91,7 @@ export type ReactModel =
   | Iterable<ReactModel>
   | ReactModelObject;
 
-type ReactModelObject = {+[key: string]: ReactModel, ...};
+type ReactModelObject = {|+[key: string]: ReactModel|};
 
 const PENDING = 0;
 const COMPLETED = 1;
@@ -272,6 +272,7 @@ function attemptResolveElement(
             );
           }
         }
+        // $FlowFixMe issue discovered when updating Flow
         return [
           REACT_ELEMENT_TYPE,
           type,
@@ -698,6 +699,7 @@ export function resolveModelToJSON(
       }
     }
 
+    // $FlowFixMe
     return value;
   }
 

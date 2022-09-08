@@ -15,7 +15,7 @@ export type JSONValue =
   | boolean
   | null
   | {|+[key: string]: JSONValue|}
-  | Array<JSONValue>;
+  | $ReadOnlyArray<JSONValue>;
 
 export type RowEncoding =
   | ['J', number, JSONValue]

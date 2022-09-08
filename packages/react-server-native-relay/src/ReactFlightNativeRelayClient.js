@@ -24,8 +24,10 @@ export {createResponse, close};
 
 export function resolveRow(response: Response, chunk: RowEncoding): void {
   if (chunk[0] === 'J') {
+    // $FlowFixMe `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
     resolveModel(response, chunk[1], chunk[2]);
   } else if (chunk[0] === 'M') {
+    // $FlowFixMe `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
     resolveModule(response, chunk[1], chunk[2]);
   } else if (chunk[0] === 'S') {
     // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
