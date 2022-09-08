@@ -13,6 +13,11 @@ import {
   SESSION_STORAGE_LAST_SELECTION_KEY,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+  LOCAL_STORAGE_BROWSER_THEME,
+  LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+  LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
+  LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+  LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
   __DEBUG__,
 } from '../constants';
 import {
@@ -20,6 +25,7 @@ import {
   sessionStorageRemoveItem,
   sessionStorageSetItem,
 } from 'react-devtools-shared/src/storage';
+import {storeSettingInDeviceStorage} from 'react-devtools-shared/src/backend/deviceStorage';
 import setupHighlighter from './views/Highlighter';
 import {
   initialize as setupTraceUpdates,
@@ -683,7 +689,27 @@ export default class Agent extends EventEmitter<{|
     hideConsoleLogsInStrictMode: boolean,
     browserTheme: BrowserTheme,
   |}) => {
-    // If the frontend preference has change,
+    // Store the current settings in the device storage cache so that, if the app
+    // is restarted, we can access those settings before the DevTools frontend connects
+    storeSettingInDeviceStorage(
+      LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
+      JSON.stringify(appendComponentStack),
+    );
+    storeSettingInDeviceStorage(
+      LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+      JSON.stringify(breakOnConsoleErrors),
+    );
+    storeSettingInDeviceStorage(
+      LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+      JSON.stringify(showInlineWarningsAndErrors),
+    );
+    storeSettingInDeviceStorage(
+      LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
+      JSON.stringify(hideConsoleLogsInStrictMode),
+    );
+    storeSettingInDeviceStorage(LOCAL_STORAGE_BROWSER_THEME, browserTheme);
+
+    // If the frontend preferences have changed,
     // or in the case of React Native- if the backend is just finding out the preference-
     // then reinstall the console overrides.
     // It's safe to call these methods multiple times, so we don't need to worry about that.

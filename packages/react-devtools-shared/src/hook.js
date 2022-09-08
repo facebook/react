@@ -11,10 +11,11 @@
 import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 
+import {registerRenderer as registerRendererWithConsole} from './backend/console';
 import {
-  patch as patchConsole,
-  registerRenderer as registerRendererWithConsole,
-} from './backend/console';
+  injectDeviceStorageMethods,
+  initializeFromDeviceStorage,
+} from './backend/deviceStorage';
 
 declare var window: any;
 
@@ -343,31 +344,8 @@ export function installHook(target: any): DevToolsHook | null {
     // (See comments in the try/catch below for more context on inlining.)
     if (!__TEST__ && !__EXTENSION__) {
       try {
-        const appendComponentStack =
-          window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
-        const breakOnConsoleErrors =
-          window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
-        const showInlineWarningsAndErrors =
-          window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
-        const hideConsoleLogsInStrictMode =
-          window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
-        const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
-
-        // The installHook() function is injected by being stringified in the browser,
-        // so imports outside of this function do not get included.
-        //
-        // Normally we could check "typeof patchConsole === 'function'",
-        // but Webpack wraps imports with an object (e.g. _backend_console__WEBPACK_IMPORTED_MODULE_0__)
-        // and the object itself will be undefined as well for the reasons mentioned above,
-        // so we use try/catch instead.
         registerRendererWithConsole(renderer);
-        patchConsole({
-          appendComponentStack,
-          breakOnConsoleErrors,
-          showInlineWarningsAndErrors,
-          hideConsoleLogsInStrictMode,
-          browserTheme,
-        });
+        initializeFromDeviceStorage();
       } catch (error) {}
     }
 
@@ -552,6 +530,9 @@ export function installHook(target: any): DevToolsHook | null {
     onCommitFiberRoot,
     onPostCommitFiberRoot,
     setStrictMode,
+
+    // React Native calls this
+    injectDeviceStorageMethods,
 
     // Schedule Profiler runtime helpers.
     // These internal React modules to report their own boundaries

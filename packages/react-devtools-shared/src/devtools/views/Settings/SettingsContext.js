@@ -29,6 +29,7 @@ import {
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
 import {logEvent} from 'react-devtools-shared/src/Logger';
+import {storeSettingInDeviceStorage} from 'react-devtools-shared/src/backend/deviceStorage';
 
 import type {BrowserTheme} from '../DevTools';
 
@@ -73,8 +74,12 @@ SettingsContext.displayName = 'SettingsContext';
 function useLocalStorageWithLog<T>(
   key: string,
   initialValue: T | (() => T),
+  onSet: ?(T) => void,
 ): [T, (value: T | (() => T)) => void] {
   return useLocalStorage<T>(key, initialValue, (v, k) => {
+    if (onSet != null) {
+      onSet(v);
+    }
     logEvent({
       event_name: 'settings-changed',
       metadata: {
@@ -113,21 +118,51 @@ function SettingsContextController({
   const [theme, setTheme] = useLocalStorageWithLog<Theme>(
     LOCAL_STORAGE_BROWSER_THEME,
     'auto',
+    newTheme => {
+      switch (theme) {
+        case 'light':
+          storeSettingInDeviceStorage(
+            LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
+            JSON.stringify(newTheme),
+          );
+        case 'dark':
+          storeSettingInDeviceStorage(
+            LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
+            JSON.stringify(newTheme),
+          );
+        case 'auto':
+          return;
+      }
+    },
   );
+
   const [
     appendComponentStack,
     setAppendComponentStack,
   ] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
     true,
+    newAppendComponentStack =>
+      storeSettingInDeviceStorage(
+        LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
+        JSON.stringify(newAppendComponentStack),
+      ),
   );
+
   const [
     breakOnConsoleErrors,
     setBreakOnConsoleErrors,
   ] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
     false,
+    newBreakOnConsoleErrors => {
+      storeSettingInDeviceStorage(
+        LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+        JSON.stringify(newBreakOnConsoleErrors),
+      );
+    },
   );
+
   const [parseHookNames, setParseHookNames] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
     false,
@@ -138,6 +173,12 @@ function SettingsContextController({
   ] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
     false,
+    newHideConsoleLogsInStrictMode => {
+      storeSettingInDeviceStorage(
+        LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
+        JSON.stringify(newHideConsoleLogsInStrictMode),
+      );
+    },
   );
   const [
     showInlineWarningsAndErrors,
@@ -145,6 +186,12 @@ function SettingsContextController({
   ] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
     true,
+    newShowInlineWarningsAndErrors => {
+      storeSettingInDeviceStorage(
+        LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+        JSON.stringify(newShowInlineWarningsAndErrors),
+      );
+    },
   );
   const [
     traceUpdatesEnabled,

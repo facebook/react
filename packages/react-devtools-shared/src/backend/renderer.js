@@ -97,6 +97,7 @@ import is from 'shared/objectIs';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {getStyleXData} from './StyleX/utils';
 import {createProfilingHooks} from './profilingHooks';
+import {initializeFromDeviceStorage} from 'react-devtools-shared/src/backend/deviceStorage';
 
 import type {GetTimelineData, ToggleProfilingStatus} from './profilingHooks';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
@@ -813,27 +814,7 @@ export function attach(
   // * Append component stacks to warnings and error messages
   // * Disable logging during re-renders to inspect hooks (see inspectHooksOfFiber)
   registerRendererWithConsole(renderer, onErrorOrWarning);
-
-  // The renderer interface can't read these preferences directly,
-  // because it is stored in localStorage within the context of the extension.
-  // It relies on the extension to pass the preference through via the global.
-  const appendComponentStack =
-    window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
-  const breakOnConsoleErrors =
-    window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
-  const showInlineWarningsAndErrors =
-    window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
-  const hideConsoleLogsInStrictMode =
-    window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
-  const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
-
-  patchConsole({
-    appendComponentStack,
-    breakOnConsoleErrors,
-    showInlineWarningsAndErrors,
-    hideConsoleLogsInStrictMode,
-    browserTheme,
-  });
+  initializeFromDeviceStorage();
 
   const debug = (
     name: string,

@@ -451,6 +451,10 @@ export type DevToolsProfilingHooks = {|
   markComponentPassiveEffectUnmountStopped: () => void,
 |};
 
+export type InjectedDeviceStorageMethods = {
+  setValueOnDevice: (key: string, value: string) => void,
+};
+
 export type DevToolsHook = {
   listeners: {[key: string]: Array<Handler>, ...},
   rendererInterfaces: Map<RendererID, RendererInterface>,
@@ -479,6 +483,9 @@ export type DevToolsHook = {
     // Added in v16.9 to support Fast Refresh
     didError?: boolean,
   ) => void,
+
+  // React Native calls this
+  injectDeviceStorageMethods: (methods: InjectedDeviceStorageMethods) => void,
 
   // Timeline internal module filtering
   getInternalModuleRanges: () => Array<[string, string]>,
