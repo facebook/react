@@ -9,18 +9,21 @@
  */
 
 import {attach} from 'react-devtools-shared/src/backend/renderer';
+import {IS_FIREFOX} from '../utils';
 
-Object.defineProperty(
-  window,
-  '__REACT_DEVTOOLS_ATTACH__',
-  ({
-    enumerable: false,
-    // This property needs to be configurable to allow third-party integrations
-    // to attach their own renderer. Note that using third-party integrations
-    // is not officially supported. Use at your own risk.
-    configurable: true,
-    get() {
-      return attach;
-    },
-  }: Object),
-);
+if (IS_FIREFOX) {
+  Object.defineProperty(
+    window,
+    '__REACT_DEVTOOLS_ATTACH__',
+    ({
+      enumerable: false,
+      // This property needs to be configurable to allow third-party integrations
+      // to attach their own renderer. Note that using third-party integrations
+      // is not officially supported. Use at your own risk.
+      configurable: true,
+      get() {
+        return attach;
+      },
+    }: Object),
+  );
+}

@@ -3,17 +3,24 @@
 import nullthrows from 'nullthrows';
 import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
+import {IS_FIREFOX} from '../utils';
 
-function injectCode(src) {
+function injectCodeSync(src) {
+  let code = '';
+  const request = new XMLHttpRequest();
+  request.addEventListener('load', function() {
+    code = this.responseText;
+  });
+  request.open('GET', src, false);
+  request.send();
+
   const script = document.createElement('script');
-  script.src = src;
-  script.onload = () => {
-    script.remove();
-  };
+  script.textContent = code;
 
   // This script runs before the <head> element is created,
   // so we add the script to <html> instead.
   nullthrows(document.documentElement).appendChild(script);
+  // nullthrows(script.parentNode).removeChild(script);
 }
 
 let lastDetectionResult;
@@ -97,21 +104,27 @@ window.addEventListener('pageshow', function({target}) {
   chrome.runtime.sendMessage(lastDetectionResult);
 });
 
-// If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
-if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
-  injectCode(chrome.runtime.getURL('build/renderer.js'));
-}
+// The legacy way to inject the global hook in Manifest V2 extensions.
+// In V3, we use chrome.scripting.registerContentScripts instead (see background.js)
+if (IS_FIREFOX) {
+  // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
+  if (
+    sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+  ) {
+    injectCodeSync(chrome.runtime.getURL('build/renderer.js'));
+  }
 
-// Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
-// Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
-// We need to inject this code because content scripts (ie injectGlobalHook.js) don't have access
-// to the webpage's window, so in order to access front end settings
-// and communicate with React, we must inject this code into the webpage
-switch (document.contentType) {
-  case 'text/html':
-  case 'application/xhtml+xml': {
-    injectCode(chrome.runtime.getURL('build/hook-exec.js'));
-    break;
+  // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
+  // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
+  // We need to inject this code because content scripts (ie injectGlobalHook.js) don't have access
+  // to the webpage's window, so in order to access front end settings
+  // and communicate with React, we must inject this code into the webpage
+  switch (document.contentType) {
+    case 'text/html':
+    case 'application/xhtml+xml': {
+      injectCodeSync(chrome.runtime.getURL('build/installHook.js'));
+      break;
+    }
   }
 }
 

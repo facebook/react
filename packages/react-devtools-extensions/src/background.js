@@ -2,9 +2,33 @@
 
 'use strict';
 
+import {IS_FIREFOX} from './utils';
+
 const ports = {};
 
-const IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
+if (!IS_FIREFOX) {
+  // Manifest V3 method of injecting content scripts (not yet supported in Firefox)
+  // Note: the "world" option in registerContentScripts is only available in Chrome v102+
+  // It's critical since it allows us to directly run scripts on the "main" world on the page
+  // "document_start" allows it to run before the page's scripts
+  // so the hook can be detected by react reconciler
+  chrome.scripting.registerContentScripts([
+    {
+      id: 'hook',
+      matches: ['<all_urls>'],
+      js: ['build/installHook.js'],
+      runAt: 'document_start',
+      world: chrome.scripting.ExecutionWorld.MAIN,
+    },
+    {
+      id: 'rennderer',
+      matches: ['<all_urls>'],
+      js: ['build/renderer.js'],
+      runAt: 'document_start',
+      world: chrome.scripting.ExecutionWorld.MAIN,
+    },
+  ]);
+}
 
 chrome.runtime.onConnect.addListener(function(port) {
   let tab = null;
@@ -12,7 +36,7 @@ chrome.runtime.onConnect.addListener(function(port) {
   if (isNumeric(port.name)) {
     tab = port.name;
     name = 'devtools';
-    installContentScript(+port.name);
+    installProxy(+port.name);
   } else {
     tab = port.sender.tab.id;
     name = 'content-script';
@@ -35,17 +59,13 @@ function isNumeric(str: string): boolean {
   return +str + '' === str;
 }
 
-function installContentScript(tabId: number) {
+function installProxy(tabId: number) {
   if (IS_FIREFOX) {
-    chrome.tabs.executeScript(
-      tabId,
-      {file: '/build/contentScript.js'},
-      function() {},
-    );
+    chrome.tabs.executeScript(tabId, {file: '/build/proxy.js'}, function() {});
   } else {
     chrome.scripting.executeScript({
       target: {tabId: tabId},
-      files: ['/build/contentScript.js'],
+      files: ['/build/proxy.js'],
     });
   }
 }
@@ -146,9 +166,6 @@ chrome.runtime.onMessage.addListener((request, sender) => {
     // This is sent from the hook content script.
     // It tells us a renderer has attached.
     if (request.hasDetectedReact) {
-      // We use browserAction instead of pageAction because this lets us
-      // display a custom default popup when React is *not* detected.
-      // It is specified in the manifest.
       setIconAndPopup(request.reactBuildType, id);
     } else {
       switch (request.payload?.type) {
