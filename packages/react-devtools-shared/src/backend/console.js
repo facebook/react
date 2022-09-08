@@ -15,6 +15,7 @@ import {format, formatWithStyles} from './utils';
 import {getInternalReactConstants} from './renderer';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 import {consoleManagedByDevToolsDuringStrictMode} from 'react-devtools-feature-flags';
+import {castBool, castBrowserTheme} from '../utils';
 
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn'];
 const DIMMED_NODE_CONSOLE_COLOR = '\x1b[2m%s\x1b[0m';
@@ -143,6 +144,14 @@ const consoleSettingsRef = {
   browserTheme: 'dark',
 };
 
+export type ConsolePatchSettings = {
+  appendComponentStack: boolean,
+  breakOnConsoleErrors: boolean,
+  showInlineWarningsAndErrors: boolean,
+  hideConsoleLogsInStrictMode: boolean,
+  browserTheme: BrowserTheme,
+};
+
 // Patches console methods to append component stack for the current fiber.
 // Call unpatch() to remove the injected behavior.
 export function patch({
@@ -151,13 +160,7 @@ export function patch({
   showInlineWarningsAndErrors,
   hideConsoleLogsInStrictMode,
   browserTheme,
-}: {
-  appendComponentStack: boolean,
-  breakOnConsoleErrors: boolean,
-  showInlineWarningsAndErrors: boolean,
-  hideConsoleLogsInStrictMode: boolean,
-  browserTheme: BrowserTheme,
-}): void {
+}: ConsolePatchSettings): void {
   // Settings may change after we've patched the console.
   // Using a shared ref allows the patch function to read the latest values.
   consoleSettingsRef.appendComponentStack = appendComponentStack;
@@ -390,14 +393,19 @@ export function patchConsoleUsingWindowValues() {
   });
 }
 
-function castBool(v: any): ?boolean {
-  if (v === true || v === false) {
-    return v;
-  }
-}
-
-function castBrowserTheme(v: any): ?BrowserTheme {
-  if (v === 'light' || v === 'dark' || v === 'auto') {
-    return v;
-  }
+// After receiving cached console patch settings from React Native, we set them on window.
+// When the console is initially patched (in renderer.js and hook.js), these values are read.
+// The browser extension (etc.) sets these values on window, but through another method.
+export function writeConsolePatchSettingsToWindow(
+  settings: ConsolePatchSettings,
+): void {
+  window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ =
+    settings.appendComponentStack;
+  window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ =
+    settings.breakOnConsoleErrors;
+  window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ =
+    settings.showInlineWarningsAndErrors;
+  window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ =
+    settings.hideConsoleLogsInStrictMode;
+  window.__REACT_DEVTOOLS_BROWSER_THEME__ = settings.browserTheme;
 }
