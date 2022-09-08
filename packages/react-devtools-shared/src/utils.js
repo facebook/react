@@ -55,6 +55,7 @@ import isArray from './isArray';
 
 import type {ComponentFilter, ElementType} from './types';
 import type {LRUCache} from 'react-devtools-shared/src/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
@@ -347,6 +348,18 @@ function parseBool(s: ?string): ?boolean {
   }
   if (s === 'false') {
     return false;
+  }
+}
+
+export function castBool(v: any): ?boolean {
+  if (v === true || v === false) {
+    return v;
+  }
+}
+
+export function castBrowserTheme(v: any): ?BrowserTheme {
+  if (v === 'light' || v === 'dark' || v === 'auto') {
+    return v;
   }
 }
 
