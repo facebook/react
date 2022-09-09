@@ -78,7 +78,7 @@ export function processErrorChunk(
 
 function convertModelToJSON(
   request: Request,
-  parent: {+[key: string]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  parent: {|+[key: string]: ReactModel|} | $ReadOnlyArray<ReactModel>,
   key: string,
   model: ReactModel,
 ): JSONValue {
@@ -91,7 +91,9 @@ function convertModelToJSON(
       }
       return jsonArray;
     } else {
-      const jsonObj: {[key: string]: JSONValue} = {};
+      /* $FlowFixMe the old version of Flow doesn't have a good way to define
+       * an empty exact object. */
+      const jsonObj: {|[key: string]: JSONValue|} = {};
       for (const nextKey in json) {
         if (hasOwnProperty.call(json, nextKey)) {
           jsonObj[nextKey] = convertModelToJSON(
@@ -113,6 +115,7 @@ export function processModelChunk(
   id: number,
   model: ReactModel,
 ): Chunk {
+  // $FlowFixMe no good way to define an empty exact object
   const json = convertModelToJSON(request, {}, '', model);
   return ['J', id, json];
 }
@@ -159,6 +162,7 @@ export function flushBuffered(destination: Destination) {}
 export function beginWriting(destination: Destination) {}
 
 export function writeChunk(destination: Destination, chunk: Chunk): void {
+  // $FlowFixMe `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
   emitRow(destination, chunk);
 }
 
@@ -166,6 +170,7 @@ export function writeChunkAndReturn(
   destination: Destination,
   chunk: Chunk,
 ): boolean {
+  // $FlowFixMe `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
   emitRow(destination, chunk);
   return true;
 }

@@ -124,7 +124,7 @@ import type {
 } from 'react-devtools-shared/src/types';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
-type getTypeSymbolType = (type: any) => Symbol | number;
+type getTypeSymbolType = (type: any) => symbol | number;
 
 type ReactPriorityLevelsType = {|
   ImmediatePriority: number,
@@ -382,13 +382,14 @@ export function getInternalReactConstants(
   // End of copied code.
   // **********************************************************
 
-  function getTypeSymbol(type: any): Symbol | number {
+  function getTypeSymbol(type: any): symbol | number {
     const symbolOrNumber =
       typeof type === 'object' && type !== null ? type.$$typeof : type;
 
     // $FlowFixMe Flow doesn't know about typeof "symbol"
     return typeof symbolOrNumber === 'symbol'
-      ? symbolOrNumber.toString()
+      ? // $FlowFixMe `toString()` doesn't match the type signature?
+        symbolOrNumber.toString()
       : symbolOrNumber;
   }
 
@@ -468,8 +469,9 @@ export function getInternalReactConstants(
         return type;
       case HostPortal:
       case HostText:
-      case Fragment:
         return null;
+      case Fragment:
+        return 'Fragment';
       case LazyComponent:
         // This display name will not be user visible.
         // Once a Lazy component loads its inner component, React replaces the tag and type.
@@ -981,7 +983,7 @@ export function attach(
 
   // NOTICE Keep in sync with get*ForFiber methods
   function shouldFilterFiber(fiber: Fiber): boolean {
-    const {_debugSource, tag, type} = fiber;
+    const {_debugSource, tag, type, key} = fiber;
 
     switch (tag) {
       case DehydratedSuspenseComponent:
@@ -993,13 +995,14 @@ export function attach(
         return true;
       case HostPortal:
       case HostText:
-      case Fragment:
       case LegacyHiddenComponent:
       case OffscreenComponent:
         return true;
       case HostRoot:
         // It is never valid to filter the root element.
         return false;
+      case Fragment:
+        return key === null;
       default:
         const typeSymbol = getTypeSymbol(type);
 

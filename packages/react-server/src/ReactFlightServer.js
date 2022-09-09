@@ -16,9 +16,11 @@ import type {
   ModuleKey,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
+import type {ThenableState} from './ReactFlightWakeable';
 import type {
   ReactProviderType,
   ServerContextJSONValue,
+  Wakeable,
 } from 'shared/ReactTypes';
 
 import {
@@ -44,6 +46,8 @@ import {
   Dispatcher,
   getCurrentCache,
   prepareToUseHooksForRequest,
+  prepareToUseHooksForComponent,
+  getThenableStateAfterSuspending,
   resetHooksForRequest,
   setCurrentCache,
 } from './ReactFlightHooks';
@@ -54,6 +58,7 @@ import {
   getActiveContext,
   rootContextSnapshot,
 } from './ReactFlightNewContext';
+import {trackSuspendedWakeable} from './ReactFlightWakeable';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -81,26 +86,28 @@ export type ReactModel =
   | string
   | boolean
   | number
+  | symbol
   | null
   | Iterable<ReactModel>
   | ReactModelObject;
 
-type ReactModelObject = {+[key: string]: ReactModel};
+type ReactModelObject = {|+[key: string]: ReactModel|};
 
 const PENDING = 0;
 const COMPLETED = 1;
 const ABORTED = 3;
 const ERRORED = 4;
 
-type Task = {
+type Task = {|
   id: number,
   status: 0 | 1 | 3 | 4,
   model: ReactModel,
   ping: () => void,
   context: ContextSnapshot,
-};
+  thenableState: ThenableState | null,
+|};
 
-export type Request = {
+export type Request = {|
   status: 0 | 1 | 2,
   fatalError: mixed,
   destination: null | Destination,
@@ -113,14 +120,14 @@ export type Request = {
   completedModuleChunks: Array<Chunk>,
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
-  writtenSymbols: Map<Symbol, number>,
+  writtenSymbols: Map<symbol, number>,
   writtenModules: Map<ModuleKey, number>,
   writtenProviders: Map<string, number>,
   identifierPrefix: string,
   identifierCount: number,
   onError: (error: mixed) => void,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
-};
+|};
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -185,6 +192,7 @@ function attemptResolveElement(
   key: null | React$Key,
   ref: mixed,
   props: any,
+  prevThenableState: ThenableState | null,
 ): ReactModel {
   if (ref !== null && ref !== undefined) {
     // When the ref moves to the regular props object this will implicitly
@@ -200,6 +208,7 @@ function attemptResolveElement(
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     // This is a server-side component.
+    prepareToUseHooksForComponent(prevThenableState);
     return type(props);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
@@ -225,14 +234,27 @@ function attemptResolveElement(
         const payload = type._payload;
         const init = type._init;
         const wrappedType = init(payload);
-        return attemptResolveElement(wrappedType, key, ref, props);
+        return attemptResolveElement(
+          wrappedType,
+          key,
+          ref,
+          props,
+          prevThenableState,
+        );
       }
       case REACT_FORWARD_REF_TYPE: {
         const render = type.render;
+        prepareToUseHooksForComponent(prevThenableState);
         return render(props, undefined);
       }
       case REACT_MEMO_TYPE: {
-        return attemptResolveElement(type.type, key, ref, props);
+        return attemptResolveElement(
+          type.type,
+          key,
+          ref,
+          props,
+          prevThenableState,
+        );
       }
       case REACT_PROVIDER_TYPE: {
         pushProvider(type._context, props.value);
@@ -250,6 +272,7 @@ function attemptResolveElement(
             );
           }
         }
+        // $FlowFixMe issue discovered when updating Flow
         return [
           REACT_ELEMENT_TYPE,
           type,
@@ -286,6 +309,7 @@ function createTask(
     model,
     context,
     ping: () => pingTask(request, task),
+    thenableState: null,
   };
   abortSet.add(task);
   return task;
@@ -301,7 +325,7 @@ function serializeByRefID(id: number): string {
 
 function serializeModuleReference(
   request: Request,
-  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  parent: {|+[key: string | number]: ReactModel|} | $ReadOnlyArray<ReactModel>,
   key: string,
   moduleReference: ModuleReference<any>,
 ): string {
@@ -442,7 +466,7 @@ function describeValueForErrorMessage(value: ReactModel): string {
 
 function describeObjectForErrorMessage(
   objectOrArray:
-    | {+[key: string | number]: ReactModel}
+    | {+[key: string | number]: ReactModel, ...}
     | $ReadOnlyArray<ReactModel>,
   expandedName?: string,
 ): string {
@@ -472,7 +496,7 @@ function describeObjectForErrorMessage(
     return str;
   } else {
     let str = '{';
-    const object: {+[key: string | number]: ReactModel} = objectOrArray;
+    const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
     const names = Object.keys(object);
     for (let i = 0; i < names.length; i++) {
       if (i > 0) {
@@ -505,7 +529,7 @@ let isInsideContextValue = false;
 
 export function resolveModelToJSON(
   request: Request,
-  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  parent: {|+[key: string | number]: ReactModel|} | $ReadOnlyArray<ReactModel>,
   key: string,
   value: ReactModel,
 ): ReactJSONValue {
@@ -569,6 +593,7 @@ export function resolveModelToJSON(
             element.key,
             element.ref,
             element.props,
+            null,
           );
           break;
         }
@@ -591,6 +616,11 @@ export function resolveModelToJSON(
         );
         const ping = newTask.ping;
         x.then(ping, ping);
+
+        const wakeable: Wakeable = x;
+        trackSuspendedWakeable(wakeable);
+        newTask.thenableState = getThenableStateAfterSuspending();
+
         return serializeByRefID(newTask.id);
       } else {
         logRecoverableError(request, x);
@@ -669,6 +699,7 @@ export function resolveModelToJSON(
       }
     }
 
+    // $FlowFixMe
     return value;
   }
 
@@ -718,12 +749,17 @@ export function resolveModelToJSON(
     if (existingId !== undefined) {
       return serializeByValueID(existingId);
     }
-    const name = value.description;
+    // $FlowFixMe `description` might be undefined
+    const name: string = value.description;
 
+    // $FlowFixMe `name` might be undefined
     if (Symbol.for(name) !== value) {
       throw new Error(
         'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
-          `The symbol Symbol.for(${value.description}) cannot be found among global symbols. ` +
+          `The symbol Symbol.for(${
+            // $FlowFixMe `description` might be undefined
+            value.description
+          }) cannot be found among global symbols. ` +
           `Remove ${describeKeyForErrorMessage(
             key,
           )} from this object, or avoid the entire object: ${describeObjectForErrorMessage(
@@ -805,6 +841,7 @@ function emitModuleChunk(
   id: number,
   moduleMetaData: ModuleMetaData,
 ): void {
+  // $FlowFixMe ModuleMetaData is not a ReactModel
   const processedChunk = processModuleChunk(request, id, moduleMetaData);
   request.completedModuleChunks.push(processedChunk);
 }
@@ -828,16 +865,22 @@ function retryTask(request: Request, task: Task): void {
     // We completed this by other means before we had a chance to retry it.
     return;
   }
+
   switchContext(task.context);
   try {
     let value = task.model;
-    while (
+    if (
       typeof value === 'object' &&
       value !== null &&
       (value: any).$$typeof === REACT_ELEMENT_TYPE
     ) {
       // TODO: Concatenate keys of parents onto children.
       const element: React$Element<any> = (value: any);
+
+      // When retrying a component, reuse the thenableState from the
+      // previous attempt.
+      const prevThenableState = task.thenableState;
+
       // Attempt to render the server component.
       // Doing this here lets us reuse this same task if the next component
       // also suspends.
@@ -847,8 +890,34 @@ function retryTask(request: Request, task: Task): void {
         element.key,
         element.ref,
         element.props,
+        prevThenableState,
       );
+
+      // Successfully finished this component. We're going to keep rendering
+      // using the same task, but we reset its thenable state before continuing.
+      task.thenableState = null;
+
+      // Keep rendering and reuse the same task. This inner loop is separate
+      // from the render above because we don't need to reset the thenable state
+      // until the next time something suspends and retries.
+      while (
+        typeof value === 'object' &&
+        value !== null &&
+        (value: any).$$typeof === REACT_ELEMENT_TYPE
+      ) {
+        // TODO: Concatenate keys of parents onto children.
+        const nextElement: React$Element<any> = (value: any);
+        task.model = value;
+        value = attemptResolveElement(
+          nextElement.type,
+          nextElement.key,
+          nextElement.ref,
+          nextElement.props,
+          null,
+        );
+      }
     }
+
     const processedChunk = processModelChunk(request, task.id, value);
     request.completedJSONChunks.push(processedChunk);
     request.abortableTasks.delete(task);
@@ -858,6 +927,10 @@ function retryTask(request: Request, task: Task): void {
       // Something suspended again, let's pick it back up later.
       const ping = task.ping;
       x.then(ping, ping);
+
+      const wakeable: Wakeable = x;
+      trackSuspendedWakeable(wakeable);
+      task.thenableState = getThenableStateAfterSuspending();
       return;
     } else {
       request.abortableTasks.delete(task);

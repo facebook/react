@@ -34,24 +34,24 @@ export type LoggerEvent =
     |}
   | {|
       +event_name: 'select-element',
-      +metadata: {
+      +metadata: {|
         +source: string,
-      },
+      |},
     |}
   | {|
       +event_name: 'inspect-element-button-clicked',
     |}
   | {|
       +event_name: 'profiling-start',
-      +metadata: {
+      +metadata: {|
         +current_tab: string,
-      },
+      |},
     |}
   | {|
       +event_name: 'profiler-tab-changed',
-      +metadata: {
+      +metadata: {|
         +tabId: string,
-      },
+      |},
     |}
   | {|
       +event_name: 'settings-changed',

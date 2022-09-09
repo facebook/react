@@ -315,4 +315,28 @@ describe('ReactWakeable', () => {
     ]);
     expect(root).toMatchRenderedOutput('Caught an error: Oops!');
   });
+
+  // @gate enableUseHook
+  test('basic use(context)', () => {
+    const ContextA = React.createContext('');
+    const ContextB = React.createContext('B');
+
+    function Sync() {
+      const text = use(ContextA) + use(ContextB);
+      return text;
+    }
+
+    function App() {
+      return (
+        <ContextA.Provider value="A">
+          <Sync />
+        </ContextA.Provider>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    root.render(<App />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(root).toMatchRenderedOutput('AB');
+  });
 });

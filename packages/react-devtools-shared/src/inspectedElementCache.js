@@ -168,12 +168,12 @@ export function checkForUpdate({
   element,
   refresh,
   store,
-}: {
+}: {|
   bridge: FrontendBridge,
   element: Element,
   refresh: RefreshFunction,
   store: Store,
-}): void {
+|}): void {
   const {id} = element;
   const rendererID = store.getRendererIDForElement(id);
   if (rendererID != null) {

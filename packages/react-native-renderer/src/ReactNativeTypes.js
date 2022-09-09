@@ -62,38 +62,38 @@ export type PartialAttributeConfiguration = $ReadOnly<{
   ...
 }>;
 
-export type ViewConfig = $ReadOnly<{
+export type ViewConfig = $ReadOnly<{|
   Commands?: $ReadOnly<{[commandName: string]: number, ...}>,
   Constants?: $ReadOnly<{[name: string]: mixed, ...}>,
   Manager?: string,
   NativeProps?: $ReadOnly<{[propName: string]: string, ...}>,
   baseModuleName?: ?string,
   bubblingEventTypes?: $ReadOnly<{
-    [eventName: string]: $ReadOnly<{
-      phasedRegistrationNames: $ReadOnly<{
+    [eventName: string]: $ReadOnly<{|
+      phasedRegistrationNames: $ReadOnly<{|
         captured: string,
         bubbled: string,
         skipBubbling?: ?boolean,
-      }>,
-    }>,
+      |}>,
+    |}>,
     ...,
   }>,
   directEventTypes?: $ReadOnly<{
-    [eventName: string]: $ReadOnly<{
+    [eventName: string]: $ReadOnly<{|
       registrationName: string,
-    }>,
+    |}>,
     ...,
   }>,
   uiViewClassName: string,
   validAttributes: AttributeConfiguration,
-}>;
+|}>;
 
-export type PartialViewConfig = $ReadOnly<{
+export type PartialViewConfig = $ReadOnly<{|
   bubblingEventTypes?: $PropertyType<ViewConfig, 'bubblingEventTypes'>,
   directEventTypes?: $PropertyType<ViewConfig, 'directEventTypes'>,
   uiViewClassName: string,
   validAttributes?: PartialAttributeConfiguration,
-}>;
+|}>;
 
 export type NativeMethods = $ReadOnly<{|
   blur(): void,

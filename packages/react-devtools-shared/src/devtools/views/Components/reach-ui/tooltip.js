@@ -23,6 +23,7 @@ const Tooltip = ({
 }) => {
   const style = useThemeStyles();
   return (
+    // $FlowFixMe unsafe spread
     <ReachTooltip
       className={`${tooltipStyles.Tooltip} ${className}`}
       style={style}

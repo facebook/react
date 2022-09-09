@@ -60,10 +60,10 @@
 // log2(32) = 5 bits. That means we can lop bits off the end 5 at a time without
 // affecting the final result.
 
-export type TreeContext = {
+export type TreeContext = {|
   +id: number,
   +overflow: string,
-};
+|};
 
 export const emptyTreeContext = {
   id: 1,

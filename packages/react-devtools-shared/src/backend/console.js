@@ -151,13 +151,13 @@ export function patch({
   showInlineWarningsAndErrors,
   hideConsoleLogsInStrictMode,
   browserTheme,
-}: {
+}: {|
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
   browserTheme: BrowserTheme,
-}): void {
+|}): void {
   // Settings may change after we've patched the console.
   // Using a shared ref allows the patch function to read the latest values.
   consoleSettingsRef.appendComponentStack = appendComponentStack;
@@ -301,7 +301,15 @@ let unpatchForStrictModeFn: null | (() => void) = null;
 // NOTE: KEEP IN SYNC with src/hook.js:patchConsoleForInitialRenderInStrictMode
 export function patchForStrictMode() {
   if (consoleManagedByDevToolsDuringStrictMode) {
-    const overrideConsoleMethods = ['error', 'trace', 'warn', 'log'];
+    const overrideConsoleMethods = [
+      'error',
+      'group',
+      'groupCollapsed',
+      'info',
+      'log',
+      'trace',
+      'warn',
+    ];
 
     if (unpatchForStrictModeFn !== null) {
       // Don't patch twice.

@@ -43,6 +43,7 @@ function nodeFetch(
     // TODO: cherry-pick supported user-passed options.
   };
   const nodeImpl = protocol === 'https:' ? https : http;
+  // $FlowFixMe: node flow type has `port` as a number
   const request = nodeImpl.request(nodeOptions, response => {
     // TODO: support redirects.
     onResolve(new Response(response));

@@ -18,12 +18,12 @@ import {
   abort,
 } from 'react-server/src/ReactFlightServer';
 
-type Options = {
+type Options = {|
   identifierPrefix?: string,
   signal?: AbortSignal,
   context?: Array<[string, ServerContextJSONValue]>,
   onError?: (error: mixed) => void,
-};
+|};
 
 function renderToReadableStream(
   model: ReactModel,
@@ -52,13 +52,13 @@ function renderToReadableStream(
   const stream = new ReadableStream(
     {
       type: 'bytes',
-      start(controller) {
+      start(controller): ?Promise<void> {
         startWork(request);
       },
-      pull(controller) {
+      pull(controller): ?Promise<void> {
         startFlowing(request, controller);
       },
-      cancel(reason) {},
+      cancel(reason): ?Promise<void> {},
     },
     // $FlowFixMe size() methods are not allowed on byte streams.
     {highWaterMark: 0},

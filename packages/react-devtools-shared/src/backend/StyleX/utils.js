@@ -92,7 +92,9 @@ function getPropertyValueForStyleName(styleName: string): string | null {
     ]: any): CSSStyleSheet);
     // $FlowFixMe Flow doesn't konw about these properties
     const rules = styleSheet.rules || styleSheet.cssRules;
+    // $FlowFixMe `rules` is mixed
     for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
+      // $FlowFixMe `rules` is mixed
       const rule = rules[ruleIndex];
       // $FlowFixMe Flow doesn't konw about these properties
       const {cssText, selectorText, style} = rule;

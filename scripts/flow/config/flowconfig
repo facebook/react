@@ -37,6 +37,7 @@
 
 [lints]
 untyped-type-import=error
+implicit-inexact-object=error
 
 [options]
 server.max_workers=4
@@ -50,4 +51,4 @@ esproposal.optional_chaining=enable
 munge_underscores=false
 
 [version]
-^0.97.0
+^0.122.0

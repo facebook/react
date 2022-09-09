@@ -67,8 +67,8 @@ const encodedStringCache: LRUCache<string, Array<number>> = new LRU({
 });
 
 export function alphaSortKeys(
-  a: string | number | Symbol,
-  b: string | number | Symbol,
+  a: string | number | symbol,
+  b: string | number | symbol,
 ): number {
   if (a.toString() > b.toString()) {
     return 1;
@@ -81,7 +81,7 @@ export function alphaSortKeys(
 
 export function getAllEnumerableKeys(
   obj: Object,
-): Set<string | number | Symbol> {
+): Set<string | number | symbol> {
   const keys = new Set();
   let current = obj;
   while (current != null) {

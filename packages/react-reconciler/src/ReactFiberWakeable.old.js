@@ -18,6 +18,7 @@ import type {
 let suspendedThenable: Thenable<mixed> | null = null;
 let adHocSuspendCount: number = 0;
 
+// TODO: Sparse arrays are bad for performance.
 let usedThenables: Array<Thenable<any> | void> | null = null;
 let lastUsedThenable: Thenable<any> | null = null;
 
@@ -74,6 +75,9 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
       suspendedThenable = null;
       break;
     default: {
+      // TODO: Only instrument the thenable if the status if not defined. If
+      // it's defined, but an unknown value, assume it's been instrumented by
+      // some custom userspace implementation.
       const pendingThenable: PendingThenable<mixed> = (thenable: any);
       pendingThenable.status = 'pending';
       pendingThenable.then(

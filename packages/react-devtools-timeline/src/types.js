@@ -17,11 +17,11 @@ export type Return<T> = Return_<*, T>;
 
 // Project types
 
-export type ErrorStackFrame = {
+export type ErrorStackFrame = {|
   fileName: string,
   lineNumber: number,
   columnNumber: number,
-};
+|};
 
 export type Milliseconds = number;
 

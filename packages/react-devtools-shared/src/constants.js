@@ -79,7 +79,7 @@ import type {
   DisplayDensity,
 } from './devtools/views/Settings/SettingsContext';
 
-export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
+export const THEME_STYLES: {[style: Theme | DisplayDensity]: any, ...} = {
   light: {
     '--color-attribute-name': '#ef6632',
     '--color-attribute-name-not-editable': '#23272f',

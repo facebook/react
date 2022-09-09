@@ -37,9 +37,9 @@ type Options = {|
 |};
 
 // TODO: Move to sub-classing ReadableStream.
-type ReactDOMServerReadableStream = ReadableStream & {
+type ReactDOMServerReadableStream = ReadableStream & {|
   allReady: Promise<void>,
-};
+|};
 
 function renderToReadableStream(
   children: ReactNodeList,
@@ -57,10 +57,10 @@ function renderToReadableStream(
       const stream: ReactDOMServerReadableStream = (new ReadableStream(
         {
           type: 'bytes',
-          pull(controller) {
+          pull(controller): ?Promise<void> {
             startFlowing(request, controller);
           },
-          cancel(reason) {
+          cancel(reason): ?Promise<void> {
             abort(request);
           },
         },

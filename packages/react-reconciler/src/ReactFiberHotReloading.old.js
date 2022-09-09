@@ -222,6 +222,7 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
       return;
     }
     if (failedBoundaries === null) {
+      // $FlowFixMe Flow got confused by the feature check above.
       failedBoundaries = new WeakSet();
     }
     failedBoundaries.add(fiber);

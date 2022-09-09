@@ -39,7 +39,7 @@ if (typeof Symbol === 'function' && Symbol.for) {
   TEXT_TYPE = symbolFor('selector.text');
 }
 
-type Type = Symbol | number;
+type Type = symbol | number;
 
 type ComponentSelector = {|
   $$typeof: Type,
@@ -506,13 +506,15 @@ export function onCommitRoot(): void {
 export type IntersectionObserverOptions = Object;
 
 export type ObserveVisibleRectsCallback = (
-  intersections: Array<{ratio: number, rect: BoundingRect}>,
+  intersections: Array<{|ratio: number, rect: BoundingRect|}>,
 ) => void;
 
 export function observeVisibleRects(
   hostRoot: Instance,
   selectors: Array<Selector>,
-  callback: (intersections: Array<{ratio: number, rect: BoundingRect}>) => void,
+  callback: (
+    intersections: Array<{|ratio: number, rect: BoundingRect|}>,
+  ) => void,
   options?: IntersectionObserverOptions,
 ): {|disconnect: () => void|} {
   if (!supportsTestSelectors) {

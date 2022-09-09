@@ -80,7 +80,7 @@ function CanvasPage({profilerData, viewState}: Props) {
       className={styles.CanvasPage}
       style={{backgroundColor: COLORS.BACKGROUND}}>
       <AutoSizer>
-        {({height, width}: {height: number, width: number}) => (
+        {({height, width}: {|height: number, width: number|}) => (
           <AutoSizedCanvas
             data={profilerData}
             height={height}

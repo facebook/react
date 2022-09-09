@@ -22,7 +22,7 @@ export default function useContextMenu({
   data: Object,
   id: string,
   onChange?: OnChangeFn,
-  ref: {current: ElementRef<*> | null},
+  ref: {|current: ElementRef<*> | null|},
 |}) {
   const {showMenu} = useContext<RegistryContextType>(RegistryContext);
 

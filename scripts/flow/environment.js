@@ -77,52 +77,52 @@ declare module 'fs/promises' {
   declare var access: (path: string, mode?: number) => Promise<void>;
   declare var lstat: (
     path: string,
-    options?: ?{bigint?: boolean},
+    options?: ?{|bigint?: boolean|},
   ) => Promise<mixed>;
   declare var readdir: (
     path: string,
     options?:
       | ?string
-      | {
+      | {|
           encoding?: ?string,
           withFileTypes?: ?boolean,
-        },
+        |},
   ) => Promise<Buffer>;
   declare var readFile: (
     path: string,
     options?:
       | ?string
-      | {
+      | {|
           encoding?: ?string,
-        },
+        |},
   ) => Promise<Buffer>;
   declare var readlink: (
     path: string,
     options?:
       | ?string
-      | {
+      | {|
           encoding?: ?string,
-        },
+        |},
   ) => Promise<mixed>;
   declare var realpath: (
     path: string,
     options?:
       | ?string
-      | {
+      | {|
           encoding?: ?string,
-        },
+        |},
   ) => Promise<mixed>;
   declare var stat: (
     path: string,
-    options?: ?{bigint?: boolean},
+    options?: ?{|bigint?: boolean|},
   ) => Promise<mixed>;
 }
 declare module 'pg' {
   declare var Pool: (
     options: mixed,
-  ) => {
+  ) => {|
     query: (query: string, values?: Array<mixed>) => void,
-  };
+  |};
 }
 
 declare module 'util' {
@@ -147,13 +147,13 @@ declare module 'util' {
     encodeInto(
       buffer: string,
       dest: Uint8Array,
-    ): {read: number, written: number};
+    ): {|read: number, written: number|};
     encoding: string;
   }
 }
 
 declare module 'pg/lib/utils' {
-  declare module.exports: {
+  declare module.exports: {|
     prepareValue(val: any): mixed,
-  };
+  |};
 }

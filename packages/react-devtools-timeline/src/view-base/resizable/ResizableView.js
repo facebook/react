@@ -47,7 +47,7 @@ const HIDDEN_RECT = {
 };
 
 export class ResizableView extends View {
-  _canvasRef: {current: HTMLCanvasElement | null};
+  _canvasRef: {|current: HTMLCanvasElement | null|};
   _layoutState: LayoutState;
   _mutableViewStateKey: string;
   _resizeBar: ResizeBarView;
@@ -60,7 +60,7 @@ export class ResizableView extends View {
     frame: Rect,
     subview: View,
     viewState: ViewState,
-    canvasRef: {current: HTMLCanvasElement | null},
+    canvasRef: {|current: HTMLCanvasElement | null|},
     label: string,
   ) {
     super(surface, frame, noopLayout);

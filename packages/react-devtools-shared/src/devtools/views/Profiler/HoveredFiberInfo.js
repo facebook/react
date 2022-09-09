@@ -23,9 +23,9 @@ export type TooltipFiberData = {|
   name: string,
 |};
 
-export type Props = {
+export type Props = {|
   fiberData: ChartNode,
-};
+|};
 
 export default function HoveredFiberInfo({fiberData}: Props) {
   const {profilerStore} = useContext(StoreContext);
