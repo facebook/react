@@ -408,31 +408,30 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
 
   if ((flags & Snapshot) !== NoFlags) {
     setCurrentDebugFiberInDEV(finishedWork);
+  }
 
-    switch (finishedWork.tag) {
-      case FunctionComponent:
-        // TODO: swap ref.current for useEvent;
-        if (flags & Update) {
-          try {
-            commitHookEffectListUnmount(
-              HookSnapshot | HookHasEffect,
-              finishedWork,
-              finishedWork.return,
-            );
-            commitHookEffectListMount(
-              HookSnapshot | HookHasEffect,
-              finishedWork,
-            );
-          } catch (error) {
-            captureCommitPhaseError(finishedWork, finishedWork.return, error);
-          }
+  switch (finishedWork.tag) {
+    case FunctionComponent: {
+      if ((flags & Update) !== NoFlags) {
+        try {
+          commitHookEffectListUnmount(
+            HookSnapshot | HookHasEffect,
+            finishedWork,
+            finishedWork.return,
+          );
+          commitHookEffectListMount(HookSnapshot | HookHasEffect, finishedWork);
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
-        break;
-      case ForwardRef:
-      case SimpleMemoComponent: {
-        break;
       }
-      case ClassComponent: {
+      break;
+    }
+    case ForwardRef:
+    case SimpleMemoComponent: {
+      break;
+    }
+    case ClassComponent: {
+      if ((flags & Snapshot) !== NoFlags) {
         if (current !== null) {
           const prevProps = current.memoizedProps;
           const prevState = current.memoizedState;
@@ -486,29 +485,35 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
           }
           instance.__reactInternalSnapshotBeforeUpdate = snapshot;
         }
-        break;
       }
-      case HostRoot: {
+      break;
+    }
+    case HostRoot: {
+      if ((flags & Snapshot) !== NoFlags) {
         if (supportsMutation) {
           const root = finishedWork.stateNode;
           clearContainer(root.containerInfo);
         }
-        break;
       }
-      case HostComponent:
-      case HostText:
-      case HostPortal:
-      case IncompleteClassComponent:
-        // Nothing to do for these component types
-        break;
-      default: {
+      break;
+    }
+    case HostComponent:
+    case HostText:
+    case HostPortal:
+    case IncompleteClassComponent:
+      // Nothing to do for these component types
+      break;
+    default: {
+      if ((flags & Snapshot) !== NoFlags) {
         throw new Error(
           'This unit of work tag should not have side-effects. This error is ' +
             'likely caused by a bug in React. Please file an issue.',
         );
       }
     }
+  }
 
+  if ((flags & Snapshot) !== NoFlags) {
     resetCurrentDebugFiberInDEV();
   }
 }

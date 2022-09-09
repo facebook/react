@@ -1901,7 +1901,7 @@ function updateEvent<T>(callback: () => T): () => T {
 
   updateEffectImpl(
     UpdateEffect,
-    HookInsertion,
+    HookSnapshot,
     () => {
       ref.current = callback;
     },
