@@ -19,10 +19,13 @@ describe('useEvent', () => {
   let ReactNoop;
   let Scheduler;
   let act;
+  let createContext;
+  let useContext;
   let useState;
   let useEvent;
   let useEffect;
   let useLayoutEffect;
+  let useMemo;
 
   beforeEach(() => {
     React = require('react');
@@ -30,10 +33,13 @@ describe('useEvent', () => {
     Scheduler = require('scheduler');
 
     act = require('jest-react').act;
+    createContext = React.createContext;
+    useContext = React.useContext;
     useState = React.useState;
     useEvent = React.experimental_useEvent;
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;
+    useMemo = React.useMemo;
   });
 
   function span(prop) {
@@ -150,7 +156,7 @@ describe('useEvent', () => {
   });
 
   // @gate enableUseEventHook
-  it('useLayoutEffect shouldn’t re-fire when event handlers change', () => {
+  it("useLayoutEffect shouldn't re-fire when event handlers change", () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
         this.props.onClick();
@@ -235,7 +241,7 @@ describe('useEvent', () => {
   });
 
   // @gate enableUseEventHook
-  it('useEffect shouldn’t re-fire when event handlers change', () => {
+  it("useEffect shouldn't re-fire when event handlers change", () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
         this.props.onClick();
@@ -430,5 +436,160 @@ describe('useEvent', () => {
 
     act(() => ReactNoop.render(<Counter value={2} />));
     expect(Scheduler).toHaveYielded(['Effect value: 2', 'Event value: 2']);
+  });
+
+  // @gate enableUseEventHook
+  it('integration: implements docs chat room example', () => {
+    function createConnection() {
+      let connectedCallback;
+      let timeout;
+      return {
+        connect() {
+          timeout = setTimeout(() => {
+            if (connectedCallback) {
+              connectedCallback();
+            }
+          }, 100);
+        },
+        on(event, callback) {
+          if (connectedCallback) {
+            throw Error('Cannot add the handler twice.');
+          }
+          if (event !== 'connected') {
+            throw Error('Only "connected" event is supported.');
+          }
+          connectedCallback = callback;
+        },
+        disconnect() {
+          clearTimeout(timeout);
+        },
+      };
+    }
+
+    function ChatRoom({roomId, theme}) {
+      const onConnected = useEvent(() => {
+        Scheduler.unstable_yieldValue('Connected! theme: ' + theme);
+      });
+
+      useEffect(() => {
+        const connection = createConnection(roomId);
+        connection.on('connected', () => {
+          onConnected();
+        });
+        connection.connect();
+        return () => connection.disconnect();
+      }, [roomId, onConnected]);
+
+      return <Text text={`Welcome to the ${roomId} room!`} />;
+    }
+
+    act(() => ReactNoop.render(<ChatRoom roomId="general" theme="light" />));
+    expect(Scheduler).toHaveYielded(['Welcome to the general room!']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Welcome to the general room!'),
+    ]);
+
+    jest.advanceTimersByTime(100);
+    Scheduler.unstable_advanceTime(100);
+    expect(Scheduler).toHaveYielded(['Connected! theme: light']);
+
+    // change roomId only
+    act(() => ReactNoop.render(<ChatRoom roomId="music" theme="light" />));
+    expect(Scheduler).toHaveYielded(['Welcome to the music room!']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Welcome to the music room!'),
+    ]);
+    jest.advanceTimersByTime(100);
+    Scheduler.unstable_advanceTime(100);
+    // should trigger a reconnect
+    expect(Scheduler).toHaveYielded(['Connected! theme: light']);
+
+    // change theme only
+    act(() => ReactNoop.render(<ChatRoom roomId="music" theme="dark" />));
+    expect(Scheduler).toHaveYielded(['Welcome to the music room!']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Welcome to the music room!'),
+    ]);
+    jest.advanceTimersByTime(100);
+    Scheduler.unstable_advanceTime(100);
+    // should not trigger a reconnect
+    expect(Scheduler).toFlushWithoutYielding();
+
+    // change roomId only
+    act(() => ReactNoop.render(<ChatRoom roomId="travel" theme="dark" />));
+    expect(Scheduler).toHaveYielded(['Welcome to the travel room!']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Welcome to the travel room!'),
+    ]);
+    jest.advanceTimersByTime(100);
+    Scheduler.unstable_advanceTime(100);
+    // should trigger a reconnect
+    expect(Scheduler).toHaveYielded(['Connected! theme: dark']);
+  });
+
+  // @gate enableUseEventHook
+  it('integration: implements the docs logVisit example', () => {
+    class AddToCartButton extends React.PureComponent {
+      addToCart = () => {
+        this.props.onClick();
+      };
+      render() {
+        return <Text text="Add to cart" />;
+      }
+    }
+    const ShoppingCartContext = createContext(null);
+
+    function AppShell({children}) {
+      const [items, updateItems] = useState([]);
+      const value = useMemo(() => ({items, updateItems}), [items, updateItems]);
+
+      return (
+        <ShoppingCartContext.Provider value={value}>
+          {children}
+        </ShoppingCartContext.Provider>
+      );
+    }
+
+    function Page({url}) {
+      const {items, updateItems} = useContext(ShoppingCartContext);
+      const onClick = useEvent(() => updateItems([...items, 1]));
+      const numberOfItems = items.length;
+
+      const onVisit = useEvent(visitedUrl => {
+        Scheduler.unstable_yieldValue(
+          'url: ' + url + ', numberOfItems: ' + numberOfItems,
+        );
+      });
+
+      useEffect(() => {
+        onVisit(url);
+      }, [url]);
+
+      return <AddToCartButton onClick={onClick} ref={button} />;
+    }
+
+    const button = React.createRef(null);
+    act(() =>
+      ReactNoop.render(
+        <AppShell>
+          <Page url="/shop/1" />
+        </AppShell>,
+      ),
+    );
+    expect(Scheduler).toHaveYielded([
+      'Add to cart',
+      'url: /shop/1, numberOfItems: 0',
+    ]);
+    act(button.current.addToCart);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    act(() =>
+      ReactNoop.render(
+        <AppShell>
+          <Page url="/shop/2" />
+        </AppShell>,
+      ),
+    );
+    expect(Scheduler).toHaveYielded(['url: /shop/2, numberOfItems: 1']);
   });
 });
