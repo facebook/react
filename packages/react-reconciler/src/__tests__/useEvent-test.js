@@ -12,7 +12,9 @@
 
 'use strict';
 
-describe('useRef', () => {
+import {useInsertionEffect} from 'react';
+
+describe('useEvent', () => {
   let React;
   let ReactNoop;
   let Scheduler;
@@ -401,6 +403,39 @@ describe('useRef', () => {
     expect(ReactNoop.getChildren()).toEqual([
       span('Increment'),
       span('Count: 34'),
+    ]);
+  });
+
+  it('is mutated before all other effects', () => {
+    function Counter({value}) {
+      useInsertionEffect(() => {
+        Scheduler.unstable_yieldValue('Effect value: ' + value);
+        increment();
+      }, [value]);
+
+      // This is defined after the insertion effect, but it should
+      // update the event fn _before_ the insertion effect fires.
+      const increment = useEvent(() => {
+        Scheduler.unstable_yieldValue('Event value: ' + value);
+      });
+
+      return (
+        <>
+        </>
+      );
+    }
+
+    ReactNoop.render(<Counter value={1} />);
+    expect(Scheduler).toFlushAndYield([
+      'Effect value: 1',
+      'Event value: 1',
+    ]);
+
+
+    act(() => ReactNoop.render(<Counter value={2} />));
+    expect(Scheduler).toHaveYielded([
+      'Effect value: 2',
+      'Event value: 2',
     ]);
   });
 });
