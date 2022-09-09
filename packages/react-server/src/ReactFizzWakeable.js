@@ -7,7 +7,7 @@
  * @flow
  */
 
-// Corresponds to ReactFiberWakeable and ReactFizzWakeable modules. Generally,
+// Corresponds to ReactFiberWakeable and ReactFlightWakeable modules. Generally,
 // changes to one module should be reflected in the others.
 
 // TODO: Rename this module and the corresponding Fiber one to "Thenable"
@@ -90,10 +90,6 @@ export function trackUsedThenable<T>(
 ) {
   // This is only a separate function from trackSuspendedWakeable for symmetry
   // with Fiber.
-  // TODO: Disallow throwing a thenable directly. It must go through `use` (or
-  // some equivalent for internal Suspense implementations). We can't do this in
-  // Fiber yet because it's a breaking change but we can do it in Server
-  // Components because Server Components aren't released yet.
   thenableState[index] = thenable;
 }
 
