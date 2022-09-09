@@ -200,10 +200,7 @@ function use<T>(usable: Usable<T>): T {
           }
         }
       }
-    } else if (
-      usable.$$typeof != null &&
-      usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-    ) {
+    } else if (usable.$$typeof === REACT_SERVER_CONTEXT_TYPE) {
       const context: ReactServerContext<T> = (usable: any);
       return readContext(context);
     }
