@@ -3866,13 +3866,12 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       ReactNoop.render(<App loadA={true} />);
       expect(() => {
-        const expectFlush = expect(() => {
-          expect(Scheduler).toFlushAndYield(['A: 0']);
-        });
         if (gate(flag => flag.enableThrowOnMountForHookMismatch)) {
-          expectFlush.toThrow(
-            'Rendered more hooks than during the previous render',
-          );
+          expect(() => {
+            expect(Scheduler).toFlushAndYield(['A: 0']);
+          }).toThrow('Rendered more hooks than during the previous render');
+        } else {
+          expect(Scheduler).toFlushAndYield(['A: 0']);
         }
       }).toErrorDev([
         'Warning: React has detected a change in the order of Hooks called by App. ' +
@@ -3974,24 +3973,34 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<App showMore={true} />);
-        expect(() => {
-          const expectFlush = expect(() => {
+        if (gate(flags => flags.enableThrowOnMountForHookMismatch)) {
+          expect(() => {
+            expect(() => {
+              expect(Scheduler).toFlushAndYield(['Mount A']);
+            }).toThrow('Rendered more hooks than during the previous render');
+          }).toErrorDev([
+            'Warning: React has detected a change in the order of Hooks called by App. ' +
+              'This will lead to bugs and errors if not fixed. For more information, ' +
+              'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+              '   Previous render            Next render\n' +
+              '   ------------------------------------------------------\n' +
+              '1. undefined                  useEffect\n' +
+              '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+          ]);
+        } else {
+          expect(() => {
             expect(Scheduler).toFlushAndYield(['Mount A']);
-          });
-          if (gate(flags => flags.enableThrowOnMountForHookMismatch)) {
-            expectFlush.toThrow(
-              'Rendered more hooks than during the previous render',
-            );
-          }
-        }).toErrorDev([
-          'Warning: React has detected a change in the order of Hooks called by App. ' +
-            'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
-            '   Previous render            Next render\n' +
-            '   ------------------------------------------------------\n' +
-            '1. undefined                  useEffect\n' +
-            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
-        ]);
+          }).toErrorDev([
+            'Warning: Internal React error: Expected static flag was missing. Please notify the React team.',
+            'Warning: React has detected a change in the order of Hooks called by App. ' +
+              'This will lead to bugs and errors if not fixed. For more information, ' +
+              'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
+              '   Previous render            Next render\n' +
+              '   ------------------------------------------------------\n' +
+              '1. undefined                  useEffect\n' +
+              '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+          ]);
+        }
       });
     });
 
