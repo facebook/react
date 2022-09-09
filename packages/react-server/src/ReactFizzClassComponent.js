@@ -100,10 +100,10 @@ function warnNoop(
   }
 }
 
-type InternalInstance = {|
+type InternalInstance = {
   queue: null | Array<Object>,
   replace: boolean,
-|};
+};
 
 const classComponentUpdater = {
   isMounted(inst) {

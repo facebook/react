@@ -72,16 +72,16 @@ import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
 
-type DispatchListener = {|
+type DispatchListener = {
   instance: null | Fiber,
   listener: Function,
   currentTarget: EventTarget,
-|};
+};
 
-type DispatchEntry = {|
+type DispatchEntry = {
   event: ReactSyntheticEvent,
   listeners: Array<DispatchListener>,
-|};
+};
 
 export type DispatchQueue = Array<DispatchEntry>;
 

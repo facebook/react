@@ -38,11 +38,11 @@ import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
 import {createCache, retainCache} from './ReactFiberCacheComponent.old';
 
-export type RootState = {|
+export type RootState = {
   element: any,
   isDehydrated: boolean,
   cache: Cache,
-|};
+};
 
 function FiberRootNode(
   containerInfo,

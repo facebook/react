@@ -21,11 +21,11 @@ const LABELS = [
 // This must match the filename in ".github/ISSUE_TEMPLATE/"
 const TEMPLATE = 'devtools_bug_report.yml';
 
-type Props = {|
+type Props = {
   callStack: string | null,
   componentStack: string | null,
   errorMessage: string | null,
-|};
+};
 
 export default function ReportNewIssue({
   callStack,

@@ -91,23 +91,23 @@ export type ReactModel =
   | Iterable<ReactModel>
   | ReactModelObject;
 
-type ReactModelObject = {|+[key: string]: ReactModel|};
+type ReactModelObject = {+[key: string]: ReactModel};
 
 const PENDING = 0;
 const COMPLETED = 1;
 const ABORTED = 3;
 const ERRORED = 4;
 
-type Task = {|
+type Task = {
   id: number,
   status: 0 | 1 | 3 | 4,
   model: ReactModel,
   ping: () => void,
   context: ContextSnapshot,
   thenableState: ThenableState | null,
-|};
+};
 
-export type Request = {|
+export type Request = {
   status: 0 | 1 | 2,
   fatalError: mixed,
   destination: null | Destination,
@@ -127,7 +127,7 @@ export type Request = {|
   identifierCount: number,
   onError: (error: mixed) => void,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
-|};
+};
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -325,7 +325,7 @@ function serializeByRefID(id: number): string {
 
 function serializeModuleReference(
   request: Request,
-  parent: {|+[key: string | number]: ReactModel|} | $ReadOnlyArray<ReactModel>,
+  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
   key: string,
   moduleReference: ModuleReference<any>,
 ): string {
@@ -529,7 +529,7 @@ let isInsideContextValue = false;
 
 export function resolveModelToJSON(
   request: Request,
-  parent: {|+[key: string | number]: ReactModel|} | $ReadOnlyArray<ReactModel>,
+  parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
   key: string,
   value: ReactModel,
 ): ReactJSONValue {

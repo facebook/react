@@ -26,19 +26,19 @@ import {
   createRootFormatContext,
 } from 'react-server/src/ReactServerFormatConfig';
 
-type Options = {|
+type Options = {
   identifierPrefix?: string,
   bootstrapScriptContent?: string,
   bootstrapScripts: Array<string>,
   bootstrapModules: Array<string>,
   progressiveChunkSize?: number,
   onError: (error: mixed) => void,
-|};
+};
 
-opaque type Stream = {|
+opaque type Stream = {
   destination: Destination,
   request: Request,
-|};
+};
 
 function renderToStream(children: ReactNodeList, options: Options): Stream {
   const destination = {

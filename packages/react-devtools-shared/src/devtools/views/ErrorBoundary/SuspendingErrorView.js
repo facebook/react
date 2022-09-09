@@ -13,11 +13,11 @@ import UpdateExistingIssue from './UpdateExistingIssue';
 import ReportNewIssue from './ReportNewIssue';
 import WorkplaceGroup from './WorkplaceGroup';
 
-type Props = {|
+type Props = {
   callStack: string | null,
   componentStack: string | null,
   errorMessage: string | null,
-|};
+};
 
 export default function SuspendingErrorView({
   callStack,

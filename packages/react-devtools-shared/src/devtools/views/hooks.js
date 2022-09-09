@@ -23,25 +23,25 @@ import {
 import {StoreContext, BridgeContext} from './context';
 import {sanitizeForParse, smartParse, smartStringify} from '../utils';
 
-type ACTION_RESET = {|
+type ACTION_RESET = {
   type: 'RESET',
   externalValue: any,
-|};
-type ACTION_UPDATE = {|
+};
+type ACTION_UPDATE = {
   type: 'UPDATE',
   editableValue: any,
   externalValue: any,
-|};
+};
 
 type UseEditableValueAction = ACTION_RESET | ACTION_UPDATE;
 type UseEditableValueDispatch = (action: UseEditableValueAction) => void;
-type UseEditableValueState = {|
+type UseEditableValueState = {
   editableValue: any,
   externalValue: any,
   hasPendingChanges: boolean,
   isValid: boolean,
   parsedValue: any,
-|};
+};
 
 function useEditableValueReducer(state, action) {
   switch (action.type) {
@@ -271,10 +271,10 @@ export function useModalDismissSignal(
 export function useSubscription<Value>({
   getCurrentValue,
   subscribe,
-}: {|
+}: {
   getCurrentValue: () => Value,
   subscribe: (callback: Function) => () => void,
-|}): Value {
+}): Value {
   const [state, setState] = useState(() => ({
     getCurrentValue,
     subscribe,

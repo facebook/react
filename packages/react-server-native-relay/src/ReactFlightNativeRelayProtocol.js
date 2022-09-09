@@ -14,7 +14,7 @@ export type JSONValue =
   | number
   | boolean
   | null
-  | {|+[key: string]: JSONValue|}
+  | {+[key: string]: JSONValue}
   | Array<JSONValue>;
 
 export type RowEncoding =

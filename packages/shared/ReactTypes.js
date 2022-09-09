@@ -80,7 +80,7 @@ export type ServerContextJSONValue =
   | number
   | null
   | $ReadOnlyArray<ServerContextJSONValue>
-  | {|+[key: string]: ServerContextJSONValue|};
+  | {+[key: string]: ServerContextJSONValue};
 
 export type ReactServerContext<T: any> = ReactContext<T>;
 
@@ -94,13 +94,13 @@ export type ReactPortal = {
   ...
 };
 
-export type RefObject = {|
+export type RefObject = {
   current: any,
-|};
+};
 
-export type ReactScope = {|
+export type ReactScope = {
   $$typeof: symbol | number,
-|};
+};
 
 export type ReactScopeQuery = (
   type: string,
@@ -108,12 +108,12 @@ export type ReactScopeQuery = (
   instance: mixed,
 ) => boolean;
 
-export type ReactScopeInstance = {|
+export type ReactScopeInstance = {
   DO_NOT_USE_queryAllNodes(ReactScopeQuery): null | Array<Object>,
   DO_NOT_USE_queryFirstNode(ReactScopeQuery): null | Object,
   containsNode(Object): boolean,
   getChildContextValues: <T>(context: ReactContext<T>) => Array<T>,
-|};
+};
 
 // Mutable source version can be anything (e.g. number, string, immutable data structure)
 // so long as it changes every time any part of the source changes.
@@ -133,7 +133,7 @@ export type MutableSourceGetVersionFn = (
   source: $NonMaybeType<mixed>,
 ) => MutableSourceVersion;
 
-export type MutableSource<Source: $NonMaybeType<mixed>> = {|
+export type MutableSource<Source: $NonMaybeType<mixed>> = {
   _source: Source,
 
   _getVersion: MutableSourceGetVersionFn,
@@ -163,7 +163,7 @@ export type MutableSource<Source: $NonMaybeType<mixed>> = {|
   // See https://github.com/facebook/react/issues/19948
   _currentlyRenderingFiber?: Fiber | null,
   _initialVersionAsOfFirstRender?: MutableSourceVersion | null,
-|};
+};
 
 // The subset of a Thenable required by things thrown by Suspense.
 // This doesn't require a value to be passed to either handler.
@@ -209,9 +209,9 @@ export type OffscreenMode =
   | 'unstable-defer-without-hiding'
   | 'visible';
 
-export type StartTransitionOptions = {|
+export type StartTransitionOptions = {
   name?: string,
-|};
+};
 
 // TODO: Add Context support
 export type Usable<T> = Thenable<T> | ReactContext<T>;

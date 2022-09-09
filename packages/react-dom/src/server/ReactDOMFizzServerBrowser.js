@@ -24,7 +24,7 @@ import {
   createRootFormatContext,
 } from './ReactDOMServerFormatConfig';
 
-type Options = {|
+type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
   nonce?: string,
@@ -34,12 +34,12 @@ type Options = {|
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
-|};
+};
 
 // TODO: Move to sub-classing ReadableStream.
-type ReactDOMServerReadableStream = ReadableStream & {|
+type ReactDOMServerReadableStream = ReadableStream & {
   allReady: Promise<void>,
-|};
+};
 
 function renderToReadableStream(
   children: ReactNodeList,

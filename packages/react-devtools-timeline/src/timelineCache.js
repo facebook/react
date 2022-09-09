@@ -16,20 +16,20 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type PendingRecord = {|
+type PendingRecord = {
   status: 0,
   value: Wakeable,
-|};
+};
 
-type ResolvedRecord<T> = {|
+type ResolvedRecord<T> = {
   status: 1,
   value: T,
-|};
+};
 
-type RejectedRecord = {|
+type RejectedRecord = {
   status: 2,
   value: Error,
-|};
+};
 
 type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
 

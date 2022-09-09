@@ -23,9 +23,9 @@ import {
   createRootFormatContext,
 } from './ReactDOMServerLegacyFormatConfig';
 
-type ServerOptions = {|
+type ServerOptions = {
   identifierPrefix?: string,
-|};
+};
 
 function onError() {
   // Non-fatal errors are ignored.

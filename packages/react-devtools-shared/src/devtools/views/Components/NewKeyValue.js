@@ -18,7 +18,7 @@ import styles from './NewKeyValue.css';
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
-type Props = {|
+type Props = {
   bridge: FrontendBridge,
   depth: number,
   hidden: boolean,
@@ -27,7 +27,7 @@ type Props = {|
   path: Array<string | number>,
   store: Store,
   type: 'props' | 'state' | 'hooks' | 'context',
-|};
+};
 
 export default function NewKeyValue({
   bridge,

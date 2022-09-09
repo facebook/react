@@ -13,7 +13,7 @@ import {SettingsContext} from './SettingsContext';
 
 import styles from './SettingsShared.css';
 
-export default function DebuggingSettings(_: {||}) {
+export default function DebuggingSettings(_: {}) {
   const {
     appendComponentStack,
     breakOnConsoleErrors,

@@ -13,11 +13,11 @@ import styles from './ListItem.css';
 
 import type {Item} from './List';
 
-type Props = {|
+type Props = {
   item: Item,
   removeItem: (item: Item) => void,
   toggleItem: (item: Item) => void,
-|};
+};
 
 function ListItem({item, removeItem, toggleItem}: Props) {
   const handleDelete = useCallback(() => {

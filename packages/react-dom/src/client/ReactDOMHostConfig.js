@@ -126,12 +126,12 @@ export type UpdatePayload = Array<mixed>;
 export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
-export type RendererInspectionConfig = $ReadOnly<{||}>;
+export type RendererInspectionConfig = $ReadOnly<{}>;
 
-type SelectionInformation = {|
+type SelectionInformation = {
   focusedElem: null | HTMLElement,
   selectionRange: mixed,
-|};
+};
 
 const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 
@@ -733,7 +733,7 @@ export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
 
 export function getSuspenseInstanceFallbackErrorDetails(
   instance: SuspenseInstance,
-): {|digest: ?string, message?: string, stack?: string|} {
+): {digest: ?string, message?: string, stack?: string} {
   const dataset =
     instance.nextSibling && ((instance.nextSibling: any): HTMLElement).dataset;
   let digest, message, stack;
@@ -1320,20 +1320,20 @@ export function setFocusIfFocusable(node: Instance): boolean {
   return didFocus;
 }
 
-type RectRatio = {|
+type RectRatio = {
   ratio: number,
   rect: BoundingRect,
-|};
+};
 
 export function setupIntersectionObserver(
   targets: Array<Instance>,
   callback: ObserveVisibleRectsCallback,
   options?: IntersectionObserverOptions,
-): {|
+): {
   disconnect: () => void,
   observe: (instance: Instance) => void,
   unobserve: (instance: Instance) => void,
-|} {
+} {
   const rectRatioCache: Map<Instance, RectRatio> = new Map();
   targets.forEach(target => {
     rectRatioCache.set(target, {

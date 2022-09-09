@@ -7,12 +7,12 @@
  * @flow
  */
 
-export type Destination = {|
+export type Destination = {
   buffer: string,
   done: boolean,
   fatal: boolean,
   error: mixed,
-|};
+};
 
 export type PrecomputedChunk = string;
 export type Chunk = string;

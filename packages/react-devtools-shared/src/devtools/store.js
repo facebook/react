@@ -62,9 +62,9 @@ const LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY =
 const LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
 
-type ErrorAndWarningTuples = Array<{|id: number, index: number|}>;
+type ErrorAndWarningTuples = Array<{id: number, index: number}>;
 
-type Config = {|
+type Config = {
   checkBridgeProtocolCompatibility?: boolean,
   isProfiling?: boolean,
   supportsNativeInspection?: boolean,
@@ -72,20 +72,20 @@ type Config = {|
   supportsReloadAndProfile?: boolean,
   supportsTimeline?: boolean,
   supportsTraceUpdates?: boolean,
-|};
+};
 
-export type Capabilities = {|
+export type Capabilities = {
   supportsBasicProfiling: boolean,
   hasOwnerMetadata: boolean,
   supportsStrictMode: boolean,
   supportsTimeline: boolean,
-|};
+};
 
 /**
  * The store is the single source of truth for updates from the backend.
  * ContextProviders can subscribe to the Store for specific things they want to provide.
  */
-export default class Store extends EventEmitter<{|
+export default class Store extends EventEmitter<{
   backendVersion: [],
   collapseNodesByDefault: [],
   componentFilters: [],
@@ -99,7 +99,7 @@ export default class Store extends EventEmitter<{|
   supportsReloadAndProfile: [],
   unsupportedBridgeProtocolDetected: [],
   unsupportedRendererVersionDetected: [],
-|}> {
+}> {
   // If the backend version is new enough to report its (NPM) version, this is it.
   // This version may be displayed by the frontend for debugging purposes.
   _backendVersion: string | null = null;
@@ -119,7 +119,7 @@ export default class Store extends EventEmitter<{|
   // Map of ID to number of recorded error and warning message IDs.
   _errorsAndWarnings: Map<
     number,
-    {|errorCount: number, warningCount: number|},
+    {errorCount: number, warningCount: number},
   > = new Map();
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
@@ -553,7 +553,7 @@ export default class Store extends EventEmitter<{|
   }
 
   // Returns a tuple of [id, index]
-  getElementsWithErrorsAndWarnings(): Array<{|id: number, index: number|}> {
+  getElementsWithErrorsAndWarnings(): Array<{id: number, index: number}> {
     if (this._cachedErrorAndWarningTuples !== null) {
       return this._cachedErrorAndWarningTuples;
     } else {
@@ -586,7 +586,7 @@ export default class Store extends EventEmitter<{|
 
   getErrorAndWarningCountForElementID(
     id: number,
-  ): {|errorCount: number, warningCount: number|} {
+  ): {errorCount: number, warningCount: number} {
     return this._errorsAndWarnings.get(id) || {errorCount: 0, warningCount: 0};
   }
 
@@ -871,10 +871,10 @@ export default class Store extends EventEmitter<{|
   onBridgeNativeStyleEditorSupported = ({
     isSupported,
     validAttributes,
-  }: {|
+  }: {
     isSupported: boolean,
     validAttributes: ?$ReadOnlyArray<string>,
-  |}) => {
+  }) => {
     this._isNativeStyleEditorSupported = isSupported;
     this._nativeStyleEditorValidAttributes = validAttributes || null;
 

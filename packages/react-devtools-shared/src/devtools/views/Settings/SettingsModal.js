@@ -28,7 +28,7 @@ import styles from './SettingsModal.css';
 
 type TabID = 'general' | 'components' | 'profiler';
 
-export default function SettingsModal(_: {||}) {
+export default function SettingsModal(_: {}) {
   const {isModalShowing, setIsModalShowing} = useContext(SettingsModalContext);
   const store = useContext(StoreContext);
   const {profilerStore} = store;
@@ -57,7 +57,7 @@ export default function SettingsModal(_: {||}) {
   return <SettingsModalImpl />;
 }
 
-function SettingsModalImpl(_: {||}) {
+function SettingsModalImpl(_: {}) {
   const {setIsModalShowing} = useContext(SettingsModalContext);
   const dismissModal = useCallback(() => setIsModalShowing(false), [
     setIsModalShowing,

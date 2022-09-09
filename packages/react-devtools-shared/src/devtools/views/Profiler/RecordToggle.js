@@ -15,9 +15,9 @@ import {ProfilerContext} from './ProfilerContext';
 
 import styles from './RecordToggle.css';
 
-export type Props = {|
+export type Props = {
   disabled?: boolean,
-|};
+};
 
 export default function RecordToggle({disabled}: Props) {
   const {isProfiling, startProfiling, stopProfiling} = useContext(

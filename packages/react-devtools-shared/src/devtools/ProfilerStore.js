@@ -21,11 +21,11 @@ import type {
   SnapshotNode,
 } from './views/Profiler/types';
 
-export default class ProfilerStore extends EventEmitter<{|
+export default class ProfilerStore extends EventEmitter<{
   isProcessingData: [],
   isProfiling: [],
   profilingData: [],
-|}> {
+}> {
   _bridge: FrontendBridge;
 
   // Suspense cache for lazily calculating derived profiling data.

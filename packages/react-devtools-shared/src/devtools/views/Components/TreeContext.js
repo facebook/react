@@ -42,7 +42,7 @@ import Store from '../../store';
 
 import type {Element} from './types';
 
-export type StateContext = {|
+export type StateContext = {
   // Tree
   numElements: number,
   ownerSubtreeLeafElementID: number | null,
@@ -60,70 +60,70 @@ export type StateContext = {|
 
   // Inspection element panel
   inspectedElementID: number | null,
-|};
+};
 
-type ACTION_GO_TO_NEXT_SEARCH_RESULT = {|
+type ACTION_GO_TO_NEXT_SEARCH_RESULT = {
   type: 'GO_TO_NEXT_SEARCH_RESULT',
-|};
-type ACTION_GO_TO_PREVIOUS_SEARCH_RESULT = {|
+};
+type ACTION_GO_TO_PREVIOUS_SEARCH_RESULT = {
   type: 'GO_TO_PREVIOUS_SEARCH_RESULT',
-|};
-type ACTION_HANDLE_STORE_MUTATION = {|
+};
+type ACTION_HANDLE_STORE_MUTATION = {
   type: 'HANDLE_STORE_MUTATION',
   payload: [Array<number>, Map<number, number>],
-|};
-type ACTION_RESET_OWNER_STACK = {|
+};
+type ACTION_RESET_OWNER_STACK = {
   type: 'RESET_OWNER_STACK',
-|};
-type ACTION_SELECT_CHILD_ELEMENT_IN_TREE = {|
+};
+type ACTION_SELECT_CHILD_ELEMENT_IN_TREE = {
   type: 'SELECT_CHILD_ELEMENT_IN_TREE',
-|};
-type ACTION_SELECT_ELEMENT_AT_INDEX = {|
+};
+type ACTION_SELECT_ELEMENT_AT_INDEX = {
   type: 'SELECT_ELEMENT_AT_INDEX',
   payload: number | null,
-|};
-type ACTION_SELECT_ELEMENT_BY_ID = {|
+};
+type ACTION_SELECT_ELEMENT_BY_ID = {
   type: 'SELECT_ELEMENT_BY_ID',
   payload: number | null,
-|};
-type ACTION_SELECT_NEXT_ELEMENT_IN_TREE = {|
+};
+type ACTION_SELECT_NEXT_ELEMENT_IN_TREE = {
   type: 'SELECT_NEXT_ELEMENT_IN_TREE',
-|};
-type ACTION_SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {|
+};
+type ACTION_SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {
   type: 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
-|};
-type ACTION_SELECT_NEXT_SIBLING_IN_TREE = {|
+};
+type ACTION_SELECT_NEXT_SIBLING_IN_TREE = {
   type: 'SELECT_NEXT_SIBLING_IN_TREE',
-|};
-type ACTION_SELECT_OWNER = {|
+};
+type ACTION_SELECT_OWNER = {
   type: 'SELECT_OWNER',
   payload: number,
-|};
-type ACTION_SELECT_PARENT_ELEMENT_IN_TREE = {|
+};
+type ACTION_SELECT_PARENT_ELEMENT_IN_TREE = {
   type: 'SELECT_PARENT_ELEMENT_IN_TREE',
-|};
-type ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE = {|
+};
+type ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE = {
   type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE',
-|};
-type ACTION_SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {|
+};
+type ACTION_SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {
   type: 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
-|};
-type ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE = {|
+};
+type ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE = {
   type: 'SELECT_PREVIOUS_SIBLING_IN_TREE',
-|};
-type ACTION_SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE = {|
+};
+type ACTION_SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE = {
   type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE',
-|};
-type ACTION_SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE = {|
+};
+type ACTION_SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE = {
   type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE',
-|};
-type ACTION_SET_SEARCH_TEXT = {|
+};
+type ACTION_SET_SEARCH_TEXT = {
   type: 'SET_SEARCH_TEXT',
   payload: string,
-|};
-type ACTION_UPDATE_INSPECTED_ELEMENT_ID = {|
+};
+type ACTION_UPDATE_INSPECTED_ELEMENT_ID = {
   type: 'UPDATE_INSPECTED_ELEMENT_ID',
-|};
+};
 
 type Action =
   | ACTION_GO_TO_NEXT_SEARCH_RESULT
@@ -158,7 +158,7 @@ const TreeDispatcherContext = createContext<DispatcherContext>(
 );
 TreeDispatcherContext.displayName = 'TreeDispatcherContext';
 
-type State = {|
+type State = {
   // Tree
   numElements: number,
   ownerSubtreeLeafElementID: number | null,
@@ -176,7 +176,7 @@ type State = {|
 
   // Inspection element panel
   inspectedElementID: number | null,
-|};
+};
 
 function reduceTreeState(store: Store, state: State, action: Action): State {
   let {
@@ -817,7 +817,7 @@ function reduceSuspenseState(
   return state;
 }
 
-type Props = {|
+type Props = {
   children: React$Node,
 
   // Used for automated testing
@@ -825,7 +825,7 @@ type Props = {|
   defaultOwnerID?: ?number,
   defaultSelectedElementID?: ?number,
   defaultSelectedElementIndex?: ?number,
-|};
+};
 
 // TODO Remove TreeContextController wrapper element once global Context.write API exists.
 function TreeContextController({

@@ -14,12 +14,12 @@ import {useEditableValue} from '../hooks';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
-type EditableValueProps = {|
+type EditableValueProps = {
   className?: string,
   overrideValue: OverrideValueFn,
   path: Array<string | number>,
   value: any,
-|};
+};
 
 export default function EditableValue({
   className = '',

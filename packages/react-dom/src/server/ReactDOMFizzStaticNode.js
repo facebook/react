@@ -26,7 +26,7 @@ import {
   createRootFormatContext,
 } from './ReactDOMServerFormatConfig';
 
-type Options = {|
+type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
   bootstrapScriptContent?: string,
@@ -35,11 +35,11 @@ type Options = {|
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
-|};
+};
 
-type StaticResult = {|
+type StaticResult = {
   prelude: Readable,
-|};
+};
 
 function createFakeWritable(readable): Writable {
   // The current host config expects a Writable so we create

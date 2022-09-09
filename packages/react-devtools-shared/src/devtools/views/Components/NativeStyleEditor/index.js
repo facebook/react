@@ -16,7 +16,7 @@ import LayoutViewer from './LayoutViewer';
 import StyleEditor from './StyleEditor';
 import {TreeStateContext} from '../TreeContext';
 
-type Props = {||};
+type Props = {};
 
 export default function NativeStyleEditorWrapper(_: Props) {
   const store = useContext(StoreContext);

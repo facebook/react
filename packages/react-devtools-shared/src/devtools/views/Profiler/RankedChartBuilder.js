@@ -16,17 +16,17 @@ import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
 import type {CommitTree} from './types';
 
-export type ChartNode = {|
+export type ChartNode = {
   id: number,
   label: string,
   name: string,
   value: number,
-|};
+};
 
-export type ChartData = {|
+export type ChartData = {
   maxValue: number,
   nodes: Array<ChartNode>,
-|};
+};
 
 const cachedChartData: Map<string, ChartData> = new Map();
 
@@ -35,12 +35,12 @@ export function getChartData({
   commitTree,
   profilerStore,
   rootID,
-}: {|
+}: {
   commitIndex: number,
   commitTree: CommitTree,
   profilerStore: ProfilerStore,
   rootID: number,
-|}): ChartData {
+}): ChartData {
   const commitDatum = profilerStore.getCommitData(rootID, commitIndex);
 
   const {fiberActualDurations, fiberSelfDurations} = commitDatum;

@@ -58,12 +58,12 @@ export function inspectElement({
   element,
   path,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   element: Element,
   path: Path | null,
   rendererID: number,
-|}): Promise<InspectElementReturnType> {
+}): Promise<InspectElementReturnType> {
   const {id} = element;
 
   // This could indicate that the DevTools UI has been closed and reopened.

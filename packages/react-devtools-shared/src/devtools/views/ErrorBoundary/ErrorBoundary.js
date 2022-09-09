@@ -22,14 +22,14 @@ import UserError from 'react-devtools-shared/src/errors/UserError';
 import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 
-type Props = {|
+type Props = {
   children: React$Node,
   canDismiss?: boolean,
   onBeforeDismissCallback?: () => void,
   store?: Store,
-|};
+};
 
-type State = {|
+type State = {
   callStack: string | null,
   canDismiss: boolean,
   componentStack: string | null,
@@ -39,7 +39,7 @@ type State = {|
   isTimeout: boolean,
   isUserError: boolean,
   isUnknownHookError: boolean,
-|};
+};
 
 const InitialState: State = {
   callStack: null,

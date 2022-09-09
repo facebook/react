@@ -32,7 +32,7 @@ import {TimelineSearchContextController} from './TimelineSearchContext';
 
 import styles from './Timeline.css';
 
-export function Timeline(_: {||}) {
+export function Timeline(_: {}) {
   const {
     file,
     inMemoryTimelineData,
@@ -143,11 +143,11 @@ const FileLoader = ({
   file,
   onFileSelect,
   viewState,
-}: {|
+}: {
   file: File | null,
   onFileSelect: (file: File) => void,
   viewState: ViewState,
-|}) => {
+}) => {
   if (file === null) {
     return null;
   }

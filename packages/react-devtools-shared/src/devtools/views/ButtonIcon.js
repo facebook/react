@@ -41,10 +41,10 @@ export type IconType =
   | 'view-dom'
   | 'view-source';
 
-type Props = {|
+type Props = {
   className?: string,
   type: IconType,
-|};
+};
 
 export default function ButtonIcon({className = '', type}: Props) {
   let pathData = null;

@@ -17,11 +17,11 @@ import type {Wall} from 'react-devtools-shared/src/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Props} from 'react-devtools-shared/src/devtools/views/DevTools';
 
-type Config = {|
+type Config = {
   checkBridgeProtocolCompatibility?: boolean,
   supportsNativeInspection?: boolean,
   supportsProfiling?: boolean,
-|};
+};
 
 export function createStore(bridge: FrontendBridge, config?: Config): Store {
   return new Store(bridge, {
@@ -62,10 +62,10 @@ export function initialize(
   {
     bridge,
     store,
-  }: {|
+  }: {
     bridge?: FrontendBridge,
     store?: Store,
-  |} = {},
+  } = {},
 ): React.AbstractComponent<Props, mixed> {
   if (bridge == null) {
     bridge = createBridge(contentWindow);

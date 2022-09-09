@@ -38,7 +38,7 @@ import {enableProfilerComponentTree} from 'react-devtools-feature-flags';
 
 import styles from './Profiler.css';
 
-function Profiler(_: {||}) {
+function Profiler(_: {}) {
   const {
     didRecordCommits,
     isProcessingData,

@@ -15,9 +15,9 @@ import {enableLogger} from 'react-devtools-feature-flags';
 let loggingIFrame = null;
 let missedEvents = [];
 
-type LoggerContext = {|
+type LoggerContext = {
   page_url: ?string,
-|};
+};
 
 export function registerDevToolsEventLogger(
   surface: string,

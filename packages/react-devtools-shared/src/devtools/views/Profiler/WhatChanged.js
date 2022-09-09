@@ -33,9 +33,9 @@ function hookIndicesToString(indices: Array<number>): string {
   }
 }
 
-type Props = {|
+type Props = {
   fiberID: number,
-|};
+};
 
 export default function WhatChanged({fiberID}: Props) {
   const {profilerStore} = useContext(StoreContext);

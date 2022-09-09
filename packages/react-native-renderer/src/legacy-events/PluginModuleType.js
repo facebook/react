@@ -22,7 +22,7 @@ export type PluginName = string;
 
 export type EventSystemFlags = number;
 
-export type LegacyPluginModule<NativeEvent> = {|
+export type LegacyPluginModule<NativeEvent> = {
   eventTypes: EventTypes,
   extractEvents: (
     topLevelType: TopLevelType,
@@ -33,4 +33,4 @@ export type LegacyPluginModule<NativeEvent> = {|
     container?: null | EventTarget,
   ) => ?ReactSyntheticEvent,
   tapMoveThreshold?: number,
-|};
+};

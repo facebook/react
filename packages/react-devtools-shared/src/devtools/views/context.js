@@ -21,10 +21,10 @@ BridgeContext.displayName = 'BridgeContext';
 export const StoreContext = createContext<Store>(((null: any): Store));
 StoreContext.displayName = 'StoreContext';
 
-export type ContextMenuContextType = {|
+export type ContextMenuContextType = {
   isEnabledForInspectedElement: boolean,
   viewAttributeSourceFunction: ViewAttributeSource | null,
-|};
+};
 
 export const ContextMenuContext = createContext<ContextMenuContextType>({
   isEnabledForInspectedElement: false,
@@ -32,14 +32,14 @@ export const ContextMenuContext = createContext<ContextMenuContextType>({
 });
 ContextMenuContext.displayName = 'ContextMenuContext';
 
-export type OptionsContextType = {|
+export type OptionsContextType = {
   readOnly: boolean,
   hideSettings: boolean,
   hideToggleErrorAction: boolean,
   hideToggleSuspenseAction: boolean,
   hideLogAction: boolean,
   hideViewSourceAction: boolean,
-|};
+};
 
 export const OptionsContext = createContext<OptionsContextType>({
   readOnly: false,

@@ -10,12 +10,12 @@
 import * as React from 'react';
 import styles from './shared.css';
 
-type Props = {|
+type Props = {
   callStack: string | null,
   children: React$Node,
   componentStack: string | null,
   errorMessage: string | null,
-|};
+};
 
 export default function UnsupportedBridgeOperationView({
   callStack,

@@ -69,12 +69,12 @@ type OnErrorOrWarning = (
 
 const injectedRenderers: Map<
   ReactRenderer,
-  {|
+  {
     currentDispatcherRef: CurrentDispatcherRef,
     getCurrentFiber: () => Fiber | null,
     onErrorOrWarning: ?OnErrorOrWarning,
     workTagMap: WorkTagMap,
-  |},
+  },
 > = new Map();
 
 let targetConsole: Object = console;
@@ -151,13 +151,13 @@ export function patch({
   showInlineWarningsAndErrors,
   hideConsoleLogsInStrictMode,
   browserTheme,
-}: {|
+}: {
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
   browserTheme: BrowserTheme,
-|}): void {
+}): void {
   // Settings may change after we've patched the console.
   // Using a shared ref allows the patch function to read the latest values.
   consoleSettingsRef.appendComponentStack = appendComponentStack;

@@ -10,9 +10,9 @@
 import * as React from 'react';
 import styles from './LoadingAnimation.css';
 
-type Props = {|
+type Props = {
   className?: string,
-|};
+};
 
 export default function LoadingAnimation({className = ''}: Props) {
   return (

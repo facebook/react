@@ -18,9 +18,9 @@ import {TreeStateContext} from './TreeContext';
 import {clearCacheBecauseOfError} from '../../../inspectedElementCache';
 import styles from './InspectedElementErrorBoundary.css';
 
-type WrapperProps = {|
+type WrapperProps = {
   children: React$Node,
-|};
+};
 
 export default function InspectedElementErrorBoundaryWrapper({
   children,

@@ -27,11 +27,11 @@ import {
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
-type Props = {|
+type Props = {
   bridge: FrontendBridge,
   inspectedElement: InspectedElement,
   store: Store,
-|};
+};
 
 export default function InspectedElementErrorsAndWarningsTree({
   bridge,
@@ -115,7 +115,7 @@ export default function InspectedElementErrorsAndWarningsTree({
   );
 }
 
-type TreeProps = {|
+type TreeProps = {
   badgeClassName: string,
   actions: React$Node,
   className: string,
@@ -124,7 +124,7 @@ type TreeProps = {|
   isTransitionPending: boolean,
   label: string,
   messageClassName: string,
-|};
+};
 
 function Tree({
   badgeClassName,
@@ -163,12 +163,12 @@ function Tree({
   );
 }
 
-type ErrorOrWarningViewProps = {|
+type ErrorOrWarningViewProps = {
   badgeClassName: string,
   className: string,
   count: number,
   message: string,
-|};
+};
 
 function ErrorOrWarningView({
   className,

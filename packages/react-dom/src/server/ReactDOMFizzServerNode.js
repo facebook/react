@@ -34,7 +34,7 @@ function createAbortHandler(request, reason) {
   return () => abort(request, new Error(reason));
 }
 
-type Options = {|
+type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
   nonce?: string,
@@ -46,14 +46,14 @@ type Options = {|
   onShellError?: (error: mixed) => void,
   onAllReady?: () => void,
   onError?: (error: mixed) => ?string,
-|};
+};
 
-type PipeableStream = {|
+type PipeableStream = {
   // Cancel any pending I/O and put anything remaining into
   // client rendered mode.
   abort(reason: mixed): void,
   pipe<T: Writable>(destination: T): T,
-|};
+};
 
 function createRequestImpl(children: ReactNodeList, options: void | Options) {
   return createRequest(

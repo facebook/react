@@ -17,9 +17,9 @@ declare class TaskController {
 
 type PostTaskPriorityLevel = 'user-blocking' | 'user-visible' | 'background';
 
-type CallbackNode = {|
+type CallbackNode = {
   _controller: TaskController,
-|};
+};
 
 import {
   ImmediatePriority,
@@ -77,7 +77,7 @@ type SchedulerCallback<T> = (
 export function unstable_scheduleCallback<T>(
   priorityLevel: PriorityLevel,
   callback: SchedulerCallback<T>,
-  options?: {|delay?: number|},
+  options?: {delay?: number},
 ): CallbackNode {
   let postTaskPriority;
   switch (priorityLevel) {

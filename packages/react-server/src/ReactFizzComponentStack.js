@@ -14,21 +14,21 @@ import {
 } from 'shared/ReactComponentStackFrame';
 
 // DEV-only reverse linked list representing the current component stack
-type BuiltInComponentStackNode = {|
+type BuiltInComponentStackNode = {
   tag: 0,
   parent: null | ComponentStackNode,
   type: string,
-|};
-type FunctionComponentStackNode = {|
+};
+type FunctionComponentStackNode = {
   tag: 1,
   parent: null | ComponentStackNode,
   type: Function,
-|};
-type ClassComponentStackNode = {|
+};
+type ClassComponentStackNode = {
   tag: 2,
   parent: null | ComponentStackNode,
   type: Function,
-|};
+};
 export type ComponentStackNode =
   | BuiltInComponentStackNode
   | FunctionComponentStackNode

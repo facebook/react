@@ -12,7 +12,7 @@ type JSONValue =
   | boolean
   | number
   | null
-  | {|+[key: string]: JSONValue|}
+  | {+[key: string]: JSONValue}
   | $ReadOnlyArray<JSONValue>;
 
 declare module 'JSResourceReference' {

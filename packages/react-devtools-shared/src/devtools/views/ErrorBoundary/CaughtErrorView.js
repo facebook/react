@@ -10,13 +10,13 @@
 import * as React from 'react';
 import styles from './shared.css';
 
-type Props = {|
+type Props = {
   callStack: string | null,
   children: React$Node,
   info: React$Node | null,
   componentStack: string | null,
   errorMessage: string,
-|};
+};
 
 export default function CaughtErrorView({
   callStack,

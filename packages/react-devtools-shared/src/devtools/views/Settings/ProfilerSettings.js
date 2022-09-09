@@ -15,7 +15,7 @@ import {ProfilerContext} from 'react-devtools-shared/src/devtools/views/Profiler
 
 import styles from './SettingsShared.css';
 
-export default function ProfilerSettings(_: {||}) {
+export default function ProfilerSettings(_: {}) {
   const {
     isCommitFilterEnabled,
     minCommitDuration,

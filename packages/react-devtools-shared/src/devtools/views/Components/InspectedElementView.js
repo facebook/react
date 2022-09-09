@@ -45,13 +45,13 @@ import type {ToggleParseHookNames} from './InspectedElementContext';
 export type CopyPath = (path: Array<string | number>) => void;
 export type InspectPath = (path: Array<string | number>) => void;
 
-type Props = {|
+type Props = {
   element: Element,
   hookNames: HookNames | null,
   inspectedElement: InspectedElement,
   parseHookNames: boolean,
   toggleParseHookNames: ToggleParseHookNames,
-|};
+};
 
 export default function InspectedElementView({
   element,
@@ -259,10 +259,10 @@ function formatSourceForDisplay(fileName: string, lineNumber: string) {
   return `${nameOnly}:${lineNumber}`;
 }
 
-type SourceProps = {|
+type SourceProps = {
   fileName: string,
   lineNumber: string,
-|};
+};
 
 function Source({fileName, lineNumber}: SourceProps) {
   const handleCopy = () => copy(`${fileName}:${lineNumber}`);
@@ -281,13 +281,13 @@ function Source({fileName, lineNumber}: SourceProps) {
   );
 }
 
-type OwnerViewProps = {|
+type OwnerViewProps = {
   displayName: string,
   hocDisplayNames: Array<string> | null,
   id: number,
   isInStore: boolean,
   type: ElementType,
-|};
+};
 
 function OwnerView({
   displayName,

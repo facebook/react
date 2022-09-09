@@ -22,7 +22,7 @@ type Context = {
 const SettingsModalContext = createContext<Context>(((null: any): Context));
 SettingsModalContext.displayName = 'SettingsModalContext';
 
-function SettingsModalContextController({children}: {|children: React$Node|}) {
+function SettingsModalContextController({children}: {children: React$Node}) {
   const [isModalShowing, setIsModalShowing] = useState<boolean>(false);
 
   const value = useMemo(() => ({isModalShowing, setIsModalShowing}), [

@@ -20,14 +20,14 @@ import type {RNTopLevelEventType} from 'react-native-renderer/src/legacy-events/
 import type {CapturedError} from 'react-reconciler/src/ReactCapturedValue';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
-type DeepDifferOptions = {|+unsafelyIgnoreFunctions?: boolean|};
-type RawEventEmitterEvent = $ReadOnly<{|
+type DeepDifferOptions = {+unsafelyIgnoreFunctions?: boolean};
+type RawEventEmitterEvent = $ReadOnly<{
   eventName: string,
   // We expect, but do not/cannot require, that nativeEvent is an object
   // with the properties: key, elementType (string), type (string), tag (numeric),
   // and a stateNode of the native element/Fiber the event was emitted to.
   nativeEvent: {[string]: mixed, ...},
-|}>;
+}>;
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface' {
   declare export function deepDiffer(

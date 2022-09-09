@@ -18,7 +18,7 @@ import styles from './NewArrayValue.css';
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
-type Props = {|
+type Props = {
   bridge: FrontendBridge,
   depth: number,
   hidden: boolean,
@@ -28,7 +28,7 @@ type Props = {|
   path: Array<string | number>,
   store: Store,
   type: 'props' | 'context' | 'hooks' | 'state',
-|};
+};
 
 export default function NewArrayValue({
   bridge,

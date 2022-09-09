@@ -47,13 +47,13 @@ type Path = Array<string | number>;
 type InspectPathFunction = (path: Path) => void;
 export type ToggleParseHookNames = () => void;
 
-type Context = {|
+type Context = {
   hookNames: HookNames | null,
   inspectedElement: InspectedElement | null,
   inspectPaths: InspectPathFunction,
   parseHookNames: boolean,
   toggleParseHookNames: ToggleParseHookNames,
-|};
+};
 
 export const InspectedElementContext = createContext<Context>(
   ((null: any): Context),
@@ -61,9 +61,9 @@ export const InspectedElementContext = createContext<Context>(
 
 const POLL_INTERVAL = 1000;
 
-export type Props = {|
+export type Props = {
   children: ReactNodeList,
-|};
+};
 
 export function InspectedElementContextController({children}: Props) {
   const {selectedElementID} = useContext(TreeStateContext);
@@ -84,10 +84,10 @@ export function InspectedElementContextController({children}: Props) {
   // The transition that updates this causes the component to re-render and ask the cache->backend for the new path.
   // When a path is sent along with an "inspectElement" request,
   // the backend knows to send its dehydrated data even if the element hasn't updated since the last request.
-  const [state, setState] = useState<{|
+  const [state, setState] = useState<{
     element: Element | null,
     path: Array<number | string> | null,
-  |}>({
+  }>({
     element: null,
     path: null,
   });

@@ -90,13 +90,13 @@ type PointerEvent = Event & {
   ...
 };
 
-type QueuedReplayableEvent = {|
+type QueuedReplayableEvent = {
   blockedOn: null | Container | SuspenseInstance,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
   targetContainers: Array<EventTarget>,
-|};
+};
 
 let hasScheduledReplayAttempt = false;
 
@@ -115,11 +115,11 @@ const queuedPointers: Map<number, QueuedReplayableEvent> = new Map();
 const queuedPointerCaptures: Map<number, QueuedReplayableEvent> = new Map();
 // We could consider replaying selectionchange and touchmoves too.
 
-type QueuedHydrationTarget = {|
+type QueuedHydrationTarget = {
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
   priority: EventPriority,
-|};
+};
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 
 export function hasQueuedDiscreteEvents(): boolean {

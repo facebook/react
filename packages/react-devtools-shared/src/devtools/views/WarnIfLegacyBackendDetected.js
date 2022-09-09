@@ -14,7 +14,7 @@ import {ModalDialogContext} from './ModalDialog';
 
 import styles from './WarnIfLegacyBackendDetected.css';
 
-export default function WarnIfLegacyBackendDetected(_: {||}) {
+export default function WarnIfLegacyBackendDetected(_: {}) {
   const bridge = useContext(BridgeContext);
   const {dispatch} = useContext(ModalDialogContext);
 
@@ -75,7 +75,7 @@ export default function WarnIfLegacyBackendDetected(_: {||}) {
   return null;
 }
 
-function InvalidBackendDetected(_: {||}) {
+function InvalidBackendDetected(_: {}) {
   return (
     <Fragment>
       <p>Either upgrade React or install React DevTools v3:</p>

@@ -9,11 +9,11 @@
 
 import {checkFormFieldValueStringCoercion} from 'shared/CheckStringCoercion';
 
-type ValueTracker = {|
+type ValueTracker = {
   getValue(): string,
   setValue(value: string): void,
   stopTracking(): void,
-|};
+};
 type WrapperState = {_valueTracker?: ?ValueTracker, ...};
 type ElementWithValueTracker = HTMLInputElement & WrapperState;
 

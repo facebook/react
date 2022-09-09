@@ -11,9 +11,9 @@ import * as React from 'react';
 
 import styles from './ReactLogo.css';
 
-type Props = {|
+type Props = {
   className?: string,
-|};
+};
 
 export default function ReactLogo({className}: Props) {
   return (

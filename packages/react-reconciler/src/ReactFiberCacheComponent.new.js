@@ -36,21 +36,21 @@ const AbortControllerLocal = enableCache
       }: AbortController)
   : (null: any);
 
-export type Cache = {|
+export type Cache = {
   controller: AbortControllerLocal,
   data: Map<() => mixed, mixed>,
   refCount: number,
-|};
+};
 
-export type CacheComponentState = {|
+export type CacheComponentState = {
   +parent: Cache,
   +cache: Cache,
-|};
+};
 
-export type SpawnedCachePool = {|
+export type SpawnedCachePool = {
   +parent: Cache,
   +pool: Cache,
-|};
+};
 
 // Intentionally not named imports because Rollup would
 // use dynamic dispatch for CommonJS interop named imports.

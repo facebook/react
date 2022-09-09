@@ -16,25 +16,25 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type UninitializedPayload<T> = {|
+type UninitializedPayload<T> = {
   _status: -1,
   _result: () => Thenable<{default: T, ...}>,
-|};
+};
 
-type PendingPayload = {|
+type PendingPayload = {
   _status: 0,
   _result: Wakeable,
-|};
+};
 
-type ResolvedPayload<T> = {|
+type ResolvedPayload<T> = {
   _status: 1,
   _result: {default: T, ...},
-|};
+};
 
-type RejectedPayload = {|
+type RejectedPayload = {
   _status: 2,
   _result: mixed,
-|};
+};
 
 type Payload<T> =
   | UninitializedPayload<T>
@@ -42,11 +42,11 @@ type Payload<T> =
   | ResolvedPayload<T>
   | RejectedPayload;
 
-export type LazyComponent<T, P> = {|
+export type LazyComponent<T, P> = {
   $$typeof: symbol | number,
   _payload: P,
   _init: (payload: P) => T,
-|};
+};
 
 function lazyInitializer<T>(payload: Payload<T>): T {
   if (payload._status === Uninitialized) {

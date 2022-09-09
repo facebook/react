@@ -17,23 +17,23 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type PendingRecord = {|
+type PendingRecord = {
   status: 0,
   value: Wakeable,
   cache: null,
-|};
+};
 
-type ResolvedRecord<T> = {|
+type ResolvedRecord<T> = {
   status: 1,
   value: T,
   cache: null | Array<mixed>,
-|};
+};
 
-type RejectedRecord = {|
+type RejectedRecord = {
   status: 2,
   value: mixed,
   cache: null,
-|};
+};
 
 type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
 
@@ -128,7 +128,7 @@ function createLstatMap(): Map<string, Array<boolean | Record<mixed>>> {
   return new Map();
 }
 
-export function lstat(path: string, options?: {|bigint?: boolean|}): mixed {
+export function lstat(path: string, options?: {bigint?: boolean}): mixed {
   checkPathInDev(path);
   let bigint = false;
   if (options && options.bigint) {
@@ -167,7 +167,7 @@ function createReaddirMap(): Map<
 
 export function readdir(
   path: string,
-  options?: string | {|encoding?: string, withFileTypes?: boolean|},
+  options?: string | {encoding?: string, withFileTypes?: boolean},
 ): mixed {
   checkPathInDev(path);
   let encoding = 'utf8';
@@ -215,12 +215,12 @@ export function readFile(
   path: string,
   options:
     | string
-    | {|
+    | {
         encoding?: string | null,
         // Unsupported:
         flag?: string, // Doesn't make sense except "r"
         signal?: mixed, // We'll have our own signal
-      |},
+      },
 ): string | Buffer {
   checkPathInDev(path);
   const map = unstable_getCacheForType(createReadFileMap);
@@ -270,7 +270,7 @@ function createReadlinkMap(): Map<string, Array<string | Record<mixed>>> {
 
 export function readlink(
   path: string,
-  options?: string | {|encoding?: string|},
+  options?: string | {encoding?: string},
 ): mixed {
   checkPathInDev(path);
   let encoding = 'utf8';
@@ -311,7 +311,7 @@ function createRealpathMap(): Map<string, Array<string | Record<mixed>>> {
 
 export function realpath(
   path: string,
-  options?: string | {|encoding?: string|},
+  options?: string | {encoding?: string},
 ): mixed {
   checkPathInDev(path);
   let encoding = 'utf8';
@@ -350,7 +350,7 @@ function createStatMap(): Map<string, Array<boolean | Record<mixed>>> {
   return new Map();
 }
 
-export function stat(path: string, options?: {|bigint?: boolean|}): mixed {
+export function stat(path: string, options?: {bigint?: boolean}): mixed {
   checkPathInDev(path);
   let bigint = false;
   if (options && options.bigint) {

@@ -16,10 +16,10 @@ import {View} from './View';
 import {zeroPoint} from './geometry';
 import {DPR} from '../content-views/constants';
 
-export type ViewRefs = {|
+export type ViewRefs = {
   activeView: View | null,
   hoveredView: View | null,
-|};
+};
 
 // hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
 function configureRetinaCanvas(canvas, height, width) {

@@ -11,15 +11,15 @@ import {getHookNamesMappingFromAST} from './astUtils';
 import {encode, decode} from 'sourcemap-codec';
 import {File} from '@babel/types';
 
-export type HookMap = {|
+export type HookMap = {
   names: $ReadOnlyArray<string>,
   mappings: HookMapMappings,
-|};
+};
 
-export type EncodedHookMap = {|
+export type EncodedHookMap = {
   names: $ReadOnlyArray<string>,
   mappings: string,
-|};
+};
 
 // See generateHookMap below for more details on formatting
 export type HookMapEntry = [

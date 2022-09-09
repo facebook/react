@@ -10,57 +10,57 @@
 import {enableLogger} from 'react-devtools-feature-flags';
 
 export type LoggerEvent =
-  | {|
+  | {
       +event_name: 'loaded-dev-tools',
-    |}
-  | {|
+    }
+  | {
       +event_name: 'error',
       +error_message: string | null,
       +error_stack: string | null,
       +error_component_stack: string | null,
-    |}
-  | {|
+    }
+  | {
       +event_name: 'selected-components-tab',
-    |}
-  | {|
+    }
+  | {
       +event_name: 'selected-profiler-tab',
-    |}
-  | {|
+    }
+  | {
       +event_name: 'load-hook-names',
       +event_status: 'success' | 'error' | 'timeout' | 'unknown',
       +duration_ms: number,
       +inspected_element_display_name: string | null,
       +inspected_element_number_of_hooks: number | null,
-    |}
-  | {|
+    }
+  | {
       +event_name: 'select-element',
-      +metadata: {|
+      +metadata: {
         +source: string,
-      |},
-    |}
-  | {|
+      },
+    }
+  | {
       +event_name: 'inspect-element-button-clicked',
-    |}
-  | {|
+    }
+  | {
       +event_name: 'profiling-start',
-      +metadata: {|
+      +metadata: {
         +current_tab: string,
-      |},
-    |}
-  | {|
+      },
+    }
+  | {
       +event_name: 'profiler-tab-changed',
-      +metadata: {|
+      +metadata: {
         +tabId: string,
-      |},
-    |}
-  | {|
+      },
+    }
+  | {
       +event_name: 'settings-changed',
       +metadata: {
         +key: string,
         +value: any,
         ...
       },
-    |};
+    };
 
 export type LogFunction = LoggerEvent => void | Promise<void>;
 

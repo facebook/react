@@ -18,7 +18,7 @@ import ButtonIcon from '../ButtonIcon';
 
 import styles from './SidebarSelectedFiberInfo.css';
 
-export type Props = {||};
+export type Props = {};
 
 export default function SidebarSelectedFiberInfo(_: Props) {
   const {profilerStore} = useContext(StoreContext);

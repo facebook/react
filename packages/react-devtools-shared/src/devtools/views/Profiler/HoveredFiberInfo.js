@@ -18,14 +18,14 @@ import styles from './HoveredFiberInfo.css';
 
 import type {ChartNode} from './FlamegraphChartBuilder';
 
-export type TooltipFiberData = {|
+export type TooltipFiberData = {
   id: number,
   name: string,
-|};
+};
 
-export type Props = {|
+export type Props = {
   fiberData: ChartNode,
-|};
+};
 
 export default function HoveredFiberInfo({fiberData}: Props) {
   const {profilerStore} = useContext(StoreContext);

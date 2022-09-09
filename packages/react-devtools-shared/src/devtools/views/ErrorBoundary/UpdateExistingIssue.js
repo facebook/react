@@ -15,9 +15,9 @@ import styles from './shared.css';
 
 export default function UpdateExistingIssue({
   gitHubIssue,
-}: {|
+}: {
   gitHubIssue: GitHubIssue,
-|}) {
+}) {
   const {title, url} = gitHubIssue;
   return (
     <div className={styles.GitHubLinkRow}>

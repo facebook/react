@@ -34,7 +34,7 @@ export type JSONValue =
   | null
   | boolean
   | string
-  | {|+[key: string]: JSONValue|}
+  | {+[key: string]: JSONValue}
   | $ReadOnlyArray<JSONValue>;
 
 const PENDING = 0;
@@ -43,36 +43,36 @@ const RESOLVED_MODULE = 2;
 const INITIALIZED = 3;
 const ERRORED = 4;
 
-type PendingChunk = {|
+type PendingChunk = {
   _status: 0,
   _value: null | Array<() => mixed>,
   _response: Response,
   then(resolve: () => mixed): void,
-|};
-type ResolvedModelChunk = {|
+};
+type ResolvedModelChunk = {
   _status: 1,
   _value: UninitializedModel,
   _response: Response,
   then(resolve: () => mixed): void,
-|};
-type ResolvedModuleChunk<T> = {|
+};
+type ResolvedModuleChunk<T> = {
   _status: 2,
   _value: ModuleReference<T>,
   _response: Response,
   then(resolve: () => mixed): void,
-|};
-type InitializedChunk<T> = {|
+};
+type InitializedChunk<T> = {
   _status: 3,
   _value: T,
   _response: Response,
   then(resolve: () => mixed): void,
-|};
-type ErroredChunk = {|
+};
+type ErroredChunk = {
   _status: 4,
   _value: Error,
   _response: Response,
   then(resolve: () => mixed): void,
-|};
+};
 type SomeChunk<T> =
   | PendingChunk
   | ResolvedModelChunk
@@ -338,7 +338,7 @@ export function parseModelString(
 
 export function parseModelTuple(
   response: Response,
-  value: {|+[key: string]: JSONValue|} | $ReadOnlyArray<JSONValue>,
+  value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
 ): any {
   const tuple: [mixed, mixed, mixed, mixed] = (value: any);
 

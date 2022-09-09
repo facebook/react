@@ -13,12 +13,12 @@ import styles from './Badge.css';
 
 import type {ElementType} from 'react-devtools-shared/src/types';
 
-type Props = {|
+type Props = {
   className?: string,
   hocDisplayNames: Array<string> | null,
   type: ElementType,
   children: React$Node,
-|};
+};
 
 export default function Badge({
   className,
