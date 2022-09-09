@@ -106,6 +106,25 @@ describe('ReactOffscreenStrictMode', () => {
       'A: useLayoutEffect mount',
       'A: useEffect mount',
     ]);
+
+    log = [];
+
+    act(() => {
+      ReactNoop.render(
+        <React.StrictMode>
+          <Offscreen mode="hidden">
+            <Component label="A" />
+          </Offscreen>
+        </React.StrictMode>,
+      );
+    });
+
+    expect(log).toEqual([
+      'A: useLayoutEffect unmount',
+      'A: useEffect unmount',
+      'A: render',
+      'A: render',
+    ]);
   });
 
   it('should not cause infinite render loop when StrictMode is used with Suspense and synchronous set states', () => {

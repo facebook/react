@@ -3188,9 +3188,12 @@ function doubleInvokeEffectsInDEV(
 
   if (fiber.flags & PlacementDEV || fiber.tag === OffscreenComponent) {
     setCurrentDebugFiberInDEV(fiber);
-    const hasOffscreenVisibilityFlag =
-      fiber.tag !== OffscreenComponent || fiber.flags & Visibility;
-    if (isInStrictMode && hasOffscreenVisibilityFlag) {
+    const isNotOffscreen = fiber.tag !== OffscreenComponent;
+    // Checks if Offscreen is being revealed. For all other components, evaluates to true.
+    const hasOffscreenBecomeVisible =
+      isNotOffscreen ||
+      (fiber.flags & Visibility && fiber.memoizedState === null);
+    if (isInStrictMode && hasOffscreenBecomeVisible) {
       disappearLayoutEffects(fiber);
       disconnectPassiveEffect(fiber);
       reappearLayoutEffects(root, fiber.alternate, fiber, false);
