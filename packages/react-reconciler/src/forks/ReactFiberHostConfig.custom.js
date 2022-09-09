@@ -193,11 +193,12 @@ export const getMatchingResourceInstance =
   $$$hostConfig.getMatchingResourceInstance;
 
 // -------------------
-//     Resources
+//     Singletons
 //     (optional)
 // -------------------
 export const supportsSingletons = $$$hostConfig.supportsSingletons;
-export const commitSingletonPlacement = $$$hostConfig.commitSingletonPlacement;
+export const resetSingletonInstance = $$$hostConfig.resetSingletonInstance;
+export const clearSingletonInstance = $$$hostConfig.clearSingletonInstance;
 export const acquireSingletonInstance = $$$hostConfig.acquireSingletonInstance;
 export const getInsertionEdge = $$$hostConfig.getInsertionEdge;
 export const isHostSingletonInstance = $$$hostConfig.isHostSingletonInstance;

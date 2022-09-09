@@ -66,6 +66,7 @@ import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enableFloat,
   enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -731,11 +732,14 @@ export function clearContainer(container: Container): void {
 export const supportsHydration = true;
 
 export function isHydratableResource(type: string, props: Props) {
-  return (
-    type === 'link' &&
-    typeof (props: any).precedence === 'string' &&
-    (props: any).rel === 'stylesheet'
-  );
+  if (enableFloat) {
+    return (
+      type === 'link' &&
+      typeof (props: any).precedence === 'string' &&
+      (props: any).rel === 'stylesheet'
+    );
+  }
+  return false;
 }
 
 export function canHydrateInstance(
@@ -1323,7 +1327,7 @@ export function acquireSingletonInstance(
   }
 }
 
-export function commitSingletonPlacement(
+export function resetSingletonInstance(
   type: string,
   props: Props,
   instance: Instance,
@@ -1391,7 +1395,7 @@ export function getInsertionEdge(parent: Instance): ?InstanceSibling {
   return null;
 }
 
-function clearSingletonInstance(instance: Instance) {
+export function clearSingletonInstance(instance: Instance) {
   const tagName = instance.tagName.toLowerCase();
   switch (tagName) {
     case 'html': {

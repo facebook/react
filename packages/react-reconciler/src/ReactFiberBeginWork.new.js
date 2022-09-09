@@ -1590,13 +1590,37 @@ function updateHostSingleton(
     tryToClaimNextHydratableInstance(workInProgress);
   }
 
+  const type = workInProgress.type;
+  const nextProps = workInProgress.pendingProps;
+  const prevProps = current !== null ? current.memoizedProps : null;
+
+  let nextChildren = nextProps.children;
+  const isDirectTextChild = shouldSetTextContent(type, nextProps);
+
+  if (isDirectTextChild) {
+    // We special case a direct text child of a singleton node. This is done to keep
+    // parity with HostComponents.
+    nextChildren = null;
+  } else if (prevProps !== null && shouldSetTextContent(type, prevProps)) {
+    // If we're switching from a direct text child to a normal child, or to
+    // empty, we need to schedule the text content to be reset.
+    workInProgress.flags |= ContentReset;
+  }
+
+  if (current === null) {
+    // Similar to Portals we append Singleton children in the commit phase. So we
+    // Track insertions even on mount.
+    // TODO: Consider unifying this with how the root works.
+    workInProgress.child = reconcileChildFibers(
+      workInProgress,
+      null,
+      nextChildren,
+      renderLanes,
+    );
+  } else {
+    reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  }
   markRef(current, workInProgress);
-  reconcileChildren(
-    current,
-    workInProgress,
-    workInProgress.pendingProps.children,
-    renderLanes,
-  );
   return workInProgress.child;
 }
 

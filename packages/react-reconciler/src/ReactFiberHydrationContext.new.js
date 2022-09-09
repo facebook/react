@@ -35,7 +35,7 @@ import {
   NoFlags,
   DidCapture,
 } from './ReactFiberFlags';
-import {enableHostSingletons} from 'shared/ReactFeatureFlags';
+import {enableHostSingletons, enableFloat} from 'shared/ReactFeatureFlags';
 
 import {
   createFiberFromHostInstanceForDeletion,
@@ -416,7 +416,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
     return;
   }
-  if (enableHostSingletons && supportsSingletons) {
+  if (enableFloat) {
     if (
       fiber.tag === HostComponent &&
       isHydratableResource(fiber.type, fiber.pendingProps)
@@ -626,8 +626,7 @@ function popHydrationState(fiber: Fiber): boolean {
     return false;
   }
   if (
-    enableHostSingletons &&
-    supportsSingletons &&
+    enableFloat &&
     isHydrating &&
     isHydratableResource(fiber.type, fiber.memoizedProps)
   ) {

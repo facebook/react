@@ -142,7 +142,8 @@ import {
   prepareForCommit,
   beforeActiveInstanceBlur,
   detachDeletedInstance,
-  commitSingletonPlacement as commitSingletonPlacementImpl,
+  resetSingletonInstance,
+  clearSingletonInstance,
   isHostSingletonInstance,
   getInsertionEdge,
 } from './ReactFiberHostConfig';
@@ -1761,30 +1762,6 @@ function getHostSibling(fiber: Fiber): ?Instance {
   }
 }
 
-function commitSingletonPlacement(finishedWork: Fiber): void {
-  if (!supportsSingletons) {
-    return;
-  }
-  if (enableHostSingletons) {
-    // We get back the singleton Instance from placement and need to capture it as the stateNode
-    // for the Fiber.
-    commitSingletonPlacementImpl(
-      finishedWork.type,
-      finishedWork.memoizedProps,
-      finishedWork.stateNode,
-      finishedWork,
-    );
-    const parent = finishedWork.stateNode;
-    const before = getInsertionEdge(parent);
-    let child = finishedWork.child;
-    while (child !== null) {
-      insertOrAppendPlacementNode(child, before, parent);
-      child = child.sibling;
-    }
-  }
-  return;
-}
-
 function commitPlacement(finishedWork: Fiber): void {
   if (!supportsMutation) {
     return;
@@ -2016,24 +1993,19 @@ function commitDeletionEffectsOnFiber(
           safelyDetachRef(deletedFiber, nearestMountedAncestor);
         }
 
-        if (supportsMutation) {
-          const prevHostParent = hostParent;
-          const prevHostParentIsContainer = hostParentIsContainer;
-          hostParent = deletedFiber.stateNode;
-          recursivelyTraverseDeletionEffects(
-            finishedRoot,
-            nearestMountedAncestor,
-            deletedFiber,
-          );
-          hostParent = prevHostParent;
-          hostParentIsContainer = prevHostParentIsContainer;
-        } else {
-          recursivelyTraverseDeletionEffects(
-            finishedRoot,
-            nearestMountedAncestor,
-            deletedFiber,
-          );
-        }
+        const prevHostParent = hostParent;
+        const prevHostParentIsContainer = hostParentIsContainer;
+        hostParent = deletedFiber.stateNode;
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber,
+        );
+        hostParent = prevHostParent;
+        hostParentIsContainer = prevHostParentIsContainer;
+
+        clearSingletonInstance(deletedFiber.stateNode);
+
         return;
       }
     }
@@ -2533,7 +2505,19 @@ function commitMutationEffectsOnFiber(
       }
       return;
     }
-    case HostSingleton:
+    case HostSingleton: {
+      // We check ContentReset first and if found, reset the singleton
+      if (flags & ContentReset) {
+        resetSingletonInstance(
+          finishedWork.type,
+          finishedWork.memoizedProps,
+          finishedWork.stateNode,
+          finishedWork,
+        );
+        finishedWork.flags &= ~ContentReset;
+      }
+    }
+    // eslint-disable-next-line-no-fallthrough
     case HostComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
@@ -2826,15 +2810,7 @@ function commitReconciliationEffects(finishedWork: Fiber) {
   const flags = finishedWork.flags;
   if (flags & Placement) {
     try {
-      if (
-        enableHostSingletons &&
-        supportsSingletons &&
-        finishedWork.tag === HostSingleton
-      ) {
-        commitSingletonPlacement(finishedWork);
-      } else {
-        commitPlacement(finishedWork);
-      }
+      commitPlacement(finishedWork);
     } catch (error) {
       captureCommitPhaseError(finishedWork, finishedWork.return, error);
     }

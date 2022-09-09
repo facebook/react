@@ -84,6 +84,7 @@ import {
   Incomplete,
   ShouldCapture,
   ForceClientRender,
+  ContentReset,
 } from './ReactFiberFlags';
 
 import {
@@ -1001,7 +1002,10 @@ function completeWork(
               rootContainerInstance,
               currentHostContext,
             );
-            workInProgress.flags |= Placement;
+            // ContentReset is used differently for HostSingletons than HostComponents
+            // While it can be used to prepare for text content children it is more broadly used
+            // to prepare a hostSingleton for any kind of children
+            workInProgress.flags |= ContentReset;
           }
 
           if (workInProgress.ref !== null) {
