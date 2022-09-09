@@ -3187,19 +3187,19 @@ function doubleInvokeEffectsInDEV(
   const isInStrictMode = parentIsInStrictMode || isStrictModeFiber;
 
   if (fiber.flags & PlacementDEV || fiber.tag === OffscreenComponent) {
+    setCurrentDebugFiberInDEV(fiber);
     const isNotOffscreen = fiber.tag !== OffscreenComponent;
     // Checks if Offscreen is being revealed. For all other components, evaluates to true.
     const hasOffscreenBecomeVisible =
       isNotOffscreen ||
       (fiber.flags & Visibility && fiber.memoizedState === null);
     if (isInStrictMode && hasOffscreenBecomeVisible) {
-      setCurrentDebugFiberInDEV(fiber);
       disappearLayoutEffects(fiber);
       disconnectPassiveEffect(fiber);
       reappearLayoutEffects(root, fiber.alternate, fiber, false);
       reconnectPassiveEffects(root, fiber, NoLanes, null, false);
-      resetCurrentDebugFiberInDEV();
     }
+    resetCurrentDebugFiberInDEV();
   } else {
     recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, fiber, isInStrictMode);
   }
