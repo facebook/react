@@ -64,7 +64,6 @@ import ReactSharedInternals from './ReactSharedInternals';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
 
-
 const Children = {
   map,
   forEach,

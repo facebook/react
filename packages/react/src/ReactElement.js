@@ -577,7 +577,12 @@ export function isValidElement(object) {
   );
 }
 
-
-export const createElementEnv = __DEV__ ? createElementWithValidation : createElement;
-export const cloneElementEnv = __DEV__ ? cloneElementWithValidation : cloneElement;
-export const createFactoryEnv = __DEV__ ? createFactoryWithValidation : createFactory;
+export const createElementEnv = __DEV__
+  ? createElementWithValidation
+  : createElement;
+export const cloneElementEnv = __DEV__
+  ? cloneElementWithValidation
+  : cloneElement;
+export const createFactoryEnv = __DEV__
+  ? createFactoryWithValidation
+  : createFactory;
