@@ -124,6 +124,7 @@ import {
   LayoutMask,
   PassiveMask,
   PlacementDEV,
+  Visibility,
 } from './ReactFiberFlags';
 import {
   NoLanes,
@@ -3184,9 +3185,15 @@ function doubleInvokeEffectsInDEV(
 ) {
   const isStrictModeFiber = fiber.type === REACT_STRICT_MODE_TYPE;
   const isInStrictMode = parentIsInStrictMode || isStrictModeFiber;
+
   if (fiber.flags & PlacementDEV || fiber.tag === OffscreenComponent) {
     setCurrentDebugFiberInDEV(fiber);
-    if (isInStrictMode) {
+    const isNotOffscreen = fiber.tag !== OffscreenComponent;
+    // Checks if Offscreen is being revealed. For all other components, evaluates to true.
+    const hasOffscreenBecomeVisible =
+      isNotOffscreen ||
+      (fiber.flags & Visibility && fiber.memoizedState === null);
+    if (isInStrictMode && hasOffscreenBecomeVisible) {
       disappearLayoutEffects(fiber);
       disconnectPassiveEffect(fiber);
       reappearLayoutEffects(root, fiber.alternate, fiber, false);
