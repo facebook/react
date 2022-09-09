@@ -52,7 +52,7 @@ module.exports = function register() {
             // we should resolve that with a client reference that unwraps the Promise on
             // the client.
             const then = function then(resolve, reject) {
-              const moduleReference: {[string]: any} = {
+              const moduleReference: {[string]: any, ...} = {
                 $$typeof: MODULE_REFERENCE,
                 filepath: target.filepath,
                 name: '*', // Represents the whole object instead of a particular import.
@@ -93,7 +93,7 @@ module.exports = function register() {
 
   Module._extensions['.client.js'] = function(module, path) {
     const moduleId = url.pathToFileURL(path).href;
-    const moduleReference: {[string]: any} = {
+    const moduleReference: {[string]: any, ...} = {
       $$typeof: MODULE_REFERENCE,
       filepath: moduleId,
       name: '*', // Represents the whole object instead of a particular import.

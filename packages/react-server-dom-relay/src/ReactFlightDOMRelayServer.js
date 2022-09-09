@@ -19,10 +19,10 @@ import {
   startFlowing,
 } from 'react-server/src/ReactFlightServer';
 
-type Options = {
+type Options = {|
   onError?: (error: mixed) => void,
   identifierPrefix?: string,
-};
+|};
 
 function render(
   model: ReactModel,

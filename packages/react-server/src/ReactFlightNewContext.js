@@ -23,13 +23,13 @@ if (__DEV__) {
 
 // Used to store the parent path of all context overrides in a shared linked list.
 // Forming a reverse tree.
-type ContextNode<T: ServerContextJSONValue> = {
+type ContextNode<T: ServerContextJSONValue> = {|
   parent: null | ContextNode<any>,
   depth: number, // Short hand to compute the depth of the tree at this node.
   context: ReactServerContext<T>,
   parentValue: T,
   value: T,
-};
+|};
 
 // The structure of a context snapshot is an implementation of this file.
 // Currently, it's implemented as tracking the current active node.

@@ -733,7 +733,7 @@ export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
 
 export function getSuspenseInstanceFallbackErrorDetails(
   instance: SuspenseInstance,
-): {digest: ?string, message?: string, stack?: string} {
+): {|digest: ?string, message?: string, stack?: string|} {
   const dataset =
     instance.nextSibling && ((instance.nextSibling: any): HTMLElement).dataset;
   let digest, message, stack;
@@ -1320,10 +1320,10 @@ export function setFocusIfFocusable(node: Instance): boolean {
   return didFocus;
 }
 
-type RectRatio = {
+type RectRatio = {|
   ratio: number,
   rect: BoundingRect,
-};
+|};
 
 export function setupIntersectionObserver(
   targets: Array<Instance>,

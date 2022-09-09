@@ -51,10 +51,10 @@ type Dispatch<A> = A => void;
 
 let primitiveStackCache: null | Map<string, Array<any>> = null;
 
-type Hook = {
+type Hook = {|
   memoizedState: any,
   next: Hook | null,
-};
+|};
 
 function getPrimitiveStackCache(): Map<string, Array<any>> {
   // This initializes a cache of all primitive hooks so that the top
@@ -371,12 +371,12 @@ const DispatcherProxy = new Proxy(Dispatcher, DispatcherProxyHandler);
 
 // Inspect
 
-export type HookSource = {
+export type HookSource = {|
   lineNumber: number | null,
   columnNumber: number | null,
   fileName: string | null,
   functionName: string | null,
-};
+|};
 
 export type HooksNode = {
   id: number | null,

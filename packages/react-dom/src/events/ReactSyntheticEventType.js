@@ -20,7 +20,7 @@ export type DispatchConfig = {|
   registrationName?: string,
 |};
 
-type BaseSyntheticEvent = {
+type BaseSyntheticEvent = {|
   isPersistent: () => boolean,
   isPropagationStopped: () => boolean,
   _dispatchInstances?: null | Array<Fiber | null> | Fiber,
@@ -31,14 +31,14 @@ type BaseSyntheticEvent = {
   relatedTarget?: mixed,
   type: string,
   currentTarget: null | EventTarget,
-};
+|};
 
-export type KnownReactSyntheticEvent = BaseSyntheticEvent & {
+export type KnownReactSyntheticEvent = BaseSyntheticEvent & {|
   _reactName: string,
-};
-export type UnknownReactSyntheticEvent = BaseSyntheticEvent & {
+|};
+export type UnknownReactSyntheticEvent = BaseSyntheticEvent & {|
   _reactName: null,
-};
+|};
 
 export type ReactSyntheticEvent =
   | KnownReactSyntheticEvent

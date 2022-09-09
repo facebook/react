@@ -28,7 +28,7 @@ import type {
 
 export const isPrimaryRenderer = false;
 
-export type ResponseState = {
+export type ResponseState = {|
   // Keep this in sync with ReactDOMServerFormatConfig
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
   startInlineScript: PrecomputedChunk,
@@ -42,7 +42,7 @@ export type ResponseState = {
   sentClientRenderFunction: boolean,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
-};
+|};
 
 export function createResponseState(
   generateStaticMarkup: boolean,

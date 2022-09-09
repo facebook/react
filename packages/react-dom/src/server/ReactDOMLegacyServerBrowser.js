@@ -11,9 +11,9 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {version, renderToStringImpl} from './ReactDOMLegacyServerImpl';
 
-type ServerOptions = {
+type ServerOptions = {|
   identifierPrefix?: string,
-};
+|};
 
 function renderToString(
   children: ReactNodeList,

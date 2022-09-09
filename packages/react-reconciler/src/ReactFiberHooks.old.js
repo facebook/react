@@ -1032,10 +1032,10 @@ function rerenderReducer<S, I, A>(
 }
 
 type MutableSourceMemoizedState<Source, Snapshot> = {|
-  refs: {
+  refs: {|
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     setSnapshot: Snapshot => void,
-  },
+  |},
   source: MutableSource<any>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 |};

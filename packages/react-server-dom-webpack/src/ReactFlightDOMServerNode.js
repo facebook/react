@@ -23,11 +23,11 @@ function createDrainHandler(destination, request) {
   return () => startFlowing(request, destination);
 }
 
-type Options = {
+type Options = {|
   onError?: (error: mixed) => void,
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
-};
+|};
 
 type PipeableStream = {|
   abort(reason: mixed): void,

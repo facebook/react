@@ -7,28 +7,28 @@
  * @flow
  */
 
-type WebpackMap = {
-  [filepath: string]: {
+type WebpackMap = {|
+  [filepath: string]: {|
     [name: string]: ModuleMetaData,
-  },
-};
+  |},
+|};
 
 export type BundlerConfig = WebpackMap;
 
 // eslint-disable-next-line no-unused-vars
-export type ModuleReference<T> = {
+export type ModuleReference<T> = {|
   $$typeof: symbol,
   filepath: string,
   name: string,
   async: boolean,
-};
+|};
 
-export type ModuleMetaData = {
+export type ModuleMetaData = {|
   id: string,
   chunks: Array<string>,
   name: string,
   async: boolean,
-};
+|};
 
 export type ModuleKey = string;
 

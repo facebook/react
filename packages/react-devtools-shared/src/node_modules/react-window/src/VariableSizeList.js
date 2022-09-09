@@ -18,7 +18,7 @@ type ItemMetadata = {|
   size: number,
 |};
 type InstanceProps = {|
-  itemMetadataMap: { [index: number]: ItemMetadata },
+  itemMetadataMap: { [index: number]: ItemMetadata, ... },
   estimatedItemSize: number,
   lastMeasuredIndex: number,
 |};

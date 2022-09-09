@@ -19,9 +19,9 @@ import {
   close,
 } from 'react-client/src/ReactFlightClientStream';
 
-export type Options = {
+export type Options = {|
   moduleMap?: BundlerConfig,
-};
+|};
 
 function startReadingFromStream(
   response: FlightResponse,

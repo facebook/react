@@ -258,7 +258,7 @@ type BaseFiberRootProperties = {|
 
   onRecoverableError: (
     error: mixed,
-    errorInfo: {digest?: ?string, componentStack?: ?string},
+    errorInfo: {|digest?: ?string, componentStack?: ?string|},
   ) => void,
 |};
 
@@ -280,22 +280,22 @@ type SuspenseCallbackOnlyFiberRootProperties = {|
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
 |};
 
-export type TransitionTracingCallbacks = {
+export type TransitionTracingCallbacks = {|
   onTransitionStart?: (transitionName: string, startTime: number) => void,
   onTransitionProgress?: (
     transitionName: string,
     startTime: number,
     currentTime: number,
-    pending: Array<{name: null | string}>,
+    pending: Array<{|name: null | string|}>,
   ) => void,
   onTransitionIncomplete?: (
     transitionName: string,
     startTime: number,
-    deletions: Array<{
+    deletions: Array<{|
       type: string,
       name?: string | null,
       endTime: number,
-    }>,
+    |}>,
   ) => void,
   onTransitionComplete?: (
     transitionName: string,
@@ -307,17 +307,17 @@ export type TransitionTracingCallbacks = {
     marker: string,
     startTime: number,
     currentTime: number,
-    pending: Array<{name: null | string}>,
+    pending: Array<{|name: null | string|}>,
   ) => void,
   onMarkerIncomplete?: (
     transitionName: string,
     marker: string,
     startTime: number,
-    deletions: Array<{
+    deletions: Array<{|
       type: string,
       name?: string | null,
       endTime: number,
-    }>,
+    |}>,
   ) => void,
   onMarkerComplete?: (
     transitionName: string,
@@ -325,7 +325,7 @@ export type TransitionTracingCallbacks = {
     startTime: number,
     endTime: number,
   ) => void,
-};
+|};
 
 // The following fields are only used in transition tracing in Profile builds
 type TransitionTracingOnlyFiberRootProperties = {|

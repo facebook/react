@@ -131,11 +131,11 @@ import {trackSuspendedWakeable} from './ReactFizzWakeable';
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
-type LegacyContext = {
+type LegacyContext = {|
   [key: string]: any,
-};
+|};
 
-type SuspenseBoundary = {
+type SuspenseBoundary = {|
   id: SuspenseBoundaryID,
   rootSegmentID: number,
   errorDigest: ?string, // the error hash if it errors
@@ -147,9 +147,9 @@ type SuspenseBoundary = {
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
   byteSize: number, // used to determine whether to inline children boundaries.
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
-};
+|};
 
-export type Task = {
+export type Task = {|
   node: ReactNodeList,
   ping: () => void,
   blockedBoundary: Root | SuspenseBoundary,
@@ -160,7 +160,7 @@ export type Task = {
   treeContext: TreeContext, // the current tree context that this task is executing in
   componentStack: null | ComponentStackNode, // DEV-only component stack
   thenableState: null | ThenableState,
-};
+|};
 
 const PENDING = 0;
 const COMPLETED = 1;
@@ -170,7 +170,7 @@ const ERRORED = 4;
 
 type Root = null;
 
-type Segment = {
+type Segment = {|
   status: 0 | 1 | 2 | 3 | 4,
   parentFlushed: boolean, // typically a segment will be flushed by its parent, except if its parent was already flushed
   id: number, // starts as 0 and is lazily assigned if the parent flushes early
@@ -184,13 +184,13 @@ type Segment = {
   // used to discern when text separator boundaries are needed
   lastPushedText: boolean,
   textEmbedded: boolean,
-};
+|};
 
 const OPEN = 0;
 const CLOSING = 1;
 const CLOSED = 2;
 
-export opaque type Request = {
+export opaque type Request = {|
   destination: null | Destination,
   +responseState: ResponseState,
   +progressiveChunkSize: number,
@@ -223,7 +223,7 @@ export opaque type Request = {
   // emit a different response to the stream instead.
   onShellError: (error: mixed) => void,
   onFatalError: (error: mixed) => void,
-};
+|};
 
 // This is a default heuristic for how to split up the HTML content into progressive
 // loading. Our goal is to be able to display additional new content about every 500ms.

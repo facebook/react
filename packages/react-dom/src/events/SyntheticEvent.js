@@ -13,7 +13,8 @@ import assign from 'shared/assign';
 import getEventCharCode from './getEventCharCode';
 
 type EventInterfaceType = {
-  [propName: string]: 0 | ((event: {[propName: string]: mixed}) => mixed),
+  [propName: string]: 0 | ((event: {[propName: string]: mixed, ...}) => mixed),
+  ...,
 };
 
 function functionThatReturnsTrue() {
@@ -44,7 +45,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
     reactName: string | null,
     reactEventType: string,
     targetInst: Fiber,
-    nativeEvent: {[propName: string]: mixed},
+    nativeEvent: {[propName: string]: mixed, ...},
     nativeEventTarget: null | EventTarget,
   ) {
     this._reactName = reactName;

@@ -37,9 +37,9 @@ type Options = {|
 |};
 
 // TODO: Move to sub-classing ReadableStream.
-type ReactDOMServerReadableStream = ReadableStream & {
+type ReactDOMServerReadableStream = ReadableStream & {|
   allReady: Promise<void>,
-};
+|};
 
 function renderToReadableStream(
   children: ReactNodeList,
