@@ -74,7 +74,7 @@ type InitializedChunk<T> = {
 type ErroredChunk<T> = {
   status: 'rejected',
   value: null,
-  reason: Error,
+  reason: mixed,
   _response: Response,
   then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
 };
@@ -188,7 +188,7 @@ function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T) {
   }
 }
 
-function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: Error): void {
+function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   if (chunk.status !== PENDING) {
     // We already resolved. We didn't expect to see this.
     return;
@@ -443,12 +443,25 @@ export function resolveModule(
   // TODO: Add an option to encode modules that are lazy loaded.
   // For now we preload all modules as early as possible since it's likely
   // that we'll need them.
-  preloadModule(moduleReference);
-
-  if (!chunk) {
-    chunks.set(id, createResolvedModuleChunk(response, moduleReference));
+  const promise = preloadModule(moduleReference);
+  if (promise) {
+    let pendingChunk;
+    if (!chunk) {
+      pendingChunk = createPendingChunk(response);
+      chunks.set(id, pendingChunk);
+    } else {
+      pendingChunk = chunk;
+    }
+    promise.then(
+      () => resolveModuleChunk(pendingChunk, moduleReference),
+      error => triggerErrorOnChunk(pendingChunk, error),
+    );
   } else {
-    resolveModuleChunk(chunk, moduleReference);
+    if (!chunk) {
+      chunks.set(id, createResolvedModuleChunk(response, moduleReference));
+    } else {
+      resolveModuleChunk(chunk, moduleReference);
+    }
   }
 }
 

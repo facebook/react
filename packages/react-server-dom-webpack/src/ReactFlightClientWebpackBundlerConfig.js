@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  FulfilledThenable,
+  RejectedThenable,
+} from 'shared/ReactTypes';
 
 export type WebpackSSRMap = {
   [clientId: string]: {
@@ -56,7 +60,9 @@ const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 
 // Start preloading the modules since we might need them soon.
 // This function doesn't suspend.
-export function preloadModule<T>(moduleData: ModuleReference<T>): void {
+export function preloadModule<T>(
+  moduleData: ModuleReference<T>,
+): null | Thenable<any> {
   const chunks = moduleData.chunks;
   const promises = [];
   for (let i = 0; i < chunks.length; i++) {
@@ -72,20 +78,35 @@ export function preloadModule<T>(moduleData: ModuleReference<T>): void {
     }
   }
   if (moduleData.async) {
-    const modulePromise: any = Promise.all(promises).then(() => {
-      return __webpack_require__(moduleData.id);
-    });
-    modulePromise.then(
-      value => {
-        modulePromise.status = 'fulfilled';
-        modulePromise.value = value;
-      },
-      reason => {
-        modulePromise.status = 'rejected';
-        modulePromise.reason = reason;
-      },
-    );
-    asyncModuleCache.set(moduleData.id, modulePromise);
+    const existingPromise = asyncModuleCache.get(moduleData.id);
+    if (existingPromise) {
+      if (existingPromise.status === 'fulfilled') {
+        return null;
+      }
+      return existingPromise;
+    } else {
+      const modulePromise: Thenable<T> = Promise.all(promises).then(() => {
+        return __webpack_require__(moduleData.id);
+      });
+      modulePromise.then(
+        value => {
+          const fulfilledThenable: FulfilledThenable<mixed> = (modulePromise: any);
+          fulfilledThenable.status = 'fulfilled';
+          fulfilledThenable.value = value;
+        },
+        reason => {
+          const rejectedThenable: RejectedThenable<mixed> = (modulePromise: any);
+          rejectedThenable.status = 'rejected';
+          rejectedThenable.reason = reason;
+        },
+      );
+      asyncModuleCache.set(moduleData.id, modulePromise);
+      return modulePromise;
+    }
+  } else if (promises.length > 0) {
+    return Promise.all(promises);
+  } else {
+    return null;
   }
 }
 
@@ -99,23 +120,10 @@ export function requireModule<T>(moduleData: ModuleReference<T>): T {
     const promise: any = asyncModuleCache.get(moduleData.id);
     if (promise.status === 'fulfilled') {
       moduleExports = promise.value;
-    } else if (promise.status === 'rejected') {
-      throw promise.reason;
     } else {
-      throw promise;
+      throw promise.reason;
     }
   } else {
-    const chunks = moduleData.chunks;
-    for (let i = 0; i < chunks.length; i++) {
-      const chunkId = chunks[i];
-      const entry = chunkCache.get(chunkId);
-      if (entry !== null) {
-        // We assume that preloadModule has been called before.
-        // So we don't expect to see entry being undefined here, that's an error.
-        // Let's throw either an error or the Promise.
-        throw entry;
-      }
-    }
     moduleExports = __webpack_require__(moduleData.id);
   }
   if (moduleData.name === '*') {
