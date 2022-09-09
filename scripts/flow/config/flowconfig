@@ -37,18 +37,17 @@
 
 [lints]
 untyped-type-import=error
-implicit-inexact-object=error
 
 [options]
 server.max_workers=4
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
 esproposal.optional_chaining=enable
+exact_by_default=true
+munge_underscores=false
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
-
-munge_underscores=false
 
 [version]
 ^0.122.0
