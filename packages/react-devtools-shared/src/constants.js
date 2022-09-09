@@ -30,7 +30,7 @@ export const PROFILING_FLAG_TIMELINE_SUPPORT = 0b10;
 
 export const LOCAL_STORAGE_DEFAULT_TAB_KEY = 'React::DevTools::defaultTab';
 
-export const LOCAL_STORAGE_FILTER_PREFERENCES_KEY =
+export const LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY =
   'React::DevTools::componentFilters';
 
 export const SESSION_STORAGE_LAST_SELECTION_KEY =
@@ -50,6 +50,8 @@ export const SESSION_STORAGE_RELOAD_AND_PROFILE_KEY =
 
 export const LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS =
   'React::DevTools::breakOnConsoleErrors';
+
+export const LOCAL_STORAGE_BROWSER_THEME = 'React::DevTools::theme';
 
 export const LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY =
   'React::DevTools::appendComponentStack';

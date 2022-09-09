@@ -22,7 +22,7 @@ export default function DebuggingSettings(_: {||}) {
     setBreakOnConsoleErrors,
     setShowInlineWarningsAndErrors,
     showInlineWarningsAndErrors,
-    sethideConsoleLogsInStrictMode,
+    setHideConsoleLogsInStrictMode,
   } = useContext(SettingsContext);
 
   return (
@@ -72,7 +72,7 @@ export default function DebuggingSettings(_: {||}) {
             type="checkbox"
             checked={hideConsoleLogsInStrictMode}
             onChange={({currentTarget}) =>
-              sethideConsoleLogsInStrictMode(currentTarget.checked)
+              setHideConsoleLogsInStrictMode(currentTarget.checked)
             }
           />{' '}
           Hide logs during second render in Strict Mode

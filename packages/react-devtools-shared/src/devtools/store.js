@@ -23,7 +23,7 @@ import {
 import {ElementTypeRoot} from '../types';
 import {
   getSavedComponentFilters,
-  saveComponentFilters,
+  setSavedComponentFilters,
   separateDisplayNameAndHOCs,
   shallowDiffers,
   utfDecodeString,
@@ -365,7 +365,7 @@ export default class Store extends EventEmitter<{|
     this._componentFilters = value;
 
     // Update persisted filter preferences stored in localStorage.
-    saveComponentFilters(value);
+    setSavedComponentFilters(value);
 
     // Notify the renderer that filter preferences have changed.
     // This is an expensive operation; it unmounts and remounts the entire tree,
@@ -1332,7 +1332,7 @@ export default class Store extends EventEmitter<{|
   ) => {
     this._componentFilters = componentFilters;
 
-    saveComponentFilters(componentFilters);
+    setSavedComponentFilters(componentFilters);
   };
 
   onBridgeShutdown = () => {

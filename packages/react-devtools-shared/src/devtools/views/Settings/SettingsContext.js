@@ -18,6 +18,7 @@ import {
 import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
+  LOCAL_STORAGE_BROWSER_THEME,
   LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
@@ -52,7 +53,7 @@ type Context = {|
   setParseHookNames: (value: boolean) => void,
 
   hideConsoleLogsInStrictMode: boolean,
-  sethideConsoleLogsInStrictMode: (value: boolean) => void,
+  setHideConsoleLogsInStrictMode: (value: boolean) => void,
 
   showInlineWarningsAndErrors: boolean,
   setShowInlineWarningsAndErrors: (value: boolean) => void,
@@ -110,7 +111,7 @@ function SettingsContextController({
     'compact',
   );
   const [theme, setTheme] = useLocalStorageWithLog<Theme>(
-    'React::DevTools::theme',
+    LOCAL_STORAGE_BROWSER_THEME,
     'auto',
   );
   const [
@@ -133,7 +134,7 @@ function SettingsContextController({
   );
   const [
     hideConsoleLogsInStrictMode,
-    sethideConsoleLogsInStrictMode,
+    setHideConsoleLogsInStrictMode,
   ] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
     false,
@@ -240,7 +241,7 @@ function SettingsContextController({
       setTraceUpdatesEnabled,
       setShowInlineWarningsAndErrors,
       showInlineWarningsAndErrors,
-      sethideConsoleLogsInStrictMode,
+      setHideConsoleLogsInStrictMode,
       hideConsoleLogsInStrictMode,
       theme,
       browserTheme,
@@ -259,7 +260,7 @@ function SettingsContextController({
       setTraceUpdatesEnabled,
       setShowInlineWarningsAndErrors,
       showInlineWarningsAndErrors,
-      sethideConsoleLogsInStrictMode,
+      setHideConsoleLogsInStrictMode,
       hideConsoleLogsInStrictMode,
       theme,
       browserTheme,
