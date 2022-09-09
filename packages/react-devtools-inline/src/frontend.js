@@ -33,10 +33,7 @@ export function createStore(bridge: FrontendBridge, config?: Config): Store {
   });
 }
 
-export function createBridge(
-  contentWindow: window,
-  wall?: Wall,
-): FrontendBridge {
+export function createBridge(contentWindow: any, wall?: Wall): FrontendBridge {
   if (wall == null) {
     wall = {
       listen(fn) {
@@ -58,7 +55,7 @@ export function createBridge(
 }
 
 export function initialize(
-  contentWindow: window,
+  contentWindow: any,
   {
     bridge,
     store,
