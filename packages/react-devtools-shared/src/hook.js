@@ -12,7 +12,7 @@ import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevToo
 import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 
 import {
-  patch as patchConsole,
+  patchConsoleUsingWindowValues,
   registerRenderer as registerRendererWithConsole,
 } from './backend/console';
 
@@ -343,16 +343,6 @@ export function installHook(target: any): DevToolsHook | null {
     // (See comments in the try/catch below for more context on inlining.)
     if (!__TEST__ && !__EXTENSION__) {
       try {
-        const appendComponentStack =
-          window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
-        const breakOnConsoleErrors =
-          window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
-        const showInlineWarningsAndErrors =
-          window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
-        const hideConsoleLogsInStrictMode =
-          window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
-        const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
-
         // The installHook() function is injected by being stringified in the browser,
         // so imports outside of this function do not get included.
         //
@@ -361,13 +351,7 @@ export function installHook(target: any): DevToolsHook | null {
         // and the object itself will be undefined as well for the reasons mentioned above,
         // so we use try/catch instead.
         registerRendererWithConsole(renderer);
-        patchConsole({
-          appendComponentStack,
-          breakOnConsoleErrors,
-          showInlineWarningsAndErrors,
-          hideConsoleLogsInStrictMode,
-          browserTheme,
-        });
+        patchConsoleUsingWindowValues();
       } catch (error) {}
     }
 

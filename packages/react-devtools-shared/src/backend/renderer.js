@@ -63,7 +63,7 @@ import {
 } from '../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
-  patch as patchConsole,
+  patchConsoleUsingWindowValues,
   registerRenderer as registerRendererWithConsole,
   patchForStrictMode as patchConsoleForStrictMode,
   unpatchForStrictMode as unpatchConsoleForStrictMode,
@@ -817,23 +817,7 @@ export function attach(
   // The renderer interface can't read these preferences directly,
   // because it is stored in localStorage within the context of the extension.
   // It relies on the extension to pass the preference through via the global.
-  const appendComponentStack =
-    window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
-  const breakOnConsoleErrors =
-    window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
-  const showInlineWarningsAndErrors =
-    window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
-  const hideConsoleLogsInStrictMode =
-    window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
-  const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
-
-  patchConsole({
-    appendComponentStack,
-    breakOnConsoleErrors,
-    showInlineWarningsAndErrors,
-    hideConsoleLogsInStrictMode,
-    browserTheme,
-  });
+  patchConsoleUsingWindowValues();
 
   const debug = (
     name: string,
