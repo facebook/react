@@ -22,6 +22,7 @@ import type {HookFlags} from './ReactHookEffectTags';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Cache} from './ReactFiberCacheComponent.old';
 import type {Flags} from './ReactFiberFlags';
+import {enableThrowOnMountForHookMismatch} from 'shared/ReactFeatureFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -290,7 +291,7 @@ function warnOnHookMismatchInDev(currentHookName: ?HookType) {
               ? null
               : i === ((hookTypesUpdateIndexDev: any): number)
               ? currentHookName
-              : oldHookName) ?? undefined;
+              : oldHookName) ?? 'undefined';
 
           let row = `${i + 1}. ${oldHookName}`;
 
@@ -423,7 +424,9 @@ export function renderWithHooks<Props, SecondArg>(
   if (__DEV__) {
     if (
       current !== null &&
-      (current.mode & ConcurrentMode || current.memoizedState !== null)
+      ((enableThrowOnMountForHookMismatch &&
+        (current.mode & ConcurrentMode) !== NoMode) ||
+        current.memoizedState !== null)
     ) {
       ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
     } else if (hookTypesDev !== null) {
@@ -438,11 +441,12 @@ export function renderWithHooks<Props, SecondArg>(
     }
   } else {
     ReactCurrentDispatcher.current =
-      current === null ||
-      ((current.mode & ConcurrentMode) === NoMode &&
-        current.memoizedState === null)
-        ? HooksDispatcherOnMount
-        : HooksDispatcherOnUpdate;
+      current !== null &&
+      ((enableThrowOnMountForHookMismatch &&
+        (current.mode & ConcurrentMode) !== NoMode) ||
+        current.memoizedState !== null)
+        ? HooksDispatcherOnUpdate
+        : HooksDispatcherOnMount;
   }
 
   let children = Component(props, secondArg);

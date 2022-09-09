@@ -3866,9 +3866,14 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       ReactNoop.render(<App loadA={true} />);
       expect(() => {
-        expect(() => {
+        const expectFlush = expect(() => {
           expect(Scheduler).toFlushAndYield(['A: 0']);
-        }).toThrow('Rendered more hooks than during the previous render');
+        });
+        if (gate(flag => flag.enableThrowOnMountForHookMismatch)) {
+          expectFlush.toThrow(
+            'Rendered more hooks than during the previous render',
+          );
+        }
       }).toErrorDev([
         'Warning: React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
@@ -3970,9 +3975,14 @@ describe('ReactHooksWithNoopRenderer', () => {
       act(() => {
         ReactNoop.render(<App showMore={true} />);
         expect(() => {
-          expect(() => {
+          const expectFlush = expect(() => {
             expect(Scheduler).toFlushAndYield(['Mount A']);
-          }).toThrow('Rendered more hooks than during the previous render');
+          });
+          if (gate(flags => flags.enableThrowOnMountForHookMismatch)) {
+            expectFlush.toThrow(
+              'Rendered more hooks than during the previous render',
+            );
+          }
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +

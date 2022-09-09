@@ -258,3 +258,7 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableProfilerNestedUpdateScheduledHook = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
+
+// When going between 0 to n hooks in concurrent mode, throw "Rendered more/fewer" hooks than expected.
+// This may be an invasive change so we're rolling it out slower.
+export const enableThrowOnMountForHookMismatch = false;

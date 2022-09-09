@@ -34,6 +34,7 @@ export const {
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnTextMismatch,
   enableTransitionTracing,
+  enableThrowOnMountForHookMismatch,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
