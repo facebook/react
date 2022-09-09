@@ -10,6 +10,11 @@ import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import assign from 'shared/assign';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
+import {
+  createElementWithValidation,
+  createFactoryWithValidation,
+  cloneElementWithValidation,
+} from './ReactElementValidator';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
@@ -571,3 +576,8 @@ export function isValidElement(object) {
     object.$$typeof === REACT_ELEMENT_TYPE
   );
 }
+
+
+export const createElementEnv = __DEV__ ? createElementWithValidation : createElement;
+export const cloneElementEnv = __DEV__ ? cloneElementWithValidation : cloneElement;
+export const createFactoryEnv = __DEV__ ? createFactoryWithValidation : createFactory;
