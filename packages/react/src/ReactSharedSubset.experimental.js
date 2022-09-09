@@ -32,8 +32,6 @@ export {
   useCallback,
   useContext,
   useDebugValue,
-  useDeferredValue,
   useMemo,
-  useTransition,
   version,
 } from './React';
