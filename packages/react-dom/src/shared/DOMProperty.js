@@ -57,6 +57,7 @@ export type PropertyInfo = {|
   +type: PropertyType,
   +sanitizeURL: boolean,
   +removeEmptyString: boolean,
+  +propertyMustUseAttribute: boolean,
 |};
 
 /* eslint-disable max-len */
@@ -222,6 +223,7 @@ function PropertyInfoRecord(
   attributeNamespace: string | null,
   sanitizeURL: boolean,
   removeEmptyString: boolean,
+  propertyMustUseAttribute: boolean,
 ) {
   this.acceptsBooleans =
     type === BOOLEANISH_STRING ||
@@ -234,6 +236,7 @@ function PropertyInfoRecord(
   this.type = type;
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
+  this.propertyMustUseAttribute = propertyMustUseAttribute;
 }
 
 // When adding attributes to this list, be sure to also add them to
@@ -268,6 +271,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -287,6 +291,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -302,6 +307,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -323,6 +329,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -363,6 +370,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -373,7 +381,6 @@ reservedProps.forEach(name => {
   // Note: `option.selected` is not updated if `select.multiple` is
   // disabled with `removeAttribute`. We have special logic for handling this.
   'multiple',
-  'muted',
   'selected',
 
   // NOTE: if you add a camelCased prop to this list,
@@ -388,6 +395,21 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
+  );
+});
+
+// These are HTML attributes that are props but should also be in html tag as attribute
+['muted'].forEach(name => {
+  properties[name] = new PropertyInfoRecord(
+    name,
+    BOOLEAN,
+    true, // mustUseProperty
+    name, // attributeName
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
+    true, // propertyMustUseAttribute
   );
 });
 
@@ -409,6 +431,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -431,6 +454,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -444,6 +468,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -543,6 +568,7 @@ const capitalize = token => token[1].toUpperCase();
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -568,6 +594,7 @@ const capitalize = token => token[1].toUpperCase();
     'http://www.w3.org/1999/xlink',
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -590,6 +617,7 @@ const capitalize = token => token[1].toUpperCase();
     'http://www.w3.org/XML/1998/namespace',
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -605,6 +633,7 @@ const capitalize = token => token[1].toUpperCase();
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -619,6 +648,7 @@ properties[xlinkHref] = new PropertyInfoRecord(
   'http://www.w3.org/1999/xlink',
   true, // sanitizeURL
   false, // removeEmptyString
+  false, // propertyMustUseAttribute
 );
 
 ['src', 'href', 'action', 'formAction'].forEach(attributeName => {
@@ -630,5 +660,6 @@ properties[xlinkHref] = new PropertyInfoRecord(
     null, // attributeNamespace
     true, // sanitizeURL
     true, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
