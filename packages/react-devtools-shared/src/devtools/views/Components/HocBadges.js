@@ -12,9 +12,9 @@ import styles from './HocBadges.css';
 
 import type {Element} from './types';
 
-type Props = {|
+type Props = {
   element: Element,
-|};
+};
 
 export default function HocBadges({element}: Props) {
   const {hocDisplayNames} = ((element: any): Element);

@@ -93,11 +93,11 @@ export function setPerformanceMock_ONLY_FOR_TESTING(
 export type GetTimelineData = () => TimelineData | null;
 export type ToggleProfilingStatus = (value: boolean) => void;
 
-type Response = {|
+type Response = {
   getTimelineData: GetTimelineData,
   profilingHooks: DevToolsProfilingHooks,
   toggleProfilingStatus: ToggleProfilingStatus,
-|};
+};
 
 export function createProfilingHooks({
   getDisplayNameForFiber,
@@ -106,14 +106,14 @@ export function createProfilingHooks({
   workTagMap,
   currentDispatcherRef,
   reactVersion,
-}: {|
+}: {
   getDisplayNameForFiber: (fiber: Fiber) => string | null,
   getIsProfiling: () => boolean,
   getLaneLabelMap?: () => Map<Lane, string> | null,
   currentDispatcherRef?: CurrentDispatcherRef,
   workTagMap: WorkTagMap,
   reactVersion: string,
-|}): Response {
+}): Response {
   let currentBatchUID: BatchUID = 0;
   let currentReactComponentMeasure: ReactComponentMeasure | null = null;
   let currentReactMeasuresStack: Array<ReactMeasure> = [];

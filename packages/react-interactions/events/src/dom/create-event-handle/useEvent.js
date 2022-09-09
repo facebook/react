@@ -13,19 +13,19 @@ import * as ReactDOM from 'react-dom';
 const {useLayoutEffect, useRef} = React;
 const {unstable_createEventHandle} = ReactDOM;
 
-type UseEventHandle = {|
+type UseEventHandle = {
   setListener: (
     target: EventTarget,
     null | ((SyntheticEvent<EventTarget>) => void),
   ) => void,
   clear: () => void,
-|};
+};
 
 export default function useEvent(
   event: string,
-  options?: {|
+  options?: {
     capture?: boolean,
-  |},
+  },
 ): UseEventHandle {
   const handleRef = useRef<UseEventHandle | null>(null);
   let useEventHandle = handleRef.current;

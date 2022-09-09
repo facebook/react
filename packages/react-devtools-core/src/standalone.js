@@ -284,14 +284,14 @@ function connectToSocket(socket: WebSocket) {
   };
 }
 
-type ServerOptions = {|
+type ServerOptions = {
   key?: string,
   cert?: string,
-|};
+};
 
-type LoggerOptions = {|
+type LoggerOptions = {
   surface?: ?string,
-|};
+};
 
 function startServer(
   port?: number = 8097,

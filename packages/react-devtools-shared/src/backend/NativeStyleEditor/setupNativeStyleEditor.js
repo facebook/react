@@ -25,7 +25,7 @@ export default function setupNativeStyleEditor(
 ) {
   bridge.addListener(
     'NativeStyleEditor_measure',
-    ({id, rendererID}: {|id: number, rendererID: RendererID|}) => {
+    ({id, rendererID}: {id: number, rendererID: RendererID}) => {
       measureStyle(agent, bridge, resolveNativeStyle, id, rendererID);
     },
   );
@@ -38,13 +38,13 @@ export default function setupNativeStyleEditor(
       oldName,
       newName,
       value,
-    }: {|
+    }: {
       id: number,
       rendererID: RendererID,
       oldName: string,
       newName: string,
       value: string,
-    |}) => {
+    }) => {
       renameStyle(agent, id, rendererID, oldName, newName, value);
       setTimeout(() =>
         measureStyle(agent, bridge, resolveNativeStyle, id, rendererID),
@@ -59,12 +59,12 @@ export default function setupNativeStyleEditor(
       rendererID,
       name,
       value,
-    }: {|
+    }: {
       id: number,
       rendererID: number,
       name: string,
       value: string,
-    |}) => {
+    }) => {
       setStyle(agent, id, rendererID, name, value);
       setTimeout(() =>
         measureStyle(agent, bridge, resolveNativeStyle, id, rendererID),

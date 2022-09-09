@@ -24,7 +24,7 @@ import {
   createRootFormatContext,
 } from './ReactDOMServerFormatConfig';
 
-type Options = {|
+type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
   bootstrapScriptContent?: string,
@@ -33,11 +33,11 @@ type Options = {|
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
-|};
+};
 
-type StaticResult = {|
+type StaticResult = {
   prelude: ReadableStream,
-|};
+};
 
 function prerender(
   children: ReactNodeList,

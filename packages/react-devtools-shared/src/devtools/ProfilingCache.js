@@ -36,10 +36,10 @@ export default class ProfilingCache {
   getCommitTree = ({
     commitIndex,
     rootID,
-  }: {|
+  }: {
     commitIndex: number,
     rootID: number,
-  |}) =>
+  }) =>
     getCommitTree({
       commitIndex,
       profilerStore: this._profilerStore,
@@ -49,10 +49,10 @@ export default class ProfilingCache {
   getFiberCommits = ({
     fiberID,
     rootID,
-  }: {|
+  }: {
     fiberID: number,
     rootID: number,
-  |}): Array<number> => {
+  }): Array<number> => {
     const cachedFiberCommits = this._fiberCommits.get(fiberID);
     if (cachedFiberCommits != null) {
       return cachedFiberCommits;
@@ -75,11 +75,11 @@ export default class ProfilingCache {
     commitIndex,
     commitTree,
     rootID,
-  }: {|
+  }: {
     commitIndex: number,
     commitTree: CommitTree,
     rootID: number,
-  |}): FlamegraphChartData =>
+  }): FlamegraphChartData =>
     getFlamegraphChartData({
       commitIndex,
       commitTree,
@@ -91,11 +91,11 @@ export default class ProfilingCache {
     commitIndex,
     commitTree,
     rootID,
-  }: {|
+  }: {
     commitIndex: number,
     commitTree: CommitTree,
     rootID: number,
-  |}): RankedChartData =>
+  }): RankedChartData =>
     getRankedChartData({
       commitIndex,
       commitTree,

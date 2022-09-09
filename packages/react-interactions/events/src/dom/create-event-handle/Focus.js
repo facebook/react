@@ -14,15 +14,15 @@ const {useCallback, useEffect, useLayoutEffect, useRef} = React;
 
 type FocusEvent = SyntheticEvent<EventTarget>;
 
-type UseFocusOptions = {|
+type UseFocusOptions = {
   disabled?: boolean,
   onBlur?: ?(FocusEvent) => void,
   onFocus?: ?(FocusEvent) => void,
   onFocusChange?: ?(boolean) => void,
   onFocusVisibleChange?: ?(boolean) => void,
-|};
+};
 
-type UseFocusWithinOptions = {|
+type UseFocusWithinOptions = {
   disabled?: boolean,
   onAfterBlurWithin?: FocusEvent => void,
   onBeforeBlurWithin?: FocusEvent => void,
@@ -30,7 +30,7 @@ type UseFocusWithinOptions = {|
   onFocusWithin?: FocusEvent => void,
   onFocusWithinChange?: boolean => void,
   onFocusWithinVisibleChange?: boolean => void,
-|};
+};
 
 const isMac =
   typeof window !== 'undefined' && window.navigator != null
@@ -154,7 +154,7 @@ function useFocusLifecycles() {
 }
 
 export function useFocus(
-  focusTargetRef: {|current: null | Node|},
+  focusTargetRef: {current: null | Node},
   {
     disabled,
     onBlur,
@@ -164,10 +164,10 @@ export function useFocus(
   }: UseFocusOptions,
 ): void {
   // Setup controlled state for this useFocus hook
-  const stateRef = useRef<null | {|
+  const stateRef = useRef<null | {
     isFocused: boolean,
     isFocusVisible: boolean,
-  |}>({isFocused: false, isFocusVisible: false});
+  }>({isFocused: false, isFocusVisible: false});
   const focusHandle = useEvent('focusin');
   const blurHandle = useEvent('focusout');
   const focusVisibleHandles = useFocusVisibleInputHandles();
@@ -249,7 +249,7 @@ export function useFocus(
 
 export function useFocusWithin<T>(
   focusWithinTargetRef:
-    | {|current: null | T|}
+    | {current: null | T}
     | ((focusWithinTarget: null | T) => void),
   {
     disabled,
@@ -262,10 +262,10 @@ export function useFocusWithin<T>(
   }: UseFocusWithinOptions,
 ): (focusWithinTarget: null | T) => void {
   // Setup controlled state for this useFocus hook
-  const stateRef = useRef<null | {|
+  const stateRef = useRef<null | {
     isFocused: boolean,
     isFocusVisible: boolean,
-  |}>({isFocused: false, isFocusVisible: false});
+  }>({isFocused: false, isFocusVisible: false});
   const focusHandle = useEvent('focusin');
   const blurHandle = useEvent('focusout');
   const afterBlurHandle = useEvent('afterblur');

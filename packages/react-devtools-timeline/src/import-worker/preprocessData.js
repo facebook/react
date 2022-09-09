@@ -38,15 +38,15 @@ import InvalidProfileError from './InvalidProfileError';
 import {getBatchRange} from '../utils/getBatchRange';
 import ErrorStackParser from 'error-stack-parser';
 
-type MeasureStackElement = {|
+type MeasureStackElement = {
   type: ReactMeasureType,
   depth: number,
   measure: ReactMeasure,
   startTime: Milliseconds,
   stopTime?: Milliseconds,
-|};
+};
 
-type ProcessorState = {|
+type ProcessorState = {
   asyncProcessingPromises: Promise<any>[],
   batchUID: BatchUID,
   currentReactComponentMeasure: ReactComponentMeasure | null,
@@ -64,7 +64,7 @@ type ProcessorState = {|
   requestIdToNetworkMeasureMap: Map<string, NetworkMeasure>,
   uidCounter: BatchUID,
   unresolvedSuspenseEvents: Map<string, SuspenseEvent>,
-|};
+};
 
 const NATIVE_EVENT_DURATION_THRESHOLD = 20;
 const NESTED_UPDATE_DURATION_THRESHOLD = 20;

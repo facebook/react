@@ -78,7 +78,7 @@ export function processErrorChunk(
 
 function convertModelToJSON(
   request: Request,
-  parent: {|+[key: string]: ReactModel|} | $ReadOnlyArray<ReactModel>,
+  parent: {+[key: string]: ReactModel} | $ReadOnlyArray<ReactModel>,
   key: string,
   model: ReactModel,
 ): JSONValue {
@@ -93,7 +93,7 @@ function convertModelToJSON(
     } else {
       /* $FlowFixMe the old version of Flow doesn't have a good way to define
        * an empty exact object. */
-      const jsonObj: {|[key: string]: JSONValue|} = {};
+      const jsonObj: {[key: string]: JSONValue} = {};
       for (const nextKey in json) {
         if (hasOwnProperty.call(json, nextKey)) {
           jsonObj[nextKey] = convertModelToJSON(

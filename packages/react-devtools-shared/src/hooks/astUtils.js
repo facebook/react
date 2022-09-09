@@ -13,16 +13,16 @@ import {File} from '@babel/types';
 
 import type {HooksNode} from 'react-debug-tools/src/ReactDebugHooks';
 
-export type Position = {|
+export type Position = {
   line: number,
   column: number,
-|};
+};
 
-export type SourceFileASTWithHookDetails = {|
+export type SourceFileASTWithHookDetails = {
   sourceFileAST: File,
   line: number,
   source: string,
-|};
+};
 
 export const NO_HOOK_NAME = '<no-hook>';
 
@@ -356,7 +356,7 @@ function getPotentialHookDeclarationsFromAST(sourceAST: File): NodePath[] {
  */
 export function getHookNamesMappingFromAST(
   sourceAST: File,
-): $ReadOnlyArray<{|name: string, start: Position|}> {
+): $ReadOnlyArray<{name: string, start: Position}> {
   const hookStack = [];
   const hookNames = [];
   const pushFrame = (name: string, node: Node) => {

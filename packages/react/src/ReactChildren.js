@@ -173,9 +173,9 @@ function mapIntoArray(
   } else {
     const iteratorFn = getIteratorFn(children);
     if (typeof iteratorFn === 'function') {
-      const iterableChildren: Iterable<React$Node> & {|
+      const iterableChildren: Iterable<React$Node> & {
         entries: any,
-      |} = (children: any);
+      } = (children: any);
 
       if (__DEV__) {
         // Warn about using Maps as children

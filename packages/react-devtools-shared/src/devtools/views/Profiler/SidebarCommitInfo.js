@@ -17,7 +17,7 @@ import {getCommitTree} from './CommitTreeBuilder';
 
 import styles from './SidebarCommitInfo.css';
 
-export type Props = {||};
+export type Props = {};
 
 export default function SidebarCommitInfo(_: Props) {
   const {selectedCommitIndex, rootID} = useContext(ProfilerContext);

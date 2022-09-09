@@ -32,7 +32,7 @@ function reducer(state, action) {
   }
 }
 
-type StatefulFunctionProps = {|name: string|};
+type StatefulFunctionProps = {name: string};
 
 function StatefulFunction({name}: StatefulFunctionProps) {
   const [count, updateCount] = useState(0);
@@ -68,8 +68,8 @@ function StatefulFunction({name}: StatefulFunctionProps) {
 const BoolContext = createContext(true);
 BoolContext.displayName = 'BoolContext';
 
-type Props = {|name: string, toggle: boolean|};
-type State = {|cities: Array<string>, state: string|};
+type Props = {name: string, toggle: boolean};
+type State = {cities: Array<string>, state: string};
 
 class StatefulClass extends Component<Props, State> {
   static contextType = BoolContext;
@@ -102,7 +102,7 @@ class StatefulClass extends Component<Props, State> {
 const MemoizedStatefulClass = memo(StatefulClass);
 const MemoizedStatefulFunction = memo(StatefulFunction);
 
-const ForwardRef = forwardRef<{|name: string|}, HTMLUListElement>(
+const ForwardRef = forwardRef<{name: string}, HTMLUListElement>(
   ({name}, ref) => {
     const [count, updateCount] = useState(0);
     const debouncedCount = useDebounce(count, 1000);

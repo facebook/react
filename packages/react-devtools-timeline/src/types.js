@@ -17,51 +17,51 @@ export type Return<T> = Return_<*, T>;
 
 // Project types
 
-export type ErrorStackFrame = {|
+export type ErrorStackFrame = {
   fileName: string,
   lineNumber: number,
   columnNumber: number,
-|};
+};
 
 export type Milliseconds = number;
 
 export type ReactLane = number;
 
-export type NativeEvent = {|
+export type NativeEvent = {
   +depth: number,
   +duration: Milliseconds,
   +timestamp: Milliseconds,
   +type: string,
   warning: string | null,
-|};
+};
 
-type BaseReactEvent = {|
+type BaseReactEvent = {
   +componentName?: string,
   +timestamp: Milliseconds,
   warning: string | null,
-|};
+};
 
-type BaseReactScheduleEvent = {|
+type BaseReactScheduleEvent = {
   ...BaseReactEvent,
   +lanes: ReactLane[],
-|};
-export type ReactScheduleRenderEvent = {|
+};
+export type ReactScheduleRenderEvent = {
   ...BaseReactScheduleEvent,
   +type: 'schedule-render',
-|};
-export type ReactScheduleStateUpdateEvent = {|
+};
+export type ReactScheduleStateUpdateEvent = {
   ...BaseReactScheduleEvent,
   +componentStack?: string,
   +type: 'schedule-state-update',
-|};
-export type ReactScheduleForceUpdateEvent = {|
+};
+export type ReactScheduleForceUpdateEvent = {
   ...BaseReactScheduleEvent,
   +type: 'schedule-force-update',
-|};
+};
 
 export type Phase = 'mount' | 'update';
 
-export type SuspenseEvent = {|
+export type SuspenseEvent = {
   ...BaseReactEvent,
   depth: number,
   duration: number | null,
@@ -70,15 +70,15 @@ export type SuspenseEvent = {|
   promiseName: string | null,
   resolution: 'rejected' | 'resolved' | 'unresolved',
   +type: 'suspense',
-|};
+};
 
-export type ThrownError = {|
+export type ThrownError = {
   +componentName?: string,
   +message: string,
   +phase: Phase,
   +timestamp: Milliseconds,
   +type: 'thrown-error',
-|};
+};
 
 export type SchedulingEvent =
   | ReactScheduleRenderEvent
@@ -97,16 +97,16 @@ export type ReactMeasureType =
 
 export type BatchUID = number;
 
-export type ReactMeasure = {|
+export type ReactMeasure = {
   +type: ReactMeasureType,
   +lanes: ReactLane[],
   +timestamp: Milliseconds,
   +duration: Milliseconds,
   +batchUID: BatchUID,
   +depth: number,
-|};
+};
 
-export type NetworkMeasure = {|
+export type NetworkMeasure = {
   +depth: number,
   finishTimestamp: Milliseconds,
   firstReceivedDataTimestamp: Milliseconds,
@@ -117,7 +117,7 @@ export type NetworkMeasure = {|
   requestMethod: string,
   sendRequestTimestamp: Milliseconds,
   url: string,
-|};
+};
 
 export type ReactComponentMeasureType =
   | 'render'
@@ -126,38 +126,38 @@ export type ReactComponentMeasureType =
   | 'passive-effect-mount'
   | 'passive-effect-unmount';
 
-export type ReactComponentMeasure = {|
+export type ReactComponentMeasure = {
   +componentName: string,
   duration: Milliseconds,
   +timestamp: Milliseconds,
   +type: ReactComponentMeasureType,
   warning: string | null,
-|};
+};
 
 /**
  * A flamechart stack frame belonging to a stack trace.
  */
-export type FlamechartStackFrame = {|
+export type FlamechartStackFrame = {
   name: string,
   timestamp: Milliseconds,
   duration: Milliseconds,
   scriptUrl?: string,
   locationLine?: number,
   locationColumn?: number,
-|};
+};
 
-export type UserTimingMark = {|
+export type UserTimingMark = {
   name: string,
   timestamp: Milliseconds,
-|};
+};
 
-export type Snapshot = {|
+export type Snapshot = {
   height: number,
   image: Image | null,
   +imageSource: string,
   +timestamp: Milliseconds,
   width: number,
-|};
+};
 
 /**
  * A "layer" of stack frames in the profiler UI, i.e. all stack frames of the
@@ -177,7 +177,7 @@ export type SearchRegExpStateChangeCallback = (
 // Imperative view state that corresponds to profiler data.
 // This state lives outside of React's lifecycle
 // and should be erased/reset whenever new profiler data is loaded.
-export type ViewState = {|
+export type ViewState = {
   horizontalScrollState: ScrollState,
   onHorizontalScrollStateChange: (
     callback: HorizontalScrollStateChangeCallback,
@@ -189,7 +189,7 @@ export type ViewState = {|
   updateHorizontalScrollState: (scrollState: ScrollState) => void,
   updateSearchRegExpState: (searchRegExp: RegExp | null) => void,
   viewToMutableViewStateMap: Map<string, mixed>,
-|};
+};
 
 export type InternalModuleSourceToRanges = Map<
   string,
@@ -198,7 +198,7 @@ export type InternalModuleSourceToRanges = Map<
 
 export type LaneToLabelMap = Map<ReactLane, string>;
 
-export type TimelineData = {|
+export type TimelineData = {
   batchUIDToMeasuresMap: Map<BatchUID, ReactMeasure[]>,
   componentMeasures: ReactComponentMeasure[],
   duration: number,
@@ -216,9 +216,9 @@ export type TimelineData = {|
   startTime: number,
   suspenseEvents: SuspenseEvent[],
   thrownErrors: ThrownError[],
-|};
+};
 
-export type TimelineDataExport = {|
+export type TimelineDataExport = {
   batchUIDToMeasuresKeyValueArray: Array<[BatchUID, ReactMeasure[]]>,
   componentMeasures: ReactComponentMeasure[],
   duration: number,
@@ -238,9 +238,9 @@ export type TimelineDataExport = {|
   startTime: number,
   suspenseEvents: SuspenseEvent[],
   thrownErrors: ThrownError[],
-|};
+};
 
-export type ReactEventInfo = {|
+export type ReactEventInfo = {
   componentMeasure: ReactComponentMeasure | null,
   flamechartStackFrame: FlamechartStackFrame | null,
   measure: ReactMeasure | null,
@@ -251,4 +251,4 @@ export type ReactEventInfo = {|
   snapshot: Snapshot | null,
   thrownError: ThrownError | null,
   userTimingMark: UserTimingMark | null,
-|};
+};

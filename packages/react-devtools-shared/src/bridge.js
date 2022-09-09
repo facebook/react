@@ -24,7 +24,7 @@ const BATCH_DURATION = 100;
 // This message specifies the version of the DevTools protocol currently supported by the backend,
 // as well as the earliest NPM version (e.g. "4.13.0") that protocol is supported by on the frontend.
 // This enables an older frontend to display an upgrade message to users for a newer, unsupported backend.
-export type BridgeProtocol = {|
+export type BridgeProtocol = {
   // Version supported by the current frontend/backend.
   version: number,
 
@@ -32,7 +32,7 @@ export type BridgeProtocol = {|
   // Note that 'maxNpmVersion' is only set when the version is bumped.
   minNpmVersion: string,
   maxNpmVersion: string | null,
-|};
+};
 
 // Bump protocol version whenever a backwards breaking change is made
 // in the messages sent between BackendBridge and FrontendBridge.
@@ -73,121 +73,121 @@ export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
 export const currentBridgeProtocol: BridgeProtocol =
   BRIDGE_PROTOCOL[BRIDGE_PROTOCOL.length - 1];
 
-type ElementAndRendererID = {|id: number, rendererID: RendererID|};
+type ElementAndRendererID = {id: number, rendererID: RendererID};
 
-type Message = {|
+type Message = {
   event: string,
   payload: any,
-|};
+};
 
-type HighlightElementInDOM = {|
+type HighlightElementInDOM = {
   ...ElementAndRendererID,
   displayName: string | null,
   hideAfterTimeout: boolean,
   openNativeElementsPanel: boolean,
   scrollIntoView: boolean,
-|};
+};
 
-type OverrideValue = {|
+type OverrideValue = {
   ...ElementAndRendererID,
   path: Array<string | number>,
   wasForwarded?: boolean,
   value: any,
-|};
+};
 
-type OverrideHookState = {|
+type OverrideHookState = {
   ...OverrideValue,
   hookID: number,
-|};
+};
 
 type PathType = 'props' | 'hooks' | 'state' | 'context';
 
-type DeletePath = {|
+type DeletePath = {
   ...ElementAndRendererID,
   type: PathType,
   hookID?: ?number,
   path: Array<string | number>,
-|};
+};
 
-type RenamePath = {|
+type RenamePath = {
   ...ElementAndRendererID,
   type: PathType,
   hookID?: ?number,
   oldPath: Array<string | number>,
   newPath: Array<string | number>,
-|};
+};
 
-type OverrideValueAtPath = {|
+type OverrideValueAtPath = {
   ...ElementAndRendererID,
   type: PathType,
   hookID?: ?number,
   path: Array<string | number>,
   value: any,
-|};
+};
 
-type OverrideError = {|
+type OverrideError = {
   ...ElementAndRendererID,
   forceError: boolean,
-|};
+};
 
-type OverrideSuspense = {|
+type OverrideSuspense = {
   ...ElementAndRendererID,
   forceFallback: boolean,
-|};
+};
 
-type CopyElementPathParams = {|
+type CopyElementPathParams = {
   ...ElementAndRendererID,
   path: Array<string | number>,
-|};
+};
 
-type ViewAttributeSourceParams = {|
+type ViewAttributeSourceParams = {
   ...ElementAndRendererID,
   path: Array<string | number>,
-|};
+};
 
-type InspectElementParams = {|
+type InspectElementParams = {
   ...ElementAndRendererID,
   forceFullData: boolean,
   path: Array<number | string> | null,
   requestID: number,
-|};
+};
 
-type StoreAsGlobalParams = {|
+type StoreAsGlobalParams = {
   ...ElementAndRendererID,
   count: number,
   path: Array<string | number>,
-|};
+};
 
-type NativeStyleEditor_RenameAttributeParams = {|
+type NativeStyleEditor_RenameAttributeParams = {
   ...ElementAndRendererID,
   oldName: string,
   newName: string,
   value: string,
-|};
+};
 
-type NativeStyleEditor_SetValueParams = {|
+type NativeStyleEditor_SetValueParams = {
   ...ElementAndRendererID,
   name: string,
   value: string,
-|};
+};
 
-type UpdateConsolePatchSettingsParams = {|
+type UpdateConsolePatchSettingsParams = {
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
   browserTheme: BrowserTheme,
-|};
+};
 
-type SavedPreferencesParams = {|
+type SavedPreferencesParams = {
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   componentFilters: Array<ComponentFilter>,
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
-|};
+};
 
-export type BackendEvents = {|
+export type BackendEvents = {
   backendVersion: [string],
   bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],
@@ -211,13 +211,13 @@ export type BackendEvents = {|
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
-    {|isSupported: boolean, validAttributes: ?$ReadOnlyArray<string>|},
+    {isSupported: boolean, validAttributes: ?$ReadOnlyArray<string>},
   ],
   NativeStyleEditor_styleAndLayout: [StyleAndLayoutPayload],
-|};
+};
 
-type FrontendEvents = {|
-  clearErrorsAndWarnings: [{|rendererID: RendererID|}],
+type FrontendEvents = {
+  clearErrorsAndWarnings: [{rendererID: RendererID}],
   clearErrorsForFiberID: [ElementAndRendererID],
   clearNativeElementHighlight: [],
   clearWarningsForFiberID: [ElementAndRendererID],
@@ -226,7 +226,7 @@ type FrontendEvents = {|
   getBackendVersion: [],
   getBridgeProtocol: [],
   getOwnersList: [ElementAndRendererID],
-  getProfilingData: [{|rendererID: RendererID|}],
+  getProfilingData: [{rendererID: RendererID}],
   getProfilingStatus: [],
   highlightNativeElement: [HighlightElementInDOM],
   inspectElement: [InspectElementParams],
@@ -270,15 +270,15 @@ type FrontendEvents = {|
   overrideHookState: [OverrideHookState],
   overrideProps: [OverrideValue],
   overrideState: [OverrideValue],
-|};
+};
 
 class Bridge<
   OutgoingEvents: Object,
   IncomingEvents: Object,
-> extends EventEmitter<{|
+> extends EventEmitter<{
   ...IncomingEvents,
   ...OutgoingEvents,
-|}> {
+}> {
   _isShutdown: boolean = false;
   _messageQueue: Array<any> = [];
   _timeoutID: TimeoutID | null = null;

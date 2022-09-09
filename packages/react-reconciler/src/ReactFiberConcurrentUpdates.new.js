@@ -33,14 +33,14 @@ import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {HostRoot, OffscreenComponent} from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 
-export type ConcurrentUpdate = {|
+export type ConcurrentUpdate = {
   next: ConcurrentUpdate,
   lane: Lane,
-|};
+};
 
-type ConcurrentQueue = {|
+type ConcurrentQueue = {
   pending: ConcurrentUpdate | null,
-|};
+};
 
 // If a render is in progress, and we receive an update from a concurrent event,
 // we wait until the current render is over (either finished or interrupted)

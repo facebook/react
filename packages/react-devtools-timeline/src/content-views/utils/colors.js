@@ -7,10 +7,10 @@
  * @flow
  */
 
-type ColorSpace = number | {|min: number, max: number, count?: number|};
+type ColorSpace = number | {min: number, max: number, count?: number};
 
 // Docstrings from https://www.w3schools.com/css/css_colors_hsl.asp
-type HslaColor = $ReadOnly<{|
+type HslaColor = $ReadOnly<{
   /** Hue is a degree on the color wheel from 0 to 360. 0 is red, 120 is green, and 240 is blue. */
   h: number,
   /** Saturation is a percentage value, 0% means a shade of gray, and 100% is the full color. */
@@ -19,7 +19,7 @@ type HslaColor = $ReadOnly<{|
   l: number,
   /** Alpha is a percentage, 0% is fully transparent, and 100 is not transparent at all. */
   a: number,
-|}>;
+}>;
 
 export function hslaColorToString({h, s, l, a}: HslaColor): string {
   return `hsl(${h}deg ${s}% ${l}% / ${a})`;

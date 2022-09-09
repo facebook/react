@@ -78,9 +78,9 @@ export function activate(
   contentWindow: window,
   {
     bridge,
-  }: {|
+  }: {
     bridge?: BackendBridge,
-  |} = {},
+  } = {},
 ): void {
   if (bridge == null) {
     bridge = createBridge(contentWindow);

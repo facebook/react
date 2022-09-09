@@ -30,12 +30,12 @@ const getCurrentTime =
     ? () => performance.now()
     : () => Date.now();
 
-export type Data = {|
+export type Data = {
   count: number,
   expirationTime: number,
   lastMeasuredAt: number,
   rect: Rect | null,
-|};
+};
 
 const nodeToData: Map<NativeType, Data> = new Map();
 

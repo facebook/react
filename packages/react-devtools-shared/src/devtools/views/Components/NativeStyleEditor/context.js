@@ -37,18 +37,18 @@ import type {
 
 export type GetStyleAndLayout = (id: number) => StyleAndLayoutFrontend | null;
 
-type Context = {|
+type Context = {
   getStyleAndLayout: GetStyleAndLayout,
-|};
+};
 
 const NativeStyleContext = createContext<Context>(((null: any): Context));
 NativeStyleContext.displayName = 'NativeStyleContext';
 
 type ResolveFn = (styleAndLayout: StyleAndLayoutFrontend) => void;
-type InProgressRequest = {|
+type InProgressRequest = {
   promise: Thenable<StyleAndLayoutFrontend>,
   resolveFn: ResolveFn,
-|};
+};
 
 const inProgressRequests: WeakMap<Element, InProgressRequest> = new WeakMap();
 const resource: Resource<
@@ -75,9 +75,9 @@ const resource: Resource<
   {useWeakMap: true},
 );
 
-type Props = {|
+type Props = {
   children: React$Node,
-|};
+};
 
 function NativeStyleContextController({children}: Props) {
   const bridge = useContext<FrontendBridge>(BridgeContext);

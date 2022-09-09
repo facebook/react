@@ -9,20 +9,20 @@
 
 import type {Thenable} from 'shared/ReactTypes';
 
-export type WebpackSSRMap = {|
-  [clientId: string]: {|
+export type WebpackSSRMap = {
+  [clientId: string]: {
     [clientExportName: string]: ModuleMetaData,
-  |},
-|};
+  },
+};
 
 export type BundlerConfig = null | WebpackSSRMap;
 
-export opaque type ModuleMetaData = {|
+export opaque type ModuleMetaData = {
   id: string,
   chunks: Array<string>,
   name: string,
   async: boolean,
-|};
+};
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ModuleReference<T> = ModuleMetaData;

@@ -17,12 +17,12 @@ import {useSubscription} from '../hooks';
 
 import styles from './SelectedTreeHighlight.css';
 
-type Data = {|
+type Data = {
   startIndex: number,
   stopIndex: number,
-|};
+};
 
-export default function SelectedTreeHighlight(_: {||}) {
+export default function SelectedTreeHighlight(_: {}) {
   const {lineHeight} = useContext(SettingsContext);
   const store = useContext(StoreContext);
   const treeFocused = useContext(TreeFocusedContext);

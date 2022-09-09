@@ -18,7 +18,7 @@ import styles from './UnsupportedVersionDialog.css';
 
 type DAILOG_STATE = 'dialog-not-shown' | 'show-dialog' | 'dialog-shown';
 
-export default function UnsupportedVersionDialog(_: {||}) {
+export default function UnsupportedVersionDialog(_: {}) {
   const {dispatch} = useContext(ModalDialogContext);
   const store = useContext(StoreContext);
   const [state, setState] = useState<DAILOG_STATE>('dialog-not-shown');
@@ -54,7 +54,7 @@ export default function UnsupportedVersionDialog(_: {||}) {
   return null;
 }
 
-function DialogContent(_: {||}) {
+function DialogContent(_: {}) {
   return (
     <Fragment>
       <div className={styles.Row}>

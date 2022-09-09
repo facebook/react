@@ -40,14 +40,14 @@ import {
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 
-export type Family = {|
+export type Family = {
   current: any,
-|};
+};
 
-export type RefreshUpdate = {|
+export type RefreshUpdate = {
   staleFamilies: Set<Family>,
   updatedFamilies: Set<Family>,
-|};
+};
 
 // Resolves type to a family.
 type RefreshHandler = any => Family | void;

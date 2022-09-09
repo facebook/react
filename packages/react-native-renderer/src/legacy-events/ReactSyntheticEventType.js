@@ -11,27 +11,27 @@
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {TopLevelType} from './TopLevelEventTypes';
 
-export type DispatchConfig = {|
+export type DispatchConfig = {
   dependencies?: Array<TopLevelType>,
-  phasedRegistrationNames: {|
+  phasedRegistrationNames: {
     bubbled: null | string,
     captured: null | string,
     skipBubbling?: ?boolean,
-  |},
+  },
   registrationName?: string,
-|};
+};
 
-export type CustomDispatchConfig = {|
-  phasedRegistrationNames: {|
+export type CustomDispatchConfig = {
+  phasedRegistrationNames: {
     bubbled: null,
     captured: null,
     skipBubbling?: ?boolean,
-  |},
+  },
   registrationName?: string,
   customEvent: true,
-|};
+};
 
-export type ReactSyntheticEvent = {|
+export type ReactSyntheticEvent = {
   dispatchConfig: DispatchConfig | CustomDispatchConfig,
   getPooled: (
     dispatchConfig: DispatchConfig | CustomDispatchConfig,
@@ -46,4 +46,4 @@ export type ReactSyntheticEvent = {|
   _targetInst: Fiber,
   type: string,
   currentTarget: null | EventTarget,
-|};
+};

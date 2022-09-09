@@ -45,11 +45,11 @@ export function getCommitTree({
   commitIndex,
   profilerStore,
   rootID,
-}: {|
+}: {
   commitIndex: number,
   profilerStore: ProfilerStore,
   rootID: number,
-|}): CommitTree {
+}): CommitTree {
   if (!rootToCommitTreeMap.has(rootID)) {
     rootToCommitTreeMap.set(rootID, []);
   }

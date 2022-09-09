@@ -16,21 +16,21 @@ import type {
   MixedSourceMap,
 } from './SourceMapTypes';
 
-type SearchPosition = {|
+type SearchPosition = {
   columnNumber: number,
   lineNumber: number,
-|};
+};
 
-type ResultPosition = {|
+type ResultPosition = {
   column: number,
   line: number,
   sourceContent: string,
   sourceURL: string,
-|};
+};
 
-export type SourceMapConsumerType = {|
+export type SourceMapConsumerType = {
   originalPositionFor: SearchPosition => ResultPosition,
-|};
+};
 
 type Mappings = Array<Array<Array<number>>>;
 
@@ -138,14 +138,14 @@ function BasicSourceMapConsumer(sourceMapJSON: BasicSourceMap) {
   }: any): SourceMapConsumerType);
 }
 
-type Section = {|
+type Section = {
   +generatedColumn: number,
   +generatedLine: number,
   +map: MixedSourceMap,
 
   // Lazily parsed only when/as the section is needed.
   sourceMapConsumer: SourceMapConsumerType | null,
-|};
+};
 
 function IndexedSourceMapConsumer(sourceMapJSON: IndexSourceMap) {
   let lastOffset = {

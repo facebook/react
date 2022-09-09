@@ -42,21 +42,21 @@ class ClientReferenceDependency extends ModuleDependency {
 const clientImportName = 'react-server-dom-webpack';
 const clientFileName = require.resolve('../');
 
-type ClientReferenceSearchPath = {|
+type ClientReferenceSearchPath = {
   directory: string,
   recursive?: boolean,
   include: RegExp,
   exclude?: RegExp,
-|};
+};
 
 type ClientReferencePath = string | ClientReferenceSearchPath;
 
-type Options = {|
+type Options = {
   isServer: boolean,
   clientReferences?: ClientReferencePath | $ReadOnlyArray<ClientReferencePath>,
   chunkName?: string,
   manifestFilename?: string,
-|};
+};
 
 const PLUGIN_NAME = 'React Server Plugin';
 

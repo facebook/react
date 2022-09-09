@@ -11,7 +11,7 @@ import * as React from 'react';
 
 import styles from './ChartNode.css';
 
-type Props = {|
+type Props = {
   color: string,
   height: number,
   isDimmed?: boolean,
@@ -25,7 +25,7 @@ type Props = {|
   width: number,
   x: number,
   y: number,
-|};
+};
 
 const minWidthToDisplay = 35;
 

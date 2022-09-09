@@ -18,7 +18,7 @@ type OverrideNameFn = (
   newName: Array<string | number>,
 ) => void;
 
-type EditableNameProps = {|
+type EditableNameProps = {
   allowEmpty?: boolean,
   allowWhiteSpace?: boolean,
   autoFocus?: boolean,
@@ -27,7 +27,7 @@ type EditableNameProps = {|
   overrideName: OverrideNameFn,
   path: Array<string | number>,
   type: Type,
-|};
+};
 
 export default function EditableName({
   allowEmpty = false,

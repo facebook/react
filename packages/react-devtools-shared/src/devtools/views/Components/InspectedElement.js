@@ -28,7 +28,7 @@ import styles from './InspectedElement.css';
 
 import type {InspectedElement} from './types';
 
-export type Props = {||};
+export type Props = {};
 
 // TODO Make edits and deletes also use transition API!
 

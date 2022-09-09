@@ -18,7 +18,7 @@ import {StoreContext} from '../context';
 
 import styles from './SnapshotSelector.css';
 
-export type Props = {||};
+export type Props = {};
 
 export default function SnapshotSelector(_: Props) {
   const {

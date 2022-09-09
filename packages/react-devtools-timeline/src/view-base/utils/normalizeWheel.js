@@ -9,10 +9,10 @@
 
 // Adapted from: https://github.com/facebookarchive/fixed-data-table/blob/main/src/vendor_upstream/dom/normalizeWheel.js
 
-export type NormalizedWheelDelta = {|
+export type NormalizedWheelDelta = {
   deltaX: number,
   deltaY: number,
-|};
+};
 
 // Reasonable defaults
 const LINE_HEIGHT = 40;

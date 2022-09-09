@@ -18,12 +18,12 @@ import {
   abort,
 } from 'react-server/src/ReactFlightServer';
 
-type Options = {|
+type Options = {
   identifierPrefix?: string,
   signal?: AbortSignal,
   context?: Array<[string, ServerContextJSONValue]>,
   onError?: (error: mixed) => void,
-|};
+};
 
 function renderToReadableStream(
   model: ReactModel,

@@ -105,10 +105,10 @@ const scriptRegex = /(<\/|<)(s)(cript)/gi;
 const scriptReplacer = (match, prefix, s, suffix) =>
   `${prefix}${s === 's' ? '\\u0073' : '\\u0053'}${suffix}`;
 
-export type BootstrapScriptDescriptor = {|
+export type BootstrapScriptDescriptor = {
   src: string,
   integrity?: string,
-|};
+};
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(
   identifierPrefix: string | void,
@@ -203,10 +203,10 @@ const HTML_COLGROUP_MODE = 7;
 type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 // Lets us keep track of contextual state and pick it back up after suspending.
-export type FormatContext = {|
+export type FormatContext = {
   insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
-|};
+};
 
 function createFormatContext(
   insertionMode: InsertionMode,

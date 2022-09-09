@@ -25,9 +25,9 @@ import {
 
 import {Readable} from 'stream';
 
-type ServerOptions = {|
+type ServerOptions = {
   identifierPrefix?: string,
-|};
+};
 
 class ReactMarkupReadableStream extends Readable {
   request: Request;

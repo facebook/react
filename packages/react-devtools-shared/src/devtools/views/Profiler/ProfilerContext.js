@@ -22,7 +22,7 @@ import type {ProfilingDataFrontend} from './types';
 
 export type TabID = 'flame-chart' | 'ranked-chart' | 'timeline';
 
-export type Context = {|
+export type Context = {
   // Which tab is selected in the Profiler UI?
   selectedTabID: TabID,
   selectTab(id: TabID): void,
@@ -65,22 +65,22 @@ export type Context = {|
   selectedFiberID: number | null,
   selectedFiberName: string | null,
   selectFiber: (id: number | null, name: string | null) => void,
-|};
+};
 
 const ProfilerContext = createContext<Context>(((null: any): Context));
 ProfilerContext.displayName = 'ProfilerContext';
 
-type StoreProfilingState = {|
+type StoreProfilingState = {
   didRecordCommits: boolean,
   isProcessingData: boolean,
   isProfiling: boolean,
   profilingData: ProfilingDataFrontend | null,
   supportsProfiling: boolean,
-|};
+};
 
-type Props = {|
+type Props = {
   children: React$Node,
-|};
+};
 
 function ProfilerContextController({children}: Props) {
   const store = useContext(StoreContext);

@@ -12,13 +12,13 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import styles from './shared.css';
 
-type Props = {|
+type Props = {
   callStack: string | null,
   children: React$Node,
   componentStack: string | null,
   dismissError: Function | null,
   errorMessage: string | null,
-|};
+};
 
 export default function ErrorView({
   callStack,

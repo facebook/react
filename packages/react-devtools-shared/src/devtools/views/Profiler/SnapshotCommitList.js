@@ -20,7 +20,7 @@ import Tooltip from './Tooltip';
 
 import styles from './SnapshotCommitList.css';
 
-export type ItemData = {|
+export type ItemData = {
   commitTimes: Array<number>,
   filteredCommitIndices: Array<number>,
   maxDuration: number,
@@ -30,9 +30,9 @@ export type ItemData = {|
   setHoveredCommitIndex: (index: number) => void,
   startCommitDrag: (newDragState: DragState) => void,
   totalDurations: Array<number>,
-|};
+};
 
-type Props = {|
+type Props = {
   commitData: CommitDataFrontend,
   commitTimes: Array<number>,
   filteredCommitIndices: Array<number>,
@@ -40,7 +40,7 @@ type Props = {|
   selectedFilteredCommitIndex: number | null,
   selectCommitIndex: (index: number) => void,
   totalDurations: Array<number>,
-|};
+};
 
 export default function SnapshotCommitList({
   commitData,
@@ -70,7 +70,7 @@ export default function SnapshotCommitList({
   );
 }
 
-type ListProps = {|
+type ListProps = {
   commitData: CommitDataFrontend,
   commitTimes: Array<number>,
   height: number,
@@ -80,13 +80,13 @@ type ListProps = {|
   selectCommitIndex: (index: number) => void,
   totalDurations: Array<number>,
   width: number,
-|};
+};
 
-type DragState = {|
+type DragState = {
   commitIndex: number,
   left: number,
   sizeIncrement: number,
-|};
+};
 
 function List({
   commitData,

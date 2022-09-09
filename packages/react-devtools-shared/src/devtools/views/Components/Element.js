@@ -64,10 +64,10 @@ export default function Element({data, index, style}: Props) {
     }),
     [store, element],
   );
-  const {errorCount, warningCount} = useSubscription<{|
+  const {errorCount, warningCount} = useSubscription<{
     errorCount: number,
     warningCount: number,
-  |}>(errorsAndWarningsSubscription);
+  }>(errorsAndWarningsSubscription);
 
   const handleDoubleClick = () => {
     if (id !== null) {
@@ -225,10 +225,10 @@ const swallowDoubleClick = event => {
   event.stopPropagation();
 };
 
-type ExpandCollapseToggleProps = {|
+type ExpandCollapseToggleProps = {
   element: ElementType,
   store: Store,
-|};
+};
 
 function ExpandCollapseToggle({element, store}: ExpandCollapseToggleProps) {
   const {children, id, isCollapsed} = element;
@@ -260,10 +260,10 @@ function ExpandCollapseToggle({element, store}: ExpandCollapseToggleProps) {
   );
 }
 
-type DisplayNameProps = {|
+type DisplayNameProps = {
   displayName: string | null,
   id: number,
-|};
+};
 
 function DisplayName({displayName, id}: DisplayNameProps) {
   const {searchIndex, searchResults, searchText} = useContext(TreeStateContext);

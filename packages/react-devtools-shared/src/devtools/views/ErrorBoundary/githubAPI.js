@@ -7,10 +7,10 @@
  * @flow
  */
 
-export type GitHubIssue = {|
+export type GitHubIssue = {
   title: string,
   url: string,
-|};
+};
 
 const GITHUB_ISSUES_API = 'https://api.github.com/search/issues';
 

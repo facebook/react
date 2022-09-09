@@ -7,9 +7,9 @@
  * @flow
  */
 
-export type Point = $ReadOnly<{|x: number, y: number|}>;
-export type Size = $ReadOnly<{|width: number, height: number|}>;
-export type IntrinsicSize = {|
+export type Point = $ReadOnly<{x: number, y: number}>;
+export type Size = $ReadOnly<{width: number, height: number}>;
+export type IntrinsicSize = {
   ...Size,
 
   // If content is this height or less, hide the scrollbar entirely,
@@ -18,8 +18,8 @@ export type IntrinsicSize = {|
 
   // The initial height should be the height of the content, or this, whichever is less.
   maxInitialHeight?: number,
-|};
-export type Rect = $ReadOnly<{|origin: Point, size: Size|}>;
+};
+export type Rect = $ReadOnly<{origin: Point, size: Size}>;
 
 /**
  * Alternative representation of `Rect`.

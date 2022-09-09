@@ -13,7 +13,7 @@ import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 
 import SearchInput from '../SearchInput';
 
-type Props = {||};
+type Props = {};
 
 export default function ComponentSearchInput(props: Props) {
   const {searchIndex, searchResults, searchText} = useContext(TreeStateContext);

@@ -41,15 +41,15 @@ import {logEvent} from 'react-devtools-shared/src/Logger';
 // Never indent more than this number of pixels (even if we have the room).
 const DEFAULT_INDENTATION_SIZE = 12;
 
-export type ItemData = {|
+export type ItemData = {
   numElements: number,
   isNavigatingWithKeyboard: boolean,
   lastScrolledIDRef: {current: number | null, ...},
   onElementMouseEnter: (id: number) => void,
   treeFocused: boolean,
-|};
+};
 
-type Props = {||};
+type Props = {};
 
 export default function Tree(props: Props) {
   const dispatch = useContext(TreeDispatcherContext);
@@ -473,8 +473,8 @@ export default function Tree(props: Props) {
 function updateIndentationSizeVar(
   innerDiv: HTMLDivElement,
   cachedChildWidths: WeakMap<HTMLElement, number>,
-  indentationSizeRef: {|current: number|},
-  prevListWidthRef: {|current: number|},
+  indentationSizeRef: {current: number},
+  prevListWidthRef: {current: number},
 ): void {
   const list = ((innerDiv.parentElement: any): HTMLDivElement);
   const listWidth = list.clientWidth;

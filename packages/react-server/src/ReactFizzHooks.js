@@ -43,21 +43,21 @@ import is from 'shared/objectIs';
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
-type Update<A> = {|
+type Update<A> = {
   action: A,
   next: Update<A> | null,
-|};
+};
 
-type UpdateQueue<A> = {|
+type UpdateQueue<A> = {
   last: Update<A> | null,
   dispatch: any,
-|};
+};
 
-type Hook = {|
+type Hook = {
   memoizedState: any,
   queue: UpdateQueue<any> | null,
   next: Hook | null,
-|};
+};
 
 let currentlyRenderingComponent: Object | null = null;
 let currentlyRenderingTask: Task | null = null;
@@ -416,7 +416,7 @@ function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
   return nextValue;
 }
 
-function useRef<T>(initialValue: T): {|current: T|} {
+function useRef<T>(initialValue: T): {current: T} {
   currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
   workInProgressHook = createWorkInProgressHook();
   const previousRef = workInProgressHook.memoizedState;

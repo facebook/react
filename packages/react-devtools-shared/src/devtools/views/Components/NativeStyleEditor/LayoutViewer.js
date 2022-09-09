@@ -12,10 +12,10 @@ import styles from './LayoutViewer.css';
 
 import type {Layout} from './types';
 
-type Props = {|
+type Props = {
   id: number,
   layout: Layout,
-|};
+};
 
 export default function LayoutViewer({id, layout}: Props) {
   const {height, margin, padding, y, width, x} = layout;

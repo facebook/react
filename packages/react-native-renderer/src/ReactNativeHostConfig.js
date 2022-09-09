@@ -35,16 +35,16 @@ export type Instance = ReactNativeFiberHostComponent;
 export type TextInstance = number;
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = Instance;
-export type HostContext = $ReadOnly<{|
+export type HostContext = $ReadOnly<{
   isInAParentText: boolean,
-|}>;
+}>;
 export type UpdatePayload = Object; // Unused
 export type ChildSet = void; // Unused
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
-export type RendererInspectionConfig = $ReadOnly<{|
+export type RendererInspectionConfig = $ReadOnly<{
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
   getInspectorDataForViewTag?: (tag: number) => Object,
   getInspectorDataForViewAtPoint?: (
@@ -53,7 +53,7 @@ export type RendererInspectionConfig = $ReadOnly<{|
     locationY: number,
     callback: (viewData: TouchedViewDataAtPoint) => mixed,
   ) => void,
-|}>;
+}>;
 
 const UPDATE_SIGNAL = {};
 if (__DEV__) {

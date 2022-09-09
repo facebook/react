@@ -125,7 +125,7 @@ import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
 
 import assign from 'shared/assign';
 
-export type Update<State> = {|
+export type Update<State> = {
   // TODO: Temporary field. Will remove this by storing a map of
   // transition -> event time on the root.
   eventTime: number,
@@ -136,21 +136,21 @@ export type Update<State> = {|
   callback: (() => mixed) | null,
 
   next: Update<State> | null,
-|};
+};
 
-export type SharedQueue<State> = {|
+export type SharedQueue<State> = {
   pending: Update<State> | null,
   lanes: Lanes,
   hiddenCallbacks: Array<() => mixed> | null,
-|};
+};
 
-export type UpdateQueue<State> = {|
+export type UpdateQueue<State> = {
   baseState: State,
   firstBaseUpdate: Update<State> | null,
   lastBaseUpdate: Update<State> | null,
   shared: SharedQueue<State>,
   callbacks: Array<() => mixed> | null,
-|};
+};
 
 export const UpdateState = 0;
 export const ReplaceState = 1;

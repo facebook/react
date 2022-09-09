@@ -35,10 +35,10 @@ export type MeasureLayoutOnSuccessCallback = (
 
 export type AttributeType<T, V> =
   | true
-  | $ReadOnly<{|
+  | $ReadOnly<{
       diff?: (arg1: T, arg2: T) => boolean,
       process?: (arg1: V) => T,
-    |}>;
+    }>;
 
 // We either force that `diff` and `process` always use mixed,
 // or we allow them to define specific types and use this hack
@@ -62,40 +62,40 @@ export type PartialAttributeConfiguration = $ReadOnly<{
   ...
 }>;
 
-export type ViewConfig = $ReadOnly<{|
+export type ViewConfig = $ReadOnly<{
   Commands?: $ReadOnly<{[commandName: string]: number, ...}>,
   Constants?: $ReadOnly<{[name: string]: mixed, ...}>,
   Manager?: string,
   NativeProps?: $ReadOnly<{[propName: string]: string, ...}>,
   baseModuleName?: ?string,
   bubblingEventTypes?: $ReadOnly<{
-    [eventName: string]: $ReadOnly<{|
-      phasedRegistrationNames: $ReadOnly<{|
+    [eventName: string]: $ReadOnly<{
+      phasedRegistrationNames: $ReadOnly<{
         captured: string,
         bubbled: string,
         skipBubbling?: ?boolean,
-      |}>,
-    |}>,
+      }>,
+    }>,
     ...,
   }>,
   directEventTypes?: $ReadOnly<{
-    [eventName: string]: $ReadOnly<{|
+    [eventName: string]: $ReadOnly<{
       registrationName: string,
-    |}>,
+    }>,
     ...,
   }>,
   uiViewClassName: string,
   validAttributes: AttributeConfiguration,
-|}>;
+}>;
 
-export type PartialViewConfig = $ReadOnly<{|
+export type PartialViewConfig = $ReadOnly<{
   bubblingEventTypes?: $PropertyType<ViewConfig, 'bubblingEventTypes'>,
   directEventTypes?: $PropertyType<ViewConfig, 'directEventTypes'>,
   uiViewClassName: string,
   validAttributes?: PartialAttributeConfiguration,
-|}>;
+}>;
 
-export type NativeMethods = $ReadOnly<{|
+export type NativeMethods = $ReadOnly<{
   blur(): void,
   focus(): void,
   measure(callback: MeasureOnSuccessCallback): void,
@@ -106,7 +106,7 @@ export type NativeMethods = $ReadOnly<{|
     onFail?: () => void,
   ): void,
   setNativeProps(nativeProps: {...}): void,
-|}>;
+}>;
 
 export type HostComponent<T> = AbstractComponent<T, $ReadOnly<NativeMethods>>;
 
@@ -122,43 +122,43 @@ type InspectorDataProps = $ReadOnly<{
   ...,
 }>;
 
-type InspectorDataSource = $ReadOnly<{|
+type InspectorDataSource = $ReadOnly<{
   fileName?: string,
   lineNumber?: number,
-|}>;
+}>;
 
 type InspectorDataGetter = (
   <TElementType: ElementType>(
     componentOrHandle: ElementRef<TElementType> | number,
   ) => ?number,
-) => $ReadOnly<{|
+) => $ReadOnly<{
   measure: (callback: MeasureOnSuccessCallback) => void,
   props: InspectorDataProps,
   source: InspectorDataSource,
-|}>;
+}>;
 
-export type InspectorData = $ReadOnly<{|
-  hierarchy: Array<{|
+export type InspectorData = $ReadOnly<{
+  hierarchy: Array<{
     name: ?string,
     getInspectorData: InspectorDataGetter,
-  |}>,
+  }>,
   selectedIndex: ?number,
   props: InspectorDataProps,
   source: ?InspectorDataSource,
-|}>;
+}>;
 
-export type TouchedViewDataAtPoint = $ReadOnly<{|
+export type TouchedViewDataAtPoint = $ReadOnly<{
   pointerY: number,
   touchedViewTag?: number,
   closestInstance?: mixed,
-  frame: $ReadOnly<{|
+  frame: $ReadOnly<{
     top: number,
     left: number,
     width: number,
     height: number,
-  |}>,
+  }>,
   ...InspectorData,
-|}>;
+}>;
 
 /**
  * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
@@ -268,18 +268,18 @@ export type LayoutAnimationProperty =
   | 'scaleY'
   | 'scaleXY';
 
-export type LayoutAnimationAnimationConfig = $ReadOnly<{|
+export type LayoutAnimationAnimationConfig = $ReadOnly<{
   duration?: number,
   delay?: number,
   springDamping?: number,
   initialVelocity?: number,
   type?: LayoutAnimationType,
   property?: LayoutAnimationProperty,
-|}>;
+}>;
 
-export type LayoutAnimationConfig = $ReadOnly<{|
+export type LayoutAnimationConfig = $ReadOnly<{
   duration: number,
   create?: LayoutAnimationAnimationConfig,
   update?: LayoutAnimationAnimationConfig,
   delete?: LayoutAnimationAnimationConfig,
-|}>;
+}>;

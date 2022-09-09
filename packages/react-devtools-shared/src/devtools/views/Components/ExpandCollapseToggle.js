@@ -13,11 +13,11 @@ import ButtonIcon from '../ButtonIcon';
 
 import styles from './ExpandCollapseToggle.css';
 
-type ExpandCollapseToggleProps = {|
+type ExpandCollapseToggleProps = {
   disabled: boolean,
   isOpen: boolean,
   setIsOpen: Function,
-|};
+};
 
 export default function ExpandCollapseToggle({
   disabled,

@@ -27,7 +27,7 @@ import type {
 } from './types';
 import type {RefObject} from 'shared/ReactTypes';
 
-export type Context = {|
+export type Context = {
   file: File | null,
   inMemoryTimelineData: Array<TimelineData> | null,
   isTimelineSupported: boolean,
@@ -36,14 +36,14 @@ export type Context = {|
   viewState: ViewState,
   selectEvent: ReactEventInfo => void,
   selectedEvent: ReactEventInfo,
-|};
+};
 
 const TimelineContext = createContext<Context>(((null: any): Context));
 TimelineContext.displayName = 'TimelineContext';
 
-type Props = {|
+type Props = {
   children: React$Node,
-|};
+};
 
 function TimelineContextController({children}: Props) {
   const searchInputContainerRef = useRef(null);

@@ -16,12 +16,12 @@ const {
   unstable_IdlePriority: IdlePriority,
 } = Scheduler;
 
-type Entry<T> = {|
+type Entry<T> = {
   value: T,
   onDelete: () => mixed,
   previous: Entry<T>,
   next: Entry<T>,
-|};
+};
 
 export function createLRU<T>(limit: number) {
   let LIMIT = limit;

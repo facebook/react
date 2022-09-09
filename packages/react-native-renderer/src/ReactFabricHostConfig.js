@@ -75,15 +75,15 @@ export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactFabricHostComponent;
 export type Container = number;
 export type ChildSet = Object;
-export type HostContext = $ReadOnly<{|
+export type HostContext = $ReadOnly<{
   isInAParentText: boolean,
-|}>;
+}>;
 export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
-export type RendererInspectionConfig = $ReadOnly<{|
+export type RendererInspectionConfig = $ReadOnly<{
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
   getInspectorDataForViewTag?: (tag: number) => Object,
   getInspectorDataForViewAtPoint?: (
@@ -92,29 +92,29 @@ export type RendererInspectionConfig = $ReadOnly<{|
     locationY: number,
     callback: (viewData: TouchedViewDataAtPoint) => mixed,
   ) => void,
-|}>;
+}>;
 
 // TODO?: find a better place for this type to live
-export type EventListenerOptions = $ReadOnly<{|
+export type EventListenerOptions = $ReadOnly<{
   capture?: boolean,
   once?: boolean,
   passive?: boolean,
   signal: mixed, // not yet implemented
-|}>;
-export type EventListenerRemoveOptions = $ReadOnly<{|
+}>;
+export type EventListenerRemoveOptions = $ReadOnly<{
   capture?: boolean,
-|}>;
+}>;
 
 // TODO?: this will be changed in the future to be w3c-compatible and allow "EventListener" objects as well as functions.
 export type EventListener = Function;
 
-type InternalEventListeners = {|
-  [string]: {|
+type InternalEventListeners = {
+  [string]: {
     listener: EventListener,
     options: EventListenerOptions,
     invalidated: boolean,
-  |}[],
-|};
+  }[],
+};
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {

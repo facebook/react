@@ -16,10 +16,10 @@ import {ProfilerContext} from './ProfilerContext';
 import styles from './Updaters.css';
 import {ElementTypeRoot} from '../../../types';
 
-export type Props = {|
+export type Props = {
   commitTree: CommitTree,
   updaters: Array<SerializedElement>,
-|};
+};
 
 export default function Updaters({commitTree, updaters}: Props) {
   const {selectFiber} = useContext(ProfilerContext);

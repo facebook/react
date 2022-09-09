@@ -10,7 +10,7 @@
 import type {Rect} from './geometry';
 import type {View} from './View';
 
-export type LayoutInfo = {|view: View, frame: Rect|};
+export type LayoutInfo = {view: View, frame: Rect};
 export type Layout = LayoutInfo[];
 
 /**

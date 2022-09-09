@@ -15,9 +15,9 @@ import {
   renderToStaticNodeStream,
 } from './ReactDOMLegacyServerNodeStream';
 
-type ServerOptions = {|
+type ServerOptions = {
   identifierPrefix?: string,
-|};
+};
 
 function renderToString(
   children: ReactNodeList,

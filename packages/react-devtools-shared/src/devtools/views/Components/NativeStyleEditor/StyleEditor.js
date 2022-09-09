@@ -24,10 +24,10 @@ import {sanitizeForParse} from '../../../utils';
 
 import type {Style} from './types';
 
-type Props = {|
+type Props = {
   id: number,
   style: Style,
-|};
+};
 
 type ChangeAttributeFn = (oldName: string, newName: string, value: any) => void;
 type ChangeValueFn = (name: string, value: any) => void;
@@ -96,11 +96,11 @@ export default function StyleEditor({id, style}: Props) {
   );
 }
 
-type NewRowProps = {|
+type NewRowProps = {
   changeAttribute: ChangeAttributeFn,
   changeValue: ChangeValueFn,
   validAttributes: $ReadOnlyArray<string> | null,
-|};
+};
 
 function NewRow({changeAttribute, changeValue, validAttributes}: NewRowProps) {
   const [key, setKey] = useState<number>(0);
@@ -141,7 +141,7 @@ function NewRow({changeAttribute, changeValue, validAttributes}: NewRowProps) {
   );
 }
 
-type RowProps = {|
+type RowProps = {
   attribute: string,
   attributePlaceholder?: string,
   changeAttribute: ChangeAttributeFn,
@@ -149,7 +149,7 @@ type RowProps = {|
   validAttributes: $ReadOnlyArray<string> | null,
   value: any,
   valuePlaceholder?: string,
-|};
+};
 
 function Row({
   attribute,
@@ -245,14 +245,14 @@ function Row({
   );
 }
 
-type FieldProps = {|
+type FieldProps = {
   className: string,
   onChange: (value: any) => void,
   onReset: () => void,
   onSubmit: () => void,
   placeholder?: string,
   value: any,
-|};
+};
 
 function Field({
   className,

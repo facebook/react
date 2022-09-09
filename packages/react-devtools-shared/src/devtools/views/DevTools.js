@@ -67,7 +67,7 @@ export type CanViewElementSource = (
   inspectedElement: InspectedElement,
 ) => boolean;
 
-export type Props = {|
+export type Props = {
   bridge: FrontendBridge,
   browserTheme?: BrowserTheme,
   canViewElementSourceFunction?: ?CanViewElementSource,
@@ -105,7 +105,7 @@ export type Props = {|
   fetchFileWithCaching?: ?FetchFileWithCaching,
   // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
   hookNamesModuleLoaderFunction?: ?HookNamesModuleLoaderFunction,
-|};
+};
 
 const componentsTab = {
   id: ('components': TabID),

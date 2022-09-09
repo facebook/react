@@ -64,10 +64,10 @@ import {getIsHydrating} from './ReactFiberHydrationContext.old';
 import {clz32} from './clz32';
 import {Forked, NoFlags} from './ReactFiberFlags';
 
-export type TreeContext = {|
+export type TreeContext = {
   id: number,
   overflow: string,
-|};
+};
 
 // TODO: Use the unified fiber stack module instead of this local one?
 // Intentionally not using it yet to derisk the initial implementation, because

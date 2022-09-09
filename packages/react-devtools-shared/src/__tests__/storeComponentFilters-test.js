@@ -51,7 +51,7 @@ describe('Store component filters', () => {
 
   // @reactVersion >= 16.0
   it('should support filtering by element type', () => {
-    class ClassComponent extends React.Component<{|children: React$Node|}> {
+    class ClassComponent extends React.Component<{children: React$Node}> {
       render() {
         return <div>{this.props.children}</div>;
       }
