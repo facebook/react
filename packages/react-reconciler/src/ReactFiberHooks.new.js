@@ -232,7 +232,6 @@ let ignorePreviousDependencies: boolean = false;
 function mountHookTypesDev() {
   if (__DEV__) {
     const hookName = ((currentHookNameInDev: any): HookType);
-
     if (hookTypesDev === null) {
       hookTypesDev = [hookName];
     } else {
@@ -269,7 +268,7 @@ function checkDepsAreArrayDev(deps: mixed) {
   }
 }
 
-function warnOnHookMismatchInDev(currentHookName: HookType) {
+function warnOnHookMismatchInDev(currentHookName: ?HookType) {
   if (__DEV__) {
     const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
     if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
@@ -280,12 +279,18 @@ function warnOnHookMismatchInDev(currentHookName: HookType) {
 
         const secondColumnStart = 30;
 
-        for (let i = 0; i <= ((hookTypesUpdateIndexDev: any): number); i++) {
+        const endIndex =
+          hookTypesUpdateIndexDev < 0
+            ? hookTypesDev.length - 1
+            : hookTypesUpdateIndexDev;
+        for (let i = 0; i <= endIndex; i++) {
           const oldHookName = hookTypesDev[i];
           const newHookName =
-            i === ((hookTypesUpdateIndexDev: any): number)
+            (hookTypesUpdateIndexDev < 0
+              ? null
+              : i === ((hookTypesUpdateIndexDev: any): number)
               ? currentHookName
-              : oldHookName;
+              : oldHookName) ?? undefined;
 
           let row = `${i + 1}. ${oldHookName}`;
 
@@ -416,7 +421,10 @@ export function renderWithHooks<Props, SecondArg>(
   // Non-stateful hooks (e.g. context) don't get added to memoizedState,
   // so memoizedState would be null during updates and mounts.
   if (__DEV__) {
-    if (current !== null && current.memoizedState !== null) {
+    if (
+      current !== null &&
+      (current.mode & ConcurrentMode || current.memoizedState !== null)
+    ) {
       ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
     } else if (hookTypesDev !== null) {
       // This dispatcher handles an edge case where a component is updating,
@@ -430,7 +438,9 @@ export function renderWithHooks<Props, SecondArg>(
     }
   } else {
     ReactCurrentDispatcher.current =
-      current === null || current.memoizedState === null
+      current === null ||
+      ((current.mode & ConcurrentMode) === NoMode &&
+        current.memoizedState === null)
         ? HooksDispatcherOnMount
         : HooksDispatcherOnUpdate;
   }
@@ -485,7 +495,14 @@ export function renderWithHooks<Props, SecondArg>(
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
   if (__DEV__) {
-    workInProgress._debugHookTypes = hookTypesDev;
+    workInProgress._debugHookTypes = hookTypesDev ?? [];
+
+    if (hookTypesDev !== null) {
+      if (currentHookNameInDev == null && hookTypesDev.length) {
+        // Renders no hook from some hooks
+        warnOnHookMismatchInDev(null);
+      }
+    }
   }
 
   // This check uses currentHook so that it works the same in DEV and prod bundles.
