@@ -9,6 +9,8 @@
 
 /* eslint valid-typeof: 0 */
 
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+
 import assign from 'shared/assign';
 import getEventCharCode from './getEventCharCode';
 
@@ -44,7 +46,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
   function SyntheticBaseEvent(
     reactName: string | null,
     reactEventType: string,
-    targetInst: Fiber,
+    targetInst: Fiber | null,
     nativeEvent: {[propName: string]: mixed, ...},
     nativeEventTarget: null | EventTarget,
   ) {

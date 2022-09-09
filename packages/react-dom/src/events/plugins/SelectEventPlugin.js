@@ -11,6 +11,8 @@ import type {AnyNativeEvent} from '../PluginModuleType';
 import type {DOMEventName} from '../DOMEventNames';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {ReactSyntheticEvent} from '../ReactSyntheticEventType';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {SyntheticEvent} from '../../events/SyntheticEvent';
@@ -114,7 +116,8 @@ function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
       'onSelect',
     );
     if (listeners.length > 0) {
-      const event = new SyntheticEvent(
+      // $FlowFixMe[incompatible-type]
+      const event: ReactSyntheticEvent = new SyntheticEvent(
         'onSelect',
         'select',
         null,

@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+
 export type ReactNode =
   | React$Element<any>
   | ReactPortal
