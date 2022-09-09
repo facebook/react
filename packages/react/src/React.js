@@ -97,7 +97,7 @@ export {
   useCallback,
   useContext,
   useEffect,
-  useEvent,
+  useEvent as experimental_useEvent,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,

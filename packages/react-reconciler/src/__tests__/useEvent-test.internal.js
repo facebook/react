@@ -29,12 +29,9 @@ describe('useEvent', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
 
-    // const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    // ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-
     act = require('jest-react').act;
     useState = React.useState;
-    useEvent = React.useEvent;
+    useEvent = React.experimental_useEvent;
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;
   });
@@ -48,6 +45,7 @@ describe('useEvent', () => {
     return <span prop={props.text} />;
   }
 
+  // @gate enableUseEventHook
   it('memoizes basic case correctly', () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -115,6 +113,7 @@ describe('useEvent', () => {
     ]);
   });
 
+  // @gate enableUseEventHook
   it('throws when called in render', () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -150,6 +149,7 @@ describe('useEvent', () => {
     expect(Scheduler).toHaveYielded(['Count: 0', 'Count: 0']);
   });
 
+  // @gate enableUseEventHook
   it('useLayoutEffect shouldn’t re-fire when event handlers change', () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -234,6 +234,7 @@ describe('useEvent', () => {
     ]);
   });
 
+  // @gate enableUseEventHook
   it('useEffect shouldn’t re-fire when event handlers change', () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -317,6 +318,7 @@ describe('useEvent', () => {
     ]);
   });
 
+  // @gate enableUseEventHook
   it('is stable in a custom hook', () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {
@@ -406,6 +408,7 @@ describe('useEvent', () => {
     ]);
   });
 
+  // @gate enableUseEventHook
   it('is mutated before all other effects', () => {
     function Counter({value}) {
       useInsertionEffect(() => {

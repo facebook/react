@@ -377,7 +377,7 @@ export type Dispatcher = {
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
-  useEvent<T>(callback: () => T): () => T,
+  useEvent?: <T>(callback: () => T) => () => T,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
