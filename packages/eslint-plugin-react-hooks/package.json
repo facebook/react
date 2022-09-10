@@ -7,10 +7,19 @@
     "url": "https://github.com/facebook/react.git",
     "directory": "packages/eslint-plugin-react-hooks"
   },
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./recommended": "./src/configs/recommended.mjs"
+  },
   "files": [
     "LICENSE",
     "README.md",
     "index.js",
+    "index.mjs",
+    "src",
     "cjs"
   ],
   "keywords": [
