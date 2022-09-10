@@ -619,6 +619,9 @@ describe('ReactFlightDOMBrowser', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     await act(async () => {
+      // Client uses a different renderer.
+      // We reset _currentRenderer here to not trigger a warning about multiple
+      // renderers concurrently using this context
       ContextA._currentRenderer = null;
       root.render(<Client />);
     });

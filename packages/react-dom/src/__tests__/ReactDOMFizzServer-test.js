@@ -5330,6 +5330,9 @@ describe('ReactDOMFizzServer', () => {
       });
       expect(getVisibleChildren(container)).toEqual(['AB', 'C']);
 
+      // Hydration uses a different renderer runtime (Fiber instead of Fizz).
+      // We reset _currentRenderer here to not trigger a warning about multiple
+      // renderers concurrently using these contexts
       ContextA._currentRenderer = null;
       ServerContext._currentRenderer = null;
       ReactDOMClient.hydrateRoot(container, <App />);
