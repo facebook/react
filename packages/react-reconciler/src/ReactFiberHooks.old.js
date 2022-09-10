@@ -36,7 +36,10 @@ import {
   enableUseHook,
   enableUseMemoCacheHook,
 } from 'shared/ReactFeatureFlags';
-import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_CONTEXT_TYPE,
+  REACT_SERVER_CONTEXT_TYPE,
+} from 'shared/ReactSymbols';
 
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
@@ -771,8 +774,8 @@ function use<T>(usable: Usable<T>): T {
         }
       }
     } else if (
-      usable.$$typeof != null &&
-      usable.$$typeof === REACT_CONTEXT_TYPE
+      usable.$$typeof === REACT_CONTEXT_TYPE ||
+      usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
     ) {
       const context: ReactContext<T> = (usable: any);
       return readContext(context);

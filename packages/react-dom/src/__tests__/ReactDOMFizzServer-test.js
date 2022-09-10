@@ -5293,6 +5293,54 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // @gate enableUseHook
+    it('basic use(context)', async () => {
+      const ContextA = React.createContext('default');
+      const ContextB = React.createContext('B');
+      const ServerContext = React.createServerContext(
+        'ServerContext',
+        'default',
+      );
+      function Client() {
+        return use(ContextA) + use(ContextB);
+      }
+      function ServerComponent() {
+        return use(ServerContext);
+      }
+      function Server() {
+        return (
+          <ServerContext.Provider value="C">
+            <ServerComponent />
+          </ServerContext.Provider>
+        );
+      }
+      function App() {
+        return (
+          <>
+            <ContextA.Provider value="A">
+              <Client />
+            </ContextA.Provider>
+            <Server />
+          </>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(getVisibleChildren(container)).toEqual(['AB', 'C']);
+
+      // Hydration uses a different renderer runtime (Fiber instead of Fizz).
+      // We reset _currentRenderer here to not trigger a warning about multiple
+      // renderers concurrently using these contexts
+      ContextA._currentRenderer = null;
+      ServerContext._currentRenderer = null;
+      ReactDOMClient.hydrateRoot(container, <App />);
+      expect(Scheduler).toFlushAndYield([]);
+      expect(getVisibleChildren(container)).toEqual(['AB', 'C']);
+    });
+
+    // @gate enableUseHook
     it('use(promise) in multiple components', async () => {
       const promiseA = Promise.resolve('A');
       const promiseB = Promise.resolve('B');

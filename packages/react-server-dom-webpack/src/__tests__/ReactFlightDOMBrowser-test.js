@@ -595,6 +595,40 @@ describe('ReactFlightDOMBrowser', () => {
   });
 
   // @gate enableUseHook
+  it('basic use(context)', async () => {
+    const ContextA = React.createServerContext('ContextA', '');
+    const ContextB = React.createServerContext('ContextB', 'B');
+
+    function ServerComponent() {
+      return use(ContextA) + use(ContextB);
+    }
+    function Server() {
+      return (
+        <ContextA.Provider value="A">
+          <ServerComponent />
+        </ContextA.Provider>
+      );
+    }
+    const stream = ReactServerDOMWriter.renderToReadableStream(<Server />);
+    const response = ReactServerDOMReader.createFromReadableStream(stream);
+
+    function Client() {
+      return response.readRoot();
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      // Client uses a different renderer.
+      // We reset _currentRenderer here to not trigger a warning about multiple
+      // renderers concurrently using this context
+      ContextA._currentRenderer = null;
+      root.render(<Client />);
+    });
+    expect(container.innerHTML).toBe('AB');
+  });
+
+  // @gate enableUseHook
   it('use(promise) in multiple components', async () => {
     function Child({prefix}) {
       return prefix + use(Promise.resolve('C')) + use(Promise.resolve('D'));
