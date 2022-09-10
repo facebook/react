@@ -56,7 +56,7 @@ env.beforeEach(() => {
   } = require('react-devtools-shared/src/utils');
 
   // Fake timers let us flush Bridge operations between setup and assertions.
-  jest.useFakeTimers('legacy');
+  jest.useFakeTimers({legacyFakeTimers: true});
 
   // Use utils.js#withErrorsOrWarningsIgnored instead of directly mutating this array.
   global._ignoredErrorOrWarningMessages = [];

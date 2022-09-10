@@ -21,7 +21,10 @@ module.exports = {
   roots: ['<rootDir>/packages', '<rootDir>/scripts'],
   collectCoverageFrom: ['packages/**/*.js'],
   // TODO: Use the default `modern` implementation (includes `jest.useFakeTimers()`)
-  timers: 'legacy',
+  fakeTimers: {
+    enableGlobally: true,
+    legacyFakeTimers: true,
+  },
   snapshotSerializers: [require.resolve('jest-snapshot-serializer-raw')],
 
   testSequencer: require.resolve('./jestSequencer'),

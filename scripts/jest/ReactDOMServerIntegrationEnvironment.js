@@ -1,7 +1,7 @@
 'use strict';
 
-const JSDOMEnvironment = require('jest-environment-jsdom');
-const NodeEnvironment = require('jest-environment-node');
+const {TestEnvironment:JSDOMEnvironment} = require('jest-environment-jsdom');
+const {TestEnvironment:NodeEnvironment} = require('jest-environment-node');
 
 /**
  * Test environment for testing integration of react-dom (browser) with react-dom/server (node)
