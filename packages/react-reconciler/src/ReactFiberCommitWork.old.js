@@ -1122,38 +1122,6 @@ function commitLayoutEffectOnFiber(
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
         }
 
-        // TODO: figure out the proper place for this.
-        finishedWork.stateNode.detach = () => {
-          const executionContext = getExecutionContext();
-          if (
-            (executionContext & (RenderContext | CommitContext)) !==
-            NoContext
-          ) {
-            scheduleMicrotask(() => {
-              finishedWork.stateNode._isDetached = true;
-              disappearLayoutEffects(finishedWork);
-              disconnectPassiveEffect(finishedWork);
-            });
-          } else {
-            finishedWork.stateNode._isDetached = true;
-            disappearLayoutEffects(finishedWork);
-            disconnectPassiveEffect(finishedWork);
-          }
-        };
-
-        finishedWork.stateNode.attach = () => {
-          // TODO: does not handle when attach is called from effect or when tree is rendered.
-          finishedWork.stateNode._isDetached = false;
-          reappearLayoutEffects(finishedRoot, null, finishedWork, false);
-          reconnectPassiveEffects(
-            finishedRoot,
-            finishedWork,
-            NoLanes,
-            null,
-            false,
-          );
-        };
-
         if (finishedWork.pendingProps.mode === null) {
           if (flags & Ref) {
             safelyAttachRef(finishedWork, finishedWork.return);
@@ -2292,6 +2260,30 @@ function getRetryCache(finishedWork) {
   }
 }
 
+function attachOffscreenActions(offscreenFiber: Fiber, root: FiberRoot) {
+  offscreenFiber.stateNode.detach = () => {
+    const executionContext = getExecutionContext();
+    if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+      scheduleMicrotask(() => {
+        offscreenFiber.stateNode._isDetached = true;
+        disappearLayoutEffects(offscreenFiber);
+        disconnectPassiveEffect(offscreenFiber);
+      });
+    } else {
+      offscreenFiber.stateNode._isDetached = true;
+      disappearLayoutEffects(offscreenFiber);
+      disconnectPassiveEffect(offscreenFiber);
+    }
+  };
+
+  offscreenFiber.stateNode.attach = () => {
+    // TODO: does not handle when attach is called from effect or when tree is rendered.
+    offscreenFiber.stateNode._isDetached = false;
+    reappearLayoutEffects(root, null, offscreenFiber, false);
+    reconnectPassiveEffects(root, offscreenFiber, NoLanes, null, false);
+  };
+}
+
 function attachSuspenseRetryListeners(
   finishedWork: Fiber,
   wakeables: Set<Wakeable>,
@@ -2670,6 +2662,7 @@ function commitMutationEffectsOnFiber(
       }
 
       commitReconciliationEffects(finishedWork);
+      attachOffscreenActions(finishedWork, root);
 
       if (flags & Visibility) {
         const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
