@@ -7,9 +7,8 @@
  * @emails react-core
  */
 'use strict';
-
+let shallowEqual;
 describe('test shared utils', () => {
-  let shallowEqual;
   beforeEach(() => {
     shallowEqual = require('shared/shallowEqual').default;
   });
