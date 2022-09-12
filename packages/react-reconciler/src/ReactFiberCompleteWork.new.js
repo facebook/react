@@ -662,8 +662,10 @@ function bubbleProperties(completedWork: Fiber) {
         // this value will reflect the amount of time spent working on a previous
         // render. In that case it should not bubble. We determine whether it was
         // cloned by comparing the child pointer.
+        // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
         actualDuration += child.actualDuration;
 
+        // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
         treeBaseDuration += child.treeBaseDuration;
         child = child.sibling;
       }
@@ -712,6 +714,7 @@ function bubbleProperties(completedWork: Fiber) {
         subtreeFlags |= child.subtreeFlags & StaticMask;
         subtreeFlags |= child.flags & StaticMask;
 
+        // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
         treeBaseDuration += child.treeBaseDuration;
         child = child.sibling;
       }
