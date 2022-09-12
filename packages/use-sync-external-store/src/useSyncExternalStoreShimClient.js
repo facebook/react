@@ -128,7 +128,10 @@ export function useSyncExternalStore<T>(
   return value;
 }
 
-function checkIfSnapshotChanged(inst) {
+function checkIfSnapshotChanged<T>(inst: {
+  value: T,
+  getSnapshot: () => T,
+}): boolean {
   const latestGetSnapshot = inst.getSnapshot;
   const prevValue = inst.value;
   try {

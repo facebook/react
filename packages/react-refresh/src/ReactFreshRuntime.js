@@ -654,6 +654,7 @@ export function createSignatureFunctionForTransform() {
         // in HOC chains like _s(hoc1(_s(hoc2(_s(actualFunction))))).
         if (!savedType) {
           // We're in the innermost call, so this is the actual type.
+          // $FlowFixMe[escaped-generic] discovered when updating Flow
           savedType = type;
           hasCustomHooks = typeof getCustomHooks === 'function';
         }

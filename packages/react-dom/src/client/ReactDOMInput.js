@@ -177,6 +177,7 @@ export function updateWrapper(element: Element, props: Object) {
   if (value != null) {
     if (type === 'number') {
       if (
+        // $FlowFixMe[incompatible-type]
         (value === 0 && node.value === '') ||
         // We explicitly want to coerce to number here if possible.
         // eslint-disable-next-line

@@ -160,7 +160,7 @@ export type Effect = {
   tag: HookFlags,
   create: () => (() => void) | void,
   destroy: (() => void) | void,
-  deps: Array<mixed> | null,
+  deps: Array<mixed> | void | null,
   next: Effect,
 };
 
@@ -1539,7 +1539,7 @@ function updateStoreInstance<T>(
   }
 }
 
-function subscribeToStore(fiber, inst, subscribe) {
+function subscribeToStore<T>(fiber, inst: StoreInstance<T>, subscribe) {
   const handleStoreChange = () => {
     // The store changed. Check if the snapshot changed since the last time we
     // read from the store.
@@ -1552,7 +1552,7 @@ function subscribeToStore(fiber, inst, subscribe) {
   return subscribe(handleStoreChange);
 }
 
-function checkIfSnapshotChanged(inst) {
+function checkIfSnapshotChanged<T>(inst: StoreInstance<T>): boolean {
   const latestGetSnapshot = inst.getSnapshot;
   const prevValue = inst.value;
   try {
@@ -1609,7 +1609,7 @@ function rerenderState<S>(
   return rerenderReducer(basicStateReducer, (initialState: any));
 }
 
-function pushEffect(tag, create, destroy, deps) {
+function pushEffect(tag, create, destroy, deps: Array<mixed> | void | null) {
   const effect: Effect = {
     tag,
     create,
@@ -1728,7 +1728,12 @@ function updateRef<T>(initialValue: T): {current: T} {
   return hook.memoizedState;
 }
 
-function mountEffectImpl(fiberFlags, hookFlags, create, deps): void {
+function mountEffectImpl(
+  fiberFlags,
+  hookFlags,
+  create,
+  deps: Array<mixed> | void | null,
+): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   currentlyRenderingFiber.flags |= fiberFlags;
@@ -1740,7 +1745,12 @@ function mountEffectImpl(fiberFlags, hookFlags, create, deps): void {
   );
 }
 
-function updateEffectImpl(fiberFlags, hookFlags, create, deps): void {
+function updateEffectImpl(
+  fiberFlags,
+  hookFlags,
+  create,
+  deps: Array<mixed> | void | null,
+): void {
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   let destroy = undefined;
@@ -2395,7 +2405,7 @@ function entangleTransitionUpdate<S, A>(
   }
 }
 
-function markUpdateInDevTools(fiber, lane, action) {
+function markUpdateInDevTools<A>(fiber, lane, action: A) {
   if (__DEV__) {
     if (enableDebugTracing) {
       if (fiber.mode & DebugTracingMode) {
@@ -2490,6 +2500,7 @@ const HooksDispatcherOnMount: Dispatcher = {
 if (enableCache) {
   (HooksDispatcherOnMount: Dispatcher).getCacheSignal = getCacheSignal;
   (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
+  // $FlowFixMe[escaped-generic] discovered when updating Flow
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
 }
 if (enableUseHook) {

@@ -10,6 +10,7 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
 import type {BootstrapScriptDescriptor} from './ReactDOMServerFormatConfig';
+import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -25,7 +26,7 @@ import {
   createRootFormatContext,
 } from './ReactDOMServerFormatConfig';
 
-function createDrainHandler(destination, request) {
+function createDrainHandler(destination: Destination, request) {
   return () => startFlowing(request, destination);
 }
 
