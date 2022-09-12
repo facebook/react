@@ -9,7 +9,9 @@
 
 import {getHookNamesMappingFromAST} from './astUtils';
 import {encode, decode} from 'sourcemap-codec';
-import {File} from '@babel/types';
+
+// Missing types in @babel/types
+type File = any;
 
 export type HookMap = {
   names: $ReadOnlyArray<string>,
