@@ -2217,6 +2217,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         let actualDuration = completedWork.actualDuration;
         let child = completedWork.child;
         while (child !== null) {
+          // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
           actualDuration += child.actualDuration;
           child = child.sibling;
         }

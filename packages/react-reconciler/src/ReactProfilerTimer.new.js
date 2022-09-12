@@ -122,6 +122,7 @@ function stopProfilerTimerIfRunningAndRecordDelta(
 
   if (profilerStartTime >= 0) {
     const elapsedTime = now() - profilerStartTime;
+    // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
     fiber.actualDuration += elapsedTime;
     if (overrideBaseTime) {
       fiber.selfBaseDuration = elapsedTime;
@@ -215,6 +216,7 @@ function transferActualDuration(fiber: Fiber): void {
   // where we should count the work of multiple passes.
   let child = fiber.child;
   while (child) {
+    // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
     fiber.actualDuration += child.actualDuration;
     child = child.sibling;
   }

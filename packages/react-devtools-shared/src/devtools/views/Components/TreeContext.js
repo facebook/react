@@ -505,6 +505,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
         if (numPrevSearchResults > 0) {
           didRequestSearch = true;
           searchIndex =
+            // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
             searchIndex + 1 < numPrevSearchResults ? searchIndex + 1 : 0;
         }
         break;

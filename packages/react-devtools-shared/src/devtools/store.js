@@ -681,6 +681,7 @@ export default class Store extends EventEmitter<{
             let depth = 0;
             while (parentID > 0) {
               if (parentID === ownerID || unsortedIDs.has(parentID)) {
+                // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
                 depth = depthMap.get(parentID) + 1;
                 depthMap.set(id, depth);
                 break;

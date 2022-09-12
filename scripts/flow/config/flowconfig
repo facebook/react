@@ -38,10 +38,6 @@
 [lints]
 untyped-type-import=error
 
-# TODO: We might want to enable this this as a error (the default), it
-#       disallows adding undefined and numbers.
-unsafe-addition=off
-
 [options]
 server.max_workers=4
 esproposal.class_static_fields=enable
