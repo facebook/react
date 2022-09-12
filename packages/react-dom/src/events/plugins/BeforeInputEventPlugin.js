@@ -12,6 +12,7 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {AnyNativeEvent} from '../../events/PluginModuleType';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
+import type {ReactSyntheticEvent} from '../ReactSyntheticEventType';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
@@ -228,7 +229,8 @@ function extractCompositionEvent(
 
   const listeners = accumulateTwoPhaseListeners(targetInst, eventType);
   if (listeners.length > 0) {
-    const event = new SyntheticCompositionEvent(
+    // $FlowFixMe[incompatible-type]
+    const event: ReactSyntheticEvent = new SyntheticCompositionEvent(
       eventType,
       domEventName,
       null,
@@ -239,10 +241,12 @@ function extractCompositionEvent(
     if (fallbackData) {
       // Inject data generated from fallback path into the synthetic event.
       // This matches the property of native CompositionEventInterface.
+      // $FlowFixMe[incompatible-use]
       event.data = fallbackData;
     } else {
       const customData = getDataFromCustomEvent(nativeEvent);
       if (customData !== null) {
+        // $FlowFixMe[incompatible-use]
         event.data = customData;
       }
     }
@@ -398,7 +402,8 @@ function extractBeforeInputEvent(
 
   const listeners = accumulateTwoPhaseListeners(targetInst, 'onBeforeInput');
   if (listeners.length > 0) {
-    const event = new SyntheticInputEvent(
+    // $FlowFixMe[incompatible-type]
+    const event: ReactSyntheticEvent = new SyntheticInputEvent(
       'onBeforeInput',
       'beforeinput',
       null,
@@ -406,6 +411,7 @@ function extractBeforeInputEvent(
       nativeEventTarget,
     );
     dispatchQueue.push({event, listeners});
+    // $FlowFixMe[incompatible-use]
     event.data = chars;
   }
 }

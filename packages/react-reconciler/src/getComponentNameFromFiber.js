@@ -8,6 +8,7 @@
  */
 
 import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {Fiber} from './ReactInternalTypes';
 
 import {enableLegacyHidden} from 'shared/ReactFeatureFlags';
 
