@@ -10,10 +10,18 @@
 /* eslint-disable react-internal/prod-error-codes */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {Fiber} from './ReactInternalTypes';
-import type {FiberRoot} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
+
+import type {
+  Family,
+  FindHostInstancesForRefresh,
+  RefreshHandler,
+  RefreshUpdate,
+  ScheduleRefresh,
+  ScheduleRoot,
+} from './ReactFiberHotReloading';
 
 import {
   flushSync,
@@ -39,27 +47,6 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-
-export type Family = {
-  current: any,
-};
-
-export type RefreshUpdate = {
-  staleFamilies: Set<Family>,
-  updatedFamilies: Set<Family>,
-};
-
-// Resolves type to a family.
-type RefreshHandler = any => Family | void;
-
-// Used by React Refresh runtime through DevTools Global Hook.
-export type SetRefreshHandler = (handler: RefreshHandler | null) => void;
-export type ScheduleRefresh = (root: FiberRoot, update: RefreshUpdate) => void;
-export type ScheduleRoot = (root: FiberRoot, element: ReactNodeList) => void;
-export type FindHostInstancesForRefresh = (
-  root: FiberRoot,
-  families: Array<Family>,
-) => Set<Instance>;
 
 let resolveFamily: RefreshHandler | null = null;
 // $FlowFixMe Flow gets confused by a WeakSet feature check below.

@@ -7,16 +7,11 @@
  * @flow
  */
 
-import {enableNewReconciler} from 'shared/ReactFeatureFlags';
+import type {Instance} from './ReactFiberHostConfig';
+import type {FiberRoot} from './ReactInternalTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
-export type {
-  Family,
-  RefreshUpdate,
-  SetRefreshHandler,
-  ScheduleRefresh,
-  ScheduleRoot,
-  FindHostInstancesForRefresh,
-} from './ReactFiberHotReloading';
+import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 
 import {
   setRefreshHandler as setRefreshHandler_old,
@@ -41,6 +36,27 @@ import {
   scheduleRoot as scheduleRoot_new,
   findHostInstancesForRefresh as findHostInstancesForRefresh_new,
 } from './ReactFiberHotReloading.new';
+
+export type Family = {
+  current: any,
+};
+
+export type RefreshUpdate = {
+  staleFamilies: Set<Family>,
+  updatedFamilies: Set<Family>,
+};
+
+// Resolves type to a family.
+export type RefreshHandler = any => Family | void;
+
+// Used by React Refresh runtime through DevTools Global Hook.
+export type SetRefreshHandler = (handler: RefreshHandler | null) => void;
+export type ScheduleRefresh = (root: FiberRoot, update: RefreshUpdate) => void;
+export type ScheduleRoot = (root: FiberRoot, element: ReactNodeList) => void;
+export type FindHostInstancesForRefresh = (
+  root: FiberRoot,
+  families: Array<Family>,
+) => Set<Instance>;
 
 export const setRefreshHandler = enableNewReconciler
   ? setRefreshHandler_new
