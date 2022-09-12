@@ -27,7 +27,7 @@ export type Props = {
   fiberData: ChartNode,
 };
 
-export default function HoveredFiberInfo({fiberData}: Props) {
+export default function HoveredFiberInfo({fiberData}: Props): React.Node {
   const {profilerStore} = useContext(StoreContext);
   const {rootID, selectedCommitIndex} = useContext(ProfilerContext);
 

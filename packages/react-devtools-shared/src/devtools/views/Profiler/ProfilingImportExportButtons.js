@@ -27,7 +27,7 @@ import styles from './ProfilingImportExportButtons.css';
 
 import type {ProfilingDataExport} from './types';
 
-export default function ProfilingImportExportButtons() {
+export default function ProfilingImportExportButtons(): React.Node {
   const {isProfiling, profilingData, rootID} = useContext(ProfilerContext);
   const {setFile} = useContext(TimelineContext);
   const store = useContext(StoreContext);

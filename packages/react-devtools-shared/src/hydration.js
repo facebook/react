@@ -19,15 +19,15 @@ import {
 import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
 
 export const meta = {
-  inspectable: Symbol('inspectable'),
-  inspected: Symbol('inspected'),
-  name: Symbol('name'),
-  preview_long: Symbol('preview_long'),
-  preview_short: Symbol('preview_short'),
-  readonly: Symbol('readonly'),
-  size: Symbol('size'),
-  type: Symbol('type'),
-  unserializable: Symbol('unserializable'),
+  inspectable: (Symbol('inspectable'): symbol),
+  inspected: (Symbol('inspected'): symbol),
+  name: (Symbol('name'): symbol),
+  preview_long: (Symbol('preview_long'): symbol),
+  preview_short: (Symbol('preview_short'): symbol),
+  readonly: (Symbol('readonly'): symbol),
+  size: (Symbol('size'): symbol),
+  type: (Symbol('type'): symbol),
+  unserializable: (Symbol('unserializable'): symbol),
 };
 
 export type Dehydrated = {

@@ -49,7 +49,7 @@ export class TimeAxisMarkersView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): Size {
     return this._intrinsicSize;
   }
 

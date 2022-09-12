@@ -15,7 +15,7 @@ import ButtonIcon from '../ButtonIcon';
 import {StoreContext} from '../context';
 import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 
-export default function ClearProfilingDataButton() {
+export default function ClearProfilingDataButton(): React.Node {
   const store = useContext(StoreContext);
   const {didRecordCommits, isProfiling} = useContext(ProfilerContext);
   const {file, setFile} = useContext(TimelineContext);

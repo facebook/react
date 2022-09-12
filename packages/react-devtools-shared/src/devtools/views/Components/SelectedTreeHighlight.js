@@ -22,7 +22,7 @@ type Data = {
   stopIndex: number,
 };
 
-export default function SelectedTreeHighlight(_: {}) {
+export default function SelectedTreeHighlight(_: {}): React.Node {
   const {lineHeight} = useContext(SettingsContext);
   const store = useContext(StoreContext);
   const treeFocused = useContext(TreeFocusedContext);

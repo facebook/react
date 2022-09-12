@@ -38,7 +38,7 @@ export type ItemData = {
   width: number,
 };
 
-export default function CommitFlamegraphAutoSizer(_: {}) {
+export default function CommitFlamegraphAutoSizer(_: {}): React.Node {
   const {profilerStore} = useContext(StoreContext);
   const {rootID, selectedCommitIndex, selectFiber} = useContext(
     ProfilerContext,

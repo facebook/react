@@ -20,7 +20,7 @@ const Tooltip = ({
   children: React$Node,
   className: string,
   ...
-}) => {
+}): React.Node => {
   const style = useThemeStyles();
   return (
     // $FlowFixMe unsafe spread

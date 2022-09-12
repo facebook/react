@@ -329,7 +329,10 @@ export function useSubscription<Value>({
   return state.value;
 }
 
-export function useHighlightNativeElement() {
+export function useHighlightNativeElement(): {
+  clearHighlightNativeElement: () => void,
+  highlightNativeElement: (id: number) => void,
+} {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 

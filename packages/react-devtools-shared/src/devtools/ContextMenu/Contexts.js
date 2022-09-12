@@ -61,7 +61,7 @@ function showMenu({
   }
 }
 
-function registerMenu(id: string, showFn: ShowFn, hideFn: HideFn) {
+function registerMenu(id: string, showFn: ShowFn, hideFn: HideFn): () => void {
   if (idToShowFnMap.has(id)) {
     throw Error(`Context menu with id "${id}" already registered.`);
   }

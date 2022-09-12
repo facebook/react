@@ -31,7 +31,7 @@ export default function ReportNewIssue({
   callStack,
   componentStack,
   errorMessage,
-}: Props) {
+}: Props): React.Node {
   let bugURL = process.env.GITHUB_URL;
   if (!bugURL) {
     return null;

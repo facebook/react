@@ -54,7 +54,7 @@ export function InspectedElementHooksTree({
   parseHookNames,
   store,
   toggleParseHookNames,
-}: HooksTreeViewProps) {
+}: HooksTreeViewProps): React.Node {
   const {hooks, id} = inspectedElement;
 
   // Changing parseHookNames is done in a transition, because it suspends.
@@ -137,7 +137,7 @@ export function InnerHooksTreeView({
   id,
   inspectedElement,
   path,
-}: InnerHooksTreeViewProps) {
+}: InnerHooksTreeViewProps): React.Node {
   // $FlowFixMe "Missing type annotation for U" whatever that means
   return hooks.map((hook, index) => (
     <HookView

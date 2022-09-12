@@ -353,7 +353,7 @@ export function prepareProfilingDataExport(
   };
 }
 
-export const getGradientColor = (value: number) => {
+export const getGradientColor = (value: number): string => {
   const maxIndex = commitGradient.length - 1;
   let index;
   if (Number.isNaN(value)) {
@@ -366,11 +366,11 @@ export const getGradientColor = (value: number) => {
   return commitGradient[Math.round(index)];
 };
 
-export const formatDuration = (duration: number) =>
+export const formatDuration = (duration: number): number | string =>
   Math.round(duration * 10) / 10 || '<0.1';
-export const formatPercentage = (percentage: number) =>
+export const formatPercentage = (percentage: number): number =>
   Math.round(percentage * 100);
-export const formatTime = (timestamp: number) =>
+export const formatTime = (timestamp: number): number =>
   Math.round(Math.round(timestamp) / 100) / 10;
 
 export const scale = (
@@ -378,7 +378,10 @@ export const scale = (
   maxValue: number,
   minRange: number,
   maxRange: number,
-) => (value: number, fallbackValue: number) =>
+): ((value: number, fallbackValue: number) => number) => (
+  value: number,
+  fallbackValue: number,
+) =>
   maxValue - minValue === 0
     ? fallbackValue
     : ((value - minValue) / (maxValue - minValue)) * (maxRange - minRange);

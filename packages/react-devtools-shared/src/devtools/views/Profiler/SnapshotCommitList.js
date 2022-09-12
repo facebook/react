@@ -50,7 +50,7 @@ export default function SnapshotCommitList({
   selectedFilteredCommitIndex,
   selectCommitIndex,
   totalDurations,
-}: Props) {
+}: Props): React.Node {
   return (
     <AutoSizer>
       {({height, width}) => (

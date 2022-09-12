@@ -51,7 +51,7 @@ import type {
   RegExpComponentFilter,
 } from 'react-devtools-shared/src/types';
 
-export default function ComponentsSettings(_: {}) {
+export default function ComponentsSettings(_: {}): React.Node {
   const store = useContext(StoreContext);
   const {parseHookNames, setParseHookNames} = useContext(SettingsContext);
 

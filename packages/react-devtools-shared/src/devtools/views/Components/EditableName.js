@@ -38,7 +38,7 @@ export default function EditableName({
   overrideName,
   path,
   type,
-}: EditableNameProps) {
+}: EditableNameProps): React.Node {
   const [editableName, setEditableName] = useState(initialValue);
   const [isValid, setIsValid] = useState(false);
 

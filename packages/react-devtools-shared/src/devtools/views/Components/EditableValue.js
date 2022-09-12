@@ -26,7 +26,7 @@ export default function EditableValue({
   overrideValue,
   path,
   value,
-}: EditableValueProps) {
+}: EditableValueProps): React.Node {
   const [state, dispatch] = useEditableValue(value);
   const {editableValue, hasPendingChanges, isValid, parsedValue} = state;
 

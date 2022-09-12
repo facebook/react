@@ -146,7 +146,7 @@ export default function DevTools({
   hideToggleSuspenseAction,
   hideLogAction,
   hideViewSourceAction,
-}: Props) {
+}: Props): React.Node {
   const [currentTab, setTab] = useLocalStorage<TabID>(
     LOCAL_STORAGE_DEFAULT_TAB_KEY,
     defaultTab,

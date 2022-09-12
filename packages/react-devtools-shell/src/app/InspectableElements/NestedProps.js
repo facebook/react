@@ -19,7 +19,7 @@ const object = {
   null: null,
 };
 
-export default function ObjectProps() {
+export default function ObjectProps(): React.Node {
   return (
     <ChildComponent
       object={{

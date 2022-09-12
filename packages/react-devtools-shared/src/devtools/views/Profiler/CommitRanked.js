@@ -38,7 +38,7 @@ export type ItemData = {
   width: number,
 };
 
-export default function CommitRankedAutoSizer(_: {}) {
+export default function CommitRankedAutoSizer(_: {}): React.Node {
   const {profilerStore} = useContext(StoreContext);
   const {rootID, selectedCommitIndex, selectFiber} = useContext(
     ProfilerContext,

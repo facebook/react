@@ -69,7 +69,7 @@ export class ComponentMeasuresView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): IntrinsicSize {
     return this._intrinsicSize;
   }
 

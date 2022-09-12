@@ -54,7 +54,7 @@ const LazyComponent = lazy(() =>
   }),
 );
 
-export default function ElementTypes() {
+export default function ElementTypes(): React.Node {
   return (
     <Profiler id="test" onRender={() => {}}>
       <Fragment>

@@ -42,7 +42,7 @@ export default function ChartNode({
   width,
   x,
   y,
-}: Props) {
+}: Props): React.Node {
   return (
     <g className={styles.Group} transform={`translate(${x},${y})`}>
       <rect

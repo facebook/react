@@ -72,10 +72,10 @@ export class VerticalScrollOverflowView extends View {
     this.setNeedsDisplay();
   }
 
-  _onVerticalScrollViewChange = (
+  _onVerticalScrollViewChange: (
     scrollState: ScrollState,
     containerLength: number,
-  ) => {
+  ) => void = (scrollState: ScrollState, containerLength: number) => {
     const maxOffset = scrollState.length - containerLength;
     if (maxOffset === 0) {
       return;

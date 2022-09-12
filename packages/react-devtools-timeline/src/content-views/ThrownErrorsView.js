@@ -55,7 +55,7 @@ export class ThrownErrorsView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): Size {
     return this._intrinsicSize;
   }
 

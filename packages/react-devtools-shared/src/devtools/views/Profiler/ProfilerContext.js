@@ -82,7 +82,7 @@ type Props = {
   children: React$Node,
 };
 
-function ProfilerContextController({children}: Props) {
+function ProfilerContextController({children}: Props): React.Node {
   const store = useContext(StoreContext);
   const {selectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);

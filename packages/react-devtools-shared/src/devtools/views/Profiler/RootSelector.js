@@ -13,7 +13,7 @@ import {ProfilerContext} from './ProfilerContext';
 
 import styles from './RootSelector.css';
 
-export default function RootSelector(_: {}) {
+export default function RootSelector(_: {}): React.Node {
   const {profilingData, rootID, setRootID} = useContext(ProfilerContext);
 
   const options = [];

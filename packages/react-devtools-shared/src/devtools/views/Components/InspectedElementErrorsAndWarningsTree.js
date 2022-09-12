@@ -37,7 +37,7 @@ export default function InspectedElementErrorsAndWarningsTree({
   bridge,
   inspectedElement,
   store,
-}: Props) {
+}: Props): React.Node {
   const refresh = useCacheRefresh();
 
   const [

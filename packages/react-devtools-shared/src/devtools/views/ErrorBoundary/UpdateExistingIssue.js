@@ -17,7 +17,7 @@ export default function UpdateExistingIssue({
   gitHubIssue,
 }: {
   gitHubIssue: GitHubIssue,
-}) {
+}): React.Node {
   const {title, url} = gitHubIssue;
   return (
     <div className={styles.GitHubLinkRow}>

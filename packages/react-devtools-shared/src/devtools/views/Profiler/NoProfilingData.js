@@ -12,7 +12,7 @@ import RecordToggle from './RecordToggle';
 
 import styles from './Profiler.css';
 
-export default function NoProfilingData() {
+export default function NoProfilingData(): React.Node {
   return (
     <div className={styles.Column}>
       <div className={styles.Header}>No profiling data has been recorded.</div>
