@@ -19,6 +19,7 @@ global.setImmediate = cb => cb();
 
 let act;
 let clientExports;
+let clientModuleError;
 let webpackMap;
 let Stream;
 let React;
@@ -26,6 +27,7 @@ let ReactDOMClient;
 let ReactServerDOMWriter;
 let ReactServerDOMReader;
 let Suspense;
+let ErrorBoundary;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
@@ -33,6 +35,7 @@ describe('ReactFlightDOM', () => {
     act = require('jest-react').act;
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
+    clientModuleError = WebpackMock.clientModuleError;
     webpackMap = WebpackMock.webpackMap;
 
     Stream = require('stream');
@@ -41,6 +44,22 @@ describe('ReactFlightDOM', () => {
     ReactDOMClient = require('react-dom/client');
     ReactServerDOMWriter = require('react-server-dom-webpack/writer.node.server');
     ReactServerDOMReader = require('react-server-dom-webpack');
+
+    ErrorBoundary = class extends React.Component {
+      state = {hasError: false, error: null};
+      static getDerivedStateFromError(error) {
+        return {
+          hasError: true,
+          error,
+        };
+      }
+      render() {
+        if (this.state.hasError) {
+          return this.props.fallback(this.state.error);
+        }
+        return this.props.children;
+      }
+    };
   });
 
   function getTestStream() {
@@ -319,22 +338,6 @@ describe('ReactFlightDOM', () => {
 
     // Client Components
 
-    class ErrorBoundary extends React.Component {
-      state = {hasError: false, error: null};
-      static getDerivedStateFromError(error) {
-        return {
-          hasError: true,
-          error,
-        };
-      }
-      render() {
-        if (this.state.hasError) {
-          return this.props.fallback(this.state.error);
-        }
-        return this.props.children;
-      }
-    }
-
     function MyErrorBoundary({children}) {
       return (
         <ErrorBoundary fallback={e => <p>{e.message}</p>}>
@@ -605,22 +608,6 @@ describe('ReactFlightDOM', () => {
   it('should be able to complete after aborting and throw the reason client-side', async () => {
     const reportedErrors = [];
 
-    class ErrorBoundary extends React.Component {
-      state = {hasError: false, error: null};
-      static getDerivedStateFromError(error) {
-        return {
-          hasError: true,
-          error,
-        };
-      }
-      render() {
-        if (this.state.hasError) {
-          return this.props.fallback(this.state.error);
-        }
-        return this.props.children;
-      }
-    }
-
     const {writable, readable} = getTestStream();
     const {pipe, abort} = ReactServerDOMWriter.renderToPipeableStream(
       <div>
@@ -660,5 +647,160 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>Error: for reasons</p>');
 
     expect(reportedErrors).toEqual(['for reasons']);
+  });
+
+  it('should be able to recover from a direct reference erroring client-side', async () => {
+    const reportedErrors = [];
+
+    const ClientComponent = clientExports(function({prop}) {
+      return 'This should never render';
+    });
+
+    const ClientReference = clientModuleError(new Error('module init error'));
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <div>
+        <ClientComponent prop={ClientReference} />
+      </div>,
+      webpackMap,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App({res}) {
+      return res.readRoot();
+    }
+
+    await act(async () => {
+      root.render(
+        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+          <Suspense fallback={<p>(loading)</p>}>
+            <App res={response} />
+          </Suspense>
+        </ErrorBoundary>,
+      );
+    });
+    expect(container.innerHTML).toBe('<p>module init error</p>');
+
+    expect(reportedErrors).toEqual([]);
+  });
+
+  it('should be able to recover from a direct reference erroring client-side async', async () => {
+    const reportedErrors = [];
+
+    const ClientComponent = clientExports(function({prop}) {
+      return 'This should never render';
+    });
+
+    let rejectPromise;
+    const ClientReference = await clientExports(
+      new Promise((resolve, reject) => {
+        rejectPromise = reject;
+      }),
+    );
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <div>
+        <ClientComponent prop={ClientReference} />
+      </div>,
+      webpackMap,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
+    );
+    pipe(writable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App({res}) {
+      return res.readRoot();
+    }
+
+    await act(async () => {
+      root.render(
+        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+          <Suspense fallback={<p>(loading)</p>}>
+            <App res={response} />
+          </Suspense>
+        </ErrorBoundary>,
+      );
+    });
+
+    expect(container.innerHTML).toBe('<p>(loading)</p>');
+
+    await act(async () => {
+      rejectPromise(new Error('async module init error'));
+    });
+
+    expect(container.innerHTML).toBe('<p>async module init error</p>');
+
+    expect(reportedErrors).toEqual([]);
+  });
+
+  it('should be able to recover from a direct reference erroring server-side', async () => {
+    const reportedErrors = [];
+
+    const ClientComponent = clientExports(function({prop}) {
+      return 'This should never render';
+    });
+
+    // We simulate a bug in the Webpack bundler which causes an error on the server.
+    for (const id in webpackMap) {
+      Object.defineProperty(webpackMap, id, {
+        get: () => {
+          throw new Error('bug in the bundler');
+        },
+      });
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <div>
+        <ClientComponent />
+      </div>,
+      webpackMap,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
+    );
+    pipe(writable);
+
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App({res}) {
+      return res.readRoot();
+    }
+
+    await act(async () => {
+      root.render(
+        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+          <Suspense fallback={<p>(loading)</p>}>
+            <App res={response} />
+          </Suspense>
+        </ErrorBoundary>,
+      );
+    });
+    expect(container.innerHTML).toBe('<p>bug in the bundler</p>');
+
+    expect(reportedErrors).toEqual([]);
   });
 });
