@@ -91,6 +91,9 @@ function Chunk(status: any, value: any, reason: any, response: Response) {
   this.reason = reason;
   this._response = response;
 }
+// We subclass Promise.prototype so that we get other methods like .catch
+Chunk.prototype = (Object.create(Promise.prototype): any);
+// TODO: This doesn't return a new Promise chain unlike the real .then
 Chunk.prototype.then = function<T>(
   resolve: (value: T) => mixed,
   reject: (reason: mixed) => mixed,
