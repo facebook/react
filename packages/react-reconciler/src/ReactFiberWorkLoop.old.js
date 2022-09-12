@@ -83,7 +83,6 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
-  requestPostPaintCallback,
 } from './ReactFiberHostConfig';
 
 import {
@@ -261,6 +260,7 @@ import {
   suspendedThenableDidResolve,
   isTrackingSuspendedThenable,
 } from './ReactFiberWakeable.old';
+import {schedulePostPaintCallback} from './ReactPostPaintCallback';
 
 const ceil = Math.ceil;
 
@@ -2653,7 +2653,7 @@ function commitRootImpl(
     // and then call the callback via the correct end time.
     const prevRootTransitionCallbacks = root.transitionCallbacks;
     if (prevRootTransitionCallbacks !== null) {
-      requestPostPaintCallback(endTime => {
+      schedulePostPaintCallback(endTime => {
         const prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
         if (prevPendingTransitionCallbacks !== null) {
           currentPendingTransitionCallbacks = null;
