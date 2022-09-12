@@ -123,7 +123,7 @@ export function track(node: ElementWithValueTracker) {
   node._valueTracker = trackValueOnNode(node);
 }
 
-export function updateValueIfChanged(node: ElementWithValueTracker) {
+export function updateValueIfChanged(node: ElementWithValueTracker): boolean {
   if (!node) {
     return false;
   }

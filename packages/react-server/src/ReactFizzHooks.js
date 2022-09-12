@@ -239,13 +239,13 @@ export function finishHooks(
   return children;
 }
 
-export function getThenableStateAfterSuspending() {
+export function getThenableStateAfterSuspending(): null | ThenableState {
   const state = thenableState;
   thenableState = null;
   return state;
 }
 
-export function checkDidRenderIdHook() {
+export function checkDidRenderIdHook(): boolean {
   // This should be called immediately after every finishHooks call.
   // Conceptually, it's part of the return value of finishHooks; it's only a
   // separate function to avoid using an array tuple.

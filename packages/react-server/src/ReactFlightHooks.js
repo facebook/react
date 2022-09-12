@@ -39,7 +39,7 @@ export function prepareToUseHooksForComponent(
   thenableState = prevThenableState;
 }
 
-export function getThenableStateAfterSuspending() {
+export function getThenableStateAfterSuspending(): null | ThenableState {
   const state = thenableState;
   thenableState = null;
   return state;

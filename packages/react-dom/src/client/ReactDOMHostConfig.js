@@ -677,7 +677,7 @@ export function clearContainer(container: Container): void {
 
 export const supportsHydration = true;
 
-export function isHydratableResource(type: string, props: Props) {
+export function isHydratableResource(type: string, props: Props): boolean {
   return (
     type === 'link' &&
     typeof (props: any).precedence === 'string' &&
@@ -723,11 +723,13 @@ export function canHydrateSuspenseInstance(
   return ((instance: any): SuspenseInstance);
 }
 
-export function isSuspenseInstancePending(instance: SuspenseInstance) {
+export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
   return instance.data === SUSPENSE_PENDING_START_DATA;
 }
 
-export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
+export function isSuspenseInstanceFallback(
+  instance: SuspenseInstance,
+): boolean {
   return instance.data === SUSPENSE_FALLBACK_START_DATA;
 }
 

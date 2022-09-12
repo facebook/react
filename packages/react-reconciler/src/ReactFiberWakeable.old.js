@@ -24,11 +24,11 @@ let lastUsedThenable: Thenable<any> | null = null;
 
 const MAX_AD_HOC_SUSPEND_COUNT = 50;
 
-export function isTrackingSuspendedThenable() {
+export function isTrackingSuspendedThenable(): boolean {
   return suspendedThenable !== null;
 }
 
-export function suspendedThenableDidResolve() {
+export function suspendedThenableDidResolve(): boolean {
   if (suspendedThenable !== null) {
     const status = suspendedThenable.status;
     return status === 'fulfilled' || status === 'rejected';

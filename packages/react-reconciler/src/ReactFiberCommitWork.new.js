@@ -320,7 +320,7 @@ let shouldFireAfterActiveInstanceBlur: boolean = false;
 export function commitBeforeMutationEffects(
   root: FiberRoot,
   firstChild: Fiber,
-) {
+): boolean {
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
 
   nextEffect = firstChild;

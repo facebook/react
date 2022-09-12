@@ -225,7 +225,7 @@ function shouldConstruct(Component: Function) {
   return !!(prototype && prototype.isReactComponent);
 }
 
-export function isSimpleFunctionComponent(type: any) {
+export function isSimpleFunctionComponent(type: any): boolean {
   return (
     typeof type === 'function' &&
     !shouldConstruct(type) &&
@@ -355,7 +355,10 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 }
 
 // Used to reuse a Fiber for a second pass.
-export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
+export function resetWorkInProgress(
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+): Fiber {
   // This resets the Fiber to what createFiber or createWorkInProgress would
   // have set the values to before during the first pass. Ideally this wouldn't
   // be necessary but unfortunately many code paths reads from the workInProgress
