@@ -120,6 +120,52 @@ describe('useEvent', () => {
   });
 
   // @gate enableUseEventHook
+  it('does not preserve `this` in event functions', () => {
+    class GreetButton extends React.PureComponent {
+      greet = () => {
+        this.props.onClick();
+      };
+      render() {
+        return <Text text={'Say ' + this.props.hello} />;
+      }
+    }
+    function Greeter({hello}) {
+      const person = {
+        toString() {
+          return 'Jane';
+        },
+        greet() {
+          return updateGreeting(this + ' says ' + hello);
+        },
+      };
+      const [greeting, updateGreeting] = useState('Seb says ' + hello);
+      const onClick = useEvent(person.greet);
+
+      return (
+        <>
+          <GreetButton hello={hello} onClick={onClick} ref={button} />
+          <Text text={'Greeting: ' + greeting} />
+        </>
+      );
+    }
+
+    const button = React.createRef(null);
+    ReactNoop.render(<Greeter hello={'hej'} />);
+    expect(Scheduler).toFlushAndYield(['Say hej', 'Greeting: Seb says hej']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Say hej'),
+      span('Greeting: Seb says hej'),
+    ]);
+
+    act(button.current.greet);
+    expect(Scheduler).toHaveYielded(['Greeting: undefined says hej']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Say hej'),
+      span('Greeting: undefined says hej'),
+    ]);
+  });
+
+  // @gate enableUseEventHook
   it('throws when called in render', () => {
     class IncrementButton extends React.PureComponent {
       increment = () => {

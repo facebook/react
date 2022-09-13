@@ -1879,7 +1879,7 @@ function mountEvent<T>(callback: () => T): () => T {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error('An event from useEvent was called during render.');
     }
-    return ref.current.apply(this, arguments);
+    return ref.current.apply(undefined, arguments);
   }
 
   // TODO: We don't need all the overhead of an effect object since there are no deps and no
