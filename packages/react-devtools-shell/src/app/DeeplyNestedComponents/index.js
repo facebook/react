@@ -36,7 +36,7 @@ function Nested() {
 
 const DeeplyNested = wrapWithNested(Nested, 100);
 
-export default function DeeplyNestedComponents() {
+export default function DeeplyNestedComponents(): React.Node {
   return (
     <Fragment>
       <h1>Deeply nested component</h1>

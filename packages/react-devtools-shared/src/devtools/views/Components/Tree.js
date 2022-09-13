@@ -51,7 +51,7 @@ export type ItemData = {
 
 type Props = {};
 
-export default function Tree(props: Props) {
+export default function Tree(props: Props): React.Node {
   const dispatch = useContext(TreeDispatcherContext);
   const {
     numElements,

@@ -22,7 +22,7 @@ export default function UnsupportedBridgeOperationView({
   children,
   componentStack,
   errorMessage,
-}: Props) {
+}: Props): React.Node {
   return (
     <div className={styles.ErrorBoundary}>
       {children}

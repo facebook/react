@@ -15,7 +15,7 @@ type Props = {
   className?: string,
 };
 
-export default function ReactLogo({className}: Props) {
+export default function ReactLogo({className}: Props): React.Node {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

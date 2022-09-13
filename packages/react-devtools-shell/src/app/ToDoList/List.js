@@ -20,7 +20,7 @@ export type Item = {
 
 type Props = {};
 
-export default function List(props: Props) {
+export default function List(props: Props): React.Node {
   const [newItemText, setNewItemText] = useState<string>('');
   const [items, setItems] = useState<Array<Item>>([
     {id: 1, isComplete: true, text: 'First'},

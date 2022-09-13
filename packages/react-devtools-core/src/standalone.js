@@ -266,7 +266,7 @@ function initialize(socket: WebSocket) {
 
 let startServerTimeoutID: TimeoutID | null = null;
 
-function connectToSocket(socket: WebSocket) {
+function connectToSocket(socket: WebSocket): {close(): void} {
   socket.onerror = err => {
     onDisconnected();
     log.error('Error with websocket connection', err);
@@ -298,7 +298,7 @@ function startServer(
   host?: string = 'localhost',
   httpsOptions?: ServerOptions,
   loggerOptions?: LoggerOptions,
-) {
+): {close(): void} {
   registerDevToolsEventLogger(loggerOptions?.surface ?? 'standalone');
 
   const useHttps = !!httpsOptions;

@@ -20,7 +20,7 @@ import styles from './SnapshotSelector.css';
 
 export type Props = {};
 
-export default function SnapshotSelector(_: Props) {
+export default function SnapshotSelector(_: Props): React.Node {
   const {
     isCommitFilterEnabled,
     minCommitDuration,

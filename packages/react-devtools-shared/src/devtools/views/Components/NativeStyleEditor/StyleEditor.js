@@ -32,7 +32,7 @@ type Props = {
 type ChangeAttributeFn = (oldName: string, newName: string, value: any) => void;
 type ChangeValueFn = (name: string, value: any) => void;
 
-export default function StyleEditor({id, style}: Props) {
+export default function StyleEditor({id, style}: Props): React.Node {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 

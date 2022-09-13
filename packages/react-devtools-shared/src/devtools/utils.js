@@ -13,7 +13,10 @@ import type {Element} from './views/Components/types';
 import type {StateContext} from './views/Components/TreeContext';
 import type Store from './store';
 
-export function printElement(element: Element, includeWeight: boolean = false) {
+export function printElement(
+  element: Element,
+  includeWeight: boolean = false,
+): string {
   let prefix = ' ';
   if (element.children.length > 0) {
     prefix = element.isCollapsed ? '▸' : '▾';
@@ -44,7 +47,7 @@ export function printElement(element: Element, includeWeight: boolean = false) {
 export function printOwnersList(
   elements: Array<Element>,
   includeWeight: boolean = false,
-) {
+): string {
   return elements
     .map(element => printElement(element, includeWeight))
     .join('\n');
@@ -54,7 +57,7 @@ export function printStore(
   store: Store,
   includeWeight: boolean = false,
   state: StateContext | null = null,
-) {
+): string {
   const snapshotLines = [];
 
   let rootWeight = 0;
@@ -172,7 +175,7 @@ export function smartParse(value: any) {
   }
 }
 
-export function smartStringify(value: any) {
+export function smartStringify(value: any): string {
   if (typeof value === 'number') {
     if (Number.isNaN(value)) {
       return 'NaN';

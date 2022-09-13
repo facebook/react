@@ -71,7 +71,7 @@ export class ReactMeasuresView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): IntrinsicSize {
     return this._intrinsicSize;
   }
 

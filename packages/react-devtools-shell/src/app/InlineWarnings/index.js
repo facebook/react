@@ -155,7 +155,7 @@ function ComponentWithSymbolWarning() {
   return null;
 }
 
-export default function ErrorsAndWarnings() {
+export default function ErrorsAndWarnings(): React.Node {
   const [count, setCount] = useState(0);
   const handleClick = () => setCount(count + 1);
   return (

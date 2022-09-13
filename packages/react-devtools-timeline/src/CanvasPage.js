@@ -74,7 +74,7 @@ type Props = {
   viewState: ViewState,
 };
 
-function CanvasPage({profilerData, viewState}: Props) {
+function CanvasPage({profilerData, viewState}: Props): React.Node {
   return (
     <div
       className={styles.CanvasPage}

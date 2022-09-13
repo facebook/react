@@ -10,7 +10,7 @@
 import * as React from 'react';
 import {useRef, useState} from 'react';
 
-export default function App() {
+export default function App(): React.Node {
   return <List />;
 }
 

@@ -40,7 +40,7 @@ export default function NewArrayValue({
   path,
   store,
   type,
-}: Props) {
+}: Props): React.Node {
   const [key, setKey] = useState<number>(0);
   const [isInvalid, setIsInvalid] = useState(false);
 

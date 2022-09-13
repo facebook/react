@@ -69,7 +69,7 @@ export default function EventTooltip({
   hoveredEvent,
   origin,
   width,
-}: Props) {
+}: Props): React.Node {
   const ref = useSmartTooltip({
     canvasRef,
     mouseX: origin.x,

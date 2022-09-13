@@ -16,7 +16,7 @@ class Custom {
   }
 }
 
-export default function CustomObject() {
+export default function CustomObject(): React.Node {
   return <ChildComponent customObject={new Custom()} />;
 }
 

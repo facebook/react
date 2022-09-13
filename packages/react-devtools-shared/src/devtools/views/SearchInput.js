@@ -35,7 +35,7 @@ export default function SearchInput({
   searchResultsCount,
   searchText,
   testName,
-}: Props) {
+}: Props): React.Node {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const resetSearch = () => search('');

@@ -37,7 +37,7 @@ type Props = {
   fiberID: number,
 };
 
-export default function WhatChanged({fiberID}: Props) {
+export default function WhatChanged({fiberID}: Props): React.Node {
   const {profilerStore} = useContext(StoreContext);
   const {rootID, selectedCommitIndex} = useContext(ProfilerContext);
 

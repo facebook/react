@@ -14,7 +14,7 @@ import {ModalDialogContext} from './ModalDialog';
 
 import styles from './WarnIfLegacyBackendDetected.css';
 
-export default function WarnIfLegacyBackendDetected(_: {}) {
+export default function WarnIfLegacyBackendDetected(_: {}): null {
   const bridge = useContext(BridgeContext);
   const {dispatch} = useContext(ModalDialogContext);
 
