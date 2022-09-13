@@ -510,3 +510,7 @@ export function preparePortalMount(portalInstance: Instance): void {
 export function detachDeletedInstance(node: Instance): void {
   // noop
 }
+
+export function requestPostPaintCallback(callback: (time: number) => void) {
+  // noop
+}

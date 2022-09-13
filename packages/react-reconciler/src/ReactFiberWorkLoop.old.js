@@ -261,6 +261,7 @@ import {
   suspendedThenableDidResolve,
   isTrackingSuspendedThenable,
 } from './ReactFiberWakeable.old';
+import {schedulePostPaintCallback} from './ReactPostPaintCallback';
 
 const ceil = Math.ceil;
 
@@ -361,6 +362,7 @@ export function getWorkInProgressTransitions() {
 }
 
 let currentPendingTransitionCallbacks: PendingTransitionCallbacks | null = null;
+let currentEndTime: number | null = null;
 
 export function addTransitionStartCallbackToPendingTransition(
   transition: Transition,
@@ -2643,6 +2645,36 @@ function commitRootImpl(
     markCommitStopped();
   }
 
+  if (enableTransitionTracing) {
+    // We process transitions during passive effects. However, passive effects can be
+    // processed synchronously during the commit phase as well as asynchronously after
+    // paint. At the end of the commit phase, we schedule a callback that will be called
+    // after the next paint. If the transitions have already been processed (passive
+    // effect phase happened synchronously), we will schedule a callback to process
+    // the transitions. However, if we don't have any pending transition callbacks, this
+    // means that the transitions have yet to be processed (passive effects processed after paint)
+    // so we will store the end time of paint so that we can process the transitions
+    // and then call the callback via the correct end time.
+    const prevRootTransitionCallbacks = root.transitionCallbacks;
+    if (prevRootTransitionCallbacks !== null) {
+      schedulePostPaintCallback(endTime => {
+        const prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
+        if (prevPendingTransitionCallbacks !== null) {
+          currentPendingTransitionCallbacks = null;
+          scheduleCallback(IdleSchedulerPriority, () => {
+            processTransitionCallbacks(
+              prevPendingTransitionCallbacks,
+              endTime,
+              prevRootTransitionCallbacks,
+            );
+          });
+        } else {
+          currentEndTime = endTime;
+        }
+      });
+    }
+  }
+
   return null;
 }
 
@@ -2784,28 +2816,21 @@ function flushPassiveEffectsImpl() {
   if (enableTransitionTracing) {
     const prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
     const prevRootTransitionCallbacks = root.transitionCallbacks;
+    const prevEndTime = currentEndTime;
     if (
       prevPendingTransitionCallbacks !== null &&
-      prevRootTransitionCallbacks !== null
+      prevRootTransitionCallbacks !== null &&
+      prevEndTime !== null
     ) {
-      // TODO(luna) Refactor this code into the Host Config
-      // TODO(luna) The end time here is not necessarily accurate
-      // because passive effects could be called before paint
-      // (synchronously) or after paint (normally). We need
-      // to come up with a way to get the correct end time for both cases.
-      // One solution is in the host config, if the passive effects
-      // have not yet been run, make a call to flush the passive effects
-      // right after paint.
-      const endTime = now();
       currentPendingTransitionCallbacks = null;
-
-      scheduleCallback(IdleSchedulerPriority, () =>
+      currentEndTime = null;
+      scheduleCallback(IdleSchedulerPriority, () => {
         processTransitionCallbacks(
           prevPendingTransitionCallbacks,
-          endTime,
+          prevEndTime,
           prevRootTransitionCallbacks,
-        ),
-      );
+        );
+      });
     }
   }
 

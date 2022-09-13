@@ -2273,4 +2273,231 @@ describe('ReactInteractionTracing', () => {
     });
     expect(Scheduler).toHaveYielded(['Hidden Text']);
   });
+
+  // @gate enableTransitionTracing
+  it('discrete events', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App() {
+      return (
+        <Suspense
+          fallback={<Text text="Loading..." />}
+          unstable_name="suspense page">
+          <AsyncText text="Page Two" />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+
+    await act(async () => {
+      ReactNoop.discreteUpdates(() =>
+        startTransition(() => root.render(<App />), {name: 'page transition'}),
+      );
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'Suspend [Page Two]',
+      'Loading...',
+      'onTransitionStart(page transition, 0)',
+      'onTransitionProgress(page transition, 0, 1000, [suspense page])',
+    ]);
+    await act(async () => {
+      ReactNoop.discreteUpdates(() => resolveText('Page Two'));
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'Page Two',
+      'onTransitionProgress(page transition, 0, 2000, [])',
+      'onTransitionComplete(page transition, 0, 2000)',
+    ]);
+  });
+
+  // @gate enableTransitionTracing
+  it('multiple commits happen before a paint', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App() {
+      const [, setRerender] = useState(false);
+      React.useLayoutEffect(() => {
+        resolveText('Text');
+        setRerender(true);
+      });
+      return (
+        <>
+          <Suspense unstable_name="one" fallback={<Text text="Loading..." />}>
+            <AsyncText text="Text" />
+          </Suspense>
+          <Suspense
+            unstable_name="two"
+            fallback={<Text text="Loading Two..." />}>
+            <AsyncText text="Text Two" />
+          </Suspense>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+
+    await act(() => {
+      startTransition(() => root.render(<App />), {name: 'transition'});
+      ReactNoop.expire(1000);
+      advanceTimers(1000);
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'Suspend [Text]',
+      'Loading...',
+      'Suspend [Text Two]',
+      'Loading Two...',
+      'Text',
+      'Suspend [Text Two]',
+      'Loading Two...',
+      'onTransitionStart(transition, 0)',
+      'onTransitionProgress(transition, 0, 1000, [two])',
+    ]);
+
+    await act(() => {
+      resolveText('Text Two');
+      ReactNoop.expire(1000);
+      advanceTimers(1000);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Text Two',
+      'onTransitionProgress(transition, 0, 2000, [])',
+      'onTransitionComplete(transition, 0, 2000)',
+    ]);
+  });
+
+  // @gate enableTransitionTracing
+  it('transition callbacks work for multiple roots', async () => {
+    const getTransitionCallbacks = transitionName => {
+      return {
+        onTransitionStart: (name, startTime) => {
+          Scheduler.unstable_yieldValue(
+            `onTransitionStart(${name}, ${startTime}) /${transitionName}/`,
+          );
+        },
+        onTransitionProgress: (name, startTime, endTime, pending) => {
+          const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+          Scheduler.unstable_yieldValue(
+            `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}]) /${transitionName}/`,
+          );
+        },
+        onTransitionComplete: (name, startTime, endTime) => {
+          Scheduler.unstable_yieldValue(
+            `onTransitionComplete(${name}, ${startTime}, ${endTime}) /${transitionName}/`,
+          );
+        },
+      };
+    };
+
+    function App({name}) {
+      return (
+        <>
+          <Suspense
+            unstable_name={name}
+            fallback={<Text text={`Loading ${name}...`} />}>
+            <AsyncText text={`Text ${name}`} />
+          </Suspense>
+        </>
+      );
+    }
+
+    const rootOne = ReactNoop.createRoot({
+      unstable_transitionCallbacks: getTransitionCallbacks('root one'),
+    });
+
+    const rootTwo = ReactNoop.createRoot({
+      unstable_transitionCallbacks: getTransitionCallbacks('root two'),
+    });
+
+    await act(() => {
+      startTransition(() => rootOne.render(<App name="one" />), {
+        name: 'transition one',
+      });
+      startTransition(() => rootTwo.render(<App name="two" />), {
+        name: 'transition two',
+      });
+      ReactNoop.expire(1000);
+      advanceTimers(1000);
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'Suspend [Text one]',
+      'Loading one...',
+      'Suspend [Text two]',
+      'Loading two...',
+      'onTransitionStart(transition one, 0) /root one/',
+      'onTransitionProgress(transition one, 0, 1000, [one]) /root one/',
+      'onTransitionStart(transition two, 0) /root two/',
+      'onTransitionProgress(transition two, 0, 1000, [two]) /root two/',
+    ]);
+
+    await act(() => {
+      caches[0].resolve('Text one');
+      ReactNoop.expire(1000);
+      advanceTimers(1000);
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'Text one',
+      'onTransitionProgress(transition one, 0, 2000, []) /root one/',
+      'onTransitionComplete(transition one, 0, 2000) /root one/',
+    ]);
+
+    await act(() => {
+      resolveText('Text two');
+      ReactNoop.expire(1000);
+      advanceTimers(1000);
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'Text two',
+      'onTransitionProgress(transition two, 0, 3000, []) /root two/',
+      'onTransitionComplete(transition two, 0, 3000) /root two/',
+    ]);
+  });
 });

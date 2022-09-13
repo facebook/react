@@ -377,7 +377,10 @@ export const cancelTimeout: any =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 export const noTimeout = -1;
 const localPromise = typeof Promise === 'function' ? Promise : undefined;
-
+const localRequestAnimationFrame =
+  typeof requestAnimationFrame === 'function'
+    ? requestAnimationFrame
+    : scheduleTimeout;
 // -------------------
 //     Microtasks
 // -------------------
@@ -1378,4 +1381,10 @@ export function setupIntersectionObserver(
       observer.unobserve((target: any));
     },
   };
+}
+
+export function requestPostPaintCallback(callback: (time: number) => void) {
+  localRequestAnimationFrame(() => {
+    localRequestAnimationFrame(time => callback(time));
+  });
 }
