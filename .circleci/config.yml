@@ -12,6 +12,11 @@ aliases:
       name: Restore yarn cache
       key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
 
+  - &prepare_node_modules_cache_key
+    run:
+      name: Preparing node_modules cache key
+      command: yarn workspaces info | head -n -1 > workspace_info.txt
+
   - &restore_node_modules
     restore_cache:
       name: Restore node_modules cache
@@ -72,7 +77,7 @@ jobs:
 
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
@@ -87,7 +92,7 @@ jobs:
 
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
 
@@ -97,7 +102,7 @@ jobs:
 
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           command: |
@@ -114,7 +119,7 @@ jobs:
     parallelism: 40
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run: yarn build-combined
       - persist_to_workspace:
@@ -130,7 +135,7 @@ jobs:
         type: string
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Download artifacts for revision
@@ -148,7 +153,7 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Download artifacts for base revision
@@ -177,7 +182,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
@@ -197,7 +202,7 @@ jobs:
       - attach_workspace:
           at: .
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           command: node ./scripts/tasks/danger
@@ -209,7 +214,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Install Packages
@@ -228,7 +233,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Install Packages
@@ -254,7 +259,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Install nested packages from Yarn cache
@@ -273,7 +278,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Install nested packages from Yarn cache
@@ -301,7 +306,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run: yarn lint-build
 
@@ -312,7 +317,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run: yarn check-release-dependencies
 
@@ -323,7 +328,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Search build artifacts for unminified errors
@@ -340,7 +345,7 @@ jobs:
         type: string
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run: yarn test <<parameters.args>> --ci
 
@@ -355,7 +360,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Install nested packages from Yarn cache
@@ -369,7 +374,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Run DOM fixture tests
@@ -386,7 +391,7 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Run fuzz tests
@@ -406,7 +411,7 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Run publish script
@@ -425,7 +430,7 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
           name: Fetch revisions that contain an intentional fork
@@ -676,4 +681,3 @@ workflows:
           commit_sha: << pipeline.git.revision >>
           release_channel: experimental
           dist_tag: experimental
-
