@@ -5,7 +5,7 @@ let useState;
 let useMemoCache;
 let ErrorBoundary;
 
-describe('ReactCache', () => {
+describe('useMemoCache()', () => {
   beforeEach(() => {
     jest.resetModules();
 
@@ -40,7 +40,7 @@ describe('ReactCache', () => {
     ErrorBoundary = _ErrorBoundary;
   });
 
-  // @gate experimental || www
+  // @gate enableUseMemoCacheHook
   test('render component using cache', async () => {
     function Component(props) {
       const cache = useMemoCache(1);
@@ -56,7 +56,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Ok');
   });
 
-  // @gate experimental || www
+  // @gate enableUseMemoCacheHook
   test('update component using cache', async () => {
     let setX;
     let forceUpdate;
@@ -120,7 +120,7 @@ describe('ReactCache', () => {
     expect(data).toBe(data1); // confirm that the cache persisted across renders
   });
 
-  // @gate experimental || www
+  // @gate enableUseMemoCacheHook
   test('update component using cache with setstate during render', async () => {
     let setX;
     let setN;
@@ -199,7 +199,7 @@ describe('ReactCache', () => {
     expect(data).toBe(data1); // confirm that the cache persisted across renders
   });
 
-  // @gate experimental || www
+  // @gate enableUseMemoCacheHook
   test('update component using cache with throw during render', async () => {
     let setX;
     let setN;
@@ -288,7 +288,7 @@ describe('ReactCache', () => {
     expect(data).toBe(data1); // confirm that the cache persisted across renders
   });
 
-  // @gate experimental || www
+  // @gate enableUseMemoCacheHook
   test('update component and custom hook with caches', async () => {
     let setX;
     let forceUpdate;

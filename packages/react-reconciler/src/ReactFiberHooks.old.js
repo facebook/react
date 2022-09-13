@@ -836,6 +836,14 @@ function useMemoCache(size: number): Array<any> {
     data = memoCache.data[memoCache.index] = new Array(size);
   } else if (data.length !== size) {
     // TODO: consider warning or throwing here
+    if (__DEV__) {
+console.error(
+      'Expected a constant size argument for each invocation of useMemoCache. ' +
+        'The previous cache was allocated with size %s but size %s was requested.',
+      data.length,
+      size,
+    )
+};
   }
   memoCache.index++;
   return data;
