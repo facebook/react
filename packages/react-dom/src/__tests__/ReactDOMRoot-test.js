@@ -537,7 +537,10 @@ describe('ReactDOMRoot', () => {
           )}
           {mount3 && (
             <div onBlur={handleBlur3}>
-              <button id="btn4" onClick={() => setMount3(false)} onBlur={handleBlur3}>
+              <button
+                id="btn4"
+                onClick={() => setMount3(false)}
+                onBlur={handleBlur3}>
                 click me4
               </button>
             </div>
