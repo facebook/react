@@ -783,7 +783,7 @@ export function inspectHooksOfFiber(
   fiber: Fiber,
   currentDispatcher: ?CurrentDispatcherRef,
   includeHooksSource?: boolean = false,
-) {
+): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
   if (currentDispatcher == null) {

@@ -571,7 +571,7 @@ export function renderWithHooks<Props, SecondArg>(
   return children;
 }
 
-export function checkDidRenderIdHook() {
+export function checkDidRenderIdHook(): boolean {
   // This should be called immediately after every renderWithHooks call.
   // Conceptually, it's part of the return value of renderWithHooks; it's only a
   // separate function to avoid using an array tuple.

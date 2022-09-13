@@ -357,7 +357,7 @@ let workInProgressRootRenderTargetTime: number = Infinity;
 const RENDER_TIMEOUT_MS = 500;
 
 let workInProgressTransitions: Array<Transition> | null = null;
-export function getWorkInProgressTransitions() {
+export function getWorkInProgressTransitions(): null | Array<Transition> {
   return workInProgressTransitions;
 }
 
@@ -814,7 +814,7 @@ export function scheduleInitialHydrationOnRoot(
   ensureRootIsScheduled(root, eventTime);
 }
 
-export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber) {
+export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber): boolean {
   // Check if this is a render phase update. Only called by class components,
   // which special (deprecated) behavior for UNSAFE_componentWillReceive props.
   return (
@@ -1557,7 +1557,7 @@ declare function flushSync<R>(fn: () => R): R;
 // eslint-disable-next-line no-redeclare
 declare function flushSync(): void;
 // eslint-disable-next-line no-redeclare
-export function flushSync(fn) {
+export function flushSync(fn): void {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
   if (
@@ -1596,7 +1596,7 @@ export function flushSync(fn) {
   }
 }
 
-export function isAlreadyRendering() {
+export function isAlreadyRendering(): boolean {
   // Used by the renderer to print a warning if certain APIs are called from
   // the wrong context.
   return (

@@ -599,13 +599,13 @@ export function injectIntoGlobalHook(globalObject: any): void {
   }
 }
 
-export function hasUnrecoverableErrors() {
+export function hasUnrecoverableErrors(): boolean {
   // TODO: delete this after removing dependency in RN.
   return false;
 }
 
 // Exposed for testing.
-export function _getMountedRootCount() {
+export function _getMountedRootCount(): number {
   if (__DEV__) {
     return mountedRoots.size;
   } else {

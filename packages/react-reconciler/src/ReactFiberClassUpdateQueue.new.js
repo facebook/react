@@ -164,7 +164,7 @@ let hasForceUpdate = false;
 
 let didWarnUpdateInsideUpdate;
 let currentlyProcessingQueue;
-export let resetCurrentlyProcessingQueue;
+export let resetCurrentlyProcessingQueue: () => void;
 if (__DEV__) {
   didWarnUpdateInsideUpdate = false;
   currentlyProcessingQueue = null;

@@ -105,7 +105,7 @@ export function rethrowCaughtError() {
   }
 }
 
-export function hasCaughtError() {
+export function hasCaughtError(): boolean {
   return hasError;
 }
 

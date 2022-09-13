@@ -29,7 +29,7 @@ class ClientReferenceDependency extends ModuleDependency {
     super(request);
   }
 
-  get type() {
+  get type(): string {
     return 'client-reference';
   }
 }
