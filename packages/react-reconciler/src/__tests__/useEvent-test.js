@@ -197,7 +197,6 @@ describe('useEvent', () => {
       'An event from useEvent was called during render',
     );
 
-    // TODO: Why?
     expect(Scheduler).toHaveYielded(['Count: 0', 'Count: 0']);
   });
 
