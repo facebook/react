@@ -1926,8 +1926,13 @@ function commitDeletionEffectsOnFiber(
   nearestMountedAncestor: Fiber,
   deletedFiber: Fiber,
 ) {
-  onCommitUnmount(deletedFiber);
+  // if component has onBlur event, emit onBlur event before unmount.
+  // fix: #25194
+  if (deletedFiber.memoizedProps && deletedFiber.memoizedProps.onBlur) {
+    deletedFiber.memoizedProps.onBlur(new Event('blur', {bubbles: true}));
+  }
 
+  onCommitUnmount(deletedFiber);
   // The cases in this outer switch modify the stack before they traverse
   // into their subtree. There are simpler cases in the inner switch
   // that don't modify the stack.

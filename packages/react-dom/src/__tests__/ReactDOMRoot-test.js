@@ -16,6 +16,7 @@ let ReactDOMServer = require('react-dom/server');
 let Scheduler = require('scheduler');
 let act;
 let useEffect;
+let useState;
 
 describe('ReactDOMRoot', () => {
   let container;
@@ -30,6 +31,7 @@ describe('ReactDOMRoot', () => {
     Scheduler = require('scheduler');
     act = require('jest-react').act;
     useEffect = React.useEffect;
+    useState = React.useState;
   });
 
   it('renders children', () => {
@@ -505,5 +507,59 @@ describe('ReactDOMRoot', () => {
         withoutStack: true,
       },
     );
+  });
+
+  it('should be trigger onBlur before component unmount', async () => {
+    const handleBlur = jest.fn();
+    const handleBlur2 = jest.fn();
+    const handleBlur3 = jest.fn();
+    function App() {
+      const [mount, setMount] = useState(true);
+      const [mount2, setMount2] = useState(true);
+      const [mount3, setMount3] = useState(true);
+      return (
+        <>
+          {mount && (
+            <button
+              id="btn1"
+              onClick={() => setMount(false)}
+              onBlur={handleBlur}>
+              click me
+            </button>
+          )}
+          <button id="btn2" onBlur={handleBlur2}>
+            click me2
+          </button>
+          {mount2 && (
+            <button id="btn3" onClick={() => setMount2(false)}>
+              click me3
+            </button>
+          )}
+          {mount3 && (
+            <div onBlur={handleBlur3}>
+              <button id="btn4" onClick={() => setMount3(false)} onBlur={handleBlur3}>
+                click me4
+              </button>
+            </div>
+          )}
+        </>
+      );
+    }
+    document.body.appendChild(container);
+    ReactDOM.render(<App />, container);
+    const button = container.querySelector('#btn1');
+    button.click();
+    expect(handleBlur).toHaveBeenCalled();
+    const button2 = container.querySelector('#btn2');
+    button2.focus();
+    button2.blur();
+    expect(handleBlur2).toHaveBeenCalled();
+    const button3 = container.querySelector('#btn3');
+    button3.click();
+    expect(container.querySelector('#btn3')).toBe(null);
+    const button4 = container.querySelector('#btn4');
+    button4.click();
+    expect(container.querySelector('#btn4')).toBe(null);
+    expect(handleBlur3).toBeCalledTimes(2);
   });
 });
