@@ -1192,6 +1192,14 @@ function commitLayoutEffectOnFiber(
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
         }
+
+        if (finishedWork.pendingProps.mode === 'manual') {
+          if (flags & Ref) {
+            safelyAttachRef(finishedWork, finishedWork.return);
+          }
+        } else if (finishedWork.pendingProps.mode !== undefined) {
+          safelyDetachRef(finishedWork, finishedWork.return);
+        }
       } else {
         recursivelyTraverseLayoutEffects(
           finishedRoot,
