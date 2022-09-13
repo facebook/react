@@ -209,7 +209,8 @@ export type Thenable<T> =
 export type OffscreenMode =
   | 'hidden'
   | 'unstable-defer-without-hiding'
-  | 'visible';
+  | 'visible'
+  | 'manual';
 
 export type StartTransitionOptions = {
   name?: string,

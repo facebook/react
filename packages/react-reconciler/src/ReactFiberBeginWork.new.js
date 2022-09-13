@@ -677,6 +677,10 @@ function updateOffscreenComponent(
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
 
+  if (nextProps.mode === 'manual') {
+    markRef(current, workInProgress);
+  }
+
   if (
     nextProps.mode === 'hidden' ||
     (enableLegacyHidden && nextProps.mode === 'unstable-defer-without-hiding')
