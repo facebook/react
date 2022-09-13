@@ -51,4 +51,4 @@ types_first=false
 %REACT_RENDERER_FLOW_OPTIONS%
 
 [version]
-^0.140.0
+^0.142.0
