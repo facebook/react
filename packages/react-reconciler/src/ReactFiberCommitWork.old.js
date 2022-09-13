@@ -1933,7 +1933,6 @@ function commitDeletionEffectsOnFiber(
   }
 
   onCommitUnmount(deletedFiber);
-
   // The cases in this outer switch modify the stack before they traverse
   // into their subtree. There are simpler cases in the inner switch
   // that don't modify the stack.
