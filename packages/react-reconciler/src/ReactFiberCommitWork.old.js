@@ -48,6 +48,7 @@ import {
   enableUpdaterTracking,
   enableCache,
   enableTransitionTracing,
+  enableUseEventHook,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -412,16 +413,10 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
 
   switch (finishedWork.tag) {
     case FunctionComponent: {
-      if ((flags & Update) !== NoFlags) {
-        try {
-          commitHookEffectListUnmount(
-            HookSnapshot | HookHasEffect,
-            finishedWork,
-            finishedWork.return,
-          );
+      if (enableUseEventHook) {
+        if ((flags & Update) !== NoFlags) {
+          // useEvent doesn't need to be cleaned up
           commitHookEffectListMount(HookSnapshot | HookHasEffect, finishedWork);
-        } catch (error) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
       }
       break;

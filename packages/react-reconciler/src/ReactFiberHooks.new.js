@@ -95,7 +95,7 @@ import {
   requestUpdateLane,
   requestEventTime,
   markSkippedUpdateLanes,
-  isAlreadyRenderingProd,
+  isInvalidExecutionContextForEventFunction,
 } from './ReactFiberWorkLoop.new';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -1875,13 +1875,15 @@ function mountEvent<T>(callback: () => T): () => T {
   const hook = mountWorkInProgressHook();
   const ref = {current: callback};
 
-  function event(...args) {
-    if (isAlreadyRenderingProd()) {
+  function event() {
+    if (isInvalidExecutionContextForEventFunction()) {
       throw new Error('An event from useEvent was called during render.');
     }
-    return ref.current.apply(this, args);
+    return ref.current.apply(this, arguments);
   }
 
+  // TODO: We don't need all the overhead of an effect object since there are no deps and no
+  // clean up functions.
   mountEffectImpl(
     UpdateEffect,
     HookSnapshot,
