@@ -23,7 +23,14 @@ type Entry<T> = {
   next: Entry<T>,
 };
 
-export function createLRU<T>(limit: number) {
+type LRU<T> = {
+  add(value: Object, onDelete: () => mixed): Entry<Object>,
+  update(entry: Entry<T>, newValue: T): void,
+  access(entry: Entry<T>): T,
+  setLimit(newLimit: number): void,
+};
+
+export function createLRU<T>(limit: number): LRU<T> {
   let LIMIT = limit;
 
   // Circular, doubly-linked list
@@ -135,7 +142,7 @@ export function createLRU<T>(limit: number) {
     return entry.value;
   }
 
-  function setLimit(newLimit: number) {
+  function setLimit(newLimit: number): void {
     LIMIT = newLimit;
     scheduleCleanUp();
   }

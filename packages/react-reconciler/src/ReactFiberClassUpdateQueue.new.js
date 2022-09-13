@@ -476,6 +476,7 @@ export function processUpdateQueue<State>(
   hasForceUpdate = false;
 
   if (__DEV__) {
+    // $FlowFixMe[escaped-generic] discovered when updating Flow
     currentlyProcessingQueue = queue.shared;
   }
 
