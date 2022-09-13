@@ -3855,6 +3855,40 @@ export function disconnectPassiveEffect(finishedWork: Fiber): void {
     }
     case OffscreenComponent: {
       const instance: OffscreenInstance = finishedWork.stateNode;
+      if (
+        enableTransitionTracing &&
+        finishedWork.return !== null &&
+        finishedWork.return.tag === SuspenseComponent
+      ) {
+        const isHidden = finishedWork.memoizedState !== null;
+        if (isHidden && instance.pendingMarkers !== null) {
+          instance.pendingMarkers.forEach(
+            ({transitions, pendingBoundaries, name}) => {
+              if (transitions !== null && pendingBoundaries !== null) {
+                if (pendingBoundaries.has(instance)) {
+                  pendingBoundaries.delete(instance);
+                }
+
+                if (name) {
+                  addMarkerProgressCallbackToPendingTransition(
+                    name,
+                    transitions,
+                    pendingBoundaries,
+                  );
+                } else {
+                  transitions.forEach(transition => {
+                    addTransitionProgressCallbackToPendingTransition(
+                      transition,
+                      pendingBoundaries,
+                    );
+                  });
+                }
+              }
+            },
+          );
+        }
+      }
+
       if (instance.visibility & OffscreenPassiveEffectsConnected) {
         instance.visibility &= ~OffscreenPassiveEffectsConnected;
         recursivelyTraverseDisconnectPassiveEffects(finishedWork);

@@ -2273,4 +2273,298 @@ describe('ReactInteractionTracing', () => {
     });
     expect(Scheduler).toHaveYielded(['Hidden Text']);
   });
+
+  // @gate enableTransitionTracing
+  it('trees that are offscreen are considered deleted', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
+        );
+      },
+      onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App({show}) {
+      return (
+        <React.unstable_TracingMarker name="marker">
+          <Offscreen mode={show ? 'visible' : 'hidden'}>
+            <Suspense
+              unstable_name={'suspense'}
+              fallback={<Text text="Loading..." />}>
+              <AsyncText text="Text" />
+            </Suspense>
+          </Offscreen>
+        </React.unstable_TracingMarker>
+      );
+    }
+
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+
+    startTransition(() => root.render(<App show={true} />), {
+      name: 'transition',
+    });
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+
+    expect(Scheduler).toFlushAndYield([
+      'Suspend [Text]',
+      'Loading...',
+      'onTransitionStart(transition, 0)',
+      'onMarkerProgress(transition, marker, 0, 1000, [suspense])',
+      'onTransitionProgress(transition, 0, 1000, [suspense])',
+    ]);
+
+    root.render(<App show={false} />);
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+    expect(Scheduler).toFlushAndYield([
+      'Suspend [Text]',
+      'Loading...',
+      'onMarkerProgress(transition, marker, 0, 2000, [])',
+      // TODO: Discuss whether marker/transitions can complete if a subtree
+      // was hidden
+      'onMarkerComplete(transition, marker, 0, 2000)',
+      'onTransitionProgress(transition, 0, 2000, [])',
+      'onTransitionComplete(transition, 0, 2000)',
+    ]);
+  });
+
+  // @gate enableTransitionTracing
+  it('boundaries in trees that become onscreen are NOT part of the transition', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
+        );
+      },
+      onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App({show}) {
+      return (
+        <React.unstable_TracingMarker name="marker">
+          <Suspense
+            unstable_name="suspense"
+            fallback={<Text text="Loading..." />}>
+            <AsyncText text="Text" />
+          </Suspense>
+          <Offscreen mode={show ? 'visible' : 'hidden'}>
+            <Suspense
+              unstable_name="child suspense"
+              fallback={<Text text="Child Loading..." />}>
+              <AsyncText text="Child" />
+            </Suspense>
+          </Offscreen>
+        </React.unstable_TracingMarker>
+      );
+    }
+
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+
+    startTransition(() => root.render(<App show={false} />), {
+      name: 'transition',
+    });
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+
+    expect(Scheduler).toFlushAndYield([
+      'Suspend [Text]',
+      'Loading...',
+      'Suspend [Child]',
+      'Child Loading...',
+      'onTransitionStart(transition, 0)',
+      'onMarkerProgress(transition, marker, 0, 1000, [suspense])',
+      'onTransitionProgress(transition, 0, 1000, [suspense])',
+    ]);
+
+    root.render(<App show={true} />);
+
+    expect(Scheduler).toFlushAndYield([
+      'Suspend [Text]',
+      'Loading...',
+      'Suspend [Child]',
+      'Child Loading...',
+    ]);
+
+    resolveText('Child');
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+
+    expect(Scheduler).toFlushAndYield(['Child']);
+
+    resolveText('Text');
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+    expect(Scheduler).toFlushAndYield([
+      'Text',
+      'onMarkerProgress(transition, marker, 0, 3000, [])',
+      'onMarkerComplete(transition, marker, 0, 3000)',
+      'onTransitionProgress(transition, 0, 3000, [])',
+      'onTransitionComplete(transition, 0, 3000)',
+    ]);
+  });
+
+  // @gate enableTransitionTracing
+  it('nested offscreen boundaries', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionStart(${name}, ${startTime})`,
+        );
+      },
+      onTransitionProgress: (name, startTime, endTime, pending) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onTransitionProgress(${name}, ${startTime}, ${endTime}, [${suspenseNames}])`,
+        );
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+      onMarkerProgress: (
+        transitioName,
+        markerName,
+        startTime,
+        currentTime,
+        pending,
+      ) => {
+        const suspenseNames = pending.map(p => p.name || '<null>').join(', ');
+        Scheduler.unstable_yieldValue(
+          `onMarkerProgress(${transitioName}, ${markerName}, ${startTime}, ${currentTime}, [${suspenseNames}])`,
+        );
+      },
+      onMarkerComplete: (transitioName, markerName, startTime, endTime) => {
+        Scheduler.unstable_yieldValue(
+          `onMarkerComplete(${transitioName}, ${markerName}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App({outer, inner}) {
+      return (
+        <React.unstable_TracingMarker name="marker">
+          <Suspense
+            unstable_name="suspense"
+            fallback={<Text text="Loading..." />}>
+            <AsyncText text="Child" />
+          </Suspense>
+
+          <Offscreen mode={outer ? 'visible' : 'hidden'}>
+            <Suspense
+              unstable_name="outer suspense"
+              fallback={<Text text="Outer Loading..." />}>
+              <AsyncText text="Outer" />
+            </Suspense>
+            <Offscreen mode={inner ? 'visible' : 'hidden'}>
+              <Suspense
+                unstable_name="inner suspense"
+                fallback={<Text text="Inner Loading..." />}>
+                <AsyncText text="Inner" />
+              </Suspense>
+            </Offscreen>
+          </Offscreen>
+        </React.unstable_TracingMarker>
+      );
+    }
+
+    const root = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+    startTransition(() => root.render(<App outer={false} inner={false} />), {
+      name: 'transition',
+    });
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+
+    expect(Scheduler).toFlushAndYield([
+      'Suspend [Child]',
+      'Loading...',
+      'Suspend [Outer]',
+      'Outer Loading...',
+      'Suspend [Inner]',
+      'Inner Loading...',
+      'onTransitionStart(transition, 0)',
+      'onMarkerProgress(transition, marker, 0, 1000, [suspense])',
+      'onTransitionProgress(transition, 0, 1000, [suspense])',
+    ]);
+
+    root.render(<App outer={true} inner={false} />);
+    resolveText('Child');
+    resolveText('Outer');
+
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+
+    expect(Scheduler).toFlushAndYield([
+      'Child',
+      'Outer',
+      'Suspend [Inner]',
+      'Inner Loading...',
+      'onMarkerProgress(transition, marker, 0, 2000, [])',
+      'onMarkerComplete(transition, marker, 0, 2000)',
+      'onTransitionProgress(transition, 0, 2000, [])',
+      'onTransitionComplete(transition, 0, 2000)',
+    ]);
+  });
 });
