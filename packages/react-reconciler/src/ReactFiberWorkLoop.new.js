@@ -3172,6 +3172,11 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
   parentFiber: Fiber,
   isInStrictMode: boolean,
 ) {
+  if ((parentFiber.subtreeFlags & (PlacementDEV | Visibility)) === NoFlags) {
+    // Parent's descendants have already had effects double invoked.
+    // Early exit to avoid unnecessary tree traversal.
+    return;
+  }
   let child = parentFiber.child;
   while (child !== null) {
     doubleInvokeEffectsInDEV(root, child, isInStrictMode);
