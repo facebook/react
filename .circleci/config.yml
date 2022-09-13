@@ -10,18 +10,62 @@ aliases:
   - &restore_yarn_cache
     restore_cache:
       name: Restore yarn cache
-      key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
+      keys:
+        - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
+        - v1-yarn_cache-{{ arch }}-
+        - v1-yarn_cache-
+
+  - &yarn_install
+    run:
+      name: Install dependencies
+      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+
+  - &save_yarn_cache
+    save_cache:
+      name: Save yarn cache
+      key: v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
+      paths:
+        - ~/.cache/yarn
+
+  - &restore_yarn_cache_fixtures_dom
+    restore_cache:
+      name: Restore yarn cache for fixtures/dom
+      keys:
+        - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
+        - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
+        - v1-yarn_cache-{{ arch }}-
+        - v1-yarn_cache-
+
+  - &yarn_install_fixtures_dom
+    run:
+      name: Install dependencies in fixtures/dom
+      working_directory: fixtures/dom
+      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+
+  - &save_yarn_cache_fixtures_dom
+    save_cache:
+      name: Save yarn cache for fixtures/dom
+      key: v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
+      paths:
+        - ~/.cache/yarn
 
   - &prepare_node_modules_cache_key
     run:
       name: Preparing node_modules cache key
       command: yarn workspaces info | head -n -1 > workspace_info.txt
 
+  - &save_node_modules
+    save_cache:
+      name: Save node_modules cache
+      key: v1-node_modules-{{ arch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}
+      paths:
+        - node_modules
+
   - &restore_node_modules
     restore_cache:
       name: Restore node_modules cache
       keys:
-        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
+        - v1-node_modules-{{ arch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}
 
   - &TEST_PARALLELISM 20
 
@@ -48,28 +92,12 @@ jobs:
       - run:
           name: Nodejs Version
           command: node --version
+      - *prepare_node_modules_cache_key
       - *restore_yarn_cache
-      - run:
-          name: Install Packages
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - save_cache:
-          # Store the yarn cache globally for all lock files with this same
-          # checksum. This will speed up the setup job for all PRs where the
-          # lockfile is the same.
-          name: Save yarn cache for future installs
-          key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
-          paths:
-            - ~/.cache/yarn
-      - save_cache:
-          # Store node_modules for all jobs in this workflow so that they don't
-          # need to each run a yarn install for each job. This will speed up
-          # all jobs run on this branch with the same lockfile.
-          name: Save node_modules cache
-          # This cache key is per branch, a yarn install in setup is required.
-          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
-          paths:
-            - node_modules
+      - *restore_node_modules
+      - *yarn_install
+      - *save_yarn_cache
+      - *save_node_modules
 
   yarn_lint:
     docker: *docker
@@ -217,9 +245,6 @@ jobs:
       - *prepare_node_modules_cache_key
       - *restore_node_modules
       - run:
-          name: Install Packages
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
-      - run:
           environment:
             RELEASE_CHANNEL: experimental
           command: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
@@ -235,9 +260,6 @@ jobs:
           at: .
       - *prepare_node_modules_cache_key
       - *restore_node_modules
-      - run:
-          name: Install Packages
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run:
           name: Playwright install deps
           command: |
@@ -261,9 +283,6 @@ jobs:
           at: .
       - *prepare_node_modules_cache_key
       - *restore_node_modules
-      - run:
-          name: Install nested packages from Yarn cache
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
       - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
 
@@ -280,9 +299,6 @@ jobs:
           at: .
       - *prepare_node_modules_cache_key
       - *restore_node_modules
-      - run:
-          name: Install nested packages from Yarn cache
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run:
           name: Playwright install deps
           command: |
@@ -362,9 +378,6 @@ jobs:
           at: .
       - *prepare_node_modules_cache_key
       - *restore_node_modules
-      - run:
-          name: Install nested packages from Yarn cache
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run: yarn test --build <<parameters.args>> --ci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
@@ -376,13 +389,15 @@ jobs:
           at: .
       - *prepare_node_modules_cache_key
       - *restore_node_modules
+      - *restore_yarn_cache_fixtures_dom
+      - *yarn_install_fixtures_dom
+      - *save_yarn_cache_fixtures_dom
       - run:
           name: Run DOM fixture tests
           environment:
             RELEASE_CHANNEL: stable
+          working_directory: fixtures/dom
           command: |
-            cd fixtures/dom
-            yarn --frozen-lockfile
             yarn prestart
             yarn test --maxWorkers=2
 
