@@ -182,7 +182,8 @@ type StoreConsistencyCheck<T> = {
 export type FunctionComponentUpdateQueue = {
   lastEffect: Effect | null,
   stores: Array<StoreConsistencyCheck<any>> | null,
-  memoCache: MemoCache | null,
+  // NOTE: optional, only set when enableUseMemoCacheHook is enabled
+  memoCache?: MemoCache | null,
 };
 
 type BasicStateAction<S> = (S => S) | S;
@@ -716,11 +717,23 @@ function updateWorkInProgressHook(): Hook {
   return workInProgressHook;
 }
 
-function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
-  return {
-    lastEffect: null,
-    stores: null,
-    memoCache: null,
+// NOTE: defining two versions of this function to avoid size impact when this feature is disabled.
+// Previously this function was inlined, the additional `memoCache` property makes it not inlined.
+let createFunctionComponentUpdateQueue: () => FunctionComponentUpdateQueue;
+if (enableUseMemoCacheHook) {
+  createFunctionComponentUpdateQueue = () => {
+    return {
+      lastEffect: null,
+      stores: null,
+      memoCache: null,
+    };
+  };
+} else {
+  createFunctionComponentUpdateQueue = () => {
+    return {
+      lastEffect: null,
+      stores: null,
+    };
   };
 }
 
@@ -803,13 +816,13 @@ function useMemoCache(size: number): Array<any> {
   // Otherwise clone from the current fiber
   // TODO: not sure how to access the current fiber here other than going through
   // currentlyRenderingFiber.alternate
-  if (memoCache === null) {
+  if (memoCache == null) {
     const current: Fiber | null = currentlyRenderingFiber.alternate;
     if (current !== null) {
       const currentUpdateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
       if (currentUpdateQueue !== null) {
-        const currentMemoCache: MemoCache | null = currentUpdateQueue.memoCache;
-        if (currentMemoCache !== null) {
+        const currentMemoCache: ?MemoCache = currentUpdateQueue.memoCache;
+        if (currentMemoCache != null) {
           memoCache = {
             data: currentMemoCache.data.map(array => array.slice()),
             index: 0,
@@ -819,7 +832,7 @@ function useMemoCache(size: number): Array<any> {
     }
   }
   // Finally fall back to allocating a fresh instance
-  if (memoCache === null) {
+  if (memoCache == null) {
     memoCache = {
       data: [],
       index: 0,
@@ -837,13 +850,13 @@ function useMemoCache(size: number): Array<any> {
   } else if (data.length !== size) {
     // TODO: consider warning or throwing here
     if (__DEV__) {
-console.error(
-      'Expected a constant size argument for each invocation of useMemoCache. ' +
-        'The previous cache was allocated with size %s but size %s was requested.',
-      data.length,
-      size,
-    )
-};
+      console.error(
+        'Expected a constant size argument for each invocation of useMemoCache. ' +
+          'The previous cache was allocated with size %s but size %s was requested.',
+        data.length,
+        size,
+      );
+    }
   }
   memoCache.index++;
   return data;
