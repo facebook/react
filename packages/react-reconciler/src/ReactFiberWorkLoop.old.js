@@ -3085,7 +3085,7 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
       break;
     case OffscreenComponent: {
       const instance: OffscreenInstance = boundaryFiber.stateNode;
-      retryCache = instance.retryCache;
+      retryCache = instance._retryCache;
       break;
     }
     default:

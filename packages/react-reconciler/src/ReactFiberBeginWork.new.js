@@ -815,8 +815,8 @@ function updateOffscreenComponent(
         // We have now gone from hidden to visible, so any transitions should
         // be added to the stack to get added to any Offscreen/suspense children
         const instance: OffscreenInstance | null = workInProgress.stateNode;
-        if (instance !== null && instance.transitions != null) {
-          transitions = Array.from(instance.transitions);
+        if (instance !== null && instance._transitions != null) {
+          transitions = Array.from(instance._transitions);
         }
       }
 
