@@ -831,7 +831,7 @@ function useMemoCache(size: number): Array<any> {
       }
     }
   }
-  // Finally fall back to allocating a fresh instance
+  // Finally fall back to allocating a fresh instance of the cache
   if (memoCache == null) {
     memoCache = {
       data: [],
