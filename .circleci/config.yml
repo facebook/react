@@ -60,6 +60,27 @@ aliases:
       key: v1-node_modules-{{ arch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}
       paths:
         - node_modules
+        - packages/eslint-plugin-react-hooks/node_modules
+        - packages/react-art/node_modules
+        - packages/react-client/node_modules
+        - packages/react-devtools-core/node_modules
+        - packages/react-devtools-extensions/node_modules
+        - packages/react-devtools-inline/node_modules
+        - packages/react-devtools-shared/node_modules
+        - packages/react-devtools-shell/node_modules
+        - packages/react-devtools-timeline/node_modules
+        - packages/react-devtools/node_modules
+        - packages/react-dom/node_modules
+        - packages/react-interactions/node_modules
+        - packages/react-native-renderer/node_modules
+        - packages/react-reconciler/node_modules
+        - packages/react-server-dom-relay/node_modules
+        - packages/react-server-dom-webpack/node_modules
+        - packages/react-server-native-relay/node_modules
+        - packages/react-server/node_modules
+        - packages/react-test-renderer/node_modules
+        - packages/react/node_modules
+        - packages/scheduler/node_modules
 
   - &restore_node_modules
     restore_cache:
