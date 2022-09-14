@@ -151,6 +151,7 @@ describe('ReactFlightDOMBrowser', () => {
     });
   });
 
+  // @gate enableUseHook
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 
@@ -438,6 +439,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(isDone).toBeTruthy();
   });
 
+  // @gate enableUseHook
   it('should allow an alternative module mapping to be used for SSR', async () => {
     function ClientComponent() {
       return <span>Client Component</span>;
@@ -483,6 +485,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(result).toEqual('<span>Client Component</span>');
   });
 
+  // @gate enableUseHook
   it('should be able to complete after aborting and throw the reason client-side', async () => {
     const reportedErrors = [];
 

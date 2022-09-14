@@ -125,6 +125,7 @@ describe('ReactFlightDOM', () => {
     });
   });
 
+  // @gate enableUseHook
   it('should resolve the root', async () => {
     // Model
     function Text({children}) {
@@ -174,6 +175,7 @@ describe('ReactFlightDOM', () => {
     );
   });
 
+  // @gate enableUseHook
   it('should not get confused by $', async () => {
     // Model
     function RootModel() {
@@ -208,6 +210,7 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>$1</p>');
   });
 
+  // @gate enableUseHook
   it('should not get confused by @', async () => {
     // Model
     function RootModel() {
@@ -242,6 +245,7 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
+  // @gate enableUseHook
   it('should unwrap async module references', async () => {
     const AsyncModule = Promise.resolve(function AsyncModule({text}) {
       return 'Async: ' + text;
@@ -282,6 +286,7 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>Async: Module</p>');
   });
 
+  // @gate enableUseHook
   it('should be able to import a name called "then"', async () => {
     const thenExports = {
       then: function then() {
@@ -319,6 +324,7 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>and then</p>');
   });
 
+  // @gate enableUseHook
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 
@@ -506,6 +512,7 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
+  // @gate enableUseHook
   it('should preserve state of client components on refetch', async () => {
     // Client
 
@@ -591,6 +598,7 @@ describe('ReactFlightDOM', () => {
     expect(inputB.value).toBe('goodbye');
   });
 
+  // @gate enableUseHook
   it('should be able to complete after aborting and throw the reason client-side', async () => {
     const reportedErrors = [];
 
@@ -635,6 +643,7 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
+  // @gate enableUseHook
   it('should be able to recover from a direct reference erroring client-side', async () => {
     const reportedErrors = [];
 
@@ -680,6 +689,7 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
+  // @gate enableUseHook
   it('should be able to recover from a direct reference erroring client-side async', async () => {
     const reportedErrors = [];
 
@@ -737,6 +747,7 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
+  // @gate enableUseHook
   it('should be able to recover from a direct reference erroring server-side', async () => {
     const reportedErrors = [];
 
