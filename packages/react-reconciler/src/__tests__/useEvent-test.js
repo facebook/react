@@ -68,7 +68,7 @@ describe('useEvent', () => {
 
       return (
         <>
-          <IncrementButton onClick={onClick} ref={button} />
+          <IncrementButton onClick={() => onClick()} ref={button} />
           <Text text={'Count: ' + count} />
         </>
       );
@@ -83,10 +83,7 @@ describe('useEvent', () => {
     ]);
 
     act(button.current.increment);
-    expect(Scheduler).toHaveYielded([
-      // Button should not re-render, because its props haven't changed
-      'Count: 1',
-    ]);
+    expect(Scheduler).toHaveYielded(['Increment', 'Count: 1']);
     expect(ReactNoop.getChildren()).toEqual([
       span('Increment'),
       span('Count: 1'),
@@ -94,6 +91,7 @@ describe('useEvent', () => {
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
+      'Increment',
       // Event should use the updated callback function closed over the new value.
       'Count: 2',
     ]);
@@ -104,7 +102,7 @@ describe('useEvent', () => {
 
     // Increase the increment prop amount
     ReactNoop.render(<Counter incrementBy={10} />);
-    expect(Scheduler).toFlushAndYield(['Count: 2']);
+    expect(Scheduler).toFlushAndYield(['Increment', 'Count: 2']);
     expect(ReactNoop.getChildren()).toEqual([
       span('Increment'),
       span('Count: 2'),
@@ -112,7 +110,7 @@ describe('useEvent', () => {
 
     // Event uses the new prop
     act(button.current.increment);
-    expect(Scheduler).toHaveYielded(['Count: 12']);
+    expect(Scheduler).toHaveYielded(['Increment', 'Count: 12']);
     expect(ReactNoop.getChildren()).toEqual([
       span('Increment'),
       span('Count: 12'),
@@ -143,7 +141,7 @@ describe('useEvent', () => {
 
       return (
         <>
-          <GreetButton hello={hello} onClick={onClick} ref={button} />
+          <GreetButton hello={hello} onClick={() => onClick()} ref={button} />
           <Text text={'Greeting: ' + greeting} />
         </>
       );
@@ -158,7 +156,10 @@ describe('useEvent', () => {
     ]);
 
     act(button.current.greet);
-    expect(Scheduler).toHaveYielded(['Greeting: undefined says hej']);
+    expect(Scheduler).toHaveYielded([
+      'Say hej',
+      'Greeting: undefined says hej',
+    ]);
     expect(ReactNoop.getChildren()).toEqual([
       span('Say hej'),
       span('Greeting: undefined says hej'),
@@ -186,7 +187,7 @@ describe('useEvent', () => {
 
       return (
         <>
-          <IncrementButton onClick={onClick} />
+          <IncrementButton onClick={() => onClick()} />
           <Text text={'Count: ' + count} />
         </>
       );
@@ -197,6 +198,8 @@ describe('useEvent', () => {
       'An event from useEvent was called during render',
     );
 
+    // If something throws, we try one more time synchronously in case the error was
+    // caused by a data race. See recoverFromConcurrentError
     expect(Scheduler).toHaveYielded(['Count: 0', 'Count: 0']);
   });
 
@@ -224,7 +227,7 @@ describe('useEvent', () => {
 
       return (
         <>
-          <IncrementButton onClick={increment} ref={button} />
+          <IncrementButton onClick={() => increment()} ref={button} />
           <Text text={'Count: ' + count} />
         </>
       );
@@ -237,6 +240,7 @@ describe('useEvent', () => {
       'Increment',
       'Count: 0',
       'Effect: by 2',
+      'Increment',
       'Count: 2',
     ]);
     expect(ReactNoop.getChildren()).toEqual([
@@ -246,6 +250,7 @@ describe('useEvent', () => {
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
+      'Increment',
       // Effect should not re-run because the dependency hasn't changed.
       'Count: 3',
     ]);
@@ -256,6 +261,7 @@ describe('useEvent', () => {
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
+      'Increment',
       // Event should use the updated callback function closed over the new value.
       'Count: 4',
     ]);
@@ -267,8 +273,10 @@ describe('useEvent', () => {
     // Increase the increment prop amount
     ReactNoop.render(<Counter incrementBy={10} />);
     expect(Scheduler).toFlushAndYield([
+      'Increment',
       'Count: 4',
       'Effect: by 20',
+      'Increment',
       'Count: 24',
     ]);
     expect(ReactNoop.getChildren()).toEqual([
@@ -278,7 +286,7 @@ describe('useEvent', () => {
 
     // Event uses the new prop
     act(button.current.increment);
-    expect(Scheduler).toHaveYielded(['Count: 34']);
+    expect(Scheduler).toHaveYielded(['Increment', 'Count: 34']);
     expect(ReactNoop.getChildren()).toEqual([
       span('Increment'),
       span('Count: 34'),
@@ -309,7 +317,7 @@ describe('useEvent', () => {
 
       return (
         <>
-          <IncrementButton onClick={increment} ref={button} />
+          <IncrementButton onClick={() => increment()} ref={button} />
           <Text text={'Count: ' + count} />
         </>
       );
@@ -321,6 +329,7 @@ describe('useEvent', () => {
       'Increment',
       'Count: 0',
       'Effect: by 2',
+      'Increment',
       'Count: 2',
     ]);
     expect(ReactNoop.getChildren()).toEqual([
@@ -330,6 +339,7 @@ describe('useEvent', () => {
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
+      'Increment',
       // Effect should not re-run because the dependency hasn't changed.
       'Count: 3',
     ]);
@@ -340,6 +350,7 @@ describe('useEvent', () => {
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
+      'Increment',
       // Event should use the updated callback function closed over the new value.
       'Count: 4',
     ]);
@@ -351,8 +362,10 @@ describe('useEvent', () => {
     // Increase the increment prop amount
     ReactNoop.render(<Counter incrementBy={10} />);
     expect(Scheduler).toFlushAndYield([
+      'Increment',
       'Count: 4',
       'Effect: by 20',
+      'Increment',
       'Count: 24',
     ]);
     expect(ReactNoop.getChildren()).toEqual([
@@ -362,7 +375,7 @@ describe('useEvent', () => {
 
     // Event uses the new prop
     act(button.current.increment);
-    expect(Scheduler).toHaveYielded(['Count: 34']);
+    expect(Scheduler).toHaveYielded(['Increment', 'Count: 34']);
     expect(ReactNoop.getChildren()).toEqual([
       span('Increment'),
       span('Count: 34'),
@@ -399,7 +412,7 @@ describe('useEvent', () => {
 
       return (
         <>
-          <IncrementButton onClick={increment} ref={button} />
+          <IncrementButton onClick={() => increment()} ref={button} />
           <Text text={'Count: ' + count} />
         </>
       );
@@ -411,6 +424,7 @@ describe('useEvent', () => {
       'Increment',
       'Count: 0',
       'Effect: by 2',
+      'Increment',
       'Count: 2',
     ]);
     expect(ReactNoop.getChildren()).toEqual([
@@ -420,6 +434,7 @@ describe('useEvent', () => {
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
+      'Increment',
       // Effect should not re-run because the dependency hasn't changed.
       'Count: 3',
     ]);
@@ -430,6 +445,7 @@ describe('useEvent', () => {
 
     act(button.current.increment);
     expect(Scheduler).toHaveYielded([
+      'Increment',
       // Event should use the updated callback function closed over the new value.
       'Count: 4',
     ]);
@@ -441,8 +457,10 @@ describe('useEvent', () => {
     // Increase the increment prop amount
     ReactNoop.render(<Counter incrementBy={10} />);
     expect(Scheduler).toFlushAndYield([
+      'Increment',
       'Count: 4',
       'Effect: by 20',
+      'Increment',
       'Count: 24',
     ]);
     expect(ReactNoop.getChildren()).toEqual([
@@ -452,7 +470,7 @@ describe('useEvent', () => {
 
     // Event uses the new prop
     act(button.current.increment);
-    expect(Scheduler).toHaveYielded(['Count: 34']);
+    expect(Scheduler).toHaveYielded(['Increment', 'Count: 34']);
     expect(ReactNoop.getChildren()).toEqual([
       span('Increment'),
       span('Count: 34'),
@@ -610,7 +628,14 @@ describe('useEvent', () => {
         onVisit(url);
       }, [url]);
 
-      return <AddToCartButton onClick={onClick} ref={button} />;
+      return (
+        <AddToCartButton
+          onClick={() => {
+            onClick();
+          }}
+          ref={button}
+        />
+      );
     }
 
     const button = React.createRef(null);
@@ -626,7 +651,7 @@ describe('useEvent', () => {
       'url: /shop/1, numberOfItems: 0',
     ]);
     act(button.current.addToCart);
-    expect(Scheduler).toFlushWithoutYielding();
+    expect(Scheduler).toHaveYielded(['Add to cart']);
 
     act(() =>
       ReactNoop.render(
@@ -635,6 +660,9 @@ describe('useEvent', () => {
         </AppShell>,
       ),
     );
-    expect(Scheduler).toHaveYielded(['url: /shop/2, numberOfItems: 1']);
+    expect(Scheduler).toHaveYielded([
+      'Add to cart',
+      'url: /shop/2, numberOfItems: 1',
+    ]);
   });
 });
