@@ -42,6 +42,7 @@ export type HookType =
   | 'useContext'
   | 'useRef'
   | 'useEffect'
+  | 'useEvent'
   | 'useInsertionEffect'
   | 'useLayoutEffect'
   | 'useCallback'
@@ -376,6 +377,7 @@ export type Dispatcher = {
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
+  useEvent?: <T>(callback: () => T) => () => T,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,

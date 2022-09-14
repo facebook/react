@@ -71,6 +71,7 @@ export {
   useDebugValue,
   useDeferredValue,
   useEffect,
+  experimental_useEvent,
   useImperativeHandle,
   useInsertionEffect,
   useLayoutEffect,

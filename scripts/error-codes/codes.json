@@ -424,5 +424,6 @@
   "436": "Stylesheet resources need a unique representation in the DOM while hydrating and more than one matching DOM Node was found. To fix, ensure you are only rendering one stylesheet link with an href attribute of \"%s\".",
   "437": "the \"precedence\" prop for links to stylesheets expects to receive a string but received something of type \"%s\" instead.",
   "438": "An unsupported type was passed to use(): %s",
-  "439": "We didn't expect to see a forward reference. This is a bug in the React Server."
+  "439": "We didn't expect to see a forward reference. This is a bug in the React Server.",
+  "440": "An event from useEvent was called during render."
 }

@@ -40,6 +40,7 @@ import {
   enableTransitionTracing,
   enableUseHook,
   enableUseMemoCacheHook,
+  enableUseEventHook,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -85,6 +86,7 @@ import {
   Layout as HookLayout,
   Passive as HookPassive,
   Insertion as HookInsertion,
+  Snapshot as HookSnapshot,
 } from './ReactHookEffectTags';
 import {
   getWorkInProgressRoot,
@@ -93,6 +95,7 @@ import {
   requestUpdateLane,
   requestEventTime,
   markSkippedUpdateLanes,
+  isInvalidExecutionContextForEventFunction,
 } from './ReactFiberWorkLoop.old';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -1868,6 +1871,49 @@ function updateEffect(
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
+function mountEvent<T>(callback: () => T): () => T {
+  const hook = mountWorkInProgressHook();
+  const ref = {current: callback};
+
+  function event() {
+    if (isInvalidExecutionContextForEventFunction()) {
+      throw new Error('An event from useEvent was called during render.');
+    }
+    return ref.current.apply(undefined, arguments);
+  }
+
+  // TODO: We don't need all the overhead of an effect object since there are no deps and no
+  // clean up functions.
+  mountEffectImpl(
+    UpdateEffect,
+    HookSnapshot,
+    () => {
+      ref.current = callback;
+    },
+    [ref, callback],
+  );
+
+  hook.memoizedState = [ref, event];
+
+  return event;
+}
+
+function updateEvent<T>(callback: () => T): () => T {
+  const hook = updateWorkInProgressHook();
+  const ref = hook.memoizedState[0];
+
+  updateEffectImpl(
+    UpdateEffect,
+    HookSnapshot,
+    () => {
+      ref.current = callback;
+    },
+    [ref, callback],
+  );
+
+  return hook.memoizedState[1];
+}
+
 function mountInsertionEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
@@ -2546,6 +2592,9 @@ if (enableUseHook) {
 if (enableUseMemoCacheHook) {
   (ContextOnlyDispatcher: Dispatcher).useMemoCache = throwInvalidHookError;
 }
+if (enableUseEventHook) {
+  (ContextOnlyDispatcher: Dispatcher).useEvent = throwInvalidHookError;
+}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -2581,6 +2630,9 @@ if (enableUseHook) {
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnMount: Dispatcher).useMemoCache = useMemoCache;
 }
+if (enableUseEventHook) {
+  (HooksDispatcherOnMount: Dispatcher).useEvent = mountEvent;
+}
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
@@ -2613,6 +2665,9 @@ if (enableUseMemoCacheHook) {
 }
 if (enableUseHook) {
   (HooksDispatcherOnUpdate: Dispatcher).use = use;
+}
+if (enableUseEventHook) {
+  (HooksDispatcherOnUpdate: Dispatcher).useEvent = updateEvent;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -2647,6 +2702,9 @@ if (enableUseHook) {
 }
 if (enableUseMemoCacheHook) {
   (HooksDispatcherOnRerender: Dispatcher).useMemoCache = useMemoCache;
+}
+if (enableUseEventHook) {
+  (HooksDispatcherOnRerender: Dispatcher).useEvent = updateEvent;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -2829,6 +2887,15 @@ if (__DEV__) {
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
+  if (enableUseEventHook) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useEvent = function useEvent<T>(
+      callback: () => T,
+    ): () => T {
+      currentHookNameInDev = 'useEvent';
+      mountHookTypesDev();
+      return mountEvent(callback);
+    };
+  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -2976,6 +3043,15 @@ if (__DEV__) {
   }
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useMemoCache = useMemoCache;
+  }
+  if (enableUseEventHook) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEvent = function useEvent<
+      T,
+    >(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return mountEvent(callback);
+    };
   }
 
   HooksDispatcherOnUpdateInDEV = {
@@ -3125,6 +3201,15 @@ if (__DEV__) {
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
+  if (enableUseEventHook) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useEvent = function useEvent<T>(
+      callback: () => T,
+    ): () => T {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return updateEvent(callback);
+    };
+  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3273,6 +3358,15 @@ if (__DEV__) {
   }
   if (enableUseMemoCacheHook) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useMemoCache = useMemoCache;
+  }
+  if (enableUseEventHook) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useEvent = function useEvent<
+      T,
+    >(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      updateHookTypesDev();
+      return updateEvent(callback);
+    };
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -3447,6 +3541,16 @@ if (__DEV__) {
     ): Array<any> {
       warnInvalidHookAccess();
       return useMemoCache(size);
+    };
+  }
+  if (enableUseEventHook) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useEvent = function useEvent<
+      T,
+    >(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountEvent(callback);
     };
   }
 
@@ -3624,6 +3728,16 @@ if (__DEV__) {
       return useMemoCache(size);
     };
   }
+  if (enableUseEventHook) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useEvent = function useEvent<
+      T,
+    >(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEvent(callback);
+    };
+  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3798,6 +3912,16 @@ if (__DEV__) {
     ): Array<any> {
       warnInvalidHookAccess();
       return useMemoCache(size);
+    };
+  }
+  if (enableUseEventHook) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useEvent = function useEvent<
+      T,
+    >(callback: () => T): () => T {
+      currentHookNameInDev = 'useEvent';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateEvent(callback);
     };
   }
 }

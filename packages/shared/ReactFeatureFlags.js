@@ -120,6 +120,8 @@ export const enableUseHook = __EXPERIMENTAL__;
 // auto-memoization.
 export const enableUseMemoCacheHook = __EXPERIMENTAL__;
 
+export const enableUseEventHook = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
