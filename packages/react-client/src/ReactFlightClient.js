@@ -38,6 +38,7 @@ export type JSONValue =
   | $ReadOnlyArray<JSONValue>;
 
 const PENDING = 'pending';
+const BLOCKED = 'blocked';
 const RESOLVED_MODEL = 'resolved_model';
 const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
@@ -45,6 +46,13 @@ const ERRORED = 'rejected';
 
 type PendingChunk<T> = {
   status: 'pending',
+  value: null | Array<(T) => mixed>,
+  reason: null | Array<(mixed) => mixed>,
+  _response: Response,
+  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+};
+type BlockedChunk<T> = {
+  status: 'blocked',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
@@ -80,6 +88,7 @@ type ErroredChunk<T> = {
 };
 type SomeChunk<T> =
   | PendingChunk<T>
+  | BlockedChunk<T>
   | ResolvedModelChunk<T>
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
@@ -115,6 +124,7 @@ Chunk.prototype.then = function<T>(
       resolve(chunk.value);
       break;
     case PENDING:
+    case BLOCKED:
       if (resolve) {
         if (chunk.value === null) {
           chunk.value = [];
@@ -159,8 +169,9 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
     case INITIALIZED:
       return chunk.value;
     case PENDING:
+    case BLOCKED:
       // eslint-disable-next-line no-throw-literal
-      throw (chunk: Thenable<T>);
+      throw ((chunk: any): Thenable<T>);
     default:
       throw chunk.reason;
   }
@@ -175,6 +186,11 @@ function readRoot<T>(): T {
 function createPendingChunk<T>(response: Response): PendingChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(PENDING, null, null, response);
+}
+
+function createBlockedChunk<T>(response: Response): BlockedChunk<T> {
+  // $FlowFixMe Flow doesn't support functions as constructors
+  return new Chunk(BLOCKED, null, null, response);
 }
 
 function createErrorChunk<T>(
@@ -210,6 +226,7 @@ function wakeChunkIfInitialized<T>(
       wakeChunk(resolveListeners, chunk.value);
       break;
     case PENDING:
+    case BLOCKED:
       chunk.value = resolveListeners;
       chunk.reason = rejectListeners;
       break;
@@ -222,7 +239,7 @@ function wakeChunkIfInitialized<T>(
 }
 
 function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
-  if (chunk.status !== PENDING) {
+  if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
     // We already resolved. We didn't expect to see this.
     return;
   }
@@ -278,7 +295,7 @@ function resolveModuleChunk<T>(
   chunk: SomeChunk<T>,
   value: ModuleReference<T>,
 ): void {
-  if (chunk.status !== PENDING) {
+  if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
     // We already resolved. We didn't expect to see this.
     return;
   }
@@ -308,11 +325,11 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     ) {
       initializingChunkBlockedModel.value = value;
       // We discovered new dependencies on modules that are not yet resolved.
-      // We have to return to the PENDING state until they're resolved.
-      const pendingChunk: PendingChunk<T> = (chunk: any);
-      pendingChunk.status = PENDING;
-      pendingChunk.value = null;
-      pendingChunk.reason = null;
+      // We have to go the BLOCKED state until they're resolved.
+      const blockedChunk: BlockedChunk<T> = (chunk: any);
+      blockedChunk.status = BLOCKED;
+      blockedChunk.value = null;
+      blockedChunk.reason = null;
     } else {
       const initializedChunk: InitializedChunk<T> = (chunk: any);
       initializedChunk.status = INITIALIZED;
@@ -348,7 +365,9 @@ export function reportGlobalError(response: Response, error: Error): void {
     // If this chunk was already resolved or errored, it won't
     // trigger an error but if it wasn't then we need to
     // because we won't be getting any new data to resolve it.
-    triggerErrorOnChunk(chunk, error);
+    if (chunk.status === PENDING) {
+      triggerErrorOnChunk(chunk, error);
+    }
   });
 }
 
@@ -433,7 +452,7 @@ function createModelResolver<T>(
     parentObject[key] = value;
     blocked.deps--;
     if (blocked.deps === 0) {
-      if (chunk.status !== PENDING) {
+      if (chunk.status !== BLOCKED) {
         return;
       }
       const resolveListeners = chunk.value;
@@ -480,6 +499,7 @@ export function parseModelString(
           case INITIALIZED:
             return chunk.value;
           case PENDING:
+          case BLOCKED:
             const parentChunk = initializingChunk;
             chunk.then(
               createModelResolver(parentChunk, parentObject, key),
@@ -573,21 +593,28 @@ export function resolveModule(
   // that we'll need them.
   const promise = preloadModule(moduleReference);
   if (promise) {
-    let pendingChunk;
+    let blockedChunk: BlockedChunk<any>;
     if (!chunk) {
-      pendingChunk = createPendingChunk(response);
-      chunks.set(id, pendingChunk);
+      // Technically, we should just treat promise as the chunk in this
+      // case. Because it'll just behave as any other promise.
+      blockedChunk = createBlockedChunk(response);
+      chunks.set(id, blockedChunk);
     } else {
-      pendingChunk = chunk;
+      // This can't actually happen because we don't have any forward
+      // references to modules.
+      blockedChunk = (chunk: any);
+      blockedChunk.status = BLOCKED;
     }
     promise.then(
-      () => resolveModuleChunk(pendingChunk, moduleReference),
-      error => triggerErrorOnChunk(pendingChunk, error),
+      () => resolveModuleChunk(blockedChunk, moduleReference),
+      error => triggerErrorOnChunk(blockedChunk, error),
     );
   } else {
     if (!chunk) {
       chunks.set(id, createResolvedModuleChunk(response, moduleReference));
     } else {
+      // This can't actually happen because we don't have any forward
+      // references to modules.
       resolveModuleChunk(chunk, moduleReference);
     }
   }
