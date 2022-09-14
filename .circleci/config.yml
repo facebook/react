@@ -57,7 +57,7 @@ aliases:
   - &save_node_modules
     save_cache:
       name: Save node_modules cache
-      key: v2-node_modules-{{ arch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}
+      key: v1-node_modules-{{ arch }}-{{ epoch }}
       paths:
         - node_modules
         - packages/eslint-plugin-react-hooks/node_modules
@@ -86,7 +86,7 @@ aliases:
     restore_cache:
       name: Restore node_modules cache
       keys:
-        - v2-node_modules-{{ arch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}
+        - v1-node_modules-{{ arch }}-{{ epoch }}
 
   - &TEST_PARALLELISM 20
 
