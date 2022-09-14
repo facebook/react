@@ -20,6 +20,12 @@ aliases:
       name: Install dependencies
       command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
 
+  - &yarn_install_retry
+    run:
+      name: Install dependencies (retry)
+      when: on_fail
+      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+
   - &save_yarn_cache
     save_cache:
       name: Save yarn cache
@@ -39,6 +45,13 @@ aliases:
   - &yarn_install_fixtures_dom
     run:
       name: Install dependencies in fixtures/dom
+      working_directory: fixtures/dom
+      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+
+  - &yarn_install_fixtures_dom_retry
+    run:
+      name: Install dependencies in fixtures/dom (retry)
+      when: on_fail
       working_directory: fixtures/dom
       command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
 
@@ -111,6 +124,7 @@ jobs:
       - *restore_yarn_cache
       - *restore_node_modules
       - *yarn_install
+      - *yarn_install_retry
       - *save_yarn_cache
       - *save_node_modules
 
@@ -388,6 +402,7 @@ jobs:
       - *restore_node_modules
       - *restore_yarn_cache_fixtures_dom
       - *yarn_install_fixtures_dom
+      - *yarn_install_fixtures_dom_retry
       - *save_yarn_cache_fixtures_dom
       - run:
           name: Run DOM fixture tests
