@@ -293,20 +293,38 @@ function resolveModuleChunk<T>(
   }
 }
 
+let initializingChunk: ResolvedModelChunk<any> = (null: any);
+let initializingChunkBlockedModel: null | {deps: number, value: any} = null;
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
+  const prevChunk = initializingChunk;
+  const prevBlocked = initializingChunkBlockedModel;
+  initializingChunk = chunk;
+  initializingChunkBlockedModel = null;
   try {
     const value: T = parseModel(chunk._response, chunk.value);
-    const initializedChunk: InitializedChunk<T> = (chunk: any);
-    initializedChunk.status = INITIALIZED;
-    initializedChunk.value = value;
-  } catch (error) {
-    if (typeof error.then === 'function') {
-      // TODO: Remove this once we remove readChunk from the model init
-      throw error;
+    if (
+      initializingChunkBlockedModel !== null &&
+      initializingChunkBlockedModel.deps > 0
+    ) {
+      initializingChunkBlockedModel.value = value;
+      // We discovered new dependencies on modules that are not yet resolved.
+      // We have to return to the PENDING state until they're resolved.
+      const pendingChunk: PendingChunk<T> = (chunk: any);
+      pendingChunk.status = PENDING;
+      pendingChunk.value = null;
+      pendingChunk.reason = null;
+    } else {
+      const initializedChunk: InitializedChunk<T> = (chunk: any);
+      initializedChunk.status = INITIALIZED;
+      initializedChunk.value = value;
     }
+  } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
     erroredChunk.reason = error;
+  } finally {
+    initializingChunk = prevChunk;
+    initializingChunkBlockedModel = prevBlocked;
   }
 }
 
@@ -396,6 +414,43 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   return chunk;
 }
 
+function createModelResolver<T>(
+  chunk: SomeChunk<T>,
+  parentObject: Object,
+  key: string,
+) {
+  let blocked;
+  if (initializingChunkBlockedModel) {
+    blocked = initializingChunkBlockedModel;
+    blocked.deps++;
+  } else {
+    blocked = initializingChunkBlockedModel = {
+      deps: 1,
+      value: null,
+    };
+  }
+  return value => {
+    parentObject[key] = value;
+    blocked.deps--;
+    if (blocked.deps === 0) {
+      if (chunk.status !== PENDING) {
+        return;
+      }
+      const resolveListeners = chunk.value;
+      const initializedChunk: InitializedChunk<T> = (chunk: any);
+      initializedChunk.status = INITIALIZED;
+      initializedChunk.value = blocked.value;
+      if (resolveListeners !== null) {
+        wakeChunk(resolveListeners, blocked.value);
+      }
+    }
+  };
+}
+
+function createModelReject<T>(chunk: SomeChunk<T>) {
+  return error => triggerErrorOnChunk(chunk, error);
+}
+
 export function parseModelString(
   response: Response,
   parentObject: Object,
@@ -412,7 +467,28 @@ export function parseModelString(
       } else {
         const id = parseInt(value.substring(1), 16);
         const chunk = getChunk(response, id);
-        return readChunk(chunk);
+        switch (chunk.status) {
+          case RESOLVED_MODEL:
+            initializeModelChunk(chunk);
+            break;
+          case RESOLVED_MODULE:
+            initializeModuleChunk(chunk);
+            break;
+        }
+        // The status might have changed after initialization.
+        switch (chunk.status) {
+          case INITIALIZED:
+            return chunk.value;
+          case PENDING:
+            const parentChunk = initializingChunk;
+            chunk.then(
+              createModelResolver(parentChunk, parentObject, key),
+              createModelReject(parentChunk),
+            );
+            return null;
+          default:
+            throw chunk.reason;
+        }
       }
     }
     case '@': {
