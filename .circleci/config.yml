@@ -57,7 +57,7 @@ aliases:
   - &save_node_modules
     save_cache:
       name: Save node_modules cache
-      key: v1-node_modules-{{ arch }}-{{ epoch }}
+      key: v1-node_modules-{{ arch }}-{{ .Revision }}
       paths:
         - node_modules
         - packages/eslint-plugin-react-hooks/node_modules
