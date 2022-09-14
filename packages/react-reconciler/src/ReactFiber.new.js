@@ -74,6 +74,7 @@ import {
 import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 
+import {detachOffscreenInstance} from './ReactFiberCommitWork.new';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 import {
   resolveClassForHotReloading,
@@ -755,6 +756,7 @@ export function createFiberFromOffscreen(
     _pendingMarkers: null,
     _retryCache: null,
     _transitions: null,
+    detach: () => detachOffscreenInstance(primaryChildInstance),
   };
   fiber.stateNode = primaryChildInstance;
   return fiber;
@@ -776,6 +778,7 @@ export function createFiberFromLegacyHidden(
     _pendingMarkers: null,
     _transitions: null,
     _retryCache: null,
+    detach: () => detachOffscreenInstance(instance),
   };
   fiber.stateNode = instance;
   return fiber;

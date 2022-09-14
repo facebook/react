@@ -37,7 +37,6 @@ import type {
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {RootState} from './ReactFiberRoot.old';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old';
-
 import checkPropTypes from 'shared/checkPropTypes';
 import {
   markComponentRenderStarted,
@@ -688,7 +687,9 @@ function updateOffscreenComponent(
 
   if (
     nextProps.mode === 'hidden' ||
-    (enableLegacyHidden && nextProps.mode === 'unstable-defer-without-hiding')
+    (enableLegacyHidden &&
+      nextProps.mode === 'unstable-defer-without-hiding') ||
+    workInProgress.stateNode._visibility & OffscreenDetached
   ) {
     // Rendering a hidden tree.
 

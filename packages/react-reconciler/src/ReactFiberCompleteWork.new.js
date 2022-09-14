@@ -28,6 +28,7 @@ import type {
   SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent.new';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
+import {OffscreenDetached} from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import {
@@ -428,7 +429,15 @@ if (supportsMutation) {
         if (child !== null) {
           child.return = node;
         }
-        appendAllChildrenToContainer(containerChildSet, node, true, true);
+        // Detached tree is hidden from user space.
+        const _needsVisibilityToggle =
+          node.stateNode._visibility & OffscreenDetached;
+        appendAllChildrenToContainer(
+          containerChildSet,
+          node,
+          _needsVisibilityToggle,
+          true,
+        );
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
