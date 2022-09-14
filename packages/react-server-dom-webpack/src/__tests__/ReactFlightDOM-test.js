@@ -18,6 +18,7 @@ global.TextDecoder = require('util').TextDecoder;
 global.setImmediate = cb => cb();
 
 let act;
+let use;
 let clientExports;
 let clientModuleError;
 let webpackMap;
@@ -40,6 +41,7 @@ describe('ReactFlightDOM', () => {
 
     Stream = require('stream');
     React = require('react');
+    use = React.experimental_use;
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
     ReactServerDOMWriter = require('react-server-dom-webpack/writer.node.server');
@@ -80,20 +82,6 @@ describe('ReactFlightDOM', () => {
     };
   }
 
-  async function waitForSuspense(fn) {
-    while (true) {
-      try {
-        return fn();
-      } catch (promise) {
-        if (typeof promise.then === 'function') {
-          await promise;
-        } else {
-          throw promise;
-        }
-      }
-    }
-  }
-
   const theInfinitePromise = new Promise(() => {});
   function InfiniteSuspend() {
     throw theInfinitePromise;
@@ -126,16 +114,14 @@ describe('ReactFlightDOM', () => {
     );
     pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
-    await waitForSuspense(() => {
-      const model = response.readRoot();
-      expect(model).toEqual({
-        html: (
-          <div>
-            <span>hello</span>
-            <span>world</span>
-          </div>
-        ),
-      });
+    const model = await response;
+    expect(model).toEqual({
+      html: (
+        <div>
+          <span>hello</span>
+          <span>world</span>
+        </div>
+      ),
     });
   });
 
@@ -160,7 +146,7 @@ describe('ReactFlightDOM', () => {
 
     // View
     function Message({response}) {
-      return <section>{response.readRoot().html}</section>;
+      return <section>{use(response).html}</section>;
     }
     function App({response}) {
       return (
@@ -196,7 +182,7 @@ describe('ReactFlightDOM', () => {
 
     // View
     function Message({response}) {
-      return <p>{response.readRoot().text}</p>;
+      return <p>{use(response).text}</p>;
     }
     function App({response}) {
       return (
@@ -230,7 +216,7 @@ describe('ReactFlightDOM', () => {
 
     // View
     function Message({response}) {
-      return <p>{response.readRoot().text}</p>;
+      return <p>{use(response).text}</p>;
     }
     function App({response}) {
       return (
@@ -266,7 +252,7 @@ describe('ReactFlightDOM', () => {
     });
 
     function Print({response}) {
-      return <p>{response.readRoot()}</p>;
+      return <p>{use(response)}</p>;
     }
 
     function App({response}) {
@@ -304,7 +290,7 @@ describe('ReactFlightDOM', () => {
     };
 
     function Print({response}) {
-      return <p>{response.readRoot()}</p>;
+      return <p>{use(response)}</p>;
     }
 
     function App({response}) {
@@ -432,7 +418,7 @@ describe('ReactFlightDOM', () => {
     };
 
     function ProfilePage({response}) {
-      return response.readRoot().rootContent;
+      return use(response).rootContent;
     }
 
     const {writable, readable} = getTestStream();
@@ -524,7 +510,7 @@ describe('ReactFlightDOM', () => {
     // Client
 
     function Page({response}) {
-      return response.readRoot();
+      return use(response);
     }
 
     function Input() {
@@ -627,7 +613,7 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOMClient.createRoot(container);
 
     function App({res}) {
-      return res.readRoot();
+      return use(res);
     }
 
     await act(async () => {
@@ -677,7 +663,7 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOMClient.createRoot(container);
 
     function App({res}) {
-      return res.readRoot();
+      return use(res);
     }
 
     await act(async () => {
@@ -727,7 +713,7 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOMClient.createRoot(container);
 
     function App({res}) {
-      return res.readRoot();
+      return use(res);
     }
 
     await act(async () => {
@@ -787,7 +773,7 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOMClient.createRoot(container);
 
     function App({res}) {
-      return res.readRoot();
+      return use(res);
     }
 
     await act(async () => {

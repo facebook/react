@@ -43,20 +43,6 @@ describe('ReactFlightDOMBrowser', () => {
     use = React.experimental_use;
   });
 
-  async function waitForSuspense(fn) {
-    while (true) {
-      try {
-        return fn();
-      } catch (promise) {
-        if (typeof promise.then === 'function') {
-          await promise;
-        } else {
-          throw promise;
-        }
-      }
-    }
-  }
-
   async function readResult(stream) {
     const reader = stream.getReader();
     let result = '';
@@ -121,16 +107,14 @@ describe('ReactFlightDOMBrowser', () => {
 
     const stream = ReactServerDOMWriter.renderToReadableStream(<App />);
     const response = ReactServerDOMReader.createFromReadableStream(stream);
-    await waitForSuspense(() => {
-      const model = response.readRoot();
-      expect(model).toEqual({
-        html: (
-          <div>
-            <span>hello</span>
-            <span>world</span>
-          </div>
-        ),
-      });
+    const model = await response;
+    expect(model).toEqual({
+      html: (
+        <div>
+          <span>hello</span>
+          <span>world</span>
+        </div>
+      ),
     });
   });
 
@@ -156,16 +140,14 @@ describe('ReactFlightDOMBrowser', () => {
 
     const stream = ReactServerDOMWriter.renderToReadableStream(<App />);
     const response = ReactServerDOMReader.createFromReadableStream(stream);
-    await waitForSuspense(() => {
-      const model = response.readRoot();
-      expect(model).toEqual({
-        html: (
-          <div>
-            <span>hello</span>
-            <span>world</span>
-          </div>
-        ),
-      });
+    const model = await response;
+    expect(model).toEqual({
+      html: (
+        <div>
+          <span>hello</span>
+          <span>world</span>
+        </div>
+      ),
     });
   });
 
@@ -259,7 +241,7 @@ describe('ReactFlightDOMBrowser', () => {
     };
 
     function ProfilePage({response}) {
-      return response.readRoot().rootContent;
+      return use(response).rootContent;
     }
 
     const stream = ReactServerDOMWriter.renderToReadableStream(
@@ -491,7 +473,7 @@ describe('ReactFlightDOMBrowser', () => {
     });
 
     function ClientRoot() {
-      return response.readRoot();
+      return use(response);
     }
 
     const ssrStream = await ReactDOMServer.renderToReadableStream(
@@ -539,7 +521,7 @@ describe('ReactFlightDOMBrowser', () => {
     const root = ReactDOMClient.createRoot(container);
 
     function App({res}) {
-      return res.readRoot();
+      return use(res);
     }
 
     await act(async () => {
@@ -579,7 +561,7 @@ describe('ReactFlightDOMBrowser', () => {
     const response = ReactServerDOMReader.createFromReadableStream(stream);
 
     function Client() {
-      return response.readRoot();
+      return use(response);
     }
 
     const container = document.createElement('div');
@@ -613,7 +595,7 @@ describe('ReactFlightDOMBrowser', () => {
     const response = ReactServerDOMReader.createFromReadableStream(stream);
 
     function Client() {
-      return response.readRoot();
+      return use(response);
     }
 
     const container = document.createElement('div');
@@ -644,7 +626,7 @@ describe('ReactFlightDOMBrowser', () => {
     const response = ReactServerDOMReader.createFromReadableStream(stream);
 
     function Client() {
-      return response.readRoot();
+      return use(response);
     }
 
     const container = document.createElement('div');
@@ -699,7 +681,7 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     function Client() {
-      return response.readRoot();
+      return use(response);
     }
 
     const container = document.createElement('div');
@@ -733,7 +715,7 @@ describe('ReactFlightDOMBrowser', () => {
     const response = ReactServerDOMReader.createFromReadableStream(stream);
 
     function Client() {
-      return response.readRoot();
+      return use(response);
     }
 
     const container = document.createElement('div');
