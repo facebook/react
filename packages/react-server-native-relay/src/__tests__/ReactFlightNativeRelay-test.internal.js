@@ -48,7 +48,16 @@ describe('ReactFlightNativeRelay', () => {
       ReactNativeFlightRelayClient.resolveRow(response, chunk);
     }
     ReactNativeFlightRelayClient.close(response);
-    const model = response.readRoot();
+    const promise = ReactNativeFlightRelayClient.getRoot(response);
+    let model;
+    let error;
+    promise.then(
+      m => (model = m),
+      e => (error = e),
+    );
+    if (error) {
+      throw error;
+    }
     return model;
   }
 

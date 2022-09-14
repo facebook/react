@@ -18,9 +18,10 @@ import {
   resolveSymbol,
   resolveError,
   close,
+  getRoot,
 } from 'react-client/src/ReactFlightClient';
 
-export {createResponse, close};
+export {createResponse, close, getRoot};
 
 export function resolveRow(response: Response, chunk: RowEncoding): void {
   if (chunk[0] === 'J') {
