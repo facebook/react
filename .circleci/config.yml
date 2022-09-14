@@ -86,7 +86,7 @@ aliases:
     restore_cache:
       name: Restore node_modules cache
       keys:
-        - v1-node_modules-{{ arch }}-{{ epoch }}
+        - v1-node_modules-{{ arch }}-{{ .Revision }}
 
   - &TEST_PARALLELISM 20
 
