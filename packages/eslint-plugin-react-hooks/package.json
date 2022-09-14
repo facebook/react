@@ -9,10 +9,12 @@
   },
   "exports": {
     ".": {
-      "import": "./index.mjs",
-      "require": "./index.js"
+      "import": "./index.js",
+      "require": "./legacy.js"
     },
-    "./recommended": "./src/configs/recommended.mjs"
+    "./new": "./index.js",
+    "./recommended": "./src/configs/recommended.js",
+    "./package.json": "./package.json"
   },
   "files": [
     "LICENSE",

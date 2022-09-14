@@ -1,5 +1,5 @@
-import { configs } from '../index.js';
-import reactHooks from '../../index.mjs'
+import { configs } from '../index';
+import reactHooks from '../../index';
 
 export default {
   plugins: {

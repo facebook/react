@@ -5,8 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { rules } from './src/index.js';
-
-export default {
-  rules,
-}
+export * from './src/index';
