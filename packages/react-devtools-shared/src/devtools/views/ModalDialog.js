@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
 import * as React from 'react';
 import {
   createContext,
@@ -55,7 +56,7 @@ type ModalDialogContextType = {
   dispatch: Dispatch,
 };
 
-const ModalDialogContext = createContext<ModalDialogContextType>(
+const ModalDialogContext: ReactContext<ModalDialogContextType> = createContext<ModalDialogContextType>(
   ((null: any): ModalDialogContextType),
 );
 ModalDialogContext.displayName = 'ModalDialogContext';

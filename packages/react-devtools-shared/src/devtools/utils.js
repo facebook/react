@@ -149,7 +149,7 @@ export function printStore(
 // We use JSON.parse to parse string values
 // e.g. 'foo' is not valid JSON but it is a valid string
 // so this method replaces e.g. 'foo' with "foo"
-export function sanitizeForParse(value: any) {
+export function sanitizeForParse(value: any): any | string {
   if (typeof value === 'string') {
     if (
       value.length >= 2 &&
@@ -162,7 +162,7 @@ export function sanitizeForParse(value: any) {
   return value;
 }
 
-export function smartParse(value: any) {
+export function smartParse(value: any): any | void | number {
   switch (value) {
     case 'Infinity':
       return Infinity;

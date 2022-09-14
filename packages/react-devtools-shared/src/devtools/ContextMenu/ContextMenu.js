@@ -53,7 +53,7 @@ type Props = {
   id: string,
 };
 
-export default function ContextMenu({children, id}: Props) {
+export default function ContextMenu({children, id}: Props): React.Node {
   const {hideMenu, registerMenu} = useContext<RegistryContextType>(
     RegistryContext,
   );

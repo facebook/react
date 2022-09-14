@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import * as React from 'react';
 import {createContext, useCallback, useContext, useMemo, useState} from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
@@ -67,7 +69,9 @@ export type Context = {
   selectFiber: (id: number | null, name: string | null) => void,
 };
 
-const ProfilerContext = createContext<Context>(((null: any): Context));
+const ProfilerContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 ProfilerContext.displayName = 'ProfilerContext';
 
 type StoreProfilingState = {

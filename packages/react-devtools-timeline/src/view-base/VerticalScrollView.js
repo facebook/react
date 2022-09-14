@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Size, IntrinsicSize} from './geometry';
 import type {
   Interaction,
   MouseDownInteraction,
@@ -78,7 +79,7 @@ export class VerticalScrollView extends View {
     this._setScrollState(this._scrollState);
   }
 
-  desiredSize() {
+  desiredSize(): Size | IntrinsicSize {
     return this._contentView.desiredSize();
   }
 
@@ -195,7 +196,7 @@ export class VerticalScrollView extends View {
     }
   }
 
-  _handleMouseMove(interaction: MouseMoveInteraction) {
+  _handleMouseMove(interaction: MouseMoveInteraction): void | boolean {
     if (!this._isPanning) {
       return;
     }
