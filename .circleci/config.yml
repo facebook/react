@@ -49,6 +49,45 @@ aliases:
       paths:
         - ~/.cache/yarn
 
+  - &prepare_node_modules_cache_key
+    run:
+      name: Preparing node_modules cache key
+      command: yarn workspaces info | head -n -1 > workspace_info.txt
+
+  - &save_node_modules
+    save_cache:
+      name: Save node_modules cache
+      key: v1-node_modules-{{ arch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}
+      paths:
+        - node_modules
+        - packages/eslint-plugin-react-hooks/node_modules
+        - packages/react-art/node_modules
+        - packages/react-client/node_modules
+        - packages/react-devtools-core/node_modules
+        - packages/react-devtools-extensions/node_modules
+        - packages/react-devtools-inline/node_modules
+        - packages/react-devtools-shared/node_modules
+        - packages/react-devtools-shell/node_modules
+        - packages/react-devtools-timeline/node_modules
+        - packages/react-devtools/node_modules
+        - packages/react-dom/node_modules
+        - packages/react-interactions/node_modules
+        - packages/react-native-renderer/node_modules
+        - packages/react-reconciler/node_modules
+        - packages/react-server-dom-relay/node_modules
+        - packages/react-server-dom-webpack/node_modules
+        - packages/react-server-native-relay/node_modules
+        - packages/react-server/node_modules
+        - packages/react-test-renderer/node_modules
+        - packages/react/node_modules
+        - packages/scheduler/node_modules
+
+  - &restore_node_modules
+    restore_cache:
+      name: Restore node_modules cache
+      keys:
+        - v1-node_modules-{{ arch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}
+
   - &TEST_PARALLELISM 20
 
   - &attach_workspace
@@ -74,9 +113,12 @@ jobs:
       - run:
           name: Nodejs Version
           command: node --version
+      - *prepare_node_modules_cache_key
       - *restore_yarn_cache
+      - *restore_node_modules
       - *yarn_install
       - *save_yarn_cache
+      - *save_node_modules
 
   yarn_lint:
     docker: *docker
@@ -84,8 +126,8 @@ jobs:
 
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
       - run: ./scripts/circleci/check_license.sh
@@ -99,8 +141,8 @@ jobs:
 
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
 
   scrape_warning_messages:
@@ -109,8 +151,8 @@ jobs:
 
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run:
           command: |
             mkdir -p ./build
@@ -126,8 +168,8 @@ jobs:
     parallelism: 40
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run: yarn build-combined
       - persist_to_workspace:
           root: .
@@ -142,8 +184,8 @@ jobs:
         type: string
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run:
           name: Download artifacts for revision
           command: |
@@ -160,8 +202,8 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run:
           name: Download artifacts for base revision
           command: |
@@ -189,8 +231,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
       - run: tar -zcvf ./build.tgz ./build
@@ -209,8 +251,8 @@ jobs:
       - attach_workspace:
           at: .
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run:
           command: node ./scripts/tasks/danger
 
@@ -221,8 +263,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: experimental
@@ -237,8 +279,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run:
           name: Playwright install deps
           command: |
@@ -260,8 +302,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
       - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
 
@@ -276,8 +318,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run:
           name: Playwright install deps
           command: |
@@ -301,8 +343,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run: yarn lint-build
 
   yarn_check_release_dependencies:
@@ -312,8 +354,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run: yarn check-release-dependencies
 
 
@@ -323,8 +365,8 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run:
           name: Search build artifacts for unminified errors
           command: |
@@ -340,8 +382,8 @@ jobs:
         type: string
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run: yarn test <<parameters.args>> --ci
 
   yarn_test_build:
@@ -355,8 +397,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run: yarn test --build <<parameters.args>> --ci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
@@ -366,6 +408,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - *restore_yarn_cache_fixtures_dom
       - *yarn_install_fixtures_dom
       - *save_yarn_cache_fixtures_dom
@@ -383,8 +427,8 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run:
           name: Run fuzz tests
           command: |
@@ -403,8 +447,8 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run:
           name: Run publish script
           command: |
@@ -422,8 +466,8 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *yarn_install
+      - *prepare_node_modules_cache_key
+      - *restore_node_modules
       - run:
           name: Fetch revisions that contain an intentional fork
           # This will fetch each revision listed in the `forked-revisions` file,
