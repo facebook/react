@@ -65,6 +65,8 @@ aliases:
   - &save_node_modules
     save_cache:
       name: Save node_modules cache
+      # Cache only for the current revision to prevent cache injections from
+      # malicious PRs.
       key: v1-node_modules-{{ arch }}-{{ .Revision }}
       paths:
         - node_modules
