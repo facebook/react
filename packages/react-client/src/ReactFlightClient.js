@@ -178,7 +178,7 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
 
 export function getRoot<T>(response: Response): Thenable<T> {
   const chunk = getChunk(response, 0);
-  return chunk;
+  return (chunk: any);
 }
 
 function createPendingChunk<T>(response: Response): PendingChunk<T> {
