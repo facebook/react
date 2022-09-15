@@ -9,7 +9,7 @@
 
 import {isEnabled} from './src/events/ReactDOMEventListener';
 
-import Internals from 'shared/ReactDOMSharedInternals';
+import Internals from './src/ReactDOMSharedInternals';
 
 // For classic WWW builds, include a few internals that are already in use.
 Object.assign((Internals: any), {
