@@ -137,4 +137,4 @@ export function createResponse(bundlerConfig: BundlerConfig): Response {
   return response;
 }
 
-export {reportGlobalError, close} from './ReactFlightClient';
+export {reportGlobalError, getRoot, close} from './ReactFlightClient';

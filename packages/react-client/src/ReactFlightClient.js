@@ -147,7 +147,6 @@ Chunk.prototype.then = function<T>(
 export type ResponseBase = {
   _bundlerConfig: BundlerConfig,
   _chunks: Map<number, SomeChunk<any>>,
-  readRoot<T>(): T,
   ...
 };
 
@@ -177,10 +176,9 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
   }
 }
 
-function readRoot<T>(): T {
-  const response: Response = this;
+export function getRoot<T>(response: Response): Thenable<T> {
   const chunk = getChunk(response, 0);
-  return readChunk(chunk);
+  return (chunk: any);
 }
 
 function createPendingChunk<T>(response: Response): PendingChunk<T> {
@@ -541,7 +539,6 @@ export function createResponse(bundlerConfig: BundlerConfig): ResponseBase {
   const response = {
     _bundlerConfig: bundlerConfig,
     _chunks: chunks,
-    readRoot: readRoot,
   };
   return response;
 }
