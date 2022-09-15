@@ -62,7 +62,7 @@ import {
 } from '../events/ReactDOMEventReplaying';
 import {setBatchingImplementation} from '../events/ReactDOMUpdateBatching';
 import {setRestoreImplementation} from '../events/ReactDOMControlledComponent';
-import Internals from '../ReactDOMInternals';
+import Internals from 'shared/ReactDOMSharedInternals';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptDiscreteHydration(attemptDiscreteHydration);
