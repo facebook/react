@@ -21,7 +21,11 @@ type Props = {
   title: string,
 };
 
-export default function ContextMenuItem({children, onClick, title}: Props) {
+export default function ContextMenuItem({
+  children,
+  onClick,
+  title,
+}: Props): React.Node {
   const {hideMenu} = useContext<RegistryContextType>(RegistryContext);
 
   const handleClick = event => {

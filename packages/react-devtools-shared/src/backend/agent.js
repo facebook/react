@@ -254,7 +254,9 @@ export default class Agent extends EventEmitter<{
     return this._rendererInterfaces;
   }
 
-  clearErrorsAndWarnings = ({rendererID}: {rendererID: RendererID}) => {
+  clearErrorsAndWarnings: ({rendererID: RendererID}) => void = ({
+    rendererID,
+  }) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}"`);
@@ -263,7 +265,7 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  clearErrorsForFiberID = ({id, rendererID}: ElementAndRendererID) => {
+  clearErrorsForFiberID: ElementAndRendererID => void = ({id, rendererID}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}"`);
@@ -272,7 +274,10 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  clearWarningsForFiberID = ({id, rendererID}: ElementAndRendererID) => {
+  clearWarningsForFiberID: ElementAndRendererID => void = ({
+    id,
+    rendererID,
+  }) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}"`);
@@ -281,7 +286,11 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  copyElementPath = ({id, path, rendererID}: CopyElementParams) => {
+  copyElementPath: CopyElementParams => void = ({
+    id,
+    path,
+    rendererID,
+  }: CopyElementParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -290,7 +299,13 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  deletePath = ({hookID, id, path, rendererID, type}: DeletePathParams) => {
+  deletePath: DeletePathParams => void = ({
+    hookID,
+    id,
+    path,
+    rendererID,
+    type,
+  }: DeletePathParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -344,18 +359,18 @@ export default class Agent extends EventEmitter<{
     return null;
   }
 
-  getBackendVersion = () => {
+  getBackendVersion: () => void = () => {
     const version = process.env.DEVTOOLS_VERSION;
     if (version) {
       this._bridge.send('backendVersion', version);
     }
   };
 
-  getBridgeProtocol = () => {
+  getBridgeProtocol: () => void = () => {
     this._bridge.send('bridgeProtocol', currentBridgeProtocol);
   };
 
-  getProfilingData = ({rendererID}: {rendererID: RendererID}) => {
+  getProfilingData: ({rendererID: RendererID}) => void = ({rendererID}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}"`);
@@ -364,11 +379,11 @@ export default class Agent extends EventEmitter<{
     this._bridge.send('profilingData', renderer.getProfilingData());
   };
 
-  getProfilingStatus = () => {
+  getProfilingStatus: () => void = () => {
     this._bridge.send('profilingStatus', this._isProfiling);
   };
 
-  getOwnersList = ({id, rendererID}: ElementAndRendererID) => {
+  getOwnersList: ElementAndRendererID => void = ({id, rendererID}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -378,13 +393,13 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  inspectElement = ({
+  inspectElement: InspectElementParams => void = ({
     forceFullData,
     id,
     path,
     rendererID,
     requestID,
-  }: InspectElementParams) => {
+  }) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -414,7 +429,7 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  logElementToConsole = ({id, rendererID}: ElementAndRendererID) => {
+  logElementToConsole: ElementAndRendererID => void = ({id, rendererID}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -423,7 +438,11 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  overrideError = ({id, rendererID, forceError}: OverrideErrorParams) => {
+  overrideError: OverrideErrorParams => void = ({
+    id,
+    rendererID,
+    forceError,
+  }) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -432,11 +451,11 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  overrideSuspense = ({
+  overrideSuspense: OverrideSuspenseParams => void = ({
     id,
     rendererID,
     forceFallback,
-  }: OverrideSuspenseParams) => {
+  }) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -445,14 +464,14 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  overrideValueAtPath = ({
+  overrideValueAtPath: OverrideValueAtPathParams => void = ({
     hookID,
     id,
     path,
     rendererID,
     type,
     value,
-  }: OverrideValueAtPathParams) => {
+  }) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -463,13 +482,13 @@ export default class Agent extends EventEmitter<{
 
   // Temporarily support older standalone front-ends by forwarding the older message types
   // to the new "overrideValueAtPath" command the backend is now listening to.
-  overrideContext = ({
+  overrideContext: SetInParams => void = ({
     id,
     path,
     rendererID,
     wasForwarded,
     value,
-  }: SetInParams) => {
+  }) => {
     // Don't forward a message that's already been forwarded by the front-end Bridge.
     // We only need to process the override command once!
     if (!wasForwarded) {
@@ -485,14 +504,14 @@ export default class Agent extends EventEmitter<{
 
   // Temporarily support older standalone front-ends by forwarding the older message types
   // to the new "overrideValueAtPath" command the backend is now listening to.
-  overrideHookState = ({
+  overrideHookState: OverrideHookParams => void = ({
     id,
     hookID,
     path,
     rendererID,
     wasForwarded,
     value,
-  }: OverrideHookParams) => {
+  }) => {
     // Don't forward a message that's already been forwarded by the front-end Bridge.
     // We only need to process the override command once!
     if (!wasForwarded) {
@@ -508,13 +527,13 @@ export default class Agent extends EventEmitter<{
 
   // Temporarily support older standalone front-ends by forwarding the older message types
   // to the new "overrideValueAtPath" command the backend is now listening to.
-  overrideProps = ({
+  overrideProps: SetInParams => void = ({
     id,
     path,
     rendererID,
     wasForwarded,
     value,
-  }: SetInParams) => {
+  }) => {
     // Don't forward a message that's already been forwarded by the front-end Bridge.
     // We only need to process the override command once!
     if (!wasForwarded) {
@@ -530,13 +549,13 @@ export default class Agent extends EventEmitter<{
 
   // Temporarily support older standalone front-ends by forwarding the older message types
   // to the new "overrideValueAtPath" command the backend is now listening to.
-  overrideState = ({
+  overrideState: SetInParams => void = ({
     id,
     path,
     rendererID,
     wasForwarded,
     value,
-  }: SetInParams) => {
+  }) => {
     // Don't forward a message that's already been forwarded by the front-end Bridge.
     // We only need to process the override command once!
     if (!wasForwarded) {
@@ -550,7 +569,9 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  reloadAndProfile = (recordChangeDescriptions: boolean) => {
+  reloadAndProfile: (
+    recordChangeDescriptions: boolean,
+  ) => void = recordChangeDescriptions => {
     sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
     sessionStorageSetItem(
       SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
@@ -563,14 +584,14 @@ export default class Agent extends EventEmitter<{
     this._bridge.send('reloadAppForProfiling');
   };
 
-  renamePath = ({
+  renamePath: RenamePathParams => void = ({
     hookID,
     id,
     newPath,
     oldPath,
     rendererID,
     type,
-  }: RenamePathParams) => {
+  }) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -607,7 +628,9 @@ export default class Agent extends EventEmitter<{
     }
   }
 
-  setTraceUpdatesEnabled = (traceUpdatesEnabled: boolean) => {
+  setTraceUpdatesEnabled: (
+    traceUpdatesEnabled: boolean,
+  ) => void = traceUpdatesEnabled => {
     this._traceUpdatesEnabled = traceUpdatesEnabled;
 
     setTraceUpdatesEnabled(traceUpdatesEnabled);
@@ -620,7 +643,7 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  syncSelectionFromNativeElementsPanel = () => {
+  syncSelectionFromNativeElementsPanel: () => void = () => {
     const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
     if (target == null) {
       return;
@@ -628,12 +651,14 @@ export default class Agent extends EventEmitter<{
     this.selectNode(target);
   };
 
-  shutdown = () => {
+  shutdown: () => void = () => {
     // Clean up the overlay if visible, and associated events.
     this.emit('shutdown');
   };
 
-  startProfiling = (recordChangeDescriptions: boolean) => {
+  startProfiling: (
+    recordChangeDescriptions: boolean,
+  ) => void = recordChangeDescriptions => {
     this._recordChangeDescriptions = recordChangeDescriptions;
     this._isProfiling = true;
     for (const rendererID in this._rendererInterfaces) {
@@ -645,7 +670,7 @@ export default class Agent extends EventEmitter<{
     this._bridge.send('profilingStatus', this._isProfiling);
   };
 
-  stopProfiling = () => {
+  stopProfiling: () => void = () => {
     this._isProfiling = false;
     this._recordChangeDescriptions = false;
     for (const rendererID in this._rendererInterfaces) {
@@ -657,11 +682,16 @@ export default class Agent extends EventEmitter<{
     this._bridge.send('profilingStatus', this._isProfiling);
   };
 
-  stopInspectingNative = (selected: boolean) => {
+  stopInspectingNative: (selected: boolean) => void = selected => {
     this._bridge.send('stopInspectingNative', selected);
   };
 
-  storeAsGlobal = ({count, id, path, rendererID}: StoreAsGlobalParams) => {
+  storeAsGlobal: StoreAsGlobalParams => void = ({
+    count,
+    id,
+    path,
+    rendererID,
+  }) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -670,18 +700,18 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  updateConsolePatchSettings = ({
+  updateConsolePatchSettings: ({
+    appendComponentStack: boolean,
+    breakOnConsoleErrors: boolean,
+    browserTheme: BrowserTheme,
+    hideConsoleLogsInStrictMode: boolean,
+    showInlineWarningsAndErrors: boolean,
+  }) => void = ({
     appendComponentStack,
     breakOnConsoleErrors,
     showInlineWarningsAndErrors,
     hideConsoleLogsInStrictMode,
     browserTheme,
-  }: {
-    appendComponentStack: boolean,
-    breakOnConsoleErrors: boolean,
-    showInlineWarningsAndErrors: boolean,
-    hideConsoleLogsInStrictMode: boolean,
-    browserTheme: BrowserTheme,
   }) => {
     // If the frontend preference has change,
     // or in the case of React Native- if the backend is just finding out the preference-
@@ -696,7 +726,9 @@ export default class Agent extends EventEmitter<{
     });
   };
 
-  updateComponentFilters = (componentFilters: Array<ComponentFilter>) => {
+  updateComponentFilters: (
+    componentFilters: Array<ComponentFilter>,
+  ) => void = componentFilters => {
     for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
@@ -705,7 +737,7 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  viewAttributeSource = ({id, path, rendererID}: CopyElementParams) => {
+  viewAttributeSource: CopyElementParams => void = ({id, path, rendererID}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -714,7 +746,7 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  viewElementSource = ({id, rendererID}: ElementAndRendererID) => {
+  viewElementSource: ElementAndRendererID => void = ({id, rendererID}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -723,11 +755,11 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  onTraceUpdates = (nodes: Set<NativeType>) => {
+  onTraceUpdates: (nodes: Set<NativeType>) => void = nodes => {
     this.emit('traceUpdates', nodes);
   };
 
-  onFastRefreshScheduled = () => {
+  onFastRefreshScheduled: () => void = () => {
     if (__DEBUG__) {
       debug('onFastRefreshScheduled');
     }
@@ -735,7 +767,7 @@ export default class Agent extends EventEmitter<{
     this._bridge.send('fastRefreshScheduled');
   };
 
-  onHookOperations = (operations: Array<number>) => {
+  onHookOperations: (operations: Array<number>) => void = operations => {
     if (__DEBUG__) {
       debug(
         'onHookOperations',
@@ -800,19 +832,22 @@ export default class Agent extends EventEmitter<{
     this._bridge.send('unsupportedRendererVersion', rendererID);
   }
 
-  _throttledPersistSelection = throttle((rendererID: number, id: number) => {
-    // This is throttled, so both renderer and selected ID
-    // might not be available by the time we read them.
-    // This is why we need the defensive checks here.
-    const renderer = this._rendererInterfaces[rendererID];
-    const path = renderer != null ? renderer.getPathForElement(id) : null;
-    if (path !== null) {
-      sessionStorageSetItem(
-        SESSION_STORAGE_LAST_SELECTION_KEY,
-        JSON.stringify(({rendererID, path}: PersistedSelection)),
-      );
-    } else {
-      sessionStorageRemoveItem(SESSION_STORAGE_LAST_SELECTION_KEY);
-    }
-  }, 1000);
+  _throttledPersistSelection: any = throttle(
+    (rendererID: number, id: number) => {
+      // This is throttled, so both renderer and selected ID
+      // might not be available by the time we read them.
+      // This is why we need the defensive checks here.
+      const renderer = this._rendererInterfaces[rendererID];
+      const path = renderer != null ? renderer.getPathForElement(id) : null;
+      if (path !== null) {
+        sessionStorageSetItem(
+          SESSION_STORAGE_LAST_SELECTION_KEY,
+          JSON.stringify(({rendererID, path}: PersistedSelection)),
+        );
+      } else {
+        sessionStorageRemoveItem(SESSION_STORAGE_LAST_SELECTION_KEY);
+      }
+    },
+    1000,
+  );
 }

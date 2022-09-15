@@ -20,7 +20,7 @@ export function formatTimestamp(ms: number): string {
   );
 }
 
-export function formatDuration(ms: number) {
+export function formatDuration(ms: number): string {
   return prettyMilliseconds(ms, {millisecondsDecimalDigits: 1});
 }
 

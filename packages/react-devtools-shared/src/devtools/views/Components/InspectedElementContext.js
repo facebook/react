@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import * as React from 'react';
 import {
   createContext,
@@ -55,7 +57,7 @@ type Context = {
   toggleParseHookNames: ToggleParseHookNames,
 };
 
-export const InspectedElementContext = createContext<Context>(
+export const InspectedElementContext: ReactContext<Context> = createContext<Context>(
   ((null: any): Context),
 );
 
@@ -65,7 +67,9 @@ export type Props = {
   children: ReactNodeList,
 };
 
-export function InspectedElementContextController({children}: Props) {
+export function InspectedElementContextController({
+  children,
+}: Props): React.Node {
   const {selectedElementID} = useContext(TreeStateContext);
   const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
   const bridge = useContext(BridgeContext);

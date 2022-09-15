@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import * as React from 'react';
 import {
   createContext,
@@ -38,14 +40,16 @@ export type Context = {
   selectedEvent: ReactEventInfo,
 };
 
-const TimelineContext = createContext<Context>(((null: any): Context));
+const TimelineContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 TimelineContext.displayName = 'TimelineContext';
 
 type Props = {
   children: React$Node,
 };
 
-function TimelineContextController({children}: Props) {
+function TimelineContextController({children}: Props): React.Node {
   const searchInputContainerRef = useRef(null);
   const [file, setFile] = useState<string | null>(null);
 

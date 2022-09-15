@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import {createContext} from 'react';
 
 export type ShowFn = ({data: Object, pageX: number, pageY: number}) => void;
@@ -81,8 +83,10 @@ export type RegistryContextType = {
   registerMenu: typeof registerMenu,
 };
 
-export const RegistryContext = createContext<RegistryContextType>({
-  hideMenu,
-  showMenu,
-  registerMenu,
-});
+export const RegistryContext: ReactContext<RegistryContextType> = createContext<RegistryContextType>(
+  {
+    hideMenu,
+    showMenu,
+    registerMenu,
+  },
+);

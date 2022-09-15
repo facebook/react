@@ -417,5 +417,6 @@ function HookView({
   }
 }
 
-// $FlowFixMe
-export default React.memo(InspectedElementHooksTree);
+export default (React.memo(
+  InspectedElementHooksTree,
+): React.ComponentType<HookViewProps>);

@@ -23,7 +23,7 @@ export default function ExpandCollapseToggle({
   disabled,
   isOpen,
   setIsOpen,
-}: ExpandCollapseToggleProps) {
+}: ExpandCollapseToggleProps): React.Node {
   return (
     <Button
       className={styles.ExpandCollapseToggle}

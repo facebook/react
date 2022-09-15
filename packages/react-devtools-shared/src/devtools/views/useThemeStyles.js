@@ -11,7 +11,7 @@ import {useContext, useMemo} from 'react';
 import {SettingsContext} from './Settings/SettingsContext';
 import {THEME_STYLES} from '../../constants';
 
-const useThemeStyles = () => {
+const useThemeStyles = (): any => {
   const {theme, displayDensity, browserTheme} = useContext(SettingsContext);
 
   const style = useMemo(
