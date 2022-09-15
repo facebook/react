@@ -68,7 +68,7 @@ const forks = Object.freeze({
   },
 
   // Without this fork, importing `shared/ReactDOMSharedInternals` inside
-  // the `react` package itself would not work due to a cyclical dependency.
+  // the `react-dom` package itself would not work due to a cyclical dependency.
   './packages/shared/ReactDOMSharedInternals.js': (
     bundleType,
     entry,
