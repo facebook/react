@@ -49,9 +49,9 @@ function readContext<T>(context: ReactServerContext<T>): T {
   if (__DEV__) {
     if (context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
       console.error(
-        `Only createServerContext is supported in Server Components. ${
-          `createContext found${context.displayName ? ` in ${context.displayName}` : ''}.`
-        }`
+        `Only createServerContext is supported in Server Components. ${`createContext found${
+          context.displayName ? ` in ${context.displayName}` : ''
+        }.`}`,
       );
     }
     if (currentCache === null) {
