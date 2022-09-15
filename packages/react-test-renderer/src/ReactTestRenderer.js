@@ -391,6 +391,10 @@ class ReactTestInstance {
       options,
     );
   }
+
+  toJSON(): ReactTestRendererNode | null {
+    return toJSON(this._fiber.stateNode);
+  }
 }
 
 function findAll(
