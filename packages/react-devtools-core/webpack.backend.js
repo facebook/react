@@ -81,6 +81,22 @@ module.exports = {
       'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
     }),
+    {
+      apply: compiler => {
+        compiler.hooks.afterEmit.tap('AfterEmitPlugin', compilation => {
+          require('child_process').exec(
+            'cp ~/react/packages/react-devtools-core/dist/* ~/rn-test/AwesomeProject/node_modules/react-devtools-core/dist/ ' +
+              ' && cd ~/rn-test/AwesomeProject/ && npx react-native run-ios',
+            (err, stdout, stderr) => {
+              process.stdout.write('DONE');
+              process.stderr.write('DONE');
+              if (stdout) process.stdout.write(stdout);
+              if (stderr) process.stderr.write(stderr);
+            },
+          );
+        });
+      },
+    },
   ],
   optimization: {
     minimize: false,

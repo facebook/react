@@ -17,7 +17,7 @@ import type {
   RendererID,
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
-import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {ConsolePatchSettings} from 'react-devtools-shared/src/backend/console';
 
 const BATCH_DURATION = 100;
 
@@ -171,14 +171,6 @@ type NativeStyleEditor_SetValueParams = {
   value: string,
 };
 
-type UpdateConsolePatchSettingsParams = {
-  appendComponentStack: boolean,
-  breakOnConsoleErrors: boolean,
-  showInlineWarningsAndErrors: boolean,
-  hideConsoleLogsInStrictMode: boolean,
-  browserTheme: BrowserTheme,
-};
-
 type SavedPreferencesParams = {
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
@@ -247,7 +239,7 @@ type FrontendEvents = {
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
-  updateConsolePatchSettings: [UpdateConsolePatchSettingsParams],
+  updateConsolePatchSettings: [ConsolePatchSettings],
   viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
 
