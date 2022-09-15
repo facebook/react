@@ -58,6 +58,9 @@ export function resolveModuleReference<T>(
 const chunkCache: Map<string, null | Promise<any>> = new Map();
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 
+function ignoreReject() {
+  // We rely on rejected promises to be handled by another listener.
+}
 // Start preloading the modules since we might need them soon.
 // This function doesn't suspend.
 export function preloadModule<T>(
@@ -72,7 +75,7 @@ export function preloadModule<T>(
       const thenable = __webpack_chunk_load__(chunkId);
       promises.push(thenable);
       const resolve = chunkCache.set.bind(chunkCache, chunkId, null);
-      thenable.then(resolve);
+      thenable.then(resolve, ignoreReject);
       chunkCache.set(chunkId, thenable);
     } else if (entry !== null) {
       promises.push(entry);
