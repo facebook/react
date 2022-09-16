@@ -57,7 +57,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
       }
     `,
     `
-      if (__DEV__) { checkFormFieldValueStringCoercion (obj) } 
+      if (__DEV__) { checkFormFieldValueStringCoercion (obj) }
       '' + obj;
     `,
     `
@@ -87,6 +87,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
     // doesn't violate this rule.
     "if (typeof obj === 'string') { if (typeof obj === 'string' && obj.length) {} else {'' + obj} }",
     "if (typeof obj === 'string') if (typeof obj === 'string' && obj.length) {} else {'' + obj}",
+    "'' + ''",
   ],
   invalid: [
     {
@@ -145,7 +146,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
     },
     {
       code: `
-          if (__D__) { checkFormFieldValueStringCoercion (obj) } 
+          if (__D__) { checkFormFieldValueStringCoercion (obj) }
           '' + obj;
         `,
       errors: [
@@ -156,7 +157,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
     },
     {
       code: `
-          if (__DEV__) { checkFormFieldValueStringCoercion (obj) } 
+          if (__DEV__) { checkFormFieldValueStringCoercion (obj) }
           '' + notobjj;
         `,
       errors: [
@@ -172,7 +173,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
       code: `
           if (__DEV__) { checkFormFieldValueStringCoercion (obj) }
           // must be right before the check call
-          someOtherCode(); 
+          someOtherCode();
           '' + objj;
         `,
       errors: [
