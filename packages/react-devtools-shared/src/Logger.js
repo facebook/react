@@ -74,7 +74,7 @@ export const logEvent: LogFunction =
       }
     : function logEvent() {};
 
-export const registerEventLogger =
+export const registerEventLogger: (logFunction: LogFunction) => () => void =
   enableLogger === true
     ? function registerEventLogger(logFunction: LogFunction): () => void {
         if (enableLogger) {

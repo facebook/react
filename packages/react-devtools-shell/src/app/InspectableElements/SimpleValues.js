@@ -13,9 +13,9 @@ import {Component} from 'react';
 function noop() {}
 
 export default class SimpleValues extends Component {
-  anonymousFunction = () => {};
+  anonymousFunction: () => void = () => {};
 
-  render() {
+  render(): React.Node {
     return (
       <ChildComponent
         string="abc"

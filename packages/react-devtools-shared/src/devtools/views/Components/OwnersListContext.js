@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import * as React from 'react';
 import {createContext, useCallback, useContext, useEffect} from 'react';
 import {createResource} from '../../cache';
@@ -23,7 +25,9 @@ import type {Resource, Thenable} from '../../cache';
 
 type Context = (id: number) => Array<SerializedElement> | null;
 
-const OwnersListContext = createContext<Context>(((null: any): Context));
+const OwnersListContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 OwnersListContext.displayName = 'OwnersListContext';
 
 type ResolveFn = (ownersList: Array<SerializedElement> | null) => void;
@@ -61,7 +65,7 @@ type Props = {
   children: React$Node,
 };
 
-function OwnersListContextController({children}: Props) {
+function OwnersListContextController({children}: Props): React.Node {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {ownerID} = useContext(TreeStateContext);

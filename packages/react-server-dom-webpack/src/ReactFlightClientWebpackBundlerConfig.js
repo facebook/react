@@ -55,9 +55,12 @@ export function resolveModuleReference<T>(
 // If they're still pending they're a thenable. This map also exists
 // in Webpack but unfortunately it's not exposed so we have to
 // replicate it in user space. null means that it has already loaded.
-const chunkCache: Map<string, null | Promise<any> | Error> = new Map();
+const chunkCache: Map<string, null | Promise<any>> = new Map();
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 
+function ignoreReject() {
+  // We rely on rejected promises to be handled by another listener.
+}
 // Start preloading the modules since we might need them soon.
 // This function doesn't suspend.
 export function preloadModule<T>(
@@ -72,9 +75,10 @@ export function preloadModule<T>(
       const thenable = __webpack_chunk_load__(chunkId);
       promises.push(thenable);
       const resolve = chunkCache.set.bind(chunkCache, chunkId, null);
-      const reject = chunkCache.set.bind(chunkCache, chunkId);
-      thenable.then(resolve, reject);
+      thenable.then(resolve, ignoreReject);
       chunkCache.set(chunkId, thenable);
+    } else if (entry !== null) {
+      promises.push(entry);
     }
   }
   if (moduleData.async) {
