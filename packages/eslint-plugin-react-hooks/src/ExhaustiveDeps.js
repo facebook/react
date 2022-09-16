@@ -225,7 +225,10 @@ export default {
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
-        } else if (name === 'useEvent' && id.type === 'Identifier') {
+        } else if (
+          (name === 'experimental_useEvent' || name === 'useEvent') &&
+          id.type === 'Identifier'
+        ) {
           // useEvent() return value is stable.
           return true;
         } else if (name === 'useState' || name === 'useReducer') {
