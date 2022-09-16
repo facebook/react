@@ -103,8 +103,9 @@ async function getCommitLog(sha) {
   const rawLog = await execRead(`
     git log --topo-order --pretty=format:'%s' ${sha}...HEAD -- packages/react-devtools*
   `);
-  for (let line of rawLog.split('\n')) {
-    line = line.replace(/^\[[dD]ev[tT]ools\]? /, '');
+  const lines = rawLog.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].replace(/^\[devtools\] */i, '');
     const match = line.match(/(.+) \(#([0-9]+)\)/);
     if (match !== null) {
       const title = match[1];
