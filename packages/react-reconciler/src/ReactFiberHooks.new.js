@@ -291,7 +291,7 @@ function warnOnHookMismatchInDev(currentHookName: ?HookType) {
               ? null
               : i === ((hookTypesUpdateIndexDev: any): number)
               ? currentHookName
-              : oldHookName) ?? 'undefined';
+              : oldHookName) || 'undefined';
 
           let row = `${i + 1}. ${oldHookName}`;
 
@@ -499,7 +499,7 @@ export function renderWithHooks<Props, SecondArg>(
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
   if (__DEV__) {
-    workInProgress._debugHookTypes = hookTypesDev ?? [];
+    workInProgress._debugHookTypes = hookTypesDev || [];
 
     if (hookTypesDev !== null) {
       if (currentHookNameInDev == null && hookTypesDev.length) {
