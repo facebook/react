@@ -1898,49 +1898,48 @@ function mountIndeterminateComponent(
       hasContext,
       renderLanes,
     );
-  } else {
-    // Proceed under the assumption that this is a function component
-    workInProgress.tag = FunctionComponent;
-    if (__DEV__) {
-      if (disableLegacyContext && Component.contextTypes) {
-        console.error(
-          '%s uses the legacy contextTypes API which is no longer supported. ' +
-            'Use React.createContext() with React.useContext() instead.',
-          getComponentNameFromType(Component) || 'Unknown',
-        );
-      }
-
-      if (
-        debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictLegacyMode
-      ) {
-        setIsStrictModeForDevtools(true);
-        try {
-          value = renderWithHooks(
-            null,
-            workInProgress,
-            Component,
-            props,
-            context,
-            renderLanes,
-          );
-          hasId = checkDidRenderIdHook();
-        } finally {
-          setIsStrictModeForDevtools(false);
-        }
-      }
-    }
-
-    if (getIsHydrating() && hasId) {
-      pushMaterializedTreeId(workInProgress);
-    }
-
-    reconcileChildren(null, workInProgress, value, renderLanes);
-    if (__DEV__) {
-      validateFunctionComponentInDev(workInProgress, Component);
-    }
-    return workInProgress.child;
   }
+  // Proceed under the assumption that this is a function component
+  workInProgress.tag = FunctionComponent;
+  if (__DEV__) {
+    if (disableLegacyContext && Component.contextTypes) {
+      console.error(
+        '%s uses the legacy contextTypes API which is no longer supported. ' +
+          'Use React.createContext() with React.useContext() instead.',
+        getComponentNameFromType(Component) || 'Unknown',
+      );
+    }
+
+    if (
+      debugRenderPhaseSideEffectsForStrictMode &&
+      workInProgress.mode & StrictLegacyMode
+    ) {
+      setIsStrictModeForDevtools(true);
+      try {
+        value = renderWithHooks(
+          null,
+          workInProgress,
+          Component,
+          props,
+          context,
+          renderLanes,
+        );
+        hasId = checkDidRenderIdHook();
+      } finally {
+        setIsStrictModeForDevtools(false);
+      }
+    }
+  }
+
+  if (getIsHydrating() && hasId) {
+    pushMaterializedTreeId(workInProgress);
+  }
+
+  reconcileChildren(null, workInProgress, value, renderLanes);
+  if (__DEV__) {
+    validateFunctionComponentInDev(workInProgress, Component);
+  }
+  return workInProgress.child;
 }
 
 function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {

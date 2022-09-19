@@ -1201,12 +1201,11 @@ function ChildReconciler(shouldTrackSideEffects) {
       );
       created.return = returnFiber;
       return created;
-    } else {
-      const created = createFiberFromElement(element, returnFiber.mode, lanes);
-      created.ref = coerceRef(returnFiber, currentFirstChild, element);
-      created.return = returnFiber;
-      return created;
     }
+    const created = createFiberFromElement(element, returnFiber.mode, lanes);
+    created.ref = coerceRef(returnFiber, currentFirstChild, element);
+    created.return = returnFiber;
+    return created;
   }
 
   function reconcileSinglePortal(
