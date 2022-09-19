@@ -15,8 +15,8 @@ export type ReactDOMEventHandle = (
   callback: (SyntheticEvent<EventTarget>) => void,
 ) => () => void;
 
-export type ReactDOMEventHandleListener = {|
+export type ReactDOMEventHandleListener = {
   callback: (SyntheticEvent<EventTarget>) => void,
   capture: boolean,
   type: DOMEventName,
-|};
+};

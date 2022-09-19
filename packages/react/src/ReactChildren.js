@@ -137,9 +137,12 @@ function mapIntoArray(
           escapedPrefix +
             // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
             (mappedChild.key && (!child || child.key !== mappedChild.key)
-              ? // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
-                // eslint-disable-next-line react-internal/safe-string-coercion
-                escapeUserProvidedKey('' + mappedChild.key) + '/'
+              ? escapeUserProvidedKey(
+                  // eslint-disable-next-line react-internal/safe-string-coercion
+                  '' +
+                    // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
+                    mappedChild.key,
+                ) + '/'
               : '') +
             childKey,
         );
@@ -190,6 +193,7 @@ function mapIntoArray(
       const iterator = iteratorFn.call(iterableChildren);
       let step;
       let ii = 0;
+      // $FlowFixMe `iteratorFn` might return null according to typing.
       while (!(step = iterator.next()).done) {
         child = step.value;
         nextName = nextNamePrefix + getElementKey(child, ii++);
@@ -222,7 +226,7 @@ function mapIntoArray(
   return subtreeCount;
 }
 
-type MapFunc = (child: ?React$Node) => ?ReactNodeList;
+type MapFunc = (child: ?React$Node, index: number) => ?ReactNodeList;
 
 /**
  * Maps children that are typically specified as `props.children`.

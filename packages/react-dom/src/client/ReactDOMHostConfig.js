@@ -126,12 +126,12 @@ export type UpdatePayload = Array<mixed>;
 export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
-export type RendererInspectionConfig = $ReadOnly<{||}>;
+export type RendererInspectionConfig = $ReadOnly<{}>;
 
-type SelectionInformation = {|
+type SelectionInformation = {
   focusedElem: null | HTMLElement,
   selectionRange: mixed,
-|};
+};
 
 const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 
@@ -377,7 +377,10 @@ export const cancelTimeout: any =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 export const noTimeout = -1;
 const localPromise = typeof Promise === 'function' ? Promise : undefined;
-
+const localRequestAnimationFrame =
+  typeof requestAnimationFrame === 'function'
+    ? requestAnimationFrame
+    : scheduleTimeout;
 // -------------------
 //     Microtasks
 // -------------------
@@ -677,7 +680,7 @@ export function clearContainer(container: Container): void {
 
 export const supportsHydration = true;
 
-export function isHydratableResource(type: string, props: Props) {
+export function isHydratableResource(type: string, props: Props): boolean {
   return (
     type === 'link' &&
     typeof (props: any).precedence === 'string' &&
@@ -723,11 +726,13 @@ export function canHydrateSuspenseInstance(
   return ((instance: any): SuspenseInstance);
 }
 
-export function isSuspenseInstancePending(instance: SuspenseInstance) {
+export function isSuspenseInstancePending(instance: SuspenseInstance): boolean {
   return instance.data === SUSPENSE_PENDING_START_DATA;
 }
 
-export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
+export function isSuspenseInstanceFallback(
+  instance: SuspenseInstance,
+): boolean {
   return instance.data === SUSPENSE_FALLBACK_START_DATA;
 }
 
@@ -1329,11 +1334,11 @@ export function setupIntersectionObserver(
   targets: Array<Instance>,
   callback: ObserveVisibleRectsCallback,
   options?: IntersectionObserverOptions,
-): {|
+): {
   disconnect: () => void,
   observe: (instance: Instance) => void,
   unobserve: (instance: Instance) => void,
-|} {
+} {
   const rectRatioCache: Map<Instance, RectRatio> = new Map();
   targets.forEach(target => {
     rectRatioCache.set(target, {
@@ -1378,4 +1383,10 @@ export function setupIntersectionObserver(
       observer.unobserve((target: any));
     },
   };
+}
+
+export function requestPostPaintCallback(callback: (time: number) => void) {
+  localRequestAnimationFrame(() => {
+    localRequestAnimationFrame(time => callback(time));
+  });
 }

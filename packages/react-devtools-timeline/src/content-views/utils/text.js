@@ -62,11 +62,11 @@ export function trimText(
   return longestValidText;
 }
 
-type TextConfig = {|
+type TextConfig = {
   fillStyle?: string,
   fontSize?: number,
   textAlign?: 'left' | 'center',
-|};
+};
 
 export function drawText(
   text: string,

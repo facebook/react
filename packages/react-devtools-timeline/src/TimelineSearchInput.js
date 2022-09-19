@@ -14,9 +14,9 @@ import SearchInput from 'react-devtools-shared/src/devtools/views/SearchInput';
 import {TimelineContext} from './TimelineContext';
 import {TimelineSearchContext} from './TimelineSearchContext';
 
-type Props = {||};
+type Props = {};
 
-export default function TimelineSearchInput(props: Props) {
+export default function TimelineSearchInput(props: Props): React.Node {
   const {searchInputContainerRef} = useContext(TimelineContext);
   const {dispatch, searchIndex, searchResults, searchText} = useContext(
     TimelineSearchContext,

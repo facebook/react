@@ -13,7 +13,7 @@ import * as http from 'http';
 import * as https from 'https';
 import {unstable_getCacheForType} from 'react';
 
-type FetchResponse = {|
+type FetchResponse = {
   // Properties
   headers: any,
   ok: boolean,
@@ -27,7 +27,7 @@ type FetchResponse = {|
   blob(): any,
   json(): any,
   text(): string,
-|};
+};
 
 function nodeFetch(
   url: string,
@@ -43,6 +43,7 @@ function nodeFetch(
     // TODO: cherry-pick supported user-passed options.
   };
   const nodeImpl = protocol === 'https:' ? https : http;
+  // $FlowFixMe: node flow type has `port` as a number
   const request = nodeImpl.request(nodeOptions, response => {
     // TODO: support redirects.
     onResolve(new Response(response));
@@ -57,20 +58,20 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type PendingRecord = {|
+type PendingRecord = {
   status: 0,
   value: Wakeable,
-|};
+};
 
-type ResolvedRecord<V> = {|
+type ResolvedRecord<V> = {
   status: 1,
   value: V,
-|};
+};
 
-type RejectedRecord = {|
+type RejectedRecord = {
   status: 2,
   value: mixed,
-|};
+};
 
 type Record<V> = PendingRecord | ResolvedRecord<V> | RejectedRecord;
 

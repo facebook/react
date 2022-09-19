@@ -45,4 +45,8 @@ function unmemoizedGetBatchRange(
   return [startTime, stopTime];
 }
 
-export const getBatchRange = memoize(unmemoizedGetBatchRange);
+export const getBatchRange: (
+  batchUID: BatchUID,
+  data: TimelineData,
+  minStartTime?: number,
+) => [Milliseconds, Milliseconds] = memoize(unmemoizedGetBatchRange);

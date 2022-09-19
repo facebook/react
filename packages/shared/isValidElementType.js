@@ -33,9 +33,9 @@ import {
   enableLegacyHidden,
 } from './ReactFeatureFlags';
 
-const REACT_MODULE_REFERENCE: Symbol = Symbol.for('react.module.reference');
+const REACT_MODULE_REFERENCE: symbol = Symbol.for('react.module.reference');
 
-export default function isValidElementType(type: mixed) {
+export default function isValidElementType(type: mixed): boolean {
   if (typeof type === 'string' || typeof type === 'function') {
     return true;
   }

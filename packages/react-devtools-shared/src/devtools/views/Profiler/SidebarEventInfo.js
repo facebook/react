@@ -24,11 +24,11 @@ import {copy} from 'clipboard-js';
 
 import styles from './SidebarEventInfo.css';
 
-export type Props = {||};
+export type Props = {};
 
-type SchedulingEventProps = {|
+type SchedulingEventProps = {
   eventInfo: SchedulingEvent,
-|};
+};
 
 function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
   const {viewUrlSourceFunction} = useContext(ViewSourceContext);
@@ -90,7 +90,7 @@ function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
   );
 }
 
-export default function SidebarEventInfo(_: Props) {
+export default function SidebarEventInfo(_: Props): React.Node {
   const {selectedEvent} = useContext(TimelineContext);
   // (TODO) Refactor in next PR so this supports multiple types of events
   if (selectedEvent && selectedEvent.schedulingEvent) {

@@ -114,7 +114,7 @@ function createFromJSONCallback(response: Response) {
   return function(key: string, value: JSONValue) {
     if (typeof value === 'string') {
       // We can't use .bind here because we need the "this" value.
-      return parseModelString(response, this, value);
+      return parseModelString(response, this, key, value);
     }
     if (typeof value === 'object' && value !== null) {
       return parseModelTuple(response, value);
@@ -137,4 +137,4 @@ export function createResponse(bundlerConfig: BundlerConfig): Response {
   return response;
 }
 
-export {reportGlobalError, close} from './ReactFlightClient';
+export {reportGlobalError, getRoot, close} from './ReactFlightClient';

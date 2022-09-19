@@ -69,12 +69,12 @@ type OnErrorOrWarning = (
 
 const injectedRenderers: Map<
   ReactRenderer,
-  {|
+  {
     currentDispatcherRef: CurrentDispatcherRef,
     getCurrentFiber: () => Fiber | null,
     onErrorOrWarning: ?OnErrorOrWarning,
     workTagMap: WorkTagMap,
-  |},
+  },
 > = new Map();
 
 let targetConsole: Object = console;
@@ -301,7 +301,15 @@ let unpatchForStrictModeFn: null | (() => void) = null;
 // NOTE: KEEP IN SYNC with src/hook.js:patchConsoleForInitialRenderInStrictMode
 export function patchForStrictMode() {
   if (consoleManagedByDevToolsDuringStrictMode) {
-    const overrideConsoleMethods = ['error', 'trace', 'warn', 'log'];
+    const overrideConsoleMethods = [
+      'error',
+      'group',
+      'groupCollapsed',
+      'info',
+      'log',
+      'trace',
+      'warn',
+    ];
 
     if (unpatchForStrictModeFn !== null) {
       // Don't patch twice.
@@ -361,5 +369,39 @@ export function unpatchForStrictMode(): void {
       unpatchForStrictModeFn();
       unpatchForStrictModeFn = null;
     }
+  }
+}
+
+export function patchConsoleUsingWindowValues() {
+  const appendComponentStack =
+    castBool(window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__) ?? true;
+  const breakOnConsoleErrors =
+    castBool(window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__) ?? false;
+  const showInlineWarningsAndErrors =
+    castBool(window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__) ?? true;
+  const hideConsoleLogsInStrictMode =
+    castBool(window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__) ??
+    false;
+  const browserTheme =
+    castBrowserTheme(window.__REACT_DEVTOOLS_BROWSER_THEME__) ?? 'dark';
+
+  patch({
+    appendComponentStack,
+    breakOnConsoleErrors,
+    showInlineWarningsAndErrors,
+    hideConsoleLogsInStrictMode,
+    browserTheme,
+  });
+}
+
+function castBool(v: any): ?boolean {
+  if (v === true || v === false) {
+    return v;
+  }
+}
+
+function castBrowserTheme(v: any): ?BrowserTheme {
+  if (v === 'light' || v === 'dark' || v === 'auto') {
+    return v;
   }
 }

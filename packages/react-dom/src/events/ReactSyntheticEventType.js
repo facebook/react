@@ -11,14 +11,14 @@
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {DOMEventName} from './DOMEventNames';
 
-export type DispatchConfig = {|
+export type DispatchConfig = {
   dependencies?: Array<DOMEventName>,
-  phasedRegistrationNames: {|
+  phasedRegistrationNames: {
     bubbled: null | string,
     captured: null | string,
-  |},
+  },
   registrationName?: string,
-|};
+};
 
 type BaseSyntheticEvent = {
   isPersistent: () => boolean,

@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  FulfilledThenable,
+  RejectedThenable,
+} from 'shared/ReactTypes';
 
 export type WebpackSSRMap = {
   [clientId: string]: {
@@ -51,12 +55,17 @@ export function resolveModuleReference<T>(
 // If they're still pending they're a thenable. This map also exists
 // in Webpack but unfortunately it's not exposed so we have to
 // replicate it in user space. null means that it has already loaded.
-const chunkCache: Map<string, null | Promise<any> | Error> = new Map();
+const chunkCache: Map<string, null | Promise<any>> = new Map();
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 
+function ignoreReject() {
+  // We rely on rejected promises to be handled by another listener.
+}
 // Start preloading the modules since we might need them soon.
 // This function doesn't suspend.
-export function preloadModule<T>(moduleData: ModuleReference<T>): void {
+export function preloadModule<T>(
+  moduleData: ModuleReference<T>,
+): null | Thenable<any> {
   const chunks = moduleData.chunks;
   const promises = [];
   for (let i = 0; i < chunks.length; i++) {
@@ -66,26 +75,42 @@ export function preloadModule<T>(moduleData: ModuleReference<T>): void {
       const thenable = __webpack_chunk_load__(chunkId);
       promises.push(thenable);
       const resolve = chunkCache.set.bind(chunkCache, chunkId, null);
-      const reject = chunkCache.set.bind(chunkCache, chunkId);
-      thenable.then(resolve, reject);
+      thenable.then(resolve, ignoreReject);
       chunkCache.set(chunkId, thenable);
+    } else if (entry !== null) {
+      promises.push(entry);
     }
   }
   if (moduleData.async) {
-    const modulePromise: any = Promise.all(promises).then(() => {
-      return __webpack_require__(moduleData.id);
-    });
-    modulePromise.then(
-      value => {
-        modulePromise.status = 'fulfilled';
-        modulePromise.value = value;
-      },
-      reason => {
-        modulePromise.status = 'rejected';
-        modulePromise.reason = reason;
-      },
-    );
-    asyncModuleCache.set(moduleData.id, modulePromise);
+    const existingPromise = asyncModuleCache.get(moduleData.id);
+    if (existingPromise) {
+      if (existingPromise.status === 'fulfilled') {
+        return null;
+      }
+      return existingPromise;
+    } else {
+      const modulePromise: Thenable<T> = Promise.all(promises).then(() => {
+        return __webpack_require__(moduleData.id);
+      });
+      modulePromise.then(
+        value => {
+          const fulfilledThenable: FulfilledThenable<mixed> = (modulePromise: any);
+          fulfilledThenable.status = 'fulfilled';
+          fulfilledThenable.value = value;
+        },
+        reason => {
+          const rejectedThenable: RejectedThenable<mixed> = (modulePromise: any);
+          rejectedThenable.status = 'rejected';
+          rejectedThenable.reason = reason;
+        },
+      );
+      asyncModuleCache.set(moduleData.id, modulePromise);
+      return modulePromise;
+    }
+  } else if (promises.length > 0) {
+    return Promise.all(promises);
+  } else {
+    return null;
   }
 }
 
@@ -99,23 +124,10 @@ export function requireModule<T>(moduleData: ModuleReference<T>): T {
     const promise: any = asyncModuleCache.get(moduleData.id);
     if (promise.status === 'fulfilled') {
       moduleExports = promise.value;
-    } else if (promise.status === 'rejected') {
-      throw promise.reason;
     } else {
-      throw promise;
+      throw promise.reason;
     }
   } else {
-    const chunks = moduleData.chunks;
-    for (let i = 0; i < chunks.length; i++) {
-      const chunkId = chunks[i];
-      const entry = chunkCache.get(chunkId);
-      if (entry !== null) {
-        // We assume that preloadModule has been called before.
-        // So we don't expect to see entry being undefined here, that's an error.
-        // Let's throw either an error or the Promise.
-        throw entry;
-      }
-    }
     moduleExports = __webpack_require__(moduleData.id);
   }
   if (moduleData.name === '*') {

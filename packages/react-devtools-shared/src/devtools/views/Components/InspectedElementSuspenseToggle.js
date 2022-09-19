@@ -17,17 +17,17 @@ import styles from './InspectedElementSharedStyles.css';
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
-type Props = {|
+type Props = {
   bridge: FrontendBridge,
   inspectedElement: InspectedElement,
   store: Store,
-|};
+};
 
 export default function InspectedElementSuspenseToggle({
   bridge,
   inspectedElement,
   store,
-}: Props) {
+}: Props): React.Node {
   const {readOnly} = React.useContext(OptionsContext);
 
   const {id, state, type} = inspectedElement;

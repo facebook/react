@@ -26,6 +26,7 @@ function typeName(value: mixed): string {
       (hasToStringTag && (value: any)[Symbol.toStringTag]) ||
       (value: any).constructor.name ||
       'Object';
+    // $FlowFixMe
     return type;
   }
 }
@@ -72,7 +73,7 @@ function testStringCoercion(value: mixed) {
 export function checkAttributeStringCoercion(
   value: mixed,
   attributeName: string,
-) {
+): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(
@@ -86,7 +87,7 @@ export function checkAttributeStringCoercion(
   }
 }
 
-export function checkKeyStringCoercion(value: mixed) {
+export function checkKeyStringCoercion(value: mixed): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(
@@ -99,7 +100,10 @@ export function checkKeyStringCoercion(value: mixed) {
   }
 }
 
-export function checkPropStringCoercion(value: mixed, propName: string) {
+export function checkPropStringCoercion(
+  value: mixed,
+  propName: string,
+): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(
@@ -113,7 +117,10 @@ export function checkPropStringCoercion(value: mixed, propName: string) {
   }
 }
 
-export function checkCSSPropertyStringCoercion(value: mixed, propName: string) {
+export function checkCSSPropertyStringCoercion(
+  value: mixed,
+  propName: string,
+): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(
@@ -127,7 +134,7 @@ export function checkCSSPropertyStringCoercion(value: mixed, propName: string) {
   }
 }
 
-export function checkHtmlStringCoercion(value: mixed) {
+export function checkHtmlStringCoercion(value: mixed): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(
@@ -140,7 +147,7 @@ export function checkHtmlStringCoercion(value: mixed) {
   }
 }
 
-export function checkFormFieldValueStringCoercion(value: mixed) {
+export function checkFormFieldValueStringCoercion(value: mixed): void | string {
   if (__DEV__) {
     if (willCoercionThrow(value)) {
       console.error(

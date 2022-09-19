@@ -598,7 +598,9 @@ function propagateParentContextChanges(
   workInProgress.flags |= DidPropagateContext;
 }
 
-export function checkIfContextChanged(currentDependencies: Dependencies) {
+export function checkIfContextChanged(
+  currentDependencies: Dependencies,
+): boolean {
   if (!enableLazyContextPropagation) {
     return false;
   }

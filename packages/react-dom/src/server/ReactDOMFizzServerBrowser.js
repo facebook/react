@@ -24,7 +24,7 @@ import {
   createRootFormatContext,
 } from './ReactDOMServerFormatConfig';
 
-type Options = {|
+type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
   nonce?: string,
@@ -34,7 +34,7 @@ type Options = {|
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
-|};
+};
 
 // TODO: Move to sub-classing ReadableStream.
 type ReactDOMServerReadableStream = ReadableStream & {
@@ -57,10 +57,10 @@ function renderToReadableStream(
       const stream: ReactDOMServerReadableStream = (new ReadableStream(
         {
           type: 'bytes',
-          pull(controller) {
+          pull(controller): ?Promise<void> {
             startFlowing(request, controller);
           },
-          cancel(reason) {
+          cancel(reason): ?Promise<void> {
             abort(request);
           },
         },

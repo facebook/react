@@ -36,7 +36,7 @@ import type {HookNames} from 'react-devtools-shared/src/types';
 import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
 import type {ToggleParseHookNames} from './InspectedElementContext';
 
-type HooksTreeViewProps = {|
+type HooksTreeViewProps = {
   bridge: FrontendBridge,
   element: Element,
   hookNames: HookNames | null,
@@ -44,7 +44,7 @@ type HooksTreeViewProps = {|
   parseHookNames: boolean,
   store: Store,
   toggleParseHookNames: ToggleParseHookNames,
-|};
+};
 
 export function InspectedElementHooksTree({
   bridge,
@@ -54,7 +54,7 @@ export function InspectedElementHooksTree({
   parseHookNames,
   store,
   toggleParseHookNames,
-}: HooksTreeViewProps) {
+}: HooksTreeViewProps): React.Node {
   const {hooks, id} = inspectedElement;
 
   // Changing parseHookNames is done in a transition, because it suspends.
@@ -121,14 +121,14 @@ export function InspectedElementHooksTree({
   }
 }
 
-type InnerHooksTreeViewProps = {|
+type InnerHooksTreeViewProps = {
   element: Element,
   hookNames: HookNames | null,
   hooks: HooksTree,
   id: number,
   inspectedElement: InspectedElement,
   path: Array<string | number>,
-|};
+};
 
 export function InnerHooksTreeView({
   element,
@@ -137,7 +137,7 @@ export function InnerHooksTreeView({
   id,
   inspectedElement,
   path,
-}: InnerHooksTreeViewProps) {
+}: InnerHooksTreeViewProps): React.Node {
   // $FlowFixMe "Missing type annotation for U" whatever that means
   return hooks.map((hook, index) => (
     <HookView
@@ -152,14 +152,14 @@ export function InnerHooksTreeView({
   ));
 }
 
-type HookViewProps = {|
+type HookViewProps = {
   element: Element,
   hook: HooksNode,
   hookNames: HookNames | null,
   id: number,
   inspectedElement: InspectedElement,
   path: Array<string | number>,
-|};
+};
 
 function HookView({
   element,
@@ -417,5 +417,6 @@ function HookView({
   }
 }
 
-// $FlowFixMe
-export default React.memo(InspectedElementHooksTree);
+export default (React.memo(
+  InspectedElementHooksTree,
+): React.ComponentType<HookViewProps>);

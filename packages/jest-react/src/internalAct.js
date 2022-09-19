@@ -28,6 +28,8 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
       'This version of `act` requires a special mock build of Scheduler.',
     );
   }
+
+  // $FlowFixMe: _isMockFunction doesn't exist on function
   if (setTimeout._isMockFunction !== true) {
     throw Error(
       "This version of `act` requires Jest's timer mocks " +

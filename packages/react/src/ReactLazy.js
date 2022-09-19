@@ -28,7 +28,7 @@ type PendingPayload = {
 
 type ResolvedPayload<T> = {
   _status: 1,
-  _result: {default: T},
+  _result: {default: T, ...},
 };
 
 type RejectedPayload = {
@@ -43,7 +43,7 @@ type Payload<T> =
   | RejectedPayload;
 
 export type LazyComponent<T, P> = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   _payload: P,
   _init: (payload: P) => T,
 };

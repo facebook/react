@@ -202,10 +202,7 @@ describe('ProfilingCache', () => {
 
     const ModernContext = React.createContext(0);
 
-    class LegacyContextProvider extends React.Component<
-      any,
-      {|count: number|},
-    > {
+    class LegacyContextProvider extends React.Component<any, {count: number}> {
       static childContextTypes = {
         count: PropTypes.number,
       };

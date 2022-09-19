@@ -18,14 +18,17 @@ import {
   resolveSymbol,
   resolveError,
   close,
+  getRoot,
 } from 'react-client/src/ReactFlightClient';
 
-export {createResponse, close};
+export {createResponse, close, getRoot};
 
 export function resolveRow(response: Response, chunk: RowEncoding): void {
   if (chunk[0] === 'J') {
+    // $FlowFixMe unable to refine on array indices
     resolveModel(response, chunk[1], chunk[2]);
   } else if (chunk[0] === 'M') {
+    // $FlowFixMe unable to refine on array indices
     resolveModule(response, chunk[1], chunk[2]);
   } else if (chunk[0] === 'S') {
     // $FlowFixMe: Flow doesn't support disjoint unions on tuples.

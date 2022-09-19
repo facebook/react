@@ -60,7 +60,7 @@ export class SchedulingEventsView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): Size {
     return this._intrinsicSize;
   }
 

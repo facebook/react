@@ -29,9 +29,9 @@ import {
   enableCreateEventHandleAPI,
 } from 'shared/ReactFeatureFlags';
 
-type EventHandleOptions = {|
+type EventHandleOptions = {
   capture?: boolean,
-|};
+};
 
 function isValidEventTarget(target: EventTarget | ReactScopeInstance): boolean {
   return typeof (target: Object).addEventListener === 'function';

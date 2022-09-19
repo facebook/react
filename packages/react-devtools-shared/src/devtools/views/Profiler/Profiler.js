@@ -38,7 +38,7 @@ import {enableProfilerComponentTree} from 'react-devtools-feature-flags';
 
 import styles from './Profiler.css';
 
-function Profiler(_: {||}) {
+function Profiler(_: {}) {
   const {
     didRecordCommits,
     isProcessingData,
@@ -196,4 +196,4 @@ const tabsWithTimeline = [
   },
 ];
 
-export default portaledContent(Profiler);
+export default (portaledContent(Profiler): React.ComponentType<{}>);

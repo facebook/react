@@ -55,7 +55,7 @@ export class View {
    * @see setNeedsDisplay
    * @private
    */
-  _needsDisplay = true;
+  _needsDisplay: boolean = true;
 
   /**
    * Whether the hierarchy below this view has subviews that need display.
@@ -65,7 +65,7 @@ export class View {
    * @see setSubviewsNeedDisplay
    * @private
    */
-  _subviewsNeedDisplay = false;
+  _subviewsNeedDisplay: boolean = false;
 
   constructor(
     surface: Surface,

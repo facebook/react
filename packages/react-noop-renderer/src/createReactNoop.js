@@ -49,7 +49,7 @@ type Props = {
   top?: null | number,
   ...
 };
-type Instance = {|
+type Instance = {
   type: string,
   id: number,
   parent: number,
@@ -58,14 +58,14 @@ type Instance = {|
   prop: any,
   hidden: boolean,
   context: HostContext,
-|};
-type TextInstance = {|
+};
+type TextInstance = {
   text: string,
   id: number,
   parent: number,
   hidden: boolean,
   context: HostContext,
-|};
+};
 type HostContext = Object;
 type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
@@ -472,6 +472,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     logRecoverableError() {
       // no-op
+    },
+
+    requestPostPaintCallback(callback) {
+      const endTime = Scheduler.unstable_now();
+      callback(endTime);
     },
   };
 
@@ -953,14 +958,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     flushWithHostCounters(
       fn: () => void,
     ):
-      | {|
+      | {
           hostDiffCounter: number,
           hostUpdateCounter: number,
-        |}
-      | {|
+        }
+      | {
           hostDiffCounter: number,
           hostCloneCounter: number,
-        |} {
+        } {
       hostDiffCounter = 0;
       hostUpdateCounter = 0;
       hostCloneCounter = 0;

@@ -51,6 +51,7 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
 export const enableUseHook = false;
 export const enableUseMemoCacheHook = false;
+export const enableUseEventHook = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableStrictEffects = false;

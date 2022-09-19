@@ -18,22 +18,22 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import ReactFizzServer from 'react-server';
 
-type Instance = {|
+type Instance = {
   type: string,
   children: Array<Instance | TextInstance | SuspenseInstance>,
   prop: any,
   hidden: boolean,
-|};
+};
 
-type TextInstance = {|
+type TextInstance = {
   text: string,
   hidden: boolean,
-|};
+};
 
-type SuspenseInstance = {|
+type SuspenseInstance = {
   state: 'pending' | 'complete' | 'client-render',
   children: Array<Instance | TextInstance | SuspenseInstance>,
-|};
+};
 
 type Placeholder = {
   parent: Instance | SuspenseInstance,

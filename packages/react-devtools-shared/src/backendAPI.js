@@ -28,10 +28,10 @@ import type {
 export function clearErrorsAndWarnings({
   bridge,
   store,
-}: {|
+}: {
   bridge: FrontendBridge,
   store: Store,
-|}): void {
+}): void {
   store.rootIDToRendererID.forEach(rendererID => {
     bridge.send('clearErrorsAndWarnings', {rendererID});
   });
@@ -41,11 +41,11 @@ export function clearErrorsForElement({
   bridge,
   id,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   id: number,
   rendererID: number,
-|}): void {
+}): void {
   bridge.send('clearErrorsForFiberID', {
     rendererID,
     id,
@@ -56,11 +56,11 @@ export function clearWarningsForElement({
   bridge,
   id,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   id: number,
   rendererID: number,
-|}): void {
+}): void {
   bridge.send('clearWarningsForFiberID', {
     rendererID,
     id,
@@ -72,12 +72,12 @@ export function copyInspectedElementPath({
   id,
   path,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   id: number,
   path: Array<string | number>,
   rendererID: number,
-|}): void {
+}): void {
   bridge.send('copyElementPath', {
     id,
     path,
@@ -91,13 +91,13 @@ export function inspectElement({
   id,
   path,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   forceFullData: boolean,
   id: number,
   path: Array<string | number> | null,
   rendererID: number,
-|}): Promise<InspectedElementPayload> {
+}): Promise<InspectedElementPayload> {
   const requestID = requestCounter++;
   const promise = getPromiseForRequestID<InspectedElementPayload>(
     requestID,
@@ -124,12 +124,12 @@ export function storeAsGlobal({
   id,
   path,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   id: number,
   path: Array<string | number>,
   rendererID: number,
-|}): void {
+}): void {
   bridge.send('storeAsGlobal', {
     count: storeAsGlobalCount++,
     id,

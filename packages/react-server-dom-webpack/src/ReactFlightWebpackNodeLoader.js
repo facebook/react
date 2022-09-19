@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {acorn} from 'acorn';
+import * as acorn from 'acorn';
 
 type ResolveContext = {
   conditions: Array<string>,
@@ -94,7 +94,7 @@ export async function getSource(
   url: string,
   context: GetSourceContext,
   defaultGetSource: GetSourceFunction,
-) {
+): Promise<{source: Source}> {
   // We stash this in case we end up needing to resolve export * statements later.
   stashedGetSource = defaultGetSource;
   return defaultGetSource(url, context, defaultGetSource);

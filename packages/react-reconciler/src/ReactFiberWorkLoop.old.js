@@ -124,6 +124,7 @@ import {
   LayoutMask,
   PassiveMask,
   PlacementDEV,
+  Visibility,
 } from './ReactFiberFlags';
 import {
   NoLanes,
@@ -260,6 +261,7 @@ import {
   suspendedThenableDidResolve,
   isTrackingSuspendedThenable,
 } from './ReactFiberWakeable.old';
+import {schedulePostPaintCallback} from './ReactPostPaintCallback';
 
 const ceil = Math.ceil;
 
@@ -355,11 +357,12 @@ let workInProgressRootRenderTargetTime: number = Infinity;
 const RENDER_TIMEOUT_MS = 500;
 
 let workInProgressTransitions: Array<Transition> | null = null;
-export function getWorkInProgressTransitions() {
+export function getWorkInProgressTransitions(): null | Array<Transition> {
   return workInProgressTransitions;
 }
 
 let currentPendingTransitionCallbacks: PendingTransitionCallbacks | null = null;
+let currentEndTime: number | null = null;
 
 export function addTransitionStartCallbackToPendingTransition(
   transition: Transition,
@@ -811,7 +814,7 @@ export function scheduleInitialHydrationOnRoot(
   ensureRootIsScheduled(root, eventTime);
 }
 
-export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber) {
+export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber): boolean {
   // Check if this is a render phase update. Only called by class components,
   // which special (deprecated) behavior for UNSAFE_componentWillReceive props.
   return (
@@ -1554,7 +1557,7 @@ declare function flushSync<R>(fn: () => R): R;
 // eslint-disable-next-line no-redeclare
 declare function flushSync(): void;
 // eslint-disable-next-line no-redeclare
-export function flushSync(fn) {
+export function flushSync(fn): void {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
   if (
@@ -1593,13 +1596,18 @@ export function flushSync(fn) {
   }
 }
 
-export function isAlreadyRendering() {
+export function isAlreadyRendering(): boolean {
   // Used by the renderer to print a warning if certain APIs are called from
   // the wrong context.
   return (
     __DEV__ &&
     (executionContext & (RenderContext | CommitContext)) !== NoContext
   );
+}
+
+export function isInvalidExecutionContextForEventFunction() {
+  // Used to throw if certain APIs are called from the wrong context.
+  return (executionContext & RenderContext) !== NoContext;
 }
 
 export function flushControlled(fn: () => mixed): void {
@@ -1650,7 +1658,9 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   }
 
   if (workInProgress !== null) {
-    let interruptedWork = workInProgress.return;
+    let interruptedWork = workInProgressIsSuspended
+      ? workInProgress
+      : workInProgress.return;
     while (interruptedWork !== null) {
       const current = interruptedWork.alternate;
       unwindInterruptedWork(
@@ -2216,6 +2226,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         let actualDuration = completedWork.actualDuration;
         let child = completedWork.child;
         while (child !== null) {
+          // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
           actualDuration += child.actualDuration;
           child = child.sibling;
         }
@@ -2639,6 +2650,36 @@ function commitRootImpl(
     markCommitStopped();
   }
 
+  if (enableTransitionTracing) {
+    // We process transitions during passive effects. However, passive effects can be
+    // processed synchronously during the commit phase as well as asynchronously after
+    // paint. At the end of the commit phase, we schedule a callback that will be called
+    // after the next paint. If the transitions have already been processed (passive
+    // effect phase happened synchronously), we will schedule a callback to process
+    // the transitions. However, if we don't have any pending transition callbacks, this
+    // means that the transitions have yet to be processed (passive effects processed after paint)
+    // so we will store the end time of paint so that we can process the transitions
+    // and then call the callback via the correct end time.
+    const prevRootTransitionCallbacks = root.transitionCallbacks;
+    if (prevRootTransitionCallbacks !== null) {
+      schedulePostPaintCallback(endTime => {
+        const prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
+        if (prevPendingTransitionCallbacks !== null) {
+          currentPendingTransitionCallbacks = null;
+          scheduleCallback(IdleSchedulerPriority, () => {
+            processTransitionCallbacks(
+              prevPendingTransitionCallbacks,
+              endTime,
+              prevRootTransitionCallbacks,
+            );
+          });
+        } else {
+          currentEndTime = endTime;
+        }
+      });
+    }
+  }
+
   return null;
 }
 
@@ -2780,28 +2821,21 @@ function flushPassiveEffectsImpl() {
   if (enableTransitionTracing) {
     const prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
     const prevRootTransitionCallbacks = root.transitionCallbacks;
+    const prevEndTime = currentEndTime;
     if (
       prevPendingTransitionCallbacks !== null &&
-      prevRootTransitionCallbacks !== null
+      prevRootTransitionCallbacks !== null &&
+      prevEndTime !== null
     ) {
-      // TODO(luna) Refactor this code into the Host Config
-      // TODO(luna) The end time here is not necessarily accurate
-      // because passive effects could be called before paint
-      // (synchronously) or after paint (normally). We need
-      // to come up with a way to get the correct end time for both cases.
-      // One solution is in the host config, if the passive effects
-      // have not yet been run, make a call to flush the passive effects
-      // right after paint.
-      const endTime = now();
       currentPendingTransitionCallbacks = null;
-
-      scheduleCallback(IdleSchedulerPriority, () =>
+      currentEndTime = null;
+      scheduleCallback(IdleSchedulerPriority, () => {
         processTransitionCallbacks(
           prevPendingTransitionCallbacks,
-          endTime,
+          prevEndTime,
           prevRootTransitionCallbacks,
-        ),
-      );
+        );
+      });
     }
   }
 
@@ -3170,6 +3204,11 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
   parentFiber: Fiber,
   isInStrictMode: boolean,
 ) {
+  if ((parentFiber.subtreeFlags & (PlacementDEV | Visibility)) === NoFlags) {
+    // Parent's descendants have already had effects double invoked.
+    // Early exit to avoid unnecessary tree traversal.
+    return;
+  }
   let child = parentFiber.child;
   while (child !== null) {
     doubleInvokeEffectsInDEV(root, child, isInStrictMode);
@@ -3184,9 +3223,15 @@ function doubleInvokeEffectsInDEV(
 ) {
   const isStrictModeFiber = fiber.type === REACT_STRICT_MODE_TYPE;
   const isInStrictMode = parentIsInStrictMode || isStrictModeFiber;
+
   if (fiber.flags & PlacementDEV || fiber.tag === OffscreenComponent) {
     setCurrentDebugFiberInDEV(fiber);
-    if (isInStrictMode) {
+    const isNotOffscreen = fiber.tag !== OffscreenComponent;
+    // Checks if Offscreen is being revealed. For all other components, evaluates to true.
+    const hasOffscreenBecomeVisible =
+      isNotOffscreen ||
+      (fiber.flags & Visibility && fiber.memoizedState === null);
+    if (isInStrictMode && hasOffscreenBecomeVisible) {
       disappearLayoutEffects(fiber);
       disconnectPassiveEffect(fiber);
       reappearLayoutEffects(root, fiber.alternate, fiber, false);

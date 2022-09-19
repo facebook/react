@@ -18,7 +18,7 @@ type OverrideNameFn = (
   newName: Array<string | number>,
 ) => void;
 
-type EditableNameProps = {|
+type EditableNameProps = {
   allowEmpty?: boolean,
   allowWhiteSpace?: boolean,
   autoFocus?: boolean,
@@ -27,7 +27,7 @@ type EditableNameProps = {|
   overrideName: OverrideNameFn,
   path: Array<string | number>,
   type: Type,
-|};
+};
 
 export default function EditableName({
   allowEmpty = false,
@@ -38,7 +38,7 @@ export default function EditableName({
   overrideName,
   path,
   type,
-}: EditableNameProps) {
+}: EditableNameProps): React.Node {
   const [editableName, setEditableName] = useState(initialValue);
   const [isValid, setIsValid] = useState(false);
 

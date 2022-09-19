@@ -109,7 +109,7 @@ export function markDidThrowWhileHydratingDEV() {
   }
 }
 
-export function didSuspendOrErrorWhileHydratingDEV() {
+export function didSuspendOrErrorWhileHydratingDEV(): boolean {
   if (__DEV__) {
     return didSuspendOrErrorDEV;
   }
@@ -685,7 +685,7 @@ function popHydrationState(fiber: Fiber): boolean {
   return true;
 }
 
-function hasUnhydratedTailNodes() {
+function hasUnhydratedTailNodes(): boolean {
   return isHydrating && nextHydratableInstance !== null;
 }
 

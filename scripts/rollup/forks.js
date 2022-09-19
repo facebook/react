@@ -67,6 +67,33 @@ const forks = Object.freeze({
     return null;
   },
 
+  // Without this fork, importing `shared/ReactDOMSharedInternals` inside
+  // the `react-dom` package itself would not work due to a cyclical dependency.
+  './packages/shared/ReactDOMSharedInternals.js': (
+    bundleType,
+    entry,
+    dependencies
+  ) => {
+    if (entry === 'react-dom') {
+      return './packages/react-dom/src/ReactDOMSharedInternals.js';
+    }
+    if (
+      !entry.startsWith('react-dom/') &&
+      dependencies.indexOf('react-dom') === -1
+    ) {
+      // React DOM internals are unavailable if we can't reference the package.
+      // We return an error because we only want to throw if this module gets used.
+      return new Error(
+        'Cannot use a module that depends on ReactDOMSharedInternals ' +
+          'from "' +
+          entry +
+          '" because it does not declare "react-dom" in the package ' +
+          'dependencies or peerDependencies.'
+      );
+    }
+    return null;
+  },
+
   // We have a few forks for different environments.
   './packages/shared/ReactFeatureFlags.js': (bundleType, entry) => {
     switch (entry) {

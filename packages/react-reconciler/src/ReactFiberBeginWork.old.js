@@ -281,7 +281,7 @@ let didWarnAboutModulePatternComponent;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
-export let didWarnAboutReassigningProps;
+export let didWarnAboutReassigningProps: boolean;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
 let didWarnAboutDefaultPropsOnFunctionComponent;
@@ -3479,7 +3479,7 @@ export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
 
-export function checkIfWorkInProgressReceivedUpdate() {
+export function checkIfWorkInProgressReceivedUpdate(): boolean {
   return didReceiveUpdate;
 }
 

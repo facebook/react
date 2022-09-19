@@ -83,10 +83,10 @@ export class SourceMapMetadataConsumer {
     line,
     column,
     source,
-  }: {|
+  }: {
     ...Position,
     +source: ?string,
-  |}): ?string {
+  }): ?string {
     if (source == null) {
       return null;
     }

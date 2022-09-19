@@ -12,12 +12,12 @@ import styles from './LayoutViewer.css';
 
 import type {Layout} from './types';
 
-type Props = {|
+type Props = {
   id: number,
   layout: Layout,
-|};
+};
 
-export default function LayoutViewer({id, layout}: Props) {
+export default function LayoutViewer({id, layout}: Props): React.Node {
   const {height, margin, padding, y, width, x} = layout;
 
   return (

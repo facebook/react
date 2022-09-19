@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {FiberRoot} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {
   UpdateQueue as HookQueue,
   Update as HookUpdate,

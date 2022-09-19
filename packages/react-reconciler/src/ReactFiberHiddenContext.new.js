@@ -22,6 +22,7 @@ type HiddenContext = {
   // order to reveal the hidden content.
   // TODO: Remove `subtreeLanes` context from work loop in favor of this one.
   baseLanes: number,
+  ...
 };
 
 // TODO: This isn't being used yet, but it's intended to replace the
@@ -65,6 +66,6 @@ export function popHiddenContext(fiber: Fiber): void {
   pop(prevRenderLanesStackCursor, fiber);
 }
 
-export function isCurrentTreeHidden() {
+export function isCurrentTreeHidden(): boolean {
   return currentTreeHiddenStackCursor.current !== null;
 }

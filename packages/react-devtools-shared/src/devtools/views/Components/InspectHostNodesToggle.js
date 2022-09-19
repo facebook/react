@@ -14,7 +14,7 @@ import Toggle from '../Toggle';
 import ButtonIcon from '../ButtonIcon';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 
-export default function InspectHostNodesToggle() {
+export default function InspectHostNodesToggle(): React.Node {
   const [isInspecting, setIsInspecting] = useState(false);
   const bridge = useContext(BridgeContext);
 

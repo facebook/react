@@ -21,9 +21,9 @@ if (__DEV__) {
   didWarnValueDefaultValue = false;
 }
 
-type SelectWithWrapperState = HTMLSelectElement & {|
-  _wrapperState: {|wasMultiple: boolean|},
-|};
+type SelectWithWrapperState = HTMLSelectElement & {
+  _wrapperState: {wasMultiple: boolean},
+};
 
 function getDeclarationErrorAddendum() {
   const ownerName = getCurrentFiberOwnerNameInDevOrNull();

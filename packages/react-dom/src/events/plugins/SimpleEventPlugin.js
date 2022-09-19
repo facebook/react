@@ -12,6 +12,7 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {AnyNativeEvent} from '../../events/PluginModuleType';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
+import type {ReactSyntheticEvent} from '../ReactSyntheticEventType';
 
 import {
   SyntheticEvent,
@@ -172,7 +173,8 @@ function extractEvents(
     );
     if (listeners.length > 0) {
       // Intentionally create event lazily.
-      const event = new SyntheticEventCtor(
+      // $FlowFixMe[incompatible-type]
+      const event: ReactSyntheticEvent = new SyntheticEventCtor(
         reactName,
         reactEventType,
         null,
@@ -204,7 +206,8 @@ function extractEvents(
     );
     if (listeners.length > 0) {
       // Intentionally create event lazily.
-      const event = new SyntheticEventCtor(
+      // $FlowFixMe[incompatible-type]
+      const event: ReactSyntheticEvent = new SyntheticEventCtor(
         reactName,
         reactEventType,
         null,

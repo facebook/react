@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import {createContext} from 'react';
 
 import type {
@@ -14,12 +16,14 @@ import type {
   ViewElementSource,
 } from 'react-devtools-shared/src/devtools/views/DevTools';
 
-export type Context = {|
+export type Context = {
   canViewElementSourceFunction: CanViewElementSource | null,
   viewElementSourceFunction: ViewElementSource | null,
-|};
+};
 
-const ViewElementSourceContext = createContext<Context>(((null: any): Context));
+const ViewElementSourceContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 ViewElementSourceContext.displayName = 'ViewElementSourceContext';
 
 export default ViewElementSourceContext;

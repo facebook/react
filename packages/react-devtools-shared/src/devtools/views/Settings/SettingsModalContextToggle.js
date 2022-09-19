@@ -15,7 +15,7 @@ import ButtonIcon from '../ButtonIcon';
 import {StoreContext} from '../context';
 import {useSubscription} from '../hooks';
 
-export default function SettingsModalContextToggle() {
+export default function SettingsModalContextToggle(): React.Node {
   const {setIsModalShowing} = useContext(SettingsModalContext);
   const store = useContext(StoreContext);
   const {profilerStore} = store;

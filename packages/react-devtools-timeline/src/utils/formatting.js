@@ -11,7 +11,7 @@ import type {SchedulingEvent} from '../types';
 
 import prettyMilliseconds from 'pretty-ms';
 
-export function formatTimestamp(ms: number) {
+export function formatTimestamp(ms: number): string {
   return (
     ms.toLocaleString(undefined, {
       minimumFractionDigits: 1,
@@ -20,7 +20,7 @@ export function formatTimestamp(ms: number) {
   );
 }
 
-export function formatDuration(ms: number) {
+export function formatDuration(ms: number): string {
   return prettyMilliseconds(ms, {millisecondsDecimalDigits: 1});
 }
 

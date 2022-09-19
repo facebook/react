@@ -18,16 +18,17 @@ import type {
 let suspendedThenable: Thenable<mixed> | null = null;
 let adHocSuspendCount: number = 0;
 
+// TODO: Sparse arrays are bad for performance.
 let usedThenables: Array<Thenable<any> | void> | null = null;
 let lastUsedThenable: Thenable<any> | null = null;
 
 const MAX_AD_HOC_SUSPEND_COUNT = 50;
 
-export function isTrackingSuspendedThenable() {
+export function isTrackingSuspendedThenable(): boolean {
   return suspendedThenable !== null;
 }
 
-export function suspendedThenableDidResolve() {
+export function suspendedThenableDidResolve(): boolean {
   if (suspendedThenable !== null) {
     const status = suspendedThenable.status;
     return status === 'fulfilled' || status === 'rejected';
@@ -60,10 +61,6 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
   // If the thenable doesn't have a status, set it to "pending" and attach
   // a listener that will update its status and result when it resolves.
   switch (thenable.status) {
-    case 'pending':
-      // Since the status is already "pending", we can assume it will be updated
-      // when it resolves, either by React or something in userspace.
-      break;
     case 'fulfilled':
     case 'rejected':
       // A thenable that already resolved shouldn't have been thrown, so this is
@@ -74,6 +71,12 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
       suspendedThenable = null;
       break;
     default: {
+      if (typeof thenable.status === 'string') {
+        // Only instrument the thenable if the status if not defined. If
+        // it's defined, but an unknown value, assume it's been instrumented by
+        // some custom userspace implementation. We treat it as "pending".
+        break;
+      }
       const pendingThenable: PendingThenable<mixed> = (thenable: any);
       pendingThenable.status = 'pending';
       pendingThenable.then(

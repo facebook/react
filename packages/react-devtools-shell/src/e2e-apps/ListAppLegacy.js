@@ -9,7 +9,7 @@
 
 import * as React from 'react';
 
-export default function App() {
+export default function App(): React.Node {
   return <List />;
 }
 

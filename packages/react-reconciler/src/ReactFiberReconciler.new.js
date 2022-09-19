@@ -120,7 +120,7 @@ type OpaqueRoot = FiberRoot;
 // Might add PROFILE later.
 type BundleType = 0 | 1;
 
-type DevToolsConfig = {|
+type DevToolsConfig = {
   bundleType: BundleType,
   version: string,
   rendererPackageName: string,
@@ -128,7 +128,7 @@ type DevToolsConfig = {|
   // Used by "inspect clicked DOM element" in React DevTools.
   findFiberByHostInstance?: (instance: Instance | TextInstance) => Fiber | null,
   rendererConfig?: RendererInspectionConfig,
-|};
+};
 
 let didWarnAboutNestedUpdates;
 let didWarnAboutFindNodeInStrictMode;

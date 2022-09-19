@@ -6,7 +6,7 @@
  *
  * @flow
  */
-import type {FiberRoot} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';

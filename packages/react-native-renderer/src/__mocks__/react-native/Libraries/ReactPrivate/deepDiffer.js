@@ -10,7 +10,7 @@
 
 'use strict';
 
-type Options = {|+unsafelyIgnoreFunctions?: boolean|};
+type Options = {+unsafelyIgnoreFunctions?: boolean};
 
 /*
  * @returns {bool} true if different, false if equal

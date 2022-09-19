@@ -10,6 +10,8 @@ import type {AnyNativeEvent} from '../PluginModuleType';
 import type {DOMEventName} from '../DOMEventNames';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {ReactSyntheticEvent} from '../ReactSyntheticEventType';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';
 import {SyntheticEvent} from '../SyntheticEvent';
@@ -57,7 +59,8 @@ function createAndAccumulateChangeEvent(
   enqueueStateRestore(((target: any): Node));
   const listeners = accumulateTwoPhaseListeners(inst, 'onChange');
   if (listeners.length > 0) {
-    const event = new SyntheticEvent(
+    // $FlowFixMe[incompatible-type]
+    const event: ReactSyntheticEvent = new SyntheticEvent(
       'onChange',
       'change',
       null,

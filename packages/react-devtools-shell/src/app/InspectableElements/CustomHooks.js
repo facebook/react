@@ -114,7 +114,7 @@ function wrapWithHoc(Component) {
 }
 const HocWithHooks = wrapWithHoc(FunctionWithHooks);
 
-export default function CustomHooks() {
+export default function CustomHooks(): React.Node {
   return (
     <Fragment>
       <FunctionWithHooks />

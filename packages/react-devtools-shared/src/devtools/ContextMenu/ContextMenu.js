@@ -48,12 +48,12 @@ const HIDDEN_STATE = {
   pageY: 0,
 };
 
-type Props = {|
+type Props = {
   children: (data: Object) => React$Node,
   id: string,
-|};
+};
 
-export default function ContextMenu({children, id}: Props) {
+export default function ContextMenu({children, id}: Props): React.Node {
   const {hideMenu, registerMenu} = useContext<RegistryContextType>(
     RegistryContext,
   );

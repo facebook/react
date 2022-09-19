@@ -19,7 +19,7 @@ const objectWithNullProto = Object.create(null);
 objectWithNullProto.foo = 'abc';
 objectWithNullProto.bar = 123;
 
-export default function EdgeCaseObjects() {
+export default function EdgeCaseObjects(): React.Node {
   return (
     <ChildComponent
       objectWithModifiedHasOwnProperty={objectWithModifiedHasOwnProperty}

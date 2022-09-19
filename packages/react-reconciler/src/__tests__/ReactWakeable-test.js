@@ -315,4 +315,75 @@ describe('ReactWakeable', () => {
     ]);
     expect(root).toMatchRenderedOutput('Caught an error: Oops!');
   });
+
+  // @gate enableUseHook
+  test('basic use(context)', () => {
+    const ContextA = React.createContext('');
+    const ContextB = React.createContext('B');
+
+    function Sync() {
+      const text = use(ContextA) + use(ContextB);
+      return text;
+    }
+
+    function App() {
+      return (
+        <ContextA.Provider value="A">
+          <Sync />
+        </ContextA.Provider>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    root.render(<App />);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(root).toMatchRenderedOutput('AB');
+  });
+
+  // @gate enableUseHook
+  test('interrupting while yielded should reset contexts', async () => {
+    let resolve;
+    const promise = new Promise(r => {
+      resolve = r;
+    });
+
+    const Context = React.createContext();
+
+    const lazy = React.lazy(() => {
+      return promise;
+    });
+
+    function ContextText() {
+      return <Text text={use(Context)} />;
+    }
+
+    function App({text}) {
+      return (
+        <div>
+          <Context.Provider value={text}>
+            {lazy}
+            <ContextText />
+          </Context.Provider>
+        </div>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    startTransition(() => {
+      root.render(<App text="world" />);
+    });
+    expect(Scheduler).toFlushUntilNextPaint([]);
+    expect(root).toMatchRenderedOutput(null);
+
+    await resolve({default: <Text key="hi" text="Hello " />});
+
+    // Higher priority update that interrupts the first render
+    ReactNoop.flushSync(() => {
+      root.render(<App text="world!" />);
+    });
+
+    expect(Scheduler).toHaveYielded(['Hello ', 'world!']);
+
+    expect(root).toMatchRenderedOutput(<div>Hello world!</div>);
+  });
 });

@@ -18,19 +18,19 @@ import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
 
-type Props = {|
+type Props = {
   bridge: FrontendBridge,
   element: Element,
   inspectedElement: InspectedElement,
   store: Store,
-|};
+};
 
 export default function InspectedElementStyleXPlugin({
   bridge,
   element,
   inspectedElement,
   store,
-}: Props) {
+}: Props): React.Node {
   if (!enableStyleXFeatures) {
     return null;
   }

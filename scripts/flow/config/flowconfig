@@ -43,11 +43,17 @@ server.max_workers=4
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
 esproposal.optional_chaining=enable
+exact_by_default=true
+munge_underscores=false
+types_first=false
+
+well_formed_exports=true
+well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-shared
+well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-shell
+well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-timeline
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
 
-munge_underscores=false
-
 [version]
-^0.97.0
+^0.142.0

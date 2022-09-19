@@ -17,9 +17,9 @@ declare class TaskController {
 
 type PostTaskPriorityLevel = 'user-blocking' | 'user-visible' | 'background';
 
-type CallbackNode = {|
+type CallbackNode = {
   _controller: TaskController,
-|};
+};
 
 import {
   ImmediatePriority,
@@ -59,7 +59,7 @@ let currentPriorityLevel_DEPRECATED = NormalPriority;
 
 // `isInputPending` is not available. Since we have no way of knowing if
 // there's pending input, always yield at the end of the frame.
-export function unstable_shouldYield() {
+export function unstable_shouldYield(): boolean {
   return getCurrentTime() >= deadline;
 }
 

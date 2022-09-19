@@ -48,18 +48,18 @@ export type BatchConfigTransition = {
 };
 
 // TODO: Is there a way to not include the tag or name here?
-export type TracingMarkerInstance = {|
+export type TracingMarkerInstance = {
   tag?: TracingMarkerTag,
   transitions: Set<Transition> | null,
   pendingBoundaries: PendingBoundaries | null,
   aborts: Array<TransitionAbort> | null,
   name: string | null,
-|};
+};
 
-export type TransitionAbort = {|
+export type TransitionAbort = {
   reason: 'error' | 'unknown' | 'marker' | 'suspense',
   name?: string | null,
-|};
+};
 
 export const TransitionRoot = 0;
 export const TransitionTracingMarker = 1;
