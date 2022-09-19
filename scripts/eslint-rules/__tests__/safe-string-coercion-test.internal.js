@@ -88,6 +88,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
     "if (typeof obj === 'string') { if (typeof obj === 'string' && obj.length) {} else {'' + obj} }",
     "if (typeof obj === 'string') if (typeof obj === 'string' && obj.length) {} else {'' + obj}",
     "'' + ''",
+    "'' + '' + ''",
   ],
   invalid: [
     {
@@ -260,6 +261,13 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
         {
           message: missingDevCheckMessage + '\n' + message,
         },
+      ],
+    },
+    {
+      code: `'' + obj + ''`,
+      errors: [
+        {message: missingDevCheckMessage + '\n' + message},
+        {message: missingDevCheckMessage + '\n' + message},
       ],
     },
   ],

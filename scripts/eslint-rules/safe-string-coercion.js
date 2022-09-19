@@ -266,9 +266,21 @@ function hasCoercionCheck(node) {
   }
 }
 
-function checkBinaryExpression(context, node) {
+function isOnlyAddingStrings(node) {
+  if (node.operator !== '+') {
+    return;
+  }
   if (isStringLiteral(node.left) && isStringLiteral(node.right)) {
     // It's always safe to add string literals
+    return true;
+  }
+  if (node.left.type === 'BinaryExpression' && isStringLiteral(node.right)) {
+    return isOnlyAddingStrings(node.left);
+  }
+}
+
+function checkBinaryExpression(context, node) {
+  if (isOnlyAddingStrings(node)) {
     return;
   }
 
