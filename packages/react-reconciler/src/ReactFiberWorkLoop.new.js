@@ -1983,7 +1983,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
       handleThrow(root, thrownValue);
       if (isTrackingSuspendedThenable()) {
         // If this fiber just suspended, it's possible the data is already
-        // cached. Yield to the the main thread to give it a chance to ping. If
+        // cached. Yield to the main thread to give it a chance to ping. If
         // it does, we can retry immediately without unwinding the stack.
         break;
       }
