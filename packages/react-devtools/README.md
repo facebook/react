@@ -97,7 +97,7 @@ By default DevTools listen to port `8097` on `localhost`. If you need to customi
 
 ![Allow access to file URLs](https://user-images.githubusercontent.com/29597/64646784-95b58080-d3cc-11e9-943d-02474683398a.png)
 
-Or you could develop with a local HTTP server [like `serve`](https://www.npmjs.com/package/serve).
+Or you could develop with a local HTTP server like [`serve`](https://www.npmjs.com/package/serve).
 
 **The React tab won't show up if the site doesn't use React**, or if React can't communicate with the devtools. When the page loads, the devtools sets a global named `__REACT_DEVTOOLS_GLOBAL_HOOK__`, then React communicates with that hook during initialization. You can test this on the [React website](https://reactjs.org/) or by inspecting [Facebook](https://www.facebook.com/).
 
