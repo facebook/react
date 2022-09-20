@@ -309,7 +309,7 @@ describe('ReactFlightDOMBrowser', () => {
       rejectGames(theError);
     });
 
-    let gamesExpectedValue = __DEV__
+    const gamesExpectedValue = __DEV__
       ? '<p>Game over + a dev digest</p>'
       : '<p>digest("Game over")</p>';
 
@@ -550,7 +550,7 @@ describe('ReactFlightDOMBrowser', () => {
       {
         signal: controller.signal,
         onError(x) {
-          let message = typeof x === 'string' ? x : x.message;
+          const message = typeof x === 'string' ? x : x.message;
           reportedErrors.push(x);
           return __DEV__ ? 'a dev digest' : `digest("${message}")`;
         },

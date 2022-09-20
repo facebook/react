@@ -48,7 +48,7 @@ export function resolveRow(response: Response, chunk: RowEncoding): void {
       );
     } else {
       // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
-      resolveErrorPro(response, chunk[1], chunk[2].digest);
+      resolveErrorProd(response, chunk[1], chunk[2].digest);
     }
   }
 }
