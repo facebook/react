@@ -797,7 +797,7 @@ describe('ReactFlightDOM', () => {
       {
         onError(x) {
           reportedErrors.push(x.message);
-          return `digestOf("${x.message}")`;
+          return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
         },
       },
     );
@@ -816,10 +816,10 @@ describe('ReactFlightDOM', () => {
       root.render(
         <ErrorBoundary
           fallback={e => (
-            <>
-              <p>{e.message}</p>
-              <p>{e._digest}</p>
-            </>
+            <p>
+              {__DEV__ ? e.message + ' + ' : null}
+              {e._digest}
+            </p>
           )}>
           <Suspense fallback={<p>(loading)</p>}>
             <App res={response} />
@@ -829,12 +829,10 @@ describe('ReactFlightDOM', () => {
     });
     if (__DEV__) {
       expect(container.innerHTML).toBe(
-        '<p>bug in the bundler</p><p>digestOf("bug in the bundler")</p>',
+        '<p>bug in the bundler + a dev digest</p>',
       );
     } else {
-      expect(container.innerHTML).toBe(
-        '<p>An error occurred in the Server Components render.</p><p>digestOf("bug in the bundler")</p>',
-      );
+      expect(container.innerHTML).toBe('<p>digest("bug in the bundler")</p>');
     }
 
     expect(reportedErrors).toEqual(['bug in the bundler']);
