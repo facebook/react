@@ -109,46 +109,44 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
         }
       }
       return thenable;
-    } else {
-      const returnValue: T = (result: any);
-      // The callback is not an async function. Exit the current scope
-      // immediately, without awaiting.
-      popActScope(prevActScopeDepth);
-      if (actScopeDepth === 0) {
-        // Exiting the outermost act scope. Flush the queue.
-        const queue = ReactCurrentActQueue.current;
-        if (queue !== null) {
-          flushActQueue(queue);
-          ReactCurrentActQueue.current = null;
-        }
-        // Return a thenable. If the user awaits it, we'll flush again in
-        // case additional work was scheduled by a microtask.
-        const thenable: Thenable<T> = {
-          then(resolve, reject) {
-            // Confirm we haven't re-entered another `act` scope, in case
-            // the user does something weird like await the thenable
-            // multiple times.
-            if (ReactCurrentActQueue.current === null) {
-              // Recursively flush the queue until there's no remaining work.
-              ReactCurrentActQueue.current = [];
-              recursivelyFlushAsyncActWork(returnValue, resolve, reject);
-            } else {
-              resolve(returnValue);
-            }
-          },
-        };
-        return thenable;
-      } else {
-        // Since we're inside a nested `act` scope, the returned thenable
-        // immediately resolves. The outer scope will flush the queue.
-        const thenable: Thenable<T> = {
-          then(resolve, reject) {
-            resolve(returnValue);
-          },
-        };
-        return thenable;
-      }
     }
+    const returnValue: T = (result: any);
+    // The callback is not an async function. Exit the current scope
+    // immediately, without awaiting.
+    popActScope(prevActScopeDepth);
+    if (actScopeDepth === 0) {
+      // Exiting the outermost act scope. Flush the queue.
+      const queue = ReactCurrentActQueue.current;
+      if (queue !== null) {
+        flushActQueue(queue);
+        ReactCurrentActQueue.current = null;
+      }
+      // Return a thenable. If the user awaits it, we'll flush again in
+      // case additional work was scheduled by a microtask.
+      const thenable: Thenable<T> = {
+        then(resolve, reject) {
+          // Confirm we haven't re-entered another `act` scope, in case
+          // the user does something weird like await the thenable
+          // multiple times.
+          if (ReactCurrentActQueue.current === null) {
+            // Recursively flush the queue until there's no remaining work.
+            ReactCurrentActQueue.current = [];
+            recursivelyFlushAsyncActWork(returnValue, resolve, reject);
+          } else {
+            resolve(returnValue);
+          }
+        },
+      };
+      return thenable;
+    }
+    // Since we're inside a nested `act` scope, the returned thenable
+    // immediately resolves. The outer scope will flush the queue.
+    const thenable: Thenable<T> = {
+      then(resolve, reject) {
+        resolve(returnValue);
+      },
+    };
+    return thenable;
   } else {
     throw new Error('act(...) is not supported in production builds of React.');
   }
