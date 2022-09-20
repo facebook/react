@@ -628,21 +628,60 @@ export function resolveSymbol(
   chunks.set(id, createInitializedChunk(response, Symbol.for(name)));
 }
 
-export function resolveError(
+type ErrorWithDigest = Error & {_digest?: string};
+export function resolveErrorProd(
   response: Response,
   id: number,
-  message: string,
-  stack: string,
+  digest: string,
 ): void {
-  // eslint-disable-next-line react-internal/prod-error-codes
-  const error = new Error(message);
-  error.stack = stack;
+  if (__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'resolveErrorProd should never be called in development mode. Use resolveErrorDev instead. This is a bug in React.',
+    );
+  }
+  const error = new Error('An error occurred in the Server Components render.');
+  error.stack = '';
+  (error: any)._digest = digest;
+  const errorWithDigest: ErrorWithDigest = (error: any);
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
-    chunks.set(id, createErrorChunk(response, error));
+    chunks.set(id, createErrorChunk(response, errorWithDigest));
   } else {
-    triggerErrorOnChunk(chunk, error);
+    triggerErrorOnChunk(chunk, errorWithDigest);
+  }
+}
+
+export function resolveErrorDev(
+  response: Response,
+  id: number,
+  digest: string,
+  message: string,
+  stack: string,
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'resolveErrorDev should never be called in production mode. Use resolveErrorProd instead. This is a bug in React.',
+    );
+  }
+  // eslint-disable-next-line react-internal/prod-error-codes
+  const error = new Error(
+    message ||
+      'An error occurred in the Server Components render but no message was provided',
+  );
+  error.stack = stack;
+  (error: any)._digest = digest;
+  const errorWithDigest: ErrorWithDigest = (error: any);
+  const chunks = response._chunks;
+  const chunk = chunks.get(id);
+  if (!chunk) {
+    chunks.set(id, createErrorChunk(response, errorWithDigest));
+  } else {
+    triggerErrorOnChunk(chunk, errorWithDigest);
   }
 }
 

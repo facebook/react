@@ -16,7 +16,8 @@ import {
   resolveModel,
   resolveProvider,
   resolveSymbol,
-  resolveError,
+  resolveErrorProd,
+  resolveErrorDev,
   createResponse as createResponseBase,
   parseModelString,
   parseModelTuple,
@@ -62,7 +63,17 @@ function processFullRow(response: Response, row: string): void {
     }
     case 'E': {
       const errorInfo = JSON.parse(text);
-      resolveError(response, id, errorInfo.message, errorInfo.stack);
+      if (__DEV__) {
+        resolveErrorDev(
+          response,
+          id,
+          errorInfo.digest,
+          errorInfo.message,
+          errorInfo.stack,
+        );
+      } else {
+        resolveErrorProd(response, id, errorInfo.digest);
+      }
       return;
     }
     default: {

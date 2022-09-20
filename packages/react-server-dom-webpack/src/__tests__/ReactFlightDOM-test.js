@@ -772,7 +772,8 @@ describe('ReactFlightDOM', () => {
       webpackMap,
       {
         onError(x) {
-          reportedErrors.push(x);
+          reportedErrors.push(x.message);
+          return `digestOf("${x.message}")`;
         },
       },
     );
@@ -789,15 +790,29 @@ describe('ReactFlightDOM', () => {
 
     await act(async () => {
       root.render(
-        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+        <ErrorBoundary
+          fallback={e => (
+            <>
+              <p>{e.message}</p>
+              <p>{e._digest}</p>
+            </>
+          )}>
           <Suspense fallback={<p>(loading)</p>}>
             <App res={response} />
           </Suspense>
         </ErrorBoundary>,
       );
     });
-    expect(container.innerHTML).toBe('<p>bug in the bundler</p>');
+    if (__DEV__) {
+      expect(container.innerHTML).toBe(
+        '<p>bug in the bundler</p><p>digestOf("bug in the bundler")</p>',
+      );
+    } else {
+      expect(container.innerHTML).toBe(
+        '<p>An error occurred in the Server Components render.</p><p>digestOf("bug in the bundler")</p>',
+      );
+    }
 
-    expect(reportedErrors).toEqual([]);
+    expect(reportedErrors).toEqual(['bug in the bundler']);
   });
 });
