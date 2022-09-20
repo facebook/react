@@ -332,7 +332,13 @@ describe('ReactFlightDOM', () => {
 
     function MyErrorBoundary({children}) {
       return (
-        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+        <ErrorBoundary
+          fallback={e => (
+            <p>
+              {__DEV__ ? e.message + ' + ' : null}
+              {e._digest}
+            </p>
+          )}>
           {children}
         </ErrorBoundary>
       );
@@ -434,6 +440,7 @@ describe('ReactFlightDOM', () => {
       {
         onError(x) {
           reportedErrors.push(x);
+          return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
         },
       },
     );
@@ -477,11 +484,14 @@ describe('ReactFlightDOM', () => {
     await act(async () => {
       rejectGames(theError);
     });
+    const expectedGamesValue = __DEV__
+      ? '<p>Game over + a dev digest</p>'
+      : '<p>digest("Game over")</p>';
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
         '<p>(loading sidebar)</p>' +
         '<p>(loading posts)</p>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        expectedGamesValue,
     );
 
     expect(reportedErrors).toEqual([theError]);
@@ -495,7 +505,7 @@ describe('ReactFlightDOM', () => {
       '<div>:name::avatar:</div>' +
         '<div>:photos::friends:</div>' +
         '<p>(loading posts)</p>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        expectedGamesValue,
     );
 
     // Show everything.
@@ -506,7 +516,7 @@ describe('ReactFlightDOM', () => {
       '<div>:name::avatar:</div>' +
         '<div>:photos::friends:</div>' +
         '<div>:posts:</div>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        expectedGamesValue,
     );
 
     expect(reportedErrors).toEqual([]);
@@ -611,6 +621,8 @@ describe('ReactFlightDOM', () => {
       {
         onError(x) {
           reportedErrors.push(x);
+          const message = typeof x === 'string' ? x : x.message;
+          return __DEV__ ? 'a dev digest' : `digest("${message}")`;
         },
       },
     );
@@ -626,7 +638,13 @@ describe('ReactFlightDOM', () => {
 
     await act(async () => {
       root.render(
-        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+        <ErrorBoundary
+          fallback={e => (
+            <p>
+              {__DEV__ ? e.message + ' + ' : null}
+              {e._digest}
+            </p>
+          )}>
           <Suspense fallback={<p>(loading)</p>}>
             <App res={response} />
           </Suspense>
@@ -638,7 +656,13 @@ describe('ReactFlightDOM', () => {
     await act(async () => {
       abort('for reasons');
     });
-    expect(container.innerHTML).toBe('<p>Error: for reasons</p>');
+    if (__DEV__) {
+      expect(container.innerHTML).toBe(
+        '<p>Error: for reasons + a dev digest</p>',
+      );
+    } else {
+      expect(container.innerHTML).toBe('<p>digest("for reasons")</p>');
+    }
 
     expect(reportedErrors).toEqual(['for reasons']);
   });

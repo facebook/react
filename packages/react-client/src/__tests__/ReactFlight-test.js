@@ -45,7 +45,19 @@ describe('ReactFlight', () => {
       componentDidMount() {
         expect(this.state.hasError).toBe(true);
         expect(this.state.error).toBeTruthy();
-        expect(this.state.error.message).toContain(this.props.expectedMessage);
+        if (__DEV__) {
+          expect(this.state.error.message).toContain(
+            this.props.expectedMessage,
+          );
+          expect(this.state.error._digest).toContain('a dev digest');
+        } else {
+          expect(this.state.error.message).toContain(
+            'An error occurred in the Server Components render.',
+          );
+          expect(this.state.error._digest).toContain(
+            this.props.expectedMessage,
+          );
+        }
       }
       render() {
         if (this.state.hasError) {
@@ -371,8 +383,8 @@ describe('ReactFlight', () => {
     }
 
     const options = {
-      onError() {
-        // ignore
+      onError(x) {
+        return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
       },
     };
     const event = ReactNoopFlightServer.render(<EventHandlerProp />, options);
