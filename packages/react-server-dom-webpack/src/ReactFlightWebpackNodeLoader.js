@@ -48,6 +48,10 @@ let warnedAboutConditionsFlag = false;
 let stashedGetSource: null | GetSourceFunction = null;
 let stashedResolve: null | ResolveFunction = null;
 
+//
+// Node version 17+
+// 
+
 export async function load(url, context, defaultLoad) {
   const transformed = await transformed(
     url,
@@ -132,6 +136,10 @@ export async function resolve(
   }
   return resolved;
 }
+
+//
+// Node version < 17.
+// 
 
 export async function getSource(
   url: string,
