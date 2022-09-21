@@ -48,6 +48,49 @@ let warnedAboutConditionsFlag = false;
 let stashedGetSource: null | GetSourceFunction = null;
 let stashedResolve: null | ResolveFunction = null;
 
+export async function load(url, context, defaultLoad) {
+  const transformed = await transformed(
+    url,
+    context,
+    defaultLoad,
+  );
+
+  if (context.format === 'module' && context.url.endsWith('.client.js')) {
+    const transformedSource = transformed.source;
+    if (typeof transformedSource !== 'string') {
+      throw new Error('Expected source to have been transformed to a string.');
+    }
+
+    const names = [];
+    await parseExportNamesInto(
+      transformedSource,
+      names,
+      context.url,
+      defaultLoad,
+    );
+
+    let newSrc =
+      "const MODULE_REFERENCE = Symbol.for('react.module.reference');\n";
+    for (let i = 0; i < names.length; i++) {
+      const name = names[i];
+      if (name === 'default') {
+        newSrc += 'export default ';
+      } else {
+        newSrc += 'export const ' + name + ' = ';
+      }
+      newSrc += '{ $$typeof: MODULE_REFERENCE, filepath: ';
+      newSrc += JSON.stringify(context.url);
+      newSrc += ', name: ';
+      newSrc += JSON.stringify(name);
+      newSrc += '};\n';
+    }
+
+    return { format: 'module', source: newSrc, shortCircuit: true }
+  }
+
+  return transformed
+}
+
 export async function resolve(
   specifier: string,
   context: ResolveContext,
@@ -265,3 +308,4 @@ export async function transformSource(
   }
   return transformed;
 }
+
