@@ -2798,7 +2798,7 @@ function updateDehydratedSuspenseComponent(
             current,
             attemptHydrationAtLane,
             eventTime,
-            false, // TODO: what about isUnknownUpdate
+            false,
           );
         } else {
           // We have already tried to ping at a higher priority than we're rendering with

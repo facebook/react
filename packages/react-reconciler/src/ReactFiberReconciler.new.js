@@ -436,7 +436,6 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
         const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
         if (root !== null) {
           const eventTime = requestEventTime();
-          // TODO: isUnknownEvent
           scheduleUpdateOnFiber(root, fiber, SyncLane, eventTime, false);
         }
       });
@@ -481,7 +480,6 @@ export function attemptDiscreteHydration(fiber: Fiber): void {
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     const eventTime = requestEventTime();
-    // TODO: isUnknownEvent
     scheduleUpdateOnFiber(root, fiber, lane, eventTime, false);
   }
   markRetryLaneIfNotHydrated(fiber, lane);
@@ -499,7 +497,6 @@ export function attemptContinuousHydration(fiber: Fiber): void {
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     const eventTime = requestEventTime();
-    // TODO: isUnknownEvent
     scheduleUpdateOnFiber(root, fiber, lane, eventTime, false);
   }
   markRetryLaneIfNotHydrated(fiber, lane);
@@ -515,7 +512,6 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     const eventTime = requestEventTime();
-    // TODO: isUnknownEvent
     scheduleUpdateOnFiber(root, fiber, lane, eventTime, false);
   }
   markRetryLaneIfNotHydrated(fiber, lane);
@@ -695,7 +691,6 @@ if (__DEV__) {
 
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        // TODO: isUnknownEvent
         scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
       }
     }
@@ -720,7 +715,6 @@ if (__DEV__) {
 
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        // TODO: isUnknownEvent
         scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
       }
     }
@@ -746,7 +740,6 @@ if (__DEV__) {
 
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        // TODO: isUnknownEvent
         scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
       }
     }
@@ -760,7 +753,6 @@ if (__DEV__) {
     }
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      // TODO: isUnknownEvent
       scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
     }
   };
@@ -771,7 +763,6 @@ if (__DEV__) {
     }
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      // TODO: isUnknownEvent
       scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
     }
   };
@@ -786,7 +777,6 @@ if (__DEV__) {
     }
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      // TODO: isUnknownEvent
       scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
     }
   };
@@ -794,7 +784,6 @@ if (__DEV__) {
   scheduleUpdate = (fiber: Fiber) => {
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      // TODO: isUnknownEvent
       scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
     }
   };

@@ -915,26 +915,25 @@ describe('ReactDOMFiberAsync', () => {
 
       window.event = undefined;
       setState(1);
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
       global.flushRequestAnimationFrameQueue();
       expect(Scheduler).toHaveYielded(['Count: 1']);
 
       setState(2);
       setThrowing(true);
-
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
       global.flushRequestAnimationFrameQueue();
       expect(Scheduler).toHaveYielded(['Count: 2', 'suspending']);
       expect(counterRef.current.textContent).toBe('Count: 1');
 
       unsuspend();
-      setThrowing(false);
-
       // Should not be scheduled in a rAF.
       window.event = 'test';
+      setThrowing(false);
       setState(2);
 
-      // TODO: This should not yield
-      // global.flushRequestAnimationFrameQueue();
-      // expect(Scheduler).toHaveYielded([]);
+      global.flushRequestAnimationFrameQueue();
+      expect(Scheduler).toHaveYielded([]);
 
       expect(Scheduler).toFlushAndYield(['Count: 2']);
       expect(counterRef.current.textContent).toBe('Count: 2');

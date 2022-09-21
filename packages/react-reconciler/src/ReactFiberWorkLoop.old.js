@@ -84,6 +84,7 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
+  isFrameAlignedTask,
   cancelFrameAlignedTask,
   scheduleFrameAlignedTask,
   supportsFrameAlignedTask,
@@ -703,7 +704,6 @@ export function scheduleUpdateOnFiber(
       didScheduleUpdateDuringPassiveEffects = true;
     }
   }
-
   // Mark that the root has a pending update.
   markRootUpdated(root, lane, eventTime, isUnknownEvent);
 
@@ -903,11 +903,8 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     if (
       enableFrameEndScheduling &&
       newCallbackPriority === DefaultLane &&
-      existingCallbackNode !== null &&
-      // TODO: We can't expose the rafNode here,
-      // but how do we know the rAF is not scheduled?
-      existingCallbackNode.rafNode == null &&
-      root.hasUnknownUpdates
+      root.hasUnknownUpdates &&
+      !isFrameAlignedTask(existingCallbackNode)
     ) {
       // Do nothing, we need to schedule a new rAF.
     } else {
@@ -921,10 +918,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     if (
       enableFrameEndScheduling &&
       supportsFrameAlignedTask &&
-      existingCallbackNode != null &&
-      // TODO: we can't expose the scheduler node here,
-      // but how do we know we need to cancel with the host config method?
-      existingCallbackNode.schedulerNode != null
+      isFrameAlignedTask(existingCallbackNode)
     ) {
       cancelFrameAlignedTask(existingCallbackNode);
     } else {

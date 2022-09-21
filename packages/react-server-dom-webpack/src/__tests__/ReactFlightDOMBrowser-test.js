@@ -766,7 +766,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const stream = ReactServerDOMWriter.renderToReadableStream(<Server />);
     const response = ReactServerDOMReader.createFromReadableStream(stream);
-
+    
     function Client() {
       return use(response);
     }

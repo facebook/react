@@ -402,12 +402,11 @@ export const scheduleMicrotask: any =
           .catch(handleErrorInNextTick)
     : scheduleTimeout; // TODO: Determine the best fallback here.
 
-// TODO: Fix these types
 export const supportsFrameAlignedTask = true;
 
 type FrameAlignedTask = {|
-  rafNode: number,
-  schedulerNode: number,
+  rafNode: AnimationFrameID,
+  schedulerNode: number | null,
   task: function,
 |};
 
@@ -415,13 +414,17 @@ let currentTask: FrameAlignedTask | null = null;
 function performFrameAlignedWork() {
   if (currentTask != null) {
     const task = currentTask.task;
-    localCancelAnimationFrame(currentTask.id);
+    localCancelAnimationFrame(currentTask.rafNode);
     Scheduler.unstable_cancelCallback(currentTask.schedulerNode);
     currentTask = null;
     if (task != null) {
       task();
     }
   }
+}
+
+export function isFrameAlignedTask(task: any): boolean {
+  return task != null && task.rafNode != null && task.task != null;
 }
 
 export function scheduleFrameAlignedTask(task: any): any {
@@ -449,7 +452,7 @@ export function scheduleFrameAlignedTask(task: any): any {
   return currentTask;
 }
 
-export function cancelFrameAlignedTask(task: FrameAlignedTask) {
+export function cancelFrameAlignedTask(task: any) {
   Scheduler.unstable_cancelCallback(task.schedulerNode);
   task.schedulerNode = null;
   // We don't cancel the rAF in case it gets re-used later.

@@ -1642,8 +1642,15 @@ function checkIfSnapshotChanged<T>(inst: StoreInstance<T>): boolean {
 
 function forceStoreRerender(fiber) {
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+  const isUnknownEventPriority = requestUpdateLane_isUnknownEventPriority();
   if (root !== null) {
-    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false); // TODO: isUnknownEvent
+    scheduleUpdateOnFiber(
+      root,
+      fiber,
+      SyncLane,
+      NoTimestamp,
+      isUnknownEventPriority,
+    );
   }
 }
 

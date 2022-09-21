@@ -83,6 +83,7 @@ export const scheduleMicrotask = $$$hostConfig.scheduleMicrotask;
 export const supportsFrameAlignedTask = $$$hostConfig.supportsFrameAlignedTask;
 export const scheduleFrameAlignedTask = $$$hostConfig.scheduleFrameAlignedTask;
 export const cancelFrameAlignedTask = $$$hostConfig.cancelFrameAlignedTask;
+export const isFrameAlignedTask = $$$hostConfig.isFrameAlignedTask;
 
 // -------------------
 //      Test selectors
