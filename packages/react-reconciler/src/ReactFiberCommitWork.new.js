@@ -1116,20 +1116,19 @@ function commitLayoutEffectOnFiber(
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
         }
-
-        if (finishedWork.pendingProps.mode === 'manual') {
-          if (flags & Ref) {
-            safelyAttachRef(finishedWork, finishedWork.return);
-          }
-        } else {
-          safelyDetachRef(finishedWork, finishedWork.return);
-        }
       } else {
         recursivelyTraverseLayoutEffects(
           finishedRoot,
           finishedWork,
           committedLanes,
         );
+      }
+      if (flags & Ref) {
+        if (finishedWork.pendingProps.mode === 'manual') {
+          safelyAttachRef(finishedWork, finishedWork.return);
+        } else {
+          safelyDetachRef(finishedWork, finishedWork.return);
+        }
       }
       break;
     }
@@ -2134,6 +2133,7 @@ function commitDeletionEffectsOnFiber(
       return;
     }
     case OffscreenComponent: {
+      safelyDetachRef(deletedFiber, nearestMountedAncestor);
       if (deletedFiber.mode & ConcurrentMode) {
         // If this offscreen component is hidden, we already unmounted it. Before
         // deleting the children, track that it's already unmounted so that we
@@ -2147,8 +2147,6 @@ function commitDeletionEffectsOnFiber(
         const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
         offscreenSubtreeWasHidden =
           prevOffscreenSubtreeWasHidden || deletedFiber.memoizedState !== null;
-
-        safelyDetachRef(deletedFiber, nearestMountedAncestor);
 
         recursivelyTraverseDeletionEffects(
           finishedRoot,
@@ -2615,6 +2613,12 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case OffscreenComponent: {
+      if (flags & Ref) {
+        if (current !== null) {
+          safelyDetachRef(current, current.return);
+        }
+      }
+
       const newState: OffscreenState | null = finishedWork.memoizedState;
       const isHidden = newState !== null;
       const wasHidden = current !== null && current.memoizedState !== null;
@@ -2830,12 +2834,14 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       break;
     }
     case OffscreenComponent: {
+      // TODO (Offscreen) Check: flags & RefStatic
+      safelyDetachRef(finishedWork, finishedWork.return);
+
       const isHidden = finishedWork.memoizedState !== null;
       if (isHidden) {
         // Nested Offscreen tree is already hidden. Don't disappear
         // its effects.
       } else {
-        safelyDetachRef(finishedWork, finishedWork.return);
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
       }
       break;
@@ -2977,9 +2983,9 @@ export function reappearLayoutEffects(
           finishedWork,
           includeWorkInProgressEffects,
         );
-
-        safelyAttachRef(finishedWork, finishedWork.return);
       }
+      // TODO: Check flags & Ref
+      safelyAttachRef(finishedWork, finishedWork.return);
       break;
     }
     default: {

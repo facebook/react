@@ -1347,17 +1347,15 @@ describe('ReactOffscreen', () => {
   });
 
   // @gate enableOffscreen
-  it('should detach ref if Offscreen is unmounted', async () => {
+  it('should detach ref when parent Offscreen is hidden', async () => {
     let offscreenRef;
-    let divRef;
 
     function App({mode}) {
       offscreenRef = useRef(null);
-      divRef = useRef(null);
       return (
         <Offscreen mode={mode}>
           <Offscreen mode={'manual'} ref={offscreenRef}>
-            <div ref={divRef} />
+            <div />
           </Offscreen>
         </Offscreen>
       );
@@ -1370,21 +1368,19 @@ describe('ReactOffscreen', () => {
     });
 
     expect(offscreenRef.current).toBeNull();
-    expect(divRef.current).toBeNull();
 
     await act(async () => {
       root.render(<App mode={'visible'} />);
     });
 
     expect(offscreenRef.current).not.toBeNull();
-    expect(divRef.current).not.toBeNull();
 
-    console.log('Becoming Hidden');
     await act(async () => {
       root.render(<App mode={'hidden'} />);
     });
 
     expect(offscreenRef.current).toBeNull();
-    expect(divRef.current).toBeNull();
   });
+
+  // TODO: When attach/detach methods are implemented. Add tests for nested Offscreen case.
 });
