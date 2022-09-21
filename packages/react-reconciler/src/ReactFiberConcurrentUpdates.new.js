@@ -32,6 +32,7 @@ import {
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {HostRoot, OffscreenComponent} from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberOffscreenComponent';
+import {getWorkInProgressRoot} from './ReactFiberWorkLoop.new';
 
 export type ConcurrentUpdate = {
   next: ConcurrentUpdate,
@@ -139,6 +140,18 @@ export function enqueueConcurrentHookUpdateAndEagerlyBailout<S, A>(
   const concurrentQueue: ConcurrentQueue = (queue: any);
   const concurrentUpdate: ConcurrentUpdate = (update: any);
   enqueueUpdate(fiber, concurrentQueue, concurrentUpdate, lane);
+
+  // Usually we can rely on the upcoming render phase to process the concurrent
+  // queue. However, since this is a bail out, we're not scheduling any work
+  // here. So the update we just queued will leak until something else happens
+  // to schedule work (if ever).
+  //
+  // Check if we're currently in the middle of rendering a tree, and if not,
+  // process the queue immediately to prevent a leak.
+  const isConcurrentlyRendering = getWorkInProgressRoot() !== null;
+  if (!isConcurrentlyRendering) {
+    finishQueueingConcurrentUpdates();
+  }
 }
 
 export function enqueueConcurrentClassUpdate<State>(

@@ -1912,6 +1912,9 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
   workInProgressRoot = null;
   workInProgressRootRenderLanes = NoLanes;
 
+  // It's safe to process the queue now that the render phase is complete.
+  finishQueueingConcurrentUpdates();
+
   return workInProgressRootExitStatus;
 }
 
@@ -2016,6 +2019,9 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     // Set this to null to indicate there's no in-progress render.
     workInProgressRoot = null;
     workInProgressRootRenderLanes = NoLanes;
+
+    // It's safe to process the queue now that the render phase is complete.
+    finishQueueingConcurrentUpdates();
 
     // Return the final exit status.
     return workInProgressRootExitStatus;
