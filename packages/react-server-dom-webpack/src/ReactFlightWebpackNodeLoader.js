@@ -74,7 +74,7 @@ export async function load(url: string, context: LoadContext, defaultLoad: LoadF
   );
 
   if (context.format === 'module' && url.endsWith('.client.js')) {
-    const transformedSource = transformed.source;
+    const transformedSource = transformed.source.toString();
     if (typeof transformedSource !== 'string') {
       throw new Error('Expected source to have been transformed to a string.');
     }
@@ -297,7 +297,7 @@ export async function transformSource(
     defaultTransformSource,
   );
   if (context.format === 'module' && context.url.endsWith('.client.js')) {
-    const transformedSource = transformed.source;
+    const transformedSource = transformed.source.toString();
     if (typeof transformedSource !== 'string') {
       throw new Error('Expected source to have been transformed to a string.');
     }
