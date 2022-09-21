@@ -9,6 +9,17 @@
 
 import * as acorn from 'acorn';
 
+type LoadContext = {
+  format: string,
+  importAssertions: {}
+};
+
+type LoadFunction = (
+  string,
+  LoadContext,
+  LoadFunction,
+) => { format: string, source: Source, shortCircuit?: boolean } | Promise<{ format: string, source: Source, shortCircuit?: boolean }>;
+
 type ResolveContext = {
   conditions: Array<string>,
   parentURL: string | void,
@@ -52,8 +63,8 @@ let stashedResolve: null | ResolveFunction = null;
 // Node version 17+
 // 
 
-export async function load(url, context, defaultLoad) {
-  const transformed = await transformed(
+export async function load(url: string, context: LoadContext, defaultLoad: LoadFunction) {
+  const transformed = await defaultLoad(
     url,
     context,
     defaultLoad,
