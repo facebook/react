@@ -153,4 +153,77 @@ describe('ReactOffscreenStrictMode', () => {
       );
     });
   });
+
+  // @gate __DEV__ && enableStrictEffects && enableOffscreen
+  it('should double invoke effects on unsuspended child', async () => {
+    let shouldSuspend = true;
+    let resolve;
+    const suspensePromise = new Promise(_resolve => {
+      resolve = _resolve;
+    });
+
+    function Parent() {
+      log.push('Parent rendered');
+      React.useEffect(() => {
+        log.push('Parent mount');
+        return () => {
+          log.push('Parent unmount');
+        };
+      });
+
+      return (
+        <React.Suspense fallback="fallback">
+          <Child />
+        </React.Suspense>
+      );
+    }
+
+    function Child() {
+      log.push('Child rendered');
+      React.useEffect(() => {
+        log.push('Child mount');
+        return () => {
+          log.push('Child unmount');
+        };
+      });
+      if (shouldSuspend) {
+        log.push('Child suspended');
+        throw suspensePromise;
+      }
+      return null;
+    }
+
+    act(() => {
+      ReactNoop.render(
+        <React.StrictMode>
+          <Offscreen mode="visible">
+            <Parent />
+          </Offscreen>
+        </React.StrictMode>,
+      );
+    });
+
+    log.push('------------------------------');
+
+    await act(async () => {
+      resolve();
+      shouldSuspend = false;
+    });
+
+    expect(log).toEqual([
+      'Parent rendered',
+      'Parent rendered',
+      'Child rendered',
+      'Child suspended',
+      'Parent mount',
+      'Parent unmount',
+      'Parent mount',
+      '------------------------------',
+      'Child rendered',
+      'Child rendered',
+      'Child mount',
+      'Child unmount',
+      'Child mount',
+    ]);
+  });
 });

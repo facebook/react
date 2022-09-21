@@ -3211,12 +3211,20 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
   }
   let child = parentFiber.child;
   while (child !== null) {
-    doubleInvokeEffectsInDEV(root, child, isInStrictMode);
+    doubleInvokeEffectsInDEVIfNecessary(root, child, isInStrictMode);
     child = child.sibling;
   }
 }
 
-function doubleInvokeEffectsInDEV(
+// Unconditionally disconnects and connects passive and layout effects.
+function doubleInvokeEffectsOnFiber(root: FiberRoot, fiber: Fiber) {
+  disappearLayoutEffects(fiber);
+  disconnectPassiveEffect(fiber);
+  reappearLayoutEffects(root, fiber.alternate, fiber, false);
+  reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+}
+
+function doubleInvokeEffectsInDEVIfNecessary(
   root: FiberRoot,
   fiber: Fiber,
   parentIsInStrictMode: boolean,
@@ -3224,22 +3232,45 @@ function doubleInvokeEffectsInDEV(
   const isStrictModeFiber = fiber.type === REACT_STRICT_MODE_TYPE;
   const isInStrictMode = parentIsInStrictMode || isStrictModeFiber;
 
-  if (fiber.flags & PlacementDEV || fiber.tag === OffscreenComponent) {
+  // First case: the fiber **is not** of type OffscreenComponent. No
+  // special rules apply to double invoking effects.
+  if (fiber.tag !== OffscreenComponent) {
+    if (fiber.flags & PlacementDEV) {
+      setCurrentDebugFiberInDEV(fiber);
+      if (isInStrictMode) {
+        doubleInvokeEffectsOnFiber(root, fiber);
+      }
+      resetCurrentDebugFiberInDEV();
+    } else {
+      recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+        root,
+        fiber,
+        isInStrictMode,
+      );
+    }
+    return;
+  }
+
+  // Second case: the fiber **is** of type OffscreenComponent.
+  // This branch contains cases specific to Offscreen.
+  if (fiber.memoizedState === null) {
+    // Only consider Offscreen that is visible.
+    // TODO (Offscreen) Handle manual mode.
     setCurrentDebugFiberInDEV(fiber);
-    const isNotOffscreen = fiber.tag !== OffscreenComponent;
-    // Checks if Offscreen is being revealed. For all other components, evaluates to true.
-    const hasOffscreenBecomeVisible =
-      isNotOffscreen ||
-      (fiber.flags & Visibility && fiber.memoizedState === null);
-    if (isInStrictMode && hasOffscreenBecomeVisible) {
-      disappearLayoutEffects(fiber);
-      disconnectPassiveEffect(fiber);
-      reappearLayoutEffects(root, fiber.alternate, fiber, false);
-      reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+    if (isInStrictMode && fiber.flags & Visibility) {
+      // Double invoke effects on Offscreen's subtree only
+      // if it is visible and its visibility has changed.
+      doubleInvokeEffectsOnFiber(root, fiber);
+    } else if (fiber.subtreeFlags & PlacementDEV) {
+      // Something in the subtree could have been suspended.
+      // We need to continue traversal and find newly inserted fibers.
+      recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+        root,
+        fiber,
+        isInStrictMode,
+      );
     }
     resetCurrentDebugFiberInDEV();
-  } else {
-    recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, fiber, isInStrictMode);
   }
 }
 
