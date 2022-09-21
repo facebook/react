@@ -8,7 +8,6 @@ It is a part of the [Hooks API](https://reactjs.org/docs/hooks-intro.html) for R
 
 From [`v8.21.0`](https://github.com/eslint/eslint/releases/tag/v8.21.0), eslint announced a new config system.
 In the new system, `.eslintrc*` is no longer used. `eslint.config.js` would be the default config file name.
-In eslint `v8`, the legacy system (`.eslintrc*`) would still be supported, while in eslint `v9`, only the new system would be supported.
 
 And from [`v8.23.0`](https://github.com/eslint/eslint/releases/tag/v8.23.0), eslint CLI starts to look up `eslint.config.js`.
 **So, if your eslint is `>=8.23.0`, you're 100% ready to use the new config system.**
