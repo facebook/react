@@ -1307,4 +1307,84 @@ describe('ReactOffscreen', () => {
       expect(offscreenRef.current).not.toBeNull();
     });
   });
+
+  // @gate enableOffscreen
+  it('should detach ref if Offscreen is unmounted', async () => {
+    let offscreenRef;
+
+    function App({showOffscreen}) {
+      offscreenRef = useRef(null);
+      return showOffscreen ? (
+        <Offscreen
+          mode={'manual'}
+          ref={ref => {
+            offscreenRef.current = ref;
+          }}>
+          <div />
+        </Offscreen>
+      ) : null;
+    }
+
+    const root = ReactNoop.createRoot();
+
+    await act(async () => {
+      root.render(<App showOffscreen={true} />);
+    });
+
+    expect(offscreenRef.current).not.toBeNull();
+
+    await act(async () => {
+      root.render(<App showOffscreen={false} />);
+    });
+
+    expect(offscreenRef.current).toBeNull();
+
+    await act(async () => {
+      root.render(<App showOffscreen={true} />);
+    });
+
+    expect(offscreenRef.current).not.toBeNull();
+  });
+
+  // @gate enableOffscreen
+  it('should detach ref if Offscreen is unmounted', async () => {
+    let offscreenRef;
+    let divRef;
+
+    function App({mode}) {
+      offscreenRef = useRef(null);
+      divRef = useRef(null);
+      return (
+        <Offscreen mode={mode}>
+          <Offscreen mode={'manual'} ref={offscreenRef}>
+            <div ref={divRef} />
+          </Offscreen>
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    await act(async () => {
+      root.render(<App mode={'hidden'} />);
+    });
+
+    expect(offscreenRef.current).toBeNull();
+    expect(divRef.current).toBeNull();
+
+    await act(async () => {
+      root.render(<App mode={'visible'} />);
+    });
+
+    expect(offscreenRef.current).not.toBeNull();
+    expect(divRef.current).not.toBeNull();
+
+    console.log('Becoming Hidden');
+    await act(async () => {
+      root.render(<App mode={'hidden'} />);
+    });
+
+    expect(offscreenRef.current).toBeNull();
+    expect(divRef.current).toBeNull();
+  });
 });

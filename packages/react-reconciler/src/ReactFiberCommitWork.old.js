@@ -1121,7 +1121,7 @@ function commitLayoutEffectOnFiber(
           if (flags & Ref) {
             safelyAttachRef(finishedWork, finishedWork.return);
           }
-        } else if (finishedWork.pendingProps.mode !== undefined) {
+        } else {
           safelyDetachRef(finishedWork, finishedWork.return);
         }
       } else {
@@ -2148,6 +2148,8 @@ function commitDeletionEffectsOnFiber(
         offscreenSubtreeWasHidden =
           prevOffscreenSubtreeWasHidden || deletedFiber.memoizedState !== null;
 
+        safelyDetachRef(deletedFiber, nearestMountedAncestor);
+
         recursivelyTraverseDeletionEffects(
           finishedRoot,
           nearestMountedAncestor,
@@ -2833,6 +2835,7 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
         // Nested Offscreen tree is already hidden. Don't disappear
         // its effects.
       } else {
+        safelyDetachRef(finishedWork, finishedWork.return);
         recursivelyTraverseDisappearLayoutEffects(finishedWork);
       }
       break;
@@ -2974,6 +2977,8 @@ export function reappearLayoutEffects(
           finishedWork,
           includeWorkInProgressEffects,
         );
+
+        safelyAttachRef(finishedWork, finishedWork.return);
       }
       break;
     }
