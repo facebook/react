@@ -1430,7 +1430,6 @@ describe('ReactOffscreen', () => {
     });
 
     expect(offscreenRef.current).not.toBeNull();
-
     await act(async () => {
       root.render(<App mode={'hidden'} />);
     });
