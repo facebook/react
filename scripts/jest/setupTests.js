@@ -64,9 +64,11 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     if (error) {
       throw error;
     }
+    if (global.requestAnimationFrameQueue != null) {
+      console.warn('requestAnimationFrameQueue has not been flushed.');
+    }
   });
   env.beforeEach(() => {
-    // TODO: warn if this has not flushed.
     global.requestAnimationFrameQueue = null;
   });
 

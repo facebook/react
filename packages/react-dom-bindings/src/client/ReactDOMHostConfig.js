@@ -74,7 +74,7 @@ import {
 } from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
-import {UnknownEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 // TODO: Remove this deep import when we delete the legacy root API
 import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
@@ -374,7 +374,7 @@ export function createTextInstance(
 export function getCurrentEventPriority(): EventPriority {
   const currentEvent = window.event;
   if (currentEvent === undefined) {
-    return UnknownEventPriority;
+    return DefaultEventPriority;
   }
   return getEventPriority(currentEvent.type);
 }
@@ -414,21 +414,21 @@ export const scheduleMicrotask: any =
           .catch(handleErrorInNextTick)
     : scheduleTimeout; // TODO: Determine the best fallback here.
 
-// TODO: Fix these types
 export const supportsFrameAlignedTask = true;
 
 type FrameAlignedTask = {|
-  rafNode: number,
+  rafNode: AnimationFrameID,
   schedulerNode: number,
   task: function,
 |};
 
 let currentTask: FrameAlignedTask | null = null;
 function performFrameAlignedWork() {
-  if (currentTask != null) {
-    const task = currentTask.task;
-    localCancelAnimationFrame(currentTask.id);
-    Scheduler.unstable_cancelCallback(currentTask.schedulerNode);
+  const constCurrentTask = currentTask;
+  if (constCurrentTask != null) {
+    const task = constCurrentTask.task;
+    localCancelAnimationFrame(constCurrentTask.rafNode);
+    Scheduler.unstable_cancelCallback(constCurrentTask.schedulerNode);
     currentTask = null;
     if (task != null) {
       task();
@@ -461,9 +461,8 @@ export function scheduleFrameAlignedTask(task: any): any {
   return currentTask;
 }
 
-export function cancelFrameAlignedTask(task: FrameAlignedTask) {
+export function cancelFrameAlignedTask(task: any) {
   Scheduler.unstable_cancelCallback(task.schedulerNode);
-  task.schedulerNode = null;
   // We don't cancel the rAF in case it gets re-used later.
   // But clear the task so if it fires and shouldn't run, it won't.
   task.task = null;

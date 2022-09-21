@@ -314,6 +314,7 @@ function scheduleFibersWithFamiliesRecursively(
     }
     if (needsRemount || needsRender) {
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+
       if (root !== null) {
         scheduleUpdateOnFiber(
           root,

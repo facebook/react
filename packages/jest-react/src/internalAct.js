@@ -106,11 +106,6 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
         let didFlushWork;
         do {
           didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
-
-          // Flush scheduled rAF.
-          if (global.flushRequestAnimationFrameQueue) {
-            global.flushRequestAnimationFrameQueue();
-          }
         } while (didFlushWork);
         return {
           then(resolve, reject) {

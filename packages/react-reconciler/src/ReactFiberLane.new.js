@@ -483,11 +483,7 @@ export function includesBlockingLane(root: FiberRoot, lanes: Lanes): boolean {
     allowConcurrentByDefault &&
     (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
   ) {
-    if (
-      enableFrameEndScheduling &&
-      (lanes & DefaultLane) !== NoLanes &&
-      root.hasUnknownUpdates
-    ) {
+    if (enableFrameEndScheduling && (lanes & DefaultLane) !== NoLanes) {
       // Unknown updates should flush synchronously, even in concurrent by default.
       return true;
     }
@@ -631,7 +627,6 @@ export function markRootUpdated(
 export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
-  root.hasUnknownUpdates = false;
 
   // The suspended lanes are no longer CPU-bound. Clear their expiration times.
   const expirationTimes = root.expirationTimes;
@@ -662,10 +657,6 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
 
   root.pendingLanes = remainingLanes;
-
-  if ((root.pendingLanes & DefaultLane) === NoLane) {
-    root.hasUnknownUpdates = false;
-  }
 
   // Let's try everything again
   root.suspendedLanes = NoLanes;

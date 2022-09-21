@@ -723,7 +723,6 @@ export function scheduleUpdateOnFiber(
       didScheduleUpdateDuringPassiveEffects = true;
     }
   }
-
   // Mark that the root has a pending update.
   markRootUpdated(root, lane, eventTime, updatePriority);
 
@@ -924,12 +923,8 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
     if (
       enableFrameEndScheduling &&
-      newCallbackPriority === DefaultLane &&
-      existingCallbackNode !== null &&
-      // TODO: We can't expose the rafNode here,
-      // but how do we know the rAF is not scheduled?
-      existingCallbackNode.rafNode == null &&
-      root.hasUnknownUpdates
+      supportsFrameAlignedTask &&
+      newCallbackPriority === DefaultEventPriority
     ) {
       // Do nothing, we need to schedule a new rAF.
     } else {
@@ -943,10 +938,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     if (
       enableFrameEndScheduling &&
       supportsFrameAlignedTask &&
-      existingCallbackNode != null &&
-      // TODO: we can't expose the scheduler node here,
-      // but how do we know we need to cancel with the host config method?
-      existingCallbackNode.schedulerNode != null
+      existingCallbackPriority === DefaultEventPriority
     ) {
       cancelFrameAlignedTask(existingCallbackNode);
     } else {
@@ -998,8 +990,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   } else if (
     enableFrameEndScheduling &&
     supportsFrameAlignedTask &&
-    newCallbackPriority === DefaultLane &&
-    root.hasUnknownUpdates
+    newCallbackPriority === DefaultEventPriority
   ) {
     if (__DEV__ && ReactCurrentActQueue.current !== null) {
       // Inside `act`, use our internal `act` queue so that these get flushed

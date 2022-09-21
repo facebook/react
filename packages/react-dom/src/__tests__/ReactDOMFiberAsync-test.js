@@ -678,8 +678,8 @@ describe('ReactDOMFiberAsync', () => {
       window.event = 'test';
       setState(1);
 
-      // We should not schedule a rAF for default updates only.
-      expect(global.requestAnimationFrameQueue).toBe(null);
+      // We should schedule a rAF for default updates.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
 
       window.event = undefined;
       setState(2);
@@ -715,8 +715,8 @@ describe('ReactDOMFiberAsync', () => {
       window.event = 'test';
       setState(1);
 
-      // We should not schedule a rAF for default updates only.
-      expect(global.requestAnimationFrameQueue).toBe(null);
+      // We should schedule a rAF for default updates.
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
 
       window.event = undefined;
       setState(2);
@@ -914,29 +914,27 @@ describe('ReactDOMFiberAsync', () => {
       expect(Scheduler).toHaveYielded(['Count: 0']);
 
       window.event = undefined;
+      console.log('set state');
       setState(1);
+      //expect(global.requestAnimationFrameQueue.length).toBe(1);
       global.flushRequestAnimationFrameQueue();
       expect(Scheduler).toHaveYielded(['Count: 1']);
 
       setState(2);
       setThrowing(true);
-
+      expect(global.requestAnimationFrameQueue.length).toBe(1);
       global.flushRequestAnimationFrameQueue();
       expect(Scheduler).toHaveYielded(['Count: 2', 'suspending']);
       expect(counterRef.current.textContent).toBe('Count: 1');
 
       unsuspend();
-      setThrowing(false);
-
-      // Should not be scheduled in a rAF.
+      // Default update should be scheduled in a rAF.
       window.event = 'test';
+      setThrowing(false);
       setState(2);
 
-      // TODO: This should not yield
-      // global.flushRequestAnimationFrameQueue();
-      // expect(Scheduler).toHaveYielded([]);
-
-      expect(Scheduler).toFlushAndYield(['Count: 2']);
+      global.flushRequestAnimationFrameQueue();
+      expect(Scheduler).toHaveYielded(['Count: 2']);
       expect(counterRef.current.textContent).toBe('Count: 2');
     });
   });

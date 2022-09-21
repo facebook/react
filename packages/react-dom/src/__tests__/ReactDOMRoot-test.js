@@ -392,9 +392,6 @@ describe('ReactDOMRoot', () => {
 
     expect(container.textContent).toEqual('a');
 
-    // Set an event so this isn't flushed synchronously as an unknown update.
-    window.event = 'test';
-
     await act(async () => {
       root.render(<Foo value="b" />);
 
@@ -402,7 +399,12 @@ describe('ReactDOMRoot', () => {
       expect(container.textContent).toEqual('a');
 
       expect(Scheduler).toFlushAndYieldThrough(['b']);
-      if (gate(flags => flags.allowConcurrentByDefault)) {
+      if (
+        gate(
+          flags =>
+            flags.allowConcurrentByDefault && !flags.enableFrameEndScheduling,
+        )
+      ) {
         expect(container.textContent).toEqual('a');
       } else {
         expect(container.textContent).toEqual('b');
