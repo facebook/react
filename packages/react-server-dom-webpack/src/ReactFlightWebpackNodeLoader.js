@@ -70,7 +70,7 @@ export async function load(url: string, context: LoadContext, defaultLoad: LoadF
     defaultLoad,
   );
 
-  if (context.format === 'module' && context.url.endsWith('.client.js')) {
+  if (context.format === 'module' && url.endsWith('.client.js')) {
     const transformedSource = transformed.source;
     if (typeof transformedSource !== 'string') {
       throw new Error('Expected source to have been transformed to a string.');
@@ -80,7 +80,7 @@ export async function load(url: string, context: LoadContext, defaultLoad: LoadF
     await parseExportNamesInto(
       transformedSource,
       names,
-      context.url,
+      url,
       defaultLoad,
     );
 
@@ -94,7 +94,7 @@ export async function load(url: string, context: LoadContext, defaultLoad: LoadF
         newSrc += 'export const ' + name + ' = ';
       }
       newSrc += '{ $$typeof: MODULE_REFERENCE, filepath: ';
-      newSrc += JSON.stringify(context.url);
+      newSrc += JSON.stringify(url);
       newSrc += ', name: ';
       newSrc += JSON.stringify(name);
       newSrc += '};\n';
