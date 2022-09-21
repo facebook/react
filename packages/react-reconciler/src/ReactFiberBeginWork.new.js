@@ -684,9 +684,7 @@ function updateOffscreenComponent(
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
 
-  if (nextProps.mode === 'manual') {
-    markRef(current, workInProgress);
-  }
+  markRef(current, workInProgress);
 
   if (
     nextProps.mode === 'hidden' ||
