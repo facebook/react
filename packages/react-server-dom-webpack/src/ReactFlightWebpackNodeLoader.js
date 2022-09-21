@@ -15,7 +15,7 @@ type LoadContext = {
 };
 
 type LoadFunction = (
-  string,
+  Source,
   LoadContext,
   LoadFunction,
 ) => { format: string, source: Source, shortCircuit?: boolean } | Promise<{ format: string, source: Source, shortCircuit?: boolean }>;
@@ -51,6 +51,9 @@ type TransformSourceFunction = (
   TransformSourceContext,
   TransformSourceFunction,
 ) => Promise<{source: Source}>;
+
+type LoaderFnContext = { format: string, url?: string, ... }
+type LoaderFn = (Source, LoaderFnContext, LoaderFn) => Promise<{source: Source}>
 
 type Source = string | ArrayBuffer | Uint8Array;
 
@@ -212,7 +215,7 @@ function resolveClientImport(
 
 async function loadClientImport(
   url: string,
-  defaultTransformSource: TransformSourceFunction,
+  defaultFn: LoaderFn
 ): Promise<{source: Source}> {
   if (stashedGetSource === null) {
     throw new Error(
@@ -225,18 +228,18 @@ async function loadClientImport(
     {format: 'module'},
     stashedGetSource,
   );
-  return defaultTransformSource(
+  return defaultFn(
     source,
     {format: 'module', url},
-    defaultTransformSource,
+    defaultFn,
   );
 }
 
 async function parseExportNamesInto(
-  transformedSource: string,
+  transformedSource: Source,
   names: Array<string>,
   parentURL: string,
-  defaultTransformSource,
+  loaderFn: LoaderFn
 ): Promise<void> {
   const {body} = acorn.parse(transformedSource, {
     ecmaVersion: '2019',
@@ -251,11 +254,11 @@ async function parseExportNamesInto(
           continue;
         } else {
           const {url} = await resolveClientImport(node.source.value, parentURL);
-          const {source} = await loadClientImport(url, defaultTransformSource);
+          const {source} = await loadClientImport(url, loaderFn);
           if (typeof source !== 'string') {
             throw new Error('Expected the transformed source to be a string.');
           }
-          parseExportNamesInto(source, names, url, defaultTransformSource);
+          parseExportNamesInto(source, names, url, loaderFn);
           continue;
         }
       case 'ExportDefaultDeclaration':
