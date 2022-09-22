@@ -44,7 +44,7 @@ const setTimeout = window.setTimeout;
 // Use experimental Chrome Scheduler postTask API.
 const scheduler = global.scheduler;
 
-const getCurrentTime = perf.now.bind(perf);
+const getCurrentTime: () => DOMHighResTimeStamp = perf.now.bind(perf);
 
 export const unstable_now = getCurrentTime;
 
@@ -193,7 +193,7 @@ export function unstable_runWithPriority<T>(
   }
 }
 
-export function unstable_getCurrentPriorityLevel() {
+export function unstable_getCurrentPriorityLevel(): PriorityLevel {
   return currentPriorityLevel_DEPRECATED;
 }
 
@@ -240,7 +240,7 @@ export function unstable_pauseExecution() {}
 
 export function unstable_continueExecution() {}
 
-export function unstable_getFirstCallbackNode() {
+export function unstable_getFirstCallbackNode(): null {
   return null;
 }
 

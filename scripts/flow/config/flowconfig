@@ -51,6 +51,7 @@ well_formed_exports=true
 well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-shared
 well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-shell
 well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-timeline
+well_formed_exports.includes=<PROJECT_ROOT>/packages/scheduler
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
