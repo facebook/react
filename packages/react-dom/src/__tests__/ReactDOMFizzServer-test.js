@@ -3257,6 +3257,7 @@ describe('ReactDOMFizzServer', () => {
       {
         onRecoverableError(error, errorInfo) {
           expect(() => {
+            expect(error.digest).toBe('a digest');
             expect(errorInfo.digest).toBe('a digest');
           }).toErrorDev(
             'Warning: You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +

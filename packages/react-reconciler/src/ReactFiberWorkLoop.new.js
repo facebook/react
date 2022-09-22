@@ -2596,24 +2596,10 @@ function commitRootImpl(
     const onRecoverableError = root.onRecoverableError;
     for (let i = 0; i < recoverableErrors.length; i++) {
       const recoverableError = recoverableErrors[i];
-      const componentStack = recoverableError.stack;
-      const digest = recoverableError.digest;
-      let errorInfo;
-      if (__DEV__) {
-        errorInfo = {
-          componentStack,
-          get digest() {
-            console.error(
-              'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
-                ' This property is deprecated and will be removed in a future version of React.' +
-                ' To access the digest of an Error look for this property on the Error instance itself.',
-            );
-            return digest;
-          },
-        };
-      } else {
-        errorInfo = {componentStack, digest};
-      }
+      const errorInfo = makeErrorInfo(
+        recoverableError.digest,
+        recoverableError.stack,
+      );
       onRecoverableError(recoverableError.value, errorInfo);
     }
   }
@@ -2703,6 +2689,33 @@ function commitRootImpl(
   }
 
   return null;
+}
+
+function makeErrorInfo(digest: ?string, componentStack: ?string) {
+  if (__DEV__) {
+    const errorInfo = {
+      componentStack,
+      digest,
+    };
+    Object.defineProperty(errorInfo, 'digest', {
+      configurable: false,
+      enumerable: true,
+      get() {
+        console.error(
+          'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+            ' This property is deprecated and will be removed in a future version of React.' +
+            ' To access the digest of an Error look for this property on the Error instance itself.',
+        );
+        return digest;
+      },
+    });
+    return errorInfo;
+  } else {
+    return {
+      digest,
+      componentStack,
+    };
+  }
 }
 
 function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
