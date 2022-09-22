@@ -177,7 +177,7 @@ describe('ReactFlightDOMBrowser', () => {
     if (__DEV__) {
       errorBoundaryFn = e => (
         <p>
-          {e.message} + {e._digest}
+          {e.message} + {e.digest}
         </p>
       );
     } else {
@@ -185,7 +185,7 @@ describe('ReactFlightDOMBrowser', () => {
         expect(e.message).toBe(
           'An error occurred in the Server Components render.',
         );
-        return <p>{e._digest}</p>;
+        return <p>{e.digest}</p>;
       };
     }
 
@@ -513,7 +513,7 @@ describe('ReactFlightDOMBrowser', () => {
     if (__DEV__) {
       errorBoundaryFn = e => (
         <p>
-          {e.message} + {e._digest}
+          {e.message} + {e.digest}
         </p>
       );
     } else {
@@ -521,7 +521,7 @@ describe('ReactFlightDOMBrowser', () => {
         expect(e.message).toBe(
           'An error occurred in the Server Components render.',
         );
-        return <p>{e._digest}</p>;
+        return <p>{e.digest}</p>;
       };
     }
 
@@ -720,8 +720,8 @@ describe('ReactFlightDOMBrowser', () => {
       render() {
         if (this.state.error) {
           return __DEV__
-            ? this.state.error.message + ' + ' + this.state.error._digest
-            : this.state.error._digest;
+            ? this.state.error.message + ' + ' + this.state.error.digest
+            : this.state.error.digest;
         }
         return this.props.children;
       }

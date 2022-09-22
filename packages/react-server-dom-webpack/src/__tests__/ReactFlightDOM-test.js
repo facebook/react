@@ -336,7 +336,7 @@ describe('ReactFlightDOM', () => {
           fallback={e => (
             <p>
               {__DEV__ ? e.message + ' + ' : null}
-              {e._digest}
+              {e.digest}
             </p>
           )}>
           {children}
@@ -642,7 +642,7 @@ describe('ReactFlightDOM', () => {
           fallback={e => (
             <p>
               {__DEV__ ? e.message + ' + ' : null}
-              {e._digest}
+              {e.digest}
             </p>
           )}>
           <Suspense fallback={<p>(loading)</p>}>
@@ -818,7 +818,7 @@ describe('ReactFlightDOM', () => {
           fallback={e => (
             <p>
               {__DEV__ ? e.message + ' + ' : null}
-              {e._digest}
+              {e.digest}
             </p>
           )}>
           <Suspense fallback={<p>(loading)</p>}>

@@ -193,7 +193,7 @@ function createBlockedChunk<T>(response: Response): BlockedChunk<T> {
 
 function createErrorChunk<T>(
   response: Response,
-  error: Error,
+  error: ErrorWithDigest,
 ): ErroredChunk<T> {
   // $FlowFixMe Flow doesn't support functions as constructors
   return new Chunk(ERRORED, null, error, response);
@@ -628,7 +628,7 @@ export function resolveSymbol(
   chunks.set(id, createInitializedChunk(response, Symbol.for(name)));
 }
 
-type ErrorWithDigest = Error & {_digest?: string};
+type ErrorWithDigest = Error & {digest?: string};
 export function resolveErrorProd(
   response: Response,
   id: number,
@@ -641,9 +641,13 @@ export function resolveErrorProd(
       'resolveErrorProd should never be called in development mode. Use resolveErrorDev instead. This is a bug in React.',
     );
   }
-  const error = new Error('An error occurred in the Server Components render.');
+  const error = new Error(
+    'An error occurred in the Server Components render. The specific message is omitted in production' +
+      ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
+      ' may provide additional details about the nature of the error.',
+  );
   error.stack = '';
-  (error: any)._digest = digest;
+  (error: any).digest = digest;
   const errorWithDigest: ErrorWithDigest = (error: any);
   const chunks = response._chunks;
   const chunk = chunks.get(id);
@@ -674,7 +678,7 @@ export function resolveErrorDev(
       'An error occurred in the Server Components render but no message was provided',
   );
   error.stack = stack;
-  (error: any)._digest = digest;
+  (error: any).digest = digest;
   const errorWithDigest: ErrorWithDigest = (error: any);
   const chunks = response._chunks;
   const chunk = chunks.get(id);

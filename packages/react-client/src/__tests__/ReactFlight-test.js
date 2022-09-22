@@ -49,14 +49,12 @@ describe('ReactFlight', () => {
           expect(this.state.error.message).toContain(
             this.props.expectedMessage,
           );
-          expect(this.state.error._digest).toBe('a dev digest');
+          expect(this.state.error.digest).toBe('a dev digest');
         } else {
           expect(this.state.error.message).toBe(
             'An error occurred in the Server Components render.',
           );
-          expect(this.state.error._digest).toContain(
-            this.props.expectedMessage,
-          );
+          expect(this.state.error.digest).toContain(this.props.expectedMessage);
         }
       }
       render() {
