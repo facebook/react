@@ -226,7 +226,7 @@ export default {
           // useRef() return value is stable.
           return true;
         } else if (
-          (name === 'experimental_useEvent' || name === 'useEvent') &&
+          name === 'experimental_useEvent' &&
           id.type === 'Identifier'
         ) {
           // useEvent() return value is stable.

@@ -1455,7 +1455,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent({ theme }) {
-          const onStuff = useEvent(() => {
+          const onStuff = experimental_useEvent(() => {
             showNotification(theme);
           });
           useEffect(() => {
@@ -1642,7 +1642,7 @@ const tests = {
                     }, 1000);
                     return () => clearInterval(id);
                   }, [setCount]);
-        
+
                   return <h1>{count}</h1>;
                 }
               `,
