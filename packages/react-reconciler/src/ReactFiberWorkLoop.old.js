@@ -2598,7 +2598,23 @@ function commitRootImpl(
       const recoverableError = recoverableErrors[i];
       const componentStack = recoverableError.stack;
       const digest = recoverableError.digest;
-      onRecoverableError(recoverableError.value, {componentStack, digest});
+      let errorInfo;
+      if (__DEV__) {
+        errorInfo = {
+          componentStack,
+          get digest() {
+            console.error(
+              'You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+                ' This property is deprecated and will be removed in a future version of React.' +
+                ' To access the digest of an Error look for this property on the Error instance itself.',
+            );
+            return digest;
+          },
+        };
+      } else {
+        errorInfo = {componentStack, digest};
+      }
+      onRecoverableError(recoverableError.value, errorInfo);
     }
   }
 

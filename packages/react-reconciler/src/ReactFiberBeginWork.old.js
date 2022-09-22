@@ -2746,6 +2746,7 @@ function updateDehydratedSuspenseComponent(
             'client rendering.',
         );
       }
+      (error: any).digest = digest;
       const capturedValue = createCapturedValue(error, digest, stack);
       return retrySuspenseComponentWithoutHydrating(
         current,
