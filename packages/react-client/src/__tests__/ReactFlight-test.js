@@ -52,7 +52,9 @@ describe('ReactFlight', () => {
           expect(this.state.error.digest).toBe('a dev digest');
         } else {
           expect(this.state.error.message).toBe(
-            'An error occurred in the Server Components render.',
+            'An error occurred in the Server Components render. The specific message is omitted in production' +
+              ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
+              ' may provide additional details about the nature of the error.',
           );
           expect(this.state.error.digest).toContain(this.props.expectedMessage);
         }

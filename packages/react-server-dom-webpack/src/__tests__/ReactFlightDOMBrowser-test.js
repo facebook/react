@@ -183,7 +183,9 @@ describe('ReactFlightDOMBrowser', () => {
     } else {
       errorBoundaryFn = e => {
         expect(e.message).toBe(
-          'An error occurred in the Server Components render.',
+          'An error occurred in the Server Components render. The specific message is omitted in production' +
+            ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
+            ' may provide additional details about the nature of the error.',
         );
         return <p>{e.digest}</p>;
       };
@@ -519,7 +521,9 @@ describe('ReactFlightDOMBrowser', () => {
     } else {
       errorBoundaryFn = e => {
         expect(e.message).toBe(
-          'An error occurred in the Server Components render.',
+          'An error occurred in the Server Components render. The specific message is omitted in production' +
+            ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
+            ' may provide additional details about the nature of the error.',
         );
         return <p>{e.digest}</p>;
       };
