@@ -722,10 +722,10 @@ export function createFiberFromOffscreen(
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
   const primaryChildInstance: OffscreenInstance = {
-    visibility: OffscreenVisible,
-    pendingMarkers: null,
-    retryCache: null,
-    transitions: null,
+    _visibility: OffscreenVisible,
+    _pendingMarkers: null,
+    _retryCache: null,
+    _transitions: null,
   };
   fiber.stateNode = primaryChildInstance;
   return fiber;
@@ -743,10 +743,10 @@ export function createFiberFromLegacyHidden(
   // Adding a stateNode for legacy hidden because it's currently using
   // the offscreen implementation, which depends on a state node
   const instance: OffscreenInstance = {
-    visibility: OffscreenVisible,
-    pendingMarkers: null,
-    transitions: null,
-    retryCache: null,
+    _visibility: OffscreenVisible,
+    _pendingMarkers: null,
+    _transitions: null,
+    _retryCache: null,
   };
   fiber.stateNode = instance;
   return fiber;
