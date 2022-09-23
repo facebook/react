@@ -100,6 +100,13 @@ function isInsideComponentOrHook(node) {
   return false;
 }
 
+function isUseEventIdentifier(node) {
+  if (__EXPERIMENTAL__) {
+    return node.type === 'Identifier' && node.name === 'useEvent';
+  }
+  return false;
+}
+
 export default {
   meta: {
     type: 'problem',
@@ -110,8 +117,45 @@ export default {
     },
   },
   create(context) {
+    let lastEffect = null;
     const codePathReactHooksMapStack = [];
     const codePathSegmentStack = [];
+    const useEventViolations = new Set();
+
+    // For a given AST node, iterate through the top level statements and add all useEvent
+    // definitions. We can do this in non-Program nodes because we can rely on the assumption that
+    // useEvent functions can only be declared within a component or hook at its top level.
+    function addAllUseEventViolations(node) {
+      if (node.body.type !== 'BlockStatement') return;
+      for (const statement of node.body.body) {
+        if (statement.type !== 'VariableDeclaration') continue;
+        for (const declaration of statement.declarations) {
+          if (
+            declaration.type === 'VariableDeclarator' &&
+            declaration.init &&
+            declaration.init.type === 'CallExpression' &&
+            declaration.init.callee &&
+            isUseEventIdentifier(declaration.init.callee)
+          ) {
+            useEventViolations.add(declaration.id);
+          }
+        }
+      }
+    }
+
+    // Resolve a useEvent violation, ie the useEvent created function was called.
+    function resolveUseEventViolation(scope, ident) {
+      if (scope.references == null || useEventViolations.size === 0) return;
+      for (const ref of scope.references) {
+        if (ref.resolved == null) continue;
+        const [useEventFunctionIdentifier] = ref.resolved.identifiers;
+        if (ident.name === useEventFunctionIdentifier.name) {
+          useEventViolations.delete(useEventFunctionIdentifier);
+          break;
+        }
+      }
+    }
+
     return {
       // Maintain code segment path stack as we traverse.
       onCodePathSegmentStart: segment => codePathSegmentStack.push(segment),
@@ -521,6 +565,64 @@ export default {
             reactHooksMap.set(codePathSegment, reactHooks);
           }
           reactHooks.push(node.callee);
+        }
+
+        const scope = context.getScope();
+        // useEvent: Resolve a function created with useEvent that is invoked locally at least once.
+        // OK - onClick();
+        resolveUseEventViolation(scope, node.callee);
+
+        // useEvent: useEvent functions can be passed by reference within useEffect as well as in
+        // another useEvent
+        if (
+          node.callee.type === 'Identifier' &&
+          (node.callee.name === 'useEffect' ||
+            isUseEventIdentifier(node.callee)) &&
+          node.arguments.length > 0
+        ) {
+          // Denote that we have traversed into a useEffect call, and stash the CallExpr for
+          // comparison later when we exit
+          lastEffect = node;
+        }
+      },
+
+      Identifier(node) {
+        // OK - useEffect(() => { setInterval(onClick, ...) }, []);
+        if (lastEffect != null && node.parent.type === 'CallExpression') {
+          resolveUseEventViolation(context.getScope(), node);
+        }
+      },
+
+      'CallExpression:exit'(node) {
+        if (node === lastEffect) {
+          lastEffect = null;
+        }
+      },
+
+      FunctionDeclaration(node) {
+        // function MyComponent() { const onClick = useEvent(...) }
+        if (isInsideComponentOrHook(node)) {
+          addAllUseEventViolations(node);
+        }
+      },
+
+      ArrowFunctionExpression(node) {
+        // const MyComponent = () => { const onClick = useEvent(...) }
+        if (isInsideComponentOrHook(node)) {
+          addAllUseEventViolations(node);
+        }
+      },
+
+      'Program:exit'(_node) {
+        for (const node of useEventViolations.values()) {
+          context.report({
+            node,
+            message:
+              `\`${context.getSource(
+                node,
+              )}\` is a function created with React Hook "useEvent", and can only be called from ` +
+              'the same component. They cannot be assigned to variables or passed down.',
+          });
         }
       },
     };
