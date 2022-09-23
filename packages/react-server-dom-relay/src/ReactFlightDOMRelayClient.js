@@ -16,7 +16,8 @@ import {
   resolveModel,
   resolveModule,
   resolveSymbol,
-  resolveError,
+  resolveErrorDev,
+  resolveErrorProd,
   close,
   getRoot,
 } from 'react-client/src/ReactFlightClient';
@@ -34,7 +35,20 @@ export function resolveRow(response: Response, chunk: RowEncoding): void {
     // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
     resolveSymbol(response, chunk[1], chunk[2]);
   } else {
-    // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
-    resolveError(response, chunk[1], chunk[2].message, chunk[2].stack);
+    if (__DEV__) {
+      resolveErrorDev(
+        response,
+        chunk[1],
+        // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+        chunk[2].digest,
+        // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+        chunk[2].message || '',
+        // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+        chunk[2].stack || '',
+      );
+    } else {
+      // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+      resolveErrorProd(response, chunk[1], chunk[2].digest);
+    }
   }
 }

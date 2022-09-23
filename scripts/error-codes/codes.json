@@ -425,5 +425,6 @@
   "437": "the \"precedence\" prop for links to stylesheets expects to receive a string but received something of type \"%s\" instead.",
   "438": "An unsupported type was passed to use(): %s",
   "439": "We didn't expect to see a forward reference. This is a bug in the React Server.",
-  "440": "An event from useEvent was called during render."
+  "440": "An event from useEvent was called during render.",
+  "441": "An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error."
 }

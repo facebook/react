@@ -173,11 +173,27 @@ describe('ReactFlightDOMBrowser', () => {
       }
     }
 
+    let errorBoundaryFn;
+    if (__DEV__) {
+      errorBoundaryFn = e => (
+        <p>
+          {e.message} + {e.digest}
+        </p>
+      );
+    } else {
+      errorBoundaryFn = e => {
+        expect(e.message).toBe(
+          'An error occurred in the Server Components render. The specific message is omitted in production' +
+            ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
+            ' may provide additional details about the nature of the error.',
+        );
+        return <p>{e.digest}</p>;
+      };
+    }
+
     function MyErrorBoundary({children}) {
       return (
-        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
-          {children}
-        </ErrorBoundary>
+        <ErrorBoundary fallback={errorBoundaryFn}>{children}</ErrorBoundary>
       );
     }
 
@@ -251,6 +267,7 @@ describe('ReactFlightDOMBrowser', () => {
       {
         onError(x) {
           reportedErrors.push(x);
+          return __DEV__ ? `a dev digest` : `digest("${x.message}")`;
         },
       },
     );
@@ -293,11 +310,16 @@ describe('ReactFlightDOMBrowser', () => {
     await act(async () => {
       rejectGames(theError);
     });
+
+    const gamesExpectedValue = __DEV__
+      ? '<p>Game over + a dev digest</p>'
+      : '<p>digest("Game over")</p>';
+
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
         '<p>(loading sidebar)</p>' +
         '<p>(loading posts)</p>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        gamesExpectedValue,
     );
 
     expect(reportedErrors).toEqual([theError]);
@@ -311,7 +333,7 @@ describe('ReactFlightDOMBrowser', () => {
       '<div>:name::avatar:</div>' +
         '<div>:photos::friends:</div>' +
         '<p>(loading posts)</p>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        gamesExpectedValue,
     );
 
     // Show everything.
@@ -322,7 +344,7 @@ describe('ReactFlightDOMBrowser', () => {
       '<div>:name::avatar:</div>' +
         '<div>:photos::friends:</div>' +
         '<div>:posts:</div>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        gamesExpectedValue,
     );
 
     expect(reportedErrors).toEqual([]);
@@ -489,6 +511,24 @@ describe('ReactFlightDOMBrowser', () => {
   it('should be able to complete after aborting and throw the reason client-side', async () => {
     const reportedErrors = [];
 
+    let errorBoundaryFn;
+    if (__DEV__) {
+      errorBoundaryFn = e => (
+        <p>
+          {e.message} + {e.digest}
+        </p>
+      );
+    } else {
+      errorBoundaryFn = e => {
+        expect(e.message).toBe(
+          'An error occurred in the Server Components render. The specific message is omitted in production' +
+            ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
+            ' may provide additional details about the nature of the error.',
+        );
+        return <p>{e.digest}</p>;
+      };
+    }
+
     class ErrorBoundary extends React.Component {
       state = {hasError: false, error: null};
       static getDerivedStateFromError(error) {
@@ -514,7 +554,9 @@ describe('ReactFlightDOMBrowser', () => {
       {
         signal: controller.signal,
         onError(x) {
+          const message = typeof x === 'string' ? x : x.message;
           reportedErrors.push(x);
+          return __DEV__ ? 'a dev digest' : `digest("${message}")`;
         },
       },
     );
@@ -529,7 +571,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     await act(async () => {
       root.render(
-        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+        <ErrorBoundary fallback={errorBoundaryFn}>
           <Suspense fallback={<p>(loading)</p>}>
             <App res={response} />
           </Suspense>
@@ -545,7 +587,10 @@ describe('ReactFlightDOMBrowser', () => {
       controller.signal.reason = 'for reasons';
       controller.abort('for reasons');
     });
-    expect(container.innerHTML).toBe('<p>Error: for reasons</p>');
+    const expectedValue = __DEV__
+      ? '<p>Error: for reasons + a dev digest</p>'
+      : '<p>digest("for reasons")</p>';
+    expect(container.innerHTML).toBe(expectedValue);
 
     expect(reportedErrors).toEqual(['for reasons']);
   });
@@ -665,6 +710,7 @@ describe('ReactFlightDOMBrowser', () => {
       {
         onError(x) {
           reportedErrors.push(x);
+          return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
         },
       },
     );
@@ -677,7 +723,9 @@ describe('ReactFlightDOMBrowser', () => {
       }
       render() {
         if (this.state.error) {
-          return this.state.error.message;
+          return __DEV__
+            ? this.state.error.message + ' + ' + this.state.error.digest
+            : this.state.error.digest;
         }
         return this.props.children;
       }
@@ -696,7 +744,9 @@ describe('ReactFlightDOMBrowser', () => {
         </ErrorBoundary>,
       );
     });
-    expect(container.innerHTML).toBe('Oops!');
+    expect(container.innerHTML).toBe(
+      __DEV__ ? 'Oops! + a dev digest' : 'digest("Oops!")',
+    );
     expect(reportedErrors.length).toBe(1);
     expect(reportedErrors[0].message).toBe('Oops!');
   });
