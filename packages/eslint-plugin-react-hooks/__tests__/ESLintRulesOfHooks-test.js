@@ -1090,7 +1090,7 @@ if (__EXPERIMENTAL__) {
         return <Child onClick={() => onClick()} />
       }
     `,
-      errors: [{...useEventError('onClick'), line: 4}],
+      errors: [{...useEventError('onClick'), line: 7}],
     },
     {
       code: `
@@ -1110,13 +1110,26 @@ if (__EXPERIMENTAL__) {
         const onClick = useEvent(() => {
           showNotification(theme);
         });
-        let foo;
-        useEffect(() => {
-          foo = onClick;
-        });
+        let foo = onClick;
         return <Bar onClick={foo} />
       }
     `,
+      errors: [{...useEventError('onClick'), line: 7}],
+    },
+    {
+      code: `
+        // Should error because it's being passed down to JSX, although it's been referenced once
+        // in an effect
+        function MyComponent({ theme }) {
+          const onClick = useEvent(() => {
+            showNotification(them);
+          });
+          useEffect(() => {
+            setTimeout(onClick, 100);
+          });
+          return <Child onClick={onClick} />
+        }
+      `,
       errors: [useEventError('onClick')],
     },
   ];
