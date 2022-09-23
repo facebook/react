@@ -550,9 +550,11 @@ describe('ReactDOMRoot', () => {
     }
     document.body.appendChild(container);
     ReactDOM.render(<App />, container);
+    // should call blur handler with emit unmount
     const button = container.querySelector('#btn1');
     button.click();
     expect(handleBlur).toHaveBeenCalled();
+    // should call blur handler without emit unmount
     const button2 = container.querySelector('#btn2');
     button2.focus();
     button2.blur();
