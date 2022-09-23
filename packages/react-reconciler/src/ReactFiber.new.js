@@ -693,7 +693,7 @@ export function createFiberFromSuspense(
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
-) {
+): Fiber {
   const fiber = createFiber(SuspenseComponent, pendingProps, key, mode);
   fiber.elementType = REACT_SUSPENSE_TYPE;
   fiber.lanes = lanes;
@@ -705,7 +705,7 @@ export function createFiberFromSuspenseList(
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
-) {
+): Fiber {
   const fiber = createFiber(SuspenseListComponent, pendingProps, key, mode);
   fiber.elementType = REACT_SUSPENSE_LIST_TYPE;
   fiber.lanes = lanes;
@@ -717,7 +717,7 @@ export function createFiberFromOffscreen(
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
-) {
+): Fiber {
   const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
@@ -736,7 +736,7 @@ export function createFiberFromLegacyHidden(
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
-) {
+): Fiber {
   const fiber = createFiber(LegacyHiddenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_LEGACY_HIDDEN_TYPE;
   fiber.lanes = lanes;
@@ -757,7 +757,7 @@ export function createFiberFromCache(
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
-) {
+): Fiber {
   const fiber = createFiber(CacheComponent, pendingProps, key, mode);
   fiber.elementType = REACT_CACHE_TYPE;
   fiber.lanes = lanes;
@@ -769,7 +769,7 @@ export function createFiberFromTracingMarker(
   mode: TypeOfMode,
   lanes: Lanes,
   key: null | string,
-) {
+): Fiber {
   const fiber = createFiber(TracingMarkerComponent, pendingProps, key, mode);
   fiber.elementType = REACT_TRACING_MARKER_TYPE;
   fiber.lanes = lanes;

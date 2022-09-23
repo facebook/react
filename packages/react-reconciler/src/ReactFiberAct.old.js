@@ -37,7 +37,7 @@ export function isLegacyActEnvironment(fiber: Fiber): boolean {
   return false;
 }
 
-export function isConcurrentActEnvironment() {
+export function isConcurrentActEnvironment(): void | boolean {
   if (__DEV__) {
     const isReactActEnvironmentGlobal =
       // $FlowFixMe – Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
