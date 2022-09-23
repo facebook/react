@@ -225,10 +225,7 @@ export default {
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
-        } else if (
-          name === 'experimental_useEvent' &&
-          id.type === 'Identifier'
-        ) {
+        } else if (isUseEventIdentifier(callee) && id.type === 'Identifier') {
           // useEvent() return value is stable.
           return true;
         } else if (name === 'useState' || name === 'useReducer') {
@@ -1826,4 +1823,11 @@ function isSameIdentifier(a, b) {
 
 function isAncestorNodeOf(a, b) {
   return a.range[0] <= b.range[0] && a.range[1] >= b.range[1];
+}
+
+function isUseEventIdentifier(node) {
+  if (__EXPERIMENTAL__) {
+    return node.type === 'Identifier' && node.name === 'useEvent';
+  }
+  return false;
 }

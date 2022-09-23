@@ -101,10 +101,10 @@ function isInsideComponentOrHook(node) {
 }
 
 function isUseEventIdentifier(node) {
-  return (
-    node.type === 'Identifier' &&
-    (node.name === 'useEvent' || node.name === 'experimental_useEvent')
-  );
+  if (__EXPERIMENTAL__) {
+    return node.type === 'Identifier' && node.name === 'useEvent';
+  }
+  return false;
 }
 
 export default {
