@@ -26,6 +26,7 @@ import type {
   OffscreenState,
   OffscreenInstance,
   OffscreenQueue,
+  OffscreenProps,
 } from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
@@ -1124,7 +1125,8 @@ function commitLayoutEffectOnFiber(
         );
       }
       if (flags & Ref) {
-        if (finishedWork.pendingProps.mode === 'manual') {
+        const props: OffscreenProps = finishedWork.memoizedProps;
+        if (props.mode === 'manual') {
           safelyAttachRef(finishedWork, finishedWork.return);
         } else {
           safelyDetachRef(finishedWork, finishedWork.return);
