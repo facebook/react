@@ -441,15 +441,20 @@ const tests = {
       }
     `,
     `
-      // Valid because functions created with useEvent can be passed by reference in useEffect.
+      // Valid because functions created with useEvent can be passed by reference in useEffect
+      // and useEvent.
       function MyComponent({ theme }) {
         const onClick = useEvent(() => {
           showNotification(theme);
+        });
+        const onClick2 = useEvent(() => {
+          debounce(onClick);
         });
         useEffect(() => {
           let id = setInterval(onClick, 100);
           return () => clearInterval(onClick);
         }, []);
+        return <Child onClick={() => onClick2()} />
       }
     `,
     `

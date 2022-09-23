@@ -572,10 +572,12 @@ export default {
         // OK - onClick();
         resolveUseEventViolation(scope, node.callee);
 
-        // useEvent: useEvent functions can be passed by reference within useEffect
+        // useEvent: useEvent functions can be passed by reference within useEffect as well as in
+        // another useEvent
         if (
           node.callee.type === 'Identifier' &&
-          node.callee.name === 'useEffect' &&
+          (node.callee.name === 'useEffect' ||
+            isUseEventIdentifier(node.callee)) &&
           node.arguments.length > 0
         ) {
           // Denote that we have traversed into a useEffect call, and stash the CallExpr for
