@@ -7,6 +7,7 @@
  * @emails react-core
  */
 'use strict';
+// test shared utils
 let shallowEqual;
 describe('test shared utils', () => {
   beforeEach(() => {
