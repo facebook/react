@@ -406,6 +406,13 @@ const tests = {
         const [myState, setMyState] = useState(null);
       }
     `,
+    `
+      // Valid because useNewBehavior is not a hook
+      function MyComponent() {
+        let useNewBehavior = config.behavior === 'new'
+        doStuff(useNewBehavior)
+      }
+    `,
   ],
   invalid: [
     {
@@ -626,6 +633,29 @@ const tests = {
         }
       `,
       errors: [functionError('useState', 'renderItem')],
+    },
+    {
+      code: `
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+
+        function List(props) {
+          return props.items.map(useState);
+        }
+      `,
+      errors: [callbackError('useState')],
+    },
+    {
+      code: `
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+
+        let useMyHook = () => {};
+        function List(props) {
+          return props.items.map(useMyHook);
+        }
+      `,
+      errors: [callbackError('useMyHook')],
     },
     {
       code: `
@@ -1008,6 +1038,15 @@ function genericError(hook) {
   return {
     message:
       `React Hook "${hook}" cannot be called inside a callback. React Hooks ` +
+      'must be called in a React function component or a custom React ' +
+      'Hook function.',
+  };
+}
+
+function callbackError(hook) {
+  return {
+    message:
+      `React Hook "${hook}" cannot be passed as a callback. React Hooks ` +
       'must be called in a React function component or a custom React ' +
       'Hook function.',
   };
