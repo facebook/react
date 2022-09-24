@@ -43,6 +43,7 @@ import {
   OVERLOADED_BOOLEAN,
   NUMERIC,
   POSITIVE_NUMERIC,
+  RESERVED,
 } from '../shared/DOMProperty';
 import {isUnitlessNumber} from '../shared/CSSProperty';
 
@@ -454,13 +455,6 @@ function pushAttribute(
       pushStyle(target, responseState, value);
       return;
     }
-    case 'defaultValue':
-    case 'defaultChecked': // These shouldn't be set as attributes on generic HTML elements.
-    case 'innerHTML': // Must use dangerouslySetInnerHTML instead.
-    case 'suppressContentEditableWarning':
-    case 'suppressHydrationWarning':
-      // Ignored. These are built-in to React on the client.
-      return;
   }
   if (
     // shouldIgnoreAttribute
@@ -566,6 +560,9 @@ function pushAttribute(
           );
         }
         break;
+      case RESERVED:
+        // Ignored. These are built-in to React on the client.
+        return;
       default:
         if (propertyInfo.sanitizeURL) {
           if (__DEV__) {
