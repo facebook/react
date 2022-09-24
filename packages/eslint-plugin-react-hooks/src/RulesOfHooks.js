@@ -570,6 +570,8 @@ export default {
       },
 
       Identifier(node) {
+        // This identifier resolves to a useEvent function, but isn't being referenced in an
+        // effect or another event function. It isn't being called either.
         if (
           lastEffect == null &&
           useEventFunctions.has(node) &&
