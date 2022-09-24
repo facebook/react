@@ -19,12 +19,14 @@ describe('ReactOffscreenStrictMode', () => {
     React.useEffect(() => {
       log.push(`${label}: useEffect mount`);
       return () => log.push(`${label}: useEffect unmount`);
-    });
+    }, []);
 
     React.useLayoutEffect(() => {
       log.push(`${label}: useLayoutEffect mount`);
-      return () => log.push(`${label}: useLayoutEffect unmount`);
-    });
+      return () => {
+        log.push(`${label}: useLayoutEffect unmount`);
+      };
+    }, []);
 
     log.push(`${label}: render`);
 
@@ -52,6 +54,58 @@ describe('ReactOffscreenStrictMode', () => {
       'A: useEffect unmount',
       'A: useLayoutEffect mount',
       'A: useEffect mount',
+    ]);
+  });
+
+  // @gate __DEV__ && enableStrictEffects && enableOffscreen
+  it('should double invoke only newly added offscreen children', () => {
+    act(() => {
+      ReactNoop.render(
+        <React.StrictMode>
+          <Offscreen mode="visible">
+            <Component label="A" />
+          </Offscreen>
+        </React.StrictMode>,
+      );
+    });
+
+    act(() => {
+      ReactNoop.render(
+        <React.StrictMode>
+          <Offscreen mode="hidden">
+            <Component label="A" />
+            <Component label="B" />
+          </Offscreen>
+        </React.StrictMode>,
+      );
+    });
+
+    log = [];
+
+    act(() => {
+      ReactNoop.render(
+        <React.StrictMode>
+          <Offscreen mode="visible">
+            <Component label="A" />
+            <Component label="B" />
+          </Offscreen>
+        </React.StrictMode>,
+      );
+    });
+
+    expect(log).toEqual([
+      'A: render',
+      'A: render',
+      'B: render',
+      'B: render',
+      'A: useLayoutEffect mount',
+      'B: useLayoutEffect mount',
+      'A: useEffect mount',
+      'B: useEffect mount',
+      'B: useLayoutEffect unmount',
+      'B: useEffect unmount',
+      'B: useLayoutEffect mount',
+      'B: useEffect mount',
     ]);
   });
 
@@ -203,13 +257,6 @@ describe('ReactOffscreenStrictMode', () => {
       );
     });
 
-    log.push('------------------------------');
-
-    await act(async () => {
-      resolve();
-      shouldSuspend = false;
-    });
-
     expect(log).toEqual([
       'Parent rendered',
       'Parent rendered',
@@ -218,7 +265,16 @@ describe('ReactOffscreenStrictMode', () => {
       'Parent mount',
       'Parent unmount',
       'Parent mount',
-      '------------------------------',
+    ]);
+
+    log = [];
+
+    await act(async () => {
+      resolve();
+      shouldSuspend = false;
+    });
+
+    expect(log).toEqual([
       'Child rendered',
       'Child rendered',
       'Child mount',

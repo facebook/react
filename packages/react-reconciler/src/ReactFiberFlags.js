@@ -53,8 +53,8 @@ export const RefStatic = /*                    */ 0b000100000000000000000000;
 export const LayoutStatic = /*                 */ 0b001000000000000000000000;
 export const PassiveStatic = /*                */ 0b010000000000000000000000;
 
-// Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
-export const PlacementDEV = /*                 */ 0b100000000000000000000000;
+// Flag used to identify fibers that need to have effects double invoked.
+export const NeedsDoubleInvokedEffectsDEV = /* */ 0b100000000000000000000000;
 
 // Groups of flags that are used in the commit phase to skip over trees that
 // don't contain effects, by checking subtreeFlags.

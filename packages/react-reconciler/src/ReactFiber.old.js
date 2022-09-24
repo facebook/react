@@ -33,7 +33,12 @@ import {
   enableTransitionTracing,
   enableDebugTracing,
 } from 'shared/ReactFeatureFlags';
-import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
+import {
+  NoFlags,
+  Placement,
+  StaticMask,
+  NeedsDoubleInvokedEffectsDEV,
+} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
@@ -300,9 +305,12 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     }
   }
 
-  // Reset all effects except static ones.
+  // Reset all effects except static ones NeedsDoubleInvokedEffectsDEV.
   // Static effects are not specific to a render.
-  workInProgress.flags = current.flags & StaticMask;
+  // NeedsDoubleInvokedEffectsDEV is cleared when component is double invoked
+  // in debugging. It is only used with StrictMode enabled.
+  workInProgress.flags =
+    current.flags & (StaticMask | NeedsDoubleInvokedEffectsDEV);
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
 
@@ -369,7 +377,9 @@ export function resetWorkInProgress(
 
   // Reset the effect flags but keep any Placement tags, since that's something
   // that child fiber is setting, not the reconciliation.
-  workInProgress.flags &= StaticMask | Placement;
+  // NeedsDoubleInvokedEffectsDEV is cleared when component is double invoked
+  // in debugging. It is only used with StrictMode enabled.
+  workInProgress.flags &= StaticMask | Placement | NeedsDoubleInvokedEffectsDEV;
 
   // The effects are no longer valid.
 

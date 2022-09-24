@@ -17,7 +17,7 @@ import {
   Placement,
   ChildDeletion,
   Forked,
-  PlacementDEV,
+  NeedsDoubleInvokedEffectsDEV,
 } from './ReactFiberFlags';
 import {
   getIteratorFn,
@@ -349,7 +349,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       const oldIndex = current.index;
       if (oldIndex < lastPlacedIndex) {
         // This is a move.
-        newFiber.flags |= Placement | PlacementDEV;
+        newFiber.flags |= Placement | NeedsDoubleInvokedEffectsDEV;
         return lastPlacedIndex;
       } else {
         // This item can stay in place.
@@ -357,7 +357,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       }
     } else {
       // This is an insertion.
-      newFiber.flags |= Placement | PlacementDEV;
+      newFiber.flags |= Placement | NeedsDoubleInvokedEffectsDEV;
       return lastPlacedIndex;
     }
   }
@@ -366,7 +366,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     // This is simpler for the single child case. We only need to do a
     // placement for inserting new children.
     if (shouldTrackSideEffects && newFiber.alternate === null) {
-      newFiber.flags |= Placement | PlacementDEV;
+      newFiber.flags |= Placement | NeedsDoubleInvokedEffectsDEV;
     }
     return newFiber;
   }
