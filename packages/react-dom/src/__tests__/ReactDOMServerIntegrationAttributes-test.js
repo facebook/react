@@ -648,6 +648,15 @@ describe('ReactDOMServerIntegration', () => {
       const e = await render(<div on="tap:do-something" />);
       expect(e.getAttribute('on')).toEqual('tap:do-something');
     });
+
+    itRenders('no reserved attributes', async render => {
+      const e = await render(<div innerText="1" />);
+      if (ReactFeatureFlags.enableCustomElementPropertySupport) {
+        expect(e.hasAttribute('innerText')).toBe(false);
+      } else {
+        expect(e.hasAttribute('innerText')).toBe(true);
+      }
+    });
   });
 
   // These tests mostly verify the existing behavior.
