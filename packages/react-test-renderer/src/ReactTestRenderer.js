@@ -392,8 +392,51 @@ class ReactTestInstance {
     );
   }
 
-  toJSON(): ReactTestRendererNode | null {
-    return toJSON(this._fiber.stateNode);
+  toJSON(): Array<ReactTestRendererNode> | ReactTestRendererNode | null {
+    console.log(
+      'toJSON visit',
+      typeof this._fiber,
+      this.type,
+      this._fiber.stateNode?.tag,
+      this._fiber.stateNode?.isHidden,
+    );
+
+    if (typeof this.type === 'string') {
+      return toJSON(this._fiber.stateNode);
+    }
+
+    const children = nodeAndSiblingsArray(this._fiber.child);
+    if (children.length === 0) {
+      return null;
+    }
+
+    if (children.length === 1) {
+      return toJSON(children[0].stateNode);
+    }
+
+    if (
+      children.length === 2 &&
+      children[0].isHidden === true &&
+      children[1].isHidden === false
+    ) {
+      // Omit timed out children from output entirely, including the fact that we
+      // temporarily wrap fallback and timed out children in an array.
+      return toJSON(children[1].stateNode);
+    }
+
+    let renderedChildren = null;
+    for (let i = 0; i < children.length; i++) {
+      const renderedChild = toJSON(children[i].stateNode);
+      if (renderedChild !== null) {
+        if (renderedChildren === null) {
+          renderedChildren = [renderedChild];
+        } else {
+          renderedChildren.push(renderedChild);
+        }
+      }
+    }
+
+    return renderedChildren;
   }
 }
 
