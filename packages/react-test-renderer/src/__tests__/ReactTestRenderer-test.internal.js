@@ -16,6 +16,8 @@ const React = require('react');
 const ReactTestRenderer = require('react-test-renderer');
 const prettyFormat = require('pretty-format');
 
+const {toJSON} = ReactTestRenderer;
+
 // Isolate noop renderer
 jest.resetModules();
 const ReactNoop = require('react-noop-renderer');
@@ -59,7 +61,7 @@ describe('ReactTestRenderer', () => {
       props: {role: 'link'},
       children: null,
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
   });
 
   it('renders a top-level empty component', () => {
@@ -68,7 +70,7 @@ describe('ReactTestRenderer', () => {
     }
     const renderer = ReactTestRenderer.create(<Empty />);
     expect(renderer.toJSON()).toEqual(null);
-    expect(renderer.root.toJSON()).toEqual(null);
+    expect(toJSON(renderer.root)).toEqual(null);
   });
 
   it('exposes a type flag', () => {
@@ -78,7 +80,7 @@ describe('ReactTestRenderer', () => {
     const renderer = ReactTestRenderer.create(<Link />);
     const object = renderer.toJSON();
     expect(object.$$typeof).toBe(Symbol.for('react.test.json'));
-    expect(renderer.root.toJSON().$$typeof).toBe(Symbol.for('react.test.json'));
+    expect(toJSON(renderer.root).$$typeof).toBe(Symbol.for('react.test.json'));
 
     // $$typeof should not be enumerable.
     for (const key in object) {
@@ -109,7 +111,7 @@ describe('ReactTestRenderer', () => {
       props: {className: 'purple'},
       children: [{type: 'moo', props: {}, children: null}],
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
   });
 
   it('renders some basics with an update', () => {
@@ -150,7 +152,7 @@ describe('ReactTestRenderer', () => {
       props: {className: 'purple'},
       children: ['7', {type: 'moo', props: {}, children: null}],
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
     expect(renders).toBe(6);
   });
 
@@ -174,7 +176,7 @@ describe('ReactTestRenderer', () => {
       props: {},
       children: ['mouse'],
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
 
     const mouse = renderer.getInstance();
     mouse.handleMoose();
@@ -183,7 +185,7 @@ describe('ReactTestRenderer', () => {
       children: ['moose'],
       props: {},
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
   });
 
   it('updates types', () => {
@@ -193,7 +195,7 @@ describe('ReactTestRenderer', () => {
       props: {},
       children: ['mouse'],
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
 
     renderer.update(<span>mice</span>);
     expect(renderer.toJSON()).toEqual({
@@ -201,7 +203,7 @@ describe('ReactTestRenderer', () => {
       props: {},
       children: ['mice'],
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
   });
 
   it('updates children', () => {
@@ -221,7 +223,7 @@ describe('ReactTestRenderer', () => {
         {type: 'span', props: {}, children: ['C']},
       ],
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
 
     renderer.update(
       <div>
@@ -239,7 +241,7 @@ describe('ReactTestRenderer', () => {
         {type: 'span', props: {}, children: ['B']},
       ],
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
   });
 
   it('does the full lifecycle', () => {
@@ -470,7 +472,7 @@ describe('ReactTestRenderer', () => {
       props: {},
       children: ['Happy Birthday!'],
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
     expect(log).toEqual([
       'Boundary render',
       'Angry render',
@@ -493,28 +495,28 @@ describe('ReactTestRenderer', () => {
       children: ['Hi'],
       props: {},
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
     renderer.update(<Component>{['Hi', 'Bye']}</Component>);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       children: ['Hi', 'Bye'],
       props: {},
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
     renderer.update(<Component>Bye</Component>);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       children: ['Bye'],
       props: {},
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
     renderer.update(<Component>{42}</Component>);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       children: ['42'],
       props: {},
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
     renderer.update(
       <Component>
         <div />
@@ -531,7 +533,7 @@ describe('ReactTestRenderer', () => {
       ],
       props: {},
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
   });
 
   it('toTree() renders simple components returning host components', () => {
@@ -878,13 +880,13 @@ describe('ReactTestRenderer', () => {
   it('can update text nodes when rendered as root', () => {
     const renderer = ReactTestRenderer.create(['Hello', 'world']);
     expect(renderer.toJSON()).toEqual(['Hello', 'world']);
-    expect(renderer.root.toJSON()).toEqual(['Hello', 'world']);
+    expect(toJSON(renderer.root)).toEqual(['Hello', 'world']);
     renderer.update(42);
     expect(renderer.toJSON()).toEqual('42');
-    // Not able to call `renderer.root.toJSON()` because it is "42" string
+    // Not able to call `toJSON(renderer.root)` because it is "42" string
     renderer.update([42, 'world']);
     expect(renderer.toJSON()).toEqual(['42', 'world']);
-    expect(renderer.root.toJSON()).toEqual(['42', 'world']);
+    expect(toJSON(renderer.root)).toEqual(['42', 'world']);
   });
 
   it('can render and update root fragments', () => {
@@ -895,14 +897,14 @@ describe('ReactTestRenderer', () => {
       <Component key="b">Bye</Component>,
     ]);
     expect(renderer.toJSON()).toEqual(['Hi', 'Bye']);
-    expect(renderer.root.toJSON()).toEqual(['Hi', 'Bye']);
+    expect(toJSON(renderer.root)).toEqual(['Hi', 'Bye']);
     renderer.update(<div />);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       children: null,
       props: {},
     });
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
     renderer.update([<div key="a">goodbye</div>, 'world']);
     expect(renderer.toJSON()).toEqual([
       {
@@ -912,7 +914,7 @@ describe('ReactTestRenderer', () => {
       },
       'world',
     ]);
-    expect(renderer.root.toJSON()).toEqual(renderer.toJSON());
+    expect(toJSON(renderer.root)).toEqual(renderer.toJSON());
   });
 
   it('supports context providers and consumers', () => {

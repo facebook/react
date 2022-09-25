@@ -133,6 +133,45 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
   }
 }
 
+function testInstanceToJSON(
+  node: ReactTestInstance | string,
+): Array<ReactTestRendererNode> | ReactTestRendererNode | null {
+  if (typeof node === 'string') {
+    return node;
+  }
+
+  // Host node
+  if (typeof node.type === 'string') {
+    return toJSON(node._fiber.stateNode);
+  }
+
+  if (node.children == null || node.children.length === 0) {
+    return null;
+  }
+
+  const renderedChildren = [];
+  for (let i = 0; i < node.children.length; i++) {
+    const childrenJSON = testInstanceToJSON(node.children[i]);
+    if (childrenJSON !== null) {
+      if (Array.isArray(childrenJSON)) {
+        renderedChildren.push(...childrenJSON);
+      } else {
+        renderedChildren.push(childrenJSON);
+      }
+    }
+  }
+
+  if (renderedChildren.length === 0) {
+    return null;
+  }
+
+  if (renderedChildren.length === 1) {
+    return renderedChildren[0];
+  }
+
+  return renderedChildren;
+}
+
 function childrenToTree(node) {
   if (!node) {
     return null;
@@ -391,53 +430,6 @@ class ReactTestInstance {
       options,
     );
   }
-
-  toJSON(): Array<ReactTestRendererNode> | ReactTestRendererNode | null {
-    console.log(
-      'toJSON visit',
-      typeof this._fiber,
-      this.type,
-      this._fiber.stateNode?.tag,
-      this._fiber.stateNode?.isHidden,
-    );
-
-    if (typeof this.type === 'string') {
-      return toJSON(this._fiber.stateNode);
-    }
-
-    const children = nodeAndSiblingsArray(this._fiber.child);
-    if (children.length === 0) {
-      return null;
-    }
-
-    if (children.length === 1) {
-      return toJSON(children[0].stateNode);
-    }
-
-    if (
-      children.length === 2 &&
-      children[0].isHidden === true &&
-      children[1].isHidden === false
-    ) {
-      // Omit timed out children from output entirely, including the fact that we
-      // temporarily wrap fallback and timed out children in an array.
-      return toJSON(children[1].stateNode);
-    }
-
-    let renderedChildren = null;
-    for (let i = 0; i < children.length; i++) {
-      const renderedChild = toJSON(children[i].stateNode);
-      if (renderedChild !== null) {
-        if (renderedChildren === null) {
-          renderedChildren = [renderedChild];
-        } else {
-          renderedChildren.push(renderedChild);
-        }
-      }
-    }
-
-    return renderedChildren;
-  }
 }
 
 function findAll(
@@ -681,4 +673,5 @@ export {
   /* eslint-disable-next-line camelcase */
   batchedUpdates as unstable_batchedUpdates,
   act,
+  testInstanceToJSON as toJSON,
 };
