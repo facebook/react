@@ -136,39 +136,35 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
 function testInstanceToJSON(
   node: ReactTestInstance | string,
 ): Array<ReactTestRendererNode> | ReactTestRendererNode | null {
+  // Text node
   if (typeof node === 'string') {
     return node;
   }
-
   // Host node
   if (typeof node.type === 'string') {
     return toJSON(node._fiber.stateNode);
   }
-
   if (node.children == null || node.children.length === 0) {
     return null;
   }
 
   const renderedChildren = [];
   for (let i = 0; i < node.children.length; i++) {
-    const childrenJSON = testInstanceToJSON(node.children[i]);
-    if (childrenJSON !== null) {
-      if (Array.isArray(childrenJSON)) {
-        renderedChildren.push(...childrenJSON);
+    const childJSON = testInstanceToJSON(node.children[i]);
+    if (childJSON !== null) {
+      if (Array.isArray(childJSON)) {
+        renderedChildren.push(...childJSON);
       } else {
-        renderedChildren.push(childrenJSON);
+        renderedChildren.push(childJSON);
       }
     }
   }
-
   if (renderedChildren.length === 0) {
     return null;
   }
-
   if (renderedChildren.length === 1) {
     return renderedChildren[0];
   }
-
   return renderedChildren;
 }
 
