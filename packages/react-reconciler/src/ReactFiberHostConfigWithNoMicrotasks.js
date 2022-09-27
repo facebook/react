@@ -24,3 +24,4 @@ export const scheduleMicrotask = shim;
 export const supportsFrameAlignedTask = false;
 export const scheduleFrameAlignedTask = shim;
 export const cancelFrameAlignedTask = shim;
+export const isFrameAlignedTask = shim;

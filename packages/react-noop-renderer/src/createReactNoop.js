@@ -433,6 +433,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     supportsFrameAlignedTask: false,
     scheduleFrameAlignedTask: undefined,
     cancelFrameAlignedTask: undefined,
+    isFrameAlignedTask: undefined,
 
     prepareForCommit(): null | Object {
       return null;
