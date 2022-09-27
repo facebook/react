@@ -53,18 +53,17 @@ function escapeHtml(string) {
     checkHtmlStringCoercion(string);
   }
   const str = '' + string;
-  const match = matchHtmlRegExp.exec(str);
 
-  if (!match) {
+  if (matchHtmlRegExp.test(str) === false) {
     return str;
   }
 
-  let escape;
+  let escape = '';
   let html = '';
-  let index;
+  let index = 0;
   let lastIndex = 0;
 
-  for (index = match.index; index < str.length; index++) {
+  for (; index < str.length; index++) {
     switch (str.charCodeAt(index)) {
       case 34: // "
         escape = '&quot;';
@@ -86,14 +85,14 @@ function escapeHtml(string) {
     }
 
     if (lastIndex !== index) {
-      html += str.substring(lastIndex, index);
+      html += str.slice(lastIndex, index);
     }
 
     lastIndex = index + 1;
     html += escape;
   }
 
-  return lastIndex !== index ? html + str.substring(lastIndex, index) : html;
+  return lastIndex !== index ? html + str.slice(lastIndex, index) : html;
 }
 // end code copied and modified from escape-html
 
