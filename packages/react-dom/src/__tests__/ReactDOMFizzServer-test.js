@@ -5605,7 +5605,7 @@ describe('ReactDOMFizzServer', () => {
       }
       expect(logs).toEqual([]);
       expect(caughtError.message).toContain(
-        'Cannot call a function returned by useEvent',
+        "A function wrapped in useEvent can't be called during rendering.",
       );
       expect(reportedServerErrors).toEqual([caughtError]);
     });

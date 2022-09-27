@@ -505,7 +505,7 @@ export function useCallback<T>(
 
 function throwOnUseEventCall() {
   throw new Error(
-    'Cannot call a function returned by useEvent during server rendering.',
+    "A function wrapped in useEvent can't be called during rendering.",
   );
 }
 
