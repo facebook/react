@@ -128,7 +128,11 @@ export type Fiber = {
   // I'll avoid adding an owner field for prod and model that as functions.
   ref:
     | null
-    | (((handle: mixed) => void) & {_stringRef: ?string, ...})
+    | (((handle: mixed) => void) & {
+        _stringRef?: string,
+        _functionRef?: (handle: mixed) => void,
+        ...
+      })
     | RefObject,
 
   // Input is the data coming into process this fiber. Arguments. Props.
