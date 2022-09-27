@@ -11,6 +11,7 @@
 'use strict';
 
 let React;
+let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 
@@ -19,6 +20,7 @@ describe('ReactIncrementalSideEffects', () => {
     jest.resetModules();
 
     React = require('react');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
   });
@@ -1306,8 +1308,19 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushWithoutYielding();
-
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toErrorDev(
+      ReactFeatureFlags.warnAboutStringRefs
+        ? [
+            'Warning: Component "Foo" contains the string ref "bar". ' +
+              'Support for string refs will be removed in a future major release. ' +
+              'We recommend using useRef() or createRef() instead. ' +
+              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+              '    in Foo (at **)',
+          ]
+        : [],
+    );
     expect(fooInstance.refs.bar.test).toEqual('test');
   });
 });

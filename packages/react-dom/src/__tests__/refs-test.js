@@ -12,6 +12,7 @@
 let React = require('react');
 let ReactDOM = require('react-dom');
 let ReactTestUtils = require('react-dom/test-utils');
+let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 /**
  * Counts clicks and has a renders an item for each click. Each item rendered
@@ -108,6 +109,7 @@ describe('reactiverefs', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
   });
 
   afterEach(() => {
@@ -355,7 +357,20 @@ describe('ref swapping', () => {
         return <div ref={1} />;
       }
     }
-    const a = ReactTestUtils.renderIntoDocument(<A />);
+    let a;
+    expect(() => {
+      a = ReactTestUtils.renderIntoDocument(<A />);
+    }).toErrorDev(
+      ReactFeatureFlags.warnAboutStringRefs
+        ? [
+            'Warning: Component "A" contains the string ref "1". ' +
+              'Support for string refs will be removed in a future major release. ' +
+              'We recommend using useRef() or createRef() instead. ' +
+              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+              '    in A (at **)',
+          ]
+        : [],
+    );
     expect(a.refs[1].nodeName).toBe('DIV');
   });
 

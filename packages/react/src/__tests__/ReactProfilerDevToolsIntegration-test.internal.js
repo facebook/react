@@ -101,8 +101,6 @@ describe('ReactProfiler DevTools integration', () => {
     );
   });
 
-  // FIXME: What would throw in a host root apart from string refs without owner?
-  // @gate !warnAboutStringRefs
   it('should reset the fiber stack correctly after an error when profiling host roots', () => {
     Scheduler.unstable_advanceTime(20);
 
