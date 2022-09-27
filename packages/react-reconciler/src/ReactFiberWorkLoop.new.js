@@ -62,7 +62,6 @@ import {
   scheduleSyncCallback,
   scheduleLegacySyncCallback,
 } from './ReactFiberSyncTaskQueue.new';
-import {OffscreenPassiveEffectsConnected} from './ReactFiberOffscreenComponent';
 import {
   logCommitStarted,
   logCommitStopped,
@@ -3307,11 +3306,10 @@ function doubleInvokeEffectsInDEVIfNecessary(
 
       // For backwards compatibility, we don't unmount passive effects when a tree suspends.
       // StrictMode needs to align with this.
+      // TODO: Remove special case for Offscreen in Suspense when Relay internal
+      // implementation stops depending on it.
       const includePassiveEffects: boolean =
-        (fiber.stateNode._visibility & OffscreenPassiveEffectsConnected) !==
-          0 &&
-        fiber.return !== null &&
-        fiber.return.tag !== SuspenseComponent;
+        fiber.return !== null && fiber.return.tag !== SuspenseComponent;
       doubleInvokeEffectsOnFiber(root, fiber, includePassiveEffects);
     } else if (fiber.subtreeFlags & PlacementDEV) {
       // Something in the subtree could have been suspended.
