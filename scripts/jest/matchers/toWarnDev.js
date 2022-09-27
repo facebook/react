@@ -152,11 +152,7 @@ const createMatcherFor = (consoleMethod, matcherName) =>
       // Avoid using Jest's built-in spy since it can't be removed.
       console[consoleMethod] = consoleSpy;
 
-      try {
-        callback();
-      } catch (error) {
-        caughtError = error;
-      } finally {
+      const onFinally = () => {
         // Restore the unspied method so that unexpected errors fail tests.
         console[consoleMethod] = originalMethod;
 
@@ -259,12 +255,42 @@ const createMatcherFor = (consoleMethod, matcherName) =>
         }
 
         return {pass: true};
+      };
+
+      let returnPromise = null;
+      try {
+        const result = callback();
+
+        if (
+          typeof result === 'object' &&
+          result !== null &&
+          typeof result.then === 'function'
+        ) {
+          returnPromise = result.then(onFinally, error => {
+            caughtError = error;
+            onFinally();
+          });
+        }
+      } catch (error) {
+        caughtError = error;
+      } finally {
+        return returnPromise === null ? onFinally() : returnPromise;
       }
     } else {
       // Any uncaught errors or warnings should fail tests in production mode.
-      callback();
+      const result = callback();
 
-      return {pass: true};
+      if (
+        typeof result === 'object' &&
+        result !== null &&
+        typeof result.then === 'function'
+      ) {
+        return result.then(() => {
+          return {pass: true};
+        });
+      } else {
+        return {pass: true};
+      }
     }
   };
 
