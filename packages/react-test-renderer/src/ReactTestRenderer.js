@@ -133,41 +133,6 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
   }
 }
 
-function testInstanceToJSON(
-  node: ReactTestInstance | string,
-): Array<ReactTestRendererNode> | ReactTestRendererNode | null {
-  // Text node
-  if (typeof node === 'string') {
-    return node;
-  }
-  // Host node
-  if (typeof node.type === 'string') {
-    return toJSON(node._fiber.stateNode);
-  }
-  if (node.children == null || node.children.length === 0) {
-    return null;
-  }
-
-  const renderedChildren = [];
-  for (let i = 0; i < node.children.length; i++) {
-    const childJSON = testInstanceToJSON(node.children[i]);
-    if (childJSON !== null) {
-      if (Array.isArray(childJSON)) {
-        renderedChildren.push(...childJSON);
-      } else {
-        renderedChildren.push(childJSON);
-      }
-    }
-  }
-  if (renderedChildren.length === 0) {
-    return null;
-  }
-  if (renderedChildren.length === 1) {
-    return renderedChildren[0];
-  }
-  return renderedChildren;
-}
-
 function childrenToTree(node) {
   if (!node) {
     return null;
@@ -426,6 +391,39 @@ class ReactTestInstance {
       options,
     );
   }
+
+  toJSON(): Array<ReactTestRendererNode> | ReactTestRendererNode | null {
+    // Host node
+    if (typeof this.type === 'string') {
+      return toJSON(this._fiber.stateNode);
+    }
+
+    if (this.children == null || this.children.length === 0) {
+      return null;
+    }
+
+    const renderedChildren = [];
+    for (let i = 0; i < this.children.length; i++) {
+      const child = this.children[i];
+      if (typeof child === 'string') {
+        renderedChildren.push(child);
+      } else {
+        const renderedChild = child.toJSON();
+        if (Array.isArray(renderedChild)) {
+          renderedChildren.push(...renderedChild);
+        } else {
+          renderedChildren.push(renderedChild);
+        }
+      }
+    }
+    if (renderedChildren.length === 0) {
+      return null;
+    }
+    if (renderedChildren.length === 1) {
+      return renderedChildren[0];
+    }
+    return renderedChildren;
+  }
 }
 
 function findAll(
@@ -669,5 +667,4 @@ export {
   /* eslint-disable-next-line camelcase */
   batchedUpdates as unstable_batchedUpdates,
   act,
-  testInstanceToJSON as toJSON,
 };
