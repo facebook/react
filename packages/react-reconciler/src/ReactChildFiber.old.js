@@ -224,6 +224,39 @@ function coerceRef(
       }
     }
   }
+
+  if (typeof mixedRef === 'function' && element._owner) {
+    const owner: ?Fiber = (element._owner: any);
+    if (owner) {
+      const ownerFiber = ((owner: any): Fiber);
+
+      if (ownerFiber.tag === ClassComponent) {
+        const functionRef = mixedRef;
+        const resolvedInst = ownerFiber.stateNode;
+
+        // Check if previous function ref matches new function ref
+        if (
+          current !== null &&
+          current.ref !== null &&
+          typeof current.ref === 'function' &&
+          current.ref._functionRef === functionRef
+        ) {
+          return current.ref;
+        }
+
+        const ref = function(value) {
+          if (resolvedInst.refs === emptyRefsObject) {
+            // This is a lazy pooled frozen object, so we need to initialize.
+            resolvedInst.refs = {};
+          }
+          functionRef.call(resolvedInst, value);
+        };
+        ref._functionRef = functionRef;
+        return ref;
+      }
+    }
+  }
+
   return mixedRef;
 }
 

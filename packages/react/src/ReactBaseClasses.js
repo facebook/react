@@ -7,14 +7,9 @@
 
 import ReactNoopUpdateQueue from './ReactNoopUpdateQueue';
 import assign from 'shared/assign';
-import {warnAboutStringRefs} from 'shared/ReactFeatureFlags';
 
 const emptyObject = {};
-if (
-  __DEV__ &&
-  // For string refs we recommend the `string-refs` codemod that requires unsealed `this.refs`
-  !warnAboutStringRefs
-) {
+if (__DEV__) {
   Object.freeze(emptyObject);
 }
 
