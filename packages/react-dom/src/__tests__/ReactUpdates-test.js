@@ -155,7 +155,12 @@ describe('ReactUpdates', () => {
       render() {
         return (
           <div>
-            <Child ref="child" x={this.state.x} />
+            <Child
+              ref={current => {
+                this.refs.child = current;
+              }}
+              x={this.state.x}
+            />
           </div>
         );
       }
@@ -208,7 +213,12 @@ describe('ReactUpdates', () => {
       render() {
         return (
           <div>
-            <Child ref="child" x={this.state.x} />
+            <Child
+              ref={current => {
+                this.refs.child = current;
+              }}
+              x={this.state.x}
+            />
           </div>
         );
       }
@@ -342,7 +352,13 @@ describe('ReactUpdates', () => {
 
       render() {
         parentRenderCount++;
-        return <Child ref="child" />;
+        return (
+          <Child
+            ref={current => {
+              this.refs.child = current;
+            }}
+          />
+        );
       }
     }
 
@@ -429,14 +445,28 @@ describe('ReactUpdates', () => {
 
     class Box extends React.Component {
       render() {
-        return <div ref="boxDiv">{this.props.children}</div>;
+        return (
+          <div
+            ref={current => {
+              this.refs.boxDiv = current;
+            }}>
+            {this.props.children}
+          </div>
+        );
       }
     }
     Object.assign(Box.prototype, UpdateLoggingMixin);
 
     class Child extends React.Component {
       render() {
-        return <span ref="span">child</span>;
+        return (
+          <span
+            ref={current => {
+              this.refs.span = current;
+            }}>
+            child
+          </span>
+        );
       }
     }
     Object.assign(Child.prototype, UpdateLoggingMixin);
@@ -447,9 +477,14 @@ describe('ReactUpdates', () => {
         const child = this.props.children;
 
         return (
-          <Box ref="box">
+          <Box
+            ref={current => {
+              this.refs.box = current;
+            }}>
             <div
-              ref="switcherDiv"
+              ref={current => {
+                this.refs.switcherDiv = current;
+              }}
               style={{
                 display: this.state.tabKey === child.key ? '' : 'none',
               }}>
@@ -464,8 +499,16 @@ describe('ReactUpdates', () => {
     class App extends React.Component {
       render() {
         return (
-          <Switcher ref="switcher">
-            <Child key="hello" ref="child" />
+          <Switcher
+            ref={current => {
+              this.refs.switcher = current;
+            }}>
+            <Child
+              key="hello"
+              ref={current => {
+                this.refs.child = current;
+              }}
+            />
           </Switcher>
         );
       }
@@ -593,7 +636,12 @@ describe('ReactUpdates', () => {
         updates.push('Outer-render-' + this.state.x);
         return (
           <div>
-            <Inner x={this.state.x} ref="inner" />
+            <Inner
+              x={this.state.x}
+              ref={current => {
+                this.refs.inner = current;
+              }}
+            />
           </div>
         );
       }
@@ -950,7 +998,13 @@ describe('ReactUpdates', () => {
       };
 
       render() {
-        return <Child ref="child" />;
+        return (
+          <Child
+            ref={current => {
+              this.refs.child = current;
+            }}
+          />
+        );
       }
     }
 

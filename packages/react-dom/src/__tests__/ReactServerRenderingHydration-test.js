@@ -46,7 +46,11 @@ describe('ReactDOMServerHydration', () => {
 
       render() {
         return (
-          <span ref="span" onClick={this.click}>
+          <span
+            ref={current => {
+              this.refs.span = current;
+            }}
+            onClick={this.click}>
             Name: {this.props.name}
           </span>
         );

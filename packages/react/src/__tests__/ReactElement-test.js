@@ -93,7 +93,11 @@ describe('ReactElement', () => {
       render() {
         return (
           <div>
-            <Child ref="childElement" />
+            <Child
+              ref={current => {
+                this.refs.childElement = current;
+              }}
+            />
           </div>
         );
       }

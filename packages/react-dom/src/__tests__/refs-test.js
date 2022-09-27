@@ -71,11 +71,23 @@ class TestRefsComponent extends React.Component {
   render() {
     return (
       <div>
-        <div ref="resetDiv" onClick={this.doReset}>
+        <div
+          ref={current => {
+            this.refs.resetDiv = current;
+          }}
+          onClick={this.doReset}>
           Reset Me By Clicking This.
         </div>
-        <GeneralContainerComponent ref="myContainer">
-          <ClickCounter ref="myCounter" initialCount={1} />
+        <GeneralContainerComponent
+          ref={current => {
+            this.refs.myContainer = current;
+          }}>
+          <ClickCounter
+            ref={current => {
+              this.refs.myCounter = current;
+            }}
+            initialCount={1}
+          />
         </GeneralContainerComponent>
       </div>
     );
@@ -162,7 +174,13 @@ if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
       function Comp() {
         return {
           render() {
-            return <div ref="elemRef" />;
+            return (
+              <div
+                ref={current => {
+                  this.refs.elemRef = current;
+                }}
+              />
+            );
           },
         };
       }
@@ -468,7 +486,14 @@ describe('creating element with ref in constructor', () => {
   class RefTest extends React.Component {
     constructor(props) {
       super(props);
-      this.p = <p ref="p">Hello!</p>;
+      this.p = (
+        <p
+          ref={current => {
+            this.refs.p = current;
+          }}>
+          Hello!
+        </p>
+      );
     }
 
     render() {
@@ -499,8 +524,20 @@ describe('strings refs across renderers', () => {
         // This component owns both refs.
         return (
           <Indirection
-            child1={<div ref="child1" />}
-            child2={<div ref="child2" />}
+            child1={
+              <div
+                ref={current => {
+                  this.refs.child1 = current;
+                }}
+              />
+            }
+            child2={
+              <div
+                ref={current => {
+                  this.refs.child2 = current;
+                }}
+              />
+            }
           />
         );
       }

@@ -83,7 +83,17 @@ describe('ReactElementClone', () => {
   it('should keep the original ref if it is not overridden', () => {
     class Grandparent extends React.Component {
       render() {
-        return <Parent child={<div ref="yolo" />} />;
+        return (
+          <Parent
+            child={
+              <div
+                ref={current => {
+                  this.refs.yolo = current;
+                }}
+              />
+            }
+          />
+        );
       }
     }
 
@@ -188,7 +198,10 @@ describe('ReactElementClone', () => {
     class Grandparent extends React.Component {
       render() {
         return (
-          <Parent ref="parent">
+          <Parent
+            ref={current => {
+              this.refs.parent = current;
+            }}>
             <span key="abc" />
           </Parent>
         );
@@ -210,8 +223,15 @@ describe('ReactElementClone', () => {
     class Grandparent extends React.Component {
       render() {
         return (
-          <Parent ref="parent">
-            <span ref="child" />
+          <Parent
+            ref={current => {
+              this.refs.parent = current;
+            }}>
+            <span
+              ref={current => {
+                this.refs.child = current;
+              }}
+            />
           </Parent>
         );
       }

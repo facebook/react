@@ -378,7 +378,14 @@ describe('ReactComponentLifeCycle', () => {
         }
         // you would *NEVER* do anything like this in real code!
         this.state.hasRenderCompleted = true;
-        return <div ref="theDiv">I am the inner DIV</div>;
+        return (
+          <div
+            ref={current => {
+              this.refs.theDiv = current;
+            }}>
+            I am the inner DIV
+          </div>
+        );
       }
 
       componentWillUnmount() {
@@ -477,7 +484,11 @@ describe('ReactComponentLifeCycle', () => {
     class Component extends React.Component {
       render() {
         return (
-          <Tooltip ref="tooltip" tooltip={<div>{this.props.tooltipText}</div>}>
+          <Tooltip
+            ref={current => {
+              this.refs.tooltip = current;
+            }}
+            tooltip={<div>{this.props.tooltipText}</div>}>
             {this.props.text}
           </Tooltip>
         );

@@ -93,7 +93,15 @@ it('does not reuse the object that is spread into props', () => {
 });
 
 it('extracts key and ref from the rest of the props', () => {
-  const element = <Component key="12" ref="34" foo="56" />;
+  const element = (
+    <Component
+      key="12"
+      ref={current => {
+        this.refs['34'] = current;
+      }}
+      foo="56"
+    />
+  );
   expect(element.type).toBe(Component);
   expect(element.key).toBe('12');
   expect(element.ref).toBe('34');
@@ -530,7 +538,14 @@ xit('does not call lazy initializers eagerly', () => {
 it('supports classic refs', () => {
   class Foo extends React.Component {
     render() {
-      return <div className="foo" ref="inner" />;
+      return (
+        <div
+          className="foo"
+          ref={current => {
+            this.refs['inner'] = current;
+          }}
+        />
+      );
     }
   }
   const container = document.createElement('div');
@@ -554,9 +569,20 @@ it('should support refs on owned components', () => {
 
   class Component extends React.Component {
     render() {
-      const inner = <Wrapper object={innerObj} ref="inner" />;
+      const inner = (
+        <Wrapper
+          object={innerObj}
+          ref={current => {
+            this.refs['inner'] = current;
+          }}
+        />
+      );
       const outer = (
-        <Wrapper object={outerObj} ref="outer">
+        <Wrapper
+          object={outerObj}
+          ref={current => {
+            this.refs['outer'] = current;
+          }}>
           {inner}
         </Wrapper>
       );
@@ -738,7 +764,11 @@ it('should warn when `ref` is being accessed', () => {
     render() {
       return (
         <div>
-          <Child ref="childElement" />
+          <Child
+            ref={current => {
+              this.refs['childElement'] = current;
+            }}
+          />
         </div>
       );
     }
@@ -765,7 +795,15 @@ it('should NOT warn when owner and self are different for string refs', () => {
   class ClassParent extends React.Component {
     render() {
       return (
-        <ClassWithRenderProp>{() => <div ref="myRef" />}</ClassWithRenderProp>
+        <ClassWithRenderProp>
+          {() => (
+            <div
+              ref={current => {
+                this.refs['myRef'] = current;
+              }}
+            />
+          )}
+        </ClassWithRenderProp>
       );
     }
   }

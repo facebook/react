@@ -70,7 +70,12 @@ describe('ReactIdentity', () => {
       render() {
         return (
           <div>
-            <span ref="span" key={key} />
+            <span
+              ref={current => {
+                this.refs.span = current;
+              }}
+              key={key}
+            />
           </div>
         );
       }

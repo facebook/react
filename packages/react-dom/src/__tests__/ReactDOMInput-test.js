@@ -1075,18 +1075,29 @@ describe('ReactDOMInput', () => {
         return (
           <div>
             <input
-              ref="a"
+              ref={current => {
+                this.refs.a = current;
+              }}
               type="radio"
               name="fruit"
               checked={true}
               onChange={emptyFunction}
             />
             A
-            <input ref="b" type="radio" name="fruit" onChange={emptyFunction} />
+            <input
+              ref={current => {
+                this.refs.b = current;
+              }}
+              type="radio"
+              name="fruit"
+              onChange={emptyFunction}
+            />
             B
             <form>
               <input
-                ref="c"
+                ref={current => {
+                  this.refs.c = current;
+                }}
                 type="radio"
                 name="fruit"
                 defaultChecked={true}

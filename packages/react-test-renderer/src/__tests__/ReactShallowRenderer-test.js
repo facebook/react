@@ -500,7 +500,13 @@ describe('ReactShallowRenderer', () => {
   it('can shallow render with a ref', () => {
     class SomeComponent extends React.Component {
       render() {
-        return <div ref="hello" />;
+        return (
+          <div
+            ref={current => {
+              this.refs.hello = current;
+            }}
+          />
+        );
       }
     }
 
@@ -983,7 +989,11 @@ describe('ReactShallowRenderer', () => {
       render() {
         instance = this;
         return (
-          <button ref="button" onClick={this.onClick}>
+          <button
+            ref={current => {
+              this.refs.button = current;
+            }}
+            onClick={this.onClick}>
             {this.state.counter}
           </button>
         );

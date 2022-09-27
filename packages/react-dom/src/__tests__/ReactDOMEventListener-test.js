@@ -198,7 +198,14 @@ describe('ReactDOMEventListener', () => {
       };
 
       render() {
-        const inner = <div ref="inner">Inner</div>;
+        const inner = (
+          <div
+            ref={current => {
+              this.refs.inner = current;
+            }}>
+            Inner
+          </div>
+        );
         return (
           <div>
             <div onMouseOut={onMouseOut} id="outer">

@@ -37,7 +37,13 @@ describe('ReactComponent', () => {
   });
 
   it('should throw when supplying a ref outside of render method', () => {
-    let instance = <div ref="badDiv" />;
+    let instance = (
+      <div
+        ref={current => {
+          this.refs.badDiv = current;
+        }}
+      />
+    );
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
@@ -118,9 +124,20 @@ describe('ReactComponent', () => {
 
     class Component extends React.Component {
       render() {
-        const inner = <Wrapper object={innerObj} ref="inner" />;
+        const inner = (
+          <Wrapper
+            object={innerObj}
+            ref={current => {
+              this.refs.inner = current;
+            }}
+          />
+        );
         const outer = (
-          <Wrapper object={outerObj} ref="outer">
+          <Wrapper
+            object={outerObj}
+            ref={current => {
+              this.refs.outer = current;
+            }}>
             {inner}
           </Wrapper>
         );
@@ -141,7 +158,11 @@ describe('ReactComponent', () => {
       render() {
         return (
           <Child>
-            <div ref="test" />
+            <div
+              ref={current => {
+                this.refs.test = current;
+              }}
+            />
           </Child>
         );
       }

@@ -114,7 +114,10 @@ describe('ReactProfiler DevTools integration', () => {
 
     expect(() => {
       rendered.update(
-        <div ref="this-will-cause-an-error">
+        <div
+          ref={current => {
+            this.refs['this-will-cause-an-error'] = current;
+          }}>
           <AdvanceTime byAmount={3} />
         </div>,
       );

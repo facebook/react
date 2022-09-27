@@ -1387,9 +1387,23 @@ describe('ResponderEventPlugin', () => {
     class ChildComponent extends React.Component {
       render() {
         return (
-          <div ref="DIV" id={this.props.id + '__DIV'}>
-            <div ref="DIV_1" id={this.props.id + '__DIV_1'} />
-            <div ref="DIV_2" id={this.props.id + '__DIV_2'} />
+          <div
+            ref={current => {
+              this.refs.DIV = current;
+            }}
+            id={this.props.id + '__DIV'}>
+            <div
+              ref={current => {
+                this.refs.DIV_1 = current;
+              }}
+              id={this.props.id + '__DIV_1'}
+            />
+            <div
+              ref={current => {
+                this.refs.DIV_2 = current;
+              }}
+              id={this.props.id + '__DIV_2'}
+            />
           </div>
         );
       }
@@ -1398,12 +1412,35 @@ describe('ResponderEventPlugin', () => {
     class ParentComponent extends React.Component {
       render() {
         return (
-          <div ref="P" id="P">
-            <div ref="P_P1" id="P_P1">
-              <ChildComponent ref="P_P1_C1" id="P_P1_C1" />
-              <ChildComponent ref="P_P1_C2" id="P_P1_C2" />
+          <div
+            ref={current => {
+              this.refs.P = current;
+            }}
+            id="P">
+            <div
+              ref={current => {
+                this.refs.P_P1 = current;
+              }}
+              id="P_P1">
+              <ChildComponent
+                ref={current => {
+                  this.refs.P_P1_C1 = current;
+                }}
+                id="P_P1_C1"
+              />
+              <ChildComponent
+                ref={current => {
+                  this.refs.P_P1_C2 = current;
+                }}
+                id="P_P1_C2"
+              />
             </div>
-            <div ref="P_OneOff" id="P_OneOff" />
+            <div
+              ref={current => {
+                this.refs.P_OneOff = current;
+              }}
+              id="P_OneOff"
+            />
           </div>
         );
       }

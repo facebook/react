@@ -571,7 +571,14 @@ describe('ReactES6Class', () => {
   it('supports classic refs', () => {
     class Foo extends React.Component {
       render() {
-        return <Inner name="foo" ref="inner" />;
+        return (
+          <Inner
+            name="foo"
+            ref={current => {
+              this.refs.inner = current;
+            }}
+          />
+        );
       }
     }
     const ref = React.createRef();

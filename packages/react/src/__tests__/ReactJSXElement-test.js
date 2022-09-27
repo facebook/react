@@ -78,7 +78,15 @@ describe('ReactJSXElement', () => {
   });
 
   it('extracts key and ref from the rest of the props', () => {
-    const element = <Component key="12" ref="34" foo="56" />;
+    const element = (
+      <Component
+        key="12"
+        ref={current => {
+          this.refs['34'] = current;
+        }}
+        foo="56"
+      />
+    );
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
     expect(element.ref).toBe('34');

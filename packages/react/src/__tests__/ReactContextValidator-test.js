@@ -54,7 +54,13 @@ describe('ReactContextValidator', () => {
       }
 
       render() {
-        return <Component ref="child" />;
+        return (
+          <Component
+            ref={current => {
+              this.refs.child = current;
+            }}
+          />
+        );
       }
     }
     ComponentInFooBarContext.childContextTypes = {

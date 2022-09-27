@@ -79,9 +79,19 @@ describe('ReactCompositeComponent', () => {
       render() {
         const toggleActivatedState = this._toggleActivatedState;
         return !this.state.activated ? (
-          <a ref="x" onClick={toggleActivatedState} />
+          <a
+            ref={current => {
+              this.refs.x = current;
+            }}
+            onClick={toggleActivatedState}
+          />
         ) : (
-          <b ref="x" onClick={toggleActivatedState} />
+          <b
+            ref={current => {
+              this.refs.x = current;
+            }}
+            onClick={toggleActivatedState}
+          />
         );
       }
     };
@@ -98,7 +108,12 @@ describe('ReactCompositeComponent', () => {
       render() {
         const className = this.props.anchorClassOn ? 'anchorClass' : '';
         return this.props.renderAnchor ? (
-          <a ref="anch" className={className} />
+          <a
+            ref={current => {
+              this.refs.anch = current;
+            }}
+            className={className}
+          />
         ) : (
           <b />
         );
@@ -741,8 +756,15 @@ describe('ReactCompositeComponent', () => {
     class Wrapper extends React.Component {
       render() {
         return (
-          <Parent ref="parent">
-            <Child ref="child" />
+          <Parent
+            ref={current => {
+              this.refs.parent = current;
+            }}>
+            <Child
+              ref={current => {
+                this.refs.child = current;
+              }}
+            />
           </Parent>
         );
       }
@@ -1146,10 +1168,18 @@ describe('ReactCompositeComponent', () => {
         if (this.props.flipped) {
           return (
             <div>
-              <Static ref="static0" key="B">
+              <Static
+                ref={current => {
+                  this.refs.static0 = current;
+                }}
+                key="B">
                 B (ignored)
               </Static>
-              <Static ref="static1" key="A">
+              <Static
+                ref={current => {
+                  this.refs.static1 = current;
+                }}
+                key="A">
                 A (ignored)
               </Static>
             </div>
@@ -1157,10 +1187,18 @@ describe('ReactCompositeComponent', () => {
         } else {
           return (
             <div>
-              <Static ref="static0" key="A">
+              <Static
+                ref={current => {
+                  this.refs.static0 = current;
+                }}
+                key="A">
                 A
               </Static>
-              <Static ref="static1" key="B">
+              <Static
+                ref={current => {
+                  this.refs.static1 = current;
+                }}
+                key="B">
                 B
               </Static>
             </div>
@@ -1456,7 +1494,14 @@ describe('ReactCompositeComponent', () => {
       }
 
       render() {
-        return <Apple color={this.state.color} ref="apple" />;
+        return (
+          <Apple
+            color={this.state.color}
+            ref={current => {
+              this.refs.apple = current;
+            }}
+          />
+        );
       }
     }
 

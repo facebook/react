@@ -224,11 +224,22 @@ describe('ReactTestUtils', () => {
     class Root extends React.Component {
       render() {
         return (
-          <html ref="html">
-            <head ref="head">
+          <html
+            ref={current => {
+              this.refs.html = current;
+            }}>
+            <head
+              ref={current => {
+                this.refs.head = current;
+              }}>
               <title>hello</title>
             </head>
-            <body ref="body">hello, world</body>
+            <body
+              ref={current => {
+                this.refs.body = current;
+              }}>
+              hello, world
+            </body>
           </html>
         );
       }
@@ -354,7 +365,9 @@ describe('ReactTestUtils', () => {
             <div>
               <input
                 type="text"
-                ref="input"
+                ref={current => {
+                  this.refs.input = current;
+                }}
                 onChange={this.props.handleChange}
               />
             </div>

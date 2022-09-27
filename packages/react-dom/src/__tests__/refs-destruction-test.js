@@ -43,8 +43,16 @@ describe('refs-destruction', () => {
         } else {
           return (
             <div>
-              <div ref="theInnerDiv" />
-              <ClassComponent ref="theInnerClassComponent" />
+              <div
+                ref={current => {
+                  this.refs.theInnerDiv = current;
+                }}
+              />
+              <ClassComponent
+                ref={current => {
+                  this.refs.theInnerClassComponent = current;
+                }}
+              />
             </div>
           );
         }
@@ -135,7 +143,11 @@ describe('refs-destruction', () => {
       render() {
         return (
           <Modal>
-            <a ref="ref" />
+            <a
+              ref={current => {
+                this.refs.ref = current;
+              }}
+            />
           </Modal>
         );
       }

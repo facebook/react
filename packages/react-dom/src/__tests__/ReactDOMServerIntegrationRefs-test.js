@@ -82,7 +82,13 @@ describe('ReactDOMServerIntegration', () => {
     it('should have string refs on client when rendered over server markup', async () => {
       class RefsComponent extends React.Component {
         render() {
-          return <div ref="myDiv" />;
+          return (
+            <div
+              ref={current => {
+                this.refs.myDiv = current;
+              }}
+            />
+          );
         }
       }
 

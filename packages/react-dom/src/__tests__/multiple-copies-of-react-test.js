@@ -16,7 +16,14 @@ class TextWithStringRef extends React.Component {
   render() {
     jest.resetModules();
     React = require('react');
-    return <span ref="foo">Hello world!</span>;
+    return (
+      <span
+        ref={current => {
+          this.refs.foo = current;
+        }}>
+        Hello world!
+      </span>
+    );
   }
 }
 
