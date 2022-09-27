@@ -14,6 +14,8 @@
 .*/node_modules/devtools-timeline-model/.*
 .*/node_modules/create-react-class/.*
 .*/node_modules/react-native-web/.*
+# Test files of `resolve` that are ultimately irrelevant and contain purposefully malformed files.
+.*/node_modules/resolve/test/.*
 .*/__mocks__/.*
 .*/__tests__/.*
 
