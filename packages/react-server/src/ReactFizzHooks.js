@@ -36,6 +36,7 @@ import {makeId} from './ReactServerFormatConfig';
 import {
   enableCache,
   enableUseHook,
+  enableUseEventHook,
   enableUseMemoCacheHook,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
@@ -502,6 +503,16 @@ export function useCallback<T>(
   return useMemo(() => callback, deps);
 }
 
+function throwOnUseEventCall() {
+  throw new Error(
+    "A function wrapped in useEvent can't be called during rendering.",
+  );
+}
+
+export function useEvent<T>(callback: () => T): () => T {
+  return throwOnUseEventCall;
+}
+
 // TODO Decide on how to implement this hook for server rendering.
 // If a mutation occurs during render, consider triggering a Suspense boundary
 // and falling back to client rendering.
@@ -674,6 +685,9 @@ export const Dispatcher: DispatcherType = {
 if (enableCache) {
   Dispatcher.getCacheForType = getCacheForType;
   Dispatcher.useCacheRefresh = useCacheRefresh;
+}
+if (enableUseEventHook) {
+  Dispatcher.useEvent = useEvent;
 }
 if (enableUseMemoCacheHook) {
   Dispatcher.useMemoCache = useMemoCache;

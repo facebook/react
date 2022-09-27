@@ -1877,7 +1877,9 @@ function mountEvent<T>(callback: () => T): () => T {
 
   function event() {
     if (isInvalidExecutionContextForEventFunction()) {
-      throw new Error('An event from useEvent was called during render.');
+      throw new Error(
+        "A function wrapped in useEvent can't be called during rendering.",
+      );
     }
     return ref.current.apply(undefined, arguments);
   }

@@ -195,7 +195,7 @@ describe('useEvent', () => {
 
     ReactNoop.render(<Counter incrementBy={1} />);
     expect(Scheduler).toFlushAndThrow(
-      'An event from useEvent was called during render',
+      "A function wrapped in useEvent can't be called during rendering.",
     );
 
     // If something throws, we try one more time synchronously in case the error was
