@@ -203,13 +203,6 @@ describe('ReactOffscreenStrictMode', () => {
       );
     });
 
-    log.push('------------------------------');
-
-    await act(async () => {
-      resolve();
-      shouldSuspend = false;
-    });
-
     expect(log).toEqual([
       'Parent rendered',
       'Parent rendered',
@@ -218,12 +211,15 @@ describe('ReactOffscreenStrictMode', () => {
       'Parent mount',
       'Parent unmount',
       'Parent mount',
-      '------------------------------',
-      'Child rendered',
-      'Child rendered',
-      'Child mount',
-      'Child unmount',
-      'Child mount',
     ]);
+
+    log = [];
+
+    await act(async () => {
+      resolve();
+      shouldSuspend = false;
+    });
+
+    expect(log).toEqual(['Child rendered', 'Child rendered', 'Child mount']);
   });
 });

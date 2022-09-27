@@ -571,4 +571,75 @@ describe('ReactOffscreen', () => {
       </>,
     );
   });
+
+  // @gate __DEV__ && enableStrictEffects
+  it('suspending a mounted tree unmounts layout effects but not passive effects', async () => {
+    const root = ReactNoop.createRoot();
+    let shouldSuspend = false;
+
+    function Child({text}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue(`${text} mounted`);
+        return () => {
+          Scheduler.unstable_yieldValue(`${text} unmounted`);
+        };
+      });
+
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue(`${text} layout mounted`);
+        return () => {
+          Scheduler.unstable_yieldValue(`${text} layout unmounted`);
+        };
+      });
+
+      if (shouldSuspend) {
+        Scheduler.unstable_yieldValue(`${text} suspended`);
+        throw new Promise(_resolve => {
+          // do nothing.
+        });
+      }
+
+      Scheduler.unstable_yieldValue(`${text} rendered`);
+      return <span>{text}</span>;
+    }
+
+    // Initial mount. Nothing suspends.
+    await act(async () => {
+      root.render(
+        <React.StrictMode>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Child text="A" />
+          </Suspense>
+        </React.StrictMode>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'A rendered',
+      'A layout mounted',
+      'A mounted',
+      'A layout unmounted',
+      'A unmounted',
+      'A layout mounted',
+      'A mounted',
+    ]);
+
+    // Initial mount. Child suspends.
+    await act(async () => {
+      shouldSuspend = true;
+      root.render(
+        <React.StrictMode>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Child text="B" />
+          </Suspense>
+        </React.StrictMode>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'B suspended',
+      'Loading...',
+      'A layout unmounted',
+    ]);
+  });
 });

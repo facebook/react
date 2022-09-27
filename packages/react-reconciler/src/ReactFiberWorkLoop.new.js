@@ -63,6 +63,7 @@ import {
   scheduleSyncCallback,
   scheduleLegacySyncCallback,
 } from './ReactFiberSyncTaskQueue.new';
+import {OffscreenPassiveEffectsConnected} from './ReactFiberOffscreenComponent';
 import {
   logCommitStarted,
   logCommitStopped,
@@ -3291,11 +3292,19 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
 }
 
 // Unconditionally disconnects and connects passive and layout effects.
-function doubleInvokeEffectsOnFiber(root: FiberRoot, fiber: Fiber) {
+function doubleInvokeEffectsOnFiber(
+  root: FiberRoot,
+  fiber: Fiber,
+  includePassiveEffects: boolean,
+) {
   disappearLayoutEffects(fiber);
-  disconnectPassiveEffect(fiber);
+  if (includePassiveEffects) {
+    disconnectPassiveEffect(fiber);
+  }
   reappearLayoutEffects(root, fiber.alternate, fiber, false);
-  reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+  if (includePassiveEffects) {
+    reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+  }
 }
 
 function doubleInvokeEffectsInDEVIfNecessary(
@@ -3312,7 +3321,7 @@ function doubleInvokeEffectsInDEVIfNecessary(
     if (fiber.flags & PlacementDEV) {
       setCurrentDebugFiberInDEV(fiber);
       if (isInStrictMode) {
-        doubleInvokeEffectsOnFiber(root, fiber);
+        doubleInvokeEffectsOnFiber(root, fiber, true);
       }
       resetCurrentDebugFiberInDEV();
     } else {
@@ -3334,7 +3343,15 @@ function doubleInvokeEffectsInDEVIfNecessary(
     if (isInStrictMode && fiber.flags & Visibility) {
       // Double invoke effects on Offscreen's subtree only
       // if it is visible and its visibility has changed.
-      doubleInvokeEffectsOnFiber(root, fiber);
+
+      // For backwards compatibility, we don't unmount passive effects when a tree suspends.
+      // StrictMode needs to align with this.
+      const includePassiveEffects: boolean =
+        (fiber.stateNode._visibility & OffscreenPassiveEffectsConnected) !==
+          0 &&
+        fiber.return !== null &&
+        fiber.return.tag !== SuspenseComponent;
+      doubleInvokeEffectsOnFiber(root, fiber, includePassiveEffects);
     } else if (fiber.subtreeFlags & PlacementDEV) {
       // Something in the subtree could have been suspended.
       // We need to continue traversal and find newly inserted fibers.
