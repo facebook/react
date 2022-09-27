@@ -381,6 +381,25 @@ describe('ReactDOMSelect', () => {
     expect(select.selectedIndex).toBe(-1);
   });
 
+  it('does not select an item when size is greater than 1 and `defaultValue` does not match to any option', () => {
+    const stub = (
+      <select defaultValue="foobar" size="2">
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>
+    );
+    const container = document.createElement('div');
+    const select = ReactDOM.render(stub, container);
+
+    expect(select.options[0].selected).toBe(false);
+    expect(select.options[1].selected).toBe(false);
+    expect(select.options[2].selected).toBe(false);
+
+    expect(select.value).toBe('');
+    expect(select.selectedIndex).toBe(-1);
+  });
+
   it('should remember value when switching to uncontrolled', () => {
     const stub = (
       <select value={'giraffe'} onChange={noop}>
