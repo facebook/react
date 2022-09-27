@@ -90,35 +90,20 @@ function doublePipe(one, two) {
 }
 
 function setIconAndPopup(reactBuildType, tabId) {
-  if (IS_FIREFOX) {
-    chrome.browserAction.setIcon({
-      tabId: tabId,
-      path: {
-        '16': chrome.runtime.getURL(`icons/16-${reactBuildType}.png`),
-        '32': chrome.runtime.getURL(`icons/32-${reactBuildType}.png`),
-        '48': chrome.runtime.getURL(`icons/48-${reactBuildType}.png`),
-        '128': chrome.runtime.getURL(`icons/128-${reactBuildType}.png`),
-      },
-    });
-    chrome.browserAction.setPopup({
-      tabId: tabId,
-      popup: chrome.runtime.getURL(`popups/${reactBuildType}.html`),
-    });
-  } else {
-    chrome.action.setIcon({
-      tabId: tabId,
-      path: {
-        '16': chrome.runtime.getURL(`icons/16-${reactBuildType}.png`),
-        '32': chrome.runtime.getURL(`icons/32-${reactBuildType}.png`),
-        '48': chrome.runtime.getURL(`icons/48-${reactBuildType}.png`),
-        '128': chrome.runtime.getURL(`icons/128-${reactBuildType}.png`),
-      },
-    });
-    chrome.action.setPopup({
-      tabId: tabId,
-      popup: chrome.runtime.getURL(`popups/${reactBuildType}.html`),
-    });
-  }
+  const action = IS_FIREFOX ? chrome.browserAction : chrome.action;
+  action.setIcon({
+    tabId: tabId,
+    path: {
+      '16': chrome.runtime.getURL(`icons/16-${reactBuildType}.png`),
+      '32': chrome.runtime.getURL(`icons/32-${reactBuildType}.png`),
+      '48': chrome.runtime.getURL(`icons/48-${reactBuildType}.png`),
+      '128': chrome.runtime.getURL(`icons/128-${reactBuildType}.png`),
+    },
+  });
+  action.setPopup({
+    tabId: tabId,
+    popup: chrome.runtime.getURL(`popups/${reactBuildType}.html`),
+  });
 }
 
 function isRestrictedBrowserPage(url) {
