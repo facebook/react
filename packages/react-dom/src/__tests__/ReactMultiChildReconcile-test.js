@@ -116,7 +116,9 @@ class FriendsStatusDisplay extends React.Component {
         !status ? null : (
           <StatusDisplay
             key={key}
-            ref={key}
+            ref={current => {
+              this.refs[key] = current;
+            }}
             contentKey={key}
             onFlush={this.verifyPreviousRefsResolved.bind(this, key)}
             status={status}

@@ -36,7 +36,9 @@ class ClickCounter extends React.Component {
         <div
           className="clickLogDiv"
           key={'clickLog' + i}
-          ref={'clickLog' + i}
+          ref={current => {
+            this.refs['clickLog' + i] = current;
+          }}
         />,
       );
     }
@@ -73,7 +75,11 @@ class TestRefsComponent extends React.Component {
       <div>
         <div
           ref={current => {
-            this.refs.resetDiv = current;
+            if (current === null) {
+              delete this.refs.resetDiv;
+            } else {
+              this.refs.resetDiv = current;
+            }
           }}
           onClick={this.doReset}>
           Reset Me By Clicking This.
@@ -93,15 +99,6 @@ class TestRefsComponent extends React.Component {
     );
   }
 }
-
-const expectClickLogsLengthToBe = function(instance, length) {
-  const clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
-    instance,
-    'clickLogDiv',
-  );
-  expect(clickLogs.length).toBe(length);
-  expect(Object.keys(instance.refs.myCounter.refs).length).toBe(length);
-};
 
 describe('reactiverefs', () => {
   let container;
@@ -149,22 +146,47 @@ describe('reactiverefs', () => {
       'clickIncrementer',
     );
 
-    expectClickLogsLengthToBe(testRefsComponent, 1);
+    let clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      testRefsComponent,
+      'clickLogDiv',
+    );
+    expect(clickLogs.length).toBe(1);
+    expect(Object.keys(testRefsComponent.refs.myCounter.refs)).toHaveLength(1);
 
     // After clicking the reset, there should still only be one click log ref.
     testRefsComponent.refs.resetDiv.click();
-    expectClickLogsLengthToBe(testRefsComponent, 1);
+    clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      testRefsComponent,
+      'clickLogDiv',
+    );
+    expect(clickLogs.length).toBe(1);
+    expect(Object.keys(testRefsComponent.refs.myCounter.refs)).toHaveLength(1);
 
     // Begin incrementing clicks (and therefore refs).
     clickIncrementer.click();
-    expectClickLogsLengthToBe(testRefsComponent, 2);
+    clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      testRefsComponent,
+      'clickLogDiv',
+    );
+    expect(clickLogs.length).toBe(2);
+    expect(Object.keys(testRefsComponent.refs.myCounter.refs)).toHaveLength(2);
 
     clickIncrementer.click();
-    expectClickLogsLengthToBe(testRefsComponent, 3);
+    clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      testRefsComponent,
+      'clickLogDiv',
+    );
+    expect(clickLogs.length).toBe(3);
+    expect(Object.keys(testRefsComponent.refs.myCounter.refs)).toHaveLength(3);
 
     // Now reset again
     testRefsComponent.refs.resetDiv.click();
-    expectClickLogsLengthToBe(testRefsComponent, 1);
+    clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      testRefsComponent,
+      'clickLogDiv',
+    );
+    expect(clickLogs.length).toBe(1);
+    expect(Object.keys(testRefsComponent.refs.myCounter.refs)).toHaveLength(3);
   });
 });
 
@@ -230,15 +252,21 @@ describe('ref swapping', () => {
           <div>
             <div
               className="first"
-              ref={count % 3 === 0 ? 'hopRef' : 'divOneRef'}
+              ref={current => {
+                this.refs[count % 3 === 0 ? 'hopRef' : 'divOneRef'] = current;
+              }}
             />
             <div
               className="second"
-              ref={count % 3 === 1 ? 'hopRef' : 'divTwoRef'}
+              ref={current => {
+                this.refs[count % 3 === 1 ? 'hopRef' : 'divTwoRef'] = current;
+              }}
             />
             <div
               className="third"
-              ref={count % 3 === 2 ? 'hopRef' : 'divThreeRef'}
+              ref={current => {
+                this.refs[count % 3 === 2 ? 'hopRef' : 'divThreeRef'] = current;
+              }}
             />
           </div>
         );
@@ -482,18 +510,11 @@ describe('root level refs', () => {
   });
 });
 
-describe('creating element with ref in constructor', () => {
+describe('creating element with string ref in constructor', () => {
   class RefTest extends React.Component {
     constructor(props) {
       super(props);
-      this.p = (
-        <p
-          ref={current => {
-            this.refs.p = current;
-          }}>
-          Hello!
-        </p>
-      );
+      this.p = <p ref="p">Hello!</p>;
     }
 
     render() {

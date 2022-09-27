@@ -185,12 +185,15 @@ describe('ReactElementClone', () => {
   it('should support keys and refs', () => {
     class Parent extends React.Component {
       render() {
+        const ref = current => {
+          this.refs.xyz = current;
+        };
         const clone = React.cloneElement(this.props.children, {
           key: 'xyz',
-          ref: 'xyz',
+          ref: ref,
         });
         expect(clone.key).toBe('xyz');
-        expect(clone.ref).toBe('xyz');
+        expect(clone.ref).toBe(ref);
         return <div>{clone}</div>;
       }
     }
@@ -215,7 +218,11 @@ describe('ReactElementClone', () => {
   it('should steal the ref if a new ref is specified', () => {
     class Parent extends React.Component {
       render() {
-        const clone = React.cloneElement(this.props.children, {ref: 'xyz'});
+        const clone = React.cloneElement(this.props.children, {
+          ref: current => {
+            this.refs.xyz = current;
+          },
+        });
         return <div>{clone}</div>;
       }
     }
