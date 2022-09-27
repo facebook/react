@@ -40,7 +40,8 @@ describe(dimmedColor, () => {
 describe(ColorGenerator, () => {
   describe(ColorGenerator.prototype.colorForID, () => {
     it('should generate a color for an ID', () => {
-      expect(new ColorGenerator().colorForID('123')).toMatchInlineSnapshot(`
+      const color = new ColorGenerator().colorForID('123');
+      expect(color).toMatchInlineSnapshot(`
         Object {
           "a": 1,
           "h": 190,

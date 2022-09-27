@@ -69,8 +69,6 @@ const createMatcherFor = (consoleMethod, matcherName) =>
         (message.includes('\n    in ') || message.includes('\n    at '));
 
       const consoleSpy = (format, ...args) => {
-        // Ignore uncaught errors reported by jsdom
-        // and React addendums because they're too noisy.
         if (
           !logAllErrors &&
           consoleMethod === 'error' &&
@@ -82,17 +80,19 @@ const createMatcherFor = (consoleMethod, matcherName) =>
         const message = util.format(format, ...args);
         const normalizedMessage = normalizeCodeLocInfo(message);
 
-        // Remember if the number of %s interpolations
-        // doesn't match the number of arguments.
-        // We'll fail the test if it happens.
-        let argIndex = 0;
-        format.replace(/%s/g, () => argIndex++);
-        if (argIndex !== args.length) {
-          lastWarningWithMismatchingFormat = {
-            format,
-            args,
-            expectedArgCount: argIndex,
-          };
+        if (typeof format === 'string') {
+          // Remember if the number of %s interpolations
+          // doesn't match the number of arguments.
+          // We'll fail the test if it happens.
+          let argIndex = 0;
+          format.replace(/%s/g, () => argIndex++);
+          if (argIndex !== args.length) {
+            lastWarningWithMismatchingFormat = {
+              format,
+              args,
+              expectedArgCount: argIndex,
+            };
+          }
         }
 
         // Protect against accidentally passing a component stack

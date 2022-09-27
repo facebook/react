@@ -25,6 +25,10 @@ module.exports = {
     enableGlobally: true,
     legacyFakeTimers: true,
   },
+  snapshotFormat: {
+    escapeString: true,
+    printBasicPrototype: true,
+  },
   snapshotSerializers: [require.resolve('jest-snapshot-serializer-raw')],
 
   testSequencer: require.resolve('./jestSequencer'),

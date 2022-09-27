@@ -23,6 +23,7 @@ describe('SchedulerNoDOM', () => {
     jest.resetModules();
     jest.useFakeTimers({legacyFakeTimers: true});
     delete global.setImmediate;
+    delete global.MessageChannel;
     jest.unmock('scheduler');
 
     Scheduler = require('scheduler');

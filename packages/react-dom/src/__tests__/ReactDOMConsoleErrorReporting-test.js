@@ -98,17 +98,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [
             // Reported because we're in a browser click event:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
             // This one is jsdom-only. Real browser deduplicates it.
             // (In DEV, we have a nested event due to guarded callback.)
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
         ]);
@@ -178,17 +178,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [
             // Reported due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
             // This is only duplicated with createRoot
             // because it retries once with a sync render.
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
@@ -260,17 +260,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [
             // Reported by jsdom due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
             // This is only duplicated with createRoot
             // because it retries once with a sync render.
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
@@ -336,9 +336,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [
             // Reported due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
@@ -406,9 +406,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [
             // Reported by jsdom due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
@@ -473,10 +473,10 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [
-            // Reported due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
+            // Reported by jsdom due to the guarded callback:
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
@@ -544,9 +544,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [
             // Reported by jsdom due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
@@ -630,18 +630,18 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
-            // Reported because we're in a browser click event:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
+            // Reported by jsdom due to the guarded callback:
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
             // This one is jsdom-only. Real browser deduplicates it.
             // (In DEV, we have a nested event due to guarded callback.)
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
         ]);
@@ -705,10 +705,10 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
-            // Reported due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
+            // Reported by jsdom due to the guarded callback:
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
@@ -776,9 +776,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
           [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
             // Reported by jsdom due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
@@ -845,10 +845,10 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
-            // Reported due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
+            // Reported by jsdom due to the guarded callback:
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
@@ -919,9 +919,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
           [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
             // Reported by jsdom due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
@@ -988,10 +988,10 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
-            // Reported due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
+            // Reported by jsdom due to the guarded callback:
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [
@@ -1062,9 +1062,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
           [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
             // Reported by jsdom due to the guarded callback:
-            expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
-              message: 'Boom',
+              detail: expect.objectContaining({message: 'Boom'}),
+              type: 'unhandled exception',
             }),
           ],
           [

@@ -882,8 +882,11 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
   describe('selector and isEqual error handling in extra', () => {
     let ErrorBoundary;
-    beforeAll(() => {
-      spyOnDev(console, 'warn');
+    beforeEach(() => {
+      // TODO There's a "Unsafe read of a mutable value during render." somewhere.
+      if (__DEV__) {
+        jest.spyOn(console, 'warn').mockImplementation(() => {});
+      }
       ErrorBoundary = class extends React.Component {
         state = {error: null};
         static getDerivedStateFromError(error) {
@@ -896,6 +899,10 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
           return this.props.children;
         }
       };
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
     });
 
     it('selector can throw on update', async () => {

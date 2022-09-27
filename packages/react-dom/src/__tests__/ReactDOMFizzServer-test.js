@@ -10,6 +10,7 @@
 
 'use strict';
 
+let JSDOM;
 let Stream;
 let Scheduler;
 let React;
@@ -28,10 +29,15 @@ let container = null;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
+let originalDocument;
+let originalWindow;
 
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
     jest.resetModules();
+    originalDocument = global.document;
+    originalWindow = global.window;
+    JSDOM = require('jsdom').JSDOM;
     Scheduler = require('scheduler');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
@@ -79,7 +85,11 @@ describe('ReactDOMFizzServer', () => {
   });
 
   afterEach(() => {
-    container?.remove();
+    // restore actIntoEmptyDocument() effects
+    global.window = originalWindow;
+    global.document = originalDocument;
+
+    container?.remove?.();
     container = null;
   });
 
@@ -160,8 +170,8 @@ describe('ReactDOMFizzServer', () => {
     const jsdom = new JSDOM(bufferedContent, {
       runScripts: 'dangerously',
     });
-    window = jsdom.window;
-    document = jsdom.window.document;
+    global.window = jsdom.window;
+    global.document = jsdom.window.document;
     container = document;
     buffer = '';
   }
@@ -1460,7 +1470,7 @@ describe('ReactDOMFizzServer', () => {
   function normalizeCodeLocInfo(str) {
     return (
       str &&
-      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+      String(str).replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
         return '\n    in ' + name + ' (at **)';
       })
     );
@@ -3488,7 +3498,7 @@ describe('ReactDOMFizzServer', () => {
       window.__test_outlet = '';
       const stringWithScriptsInIt =
         'prescription pre<scription pre<Scription pre</scRipTion pre</ScripTion </script><script><!-- <script> -->';
-      await act(async () => {
+      await actIntoEmptyDocument(async () => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<div />, {
           bootstrapScriptContent:
             'window.__test_outlet = "This should have been replaced";var x = "' +
@@ -3509,7 +3519,7 @@ describe('ReactDOMFizzServer', () => {
       const el = document.createElement('p');
       el.textContent = '{"one":1,\u2028\u2029"two":2}';
       const stringWithLSAndPSCharacters = el.textContent;
-      await act(async () => {
+      await actIntoEmptyDocument(async () => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<div />, {
           bootstrapScriptContent:
             'let x = ' +
@@ -3530,7 +3540,7 @@ describe('ReactDOMFizzServer', () => {
       window.__test_outlet = null;
       // this boolean expression will be cast to a number due to the bitwise &. we will look for a truthy value (1) below
       const booleanLogicString = '1 < 2 & 3 > 1';
-      await act(async () => {
+      await actIntoEmptyDocument(async () => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<div />, {
           bootstrapScriptContent:
             'let x = ' + booleanLogicString + '; window.__test_outlet = x;',
@@ -4831,8 +4841,8 @@ describe('ReactDOMFizzServer', () => {
       const jsdom = new JSDOM('<!DOCTYPE html><html><head>\u0000', {
         runScripts: 'dangerously',
       });
-      window = jsdom.window;
-      document = jsdom.window.document;
+      global.window = jsdom.window;
+      global.document = jsdom.window.document;
       container = document.getElementsByTagName('head')[0];
     }
 

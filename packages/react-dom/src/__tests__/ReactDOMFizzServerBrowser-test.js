@@ -204,9 +204,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     const result = await readResult(stream);
     expect(result).toContain('Loading');
 
-    expect(errors).toEqual([
-      'The render was aborted by the server without a reason.',
-    ]);
+    expect(errors).toEqual(['The operation was aborted.']);
   });
 
   it('should reject if aborting before the shell is complete', async () => {
@@ -227,10 +225,6 @@ describe('ReactDOMFizzServerBrowser', () => {
     await jest.runAllTimers();
 
     const theReason = new Error('aborted for reasons');
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = theReason;
     controller.abort(theReason);
 
     let caughtError = null;
@@ -272,22 +266,14 @@ describe('ReactDOMFizzServerBrowser', () => {
     } catch (error) {
       caughtError = error;
     }
-    expect(caughtError.message).toBe(
-      'The render was aborted by the server without a reason.',
-    );
-    expect(errors).toEqual([
-      'The render was aborted by the server without a reason.',
-    ]);
+    expect(caughtError.message).toBe('The operation was aborted.');
+    expect(errors).toEqual(['The operation was aborted.']);
   });
 
   it('should reject if passing an already aborted signal', async () => {
     const errors = [];
     const controller = new AbortController();
     const theReason = new Error('aborted for reasons');
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = theReason;
     controller.abort(theReason);
 
     const promise = ReactDOMFizzServer.renderToReadableStream(
@@ -387,7 +373,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     let result;
     result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
-      `"<div><span></span></div><div>${str492}</div><div>${str492}</div>"`,
+      `"<div><span></span></div><div>(492) This string is intentionally 492 bytes long because we want to make sure we process chunks that will overflow buffer boundaries. It will repeat to fill out the bytes required (inclusive of this prompt):: foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux q :: total count (492)</div><div>(492) This string is intentionally 492 bytes long because we want to make sure we process chunks that will overflow buffer boundaries. It will repeat to fill out the bytes required (inclusive of this prompt):: foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux q :: total count (492)</div>"`,
     );
 
     // this size 2049 was chosen to be a couple base 2 orders larger than the current view
@@ -400,7 +386,9 @@ describe('ReactDOMFizzServerBrowser', () => {
     );
 
     result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(`"<div>${str2049}</div>"`);
+    expect(result).toMatchInlineSnapshot(
+      `"<div>(2049) This string is intentionally 2049 bytes long because we want to make sure we process chunks that will overflow buffer boundaries. It will repeat to fill out the bytes required (inclusive of this prompt):: foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy thud foo bar qux quux corge grault garply waldo fred plugh xyzzy  :: total count (2049)</div>"`,
+    );
   });
 
   it('supports custom abort reasons with a string', async () => {
@@ -435,10 +423,6 @@ describe('ReactDOMFizzServerBrowser', () => {
       },
     });
 
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = 'foobar';
     controller.abort('foobar');
 
     expect(errors).toEqual(['foobar', 'foobar']);
@@ -476,10 +460,6 @@ describe('ReactDOMFizzServerBrowser', () => {
       },
     });
 
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = new Error('uh oh');
     controller.abort(new Error('uh oh'));
 
     expect(errors).toEqual(['uh oh', 'uh oh']);
