@@ -16,8 +16,6 @@ const React = require('react');
 const ReactTestRenderer = require('react-test-renderer');
 const prettyFormat = require('pretty-format');
 
-const {toJSON} = ReactTestRenderer;
-
 // Isolate noop renderer
 jest.resetModules();
 const ReactNoop = require('react-noop-renderer');
