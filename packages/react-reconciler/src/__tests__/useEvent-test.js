@@ -118,6 +118,62 @@ describe('useEvent', () => {
   });
 
   // @gate enableUseEventHook
+  it('can be defined more than once', () => {
+    class IncrementButton extends React.PureComponent {
+      increment = () => {
+        this.props.onClick();
+      };
+      multiply = () => {
+        this.props.onMouseEnter();
+      };
+      render() {
+        return <Text text="Increment" />;
+      }
+    }
+
+    function Counter({incrementBy}) {
+      const [count, updateCount] = useState(0);
+      const onClick = useEvent(() => updateCount(c => c + incrementBy));
+      const onMouseEnter = useEvent(() => {
+        updateCount(c => c * incrementBy);
+      });
+
+      return (
+        <>
+          <IncrementButton
+            onClick={() => onClick()}
+            onMouseEnter={() => onMouseEnter()}
+            ref={button}
+          />
+          <Text text={'Count: ' + count} />
+        </>
+      );
+    }
+
+    const button = React.createRef(null);
+    ReactNoop.render(<Counter incrementBy={5} />);
+    expect(Scheduler).toFlushAndYield(['Increment', 'Count: 0']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Increment'),
+      span('Count: 0'),
+    ]);
+
+    act(button.current.increment);
+    expect(Scheduler).toHaveYielded(['Increment', 'Count: 5']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Increment'),
+      span('Count: 5'),
+    ]);
+
+    act(button.current.multiply);
+    expect(Scheduler).toHaveYielded(['Increment', 'Count: 25']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Increment'),
+      span('Count: 25'),
+    ]);
+  });
+
+  // @gate enableUseEventHook
   it('does not preserve `this` in event functions', () => {
     class GreetButton extends React.PureComponent {
       greet = () => {

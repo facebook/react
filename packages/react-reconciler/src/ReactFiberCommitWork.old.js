@@ -164,7 +164,6 @@ import {
   Layout as HookLayout,
   Insertion as HookInsertion,
   Passive as HookPassive,
-  Snapshot as HookSnapshot,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
 import {doesFiberContain} from './ReactFiberTreeReflection';
@@ -416,8 +415,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
     case FunctionComponent: {
       if (enableUseEventHook) {
         if ((flags & Update) !== NoFlags) {
-          // useEvent doesn't need to be cleaned up
-          commitHookEffectListMount(HookSnapshot | HookHasEffect, finishedWork);
+          commitUseEventMount(finishedWork);
         }
       }
       break;
@@ -662,6 +660,17 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
       }
       effect = effect.next;
     } while (effect !== firstEffect);
+  }
+}
+
+function commitUseEventMount(finishedWork: Fiber) {
+  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+  const eventStates = updateQueue !== null ? updateQueue.events : null;
+  if (eventStates !== null) {
+    for (let ii = 0; ii < eventStates.length; ii++) {
+      const eventState = eventStates[ii];
+      eventState.event._current = eventState.nextEvent;
+    }
   }
 }
 

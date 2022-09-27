@@ -86,7 +86,6 @@ import {
   Layout as HookLayout,
   Passive as HookPassive,
   Insertion as HookInsertion,
-  Snapshot as HookSnapshot,
 } from './ReactHookEffectTags';
 import {
   getWorkInProgressRoot,
@@ -182,8 +181,19 @@ type StoreConsistencyCheck<T> = {
   getSnapshot: () => T,
 };
 
+type EventFunctionState<T> = {
+  event: EventFunctionWrapper<T>,
+  nextEvent: EventFunction<T>,
+};
+type EventFunctionWrapper<T> = {
+  (): T,
+  _current: EventFunction<T>,
+};
+type EventFunction<T> = () => T;
+
 export type FunctionComponentUpdateQueue = {
   lastEffect: Effect | null,
+  events: Array<EventFunctionState<any>> | null,
   stores: Array<StoreConsistencyCheck<any>> | null,
   // NOTE: optional, only set when enableUseMemoCacheHook is enabled
   memoCache?: MemoCache | null,
@@ -727,6 +737,7 @@ if (enableUseMemoCacheHook) {
   createFunctionComponentUpdateQueue = () => {
     return {
       lastEffect: null,
+      events: null,
       stores: null,
       memoCache: null,
     };
@@ -735,6 +746,7 @@ if (enableUseMemoCacheHook) {
   createFunctionComponentUpdateQueue = () => {
     return {
       lastEffect: null,
+      events: null,
       stores: null,
     };
   };
@@ -1871,9 +1883,26 @@ function updateEffect(
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
+function useEventImpl<T>(event: EventFunction<T>, nextEvent: () => T) {
+  const eventState = {event, nextEvent};
+  currentlyRenderingFiber.flags |= UpdateEffect;
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
+  if (componentUpdateQueue === null) {
+    componentUpdateQueue = createFunctionComponentUpdateQueue();
+    currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
+    componentUpdateQueue.events = [eventState];
+  } else {
+    const events = componentUpdateQueue.events;
+    if (events === null) {
+      componentUpdateQueue.events = [eventState];
+    } else {
+      events.push(eventState);
+    }
+  }
+}
+
 function mountEvent<T>(callback: () => T): () => T {
   const hook = mountWorkInProgressHook();
-  const ref = {current: callback};
 
   function event() {
     if (isInvalidExecutionContextForEventFunction()) {
@@ -1881,39 +1910,20 @@ function mountEvent<T>(callback: () => T): () => T {
         "A function wrapped in useEvent can't be called during rendering.",
       );
     }
-    return ref.current.apply(undefined, arguments);
+    return event._current.apply(undefined, arguments);
   }
+  event._current = callback;
 
-  // TODO: We don't need all the overhead of an effect object since there are no deps and no
-  // clean up functions.
-  mountEffectImpl(
-    UpdateEffect,
-    HookSnapshot,
-    () => {
-      ref.current = callback;
-    },
-    [ref, callback],
-  );
-
-  hook.memoizedState = [ref, event];
-
+  useEventImpl(event, callback);
+  hook.memoizedState = event;
   return event;
 }
 
 function updateEvent<T>(callback: () => T): () => T {
   const hook = updateWorkInProgressHook();
-  const ref = hook.memoizedState[0];
-
-  updateEffectImpl(
-    UpdateEffect,
-    HookSnapshot,
-    () => {
-      ref.current = callback;
-    },
-    [ref, callback],
-  );
-
-  return hook.memoizedState[1];
+  const event = hook.memoizedState;
+  useEventImpl(event, callback);
+  return event;
 }
 
 function mountInsertionEffect(
