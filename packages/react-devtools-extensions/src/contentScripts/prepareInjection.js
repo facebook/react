@@ -94,7 +94,9 @@ window.addEventListener('message', function onMessage({data, source}) {
       }
       break;
     case 'react-devtools-inject-backend':
-      injectScriptAsync(chrome.runtime.getURL('build/react_devtools_backend.js'));
+      injectScriptAsync(
+        chrome.runtime.getURL('build/react_devtools_backend.js'),
+      );
       break;
   }
 });
