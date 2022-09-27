@@ -571,4 +571,68 @@ describe('ReactOffscreen', () => {
       </>,
     );
   });
+
+  // @gate enableOffscreen
+  it('suspending a tree mounted tree unmounts layout and passive effects', async () => {
+    const root = ReactNoop.createRoot();
+    let shouldSuspend = false;
+
+    function Child({text}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue(`${text} mounted`);
+        return () => {
+          Scheduler.unstable_yieldValue(`${text} unmounted`);
+        };
+      });
+
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue(`${text} layout mounted`);
+        return () => {
+          Scheduler.unstable_yieldValue(`${text} layout unmounted`);
+        };
+      });
+
+      if (shouldSuspend) {
+        Scheduler.unstable_yieldValue(`${text} suspended`);
+        throw new Promise(_resolve => {
+          // do nothing.
+        });
+      }
+
+      Scheduler.unstable_yieldValue(`${text} rendered`);
+      return <span>{text}</span>;
+    }
+
+    // Initial mount. Nothing suspends
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Child text="A" />
+        </Suspense>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'A rendered',
+      'A layout mounted',
+      'A mounted',
+    ]);
+
+    // Initial mount. Nothing suspends
+    await act(async () => {
+      shouldSuspend = true;
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Child text="B" />
+        </Suspense>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'B suspended',
+      'Loading...',
+      'A layout unmounted',
+      'A unmounted', // This was the missing bit.
+    ]);
+  });
 });

@@ -3339,16 +3339,10 @@ function commitPassiveMountOnFiber(
       const nextState: OffscreenState | null = finishedWork.memoizedState;
 
       const isHidden = nextState !== null;
-
       if (isHidden) {
         if (instance._visibility & OffscreenPassiveEffectsConnected) {
-          // The effects are currently connected. Update them.
-          recursivelyTraversePassiveMountEffects(
-            finishedRoot,
-            finishedWork,
-            committedLanes,
-            committedTransitions,
-          );
+          // The effects are currently connected. Disconnect them.
+          disconnectPassiveEffect(finishedWork);
         } else {
           if (finishedWork.mode & ConcurrentMode) {
             // The effects are currently disconnected. Since the tree is hidden,
