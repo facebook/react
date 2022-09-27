@@ -3300,9 +3300,9 @@ function doubleInvokeEffectsInDEVIfNecessary(
     // Only consider Offscreen that is visible.
     // TODO (Offscreen) Handle manual mode.
     setCurrentDebugFiberInDEV(fiber);
-    if (isInStrictMode && fiber.flags & Visibility) {
+    if (isInStrictMode && fiber.flags & (Visibility | PlacementDEV)) {
       // Double invoke effects on Offscreen's subtree only
-      // if it is visible and its visibility has changed.
+      // if it is visible and its visibility has changed
 
       // For backwards compatibility, we don't unmount passive effects when a tree suspends.
       // StrictMode needs to align with this.
