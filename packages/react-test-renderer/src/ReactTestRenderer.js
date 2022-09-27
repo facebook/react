@@ -411,7 +411,7 @@ class ReactTestInstance {
         const renderedChild = child.toJSON();
         if (Array.isArray(renderedChild)) {
           renderedChildren.push(...renderedChild);
-        } else {
+        } else if (renderedChild != null) {
           renderedChildren.push(renderedChild);
         }
       }
