@@ -686,7 +686,7 @@ describe('ReactTypeScriptClass', function() {
     test(React.createElement(ProvideContext), 'DIV', 'bar-through-context');
   });
 
-  it('supports classic refs', function() {
+  it('supports string refs', function() {
     const ref = React.createRef();
     test(React.createElement(ClassicRefs, {ref: ref}), 'DIV', 'foo');
     expect(ref.current.refs.inner.getName()).toBe('foo');

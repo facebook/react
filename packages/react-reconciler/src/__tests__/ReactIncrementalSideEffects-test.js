@@ -1301,13 +1301,7 @@ describe('ReactIncrementalSideEffects', () => {
     class Foo extends React.Component {
       render() {
         fooInstance = this;
-        return (
-          <Bar
-            ref={current => {
-              this.refs.bar = current;
-            }}
-          />
-        );
+        return <Bar ref="bar" />;
       }
     }
 

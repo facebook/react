@@ -528,7 +528,7 @@ describe 'ReactCoffeeScriptClass', ->
 
     test React.createElement(Foo), 'DIV', 'bar-through-context'
 
-  it 'supports classic refs', ->
+  it 'supports string refs', ->
     class Foo extends React.Component
       render: ->
         React.createElement(InnerComponent,

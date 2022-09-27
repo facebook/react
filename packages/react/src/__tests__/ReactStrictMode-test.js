@@ -725,11 +725,7 @@ describe('string refs', () => {
       render() {
         return (
           <StrictMode>
-            <InnerComponent
-              ref={current => {
-                this.refs.somestring = current;
-              }}
-            />
+            <InnerComponent ref="somestring" />
           </StrictMode>
         );
       }
@@ -772,13 +768,7 @@ describe('string refs', () => {
 
     class InnerComponent extends React.Component {
       render() {
-        return (
-          <MiddleComponent
-            ref={current => {
-              this.refs.somestring = current;
-            }}
-          />
-        );
+        return <MiddleComponent ref="somestring" />;
       }
     }
 

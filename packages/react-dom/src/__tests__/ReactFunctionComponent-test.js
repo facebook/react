@@ -149,13 +149,7 @@ describe('ReactFunctionComponent', () => {
 
   it('should throw on string refs in pure functions', () => {
     function Child() {
-      return (
-        <div
-          ref={current => {
-            this.refs.me = current;
-          }}
-        />
-      );
+      return <div ref="me" />;
     }
 
     expect(function() {
@@ -183,12 +177,7 @@ describe('ReactFunctionComponent', () => {
       render() {
         return (
           <Indirection>
-            <FunctionComponent
-              name="A"
-              ref={current => {
-                this.refs.stateless = current;
-              }}
-            />
+            <FunctionComponent name="A" ref="stateless" />
           </Indirection>
         );
       }

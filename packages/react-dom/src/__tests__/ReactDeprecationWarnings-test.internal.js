@@ -59,13 +59,7 @@ describe('ReactDeprecationWarnings', () => {
     }
     class Component extends React.Component {
       render() {
-        return (
-          <RefComponent
-            ref={current => {
-              this.refs.refComponent = current;
-            }}
-          />
-        );
+        return <RefComponent ref="refComponent" />;
       }
     }
 
@@ -90,14 +84,7 @@ describe('ReactDeprecationWarnings', () => {
     }
     class Component extends React.Component {
       render() {
-        return (
-          <RefComponent
-            ref={current => {
-              this.refs.refComponent = current;
-            }}
-            __self={this}
-          />
-        );
+        return <RefComponent ref="refComponent" __self={this} />;
       }
     }
     ReactNoop.renderLegacySyncRoot(<Component />);
@@ -112,14 +99,7 @@ describe('ReactDeprecationWarnings', () => {
     }
     class Component extends React.Component {
       render() {
-        return (
-          <RefComponent
-            ref={current => {
-              this.refs.refComponent = current;
-            }}
-            __self={{}}
-          />
-        );
+        return <RefComponent ref="refComponent" __self={{}} />;
       }
     }
 

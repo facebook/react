@@ -568,17 +568,10 @@ describe('ReactES6Class', () => {
     test(<Foo />, 'DIV', 'bar-through-context');
   });
 
-  it('supports classic refs', () => {
+  it('supports string refs', () => {
     class Foo extends React.Component {
       render() {
-        return (
-          <Inner
-            name="foo"
-            ref={current => {
-              this.refs.inner = current;
-            }}
-          />
-        );
+        return <Inner name="foo" ref="inner" />;
       }
     }
     const ref = React.createRef();

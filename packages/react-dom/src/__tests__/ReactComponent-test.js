@@ -36,14 +36,8 @@ describe('ReactComponent', () => {
     }).toThrowError(/Target container is not a DOM element./);
   });
 
-  it('should throw when supplying a ref outside of render method', () => {
-    let instance = (
-      <div
-        ref={current => {
-          this.refs.badDiv = current;
-        }}
-      />
-    );
+  it('should throw when supplying a string ref outside of render method', () => {
+    let instance = <div ref="badDiv" />;
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
@@ -124,20 +118,9 @@ describe('ReactComponent', () => {
 
     class Component extends React.Component {
       render() {
-        const inner = (
-          <Wrapper
-            object={innerObj}
-            ref={current => {
-              this.refs.inner = current;
-            }}
-          />
-        );
+        const inner = <Wrapper object={innerObj} ref="inner" />;
         const outer = (
-          <Wrapper
-            object={outerObj}
-            ref={current => {
-              this.refs.outer = current;
-            }}>
+          <Wrapper object={outerObj} ref="outer">
             {inner}
           </Wrapper>
         );
@@ -153,16 +136,12 @@ describe('ReactComponent', () => {
     ReactTestUtils.renderIntoDocument(<Component />);
   });
 
-  it('should not have refs on unmounted components', () => {
+  it('should not have string refs on unmounted components', () => {
     class Parent extends React.Component {
       render() {
         return (
           <Child>
-            <div
-              ref={current => {
-                this.refs.test = current;
-              }}
-            />
+            <div ref="test" />
           </Child>
         );
       }
