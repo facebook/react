@@ -5,7 +5,7 @@ import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 import {IS_FIREFOX} from '../utils';
 
-function injectCodeSync(src) {
+function injectScriptSync(src) {
   let code = '';
   const request = new XMLHttpRequest();
   request.addEventListener('load', function() {
@@ -21,6 +21,15 @@ function injectCodeSync(src) {
   // so we add the script to <html> instead.
   nullthrows(document.documentElement).appendChild(script);
   nullthrows(script.parentNode).removeChild(script);
+}
+
+function injectScriptAsync(src) {
+  const script = document.createElement('script');
+  script.src = src;
+  script.onload = function() {
+    script.remove();
+  };
+  nullthrows(document.documentElement).appendChild(script);
 }
 
 let lastDetectionResult;
@@ -85,10 +94,7 @@ window.addEventListener('message', function onMessage({data, source}) {
       }
       break;
     case 'react-devtools-inject-backend':
-      const script = document.createElement('script');
-      script.src = chrome.runtime.getURL('build/react_devtools_backend.js');
-      document.documentElement.appendChild(script);
-      script.parentNode.removeChild(script);
+      injectScriptAsync(chrome.runtime.getURL('build/react_devtools_backend.js'));
       break;
   }
 });
@@ -104,27 +110,30 @@ window.addEventListener('pageshow', function({target}) {
   chrome.runtime.sendMessage(lastDetectionResult);
 });
 
-// The legacy way to inject the global hook in Manifest V2 extensions.
-// In V3, we use chrome.scripting.registerContentScripts instead (see background.js)
-if (IS_FIREFOX) {
-  // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
-  if (
-    sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
-  ) {
-    injectCodeSync(chrome.runtime.getURL('build/renderer.js'));
-  }
+// We create a "sync" script tag to page to inject the global hook on Manifest V2 extensions.
+// To comply with the new security policy in V3, we use chrome.scripting.registerContentScripts instead (see background.js).
+// However, the new API only works for Chrome v102+.
+// We insert a "async" script tag as a fallback for older versions.
+// It has known issues if JS on the page is faster than the extension.
+// Users will see a notice in components tab when that happens (see <Tree>).
+// For Firefox, V3 is not ready, so sync injection is still the best approach.
+const injectScript = IS_FIREFOX ? injectScriptSync : injectScriptAsync;
 
-  // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
-  // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
-  // We need to inject this code because content scripts (ie injectGlobalHook.js) don't have access
-  // to the webpage's window, so in order to access front end settings
-  // and communicate with React, we must inject this code into the webpage
-  switch (document.contentType) {
-    case 'text/html':
-    case 'application/xhtml+xml': {
-      injectCodeSync(chrome.runtime.getURL('build/installHook.js'));
-      break;
-    }
+// If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
+if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
+  injectScript(chrome.runtime.getURL('build/renderer.js'));
+}
+
+// Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
+// Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
+// We need to inject this code because content scripts (ie injectGlobalHook.js) don't have access
+// to the webpage's window, so in order to access front end settings
+// and communicate with React, we must inject this code into the webpage
+switch (document.contentType) {
+  case 'text/html':
+  case 'application/xhtml+xml': {
+    injectScript(chrome.runtime.getURL('build/installHook.js'));
+    break;
   }
 }
 

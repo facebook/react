@@ -12,7 +12,10 @@ import {attach} from 'react-devtools-shared/src/backend/renderer';
 import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 
-if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
+if (
+  sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true' &&
+  !window.hasOwnProperty('__REACT_DEVTOOLS_ATTACH__')
+) {
   Object.defineProperty(
     window,
     '__REACT_DEVTOOLS_ATTACH__',

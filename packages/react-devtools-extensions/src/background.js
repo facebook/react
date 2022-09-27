@@ -21,7 +21,7 @@ if (!IS_FIREFOX) {
       world: chrome.scripting.ExecutionWorld.MAIN,
     },
     {
-      id: 'rennderer',
+      id: 'renderer',
       matches: ['<all_urls>'],
       js: ['build/renderer.js'],
       runAt: 'document_start',
