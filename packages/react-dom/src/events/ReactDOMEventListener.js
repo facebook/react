@@ -225,7 +225,7 @@ function dispatchEventOriginal(
 
   if (allowReplay) {
     if (isDiscreteEventThatRequiresHydration(domEventName)) {
-      // This this to be replayed later once the target is available.
+      // This to be replayed later once the target is available.
       queueDiscreteEvent(
         blockedOn,
         domEventName,
