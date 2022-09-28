@@ -15,8 +15,8 @@ import {
   HostComponent,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
-import {SyntheticEvent} from '../events/SyntheticEvent';
-import {ELEMENT_NODE} from '../shared/HTMLNodeType';
+import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
+import {ELEMENT_NODE} from 'react-dom-bindings/src/shared/HTMLNodeType';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,

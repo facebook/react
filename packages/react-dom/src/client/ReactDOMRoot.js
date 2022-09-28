@@ -13,7 +13,7 @@ import type {
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
 
-import {queueExplicitHydrationTarget} from '../events/ReactDOMEventReplaying';
+import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {enableFloat} from 'shared/ReactFeatureFlags';
 
@@ -51,14 +51,14 @@ import {
   isContainerMarkedAsRoot,
   markContainerAsRoot,
   unmarkContainerAsRoot,
-} from './ReactDOMComponentTree';
-import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
+} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
+import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
 import {
   ELEMENT_NODE,
   COMMENT_NODE,
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
-} from '../shared/HTMLNodeType';
+} from 'react-dom-bindings/src/shared/HTMLNodeType';
 
 import {
   createContainer,

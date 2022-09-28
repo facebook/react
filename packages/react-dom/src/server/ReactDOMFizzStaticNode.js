@@ -8,7 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {BootstrapScriptDescriptor} from './ReactDOMServerFormatConfig';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
 import {Writable, Readable} from 'stream';
 
@@ -24,7 +24,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from './ReactDOMServerFormatConfig';
+} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
 type Options = {
   identifierPrefix?: string,
