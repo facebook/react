@@ -112,13 +112,10 @@ export function cleanupAfterRenderResources() {
   previousDispatcher = null;
 }
 
-const ReactDOMClientDispatcher = {preload, preinit};
-
-// For client we set the dispatcher to the default client dispatcher. In mixed environments (like tests)
-// this will be temporarily overwritten when another runtime is rendering. We do this so we can handle
-// event callbacks with the client dispatcher. In the future we will likely have different client
-// dispatchers for when we are in render mode vs non-render mode
-ReactDOMSharedInternals.Dispatcher.current = ReactDOMClientDispatcher;
+// We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
+// internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
+// from Internals -> ReactDOM -> FloatClient -> Internals so this doesn't introduce a new one.
+export const ReactDOMClientDispatcher = {preload, preinit};
 
 // global maps of Resources
 const preloadResources: Map<string, PreloadResource> = new Map();

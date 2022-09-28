@@ -1,4 +1,4 @@
-import ReactDOMSharedInternals from '../ReactDOMSharedInternals';
+import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
 export function preinit() {
   const dispatcher = ReactDOMSharedInternals.Dispatcher.current;
