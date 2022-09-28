@@ -214,3 +214,6 @@ export {close};
 export function closeWithError(destination: Destination, error: mixed): void {
   close(destination);
 }
+
+export function prepareRendererToRender(container: Container) {}
+export function resetRendererAfterRender() {}

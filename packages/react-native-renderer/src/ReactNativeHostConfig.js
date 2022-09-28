@@ -515,3 +515,11 @@ export function detachDeletedInstance(node: Instance): void {
 export function requestPostPaintCallback(callback: (time: number) => void) {
   // noop
 }
+
+export function prepareRendererToRender(container: Container): void {
+  // noop
+}
+
+export function resetRendererAfterRender(): void {
+  // noop
+}

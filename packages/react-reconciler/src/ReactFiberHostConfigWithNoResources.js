@@ -25,5 +25,3 @@ export const isHostResourceType = shim;
 export const getResource = shim;
 export const acquireResource = shim;
 export const releaseResource = shim;
-export const prepareToRender = shim;
-export const cleanupAfterRender = shim;

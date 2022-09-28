@@ -66,8 +66,8 @@ describe('ReactFiberHostContext', () => {
       getCurrentEventPriority: function() {
         return DefaultEventPriority;
       },
-      prepareToRender: function() {},
-      cleanupAfterRender: function() {},
+      prepareRendererToRender: function() {},
+      resetRendererAfterRender: function() {},
       supportsMutation: true,
       requestPostPaintCallback: function() {},
     });
@@ -133,8 +133,8 @@ describe('ReactFiberHostContext', () => {
         return DefaultEventPriority;
       },
       requestPostPaintCallback: function() {},
-      prepareToRender: function() {},
-      cleanupAfterRender: function() {},
+      prepareRendererToRender: function() {},
+      resetRendererAfterRender: function() {},
       supportsMutation: true,
     });
 
