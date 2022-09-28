@@ -133,6 +133,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       act ->
         root.render React.createElement(Foo, foo: 'foo')
+      return
     ).toErrorDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
 
   it 'warns if getDerivedStateFromError is not static', ->
@@ -144,6 +145,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       act ->
         root.render React.createElement(Foo, foo: 'foo')
+      return
     ).toErrorDev 'Foo: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.'
 
   it 'warns if getSnapshotBeforeUpdate is static', ->
@@ -155,6 +157,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       act ->
         root.render React.createElement(Foo, foo: 'foo')
+      return
     ).toErrorDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.'
 
   it 'warns if state not initialized before static getDerivedStateFromProps', ->
@@ -171,6 +174,7 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       act ->
         root.render React.createElement(Foo, foo: 'foo')
+      return
     ).toErrorDev (
       '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
       'undefined. This is not recommended. Instead, define the initial state by ' +
