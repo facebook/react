@@ -485,7 +485,10 @@ const forks = Object.freeze({
   },
 
   // We wrap top-level listeners into guards on www.
-  './packages/react-dom/src/events/EventListener.js': (bundleType, entry) => {
+  './packages/react-dom-bindings/src/events/EventListener.js': (
+    bundleType,
+    entry
+  ) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
@@ -495,7 +498,7 @@ const forks = Object.freeze({
           return null;
         } else {
           // Use the www fork which is integrated with TimeSlice profiling.
-          return './packages/react-dom/src/events/forks/EventListener-www.js';
+          return './packages/react-dom-bindings/src/events/forks/EventListener-www.js';
         }
       default:
         return null;
