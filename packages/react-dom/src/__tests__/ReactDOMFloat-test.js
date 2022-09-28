@@ -229,6 +229,7 @@ describe('ReactDOMFloat', () => {
     return readText(text);
   }
 
+  // @gate enableFloat
   it('errors if the document does not contain a head when inserting a resource', async () => {
     document.head.parentNode.removeChild(document.head);
     const root = ReactDOMClient.createRoot(document);
