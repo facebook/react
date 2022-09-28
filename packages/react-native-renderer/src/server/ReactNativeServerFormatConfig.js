@@ -65,6 +65,8 @@ export type ResponseState = {
   nextSuspenseID: number,
 };
 
+export const emptyChunk = stringToPrecomputedChunk('');
+
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(): ResponseState {
   return {
@@ -140,7 +142,6 @@ export function pushTextInstance(
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
-  preamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,

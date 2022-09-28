@@ -110,6 +110,7 @@ export {
   setCurrentlyRenderingBoundaryResources,
   prepareToRender,
   cleanupAfterRender,
+  emptyChunk,
 } from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';

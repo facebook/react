@@ -74,6 +74,7 @@ import {
   setCurrentlyRenderingBoundaryResources,
   createResources,
   createBoundaryResources,
+  emptyChunk,
 } from './ReactServerFormatConfig';
 import {
   constructClassInstance,
@@ -182,12 +183,18 @@ const ERRORED = 4;
 
 type Root = null;
 
+export type ArrayWithPreamble<T> = Array<T> & {_preambleIndex?: number};
+
+function asArrayWithPreamble<T>(a: Array<T>): ArrayWithPreamble<T> {
+  return (a: any);
+}
+
 type Segment = {
   status: 0 | 1 | 2 | 3 | 4,
   parentFlushed: boolean, // typically a segment will be flushed by its parent, except if its parent was already flushed
   id: number, // starts as 0 and is lazily assigned if the parent flushes early
   +index: number, // the index within the parent's chunks or 0 at the root
-  +chunks: Array<Chunk | PrecomputedChunk>,
+  +chunks: ArrayWithPreamble<Chunk | PrecomputedChunk>,
   +children: Array<Segment>,
   // The context that this segment was created in.
   formatContext: FormatContext,
@@ -220,7 +227,6 @@ export opaque type Request = {
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
-  +preamble: Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted before any segment chunks.
   +postamble: Array<Chunk | PrecomputedChunk>, // Chunks that need to be emitted after segments, waiting for all pending root tasks to finish
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
@@ -297,7 +303,6 @@ export function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
-    preamble: [],
     postamble: [],
     onError: onError === undefined ? defaultErrorHandler : onError,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
@@ -406,7 +411,7 @@ function createPendingSegment(
     id: -1, // lazily assigned later
     index,
     parentFlushed: false,
-    chunks: [],
+    chunks: asArrayWithPreamble([]),
     children: [],
     formatContext,
     boundary,
@@ -695,7 +700,6 @@ function renderHostElement(
 
   const children = pushStartInstance(
     segment.chunks,
-    request.preamble,
     type,
     props,
     request.responseState,
@@ -1945,6 +1949,53 @@ export function performWork(request: Request): void {
   }
 }
 
+function flushPreamble(
+  request: Request,
+  destination: Destination,
+  segment: Segment,
+): boolean {
+  const boundary = segment.boundary;
+  if (boundary) {
+    // Preamble needs to be part of the shell
+    return true;
+  }
+  if (segment.status === COMPLETED) {
+    const chunks = segment.chunks;
+    const preambleIndex = chunks._preambleIndex || 0;
+    let chunkIdx = 0;
+    const children = segment.children;
+
+    for (let childIdx = 0; childIdx < children.length; childIdx++) {
+      const nextChild = children[childIdx];
+      // Write all the chunks up until the next child.
+      for (; chunkIdx < nextChild.index; chunkIdx++) {
+        if (chunkIdx < preambleIndex) {
+          writeChunk(destination, chunks[chunkIdx]);
+          chunks[chunkIdx] = emptyChunk;
+        } else {
+          // We have encountered a chunk that isn't preamble and must halt
+          return true;
+        }
+      }
+      if (flushPreamble(request, destination, nextChild)) {
+        // this recursive call halted, propagate
+        return true;
+      }
+    }
+    for (; chunkIdx < chunks.length; chunkIdx++) {
+      if (chunkIdx < preambleIndex) {
+        writeChunk(destination, chunks[chunkIdx]);
+        chunks[chunkIdx] = emptyChunk;
+      } else {
+        // We have encountered a chunk that isn't preamble and must halt
+        return true;
+      }
+    }
+    return false;
+  }
+  return true;
+}
+
 function flushSubtree(
   request: Request,
   destination: Destination,
@@ -2246,11 +2297,7 @@ function flushCompletedQueues(
     if (completedRootSegment !== null) {
       if (request.pendingRootTasks === 0) {
         if (enableFloat) {
-          const preamble = request.preamble;
-          for (i = 0; i < preamble.length; i++) {
-            // we expect the preamble to be tiny and will ignore backpressure
-            writeChunk(destination, preamble[i]);
-          }
+          flushPreamble(request, destination, completedRootSegment);
 
           flushInitialResources(
             destination,

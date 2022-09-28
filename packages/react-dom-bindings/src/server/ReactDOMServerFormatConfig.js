@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ArrayWithPreamble} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Resources, BoundaryResources} from './ReactDOMFloatServer';
 export type {Resources, BoundaryResources};
@@ -92,6 +93,8 @@ export type ResponseState = {
   sentStyleInsertionFunction: boolean, // We allow the legacy renderer to extend this object.
   ...
 };
+
+export const emptyChunk = stringToPrecomputedChunk('');
 
 const startInlineScript = stringToPrecomputedChunk('<script>');
 const endInlineScript = stringToPrecomputedChunk('</script>');
@@ -283,25 +286,6 @@ export function getChildFormatContext(
     return createFormatContext(HTML_MODE, null);
   }
   if (parentContext.insertionMode === ROOT_HTML_MODE) {
-    switch (type) {
-      case 'html': {
-        return parentContext;
-      }
-      case 'head':
-      case 'title':
-      case 'base':
-      case 'link':
-      case 'style':
-      case 'meta':
-      case 'script':
-      case 'noscript':
-      case 'template': {
-        break;
-      }
-      default: {
-        parentContext.preambleOpen = false;
-      }
-    }
     // We've emitted the root and is now in plain HTML mode.
     return createFormatContext(HTML_MODE, null);
   }
@@ -1316,40 +1300,33 @@ function pushStartTitle(
 }
 
 function pushStartHead(
-  target: Array<Chunk | PrecomputedChunk>,
-  preamble: Array<Chunk | PrecomputedChunk>,
+  target: ArrayWithPreamble<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
   responseState: ResponseState,
   formatContext: FormatContext,
 ): ReactNodeList {
-  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target =
-    enableFloat &&
-    formatContext.insertionMode === ROOT_HTML_MODE &&
-    formatContext.preambleOpen
-      ? preamble
-      : target;
-
-  return pushStartGenericElement(target, props, tag, responseState);
+  const children = pushStartGenericElement(target, props, tag, responseState);
+  target._preambleIndex = target.length;
+  return children;
 }
 
 function pushStartHtml(
-  target: Array<Chunk | PrecomputedChunk>,
-  preamble: Array<Chunk | PrecomputedChunk>,
+  target: ArrayWithPreamble<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
   responseState: ResponseState,
   formatContext: FormatContext,
 ): ReactNodeList {
   if (formatContext.insertionMode === ROOT_HTML_MODE) {
-    target = enableFloat && formatContext.preambleOpen ? preamble : target;
     // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
     // then we also emit the DOCTYPE as part of the root content as a convenience for
     // rendering the whole document.
     target.push(DOCTYPE);
   }
-  return pushStartGenericElement(target, props, tag, responseState);
+  const children = pushStartGenericElement(target, props, tag, responseState);
+  target._preambleIndex = target.length;
+  return children;
 }
 
 function pushStartGenericElement(
@@ -1567,8 +1544,7 @@ function startChunkForTag(tag: string): PrecomputedChunk {
 const DOCTYPE: PrecomputedChunk = stringToPrecomputedChunk('<!DOCTYPE html>');
 
 export function pushStartInstance(
-  target: Array<Chunk | PrecomputedChunk>,
-  preamble: Array<Chunk | PrecomputedChunk>,
+  target: ArrayWithPreamble<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
@@ -1663,23 +1639,9 @@ export function pushStartInstance(
     }
     // Preamble start tags
     case 'head':
-      return pushStartHead(
-        target,
-        preamble,
-        props,
-        type,
-        responseState,
-        formatContext,
-      );
+      return pushStartHead(target, props, type, responseState, formatContext);
     case 'html': {
-      return pushStartHtml(
-        target,
-        preamble,
-        props,
-        type,
-        responseState,
-        formatContext,
-      );
+      return pushStartHtml(target, props, type, responseState, formatContext);
     }
     default: {
       if (type.indexOf('-') === -1 && typeof props.is !== 'string') {
@@ -1722,17 +1684,24 @@ export function pushEndInstance(
     case 'track':
     case 'wbr': {
       // No close tag needed.
-      break;
+      return;
     }
     // Postamble end tags
-    case 'body':
-    case 'html':
-      target = enableFloat ? postamble : target;
-    // Intentional fallthrough
-    default: {
-      target.push(endTag1, stringToChunk(type), endTag2);
+    case 'body': {
+      if (enableFloat) {
+        postamble.unshift(endTag1, stringToChunk(type), endTag2);
+        return;
+      }
+      break;
     }
+    case 'html':
+      if (enableFloat) {
+        postamble.push(endTag1, stringToChunk(type), endTag2);
+        return;
+      }
+      break;
   }
+  target.push(endTag1, stringToChunk(type), endTag2);
 }
 
 export function writeCompletedRoot(

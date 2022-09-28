@@ -4320,70 +4320,129 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate enableFloat
-  it('emits html and head start tags (the preamble) before other content if rendered in the shell', async () => {
+  it('can emit the preamble even if the head renders asynchronously', async () => {
+    function AsyncNoOutput() {
+      readText('nooutput');
+      return null;
+    }
+    function AsyncHead() {
+      readText('head');
+      return (
+        <head data-foo="foo">
+          <title>a title</title>
+        </head>
+      );
+    }
+    function AsyncBody() {
+      readText('body');
+      return (
+        <body data-bar="bar">
+          <link rel="preload" as="style" href="foo" />
+          hello
+        </body>
+      );
+    }
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-        <>
-          <title data-baz="baz">a title</title>
-          <html data-foo="foo">
-            <head data-bar="bar" />
-            <body>a body</body>
-          </html>
-        </>,
+        <html data-html="html">
+          <AsyncNoOutput />
+          <AsyncHead />
+          <AsyncBody />
+        </html>,
       );
       pipe(writable);
     });
+    await actIntoEmptyDocument(() => {
+      resolveText('body');
+    });
+    await actIntoEmptyDocument(() => {
+      resolveText('nooutput');
+    });
+    // We need to use actIntoEmptyDocument because act assumes that buffered
+    // content should be fake streamed into the body which is normally true
+    // but in this test the entire shell was delayed and we need the initial
+    // construction to be done to get the parsing right
+    await actIntoEmptyDocument(() => {
+      resolveText('head');
+    });
     expect(getVisibleChildren(document)).toEqual(
-      <html data-foo="foo">
-        <head data-bar="bar">
-          <title data-baz="baz">a title</title>
+      <html data-html="html">
+        <head data-foo="foo">
+          <link rel="preload" as="style" href="foo" />
+          <title>a title</title>
         </head>
-        <body>a body</body>
+        <body data-bar="bar">hello</body>
       </html>,
     );
+  });
 
-    // Hydrate the same thing on the client. We expect this to still fail because <title> is not a Resource
-    // and is unmatched on hydration
-    const errors = [];
-    ReactDOMClient.hydrateRoot(
-      document,
-      <>
-        <title data-baz="baz">a title</title>
-        <html data-foo="foo">
-          <head data-bar="bar" />
-          <body>a body</body>
-        </html>
-      </>,
-      {
-        onRecoverableError: (err, errInfo) => {
-          errors.push(err.message);
-        },
-      },
+  // @gate enableFloat
+  it('does not emit as preamble after the first non-preamble chunk', async () => {
+    function AsyncNoOutput() {
+      readText('nooutput');
+      return null;
+    }
+    function AsyncHead() {
+      readText('head');
+      return (
+        <head data-foo="foo">
+          <title>a title</title>
+        </head>
+      );
+    }
+    function AsyncBody() {
+      readText('body');
+      return (
+        <body data-bar="bar">
+          <link rel="preload" as="style" href="foo" />
+          hello
+        </body>
+      );
+    }
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html data-html="html">
+          <AsyncNoOutput />
+          <AsyncBody />
+          <AsyncHead />
+        </html>,
+      );
+      pipe(writable);
+    });
+    await actIntoEmptyDocument(() => {
+      resolveText('body');
+    });
+    await actIntoEmptyDocument(() => {
+      resolveText('nooutput');
+    });
+    // We need to use actIntoEmptyDocument because act assumes that buffered
+    // content should be fake streamed into the body which is normally true
+    // but in this test the entire shell was delayed and we need the initial
+    // construction to be done to get the parsing right
+    await actIntoEmptyDocument(() => {
+      resolveText('head');
+    });
+    // This assertion is a little strange. The html open tag is part of the preamble
+    // but since the next chunk will be the body open tag which is not preamble it
+    // emits resources. The browser understands that the link is part of the head and
+    // constructs the head implicitly which is why it does not have the data-foo attribute.
+    // When the head finally streams in it is inside the body rather than after it because the
+    // body closing tag is part of the postamble which stays open until the entire request
+    // has flushed. This is how the browser would interpret a late head arriving after the
+    // the body closing tag so while strange it is the expected behavior. One other oddity
+    // is that <head> in body is elided by html parsers so we end up with just an inlined
+    // style tag.
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-html="html">
+        <head>
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body data-bar="bar">
+          hello
+          <title>a title</title>
+        </body>
+      </html>,
     );
-    expect(() => {
-      try {
-        expect(() => {
-          expect(Scheduler).toFlushWithoutYielding();
-        }).toThrow('Invalid insertion of HTML node in #document node.');
-      } catch (e) {
-        console.log('e', e);
-      }
-    }).toErrorDev(
-      [
-        'Warning: Expected server HTML to contain a matching <title> in <#document>.',
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-        'Warning: validateDOMNesting(...): <title> cannot appear as a child of <#document>',
-      ],
-      {withoutStack: 1},
-    );
-    expect(errors).toEqual([
-      'Hydration failed because the initial UI does not match what was rendered on the server.',
-      'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-    ]);
-    expect(getVisibleChildren(document)).toEqual();
-    expect(() => {
-      expect(Scheduler).toFlushWithoutYielding();
-    }).toThrow('The node to be removed is not a child of this node.');
   });
 
   // @gate enableFloat
