@@ -564,7 +564,7 @@ describe('ReactDOMInput', () => {
       expect(test).toThrowError(new TypeError('prod message')),
     ).toErrorDev(
       'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
-        'strings, not TemporalLike. This value must be coerced to a string before before using it here.',
+        'strings, not TemporalLike. This value must be coerced to a string before using it here.',
     );
   });
 
@@ -588,7 +588,7 @@ describe('ReactDOMInput', () => {
       expect(test).toThrowError(new TypeError('prod message')),
     ).toErrorDev(
       'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
-        'strings, not TemporalLike. This value must be coerced to a string before before using it here.',
+        'strings, not TemporalLike. This value must be coerced to a string before using it here.',
     );
   });
 
@@ -612,7 +612,7 @@ describe('ReactDOMInput', () => {
       expect(test).toThrowError(new TypeError('prod message')),
     ).toErrorDev(
       'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
-        'strings, not TemporalLike. This value must be coerced to a string before before using it here.',
+        'strings, not TemporalLike. This value must be coerced to a string before using it here.',
     );
   });
 
@@ -636,7 +636,7 @@ describe('ReactDOMInput', () => {
       expect(test).toThrowError(new TypeError('prod message')),
     ).toErrorDev(
       'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
-        'strings, not TemporalLike. This value must be coerced to a string before before using it here.',
+        'strings, not TemporalLike. This value must be coerced to a string before using it here.',
     );
   });
 
