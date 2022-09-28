@@ -19,6 +19,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
+      'react-dom-bindings',
       'react-dom/client',
       'react-dom/server',
       'react-dom/server.node',
@@ -53,6 +54,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
+      'react-dom-bindings',
       'react-dom/client',
       'react-dom/server.browser',
       'react-dom/static.browser',
@@ -80,6 +82,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
+      'react-dom-bindings',
       'react-server-dom-webpack',
       'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Brower and *Node files
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
@@ -127,7 +130,7 @@ module.exports = [
       'react-server-dom-relay/server',
       'react-server-dom-relay/src/ReactDOMServerFB.js',
     ],
-    paths: ['react-dom', 'react-server-dom-relay'],
+    paths: ['react-dom', 'react-dom-bindings', 'react-server-dom-relay'],
     isFlowTyped: true,
     isServerSupported: true,
   },

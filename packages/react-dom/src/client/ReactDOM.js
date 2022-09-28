@@ -8,7 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Container} from './ReactDOMHostConfig';
+import type {Container} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
 import type {
   RootType,
   HydrateRootOptions,
@@ -27,7 +27,7 @@ import {
   hydrateRoot as hydrateRootImpl,
   isValidContainer,
 } from './ReactDOMRoot';
-import {createEventHandle} from './ReactDOMEventHandle';
+import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHandle';
 
 import {
   batchedUpdates,
@@ -50,8 +50,8 @@ import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
 import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 
-import {getClosestInstanceFromNode} from './ReactDOMComponentTree';
-import {restoreControlledState} from './ReactDOMComponent';
+import {getClosestInstanceFromNode} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
+import {restoreControlledState} from 'react-dom-bindings/src/client/ReactDOMComponent';
 import {
   setAttemptSynchronousHydration,
   setAttemptDiscreteHydration,
@@ -59,9 +59,9 @@ import {
   setAttemptHydrationAtCurrentPriority,
   setGetCurrentUpdatePriority,
   setAttemptHydrationAtPriority,
-} from '../events/ReactDOMEventReplaying';
-import {setBatchingImplementation} from '../events/ReactDOMUpdateBatching';
-import {setRestoreImplementation} from '../events/ReactDOMControlledComponent';
+} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
+import {setBatchingImplementation} from 'react-dom-bindings/src/events/ReactDOMUpdateBatching';
+import {setRestoreImplementation} from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
 import Internals from '../ReactDOMSharedInternals';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {isEnabled} from './src/events/ReactDOMEventListener';
+import {isEnabled} from 'react-dom-bindings/src/events/ReactDOMEventListener';
 
 import Internals from './src/ReactDOMSharedInternals';
 

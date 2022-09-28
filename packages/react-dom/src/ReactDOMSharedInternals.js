@@ -11,12 +11,12 @@ import {batchedUpdates} from 'react-reconciler/src/ReactFiberReconciler';
 import {
   enqueueStateRestore,
   restoreStateIfNeeded,
-} from './events/ReactDOMControlledComponent';
+} from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
 import {
   getInstanceFromNode,
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
-} from './client/ReactDOMComponentTree';
+} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 
 const Internals = {
   usingClientEntryPoint: false,
