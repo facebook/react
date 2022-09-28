@@ -59,7 +59,7 @@ import {readContext, checkIfContextChanged} from './ReactFiberNewContext.old';
 import {
   requestEventTime,
   requestUpdateLane,
-  requestUpdateLane_isUnknownEventPriority,
+  requestUpdateLane_getUpdateType,
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.old';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
@@ -194,7 +194,7 @@ const classComponentUpdater = {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
-    const isUnknownEventPriority = requestUpdateLane_isUnknownEventPriority();
+    const updateType = requestUpdateLane_getUpdateType();
     const update = createUpdate(eventTime, lane);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
@@ -211,7 +211,7 @@ const classComponentUpdater = {
         fiber,
         lane,
         eventTime,
-        isUnknownEventPriority,
+        updateType,
       );
       entangleTransitions(root, fiber, lane);
     }
@@ -233,7 +233,7 @@ const classComponentUpdater = {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
-    const isUnknownEventPriority = requestUpdateLane_isUnknownEventPriority();
+    const updateType = requestUpdateLane_getUpdateType();
 
     const update = createUpdate(eventTime, lane);
     update.tag = ReplaceState;
@@ -253,7 +253,7 @@ const classComponentUpdater = {
         fiber,
         lane,
         eventTime,
-        isUnknownEventPriority,
+        updateType,
       );
       entangleTransitions(root, fiber, lane);
     }
@@ -275,7 +275,7 @@ const classComponentUpdater = {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
-    const isUnknownEventPriority = requestUpdateLane_isUnknownEventPriority();
+    const updateType = requestUpdateLane_getUpdateType();
 
     const update = createUpdate(eventTime, lane);
     update.tag = ForceUpdate;
@@ -294,7 +294,7 @@ const classComponentUpdater = {
         fiber,
         lane,
         eventTime,
-        isUnknownEventPriority,
+        updateType,
       );
       entangleTransitions(root, fiber, lane);
     }

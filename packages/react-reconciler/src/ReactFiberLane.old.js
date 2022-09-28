@@ -10,6 +10,7 @@
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Transition} from './ReactFiberTracingMarkerComponent.old';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.old';
+import type {UpdateType} from './ReactUpdateTypes.old';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -28,6 +29,7 @@ import {
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
 import {clz32} from './clz32';
+import {AsynchronousUpdate} from './ReactUpdateTypes.old';
 
 // Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-timeline.
 // If those values are changed that package should be rebuilt and redeployed.
@@ -485,7 +487,8 @@ export function includesBlockingLane(root: FiberRoot, lanes: Lanes): boolean {
     if (
       enableFrameEndScheduling &&
       (lanes & DefaultLane) !== NoLanes &&
-      root.hasUnknownUpdates
+      root.updateType &&
+      root.updateType !== 0
     ) {
       // Unknown updates should flush synchronously, even in concurrent by default.
       return true;
@@ -598,12 +601,12 @@ export function markRootUpdated(
   root: FiberRoot,
   updateLane: Lane,
   eventTime: number,
-  isUnknownEvent: boolean,
+  updateType: UpdateType,
 ) {
   root.pendingLanes |= updateLane;
 
-  if (isUnknownEvent) {
-    root.hasUnknownUpdates = true;
+  if (updateType !== AsynchronousUpdate) {
+    root.updateType = updateType;
   }
   // If there are any suspended transitions, it's possible this new update
   // could unblock them. Clear the suspended lanes so that we can try rendering
@@ -632,7 +635,7 @@ export function markRootUpdated(
 export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
-  root.hasUnknownUpdates = false;
+  root.updateType = AsynchronousUpdate;
 
   // The suspended lanes are no longer CPU-bound. Clear their expiration times.
   const expirationTimes = root.expirationTimes;
@@ -665,7 +668,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.pendingLanes = remainingLanes;
 
   if ((root.pendingLanes & DefaultLane) === NoLane) {
-    root.hasUnknownUpdates = false;
+    root.updateType = AsynchronousUpdate;
   }
 
   // Let's try everything again

@@ -57,7 +57,7 @@ import {
 import {
   requestEventTime,
   requestUpdateLane,
-  requestUpdateLane_isUnknownEventPriority,
+  requestUpdateLane_getUpdateType,
   scheduleUpdateOnFiber,
   scheduleInitialHydrationOnRoot,
   flushRoot,
@@ -89,6 +89,7 @@ import {
   getHighestPriorityPendingLanes,
   higherPriorityLane,
 } from './ReactFiberLane.old';
+import {AsynchronousUpdate} from './ReactUpdateTypes.old';
 import {
   getCurrentUpdatePriority,
   runWithPriority,
@@ -310,7 +311,7 @@ export function createHydrationContainer(
   const current = root.current;
   const eventTime = requestEventTime();
   const lane = requestUpdateLane(current);
-  // TODO what to do about isUnknownEventPriority here
+  // TODO what to do about updateType here
   const update = createUpdate(eventTime, lane);
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
@@ -332,7 +333,7 @@ export function updateContainer(
   const current = container.current;
   const eventTime = requestEventTime();
   const lane = requestUpdateLane(current);
-  const isUnknownEventPriority = requestUpdateLane_isUnknownEventPriority();
+  const updateType = requestUpdateLane_getUpdateType();
   if (enableSchedulingProfiler) {
     markRenderScheduled(lane);
   }
@@ -382,13 +383,7 @@ export function updateContainer(
 
   const root = enqueueUpdate(current, update, lane);
   if (root !== null) {
-    scheduleUpdateOnFiber(
-      root,
-      current,
-      lane,
-      eventTime,
-      isUnknownEventPriority,
-    );
+    scheduleUpdateOnFiber(root, current, lane, eventTime, updateType);
     entangleTransitions(root, current, lane);
   }
 
@@ -436,7 +431,13 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
         const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
         if (root !== null) {
           const eventTime = requestEventTime();
-          scheduleUpdateOnFiber(root, fiber, SyncLane, eventTime, false);
+          scheduleUpdateOnFiber(
+            root,
+            fiber,
+            SyncLane,
+            eventTime,
+            AsynchronousUpdate,
+          );
         }
       });
       // If we're still blocked after this, we need to increase
@@ -480,7 +481,7 @@ export function attemptDiscreteHydration(fiber: Fiber): void {
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     const eventTime = requestEventTime();
-    scheduleUpdateOnFiber(root, fiber, lane, eventTime, false);
+    scheduleUpdateOnFiber(root, fiber, lane, eventTime, AsynchronousUpdate);
   }
   markRetryLaneIfNotHydrated(fiber, lane);
 }
@@ -497,7 +498,7 @@ export function attemptContinuousHydration(fiber: Fiber): void {
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     const eventTime = requestEventTime();
-    scheduleUpdateOnFiber(root, fiber, lane, eventTime, false);
+    scheduleUpdateOnFiber(root, fiber, lane, eventTime, AsynchronousUpdate);
   }
   markRetryLaneIfNotHydrated(fiber, lane);
 }
@@ -512,7 +513,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     const eventTime = requestEventTime();
-    scheduleUpdateOnFiber(root, fiber, lane, eventTime, false);
+    scheduleUpdateOnFiber(root, fiber, lane, eventTime, AsynchronousUpdate);
   }
   markRetryLaneIfNotHydrated(fiber, lane);
 }
@@ -691,7 +692,13 @@ if (__DEV__) {
 
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
+        scheduleUpdateOnFiber(
+          root,
+          fiber,
+          SyncLane,
+          NoTimestamp,
+          AsynchronousUpdate,
+        );
       }
     }
   };
@@ -715,7 +722,13 @@ if (__DEV__) {
 
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
+        scheduleUpdateOnFiber(
+          root,
+          fiber,
+          SyncLane,
+          NoTimestamp,
+          AsynchronousUpdate,
+        );
       }
     }
   };
@@ -740,7 +753,13 @@ if (__DEV__) {
 
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
+        scheduleUpdateOnFiber(
+          root,
+          fiber,
+          SyncLane,
+          NoTimestamp,
+          AsynchronousUpdate,
+        );
       }
     }
   };
@@ -753,7 +772,13 @@ if (__DEV__) {
     }
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
+      scheduleUpdateOnFiber(
+        root,
+        fiber,
+        SyncLane,
+        NoTimestamp,
+        AsynchronousUpdate,
+      );
     }
   };
   overridePropsDeletePath = (fiber: Fiber, path: Array<string | number>) => {
@@ -763,7 +788,13 @@ if (__DEV__) {
     }
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
+      scheduleUpdateOnFiber(
+        root,
+        fiber,
+        SyncLane,
+        NoTimestamp,
+        AsynchronousUpdate,
+      );
     }
   };
   overridePropsRenamePath = (
@@ -777,14 +808,26 @@ if (__DEV__) {
     }
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
+      scheduleUpdateOnFiber(
+        root,
+        fiber,
+        SyncLane,
+        NoTimestamp,
+        AsynchronousUpdate,
+      );
     }
   };
 
   scheduleUpdate = (fiber: Fiber) => {
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, false);
+      scheduleUpdateOnFiber(
+        root,
+        fiber,
+        SyncLane,
+        NoTimestamp,
+        AsynchronousUpdate,
+      );
     }
   };
 

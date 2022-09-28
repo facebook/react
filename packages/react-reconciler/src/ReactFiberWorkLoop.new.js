@@ -15,6 +15,7 @@ import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {EventPriority} from './ReactEventPriorities.new';
+import type {UpdateType} from './ReactUpdateTypes.new';
 import type {
   PendingTransitionCallbacks,
   PendingBoundaries,
@@ -172,6 +173,7 @@ import {
   lowerEventPriority,
   lanesToEventPriority,
 } from './ReactEventPriorities.new';
+import {AsynchronousUpdate, DefaultUpdate} from './ReactUpdateTypes.new';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.new';
 import {completeWork} from './ReactFiberCompleteWork.new';
@@ -593,14 +595,14 @@ export function getCurrentTime() {
   return now();
 }
 
-let isUnknownEventPriority = false;
+let currentUpdateType = AsynchronousUpdate;
 
-export function requestUpdateLane_isUnknownEventPriority(): boolean {
-  return isUnknownEventPriority;
+export function requestUpdateLane_getUpdateType(): UpdateType {
+  return currentUpdateType;
 }
 
 export function requestUpdateLane(fiber: Fiber): Lane {
-  isUnknownEventPriority = false;
+  currentUpdateType = AsynchronousUpdate;
   // Special cases
   const mode = fiber.mode;
   if ((mode & ConcurrentMode) === NoMode) {
@@ -665,7 +667,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // TODO: Move this type conversion to the event priority module.
   let eventLane: Lane = (getCurrentEventPriority(): any);
   if (eventLane === NoLane) {
-    isUnknownEventPriority = true;
+    currentUpdateType = DefaultUpdate;
     eventLane = DefaultLane;
   }
   return eventLane;
@@ -690,7 +692,7 @@ export function scheduleUpdateOnFiber(
   fiber: Fiber,
   lane: Lane,
   eventTime: number,
-  isUnknownEvent: boolean,
+  synchronousUpdateType: UpdateType,
 ) {
   if (__DEV__) {
     if (isRunningInsertionEffect) {
@@ -704,7 +706,7 @@ export function scheduleUpdateOnFiber(
     }
   }
   // Mark that the root has a pending update.
-  markRootUpdated(root, lane, eventTime, isUnknownEvent);
+  markRootUpdated(root, lane, eventTime, synchronousUpdateType);
 
   if (
     (executionContext & RenderContext) !== NoLanes &&
@@ -825,7 +827,7 @@ export function scheduleInitialHydrationOnRoot(
   // match what was rendered on the server.
   const current = root.current;
   current.lanes = lane;
-  markRootUpdated(root, lane, eventTime, false);
+  markRootUpdated(root, lane, eventTime, AsynchronousUpdate);
   ensureRootIsScheduled(root, eventTime);
 }
 
@@ -2984,7 +2986,7 @@ function captureCommitPhaseErrorOnRoot(
   const root = enqueueUpdate(rootFiber, update, (SyncLane: Lane));
   const eventTime = requestEventTime();
   if (root !== null) {
-    markRootUpdated(root, SyncLane, eventTime, false);
+    markRootUpdated(root, SyncLane, eventTime, AsynchronousUpdate);
     ensureRootIsScheduled(root, eventTime);
   }
 }
@@ -3033,7 +3035,7 @@ export function captureCommitPhaseError(
         const root = enqueueUpdate(fiber, update, (SyncLane: Lane));
         const eventTime = requestEventTime();
         if (root !== null) {
-          markRootUpdated(root, SyncLane, eventTime, false);
+          markRootUpdated(root, SyncLane, eventTime, AsynchronousUpdate);
           ensureRootIsScheduled(root, eventTime);
         }
         return;
@@ -3169,7 +3171,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   const eventTime = requestEventTime();
   const root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   if (root !== null) {
-    markRootUpdated(root, retryLane, eventTime, false);
+    markRootUpdated(root, retryLane, eventTime, AsynchronousUpdate);
     ensureRootIsScheduled(root, eventTime);
   }
 }

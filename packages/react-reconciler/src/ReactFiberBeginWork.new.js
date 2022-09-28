@@ -148,6 +148,7 @@ import {
   getBumpedLaneForHydration,
   pickArbitraryLane,
 } from './ReactFiberLane.new';
+import {AsynchronousUpdate} from './ReactUpdateTypes.new';
 import {
   ConcurrentMode,
   NoMode,
@@ -2798,7 +2799,7 @@ function updateDehydratedSuspenseComponent(
             current,
             attemptHydrationAtLane,
             eventTime,
-            false,
+            AsynchronousUpdate,
           );
         } else {
           // We have already tried to ping at a higher priority than we're rendering with

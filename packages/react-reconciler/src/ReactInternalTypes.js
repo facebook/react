@@ -27,6 +27,7 @@ import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
+import type {UpdateType} from './ReactUpdateTypes.old.js';
 // Doing this because there's a merge conflict because of the way sync-reconciler-fork
 // is implemented
 import type {
@@ -236,7 +237,7 @@ type BaseFiberRootProperties = {
   // task that the root will work on.
   callbackNode: *,
   callbackPriority: Lane,
-  hasUnknownUpdates?: boolean,
+  updateType?: UpdateType,
   eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
   hiddenUpdates: LaneMap<Array<ConcurrentUpdate> | null>,
