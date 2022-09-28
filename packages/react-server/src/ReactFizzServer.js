@@ -71,7 +71,7 @@ import {
   hoistResourcesToRoot,
   prepareToRender,
   cleanupAfterRender,
-  setCurrentlyRenderingBoundaryResources,
+  setCurrentlyRenderingBoundaryResourcesTarget,
   createResources,
   createBoundaryResources,
   emptyChunk,
@@ -586,7 +586,7 @@ function renderSuspenseBoundary(
   task.blockedBoundary = newBoundary;
   task.blockedSegment = contentRootSegment;
   if (enableFloat) {
-    setCurrentlyRenderingBoundaryResources(
+    setCurrentlyRenderingBoundaryResourcesTarget(
       request.resources,
       newBoundary.resources,
     );
@@ -627,7 +627,7 @@ function renderSuspenseBoundary(
     // We do need to fallthrough to create the fallback though.
   } finally {
     if (enableFloat) {
-      setCurrentlyRenderingBoundaryResources(
+      setCurrentlyRenderingBoundaryResourcesTarget(
         request.resources,
         parentBoundary ? parentBoundary.resources : null,
       );
@@ -1836,7 +1836,7 @@ function retryTask(request: Request, task: Task): void {
   prepareToRender(request.resources);
   if (enableFloat) {
     const blockedBoundary = task.blockedBoundary;
-    setCurrentlyRenderingBoundaryResources(
+    setCurrentlyRenderingBoundaryResourcesTarget(
       request.resources,
       blockedBoundary ? blockedBoundary.resources : null,
     );
@@ -1893,7 +1893,7 @@ function retryTask(request: Request, task: Task): void {
     }
   } finally {
     if (enableFloat) {
-      setCurrentlyRenderingBoundaryResources(request.resources, null);
+      setCurrentlyRenderingBoundaryResourcesTarget(request.resources, null);
     }
     if (__DEV__) {
       currentTaskInDEV = prevTaskInDEV;
@@ -2196,7 +2196,7 @@ function flushCompletedBoundary(
   boundary: SuspenseBoundary,
 ): boolean {
   if (enableFloat) {
-    setCurrentlyRenderingBoundaryResources(
+    setCurrentlyRenderingBoundaryResourcesTarget(
       request.resources,
       boundary.resources,
     );
@@ -2224,7 +2224,7 @@ function flushPartialBoundary(
   boundary: SuspenseBoundary,
 ): boolean {
   if (enableFloat) {
-    setCurrentlyRenderingBoundaryResources(
+    setCurrentlyRenderingBoundaryResourcesTarget(
       request.resources,
       boundary.resources,
     );

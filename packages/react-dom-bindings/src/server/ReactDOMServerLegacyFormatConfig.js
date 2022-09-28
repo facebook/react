@@ -107,7 +107,7 @@ export {
   writeImmediateResources,
   hoistResources,
   hoistResourcesToRoot,
-  setCurrentlyRenderingBoundaryResources,
+  setCurrentlyRenderingBoundaryResourcesTarget,
   prepareToRender,
   cleanupAfterRender,
   emptyChunk,

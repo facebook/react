@@ -98,7 +98,7 @@ export function mergeBoundaryResources(
   source.forEach(resource => target.add(resource));
 }
 
-let currentResources: ?Resources = null;
+let currentResources: null | Resources = null;
 
 let previousDispatcher = null;
 export function prepareToRender(resources: Resources) {
@@ -108,9 +108,9 @@ export function prepareToRender(resources: Resources) {
   ReactDOMSharedInternals.Dispatcher.current = Dispatcher;
 }
 
-export function setCurrentlyRenderingBoundaryResources(
+export function setCurrentlyRenderingBoundaryResourcesTarget(
   resources: Resources,
-  boundaryResources: ?BoundaryResources,
+  boundaryResources: null | BoundaryResources,
 ) {
   resources.boundaryResources = boundaryResources;
 }

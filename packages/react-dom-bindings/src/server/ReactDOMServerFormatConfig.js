@@ -69,7 +69,7 @@ import {
 export {
   createResources,
   createBoundaryResources,
-  setCurrentlyRenderingBoundaryResources,
+  setCurrentlyRenderingBoundaryResourcesTarget,
   hoistResources,
   hoistResourcesToRoot,
 } from './ReactDOMFloatServer';

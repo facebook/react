@@ -346,7 +346,7 @@ export function prepareToRender(resources: Resources) {}
 export function cleanupAfterRender() {}
 export function createResources() {}
 export function createBoundaryResources() {}
-export function setCurrentlyRenderingBoundaryResources(
+export function setCurrentlyRenderingBoundaryResourcesTarget(
   resources: Resources,
   boundaryResources: ?BoundaryResources,
 ) {}

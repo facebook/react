@@ -81,5 +81,5 @@ export const prepareToRender = $$$hostConfig.prepareToRender;
 export const cleanupAfterRender = $$$hostConfig.cleanupAfterRender;
 export const createResources = $$$hostConfig.createResources;
 export const createBoundaryResources = $$$hostConfig.createBoundaryResources;
-export const setCurrentlyRenderingBoundaryResources =
-  $$$hostConfig.setCurrentlyRenderingBoundaryResources;
+export const setCurrentlyRenderingBoundaryResourcesTarget =
+  $$$hostConfig.setCurrentlyRenderingBoundaryResourcesTarget;
