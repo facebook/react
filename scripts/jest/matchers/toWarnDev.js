@@ -266,9 +266,19 @@ const createMatcherFor = (consoleMethod, matcherName) =>
           result !== null &&
           typeof result.then === 'function'
         ) {
-          returnPromise = result.then(onFinally, error => {
-            caughtError = error;
-            onFinally();
+          // `act` returns a thenable that can't be chained.
+          // Once `act(async () => {}).then(() => {}).then(() => {})` works
+          // we can just return `result.then(onFinally, error => ...)`
+          returnPromise = new Promise((resolve, reject) => {
+            result.then(
+              () => {
+                resolve(onFinally());
+              },
+              error => {
+                caughtError = error;
+                return resolve(onFinally());
+              }
+            );
           });
         }
       } catch (error) {
