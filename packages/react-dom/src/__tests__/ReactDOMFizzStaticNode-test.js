@@ -20,6 +20,20 @@ describe('ReactDOMFizzStaticNode', () => {
     React = require('react');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzStatic = require('react-dom/static');
+      const AbortControllerPonyfill = require('abortcontroller-polyfill/dist/cjs-ponyfill')
+        .AbortController;
+      global.AbortController = class PatchedAbortController extends AbortControllerPonyfill {
+        abort(reason) {
+          // TODO: upstream this is a hack to work around lack of support for abortSignal.reason in the ponyfill
+          if (reason === undefined) {
+            this.signal.reason = new Error('This operation was aborted');
+            this.signal.reason.name = 'AbortError';
+          } else {
+            this.signal.reason = reason;
+          }
+          super.abort(reason);
+        }
+      };
     }
     Suspense = React.Suspense;
   });
