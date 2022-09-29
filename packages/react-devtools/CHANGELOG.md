@@ -240,7 +240,7 @@ October 8, 2021
 October 1, 2021
 
 #### Bugfix
-* Fixed potential cache miss when insepcting elements ([bvaughn](https://github.com/bvaughn) in [#22472](https://github.com/facebook/react/pull/22472))
+* Fixed potential cache miss when inspecting elements ([bvaughn](https://github.com/bvaughn) in [#22472](https://github.com/facebook/react/pull/22472))
 
 ---
 
@@ -251,7 +251,7 @@ September 29, 2021
 * Scheduling Profiler: Show Suspense resource .displayName ([bvaughn](https://github.com/bvaughn) in [#22451](https://github.com/facebook/react/pull/22451))
 * Scheduling Profiler marks should include thrown Errors ([bvaughn](https://github.com/bvaughn) in [#22419](https://github.com/facebook/react/pull/22419))
 * Don't patch console during first render in strict mode ([lunaruan](https://github.com/lunaruan) in [#22308](https://github.com/facebook/react/pull/22308))
-* Show which hook indicies changed when profiling for all builds ([bvaughn](https://github.com/bvaughn) in [#22365](https://github.com/facebook/react/pull/22365))
+* Show which hook indices changed when profiling for all builds ([bvaughn](https://github.com/bvaughn) in [#22365](https://github.com/facebook/react/pull/22365))
 * Display actual ReactDOM API name in root type ([eps1lon](https://github.com/eps1lon) in [#22363](https://github.com/facebook/react/pull/22363))
 * Add named hooks support to standalone and inline DevTools ([jstejada](https://github.com/jstejada) in [#22320](https://github.com/facebook/react/pull/22320) and [bvaughn](https://github.com/bvaughn) in [#22263](https://github.com/facebook/react/pull/22263))
 #### Bugfix
