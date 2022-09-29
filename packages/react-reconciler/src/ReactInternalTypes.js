@@ -34,6 +34,7 @@ import type {
   Transition,
 } from './ReactFiberTracingMarkerComponent.new';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
+import type {Container} from './ReactFiberHostConfig';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -210,7 +211,7 @@ type BaseFiberRootProperties = {
   tag: RootTag,
 
   // Any additional information from the host associated with this root.
-  containerInfo: any,
+  containerInfo: Container,
   // Used only by persistent updates.
   pendingChildren: any,
   // The currently active root fiber. This is the mutable root of the tree.

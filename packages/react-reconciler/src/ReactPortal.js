@@ -11,10 +11,11 @@ import {REACT_PORTAL_TYPE} from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
 import type {ReactNodeList, ReactPortal} from 'shared/ReactTypes';
+import type {Container} from './ReactFiberHostConfig';
 
 export function createPortal(
   children: ReactNodeList,
-  containerInfo: any,
+  containerInfo: Container,
   // TODO: figure out the API for cross-renderer implementation.
   implementation: any,
   key: ?string = null,
