@@ -181,19 +181,19 @@ type StoreConsistencyCheck<T> = {
   getSnapshot: () => T,
 };
 
-type EventFunctionState<T> = {
+type EventFunctionPayload<T> = {
   event: EventFunctionWrapper<T>,
-  nextEvent: EventFunction<T>,
+  nextImpl: EventFunction<T>,
 };
 type EventFunctionWrapper<T> = {
   (): T,
-  _current: EventFunction<T>,
+  _impl: EventFunction<T>,
 };
 type EventFunction<T> = () => T;
 
 export type FunctionComponentUpdateQueue = {
   lastEffect: Effect | null,
-  events: Array<EventFunctionState<any>> | null,
+  events: Array<EventFunctionPayload<any>> | null,
   stores: Array<StoreConsistencyCheck<any>> | null,
   // NOTE: optional, only set when enableUseMemoCacheHook is enabled
   memoCache?: MemoCache | null,
@@ -1883,20 +1883,20 @@ function updateEffect(
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
-function useEventImpl<T>(event: EventFunction<T>, nextEvent: () => T) {
-  const eventState = {event, nextEvent};
+function useEventImpl<T>(event: EventFunction<T>, nextImpl: () => T) {
+  const eventPayload = {event, nextImpl};
   currentlyRenderingFiber.flags |= UpdateEffect;
   let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
     currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
-    componentUpdateQueue.events = [eventState];
+    componentUpdateQueue.events = [eventPayload];
   } else {
     const events = componentUpdateQueue.events;
     if (events === null) {
-      componentUpdateQueue.events = [eventState];
+      componentUpdateQueue.events = [eventPayload];
     } else {
-      events.push(eventState);
+      events.push(eventPayload);
     }
   }
 }
@@ -1910,9 +1910,9 @@ function mountEvent<T>(callback: () => T): () => T {
         "A function wrapped in useEvent can't be called during rendering.",
       );
     }
-    return event._current.apply(undefined, arguments);
+    return event._impl.apply(undefined, arguments);
   }
-  event._current = callback;
+  event._impl = callback;
 
   useEventImpl(event, callback);
   hook.memoizedState = event;

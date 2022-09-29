@@ -665,11 +665,11 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
 
 function commitUseEventMount(finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
-  const eventStates = updateQueue !== null ? updateQueue.events : null;
-  if (eventStates !== null) {
-    for (let ii = 0; ii < eventStates.length; ii++) {
-      const eventState = eventStates[ii];
-      eventState.event._current = eventState.nextEvent;
+  const eventPayloads = updateQueue !== null ? updateQueue.events : null;
+  if (eventPayloads !== null) {
+    for (let ii = 0; ii < eventPayloads.length; ii++) {
+      const eventPayload = eventPayloads[ii];
+      eventPayload.event._impl = eventPayload.nextImpl;
     }
   }
 }
