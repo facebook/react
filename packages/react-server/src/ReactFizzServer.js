@@ -213,7 +213,6 @@ export opaque type Request = {
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
   resources: Resources,
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
-  rootDidFlush: boolean,
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
   // Queues to flush in order of priority
@@ -291,7 +290,6 @@ export function createRequest(
     pendingRootTasks: 0,
     resources,
     completedRootSegment: null,
-    rootDidFlush: false,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
     clientRenderedBoundaries: [],
@@ -658,7 +656,7 @@ function hoistCompletedBoundaryResources(
   request: Request,
   completedBoundary: SuspenseBoundary,
 ): void {
-  if (!request.rootDidFlush) {
+  if (request.completedRootSegment !== null || request.pendingRootTasks > 0) {
     // The Shell has not flushed yet. we can hoist Resources for this boundary
     // all the way to the Root.
     hoistResourcesToRoot(request.resources, completedBoundary.resources);
@@ -2261,13 +2259,12 @@ function flushCompletedQueues(
 
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
-        request.rootDidFlush = true;
         writeCompletedRoot(destination, request.responseState);
       } else {
         // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
       }
-    } else if (enableFloat && request.rootDidFlush) {
+    } else if (enableFloat) {
       flushImmediateResources(destination, request);
     }
 
