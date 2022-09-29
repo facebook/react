@@ -637,7 +637,12 @@ export function _getMountedRootCount(): number {
 //   'useState{[foo, setFoo]}(0)',
 //   () => [useCustomHook], /* Lazy to avoid triggering inline requires */
 // );
-export function createSignatureFunctionForTransform() {
+export function createSignatureFunctionForTransform(): <T>(
+  type: T,
+  key: string,
+  forceReset?: boolean,
+  getCustomHooks?: () => Array<Function>,
+) => T | void {
   if (__DEV__) {
     let savedType;
     let hasCustomHooks;
