@@ -950,10 +950,10 @@ function ChildReconciler(shouldTrackSideEffects) {
         if (isOneShotIterator) {
           if (!didWarnAboutOneShotIterators) {
             console.error(
-              'Using a TOOD-understandable-term as children is unsupported and will likely yield ' +
-                'unexpected results because enumerating a TOOD-understandable-term mutates it. ' +
+              'Using an iterator such as `[].values()` as children is unsupported and will likely yield ' +
+                'unexpected results because enumerating such an iterator mutates it. ' +
                 'You may convert it to an array with `Array.from()` or the ' +
-                '`[...spread]` operator before rendering. Keep in mind ' +
+                '`[...spread]` operator before rendering. Keep in mind that ' +
                 'you might need to polyfill these features for older browsers.',
             );
           }
