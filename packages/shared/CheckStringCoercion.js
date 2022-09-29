@@ -8,7 +8,7 @@
  */
 
 /*
- * The `'' + value` pattern (used in in perf-sensitive code) throws for Symbol
+ * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
  * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
  *
  * The functions in this module will throw an easier-to-understand,
