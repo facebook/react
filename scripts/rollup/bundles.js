@@ -359,7 +359,7 @@ const bundles = [
     global: 'ReactServerDOMWriter',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'react-dom'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -368,7 +368,7 @@ const bundles = [
     global: 'ReactServerDOMWriter',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util'],
+    externals: ['react', 'util', 'react-dom'],
   },
 
   /******* React Server DOM Webpack Reader *******/
