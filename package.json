@@ -100,7 +100,7 @@
     "yargs": "^15.3.1"
   },
   "devEngines": {
-    "node": "^12.17.0 || 13.x || 14.x || 15.x || 16.x || 17.x"
+    "node": "^12.17.0 || 13.x || 14.x || 15.x || 16.x || 17.x || 18.x"
   },
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
