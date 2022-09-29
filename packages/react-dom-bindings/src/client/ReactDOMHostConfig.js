@@ -461,7 +461,7 @@ export function commitMount(
     case 'html':
     case 'head':
     case 'body': {
-      if (enableFloat) {
+      if (false && enableFloat) {
         restoreAllStylesResources();
       }
     }

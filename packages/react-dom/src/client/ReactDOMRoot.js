@@ -14,6 +14,7 @@ import type {
 } from 'react-reconciler/src/ReactInternalTypes';
 
 import ReactDOMSharedInternals from '../ReactDOMSharedInternals';
+const {Dispatcher} = ReactDOMSharedInternals;
 import {ReactDOMClientDispatcher} from 'react-dom-bindings/src/client/ReactDOMFloatClient';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -237,16 +238,15 @@ export function createRoot(
   );
   markContainerAsRoot(root.current, container);
 
+  if (enableFloat) {
+    // Set the default dispatcher to the client dispatcher
+    Dispatcher.current = ReactDOMClientDispatcher;
+  }
   const rootContainerElement: Document | Element | DocumentFragment =
     container.nodeType === COMMENT_NODE
       ? (container.parentNode: any)
       : container;
   listenToAllSupportedEvents(rootContainerElement);
-
-  if (enableFloat) {
-    // Set the default dispatcher to the client dispatcher
-    ReactDOMSharedInternals.Dispatcher.current = ReactDOMClientDispatcher;
-  }
 
   return new ReactDOMRoot(root);
 }
@@ -326,6 +326,10 @@ export function hydrateRoot(
     transitionCallbacks,
   );
   markContainerAsRoot(root.current, container);
+  if (enableFloat) {
+    // Set the default dispatcher to the client dispatcher
+    Dispatcher.current = ReactDOMClientDispatcher;
+  }
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
   listenToAllSupportedEvents(container);
 
@@ -334,11 +338,6 @@ export function hydrateRoot(
       const mutableSource = mutableSources[i];
       registerMutableSourceForHydration(root, mutableSource);
     }
-  }
-
-  if (enableFloat) {
-    // Set the default dispatcher to the client dispatcher
-    ReactDOMSharedInternals.Dispatcher.current = ReactDOMClientDispatcher;
   }
 
   return new ReactDOMHydrationRoot(root);

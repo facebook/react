@@ -7,29 +7,20 @@
  * @flow
  */
 
-import {batchedUpdates} from 'react-reconciler/src/ReactFiberReconciler';
-import {
-  enqueueStateRestore,
-  restoreStateIfNeeded,
-} from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
-import {
-  getInstanceFromNode,
-  getNodeFromInstance,
-  getFiberCurrentPropsFromNode,
-} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
-import Dispatcher from 'react-dom-bindings/src/shared/ReactDOMDispatcher';
-
-const Internals = {
-  usingClientEntryPoint: false,
-  Events: [
-    getInstanceFromNode,
-    getNodeFromInstance,
-    getFiberCurrentPropsFromNode,
-    enqueueStateRestore,
-    restoreStateIfNeeded,
-    batchedUpdates,
-  ],
-  Dispatcher,
+type InternalsType = {
+  usingClientEntryPoint: boolean,
+  Events: [any, any, any, any, any, any],
+  Dispatcher: {
+    current: mixed,
+  },
 };
+
+const Internals: InternalsType = ({
+  usingClientEntryPoint: false,
+  Events: null,
+  Dispatcher: {
+    current: null,
+  },
+}: any);
 
 export default Internals;

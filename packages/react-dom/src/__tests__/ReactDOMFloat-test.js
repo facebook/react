@@ -818,8 +818,10 @@ describe('ReactDOMFloat', () => {
       );
     });
 
+    // Disabling for now since we are going to live with not having a restore step while we consider
+    // HostSingletons or other solutions
     // @gate enableFloat
-    it('retains styles in head through head remounts', async () => {
+    xit('retains styles in head through head remounts', async () => {
       const root = ReactDOMClient.createRoot(document);
       root.render(
         <html>

@@ -9,6 +9,7 @@
 
 import type {Instance} from './ReactDOMHostConfig';
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
+const {Dispatcher} = ReactDOMSharedInternals;
 import {
   validateUnmatchedLinkResourceProps,
   validatePreloadResourceDifference,
@@ -494,7 +495,7 @@ function createStyleResource(
     loaded: false,
     error: false,
     ownerDocument,
-    instance: existingEl,
+    instance: null,
   };
   styleResources.set(href, resource);
 
@@ -739,6 +740,8 @@ function insertStyleInstance(
     // must exist.
     ((prior.parentNode: any): Node).insertBefore(instance, prior.nextSibling);
   } else {
+    // @TODO call getRootNode on root.container. if it is a Document, insert into head
+    // if it is a ShadowRoot insert it into the root node.
     const parent = ownerDocument.head;
     if (parent) {
       parent.insertBefore(instance, parent.firstChild);
