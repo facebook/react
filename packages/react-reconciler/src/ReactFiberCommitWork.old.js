@@ -2381,7 +2381,7 @@ function commitMutationEffectsOnFiber(
 
   // The effect flag should be checked *after* we refine the type of fiber,
   // because the fiber tag is more specific. An exception is any flag related
-  // to reconcilation, because those can be set on all fiber types.
+  // to reconciliation, because those can be set on all fiber types.
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
