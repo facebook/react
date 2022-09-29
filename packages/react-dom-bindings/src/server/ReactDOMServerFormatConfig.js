@@ -223,7 +223,6 @@ type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type FormatContext = {
   insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
-  preambleOpen: boolean,
 };
 
 function createFormatContext(
@@ -233,7 +232,6 @@ function createFormatContext(
   return {
     insertionMode,
     selectedValue,
-    preambleOpen: true,
   };
 }
 
