@@ -182,14 +182,9 @@ type StoreConsistencyCheck<T> = {
   getSnapshot: () => T,
 };
 
-type EventFunctionPayload<Args, Return, F: (...Array<Args>) => Return> = {
-  event: EventFunctionWrapper<Args, Return, F>,
-  nextImpl: F,
-};
-
 export type FunctionComponentUpdateQueue = {
   lastEffect: Effect | null,
-  events: Array<EventFunctionPayload<any, any, any>> | null,
+  events: Array<() => mixed> | null,
   stores: Array<StoreConsistencyCheck<any>> | null,
   // NOTE: optional, only set when enableUseMemoCacheHook is enabled
   memoCache?: MemoCache | null,
@@ -1883,19 +1878,18 @@ function useEventImpl<Args, Return, F: (...Array<Args>) => Return>(
   event: EventFunctionWrapper<Args, Return, F>,
   nextImpl: F,
 ) {
-  const eventPayload = {event, nextImpl};
   currentlyRenderingFiber.flags |= UpdateEffect;
   let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
     currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
-    componentUpdateQueue.events = [eventPayload];
+    componentUpdateQueue.events = [event, nextImpl];
   } else {
     const events = componentUpdateQueue.events;
     if (events === null) {
-      componentUpdateQueue.events = [eventPayload];
+      componentUpdateQueue.events = [event, nextImpl];
     } else {
-      events.push(eventPayload);
+      events.push(event, nextImpl);
     }
   }
 }

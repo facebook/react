@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {Dispatcher as DispatcherType, EventFunctionWrapper} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  Dispatcher as DispatcherType,
+  EventFunctionWrapper,
+} from 'react-reconciler/src/ReactInternalTypes';
 
 import type {
   MutableSource,
