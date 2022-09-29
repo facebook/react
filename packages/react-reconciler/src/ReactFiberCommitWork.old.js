@@ -671,9 +671,9 @@ function commitUseEventMount(finishedWork: Fiber) {
     // [EventFunctionWrapper, EventFunction, ...], so increment by 2 each iteration to find the next
     // pair.
     for (let ii = 0; ii < eventPayloads.length; ii += 2) {
-      const event: EventFunctionWrapper<any, any, any> = eventPayloads[ii];
+      const eventFn: EventFunctionWrapper<any, any, any> = eventPayloads[ii];
       const nextImpl = eventPayloads[ii + 1];
-      event._impl = nextImpl;
+      eventFn._impl = nextImpl;
     }
   }
 }

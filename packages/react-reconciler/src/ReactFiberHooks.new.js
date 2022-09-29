@@ -1898,29 +1898,28 @@ function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): EventFunctionWrapper<Args, Return, F> {
   const hook = mountWorkInProgressHook();
-
-  const event: EventFunctionWrapper<Args, Return, F> = function event() {
+  const eventFn: EventFunctionWrapper<Args, Return, F> = function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
         "A function wrapped in useEvent can't be called during rendering.",
       );
     }
-    return event._impl.apply(undefined, arguments);
+    return eventFn._impl.apply(undefined, arguments);
   };
-  event._impl = callback;
+  eventFn._impl = callback;
 
-  useEventImpl(event, callback);
-  hook.memoizedState = event;
-  return event;
+  useEventImpl(eventFn, callback);
+  hook.memoizedState = eventFn;
+  return eventFn;
 }
 
 function updateEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): EventFunctionWrapper<Args, Return, F> {
   const hook = updateWorkInProgressHook();
-  const event = hook.memoizedState;
-  useEventImpl(event, callback);
-  return event;
+  const eventFn = hook.memoizedState;
+  useEventImpl(eventFn, callback);
+  return eventFn;
 }
 
 function mountInsertionEffect(
