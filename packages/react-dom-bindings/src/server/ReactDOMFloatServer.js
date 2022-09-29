@@ -69,15 +69,16 @@ export type Resources = {
   boundaryResources: ?BoundaryResources,
 };
 
+// @TODO add bootstrap script to implicit preloads
 export function createResources(): Resources {
   return {
     // persistent
-    preloadsMap: new Map(), // preloadResources
-    stylesMap: new Map(), // styleResources
+    preloadsMap: new Map(),
+    stylesMap: new Map(),
 
     // cleared on flush
-    explicitPreloads: new Set(), // explicitPreloads
-    implicitPreloads: new Set(), // add bootstrap script to implicit preloads
+    explicitPreloads: new Set(),
+    implicitPreloads: new Set(),
     precedences: new Map(),
 
     // like a module global for currently rendering boundary
