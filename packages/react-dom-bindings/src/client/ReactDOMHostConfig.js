@@ -83,7 +83,6 @@ import {
   prepareToRenderResources,
   cleanupAfterRenderResources,
   isHostResourceType,
-  restoreAllStylesResources,
 } from './ReactDOMFloatClient';
 
 export type Type = string;
@@ -312,14 +311,6 @@ export function finalizeInitialChildren(
       return !!props.autoFocus;
     case 'img':
       return true;
-    case 'html':
-    case 'head':
-    case 'body': {
-      if (enableFloat) {
-        return true;
-      }
-    }
-    // eslint-disable-next-line-no-fallthrough
     default:
       return false;
   }
@@ -457,13 +448,6 @@ export function commitMount(
         ((domElement: any): HTMLImageElement).src = (newProps: any).src;
       }
       return;
-    }
-    case 'html':
-    case 'head':
-    case 'body': {
-      if (false && enableFloat) {
-        restoreAllStylesResources();
-      }
     }
   }
 }

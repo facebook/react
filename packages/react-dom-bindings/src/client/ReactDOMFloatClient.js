@@ -564,7 +564,7 @@ function immediatelyPreloadStyleResource(resource: StyleResource) {
   // don't always want to preload a style, in particular when we are going to synchronously insert
   // that style. We confirm the style resource has no preload already and then construct it. If
   // we wait and call this later it is possible a preload will already exist for this href
-  if (resource.instance === null && resource.hint === null) {
+  if (resource.loaded === false && resource.hint === null) {
     const {href, props} = resource;
     const preloadProps = preloadPropsFromStyleProps(props);
     resource.hint = createPreloadResource(
@@ -750,20 +750,6 @@ function insertStyleInstance(
         'While attempting to insert a Resource, React expected the Document to contain' +
           ' a head element but it was not found.',
       );
-    }
-  }
-}
-
-export function restoreAllStylesResources() {
-  if (stylesRestorable) {
-    stylesRestorable = false;
-    const iter = styleResources.values();
-    let resource;
-    while ((resource = iter.next().value)) {
-      const {instance, count, ownerDocument, precedence} = resource;
-      if (count && instance && !ownerDocument.contains(instance)) {
-        insertStyleInstance(instance, precedence, ownerDocument);
-      }
     }
   }
 }
