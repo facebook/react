@@ -62,8 +62,8 @@ import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
 import {
-  prepareToRender as prepareToRenderImpl,
-  cleanupAfterRender as cleanupAfterRenderImpl,
+  prepareToRenderResources,
+  finishRenderingResources,
   resourcesFromLink,
 } from './ReactDOMFloatServer';
 export {
@@ -2902,9 +2902,9 @@ function writeStyleResourceAttribute(
 }
 
 export function prepareToRender(resources: Resources) {
-  prepareToRenderImpl(resources);
+  prepareToRenderResources(resources);
 }
 
 export function cleanupAfterRender() {
-  cleanupAfterRenderImpl();
+  finishRenderingResources();
 }

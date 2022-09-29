@@ -101,7 +101,7 @@ export function mergeBoundaryResources(
 let currentResources: null | Resources = null;
 
 let previousDispatcher = null;
-export function prepareToRender(resources: Resources) {
+export function prepareToRenderResources(resources: Resources) {
   currentResources = resources;
 
   previousDispatcher = ReactDOMSharedInternals.Dispatcher.current;
@@ -115,7 +115,7 @@ export function setCurrentlyRenderingBoundaryResourcesTarget(
   resources.boundaryResources = boundaryResources;
 }
 
-export function cleanupAfterRender() {
+export function finishRenderingResources() {
   currentResources = null;
 
   ReactDOMSharedInternals.Dispatcher.current = previousDispatcher;
