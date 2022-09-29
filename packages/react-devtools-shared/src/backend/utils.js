@@ -1,4 +1,5 @@
 /**
+/**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -118,7 +119,9 @@ export function copyWithSet(
   return updated;
 }
 
-export function getEffectDurations(root: Object) {
+export function getEffectDurations(
+  root: Object,
+): {effectDuration: any | null, passiveEffectDuration: any | null} {
   // Profiling durations are only available for certain builds.
   // If available, they'll be stored on the HostRoot.
   let effectDuration = null;
@@ -188,8 +191,8 @@ export function formatWithStyles(
   }
 
   // Matches any of %(o|O|d|i|s|f), but not %%(o|O|d|i|s|f)
-  const REGEXP = /([^%]|^)(%([oOdisf]))/g;
-  if (inputArgs[0].match(REGEXP)) {
+  const REGEXP = /([^%]|^)((%%)*)(%([oOdisf]))/g;
+  if (typeof inputArgs[0] === 'string' && inputArgs[0].match(REGEXP)) {
     return [`%c${inputArgs[0]}`, style, ...inputArgs.slice(1)];
   } else {
     const firstArg = inputArgs.reduce((formatStr, elem, i) => {

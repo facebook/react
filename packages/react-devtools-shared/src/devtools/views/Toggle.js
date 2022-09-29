@@ -32,7 +32,7 @@ export default function Toggle({
   onChange,
   testName,
   title,
-}: Props) {
+}: Props): React.Node {
   let defaultClassName;
   if (isDisabled) {
     defaultClassName = styles.ToggleDisabled;

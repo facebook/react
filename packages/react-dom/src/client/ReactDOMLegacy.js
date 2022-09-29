@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Container} from './ReactDOMHostConfig';
+import type {Container} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
@@ -16,14 +16,14 @@ import {
   isContainerMarkedAsRoot,
   markContainerAsRoot,
   unmarkContainerAsRoot,
-} from './ReactDOMComponentTree';
-import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
+} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
+import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
 import {isValidContainerLegacy} from './ReactDOMRoot';
 import {
   DOCUMENT_NODE,
   ELEMENT_NODE,
   COMMENT_NODE,
-} from '../shared/HTMLNodeType';
+} from 'react-dom-bindings/src/shared/HTMLNodeType';
 
 import {
   createContainer,

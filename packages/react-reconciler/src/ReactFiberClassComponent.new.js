@@ -9,25 +9,18 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
-import type {UpdateQueue} from './ReactUpdateQueue.new';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import type {Flags} from './ReactFiberFlags';
 
 import * as React from 'react';
-import {
-  LayoutStatic,
-  MountLayoutDev,
-  Update,
-  Snapshot,
-} from './ReactFiberFlags';
+import {LayoutStatic, Update, Snapshot} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   enableDebugTracing,
   enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
-  enableStrictEffects,
   enableLazyContextPropagation,
-  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -40,12 +33,7 @@ import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
-import {
-  DebugTracingMode,
-  NoMode,
-  StrictLegacyMode,
-  StrictEffectsMode,
-} from './ReactTypeOfMode';
+import {DebugTracingMode, StrictLegacyMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -58,7 +46,7 @@ import {
   ForceUpdate,
   initializeUpdateQueue,
   cloneUpdateQueue,
-} from './ReactUpdateQueue.new';
+} from './ReactFiberClassUpdateQueue.new';
 import {NoLanes} from './ReactFiberLane.new';
 import {
   cacheContext,
@@ -215,9 +203,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -250,9 +238,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -284,9 +272,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, lane);
-    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -908,17 +896,7 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
-    let fiberFlags: Flags = Update;
-    if (enableSuspenseLayoutEffectSemantics) {
-      fiberFlags |= LayoutStatic;
-    }
-    if (
-      __DEV__ &&
-      enableStrictEffects &&
-      (workInProgress.mode & StrictEffectsMode) !== NoMode
-    ) {
-      fiberFlags |= MountLayoutDev;
-    }
+    const fiberFlags: Flags = Update | LayoutStatic;
     workInProgress.flags |= fiberFlags;
   }
 }
@@ -989,17 +967,7 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      let fiberFlags: Flags = Update;
-      if (enableSuspenseLayoutEffectSemantics) {
-        fiberFlags |= LayoutStatic;
-      }
-      if (
-        __DEV__ &&
-        enableStrictEffects &&
-        (workInProgress.mode & StrictEffectsMode) !== NoMode
-      ) {
-        fiberFlags |= MountLayoutDev;
-      }
+      const fiberFlags: Flags = Update | LayoutStatic;
       workInProgress.flags |= fiberFlags;
     }
     return false;
@@ -1043,34 +1011,14 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
-      let fiberFlags: Flags = Update;
-      if (enableSuspenseLayoutEffectSemantics) {
-        fiberFlags |= LayoutStatic;
-      }
-      if (
-        __DEV__ &&
-        enableStrictEffects &&
-        (workInProgress.mode & StrictEffectsMode) !== NoMode
-      ) {
-        fiberFlags |= MountLayoutDev;
-      }
+      const fiberFlags: Flags = Update | LayoutStatic;
       workInProgress.flags |= fiberFlags;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      let fiberFlags: Flags = Update;
-      if (enableSuspenseLayoutEffectSemantics) {
-        fiberFlags |= LayoutStatic;
-      }
-      if (
-        __DEV__ &&
-        enableStrictEffects &&
-        (workInProgress.mode & StrictEffectsMode) !== NoMode
-      ) {
-        fiberFlags |= MountLayoutDev;
-      }
+      const fiberFlags: Flags = Update | LayoutStatic;
       workInProgress.flags |= fiberFlags;
     }
 

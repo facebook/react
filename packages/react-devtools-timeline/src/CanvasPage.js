@@ -9,7 +9,7 @@
 
 import type {Point} from './view-base';
 import type {
-  ReactHoverContextInfo,
+  ReactEventInfo,
   TimelineData,
   ReactMeasure,
   ViewState,
@@ -63,17 +63,18 @@ import useContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/useCo
 import {getBatchRange} from './utils/getBatchRange';
 import {MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL} from './view-base/constants';
 import {TimelineSearchContext} from './TimelineSearchContext';
+import {TimelineContext} from './TimelineContext';
 
 import styles from './CanvasPage.css';
 
 const CONTEXT_MENU_ID = 'canvas';
 
-type Props = {|
+type Props = {
   profilerData: TimelineData,
   viewState: ViewState,
-|};
+};
 
-function CanvasPage({profilerData, viewState}: Props) {
+function CanvasPage({profilerData, viewState}: Props): React.Node {
   return (
     <div
       className={styles.CanvasPage}
@@ -131,7 +132,7 @@ const zoomToBatch = (
   viewState.updateHorizontalScrollState(scrollState);
 };
 
-const EMPTY_CONTEXT_INFO: ReactHoverContextInfo = {
+const EMPTY_CONTEXT_INFO: ReactEventInfo = {
   componentMeasure: null,
   flamechartStackFrame: null,
   measure: null,
@@ -144,12 +145,12 @@ const EMPTY_CONTEXT_INFO: ReactHoverContextInfo = {
   userTimingMark: null,
 };
 
-type AutoSizedCanvasProps = {|
+type AutoSizedCanvasProps = {
   data: TimelineData,
   height: number,
   viewState: ViewState,
   width: number,
-|};
+};
 
 function AutoSizedCanvas({
   data,
@@ -161,10 +162,7 @@ function AutoSizedCanvas({
 
   const [isContextMenuShown, setIsContextMenuShown] = useState<boolean>(false);
   const [mouseLocation, setMouseLocation] = useState<Point>(zeroPoint); // DOM coordinates
-  const [
-    hoveredEvent,
-    setHoveredEvent,
-  ] = useState<ReactHoverContextInfo | null>(null);
+  const [hoveredEvent, setHoveredEvent] = useState<ReactEventInfo | null>(null);
 
   const resetHoveredEvent = useCallback(
     () => setHoveredEvent(EMPTY_CONTEXT_INFO),
@@ -528,6 +526,8 @@ function AutoSizedCanvas({
     ref: canvasRef,
   });
 
+  const {selectEvent} = useContext(TimelineContext);
+
   useEffect(() => {
     const {current: userTimingMarksView} = userTimingMarksViewRef;
     if (userTimingMarksView) {
@@ -562,6 +562,12 @@ function AutoSizedCanvas({
             schedulingEvent,
           });
         }
+      };
+      schedulingEventsView.onClick = schedulingEvent => {
+        selectEvent({
+          ...EMPTY_CONTEXT_INFO,
+          schedulingEvent,
+        });
       };
     }
 

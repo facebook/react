@@ -75,11 +75,8 @@ function getHostContext(): HostContext {
 }
 
 function pushHostContext(fiber: Fiber): void {
-  const rootInstance: Container = requiredContext(
-    rootInstanceStackCursor.current,
-  );
   const context: HostContext = requiredContext(contextStackCursor.current);
-  const nextContext = getChildHostContext(context, fiber.type, rootInstance);
+  const nextContext = getChildHostContext(context, fiber.type);
 
   // Don't push this Fiber's context unless it's unique.
   if (context === nextContext) {

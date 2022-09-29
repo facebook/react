@@ -13,6 +13,7 @@ describe('Store', () => {
   let ReactDOMClient;
   let agent;
   let act;
+  let actAsync;
   let bridge;
   let getRendererID;
   let legacyRender;
@@ -30,11 +31,13 @@ describe('Store', () => {
 
     const utils = require('./utils');
     act = utils.act;
+    actAsync = utils.actAsync;
     getRendererID = utils.getRendererID;
     legacyRender = utils.legacyRender;
     withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
   });
 
+  // @reactVersion >= 18.0
   it('should not allow a root node to be collapsed', () => {
     const Component = () => <div>Hi</div>;
 
@@ -55,6 +58,7 @@ describe('Store', () => {
     );
   });
 
+  // @reactVersion >= 18.0
   it('should properly handle a root with no visible nodes', () => {
     const Root = ({children}) => children;
 
@@ -75,6 +79,7 @@ describe('Store', () => {
   // Thec ase below is admittedly contrived and relies on side effects.
   // I'mnot yet sure of how to reduce the GitHub reported production case to a test though.
   // See https://github.com/facebook/react/issues/21445
+  // @reactVersion >= 18.0
   it('should handle when a component mounts before its owner', () => {
     const promise = new Promise(resolve => {});
 
@@ -109,6 +114,7 @@ describe('Store', () => {
     `);
   });
 
+  // @reactVersion >= 18.0
   it('should handle multibyte character strings', () => {
     const Component = () => null;
     Component.displayName = '🟩💜🔵';
@@ -139,6 +145,7 @@ describe('Store', () => {
       expect(store.getElementAtIndex(1).isStrictModeNonCompliant).toBe(false);
     });
 
+    // @reactVersion >= 18.0
     it('should mark non strict root elements as not strict', () => {
       const App = () => <Component />;
       const Component = () => null;
@@ -177,6 +184,7 @@ describe('Store', () => {
       store.collapseNodesByDefault = false;
     });
 
+    // @reactVersion >= 18.0
     it('should support mount and update operations', () => {
       const Grandparent = ({count}) => (
         <React.Fragment>
@@ -222,6 +230,7 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(``);
     });
 
+    // @reactVersion >= 18.0
     it('should support mount and update operations for multiple roots', () => {
       const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
@@ -276,6 +285,7 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(``);
     });
 
+    // @reactVersion >= 18.0
     it('should filter DOM nodes from the store tree', () => {
       const Grandparent = () => (
         <div>
@@ -305,6 +315,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should display Suspense nodes properly in various states', () => {
       const Loading = () => <div>Loading...</div>;
       const SuspendingComponent = () => {
@@ -348,6 +359,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should support nested Suspense nodes', () => {
       const Component = () => null;
       const Loading = () => <div>Loading...</div>;
@@ -719,6 +731,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should support collapsing parts of the tree', () => {
       const Grandparent = ({count}) => (
         <React.Fragment>
@@ -793,6 +806,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should support reordering of children', () => {
       const Root = ({children}) => children;
       const Component = () => null;
@@ -850,6 +864,7 @@ describe('Store', () => {
       store.collapseNodesByDefault = true;
     });
 
+    // @reactVersion >= 18.0
     it('should support mount and update operations', () => {
       const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
@@ -891,6 +906,7 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(``);
     });
 
+    // @reactVersion >= 18.0
     it('should support mount and update operations for multiple roots', () => {
       const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
@@ -931,6 +947,7 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(``);
     });
 
+    // @reactVersion >= 18.0
     it('should filter DOM nodes from the store tree', () => {
       const Grandparent = () => (
         <div>
@@ -973,6 +990,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should display Suspense nodes properly in various states', () => {
       const Loading = () => <div>Loading...</div>;
       const SuspendingComponent = () => {
@@ -1024,6 +1042,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should support expanding parts of the tree', () => {
       const Grandparent = ({count}) => (
         <React.Fragment>
@@ -1103,6 +1122,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should support expanding deep parts of the tree', () => {
       const Wrapper = ({forwardedRef}) => (
         <Nested depth={3} forwardedRef={forwardedRef} />
@@ -1177,6 +1197,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should support reordering of children', () => {
       const Root = ({children}) => children;
       const Component = () => null;
@@ -1229,6 +1250,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should not add new nodes when suspense is toggled', () => {
       const SuspenseTree = () => {
         return (
@@ -1295,6 +1317,7 @@ describe('Store', () => {
       store.collapseNodesByDefault = false;
     });
 
+    // @reactVersion >= 18.0
     it('should support a single root with a single child', () => {
       const Grandparent = () => (
         <React.Fragment>
@@ -1312,6 +1335,7 @@ describe('Store', () => {
       }
     });
 
+    // @reactVersion >= 18.0
     it('should support multiple roots with one children each', () => {
       const Grandparent = () => <Parent />;
       const Parent = () => <Child />;
@@ -1327,6 +1351,7 @@ describe('Store', () => {
       }
     });
 
+    // @reactVersion >= 18.0
     it('should support a single root with multiple top level children', () => {
       const Grandparent = () => <Parent />;
       const Parent = () => <Child />;
@@ -1347,6 +1372,7 @@ describe('Store', () => {
       }
     });
 
+    // @reactVersion >= 18.0
     it('should support multiple roots with multiple top level children', () => {
       const Grandparent = () => <Parent />;
       const Parent = () => <Child />;
@@ -1375,6 +1401,7 @@ describe('Store', () => {
     });
   });
 
+  // @reactVersion >= 18.0
   it('detects and updates profiling support based on the attached roots', () => {
     const Component = () => null;
 
@@ -1394,6 +1421,7 @@ describe('Store', () => {
     expect(store.rootSupportsBasicProfiling).toBe(false);
   });
 
+  // @reactVersion >= 18.0
   it('should properly serialize non-string key values', () => {
     const Child = () => null;
 
@@ -1479,7 +1507,7 @@ describe('Store', () => {
             <MyComponent> [ForwardRef]
           ▾ <Anonymous> [ForwardRef]
               <MyComponent2>
-            <Custom> [ForwardRef]
+            <Custom>
             <MyComponent4> [Memo]
           ▾ <MyComponent> [Memo]
               <MyComponent> [ForwardRef]
@@ -1487,8 +1515,8 @@ describe('Store', () => {
             <Baz> [Memo][withFoo][withBar]
             <Baz> [ForwardRef][withFoo][withBar]
             <Cache>
-            <memoRefOverride> [Memo]
-            <forwardRefOverride> [ForwardRef]
+            <memoRefOverride>
+            <forwardRefOverride>
     `);
   });
 
@@ -1516,6 +1544,7 @@ describe('Store', () => {
       LazyComponent = React.lazy(() => fakeImport(LazyInnerComponent));
     });
 
+    // @reactVersion >= 18.0
     it('should support Lazy components (legacy render)', async () => {
       const container = document.createElement('div');
 
@@ -1549,6 +1578,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should support Lazy components in (createRoot)', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
@@ -1583,6 +1613,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should support Lazy components that are unmounted before they finish loading (legacy render)', async () => {
       const container = document.createElement('div');
 
@@ -1604,6 +1635,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
@@ -1628,6 +1660,7 @@ describe('Store', () => {
   });
 
   describe('inline errors and warnings', () => {
+    // @reactVersion >= 18.0
     it('during render are counted', () => {
       function Example() {
         console.error('test-only: render error');
@@ -1657,6 +1690,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('during layout get counted', () => {
       function Example() {
         React.useLayoutEffect(() => {
@@ -1698,6 +1732,7 @@ describe('Store', () => {
         jest.advanceTimersByTime(1000);
       }
 
+      // @reactVersion >= 18.0
       it('are counted (after a delay)', () => {
         function Example() {
           React.useEffect(() => {
@@ -1731,6 +1766,7 @@ describe('Store', () => {
         expect(store).toMatchInlineSnapshot(``);
       });
 
+      // @reactVersion >= 18.0
       it('are flushed early when there is a new commit', () => {
         function Example() {
           React.useEffect(() => {
@@ -1794,6 +1830,7 @@ describe('Store', () => {
       });
     });
 
+    // @reactVersion >= 18.0
     it('from react get counted', () => {
       const container = document.createElement('div');
       function Example() {
@@ -1818,6 +1855,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('can be cleared for the whole app', () => {
       function Example() {
         console.error('test-only: render error');
@@ -1859,6 +1897,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('can be cleared for particular Fiber (only warnings)', () => {
       function Example() {
         console.error('test-only: render error');
@@ -1904,6 +1943,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('can be cleared for a particular Fiber (only errors)', () => {
       function Example() {
         console.error('test-only: render error');
@@ -1949,6 +1989,7 @@ describe('Store', () => {
       `);
     });
 
+    // @reactVersion >= 18.0
     it('are updated when fibers are removed from the tree', () => {
       function ComponentWithWarning() {
         console.warn('test-only: render warning');
@@ -2024,6 +2065,48 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(`[root]`);
       expect(store.errorCount).toBe(0);
       expect(store.warningCount).toBe(0);
+    });
+
+    // Regression test for https://github.com/facebook/react/issues/23202
+    // @reactVersion >= 18.0
+    it('suspense boundary children should not double unmount and error', async () => {
+      async function fakeImport(result) {
+        return {default: result};
+      }
+
+      const ChildA = () => null;
+      const ChildB = () => null;
+
+      const LazyChildA = React.lazy(() => fakeImport(ChildA));
+      const LazyChildB = React.lazy(() => fakeImport(ChildB));
+
+      function App({renderA}) {
+        return (
+          <React.Suspense>
+            {renderA ? <LazyChildA /> : <LazyChildB />}
+          </React.Suspense>
+        );
+      }
+
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await actAsync(() => root.render(<App renderA={true} />));
+
+      expect(store).toMatchInlineSnapshot(`
+          [root]
+            ▾ <App>
+              ▾ <Suspense>
+                  <ChildA>
+        `);
+
+      await actAsync(() => root.render(<App renderA={false} />));
+
+      expect(store).toMatchInlineSnapshot(`
+          [root]
+            ▾ <App>
+              ▾ <Suspense>
+                  <ChildB>
+        `);
     });
   });
 });

@@ -20,9 +20,9 @@ import ReactFlightClient from 'react-client/flight';
 
 type Source = Array<string>;
 
-const {createResponse, processStringChunk, close} = ReactFlightClient({
+const {createResponse, processStringChunk, getRoot, close} = ReactFlightClient({
   supportsBinaryStreams: false,
-  resolveModuleReference(idx: string) {
+  resolveModuleReference(bundlerConfig: null, idx: string) {
     return idx;
   },
   preloadModule(idx: string) {},
@@ -34,13 +34,13 @@ const {createResponse, processStringChunk, close} = ReactFlightClient({
   },
 });
 
-function read<T>(source: Source): T {
-  const response = createResponse(source);
+function read<T>(source: Source): Thenable<T> {
+  const response = createResponse(source, null);
   for (let i = 0; i < source.length; i++) {
     processStringChunk(response, source[i], 0);
   }
   close(response);
-  return response.readRoot();
+  return getRoot(response);
 }
 
 export {read};

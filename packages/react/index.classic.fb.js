@@ -27,6 +27,7 @@ export {
   createMutableSource as unstable_createMutableSource,
   createRef,
   createServerContext,
+  experimental_use,
   forwardRef,
   isValidElement,
   lazy,
@@ -34,6 +35,7 @@ export {
   startTransition,
   startTransition as unstable_startTransition, // TODO: Remove once call sights updated to startTransition
   unstable_Cache,
+  unstable_TracingMarker,
   unstable_DebugTracingMode,
   unstable_LegacyHidden,
   unstable_Offscreen,
@@ -41,6 +43,7 @@ export {
   unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
+  unstable_useMemoCache,
   useId,
   useCallback,
   useContext,
@@ -48,6 +51,7 @@ export {
   useDeferredValue,
   useDeferredValue as unstable_useDeferredValue, // TODO: Remove once call sights updated to useDeferredValue
   useEffect,
+  experimental_useEvent,
   useImperativeHandle,
   useLayoutEffect,
   useInsertionEffect,

@@ -8,7 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Container} from './ReactDOMHostConfig';
+import type {Container} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
 import type {
   RootType,
   HydrateRootOptions,
@@ -27,7 +27,7 @@ import {
   hydrateRoot as hydrateRootImpl,
   isValidContainer,
 } from './ReactDOMRoot';
-import {createEventHandle} from './ReactDOMEventHandle';
+import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHandle';
 
 import {
   batchedUpdates,
@@ -50,13 +50,8 @@ import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
 import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 
-import {
-  getInstanceFromNode,
-  getNodeFromInstance,
-  getFiberCurrentPropsFromNode,
-  getClosestInstanceFromNode,
-} from './ReactDOMComponentTree';
-import {restoreControlledState} from './ReactDOMComponent';
+import {getClosestInstanceFromNode} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
+import {restoreControlledState} from 'react-dom-bindings/src/client/ReactDOMComponent';
 import {
   setAttemptSynchronousHydration,
   setAttemptDiscreteHydration,
@@ -64,13 +59,10 @@ import {
   setAttemptHydrationAtCurrentPriority,
   setGetCurrentUpdatePriority,
   setAttemptHydrationAtPriority,
-} from '../events/ReactDOMEventReplaying';
-import {setBatchingImplementation} from '../events/ReactDOMUpdateBatching';
-import {
-  setRestoreImplementation,
-  enqueueStateRestore,
-  restoreStateIfNeeded,
-} from '../events/ReactDOMControlledComponent';
+} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
+import {setBatchingImplementation} from 'react-dom-bindings/src/events/ReactDOMUpdateBatching';
+import {setRestoreImplementation} from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
+import Internals from '../ReactDOMSharedInternals';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptDiscreteHydration(attemptDiscreteHydration);
@@ -82,11 +74,11 @@ setAttemptHydrationAtPriority(runWithPriority);
 if (__DEV__) {
   if (
     typeof Map !== 'function' ||
-    // $FlowIssue Flow incorrectly thinks Map has no prototype
+    // $FlowFixMe Flow incorrectly thinks Map has no prototype
     Map.prototype == null ||
     typeof Map.prototype.forEach !== 'function' ||
     typeof Set !== 'function' ||
-    // $FlowIssue Flow incorrectly thinks Set has no prototype
+    // $FlowFixMe Flow incorrectly thinks Set has no prototype
     Set.prototype == null ||
     typeof Set.prototype.clear !== 'function' ||
     typeof Set.prototype.forEach !== 'function'
@@ -107,7 +99,7 @@ setBatchingImplementation(
 
 function createPortal(
   children: ReactNodeList,
-  container: Container,
+  container: Element | DocumentFragment,
   key: ?string = null,
 ): React$Portal {
   if (!isValidContainer(container)) {
@@ -133,22 +125,8 @@ function renderSubtreeIntoContainer(
   );
 }
 
-const Internals = {
-  usingClientEntryPoint: false,
-  // Keep in sync with ReactTestUtils.js.
-  // This is an array for better minification.
-  Events: [
-    getInstanceFromNode,
-    getNodeFromInstance,
-    getFiberCurrentPropsFromNode,
-    enqueueStateRestore,
-    restoreStateIfNeeded,
-    batchedUpdates,
-  ],
-};
-
 function createRoot(
-  container: Element | DocumentFragment,
+  container: Element | Document | DocumentFragment,
   options?: CreateRootOptions,
 ): RootType {
   if (__DEV__) {
@@ -201,7 +179,6 @@ export {
   createPortal,
   batchedUpdates as unstable_batchedUpdates,
   flushSync,
-  Internals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   ReactVersion as version,
   // Disabled behind disableLegacyReactDOMAPIs
   findDOMNode,

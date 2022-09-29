@@ -6,6 +6,7 @@ let getCacheForType;
 let Scheduler;
 let act;
 let Suspense;
+let Offscreen;
 let useCacheRefresh;
 let startTransition;
 let useState;
@@ -23,6 +24,7 @@ describe('ReactCache', () => {
     Scheduler = require('scheduler');
     act = require('jest-react').act;
     Suspense = React.Suspense;
+    Offscreen = React.unstable_Offscreen;
     getCacheSignal = React.unstable_getCacheSignal;
     getCacheForType = React.unstable_getCacheForType;
     useCacheRefresh = React.unstable_useCacheRefresh;
@@ -1589,5 +1591,37 @@ describe('ReactCache', () => {
       'Cache cleanup: A [v2]',
     ]);
     expect(root).toMatchRenderedOutput('Bye!');
+  });
+
+  // @gate enableOffscreen
+  // @gate enableCache
+  test('prerender a new cache boundary inside an Offscreen tree', async () => {
+    function App({prerenderMore}) {
+      return (
+        <Offscreen mode="hidden">
+          <div>
+            {prerenderMore ? (
+              <Cache>
+                <AsyncText text="More" />
+              </Cache>
+            ) : null}
+          </div>
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App prerenderMore={false} />);
+    });
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput(<div hidden={true} />);
+
+    seedNextTextCache('More');
+    await act(async () => {
+      root.render(<App prerenderMore={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['More']);
+    expect(root).toMatchRenderedOutput(<div hidden={true}>More</div>);
   });
 });

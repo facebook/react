@@ -7,8 +7,10 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import {createContext} from 'react';
 
-const TreeFocusedContext = createContext<boolean>(false);
+const TreeFocusedContext: ReactContext<boolean> = createContext<boolean>(false);
 
 export default TreeFocusedContext;

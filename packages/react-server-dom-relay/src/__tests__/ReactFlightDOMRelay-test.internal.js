@@ -10,7 +10,7 @@
 let act;
 let React;
 let ReactDOMClient;
-let JSResourceReference;
+let JSResourceReferenceImpl;
 let ReactDOMFlightRelayServer;
 let ReactDOMFlightRelayClient;
 let SuspenseList;
@@ -24,7 +24,7 @@ describe('ReactFlightDOMRelay', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMFlightRelayServer = require('react-server-dom-relay/server');
     ReactDOMFlightRelayClient = require('react-server-dom-relay');
-    JSResourceReference = require('JSResourceReference');
+    JSResourceReferenceImpl = require('JSResourceReferenceImpl');
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
     }
@@ -37,7 +37,16 @@ describe('ReactFlightDOMRelay', () => {
       ReactDOMFlightRelayClient.resolveRow(response, chunk);
     }
     ReactDOMFlightRelayClient.close(response);
-    const model = response.readRoot();
+    const promise = ReactDOMFlightRelayClient.getRoot(response);
+    let model;
+    let error;
+    promise.then(
+      m => (model = m),
+      e => (error = e),
+    );
+    if (error) {
+      throw error;
+    }
     return model;
   }
 
@@ -84,7 +93,7 @@ describe('ReactFlightDOMRelay', () => {
         </span>
       );
     }
-    const User = new JSResourceReference(UserClient);
+    const User = new JSResourceReferenceImpl(UserClient);
 
     function Greeting({firstName, lastName}) {
       return <User greeting="Hello" name={firstName + ' ' + lastName} />;

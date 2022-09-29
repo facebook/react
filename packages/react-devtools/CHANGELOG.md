@@ -4,6 +4,58 @@
 
 ---
 
+### 4.26.0
+September 16, 2022
+
+* Show DevTools icons in Edge browser panel ([itskolli](https://github.com/itskolli) in [#25257](https://github.com/facebook/react/pull/25257))
+* [Bugfix] Don't hide fragment if it has a key ([lunaruan](https://github.com/lunaruan) in [#25197](https://github.com/facebook/react/pull/25197))
+* Handle info, group, and groupCollapsed in Strict Mode logging ([timneutkens](https://github.com/timneutkens) in [#25172](https://github.com/facebook/react/pull/25172))
+* Highlight RN elements on hover ([tyao1](https://github.com/tyao1) in [#25106](https://github.com/facebook/react/pull/25106))
+* Remove ForwardRef/Memo from display name if `displayName` is set ([eps1lon](https://github.com/eps1lon) in [#21952](https://github.com/facebook/react/pull/21952))
+
+---
+
+### 4.25.0
+July 13, 2022
+
+* Timeline Profiler Sidebar with component tree ([lunaruan](https://github.com/lunaruan) and [blakef](https://github.com/blakef) in [#24816](https://github.com/facebook/react/pull/24816), [#24815](https://github.com/facebook/react/pull/24815), [#24814](https://github.com/facebook/react/pull/24814), [#24805](https://github.com/facebook/react/pull/24805), [#24776](https://github.com/facebook/react/pull/24776))
+* [DevTools][Bugfix] Fix DevTools Perf Issue When Unmounting Large React Subtrees ([lunaruan](https://github.com/lunaruan) in [#24863](https://github.com/facebook/react/pull/24863))
+* Enable "reload & profile" button for timeline view ([mondaychen](https://github.com/mondaychen) in [#24702](https://github.com/facebook/react/pull/24702))
+* Find best renderer when inspecting app with mutilple react roots ([mondaychen](https://github.com/mondaychen) in [#24665](https://github.com/facebook/react/pull/24665))
+* Only polyfill requestAnimationFrame when necessary ([mondaychen](https://github.com/mondaychen) in [#24651](https://github.com/facebook/react/pull/24651))
+
+---
+
+### 4.24.7
+May 31, 2022
+
+* mock requestAnimationFrame with setTimeout as a temporary fix for #24626 ([mondaychen](https://github.com/mondaychen) in [#24633](https://github.com/facebook/react/pull/24633))
+* Fix formatWithStyles not styling the results if the first argument is an object + Added unit tests ([lunaruan](https://github.com/lunaruan) in [#24554](https://github.com/facebook/react/pull/24554))
+
+---
+
+### 4.24.6
+May 12, 2022
+
+* fix a bug in console.log with non-string args ([mondaychen](https://github.com/mondaychen) in [#24546](https://github.com/facebook/react/pull/24546))
+* Add Pragma to Only Run Tests if Version Requirement Satisfied ([lunaruan](https://github.com/lunaruan) in [#24533](https://github.com/facebook/react/pull/24533))
+* [DevTools][Bug] Fix Race Condition When Unmounting Fibers ([lunaruan](https://github.com/lunaruan) in [#24510](https://github.com/facebook/react/pull/24510))
+* [React DevTools] Improve DevTools UI when Inspecting a user Component that Throws an Error  ([mondaychen](https://github.com/mondaychen) in [#24248](https://github.com/facebook/react/pull/24248))
+
+---
+
+### 4.24.5
+May 5, 2022
+
+* Fixed potential undefined error in `TreeContext` reducer ([bvaughn](https://github.com/bvaughn) in [#24501](https://github.com/facebook/react/pull/24501))
+* Fix error where Profiler sometimes incorrectlyed reported that a `forwardRef` did not render ([lunaruan](https://github.com/lunaruan) in [#24494](https://github.com/facebook/react/pull/24494))
+* Fix regex for `formateWithStyles` function ([lunaruan](https://github.com/lunaruan) in [#24486](https://github.com/facebook/react/pull/24486))
+* Fixed wrong method call for LRU cache ([bvaughn](https://github.com/bvaughn) in [#24477](https://github.com/facebook/react/pull/24477))
+* Synchronize implementations of second render logging ([billyjanitsch](https://github.com/billyjanitsch) in [#24381](https://github.com/facebook/react/pull/24381))
+* Don't stringify objects for console log second render ([lunaruan](https://github.com/lunaruan) in [#24373](https://github.com/facebook/react/pull/24373))
+
+---
+
 ### 4.24.4
 April 8, 2022
 

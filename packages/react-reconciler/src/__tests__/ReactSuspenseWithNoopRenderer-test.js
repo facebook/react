@@ -963,33 +963,36 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   // @gate enableCache
   it('resolves successfully even if fallback render is pending', async () => {
-    ReactNoop.render(
+    const root = ReactNoop.createRoot();
+    root.render(
       <>
         <Suspense fallback={<Text text="Loading..." />} />
       </>,
     );
     expect(Scheduler).toFlushAndYield([]);
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(root).toMatchRenderedOutput(null);
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
       React.startTransition(() => {
-        ReactNoop.render(
+        root.render(
           <>
             <Suspense fallback={<Text text="Loading..." />}>
               <AsyncText text="Async" />
+              <Text text="Sibling" />
             </Suspense>
           </>,
         );
       });
     } else {
-      ReactNoop.render(
+      root.render(
         <>
           <Suspense fallback={<Text text="Loading..." />}>
             <AsyncText text="Async" />
+            <Text text="Sibling" />
           </Suspense>
         </>,
       );
     }
-    expect(ReactNoop.flushNextYield()).toEqual(['Suspend! [Async]']);
+    expect(Scheduler).toFlushAndYieldThrough(['Suspend! [Async]', 'Sibling']);
 
     await resolveText('Async');
     expect(Scheduler).toFlushAndYield([
@@ -998,8 +1001,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Loading...',
       // Once we've completed the boundary we restarted.
       'Async',
+      'Sibling',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Async')]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Async" />
+        <span prop="Sibling" />
+      </>,
+    );
   });
 
   // @gate enableCache
@@ -3859,7 +3868,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Suspend! [A2]',
         'Loading...',
         'Suspend! [B2]',
-        'Loading...',
       ]);
       expect(root).toMatchRenderedOutput(
         <>

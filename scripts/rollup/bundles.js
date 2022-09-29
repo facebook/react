@@ -330,6 +330,27 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React DOM Fizz Static *******/
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
+    moduleType: RENDERER,
+    entry: 'react-dom/static.browser',
+    global: 'ReactDOMStatic',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
+    moduleType: RENDERER,
+    entry: 'react-dom/static.node',
+    name: 'react-dom-static.node',
+    global: 'ReactDOMStatic',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'util', 'stream'],
+  },
+
   /******* React Server DOM Webpack Writer *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
@@ -387,7 +408,8 @@ const bundles = [
   {
     bundleTypes: [NODE_ES2015],
     moduleType: RENDERER_UTILS,
-    entry: 'react-server-dom-webpack/node-register',
+    entry: 'react-server-dom-webpack/src/ReactFlightWebpackNodeRegister.js',
+    name: 'react-server-dom-webpack-node-register',
     global: 'ReactFlightWebpackNodeRegister',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -405,7 +427,7 @@ const bundles = [
     externals: [
       'react',
       'ReactFlightDOMRelayServerIntegration',
-      'JSResourceReference',
+      'JSResourceReferenceImpl',
     ],
   },
 
@@ -420,7 +442,7 @@ const bundles = [
     externals: [
       'react',
       'ReactFlightDOMRelayClientIntegration',
-      'JSResourceReference',
+      'JSResourceReferenceImpl',
     ],
   },
 

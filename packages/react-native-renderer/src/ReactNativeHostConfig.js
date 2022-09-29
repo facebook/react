@@ -35,16 +35,16 @@ export type Instance = ReactNativeFiberHostComponent;
 export type TextInstance = number;
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = Instance;
-export type HostContext = $ReadOnly<{|
+export type HostContext = $ReadOnly<{
   isInAParentText: boolean,
-|}>;
+}>;
 export type UpdatePayload = Object; // Unused
 export type ChildSet = void; // Unused
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
-export type RendererInspectionConfig = $ReadOnly<{|
+export type RendererInspectionConfig = $ReadOnly<{
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
   getInspectorDataForViewTag?: (tag: number) => Object,
   getInspectorDataForViewAtPoint?: (
@@ -53,7 +53,7 @@ export type RendererInspectionConfig = $ReadOnly<{|
     locationY: number,
     callback: (viewData: TouchedViewDataAtPoint) => mixed,
   ) => void,
-|}>;
+}>;
 
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
@@ -166,7 +166,6 @@ export function finalizeInitialChildren(
   parentInstance: Instance,
   type: string,
   props: Props,
-  rootContainerInstance: Container,
   hostContext: HostContext,
 ): boolean {
   // Don't send a no-op message over the bridge.
@@ -199,7 +198,6 @@ export function getRootHostContext(
 export function getChildHostContext(
   parentHostContext: HostContext,
   type: string,
-  rootContainerInstance: Container,
 ): HostContext {
   const prevIsInAParentText = parentHostContext.isInAParentText;
   const isInAParentText =
@@ -230,7 +228,6 @@ export function prepareUpdate(
   type: string,
   oldProps: Props,
   newProps: Props,
-  rootContainerInstance: Container,
   hostContext: HostContext,
 ): null | Object {
   return UPDATE_SIGNAL;
@@ -511,5 +508,9 @@ export function preparePortalMount(portalInstance: Instance): void {
 }
 
 export function detachDeletedInstance(node: Instance): void {
+  // noop
+}
+
+export function requestPostPaintCallback(callback: (time: number) => void) {
   // noop
 }

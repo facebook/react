@@ -21,7 +21,7 @@ import SymbolKeys from './SymbolKeys';
 
 // TODO Add Immutable JS example
 
-export default function InspectableElements() {
+export default function InspectableElements(): React.Node {
   return (
     <Fragment>
       <h1>Inspectable elements</h1>

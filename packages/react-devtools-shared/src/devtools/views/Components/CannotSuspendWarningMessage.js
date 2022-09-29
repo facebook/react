@@ -15,7 +15,7 @@ import {
   ElementTypeSuspense,
 } from 'react-devtools-shared/src/types';
 
-export default function CannotSuspendWarningMessage() {
+export default function CannotSuspendWarningMessage(): React.Node {
   const store = useContext(StoreContext);
   const areSuspenseElementsHidden = !!store.componentFilters.find(
     filter =>

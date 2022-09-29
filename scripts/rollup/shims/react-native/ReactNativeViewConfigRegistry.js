@@ -15,19 +15,19 @@ import invariant from 'invariant';
 
 // Event configs
 const customBubblingEventTypes: {
-  [eventName: string]: $ReadOnly<{|
-    phasedRegistrationNames: $ReadOnly<{|
+  [eventName: string]: $ReadOnly<{
+    phasedRegistrationNames: $ReadOnly<{
       captured: string,
       bubbled: string,
       skipBubbling?: ?boolean,
-    |}>,
-  |}>,
+    }>,
+  }>,
   ...,
 } = {};
 const customDirectEventTypes: {
-  [eventName: string]: $ReadOnly<{|
+  [eventName: string]: $ReadOnly<{
     registrationName: string,
-  |}>,
+  }>,
   ...,
 } = {};
 

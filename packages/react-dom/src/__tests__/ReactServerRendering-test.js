@@ -562,6 +562,19 @@ describe('ReactDOMServer', () => {
         'Bad lazy',
       );
     });
+
+    it('aborts synchronously any suspended tasks and renders their fallbacks', () => {
+      const promise = new Promise(res => {});
+      function Suspender() {
+        throw promise;
+      }
+      const response = ReactDOMServer.renderToStaticMarkup(
+        <React.Suspense fallback={'fallback'}>
+          <Suspender />
+        </React.Suspense>,
+      );
+      expect(response).toEqual('fallback');
+    });
   });
 
   describe('renderToNodeStream', () => {
@@ -617,6 +630,41 @@ describe('ReactDOMServer', () => {
         });
         expect(response.read()).toBeNull();
       });
+    });
+
+    it('should refer users to new apis when using suspense', async () => {
+      let resolve = null;
+      const promise = new Promise(res => {
+        resolve = () => {
+          resolved = true;
+          res();
+        };
+      });
+      let resolved = false;
+      function Suspender() {
+        if (resolved) {
+          return 'resolved';
+        }
+        throw promise;
+      }
+
+      let response;
+      expect(() => {
+        response = ReactDOMServer.renderToNodeStream(
+          <div>
+            <React.Suspense fallback={'fallback'}>
+              <Suspender />
+            </React.Suspense>
+          </div>,
+        );
+      }).toErrorDev(
+        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+        {withoutStack: true},
+      );
+      await resolve();
+      expect(response.read().toString()).toEqual(
+        '<div><!--$-->resolved<!-- --><!--/$--></div>',
+      );
     });
   });
 

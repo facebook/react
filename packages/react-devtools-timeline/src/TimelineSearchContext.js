@@ -7,29 +7,31 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import * as React from 'react';
 import {createContext, useMemo, useReducer} from 'react';
 
 import type {ReactComponentMeasure, TimelineData, ViewState} from './types';
 
-type State = {|
+type State = {
   profilerData: TimelineData,
   searchIndex: number,
   searchRegExp: RegExp | null,
   searchResults: Array<ReactComponentMeasure>,
   searchText: string,
-|};
+};
 
-type ACTION_GO_TO_NEXT_SEARCH_RESULT = {|
+type ACTION_GO_TO_NEXT_SEARCH_RESULT = {
   type: 'GO_TO_NEXT_SEARCH_RESULT',
-|};
-type ACTION_GO_TO_PREVIOUS_SEARCH_RESULT = {|
+};
+type ACTION_GO_TO_PREVIOUS_SEARCH_RESULT = {
   type: 'GO_TO_PREVIOUS_SEARCH_RESULT',
-|};
-type ACTION_SET_SEARCH_TEXT = {|
+};
+type ACTION_SET_SEARCH_TEXT = {
   type: 'SET_SEARCH_TEXT',
   payload: string,
-|};
+};
 
 type Action =
   | ACTION_GO_TO_NEXT_SEARCH_RESULT
@@ -111,7 +113,7 @@ function reducer(state: State, action: Action): State {
   };
 }
 
-export type Context = {|
+export type Context = {
   profilerData: TimelineData,
 
   // Search state
@@ -120,22 +122,24 @@ export type Context = {|
   searchRegExp: null,
   searchResults: Array<ReactComponentMeasure>,
   searchText: string,
-|};
+};
 
-const TimelineSearchContext = createContext<Context>(((null: any): Context));
+const TimelineSearchContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 TimelineSearchContext.displayName = 'TimelineSearchContext';
 
-type Props = {|
+type Props = {
   children: React$Node,
   profilerData: TimelineData,
   viewState: ViewState,
-|};
+};
 
 function TimelineSearchContextController({
   children,
   profilerData,
   viewState,
-}: Props) {
+}: Props): React.Node {
   const [state, dispatch] = useReducer<State, State, Action>(reducer, {
     profilerData,
     searchIndex: -1,

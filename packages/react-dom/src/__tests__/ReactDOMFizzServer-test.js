@@ -19,6 +19,7 @@ let Suspense;
 let SuspenseList;
 let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
+let use;
 let PropTypes;
 let textCache;
 let window;
@@ -37,13 +38,12 @@ describe('ReactDOMFizzServer', () => {
     Scheduler = require('scheduler');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    if (__EXPERIMENTAL__) {
-      ReactDOMFizzServer = require('react-dom/server');
-    }
+    ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
+      use = React.experimental_use;
     }
 
     PropTypes = require('prop-types');
@@ -89,6 +89,30 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
+  function expectErrors(errorsArr, toBeDevArr, toBeProdArr) {
+    const mappedErrows = errorsArr.map(({error, errorInfo}) => {
+      const stack = errorInfo && errorInfo.componentStack;
+      const digest = error.digest;
+      if (stack) {
+        return [error.message, digest, normalizeCodeLocInfo(stack)];
+      } else if (digest) {
+        return [error.message, digest];
+      }
+      return error.message;
+    });
+    if (__DEV__) {
+      expect(mappedErrows).toEqual(toBeDevArr);
+    } else {
+      expect(mappedErrows).toEqual(toBeProdArr);
+    }
+  }
+
+  function componentStack(components) {
+    return components
+      .map(component => `\n    in ${component} (at **)`)
+      .join('');
+  }
+
   async function act(callback) {
     await callback();
     // Await one turn around the event loop.
@@ -106,6 +130,8 @@ describe('ReactDOMFizzServer', () => {
     buffer = '';
     const fakeBody = document.createElement('body');
     fakeBody.innerHTML = bufferedContent;
+    const parent =
+      container.nodeName === '#document' ? container.body : container;
     while (fakeBody.firstChild) {
       const node = fakeBody.firstChild;
       if (
@@ -115,11 +141,35 @@ describe('ReactDOMFizzServer', () => {
         const script = document.createElement('script');
         script.textContent = node.textContent;
         fakeBody.removeChild(node);
-        container.appendChild(script);
+        parent.appendChild(script);
       } else {
-        container.appendChild(node);
+        parent.appendChild(node);
       }
     }
+  }
+
+  async function actIntoEmptyDocument(callback) {
+    await callback();
+    // Await one turn around the event loop.
+    // This assumes that we'll flush everything we have so far.
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+    if (hasErrored) {
+      throw fatalError;
+    }
+    // JSDOM doesn't support stream HTML parser so we need to give it a proper fragment.
+    // We also want to execute any scripts that are embedded.
+    // We assume that we have now received a proper fragment of HTML.
+    const bufferedContent = buffer;
+    // Test Environment
+    const jsdom = new JSDOM(bufferedContent, {
+      runScripts: 'dangerously',
+    });
+    window = jsdom.window;
+    document = jsdom.window.document;
+    container = document;
+    buffer = '';
   }
 
   function getVisibleChildren(element) {
@@ -234,7 +284,11 @@ describe('ReactDOMFizzServer', () => {
     return readText(text);
   }
 
-  // @gate experimental
+  function AsyncTextWrapped({as, text}) {
+    const As = as;
+    return <As>{readText(text)}</As>;
+  }
+
   it('should asynchronously load a lazy component', async () => {
     let resolveA;
     const LazyA = React.lazy(() => {
@@ -301,7 +355,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('#23331: does not warn about hydration mismatches if something suspended in an earlier sibling', async () => {
     const makeApp = () => {
       let resolve;
@@ -367,7 +420,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('should support nonce scripts', async () => {
     CSPnonce = 'R4nd0m';
     try {
@@ -399,7 +451,6 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  // @gate experimental
   it('should client render a boundary if a lazy component rejects', async () => {
     let rejectComponent;
     const LazyComponent = React.lazy(() => {
@@ -407,8 +458,6 @@ describe('ReactDOMFizzServer', () => {
         rejectComponent = reject;
       });
     });
-
-    const loggedErrors = [];
 
     function App({isClient}) {
       return (
@@ -421,24 +470,32 @@ describe('ReactDOMFizzServer', () => {
     }
 
     let bootstrapped = false;
+    const errors = [];
     window.__INIT__ = function() {
       bootstrapped = true;
       // Attempt to hydrate the content.
       ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
-        onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(error.message);
+        onRecoverableError(error, errorInfo) {
+          errors.push({error, errorInfo});
         },
       });
     };
+
+    const theError = new Error('Test');
+    const loggedErrors = [];
+    function onError(x) {
+      loggedErrors.push(x);
+      return 'Hash of (' + x.message + ')';
+    }
+    const expectedDigest = onError(theError);
+    loggedErrors.length = 0;
 
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
         {
           bootstrapScriptContent: '__INIT__();',
-          onError(x) {
-            loggedErrors.push(x);
-          },
+          onError,
         },
       );
       pipe(writable);
@@ -453,7 +510,6 @@ describe('ReactDOMFizzServer', () => {
 
     expect(loggedErrors).toEqual([]);
 
-    const theError = new Error('Test');
     await act(async () => {
       rejectComponent(theError);
     });
@@ -464,10 +520,23 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // Now we can client render it instead.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+    expectErrors(
+      errors,
+      [
+        [
+          theError.message,
+          expectedDigest,
+          componentStack(['Lazy', 'Suspense', 'div', 'App']),
+        ],
+      ],
+      [
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          expectedDigest,
+        ],
+      ],
+    );
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
@@ -475,7 +544,6 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([theError]);
   });
 
-  // @gate experimental
   it('should asynchronously load a lazy element', async () => {
     let resolveElement;
     const lazyElement = React.lazy(() => {
@@ -505,7 +573,6 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 
-  // @gate experimental
   it('should client render a boundary if a lazy element rejects', async () => {
     let rejectElement;
     const element = <Text text="Hello" />;
@@ -515,7 +582,14 @@ describe('ReactDOMFizzServer', () => {
       });
     });
 
+    const theError = new Error('Test');
     const loggedErrors = [];
+    function onError(x) {
+      loggedErrors.push(x);
+      return 'hash of (' + x.message + ')';
+    }
+    const expectedDigest = onError(theError);
+    loggedErrors.length = 0;
 
     function App({isClient}) {
       return (
@@ -532,19 +606,18 @@ describe('ReactDOMFizzServer', () => {
         <App isClient={false} />,
 
         {
-          onError(x) {
-            loggedErrors.push(x);
-          },
+          onError,
         },
       );
       pipe(writable);
     });
     expect(loggedErrors).toEqual([]);
 
+    const errors = [];
     // Attempt to hydrate the content.
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
-      onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+      onRecoverableError(error, errorInfo) {
+        errors.push({error, errorInfo});
       },
     });
     Scheduler.unstable_flushAll();
@@ -554,7 +627,6 @@ describe('ReactDOMFizzServer', () => {
 
     expect(loggedErrors).toEqual([]);
 
-    const theError = new Error('Test');
     await act(async () => {
       rejectElement(theError);
     });
@@ -565,18 +637,189 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // Now we can client render it instead.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+
+    expectErrors(
+      errors,
+      [
+        [
+          theError.message,
+          expectedDigest,
+          componentStack(['Suspense', 'div', 'App']),
+        ],
+      ],
+      [
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          expectedDigest,
+        ],
+      ],
+    );
 
     // The client rendered HTML is now in place.
-    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    // expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
 
     expect(loggedErrors).toEqual([theError]);
   });
 
-  // @gate experimental
+  it('Errors in boundaries should be sent to the client and reported on client render - Error before flushing', async () => {
+    function Indirection({level, children}) {
+      if (level > 0) {
+        return <Indirection level={level - 1}>{children}</Indirection>;
+      }
+      return children;
+    }
+
+    const theError = new Error('uh oh');
+
+    function Erroring({isClient}) {
+      if (isClient) {
+        return 'Hello World';
+      }
+      throw theError;
+    }
+
+    function App({isClient}) {
+      return (
+        <div>
+          <Suspense fallback={<span>loading...</span>}>
+            <Erroring isClient={isClient} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const loggedErrors = [];
+    function onError(x) {
+      loggedErrors.push(x);
+      return 'hash(' + x.message + ')';
+    }
+    const expectedDigest = onError(theError);
+    loggedErrors.length = 0;
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App />,
+
+        {
+          onError,
+        },
+      );
+      pipe(writable);
+    });
+    expect(loggedErrors).toEqual([theError]);
+
+    const errors = [];
+    // Attempt to hydrate the content.
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push({error, errorInfo});
+      },
+    });
+    Scheduler.unstable_flushAll();
+
+    expect(getVisibleChildren(container)).toEqual(<div>Hello World</div>);
+
+    expectErrors(
+      errors,
+      [
+        [
+          theError.message,
+          expectedDigest,
+          componentStack(['Erroring', 'Suspense', 'div', 'App']),
+        ],
+      ],
+      [
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          expectedDigest,
+        ],
+      ],
+    );
+  });
+
+  it('Errors in boundaries should be sent to the client and reported on client render - Error after flushing', async () => {
+    let rejectComponent;
+    const LazyComponent = React.lazy(() => {
+      return new Promise((resolve, reject) => {
+        rejectComponent = reject;
+      });
+    });
+
+    function App({isClient}) {
+      return (
+        <div>
+          <Suspense fallback={<Text text="Loading..." />}>
+            {isClient ? <Text text="Hello" /> : <LazyComponent text="Hello" />}
+          </Suspense>
+        </div>
+      );
+    }
+
+    const loggedErrors = [];
+    const theError = new Error('uh oh');
+    function onError(x) {
+      loggedErrors.push(x);
+      return 'hash(' + x.message + ')';
+    }
+    const expectedDigest = onError(theError);
+    loggedErrors.length = 0;
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <App />,
+
+        {
+          onError,
+        },
+      );
+      pipe(writable);
+    });
+    expect(loggedErrors).toEqual([]);
+
+    const errors = [];
+    // Attempt to hydrate the content.
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push({error, errorInfo});
+      },
+    });
+    Scheduler.unstable_flushAll();
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await act(async () => {
+      rejectComponent(theError);
+    });
+
+    expect(loggedErrors).toEqual([theError]);
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    // Now we can client render it instead.
+    expect(Scheduler).toFlushAndYield([]);
+
+    expectErrors(
+      errors,
+      [
+        [
+          theError.message,
+          expectedDigest,
+          componentStack(['Lazy', 'Suspense', 'div', 'App']),
+        ],
+      ],
+      [
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          expectedDigest,
+        ],
+      ],
+    );
+
+    // The client rendered HTML is now in place.
+    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    expect(loggedErrors).toEqual([theError]);
+  });
+
   it('should asynchronously load the suspense boundary', async () => {
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -595,7 +838,6 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Hello World</div>);
   });
 
-  // @gate experimental
   it('waits for pending content to come in from the server and then hydrates it', async () => {
     const ref = React.createRef();
 
@@ -659,7 +901,6 @@ describe('ReactDOMFizzServer', () => {
     expect(ref.current).toBe(h1);
   });
 
-  // @gate experimental
   it('handles an error on the client if the server ends up erroring', async () => {
     const ref = React.createRef();
 
@@ -741,7 +982,7 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate enableSuspenseList
-  // @gate experimental
+
   it('shows inserted items before pending in a SuspenseList as fallbacks while hydrating', async () => {
     const ref = React.createRef();
 
@@ -830,7 +1071,6 @@ describe('ReactDOMFizzServer', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate experimental
   it('client renders a boundary if it does not resolve before aborting', async () => {
     function App() {
       return (
@@ -844,18 +1084,26 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
+    const loggedErrors = [];
+    const expectedDigest = 'Hash for Abort';
+    function onError(error) {
+      loggedErrors.push(error);
+      return expectedDigest;
+    }
+
     let controls;
     await act(async () => {
-      controls = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      controls = ReactDOMFizzServer.renderToPipeableStream(<App />, {onError});
       controls.pipe(writable);
     });
 
     // We're still showing a fallback.
 
+    const errors = [];
     // Attempt to hydrate the content.
     ReactDOMClient.hydrateRoot(container, <App />, {
-      onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+      onRecoverableError(error, errorInfo) {
+        errors.push({error, errorInfo});
       },
     });
     Scheduler.unstable_flushAll();
@@ -869,10 +1117,23 @@ describe('ReactDOMFizzServer', () => {
     });
 
     // We still can't render it on the client.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to an ' +
-        'error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+    expectErrors(
+      errors,
+      [
+        [
+          'The server did not finish this Suspense boundary: The render was aborted by the server without a reason.',
+          expectedDigest,
+          componentStack(['h1', 'Suspense', 'div', 'App']),
+        ],
+      ],
+      [
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          expectedDigest,
+        ],
+      ],
+    );
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // We now resolve it on the client.
@@ -887,7 +1148,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('should allow for two containers to be written to the same document', async () => {
     // We create two passthrough streams for each container to write into.
     // Notably we don't implement a end() call for these. Because we don't want to
@@ -978,7 +1238,6 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  // @gate experimental
   it('can resolve async content in esoteric parents', async () => {
     function AsyncOption({text}) {
       return <option>{readText(text)}</option>;
@@ -1076,7 +1335,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('can resolve async content in table parents', async () => {
     function AsyncTableBody({className, children}) {
       return <tbody className={readText(className)}>{children}</tbody>;
@@ -1149,7 +1407,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('can stream into an SVG container', async () => {
     function AsyncPath({id}) {
       return <path id={readText(id)} />;
@@ -1214,7 +1471,6 @@ describe('ReactDOMFizzServer', () => {
     );
   }
 
-  // @gate experimental
   it('should include a component stack across suspended boundaries', async () => {
     function B() {
       const children = [readText('Hello'), readText('World')];
@@ -1314,7 +1570,6 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  // @gate experimental
   it('should can suspend in a class component with legacy context', async () => {
     class TestProvider extends React.Component {
       static childContextTypes = {
@@ -1382,7 +1637,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('should resume the context from where it left off', async () => {
     const ContextA = React.createContext('A0');
     const ContextB = React.createContext('B0');
@@ -1447,7 +1701,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('should recover the outer context when an error happens inside a provider', async () => {
     const ContextA = React.createContext('A0');
     const ContextB = React.createContext('B0');
@@ -1514,7 +1767,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('client renders a boundary if it errors before finishing the fallback', async () => {
     function App({isClient}) {
       return (
@@ -1530,16 +1782,22 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
+    const theError = new Error('Test');
     const loggedErrors = [];
+    function onError(x) {
+      loggedErrors.push(x);
+      return `hash of (${x.message})`;
+    }
+    const expectedDigest = onError(theError);
+    loggedErrors.length = 0;
+
     let controls;
     await act(async () => {
       controls = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
 
         {
-          onError(x) {
-            loggedErrors.push(x);
-          },
+          onError,
         },
       );
       controls.pipe(writable);
@@ -1547,10 +1805,11 @@ describe('ReactDOMFizzServer', () => {
 
     // We're still showing a fallback.
 
+    const errors = [];
     // Attempt to hydrate the content.
     ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
-      onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
+      onRecoverableError(error, errorInfo) {
+        errors.push({error, errorInfo});
       },
     });
     Scheduler.unstable_flushAll();
@@ -1560,7 +1819,6 @@ describe('ReactDOMFizzServer', () => {
 
     expect(loggedErrors).toEqual([]);
 
-    const theError = new Error('Test');
     // Error the content, but we don't have a fallback yet.
     await act(async () => {
       rejectText('Hello', theError);
@@ -1581,10 +1839,30 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // That will let us client render it instead.
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    expect(Scheduler).toFlushAndYield([]);
+    expectErrors(
+      errors,
+      [
+        [
+          theError.message,
+          expectedDigest,
+          componentStack([
+            'AsyncText',
+            'h1',
+            'Suspense',
+            'div',
+            'Suspense',
+            'App',
+          ]),
+        ],
+      ],
+      [
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          expectedDigest,
+        ],
+      ],
+    );
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(
@@ -1596,7 +1874,6 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([theError]);
   });
 
-  // @gate experimental
   it('should be able to abort the fallback if the main content finishes first', async () => {
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -1626,7 +1903,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 
-  // @gate experimental && enableSuspenseAvoidThisFallbackFizz
+  // @gate enableSuspenseAvoidThisFallbackFizz
   it('should respect unstable_avoidThisFallback', async () => {
     const resolved = {
       0: false,
@@ -1773,7 +2050,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate experimental
   it('calls getServerSnapshot instead of getSnapshot', async () => {
     const ref = React.createRef();
 
@@ -1854,7 +2130,7 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // The selector implementation uses the lazy ref initialization pattern
-  // @gate experimental
+
   it('calls getServerSnapshot instead of getSnapshot (with selector and isEqual)', async () => {
     // Same as previous test, but with a selector that returns a complex object
     // that is memoized with a custom `isEqual` function.
@@ -1939,7 +2215,6 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>client</div>);
   });
 
-  // @gate experimental
   it(
     'errors during hydration in the shell force a client render at the ' +
       'root, and during the client render it recovers',
@@ -2022,7 +2297,6 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
-  // @gate experimental
   it(
     'errors during hydration force a client render at the nearest Suspense ' +
       'boundary, and during the client render it recovers',
@@ -2116,7 +2390,6 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
-  // @gate experimental
   it(
     'errors during hydration force a client render at the nearest Suspense ' +
       'boundary, and during the client render it fails again',
@@ -2173,11 +2446,10 @@ describe('ReactDOMFizzServer', () => {
 
       // Hydrate the tree. Child will throw during render.
       isClient = true;
+      const errors = [];
       ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          Scheduler.unstable_yieldValue(
-            'Log recoverable error: ' + error.message,
-          );
+          errors.push(error.message);
         },
       });
 
@@ -2185,12 +2457,14 @@ describe('ReactDOMFizzServer', () => {
       // shouldn't be called.
       expect(Scheduler).toFlushAndYield([]);
       expect(getVisibleChildren(container)).toEqual('Oops!');
+
+      expectErrors(errors, [], []);
     },
   );
 
   // Disabled because of a WWW late mutations regression.
   // We may want to re-enable this if we figure out why.
-  // @gate experimental
+
   // @gate FIXME
   it('does not recreate the fallback if server errors and hydration suspends', async () => {
     let isClient = false;
@@ -2272,7 +2546,7 @@ describe('ReactDOMFizzServer', () => {
 
   // Disabled because of a WWW late mutations regression.
   // We may want to re-enable this if we figure out why.
-  // @gate experimental
+
   // @gate FIXME
   it(
     'does not recreate the fallback if server errors and hydration suspends ' +
@@ -2371,7 +2645,7 @@ describe('ReactDOMFizzServer', () => {
 
   // Disabled because of a WWW late mutations regression.
   // We may want to re-enable this if we figure out why.
-  // @gate experimental
+
   // @gate FIXME
   it(
     'recreates the fallback if server errors and hydration suspends but ' +
@@ -2477,7 +2751,6 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
-  // @gate experimental
   it(
     'errors during hydration force a client render at the nearest Suspense ' +
       'boundary, and during the client render it recovers, then a deeper ' +
@@ -2647,7 +2920,6 @@ describe('ReactDOMFizzServer', () => {
     expect(container.textContent).toEqual('AB');
   });
 
-  // @gate experimental
   it('logs multiple hydration errors in the same render', async () => {
     let isClient = false;
 
@@ -2717,7 +2989,7 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  // @gate enableServerContext && experimental
+  // @gate enableServerContext
   it('supports ServerContext', async () => {
     let ServerContext;
     function inlineLazyServerContextInitialization() {
@@ -2766,7 +3038,6 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  // @gate experimental
   it('Supports iterable', async () => {
     const Immutable = require('immutable');
 
@@ -2789,8 +3060,435 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('Supports custom abort reasons with a string', async () => {
+    function App() {
+      return (
+        <div>
+          <p>
+            <Suspense fallback={'p'}>
+              <AsyncText text={'hello'} />
+            </Suspense>
+          </p>
+          <span>
+            <Suspense fallback={'span'}>
+              <AsyncText text={'world'} />
+            </Suspense>
+          </span>
+        </div>
+      );
+    }
+
+    let abort;
+    const loggedErrors = [];
+    await act(async () => {
+      const {
+        pipe,
+        abort: abortImpl,
+      } = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        onError(error) {
+          // In this test we contrive erroring with strings so we push the error whereas in most
+          // other tests we contrive erroring with Errors and push the message.
+          loggedErrors.push(error);
+          return 'a digest';
+        },
+      });
+      abort = abortImpl;
+      pipe(writable);
+    });
+
+    expect(loggedErrors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>p</p>
+        <span>span</span>
+      </div>,
+    );
+
+    await act(() => {
+      abort('foobar');
+    });
+
+    expect(loggedErrors).toEqual(['foobar', 'foobar']);
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push({error, errorInfo});
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+
+    expectErrors(
+      errors,
+      [
+        [
+          'The server did not finish this Suspense boundary: foobar',
+          'a digest',
+          componentStack(['Suspense', 'p', 'div', 'App']),
+        ],
+        [
+          'The server did not finish this Suspense boundary: foobar',
+          'a digest',
+          componentStack(['Suspense', 'span', 'div', 'App']),
+        ],
+      ],
+      [
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          'a digest',
+        ],
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          'a digest',
+        ],
+      ],
+    );
+  });
+
+  it('Supports custom abort reasons with an Error', async () => {
+    function App() {
+      return (
+        <div>
+          <p>
+            <Suspense fallback={'p'}>
+              <AsyncText text={'hello'} />
+            </Suspense>
+          </p>
+          <span>
+            <Suspense fallback={'span'}>
+              <AsyncText text={'world'} />
+            </Suspense>
+          </span>
+        </div>
+      );
+    }
+
+    let abort;
+    const loggedErrors = [];
+    await act(async () => {
+      const {
+        pipe,
+        abort: abortImpl,
+      } = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        onError(error) {
+          loggedErrors.push(error.message);
+          return 'a digest';
+        },
+      });
+      abort = abortImpl;
+      pipe(writable);
+    });
+
+    expect(loggedErrors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>p</p>
+        <span>span</span>
+      </div>,
+    );
+
+    await act(() => {
+      abort(new Error('uh oh'));
+    });
+
+    expect(loggedErrors).toEqual(['uh oh', 'uh oh']);
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push({error, errorInfo});
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+
+    expectErrors(
+      errors,
+      [
+        [
+          'The server did not finish this Suspense boundary: uh oh',
+          'a digest',
+          componentStack(['Suspense', 'p', 'div', 'App']),
+        ],
+        [
+          'The server did not finish this Suspense boundary: uh oh',
+          'a digest',
+          componentStack(['Suspense', 'span', 'div', 'App']),
+        ],
+      ],
+      [
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          'a digest',
+        ],
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          'a digest',
+        ],
+      ],
+    );
+  });
+
+  it('warns in dev if you access digest from errorInfo in onRecoverableError', async () => {
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <div>
+          <Suspense fallback={'loading...'}>
+            <AsyncText text={'hello'} />
+          </Suspense>
+        </div>,
+        {
+          onError(error) {
+            return 'a digest';
+          },
+        },
+      );
+      rejectText('hello');
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(<div>loading...</div>);
+
+    ReactDOMClient.hydrateRoot(
+      container,
+      <div>
+        <Suspense fallback={'loading...'}>hello</Suspense>
+      </div>,
+      {
+        onRecoverableError(error, errorInfo) {
+          expect(() => {
+            expect(error.digest).toBe('a digest');
+            expect(errorInfo.digest).toBe('a digest');
+          }).toErrorDev(
+            'Warning: You are accessing "digest" from the errorInfo object passed to onRecoverableError.' +
+              ' This property is deprecated and will be removed in a future version of React.' +
+              ' To access the digest of an Error look for this property on the Error instance itself.',
+            {withoutStack: true},
+          );
+        },
+      },
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+  });
+
+  describe('error escaping', () => {
+    it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
+      window.__outlet = {};
+
+      const dangerousErrorString =
+        '"></template></div><script>window.__outlet.message="from error"</script><div><template data-foo="';
+
+      function Erroring() {
+        throw new Error(dangerousErrorString);
+      }
+
+      // We can't test newline in component stacks because the stack always takes just one line and we end up
+      // dropping the first part including the \n character
+      Erroring.displayName =
+        'DangerousName' +
+        dangerousErrorString.replace(
+          'message="from error"',
+          'stack="from_stack"',
+        );
+
+      function App() {
+        return (
+          <div>
+            <Suspense fallback={<div>Loading...</div>}>
+              <Erroring />
+            </Suspense>
+          </div>
+        );
+      }
+
+      function onError(x) {
+        return `dangerous hash ${x.message.replace(
+          'message="from error"',
+          'hash="from hash"',
+        )}`;
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+          onError,
+        });
+        pipe(writable);
+      });
+      expect(window.__outlet).toEqual({});
+    });
+
+    it('escapes error hash, message, and component stack values in clientRenderInstruction (javascript escaping)', async () => {
+      window.__outlet = {};
+
+      const dangerousErrorString =
+        '");window.__outlet.message="from error";</script><script>(() => {})("';
+
+      let rejectComponent;
+      const SuspensyErroring = React.lazy(() => {
+        return new Promise((resolve, reject) => {
+          rejectComponent = reject;
+        });
+      });
+
+      // We can't test newline in component stacks because the stack always takes just one line and we end up
+      // dropping the first part including the \n character
+      SuspensyErroring.displayName =
+        'DangerousName' +
+        dangerousErrorString.replace(
+          'message="from error"',
+          'stack="from_stack"',
+        );
+
+      function App() {
+        return (
+          <div>
+            <Suspense fallback={<div>Loading...</div>}>
+              <SuspensyErroring />
+            </Suspense>
+          </div>
+        );
+      }
+
+      function onError(x) {
+        return `dangerous hash ${x.message.replace(
+          'message="from error"',
+          'hash="from hash"',
+        )}`;
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+          onError,
+        });
+        pipe(writable);
+      });
+
+      await act(() => {
+        rejectComponent(new Error(dangerousErrorString));
+      });
+      expect(window.__outlet).toEqual({});
+    });
+
+    it('escapes such that attributes cannot be masked', async () => {
+      const dangerousErrorString = '" data-msg="bad message" data-foo="';
+      const theError = new Error(dangerousErrorString);
+
+      function Erroring({isClient}) {
+        if (isClient) return 'Hello';
+        throw theError;
+      }
+
+      function App({isClient}) {
+        return (
+          <div>
+            <Suspense fallback={<div>Loading...</div>}>
+              <Erroring isClient={isClient} />
+            </Suspense>
+          </div>
+        );
+      }
+
+      const loggedErrors = [];
+      function onError(x) {
+        loggedErrors.push(x);
+        return x.message.replace('bad message', 'bad hash');
+      }
+      const expectedDigest = onError(theError);
+      loggedErrors.length = 0;
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+          onError,
+        });
+        pipe(writable);
+      });
+
+      expect(loggedErrors).toEqual([theError]);
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+        onRecoverableError(error, errorInfo) {
+          errors.push({error, errorInfo});
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+
+      // If escaping were not done we would get a message that says "bad hash"
+      expectErrors(
+        errors,
+        [
+          [
+            theError.message,
+            expectedDigest,
+            componentStack(['Erroring', 'Suspense', 'div', 'App']),
+          ],
+        ],
+        [
+          [
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+            expectedDigest,
+          ],
+        ],
+      );
+    });
+  });
+
+  it('accepts an integrity property for bootstrapScripts and bootstrapModules', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+        {
+          bootstrapScripts: [
+            'foo',
+            {
+              src: 'bar',
+            },
+            {
+              src: 'baz',
+              integrity: 'qux',
+            },
+          ],
+          bootstrapModules: [
+            'quux',
+            {
+              src: 'corge',
+            },
+            {
+              src: 'grault',
+              integrity: 'garply',
+            },
+          ],
+        },
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+    expect(
+      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
+    ).toEqual([
+      '<script src="foo" async=""></script>',
+      '<script src="bar" async=""></script>',
+      '<script src="baz" integrity="qux" async=""></script>',
+      '<script type="module" src="quux" async=""></script>',
+      '<script type="module" src="corge" async=""></script>',
+      '<script type="module" src="grault" integrity="garply" async=""></script>',
+    ]);
+  });
+
   describe('bootstrapScriptContent escaping', () => {
-    // @gate experimental
     it('the "S" in "</?[Ss]cript" strings are replaced with unicode escaped lowercase s or S depending on case, preserving case sensitivity of nearby characters', async () => {
       window.__test_outlet = '';
       const stringWithScriptsInIt =
@@ -2807,7 +3505,6 @@ describe('ReactDOMFizzServer', () => {
       expect(window.__test_outlet).toMatch(stringWithScriptsInIt);
     });
 
-    // @gate experimental
     it('does not escape \\u2028, or \\u2029 characters', async () => {
       // these characters are ignored in engines support https://github.com/tc39/proposal-json-superset
       // in this test with JSDOM the characters are silently dropped and thus don't need to be encoded.
@@ -2832,7 +3529,6 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
-    // @gate experimental
     it('does not escape <, >, or & characters', async () => {
       // these characters valid javascript and may be necessary in scripts and won't be interpretted properly
       // escaped outside of a string context within javascript
@@ -2850,8 +3546,83 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
-  // @gate experimental && enableClientRenderFallbackOnTextMismatch
-  it('#24384: Suspending should halt hydration warnings while still allowing siblings to warm up', async () => {
+  it('#24384: Suspending should halt hydration warnings and not emit any if hydration completes successfully after unsuspending', async () => {
+    const makeApp = () => {
+      let resolve, resolved;
+      const promise = new Promise(r => {
+        resolve = () => {
+          resolved = true;
+          return r();
+        };
+      });
+      function ComponentThatSuspends() {
+        if (!resolved) {
+          throw promise;
+        }
+        return <p>A</p>;
+      }
+
+      const App = () => {
+        return (
+          <div>
+            <Suspense fallback={<h1>Loading...</h1>}>
+              <ComponentThatSuspends />
+              <h2 name="hello">world</h2>
+            </Suspense>
+          </div>
+        );
+      };
+
+      return [App, resolve];
+    };
+
+    const [ServerApp, serverResolve] = makeApp();
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<ServerApp />);
+      pipe(writable);
+    });
+    await act(() => {
+      serverResolve();
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>A</p>
+        <h2 name="hello">world</h2>
+      </div>,
+    );
+
+    const [ClientApp, clientResolve] = makeApp();
+    ReactDOMClient.hydrateRoot(container, <ClientApp />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(
+          'Logged recoverable error: ' + error.message,
+        );
+      },
+    });
+    Scheduler.unstable_flushAll();
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>A</p>
+        <h2 name="hello">world</h2>
+      </div>,
+    );
+
+    // Now that the boundary resolves to it's children the hydration completes and discovers that there is a mismatch requiring
+    // client-side rendering.
+    await clientResolve();
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>A</p>
+        <h2 name="hello">world</h2>
+      </div>,
+    );
+  });
+
+  // @gate enableClientRenderFallbackOnTextMismatch
+  it('#24384: Suspending should halt hydration warnings but still emit hydration warnings after unsuspending if mismatches are genuine', async () => {
     const makeApp = () => {
       let resolve, resolved;
       const promise = new Promise(r => {
@@ -2940,7 +3711,7 @@ describe('ReactDOMFizzServer', () => {
     expect(Scheduler).toFlushAndYield([]);
   });
 
-  // @gate experimental && enableClientRenderFallbackOnTextMismatch
+  // @gate enableClientRenderFallbackOnTextMismatch
   it('only warns once on hydration mismatch while within a suspense boundary', async () => {
     const originalConsoleError = console.error;
     const mockError = jest.fn();
@@ -3019,7 +3790,6 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
-  // @gate experimental
   it('supresses hydration warnings when an error occurs within a Suspense boundary', async () => {
     let isClient = false;
     let shouldThrow = true;
@@ -3091,5 +3861,1789 @@ describe('ReactDOMFizzServer', () => {
     );
 
     expect(Scheduler).toFlushAndYield([]);
+  });
+
+  // @gate __DEV__
+  it('does not invokeGuardedCallback for errors after the first hydration error', async () => {
+    // We can't use the toErrorDev helper here because this is async.
+    const originalConsoleError = console.error;
+    const mockError = jest.fn();
+    console.error = (...args) => {
+      if (args.length > 1) {
+        if (typeof args[1] === 'object') {
+          mockError(args[0].split('\n')[0]);
+          return;
+        }
+      }
+      mockError(...args.map(normalizeCodeLocInfo));
+    };
+    let isClient = false;
+    let shouldThrow = true;
+
+    function ThrowUntilOnClient({children, message}) {
+      if (isClient && shouldThrow) {
+        Scheduler.unstable_yieldValue('throwing: ' + message);
+        throw new Error(message);
+      }
+      return children;
+    }
+
+    function StopThrowingOnClient() {
+      if (isClient) {
+        shouldThrow = false;
+      }
+      return null;
+    }
+
+    const App = () => {
+      return (
+        <div>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <ThrowUntilOnClient message="first error">
+              <h1>one</h1>
+            </ThrowUntilOnClient>
+            <ThrowUntilOnClient message="second error">
+              <h2>two</h2>
+            </ThrowUntilOnClient>
+            <ThrowUntilOnClient message="third error">
+              <h3>three</h3>
+            </ThrowUntilOnClient>
+            <StopThrowingOnClient />
+          </Suspense>
+        </div>
+      );
+    };
+
+    try {
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
+
+      isClient = true;
+
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(
+            'Logged recoverable error: ' + error.message,
+          );
+        },
+      });
+      expect(Scheduler).toFlushAndYield([
+        'throwing: first error',
+        // this repeated first error is the invokeGuardedCallback throw
+        'throwing: first error',
+        // these are actually thrown during render but no iGC repeat and no queueing as hydration errors
+        'throwing: second error',
+        'throwing: third error',
+        // all hydration errors are still queued
+        'Logged recoverable error: first error',
+        'Logged recoverable error: second error',
+        'Logged recoverable error: third error',
+        // other recoverable errors are queued as hydration errors
+        'Logged recoverable error: There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+      ]);
+      // These Uncaught error calls are the error reported by the runtime (jsdom here, browser in actual use)
+      // when invokeGuardedCallback is used to replay an error in dev using event dispatching in the document
+      expect(mockError.mock.calls).toEqual([
+        // we only get one because we suppress invokeGuardedCallback after the first one when hydrating in a
+        // suspense boundary
+        ['Error: Uncaught [Error: first error]'],
+      ]);
+      mockError.mockClear();
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
+
+      expect(Scheduler).toFlushAndYield([]);
+      expect(mockError.mock.calls).toEqual([]);
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
+
+  it('does not invokeGuardedCallback for errors after a preceding fiber suspends', async () => {
+    // We can't use the toErrorDev helper here because this is async.
+    const originalConsoleError = console.error;
+    const mockError = jest.fn();
+    console.error = (...args) => {
+      if (args.length > 1) {
+        if (typeof args[1] === 'object') {
+          mockError(args[0].split('\n')[0]);
+          return;
+        }
+      }
+      mockError(...args.map(normalizeCodeLocInfo));
+    };
+    let isClient = false;
+    let shouldThrow = true;
+    let promise = null;
+    let unsuspend = null;
+    let isResolved = false;
+
+    function ComponentThatSuspendsOnClient() {
+      if (isClient && !isResolved) {
+        if (promise === null) {
+          promise = new Promise(resolve => {
+            unsuspend = () => {
+              isResolved = true;
+              resolve();
+            };
+          });
+        }
+        Scheduler.unstable_yieldValue('suspending');
+        throw promise;
+      }
+      return null;
+    }
+
+    function ThrowUntilOnClient({children, message}) {
+      if (isClient && shouldThrow) {
+        Scheduler.unstable_yieldValue('throwing: ' + message);
+        throw new Error(message);
+      }
+      return children;
+    }
+
+    function StopThrowingOnClient() {
+      if (isClient) {
+        shouldThrow = false;
+      }
+      return null;
+    }
+
+    const App = () => {
+      return (
+        <div>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <ComponentThatSuspendsOnClient />
+            <ThrowUntilOnClient message="first error">
+              <h1>one</h1>
+            </ThrowUntilOnClient>
+            <ThrowUntilOnClient message="second error">
+              <h2>two</h2>
+            </ThrowUntilOnClient>
+            <ThrowUntilOnClient message="third error">
+              <h3>three</h3>
+            </ThrowUntilOnClient>
+            <StopThrowingOnClient />
+          </Suspense>
+        </div>
+      );
+    };
+
+    try {
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
+
+      isClient = true;
+
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(
+            'Logged recoverable error: ' + error.message,
+          );
+        },
+      });
+      expect(Scheduler).toFlushAndYield([
+        'suspending',
+        'throwing: first error',
+        // There is no repeated first error because we already suspended and no
+        // invokeGuardedCallback is used if we are in dev
+        // or in prod there is just never an invokeGuardedCallback
+        'throwing: second error',
+        'throwing: third error',
+      ]);
+      expect(mockError.mock.calls).toEqual([]);
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
+      await unsuspend();
+      // Since our client components only throw on the very first render there are no
+      // new throws in this pass
+      expect(Scheduler).toFlushAndYield([]);
+
+      expect(mockError.mock.calls).toEqual([]);
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
+
+  // @gate __DEV__
+  it('suspending after erroring will cause errors previously queued to be silenced until the boundary resolves', async () => {
+    // We can't use the toErrorDev helper here because this is async.
+    const originalConsoleError = console.error;
+    const mockError = jest.fn();
+    console.error = (...args) => {
+      if (args.length > 1) {
+        if (typeof args[1] === 'object') {
+          mockError(args[0].split('\n')[0]);
+          return;
+        }
+      }
+      mockError(...args.map(normalizeCodeLocInfo));
+    };
+    let isClient = false;
+    let shouldThrow = true;
+    let promise = null;
+    let unsuspend = null;
+    let isResolved = false;
+
+    function ComponentThatSuspendsOnClient() {
+      if (isClient && !isResolved) {
+        if (promise === null) {
+          promise = new Promise(resolve => {
+            unsuspend = () => {
+              isResolved = true;
+              resolve();
+            };
+          });
+        }
+        Scheduler.unstable_yieldValue('suspending');
+        throw promise;
+      }
+      return null;
+    }
+
+    function ThrowUntilOnClient({children, message}) {
+      if (isClient && shouldThrow) {
+        Scheduler.unstable_yieldValue('throwing: ' + message);
+        throw new Error(message);
+      }
+      return children;
+    }
+
+    function StopThrowingOnClient() {
+      if (isClient) {
+        shouldThrow = false;
+      }
+      return null;
+    }
+
+    const App = () => {
+      return (
+        <div>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <ThrowUntilOnClient message="first error">
+              <h1>one</h1>
+            </ThrowUntilOnClient>
+            <ThrowUntilOnClient message="second error">
+              <h2>two</h2>
+            </ThrowUntilOnClient>
+            <ComponentThatSuspendsOnClient />
+            <ThrowUntilOnClient message="third error">
+              <h3>three</h3>
+            </ThrowUntilOnClient>
+            <StopThrowingOnClient />
+          </Suspense>
+        </div>
+      );
+    };
+
+    try {
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
+
+      isClient = true;
+
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(
+            'Logged recoverable error: ' + error.message,
+          );
+        },
+      });
+      expect(Scheduler).toFlushAndYield([
+        'throwing: first error',
+        // duplicate because first error is re-done in invokeGuardedCallback
+        'throwing: first error',
+        'throwing: second error',
+        'suspending',
+        'throwing: third error',
+      ]);
+      // These Uncaught error calls are the error reported by the runtime (jsdom here, browser in actual use)
+      // when invokeGuardedCallback is used to replay an error in dev using event dispatching in the document
+      expect(mockError.mock.calls).toEqual([
+        // we only get one because we suppress invokeGuardedCallback after the first one when hydrating in a
+        // suspense boundary
+        ['Error: Uncaught [Error: first error]'],
+      ]);
+      mockError.mockClear();
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <h1>one</h1>
+          <h2>two</h2>
+          <h3>three</h3>
+        </div>,
+      );
+      await unsuspend();
+      // Since our client components only throw on the very first render there are no
+      // new throws in this pass
+      expect(Scheduler).toFlushAndYield([]);
+      expect(mockError.mock.calls).toEqual([]);
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
+
+  it('#24578 Hydration errors caused by a suspending component should not become recoverable when nested in an ancestor Suspense that is showing primary content', async () => {
+    // this test failed before because hydration errors on the inner boundary were upgraded to recoverable by
+    // a codepath of the outer boundary
+    function App({isClient}) {
+      return (
+        <Suspense fallback={'outer'}>
+          <Suspense fallback={'inner'}>
+            <div>
+              {isClient ? <AsyncText text="A" /> : <Text text="A" />}
+              <b>B</b>
+            </div>
+          </Suspense>
+        </Suspense>
+      );
+    }
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        errors.push(error.message);
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        A<b>B</b>
+      </div>,
+    );
+
+    resolveText('A');
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        A<b>B</b>
+      </div>,
+    );
+  });
+
+  it('hydration warnings for mismatched text with multiple text nodes caused by suspending should be suppressed', async () => {
+    let resolve;
+    const Lazy = React.lazy(() => {
+      return new Promise(r => {
+        resolve = r;
+      });
+    });
+
+    function App({isClient}) {
+      return (
+        <div>
+          {isClient ? <Lazy /> : <p>lazy</p>}
+          <p>some {'text'}</p>
+        </div>
+      );
+    }
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        errors.push(error.message);
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>lazy</p>
+        <p>some {'text'}</p>
+      </div>,
+    );
+
+    resolve({default: () => <p>lazy</p>});
+    expect(Scheduler).toFlushAndYield([]);
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>lazy</p>
+        <p>some {'text'}</p>
+      </div>,
+    );
+  });
+
+  // @gate enableFloat
+  it('emits html and head start tags (the preamble) before other content if rendered in the shell', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <>
+          <title data-baz="baz">a title</title>
+          <html data-foo="foo">
+            <head data-bar="bar" />
+            <body>a body</body>
+          </html>
+        </>,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(document)).toEqual(
+      <html data-foo="foo">
+        <head data-bar="bar">
+          <title data-baz="baz">a title</title>
+        </head>
+        <body>a body</body>
+      </html>,
+    );
+
+    // Hydrate the same thing on the client. We expect this to still fail because <title> is not a Resource
+    // and is unmatched on hydration
+    const errors = [];
+    ReactDOMClient.hydrateRoot(
+      document,
+      <>
+        <title data-baz="baz">a title</title>
+        <html data-foo="foo">
+          <head data-bar="bar" />
+          <body>a body</body>
+        </html>
+      </>,
+      {
+        onRecoverableError: (err, errInfo) => {
+          errors.push(err.message);
+        },
+      },
+    );
+    expect(() => {
+      try {
+        expect(() => {
+          expect(Scheduler).toFlushWithoutYielding();
+        }).toThrow('Invalid insertion of HTML node in #document node.');
+      } catch (e) {
+        console.log('e', e);
+      }
+    }).toErrorDev(
+      [
+        'Warning: Expected server HTML to contain a matching <title> in <#document>.',
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+        'Warning: validateDOMNesting(...): <title> cannot appear as a child of <#document>',
+      ],
+      {withoutStack: 1},
+    );
+    expect(errors).toEqual([
+      'Hydration failed because the initial UI does not match what was rendered on the server.',
+      'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+    ]);
+    expect(getVisibleChildren(document)).toEqual();
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toThrow('The node to be removed is not a child of this node.');
+  });
+
+  // @gate enableFloat
+  it('holds back body and html closing tags (the postamble) until all pending tasks are completed', async () => {
+    const chunks = [];
+    writable.on('data', chunk => {
+      chunks.push(chunk);
+    });
+
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <head />
+          <body>
+            first
+            <Suspense>
+              <AsyncText text="second" />
+            </Suspense>
+          </body>
+        </html>,
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>{'first'}</body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('second');
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          {'first'}
+          {'second'}
+        </body>
+      </html>,
+    );
+
+    expect(chunks.pop()).toEqual('</body></html>');
+  });
+
+  // @gate enableFloat
+  it('recognizes stylesheet links as attributes during hydration', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <>
+          <link rel="stylesheet" href="foo" precedence="default" />
+          <html>
+            <head>
+              <link rel="author" precedence="this is a nonsense prop" />
+            </head>
+            <body>a body</body>
+          </html>
+        </>,
+      );
+      pipe(writable);
+    });
+    // precedence for stylesheets is mapped to a valid data attribute that is recognized on the client
+    // as opting this node into resource semantics. the use of precedence on the author link is just a
+    // non standard attribute which React allows but is not given any special treatment.
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-rprec="default" />
+          <link rel="author" precedence="this is a nonsense prop" />
+        </head>
+        <body>a body</body>
+      </html>,
+    );
+
+    // It hydrates successfully
+    const root = ReactDOMClient.hydrateRoot(
+      document,
+      <>
+        <link rel="stylesheet" href="foo" precedence="default" />
+        <html>
+          <head>
+            <link rel="author" precedence="this is a nonsense prop" />
+          </head>
+          <body>a body</body>
+        </html>
+      </>,
+    );
+    // We manually capture uncaught errors b/c Jest does not play well with errors thrown in
+    // microtasks after the test completes even when it is expecting to fail (e.g. when the gate is false)
+    // We need to flush the scheduler at the end even if there was an earlier throw otherwise this test will
+    // fail even when failure is expected. This is primarily caused by invokeGuardedCallback replaying commit
+    // phase errors which get rethrown in a microtask
+    const uncaughtErrors = [];
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-rprec="default" />
+            <link rel="author" precedence="this is a nonsense prop" />
+          </head>
+          <body>a body</body>
+        </html>,
+      );
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+
+    root.render(
+      <>
+        <link rel="stylesheet" href="foo" precedence="default" data-bar="bar" />
+        <html>
+          <head />
+          <body>a body</body>
+        </html>
+      </>,
+    );
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="foo"
+              data-rprec="default"
+              data-bar="bar"
+            />
+          </head>
+          <body>a body</body>
+        </html>,
+      );
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+
+    if (uncaughtErrors.length > 0) {
+      throw uncaughtErrors[0];
+    }
+  });
+
+  // Temporarily this test is expected to fail everywhere. When we have resource hoisting
+  // it should start to pass and we can adjust the gate accordingly
+  // @gate false && enableFloat
+  it('should insert missing resources during hydration', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <body>foo</body>
+        </html>,
+      );
+      pipe(writable);
+    });
+
+    const uncaughtErrors = [];
+    ReactDOMClient.hydrateRoot(
+      document,
+      <>
+        <link rel="stylesheet" href="foo" precedence="foo" />
+        <html>
+          <head />
+          <body>foo</body>
+        </html>
+      </>,
+    );
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" precedence="foo" />
+          </head>
+          <body>foo</body>
+        </html>,
+      );
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+
+    // need to flush again to get the invoke guarded callback error to throw in microtask
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+    } catch (e) {
+      uncaughtErrors.push(e);
+    }
+
+    if (uncaughtErrors.length) {
+      throw uncaughtErrors[0];
+    }
+  });
+
+  // @gate experimental && enableFloat
+  it('fail hydration if a suitable resource cannot be found in the DOM for a given location (href)', async () => {
+    gate(flags => {
+      if (!(__EXPERIMENTAL__ && flags.enableFloat)) {
+        throw new Error('bailing out of test');
+      }
+    });
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <head />
+          <body>a body</body>
+        </html>,
+      );
+      pipe(writable);
+    });
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(
+      document,
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" precedence="low" />
+        </head>
+        <body>a body</body>
+      </html>,
+      {
+        onRecoverableError(err, errInfo) {
+          errors.push(err.message);
+        },
+      },
+    );
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toErrorDev(
+      [
+        'Warning: A matching Hydratable Resource was not found in the DOM for <link rel="stylesheet" href="foo">',
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+      ],
+      {withoutStack: 1},
+    );
+    expect(errors).toEqual([
+      'Hydration failed because the initial UI does not match what was rendered on the server.',
+      'Hydration failed because the initial UI does not match what was rendered on the server.',
+      'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+    ]);
+  });
+
+  // @gate experimental && enableFloat
+  it('should error in dev when rendering more than one resource for a given location (href)', async () => {
+    gate(flags => {
+      if (!(__EXPERIMENTAL__ && flags.enableFloat)) {
+        throw new Error('bailing out of test');
+      }
+    });
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <>
+          <link rel="stylesheet" href="foo" precedence="low" />
+          <link rel="stylesheet" href="foo" precedence="high" />
+          <html>
+            <head />
+            <body>a body</body>
+          </html>
+        </>,
+      );
+      pipe(writable);
+    });
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-rprec="low" />
+          <link rel="stylesheet" href="foo" data-rprec="high" />
+        </head>
+        <body>a body</body>
+      </html>,
+    );
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(
+      document,
+      <>
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" precedence="low" />
+            <link rel="stylesheet" href="foo" precedence="high" />
+          </head>
+          <body>a body</body>
+        </html>
+      </>,
+      {
+        onRecoverableError(err, errInfo) {
+          errors.push(err.message);
+        },
+      },
+    );
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toErrorDev([
+      'Warning: Stylesheet resources need a unique representation in the DOM while hydrating and more than one matching DOM Node was found. To fix, ensure you are only rendering one stylesheet link with an href attribute of "foo"',
+      'Warning: Stylesheet resources need a unique representation in the DOM while hydrating and more than one matching DOM Node was found. To fix, ensure you are only rendering one stylesheet link with an href attribute of "foo"',
+    ]);
+    expect(errors).toEqual([]);
+  });
+
+  describe('text separators', () => {
+    // To force performWork to start before resolving AsyncText but before piping we need to wait until
+    // after scheduleWork which currently uses setImmediate to delay performWork
+    function afterImmediate() {
+      return new Promise(resolve => {
+        setImmediate(resolve);
+      });
+    }
+
+    it('it only includes separators between adjacent text nodes', async () => {
+      function App({name}) {
+        return (
+          <div>
+            hello<b>world, {name}</b>!
+          </div>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <App name="Foo" />,
+        );
+        pipe(writable);
+      });
+
+      expect(container.innerHTML).toEqual(
+        '<div>hello<b>world, <!-- -->Foo</b>!</div>',
+      );
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App name="Foo" />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          hello<b>world, {'Foo'}</b>!
+        </div>,
+      );
+    });
+
+    it('it does not insert text separators even when adjacent text is in a delayed segment', async () => {
+      function App({name}) {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div id="app-div">
+              hello
+              <b>
+                world, <AsyncText text={name} />
+              </b>
+              !
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <App name="Foo" />,
+        );
+        pipe(writable);
+      });
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">hello<b>world, <template id="P:1"></template></b>!</div>',
+      );
+
+      await act(() => resolveText('Foo'));
+
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div id="app-div">hello<b>world, Foo</b>!</div>',
+      );
+      // there are extra script nodes at the end of container
+      expect(container.childNodes.length).toBe(5);
+      const div = container.childNodes[1];
+      expect(div.childNodes.length).toBe(3);
+      const b = div.childNodes[1];
+      expect(b.childNodes.length).toBe(2);
+      expect(b.childNodes[0]).toMatchInlineSnapshot('world, ');
+      expect(b.childNodes[1]).toMatchInlineSnapshot('Foo');
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App name="Foo" />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div id="app-div">
+          hello<b>world, {'Foo'}</b>!
+        </div>,
+      );
+    });
+
+    it('it works with multiple adjacent segments', async () => {
+      function App() {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div id="app-div">
+              h<AsyncText text={'ello'} />
+              w<AsyncText text={'orld'} />
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">h<template id="P:1"></template>w<template id="P:2"></template></div>',
+      );
+
+      await act(() => resolveText('orld'));
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">h<template id="P:1"></template>world</div>',
+      );
+
+      await act(() => resolveText('ello'));
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div id="app-div">helloworld</div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App name="Foo" />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div id="app-div">{['h', 'ello', 'w', 'orld']}</div>,
+      );
+    });
+
+    it('it works when some segments are flushed and others are patched', async () => {
+      function App() {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div id="app-div">
+              h<AsyncText text={'ello'} />
+              w<AsyncText text={'orld'} />
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await afterImmediate();
+        await act(() => resolveText('ello'));
+        pipe(writable);
+      });
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">h<!-- -->ello<!-- -->w<template id="P:1"></template></div>',
+      );
+
+      await act(() => resolveText('orld'));
+
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div id="app-div">h<!-- -->ello<!-- -->world</div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div id="app-div">{['h', 'ello', 'w', 'orld']}</div>,
+      );
+    });
+
+    it('it does not prepend a text separators if the segment follows a non-Text Node', async () => {
+      function App() {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div>
+              hello
+              <b>
+                <AsyncText text={'world'} />
+              </b>
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await afterImmediate();
+        await act(() => resolveText('world'));
+        pipe(writable);
+      });
+
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div>hello<b>world<!-- --></b></div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          hello<b>world</b>
+        </div>,
+      );
+    });
+
+    it('it does not prepend a text separators if the segments first emission is a non-Text Node', async () => {
+      function App() {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div>
+              hello
+              <AsyncTextWrapped as={'b'} text={'world'} />
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await afterImmediate();
+        await act(() => resolveText('world'));
+        pipe(writable);
+      });
+
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div>hello<b>world</b></div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          hello<b>world</b>
+        </div>,
+      );
+    });
+
+    it('should not insert separators for text inside Suspense boundaries even if they would otherwise be considered text-embedded', async () => {
+      function App() {
+        return (
+          <Suspense fallback={'loading...'}>
+            <div id="app-div">
+              start
+              <Suspense fallback={'[loading first]'}>
+                firststart
+                <AsyncText text={'first suspended'} />
+                firstend
+              </Suspense>
+              <Suspense fallback={'[loading second]'}>
+                secondstart
+                <b>
+                  <AsyncText text={'second suspended'} />
+                </b>
+              </Suspense>
+              end
+            </div>
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await afterImmediate();
+        await act(() => resolveText('world'));
+        pipe(writable);
+      });
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">start<!--$?--><template id="B:0"></template>[loading first]<!--/$--><!--$?--><template id="B:1"></template>[loading second]<!--/$-->end</div>',
+      );
+
+      await act(async () => {
+        resolveText('first suspended');
+      });
+
+      expect(document.getElementById('app-div').outerHTML).toEqual(
+        '<div id="app-div">start<!--$-->firststartfirst suspendedfirstend<!--/$--><!--$?--><template id="B:1"></template>[loading second]<!--/$-->end</div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div id="app-div">
+          {'start'}
+          {'firststart'}
+          {'first suspended'}
+          {'firstend'}
+          {'[loading second]'}
+          {'end'}
+        </div>,
+      );
+
+      await act(async () => {
+        resolveText('second suspended');
+      });
+
+      expect(container.firstElementChild.outerHTML).toEqual(
+        '<div id="app-div">start<!--$-->firststartfirst suspendedfirstend<!--/$--><!--$-->secondstart<b>second suspended</b><!--/$-->end</div>',
+      );
+
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div id="app-div">
+          {'start'}
+          {'firststart'}
+          {'first suspended'}
+          {'firstend'}
+          {'secondstart'}
+          <b>second suspended</b>
+          {'end'}
+        </div>,
+      );
+    });
+
+    it('(only) includes extraneous text separators in segments that complete before flushing, followed by nothing or a non-Text node', async () => {
+      function App() {
+        return (
+          <div>
+            <Suspense fallback={'text before, nothing after...'}>
+              hello
+              <AsyncText text="world" />
+            </Suspense>
+            <Suspense fallback={'nothing before or after...'}>
+              <AsyncText text="world" />
+            </Suspense>
+            <Suspense fallback={'text before, element after...'}>
+              hello
+              <AsyncText text="world" />
+              <br />
+            </Suspense>
+            <Suspense fallback={'nothing before, element after...'}>
+              <AsyncText text="world" />
+              <br />
+            </Suspense>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        await afterImmediate();
+        await act(() => resolveText('world'));
+        pipe(writable);
+      });
+
+      expect(container.innerHTML).toEqual(
+        '<div><!--$-->hello<!-- -->world<!-- --><!--/$--><!--$-->world<!-- --><!--/$--><!--$-->hello<!-- -->world<!-- --><br><!--/$--><!--$-->world<!-- --><br><!--/$--></div>',
+      );
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          {/* first boundary */}
+          {'hello'}
+          {'world'}
+          {/* second boundary */}
+          {'world'}
+          {/* third boundary */}
+          {'hello'}
+          {'world'}
+          <br />
+          {/* fourth boundary */}
+          {'world'}
+          <br />
+        </div>,
+      );
+    });
+  });
+
+  describe('title children', () => {
+    function prepareJSDOMForTitle() {
+      // Test Environment
+      const jsdom = new JSDOM('<!DOCTYPE html><html><head>\u0000', {
+        runScripts: 'dangerously',
+      });
+      window = jsdom.window;
+      document = jsdom.window.document;
+      container = document.getElementsByTagName('head')[0];
+    }
+
+    it('should accept a single string child', async () => {
+      // a Single string child
+      function App() {
+        return <title>hello</title>;
+      }
+
+      prepareJSDOMForTitle();
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+    });
+
+    it('should accept children array of length 1 containing a string', async () => {
+      // a Single string child
+      function App() {
+        return <title>{['hello']}</title>;
+      }
+
+      prepareJSDOMForTitle();
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(errors).toEqual([]);
+      expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+    });
+
+    it('should warn in dev when given an array of length 2 or more', async () => {
+      const originalConsoleError = console.error;
+      const mockError = jest.fn();
+      console.error = (...args) => {
+        if (args.length > 1) {
+          if (typeof args[1] === 'object') {
+            mockError(args[0].split('\n')[0]);
+            return;
+          }
+        }
+        mockError(...args.map(normalizeCodeLocInfo));
+      };
+
+      // a Single string child
+      function App() {
+        return <title>{['hello1', 'hello2']}</title>;
+      }
+
+      try {
+        prepareJSDOMForTitle();
+
+        await act(async () => {
+          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+          pipe(writable);
+        });
+        if (__DEV__) {
+          expect(mockError).toHaveBeenCalledWith(
+            'Warning: A title element received an array with more than 1 element as children. ' +
+              'In browsers title Elements can only have Text Nodes as children. If ' +
+              'the children being rendered output more than a single text node in aggregate the browser ' +
+              'will display markup and comments as text in the title and hydration will likely fail and ' +
+              'fall back to client rendering%s',
+            '\n' + '    in title (at **)\n' + '    in App (at **)',
+          );
+        } else {
+          expect(mockError).not.toHaveBeenCalled();
+        }
+
+        expect(getVisibleChildren(container)).toEqual(
+          <title>{'hello1<!-- -->hello2'}</title>,
+        );
+
+        const errors = [];
+        ReactDOMClient.hydrateRoot(container, <App />, {
+          onRecoverableError(error) {
+            errors.push(error.message);
+          },
+        });
+        expect(Scheduler).toFlushAndYield([]);
+        expect(errors).toEqual(
+          [
+            gate(flags => flags.enableClientRenderFallbackOnTextMismatch)
+              ? 'Text content does not match server-rendered HTML.'
+              : null,
+            'Hydration failed because the initial UI does not match what was rendered on the server.',
+            'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+          ].filter(Boolean),
+        );
+        expect(getVisibleChildren(container)).toEqual(
+          <title>{['hello1', 'hello2']}</title>,
+        );
+      } finally {
+        console.error = originalConsoleError;
+      }
+    });
+
+    it('should warn in dev if you pass a React Component as a child to <title>', async () => {
+      const originalConsoleError = console.error;
+      const mockError = jest.fn();
+      console.error = (...args) => {
+        if (args.length > 1) {
+          if (typeof args[1] === 'object') {
+            mockError(args[0].split('\n')[0]);
+            return;
+          }
+        }
+        mockError(...args.map(normalizeCodeLocInfo));
+      };
+
+      function IndirectTitle() {
+        return 'hello';
+      }
+
+      function App() {
+        return (
+          <title>
+            <IndirectTitle />
+          </title>
+        );
+      }
+
+      try {
+        prepareJSDOMForTitle();
+
+        await act(async () => {
+          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+          pipe(writable);
+        });
+        if (__DEV__) {
+          expect(mockError).toHaveBeenCalledWith(
+            'Warning: A title element received a React element for children. ' +
+              'In the browser title Elements can only have Text Nodes as children. If ' +
+              'the children being rendered output more than a single text node in aggregate the browser ' +
+              'will display markup and comments as text in the title and hydration will likely fail and ' +
+              'fall back to client rendering%s',
+            '\n' + '    in title (at **)\n' + '    in App (at **)',
+          );
+        } else {
+          expect(mockError).not.toHaveBeenCalled();
+        }
+
+        expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+
+        const errors = [];
+        ReactDOMClient.hydrateRoot(container, <App />, {
+          onRecoverableError(error) {
+            errors.push(error.message);
+          },
+        });
+        expect(Scheduler).toFlushAndYield([]);
+        expect(errors).toEqual([]);
+        expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+      } finally {
+        console.error = originalConsoleError;
+      }
+    });
+
+    // @gate enableUseHook
+    it('basic use(promise)', async () => {
+      const promiseA = Promise.resolve('A');
+      const promiseB = Promise.resolve('B');
+      const promiseC = Promise.resolve('C');
+
+      function Async() {
+        return use(promiseA) + use(promiseB) + use(promiseC);
+      }
+
+      function App() {
+        return (
+          <Suspense fallback="Loading...">
+            <Async />
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      // TODO: The `act` implementation in this file doesn't unwrap microtasks
+      // automatically. We can't use the same `act` we use for Fiber tests
+      // because that relies on the mock Scheduler. Doesn't affect any public
+      // API but we might want to fix this for our own internal tests.
+      //
+      // For now, wait for each promise in sequence.
+      await act(async () => {
+        await promiseA;
+      });
+      await act(async () => {
+        await promiseB;
+      });
+      await act(async () => {
+        await promiseC;
+      });
+
+      expect(getVisibleChildren(container)).toEqual('ABC');
+
+      ReactDOMClient.hydrateRoot(container, <App />);
+      expect(Scheduler).toFlushAndYield([]);
+      expect(getVisibleChildren(container)).toEqual('ABC');
+    });
+
+    // @gate enableUseHook
+    it('basic use(context)', async () => {
+      const ContextA = React.createContext('default');
+      const ContextB = React.createContext('B');
+      const ServerContext = React.createServerContext(
+        'ServerContext',
+        'default',
+      );
+      function Client() {
+        return use(ContextA) + use(ContextB);
+      }
+      function ServerComponent() {
+        return use(ServerContext);
+      }
+      function Server() {
+        return (
+          <ServerContext.Provider value="C">
+            <ServerComponent />
+          </ServerContext.Provider>
+        );
+      }
+      function App() {
+        return (
+          <>
+            <ContextA.Provider value="A">
+              <Client />
+            </ContextA.Provider>
+            <Server />
+          </>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(getVisibleChildren(container)).toEqual(['AB', 'C']);
+
+      // Hydration uses a different renderer runtime (Fiber instead of Fizz).
+      // We reset _currentRenderer here to not trigger a warning about multiple
+      // renderers concurrently using these contexts
+      ContextA._currentRenderer = null;
+      ServerContext._currentRenderer = null;
+      ReactDOMClient.hydrateRoot(container, <App />);
+      expect(Scheduler).toFlushAndYield([]);
+      expect(getVisibleChildren(container)).toEqual(['AB', 'C']);
+    });
+
+    // @gate enableUseHook
+    it('use(promise) in multiple components', async () => {
+      const promiseA = Promise.resolve('A');
+      const promiseB = Promise.resolve('B');
+      const promiseC = Promise.resolve('C');
+      const promiseD = Promise.resolve('D');
+
+      function Child({prefix}) {
+        return prefix + use(promiseC) + use(promiseD);
+      }
+
+      function Parent() {
+        return <Child prefix={use(promiseA) + use(promiseB)} />;
+      }
+
+      function App() {
+        return (
+          <Suspense fallback="Loading...">
+            <Parent />
+          </Suspense>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      // TODO: The `act` implementation in this file doesn't unwrap microtasks
+      // automatically. We can't use the same `act` we use for Fiber tests
+      // because that relies on the mock Scheduler. Doesn't affect any public
+      // API but we might want to fix this for our own internal tests.
+      //
+      // For now, wait for each promise in sequence.
+      await act(async () => {
+        await promiseA;
+      });
+      await act(async () => {
+        await promiseB;
+      });
+      await act(async () => {
+        await promiseC;
+      });
+      await act(async () => {
+        await promiseD;
+      });
+
+      expect(getVisibleChildren(container)).toEqual('ABCD');
+
+      ReactDOMClient.hydrateRoot(container, <App />);
+      expect(Scheduler).toFlushAndYield([]);
+      expect(getVisibleChildren(container)).toEqual('ABCD');
+    });
+
+    // @gate enableUseHook
+    it('using a rejected promise will throw', async () => {
+      const promiseA = Promise.resolve('A');
+      const promiseB = Promise.reject(new Error('Oops!'));
+      const promiseC = Promise.resolve('C');
+
+      // Jest/Node will raise an unhandled rejected error unless we await this. It
+      // works fine in the browser, though.
+      await expect(promiseB).rejects.toThrow('Oops!');
+
+      function Async() {
+        return use(promiseA) + use(promiseB) + use(promiseC);
+      }
+
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        static getDerivedStateFromError(error) {
+          return {error};
+        }
+        render() {
+          if (this.state.error) {
+            return this.state.error.message;
+          }
+          return this.props.children;
+        }
+      }
+
+      function App() {
+        return (
+          <Suspense fallback="Loading...">
+            <ErrorBoundary>
+              <Async />
+            </ErrorBoundary>
+          </Suspense>
+        );
+      }
+
+      const reportedServerErrors = [];
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+          onError(error) {
+            reportedServerErrors.push(error);
+          },
+        });
+        pipe(writable);
+      });
+
+      // TODO: The `act` implementation in this file doesn't unwrap microtasks
+      // automatically. We can't use the same `act` we use for Fiber tests
+      // because that relies on the mock Scheduler. Doesn't affect any public
+      // API but we might want to fix this for our own internal tests.
+      //
+      // For now, wait for each promise in sequence.
+      await act(async () => {
+        await promiseA;
+      });
+      await act(async () => {
+        await expect(promiseB).rejects.toThrow('Oops!');
+      });
+      await act(async () => {
+        await promiseC;
+      });
+
+      expect(getVisibleChildren(container)).toEqual('Loading...');
+      expect(reportedServerErrors.length).toBe(1);
+      expect(reportedServerErrors[0].message).toBe('Oops!');
+
+      const reportedClientErrors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          reportedClientErrors.push(error);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([]);
+      expect(getVisibleChildren(container)).toEqual('Oops!');
+      expect(reportedClientErrors.length).toBe(1);
+      if (__DEV__) {
+        expect(reportedClientErrors[0].message).toBe('Oops!');
+      } else {
+        expect(reportedClientErrors[0].message).toBe(
+          'The server could not finish this Suspense boundary, likely due to ' +
+            'an error during server rendering. Switched to client rendering.',
+        );
+      }
+    });
+
+    // @gate enableUseHook
+    it("use a promise that's already been instrumented and resolved", async () => {
+      const thenable = {
+        status: 'fulfilled',
+        value: 'Hi',
+        then() {},
+      };
+
+      // This will never suspend because the thenable already resolved
+      function App() {
+        return use(thenable);
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(getVisibleChildren(container)).toEqual('Hi');
+
+      ReactDOMClient.hydrateRoot(container, <App />);
+      expect(Scheduler).toFlushAndYield([]);
+      expect(getVisibleChildren(container)).toEqual('Hi');
+    });
+  });
+
+  describe('useEvent', () => {
+    // @gate enableUseEventHook
+    it('can server render a component with useEvent', async () => {
+      const ref = React.createRef();
+      function App() {
+        const [count, setCount] = React.useState(0);
+        const onClick = React.experimental_useEvent(() => {
+          setCount(c => c + 1);
+        });
+        return (
+          <button ref={ref} onClick={() => onClick()}>
+            {count}
+          </button>
+        );
+      }
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(getVisibleChildren(container)).toEqual(<button>0</button>);
+
+      ReactDOMClient.hydrateRoot(container, <App />);
+      expect(Scheduler).toFlushAndYield([]);
+      expect(getVisibleChildren(container)).toEqual(<button>0</button>);
+
+      ref.current.dispatchEvent(
+        new window.MouseEvent('click', {bubbles: true}),
+      );
+      await jest.runAllTimers();
+      expect(getVisibleChildren(container)).toEqual(<button>1</button>);
+    });
+
+    // @gate enableUseEventHook
+    it('throws if useEvent is called during a server render', async () => {
+      const logs = [];
+      function App() {
+        const onRender = React.experimental_useEvent(() => {
+          logs.push('rendered');
+        });
+        onRender();
+        return <p>Hello</p>;
+      }
+
+      const reportedServerErrors = [];
+      let caughtError;
+      try {
+        await act(async () => {
+          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+            onError(e) {
+              reportedServerErrors.push(e);
+            },
+          });
+          pipe(writable);
+        });
+      } catch (err) {
+        caughtError = err;
+      }
+      expect(logs).toEqual([]);
+      expect(caughtError.message).toContain(
+        "A function wrapped in useEvent can't be called during rendering.",
+      );
+      expect(reportedServerErrors).toEqual([caughtError]);
+    });
+
+    // @gate enableUseEventHook
+    it('does not guarantee useEvent return values during server rendering are distinct', async () => {
+      function App() {
+        const onClick1 = React.experimental_useEvent(() => {});
+        const onClick2 = React.experimental_useEvent(() => {});
+        if (onClick1 === onClick2) {
+          return <div />;
+        } else {
+          return <span />;
+        }
+      }
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(getVisibleChildren(container)).toEqual(<div />);
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          errors.push(error);
+        },
+      });
+      expect(() => {
+        expect(Scheduler).toFlushAndYield([]);
+      }).toErrorDev(
+        [
+          'Expected server HTML to contain a matching <span> in <div>',
+          'An error occurred during hydration',
+        ],
+        {withoutStack: 1},
+      );
+      expect(errors.length).toEqual(2);
+      expect(getVisibleChildren(container)).toEqual(<span />);
+    });
   });
 });

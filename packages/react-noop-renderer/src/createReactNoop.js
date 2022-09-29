@@ -18,7 +18,7 @@ import type {
   Fiber,
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
-import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
+import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue.new';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
@@ -49,7 +49,7 @@ type Props = {
   top?: null | number,
   ...
 };
-type Instance = {|
+type Instance = {
   type: string,
   id: number,
   parent: number,
@@ -58,17 +58,17 @@ type Instance = {|
   prop: any,
   hidden: boolean,
   context: HostContext,
-|};
-type TextInstance = {|
+};
+type TextInstance = {
   text: string,
   id: number,
   parent: number,
   hidden: boolean,
   context: HostContext,
-|};
+};
 type HostContext = Object;
 type CreateRootOptions = {
-  transitionCallbacks?: TransitionTracingCallbacks,
+  unstable_transitionCallbacks?: TransitionTracingCallbacks,
   ...
 };
 
@@ -276,11 +276,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NO_CONTEXT;
     },
 
-    getChildHostContext(
-      parentHostContext: HostContext,
-      type: string,
-      rootcontainerInstance: Container,
-    ) {
+    getChildHostContext(parentHostContext: HostContext, type: string) {
       if (type === 'offscreen') {
         return parentHostContext;
       }
@@ -476,6 +472,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     logRecoverableError() {
       // no-op
+    },
+
+    requestPostPaintCallback(callback) {
+      const endTime = Scheduler.unstable_now();
+      callback(endTime);
     },
   };
 
@@ -806,6 +807,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           false,
           '',
           onRecoverableError,
+          null,
         );
         roots.set(rootID, root);
       }
@@ -827,8 +829,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         '',
         onRecoverableError,
-        options && options.transitionCallbacks
-          ? options.transitionCallbacks
+        options && options.unstable_transitionCallbacks
+          ? options.unstable_transitionCallbacks
           : null,
       );
       return {
@@ -859,6 +861,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         '',
         onRecoverableError,
+        null,
       );
       return {
         _Scheduler: Scheduler,
@@ -955,14 +958,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     flushWithHostCounters(
       fn: () => void,
     ):
-      | {|
+      | {
           hostDiffCounter: number,
           hostUpdateCounter: number,
-        |}
-      | {|
+        }
+      | {
           hostDiffCounter: number,
           hostCloneCounter: number,
-        |} {
+        } {
       hostDiffCounter = 0;
       hostUpdateCounter = 0;
       hostCloneCounter = 0;

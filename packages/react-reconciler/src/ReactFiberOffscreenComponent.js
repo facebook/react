@@ -7,12 +7,15 @@
  * @flow
  */
 
-import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
+import type {ReactNodeList, OffscreenMode, Wakeable} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SpawnedCachePool} from './ReactFiberCacheComponent.new';
-import type {Transition} from './ReactFiberTracingMarkerComponent.new';
+import type {
+  Transition,
+  TracingMarkerInstance,
+} from './ReactFiberTracingMarkerComponent.new';
 
-export type OffscreenProps = {|
+export type OffscreenProps = {
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum
   // for now, since we might have multiple variants. For example, hiding the
   // content without changing the layout.
@@ -21,21 +24,32 @@ export type OffscreenProps = {|
   // called "Offscreen." Possible alt: <Visibility />?
   mode?: OffscreenMode | null | void,
   children?: ReactNodeList,
-|};
+};
 
 // We use the existence of the state object as an indicator that the component
 // is hidden.
-export type OffscreenState = {|
+export type OffscreenState = {
   // TODO: This doesn't do anything, yet. It's always NoLanes. But eventually it
   // will represent the pending work that must be included in the render in
   // order to unhide the component.
   baseLanes: Lanes,
   cachePool: SpawnedCachePool | null,
-  transitions: Set<Transition> | null,
-|};
+};
 
-export type OffscreenQueue = {|
+export type OffscreenQueue = {
   transitions: Array<Transition> | null,
-|} | null;
+  markerInstances: Array<TracingMarkerInstance> | null,
+  wakeables: Set<Wakeable> | null,
+};
 
-export type OffscreenInstance = {};
+type OffscreenVisibility = number;
+
+export const OffscreenVisible = /*                     */ 0b01;
+export const OffscreenPassiveEffectsConnected = /*     */ 0b10;
+
+export type OffscreenInstance = {
+  _visibility: OffscreenVisibility,
+  _pendingMarkers: Set<TracingMarkerInstance> | null,
+  _transitions: Set<Transition> | null,
+  _retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,
+};

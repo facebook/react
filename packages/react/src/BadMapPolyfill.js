@@ -6,7 +6,7 @@
  * @flow
  */
 
-export let hasBadMapPolyfill;
+export let hasBadMapPolyfill: boolean;
 
 if (__DEV__) {
   hasBadMapPolyfill = false;

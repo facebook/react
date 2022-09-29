@@ -14,19 +14,19 @@ import {useEditableValue} from '../hooks';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
-type EditableValueProps = {|
+type EditableValueProps = {
   className?: string,
   overrideValue: OverrideValueFn,
   path: Array<string | number>,
   value: any,
-|};
+};
 
 export default function EditableValue({
   className = '',
   overrideValue,
   path,
   value,
-}: EditableValueProps) {
+}: EditableValueProps): React.Node {
   const [state, dispatch] = useEditableValue(value);
   const {editableValue, hasPendingChanges, isValid, parsedValue} = state;
 

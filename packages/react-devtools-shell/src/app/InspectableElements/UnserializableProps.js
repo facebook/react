@@ -34,7 +34,7 @@ const immutable = Immutable.fromJS({
 // $FlowFixMe
 const bigInt = BigInt(123); // eslint-disable-line no-undef
 
-export default function UnserializableProps() {
+export default function UnserializableProps(): React.Node {
   return (
     <ChildComponent
       arrayBuffer={arrayBuffer}

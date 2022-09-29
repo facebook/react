@@ -17,23 +17,23 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type PendingRecord = {|
+type PendingRecord = {
   status: 0,
   value: Wakeable,
   cache: null,
-|};
+};
 
-type ResolvedRecord<T> = {|
+type ResolvedRecord<T> = {
   status: 1,
   value: T,
   cache: null | Array<mixed>,
-|};
+};
 
-type RejectedRecord = {|
+type RejectedRecord = {
   status: 2,
   value: mixed,
   cache: null,
-|};
+};
 
 type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
 

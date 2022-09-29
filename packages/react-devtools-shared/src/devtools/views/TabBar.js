@@ -16,21 +16,21 @@ import Tooltip from './Components/reach-ui/tooltip';
 
 import type {IconType} from './Icon';
 
-type TabInfo = {|
+type TabInfo = {
   icon: IconType,
   id: string,
   label: string,
   title?: string,
-|};
+};
 
-export type Props = {|
+export type Props = {
   currentTab: any,
   disabled?: boolean,
   id: string,
   selectTab: (tabID: any) => void,
   tabs: Array<TabInfo | null>,
   type: 'navigation' | 'profiler' | 'settings',
-|};
+};
 
 export default function TabBar({
   currentTab,
@@ -39,7 +39,7 @@ export default function TabBar({
   selectTab,
   tabs,
   type,
-}: Props) {
+}: Props): React.Node {
   if (!tabs.some(tab => tab !== null && tab.id === currentTab)) {
     const firstTab = ((tabs.find(tab => tab !== null): any): TabInfo);
     selectTab(firstTab.id);

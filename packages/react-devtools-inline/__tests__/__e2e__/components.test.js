@@ -2,10 +2,12 @@
 
 'use strict';
 
+const {runOnlyForReactRange} = require('./utils');
 const listAppUtils = require('./list-app-utils');
 const devToolsUtils = require('./devtools-utils');
 const {test, expect} = require('@playwright/test');
 const config = require('../../playwright.config');
+const semver = require('semver');
 test.use(config);
 test.describe('Components', () => {
   let page;
@@ -13,7 +15,7 @@ test.describe('Components', () => {
   test.beforeEach(async ({browser}) => {
     page = await browser.newPage();
 
-    await page.goto('http://localhost:8080/e2e.html', {
+    await page.goto(config.use.url, {
       waitUntil: 'domcontentloaded',
     });
 
@@ -51,32 +53,60 @@ test.describe('Components', () => {
     // Select the first list item in DevTools.
     await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
 
+    // Prop names/values may not be editable based on the React version.
+    // If they're not editable, make sure they degrade gracefully
+    const isEditableName = semver.gte(config.use.react_version, '17.0.0');
+    const isEditableValue = semver.gte(config.use.react_version, '16.8.0');
+
     // Then read the inspected values.
-    const [propName, propValue, sourceText] = await page.evaluate(() => {
-      const {createTestNameSelector, findAllNodes} = window.REACT_DOM_DEVTOOLS;
-      const container = document.getElementById('devtools');
+    const [propName, propValue, sourceText] = await page.evaluate(
+      isEditable => {
+        const {
+          createTestNameSelector,
+          findAllNodes,
+        } = window.REACT_DOM_DEVTOOLS;
+        const container = document.getElementById('devtools');
 
-      const editableName = findAllNodes(container, [
-        createTestNameSelector('InspectedElementPropsTree'),
-        createTestNameSelector('EditableName'),
-      ])[0];
-      const editableValue = findAllNodes(container, [
-        createTestNameSelector('InspectedElementPropsTree'),
-        createTestNameSelector('EditableValue'),
-      ])[0];
-      const source = findAllNodes(container, [
-        createTestNameSelector('InspectedElementView-Source'),
-      ])[0];
+        // Get name of first prop
+        const selectorName = isEditable.name
+          ? 'EditableName'
+          : 'NonEditableName';
+        const nameElement = findAllNodes(container, [
+          createTestNameSelector('InspectedElementPropsTree'),
+          createTestNameSelector(selectorName),
+        ])[0];
+        const name = isEditable.name
+          ? nameElement.value
+          : nameElement.innerText;
 
-      return [editableName.value, editableValue.value, source.innerText];
-    });
+        // Get value of first prop
+        const selectorValue = isEditable.value
+          ? 'EditableValue'
+          : 'NonEditableValue';
+        const valueElement = findAllNodes(container, [
+          createTestNameSelector('InspectedElementPropsTree'),
+          createTestNameSelector(selectorValue),
+        ])[0];
+        const source = findAllNodes(container, [
+          createTestNameSelector('InspectedElementView-Source'),
+        ])[0];
+        const value = isEditable.value
+          ? valueElement.value
+          : valueElement.innerText;
+
+        return [name, value, source.innerText];
+      },
+      {name: isEditableName, value: isEditableValue}
+    );
 
     expect(propName).toBe('label');
     expect(propValue).toBe('"one"');
-    expect(sourceText).toContain('ListApp.js');
+    expect(sourceText).toMatch(/ListApp[a-zA-Z]*\.js/);
   });
 
   test('should allow props to be edited', async () => {
+    runOnlyForReactRange('>=16.8');
+
     // Select the first list item in DevTools.
     await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
 
@@ -109,6 +139,8 @@ test.describe('Components', () => {
   });
 
   test('should load and parse hook names for the inspected element', async () => {
+    runOnlyForReactRange('>=16.8');
+
     // Select the List component DevTools.
     await devToolsUtils.selectElement(page, 'List', 'App');
 
@@ -162,15 +194,18 @@ test.describe('Components', () => {
       });
     }
 
-    await page.evaluate(() => {
-      const {createTestNameSelector, focusWithin} = window.REACT_DOM_DEVTOOLS;
-      const container = document.getElementById('devtools');
+    async function focusComponentSearch() {
+      await page.evaluate(() => {
+        const {createTestNameSelector, focusWithin} = window.REACT_DOM_DEVTOOLS;
+        const container = document.getElementById('devtools');
 
-      focusWithin(container, [
-        createTestNameSelector('ComponentSearchInput-Input'),
-      ]);
-    });
+        focusWithin(container, [
+          createTestNameSelector('ComponentSearchInput-Input'),
+        ]);
+      });
+    }
 
+    await focusComponentSearch();
     page.keyboard.insertText('List');
     let count = await getComponentSearchResultsCount();
     expect(count).toBe('1 | 4');

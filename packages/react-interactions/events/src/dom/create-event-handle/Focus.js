@@ -164,9 +164,10 @@ export function useFocus(
   }: UseFocusOptions,
 ): void {
   // Setup controlled state for this useFocus hook
-  const stateRef = useRef<null | {isFocused: boolean, isFocusVisible: boolean}>(
-    {isFocused: false, isFocusVisible: false},
-  );
+  const stateRef = useRef<null | {
+    isFocused: boolean,
+    isFocusVisible: boolean,
+  }>({isFocused: false, isFocusVisible: false});
   const focusHandle = useEvent('focusin');
   const blurHandle = useEvent('focusout');
   const focusVisibleHandles = useFocusVisibleInputHandles();
@@ -261,9 +262,10 @@ export function useFocusWithin<T>(
   }: UseFocusWithinOptions,
 ): (focusWithinTarget: null | T) => void {
   // Setup controlled state for this useFocus hook
-  const stateRef = useRef<null | {isFocused: boolean, isFocusVisible: boolean}>(
-    {isFocused: false, isFocusVisible: false},
-  );
+  const stateRef = useRef<null | {
+    isFocused: boolean,
+    isFocusVisible: boolean,
+  }>({isFocused: false, isFocusVisible: false});
   const focusHandle = useEvent('focusin');
   const blurHandle = useEvent('focusout');
   const afterBlurHandle = useEvent('afterblur');

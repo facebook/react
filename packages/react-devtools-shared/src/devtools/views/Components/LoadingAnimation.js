@@ -10,11 +10,11 @@
 import * as React from 'react';
 import styles from './LoadingAnimation.css';
 
-type Props = {|
+type Props = {
   className?: string,
-|};
+};
 
-export default function LoadingAnimation({className = ''}: Props) {
+export default function LoadingAnimation({className = ''}: Props): React.Node {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

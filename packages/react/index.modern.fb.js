@@ -26,6 +26,7 @@ export {
   createMutableSource as unstable_createMutableSource,
   createRef,
   createServerContext,
+  experimental_use,
   forwardRef,
   isValidElement,
   lazy,
@@ -40,6 +41,7 @@ export {
   unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
+  unstable_useMemoCache,
   useId,
   useCallback,
   useContext,
@@ -47,6 +49,7 @@ export {
   useDeferredValue,
   useDeferredValue as unstable_useDeferredValue, // TODO: Remove once call sights updated to useDeferredValue
   useEffect,
+  experimental_useEvent,
   useImperativeHandle,
   useInsertionEffect,
   useLayoutEffect,

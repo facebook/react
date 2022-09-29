@@ -27,16 +27,17 @@ import type {
   OffscreenProps,
   OffscreenState,
   OffscreenQueue,
+  OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
 import type {
   Cache,
   CacheComponentState,
   SpawnedCachePool,
 } from './ReactFiberCacheComponent.new';
-import type {UpdateQueue} from './ReactUpdateQueue.new';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import type {RootState} from './ReactFiberRoot.new';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
 import {
-  enableSuspenseAvoidThisFallback,
   enableCPUSuspense,
   enableUseMutableSource,
 } from 'shared/ReactFeatureFlags';
@@ -88,6 +89,7 @@ import {
   StaticMask,
   ShouldCapture,
   ForceClientRender,
+  Passive,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -100,7 +102,6 @@ import {
   enableScopeAPI,
   enableCache,
   enableLazyContextPropagation,
-  enableSuspenseLayoutEffectSemantics,
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableLegacyHidden,
@@ -131,7 +132,7 @@ import {
   cloneUpdateQueue,
   initializeUpdateQueue,
   enqueueCapturedUpdate,
-} from './ReactUpdateQueue.new';
+} from './ReactFiberClassUpdateQueue.new';
 import {
   NoLane,
   NoLanes,
@@ -157,6 +158,7 @@ import {
   shouldSetTextContent,
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
+  getSuspenseInstanceFallbackErrorDetails,
   registerSuspenseInstanceRetry,
   supportsHydration,
   isPrimaryRenderer,
@@ -166,14 +168,21 @@ import {shouldError, shouldSuspend} from './ReactFiberReconciler';
 import {pushHostContext, pushHostContainer} from './ReactFiberHostContext.new';
 import {
   suspenseStackCursor,
-  pushSuspenseContext,
-  InvisibleParentSuspenseContext,
+  pushSuspenseListContext,
   ForceSuspenseFallback,
-  hasSuspenseContext,
-  setDefaultShallowSuspenseContext,
-  addSubtreeSuspenseContext,
-  setShallowSuspenseContext,
+  hasSuspenseListContext,
+  setDefaultShallowSuspenseListContext,
+  setShallowSuspenseListContext,
+  pushPrimaryTreeSuspenseHandler,
+  pushFallbackTreeSuspenseHandler,
+  pushOffscreenSuspenseHandler,
+  reuseSuspenseHandlerOnStack,
+  popSuspenseHandler,
 } from './ReactFiberSuspenseContext.new';
+import {
+  pushHiddenContext,
+  reuseHiddenContextOnStack,
+} from './ReactFiberHiddenContext.new';
 import {findFirstSuspended} from './ReactFiberSuspenseComponent.new';
 import {
   pushProvider,
@@ -231,11 +240,15 @@ import {
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
-  pushRenderLanes,
 } from './ReactFiberWorkLoop.new';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.new';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent.new';
-import {createCapturedValue} from './ReactCapturedValue';
+import {
+  createCapturedValue,
+  createCapturedValueAtFiber,
+  type CapturedValue,
+} from './ReactCapturedValue';
 import {createClassErrorUpdate} from './ReactFiberThrow.new';
 import is from 'shared/objectIs';
 import {
@@ -250,8 +263,14 @@ import {
   getSuspendedCache,
   pushTransition,
   getOffscreenDeferredCache,
-  getSuspendedTransitions,
+  getPendingTransitions,
 } from './ReactFiberTransition.new';
+import {
+  getMarkerInstances,
+  pushMarkerInstance,
+  pushRootMarkerInstance,
+  TransitionTracingMarker,
+} from './ReactFiberTracingMarkerComponent.new';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -262,7 +281,7 @@ let didWarnAboutModulePatternComponent;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
-export let didWarnAboutReassigningProps;
+export let didWarnAboutReassigningProps: boolean;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
 let didWarnAboutDefaultPropsOnFunctionComponent;
@@ -658,18 +677,65 @@ function updateOffscreenComponent(
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
 
+  markRef(current, workInProgress);
+
   if (
     nextProps.mode === 'hidden' ||
     (enableLegacyHidden && nextProps.mode === 'unstable-defer-without-hiding')
   ) {
     // Rendering a hidden tree.
+
+    const didSuspend = (workInProgress.flags & DidCapture) !== NoFlags;
+    if (didSuspend) {
+      // Something suspended inside a hidden tree
+
+      // Include the base lanes from the last render
+      const nextBaseLanes =
+        prevState !== null
+          ? mergeLanes(prevState.baseLanes, renderLanes)
+          : renderLanes;
+
+      if (current !== null) {
+        // Reset to the current children
+        let currentChild = (workInProgress.child = current.child);
+
+        // The current render suspended, but there may be other lanes with
+        // pending work. We can't read `childLanes` from the current Offscreen
+        // fiber because we reset it when it was deferred; however, we can read
+        // the pending lanes from the child fibers.
+        let currentChildLanes = NoLanes;
+        while (currentChild !== null) {
+          currentChildLanes = mergeLanes(
+            mergeLanes(currentChildLanes, currentChild.lanes),
+            currentChild.childLanes,
+          );
+          currentChild = currentChild.sibling;
+        }
+        const lanesWeJustAttempted = nextBaseLanes;
+        const remainingChildLanes = removeLanes(
+          currentChildLanes,
+          lanesWeJustAttempted,
+        );
+        workInProgress.childLanes = remainingChildLanes;
+      } else {
+        workInProgress.childLanes = NoLanes;
+        workInProgress.child = null;
+      }
+
+      return deferHiddenOffscreenComponent(
+        current,
+        workInProgress,
+        nextBaseLanes,
+        renderLanes,
+      );
+    }
+
     if ((workInProgress.mode & ConcurrentMode) === NoMode) {
       // In legacy sync mode, don't defer the subtree. Render it now.
       // TODO: Consider how Offscreen should work with transitions in the future
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
-        transitions: null,
       };
       workInProgress.memoizedState = nextState;
       if (enableCache) {
@@ -679,58 +745,29 @@ function updateOffscreenComponent(
           pushTransition(workInProgress, null, null);
         }
       }
-      pushRenderLanes(workInProgress, renderLanes);
+      reuseHiddenContextOnStack(workInProgress);
+      pushOffscreenSuspenseHandler(workInProgress);
     } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
-      let spawnedCachePool: SpawnedCachePool | null = null;
       // We're hidden, and we're not rendering at Offscreen. We will bail out
       // and resume this tree later.
-      let nextBaseLanes;
-      if (prevState !== null) {
-        const prevBaseLanes = prevState.baseLanes;
-        nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes);
-        if (enableCache) {
-          // Save the cache pool so we can resume later.
-          spawnedCachePool = getOffscreenDeferredCache();
-        }
-      } else {
-        nextBaseLanes = renderLanes;
-      }
 
-      // Schedule this fiber to re-render at offscreen priority. Then bailout.
+      // Schedule this fiber to re-render at Offscreen priority
       workInProgress.lanes = workInProgress.childLanes = laneToLanes(
         OffscreenLane,
       );
-      const nextState: OffscreenState = {
-        baseLanes: nextBaseLanes,
-        cachePool: spawnedCachePool,
-        transitions: null,
-      };
-      workInProgress.memoizedState = nextState;
-      workInProgress.updateQueue = null;
-      if (enableCache) {
-        // push the cache pool even though we're going to bail out
-        // because otherwise there'd be a context mismatch
-        if (current !== null) {
-          pushTransition(workInProgress, null, null);
-        }
-      }
 
-      // We're about to bail out, but we need to push this to the stack anyway
-      // to avoid a push/pop misalignment.
-      pushRenderLanes(workInProgress, nextBaseLanes);
+      // Include the base lanes from the last render
+      const nextBaseLanes =
+        prevState !== null
+          ? mergeLanes(prevState.baseLanes, renderLanes)
+          : renderLanes;
 
-      if (enableLazyContextPropagation && current !== null) {
-        // Since this tree will resume rendering in a separate render, we need
-        // to propagate parent contexts now so we don't lose track of which
-        // ones changed.
-        propagateParentContextChangesToDeferredTree(
-          current,
-          workInProgress,
-          renderLanes,
-        );
-      }
-
-      return null;
+      return deferHiddenOffscreenComponent(
+        current,
+        workInProgress,
+        nextBaseLanes,
+        renderLanes,
+      );
     } else {
       // This is the second render. The surrounding visible content has already
       // committed. Now we resume rendering the hidden tree.
@@ -739,12 +776,8 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
-        transitions: null,
       };
       workInProgress.memoizedState = nextState;
-      // Push the lanes that were skipped when we bailed out.
-      const subtreeRenderLanes =
-        prevState !== null ? prevState.baseLanes : renderLanes;
       if (enableCache && current !== null) {
         // If the render that spawned this one accessed the cache pool, resume
         // using the same cache. Unless the parent changed, since that means
@@ -755,16 +788,18 @@ function updateOffscreenComponent(
         pushTransition(workInProgress, prevCachePool, null);
       }
 
-      pushRenderLanes(workInProgress, subtreeRenderLanes);
+      // Push the lanes that were skipped when we bailed out.
+      if (prevState !== null) {
+        pushHiddenContext(workInProgress, prevState);
+      } else {
+        reuseHiddenContextOnStack(workInProgress);
+      }
+      pushOffscreenSuspenseHandler(workInProgress);
     }
   } else {
     // Rendering a visible tree.
-    let subtreeRenderLanes;
     if (prevState !== null) {
       // We're going from hidden -> visible.
-
-      subtreeRenderLanes = mergeLanes(prevState.baseLanes, renderLanes);
-
       let prevCachePool = null;
       if (enableCache) {
         // If the render that spawned this one accessed the cache pool, resume
@@ -773,7 +808,21 @@ function updateOffscreenComponent(
         prevCachePool = prevState.cachePool;
       }
 
-      pushTransition(workInProgress, prevCachePool, null);
+      let transitions = null;
+      if (enableTransitionTracing) {
+        // We have now gone from hidden to visible, so any transitions should
+        // be added to the stack to get added to any Offscreen/suspense children
+        const instance: OffscreenInstance | null = workInProgress.stateNode;
+        if (instance !== null && instance._transitions != null) {
+          transitions = Array.from(instance._transitions);
+        }
+      }
+
+      pushTransition(workInProgress, prevCachePool, transitions);
+
+      // Push the lanes that were skipped when we bailed out.
+      pushHiddenContext(workInProgress, prevState);
+      reuseSuspenseHandlerOnStack(workInProgress);
 
       // Since we're not hidden anymore, reset the state
       workInProgress.memoizedState = null;
@@ -781,7 +830,6 @@ function updateOffscreenComponent(
       // We weren't previously hidden, and we still aren't, so there's nothing
       // special to do. Need to push to the stack regardless, though, to avoid
       // a push/pop misalignment.
-      subtreeRenderLanes = renderLanes;
 
       if (enableCache) {
         // If the render that spawned this one accessed the cache pool, resume
@@ -791,12 +839,56 @@ function updateOffscreenComponent(
           pushTransition(workInProgress, null, null);
         }
       }
+
+      // We're about to bail out, but we need to push this to the stack anyway
+      // to avoid a push/pop misalignment.
+      reuseHiddenContextOnStack(workInProgress);
+      reuseSuspenseHandlerOnStack(workInProgress);
     }
-    pushRenderLanes(workInProgress, subtreeRenderLanes);
   }
 
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
+}
+
+function deferHiddenOffscreenComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  nextBaseLanes: Lanes,
+  renderLanes: Lanes,
+) {
+  const nextState: OffscreenState = {
+    baseLanes: nextBaseLanes,
+    // Save the cache pool so we can resume later.
+    cachePool: enableCache ? getOffscreenDeferredCache() : null,
+  };
+  workInProgress.memoizedState = nextState;
+  if (enableCache) {
+    // push the cache pool even though we're going to bail out
+    // because otherwise there'd be a context mismatch
+    if (current !== null) {
+      pushTransition(workInProgress, null, null);
+    }
+  }
+
+  // We're about to bail out, but we need to push this to the stack anyway
+  // to avoid a push/pop misalignment.
+  reuseHiddenContextOnStack(workInProgress);
+
+  pushOffscreenSuspenseHandler(workInProgress);
+
+  if (enableLazyContextPropagation && current !== null) {
+    // Since this tree will resume rendering in a separate render, we need
+    // to propagate parent contexts now so we don't lose track of which
+    // ones changed.
+    propagateParentContextChangesToDeferredTree(
+      current,
+      workInProgress,
+      renderLanes,
+    );
+  }
+
+  return null;
 }
 
 // Note: These happen to have identical begin phases, for now. We shouldn't hold
@@ -881,6 +973,42 @@ function updateTracingMarkerComponent(
     return null;
   }
 
+  // TODO: (luna) Only update the tracing marker if it's newly rendered or it's name changed.
+  // A tracing marker is only associated with the transitions that rendered
+  // or updated it, so we can create a new set of transitions each time
+  if (current === null) {
+    const currentTransitions = getPendingTransitions();
+    if (currentTransitions !== null) {
+      const markerInstance: TracingMarkerInstance = {
+        tag: TransitionTracingMarker,
+        transitions: new Set(currentTransitions),
+        pendingBoundaries: null,
+        name: workInProgress.pendingProps.name,
+        aborts: null,
+      };
+      workInProgress.stateNode = markerInstance;
+
+      // We call the marker complete callback when all child suspense boundaries resolve.
+      // We do this in the commit phase on Offscreen. If the marker has no child suspense
+      // boundaries, we need to schedule a passive effect to make sure we call the marker
+      // complete callback.
+      workInProgress.flags |= Passive;
+    }
+  } else {
+    if (__DEV__) {
+      if (current.memoizedProps.name !== workInProgress.pendingProps.name) {
+        console.error(
+          'Changing the name of a tracing marker after mount is not supported. ' +
+            'To remount the tracing marker, pass it a new key.',
+        );
+      }
+    }
+  }
+
+  const instance: TracingMarkerInstance | null = workInProgress.stateNode;
+  if (instance !== null) {
+    pushMarkerInstance(workInProgress, instance);
+  }
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
@@ -936,9 +1064,7 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   ) {
     // Schedule a Ref effect
     workInProgress.flags |= Ref;
-    if (enableSuspenseLayoutEffectSemantics) {
-      workInProgress.flags |= RefStatic;
-    }
+    workInProgress.flags |= RefStatic;
   }
 }
 
@@ -1072,7 +1198,7 @@ function updateClassComponent(
         // Schedule the error boundary to re-render using updated state
         const update = createClassErrorUpdate(
           workInProgress,
-          createCapturedValue(error, workInProgress),
+          createCapturedValueAtFiber(error, workInProgress),
           lane,
         );
         enqueueCapturedUpdate(workInProgress, update);
@@ -1110,16 +1236,8 @@ function updateClassComponent(
   const instance = workInProgress.stateNode;
   let shouldUpdate;
   if (instance === null) {
-    if (current !== null) {
-      // A class component without an instance only mounts if it suspended
-      // inside a non-concurrent tree, in an inconsistent state. We want to
-      // treat it like a new mount, even though an empty version of it already
-      // committed. Disconnect the alternate pointers.
-      current.alternate = null;
-      workInProgress.alternate = null;
-      // Since this is conceptually a new fiber, schedule a Placement effect
-      workInProgress.flags |= Placement;
-    }
+    resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress);
+
     // In the initial pass we might need to construct the instance.
     constructClassInstance(workInProgress, Component, nextProps);
     mountClassInstance(workInProgress, Component, nextProps, renderLanes);
@@ -1294,6 +1412,10 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   const root: FiberRoot = workInProgress.stateNode;
   pushRootTransition(workInProgress, root, renderLanes);
 
+  if (enableTransitionTracing) {
+    pushRootMarkerInstance(workInProgress);
+  }
+
   if (enableCache) {
     const nextCache: Cache = nextState.cache;
     pushCacheProvider(workInProgress, nextCache);
@@ -1316,8 +1438,6 @@ function updateHostRoot(current, workInProgress, renderLanes) {
       element: nextChildren,
       isDehydrated: false,
       cache: nextState.cache,
-      pendingSuspenseBoundaries: nextState.pendingSuspenseBoundaries,
-      transitions: nextState.transitions,
     };
     const updateQueue: UpdateQueue<RootState> = (workInProgress.updateQueue: any);
     // `baseState` can always be the last state because the root doesn't
@@ -1328,10 +1448,13 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     if (workInProgress.flags & ForceClientRender) {
       // Something errored during a previous attempt to hydrate the shell, so we
       // forced a client render.
-      const recoverableError = new Error(
-        'There was an error while hydrating. Because the error happened outside ' +
-          'of a Suspense boundary, the entire root will switch to ' +
-          'client rendering.',
+      const recoverableError = createCapturedValueAtFiber(
+        new Error(
+          'There was an error while hydrating. Because the error happened outside ' +
+            'of a Suspense boundary, the entire root will switch to ' +
+            'client rendering.',
+        ),
+        workInProgress,
       );
       return mountHostRootWithoutHydrating(
         current,
@@ -1341,9 +1464,12 @@ function updateHostRoot(current, workInProgress, renderLanes) {
         recoverableError,
       );
     } else if (nextChildren !== prevChildren) {
-      const recoverableError = new Error(
-        'This root received an early update, before anything was able ' +
-          'hydrate. Switched the entire root to client rendering.',
+      const recoverableError = createCapturedValueAtFiber(
+        new Error(
+          'This root received an early update, before anything was able ' +
+            'hydrate. Switched the entire root to client rendering.',
+        ),
+        workInProgress,
       );
       return mountHostRootWithoutHydrating(
         current,
@@ -1406,7 +1532,7 @@ function mountHostRootWithoutHydrating(
   workInProgress: Fiber,
   nextChildren: ReactNodeList,
   renderLanes: Lanes,
-  recoverableError: Error,
+  recoverableError: CapturedValue<mixed>,
 ) {
   // Revert to client rendering.
   resetHydrationState();
@@ -1469,16 +1595,7 @@ function mountLazyComponent(
   elementType,
   renderLanes,
 ) {
-  if (_current !== null) {
-    // A lazy component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to treat it like
-    // a new mount, even though an empty version of it already committed.
-    // Disconnect the alternate pointers.
-    _current.alternate = null;
-    workInProgress.alternate = null;
-    // Since this is conceptually a new fiber, schedule a Placement effect
-    workInProgress.flags |= Placement;
-  }
+  resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
   const props = workInProgress.pendingProps;
   const lazyComponent: LazyComponentType<any, any> = elementType;
@@ -1588,16 +1705,7 @@ function mountIncompleteClassComponent(
   nextProps,
   renderLanes,
 ) {
-  if (_current !== null) {
-    // An incomplete component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to treat it like
-    // a new mount, even though an empty version of it already committed.
-    // Disconnect the alternate pointers.
-    _current.alternate = null;
-    workInProgress.alternate = null;
-    // Since this is conceptually a new fiber, schedule a Placement effect
-    workInProgress.flags |= Placement;
-  }
+  resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
   // Promote the fiber to a class and try rendering again.
   workInProgress.tag = ClassComponent;
@@ -1635,16 +1743,7 @@ function mountIndeterminateComponent(
   Component,
   renderLanes,
 ) {
-  if (_current !== null) {
-    // An indeterminate component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to treat it like
-    // a new mount, even though an empty version of it already committed.
-    // Disconnect the alternate pointers.
-    _current.alternate = null;
-    workInProgress.alternate = null;
-    // Since this is conceptually a new fiber, schedule a Placement effect
-    workInProgress.flags |= Placement;
-  }
+  resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
 
   const props = workInProgress.pendingProps;
   let context;
@@ -1934,7 +2033,6 @@ function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
   return {
     baseLanes: renderLanes,
     cachePool: getSuspendedCache(),
-    transitions: null,
   };
 }
 
@@ -1969,13 +2067,11 @@ function updateSuspenseOffscreenState(
   return {
     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
     cachePool,
-    transitions: prevOffscreenState.transitions,
   };
 }
 
 // TODO: Probably should inline this back
 function shouldRemainOnFallback(
-  suspenseContext: SuspenseContext,
   current: null | Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
@@ -1995,7 +2091,8 @@ function shouldRemainOnFallback(
   }
 
   // Not currently showing content. Consult the Suspense context.
-  return hasSuspenseContext(
+  const suspenseContext: SuspenseContext = suspenseStackCursor.current;
+  return hasSuspenseListContext(
     suspenseContext,
     (ForceSuspenseFallback: SuspenseContext),
   );
@@ -2016,49 +2113,17 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
     }
   }
 
-  let suspenseContext: SuspenseContext = suspenseStackCursor.current;
-
   let showFallback = false;
   const didSuspend = (workInProgress.flags & DidCapture) !== NoFlags;
-
   if (
     didSuspend ||
-    shouldRemainOnFallback(
-      suspenseContext,
-      current,
-      workInProgress,
-      renderLanes,
-    )
+    shouldRemainOnFallback(current, workInProgress, renderLanes)
   ) {
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
     showFallback = true;
     workInProgress.flags &= ~DidCapture;
-  } else {
-    // Attempting the main content
-    if (
-      current === null ||
-      (current.memoizedState: null | SuspenseState) !== null
-    ) {
-      // This is a new mount or this boundary is already showing a fallback state.
-      // Mark this subtree context as having at least one invisible parent that could
-      // handle the fallback state.
-      // Avoided boundaries are not considered since they cannot handle preferred fallback states.
-      if (
-        !enableSuspenseAvoidThisFallback ||
-        nextProps.unstable_avoidThisFallback !== true
-      ) {
-        suspenseContext = addSubtreeSuspenseContext(
-          suspenseContext,
-          InvisibleParentSuspenseContext,
-        );
-      }
-    }
   }
-
-  suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
-
-  pushSuspenseContext(workInProgress, suspenseContext);
 
   // OK, the next part is confusing. We're about to reconcile the Suspense
   // boundary's children. This involves some custom reconciliation logic. Two
@@ -2084,25 +2149,43 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
   // a stack.
   if (current === null) {
     // Initial mount
+
+    // Special path for hydration
     // If we're currently hydrating, try to hydrate this boundary.
-    tryToClaimNextHydratableInstance(workInProgress);
-    // This could've been a dehydrated suspense component.
-    const suspenseState: null | SuspenseState = workInProgress.memoizedState;
-    if (suspenseState !== null) {
-      const dehydrated = suspenseState.dehydrated;
-      if (dehydrated !== null) {
-        return mountDehydratedSuspenseComponent(
-          workInProgress,
-          dehydrated,
-          renderLanes,
-        );
+    if (getIsHydrating()) {
+      // We must push the suspense handler context *before* attempting to
+      // hydrate, to avoid a mismatch in case it errors.
+      if (showFallback) {
+        pushPrimaryTreeSuspenseHandler(workInProgress);
+      } else {
+        pushFallbackTreeSuspenseHandler(workInProgress);
       }
+      tryToClaimNextHydratableInstance(workInProgress);
+      // This could've been a dehydrated suspense component.
+      const suspenseState: null | SuspenseState = workInProgress.memoizedState;
+      if (suspenseState !== null) {
+        const dehydrated = suspenseState.dehydrated;
+        if (dehydrated !== null) {
+          return mountDehydratedSuspenseComponent(
+            workInProgress,
+            dehydrated,
+            renderLanes,
+          );
+        }
+      }
+      // If hydration didn't succeed, fall through to the normal Suspense path.
+      // To avoid a stack mismatch we need to pop the Suspense handler that we
+      // pushed above. This will become less awkward when move the hydration
+      // logic to its own fiber.
+      popSuspenseHandler(workInProgress);
     }
 
     const nextPrimaryChildren = nextProps.children;
     const nextFallbackChildren = nextProps.fallback;
 
     if (showFallback) {
+      pushFallbackTreeSuspenseHandler(workInProgress);
+
       const fallbackFragment = mountSuspenseFallbackChildren(
         workInProgress,
         nextPrimaryChildren,
@@ -2115,12 +2198,21 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
       if (enableTransitionTracing) {
-        const currentTransitions = getSuspendedTransitions();
+        const currentTransitions = getPendingTransitions();
         if (currentTransitions !== null) {
-          const primaryChildUpdateQueue: OffscreenQueue = {
-            transitions: currentTransitions,
-          };
-          primaryChildFragment.updateQueue = primaryChildUpdateQueue;
+          const parentMarkerInstances = getMarkerInstances();
+          const offscreenQueue: OffscreenQueue | null = (primaryChildFragment.updateQueue: any);
+          if (offscreenQueue === null) {
+            const newOffscreenQueue: OffscreenQueue = {
+              transitions: currentTransitions,
+              markerInstances: parentMarkerInstances,
+              wakeables: null,
+            };
+            primaryChildFragment.updateQueue = newOffscreenQueue;
+          } else {
+            offscreenQueue.transitions = currentTransitions;
+            offscreenQueue.markerInstances = parentMarkerInstances;
+          }
         }
       }
 
@@ -2132,6 +2224,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       // This is a CPU-bound tree. Skip this tree and show a placeholder to
       // unblock the surrounding content. Then immediately retry after the
       // initial commit.
+      pushFallbackTreeSuspenseHandler(workInProgress);
       const fallbackFragment = mountSuspenseFallbackChildren(
         workInProgress,
         nextPrimaryChildren,
@@ -2144,6 +2237,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
 
+      // TODO: Transition Tracing is not yet implemented for CPU Suspense.
+
       // Since nothing actually suspended, there will nothing to ping this to
       // get it started back up to attempt the next item. While in terms of
       // priority this work has the same priority as this current render, it's
@@ -2155,6 +2250,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       workInProgress.lanes = SomeRetryLane;
       return fallbackFragment;
     } else {
+      pushPrimaryTreeSuspenseHandler(workInProgress);
       return mountSuspensePrimaryChildren(
         workInProgress,
         nextPrimaryChildren,
@@ -2164,161 +2260,91 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
   } else {
     // This is an update.
 
-    // If the current fiber has a SuspenseState, that means it's already showing
-    // a fallback.
+    // Special path for hydration
     const prevState: null | SuspenseState = current.memoizedState;
     if (prevState !== null) {
-      // The current tree is already showing a fallback
-
-      // Special path for hydration
       const dehydrated = prevState.dehydrated;
       if (dehydrated !== null) {
-        if (!didSuspend) {
-          return updateDehydratedSuspenseComponent(
-            current,
-            workInProgress,
-            dehydrated,
-            prevState,
-            renderLanes,
-          );
-        } else if (workInProgress.flags & ForceClientRender) {
-          // Something errored during hydration. Try again without hydrating.
-          workInProgress.flags &= ~ForceClientRender;
-          return retrySuspenseComponentWithoutHydrating(
-            current,
-            workInProgress,
-            renderLanes,
-            new Error(
-              'There was an error while hydrating this Suspense boundary. ' +
-                'Switched to client rendering.',
-            ),
-          );
-        } else if (
-          (workInProgress.memoizedState: null | SuspenseState) !== null
-        ) {
-          // Something suspended and we should still be in dehydrated mode.
-          // Leave the existing child in place.
-          workInProgress.child = current.child;
-          // The dehydrated completion pass expects this flag to be there
-          // but the normal suspense pass doesn't.
-          workInProgress.flags |= DidCapture;
-          return null;
-        } else {
-          // Suspended but we should no longer be in dehydrated mode.
-          // Therefore we now have to render the fallback.
-          const nextPrimaryChildren = nextProps.children;
-          const nextFallbackChildren = nextProps.fallback;
-          const fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
-            current,
-            workInProgress,
-            nextPrimaryChildren,
-            nextFallbackChildren,
-            renderLanes,
-          );
-          const primaryChildFragment: Fiber = (workInProgress.child: any);
-          primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
-            renderLanes,
-          );
-          workInProgress.memoizedState = SUSPENDED_MARKER;
-          return fallbackChildFragment;
-        }
-      }
-
-      if (showFallback) {
-        const nextFallbackChildren = nextProps.fallback;
-        const nextPrimaryChildren = nextProps.children;
-        const fallbackChildFragment = updateSuspenseFallbackChildren(
+        return updateDehydratedSuspenseComponent(
           current,
           workInProgress,
-          nextPrimaryChildren,
-          nextFallbackChildren,
+          didSuspend,
+          nextProps,
+          dehydrated,
+          prevState,
           renderLanes,
         );
-        const primaryChildFragment: Fiber = (workInProgress.child: any);
-        const prevOffscreenState: OffscreenState | null = (current.child: any)
-          .memoizedState;
-        primaryChildFragment.memoizedState =
-          prevOffscreenState === null
-            ? mountSuspenseOffscreenState(renderLanes)
-            : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
-        if (enableTransitionTracing) {
-          const currentTransitions = getSuspendedTransitions();
-          if (currentTransitions !== null) {
-            const primaryChildUpdateQueue: OffscreenQueue = {
+      }
+    }
+
+    if (showFallback) {
+      pushFallbackTreeSuspenseHandler(workInProgress);
+
+      const nextFallbackChildren = nextProps.fallback;
+      const nextPrimaryChildren = nextProps.children;
+      const fallbackChildFragment = updateSuspenseFallbackChildren(
+        current,
+        workInProgress,
+        nextPrimaryChildren,
+        nextFallbackChildren,
+        renderLanes,
+      );
+      const primaryChildFragment: Fiber = (workInProgress.child: any);
+      const prevOffscreenState: OffscreenState | null = (current.child: any)
+        .memoizedState;
+      primaryChildFragment.memoizedState =
+        prevOffscreenState === null
+          ? mountSuspenseOffscreenState(renderLanes)
+          : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
+      if (enableTransitionTracing) {
+        const currentTransitions = getPendingTransitions();
+        if (currentTransitions !== null) {
+          const parentMarkerInstances = getMarkerInstances();
+          const offscreenQueue: OffscreenQueue | null = (primaryChildFragment.updateQueue: any);
+          const currentOffscreenQueue: OffscreenQueue | null = (current.updateQueue: any);
+          if (offscreenQueue === null) {
+            const newOffscreenQueue: OffscreenQueue = {
               transitions: currentTransitions,
+              markerInstances: parentMarkerInstances,
+              wakeables: null,
             };
-            primaryChildFragment.updateQueue = primaryChildUpdateQueue;
+            primaryChildFragment.updateQueue = newOffscreenQueue;
+          } else if (offscreenQueue === currentOffscreenQueue) {
+            // If the work-in-progress queue is the same object as current, we
+            // can't modify it without cloning it first.
+            const newOffscreenQueue: OffscreenQueue = {
+              transitions: currentTransitions,
+              markerInstances: parentMarkerInstances,
+              wakeables:
+                currentOffscreenQueue !== null
+                  ? currentOffscreenQueue.wakeables
+                  : null,
+            };
+            primaryChildFragment.updateQueue = newOffscreenQueue;
+          } else {
+            offscreenQueue.transitions = currentTransitions;
+            offscreenQueue.markerInstances = parentMarkerInstances;
           }
         }
-        primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
-          current,
-          renderLanes,
-        );
-        workInProgress.memoizedState = SUSPENDED_MARKER;
-        return fallbackChildFragment;
-      } else {
-        const nextPrimaryChildren = nextProps.children;
-        const primaryChildFragment = updateSuspensePrimaryChildren(
-          current,
-          workInProgress,
-          nextPrimaryChildren,
-          renderLanes,
-        );
-        workInProgress.memoizedState = null;
-        return primaryChildFragment;
       }
+      primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+        current,
+        renderLanes,
+      );
+      workInProgress.memoizedState = SUSPENDED_MARKER;
+      return fallbackChildFragment;
     } else {
-      // The current tree is not already showing a fallback.
-      if (showFallback) {
-        // Timed out.
-        const nextFallbackChildren = nextProps.fallback;
-        const nextPrimaryChildren = nextProps.children;
-        const fallbackChildFragment = updateSuspenseFallbackChildren(
-          current,
-          workInProgress,
-          nextPrimaryChildren,
-          nextFallbackChildren,
-          renderLanes,
-        );
-        const primaryChildFragment: Fiber = (workInProgress.child: any);
-        const prevOffscreenState: OffscreenState | null = (current.child: any)
-          .memoizedState;
-        primaryChildFragment.memoizedState =
-          prevOffscreenState === null
-            ? mountSuspenseOffscreenState(renderLanes)
-            : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
-        primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
-          current,
-          renderLanes,
-        );
+      pushPrimaryTreeSuspenseHandler(workInProgress);
 
-        if (enableTransitionTracing) {
-          const currentTransitions = getSuspendedTransitions();
-          if (currentTransitions !== null) {
-            const primaryChildUpdateQueue: OffscreenQueue = {
-              transitions: currentTransitions,
-            };
-            primaryChildFragment.updateQueue = primaryChildUpdateQueue;
-          }
-        }
-
-        // Skip the primary children, and continue working on the
-        // fallback children.
-        workInProgress.memoizedState = SUSPENDED_MARKER;
-        return fallbackChildFragment;
-      } else {
-        // Still haven't timed out. Continue rendering the children, like we
-        // normally do.
-        const nextPrimaryChildren = nextProps.children;
-        const primaryChildFragment = updateSuspensePrimaryChildren(
-          current,
-          workInProgress,
-          nextPrimaryChildren,
-          renderLanes,
-        );
-        workInProgress.memoizedState = null;
-        return primaryChildFragment;
-      }
+      const nextPrimaryChildren = nextProps.children;
+      const primaryChildFragment = updateSuspensePrimaryChildren(
+        current,
+        workInProgress,
+        nextPrimaryChildren,
+        renderLanes,
+      );
+      workInProgress.memoizedState = null;
+      return primaryChildFragment;
     }
   }
 }
@@ -2556,7 +2582,7 @@ function retrySuspenseComponentWithoutHydrating(
   current: Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
-  recoverableError: Error | null,
+  recoverableError: CapturedValue<mixed> | null,
 ) {
   // Falling back to client rendering. Because this has performance
   // implications, it's considered a recoverable error, even though the user
@@ -2672,146 +2698,230 @@ function mountDehydratedSuspenseComponent(
 function updateDehydratedSuspenseComponent(
   current: Fiber,
   workInProgress: Fiber,
+  didSuspend: boolean,
+  nextProps: any,
   suspenseInstance: SuspenseInstance,
   suspenseState: SuspenseState,
   renderLanes: Lanes,
 ): null | Fiber {
-  // We should never be hydrating at this point because it is the first pass,
-  // but after we've already committed once.
-  warnIfHydrating();
+  if (!didSuspend) {
+    // This is the first render pass. Attempt to hydrate.
+    pushPrimaryTreeSuspenseHandler(workInProgress);
 
-  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
-    return retrySuspenseComponentWithoutHydrating(
-      current,
-      workInProgress,
-      renderLanes,
-      // TODO: When we delete legacy mode, we should make this error argument
-      // required — every concurrent mode path that causes hydration to
-      // de-opt to client rendering should have an error message.
-      null,
-    );
-  }
+    // We should never be hydrating at this point because it is the first pass,
+    // but after we've already committed once.
+    warnIfHydrating();
 
-  if (isSuspenseInstanceFallback(suspenseInstance)) {
-    // This boundary is in a permanent fallback state. In this case, we'll never
-    // get an update and we'll never be able to hydrate the final content. Let's just try the
-    // client side render instead.
-    return retrySuspenseComponentWithoutHydrating(
-      current,
-      workInProgress,
-      renderLanes,
-      // TODO: The server should serialize the error message so we can log it
-      // here on the client. Or, in production, a hash/id that corresponds to
-      // the error.
-      new Error(
-        'The server could not finish this Suspense boundary, likely ' +
-          'due to an error during server rendering. Switched to ' +
-          'client rendering.',
-      ),
-    );
-  }
-
-  if (
-    enableLazyContextPropagation &&
-    // TODO: Factoring is a little weird, since we check this right below, too.
-    // But don't want to re-arrange the if-else chain until/unless this
-    // feature lands.
-    !didReceiveUpdate
-  ) {
-    // We need to check if any children have context before we decide to bail
-    // out, so propagate the changes now.
-    lazilyPropagateParentContextChanges(current, workInProgress, renderLanes);
-  }
-
-  // We use lanes to indicate that a child might depend on context, so if
-  // any context has changed, we need to treat is as if the input might have changed.
-  const hasContextChanged = includesSomeLane(renderLanes, current.childLanes);
-  if (didReceiveUpdate || hasContextChanged) {
-    // This boundary has changed since the first render. This means that we are now unable to
-    // hydrate it. We might still be able to hydrate it using a higher priority lane.
-    const root = getWorkInProgressRoot();
-    if (root !== null) {
-      const attemptHydrationAtLane = getBumpedLaneForHydration(
-        root,
+    if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
         renderLanes,
+        // TODO: When we delete legacy mode, we should make this error argument
+        // required — every concurrent mode path that causes hydration to
+        // de-opt to client rendering should have an error message.
+        null,
       );
-      if (
-        attemptHydrationAtLane !== NoLane &&
-        attemptHydrationAtLane !== suspenseState.retryLane
-      ) {
-        // Intentionally mutating since this render will get interrupted. This
-        // is one of the very rare times where we mutate the current tree
-        // during the render phase.
-        suspenseState.retryLane = attemptHydrationAtLane;
-        // TODO: Ideally this would inherit the event time of the current render
-        const eventTime = NoTimestamp;
-        scheduleUpdateOnFiber(current, attemptHydrationAtLane, eventTime);
-      } else {
-        // We have already tried to ping at a higher priority than we're rendering with
-        // so if we got here, we must have failed to hydrate at those levels. We must
-        // now give up. Instead, we're going to delete the whole subtree and instead inject
-        // a new real Suspense boundary to take its place, which may render content
-        // or fallback. This might suspend for a while and if it does we might still have
-        // an opportunity to hydrate before this pass commits.
-      }
     }
 
-    // If we have scheduled higher pri work above, this will probably just abort the render
-    // since we now have higher priority work, but in case it doesn't, we need to prepare to
-    // render something, if we time out. Even if that requires us to delete everything and
-    // skip hydration.
-    // Delay having to do this as long as the suspense timeout allows us.
-    renderDidSuspendDelayIfPossible();
-    return retrySuspenseComponentWithoutHydrating(
-      current,
-      workInProgress,
-      renderLanes,
-      new Error(
-        'This Suspense boundary received an update before it finished ' +
-          'hydrating. This caused the boundary to switch to client rendering. ' +
-          'The usual way to fix this is to wrap the original update ' +
-          'in startTransition.',
-      ),
-    );
-  } else if (isSuspenseInstancePending(suspenseInstance)) {
-    // This component is still pending more data from the server, so we can't hydrate its
-    // content. We treat it as if this component suspended itself. It might seem as if
-    // we could just try to render it client-side instead. However, this will perform a
-    // lot of unnecessary work and is unlikely to complete since it often will suspend
-    // on missing data anyway. Additionally, the server might be able to render more
-    // than we can on the client yet. In that case we'd end up with more fallback states
-    // on the client than if we just leave it alone. If the server times out or errors
-    // these should update this boundary to the permanent Fallback state instead.
-    // Mark it as having captured (i.e. suspended).
-    workInProgress.flags |= DidCapture;
-    // Leave the child in place. I.e. the dehydrated fragment.
-    workInProgress.child = current.child;
-    // Register a callback to retry this boundary once the server has sent the result.
-    const retry = retryDehydratedSuspenseBoundary.bind(null, current);
-    registerSuspenseInstanceRetry(suspenseInstance, retry);
-    return null;
+    if (isSuspenseInstanceFallback(suspenseInstance)) {
+      // This boundary is in a permanent fallback state. In this case, we'll never
+      // get an update and we'll never be able to hydrate the final content. Let's just try the
+      // client side render instead.
+      let digest, message, stack;
+      if (__DEV__) {
+        ({digest, message, stack} = getSuspenseInstanceFallbackErrorDetails(
+          suspenseInstance,
+        ));
+      } else {
+        ({digest} = getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
+      }
+
+      let error;
+      if (message) {
+        // eslint-disable-next-line react-internal/prod-error-codes
+        error = new Error(message);
+      } else {
+        error = new Error(
+          'The server could not finish this Suspense boundary, likely ' +
+            'due to an error during server rendering. Switched to ' +
+            'client rendering.',
+        );
+      }
+      (error: any).digest = digest;
+      const capturedValue = createCapturedValue(error, digest, stack);
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+        capturedValue,
+      );
+    }
+
+    if (
+      enableLazyContextPropagation &&
+      // TODO: Factoring is a little weird, since we check this right below, too.
+      // But don't want to re-arrange the if-else chain until/unless this
+      // feature lands.
+      !didReceiveUpdate
+    ) {
+      // We need to check if any children have context before we decide to bail
+      // out, so propagate the changes now.
+      lazilyPropagateParentContextChanges(current, workInProgress, renderLanes);
+    }
+
+    // We use lanes to indicate that a child might depend on context, so if
+    // any context has changed, we need to treat is as if the input might have changed.
+    const hasContextChanged = includesSomeLane(renderLanes, current.childLanes);
+    if (didReceiveUpdate || hasContextChanged) {
+      // This boundary has changed since the first render. This means that we are now unable to
+      // hydrate it. We might still be able to hydrate it using a higher priority lane.
+      const root = getWorkInProgressRoot();
+      if (root !== null) {
+        const attemptHydrationAtLane = getBumpedLaneForHydration(
+          root,
+          renderLanes,
+        );
+        if (
+          attemptHydrationAtLane !== NoLane &&
+          attemptHydrationAtLane !== suspenseState.retryLane
+        ) {
+          // Intentionally mutating since this render will get interrupted. This
+          // is one of the very rare times where we mutate the current tree
+          // during the render phase.
+          suspenseState.retryLane = attemptHydrationAtLane;
+          // TODO: Ideally this would inherit the event time of the current render
+          const eventTime = NoTimestamp;
+          enqueueConcurrentRenderForLane(current, attemptHydrationAtLane);
+          scheduleUpdateOnFiber(
+            root,
+            current,
+            attemptHydrationAtLane,
+            eventTime,
+          );
+        } else {
+          // We have already tried to ping at a higher priority than we're rendering with
+          // so if we got here, we must have failed to hydrate at those levels. We must
+          // now give up. Instead, we're going to delete the whole subtree and instead inject
+          // a new real Suspense boundary to take its place, which may render content
+          // or fallback. This might suspend for a while and if it does we might still have
+          // an opportunity to hydrate before this pass commits.
+        }
+      }
+
+      // If we have scheduled higher pri work above, this will probably just abort the render
+      // since we now have higher priority work, but in case it doesn't, we need to prepare to
+      // render something, if we time out. Even if that requires us to delete everything and
+      // skip hydration.
+      // Delay having to do this as long as the suspense timeout allows us.
+      renderDidSuspendDelayIfPossible();
+      const capturedValue = createCapturedValue(
+        new Error(
+          'This Suspense boundary received an update before it finished ' +
+            'hydrating. This caused the boundary to switch to client rendering. ' +
+            'The usual way to fix this is to wrap the original update ' +
+            'in startTransition.',
+        ),
+      );
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+        capturedValue,
+      );
+    } else if (isSuspenseInstancePending(suspenseInstance)) {
+      // This component is still pending more data from the server, so we can't hydrate its
+      // content. We treat it as if this component suspended itself. It might seem as if
+      // we could just try to render it client-side instead. However, this will perform a
+      // lot of unnecessary work and is unlikely to complete since it often will suspend
+      // on missing data anyway. Additionally, the server might be able to render more
+      // than we can on the client yet. In that case we'd end up with more fallback states
+      // on the client than if we just leave it alone. If the server times out or errors
+      // these should update this boundary to the permanent Fallback state instead.
+      // Mark it as having captured (i.e. suspended).
+      workInProgress.flags |= DidCapture;
+      // Leave the child in place. I.e. the dehydrated fragment.
+      workInProgress.child = current.child;
+      // Register a callback to retry this boundary once the server has sent the result.
+      const retry = retryDehydratedSuspenseBoundary.bind(null, current);
+      registerSuspenseInstanceRetry(suspenseInstance, retry);
+      return null;
+    } else {
+      // This is the first attempt.
+      reenterHydrationStateFromDehydratedSuspenseInstance(
+        workInProgress,
+        suspenseInstance,
+        suspenseState.treeContext,
+      );
+      const primaryChildren = nextProps.children;
+      const primaryChildFragment = mountSuspensePrimaryChildren(
+        workInProgress,
+        primaryChildren,
+        renderLanes,
+      );
+      // Mark the children as hydrating. This is a fast path to know whether this
+      // tree is part of a hydrating tree. This is used to determine if a child
+      // node has fully mounted yet, and for scheduling event replaying.
+      // Conceptually this is similar to Placement in that a new subtree is
+      // inserted into the React tree here. It just happens to not need DOM
+      // mutations because it already exists.
+      primaryChildFragment.flags |= Hydrating;
+      return primaryChildFragment;
+    }
   } else {
-    // This is the first attempt.
-    reenterHydrationStateFromDehydratedSuspenseInstance(
-      workInProgress,
-      suspenseInstance,
-      suspenseState.treeContext,
-    );
-    const nextProps = workInProgress.pendingProps;
-    const primaryChildren = nextProps.children;
-    const primaryChildFragment = mountSuspensePrimaryChildren(
-      workInProgress,
-      primaryChildren,
-      renderLanes,
-    );
-    // Mark the children as hydrating. This is a fast path to know whether this
-    // tree is part of a hydrating tree. This is used to determine if a child
-    // node has fully mounted yet, and for scheduling event replaying.
-    // Conceptually this is similar to Placement in that a new subtree is
-    // inserted into the React tree here. It just happens to not need DOM
-    // mutations because it already exists.
-    primaryChildFragment.flags |= Hydrating;
-    return primaryChildFragment;
+    // This is the second render pass. We already attempted to hydrated, but
+    // something either suspended or errored.
+
+    if (workInProgress.flags & ForceClientRender) {
+      // Something errored during hydration. Try again without hydrating.
+      pushPrimaryTreeSuspenseHandler(workInProgress);
+
+      workInProgress.flags &= ~ForceClientRender;
+      const capturedValue = createCapturedValue(
+        new Error(
+          'There was an error while hydrating this Suspense boundary. ' +
+            'Switched to client rendering.',
+        ),
+      );
+      return retrySuspenseComponentWithoutHydrating(
+        current,
+        workInProgress,
+        renderLanes,
+        capturedValue,
+      );
+    } else if ((workInProgress.memoizedState: null | SuspenseState) !== null) {
+      // Something suspended and we should still be in dehydrated mode.
+      // Leave the existing child in place.
+
+      // Push to avoid a mismatch
+      pushFallbackTreeSuspenseHandler(workInProgress);
+
+      workInProgress.child = current.child;
+      // The dehydrated completion pass expects this flag to be there
+      // but the normal suspense pass doesn't.
+      workInProgress.flags |= DidCapture;
+      return null;
+    } else {
+      // Suspended but we should no longer be in dehydrated mode.
+      // Therefore we now have to render the fallback.
+      pushFallbackTreeSuspenseHandler(workInProgress);
+
+      const nextPrimaryChildren = nextProps.children;
+      const nextFallbackChildren = nextProps.fallback;
+      const fallbackChildFragment = mountSuspenseFallbackAfterRetryWithoutHydrating(
+        current,
+        workInProgress,
+        nextPrimaryChildren,
+        nextFallbackChildren,
+        renderLanes,
+      );
+      const primaryChildFragment: Fiber = (workInProgress.child: any);
+      primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
+        renderLanes,
+      );
+      workInProgress.memoizedState = SUSPENDED_MARKER;
+      return fallbackChildFragment;
+    }
   }
 }
 
@@ -3091,12 +3201,12 @@ function updateSuspenseListComponent(
 
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
-  const shouldForceFallback = hasSuspenseContext(
+  const shouldForceFallback = hasSuspenseListContext(
     suspenseContext,
     (ForceSuspenseFallback: SuspenseContext),
   );
   if (shouldForceFallback) {
-    suspenseContext = setShallowSuspenseContext(
+    suspenseContext = setShallowSuspenseListContext(
       suspenseContext,
       ForceSuspenseFallback,
     );
@@ -3114,9 +3224,9 @@ function updateSuspenseListComponent(
         renderLanes,
       );
     }
-    suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
+    suspenseContext = setDefaultShallowSuspenseListContext(suspenseContext);
   }
-  pushSuspenseContext(workInProgress, suspenseContext);
+  pushSuspenseListContext(workInProgress, suspenseContext);
 
   if ((workInProgress.mode & ConcurrentMode) === NoMode) {
     // In legacy mode, SuspenseList doesn't work so we just
@@ -3372,8 +3482,23 @@ export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
 
-export function checkIfWorkInProgressReceivedUpdate() {
+export function checkIfWorkInProgressReceivedUpdate(): boolean {
   return didReceiveUpdate;
+}
+
+function resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress) {
+  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+    if (current !== null) {
+      // A lazy component only mounts if it suspended inside a non-
+      // concurrent tree, in an inconsistent state. We want to treat it like
+      // a new mount, even though an empty version of it already committed.
+      // Disconnect the alternate pointers.
+      current.alternate = null;
+      workInProgress.alternate = null;
+      // Since this is conceptually a new fiber, schedule a Placement effect
+      workInProgress.flags |= Placement;
+    }
+  }
 }
 
 function bailoutOnAlreadyFinishedWork(
@@ -3516,6 +3641,10 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       const root: FiberRoot = workInProgress.stateNode;
       pushRootTransition(workInProgress, root, renderLanes);
 
+      if (enableTransitionTracing) {
+        pushRootMarkerInstance(workInProgress);
+      }
+
       if (enableCache) {
         const cache: Cache = current.memoizedState.cache;
         pushCacheProvider(workInProgress, cache);
@@ -3565,10 +3694,9 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       const state: SuspenseState | null = workInProgress.memoizedState;
       if (state !== null) {
         if (state.dehydrated !== null) {
-          pushSuspenseContext(
-            workInProgress,
-            setDefaultShallowSuspenseContext(suspenseStackCursor.current),
-          );
+          // We're not going to render the children, so this is just to maintain
+          // push/pop symmetry
+          pushPrimaryTreeSuspenseHandler(workInProgress);
           // We know that this component will suspend again because if it has
           // been unsuspended it has committed as a resolved Suspense component.
           // If it needs to be retried, it should have work scheduled on it.
@@ -3591,10 +3719,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         } else {
           // The primary child fragment does not have pending work marked
           // on it
-          pushSuspenseContext(
-            workInProgress,
-            setDefaultShallowSuspenseContext(suspenseStackCursor.current),
-          );
+          pushPrimaryTreeSuspenseHandler(workInProgress);
           // The primary children do not have pending work with sufficient
           // priority. Bailout.
           const child = bailoutOnAlreadyFinishedWork(
@@ -3614,10 +3739,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
           }
         }
       } else {
-        pushSuspenseContext(
-          workInProgress,
-          setDefaultShallowSuspenseContext(suspenseStackCursor.current),
-        );
+        pushPrimaryTreeSuspenseHandler(workInProgress);
       }
       break;
     }
@@ -3675,7 +3797,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         renderState.tail = null;
         renderState.lastEffect = null;
       }
-      pushSuspenseContext(workInProgress, suspenseStackCursor.current);
+      pushSuspenseListContext(workInProgress, suspenseStackCursor.current);
 
       if (hasChildWork) {
         break;
@@ -3705,6 +3827,14 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         pushCacheProvider(workInProgress, cache);
       }
       break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        const instance: TracingMarkerInstance | null = workInProgress.stateNode;
+        if (instance !== null) {
+          pushMarkerInstance(workInProgress, instance);
+        }
+      }
     }
   }
   return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);

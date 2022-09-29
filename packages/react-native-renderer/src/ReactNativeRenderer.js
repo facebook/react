@@ -96,6 +96,7 @@ function findHostInstance_DEPRECATED(
     return (hostInstance: any).canonical;
   }
   // $FlowFixMe[incompatible-return]
+  // $FlowFixMe[incompatible-exact]
   return hostInstance;
 }
 
@@ -222,7 +223,7 @@ function render(
   }
   updateContainer(element, root, null, callback);
 
-  // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
+  // $FlowFixMe Flow has hardcoded values for React DOM that don't work with RN
   return getPublicRootInstance(root);
 }
 

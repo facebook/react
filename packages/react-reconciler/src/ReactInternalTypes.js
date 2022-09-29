@@ -17,6 +17,7 @@ import type {
   MutableSource,
   StartTransitionOptions,
   Wakeable,
+  Usable,
 } from 'shared/ReactTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
@@ -26,7 +27,13 @@ import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
-import type {Transition} from './ReactFiberTracingMarkerComponent.new';
+// Doing this because there's a merge conflict because of the way sync-reconciler-fork
+// is implemented
+import type {
+  TracingMarkerInstance,
+  Transition,
+} from './ReactFiberTracingMarkerComponent.new';
+import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -35,6 +42,7 @@ export type HookType =
   | 'useContext'
   | 'useRef'
   | 'useEffect'
+  | 'useEvent'
   | 'useInsertionEffect'
   | 'useLayoutEffect'
   | 'useCallback'
@@ -61,9 +69,14 @@ export type Dependencies = {
   ...
 };
 
+export type MemoCache = {
+  data: Array<Array<any>>,
+  index: number,
+};
+
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
-export type Fiber = {|
+export type Fiber = {
   // These first fields are conceptually members of an Instance. This used to
   // be split into a separate type and intersected with the other Fiber fields,
   // but until Flow fixes its intersection bugs, we've merged them into a
@@ -190,9 +203,9 @@ export type Fiber = {|
 
   // Used to verify that the order of hooks does not change between renders.
   _debugHookTypes?: Array<HookType> | null,
-|};
+};
 
-type BaseFiberRootProperties = {|
+type BaseFiberRootProperties = {
   // The type of root (legacy, batched, concurrent, etc.)
   tag: RootTag,
 
@@ -225,12 +238,14 @@ type BaseFiberRootProperties = {|
   callbackPriority: Lane,
   eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
+  hiddenUpdates: LaneMap<Array<ConcurrentUpdate> | null>,
 
   pendingLanes: Lanes,
   suspendedLanes: Lanes,
   pingedLanes: Lanes,
   expiredLanes: Lanes,
   mutableReadLanes: Lanes,
+  errorRecoveryDisabledLanes: Lanes,
 
   finishedLanes: Lanes,
 
@@ -247,15 +262,18 @@ type BaseFiberRootProperties = {|
   // a reference to.
   identifierPrefix: string,
 
-  onRecoverableError: (error: mixed) => void,
-|};
+  onRecoverableError: (
+    error: mixed,
+    errorInfo: {digest?: ?string, componentStack?: ?string},
+  ) => void,
+};
 
 // The following attributes are only used by DevTools and are only present in DEV builds.
 // They enable DevTools Profiler UI to show which Fiber(s) scheduled a given commit.
-type UpdaterTrackingOnlyFiberRootProperties = {|
+type UpdaterTrackingOnlyFiberRootProperties = {
   memoizedUpdaters: Set<Fiber>,
   pendingUpdatersLaneMap: LaneMap<Set<Fiber>>,
-|};
+};
 
 export type SuspenseHydrationCallbacks = {
   onHydrated?: (suspenseInstance: SuspenseInstance) => void,
@@ -264,9 +282,9 @@ export type SuspenseHydrationCallbacks = {
 };
 
 // The follow fields are only used by enableSuspenseCallback for hydration.
-type SuspenseCallbackOnlyFiberRootProperties = {|
+type SuspenseCallbackOnlyFiberRootProperties = {
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
-|};
+};
 
 export type TransitionTracingCallbacks = {
   onTransitionStart?: (transitionName: string, startTime: number) => void,
@@ -281,8 +299,7 @@ export type TransitionTracingCallbacks = {
     startTime: number,
     deletions: Array<{
       type: string,
-      name?: string,
-      newName?: string,
+      name?: string | null,
       endTime: number,
     }>,
   ) => void,
@@ -304,8 +321,7 @@ export type TransitionTracingCallbacks = {
     startTime: number,
     deletions: Array<{
       type: string,
-      name?: string,
-      newName?: string,
+      name?: string | null,
       endTime: number,
     }>,
   ) => void,
@@ -318,10 +334,17 @@ export type TransitionTracingCallbacks = {
 };
 
 // The following fields are only used in transition tracing in Profile builds
-type TransitionTracingOnlyFiberRootProperties = {|
+type TransitionTracingOnlyFiberRootProperties = {
   transitionCallbacks: null | TransitionTracingCallbacks,
-  transitionLanes: Array<Array<Transition> | null>,
-|};
+  transitionLanes: Array<Set<Transition> | null>,
+  // Transitions on the root can be represented as a bunch of tracing markers.
+  // Each entangled group of transitions can be treated as a tracing marker.
+  // It will have a set of pending suspense boundaries. These transitions
+  // are considered complete when the pending suspense boundaries set is
+  // empty. We can represent this as a Map of transitions to suspense
+  // boundary sets
+  incompleteTransitions: Map<Transition, TracingMarkerInstance>,
+};
 
 // Exported FiberRoot type includes all properties,
 // To avoid requiring potentially error-prone :any casts throughout the project.
@@ -337,7 +360,8 @@ export type FiberRoot = {
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
-export type Dispatcher = {|
+export type Dispatcher = {
+  use?: <T>(Usable<T>) => T,
   getCacheSignal?: () => AbortSignal,
   getCacheForType?: <T>(resourceType: () => T) => T,
   readContext<T>(context: ReactContext<T>): T,
@@ -348,11 +372,12 @@ export type Dispatcher = {|
     init?: (I) => S,
   ): [S, Dispatch<A>],
   useContext<T>(context: ReactContext<T>): T,
-  useRef<T>(initialValue: T): {|current: T|},
+  useRef<T>(initialValue: T): {current: T},
   useEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
+  useEvent?: <T>(callback: () => T) => () => T,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
@@ -364,7 +389,7 @@ export type Dispatcher = {|
   useCallback<T>(callback: T, deps: Array<mixed> | void | null): T,
   useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T,
   useImperativeHandle<T>(
-    ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+    ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
     create: () => T,
     deps: Array<mixed> | void | null,
   ): void,
@@ -386,6 +411,7 @@ export type Dispatcher = {|
   ): T,
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
+  useMemoCache?: (size: number) => Array<any>,
 
   unstable_isNewReconciler?: boolean,
-|};
+};

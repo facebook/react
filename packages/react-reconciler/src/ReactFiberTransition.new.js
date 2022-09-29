@@ -6,7 +6,7 @@
  *
  * @flow
  */
-import type {FiberRoot} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
@@ -139,17 +139,17 @@ export function pushTransition(
 
 export function popTransition(workInProgress: Fiber, current: Fiber | null) {
   if (current !== null) {
-    if (enableCache) {
-      pop(resumedCache, workInProgress);
-    }
-
     if (enableTransitionTracing) {
       pop(transitionStack, workInProgress);
+    }
+
+    if (enableCache) {
+      pop(resumedCache, workInProgress);
     }
   }
 }
 
-export function getSuspendedTransitions(): Array<Transition> | null {
+export function getPendingTransitions(): Array<Transition> | null {
   if (!enableTransitionTracing) {
     return null;
   }

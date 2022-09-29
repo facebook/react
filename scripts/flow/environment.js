@@ -25,13 +25,13 @@ declare module 'create-react-class' {
   declare var exports: React$CreateClass;
 }
 
-declare var trustedTypes: {|
+declare var trustedTypes: {
   isHTML: (value: any) => boolean,
   isScript: (value: any) => boolean,
   isScriptURL: (value: any) => boolean,
   // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
   isURL?: (value: any) => boolean,
-|};
+};
 
 // ReactFeatureFlags www fork
 declare module 'ReactFeatureFlags' {

@@ -154,7 +154,7 @@ function useReducer<S, I, A>(
   return [state, (action: A) => {}];
 }
 
-function useRef<T>(initialValue: T): {|current: T|} {
+function useRef<T>(initialValue: T): {current: T} {
   const hook = nextHook();
   const ref = hook !== null ? hook.memoizedState : {current: initialValue};
   hookLog.push({
@@ -208,7 +208,7 @@ function useEffect(
 }
 
 function useImperativeHandle<T>(
-  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   inputs: Array<mixed> | void | null,
 ): void {
@@ -310,15 +310,11 @@ function useTransition(): [
 }
 
 function useDeferredValue<T>(value: T): T {
-  // useDeferredValue() composes multiple hooks internally.
-  // Advance the current hook index the same number of times
-  // so that subsequent hooks have the right memoized state.
-  nextHook(); // State
-  nextHook(); // Effect
+  const hook = nextHook();
   hookLog.push({
     primitive: 'DeferredValue',
     stackError: new Error(),
-    value,
+    value: hook !== null ? hook.memoizedState : value,
   });
   return value;
 }
@@ -371,7 +367,11 @@ const DispatcherProxyHandler = {
   },
 };
 
-const DispatcherProxy = new Proxy(Dispatcher, DispatcherProxyHandler);
+// `Proxy` may not exist on some platforms
+const DispatcherProxy =
+  typeof Proxy === 'undefined'
+    ? Dispatcher
+    : new Proxy(Dispatcher, DispatcherProxyHandler);
 
 // Inspect
 
@@ -687,6 +687,7 @@ function handleRenderFunctionError(error: any): void {
   // TODO: refactor this if we ever combine the devtools and debug tools packages
   wrapperError.name = 'ReactDebugToolsRenderError';
   // this stage-4 proposal is not supported by all environments yet.
+  // $FlowFixMe Flow doesn't have this type yet.
   wrapperError.cause = error;
   throw wrapperError;
 }
@@ -786,7 +787,7 @@ export function inspectHooksOfFiber(
   fiber: Fiber,
   currentDispatcher: ?CurrentDispatcherRef,
   includeHooksSource?: boolean = false,
-) {
+): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
   if (currentDispatcher == null) {

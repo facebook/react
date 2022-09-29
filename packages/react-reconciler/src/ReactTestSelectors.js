@@ -39,32 +39,32 @@ if (typeof Symbol === 'function' && Symbol.for) {
   TEXT_TYPE = symbolFor('selector.text');
 }
 
-type Type = Symbol | number;
+type Type = symbol | number;
 
-type ComponentSelector = {|
+type ComponentSelector = {
   $$typeof: Type,
   value: React$AbstractComponent<empty, mixed>,
-|};
+};
 
-type HasPseudoClassSelector = {|
+type HasPseudoClassSelector = {
   $$typeof: Type,
   value: Array<Selector>,
-|};
+};
 
-type RoleSelector = {|
+type RoleSelector = {
   $$typeof: Type,
   value: string,
-|};
+};
 
-type TextSelector = {|
+type TextSelector = {
   $$typeof: Type,
   value: string,
-|};
+};
 
-type TestNameSelector = {|
+type TestNameSelector = {
   $$typeof: Type,
   value: string,
-|};
+};
 
 type Selector =
   | ComponentSelector
@@ -364,12 +364,12 @@ export function getFindAllNodesFailureDescription(
   return null;
 }
 
-export type BoundingRect = {|
+export type BoundingRect = {
   x: number,
   y: number,
   width: number,
   height: number,
-|};
+};
 
 export function findBoundingRects(
   hostRoot: Instance,
@@ -514,7 +514,7 @@ export function observeVisibleRects(
   selectors: Array<Selector>,
   callback: (intersections: Array<{ratio: number, rect: BoundingRect}>) => void,
   options?: IntersectionObserverOptions,
-): {|disconnect: () => void|} {
+): {disconnect: () => void} {
   if (!supportsTestSelectors) {
     throw new Error('Test selector API is not supported by this renderer.');
   }

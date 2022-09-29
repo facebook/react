@@ -41,12 +41,12 @@ export type IconType =
   | 'view-dom'
   | 'view-source';
 
-type Props = {|
+type Props = {
   className?: string,
   type: IconType,
-|};
+};
 
-export default function ButtonIcon({className = '', type}: Props) {
+export default function ButtonIcon({className = '', type}: Props): React.Node {
   let pathData = null;
   switch (type) {
     case 'add':

@@ -2,6 +2,7 @@
 
 'use strict';
 
+const {runOnlyForReactRange} = require('./utils');
 const listAppUtils = require('./list-app-utils');
 const devToolsUtils = require('./devtools-utils');
 const {test, expect} = require('@playwright/test');
@@ -12,8 +13,7 @@ test.describe('Profiler', () => {
 
   test.beforeEach(async ({browser}) => {
     page = await browser.newPage();
-
-    await page.goto('http://localhost:8080/e2e.html', {
+    await page.goto(config.use.url, {
       waitUntil: 'domcontentloaded',
     });
 
@@ -23,6 +23,8 @@ test.describe('Profiler', () => {
   });
 
   test('should record renders and commits when active', async () => {
+    // Profiling is only available in 16.5 and over
+    runOnlyForReactRange('>=16.5');
     async function getSnapshotSelectorText() {
       return await page.evaluate(() => {
         const {

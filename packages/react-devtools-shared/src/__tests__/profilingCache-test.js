@@ -39,6 +39,7 @@ describe('ProfilingCache', () => {
     Scheduler = require('scheduler');
   });
 
+  // @reactVersion >= 16.9
   it('should collect data for each root (including ones added or mounted after profiling started)', () => {
     const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
@@ -150,6 +151,7 @@ describe('ProfilingCache', () => {
     });
   });
 
+  // @reactVersion >= 16.9
   it('should collect data for each commit', () => {
     const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
@@ -194,15 +196,13 @@ describe('ProfilingCache', () => {
     });
   });
 
+  // @reactVersion >= 16.9
   it('should record changed props/state/context/hooks', () => {
     let instance = null;
 
     const ModernContext = React.createContext(0);
 
-    class LegacyContextProvider extends React.Component<
-      any,
-      {|count: number|},
-    > {
+    class LegacyContextProvider extends React.Component<any, {count: number}> {
       static childContextTypes = {
         count: PropTypes.number,
       };
@@ -512,6 +512,7 @@ describe('ProfilingCache', () => {
     }
   });
 
+  // @reactVersion >= 18.0
   it('should properly detect changed hooks', () => {
     const Context = React.createContext(0);
 
@@ -730,6 +731,7 @@ describe('ProfilingCache', () => {
     }
   });
 
+  // @reactVersion >= 18.0
   it('should calculate durations based on actual children (not filtered children)', () => {
     store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
 
@@ -788,6 +790,7 @@ describe('ProfilingCache', () => {
     `);
   });
 
+  // @reactVersion >= 17.0
   it('should calculate durations correctly for suspended views', async () => {
     let data;
     const getData = () => {
@@ -857,6 +860,7 @@ describe('ProfilingCache', () => {
     `);
   });
 
+  // @reactVersion >= 16.9
   it('should collect data for each rendered fiber', () => {
     const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
@@ -934,6 +938,7 @@ describe('ProfilingCache', () => {
     }
   });
 
+  // @reactVersion >= 18.0
   it('should handle unexpectedly shallow suspense trees', () => {
     const container = document.createElement('div');
 
@@ -975,6 +980,7 @@ describe('ProfilingCache', () => {
   });
 
   // See https://github.com/facebook/react/issues/18831
+  // @reactVersion >= 16.9
   it('should not crash during route transitions with Suspense', () => {
     const RouterContext = React.createContext();
 
@@ -1063,6 +1069,7 @@ describe('ProfilingCache', () => {
     expect(container.textContent).toBe('About');
   });
 
+  // @reactVersion >= 18.0
   it('components that were deleted and added to updaters during the layout phase should not crash', () => {
     let setChildUnmounted;
     function Child() {
@@ -1093,6 +1100,7 @@ describe('ProfilingCache', () => {
     expect(updaters[0].displayName).toEqual('App');
   });
 
+  // @reactVersion >= 18.0
   it('components in a deleted subtree and added to updaters during the layout phase should not crash', () => {
     let setChildUnmounted;
     function Child() {
@@ -1127,6 +1135,7 @@ describe('ProfilingCache', () => {
     expect(updaters[0].displayName).toEqual('App');
   });
 
+  // @reactVersion >= 18.0
   it('components that were deleted should not be added to updaters during the passive phase', () => {
     let setChildUnmounted;
     function Child() {

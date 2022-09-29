@@ -25,7 +25,7 @@ type Props = {
   ...
 };
 
-function CommitFlamegraphListItem({data, index, style}: Props) {
+function CommitFlamegraphListItem({data, index, style}: Props): React.Node {
   const {
     chartData,
     onElementMouseEnter,
@@ -131,4 +131,7 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
   );
 }
 
-export default memo<Props>(CommitFlamegraphListItem, areEqual);
+export default (memo(
+  CommitFlamegraphListItem,
+  areEqual,
+): React.ComponentType<Props>);

@@ -30,6 +30,30 @@ const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
 const isChrome = getBrowserName() === 'Chrome';
 const isEdge = getBrowserName() === 'Edge';
 
+// since Chromium v102, requestAnimationFrame no longer fires in devtools_page (i.e. this file)
+// mock requestAnimationFrame with setTimeout as a temporary workaround
+// https://github.com/facebook/react/issues/24626
+if (isChrome || isEdge) {
+  const timeoutID = setTimeout(() => {
+    // if requestAnimationFrame is not working, polyfill it
+    // The polyfill is based on https://gist.github.com/jalbam/5fe05443270fa6d8136238ec72accbc0
+    const FRAME_TIME = 16;
+    let lastTime = 0;
+    window.requestAnimationFrame = function(callback, element) {
+      const now = window.performance.now();
+      const nextTime = Math.max(lastTime + FRAME_TIME, now);
+      return setTimeout(function() {
+        callback((lastTime = nextTime));
+      }, nextTime - now);
+    };
+    window.cancelAnimationFrame = clearTimeout;
+  }, 400);
+
+  requestAnimationFrame(() => {
+    clearTimeout(timeoutID);
+  });
+}
+
 let panelCreated = false;
 
 // The renderer interface can't read saved component filters directly,
@@ -91,7 +115,17 @@ function createPanelIfReactLoaded() {
 
       const tabId = chrome.devtools.inspectedWindow.tabId;
 
-      registerDevToolsEventLogger('extension');
+      registerDevToolsEventLogger('extension', async () => {
+        // TODO: after we upgrade to Manifest V3, chrome.tabs.query returns a Promise
+        // without the callback.
+        return new Promise(resolve => {
+          chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+            resolve({
+              page_url: tabs[0]?.url,
+            });
+          });
+        });
+      });
 
       function initBridgeAndStore() {
         const port = chrome.runtime.connect({
@@ -219,6 +253,10 @@ function createPanelIfReactLoaded() {
               `);
             }, 100);
           }
+        };
+
+        const viewUrlSourceFunction = (url, line, col) => {
+          chrome.devtools.panels.openResource(url, line, col);
         };
 
         let debugIDCounter = 0;
@@ -357,6 +395,7 @@ function createPanelIfReactLoaded() {
               warnIfUnsupportedVersionDetected: true,
               viewAttributeSourceFunction,
               viewElementSourceFunction,
+              viewUrlSourceFunction,
             }),
           );
         };
@@ -433,7 +472,7 @@ function createPanelIfReactLoaded() {
       let needsToSyncElementSelection = false;
 
       chrome.devtools.panels.create(
-        isChrome ? '⚛️ Components' : 'Components',
+        isChrome || isEdge ? '⚛️ Components' : 'Components',
         '',
         'panel.html',
         extensionPanel => {
@@ -464,7 +503,7 @@ function createPanelIfReactLoaded() {
       );
 
       chrome.devtools.panels.create(
-        isChrome ? '⚛️ Profiler' : 'Profiler',
+        isChrome || isEdge ? '⚛️ Profiler' : 'Profiler',
         '',
         'panel.html',
         extensionPanel => {

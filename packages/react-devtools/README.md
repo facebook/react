@@ -97,7 +97,7 @@ By default DevTools listen to port `8097` on `localhost`. If you need to customi
 
 ![Allow access to file URLs](https://user-images.githubusercontent.com/29597/64646784-95b58080-d3cc-11e9-943d-02474683398a.png)
 
-Or you could develop with a local HTTP server [like `serve`](https://www.npmjs.com/package/serve).
+Or you could develop with a local HTTP server like [`serve`](https://www.npmjs.com/package/serve).
 
 **The React tab won't show up if the site doesn't use React**, or if React can't communicate with the devtools. When the page loads, the devtools sets a global named `__REACT_DEVTOOLS_GLOBAL_HOOK__`, then React communicates with that hook during initialization. You can test this on the [React website](https://reactjs.org/) or by inspecting [Facebook](https://www.facebook.com/).
 
@@ -129,7 +129,7 @@ To use the latest build from CI, run the following command from the root of the 
 You can test the standalone DevTools by running the following:
 
 * **First, complete the prerequisite steps above! If you don't do it, none of the steps below will work.**
-* Then, run `yarn start:backend` and `yarn start:standalone` in `../react-devtools-core`
-* Run `yarn start` in this folder
+* Then, run `yarn start:backend` and `yarn start:standalone` in `packages/react-devtools-core`
+* Run `yarn start` in `packages/react-devtools`
 * Refresh the app after it has recompiled a change
 * For React Native, copy `react-devtools-core` to its `node_modules` to test your changes.

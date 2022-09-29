@@ -35,7 +35,7 @@ import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 type Type = 'props' | 'state' | 'context' | 'hooks';
 
-type KeyValueProps = {|
+type KeyValueProps = {
   alphaSort: boolean,
   bridge: FrontendBridge,
   canDeletePaths: boolean,
@@ -54,7 +54,7 @@ type KeyValueProps = {|
   pathRoot: Type,
   store: Store,
   value: any,
-|};
+};
 
 export default function KeyValue({
   alphaSort,
@@ -75,7 +75,7 @@ export default function KeyValue({
   pathRoot,
   store,
   value,
-}: KeyValueProps) {
+}: KeyValueProps): React.Node {
   const {readOnly: readOnlyGlobalFlag} = useContext(OptionsContext);
   canDeletePaths = !readOnlyGlobalFlag && canDeletePaths;
   canEditValues = !readOnlyGlobalFlag && canEditValues;
@@ -231,7 +231,7 @@ export default function KeyValue({
     );
   } else {
     renderedName = (
-      <span className={styles.Name}>
+      <span className={styles.Name} data-testname="NonEditableName">
         {name}
         {!!hookName && <span className={styles.HookName}>({hookName})</span>}
       </span>
@@ -286,7 +286,9 @@ export default function KeyValue({
             {displayValue}
           </a>
         ) : (
-          <span className={styles.Value}>{displayValue}</span>
+          <span className={styles.Value} data-testname="NonEditableValue">
+            {displayValue}
+          </span>
         )}
       </div>
     );

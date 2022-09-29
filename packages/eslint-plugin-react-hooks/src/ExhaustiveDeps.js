@@ -157,6 +157,8 @@ export default {
       //               ^^^ true for this reference
       // const ref = useRef()
       //       ^^^ true for this reference
+      // const onStuff = useEvent(() => {})
+      //       ^^^ true for this reference
       // False for everything else.
       function isStableKnownHookValue(resolved) {
         if (!isArray(resolved.defs)) {
@@ -222,6 +224,9 @@ export default {
         const {name} = callee;
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
+          return true;
+        } else if (isUseEventIdentifier(callee) && id.type === 'Identifier') {
+          // useEvent() return value is stable.
           return true;
         } else if (name === 'useState' || name === 'useReducer') {
           // Only consider second value in initializing tuple stable.
@@ -352,7 +357,7 @@ export default {
       const currentRefsInEffectCleanup = new Map();
 
       // Is this reference inside a cleanup function for this effect node?
-      // We can check by traversing scopes upwards  from the reference, and checking
+      // We can check by traversing scopes upwards from the reference, and checking
       // if the last "return () => " we encounter is located directly inside the effect.
       function isInsideEffectCleanup(reference) {
         let curScope = reference.from;
@@ -1818,4 +1823,11 @@ function isSameIdentifier(a, b) {
 
 function isAncestorNodeOf(a, b) {
   return a.range[0] <= b.range[0] && a.range[1] >= b.range[1];
+}
+
+function isUseEventIdentifier(node) {
+  if (__EXPERIMENTAL__) {
+    return node.type === 'Identifier' && node.name === 'useEvent';
+  }
+  return false;
 }

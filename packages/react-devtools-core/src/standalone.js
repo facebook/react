@@ -256,7 +256,7 @@ function initialize(socket: WebSocket) {
 
   store = new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
-    supportsNativeInspection: false,
+    supportsNativeInspection: true,
   });
 
   log('Connected');
@@ -266,7 +266,7 @@ function initialize(socket: WebSocket) {
 
 let startServerTimeoutID: TimeoutID | null = null;
 
-function connectToSocket(socket: WebSocket) {
+function connectToSocket(socket: WebSocket): {close(): void} {
   socket.onerror = err => {
     onDisconnected();
     log.error('Error with websocket connection', err);
@@ -284,21 +284,21 @@ function connectToSocket(socket: WebSocket) {
   };
 }
 
-type ServerOptions = {|
+type ServerOptions = {
   key?: string,
   cert?: string,
-|};
+};
 
-type LoggerOptions = {|
+type LoggerOptions = {
   surface?: ?string,
-|};
+};
 
 function startServer(
   port?: number = 8097,
   host?: string = 'localhost',
   httpsOptions?: ServerOptions,
   loggerOptions?: LoggerOptions,
-) {
+): {close(): void} {
   registerDevToolsEventLogger(loggerOptions?.surface ?? 'standalone');
 
   const useHttps = !!httpsOptions;

@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Size, IntrinsicSize} from './geometry';
 import type {
   Interaction,
   MouseDownInteraction,
@@ -39,7 +40,7 @@ import {
 export class HorizontalPanAndZoomView extends View {
   _contentView: View;
   _intrinsicContentWidth: number;
-  _isPanning = false;
+  _isPanning: boolean = false;
   _viewState: ViewState;
 
   constructor(
@@ -103,7 +104,7 @@ export class HorizontalPanAndZoomView extends View {
     this.setScrollState(newState);
   }
 
-  desiredSize() {
+  desiredSize(): Size | IntrinsicSize {
     return this._contentView.desiredSize();
   }
 

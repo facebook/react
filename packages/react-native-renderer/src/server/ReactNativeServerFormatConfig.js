@@ -122,7 +122,9 @@ export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-): void {
+  // This Renderer does not use this argument
+  textEmbedded: boolean,
+): boolean {
   target.push(
     INSTANCE,
     RAW_TEXT, // Type
@@ -130,10 +132,12 @@ export function pushTextInstance(
     // TODO: props { text: text }
     END, // End of children
   );
+  return false;
 }
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
+  preamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
@@ -150,11 +154,20 @@ export function pushStartInstance(
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
+  postamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {
   target.push(END);
 }
+
+// In this Renderer this is a noop
+export function pushSegmentFinale(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  lastPushedText: boolean,
+  textEmbedded: boolean,
+): void {}
 
 export function writeCompletedRoot(
   destination: Destination,
@@ -214,6 +227,10 @@ export function writeStartPendingSuspenseBoundary(
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
+  // TODO: encode error for native
+  errorDigest: ?string,
+  errorMessage: ?string,
+  errorComponentStack: ?string,
 ): boolean {
   return writeChunkAndReturn(destination, SUSPENSE_CLIENT_RENDER);
 }
@@ -284,6 +301,10 @@ export function writeClientRenderBoundaryInstruction(
   destination: Destination,
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
+  // TODO: encode error for native
+  errorDigest: ?string,
+  errorMessage: ?string,
+  errorComponentStack: ?string,
 ): boolean {
   writeChunk(destination, SUSPENSE_UPDATE_TO_CLIENT_RENDER);
   return writeChunkAndReturn(destination, formatID(boundaryID));

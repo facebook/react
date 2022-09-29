@@ -16,12 +16,12 @@ import {ProfilerContext} from './ProfilerContext';
 import styles from './Updaters.css';
 import {ElementTypeRoot} from '../../../types';
 
-export type Props = {|
+export type Props = {
   commitTree: CommitTree,
   updaters: Array<SerializedElement>,
-|};
+};
 
-export default function Updaters({commitTree, updaters}: Props) {
+export default function Updaters({commitTree, updaters}: Props): React.Node {
   const {selectFiber} = useContext(ProfilerContext);
 
   const children =

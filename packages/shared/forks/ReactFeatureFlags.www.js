@@ -33,28 +33,32 @@ export const {
   enableSyncDefaultUpdates,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableClientRenderFallbackOnTextMismatch,
+  enableTransitionTracing,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
 // It's not used anywhere in production yet.
 
-export const enableStrictEffects =
+export const enableStrictEffects: boolean =
   __DEV__ && dynamicFeatureFlags.enableStrictEffects;
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
-export const enableProfilerNestedUpdateScheduledHook =
+export const enableProfilerNestedUpdateScheduledHook: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 export const enableUpdaterTracking = __PROFILE__;
 
-export const enableSuspenseLayoutEffectSemantics = true;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
+export const enableFloat = false;
+export const enableUseHook = true;
+export const enableUseMemoCacheHook = true;
+export const enableUseEventHook = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
-export const enableSchedulingProfiler =
+export const enableSchedulingProfiler: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableSchedulingProfiler;
 
 // Note: we'll want to remove this when we to userland implementation.
@@ -107,9 +111,6 @@ export const enableUseMutableSource = true;
 
 export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
-export const enableTransitionTracing = false;
-
-export const enableSymbolFallbackForWWW = true;
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;

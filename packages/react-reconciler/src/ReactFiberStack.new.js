@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 
-export type StackCursor<T> = {|current: T|};
+export type StackCursor<T> = {current: T};
 
 const valueStack: Array<any> = [];
 

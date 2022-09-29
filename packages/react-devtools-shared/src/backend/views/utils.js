@@ -39,7 +39,7 @@ export function getOwnerIframe(node: HTMLElement): HTMLElement | null {
 
 // Get a bounding client rect for a node, with an
 // offset added to compensate for its border.
-export function getBoundingClientRectWithBorderOffset(node: HTMLElement) {
+export function getBoundingClientRectWithBorderOffset(node: HTMLElement): Rect {
   const dimensions = getElementDimensions(node);
   return mergeRectOffsets([
     node.getBoundingClientRect(),
@@ -109,7 +109,22 @@ export function getNestedBoundingClientRect(
   }
 }
 
-export function getElementDimensions(domElement: Element) {
+export function getElementDimensions(
+  domElement: Element,
+): {
+  borderBottom: number,
+  borderLeft: number,
+  borderRight: number,
+  borderTop: number,
+  marginBottom: number,
+  marginLeft: number,
+  marginRight: number,
+  marginTop: number,
+  paddingBottom: number,
+  paddingLeft: number,
+  paddingRight: number,
+  paddingTop: number,
+} {
   const calculatedStyle = window.getComputedStyle(domElement);
   return {
     borderLeft: parseInt(calculatedStyle.borderLeftWidth, 10),

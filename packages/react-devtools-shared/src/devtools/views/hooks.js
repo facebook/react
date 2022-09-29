@@ -23,25 +23,25 @@ import {
 import {StoreContext, BridgeContext} from './context';
 import {sanitizeForParse, smartParse, smartStringify} from '../utils';
 
-type ACTION_RESET = {|
+type ACTION_RESET = {
   type: 'RESET',
   externalValue: any,
-|};
-type ACTION_UPDATE = {|
+};
+type ACTION_UPDATE = {
   type: 'UPDATE',
   editableValue: any,
   externalValue: any,
-|};
+};
 
 type UseEditableValueAction = ACTION_RESET | ACTION_UPDATE;
 type UseEditableValueDispatch = (action: UseEditableValueAction) => void;
-type UseEditableValueState = {|
+type UseEditableValueState = {
   editableValue: any,
   externalValue: any,
   hasPendingChanges: boolean,
   isValid: boolean,
   parsedValue: any,
-|};
+};
 
 function useEditableValueReducer(state, action) {
   switch (action.type) {
@@ -144,6 +144,7 @@ export function useIsOverflowing(
 export function useLocalStorage<T>(
   key: string,
   initialValue: T | (() => T),
+  onValueSet?: (any, string) => void,
 ): [T, (value: T | (() => T)) => void] {
   const getValueFromLocalStorage = useCallback(() => {
     try {
@@ -173,6 +174,10 @@ export function useLocalStorage<T>(
 
         // Notify listeners that this setting has changed.
         window.dispatchEvent(new Event(key));
+
+        if (onValueSet != null) {
+          onValueSet(valueToStore, key);
+        }
       } catch (error) {
         console.log(error);
       }
@@ -266,10 +271,10 @@ export function useModalDismissSignal(
 export function useSubscription<Value>({
   getCurrentValue,
   subscribe,
-}: {|
+}: {
   getCurrentValue: () => Value,
   subscribe: (callback: Function) => () => void,
-|}): Value {
+}): Value {
   const [state, setState] = useState(() => ({
     getCurrentValue,
     subscribe,
@@ -324,7 +329,10 @@ export function useSubscription<Value>({
   return state.value;
 }
 
-export function useHighlightNativeElement() {
+export function useHighlightNativeElement(): {
+  clearHighlightNativeElement: () => void,
+  highlightNativeElement: (id: number) => void,
+} {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 

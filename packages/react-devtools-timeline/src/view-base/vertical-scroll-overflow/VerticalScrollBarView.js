@@ -52,7 +52,7 @@ export class VerticalScrollBarView extends View {
     this._verticalScrollOverflowView = verticalScrollOverflowView;
   }
 
-  desiredSize() {
+  desiredSize(): {+height: number, +width: number} {
     return {
       width: SCROLL_BAR_SIZE,
       height: 0, // No desired height

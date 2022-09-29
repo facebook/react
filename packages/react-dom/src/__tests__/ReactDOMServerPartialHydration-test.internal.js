@@ -17,6 +17,7 @@ let Scheduler;
 let ReactFeatureFlags;
 let Suspense;
 let SuspenseList;
+let Offscreen;
 let act;
 let IdleEventPriority;
 
@@ -106,6 +107,7 @@ describe('ReactDOMServerPartialHydration', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
+    Offscreen = React.unstable_Offscreen;
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
     }
@@ -1668,10 +1670,21 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    if (__DEV__) {
+      expect(Scheduler).toFlushAndYield([
+        'The server did not finish this Suspense boundary: The server used' +
+          ' "renderToString" which does not support Suspense. If you intended' +
+          ' for this Suspense boundary to render the fallback content on the' +
+          ' server consider throwing an Error somewhere within the Suspense boundary.' +
+          ' If you intended to have the server wait for the suspended component' +
+          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYield([
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
+      ]);
+    }
     jest.runAllTimers();
 
     expect(container.textContent).toBe('Hello');
@@ -1730,10 +1743,21 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    if (__DEV__) {
+      expect(Scheduler).toFlushAndYield([
+        'The server did not finish this Suspense boundary: The server used' +
+          ' "renderToString" which does not support Suspense. If you intended' +
+          ' for this Suspense boundary to render the fallback content on the' +
+          ' server consider throwing an Error somewhere within the Suspense boundary.' +
+          ' If you intended to have the server wait for the suspended component' +
+          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYield([
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
+      ]);
+    }
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
     // The boundary should longer be suspended for the middle content
@@ -1797,10 +1821,21 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    if (__DEV__) {
+      expect(Scheduler).toFlushAndYield([
+        'The server did not finish this Suspense boundary: The server used' +
+          ' "renderToString" which does not support Suspense. If you intended' +
+          ' for this Suspense boundary to render the fallback content on the' +
+          ' server consider throwing an Error somewhere within the Suspense boundary.' +
+          ' If you intended to have the server wait for the suspended component' +
+          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYield([
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
+      ]);
+    }
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
     // The boundary should longer be suspended for the middle content
@@ -2115,10 +2150,21 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     suspend = true;
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    if (__DEV__) {
+      expect(Scheduler).toFlushAndYield([
+        'The server did not finish this Suspense boundary: The server used' +
+          ' "renderToString" which does not support Suspense. If you intended' +
+          ' for this Suspense boundary to render the fallback content on the' +
+          ' server consider throwing an Error somewhere within the Suspense boundary.' +
+          ' If you intended to have the server wait for the suspended component' +
+          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYield([
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
+      ]);
+    }
 
     // We haven't hydrated the second child but the placeholder is still in the list.
     expect(container.textContent).toBe('ALoading B');
@@ -2178,10 +2224,21 @@ describe('ReactDOMServerPartialHydration', () => {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
-    expect(Scheduler).toFlushAndYield([
-      'The server could not finish this Suspense boundary, likely due to ' +
-        'an error during server rendering. Switched to client rendering.',
-    ]);
+    if (__DEV__) {
+      expect(Scheduler).toFlushAndYield([
+        'The server did not finish this Suspense boundary: The server used' +
+          ' "renderToString" which does not support Suspense. If you intended' +
+          ' for this Suspense boundary to render the fallback content on the' +
+          ' server consider throwing an Error somewhere within the Suspense boundary.' +
+          ' If you intended to have the server wait for the suspended component' +
+          ' please switch to "renderToPipeableStream" which supports Suspense on the server',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYield([
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
+      ]);
+    }
     jest.runAllTimers();
 
     expect(ref.current).toBe(span);
@@ -3226,6 +3283,103 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     expect(ref.current).toBe(span);
     expect(ref.current.innerHTML).toBe('Hidden child');
+  });
+
+  // @gate enableOffscreen
+  it('a visible Offscreen component acts like a fragment', async () => {
+    const ref = React.createRef();
+
+    function App() {
+      return (
+        <Offscreen mode="visible">
+          <span ref={ref}>Child</span>
+        </Offscreen>
+      );
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    expect(Scheduler).toHaveYielded([]);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // Visible Offscreen boundaries behave exactly like fragments: a
+    // pure indirection.
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <span>
+          Child
+        </span>
+      </div>
+    `);
+
+    const span = container.getElementsByTagName('span')[0];
+
+    // The tree successfully hydrates
+    ReactDOMClient.hydrateRoot(container, <App />);
+    expect(Scheduler).toFlushAndYield([]);
+    expect(ref.current).toBe(span);
+  });
+
+  // @gate enableOffscreen
+  it('a hidden Offscreen component is skipped over during server rendering', async () => {
+    const visibleRef = React.createRef();
+
+    function HiddenChild() {
+      Scheduler.unstable_yieldValue('HiddenChild');
+      return <span>Hidden</span>;
+    }
+
+    function App() {
+      Scheduler.unstable_yieldValue('App');
+      return (
+        <>
+          <span ref={visibleRef}>Visible</span>
+          <Offscreen mode="hidden">
+            <HiddenChild />
+          </Offscreen>
+        </>
+      );
+    }
+
+    // During server rendering, the Child component should not be evaluated,
+    // because it's inside a hidden tree.
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    expect(Scheduler).toHaveYielded(['App']);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // The hidden child is not part of the server rendered HTML
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <span>
+          Visible
+        </span>
+      </div>
+    `);
+
+    const visibleSpan = container.getElementsByTagName('span')[0];
+
+    // The visible span successfully hydrates
+    ReactDOMClient.hydrateRoot(container, <App />);
+    expect(Scheduler).toFlushUntilNextPaint(['App']);
+    expect(visibleRef.current).toBe(visibleSpan);
+
+    // Subsequently, the hidden child is prerendered on the client
+    expect(Scheduler).toFlushUntilNextPaint(['HiddenChild']);
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <span>
+          Visible
+        </span>
+        <span
+          style="display: none;"
+        >
+          Hidden
+        </span>
+      </div>
+    `);
   });
 
   function itHydratesWithoutMismatch(msg, App) {

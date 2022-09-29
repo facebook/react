@@ -14,6 +14,7 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
+  Usable,
 } from 'shared/ReactTypes';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
@@ -93,7 +94,7 @@ export function useReducer<S, I, A>(
   return dispatcher.useReducer(reducer, initialArg, init);
 }
 
-export function useRef<T>(initialValue: T): {|current: T|} {
+export function useRef<T>(initialValue: T): {current: T} {
   const dispatcher = resolveDispatcher();
   return dispatcher.useRef(initialValue);
 }
@@ -139,7 +140,7 @@ export function useMemo<T>(
 }
 
 export function useImperativeHandle<T>(
-  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   deps: Array<mixed> | void | null,
 ): void {
@@ -203,4 +204,22 @@ export function useCacheRefresh(): <T>(?() => T, ?T) => void {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe This is unstable, thus optional
   return dispatcher.useCacheRefresh();
+}
+
+export function use<T>(usable: Usable<T>): T {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.use(usable);
+}
+
+export function useMemoCache(size: number): Array<any> {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.useMemoCache(size);
+}
+
+export function useEvent<T>(callback: T): void {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.useEvent(callback);
 }

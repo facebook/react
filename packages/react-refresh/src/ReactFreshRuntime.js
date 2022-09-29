@@ -21,19 +21,19 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
-type Signature = {|
+type Signature = {
   ownKey: string,
   forceReset: boolean,
   fullKey: string | null, // Contains keys of nested Hooks. Computed lazily.
   getCustomHooks: () => Array<Function>,
-|};
+};
 
-type RendererHelpers = {|
+type RendererHelpers = {
   findHostInstancesForRefresh: FindHostInstancesForRefresh,
   scheduleRefresh: ScheduleRefresh,
   scheduleRoot: ScheduleRoot,
   setRefreshHandler: SetRefreshHandler,
-|};
+};
 
 if (!__DEV__) {
   throw new Error(
@@ -47,14 +47,14 @@ const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 // We never remove these associations.
 // It's OK to reference families, but use WeakMap/Set for types.
 const allFamiliesByID: Map<string, Family> = new Map();
-const allFamiliesByType: // $FlowIssue
+const allFamiliesByType: // $FlowFixMe
 WeakMap<any, Family> | Map<any, Family> = new PossiblyWeakMap();
-const allSignaturesByType: // $FlowIssue
+const allSignaturesByType: // $FlowFixMe
 WeakMap<any, Signature> | Map<any, Signature> = new PossiblyWeakMap();
 // This WeakMap is read by React, so we only put families
 // that have actually been edited here. This keeps checks fast.
-// $FlowIssue
-const updatedFamiliesByType: // $FlowIssue
+// $FlowFixMe
+const updatedFamiliesByType: // $FlowFixMe
 WeakMap<any, Family> | Map<any, Family> = new PossiblyWeakMap();
 
 // This is cleared on every performReactRefresh() call.
@@ -74,8 +74,8 @@ const failedRoots: Set<FiberRoot> = new Set();
 // In environments that support WeakMap, we also remember the last element for every root.
 // It needs to be weak because we do this even for roots that failed to mount.
 // If there is no WeakMap, we won't attempt to do retrying.
-// $FlowIssue
-const rootElements: WeakMap<any, ReactNodeList> | null = // $FlowIssue
+// $FlowFixMe
+const rootElements: WeakMap<any, ReactNodeList> | null = // $FlowFixMe
   typeof WeakMap === 'function' ? new WeakMap() : null;
 
 let isPerformingRefresh = false;
@@ -599,13 +599,13 @@ export function injectIntoGlobalHook(globalObject: any): void {
   }
 }
 
-export function hasUnrecoverableErrors() {
+export function hasUnrecoverableErrors(): boolean {
   // TODO: delete this after removing dependency in RN.
   return false;
 }
 
 // Exposed for testing.
-export function _getMountedRootCount() {
+export function _getMountedRootCount(): number {
   if (__DEV__) {
     return mountedRoots.size;
   } else {
@@ -654,6 +654,7 @@ export function createSignatureFunctionForTransform() {
         // in HOC chains like _s(hoc1(_s(hoc2(_s(actualFunction))))).
         if (!savedType) {
           // We're in the innermost call, so this is the actual type.
+          // $FlowFixMe[escaped-generic] discovered when updating Flow
           savedType = type;
           hasCustomHooks = typeof getCustomHooks === 'function';
         }

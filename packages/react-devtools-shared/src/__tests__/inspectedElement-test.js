@@ -889,7 +889,7 @@ describe('InspectedElement', () => {
     `);
   });
 
-  it('should support objects with with inherited keys', async () => {
+  it('should support objects with inherited keys', async () => {
     const Example = () => null;
 
     const base = Object.create(Object.prototype, {
@@ -2145,7 +2145,7 @@ describe('InspectedElement', () => {
     expect(value).toBe(null);
 
     const error = errorBoundaryInstance.state.error;
-    expect(error.message).toBe('Error rendering inspected component');
+    expect(error.message).toBe('Expected');
     expect(error.stack).toContain('inspectHooksOfFiber');
   });
 

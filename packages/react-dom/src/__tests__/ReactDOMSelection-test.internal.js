@@ -19,7 +19,7 @@ describe('ReactDOMSelection', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMSelection = require('../client/ReactDOMSelection');
+    ReactDOMSelection = require('react-dom-bindings/src/client/ReactDOMSelection');
 
     ({getModernOffsetsFromPoints} = ReactDOMSelection);
   });

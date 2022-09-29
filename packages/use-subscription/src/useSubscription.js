@@ -22,9 +22,9 @@ export function useSubscription<Value>({
   // This function is passed an event handler to attach to the subscription.
   // It should return an unsubscribe function that removes the handler.
   subscribe,
-}: {|
+}: {
   getCurrentValue: () => Value,
   subscribe: (callback: Function) => () => void,
-|}): Value {
+}): Value {
   return useSyncExternalStore(subscribe, getCurrentValue);
 }

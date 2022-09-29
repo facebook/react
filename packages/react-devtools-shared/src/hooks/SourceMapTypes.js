@@ -15,7 +15,7 @@ export type ReactSourcesArray = $ReadOnlyArray<?ReactSourceMetadata>;
 export type FBSourceMetadata = [?{...}, ?ReactSourceMetadata];
 export type FBSourcesArray = $ReadOnlyArray<?FBSourceMetadata>;
 
-export type BasicSourceMap = {|
+export type BasicSourceMap = {
   +file?: string,
   +mappings: string,
   +names: Array<string>,
@@ -25,7 +25,7 @@ export type BasicSourceMap = {|
   +version: number,
   +x_facebook_sources?: FBSourcesArray,
   +x_react_sources?: ReactSourcesArray,
-|};
+};
 
 export type IndexSourceMapSection = {
   map: IndexSourceMap | BasicSourceMap,
@@ -37,7 +37,7 @@ export type IndexSourceMapSection = {
   ...
 };
 
-export type IndexSourceMap = {|
+export type IndexSourceMap = {
   +file?: string,
   +mappings?: void, // avoids SourceMap being a disjoint union
   +sourcesContent?: void,
@@ -45,6 +45,6 @@ export type IndexSourceMap = {|
   +version: number,
   +x_facebook_sources?: FBSourcesArray,
   +x_react_sources?: ReactSourcesArray,
-|};
+};
 
 export type MixedSourceMap = IndexSourceMap | BasicSourceMap;

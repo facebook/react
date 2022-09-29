@@ -54,7 +54,6 @@ export const createTextInstance = $$$hostConfig.createTextInstance;
 export const scheduleTimeout = $$$hostConfig.scheduleTimeout;
 export const cancelTimeout = $$$hostConfig.cancelTimeout;
 export const noTimeout = $$$hostConfig.noTimeout;
-export const now = $$$hostConfig.now;
 export const isPrimaryRenderer = $$$hostConfig.isPrimaryRenderer;
 export const warnsIfNotActing = $$$hostConfig.warnsIfNotActing;
 export const supportsMutation = $$$hostConfig.supportsMutation;
@@ -68,6 +67,7 @@ export const prepareScopeUpdate = $$$hostConfig.prepareScopeUpdate;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
 export const detachDeletedInstance = $$$hostConfig.detachDeletedInstance;
+export const requestPostPaintCallback = $$$hostConfig.requestPostPaintCallback;
 
 // -------------------
 //      Microtasks
@@ -136,6 +136,8 @@ export const isSuspenseInstancePending =
   $$$hostConfig.isSuspenseInstancePending;
 export const isSuspenseInstanceFallback =
   $$$hostConfig.isSuspenseInstanceFallback;
+export const getSuspenseInstanceFallbackErrorDetails =
+  $$$hostConfig.getSuspenseInstanceFallbackErrorDetails;
 export const registerSuspenseInstanceRetry =
   $$$hostConfig.registerSuspenseInstanceRetry;
 export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;
@@ -185,3 +187,6 @@ export const didNotFindHydratableTextInstance =
 export const didNotFindHydratableSuspenseInstance =
   $$$hostConfig.didNotFindHydratableSuspenseInstance;
 export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
+export const isHydratableResource = $$$hostConfig.isHydratableResource;
+export const getMatchingResourceInstance =
+  $$$hostConfig.getMatchingResourceInstance;

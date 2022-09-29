@@ -28,11 +28,11 @@ import styles from './InspectedElement.css';
 
 import type {InspectedElement} from './types';
 
-export type Props = {||};
+export type Props = {};
 
 // TODO Make edits and deletes also use transition API!
 
-export default function InspectedElementWrapper(_: Props) {
+export default function InspectedElementWrapper(_: Props): React.Node {
   const {inspectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
   const {canViewElementSourceFunction, viewElementSourceFunction} = useContext(

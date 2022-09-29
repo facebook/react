@@ -15,10 +15,7 @@ import type {
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
-import type {
-  PendingSuspenseBoundaries,
-  Transition,
-} from './ReactFiberTracingMarkerComponent.new';
+import type {Container} from './ReactFiberHostConfig';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.new';
@@ -37,7 +34,7 @@ import {
   enableUpdaterTracking,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
-import {initializeUpdateQueue} from './ReactUpdateQueue.new';
+import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
 import {createCache, retainCache} from './ReactFiberCacheComponent.new';
 
@@ -45,8 +42,6 @@ export type RootState = {
   element: any,
   isDehydrated: boolean,
   cache: Cache,
-  pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
-  transitions: Set<Transition> | null,
 };
 
 function FiberRootNode(
@@ -76,9 +71,12 @@ function FiberRootNode(
   this.expiredLanes = NoLanes;
   this.mutableReadLanes = NoLanes;
   this.finishedLanes = NoLanes;
+  this.errorRecoveryDisabledLanes = NoLanes;
 
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);
+
+  this.hiddenUpdates = createLaneMap(null);
 
   this.identifierPrefix = identifierPrefix;
   this.onRecoverableError = onRecoverableError;
@@ -96,6 +94,7 @@ function FiberRootNode(
     this.hydrationCallbacks = null;
   }
 
+  this.incompleteTransitions = new Map();
   if (enableTransitionTracing) {
     this.transitionCallbacks = null;
     const transitionLanesMap = (this.transitionLanes = []);
@@ -130,7 +129,7 @@ function FiberRootNode(
 }
 
 export function createFiberRoot(
-  containerInfo: any,
+  containerInfo: Container,
   tag: RootTag,
   hydrate: boolean,
   initialChildren: ReactNodeList,
@@ -187,8 +186,6 @@ export function createFiberRoot(
       element: initialChildren,
       isDehydrated: hydrate,
       cache: initialCache,
-      transitions: null,
-      pendingSuspenseBoundaries: null,
     };
     uninitializedFiber.memoizedState = initialState;
   } else {
@@ -196,8 +193,6 @@ export function createFiberRoot(
       element: initialChildren,
       isDehydrated: hydrate,
       cache: (null: any), // not enabled yet
-      transitions: null,
-      pendingSuspenseBoundaries: null,
     };
     uninitializedFiber.memoizedState = initialState;
   }

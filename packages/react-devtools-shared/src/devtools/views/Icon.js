@@ -28,13 +28,17 @@ export type IconType =
   | 'strict-mode-non-compliant'
   | 'warning';
 
-type Props = {|
+type Props = {
   className?: string,
   title?: string,
   type: IconType,
-|};
+};
 
-export default function Icon({className = '', title = '', type}: Props) {
+export default function Icon({
+  className = '',
+  title = '',
+  type,
+}: Props): React.Node {
   let pathData = null;
   switch (type) {
     case 'arrow':

@@ -12,11 +12,11 @@ import styles from './HocBadges.css';
 
 import type {Element} from './types';
 
-type Props = {|
+type Props = {
   element: Element,
-|};
+};
 
-export default function HocBadges({element}: Props) {
+export default function HocBadges({element}: Props): React.Node {
   const {hocDisplayNames} = ((element: any): Element);
 
   if (hocDisplayNames === null) {

@@ -11,6 +11,7 @@ import {
   getDisplayName,
   getDisplayNameForReactElement,
 } from 'react-devtools-shared/src/utils';
+import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils';
 import {
   format,
   formatWithStyles,
@@ -23,34 +24,57 @@ import {createElement} from 'react/src/ReactElement';
 
 describe('utils', () => {
   describe('getDisplayName', () => {
+    // @reactVersion >= 16.0
     it('should return a function name', () => {
       function FauxComponent() {}
       expect(getDisplayName(FauxComponent)).toEqual('FauxComponent');
     });
 
+    // @reactVersion >= 16.0
     it('should return a displayName name if specified', () => {
       function FauxComponent() {}
       FauxComponent.displayName = 'OverrideDisplayName';
       expect(getDisplayName(FauxComponent)).toEqual('OverrideDisplayName');
     });
 
+    // @reactVersion >= 16.0
     it('should return the fallback for anonymous functions', () => {
       expect(getDisplayName(() => {}, 'Fallback')).toEqual('Fallback');
     });
 
+    // @reactVersion >= 16.0
     it('should return Anonymous for anonymous functions without a fallback', () => {
       expect(getDisplayName(() => {})).toEqual('Anonymous');
     });
 
     // Simulate a reported bug:
     // https://github.com/facebook/react/issues/16685
+    // @reactVersion >= 16.0
     it('should return a fallback when the name prop is not a string', () => {
       const FauxComponent = {name: {}};
       expect(getDisplayName(FauxComponent, 'Fallback')).toEqual('Fallback');
     });
+
+    it('should parse a component stack trace', () => {
+      expect(
+        stackToComponentSources(`
+    at Foobar (http://localhost:3000/static/js/bundle.js:103:74)
+    at a
+    at header
+    at div
+    at App`),
+      ).toEqual([
+        ['Foobar', ['http://localhost:3000/static/js/bundle.js', 103, 74]],
+        ['a', null],
+        ['header', null],
+        ['div', null],
+        ['App', null],
+      ]);
+    });
   });
 
   describe('getDisplayNameForReactElement', () => {
+    // @reactVersion >= 16.0
     it('should return correct display name for an element with function type', () => {
       function FauxComponent() {}
       FauxComponent.displayName = 'OverrideDisplayName';
@@ -60,16 +84,19 @@ describe('utils', () => {
       );
     });
 
+    // @reactVersion >= 16.0
     it('should return correct display name for an element with a type of StrictMode', () => {
       const element = createElement(StrictMode);
       expect(getDisplayNameForReactElement(element)).toEqual('StrictMode');
     });
 
+    // @reactVersion >= 16.0
     it('should return correct display name for an element with a type of SuspenseList', () => {
       const element = createElement(SuspenseList);
       expect(getDisplayNameForReactElement(element)).toEqual('SuspenseList');
     });
 
+    // @reactVersion >= 16.0
     it('should return NotImplementedInDevtools for an element with invalid symbol type', () => {
       const element = createElement(Symbol('foo'));
       expect(getDisplayNameForReactElement(element)).toEqual(
@@ -77,6 +104,7 @@ describe('utils', () => {
       );
     });
 
+    // @reactVersion >= 16.0
     it('should return NotImplementedInDevtools for an element with invalid type', () => {
       const element = createElement(true);
       expect(getDisplayNameForReactElement(element)).toEqual(
@@ -84,6 +112,7 @@ describe('utils', () => {
       );
     });
 
+    // @reactVersion >= 16.0
     it('should return Element for null type', () => {
       const element = createElement();
       expect(getDisplayNameForReactElement(element)).toEqual('Element');
@@ -91,42 +120,50 @@ describe('utils', () => {
   });
 
   describe('format', () => {
+    // @reactVersion >= 16.0
     it('should format simple strings', () => {
       expect(format('a', 'b', 'c')).toEqual('a b c');
     });
 
+    // @reactVersion >= 16.0
     it('should format multiple argument types', () => {
       expect(format('abc', 123, true)).toEqual('abc 123 true');
     });
 
+    // @reactVersion >= 16.0
     it('should support string substitutions', () => {
       expect(format('a %s b %s c', 123, true)).toEqual('a 123 b true c');
     });
 
+    // @reactVersion >= 16.0
     it('should gracefully handle Symbol types', () => {
       expect(format(Symbol('a'), 'b', Symbol('c'))).toEqual(
         'Symbol(a) b Symbol(c)',
       );
     });
 
+    // @reactVersion >= 16.0
     it('should gracefully handle Symbol type for the first argument', () => {
       expect(format(Symbol('abc'), 123)).toEqual('Symbol(abc) 123');
     });
   });
 
   describe('formatWithStyles', () => {
+    // @reactVersion >= 16.0
     it('should format empty arrays', () => {
       expect(formatWithStyles([])).toEqual([]);
       expect(formatWithStyles([], 'gray')).toEqual([]);
       expect(formatWithStyles(undefined)).toEqual(undefined);
     });
 
+    // @reactVersion >= 16.0
     it('should bail out of strings with styles', () => {
       expect(
         formatWithStyles(['%ca', 'color: green', 'b', 'c'], 'color: gray'),
       ).toEqual(['%ca', 'color: green', 'b', 'c']);
     });
 
+    // @reactVersion >= 16.0
     it('should format simple strings', () => {
       expect(formatWithStyles(['a'])).toEqual(['a']);
 
@@ -145,6 +182,7 @@ describe('utils', () => {
       ]);
     });
 
+    // @reactVersion >= 16.0
     it('should format string substituions', () => {
       expect(
         formatWithStyles(['%s %s %s', 'a', 'b', 'c'], 'color: gray'),
@@ -157,6 +195,7 @@ describe('utils', () => {
       ).toEqual(['%c%s %s', 'color: gray', 'a', 'b', 'c']);
     });
 
+    // @reactVersion >= 16.0
     it('should support multiple argument types', () => {
       const symbol = Symbol('a');
       expect(
@@ -176,6 +215,7 @@ describe('utils', () => {
       ]);
     });
 
+    // @reactVersion >= 16.0
     it('should properly format escaped string substituions', () => {
       expect(formatWithStyles(['%%s'], 'color: gray')).toEqual([
         '%c%s',
@@ -188,6 +228,28 @@ describe('utils', () => {
         '%%c',
       ]);
       expect(formatWithStyles(['%%c%c'], 'color: gray')).toEqual(['%%c%c']);
+    });
+
+    // @reactVersion >= 16.0
+    it('should format non string inputs as the first argument', () => {
+      expect(formatWithStyles([{foo: 'bar'}])).toEqual([{foo: 'bar'}]);
+      expect(formatWithStyles([[1, 2, 3]])).toEqual([[1, 2, 3]]);
+      expect(formatWithStyles([{foo: 'bar'}], 'color: gray')).toEqual([
+        '%c%o',
+        'color: gray',
+        {foo: 'bar'},
+      ]);
+      expect(formatWithStyles([[1, 2, 3]], 'color: gray')).toEqual([
+        '%c%o',
+        'color: gray',
+        [1, 2, 3],
+      ]);
+      expect(formatWithStyles([{foo: 'bar'}, 'hi'], 'color: gray')).toEqual([
+        '%c%o %s',
+        'color: gray',
+        {foo: 'bar'},
+        'hi',
+      ]);
     });
   });
 });

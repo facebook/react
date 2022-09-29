@@ -17,20 +17,20 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type PendingRecord = {|
+type PendingRecord = {
   status: 0,
   value: Wakeable,
-|};
+};
 
-type ResolvedRecord = {|
+type ResolvedRecord = {
   status: 1,
   value: mixed,
-|};
+};
 
-type RejectedRecord = {|
+type RejectedRecord = {
   status: 2,
   value: mixed,
-|};
+};
 
 type Record = PendingRecord | ResolvedRecord | RejectedRecord;
 

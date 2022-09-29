@@ -15,20 +15,20 @@ import {createLRU} from './LRU';
 
 type Suspender = {then(resolve: () => mixed, reject: () => mixed): mixed, ...};
 
-type PendingResult = {|
+type PendingResult = {
   status: 0,
   value: Suspender,
-|};
+};
 
-type ResolvedResult<V> = {|
+type ResolvedResult<V> = {
   status: 1,
   value: V,
-|};
+};
 
-type RejectedResult = {|
+type RejectedResult = {
   status: 2,
   value: mixed,
-|};
+};
 
 type Result<V> = PendingResult | ResolvedResult<V> | RejectedResult;
 
@@ -122,6 +122,7 @@ function accessResult<I, K, V>(
       status: Pending,
       value: thenable,
     };
+    // $FlowFixMe[escaped-generic] discovered when updating Flow
     const newEntry = lru.add(newResult, deleteEntry.bind(null, resource, key));
     entriesForResource.set(key, newEntry);
     return newResult;

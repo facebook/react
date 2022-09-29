@@ -26,8 +26,9 @@ export default function Button({
   testName,
   title,
   ...rest
-}: Props) {
+}: Props): React.Node {
   let button = (
+    // $FlowFixMe unsafe spread
     <button
       className={`${styles.Button} ${className}`}
       data-testname={testName}

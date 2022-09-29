@@ -9,12 +9,15 @@
 
 import type {Response} from './ReactFlightClientHostConfigStream';
 
+import type {BundlerConfig} from './ReactFlightClientHostConfig';
+
 import {
   resolveModule,
   resolveModel,
   resolveProvider,
   resolveSymbol,
-  resolveError,
+  resolveErrorProd,
+  resolveErrorDev,
   createResponse as createResponseBase,
   parseModelString,
   parseModelTuple,
@@ -60,7 +63,17 @@ function processFullRow(response: Response, row: string): void {
     }
     case 'E': {
       const errorInfo = JSON.parse(text);
-      resolveError(response, id, errorInfo.message, errorInfo.stack);
+      if (__DEV__) {
+        resolveErrorDev(
+          response,
+          id,
+          errorInfo.digest,
+          errorInfo.message,
+          errorInfo.stack,
+        );
+      } else {
+        resolveErrorProd(response, id, errorInfo.digest);
+      }
       return;
     }
     default: {
@@ -112,7 +125,7 @@ function createFromJSONCallback(response: Response) {
   return function(key: string, value: JSONValue) {
     if (typeof value === 'string') {
       // We can't use .bind here because we need the "this" value.
-      return parseModelString(response, this, value);
+      return parseModelString(response, this, key, value);
     }
     if (typeof value === 'object' && value !== null) {
       return parseModelTuple(response, value);
@@ -121,11 +134,11 @@ function createFromJSONCallback(response: Response) {
   };
 }
 
-export function createResponse(): Response {
+export function createResponse(bundlerConfig: BundlerConfig): Response {
   // NOTE: CHECK THE COMPILER OUTPUT EACH TIME YOU CHANGE THIS.
   // It should be inlined to one object literal but minor changes can break it.
   const stringDecoder = supportsBinaryStreams ? createStringDecoder() : null;
-  const response: any = createResponseBase();
+  const response: any = createResponseBase(bundlerConfig);
   response._partialRow = '';
   if (supportsBinaryStreams) {
     response._stringDecoder = stringDecoder;
@@ -135,4 +148,4 @@ export function createResponse(): Response {
   return response;
 }
 
-export {reportGlobalError, close} from './ReactFlightClient';
+export {reportGlobalError, getRoot, close} from './ReactFlightClient';

@@ -18,22 +18,22 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import ReactFizzServer from 'react-server';
 
-type Instance = {|
+type Instance = {
   type: string,
   children: Array<Instance | TextInstance | SuspenseInstance>,
   prop: any,
   hidden: boolean,
-|};
+};
 
-type TextInstance = {|
+type TextInstance = {
   text: string,
   hidden: boolean,
-|};
+};
 
-type SuspenseInstance = {|
+type SuspenseInstance = {
   state: 'pending' | 'complete' | 'client-render',
   children: Array<Instance | TextInstance | SuspenseInstance>,
-|};
+};
 
 type Placeholder = {
   parent: Instance | SuspenseInstance,
@@ -98,15 +98,22 @@ const ReactNoopServer = ReactFizzServer({
     return null;
   },
 
-  pushTextInstance(target: Array<Uint8Array>, text: string): void {
+  pushTextInstance(
+    target: Array<Uint8Array>,
+    text: string,
+    responseState: ResponseState,
+    textEmbedded: boolean,
+  ): boolean {
     const textInstance: TextInstance = {
       text,
       hidden: false,
     };
     target.push(Buffer.from(JSON.stringify(textInstance), 'utf8'), POP);
+    return false;
   },
   pushStartInstance(
     target: Array<Uint8Array>,
+    preamble: Array<Uint8Array>,
     type: string,
     props: Object,
   ): ReactNodeList {
@@ -122,11 +129,20 @@ const ReactNoopServer = ReactFizzServer({
 
   pushEndInstance(
     target: Array<Uint8Array>,
+    postamble: Array<Uint8Array>,
     type: string,
     props: Object,
   ): void {
     target.push(POP);
   },
+
+  // This is a noop in ReactNoop
+  pushSegmentFinale(
+    target: Array<Uint8Array>,
+    responseState: ResponseState,
+    lastPushedText: boolean,
+    textEmbedded: boolean,
+  ): void {},
 
   writeCompletedRoot(
     destination: Destination,
@@ -253,7 +269,7 @@ type Options = {
   progressiveChunkSize?: number,
   onShellReady?: () => void,
   onAllReady?: () => void,
-  onError?: (error: mixed) => void,
+  onError?: (error: mixed) => ?string,
 };
 
 function render(children: React$Element<any>, options?: Options): Destination {

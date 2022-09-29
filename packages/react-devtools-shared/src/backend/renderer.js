@@ -30,6 +30,7 @@ import {
 import {
   deletePathInObject,
   getDisplayName,
+  getWrappedDisplayName,
   getDefaultComponentFilters,
   getInObject,
   getUID,
@@ -62,7 +63,7 @@ import {
 } from '../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
-  patch as patchConsole,
+  patchConsoleUsingWindowValues,
   registerRenderer as registerRendererWithConsole,
   patchForStrictMode as patchConsoleForStrictMode,
   unpatchForStrictMode as unpatchConsoleForStrictMode,
@@ -123,25 +124,25 @@ import type {
 } from 'react-devtools-shared/src/types';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
-type getTypeSymbolType = (type: any) => Symbol | number;
+type getTypeSymbolType = (type: any) => symbol | number;
 
-type ReactPriorityLevelsType = {|
+type ReactPriorityLevelsType = {
   ImmediatePriority: number,
   UserBlockingPriority: number,
   NormalPriority: number,
   LowPriority: number,
   IdlePriority: number,
   NoPriority: number,
-|};
+};
 
-type ReactTypeOfSideEffectType = {|
+type ReactTypeOfSideEffectType = {
   DidCapture: number,
   NoFlags: number,
   PerformedWork: number,
   Placement: number,
   Incomplete: number,
   Hydrating: number,
-|};
+};
 
 function getFiberFlags(fiber: Fiber): number {
   // The name of this field changed from "effectTag" to "flags"
@@ -156,14 +157,14 @@ const getCurrentTime =
 
 export function getInternalReactConstants(
   version: string,
-): {|
+): {
   getDisplayNameForFiber: getDisplayNameForFiberType,
   getTypeSymbol: getTypeSymbolType,
   ReactPriorityLevels: ReactPriorityLevelsType,
   ReactTypeOfSideEffect: ReactTypeOfSideEffectType,
   ReactTypeOfWork: WorkTagMap,
   StrictModeBits: number,
-|} {
+} {
   const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
     DidCapture: 0b10000000,
     NoFlags: 0b00,
@@ -381,13 +382,14 @@ export function getInternalReactConstants(
   // End of copied code.
   // **********************************************************
 
-  function getTypeSymbol(type: any): Symbol | number {
+  function getTypeSymbol(type: any): symbol | number {
     const symbolOrNumber =
       typeof type === 'object' && type !== null ? type.$$typeof : type;
 
     // $FlowFixMe Flow doesn't know about typeof "symbol"
     return typeof symbolOrNumber === 'symbol'
-      ? symbolOrNumber.toString()
+      ? // $FlowFixMe `toString()` doesn't match the type signature?
+        symbolOrNumber.toString()
       : symbolOrNumber;
   }
 
@@ -451,10 +453,11 @@ export function getInternalReactConstants(
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
       case ForwardRef:
-        // Mirror https://github.com/facebook/react/blob/7c21bf72ace77094fd1910cc350a548287ef8350/packages/shared/getComponentName.js#L27-L37
-        return (
-          (type && type.displayName) ||
-          getDisplayName(resolvedType, 'Anonymous')
+        return getWrappedDisplayName(
+          elementType,
+          resolvedType,
+          'ForwardRef',
+          'Anonymous',
         );
       case HostRoot:
         const fiberRoot = fiber.stateNode;
@@ -466,8 +469,9 @@ export function getInternalReactConstants(
         return type;
       case HostPortal:
       case HostText:
-      case Fragment:
         return null;
+      case Fragment:
+        return 'Fragment';
       case LazyComponent:
         // This display name will not be user visible.
         // Once a Lazy component loads its inner component, React replaces the tag and type.
@@ -475,10 +479,12 @@ export function getInternalReactConstants(
         return 'Lazy';
       case MemoComponent:
       case SimpleMemoComponent:
-        return (
-          (elementType && elementType.displayName) ||
-          (type && type.displayName) ||
-          getDisplayName(resolvedType, 'Anonymous')
+        // Display name in React does not use `Memo` as a wrapper but fallback name.
+        return getWrappedDisplayName(
+          elementType,
+          resolvedType,
+          'Memo',
+          'Anonymous',
         );
       case SuspenseComponent:
         return 'Suspense';
@@ -660,6 +666,8 @@ export function attach(
       getDisplayNameForFiber,
       getIsProfiling: () => isProfiling,
       getLaneLabelMap,
+      currentDispatcherRef: renderer.currentDispatcherRef,
+      workTagMap: ReactTypeOfWork,
       reactVersion: version,
     });
 
@@ -804,32 +812,12 @@ export function attach(
   // Patching the console enables DevTools to do a few useful things:
   // * Append component stacks to warnings and error messages
   // * Disable logging during re-renders to inspect hooks (see inspectHooksOfFiber)
-  //
-  // Don't patch in test environments because we don't want to interfere with Jest's own console overrides.
-  if (process.env.NODE_ENV !== 'test') {
-    registerRendererWithConsole(renderer, onErrorOrWarning);
+  registerRendererWithConsole(renderer, onErrorOrWarning);
 
-    // The renderer interface can't read these preferences directly,
-    // because it is stored in localStorage within the context of the extension.
-    // It relies on the extension to pass the preference through via the global.
-    const appendComponentStack =
-      window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
-    const breakOnConsoleErrors =
-      window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
-    const showInlineWarningsAndErrors =
-      window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
-    const hideConsoleLogsInStrictMode =
-      window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
-    const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
-
-    patchConsole({
-      appendComponentStack,
-      breakOnConsoleErrors,
-      showInlineWarningsAndErrors,
-      hideConsoleLogsInStrictMode,
-      browserTheme,
-    });
-  }
+  // The renderer interface can't read these preferences directly,
+  // because it is stored in localStorage within the context of the extension.
+  // It relies on the extension to pass the preference through via the global.
+  patchConsoleUsingWindowValues();
 
   const debug = (
     name: string,
@@ -975,7 +963,7 @@ export function attach(
 
   // NOTICE Keep in sync with get*ForFiber methods
   function shouldFilterFiber(fiber: Fiber): boolean {
-    const {_debugSource, tag, type} = fiber;
+    const {_debugSource, tag, type, key} = fiber;
 
     switch (tag) {
       case DehydratedSuspenseComponent:
@@ -987,13 +975,14 @@ export function attach(
         return true;
       case HostPortal:
       case HostText:
-      case Fragment:
       case LegacyHiddenComponent:
       case OffscreenComponent:
         return true;
       case HostRoot:
         // It is never valid to filter the root element.
         return false;
+      case Fragment:
+        return key === null;
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -1570,6 +1559,7 @@ export function attach(
       case ContextConsumer:
       case MemoComponent:
       case SimpleMemoComponent:
+      case ForwardRef:
         // For types that execute user code, we check PerformedWork effect.
         // We don't reflect bailouts (either referential or sCU) in DevTools.
         // eslint-disable-next-line no-bitwise
@@ -1589,10 +1579,10 @@ export function attach(
 
   type OperationsArray = Array<number>;
 
-  type StringTableEntry = {|
+  type StringTableEntry = {
     encodedString: Array<number>,
     id: number,
-  |};
+  };
 
   const pendingOperations: OperationsArray = [];
   const pendingRealUnmountedIDs: Array<number> = [];
@@ -2629,10 +2619,15 @@ export function attach(
   }
 
   function handleCommitFiberUnmount(fiber) {
-    // This is not recursive.
-    // We can't traverse fibers after unmounting so instead
-    // we rely on React telling us about each unmount.
-    recordUnmount(fiber, false);
+    // If the untrackFiberSet already has the unmounted Fiber, this means we've already
+    // recordedUnmount, so we don't need to do it again. If we don't do this, we might
+    // end up double-deleting Fibers in some cases (like Legacy Suspense).
+    if (!untrackFibersSet.has(fiber)) {
+      // This is not recursive.
+      // We can't traverse fibers after unmounting so instead
+      // we rely on React telling us about each unmount.
+      recordUnmount(fiber, false);
+    }
   }
 
   function handlePostCommitFiberRoot(root) {
@@ -2811,6 +2806,10 @@ export function attach(
   function getDisplayNameForFiberID(id) {
     const fiber = idToArbitraryFiberMap.get(id);
     return fiber != null ? getDisplayNameForFiber(((fiber: any): Fiber)) : null;
+  }
+
+  function getFiberForNative(hostInstance) {
+    return renderer.findFiberByHostInstance(hostInstance);
   }
 
   function getFiberIDForNative(
@@ -3606,10 +3605,58 @@ export function attach(
     try {
       mostRecentlyInspectedElement = inspectElementRaw(id);
     } catch (error) {
+      // the error name is synced with ReactDebugHooks
+      if (error.name === 'ReactDebugToolsRenderError') {
+        let message = 'Error rendering inspected element.';
+        let stack;
+        // Log error & cause for user to debug
+        console.error(message + '\n\n', error);
+        if (error.cause != null) {
+          const fiber = findCurrentFiberUsingSlowPathById(id);
+          const componentName =
+            fiber != null ? getDisplayNameForFiber(fiber) : null;
+          console.error(
+            'React DevTools encountered an error while trying to inspect hooks. ' +
+              'This is most likely caused by an error in current inspected component' +
+              (componentName != null ? `: "${componentName}".` : '.') +
+              '\nThe error thrown in the component is: \n\n',
+            error.cause,
+          );
+          if (error.cause instanceof Error) {
+            message = error.cause.message || message;
+            stack = error.cause.stack;
+          }
+        }
+
+        return {
+          type: 'error',
+          errorType: 'user',
+          id,
+          responseID: requestID,
+          message,
+          stack,
+        };
+      }
+
+      // the error name is synced with ReactDebugHooks
+      if (error.name === 'ReactDebugToolsUnsupportedHookError') {
+        return {
+          type: 'error',
+          errorType: 'unknown-hook',
+          id,
+          responseID: requestID,
+          message:
+            'Unsupported hook in the react-debug-tools package: ' +
+            error.message,
+        };
+      }
+
+      // Log Uncaught Error
       console.error('Error inspecting element.\n\n', error);
 
       return {
         type: 'error',
+        errorType: 'uncaught',
         id,
         responseID: requestID,
         message: error.message,
@@ -3887,7 +3934,7 @@ export function attach(
     }
   }
 
-  type CommitProfilingData = {|
+  type CommitProfilingData = {
     changeDescriptions: Map<number, ChangeDescription> | null,
     commitTime: number,
     durations: Array<number>,
@@ -3896,7 +3943,7 @@ export function attach(
     passiveEffectDuration: number | null,
     priorityLevel: string | null,
     updaters: Array<SerializedElement> | null,
-  |};
+  };
 
   type CommitProfilingMetadataMap = Map<number, Array<CommitProfilingData>>;
   type DisplayNamesByRootID = Map<number, string>;
@@ -4437,6 +4484,7 @@ export function attach(
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForFiberID,
+    getFiberForNative,
     getFiberIDForNative,
     getInstanceAndStyle,
     getOwnersList,

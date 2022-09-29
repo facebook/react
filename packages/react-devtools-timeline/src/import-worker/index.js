@@ -22,10 +22,11 @@ const workerizedImportFile: ImportFileModule = window.Worker
   : importFileModule;
 
 export type ImportWorkerOutputData =
-  | {|status: 'SUCCESS', processedData: TimelineData|}
-  | {|status: 'INVALID_PROFILE_ERROR', error: Error|}
-  | {|status: 'UNEXPECTED_ERROR', error: Error|};
+  | {status: 'SUCCESS', processedData: TimelineData}
+  | {status: 'INVALID_PROFILE_ERROR', error: Error}
+  | {status: 'UNEXPECTED_ERROR', error: Error};
 
 export type importFileFunction = (file: File) => ImportWorkerOutputData;
 
-export const importFile = (file: File) => workerizedImportFile.importFile(file);
+export const importFile = (file: File): Promise<ImportWorkerOutputData> =>
+  workerizedImportFile.importFile(file);

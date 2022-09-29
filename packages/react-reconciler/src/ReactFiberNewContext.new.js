@@ -15,7 +15,7 @@ import type {
 } from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {Lanes} from './ReactFiberLane.new';
-import type {SharedQueue} from './ReactUpdateQueue.new';
+import type {SharedQueue} from './ReactFiberClassUpdateQueue.new';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
@@ -39,7 +39,7 @@ import {
 } from './ReactFiberFlags';
 
 import is from 'shared/objectIs';
-import {createUpdate, ForceUpdate} from './ReactUpdateQueue.new';
+import {createUpdate, ForceUpdate} from './ReactFiberClassUpdateQueue.new';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
 import {
   enableLazyContextPropagation,
@@ -598,7 +598,9 @@ function propagateParentContextChanges(
   workInProgress.flags |= DidPropagateContext;
 }
 
-export function checkIfContextChanged(currentDependencies: Dependencies) {
+export function checkIfContextChanged(
+  currentDependencies: Dependencies,
+): boolean {
   if (!enableLazyContextPropagation) {
     return false;
   }
