@@ -39,7 +39,7 @@
 untyped-type-import=error
 
 [options]
-server.max_workers=4
+%CI_MAX_WORKERS%
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
 esproposal.optional_chaining=enable
