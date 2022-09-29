@@ -68,7 +68,6 @@ export const writeCompletedBoundaryInstruction =
   $$$hostConfig.writeCompletedBoundaryInstruction;
 export const writeClientRenderBoundaryInstruction =
   $$$hostConfig.writeClientRenderBoundaryInstruction;
-export const emptyChunk = $$$hostConfig.emptyChunk;
 
 // -------------------------
 //     Resources

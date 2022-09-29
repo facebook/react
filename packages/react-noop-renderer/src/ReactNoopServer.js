@@ -116,6 +116,7 @@ const ReactNoopServer = ReactFizzServer({
   },
   pushStartInstance(
     target: Array<Uint8Array>,
+    preamble: Array<Uint8Array>,
     type: string,
     props: Object,
   ): ReactNodeList {

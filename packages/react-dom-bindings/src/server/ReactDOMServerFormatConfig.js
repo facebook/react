@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {ArrayWithPreamble} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Resources, BoundaryResources} from './ReactDOMFloatServer';
 export type {Resources, BoundaryResources};
@@ -93,8 +92,6 @@ export type ResponseState = {
   sentStyleInsertionFunction: boolean, // We allow the legacy renderer to extend this object.
   ...
 };
-
-export const emptyChunk = stringToPrecomputedChunk('');
 
 const startInlineScript = stringToPrecomputedChunk('<script>');
 const endInlineScript = stringToPrecomputedChunk('</script>');
@@ -1300,33 +1297,36 @@ function pushStartTitle(
 }
 
 function pushStartHead(
-  target: ArrayWithPreamble<Chunk | PrecomputedChunk>,
+  target: Array<Chunk | PrecomputedChunk>,
+  preamble: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
   responseState: ResponseState,
-  formatContext: FormatContext,
 ): ReactNodeList {
-  const children = pushStartGenericElement(target, props, tag, responseState);
-  target._preambleIndex = target.length;
-  return children;
+  return pushStartGenericElement(
+    enableFloat ? preamble : target,
+    props,
+    tag,
+    responseState,
+  );
 }
 
 function pushStartHtml(
-  target: ArrayWithPreamble<Chunk | PrecomputedChunk>,
+  target: Array<Chunk | PrecomputedChunk>,
+  preamble: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
   responseState: ResponseState,
   formatContext: FormatContext,
 ): ReactNodeList {
+  target = enableFloat ? preamble : target;
   if (formatContext.insertionMode === ROOT_HTML_MODE) {
     // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
     // then we also emit the DOCTYPE as part of the root content as a convenience for
     // rendering the whole document.
     target.push(DOCTYPE);
   }
-  const children = pushStartGenericElement(target, props, tag, responseState);
-  target._preambleIndex = target.length;
-  return children;
+  return pushStartGenericElement(target, props, tag, responseState);
 }
 
 function pushStartGenericElement(
@@ -1544,7 +1544,8 @@ function startChunkForTag(tag: string): PrecomputedChunk {
 const DOCTYPE: PrecomputedChunk = stringToPrecomputedChunk('<!DOCTYPE html>');
 
 export function pushStartInstance(
-  target: ArrayWithPreamble<Chunk | PrecomputedChunk>,
+  target: Array<Chunk | PrecomputedChunk>,
+  preamble: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
@@ -1639,9 +1640,16 @@ export function pushStartInstance(
     }
     // Preamble start tags
     case 'head':
-      return pushStartHead(target, props, type, responseState, formatContext);
+      return pushStartHead(target, preamble, props, type, responseState);
     case 'html': {
-      return pushStartHtml(target, props, type, responseState, formatContext);
+      return pushStartHtml(
+        target,
+        preamble,
+        props,
+        type,
+        responseState,
+        formatContext,
+      );
     }
     default: {
       if (type.indexOf('-') === -1 && typeof props.is !== 'string') {
@@ -2223,96 +2231,96 @@ const completeSegmentFunction =
 //   'function $RC(a,b){a=document.getElementById(a);b=document.getElementById(b);b.parentNode.removeChild(b);if(a){a=a.previousSibling;var f=a.parentNode,c=a.nextSibling,e=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d)if(0===e)break;else e--;else"$"!==d&&"$?"!==d&&"$!"!==d||e++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;b.firstChild;)f.insertBefore(b.firstChild,c);a.data="$";a._reactRetry&&a._reactRetry()}};';
 // const completeBoundaryFunction =
 //   '$RC=function(){function h(e,f){var a=document.getElementById(e),c=document.getElementById(f);c.parentNode.removeChild(c);if(a){a=a.previousSibling;var k=a.parentNode,b=a.nextSibling,g=0;do{if(b&&8===b.nodeType){var d=b.data;if("/$"===d)if(0===g)break;else g--;else"$"!==d&&"$?"!==d&&"$!"!==d||g++}d=b.nextSibling;k.removeChild(b);b=d}while(b);for(;c.firstChild;)k.insertBefore(c.firstChild,b);a.data="$";a._reactRetry&&a._reactRetry()}}return function(e,f,a){if(a&&(a=$RR(a)))return Promise.all(a).then(h.bind(null,e,f))["catch"](function(c){return console.log("caught",c)});h(e,f)}}()'
-const styleInsertionFunction =
-  '$RM=new Map;function $RR(l,m,t){function r(n){this.s=n}for(var p=new Map,q=document,g,f,e=q.querySelectorAll("link[data-rprec]"),d=0;f=e[d++];)p.set(f.dataset.rprec,g=f);f=0;e=[];for(var c,h,b,a;c=t[f++];){var k=0;h=c[k++];if(b=$RM.get(h))"l"!==b.s&&e.push(b);else{a=q.createElement("link");a.href=h;a.rel="stylesheet";for(a.dataset.rprec=d=c[k++];b=c[k++];)a.setAttribute(b,c[k++]);b=a._p=new Promise(function(n,u){a.onload=n;a.onerror=u});b.then(r.bind(b,"l"),r.bind(b,"e"));$RM.set(h,b);e.push(b);c=p.get(d)||g;c===g&&(g=a);p.set(d,a);c?c.parentNode.insertBefore(a,c.nextSibling):(d=q.head,d.insertBefore(a,d.firstChild))}}e.length?Promise.all(e).then($RC.bind(null,l,m,null),$RC.bind(null,l,m,"Resource failed to load")):$RC(l,m)};';
-// const styleInsertionFunction = `$RM = new Map();
-// function $RR(suspenseBoundaryID, contentID, styles) {
-//   const precedences = new Map();
-//   const thisDocument = document;
-//   let lastResource, node;
+// const styleInsertionFunction =
+//   '$RM=new Map;function $RR(l,m,t){function r(n){this.s=n}for(var p=new Map,q=document,g,f,e=q.querySelectorAll("link[data-rprec]"),d=0;f=e[d++];)p.set(f.dataset.rprec,g=f);f=0;e=[];for(var c,h,b,a;c=t[f++];){var k=0;h=c[k++];if(b=$RM.get(h))"l"!==b.s&&e.push(b);else{a=q.createElement("link");a.href=h;a.rel="stylesheet";for(a.dataset.rprec=d=c[k++];b=c[k++];)a.setAttribute(b,c[k++]);b=a._p=new Promise(function(n,u){a.onload=n;a.onerror=u});b.then(r.bind(b,"l"),r.bind(b,"e"));$RM.set(h,b);e.push(b);c=p.get(d)||g;c===g&&(g=a);p.set(d,a);c?c.parentNode.insertBefore(a,c.nextSibling):(d=q.head,d.insertBefore(a,d.firstChild))}}e.length?Promise.all(e).then($RC.bind(null,l,m,null),$RC.bind(null,l,m,"Resource failed to load")):$RC(l,m)};';
+const styleInsertionFunction = `$RM = new Map();
+function $RR(suspenseBoundaryID, contentID, styles) {
+  const precedences = new Map();
+  const thisDocument = document;
+  let lastResource, node;
 
-//   // Seed the precedence list with existing resources
-//   let nodes = thisDocument.querySelectorAll('link[data-rprec]');
-//   for (let i = 0;node = nodes[i++];) {
-//     precedences.set(node.dataset.rprec, lastResource = node);
-//   }
+  // Seed the precedence list with existing resources
+  let nodes = thisDocument.querySelectorAll('link[data-rprec]');
+  for (let i = 0;node = nodes[i++];) {
+    precedences.set(node.dataset.rprec, lastResource = node);
+  }
 
-//   let i = 0;
-//   let dependencies = [];
-//   let style, href, precedence, attr, loadingState, resourceEl;
+  let i = 0;
+  let dependencies = [];
+  let style, href, precedence, attr, loadingState, resourceEl;
 
-//   function setStatus(s) {
-//     this.s = s;
-//   }
+  function setStatus(s) {
+    this.s = s;
+  }
 
-//   while (style = styles[i++]) {
-//     let j = 0;
-//     href = style[j++];
-//     // We check if this resource is already in our resourceMap and reuse it if so.
-//     // If it is already loaded we don't return it as a depenendency since there is nothing
-//     // to wait for
-//     loadingState = $RM.get(href);
-//     if (loadingState) {
-//       if (loadingState.s !== 'l') {
-//         dependencies.push(loadingState);
-//       }
-//       continue;
-//     }
+  while (style = styles[i++]) {
+    let j = 0;
+    href = style[j++];
+    // We check if this resource is already in our resourceMap and reuse it if so.
+    // If it is already loaded we don't return it as a depenendency since there is nothing
+    // to wait for
+    loadingState = $RM.get(href);
+    if (loadingState) {
+      if (loadingState.s !== 'l') {
+        dependencies.push(loadingState);
+      }
+      continue;
+    }
 
-//     // We construct our new resource element, looping over remaining attributes if any
-//     // setting them to the Element.
-//     resourceEl = thisDocument.createElement("link");
-//     resourceEl.href = href;
-//     resourceEl.rel = 'stylesheet';
-//     resourceEl.dataset.rprec = precedence = style[j++];
-//     while(attr = style[j++]) {
-//       resourceEl.setAttribute(attr, style[j++]);
-//     }
+    // We construct our new resource element, looping over remaining attributes if any
+    // setting them to the Element.
+    resourceEl = thisDocument.createElement("link");
+    resourceEl.href = href;
+    resourceEl.rel = 'stylesheet';
+    resourceEl.dataset.rprec = precedence = style[j++];
+    while(attr = style[j++]) {
+      resourceEl.setAttribute(attr, style[j++]);
+    }
 
-//     // We stash a pending promise in our map by href which will resolve or reject
-//     // when the underlying resource loads or errors. We add it to the dependencies
-//     // array to be returned.
-//     loadingState = resourceEl._p = new Promise((re, rj) => {
-//       resourceEl.onload = re;
-//       resourceEl.onerror = rj;
-//     })
-//     loadingState.then(
-//       setStatus.bind(loadingState, 'l'),
-//       setStatus.bind(loadingState, 'e')
-//     );
-//     $RM.set(href, loadingState);
-//     dependencies.push(loadingState);
+    // We stash a pending promise in our map by href which will resolve or reject
+    // when the underlying resource loads or errors. We add it to the dependencies
+    // array to be returned.
+    loadingState = resourceEl._p = new Promise((re, rj) => {
+      resourceEl.onload = re;
+      resourceEl.onerror = rj;
+    })
+    loadingState.then(
+      setStatus.bind(loadingState, 'l'),
+      setStatus.bind(loadingState, 'e')
+    );
+    $RM.set(href, loadingState);
+    dependencies.push(loadingState);
 
-//     // The prior style resource is the last one placed at a given
-//     // precedence or the last resource itself which may be null.
-//     // We grab this value and then update the last resource for this
-//     // precedence to be the inserted element, updating the lastResource
-//     // pointer if needed.
-//     let prior = precedences.get(precedence) || lastResource;
-//     if (prior === lastResource) {
-//       lastResource = resourceEl
-//     }
-//     precedences.set(precedence, resourceEl)
+    // The prior style resource is the last one placed at a given
+    // precedence or the last resource itself which may be null.
+    // We grab this value and then update the last resource for this
+    // precedence to be the inserted element, updating the lastResource
+    // pointer if needed.
+    let prior = precedences.get(precedence) || lastResource;
+    if (prior === lastResource) {
+      lastResource = resourceEl
+    }
+    precedences.set(precedence, resourceEl)
 
-//     // Finally, we insert the newly constructed instance at an appropriate location
-//     // in the Document.
-//     if (prior) {
-//       prior.parentNode.insertBefore(resourceEl, prior.nextSibling);
-//     } else {
-//       let head = thisDocument.head;
-//       head.insertBefore(resourceEl, head.firstChild);
-//     }
-//   }
+    // Finally, we insert the newly constructed instance at an appropriate location
+    // in the Document.
+    if (prior) {
+      prior.parentNode.insertBefore(resourceEl, prior.nextSibling);
+    } else {
+      let head = thisDocument.head;
+      head.insertBefore(resourceEl, head.firstChild);
+    }
+  }
 
-//   if (dependencies.length) {
-//     Promise.all(dependencies).then(
-//       $RC.bind(null, suspenseBoundaryID, contentID, null),
-//       $RC.bind(null, suspenseBoundaryID, contentID, "Resource failed to load")
-//     );
-//   } else {
-//     $RC(suspenseBoundaryID, contentID);
-//   }
-// }`;
+  if (dependencies.length) {
+    Promise.all(dependencies).then(
+      $RC.bind(null, suspenseBoundaryID, contentID, ''),
+      $RC.bind(null, suspenseBoundaryID, contentID, "Resource failed to load")
+    );
+  } else {
+    $RC(suspenseBoundaryID, contentID);
+  }
+}`;
 // const completeBoundaryFunction =
 //   '$RC=function(){function f(a,c,d){var b=document.getElementById(a);if(b){a=b.previousSibling;if(c){d=a.parentNode;b=a.nextSibling;var g=0;do{if(b&&8===b.nodeType){var e=b.data;if("/$"===e)if(0===g)break;else g--;else"$"!==e&&"$?"!==e&&"$!"!==e||g++}e=b.nextSibling;d.removeChild(b);b=e}while(b);for(;c.firstChild;)d.insertBefore(c.firstChild,b);a.data="$"}else a.data="$!",b.setAttribute("data-dgst",d);a._reactRetry&&a._reactRetry()}}return function(a,c,d){c=document.getElementById(c);c.parentNode.removeChild(c);if(d&&(d=$RR(d)))return Promise.all(d).then(f.bind(null,a,c,null),f.bind(null,a,null,"Resource failed to load"));f(a,c)}}();';
 const completeBoundaryFunction = `function $RC(suspenseBoundaryID, contentID, errorDigest) {
