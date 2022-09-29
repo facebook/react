@@ -21,6 +21,7 @@ import type {
   Dispatcher,
   HookType,
   MemoCache,
+  EventFunctionWrapper,
 } from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {HookFlags} from './ReactHookEffectTags';
@@ -86,7 +87,6 @@ import {
   Layout as HookLayout,
   Passive as HookPassive,
   Insertion as HookInsertion,
-  Snapshot as HookSnapshot,
 } from './ReactHookEffectTags';
 import {
   getWorkInProgressRoot,
@@ -184,6 +184,7 @@ type StoreConsistencyCheck<T> = {
 
 export type FunctionComponentUpdateQueue = {
   lastEffect: Effect | null,
+  events: Array<() => mixed> | null,
   stores: Array<StoreConsistencyCheck<any>> | null,
   // NOTE: optional, only set when enableUseMemoCacheHook is enabled
   memoCache?: MemoCache | null,
@@ -727,6 +728,7 @@ if (enableUseMemoCacheHook) {
   createFunctionComponentUpdateQueue = () => {
     return {
       lastEffect: null,
+      events: null,
       stores: null,
       memoCache: null,
     };
@@ -735,6 +737,7 @@ if (enableUseMemoCacheHook) {
   createFunctionComponentUpdateQueue = () => {
     return {
       lastEffect: null,
+      events: null,
       stores: null,
     };
   };
@@ -1871,49 +1874,52 @@ function updateEffect(
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
-function mountEvent<T>(callback: () => T): () => T {
-  const hook = mountWorkInProgressHook();
-  const ref = {current: callback};
+function useEventImpl<Args, Return, F: (...Array<Args>) => Return>(
+  event: EventFunctionWrapper<Args, Return, F>,
+  nextImpl: F,
+) {
+  currentlyRenderingFiber.flags |= UpdateEffect;
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
+  if (componentUpdateQueue === null) {
+    componentUpdateQueue = createFunctionComponentUpdateQueue();
+    currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
+    componentUpdateQueue.events = [event, nextImpl];
+  } else {
+    const events = componentUpdateQueue.events;
+    if (events === null) {
+      componentUpdateQueue.events = [event, nextImpl];
+    } else {
+      events.push(event, nextImpl);
+    }
+  }
+}
 
-  function event() {
+function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
+  callback: F,
+): EventFunctionWrapper<Args, Return, F> {
+  const hook = mountWorkInProgressHook();
+  const eventFn: EventFunctionWrapper<Args, Return, F> = function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
         "A function wrapped in useEvent can't be called during rendering.",
       );
     }
-    return ref.current.apply(undefined, arguments);
-  }
+    return eventFn._impl.apply(undefined, arguments);
+  };
+  eventFn._impl = callback;
 
-  // TODO: We don't need all the overhead of an effect object since there are no deps and no
-  // clean up functions.
-  mountEffectImpl(
-    UpdateEffect,
-    HookSnapshot,
-    () => {
-      ref.current = callback;
-    },
-    [ref, callback],
-  );
-
-  hook.memoizedState = [ref, event];
-
-  return event;
+  useEventImpl(eventFn, callback);
+  hook.memoizedState = eventFn;
+  return eventFn;
 }
 
-function updateEvent<T>(callback: () => T): () => T {
+function updateEvent<Args, Return, F: (...Array<Args>) => Return>(
+  callback: F,
+): EventFunctionWrapper<Args, Return, F> {
   const hook = updateWorkInProgressHook();
-  const ref = hook.memoizedState[0];
-
-  updateEffectImpl(
-    UpdateEffect,
-    HookSnapshot,
-    () => {
-      ref.current = callback;
-    },
-    [ref, callback],
-  );
-
-  return hook.memoizedState[1];
+  const eventFn = hook.memoizedState;
+  useEventImpl(eventFn, callback);
+  return eventFn;
 }
 
 function mountInsertionEffect(
@@ -2890,9 +2896,11 @@ if (__DEV__) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEventHook) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useEvent = function useEvent<T>(
-      callback: () => T,
-    ): () => T {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useEvent = function useEvent<
+      Args,
+      Return,
+      F: (...Array<Args>) => Return,
+    >(callback: F): EventFunctionWrapper<Args, Return, F> {
       currentHookNameInDev = 'useEvent';
       mountHookTypesDev();
       return mountEvent(callback);
@@ -3048,8 +3056,10 @@ if (__DEV__) {
   }
   if (enableUseEventHook) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useEvent = function useEvent<
-      T,
-    >(callback: () => T): () => T {
+      Args,
+      Return,
+      F: (...Array<Args>) => Return,
+    >(callback: F): EventFunctionWrapper<Args, Return, F> {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       return mountEvent(callback);
@@ -3204,9 +3214,11 @@ if (__DEV__) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useMemoCache = useMemoCache;
   }
   if (enableUseEventHook) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useEvent = function useEvent<T>(
-      callback: () => T,
-    ): () => T {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useEvent = function useEvent<
+      Args,
+      Return,
+      F: (...Array<Args>) => Return,
+    >(callback: F): EventFunctionWrapper<Args, Return, F> {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       return updateEvent(callback);
@@ -3363,8 +3375,10 @@ if (__DEV__) {
   }
   if (enableUseEventHook) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useEvent = function useEvent<
-      T,
-    >(callback: () => T): () => T {
+      Args,
+      Return,
+      F: (...Array<Args>) => Return,
+    >(callback: F): EventFunctionWrapper<Args, Return, F> {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       return updateEvent(callback);
@@ -3547,8 +3561,10 @@ if (__DEV__) {
   }
   if (enableUseEventHook) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useEvent = function useEvent<
-      T,
-    >(callback: () => T): () => T {
+      Args,
+      Return,
+      F: (...Array<Args>) => Return,
+    >(callback: F): EventFunctionWrapper<Args, Return, F> {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -3732,8 +3748,10 @@ if (__DEV__) {
   }
   if (enableUseEventHook) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useEvent = function useEvent<
-      T,
-    >(callback: () => T): () => T {
+      Args,
+      Return,
+      F: (...Array<Args>) => Return,
+    >(callback: F): EventFunctionWrapper<Args, Return, F> {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -3918,8 +3936,10 @@ if (__DEV__) {
   }
   if (enableUseEventHook) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useEvent = function useEvent<
-      T,
-    >(callback: () => T): () => T {
+      Args,
+      Return,
+      F: (...Array<Args>) => Return,
+    >(callback: F): EventFunctionWrapper<Args, Return, F> {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();

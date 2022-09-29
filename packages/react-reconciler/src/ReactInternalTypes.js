@@ -286,6 +286,17 @@ type SuspenseCallbackOnlyFiberRootProperties = {
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
 };
 
+// A wrapper callable object around a useEvent callback that throws if the callback is called during
+// rendering. The _impl property points to the actual implementation.
+export type EventFunctionWrapper<
+  Args,
+  Return,
+  F: (...Array<Args>) => Return,
+> = {
+  (): F,
+  _impl: F,
+};
+
 export type TransitionTracingCallbacks = {
   onTransitionStart?: (transitionName: string, startTime: number) => void,
   onTransitionProgress?: (
@@ -377,7 +388,9 @@ export type Dispatcher = {
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
-  useEvent?: <T>(callback: () => T) => () => T,
+  useEvent?: <Args, Return, F: (...Array<Args>) => Return>(
+    callback: F,
+  ) => EventFunctionWrapper<Args, Return, F>,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,

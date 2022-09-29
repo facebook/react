@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  Dispatcher as DispatcherType,
+  EventFunctionWrapper,
+} from 'react-reconciler/src/ReactInternalTypes';
 
 import type {
   MutableSource,
@@ -509,7 +512,10 @@ function throwOnUseEventCall() {
   );
 }
 
-export function useEvent<T>(callback: () => T): () => T {
+export function useEvent<Args, Return, F: (...Array<Args>) => Return>(
+  callback: F,
+): EventFunctionWrapper<Args, Return, F> {
+  // $FlowIgnore[incompatible-return] useEvent doesn't work in Fizz
   return throwOnUseEventCall;
 }
 
