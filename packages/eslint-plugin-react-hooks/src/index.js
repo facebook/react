@@ -7,6 +7,7 @@
 
 'use strict';
 
+import NoNestedComponents from './NoNestedComponents';
 import RulesOfHooks from './RulesOfHooks';
 import ExhaustiveDeps from './ExhaustiveDeps';
 
@@ -14,6 +15,7 @@ export const configs = {
   recommended: {
     plugins: ['react-hooks'],
     rules: {
+      'react-hooks/no-nested-components': 'error',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
     },
@@ -21,6 +23,7 @@ export const configs = {
 };
 
 export const rules = {
+  'no-nested-components': NoNestedComponents,
   'rules-of-hooks': RulesOfHooks,
   'exhaustive-deps': ExhaustiveDeps,
 };

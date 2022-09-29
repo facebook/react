@@ -41,6 +41,7 @@ If you want more fine-grained configuration, you can instead add a snippet like 
   ],
   "rules": {
     // ...
+    "react-hooks/no-nested-components": "error",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn"
   }
