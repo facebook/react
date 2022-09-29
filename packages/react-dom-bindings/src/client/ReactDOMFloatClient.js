@@ -92,17 +92,9 @@ let currentDocument: ?Document = null;
 // preloads
 let lastCurrentDocument: ?Document = null;
 
-// When the document Node that hosts style resources is removed from the tree and another one created
-// the style Resources end up in a detatched state. We need to be able to restore them to the newly
-// inserted hosts (html, head, or body, preferring head). However to simplify the logic we attempt
-// restoration anytime a new Resource host mounts but we only want to restore once per commit. This
-// boolean is used to flag that a restore should happen or be ignored and resets on each render
-let stylesRestorable = true;
-
 let previousDispatcher = null;
 export function prepareToRenderResources(ownerDocument: Document) {
   currentDocument = lastCurrentDocument = ownerDocument;
-  stylesRestorable = true;
   previousDispatcher = Dispatcher.current;
   Dispatcher.current = ReactDOMClientDispatcher;
 }
