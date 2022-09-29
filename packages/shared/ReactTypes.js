@@ -8,6 +8,7 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Container} from '../react-reconciler/src/ReactFiberHostConfig';
 
 export type ReactNode =
   | React$Element<any>
@@ -89,7 +90,7 @@ export type ReactServerContext<T: any> = ReactContext<T>;
 export type ReactPortal = {
   $$typeof: symbol | number,
   key: null | string,
-  containerInfo: any,
+  containerInfo: Container,
   children: ReactNodeList,
   // TODO: figure out the API for cross-renderer implementation.
   implementation: any,
