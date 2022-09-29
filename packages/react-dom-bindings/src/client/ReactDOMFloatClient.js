@@ -103,13 +103,13 @@ let previousDispatcher = null;
 export function prepareToRenderResources(ownerDocument: Document) {
   currentDocument = lastCurrentDocument = ownerDocument;
   stylesRestorable = true;
-  previousDispatcher = ReactDOMSharedInternals.Dispatcher.current;
-  ReactDOMSharedInternals.Dispatcher.current = ReactDOMClientDispatcher;
+  previousDispatcher = Dispatcher.current;
+  Dispatcher.current = ReactDOMClientDispatcher;
 }
 
 export function cleanupAfterRenderResources() {
   currentDocument = null;
-  ReactDOMSharedInternals.Dispatcher.current = previousDispatcher;
+  Dispatcher.current = previousDispatcher;
   previousDispatcher = null;
 }
 
