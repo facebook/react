@@ -18,7 +18,6 @@ import {
   getFiberCurrentPropsFromNode,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import Dispatcher from 'react-dom-bindings/src/shared/ReactDOMDispatcher';
-import {ReactDOMClientDispatcher} from 'react-dom-bindings/src/client/ReactDOMFloatClient';
 
 const Internals = {
   usingClientEntryPoint: false,
@@ -32,8 +31,5 @@ const Internals = {
   ],
   Dispatcher,
 };
-
-// Set the default dispatcher to the Client dispatcher
-Dispatcher.current = ReactDOMClientDispatcher;
 
 export default Internals;

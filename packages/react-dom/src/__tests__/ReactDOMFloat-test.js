@@ -387,8 +387,13 @@ describe('ReactDOMFloat', () => {
     });
 
     // @gate enableFloat
-    it('inserts a preload resource when called in module scope', async () => {
+    it('inserts a preload resource when called in module scope if a root has already been created', async () => {
+      // The requirement that a root be created has to do with bootstrapping the dispatcher.
+      // We are intentionally avoiding setting it to the default via import due to cycles and
+      // we are trying to avoid doing a mutable initailation in module scope.
       ReactDOM.preload('foo', {as: 'style'});
+      ReactDOMClient.createRoot(container);
+      ReactDOM.preload('bar', {as: 'style'});
       // We need to use global.document because preload falls back
       // to the window.document global when no other documents have been used
       // The way the JSDOM runtim is created for these tests the local document
@@ -396,7 +401,7 @@ describe('ReactDOMFloat', () => {
       expect(getVisibleChildren(global.document)).toEqual(
         <html>
           <head>
-            <link rel="preload" as="style" href="foo" />
+            <link rel="preload" as="style" href="bar" />
           </head>
           <body />
         </html>,
@@ -526,7 +531,12 @@ describe('ReactDOMFloat', () => {
 
     // @gate enableFloat
     it('inserts a preload resource when called in module scope', async () => {
+      // The requirement that a root be created has to do with bootstrapping the dispatcher.
+      // We are intentionally avoiding setting it to the default via import due to cycles and
+      // we are trying to avoid doing a mutable initailation in module scope.
       ReactDOM.preinit('foo', {as: 'style'});
+      ReactDOMClient.hydrateRoot(container, null);
+      ReactDOM.preinit('bar', {as: 'style'});
       // We need to use global.document because preload falls back
       // to the window.document global when no other documents have been used
       // The way the JSDOM runtim is created for these tests the local document
@@ -534,7 +544,7 @@ describe('ReactDOMFloat', () => {
       expect(getVisibleChildren(global.document)).toEqual(
         <html>
           <head>
-            <link rel="preload" as="style" href="foo" />
+            <link rel="preload" as="style" href="bar" />
           </head>
           <body />
         </html>,

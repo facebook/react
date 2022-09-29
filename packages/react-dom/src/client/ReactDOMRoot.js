@@ -13,6 +13,8 @@ import type {
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
 
+import ReactDOMSharedInternals from '../ReactDOMSharedInternals';
+import {ReactDOMClientDispatcher} from 'react-dom-bindings/src/client/ReactDOMFloatClient';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {enableFloat} from 'shared/ReactFeatureFlags';
@@ -241,6 +243,11 @@ export function createRoot(
       : container;
   listenToAllSupportedEvents(rootContainerElement);
 
+  if (enableFloat) {
+    // Set the default dispatcher to the client dispatcher
+    ReactDOMSharedInternals.Dispatcher.current = ReactDOMClientDispatcher;
+  }
+
   return new ReactDOMRoot(root);
 }
 
@@ -327,6 +334,11 @@ export function hydrateRoot(
       const mutableSource = mutableSources[i];
       registerMutableSourceForHydration(root, mutableSource);
     }
+  }
+
+  if (enableFloat) {
+    // Set the default dispatcher to the client dispatcher
+    ReactDOMSharedInternals.Dispatcher.current = ReactDOMClientDispatcher;
   }
 
   return new ReactDOMHydrationRoot(root);
