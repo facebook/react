@@ -8,10 +8,7 @@
  */
 
 import {getEventPriority} from './ReactDOMEventListener';
-import {
-  DiscreteEventPriority,
-  DefaultEventPriority,
-} from 'react-reconciler/src/ReactEventPriorities';
+import {DiscreteEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 function monkeyPatchDispatchEvent(): void {
   const originalDispatchEvent = window.EventTarget.prototype.dispatchEvent;

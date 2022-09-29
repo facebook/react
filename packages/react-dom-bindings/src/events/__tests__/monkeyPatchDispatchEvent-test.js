@@ -42,7 +42,6 @@ describe('monkeyPatchDispatchEvent', () => {
   it('patches dispatchEvent and makes custom events inherit the priority of the outer event type', done => {
     const outerButton = document.createElement('button');
     const innerButton = document.createElement('button');
-    const event = new Event('click');
     innerButton.addEventListener('customEvent', () => {
       expect(getCurrentEventPriority()).toEqual(DiscreteEventPriority);
       done();
@@ -58,7 +57,6 @@ describe('monkeyPatchDispatchEvent', () => {
     const outerButton = document.createElement('button');
     const innerButton = document.createElement('button');
     const innerButton2 = document.createElement('button');
-    const event = new Event('click');
     innerButton.addEventListener('customEvent', () => {
       innerButton2.dispatchEvent(new Event('customEvent'));
     });
@@ -76,7 +74,6 @@ describe('monkeyPatchDispatchEvent', () => {
   it('patches dispatchEvent and does not change priority of an inner click event', done => {
     const outerButton = document.createElement('button');
     const innerButton = document.createElement('button');
-    const event = new Event('click');
     innerButton.addEventListener('click', () => {
       expect(getCurrentEventPriority()).toEqual(DiscreteEventPriority);
       done();
