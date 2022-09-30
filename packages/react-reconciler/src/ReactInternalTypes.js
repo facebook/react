@@ -19,13 +19,17 @@ import type {
   Wakeable,
   Usable,
 } from 'shared/ReactTypes';
-import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
 import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
-import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
+import type {
+  Container,
+  TimeoutHandle,
+  NoTimeout,
+  SuspenseInstance,
+} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
 // Doing this because there's a merge conflict because of the way sync-reconciler-fork
 // is implemented
@@ -210,7 +214,7 @@ type BaseFiberRootProperties = {
   tag: RootTag,
 
   // Any additional information from the host associated with this root.
-  containerInfo: any,
+  containerInfo: Container,
   // Used only by persistent updates.
   pendingChildren: any,
   // The currently active root fiber. This is the mutable root of the tree.
