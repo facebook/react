@@ -2434,7 +2434,9 @@ function getRetryCache(finishedWork) {
 export function detachOffscreenInstance(instance: OffscreenInstance): void {
   const currentOffscreenFiber = instance._current;
   if (currentOffscreenFiber === null) {
-    throw new Error('TODO: error message');
+    throw new Error(
+      'Calling Offscreen.detach before instance handle has been set.',
+    );
   }
 
   const executionContext = getExecutionContext();
