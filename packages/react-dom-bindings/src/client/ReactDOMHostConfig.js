@@ -782,8 +782,7 @@ function getNextHydratable(node) {
           continue;
         }
         break;
-      }
-      if (nodeType === TEXT_NODE) {
+      } else if (nodeType === TEXT_NODE) {
         break;
       }
     } else {

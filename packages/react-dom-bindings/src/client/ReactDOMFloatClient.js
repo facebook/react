@@ -296,7 +296,7 @@ type PreloadQualifyingProps = {
   [string]: mixed,
 };
 
-// This function is called in complete work and we should always have a currentDocument set
+// This function is called in begin work and we should always have a currentDocument set
 export function getResource(
   type: string,
   pendingProps: Props,
