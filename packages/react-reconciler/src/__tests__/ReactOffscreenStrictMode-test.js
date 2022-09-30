@@ -55,7 +55,7 @@ describe('ReactOffscreenStrictMode', () => {
     ]);
   });
 
-  // @gate __DEV__ && enableStrictEffects && enableOffscreen
+  // @gate __DEV__ && enableStrictEffects && enableOffscreen && useModernStrictMode
   it('should not trigger strict effects when offscreen is hidden', () => {
     act(() => {
       ReactNoop.render(
