@@ -978,142 +978,142 @@ if (__EXPERIMENTAL__) {
   tests.valid = [
     ...tests.valid,
     `
-    // Valid because functions created with useEvent can be called in a useEffect.
-    function MyComponent({ theme }) {
-      const onClick = useEvent(() => {
-        showNotification(theme);
-      });
-      useEffect(() => {
-        onClick();
-      });
-    }
-  `,
+      // Valid because functions created with useEvent can be called in a useEffect.
+      function MyComponent({ theme }) {
+        const onClick = useEvent(() => {
+          showNotification(theme);
+        });
+        useEffect(() => {
+          onClick();
+        });
+      }
+    `,
     `
-    // Valid because functions created with useEvent can be called in closures.
-    function MyComponent({ theme }) {
-      const onClick = useEvent(() => {
-        showNotification(theme);
-      });
-      return <Child onClick={() => onClick()}></Child>;
-    }
-  `,
+      // Valid because functions created with useEvent can be called in closures.
+      function MyComponent({ theme }) {
+        const onClick = useEvent(() => {
+          showNotification(theme);
+        });
+        return <Child onClick={() => onClick()}></Child>;
+      }
+    `,
     `
-    // Valid because functions created with useEvent can be called in closures.
-    function MyComponent({ theme }) {
-      const onClick = useEvent(() => {
-        showNotification(theme);
-      });
-      const onClick2 = () => { onClick() };
-      const onClick3 = useCallback(() => onClick(), []);
-      return <>
-        <Child onClick={onClick2}></Child>
-        <Child onClick={onClick3}></Child>
-      </>;
-    }
-  `,
+      // Valid because functions created with useEvent can be called in closures.
+      function MyComponent({ theme }) {
+        const onClick = useEvent(() => {
+          showNotification(theme);
+        });
+        const onClick2 = () => { onClick() };
+        const onClick3 = useCallback(() => onClick(), []);
+        return <>
+          <Child onClick={onClick2}></Child>
+          <Child onClick={onClick3}></Child>
+        </>;
+      }
+    `,
     `
-    // Valid because functions created with useEvent can be passed by reference in useEffect
-    // and useEvent.
-    function MyComponent({ theme }) {
-      const onClick = useEvent(() => {
-        showNotification(theme);
-      });
-      const onClick2 = useEvent(() => {
-        debounce(onClick);
-      });
-      useEffect(() => {
-        let id = setInterval(onClick, 100);
-        return () => clearInterval(onClick);
-      }, []);
-      return <Child onClick={() => onClick2()} />
-    }
-  `,
+      // Valid because functions created with useEvent can be passed by reference in useEffect
+      // and useEvent.
+      function MyComponent({ theme }) {
+        const onClick = useEvent(() => {
+          showNotification(theme);
+        });
+        const onClick2 = useEvent(() => {
+          debounce(onClick);
+        });
+        useEffect(() => {
+          let id = setInterval(onClick, 100);
+          return () => clearInterval(onClick);
+        }, []);
+        return <Child onClick={() => onClick2()} />
+      }
+    `,
     `
-    const MyComponent = ({theme}) => {
-      const onClick = useEvent(() => {
-        showNotification(theme);
-      });
-      return <Child onClick={() => onClick()}></Child>;
-    };
-  `,
+      const MyComponent = ({theme}) => {
+        const onClick = useEvent(() => {
+          showNotification(theme);
+        });
+        return <Child onClick={() => onClick()}></Child>;
+      };
+    `,
     `
-    function MyComponent({ theme }) {
-      const notificationService = useNotifications();
-      const showNotification = useEvent((text) => {
-        notificationService.notify(theme, text);
-      });
-      const onClick = useEvent((text) => {
-        showNotification(text);
-      });
-      return <Child onClick={(text) => onClick(text)} />
-    }
-  `,
+      function MyComponent({ theme }) {
+        const notificationService = useNotifications();
+        const showNotification = useEvent((text) => {
+          notificationService.notify(theme, text);
+        });
+        const onClick = useEvent((text) => {
+          showNotification(text);
+        });
+        return <Child onClick={(text) => onClick(text)} />
+      }
+    `,
     `
-    function MyComponent({ theme }) {
-      useEffect(() => {
-        onClick();
-      });
-      const onClick = useEvent(() => {
-        showNotification(theme);
-      });
-    }
-  `,
+      function MyComponent({ theme }) {
+        useEffect(() => {
+          onClick();
+        });
+        const onClick = useEvent(() => {
+          showNotification(theme);
+        });
+      }
+    `,
   ];
   tests.invalid = [
     ...tests.invalid,
     {
       code: `
-      function MyComponent({ theme }) {
-        const onClick = useEvent(() => {
-          showNotification(theme);
-        });
-        return <Child onClick={onClick}></Child>;
-      }
-    `,
+        function MyComponent({ theme }) {
+          const onClick = useEvent(() => {
+            showNotification(theme);
+          });
+          return <Child onClick={onClick}></Child>;
+        }
+      `,
       errors: [useEventError('onClick')],
     },
     {
       code: `
-      // This should error even though it shares an identifier name with the below
-      function MyComponent({theme}) {
-        const onClick = useEvent(() => {
-          showNotification(theme)
-        });
-        return <Child onClick={onClick} />
-      }
+        // This should error even though it shares an identifier name with the below
+        function MyComponent({theme}) {
+          const onClick = useEvent(() => {
+            showNotification(theme)
+          });
+          return <Child onClick={onClick} />
+        }
 
-      // The useEvent function shares an identifier name with the above
-      function MyOtherComponent({theme}) {
-        const onClick = useEvent(() => {
-          showNotification(theme)
-        });
-        return <Child onClick={() => onClick()} />
-      }
-    `,
+        // The useEvent function shares an identifier name with the above
+        function MyOtherComponent({theme}) {
+          const onClick = useEvent(() => {
+            showNotification(theme)
+          });
+          return <Child onClick={() => onClick()} />
+        }
+      `,
       errors: [{...useEventError('onClick'), line: 7}],
     },
     {
       code: `
-      const MyComponent = ({ theme }) => {
-        const onClick = useEvent(() => {
-          showNotification(theme);
-        });
-        return <Child onClick={onClick}></Child>;
-      }
-    `,
+        const MyComponent = ({ theme }) => {
+          const onClick = useEvent(() => {
+            showNotification(theme);
+          });
+          return <Child onClick={onClick}></Child>;
+        }
+      `,
       errors: [useEventError('onClick')],
     },
     {
       code: `
-      // Invalid because onClick is being aliased to foo but not invoked
-      function MyComponent({ theme }) {
-        const onClick = useEvent(() => {
-          showNotification(theme);
-        });
-        let foo = onClick;
-        return <Bar onClick={foo} />
-      }
-    `,
+        // Invalid because onClick is being aliased to foo but not invoked
+        function MyComponent({ theme }) {
+          const onClick = useEvent(() => {
+            showNotification(theme);
+          });
+          let foo = onClick;
+          return <Bar onClick={foo} />
+        }
+      `,
       errors: [{...useEventError('onClick'), line: 7}],
     },
     {
