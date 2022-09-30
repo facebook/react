@@ -46,6 +46,7 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoResources';
 
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
@@ -319,5 +320,13 @@ export function logRecoverableError(error: mixed): void {
 }
 
 export function requestPostPaintCallback(callback: (time: number) => void) {
+  // noop
+}
+
+export function prepareRendererToRender(container: Container): void {
+  // noop
+}
+
+export function resetRendererAfterRender(): void {
   // noop
 }

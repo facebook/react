@@ -243,6 +243,7 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoResources';
 
 export function appendInitialChild(parentInstance, child) {
   if (typeof child === 'string') {
@@ -453,5 +454,13 @@ export function detachDeletedInstance(node: Instance): void {
 }
 
 export function requestPostPaintCallback(callback: (time: number) => void) {
+  // noop
+}
+
+export function prepareRendererToRender(container: Container): void {
+  // noop
+}
+
+export function resetRendererAfterRender(): void {
   // noop
 }

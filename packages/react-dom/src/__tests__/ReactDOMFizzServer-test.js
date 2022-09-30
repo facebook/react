@@ -329,6 +329,7 @@ describe('ReactDOMFizzServer', () => {
       );
       pipe(writable);
     });
+
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <div>Loading...</div>
@@ -4319,70 +4320,60 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate enableFloat
-  it('emits html and head start tags (the preamble) before other content if rendered in the shell', async () => {
+  it('can emit the preamble even if the head renders asynchronously', async () => {
+    function AsyncNoOutput() {
+      readText('nooutput');
+      return null;
+    }
+    function AsyncHead() {
+      readText('head');
+      return (
+        <head data-foo="foo">
+          <title>a title</title>
+        </head>
+      );
+    }
+    function AsyncBody() {
+      readText('body');
+      return (
+        <body data-bar="bar">
+          <link rel="preload" as="style" href="foo" />
+          hello
+        </body>
+      );
+    }
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-        <>
-          <title data-baz="baz">a title</title>
-          <html data-foo="foo">
-            <head data-bar="bar" />
-            <body>a body</body>
-          </html>
-        </>,
+        <html data-html="html">
+          <AsyncNoOutput />
+          <AsyncHead />
+          <AsyncBody />
+        </html>,
       );
       pipe(writable);
     });
+    await actIntoEmptyDocument(() => {
+      resolveText('body');
+    });
+    await actIntoEmptyDocument(() => {
+      resolveText('nooutput');
+    });
+    // We need to use actIntoEmptyDocument because act assumes that buffered
+    // content should be fake streamed into the body which is normally true
+    // but in this test the entire shell was delayed and we need the initial
+    // construction to be done to get the parsing right
+    await actIntoEmptyDocument(() => {
+      resolveText('head');
+    });
     expect(getVisibleChildren(document)).toEqual(
-      <html data-foo="foo">
-        <head data-bar="bar">
-          <title data-baz="baz">a title</title>
+      <html data-html="html">
+        <head data-foo="foo">
+          <link rel="preload" as="style" href="foo" />
+          <title>a title</title>
         </head>
-        <body>a body</body>
+        <body data-bar="bar">hello</body>
       </html>,
     );
-
-    // Hydrate the same thing on the client. We expect this to still fail because <title> is not a Resource
-    // and is unmatched on hydration
-    const errors = [];
-    ReactDOMClient.hydrateRoot(
-      document,
-      <>
-        <title data-baz="baz">a title</title>
-        <html data-foo="foo">
-          <head data-bar="bar" />
-          <body>a body</body>
-        </html>
-      </>,
-      {
-        onRecoverableError: (err, errInfo) => {
-          errors.push(err.message);
-        },
-      },
-    );
-    expect(() => {
-      try {
-        expect(() => {
-          expect(Scheduler).toFlushWithoutYielding();
-        }).toThrow('Invalid insertion of HTML node in #document node.');
-      } catch (e) {
-        console.log('e', e);
-      }
-    }).toErrorDev(
-      [
-        'Warning: Expected server HTML to contain a matching <title> in <#document>.',
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-        'Warning: validateDOMNesting(...): <title> cannot appear as a child of <#document>',
-      ],
-      {withoutStack: 1},
-    );
-    expect(errors).toEqual([
-      'Hydration failed because the initial UI does not match what was rendered on the server.',
-      'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-    ]);
-    expect(getVisibleChildren(document)).toEqual();
-    expect(() => {
-      expect(Scheduler).toFlushWithoutYielding();
-    }).toThrow('The node to be removed is not a child of this node.');
   });
 
   // @gate enableFloat
@@ -4429,267 +4420,6 @@ describe('ReactDOMFizzServer', () => {
     );
 
     expect(chunks.pop()).toEqual('</body></html>');
-  });
-
-  // @gate enableFloat
-  it('recognizes stylesheet links as attributes during hydration', async () => {
-    await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-        <>
-          <link rel="stylesheet" href="foo" precedence="default" />
-          <html>
-            <head>
-              <link rel="author" precedence="this is a nonsense prop" />
-            </head>
-            <body>a body</body>
-          </html>
-        </>,
-      );
-      pipe(writable);
-    });
-    // precedence for stylesheets is mapped to a valid data attribute that is recognized on the client
-    // as opting this node into resource semantics. the use of precedence on the author link is just a
-    // non standard attribute which React allows but is not given any special treatment.
-    expect(getVisibleChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-rprec="default" />
-          <link rel="author" precedence="this is a nonsense prop" />
-        </head>
-        <body>a body</body>
-      </html>,
-    );
-
-    // It hydrates successfully
-    const root = ReactDOMClient.hydrateRoot(
-      document,
-      <>
-        <link rel="stylesheet" href="foo" precedence="default" />
-        <html>
-          <head>
-            <link rel="author" precedence="this is a nonsense prop" />
-          </head>
-          <body>a body</body>
-        </html>
-      </>,
-    );
-    // We manually capture uncaught errors b/c Jest does not play well with errors thrown in
-    // microtasks after the test completes even when it is expecting to fail (e.g. when the gate is false)
-    // We need to flush the scheduler at the end even if there was an earlier throw otherwise this test will
-    // fail even when failure is expected. This is primarily caused by invokeGuardedCallback replaying commit
-    // phase errors which get rethrown in a microtask
-    const uncaughtErrors = [];
-    try {
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildren(document)).toEqual(
-        <html>
-          <head>
-            <link rel="stylesheet" href="foo" data-rprec="default" />
-            <link rel="author" precedence="this is a nonsense prop" />
-          </head>
-          <body>a body</body>
-        </html>,
-      );
-    } catch (e) {
-      uncaughtErrors.push(e);
-    }
-    try {
-      expect(Scheduler).toFlushWithoutYielding();
-    } catch (e) {
-      uncaughtErrors.push(e);
-    }
-
-    root.render(
-      <>
-        <link rel="stylesheet" href="foo" precedence="default" data-bar="bar" />
-        <html>
-          <head />
-          <body>a body</body>
-        </html>
-      </>,
-    );
-    try {
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildren(document)).toEqual(
-        <html>
-          <head>
-            <link
-              rel="stylesheet"
-              href="foo"
-              data-rprec="default"
-              data-bar="bar"
-            />
-          </head>
-          <body>a body</body>
-        </html>,
-      );
-    } catch (e) {
-      uncaughtErrors.push(e);
-    }
-    try {
-      expect(Scheduler).toFlushWithoutYielding();
-    } catch (e) {
-      uncaughtErrors.push(e);
-    }
-
-    if (uncaughtErrors.length > 0) {
-      throw uncaughtErrors[0];
-    }
-  });
-
-  // Temporarily this test is expected to fail everywhere. When we have resource hoisting
-  // it should start to pass and we can adjust the gate accordingly
-  // @gate false && enableFloat
-  it('should insert missing resources during hydration', async () => {
-    await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-        <html>
-          <body>foo</body>
-        </html>,
-      );
-      pipe(writable);
-    });
-
-    const uncaughtErrors = [];
-    ReactDOMClient.hydrateRoot(
-      document,
-      <>
-        <link rel="stylesheet" href="foo" precedence="foo" />
-        <html>
-          <head />
-          <body>foo</body>
-        </html>
-      </>,
-    );
-    try {
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildren(document)).toEqual(
-        <html>
-          <head>
-            <link rel="stylesheet" href="foo" precedence="foo" />
-          </head>
-          <body>foo</body>
-        </html>,
-      );
-    } catch (e) {
-      uncaughtErrors.push(e);
-    }
-
-    // need to flush again to get the invoke guarded callback error to throw in microtask
-    try {
-      expect(Scheduler).toFlushWithoutYielding();
-    } catch (e) {
-      uncaughtErrors.push(e);
-    }
-
-    if (uncaughtErrors.length) {
-      throw uncaughtErrors[0];
-    }
-  });
-
-  // @gate experimental && enableFloat
-  it('fail hydration if a suitable resource cannot be found in the DOM for a given location (href)', async () => {
-    gate(flags => {
-      if (!(__EXPERIMENTAL__ && flags.enableFloat)) {
-        throw new Error('bailing out of test');
-      }
-    });
-    await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-        <html>
-          <head />
-          <body>a body</body>
-        </html>,
-      );
-      pipe(writable);
-    });
-
-    const errors = [];
-    ReactDOMClient.hydrateRoot(
-      document,
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" precedence="low" />
-        </head>
-        <body>a body</body>
-      </html>,
-      {
-        onRecoverableError(err, errInfo) {
-          errors.push(err.message);
-        },
-      },
-    );
-    expect(() => {
-      expect(Scheduler).toFlushWithoutYielding();
-    }).toErrorDev(
-      [
-        'Warning: A matching Hydratable Resource was not found in the DOM for <link rel="stylesheet" href="foo">',
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-      ],
-      {withoutStack: 1},
-    );
-    expect(errors).toEqual([
-      'Hydration failed because the initial UI does not match what was rendered on the server.',
-      'Hydration failed because the initial UI does not match what was rendered on the server.',
-      'There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
-    ]);
-  });
-
-  // @gate experimental && enableFloat
-  it('should error in dev when rendering more than one resource for a given location (href)', async () => {
-    gate(flags => {
-      if (!(__EXPERIMENTAL__ && flags.enableFloat)) {
-        throw new Error('bailing out of test');
-      }
-    });
-    await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-        <>
-          <link rel="stylesheet" href="foo" precedence="low" />
-          <link rel="stylesheet" href="foo" precedence="high" />
-          <html>
-            <head />
-            <body>a body</body>
-          </html>
-        </>,
-      );
-      pipe(writable);
-    });
-    expect(getVisibleChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-rprec="low" />
-          <link rel="stylesheet" href="foo" data-rprec="high" />
-        </head>
-        <body>a body</body>
-      </html>,
-    );
-
-    const errors = [];
-    ReactDOMClient.hydrateRoot(
-      document,
-      <>
-        <html>
-          <head>
-            <link rel="stylesheet" href="foo" precedence="low" />
-            <link rel="stylesheet" href="foo" precedence="high" />
-          </head>
-          <body>a body</body>
-        </html>
-      </>,
-      {
-        onRecoverableError(err, errInfo) {
-          errors.push(err.message);
-        },
-      },
-    );
-    expect(() => {
-      expect(Scheduler).toFlushWithoutYielding();
-    }).toErrorDev([
-      'Warning: Stylesheet resources need a unique representation in the DOM while hydrating and more than one matching DOM Node was found. To fix, ensure you are only rendering one stylesheet link with an href attribute of "foo"',
-      'Warning: Stylesheet resources need a unique representation in the DOM while hydrating and more than one matching DOM Node was found. To fix, ensure you are only rendering one stylesheet link with an href attribute of "foo"',
-    ]);
-    expect(errors).toEqual([]);
   });
 
   describe('text separators', () => {

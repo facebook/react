@@ -40,6 +40,7 @@ import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old
 import {
   enableCPUSuspense,
   enableUseMutableSource,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 
 import checkPropTypes from 'shared/checkPropTypes';
@@ -54,6 +55,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
+  HostResource,
   HostText,
   HostPortal,
   ForwardRef,
@@ -161,7 +163,9 @@ import {
   getSuspenseInstanceFallbackErrorDetails,
   registerSuspenseInstanceRetry,
   supportsHydration,
+  supportsResources,
   isPrimaryRenderer,
+  getResource,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
@@ -1577,6 +1581,24 @@ function updateHostComponent(
 
   markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
+
+function updateHostResource(current, workInProgress, renderLanes) {
+  pushHostContext(workInProgress);
+  markRef(current, workInProgress);
+  const currentProps = current === null ? null : current.memoizedProps;
+  workInProgress.memoizedState = getResource(
+    workInProgress.type,
+    workInProgress.pendingProps,
+    currentProps,
+  );
+  reconcileChildren(
+    current,
+    workInProgress,
+    workInProgress.pendingProps.children,
+    renderLanes,
+  );
   return workInProgress.child;
 }
 
@@ -3651,6 +3673,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       }
       resetHydrationState();
       break;
+    case HostResource:
     case HostComponent:
       pushHostContext(workInProgress);
       break;
@@ -3985,6 +4008,11 @@ function beginWork(
     }
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderLanes);
+    case HostResource:
+      if (enableFloat && supportsResources) {
+        return updateHostResource(current, workInProgress, renderLanes);
+      }
+    // eslint-disable-next-line no-fallthrough
     case HostComponent:
       return updateHostComponent(current, workInProgress, renderLanes);
     case HostText:

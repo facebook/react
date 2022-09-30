@@ -27,6 +27,7 @@ import {
   FunctionComponent,
   ClassComponent,
   HostComponent,
+  HostResource,
   HostPortal,
   HostText,
   HostRoot,
@@ -196,6 +197,7 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
+    case HostResource:
     case HostComponent: {
       return {
         nodeType: 'host',
@@ -302,7 +304,7 @@ class ReactTestInstance {
   }
 
   get instance() {
-    if (this._fiber.tag === HostComponent) {
+    if (this._fiber.tag === HostComponent || this._fiber.tag === HostResource) {
       return getPublicInstance(this._fiber.stateNode);
     } else {
       return this._fiber.stateNode;

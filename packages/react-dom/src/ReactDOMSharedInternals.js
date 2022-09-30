@@ -7,29 +7,20 @@
  * @flow
  */
 
-import {batchedUpdates} from 'react-reconciler/src/ReactFiberReconciler';
-import {
-  enqueueStateRestore,
-  restoreStateIfNeeded,
-} from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
-import {
-  getInstanceFromNode,
-  getNodeFromInstance,
-  getFiberCurrentPropsFromNode,
-} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
-
-const Internals = {
-  usingClientEntryPoint: false,
-  // Keep in sync with ReactTestUtils.js.
-  // This is an array for better minification.
-  Events: [
-    getInstanceFromNode,
-    getNodeFromInstance,
-    getFiberCurrentPropsFromNode,
-    enqueueStateRestore,
-    restoreStateIfNeeded,
-    batchedUpdates,
-  ],
+type InternalsType = {
+  usingClientEntryPoint: boolean,
+  Events: [any, any, any, any, any, any],
+  Dispatcher: {
+    current: mixed,
+  },
 };
+
+const Internals: InternalsType = ({
+  usingClientEntryPoint: false,
+  Events: null,
+  Dispatcher: {
+    current: null,
+  },
+}: any);
 
 export default Internals;
