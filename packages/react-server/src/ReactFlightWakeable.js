@@ -7,8 +7,8 @@
  * @flow
  */
 
-// Corresponds to ReactFiberWakeable and ReactFizzWakeable modules. Generally,
-// changes to one module should be reflected in the others.
+// Corresponds to ReactFiberWakeable module. Generally, changes to one module
+// should be reflected in the other.
 
 // TODO: Rename this module and the corresponding Fiber one to "Thenable"
 // instead of "Wakeable". Or some other more appropriate name.

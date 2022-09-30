@@ -39,10 +39,8 @@ export function prepareToUseHooksForComponent(
   thenableState = prevThenableState;
 }
 
-export function getThenableStateAfterSuspending(): null | ThenableState {
-  const state = thenableState;
-  thenableState = null;
-  return state;
+export function getThenableStateAfterSuspending() {
+  return thenableState;
 }
 
 function readContext<T>(context: ReactServerContext<T>): T {
@@ -204,9 +202,8 @@ function use<T>(usable: Usable<T>): T {
           }
         }
       }
-    } else if (usable.$$typeof === REACT_SERVER_CONTEXT_TYPE) {
-      const context: ReactServerContext<T> = (usable: any);
-      return readContext(context);
+    } else {
+      // TODO: Add support for Context
     }
   }
 
