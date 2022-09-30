@@ -57,7 +57,7 @@ if (__DEV__) {
   Object.freeze(UPDATE_SIGNAL);
 }
 
-export function getPublicInstance(inst: Instance | TextInstance): * {
+export function getPublicInstance(inst: Instance | TextInstance): $FlowFixMe {
   switch (inst.tag) {
     case 'INSTANCE':
       const createNodeMock = inst.rootContainerInstance.createNodeMock;
@@ -283,7 +283,7 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function getInstanceFromNode(mockNode: Object) {
+export function getInstanceFromNode(mockNode: Object): Object | null {
   const instance = nodeToInstanceMap.get(mockNode);
   if (instance !== undefined) {
     return instance.internalInstanceHandle;

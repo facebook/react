@@ -492,7 +492,7 @@ export function unhideTextInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function getInstanceFromNode(node: any) {
+export function getInstanceFromNode(node: any): empty {
   throw new Error('Not yet implemented.');
 }
 

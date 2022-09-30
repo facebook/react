@@ -8,7 +8,7 @@
  */
 
 import type {AnyNativeEvent} from '../events/PluginModuleType';
-import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
 import {enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay} from 'shared/ReactFeatureFlags';
@@ -58,15 +58,15 @@ import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
 // TODO: can we stop exporting these?
-export let _enabled = true;
+export let _enabled: boolean = true;
 
 // This is exported in FB builds for use by legacy FB layer infra.
 // We'd like to remove this but it's not clear if this is safe.
-export function setEnabled(enabled: ?boolean) {
+export function setEnabled(enabled: ?boolean): void {
   _enabled = !!enabled;
 }
 
-export function isEnabled() {
+export function isEnabled(): boolean {
   return _enabled;
 }
 
@@ -348,7 +348,7 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
   );
 }
 
-export let return_targetInst = null;
+export let return_targetInst: null | Fiber = null;
 
 // Returns a SuspenseInstance or Container if it's blocked.
 // The return_targetInst field above is conceptually part of the return value.
