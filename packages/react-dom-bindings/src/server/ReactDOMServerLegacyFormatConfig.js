@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {FormatContext} from './ReactDOMServerFormatConfig';
+import type {
+  FormatContext,
+  InstructionWriter,
+} from './ReactDOMServerFormatConfig';
 
 import {
   createResponseState as createResponseStateImpl,
@@ -31,15 +34,13 @@ export const isPrimaryRenderer = false;
 export type ResponseState = {
   // Keep this in sync with ReactDOMServerFormatConfig
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
-  startInlineScript: PrecomputedChunk,
-  placeholderPrefix: PrecomputedChunk,
-  segmentPrefix: PrecomputedChunk,
+  placeholderPrefix: string,
+  segmentPrefix: string,
   boundaryPrefix: string,
   idPrefix: string,
   nextSuspenseID: number,
-  sentCompleteSegmentFunction: boolean,
-  sentCompleteBoundaryFunction: boolean,
-  sentClientRenderFunction: boolean,
+  instructionWriter: InstructionWriter,
+  instructionWriterState: mixed,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
 };
@@ -52,15 +53,13 @@ export function createResponseState(
   return {
     // Keep this in sync with ReactDOMServerFormatConfig
     bootstrapChunks: responseState.bootstrapChunks,
-    startInlineScript: responseState.startInlineScript,
     placeholderPrefix: responseState.placeholderPrefix,
     segmentPrefix: responseState.segmentPrefix,
     boundaryPrefix: responseState.boundaryPrefix,
     idPrefix: responseState.idPrefix,
     nextSuspenseID: responseState.nextSuspenseID,
-    sentCompleteSegmentFunction: responseState.sentCompleteSegmentFunction,
-    sentCompleteBoundaryFunction: responseState.sentCompleteBoundaryFunction,
-    sentClientRenderFunction: responseState.sentClientRenderFunction,
+    instructionWriter: responseState.instructionWriter,
+    instructionWriterState: responseState.instructionWriterState,
     // This is an extra field for the legacy renderer
     generateStaticMarkup,
   };

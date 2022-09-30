@@ -62,18 +62,68 @@ import isArray from 'shared/isArray';
 // E.g. this can be used to distinguish legacy renderers from this modern one.
 export const isPrimaryRenderer = true;
 
+// Shape of argument objects for each instruction writer.
+//  Note that the formatted chunk arguments do not include
+//  enclosing '"'s
+export type CompletedSegmentInstructionWriterArgs = {
+  write: (Chunk | PrecomputedChunk) => boolean,
+  responseState: ResponseState,
+  containerID: Chunk,
+  placeholderID: Chunk,
+};
+export type CompletedBoundaryInstructionWriterArgs = {
+  write: (Chunk | PrecomputedChunk) => boolean,
+  responseState: ResponseState,
+  boundaryID: null | PrecomputedChunk,
+  contentSegmentID: Chunk,
+};
+export type ClientRenderBoundaryInstructionWriterArgs = {
+  write(Chunk | PrecomputedChunk): boolean,
+  responseState: ResponseState,
+  boundaryID: SuspenseBoundaryID,
+  errorDigest: Chunk | null,
+  errorMessage: Chunk | null,
+  errorComponentStack: Chunk | null,
+};
+export type InstructionWriter = {
+  writeCompletedSegmentInstruction(
+    args: CompletedSegmentInstructionWriterArgs,
+  ): boolean,
+
+  writeCompletedBoundaryInstruction(
+    args: CompletedBoundaryInstructionWriterArgs,
+  ): boolean,
+
+  writeClientRenderBoundaryInstruction(
+    args: ClientRenderBoundaryInstructionWriterArgs,
+  ): boolean,
+};
+
+const defaultInstructionWriter: InstructionWriter = {
+  writeCompletedSegmentInstruction: defaultWriteCompletedSegmentInstruction,
+  writeCompletedBoundaryInstruction: defaultWriteCompletedBoundaryInstruction,
+  writeClientRenderBoundaryInstruction: defaultWriteClientRenderBoundaryInstruction,
+};
+
+// State for default instruction writer, which streams executable scripts
+type DefaultInstructionWriterState = {
+  startInlineScript: PrecomputedChunk,
+  sentCompleteSegmentFunction: boolean,
+  sentCompleteBoundaryFunction: boolean,
+  sentClientRenderFunction: boolean,
+};
+
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
-  startInlineScript: PrecomputedChunk,
-  placeholderPrefix: PrecomputedChunk,
-  segmentPrefix: PrecomputedChunk,
+  placeholderPrefix: string,
+  segmentPrefix: string,
   boundaryPrefix: string,
   idPrefix: string,
   nextSuspenseID: number,
-  sentCompleteSegmentFunction: boolean,
-  sentCompleteBoundaryFunction: boolean,
-  sentClientRenderFunction: boolean, // We allow the legacy renderer to extend this object.
+  instructionWriter: InstructionWriter,
+  instructionWriterState: mixed,
+  // We allow the legacy renderer to extend this object.
   ...
 };
 
@@ -117,6 +167,7 @@ export function createResponseState(
   bootstrapScripts: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
   bootstrapModules: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
 ): ResponseState {
+  // TODO (mofeiZ): add custom InstructionWriter (and writer state) to params list
   const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
   const inlineScriptWithNonce =
     nonce === undefined
@@ -172,17 +223,21 @@ export function createResponseState(
       bootstrapChunks.push(endAsyncScript);
     }
   }
-  return {
-    bootstrapChunks: bootstrapChunks,
+  const instructionWriterState: DefaultInstructionWriterState = {
     startInlineScript: inlineScriptWithNonce,
-    placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
-    segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
-    boundaryPrefix: idPrefix + 'B:',
-    idPrefix: idPrefix,
-    nextSuspenseID: 0,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
+  };
+  return {
+    bootstrapChunks: bootstrapChunks,
+    placeholderPrefix: idPrefix + 'P:',
+    segmentPrefix: idPrefix + 'S:',
+    boundaryPrefix: idPrefix + 'B:',
+    idPrefix: idPrefix,
+    nextSuspenseID: 0,
+    instructionWriter: defaultInstructionWriter,
+    instructionWriterState,
   };
 }
 
@@ -1699,7 +1754,7 @@ export function writePlaceholder(
   id: number,
 ): boolean {
   writeChunk(destination, placeholder1);
-  writeChunk(destination, responseState.placeholderPrefix);
+  writeChunk(destination, stringToChunk(responseState.placeholderPrefix));
   const formattedID = stringToChunk(id.toString(16));
   writeChunk(destination, formattedID);
   return writeChunkAndReturn(destination, placeholder2);
@@ -1881,29 +1936,30 @@ export function writeStartSegment(
   formatContext: FormatContext,
   id: number,
 ): boolean {
+  const segmentPrefix = stringToPrecomputedChunk(responseState.segmentPrefix);
   switch (formatContext.insertionMode) {
     case ROOT_HTML_MODE:
     case HTML_MODE: {
       writeChunk(destination, startSegmentHTML);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentHTML2);
     }
     case SVG_MODE: {
       writeChunk(destination, startSegmentSVG);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentSVG2);
     }
     case MATHML_MODE: {
       writeChunk(destination, startSegmentMathML);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentMathML2);
     }
     case HTML_TABLE_MODE: {
       writeChunk(destination, startSegmentTable);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentTable2);
     }
@@ -1913,19 +1969,19 @@ export function writeStartSegment(
     // and it's kind of an edge case to suspend in a table. Totally supported though.
     case HTML_TABLE_BODY_MODE: {
       writeChunk(destination, startSegmentTableBody);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentTableBody2);
     }
     case HTML_TABLE_ROW_MODE: {
       writeChunk(destination, startSegmentTableRow);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentTableRow2);
     }
     case HTML_COLGROUP_MODE: {
       writeChunk(destination, startSegmentColGroup);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentColGroup2);
     }
@@ -1964,6 +2020,72 @@ export function writeEndSegment(
     default: {
       throw new Error('Unknown insertion mode. This is a bug in React.');
     }
+  }
+}
+
+export function writeCompletedSegmentInstruction(
+  destination: Destination,
+  responseState: ResponseState,
+  contentSegmentID: number,
+): boolean {
+  const containerID = stringToChunk(
+    responseState.segmentPrefix + contentSegmentID.toString(16),
+  );
+  const placeholderID = stringToChunk(
+    responseState.placeholderPrefix + contentSegmentID.toString(16),
+  );
+  return responseState.instructionWriter.writeCompletedSegmentInstruction({
+    write: chunk => writeChunkAndReturn(destination, chunk),
+    responseState,
+    containerID,
+    placeholderID,
+  });
+}
+
+export function writeCompletedBoundaryInstruction(
+  destination: Destination,
+  responseState: ResponseState,
+  boundaryID: SuspenseBoundaryID,
+  contentSegmentID: number,
+): boolean {
+  return responseState.instructionWriter.writeCompletedBoundaryInstruction({
+    write: chunk => writeChunkAndReturn(destination, chunk),
+    responseState,
+    boundaryID,
+    contentSegmentID: stringToChunk(
+      responseState.segmentPrefix + contentSegmentID.toString(16),
+    ),
+  });
+}
+
+export function writeClientRenderBoundaryInstruction(
+  destination: Destination,
+  responseState: ResponseState,
+  boundaryID: SuspenseBoundaryID,
+  errorDigest: ?string,
+  errorMessage?: string,
+  errorComponentStack?: string,
+): boolean {
+  return responseState.instructionWriter.writeClientRenderBoundaryInstruction({
+    write: chunk => writeChunkAndReturn(destination, chunk),
+    responseState,
+    boundaryID,
+    errorDigest:
+      errorDigest != null ? stringToFormattedChunk(errorDigest) : null,
+    errorMessage:
+      errorMessage != null ? stringToFormattedChunk(errorMessage) : null,
+    errorComponentStack:
+      errorComponentStack != null
+        ? stringToFormattedChunk(errorComponentStack)
+        : null,
+  });
+
+  // Hack for now - we should be consistent about whether InstructionWriter arguments
+  // contain surrounding '"'s.
+  function stringToFormattedChunk(s: string) {
+    const escaped = escapeJSStringsForInstructionScripts(s);
+    // remove the surrounding '"'s
+    return stringToChunk(escaped.slice(1, -1));
   }
 }
 
@@ -2091,27 +2213,29 @@ const completeSegmentScript1Partial = stringToPrecomputedChunk('$RS("');
 const completeSegmentScript2 = stringToPrecomputedChunk('","');
 const completeSegmentScript3 = stringToPrecomputedChunk('")</script>');
 
-export function writeCompletedSegmentInstruction(
-  destination: Destination,
-  responseState: ResponseState,
-  contentSegmentID: number,
-): boolean {
-  writeChunk(destination, responseState.startInlineScript);
-  if (!responseState.sentCompleteSegmentFunction) {
+function defaultWriteCompletedSegmentInstruction({
+  write,
+  responseState,
+  containerID,
+  placeholderID,
+}: CompletedSegmentInstructionWriterArgs): boolean {
+  const writerState: DefaultInstructionWriterState =
+    // $FlowFixMe[incompatible-type]
+    responseState.instructionWriterState;
+  write(writerState.startInlineScript);
+  if (!writerState.sentCompleteSegmentFunction) {
     // The first time we write this, we'll need to include the full implementation.
-    responseState.sentCompleteSegmentFunction = true;
-    writeChunk(destination, completeSegmentScript1Full);
+    writerState.sentCompleteSegmentFunction = true;
+    write(completeSegmentScript1Full);
   } else {
     // Future calls can just reuse the same function.
-    writeChunk(destination, completeSegmentScript1Partial);
+    write(completeSegmentScript1Partial);
   }
-  writeChunk(destination, responseState.segmentPrefix);
-  const formattedID = stringToChunk(contentSegmentID.toString(16));
-  writeChunk(destination, formattedID);
-  writeChunk(destination, completeSegmentScript2);
-  writeChunk(destination, responseState.placeholderPrefix);
-  writeChunk(destination, formattedID);
-  return writeChunkAndReturn(destination, completeSegmentScript3);
+  //
+  write(containerID);
+  write(completeSegmentScript2);
+  write(placeholderID);
+  return write(completeSegmentScript3);
 }
 
 const completeBoundaryScript1Full = stringToPrecomputedChunk(
@@ -2121,20 +2245,23 @@ const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
 const completeBoundaryScript2 = stringToPrecomputedChunk('","');
 const completeBoundaryScript3 = stringToPrecomputedChunk('")</script>');
 
-export function writeCompletedBoundaryInstruction(
-  destination: Destination,
-  responseState: ResponseState,
-  boundaryID: SuspenseBoundaryID,
-  contentSegmentID: number,
-): boolean {
-  writeChunk(destination, responseState.startInlineScript);
-  if (!responseState.sentCompleteBoundaryFunction) {
+function defaultWriteCompletedBoundaryInstruction({
+  write,
+  responseState,
+  boundaryID,
+  contentSegmentID,
+}: CompletedBoundaryInstructionWriterArgs): boolean {
+  const writerState: DefaultInstructionWriterState =
+    // $FlowFixMe[incompatible-type]
+    responseState.instructionWriterState;
+  write(writerState.startInlineScript);
+  if (!writerState.sentCompleteBoundaryFunction) {
     // The first time we write this, we'll need to include the full implementation.
-    responseState.sentCompleteBoundaryFunction = true;
-    writeChunk(destination, completeBoundaryScript1Full);
+    writerState.sentCompleteBoundaryFunction = true;
+    write(completeBoundaryScript1Full);
   } else {
     // Future calls can just reuse the same function.
-    writeChunk(destination, completeBoundaryScript1Partial);
+    write(completeBoundaryScript1Partial);
   }
 
   if (boundaryID === null) {
@@ -2143,38 +2270,39 @@ export function writeCompletedBoundaryInstruction(
     );
   }
 
-  const formattedContentID = stringToChunk(contentSegmentID.toString(16));
-  writeChunk(destination, boundaryID);
-  writeChunk(destination, completeBoundaryScript2);
-  writeChunk(destination, responseState.segmentPrefix);
-  writeChunk(destination, formattedContentID);
-  return writeChunkAndReturn(destination, completeBoundaryScript3);
+  write(boundaryID);
+  write(completeBoundaryScript2);
+  write(contentSegmentID);
+  return write(completeBoundaryScript3);
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
   clientRenderFunction + ';$RX("',
 );
 const clientRenderScript1Partial = stringToPrecomputedChunk('$RX("');
-const clientRenderScript1A = stringToPrecomputedChunk('"');
-const clientRenderScript2 = stringToPrecomputedChunk(')</script>');
-const clientRenderErrorScriptArgInterstitial = stringToPrecomputedChunk(',');
+const clientRenderScript2 = stringToPrecomputedChunk('")</script>');
+const clientRenderErrorScriptArgInterstitial = stringToPrecomputedChunk('","');
 
-export function writeClientRenderBoundaryInstruction(
-  destination: Destination,
-  responseState: ResponseState,
-  boundaryID: SuspenseBoundaryID,
-  errorDigest: ?string,
-  errorMessage?: string,
-  errorComponentStack?: string,
-): boolean {
-  writeChunk(destination, responseState.startInlineScript);
-  if (!responseState.sentClientRenderFunction) {
+function defaultWriteClientRenderBoundaryInstruction({
+  write,
+  responseState,
+  boundaryID,
+  errorDigest,
+  errorMessage,
+  errorComponentStack,
+}: ClientRenderBoundaryInstructionWriterArgs): boolean {
+  const writerState: DefaultInstructionWriterState =
+    // $FlowFixMe[incompatible-type]
+    responseState.instructionWriterState;
+
+  write(writerState.startInlineScript);
+  if (!writerState.sentClientRenderFunction) {
     // The first time we write this, we'll need to include the full implementation.
-    responseState.sentClientRenderFunction = true;
-    writeChunk(destination, clientRenderScript1Full);
+    writerState.sentClientRenderFunction = true;
+    write(clientRenderScript1Full);
   } else {
     // Future calls can just reuse the same function.
-    writeChunk(destination, clientRenderScript1Partial);
+    write(clientRenderScript1Partial);
   }
 
   if (boundaryID === null) {
@@ -2183,30 +2311,27 @@ export function writeClientRenderBoundaryInstruction(
     );
   }
 
-  writeChunk(destination, boundaryID);
-  writeChunk(destination, clientRenderScript1A);
+  write(boundaryID);
+  
   if (errorDigest || errorMessage || errorComponentStack) {
-    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-    writeChunk(
-      destination,
-      stringToChunk(escapeJSStringsForInstructionScripts(errorDigest || '')),
-    );
+    write(clientRenderErrorScriptArgInterstitial);
+    if (errorDigest) {
+      write(errorDigest);
+    }
   }
   if (errorMessage || errorComponentStack) {
-    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-    writeChunk(
-      destination,
-      stringToChunk(escapeJSStringsForInstructionScripts(errorMessage || '')),
-    );
+    write(clientRenderErrorScriptArgInterstitial);
+    if (errorMessage) {
+      write(errorMessage);
+    }
   }
   if (errorComponentStack) {
-    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-    writeChunk(
-      destination,
-      stringToChunk(escapeJSStringsForInstructionScripts(errorComponentStack)),
-    );
+    write(clientRenderErrorScriptArgInterstitial);
+    if (errorComponentStack) {
+      write(errorComponentStack);
+    }
   }
-  return writeChunkAndReturn(destination, clientRenderScript2);
+  return write(clientRenderScript2);
 }
 
 const regexForJSStringsInScripts = /[<\u2028\u2029]/g;
