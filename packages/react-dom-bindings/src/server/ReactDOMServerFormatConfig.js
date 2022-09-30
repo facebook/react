@@ -2280,7 +2280,7 @@ export function writeCompletedBoundaryInstruction(
     hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
   }
   writeChunk(destination, responseState.startInlineScript);
-  if (enableFloat && hasStyleResourceDependencies(boundaryResources)) {
+  if (enableFloat && hasStyleDependencies) {
     if (!responseState.sentCompleteBoundaryFunction) {
       responseState.sentCompleteBoundaryFunction = true;
       responseState.sentStyleInsertionFunction = true;
