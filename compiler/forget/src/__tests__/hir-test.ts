@@ -1,0 +1,97 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+"use strict";
+
+import generate from "@babel/generator";
+import * as parser from "@babel/parser";
+import traverse from "@babel/traverse";
+import { graphviz, wasmFolder } from "@hpcc-js/wasm";
+import { writeFileSync } from "fs";
+import invariant from "invariant";
+import path from "path";
+import prettier from "prettier";
+import { lower } from "../HIR/BuildHIR";
+import codegen from "../HIR/Codegen";
+import { HIRFunction } from "../HIR/HIR";
+import inferLifetimes, { printGraph } from "../HIR/InferMutability";
+import printHIR from "../HIR/PrintHIR";
+import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
+
+function wrapWithTripleBackticks(s: string, ext?: string) {
+  return `\`\`\`${ext ?? ""}
+${s}
+\`\`\``;
+}
+
+wasmFolder(
+  path.join(__dirname, "..", "..", "node_modules", "@hpcc-js", "wasm", "dist")
+);
+
+describe("React Forget (HIR version)", () => {
+  generateTestsFromFixtures(
+    path.join(__dirname, "fixtures", "hir"),
+    (input, file) => {
+      const ast = parser.parse(input, {
+        sourceFilename: file,
+        plugins: ["typescript", "jsx"],
+      });
+      let items: Array<[string, string]> = [];
+      traverse(ast, {
+        FunctionDeclaration: {
+          enter(nodePath) {
+            const ir: HIRFunction = lower(nodePath);
+            const lifetimeGraph = inferLifetimes(ir);
+            const textHIR = printHIR(ir.body);
+            const textLifetimeGraph = printGraph(lifetimeGraph);
+            const graphvizFile = path.join(
+              __dirname,
+              "fixtures",
+              "hir-svg",
+              file + ".svg"
+            );
+            graphviz.layout(textLifetimeGraph, "svg", "dot").then((svg) => {
+              writeFileSync(graphvizFile, svg);
+            });
+
+            const ast = codegen(ir);
+            const text = prettier.format(
+              generate(ast).code.replace("\n\n", "\n"),
+              {
+                semi: true,
+                parser: "babel-ts",
+              }
+            );
+            items.push([textHIR, text]);
+          },
+        },
+      });
+      invariant(
+        items.length > 0,
+        "Visitor failed, check that the input has a function"
+      );
+      const outputs = items.map(([hir, text]) => {
+        return `
+## HIR
+
+${wrapWithTripleBackticks(hir)}
+
+## Code
+
+${wrapWithTripleBackticks(text, "javascript")}
+        `.trim();
+      });
+      return `
+## Input
+
+${wrapWithTripleBackticks(input, "javascript")}
+
+${outputs.join("\n")}
+      `;
+    }
+  );
+});

@@ -10,7 +10,9 @@
     "noUncheckedIndexedAccess": false,
     "noUnusedParameters": false,
     "useUnknownInCatchVariables": false,
-    "target": "ES2015"
+    "target": "ES2015",
+    // ideally turn off only during dev, or on a per-file basis
+    "noUnusedLocals": false
   },
   "exclude": ["node_modules"],
   "include": ["src/**/*.ts"]

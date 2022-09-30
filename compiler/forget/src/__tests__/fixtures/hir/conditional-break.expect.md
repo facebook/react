@@ -1,0 +1,232 @@
+
+## Input
+
+```javascript
+/**
+ * props.b does *not* influence `a`
+ */
+function Component(props) {
+  const a_DEBUG = [];
+  a_DEBUG.push(props.a);
+  if (props.b) {
+    return null;
+  }
+  a_DEBUG.push(props.d);
+  return a_DEBUG;
+}
+
+/**
+ * props.b *does* influence `a`
+ */
+function Component(props) {
+  const a = [];
+  a.push(props.a);
+  if (props.b) {
+    a.push(props.c);
+  }
+  a.push(props.d);
+  return a;
+}
+
+/**
+ * props.b *does* influence `a`, but only in a way that is never observable
+ */
+function Component(props) {
+  const a = [];
+  a.push(props.a);
+  if (props.b) {
+    a.push(props.c);
+    return null;
+  }
+  a.push(props.d);
+  return a;
+}
+
+/**
+ * props.b *does* influence `a`
+ */
+function Component(props) {
+  const a = [];
+  a.push(props.a);
+  if (props.b) {
+    a.push(props.c);
+    return a;
+  }
+  a.push(props.d);
+  return a;
+}
+
+/**
+ * props.b *does* influence `a`
+ */
+function Component(props) {
+  const a = [];
+  a.push(props.a);
+  label: {
+    if (props.b) {
+      break label;
+    }
+    a.push(props.c);
+  }
+  a.push(props.d);
+  return a;
+}
+
+```
+
+## HIR
+
+```
+bb0:
+  mutable a_DEBUG$2 = Array []
+  Call mutable a_DEBUG$2.push(frozen props$1.a)
+  If (frozen props$1.b) then:bb2 else:bb1
+bb2:
+  frozen $3 = null
+  Return frozen $3
+bb1:
+  Call mutable a_DEBUG$2.push(frozen props$1.d)
+  Return frozen a_DEBUG$2
+```
+
+## Code
+
+```javascript
+function Component$0(props$1) {
+  a_DEBUG$2 = [];
+  a_DEBUG$2.push(props$1.a);
+  if (props$1.b) {
+    return null;
+  }
+
+  a_DEBUG$2.push(props$1.d);
+  return a_DEBUG$2;
+}
+
+```
+## HIR
+
+```
+bb0:
+  mutable a$2 = Array []
+  Call mutable a$2.push(frozen props$1.a)
+  If (frozen props$1.b) then:bb2 else:bb1
+bb2:
+  Call mutable a$2.push(frozen props$1.c)
+  Goto bb1
+bb1:
+  Call mutable a$2.push(frozen props$1.d)
+  Return frozen a$2
+```
+
+## Code
+
+```javascript
+function Component$0(props$1) {
+  a$2 = [];
+  a$2.push(props$1.a);
+  if (props$1.b) {
+    a$2.push(props$1.c);
+    ("<<TODO: handle complex control flow in codegen>>");
+  }
+
+  a$2.push(props$1.d);
+  return a$2;
+}
+
+```
+## HIR
+
+```
+bb0:
+  mutable a$2 = Array []
+  Call mutable a$2.push(frozen props$1.a)
+  If (frozen props$1.b) then:bb2 else:bb1
+bb2:
+  Call mutable a$2.push(frozen props$1.c)
+  frozen $3 = null
+  Return frozen $3
+bb1:
+  Call mutable a$2.push(frozen props$1.d)
+  Return frozen a$2
+```
+
+## Code
+
+```javascript
+function Component$0(props$1) {
+  a$2 = [];
+  a$2.push(props$1.a);
+  if (props$1.b) {
+    a$2.push(props$1.c);
+    return null;
+  }
+
+  a$2.push(props$1.d);
+  return a$2;
+}
+
+```
+## HIR
+
+```
+bb0:
+  mutable a$2 = Array []
+  Call mutable a$2.push(frozen props$1.a)
+  If (frozen props$1.b) then:bb2 else:bb1
+bb2:
+  Call mutable a$2.push(frozen props$1.c)
+  Return frozen a$2
+bb1:
+  Call mutable a$2.push(frozen props$1.d)
+  Return frozen a$2
+```
+
+## Code
+
+```javascript
+function Component$0(props$1) {
+  a$2 = [];
+  a$2.push(props$1.a);
+  if (props$1.b) {
+    a$2.push(props$1.c);
+    return a$2;
+  }
+
+  a$2.push(props$1.d);
+  return a$2;
+}
+
+```
+## HIR
+
+```
+bb0:
+  mutable a$2 = Array []
+  Call mutable a$2.push(frozen props$1.a)
+  If (frozen props$1.b) then:bb1 else:bb2
+bb1:
+  Call mutable a$2.push(frozen props$1.d)
+  Return frozen a$2
+bb2:
+  Call mutable a$2.push(frozen props$1.c)
+  Goto bb1
+```
+
+## Code
+
+```javascript
+function Component$0(props$1) {
+  a$2 = [];
+  a$2.push(props$1.a);
+  if (props$1.b) {
+    a$2.push(props$1.d);
+    return a$2;
+  }
+
+  a$2.push(props$1.c);
+  ("<<TODO: handle complex control flow in codegen>>");
+}
+
+```
+      
