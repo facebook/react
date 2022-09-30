@@ -495,8 +495,6 @@ const tests = {
     },
     {
       code: normalizeIndent`
-        Hook.use();
-        Hook._use();
         Hook.useState();
         Hook._useState();
         Hook.use42();
@@ -504,7 +502,6 @@ const tests = {
         Hook.use_hook();
       `,
       errors: [
-        topLevelError('Hook.use'),
         topLevelError('Hook.useState'),
         topLevelError('Hook.use42'),
         topLevelError('Hook.useHook'),
@@ -1238,6 +1235,23 @@ if (__EXPERIMENTAL__) {
         }
       `,
       errors: [useEventError('onClick')],
+    },
+    {
+      code: normalizeIndent`
+        Hook.use();
+        Hook._use();
+        Hook.useState();
+        Hook._useState();
+        Hook.use42();
+        Hook.useHook();
+        Hook.use_hook();
+      `,
+      errors: [
+        topLevelError('Hook.use'),
+        topLevelError('Hook.useState'),
+        topLevelError('Hook.use42'),
+        topLevelError('Hook.useHook'),
+      ],
     },
     {
       code: normalizeIndent`
