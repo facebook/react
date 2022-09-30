@@ -2121,14 +2121,10 @@ export function writeEndSegment(
 //     }
 //   }
 
-//   if (dependencies.length) {
-//     Promise.all(dependencies).then(
-//       completeBoundary.bind(null, suspenseBoundaryID, contentID, ''),
-//       completeBoundary.bind(null, suspenseBoundaryID, contentID, "Resource failed to load")
-//     );
-//   } else {
-//     completeBoundary(suspenseBoundaryID, contentID);
-//   }
+//   Promise.all(dependencies).then(
+//     completeBoundary.bind(null, suspenseBoundaryID, contentID, ''),
+//     completeBoundary.bind(null, suspenseBoundaryID, contentID, "Resource failed to load")
+//   );
 // }
 
 // function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {
@@ -2219,7 +2215,7 @@ const completeSegmentFunction =
 const completeBoundaryFunction =
   'function $RC(b,c,d){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(d)b.data="$!",a.setAttribute("data-dgst",d);else{d=b.parentNode;a=b.nextSibling;var e=0;do{if(a&&a.nodeType===8){var h=a.data;if(h==="/$")if(0===e)break;else e--;else h!=="$"&&h!=="$?"&&h!=="$!"||e++}h=a.nextSibling;d.removeChild(a);a=h}while(a);for(;c.firstChild;)d.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}}';
 const styleInsertionFunction =
-  '$RM=new Map;function $RR(b,c,d){function a(t){this.s=t}for(var e=new Map,h=document,p,n,m=h.querySelectorAll("link[data-rprec]"),l=0;n=m[l++];)e.set(n.dataset.rprec,p=n);n=0;m=[];for(var k,q,g,f;k=d[n++];){var r=0;q=k[r++];if(g=$RM.get(q))"l"!==g.s&&m.push(g);else{f=h.createElement("link");f.href=q;f.rel="stylesheet";for(f.dataset.rprec=l=k[r++];g=k[r++];)f.setAttribute(g,k[r++]);g=f._p=new Promise(function(t,u){f.onload=t;f.onerror=u});g.then(a.bind(g,"l"),a.bind(g,"e"));$RM.set(q,g);m.push(g);k=e.get(l)||p;k===p&&(p=f);e.set(l,f);k?k.parentNode.insertBefore(f,k.nextSibling):(l=h.head,l.insertBefore(f,l.firstChild))}}m.length?Promise.all(m).then($RC.bind(null,b,c,""),$RC.bind(null,b,c,"Resource failed to load")):$RC(b,c)}';
+  '$RM=new Map;function $RR(p,q,t){function r(l){this.s=l}for(var m=new Map,n=document,g,e,f=n.querySelectorAll("link[data-rprec]"),d=0;e=f[d++];)m.set(e.dataset.rprec,g=e);e=0;f=[];for(var c,h,b,a;c=t[e++];){var k=0;h=c[k++];if(b=$RM.get(h))"l"!==b.s&&f.push(b);else{a=n.createElement("link");a.href=h;a.rel="stylesheet";for(a.dataset.rprec=d=c[k++];b=c[k++];)a.setAttribute(b,c[k++]);b=a._p=new Promise(function(l,u){a.onload=l;a.onerror=u});b.then(r.bind(b,"l"),r.bind(b,"e"));$RM.set(h,b);f.push(b);c=m.get(d)||g;c===g&&(g=a);m.set(d,a);c?c.parentNode.insertBefore(a,c.nextSibling):(d=n.head,d.insertBefore(a,d.firstChild))}}Promise.all(f).then($RC.bind(null,p,q,""),$RC.bind(null,p,q,"Resource failed to load"))}';
 const clientRenderFunction =
   'function $RX(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),b._reactRetry&&b._reactRetry())}';
 
