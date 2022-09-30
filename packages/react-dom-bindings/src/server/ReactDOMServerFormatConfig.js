@@ -80,7 +80,7 @@ const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 export function prepareToRender(resources: Resources): mixed {
   prepareToRenderResources(resources);
 
-  let previousHostDispatcher = ReactDOMCurrentDispatcher.current;
+  const previousHostDispatcher = ReactDOMCurrentDispatcher.current;
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
   return previousHostDispatcher;
 }

@@ -7,7 +7,6 @@
  * @flow
  */
 
-import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 import {
   validatePreloadResourceDifference,
   validateStyleResourceDifference,
@@ -100,9 +99,8 @@ export function mergeBoundaryResources(
 }
 
 let currentResources: null | Resources = null;
-let currentResourcesStack = [];
+const currentResourcesStack = [];
 
-let previousDispatcher = null;
 export function prepareToRenderResources(resources: Resources) {
   currentResourcesStack.push(currentResources);
   currentResources = resources;
