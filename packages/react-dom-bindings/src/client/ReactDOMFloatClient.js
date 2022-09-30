@@ -473,8 +473,11 @@ function createStyleResource(
     }
   }
 
+  const limitedEscacpedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
+    href,
+  );
   const existingEl = ownerDocument.querySelector(
-    `link[rel="stylesheet"][href="${href}"]`,
+    `link[rel="stylesheet"][href="${limitedEscacpedHref}"]`,
   );
   const resource = {
     type: 'style',
@@ -585,8 +588,11 @@ function createPreloadResource(
   href: string,
   props: PreloadProps,
 ): PreloadResource {
+  const limitedEscacpedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
+    href,
+  );
   let element = ownerDocument.querySelector(
-    `link[rel="preload"][href="${href}"]`,
+    `link[rel="preload"][href="${limitedEscacpedHref}"]`,
   );
   if (!element) {
     element = createResourceInstance('link', props, ownerDocument);
@@ -604,8 +610,11 @@ function createPreloadResource(
 function acquireStyleResource(resource: StyleResource): Instance {
   if (!resource.instance) {
     const {props, ownerDocument, precedence} = resource;
+    const limitedEscacpedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
+      props.href,
+    );
     const existingEl = ownerDocument.querySelector(
-      `link[rel="stylesheet"][data-rprec][href="${props.href}"]`,
+      `link[rel="stylesheet"][data-rprec][href="${limitedEscacpedHref}"]`,
     );
     if (existingEl) {
       resource.instance = existingEl;
@@ -800,4 +809,17 @@ export function isHostResourceType(type: string, props: Props): boolean {
 
 function isResourceAsType(as: mixed): boolean {
   return as === 'style' || as === 'font';
+}
+
+// When passing user input into querySelector(All) the embedded string must not alter
+// the semantics of the query. This escape function is safe to use when we know the
+// provided value is going to be wrapped in double quotes as part of an attribute selector
+// Do not use it anywhere else
+// we escape double quotes and backslashes
+const escapeSelectorAttributeValueInsideDoubleQuotesRegex = /[\"\\]/g;
+function escapeSelectorAttributeValueInsideDoubleQuotes(value: string): string {
+  return value.replace(
+    escapeSelectorAttributeValueInsideDoubleQuotesRegex,
+    match => (match === '"' ? '\\"' : match === '\\' ? '\\\\' : ''),
+  );
 }

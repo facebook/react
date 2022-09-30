@@ -3483,4 +3483,117 @@ describe('ReactDOMFloat', () => {
       }
     });
   });
+
+  describe('escaping', () => {
+    // @gate enableFloat
+    it('escapes hrefs when selecting matching elements in the document when rendering Resources', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <head />
+            <body>
+              <link rel="preload" href="preload" as="style" />
+              <link rel="stylesheet" href="style" precedence="style" />
+              <link rel="stylesheet" href="with\slashes" precedence="style" />
+              <div id="container" />
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+
+      container = document.getElementById('container');
+      const root = ReactDOMClient.createRoot(container);
+      root.render(
+        <div>
+          <link rel="preload" href={'preload"][rel="preload'} as="style" />
+          <link
+            rel="stylesheet"
+            href={'style"][rel="stylesheet'}
+            precedence="style"
+          />
+          <link rel="stylesheet" href={'with\\slashes'} precedence="style" />
+          foo
+        </div>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preload" as="style" href="preload" />
+            <link rel="stylesheet" href="style" data-rprec="style" />
+            <link rel="stylesheet" href="with\slashes" data-rprec="style" />
+            <link
+              rel="stylesheet"
+              href={'style"][rel="stylesheet'}
+              data-rprec="style"
+            />
+            <link rel="preload" href={'preload"][rel="preload'} as="style" />
+            <link rel="preload" href={'style"][rel="stylesheet'} as="style" />
+          </head>
+          <body>
+            <div id="container">
+              <div>foo</div>
+            </div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('escapes hrefs when selecting matching elements in the document when using preload and preinit', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <head />
+            <body>
+              <link rel="preload" href="preload" as="style" />
+              <link rel="stylesheet" href="style" precedence="style" />
+              <link rel="stylesheet" href="with\slashes" precedence="style" />
+              <div id="container" />
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+
+      function App() {
+        ReactDOM.preload('preload"][rel="preload', {as: 'style'});
+        ReactDOM.preinit('style"][rel="stylesheet', {
+          as: 'style',
+          precedence: 'style',
+        });
+        ReactDOM.preinit('with\\slashes', {
+          as: 'style',
+          precedence: 'style',
+        });
+        return <div>foo</div>;
+      }
+
+      container = document.getElementById('container');
+      const root = ReactDOMClient.createRoot(container);
+      root.render(<App />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preload" as="style" href="preload" />
+            <link rel="stylesheet" href="style" data-rprec="style" />
+            <link rel="stylesheet" href="with\slashes" data-rprec="style" />
+            <link
+              rel="stylesheet"
+              href={'style"][rel="stylesheet'}
+              data-rprec="style"
+            />
+            <link rel="preload" href={'preload"][rel="preload'} as="style" />
+          </head>
+          <body>
+            <div id="container">
+              <div>foo</div>
+            </div>
+          </body>
+        </html>,
+      );
+    });
+  });
 });
