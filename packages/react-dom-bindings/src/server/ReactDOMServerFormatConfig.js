@@ -2058,6 +2058,13 @@ export function writeCompletedBoundaryInstruction(
   });
 }
 
+// Hack for now - we want to be consistent about whether InstructionWriter arguments
+// contain surrounding '"'s.
+function stringToFormattedChunk(s: string) {
+  const escaped = escapeJSStringsForInstructionScripts(s);
+  // remove the surrounding '"'s
+  return stringToChunk(escaped.slice(1, -1));
+}
 export function writeClientRenderBoundaryInstruction(
   destination: Destination,
   responseState: ResponseState,
@@ -2079,14 +2086,6 @@ export function writeClientRenderBoundaryInstruction(
         ? stringToFormattedChunk(errorComponentStack)
         : null,
   });
-
-  // Hack for now - we should be consistent about whether InstructionWriter arguments
-  // contain surrounding '"'s.
-  function stringToFormattedChunk(s: string) {
-    const escaped = escapeJSStringsForInstructionScripts(s);
-    // remove the surrounding '"'s
-    return stringToChunk(escaped.slice(1, -1));
-  }
 }
 
 // Instruction Set
@@ -2312,7 +2311,7 @@ function defaultWriteClientRenderBoundaryInstruction({
   }
 
   write(boundaryID);
-  
+
   if (errorDigest || errorMessage || errorComponentStack) {
     write(clientRenderErrorScriptArgInterstitial);
     if (errorDigest) {
