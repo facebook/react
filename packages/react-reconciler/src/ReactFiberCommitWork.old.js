@@ -2869,6 +2869,7 @@ function commitMutationEffectsOnFiber(
       }
 
       commitReconciliationEffects(finishedWork);
+      // TODO: Add explicit effect flag to set _current.
       finishedWork.stateNode._current = finishedWork;
 
       if (flags & Visibility) {

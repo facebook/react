@@ -689,6 +689,7 @@ function updateOffscreenComponent(
     nextProps.mode === 'hidden' ||
     (enableLegacyHidden &&
       nextProps.mode === 'unstable-defer-without-hiding') ||
+    // TODO: remove read from stateNode.
     workInProgress.stateNode._visibility & OffscreenDetached
   ) {
     // Rendering a hidden tree.

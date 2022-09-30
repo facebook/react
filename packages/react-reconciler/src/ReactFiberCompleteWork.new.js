@@ -431,7 +431,7 @@ if (supportsMutation) {
         }
         // Detached tree is hidden from user space.
         const _needsVisibilityToggle =
-          node.stateNode._visibility & OffscreenDetached;
+          (node.stateNode._visibility & OffscreenDetached) !== 0;
         appendAllChildrenToContainer(
           containerChildSet,
           node,

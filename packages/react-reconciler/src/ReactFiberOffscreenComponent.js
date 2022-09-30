@@ -10,6 +10,7 @@
 import type {ReactNodeList, OffscreenMode, Wakeable} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import type {Fiber} from './ReactInternalTypes';
 import type {
   Transition,
   TracingMarkerInstance,
