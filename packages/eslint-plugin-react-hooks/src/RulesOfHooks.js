@@ -16,6 +16,9 @@
  */
 
 function isHookName(s) {
+  if (__EXPERIMENTAL__) {
+    return s === 'use' || /^use[A-Z0-9]/.test(s);
+  }
   return /^use[A-Z0-9]/.test(s);
 }
 
@@ -103,6 +106,13 @@ function isInsideComponentOrHook(node) {
 function isUseEventIdentifier(node) {
   if (__EXPERIMENTAL__) {
     return node.type === 'Identifier' && node.name === 'useEvent';
+  }
+  return false;
+}
+
+function isUseIdentifier(node) {
+  if (__EXPERIMENTAL__) {
+    return node.type === 'Identifier' && node.name === 'use';
   }
   return false;
 }
@@ -479,7 +489,11 @@ export default {
               // path segments.
               //
               // Special case when we think there might be an early return.
-              if (!cycled && pathsFromStartToEnd !== allPathsFromStartToEnd) {
+              if (
+                !cycled &&
+                pathsFromStartToEnd !== allPathsFromStartToEnd &&
+                !isUseIdentifier(hook) // use(...) can be called conditionally.
+              ) {
                 const message =
                   `React Hook "${context.getSource(hook)}" is called ` +
                   'conditionally. React Hooks must be called in the exact ' +

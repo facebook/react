@@ -257,7 +257,6 @@ const tests = {
       code: normalizeIndent`
         // Valid because they're not matching use[A-Z].
         fooState();
-        use();
         _use();
         _useState();
         use_hook();
@@ -505,6 +504,7 @@ const tests = {
         Hook.use_hook();
       `,
       errors: [
+        topLevelError('Hook.use'),
         topLevelError('Hook.useState'),
         topLevelError('Hook.use42'),
         topLevelError('Hook.useHook'),
@@ -1146,6 +1146,25 @@ if (__EXPERIMENTAL__) {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function App() {
+          const text = use(Promise.resolve('A'));
+          return <Text text={text} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          if (shouldShowText) {
+            const text = use(query);
+            return <Text text={text} />
+          }
+          return <Text text={shouldFetchBackupText ? use(backupQuery) : "Nothing to see here"} />
+        }
+      `,
+    },
   ];
   tests.invalid = [
     ...tests.invalid,
@@ -1219,6 +1238,49 @@ if (__EXPERIMENTAL__) {
         }
       `,
       errors: [useEventError('onClick')],
+    },
+    {
+      code: normalizeIndent`
+        function notAComponent() {
+          use(promise);
+        }
+      `,
+      errors: [functionError('use', 'notAComponent')],
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          const data = useUserQuery((searchStrings) => {
+            const query = Promise.all(fetch(user, searchStrings));
+            return use(query);
+          });
+          return (
+            <ul>
+              {data.map(d => <li>{d.title}</li>)}
+            </ul>
+          );
+        }
+      `,
+      errors: [genericError('use')],
+    },
+    {
+      code: normalizeIndent`
+        const text = use(promise);
+        function App() {
+          return <Text text={text} />
+        }
+      `,
+      errors: [topLevelError('use')],
+    },
+    {
+      code: normalizeIndent`
+        class C {
+          m() {
+            use(promise);
+          }
+        }
+      `,
+      errors: [classError('use')],
     },
   ];
 }
