@@ -1827,7 +1827,6 @@ function finishedTask(
 }
 
 function retryTask(request: Request, task: Task): void {
-  prepareToRender(request.resources);
   if (enableFloat) {
     const blockedBoundary = task.blockedBoundary;
     setCurrentlyRenderingBoundaryResourcesTarget(
@@ -1892,7 +1891,6 @@ function retryTask(request: Request, task: Task): void {
     if (__DEV__) {
       currentTaskInDEV = prevTaskInDEV;
     }
-    cleanupAfterRender();
   }
 }
 
@@ -1903,6 +1901,7 @@ export function performWork(request: Request): void {
   const prevContext = getActiveContext();
   const prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = Dispatcher;
+  const previousHostDispatcher = prepareToRender(request.resources);
   let prevGetCurrentStackImpl;
   if (__DEV__) {
     prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
@@ -1927,6 +1926,8 @@ export function performWork(request: Request): void {
   } finally {
     setCurrentResponseState(prevResponseState);
     ReactCurrentDispatcher.current = prevDispatcher;
+    cleanupAfterRender(previousHostDispatcher);
+
     if (__DEV__) {
       ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
     }

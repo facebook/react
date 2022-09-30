@@ -64,6 +64,7 @@ import {
   prepareToRenderResources,
   finishRenderingResources,
   resourcesFromLink,
+  ReactDOMServerDispatcher,
 } from './ReactDOMFloatServer';
 export {
   createResources,
@@ -72,6 +73,22 @@ export {
   hoistResources,
   hoistResourcesToRoot,
 } from './ReactDOMFloatServer';
+
+import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
+const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
+
+export function prepareToRender(resources: Resources): mixed {
+  prepareToRenderResources(resources);
+
+  let previousHostDispatcher = ReactDOMCurrentDispatcher.current;
+  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
+  return previousHostDispatcher;
+}
+
+export function cleanupAfterRender(previousDispatcher: mixed) {
+  finishRenderingResources();
+  ReactDOMCurrentDispatcher.current = previousDispatcher;
+}
 
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.
@@ -2721,12 +2738,4 @@ function writeStyleResourceAttribute(
     destination,
     stringToChunk(escapeJSObjectForInstructionScripts(attributeValue)),
   );
-}
-
-export function prepareToRender(resources: Resources) {
-  prepareToRenderResources(resources);
-}
-
-export function cleanupAfterRender() {
-  finishRenderingResources();
 }

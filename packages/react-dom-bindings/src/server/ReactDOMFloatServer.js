@@ -100,13 +100,16 @@ export function mergeBoundaryResources(
 }
 
 let currentResources: null | Resources = null;
+let currentResourcesStack = [];
 
 let previousDispatcher = null;
 export function prepareToRenderResources(resources: Resources) {
+  currentResourcesStack.push(currentResources);
   currentResources = resources;
+}
 
-  previousDispatcher = ReactDOMSharedInternals.Dispatcher.current;
-  ReactDOMSharedInternals.Dispatcher.current = Dispatcher;
+export function finishRenderingResources() {
+  currentResources = currentResourcesStack.pop();
 }
 
 export function setCurrentlyRenderingBoundaryResourcesTarget(
@@ -116,12 +119,10 @@ export function setCurrentlyRenderingBoundaryResourcesTarget(
   resources.boundaryResources = boundaryResources;
 }
 
-export function finishRenderingResources() {
-  currentResources = null;
-
-  ReactDOMSharedInternals.Dispatcher.current = previousDispatcher;
-  previousDispatcher = null;
-}
+export const ReactDOMServerDispatcher = {
+  preload,
+  preinit,
+};
 
 type PreloadAs = ResourceType;
 type PreloadOptions = {as: PreloadAs, crossOrigin?: string};
@@ -574,8 +575,3 @@ export function hoistResourcesToRoot(
   });
   boundaryResources.clear();
 }
-
-const Dispatcher = {
-  preload,
-  preinit,
-};
