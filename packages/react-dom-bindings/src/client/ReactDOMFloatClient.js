@@ -816,10 +816,10 @@ function isResourceAsType(as: mixed): boolean {
 // provided value is going to be wrapped in double quotes as part of an attribute selector
 // Do not use it anywhere else
 // we escape double quotes and backslashes
-const escapeSelectorAttributeValueInsideDoubleQuotesRegex = /[\"\\]/g;
+const escapeSelectorAttributeValueInsideDoubleQuotesRegex = /[\n\"\\]/g;
 function escapeSelectorAttributeValueInsideDoubleQuotes(value: string): string {
   return value.replace(
     escapeSelectorAttributeValueInsideDoubleQuotesRegex,
-    match => (match === '"' ? '\\"' : match === '\\' ? '\\\\' : ''),
+    ch => '\\' + ch.charCodeAt(0).toString(16),
   );
 }

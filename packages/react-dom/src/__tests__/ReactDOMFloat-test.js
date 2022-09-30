@@ -3495,6 +3495,7 @@ describe('ReactDOMFloat', () => {
               <link rel="preload" href="preload" as="style" />
               <link rel="stylesheet" href="style" precedence="style" />
               <link rel="stylesheet" href="with\slashes" precedence="style" />
+              <link rel="preload" href={'with\nnewline'} as="style" />
               <div id="container" />
             </body>
           </html>,
@@ -3513,6 +3514,7 @@ describe('ReactDOMFloat', () => {
             precedence="style"
           />
           <link rel="stylesheet" href={'with\\slashes'} precedence="style" />
+          <link rel="preload" href={'with\nnewline'} as="style" />
           foo
         </div>,
       );
@@ -3521,6 +3523,7 @@ describe('ReactDOMFloat', () => {
         <html>
           <head>
             <link rel="preload" as="style" href="preload" />
+            <link rel="preload" href={'with\nnewline'} as="style" />
             <link rel="stylesheet" href="style" data-rprec="style" />
             <link rel="stylesheet" href="with\slashes" data-rprec="style" />
             <link
@@ -3550,6 +3553,7 @@ describe('ReactDOMFloat', () => {
               <link rel="preload" href="preload" as="style" />
               <link rel="stylesheet" href="style" precedence="style" />
               <link rel="stylesheet" href="with\slashes" precedence="style" />
+              <link rel="preload" href={'with\nnewline'} as="style" />
               <div id="container" />
             </body>
           </html>,
@@ -3567,6 +3571,7 @@ describe('ReactDOMFloat', () => {
           as: 'style',
           precedence: 'style',
         });
+        ReactDOM.preload('with\nnewline', {as: 'style'});
         return <div>foo</div>;
       }
 
@@ -3578,6 +3583,7 @@ describe('ReactDOMFloat', () => {
         <html>
           <head>
             <link rel="preload" as="style" href="preload" />
+            <link rel="preload" href={'with\nnewline'} as="style" />
             <link rel="stylesheet" href="style" data-rprec="style" />
             <link rel="stylesheet" href="with\slashes" data-rprec="style" />
             <link
