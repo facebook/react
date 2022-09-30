@@ -90,107 +90,113 @@ import {
   getCurrentUpdatePriority as getCurrentUpdatePriority_new,
 } from './ReactFiberReconciler.new';
 
-export const createContainer = enableNewReconciler
+export const createContainer: typeof createContainer_new = enableNewReconciler
   ? createContainer_new
   : createContainer_old;
-export const createHydrationContainer = enableNewReconciler
+export const createHydrationContainer: typeof createHydrationContainer_new = enableNewReconciler
   ? createHydrationContainer_new
   : createHydrationContainer_old;
-export const updateContainer = enableNewReconciler
+export const updateContainer: typeof updateContainer_new = enableNewReconciler
   ? updateContainer_new
   : updateContainer_old;
-export const batchedUpdates = enableNewReconciler
+export const batchedUpdates: typeof batchedUpdates_new = enableNewReconciler
   ? batchedUpdates_new
   : batchedUpdates_old;
-export const deferredUpdates = enableNewReconciler
+export const deferredUpdates: typeof deferredUpdates_new = enableNewReconciler
   ? deferredUpdates_new
   : deferredUpdates_old;
-export const discreteUpdates = enableNewReconciler
+export const discreteUpdates: typeof discreteUpdates_new = enableNewReconciler
   ? discreteUpdates_new
   : discreteUpdates_old;
-export const flushControlled = enableNewReconciler
+export const flushControlled: typeof flushControlled_new = enableNewReconciler
   ? flushControlled_new
   : flushControlled_old;
-export const flushSync = enableNewReconciler ? flushSync_new : flushSync_old;
-export const isAlreadyRendering = enableNewReconciler
+export const flushSync: typeof flushSync_new = enableNewReconciler
+  ? flushSync_new
+  : flushSync_old;
+export const isAlreadyRendering: typeof isAlreadyRendering_new = enableNewReconciler
   ? isAlreadyRendering_new
   : isAlreadyRendering_old;
-export const flushPassiveEffects = enableNewReconciler
+export const flushPassiveEffects: typeof flushPassiveEffects_new = enableNewReconciler
   ? flushPassiveEffects_new
   : flushPassiveEffects_old;
-export const getPublicRootInstance = enableNewReconciler
+export const getPublicRootInstance: typeof getPublicRootInstance_new = enableNewReconciler
   ? getPublicRootInstance_new
   : getPublicRootInstance_old;
-export const attemptSynchronousHydration = enableNewReconciler
+export const attemptSynchronousHydration: typeof attemptSynchronousHydration_new = enableNewReconciler
   ? attemptSynchronousHydration_new
   : attemptSynchronousHydration_old;
-export const attemptDiscreteHydration = enableNewReconciler
+export const attemptDiscreteHydration: typeof attemptDiscreteHydration_new = enableNewReconciler
   ? attemptDiscreteHydration_new
   : attemptDiscreteHydration_old;
-export const attemptContinuousHydration = enableNewReconciler
+export const attemptContinuousHydration: typeof attemptContinuousHydration_new = enableNewReconciler
   ? attemptContinuousHydration_new
   : attemptContinuousHydration_old;
-export const attemptHydrationAtCurrentPriority = enableNewReconciler
+export const attemptHydrationAtCurrentPriority: typeof attemptHydrationAtCurrentPriority_new = enableNewReconciler
   ? attemptHydrationAtCurrentPriority_new
   : attemptHydrationAtCurrentPriority_old;
-export const getCurrentUpdatePriority = enableNewReconciler
+export const getCurrentUpdatePriority: typeof getCurrentUpdatePriority_new = enableNewReconciler
   ? getCurrentUpdatePriority_new
-  : getCurrentUpdatePriority_old;
-export const findHostInstance = enableNewReconciler
+  : /* $FlowFixMe[incompatible-type] opaque types EventPriority from new and old
+     * are incompatible. */
+    getCurrentUpdatePriority_old;
+export const findHostInstance: typeof findHostInstance_new = enableNewReconciler
   ? findHostInstance_new
   : findHostInstance_old;
-export const findHostInstanceWithWarning = enableNewReconciler
+export const findHostInstanceWithWarning: typeof findHostInstanceWithWarning_new = enableNewReconciler
   ? findHostInstanceWithWarning_new
   : findHostInstanceWithWarning_old;
-export const findHostInstanceWithNoPortals = enableNewReconciler
+export const findHostInstanceWithNoPortals: typeof findHostInstanceWithNoPortals_new = enableNewReconciler
   ? findHostInstanceWithNoPortals_new
   : findHostInstanceWithNoPortals_old;
-export const shouldError = enableNewReconciler
+export const shouldError: typeof shouldError_new = enableNewReconciler
   ? shouldError_new
   : shouldError_old;
-export const shouldSuspend = enableNewReconciler
+export const shouldSuspend: typeof shouldSuspend_new = enableNewReconciler
   ? shouldSuspend_new
   : shouldSuspend_old;
-export const injectIntoDevTools = enableNewReconciler
+export const injectIntoDevTools: typeof injectIntoDevTools_new = enableNewReconciler
   ? injectIntoDevTools_new
   : injectIntoDevTools_old;
-export const createPortal = enableNewReconciler
+export const createPortal: typeof createPortal_new = enableNewReconciler
   ? createPortal_new
   : createPortal_old;
-export const createComponentSelector = enableNewReconciler
+export const createComponentSelector: typeof createComponentSelector_new = enableNewReconciler
   ? createComponentSelector_new
   : createComponentSelector_old;
 
-export const createHasPseudoClassSelector = enableNewReconciler
+export const createHasPseudoClassSelector: typeof createHasPseudoClassSelector_new = enableNewReconciler
   ? createHasPseudoClassSelector_new
   : createHasPseudoClassSelector_old;
-export const createRoleSelector = enableNewReconciler
+export const createRoleSelector: typeof createRoleSelector_new = enableNewReconciler
   ? createRoleSelector_new
   : createRoleSelector_old;
-export const createTextSelector = enableNewReconciler
+export const createTextSelector: typeof createTextSelector_new = enableNewReconciler
   ? createTextSelector_new
   : createTextSelector_old;
-export const createTestNameSelector = enableNewReconciler
+export const createTestNameSelector: typeof createTestNameSelector_new = enableNewReconciler
   ? createTestNameSelector_new
   : createTestNameSelector_old;
-export const getFindAllNodesFailureDescription = enableNewReconciler
+export const getFindAllNodesFailureDescription: typeof getFindAllNodesFailureDescription_new = enableNewReconciler
   ? getFindAllNodesFailureDescription_new
   : getFindAllNodesFailureDescription_old;
-export const findAllNodes = enableNewReconciler
+export const findAllNodes: typeof findAllNodes_new = enableNewReconciler
   ? findAllNodes_new
   : findAllNodes_old;
-export const findBoundingRects = enableNewReconciler
+export const findBoundingRects: typeof findBoundingRects_new = enableNewReconciler
   ? findBoundingRects_new
   : findBoundingRects_old;
-export const focusWithin = enableNewReconciler
+export const focusWithin: typeof focusWithin_new = enableNewReconciler
   ? focusWithin_new
   : focusWithin_old;
-export const observeVisibleRects = enableNewReconciler
+export const observeVisibleRects: typeof observeVisibleRects_new = enableNewReconciler
   ? observeVisibleRects_new
   : observeVisibleRects_old;
-export const registerMutableSourceForHydration = enableNewReconciler
+export const registerMutableSourceForHydration: typeof registerMutableSourceForHydration_new = enableNewReconciler
   ? registerMutableSourceForHydration_new
   : registerMutableSourceForHydration_old;
-export const runWithPriority = enableNewReconciler
+/* $FlowFixMe[incompatible-type] opaque types EventPriority from new and old
+ * are incompatible. */
+export const runWithPriority: typeof runWithPriority_new = enableNewReconciler
   ? runWithPriority_new
   : runWithPriority_old;

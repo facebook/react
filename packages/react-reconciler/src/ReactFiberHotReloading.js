@@ -63,13 +63,13 @@ export type FindHostInstancesForRefresh = (
 export const setRefreshHandler: (
   handler: RefreshHandler | null,
 ) => void = enableNewReconciler ? setRefreshHandler_new : setRefreshHandler_old;
-export const resolveFunctionForHotReloading = enableNewReconciler
+export const resolveFunctionForHotReloading: typeof resolveFunctionForHotReloading_new = enableNewReconciler
   ? resolveFunctionForHotReloading_new
   : resolveFunctionForHotReloading_old;
-export const resolveClassForHotReloading = enableNewReconciler
+export const resolveClassForHotReloading: typeof resolveClassForHotReloading_new = enableNewReconciler
   ? resolveClassForHotReloading_new
   : resolveClassForHotReloading_old;
-export const resolveForwardRefForHotReloading = enableNewReconciler
+export const resolveForwardRefForHotReloading: typeof resolveForwardRefForHotReloading_new = enableNewReconciler
   ? resolveForwardRefForHotReloading_new
   : resolveForwardRefForHotReloading_old;
 export const isCompatibleFamilyForHotReloading: (

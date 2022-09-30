@@ -580,7 +580,7 @@ export function getWorkInProgressRootRenderLanes(): Lanes {
   return workInProgressRootRenderLanes;
 }
 
-export function requestEventTime() {
+export function requestEventTime(): number {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
     return now();
@@ -595,7 +595,7 @@ export function requestEventTime() {
   return currentEventTime;
 }
 
-export function getCurrentTime() {
+export function getCurrentTime(): number {
   return now();
 }
 
@@ -1567,7 +1567,7 @@ declare function flushSync<R>(fn: () => R): R;
 // eslint-disable-next-line no-redeclare
 declare function flushSync(): void;
 // eslint-disable-next-line no-redeclare
-export function flushSync(fn): void {
+export function flushSync<R>(fn: (() => R) | void): R | void {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
   if (
@@ -1615,7 +1615,7 @@ export function isAlreadyRendering(): boolean {
   );
 }
 
-export function isInvalidExecutionContextForEventFunction() {
+export function isInvalidExecutionContextForEventFunction(): boolean {
   // Used to throw if certain APIs are called from the wrong context.
   return (executionContext & RenderContext) !== NoContext;
 }

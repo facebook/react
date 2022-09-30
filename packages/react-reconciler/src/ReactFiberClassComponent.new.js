@@ -83,7 +83,7 @@ const fakeInternalInstance = {};
 
 // React.Component uses a shared frozen object by default.
 // We'll use it to determine whether we need to initialize legacy refs.
-export const emptyRefsObject = new React.Component().refs;
+export const emptyRefsObject: $FlowFixMe = new React.Component().refs;
 
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUninitializedState;
