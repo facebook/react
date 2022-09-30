@@ -20,11 +20,21 @@ function isHookName(s) {
 }
 
 /**
+ * Namespaces that are not considered hooks
+ */
+const nonHookNamespaces = ['jest'];
+
+/**
  * We consider hooks to be a hook name identifier or a member expression
  * containing a hook name.
  */
 
 function isHook(node) {
+  console.log('isHook', {
+    type: node.type,
+    name: node.name,
+    ishookName: isHookName(node.name),
+  });
   if (node.type === 'Identifier') {
     return isHookName(node.name);
   } else if (
@@ -33,8 +43,7 @@ function isHook(node) {
     isHook(node.property)
   ) {
     const obj = node.object;
-    const isPascalCaseNameSpace = /^[A-Z].*/;
-    return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
+    return obj.type === 'Identifier' && !nonHookNamespaces.includes(obj.name);
   } else {
     return false;
   }

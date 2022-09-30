@@ -206,7 +206,7 @@ const tests = {
       _use();
       _useState();
       use_hook();
-      // also valid because it's not matching the PascalCase namespace
+      // also valid because it's not matching the allow-listed namespaces
       jest.useFakeTimer()
     `,
     `
@@ -406,6 +406,28 @@ const tests = {
         const [myState, setMyState] = useState(null);
       }
     `,
+    {
+      code: `
+      // Valid because we can have a factory function that creates hooks
+
+      function createHooks() {
+        return {
+          foo: {
+            useQuery: () => {
+              data: 'foo.useQuery'
+            },
+          }
+        };
+      }
+      const myHooks = createHooks();
+
+      const MyComponent = () => {
+        const query = myHooks.foo.useQuery();
+
+        return <>{query.data}</>;
+      }
+      `,
+    },
   ],
   invalid: [
     {
@@ -970,6 +992,52 @@ const tests = {
         (class {i() { useState(); }});
       `,
       errors: [classError('useState')],
+    },
+    {
+      code: `
+        function createHooks() {
+          return {
+            useFoo: () => {
+              data: 'foo.useQuery'
+            },
+          };
+        }
+        const hooks = createHooks();
+
+        const MyComponent = () => {
+          if (a) {
+            return;
+          }
+          const query = hooks.useFoo();
+
+          return <>{query.data}</>;
+        }
+      `,
+      errors: [conditionalError('hooks.useFoo', true)],
+    },
+    {
+      code: `
+        function createHooks() {
+          return {
+            foo: {
+              useQuery: () => {
+                data: 'foo.useQuery'
+              },
+            }
+          };
+        }
+        const hooks = createHooks();
+
+        const MyComponent = () => {
+          if (a) {
+            return;
+          }
+          const query = hooks.foo.useQuery();
+
+          return <>{query.data}</>;
+        }
+      `,
+      errors: [conditionalError('hooks.useFoo.useQuery')],
     },
   ],
 };
