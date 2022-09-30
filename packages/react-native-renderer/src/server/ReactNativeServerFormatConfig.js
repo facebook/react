@@ -342,7 +342,7 @@ export function hoistResourcesToRoot(
 ) {}
 
 export function prepareToRender(resources: Resources) {}
-export function cleanupAfterRender() {}
+export function cleanupAfterRender(previousDispatcher: mixed) {}
 export function createResources() {}
 export function createBoundaryResources() {}
 export function setCurrentlyRenderingBoundaryResourcesTarget(

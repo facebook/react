@@ -473,11 +473,11 @@ function createStyleResource(
     }
   }
 
-  const limitedEscacpedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
+  const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
     href,
   );
   const existingEl = ownerDocument.querySelector(
-    `link[rel="stylesheet"][href="${limitedEscacpedHref}"]`,
+    `link[rel="stylesheet"][href="${limitedEscapedHref}"]`,
   );
   const resource = {
     type: 'style',
@@ -588,11 +588,11 @@ function createPreloadResource(
   href: string,
   props: PreloadProps,
 ): PreloadResource {
-  const limitedEscacpedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
+  const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
     href,
   );
   let element = ownerDocument.querySelector(
-    `link[rel="preload"][href="${limitedEscacpedHref}"]`,
+    `link[rel="preload"][href="${limitedEscapedHref}"]`,
   );
   if (!element) {
     element = createResourceInstance('link', props, ownerDocument);
@@ -610,11 +610,11 @@ function createPreloadResource(
 function acquireStyleResource(resource: StyleResource): Instance {
   if (!resource.instance) {
     const {props, ownerDocument, precedence} = resource;
-    const limitedEscacpedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
+    const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
       props.href,
     );
     const existingEl = ownerDocument.querySelector(
-      `link[rel="stylesheet"][data-rprec][href="${limitedEscacpedHref}"]`,
+      `link[rel="stylesheet"][data-rprec][href="${limitedEscapedHref}"]`,
     );
     if (existingEl) {
       resource.instance = existingEl;
