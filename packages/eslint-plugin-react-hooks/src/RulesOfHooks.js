@@ -489,14 +489,11 @@ export default {
               // path segments.
               //
               // Special case when we think there might be an early return.
-              if (!cycled && pathsFromStartToEnd !== allPathsFromStartToEnd) {
-                let shouldReport = true;
-                if (__EXPERIMENTAL__) {
-                  // `use(...)` can be called conditionally.
-                  if (isUseIdentifier(hook)) {
-                    shouldReport = false;
-                  }
-                }
+              if (
+                !cycled &&
+                pathsFromStartToEnd !== allPathsFromStartToEnd &&
+                !isUseIdentifier(hook) // `use(...)` can be called conditionally.
+              ) {
                 const message =
                   `React Hook "${context.getSource(hook)}" is called ` +
                   'conditionally. React Hooks must be called in the exact ' +
@@ -505,9 +502,7 @@ export default {
                     ? ' Did you accidentally call a React Hook after an' +
                       ' early return?'
                     : '');
-                if (shouldReport) {
-                  context.report({node: hook, message});
-                }
+                context.report({node: hook, message});
               }
             } else if (
               codePathNode.parent &&
