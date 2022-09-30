@@ -1348,9 +1348,7 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
 export const supportsResources = true;
 
 export {isHostResourceType};
-export function isHostResourceInstance(
-  instance: Instance | Container,
-): boolean {
+function isHostResourceInstance(instance: Instance | Container): boolean {
   if (instance.nodeType === ELEMENT_NODE) {
     switch (instance.tagName.toLowerCase()) {
       case 'link': {
