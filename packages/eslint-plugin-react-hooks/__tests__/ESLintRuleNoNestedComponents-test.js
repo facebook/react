@@ -846,6 +846,17 @@ const tests = {
         }))
       `,
     },
+    {
+      code: normalizeIndent`
+        function useCustomHook() {
+          const useNestedHook = () => {
+            React.useRef();
+          }
+          useNestedHook();
+          useNestedHook();
+        }
+      `,
+    },
   ],
   invalid: [
     {

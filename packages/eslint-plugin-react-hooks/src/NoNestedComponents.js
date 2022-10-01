@@ -102,7 +102,7 @@ function isInsideComponentOrHook(node) {
 function isComponent(node) {
   const functionName = getFunctionName(node);
   if (functionName) {
-    if (isComponentName(functionName) || isHook(functionName)) {
+    if (isComponentName(functionName)) {
       return true;
     }
   }
