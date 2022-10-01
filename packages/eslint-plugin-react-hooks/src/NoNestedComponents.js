@@ -113,6 +113,15 @@ function isComponent(node) {
   return false;
 }
 
+function isNestedComponentDeclaration(node) {
+  return (
+    isComponent(node) &&
+    isInsideComponentOrHook(node.parent) &&
+    !isForwardRefCallback(node.parent) &&
+    !isMemoCallback(node.parent)
+  );
+}
+
 export default {
   meta: {
     type: 'problem',
@@ -133,7 +142,7 @@ export default {
     return {
       FunctionDeclaration(node) {
         // function MyComponent() { const onClick = useEvent(...) }
-        if (isComponent(node) && isInsideComponentOrHook(node.parent)) {
+        if (isNestedComponentDeclaration(node)) {
           context.report({
             node: node,
             messageId: 'declarationDuringRender',
@@ -145,7 +154,7 @@ export default {
       },
       FunctionExpression(node) {
         // const MyComponent = function MyComponent() { const onClick = useEvent(...) }
-        if (isComponent(node) && isInsideComponentOrHook(node.parent)) {
+        if (isNestedComponentDeclaration(node)) {
           context.report({
             node: node,
             messageId: 'declarationDuringRender',
@@ -155,10 +164,9 @@ export default {
           });
         }
       },
-
       ArrowFunctionExpression(node) {
         // const MyComponent = () => { const onClick = useEvent(...) }
-        if (isComponent(node) && isInsideComponentOrHook(node.parent)) {
+        if (isNestedComponentDeclaration(node)) {
           context.report({
             node: node,
             messageId: 'declarationDuringRender',

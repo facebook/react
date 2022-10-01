@@ -839,6 +839,13 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        const Component = React.memo(React.forwardRef(() => {
+          React.useRef();
+        }))
+      `,
+    },
   ],
   invalid: [
     {
