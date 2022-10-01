@@ -48,10 +48,43 @@ munge_underscores=false
 types_first=false
 
 well_formed_exports=true
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/dom-event-testing-library
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/eslint-plugin-react-hooks
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/jest-mock-scheduler
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/jest-react
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-art
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-cache
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-client
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-debug-tools
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-core
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-extensions
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-inline
 well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-shared
 well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-shell
 well_formed_exports.includes=<PROJECT_ROOT>/packages/react-devtools-timeline
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-dom
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-dom-bindings
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-fetch
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-fs
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-interactions
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-is
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-native-renderer
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-noop-renderer
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-pg
+well_formed_exports.includes=<PROJECT_ROOT>/packages/react-reconciler
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-refresh
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-server
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-server-dom-relay
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-server-dom-webpack
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-server-native-relay
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-suspense-test-utils
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-test-renderer
 well_formed_exports.includes=<PROJECT_ROOT>/packages/scheduler
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/shared
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/use-subscription
+; well_formed_exports.includes=<PROJECT_ROOT>/packages/use-sync-external-store
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
