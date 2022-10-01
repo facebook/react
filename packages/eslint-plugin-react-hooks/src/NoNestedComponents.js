@@ -128,7 +128,8 @@ export default {
     docs: {
       description: 'Ensures all component definitions ensure persistent state.',
       recommended: true,
-      url: 'https://reactjs.org/docs/??',
+      url:
+        'https://github.com/facebook/react/tree/main/packages/eslint-plugin-react-hooks#no-nested-components',
     },
     messages: {
       declarationDuringRender:
