@@ -1,8 +1,11 @@
 version: 2.1
 
+orbs:
+  node: circleci/node@4.7
+
 aliases:
   - &docker
-    - image: cimg/openjdk:17.0.0-node
+    - image: cimg/openjdk:17.0.0
 
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -114,15 +117,31 @@ parameters:
     type: string
     default: ''
 
+commands:
+  prepare:
+    description: "Checkout setup"
+    parameters:
+      node-version:
+        type: string
+    steps:
+      - checkout
+      - node/install:
+          node-version: << parameters.node-version >>
+          install-yarn: true
+      - run:
+          name: Nodejs Version
+          command: node --version
+
 jobs:
   setup:
     docker: *docker
     environment: *environment
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
-      - run:
-          name: Nodejs Version
-          command: node --version
+      - prepare:
+          node-version: << parameters.node-version >>
       - *restore_yarn_cache
       - *restore_node_modules
       - *yarn_install
@@ -133,9 +152,12 @@ jobs:
   yarn_lint:
     docker: *docker
     environment: *environment
-
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - *restore_node_modules
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
@@ -147,18 +169,24 @@ jobs:
     docker: *docker
     environment: *environment
     parallelism: 5
-
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
 
   scrape_warning_messages:
     docker: *docker
     environment: *environment
-
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - *restore_node_modules
       - run:
           command: |
@@ -173,8 +201,12 @@ jobs:
     docker: *docker
     environment: *environment
     parallelism: 40
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - *restore_node_modules
       - run: yarn build-combined
       - persist_to_workspace:
@@ -189,7 +221,8 @@ jobs:
       revision:
         type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: "16.17.1"
       - *restore_node_modules
       - run:
           name: Download artifacts for revision
@@ -205,8 +238,12 @@ jobs:
   download_base_build_for_sizebot:
     docker: *docker
     environment: *environment
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - *restore_node_modules
       - run:
           name: Download artifacts for base revision
@@ -231,8 +268,12 @@ jobs:
   process_artifacts_combined:
     docker: *docker
     environment: *environment
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - attach_workspace:
           at: .
       - *restore_node_modules
@@ -249,8 +290,12 @@ jobs:
   sizebot:
     docker: *docker
     environment: *environment
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - attach_workspace:
           at: .
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
@@ -261,8 +306,12 @@ jobs:
   build_devtools_and_process_artifacts:
     docker: *docker
     environment: *environment
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - attach_workspace:
           at: .
       - *restore_node_modules
@@ -276,8 +325,12 @@ jobs:
   run_devtools_e2e_tests:
     docker: *docker
     environment: *environment
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - attach_workspace:
           at: .
       - *restore_node_modules
@@ -296,10 +349,13 @@ jobs:
     environment: *environment
     parallelism: *TEST_PARALLELISM
     parameters:
+      node-version:
+        type: string
       version:
         type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - attach_workspace:
           at: .
       - *restore_node_modules
@@ -311,10 +367,13 @@ jobs:
     environment: *environment
     parallelism: *TEST_PARALLELISM
     parameters:
+      node-version:
+        type: string
       version:
         type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - attach_workspace:
           at: .
       - *restore_node_modules
@@ -337,8 +396,12 @@ jobs:
   yarn_lint_build:
     docker: *docker
     environment: *environment
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - attach_workspace:
           at: .
       - *restore_node_modules
@@ -347,8 +410,12 @@ jobs:
   yarn_check_release_dependencies:
     docker: *docker
     environment: *environment
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - attach_workspace:
           at: .
       - *restore_node_modules
@@ -358,8 +425,12 @@ jobs:
   check_error_codes:
     docker: *docker
     environment: *environment
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - attach_workspace: *attach_workspace
       - *restore_node_modules
       - run:
@@ -373,10 +444,13 @@ jobs:
     environment: *environment
     parallelism: *TEST_PARALLELISM
     parameters:
+      node-version:
+        type: string
       args:
         type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - *restore_node_modules
       - run: yarn test <<parameters.args>> --ci
 
@@ -385,10 +459,13 @@ jobs:
     environment: *environment
     parallelism: *TEST_PARALLELISM
     parameters:
+      node-version:
+        type: string
       args:
         type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - attach_workspace:
           at: .
       - *restore_node_modules
@@ -397,8 +474,12 @@ jobs:
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
     docker: *docker
     environment: *environment
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - attach_workspace:
           at: .
       - *restore_node_modules
@@ -419,7 +500,8 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
+      - prepare:
+          node-version: "16.17.1"
       - *restore_node_modules
       - run:
           name: Run fuzz tests
@@ -429,6 +511,8 @@ jobs:
 
   publish_prerelease:
     parameters:
+      node-version:
+        type: string
       commit_sha:
         type: string
       release_channel:
@@ -438,7 +522,8 @@ jobs:
     docker: *docker
     environment: *environment
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - *restore_node_modules
       - run:
           name: Run publish script
@@ -455,8 +540,12 @@ jobs:
   sync_reconciler_forks:
     docker: *docker
     environment: *environment
+    parameters:
+      node-version:
+        type: string
     steps:
-      - checkout
+      - prepare:
+          node-version: << parameters.node-version >>
       - *restore_node_modules
       - run:
           name: Fetch revisions that contain an intentional fork
@@ -485,16 +574,40 @@ workflows:
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
-      - setup
+      - setup:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
       - yarn_flow:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - setup
       # NOTE: This job is only enabled when we want the forks to be in sync.
       # When the forks intentionally diverge, comment out the job to disable it.
       - sync_reconciler_forks:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - setup
       - yarn_lint:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - setup
       - yarn_test:
@@ -502,6 +615,10 @@ workflows:
             - setup
           matrix:
             parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
               args:
                 # Intentionally passing these as strings instead of creating a
                 # separate parameter per CLI argument, since it's easier to
@@ -523,12 +640,30 @@ workflows:
                 - '-r=stable --env=development --persistent'
                 - '-r=experimental --env=development --persistent'
       - yarn_build_combined:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - setup
       - scrape_warning_messages:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - setup
       - process_artifacts_combined:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - scrape_warning_messages
             - yarn_build_combined
@@ -537,6 +672,10 @@ workflows:
             - yarn_build_combined
           matrix:
             parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
               args:
                 # Intentionally passing these as strings instead of creating a
                 # separate parameter per CLI argument, since it's easier to
@@ -561,6 +700,12 @@ workflows:
 
                 # TODO: Test more persistent configurations?
       - download_base_build_for_sizebot:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           filters:
             branches:
               ignore:
@@ -568,6 +713,12 @@ workflows:
           requires:
             - setup
       - sizebot:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           filters:
             branches:
               ignore:
@@ -576,21 +727,57 @@ workflows:
             - download_base_build_for_sizebot
             - yarn_build_combined
       - yarn_lint_build:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - yarn_build_combined
       - yarn_check_release_dependencies:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - yarn_build_combined
       - check_error_codes:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - yarn_build_combined
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - yarn_build_combined
       - build_devtools_and_process_artifacts:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - yarn_build_combined
       - run_devtools_e2e_tests:
+          matrix:
+            parameters:
+              node-version:
+                - "14.20.1"
+                - "16.17.1"
+                - "18.10.0"
           requires:
             - build_devtools_and_process_artifacts
 
@@ -605,7 +792,8 @@ workflows:
               only:
                 - main
     jobs:
-      - setup
+      - setup:
+          node-version: "16.17.1"
       - test_fuzz:
           requires:
             - setup
@@ -621,15 +809,18 @@ workflows:
               only:
                 - main
     jobs:
-      - setup
+      - setup:
+          node-version: "16.17.1"
       - download_build:
           requires:
             - setup
           revision: << pipeline.git.revision >>
       - build_devtools_and_process_artifacts:
+          node-version: "16.17.1"
           requires:
             - download_build
       - run_devtools_tests_for_versions:
+          node-version: "16.17.1"
           requires:
             - build_devtools_and_process_artifacts
           matrix:
@@ -641,6 +832,7 @@ workflows:
                 - "17.0"
                 - "18.0"
       - run_devtools_e2e_tests_for_versions:
+          node-version: "16.17.1"
           requires:
             - build_devtools_and_process_artifacts
           matrix:
@@ -656,8 +848,10 @@ workflows:
   publish_preleases:
     when: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
-      - setup
+      - setup:
+          node-version: "16.17.1"
       - publish_prerelease:
+          node-version: "16.17.1"
           name: Publish to Next channel
           requires:
             - setup
@@ -665,6 +859,7 @@ workflows:
           release_channel: stable
           dist_tag: "next"
       - publish_prerelease:
+          node-version: "16.17.1"
           name: Publish to Experimental channel
           requires:
             # NOTE: Intentionally running these jobs sequentially because npm
@@ -688,8 +883,10 @@ workflows:
               only:
                 - main
     jobs:
-      - setup
+      - setup:
+          node-version: "16.17.1"
       - publish_prerelease:
+          node-version: "16.17.1"
           name: Publish to Next channel
           requires:
             - setup
@@ -697,6 +894,7 @@ workflows:
           release_channel: stable
           dist_tag: "next"
       - publish_prerelease:
+          node-version: "16.17.1"
           name: Publish to Experimental channel
           requires:
             # NOTE: Intentionally running these jobs sequentially because npm
