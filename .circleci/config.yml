@@ -124,7 +124,7 @@ commands:
       - checkout
       - node/install:
           # dev engines: "16.17.1", "14.20.1", "18.10.0"
-          node-version: "18.10.0"
+          node-version: "16.17.1"
           install-yarn: true
       - run:
           name: Nodejs Version
