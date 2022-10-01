@@ -80,7 +80,7 @@ const tests = {
       `,
     },
     {
-      // false-negative memoized component
+      //false-negative due to unknown display name: memoized component
       code: normalizeIndent`
         function ParentComponent() {
           const MemoizedNestedComponent = React.useCallback(() => <div />, []);
@@ -94,7 +94,7 @@ const tests = {
       `,
     },
     {
-      // false-negative memoized component
+      // false-negative due to unknown display name: memoized component
       code: normalizeIndent`
         function ParentComponent() {
           const MemoizedNestedComponent = React.useCallback(
@@ -111,7 +111,7 @@ const tests = {
       `,
     },
     {
-      // false-negative memoized component
+      // false-negative due to unknown display name: memoized component
       code: normalizeIndent`
         function ParentComponent() {
           const MemoizedNestedFunctionComponent = React.useCallback(
@@ -130,7 +130,7 @@ const tests = {
       `,
     },
     {
-      // false-negative memoized component
+      // false-negative due to unknown display name: memoized component
       code: normalizeIndent`
         function ParentComponent() {
           const MemoizedNestedFunctionComponent = React.useCallback(
@@ -1294,6 +1294,22 @@ const tests = {
         {
           messageId: 'declarationDuringRender',
           data: {displayName: 'UnstableNestedFunctionComponent'},
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function ParentComponent() {
+          const MemoizedComponentn = React.useCallback(function Component() {});
+          return (
+            <MemoizedComponentn />
+          );
+        }
+      `,
+      errors: [
+        {
+          messageId: 'declarationDuringRender',
+          data: {displayName: 'Component'},
         },
       ],
     },
