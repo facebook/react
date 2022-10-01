@@ -578,14 +578,16 @@ workflows:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
       - yarn_flow:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - setup
       # NOTE: This job is only enabled when we want the forks to be in sync.
@@ -594,16 +596,18 @@ workflows:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - setup
       - yarn_lint:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - setup
       - yarn_test:
@@ -612,8 +616,9 @@ workflows:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
               args:
                 # Intentionally passing these as strings instead of creating a
                 # separate parameter per CLI argument, since it's easier to
@@ -638,24 +643,27 @@ workflows:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - setup
       - scrape_warning_messages:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - setup
       - process_artifacts_combined:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - scrape_warning_messages
             - yarn_build_combined
@@ -665,8 +673,9 @@ workflows:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
               args:
                 # Intentionally passing these as strings instead of creating a
                 # separate parameter per CLI argument, since it's easier to
@@ -694,8 +703,9 @@ workflows:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           filters:
             branches:
               ignore:
@@ -706,8 +716,9 @@ workflows:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           filters:
             branches:
               ignore:
@@ -719,48 +730,54 @@ workflows:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - yarn_build_combined
       - yarn_check_release_dependencies:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - yarn_build_combined
       - check_error_codes:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - yarn_build_combined
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - yarn_build_combined
       - build_devtools_and_process_artifacts:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - yarn_build_combined
       - run_devtools_e2e_tests:
           matrix:
             parameters:
               node-version:
-                # dev_engines
+                - "14.20.1"
                 - "16.17.1"
+                - "18.10.0"
           requires:
             - build_devtools_and_process_artifacts
 
