@@ -503,16 +503,15 @@ function runActTests(label, render, unmount, rerender) {
       // @gate __DEV__
       it('warns if you try to interleave multiple act calls', async () => {
         spyOnDevAndProd(console, 'error');
-        // let's try to cheat and spin off a 'thread' with an act call
-        (async () => {
-          await act(async () => {
-            await sleep(50);
-          });
-        })();
 
-        await act(async () => {
-          await sleep(100);
-        });
+        await Promise.all([
+          act(async () => {
+            await sleep(50);
+          }),
+          act(async () => {
+            await sleep(100);
+          }),
+        ]);
 
         await sleep(150);
         if (__DEV__) {
