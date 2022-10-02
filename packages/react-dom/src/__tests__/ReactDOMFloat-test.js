@@ -5,11 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
 
 let JSDOM;
+let JSDOMVirtualConsole;
 let Stream;
 let Scheduler;
 let React;
@@ -18,7 +20,6 @@ let ReactDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
 let textCache;
-let document;
 let writable;
 const CSPnonce = null;
 let container;
@@ -26,28 +27,45 @@ let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
 
+function resetModules(markup) {
+  jest.resetModules();
+
+  // Test Environment
+  ({JSDOM, VirtualConsole: JSDOMVirtualConsole} = require('jsdom'));
+  const virtualConsole = new JSDOMVirtualConsole();
+  virtualConsole.sendTo(console, {
+    omitJSDOMErrors: true,
+  });
+  virtualConsole.on('jsdomError', error => {
+    console.error(error);
+  });
+  const jsdom = new JSDOM(markup, {
+    runScripts: 'dangerously',
+    virtualConsole,
+  });
+
+  global.window = jsdom.window;
+  global.document = jsdom.window.document;
+  global.navigator = jsdom.window.navigator;
+  global.Node = jsdom.window.Node;
+
+  Scheduler = require('scheduler');
+  React = require('react');
+  ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
+  ReactDOMFizzServer = require('react-dom/server');
+  Stream = require('stream');
+  Suspense = React.Suspense;
+}
+
 describe('ReactDOMFloat', () => {
   beforeEach(() => {
-    jest.resetModules();
-    JSDOM = require('jsdom').JSDOM;
-    Scheduler = require('scheduler');
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactDOMClient = require('react-dom/client');
-    ReactDOMFizzServer = require('react-dom/server');
-    Stream = require('stream');
-    Suspense = React.Suspense;
+    resetModules(
+      '<!DOCTYPE html><html><head></head><body><div id="container">',
+    );
 
     textCache = new Map();
 
-    // Test Environment
-    const jsdom = new JSDOM(
-      '<!DOCTYPE html><html><head></head><body><div id="container">',
-      {
-        runScripts: 'dangerously',
-      },
-    );
-    document = jsdom.window.document;
     container = document.getElementById('container');
 
     buffer = '';
@@ -129,10 +147,8 @@ describe('ReactDOMFloat', () => {
     // We assume that we have now received a proper fragment of HTML.
     const bufferedContent = buffer;
     // Test Environment
-    const jsdom = new JSDOM(bufferedContent, {
-      runScripts: 'dangerously',
-    });
-    document = jsdom.window.document;
+    resetModules(bufferedContent);
+
     container = document;
     buffer = '';
   }
@@ -394,16 +410,14 @@ describe('ReactDOMFloat', () => {
       ReactDOM.preload('foo', {as: 'style'});
       ReactDOMClient.createRoot(container);
       ReactDOM.preload('bar', {as: 'style'});
-      // We need to use global.document because preload falls back
-      // to the window.document global when no other documents have been used
-      // The way the JSDOM runtim is created for these tests the local document
-      // global does not point to the global.document
-      expect(getVisibleChildren(global.document)).toEqual(
+      expect(getVisibleChildren(document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="style" href="bar" />
           </head>
-          <body />
+          <body>
+            <div id="container" />
+          </body>
         </html>,
       );
     });
@@ -468,10 +482,7 @@ describe('ReactDOMFloat', () => {
       expect(getVisibleChildren(document)).toEqual(
         <html>
           <head />
-          <body>
-            foo
-            <link rel="preload" as="style" href="foo" />
-          </body>
+          <body>foo</body>
         </html>,
       );
     });
@@ -537,16 +548,14 @@ describe('ReactDOMFloat', () => {
       ReactDOM.preinit('foo', {as: 'style'});
       ReactDOMClient.hydrateRoot(container, null);
       ReactDOM.preinit('bar', {as: 'style'});
-      // We need to use global.document because preload falls back
-      // to the window.document global when no other documents have been used
-      // The way the JSDOM runtim is created for these tests the local document
-      // global does not point to the global.document
-      expect(getVisibleChildren(global.document)).toEqual(
+      expect(getVisibleChildren(document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="style" href="bar" />
           </head>
-          <body />
+          <body>
+            <div id="container" />
+          </body>
         </html>,
       );
     });
@@ -1695,8 +1704,6 @@ describe('ReactDOMFloat', () => {
         <body>
           <div>Hello</div>
           <div>loading...</div>
-          <link rel="preload" href="one" as="style" />
-          <link rel="preload" href="two" as="style" />
         </body>
       </html>,
     );
@@ -1713,8 +1720,6 @@ describe('ReactDOMFloat', () => {
         <body>
           <div>Hello</div>
           <div>bar</div>
-          <link rel="preload" href="one" as="style" />
-          <link rel="preload" href="two" as="style" />
         </body>
       </html>,
     );
