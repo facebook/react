@@ -154,21 +154,10 @@ describe('ReactFunctionComponent', () => {
 
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Child test="test" />);
-    }).toThrowError(
-      __DEV__
-        ? 'Function components cannot have string refs. We recommend using useRef() instead.'
-        : // It happens because we don't save _owner in production for
-          // function components.
-          'Element ref was specified as a string (me) but no owner was set. This could happen for one of' +
-            ' the following reasons:\n' +
-            '1. You may be adding a ref to a function component\n' +
-            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-            '3. You have multiple copies of React loaded\n' +
-            'See https://reactjs.org/link/refs-must-have-owner for more information.',
-    );
+    }).toThrowError();
   });
 
-  it('should warn when given a string ref', () => {
+  it('should throw when given a string ref', () => {
     function Indirection(props) {
       return <div>{props.children}</div>;
     }
@@ -185,20 +174,9 @@ describe('ReactFunctionComponent', () => {
 
     expect(() =>
       ReactTestUtils.renderIntoDocument(<ParentUsingStringRef />),
-    ).toErrorDev(
-      'Warning: Function components cannot be given refs. ' +
-        'Attempts to access this ref will fail. ' +
-        'Did you mean to use React.forwardRef()?\n\n' +
-        'Check the render method ' +
-        'of `ParentUsingStringRef`.\n' +
-        '    in FunctionComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Indirection (at **)\n' +
-        '    in ParentUsingStringRef (at **)',
+    ).toThrow(
+      'Expected ref to be a function, an object returned by React.createRef(), or null.',
     );
-
-    // No additional warnings should be logged
-    ReactTestUtils.renderIntoDocument(<ParentUsingStringRef />);
   });
 
   it('should warn when given a function ref', () => {

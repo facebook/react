@@ -219,8 +219,6 @@ export const warnAboutDefaultPropsOnFunctionComponents = false; // deprecate lat
 // a deprecated pattern we want to get rid of in the future
 export const warnAboutSpreadingKeyToJSX = true;
 
-export const warnAboutStringRefs = true;
-
 // -----------------------------------------------------------------------------
 // Debugging and DevTools
 // -----------------------------------------------------------------------------

@@ -32,7 +32,6 @@ export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = true;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
-export const warnAboutStringRefs = true;
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;

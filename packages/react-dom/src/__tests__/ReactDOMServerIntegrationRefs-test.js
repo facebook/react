@@ -14,7 +14,6 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactFeatureFlags;
 let ReactTestUtils;
 
 function initModules() {
@@ -23,7 +22,6 @@ function initModules() {
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
-  ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
@@ -36,7 +34,6 @@ function initModules() {
 
 const {
   resetModules,
-  asyncReactDOMRender,
   clientRenderOnServerString,
   expectMarkupMatch,
 } = ReactDOMServerIntegrationUtils(initModules);
@@ -79,38 +76,6 @@ describe('ReactDOMServerIntegration', () => {
       const e = await clientRenderOnServerString(<RefsComponent />);
       expect(refElement).not.toBe(null);
       expect(refElement).toBe(e);
-    });
-
-    it('should have string refs on client when rendered over server markup', async () => {
-      class RefsComponent extends React.Component {
-        render() {
-          return <div ref="myDiv" />;
-        }
-      }
-
-      const markup = ReactDOMServer.renderToString(<RefsComponent />);
-      const root = document.createElement('div');
-      root.innerHTML = markup;
-      let component = null;
-      resetModules();
-      await expect(async () => {
-        await asyncReactDOMRender(
-          <RefsComponent ref={e => (component = e)} />,
-          root,
-          true,
-        );
-      }).toErrorDev(
-        ReactFeatureFlags.warnAboutStringRefs
-          ? [
-              'Warning: Component "RefsComponent" contains the string ref "myDiv". ' +
-                'Support for string refs will be removed in a future major release. ' +
-                'We recommend using useRef() or createRef() instead. ' +
-                'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-                '    in RefsComponent (at **)',
-            ]
-          : [],
-      );
-      expect(component.refs.myDiv).toBe(root.firstChild);
     });
   });
 

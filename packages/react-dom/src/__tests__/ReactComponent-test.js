@@ -12,7 +12,6 @@
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactFeatureFlags;
 let ReactTestUtils;
 
 describe('ReactComponent', () => {
@@ -22,7 +21,6 @@ describe('ReactComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactTestUtils = require('react-dom/test-utils');
   });
 
@@ -102,83 +100,6 @@ describe('ReactComponent', () => {
         </Wrapper>,
       );
     }
-  });
-
-  it('should support string refs on owned components', () => {
-    const innerObj = {};
-    const outerObj = {};
-
-    class Wrapper extends React.Component {
-      getObject = () => {
-        return this.props.object;
-      };
-
-      render() {
-        return <div>{this.props.children}</div>;
-      }
-    }
-
-    class Component extends React.Component {
-      render() {
-        const inner = <Wrapper object={innerObj} ref="inner" />;
-        const outer = (
-          <Wrapper object={outerObj} ref="outer">
-            {inner}
-          </Wrapper>
-        );
-        return outer;
-      }
-
-      componentDidMount() {
-        expect(this.refs.inner.getObject()).toEqual(innerObj);
-        expect(this.refs.outer.getObject()).toEqual(outerObj);
-      }
-    }
-
-    expect(() => {
-      ReactTestUtils.renderIntoDocument(<Component />);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "div" contains the string ref "inner". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in div (at **)\n' +
-              '    in Wrapper (at **)\n' +
-              '    in Component (at **)',
-            'Warning: Component "Component" contains the string ref "outer". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in Component (at **)',
-          ]
-        : [],
-    );
-  });
-
-  it('should not have string refs on unmounted components', () => {
-    class Parent extends React.Component {
-      render() {
-        return (
-          <Child>
-            <div ref="test" />
-          </Child>
-        );
-      }
-
-      componentDidMount() {
-        expect(this.refs && this.refs.test).toEqual(undefined);
-      }
-    }
-
-    class Child extends React.Component {
-      render() {
-        return <div />;
-      }
-    }
-
-    ReactTestUtils.renderIntoDocument(<Parent child={<span />} />);
   });
 
   it('should support callback-style refs', () => {

@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import assign from 'shared/assign';
 import hasOwnProperty from 'shared/hasOwnProperty';
@@ -20,13 +19,7 @@ const RESERVED_PROPS = {
   __source: true,
 };
 
-let specialPropKeyWarningShown,
-  specialPropRefWarningShown,
-  didWarnAboutStringRefs;
-
-if (__DEV__) {
-  didWarnAboutStringRefs = {};
-}
+let specialPropKeyWarningShown, specialPropRefWarningShown;
 
 function hasValidRef(config) {
   if (__DEV__) {
@@ -96,35 +89,6 @@ function defineRefPropWarningGetter(props, displayName) {
   });
 }
 
-function warnIfStringRefCannotBeAutoConverted(config) {
-  if (__DEV__) {
-    if (
-      typeof config.ref === 'string' &&
-      ReactCurrentOwner.current &&
-      config.__self &&
-      ReactCurrentOwner.current.stateNode !== config.__self
-    ) {
-      const componentName = getComponentNameFromType(
-        ReactCurrentOwner.current.type,
-      );
-
-      if (!didWarnAboutStringRefs[componentName]) {
-        console.error(
-          'Component "%s" contains the string ref "%s". ' +
-            'Support for string refs will be removed in a future major release. ' +
-            'This case cannot be automatically converted to an arrow function. ' +
-            'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
-            'Learn more about using refs safely here: ' +
-            'https://reactjs.org/link/strict-mode-string-ref',
-          componentName,
-          config.ref,
-        );
-        didWarnAboutStringRefs[componentName] = true;
-      }
-    }
-  }
-}
-
 /**
  * Factory method to create a new React element. This no longer adheres to
  * the class pattern, so do not use new to call it. Also, instanceof check
@@ -155,9 +119,6 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
     key: key,
     ref: ref,
     props: props,
-
-    // Record the component responsible for creating this element.
-    _owner: owner,
   };
 
   if (__DEV__) {
@@ -166,6 +127,14 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
     // This can be replaced with a WeakMap once they are implemented in
     // commonly used development environments.
     element._store = {};
+
+    // Record the component responsible for creating this element.
+    Object.defineProperty(element, '_owner', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: owner,
+    });
 
     // To make comparing ReactElements easier for testing purposes, we make
     // the validation flag non-enumerable (where possible, which should
@@ -308,7 +277,6 @@ export function jsxDEV(type, config, maybeKey, source, self) {
 
   if (hasValidRef(config)) {
     ref = config.ref;
-    warnIfStringRefCannotBeAutoConverted(config);
   }
 
   // Remaining properties are added to a new props object
@@ -373,10 +341,6 @@ export function createElement(type, config, children) {
   if (config != null) {
     if (hasValidRef(config)) {
       ref = config.ref;
-
-      if (__DEV__) {
-        warnIfStringRefCannotBeAutoConverted(config);
-      }
     }
     if (hasValidKey(config)) {
       if (__DEV__) {
@@ -506,13 +470,18 @@ export function cloneElement(element, config, children) {
   const source = element._source;
 
   // Owner will be preserved, unless ref is overridden
-  let owner = element._owner;
+  let owner;
+  if (__DEV__) {
+    owner = element._owner;
+  }
 
   if (config != null) {
     if (hasValidRef(config)) {
       // Silently steal the ref from the parent.
       ref = config.ref;
-      owner = ReactCurrentOwner.current;
+      if (__DEV__) {
+        owner = ReactCurrentOwner.current;
+      }
     }
     if (hasValidKey(config)) {
       if (__DEV__) {

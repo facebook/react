@@ -126,10 +126,7 @@ export type Fiber = {
 
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
-  ref:
-    | null
-    | (((handle: mixed) => void) & {_stringRef: ?string, ...})
-    | RefObject,
+  ref: null | ((handle: mixed) => void) | RefObject,
 
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.

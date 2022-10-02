@@ -513,8 +513,17 @@ describe('ReactElementValidator', () => {
       key: null,
       ref: null,
       props: {},
-      _owner: null,
     };
+
+    if (__DEV__) {
+      // Record the component responsible for creating this element.
+      Object.defineProperty(child, '_owner', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: null,
+      });
+    }
 
     void (<div>{[child]}</div>);
   });

@@ -26,10 +26,8 @@ import {
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-import {ClassComponent, HostText, HostPortal, Fragment} from './ReactWorkTags';
+import {HostText, HostPortal, Fragment} from './ReactWorkTags';
 import isArray from 'shared/isArray';
-import {warnAboutStringRefs} from 'shared/ReactFeatureFlags';
-import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 
 import {
   createWorkInProgress,
@@ -40,13 +38,11 @@ import {
   createFiberFromPortal,
 } from './ReactFiber.new';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
-import {StrictLegacyMode} from './ReactTypeOfMode';
 import {getIsHydrating} from './ReactFiberHydrationContext.new';
 import {pushTreeFork} from './ReactFiberTreeContext.new';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
-let didWarnAboutStringRefs;
 let ownerHasKeyUseWarning;
 let ownerHasFunctionTypeWarning;
 let warnForMissingKey = (child: mixed, returnFiber: Fiber) => {};
@@ -54,7 +50,6 @@ let warnForMissingKey = (child: mixed, returnFiber: Fiber) => {};
 if (__DEV__) {
   didWarnAboutMaps = false;
   didWarnAboutGenerators = false;
-  didWarnAboutStringRefs = {};
 
   /**
    * Warn if there's no key explicitly set on dynamic arrays of children or
@@ -97,10 +92,6 @@ if (__DEV__) {
   };
 }
 
-function isReactClass(type) {
-  return type.prototype && type.prototype.isReactComponent;
-}
-
 function coerceRef(
   returnFiber: Fiber,
   current: Fiber | null,
@@ -112,125 +103,9 @@ function coerceRef(
     typeof mixedRef !== 'function' &&
     typeof mixedRef !== 'object'
   ) {
-    if (__DEV__) {
-      // TODO: Clean this up once we turn on the string ref warning for
-      // everyone, because the strict mode case will no longer be relevant
-      if (
-        (returnFiber.mode & StrictLegacyMode || warnAboutStringRefs) &&
-        // We warn in ReactElement.js if owner and self are equal for string refs
-        // because these cannot be automatically converted to an arrow function
-        // using a codemod. Therefore, we don't have to warn about string refs again.
-        !(
-          element._owner &&
-          element._self &&
-          element._owner.stateNode !== element._self
-        ) &&
-        // Will already throw with "Function components cannot have string refs"
-        !(
-          element._owner &&
-          ((element._owner: any): Fiber).tag !== ClassComponent
-        ) &&
-        // Will already warn with "Function components cannot be given refs"
-        !(typeof element.type === 'function' && !isReactClass(element.type)) &&
-        // Will already throw with "Element ref was specified as a string (someStringRef) but no owner was set"
-        element._owner
-      ) {
-        const componentName =
-          getComponentNameFromFiber(returnFiber) || 'Component';
-        if (!didWarnAboutStringRefs[componentName]) {
-          if (warnAboutStringRefs) {
-            console.error(
-              'Component "%s" contains the string ref "%s". Support for string refs ' +
-                'will be removed in a future major release. We recommend using ' +
-                'useRef() or createRef() instead. ' +
-                'Learn more about using refs safely here: ' +
-                'https://reactjs.org/link/strict-mode-string-ref',
-              componentName,
-              mixedRef,
-            );
-          } else {
-            console.error(
-              'A string ref, "%s", has been found within a strict mode tree. ' +
-                'String refs are a source of potential bugs and should be avoided. ' +
-                'We recommend using useRef() or createRef() instead. ' +
-                'Learn more about using refs safely here: ' +
-                'https://reactjs.org/link/strict-mode-string-ref',
-              mixedRef,
-            );
-          }
-          didWarnAboutStringRefs[componentName] = true;
-        }
-      }
-    }
-
-    if (element._owner) {
-      const owner: ?Fiber = (element._owner: any);
-      let inst;
-      if (owner) {
-        const ownerFiber = ((owner: any): Fiber);
-
-        if (ownerFiber.tag !== ClassComponent) {
-          throw new Error(
-            'Function components cannot have string refs. ' +
-              'We recommend using useRef() instead. ' +
-              'Learn more about using refs safely here: ' +
-              'https://reactjs.org/link/strict-mode-string-ref',
-          );
-        }
-
-        inst = ownerFiber.stateNode;
-      }
-
-      if (!inst) {
-        throw new Error(
-          `Missing owner for string ref ${mixedRef}. This error is likely caused by a ` +
-            'bug in React. Please file an issue.',
-        );
-      }
-      // Assigning this to a const so Flow knows it won't change in the closure
-      const resolvedInst = inst;
-
-      if (__DEV__) {
-        checkPropStringCoercion(mixedRef, 'ref');
-      }
-      const stringRef = '' + mixedRef;
-      // Check if previous string ref matches new string ref
-      if (
-        current !== null &&
-        current.ref !== null &&
-        typeof current.ref === 'function' &&
-        current.ref._stringRef === stringRef
-      ) {
-        return current.ref;
-      }
-      const ref = function(value) {
-        const refs = resolvedInst.refs;
-        if (value === null) {
-          delete refs[stringRef];
-        } else {
-          refs[stringRef] = value;
-        }
-      };
-      ref._stringRef = stringRef;
-      return ref;
-    } else {
-      if (typeof mixedRef !== 'string') {
-        throw new Error(
-          'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-        );
-      }
-
-      if (!element._owner) {
-        throw new Error(
-          `Element ref was specified as a string (${mixedRef}) but no owner was set. This could happen for one of` +
-            ' the following reasons:\n' +
-            '1. You may be adding a ref to a function component\n' +
-            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-            '3. You have multiple copies of React loaded\n' +
-            'See https://reactjs.org/link/refs-must-have-owner for more information.',
-        );
-      }
-    }
+    throw new Error(
+      'Expected ref to be a function, an object returned by React.createRef(), or null.',
+    );
   }
   return mixedRef;
 }

@@ -134,6 +134,7 @@ function validateExplicitKey(element, parentType) {
   // assigning it a key.
   let childOwner = '';
   if (
+    __DEV__ &&
     element &&
     element._owner &&
     element._owner !== ReactCurrentOwner.current

@@ -212,6 +212,7 @@ describe('ReactElement', () => {
     expect(element.props).toEqual({foo: '56'});
   });
 
+  // @gate __DEV__
   it('preserves the owner on the element', () => {
     let element;
 

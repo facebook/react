@@ -14,179 +14,6 @@ let ReactDOM = require('react-dom');
 let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 let ReactTestUtils = require('react-dom/test-utils');
 
-// This is testing if string refs are deleted from `instance.refs`
-// Once support for string refs is removed, this test can be removed.
-// Detaching is already tested in refs-detruction-test.js
-describe('reactiverefs', () => {
-  let container;
-
-  beforeEach(() => {
-    jest.resetModules();
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactTestUtils = require('react-dom/test-utils');
-  });
-
-  afterEach(() => {
-    if (container) {
-      document.body.removeChild(container);
-      container = null;
-    }
-  });
-
-  /**
-   * Counts clicks and has a renders an item for each click. Each item rendered
-   * has a ref of the form "clickLogN".
-   */
-  class ClickCounter extends React.Component {
-    state = {count: this.props.initialCount};
-
-    triggerReset = () => {
-      this.setState({count: this.props.initialCount});
-    };
-
-    handleClick = () => {
-      this.setState({count: this.state.count + 1});
-    };
-
-    render() {
-      const children = [];
-      let i;
-      for (i = 0; i < this.state.count; i++) {
-        children.push(
-          <div
-            className="clickLogDiv"
-            key={'clickLog' + i}
-            ref={'clickLog' + i}
-          />,
-        );
-      }
-      return (
-        <span className="clickIncrementer" onClick={this.handleClick}>
-          {children}
-        </span>
-      );
-    }
-  }
-
-  const expectClickLogsLengthToBe = function(instance, length) {
-    const clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
-      instance,
-      'clickLogDiv',
-    );
-    expect(clickLogs.length).toBe(length);
-    expect(Object.keys(instance.refs.myCounter.refs).length).toBe(length);
-  };
-
-  /**
-   * Render a TestRefsComponent and ensure that the main refs are wired up.
-   */
-  const renderTestRefsComponent = function() {
-    /**
-     * Only purpose is to test that refs are tracked even when applied to a
-     * component that is injected down several layers. Ref systems are difficult to
-     * build in such a way that ownership is maintained in an airtight manner.
-     */
-    class GeneralContainerComponent extends React.Component {
-      render() {
-        return <div>{this.props.children}</div>;
-      }
-    }
-
-    /**
-     * Notice how refs ownership is maintained even when injecting a component
-     * into a different parent.
-     */
-    class TestRefsComponent extends React.Component {
-      doReset = () => {
-        this.refs.myCounter.triggerReset();
-      };
-
-      render() {
-        return (
-          <div>
-            <div ref="resetDiv" onClick={this.doReset}>
-              Reset Me By Clicking This.
-            </div>
-            <GeneralContainerComponent ref="myContainer">
-              <ClickCounter ref="myCounter" initialCount={1} />
-            </GeneralContainerComponent>
-          </div>
-        );
-      }
-    }
-
-    container = document.createElement('div');
-    document.body.appendChild(container);
-
-    let testRefsComponent;
-    expect(() => {
-      testRefsComponent = ReactDOM.render(<TestRefsComponent />, container);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "div" contains the string ref "resetDiv". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in div (at **)\n' +
-              '    in TestRefsComponent (at **)',
-            'Warning: Component "span" contains the string ref "clickLog0". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in span (at **)\n' +
-              '    in ClickCounter (at **)\n' +
-              '    in div (at **)\n' +
-              '    in GeneralContainerComponent (at **)\n' +
-              '    in div (at **)\n' +
-              '    in TestRefsComponent (at **)',
-          ]
-        : [],
-    );
-
-    expect(testRefsComponent instanceof TestRefsComponent).toBe(true);
-
-    const generalContainer = testRefsComponent.refs.myContainer;
-    expect(generalContainer instanceof GeneralContainerComponent).toBe(true);
-
-    const counter = testRefsComponent.refs.myCounter;
-    expect(counter instanceof ClickCounter).toBe(true);
-
-    return testRefsComponent;
-  };
-
-  /**
-   * Ensure that for every click log there is a corresponding ref (from the
-   * perspective of the injected ClickCounter component.
-   */
-  it('Should increase refs with an increase in divs', () => {
-    const testRefsComponent = renderTestRefsComponent();
-    const clickIncrementer = ReactTestUtils.findRenderedDOMComponentWithClass(
-      testRefsComponent,
-      'clickIncrementer',
-    );
-
-    expectClickLogsLengthToBe(testRefsComponent, 1);
-
-    // After clicking the reset, there should still only be one click log ref.
-    testRefsComponent.refs.resetDiv.click();
-    expectClickLogsLengthToBe(testRefsComponent, 1);
-
-    // Begin incrementing clicks (and therefore refs).
-    clickIncrementer.click();
-    expectClickLogsLengthToBe(testRefsComponent, 2);
-
-    clickIncrementer.click();
-    expectClickLogsLengthToBe(testRefsComponent, 3);
-
-    // Now reset again
-    testRefsComponent.refs.resetDiv.click();
-    expectClickLogsLengthToBe(testRefsComponent, 1);
-  });
-});
-
 if (!ReactFeatureFlags.disableModulePatternComponents) {
   describe('factory components', () => {
     it('Should correctly get the ref', () => {
@@ -340,44 +167,34 @@ describe('ref swapping', () => {
     expect(refCalled).toBe(1);
   });
 
-  it('coerces numbers to strings', () => {
+  it('throws on numbers', () => {
     class A extends React.Component {
       render() {
         return <div ref={1} />;
       }
     }
-    let a;
     expect(() => {
-      a = ReactTestUtils.renderIntoDocument(<A />);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "A" contains the string ref "1". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in A (at **)',
-          ]
-        : [],
+      ReactTestUtils.renderIntoDocument(<A />);
+    }).toThrow(
+      'Expected ref to be a function, an object returned by React.createRef(), or null.',
     );
-    expect(a.refs[1].nodeName).toBe('DIV');
   });
 
   it('provides an error for invalid refs', () => {
     expect(() => {
       ReactTestUtils.renderIntoDocument(<div ref={10} />);
     }).toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+      'Expected ref to be a function, an object returned by React.createRef(), or null.',
     );
     expect(() => {
       ReactTestUtils.renderIntoDocument(<div ref={true} />);
     }).toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+      'Expected ref to be a function, an object returned by React.createRef(), or null.',
     );
     expect(() => {
       ReactTestUtils.renderIntoDocument(<div ref={Symbol('foo')} />);
     }).toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+      'Expected ref to be a function, an object returned by React.createRef(), or null.',
     );
     // This works
     ReactTestUtils.renderIntoDocument(<div ref={undefined} />);
@@ -398,7 +215,7 @@ describe('ref swapping', () => {
         ref: undefined,
       });
     }).toThrow(
-      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+      'Expected ref to be a function, an object returned by React.createRef(), or null.',
     );
   });
 
@@ -530,85 +347,9 @@ describe('creating element with string ref in constructor', () => {
     ReactTestUtils = require('react-dom/test-utils');
 
     expect(function() {
-      ReactTestUtils.renderIntoDocument(<RefTest />);
-    }).toThrowError(
-      'Element ref was specified as a string (p) but no owner was set. This could happen for one of' +
-        ' the following reasons:\n' +
-        '1. You may be adding a ref to a function component\n' +
-        "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-        '3. You have multiple copies of React loaded\n' +
-        'See https://reactjs.org/link/refs-must-have-owner for more information.',
-    );
-  });
-});
-
-describe('strings refs across renderers', () => {
-  it('does not break', () => {
-    class Parent extends React.Component {
-      render() {
-        // This component owns both refs.
-        return (
-          <Indirection
-            child1={<div ref="child1" />}
-            child2={<div ref="child2" />}
-          />
-        );
-      }
-    }
-
-    class Indirection extends React.Component {
-      componentDidUpdate() {
-        // One ref is being rendered later using another renderer copy.
-        jest.resetModules();
-        const AnotherCopyOfReactDOM = require('react-dom');
-        AnotherCopyOfReactDOM.render(this.props.child2, div2);
-      }
-      render() {
-        // The other one is being rendered directly.
-        return this.props.child1;
-      }
-    }
-
-    const div1 = document.createElement('div');
-    const div2 = document.createElement('div');
-
-    let inst;
-    expect(() => {
-      inst = ReactDOM.render(<Parent />, div1);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "Indirection" contains the string ref "child1". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in Indirection (at **)\n' +
-              '    in Parent (at **)',
-          ]
-        : [],
-    );
-
-    // Only the first ref has rendered yet.
-    expect(inst.refs.child1.tagName).toBe('DIV');
-    expect(inst.refs.child1).toBe(div1.firstChild);
-
-    expect(() => {
-      // Now both refs should be rendered.
-      ReactDOM.render(<Parent />, div1);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "Root" contains the string ref "child2". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref',
-          ]
-        : [],
-      {withoutStack: true},
-    );
-    expect(inst.refs.child1.tagName).toBe('DIV');
-    expect(inst.refs.child1).toBe(div1.firstChild);
-    expect(inst.refs.child2.tagName).toBe('DIV');
-    expect(inst.refs.child2).toBe(div2.firstChild);
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(<RefTest />);
+      }).toErrorDev(['']);
+    }).toThrowError();
   });
 });

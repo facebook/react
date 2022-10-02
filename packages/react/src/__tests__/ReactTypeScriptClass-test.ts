@@ -308,10 +308,11 @@ class ProvideContext extends React.Component {
   }
 }
 
-// it supports classic refs
-class ClassicRefs extends React.Component {
+// it supports refs
+class Refs extends React.Component {
+  innerRef = React.createRef()
   render() {
-    return React.createElement(Inner, {name: 'foo', ref: 'inner'});
+    return React.createElement(Inner, {name: 'foo', ref: this.innerRef});
   }
 }
 
@@ -687,22 +688,10 @@ describe('ReactTypeScriptClass', function() {
     test(React.createElement(ProvideContext), 'DIV', 'bar-through-context');
   });
 
-  it('supports string refs', function() {
+  it('supports refs', function() {
     const ref = React.createRef();
-    expect(() => {
-      test(React.createElement(ClassicRefs, {ref: ref}), 'DIV', 'foo');
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "ClassicRefs" contains the string ref "inner". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in ClassicRefs (at **)',
-          ]
-        : [],
-    );
-    expect(ref.current.refs.inner.getName()).toBe('foo');
+    test(React.createElement(Refs, {ref: ref}), 'DIV', 'foo');
+    expect(ref.current.innerRef.current.getName()).toBe('foo');
   });
 
   it('supports drilling through to the DOM using findDOMNode', function() {

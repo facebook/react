@@ -63,9 +63,15 @@ export function unstable_toMatchRenderedOutput(root, expectedJSX) {
           props: {
             children: actualJSXChildren,
           },
-          _owner: null,
           _store: __DEV__ ? {} : undefined,
         };
+
+        Object.defineProperty(actualJSX, '_owner', {
+          configurable: false,
+          enumerable: false,
+          writable: false,
+          value: null,
+        });
       }
     }
   } else {
@@ -82,7 +88,7 @@ function jsonChildToJSXChild(jsonChild) {
     return jsonChild;
   } else {
     const jsxChildren = jsonChildrenToJSXChildren(jsonChild.children);
-    return {
+    const element = {
       $$typeof: REACT_ELEMENT_TYPE,
       type: jsonChild.type,
       key: null,
@@ -91,9 +97,17 @@ function jsonChildToJSXChild(jsonChild) {
         jsxChildren === null
           ? jsonChild.props
           : {...jsonChild.props, children: jsxChildren},
-      _owner: null,
       _store: __DEV__ ? {} : undefined,
     };
+
+    Object.defineProperty(element, '_owner', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: null,
+    });
+
+    return element;
   }
 }
 

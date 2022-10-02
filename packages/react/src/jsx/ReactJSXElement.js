@@ -155,9 +155,6 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
     key,
     ref,
     props,
-
-    // Record the component responsible for creating this element.
-    _owner: owner,
   };
 
   if (__DEV__) {
@@ -166,6 +163,14 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
     // This can be replaced with a WeakMap once they are implemented in
     // commonly used development environments.
     element._store = {};
+
+    // Record the component responsible for creating this element.
+    Object.defineProperty(element, '_owner', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: owner,
+    });
 
     // To make comparing ReactElements easier for testing purposes, we make
     // the validation flag non-enumerable (where possible, which should
