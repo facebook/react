@@ -271,13 +271,15 @@ describe('ReactTestRenderer', () => {
       return <div>Hello, world</div>;
     }
     class Foo extends React.Component {
+      fooRef = React.createRef();
       render() {
-        return <Bar ref="foo" />;
+        return <Bar ref={this.fooRef} />;
       }
     }
     class Baz extends React.Component {
+      bazRef = React.createRef();
       render() {
-        return <div ref="baz" />;
+        return <div ref={this.bazRef} />;
       }
     }
     ReactTestRenderer.create(<Baz />);
@@ -298,11 +300,12 @@ describe('ReactTestRenderer', () => {
     const mockAnchorInstance = {hover: () => {}};
     const log = [];
     class Foo extends React.Component {
+      barRef = React.createRef();
       componentDidMount() {
-        log.push(this.refs.bar);
+        log.push(this.barRef.current);
       }
       render() {
-        return <a ref="bar">Hello, world</a>;
+        return <a ref={this.barRef}>Hello, world</a>;
       }
     }
     function createNodeMock(element) {
@@ -355,7 +358,7 @@ describe('ReactTestRenderer', () => {
   it('supports unmounting when using refs', () => {
     class Foo extends React.Component {
       render() {
-        return <div ref="foo" />;
+        return <div ref={React.createRef()} />;
       }
     }
     const inst = ReactTestRenderer.create(<Foo />, {
@@ -394,7 +397,11 @@ describe('ReactTestRenderer', () => {
     };
     class Foo extends React.Component {
       render() {
-        return this.props.useDiv ? <div ref="foo" /> : <span ref="foo" />;
+        return this.props.useDiv ? (
+          <div ref={React.createRef()} />
+        ) : (
+          <span ref={React.createRef()} />
+        );
       }
     }
     const inst = ReactTestRenderer.create(<Foo useDiv={true} />, {

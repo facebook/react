@@ -1385,25 +1385,36 @@ describe('ResponderEventPlugin', () => {
     const ReactDOMComponentTree = require('react-dom-bindings/src/client/ReactDOMComponentTree');
 
     class ChildComponent extends React.Component {
+      divRef = React.createRef();
+      div1Ref = React.createRef();
+      div2Ref = React.createRef();
+
       render() {
         return (
-          <div ref="DIV" id={this.props.id + '__DIV'}>
-            <div ref="DIV_1" id={this.props.id + '__DIV_1'} />
-            <div ref="DIV_2" id={this.props.id + '__DIV_2'} />
+          <div ref={this.divRef} id={this.props.id + '__DIV'}>
+            <div ref={this.div1Ref} id={this.props.id + '__DIV_1'} />
+            <div ref={this.div2Ref} id={this.props.id + '__DIV_2'} />
           </div>
         );
       }
     }
 
     class ParentComponent extends React.Component {
+      pRef = React.createRef();
+      p_P1Ref = React.createRef();
+      p_P1Ref = React.createRef();
+      p_P1_C1Ref = React.createRef();
+      p_P1_C2Ref = React.createRef();
+      p_OneOffRef = React.createRef();
+
       render() {
         return (
-          <div ref="P" id="P">
-            <div ref="P_P1" id="P_P1">
-              <ChildComponent ref="P_P1_C1" id="P_P1_C1" />
-              <ChildComponent ref="P_P1_C2" id="P_P1_C2" />
+          <div ref={this.pRef} id="P">
+            <div ref={this.p_P1Ref} id="P_P1">
+              <ChildComponent ref={this.p_P1_C1Ref} id="P_P1_C1" />
+              <ChildComponent ref={this.p_P1_C2Ref} id="P_P1_C2" />
             </div>
-            <div ref="P_OneOff" id="P_OneOff" />
+            <div ref={this.p_OneOffRef} id="P_OneOff" />
           </div>
         );
       }
@@ -1414,41 +1425,45 @@ describe('ResponderEventPlugin', () => {
     const ancestors = [
       // Common ancestor with self is self.
       {
-        one: parent.refs.P_P1_C1.refs.DIV_1,
-        two: parent.refs.P_P1_C1.refs.DIV_1,
-        com: parent.refs.P_P1_C1.refs.DIV_1,
+        one: parent.p_P1_C1Ref.current.div1Ref.current,
+        two: parent.p_P1_C1Ref.current.div1Ref.current,
+        com: parent.p_P1_C1Ref.current.div1Ref.current,
       },
       // Common ancestor with self is self - even if topmost DOM.
-      {one: parent.refs.P, two: parent.refs.P, com: parent.refs.P},
+      {
+        one: parent.pRef.current,
+        two: parent.pRef.current,
+        com: parent.pRef.current,
+      },
       // Siblings
       {
-        one: parent.refs.P_P1_C1.refs.DIV_1,
-        two: parent.refs.P_P1_C1.refs.DIV_2,
-        com: parent.refs.P_P1_C1.refs.DIV,
+        one: parent.p_P1_C1Ref.current.div1Ref.current,
+        two: parent.p_P1_C1Ref.current.div2Ref.current,
+        com: parent.p_P1_C1Ref.current.divRef.current,
       },
       // Common ancestor with parent is the parent.
       {
-        one: parent.refs.P_P1_C1.refs.DIV_1,
-        two: parent.refs.P_P1_C1.refs.DIV,
-        com: parent.refs.P_P1_C1.refs.DIV,
+        one: parent.p_P1_C1Ref.current.div1Ref.current,
+        two: parent.p_P1_C1Ref.current.divRef.current,
+        com: parent.p_P1_C1Ref.current.divRef.current,
       },
       // Common ancestor with grandparent is the grandparent.
       {
-        one: parent.refs.P_P1_C1.refs.DIV_1,
-        two: parent.refs.P_P1,
-        com: parent.refs.P_P1,
+        one: parent.p_P1_C1Ref.current.div1Ref.current,
+        two: parent.p_P1Ref.current,
+        com: parent.p_P1Ref.current,
       },
       // Grandparent across subcomponent boundaries.
       {
-        one: parent.refs.P_P1_C1.refs.DIV_1,
-        two: parent.refs.P_P1_C2.refs.DIV_1,
-        com: parent.refs.P_P1,
+        one: parent.p_P1_C1Ref.current.div1Ref.current,
+        two: parent.p_P1_C2Ref.current.div1Ref.current,
+        com: parent.p_P1Ref.current,
       },
       // Something deep with something one-off.
       {
-        one: parent.refs.P_P1_C1.refs.DIV_1,
-        two: parent.refs.P_OneOff,
-        com: parent.refs.P,
+        one: parent.p_P1_C1Ref.current.div1Ref.current,
+        two: parent.p_OneOffRef.current,
+        com: parent.pRef.current,
       },
     ];
     let i;
