@@ -66,7 +66,7 @@ export const enableSchedulingProfiler: boolean =
 export const enableSchedulerDebugging = true;
 export const warnAboutDeprecatedLifecycles = true;
 export const disableLegacyContext = __EXPERIMENTAL__;
-export const warnAboutStringRefs = false;
+export const warnAboutStringRefs = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
