@@ -11,6 +11,7 @@
 'use strict';
 
 let JSDOM;
+let JSDOMVirtualConsole;
 let Stream;
 let Scheduler;
 let React;
@@ -32,38 +33,60 @@ let fatalError = undefined;
 let originalDocument;
 let originalWindow;
 
+function resetModules() {
+  jest.resetModules();
+  ({JSDOM, VirtualConsole: JSDOMVirtualConsole} = require('jsdom'));
+  Scheduler = require('scheduler');
+  React = require('react');
+  ReactDOMClient = require('react-dom/client');
+  ReactDOMFizzServer = require('react-dom/server');
+  Stream = require('stream');
+  Suspense = React.Suspense;
+  if (gate(flags => flags.enableSuspenseList)) {
+    SuspenseList = React.SuspenseList;
+    use = React.experimental_use;
+  }
+
+  PropTypes = require('prop-types');
+
+  if (gate(flags => flags.source)) {
+    // The `with-selector` module composes the main `use-sync-external-store`
+    // entrypoint. In the compiled artifacts, this is resolved to the `shim`
+    // implementation by our build config, but when running the tests against
+    // the source files, we need to tell Jest how to resolve it. Because this
+    // is a source module, this mock has no affect on the build tests.
+    jest.mock('use-sync-external-store/src/useSyncExternalStore', () =>
+      jest.requireActual('react'),
+    );
+  }
+  useSyncExternalStore = React.useSyncExternalStore;
+  useSyncExternalStoreWithSelector = require('use-sync-external-store/with-selector')
+    .useSyncExternalStoreWithSelector;
+}
+
+function resetJSDOM(markup) {
+  // Test Environment
+  const virtualConsole = new JSDOMVirtualConsole();
+  virtualConsole.sendTo(console, {
+    omitJSDOMErrors: true,
+  });
+  virtualConsole.on('jsdomError', error => {
+    console.error(error);
+  });
+  const jsdom = new JSDOM(markup, {
+    runScripts: 'dangerously',
+    virtualConsole,
+  });
+  global.window = jsdom.window;
+  global.document = jsdom.window.document;
+  resetModules();
+}
+
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
-    jest.resetModules();
     originalDocument = global.document;
     originalWindow = global.window;
-    JSDOM = require('jsdom').JSDOM;
-    Scheduler = require('scheduler');
-    React = require('react');
-    ReactDOMClient = require('react-dom/client');
-    ReactDOMFizzServer = require('react-dom/server');
-    Stream = require('stream');
-    Suspense = React.Suspense;
-    if (gate(flags => flags.enableSuspenseList)) {
-      SuspenseList = React.SuspenseList;
-      use = React.experimental_use;
-    }
-
-    PropTypes = require('prop-types');
-
-    if (gate(flags => flags.source)) {
-      // The `with-selector` module composes the main `use-sync-external-store`
-      // entrypoint. In the compiled artifacts, this is resolved to the `shim`
-      // implementation by our build config, but when running the tests against
-      // the source files, we need to tell Jest how to resolve it. Because this
-      // is a source module, this mock has no affect on the build tests.
-      jest.mock('use-sync-external-store/src/useSyncExternalStore', () =>
-        jest.requireActual('react'),
-      );
-    }
-    useSyncExternalStore = React.useSyncExternalStore;
-    useSyncExternalStoreWithSelector = require('use-sync-external-store/with-selector')
-      .useSyncExternalStoreWithSelector;
+    resetModules();
 
     textCache = new Map();
 
@@ -167,11 +190,8 @@ describe('ReactDOMFizzServer', () => {
     // We assume that we have now received a proper fragment of HTML.
     const bufferedContent = buffer;
     // Test Environment
-    const jsdom = new JSDOM(bufferedContent, {
-      runScripts: 'dangerously',
-    });
-    global.window = jsdom.window;
-    global.document = jsdom.window.document;
+    resetJSDOM(bufferedContent);
+
     container = document;
     buffer = '';
   }
@@ -4838,11 +4858,7 @@ describe('ReactDOMFizzServer', () => {
   describe('title children', () => {
     function prepareJSDOMForTitle() {
       // Test Environment
-      const jsdom = new JSDOM('<!DOCTYPE html><html><head>\u0000', {
-        runScripts: 'dangerously',
-      });
-      global.window = jsdom.window;
-      global.document = jsdom.window.document;
+      resetJSDOM('<!DOCTYPE html><html><head>\u0000');
       container = document.getElementsByTagName('head')[0];
     }
 
