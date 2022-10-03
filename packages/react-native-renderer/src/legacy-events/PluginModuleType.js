@@ -14,7 +14,7 @@ import type {
 } from './ReactSyntheticEventType';
 import type {TopLevelType} from './TopLevelEventTypes';
 
-export type EventTypes = {[key: string]: DispatchConfig, ...};
+export type EventTypes = {[key: string]: DispatchConfig};
 
 export type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | TouchEvent;
 

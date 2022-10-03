@@ -13,10 +13,10 @@ import type {
   PluginName,
   LegacyPluginModule,
 } from './PluginModuleType';
+import type {TopLevelType} from './TopLevelEventTypes';
 
 type NamesToPlugins = {
   [key: PluginName]: LegacyPluginModule<AnyNativeEvent>,
-  ...,
 };
 type EventPluginOrder = null | Array<PluginName>;
 
@@ -166,22 +166,28 @@ function publishRegistrationName(
 /**
  * Ordered list of injected plugins.
  */
-export const plugins = [];
+export const plugins: Array<LegacyPluginModule<AnyNativeEvent>> = [];
 
 /**
  * Mapping from event name to dispatch config
  */
-export const eventNameDispatchConfigs = {};
+export const eventNameDispatchConfigs: {
+  [eventName: string]: DispatchConfig,
+} = {};
 
 /**
  * Mapping from registration name to plugin module
  */
-export const registrationNameModules = {};
+export const registrationNameModules: {
+  [registrationName: string]: LegacyPluginModule<AnyNativeEvent>,
+} = {};
 
 /**
  * Mapping from registration name to event name
  */
-export const registrationNameDependencies = {};
+export const registrationNameDependencies: {
+  [registrationName: string]: Array<TopLevelType> | void,
+} = {};
 
 /**
  * Mapping from lowercase registration names to the properly cased version,
@@ -189,7 +195,9 @@ export const registrationNameDependencies = {};
  * only in __DEV__.
  * @type {Object}
  */
-export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
+export const possibleRegistrationNames: {
+  [lowerCasedName: string]: string,
+} = __DEV__ ? {} : (null: any);
 // Trust the developer to only use possibleRegistrationNames in __DEV__
 
 /**
