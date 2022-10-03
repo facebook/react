@@ -26,7 +26,7 @@ import {
 } from 'shared/ReactSymbols';
 import isValidElementType from 'shared/isValidElementType';
 
-export function typeOf(object: any) {
+export function typeOf(object: any): mixed {
   if (typeof object === 'object' && object !== null) {
     const $$typeof = object.$$typeof;
     switch ($$typeof) {
