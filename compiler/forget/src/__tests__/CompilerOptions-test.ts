@@ -49,6 +49,7 @@ describe("CompilerOptions", () => {
     const fullInput = {
       outputKinds: [OutputKind.JS, OutputKind.LIR],
       flags: {
+        addFreeze: true,
         condCache: true,
         guardReads: true,
         guardHooks: true,

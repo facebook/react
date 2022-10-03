@@ -85,6 +85,8 @@ export function runFunc(
    */
   function genPrologue(): void {
     for (const param of irFunc.params) {
+      // params are immut
+      jsFunc.emitMakeReadOnly(param);
       if (IR.isReactiveVal(param)) {
         jsFunc.emitReactiveVal(param);
       }
@@ -102,6 +104,9 @@ export function runFunc(
       jsFunc.emit(instr.ast.node);
 
       for (const decl of instr.ir.decls) {
+        if (decl.immutable) {
+          jsFunc.emitMakeReadOnly(decl);
+        }
         if (IR.isReactiveVal(decl)) {
           jsFunc.emitReactiveVal(decl);
         }

@@ -81,6 +81,10 @@ export type CompilerFlags = {
    * can remove this flag.
    */
   guardThrows: boolean;
+  /**
+   * Experimental runtime logging to collect data
+   */
+  addFreeze: boolean;
 };
 
 export function createCompilerFlags(): CompilerFlags {
@@ -95,6 +99,7 @@ export function createCompilerFlags(): CompilerFlags {
     guardReads: false,
     guardHooks: false,
     guardThrows: false,
+    addFreeze: false,
   };
 }
 
@@ -115,6 +120,7 @@ export function parseCompilerFlags(
       case "guardReads":
       case "guardHooks":
       case "guardThrows":
+      case "addFreeze":
         if (typeof value !== "boolean") {
           throw `Expected boolean for flag '${key}': ${value}`;
         }

@@ -188,6 +188,19 @@ export class Func {
     ]);
   }
 
+  // Generate calls to utility function that freezes immut objects
+  emitMakeReadOnly(val: IR.BindingVal) {
+    if (this.context.opts.flags.addFreeze === true) {
+      this.code.push(
+        t.expressionStatement(
+          t.callExpression(t.identifier("useMemoCache.makeReadOnly"), [
+            val.binding.identifier,
+          ])
+        )
+      );
+    }
+  }
+
   /**
    * Generate code materializing reactions
    * @returns
