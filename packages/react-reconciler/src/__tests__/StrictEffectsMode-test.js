@@ -27,7 +27,6 @@ describe('StrictEffectsMode', () => {
     return gate(
       flags =>
         flags.build === 'development' &&
-        flags.enableStrictEffects &&
         flags.createRootStrictEffectsByDefault &&
         flags.dfsEffectsRefactor,
     );

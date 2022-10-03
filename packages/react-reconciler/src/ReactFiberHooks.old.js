@@ -42,7 +42,6 @@ import {
   enableUseHook,
   enableUseMemoCacheHook,
   enableUseEventHook,
-  enableStrictEffects,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -600,11 +599,7 @@ export function bailoutHooks(
   workInProgress.updateQueue = current.updateQueue;
   // TODO: Don't need to reset the flags here, because they're reset in the
   // complete phase (bubbleProperties).
-  if (
-    __DEV__ &&
-    enableStrictEffects &&
-    (workInProgress.mode & StrictEffectsMode) !== NoMode
-  ) {
+  if (__DEV__ && (workInProgress.mode & StrictEffectsMode) !== NoMode) {
     workInProgress.flags &= ~(
       MountPassiveDevEffect |
       MountLayoutDevEffect |
@@ -1884,7 +1879,6 @@ function mountEffect(
 ): void {
   if (
     __DEV__ &&
-    enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     return mountEffectImpl(
@@ -1979,7 +1973,6 @@ function mountLayoutEffect(
   let fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
   if (
     __DEV__ &&
-    enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     fiberFlags |= MountLayoutDevEffect;
@@ -2046,7 +2039,6 @@ function mountImperativeHandle<T>(
   let fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
   if (
     __DEV__ &&
-    enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     fiberFlags |= MountLayoutDevEffect;

@@ -50,7 +50,6 @@ import {
   enableCache,
   enableTransitionTracing,
   enableUseEventHook,
-  enableStrictEffects,
   enableFloat,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -4183,7 +4182,7 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
 }
 
 function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
+  if (__DEV__) {
     // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {
@@ -4211,7 +4210,7 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
 }
 
 function invokePassiveEffectMountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
+  if (__DEV__) {
     // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {
@@ -4230,7 +4229,7 @@ function invokePassiveEffectMountInDEV(fiber: Fiber): void {
 }
 
 function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
+  if (__DEV__) {
     // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {
@@ -4260,7 +4259,7 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
 }
 
 function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableStrictEffects) {
+  if (__DEV__) {
     // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {

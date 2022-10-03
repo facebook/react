@@ -24,7 +24,6 @@ describe('StrictEffectsMode defaults', () => {
     act = require('jest-react').act;
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableStrictEffects = __DEV__;
     ReactFeatureFlags.createRootStrictEffectsByDefault = __DEV__;
   });
 

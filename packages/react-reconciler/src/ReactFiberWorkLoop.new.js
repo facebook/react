@@ -35,7 +35,6 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   disableSchedulerTimeoutInWorkLoop,
-  enableStrictEffects,
   skipUnmountedBoundaries,
   enableUpdaterTracking,
   enableCache,
@@ -2580,7 +2579,7 @@ function commitRootImpl(
     legacyErrorBoundariesThatAlreadyFailed = null;
   }
 
-  if (__DEV__ && enableStrictEffects) {
+  if (__DEV__) {
     if (!rootDidHavePassiveEffects) {
       commitDoubleInvokeEffectsInDEV(root, false);
     }
@@ -2857,7 +2856,7 @@ function flushPassiveEffectsImpl() {
     markPassiveEffectsStopped();
   }
 
-  if (__DEV__ && enableStrictEffects) {
+  if (__DEV__) {
     commitDoubleInvokeEffectsInDEV(root, true);
   }
 
@@ -3325,7 +3324,7 @@ function commitDoubleInvokeEffectsInDEV(
   root: FiberRoot,
   hasPassiveEffects: boolean,
 ) {
-  if (__DEV__ && enableStrictEffects) {
+  if (__DEV__) {
     if (useModernStrictMode) {
       let doubleInvokeEffects = true;
 

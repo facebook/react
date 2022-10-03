@@ -20,9 +20,6 @@ describe('ReactStrictMode', () => {
     ReactDOMClient = require('react-dom/client');
 
     act = require('jest-react').act;
-
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableStrictEffects = __DEV__;
   });
 
   describe('levels', () => {

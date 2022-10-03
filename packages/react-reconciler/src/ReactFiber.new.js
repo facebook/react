@@ -25,7 +25,6 @@ import {supportsResources, isHostResourceType} from './ReactFiberHostConfig';
 import {
   createRootStrictEffectsByDefault,
   enableCache,
-  enableStrictEffects,
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
@@ -442,13 +441,7 @@ export function createHostRootFiber(
   let mode;
   if (tag === ConcurrentRoot) {
     mode = ConcurrentMode;
-    if (isStrictMode === true) {
-      mode |= StrictLegacyMode;
-
-      if (enableStrictEffects) {
-        mode |= StrictEffectsMode;
-      }
-    } else if (enableStrictEffects && createRootStrictEffectsByDefault) {
+    if (isStrictMode === true || createRootStrictEffectsByDefault) {
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
     if (
@@ -511,7 +504,7 @@ export function createFiberFromTypeAndProps(
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
         mode |= StrictLegacyMode;
-        if (enableStrictEffects && (mode & ConcurrentMode) !== NoMode) {
+        if ((mode & ConcurrentMode) !== NoMode) {
           // Strict effects should never run on legacy roots
           mode |= StrictEffectsMode;
         }
