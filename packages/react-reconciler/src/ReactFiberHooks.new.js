@@ -771,7 +771,6 @@ if (enableUseMemoCacheHook) {
 function use<T>(usable: Usable<T>): T {
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
-    // $FlowFixMe[prop-missing]
     if (typeof usable.then === 'function') {
       // This is a thenable.
       const thenable: Thenable<T> = (usable: any);

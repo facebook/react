@@ -184,7 +184,6 @@ function createWorkInProgressHook(): Hook {
     if (workInProgressHook.next === null) {
       isReRender = false;
       // Append to the end of the list
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
       workInProgressHook = workInProgressHook.next = createHook();
     } else {
       // There's already a work-in-progress. Reuse it.
@@ -529,7 +528,6 @@ function throwOnUseEventCall() {
 export function useEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): EventFunctionWrapper<Args, Return, F> {
-  // $FlowIgnore[incompatible-return] useEvent doesn't work in Fizz
   return throwOnUseEventCall;
 }
 
@@ -594,7 +592,6 @@ function useId(): string {
 function use<T>(usable: Usable<T>): T {
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
-    // $FlowFixMe[prop-missing]
     if (typeof usable.then === 'function') {
       // This is a thenable.
       const thenable: Thenable<T> = (usable: any);

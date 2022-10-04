@@ -520,7 +520,6 @@ function unstable_flushNumberOfYields(count: number): void {
     try {
       let hasMoreWork = true;
       do {
-        // $FlowFixMe[not-a-function] found when upgrading Flow
         hasMoreWork = cb(true, currentMockTime);
       } while (hasMoreWork && !didStop);
       if (!hasMoreWork) {
@@ -546,7 +545,6 @@ function unstable_flushUntilNextPaint(): false {
     try {
       let hasMoreWork = true;
       do {
-        // $FlowFixMe[not-a-function] found when upgrading Flow
         hasMoreWork = cb(true, currentMockTime);
       } while (hasMoreWork && !didStop);
       if (!hasMoreWork) {
@@ -593,7 +591,6 @@ function unstable_flushAllWithoutAsserting(): boolean {
     try {
       let hasMoreWork = true;
       do {
-        // $FlowFixMe[not-a-function] found when upgrading Flow
         hasMoreWork = cb(true, currentMockTime);
       } while (hasMoreWork);
       if (!hasMoreWork) {

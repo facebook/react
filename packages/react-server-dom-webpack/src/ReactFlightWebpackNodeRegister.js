@@ -9,7 +9,6 @@
 
 const url = require('url');
 
-// $FlowFixMe
 const Module = require('module');
 
 module.exports = function register() {

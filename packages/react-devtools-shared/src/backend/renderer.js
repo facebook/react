@@ -387,7 +387,6 @@ export function getInternalReactConstants(
     const symbolOrNumber =
       typeof type === 'object' && type !== null ? type.$$typeof : type;
 
-    // $FlowFixMe Flow doesn't know about typeof "symbol"
     return typeof symbolOrNumber === 'symbol'
       ? // $FlowFixMe `toString()` doesn't match the type signature?
         symbolOrNumber.toString()
@@ -3275,7 +3274,6 @@ export function attach(
       for (const method in console) {
         try {
           originalConsoleMethods[method] = console[method];
-          // $FlowFixMe property error|warn is not writable.
           console[method] = () => {};
         } catch (error) {}
       }
@@ -3290,7 +3288,6 @@ export function attach(
         // Restore original console functionality.
         for (const method in originalConsoleMethods) {
           try {
-            // $FlowFixMe property error|warn is not writable.
             console[method] = originalConsoleMethods[method];
           } catch (error) {}
         }
@@ -3713,7 +3710,6 @@ export function attach(
       id,
       responseID: requestID,
       type: 'full-data',
-      // $FlowFixMe[incompatible-return] found when upgrading Flow
       // $FlowFixMe[prop-missing] found when upgrading Flow
       value: cleanedInspectedElement,
     };

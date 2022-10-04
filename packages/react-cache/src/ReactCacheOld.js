@@ -122,7 +122,6 @@ function accessResult<I, K, V>(
     );
     const newResult: PendingResult = {
       status: Pending,
-      // $FlowFixMe[method-unbinding]
       value: thenable,
     };
     // $FlowFixMe[escaped-generic] discovered when updating Flow
