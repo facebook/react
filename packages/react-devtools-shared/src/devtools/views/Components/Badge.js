@@ -25,7 +25,7 @@ export default function Badge({
   hocDisplayNames,
   type,
   children,
-}: Props) {
+}: Props): React.Node {
   if (hocDisplayNames === null || hocDisplayNames.length === 0) {
     return null;
   }

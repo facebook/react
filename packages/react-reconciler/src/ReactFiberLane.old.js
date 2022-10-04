@@ -435,7 +435,7 @@ export function markStarvedLanesAsExpired(
 
 // This returns the highest priority pending lanes regardless of whether they
 // are suspended.
-export function getHighestPriorityPendingLanes(root: FiberRoot) {
+export function getHighestPriorityPendingLanes(root: FiberRoot): Lanes {
   return getHighestPriorityLanes(root.pendingLanes);
 }
 
@@ -458,25 +458,25 @@ export function getLanesToRetrySynchronouslyOnError(
   return NoLanes;
 }
 
-export function includesSyncLane(lanes: Lanes) {
+export function includesSyncLane(lanes: Lanes): boolean {
   return (lanes & SyncLane) !== NoLanes;
 }
 
-export function includesNonIdleWork(lanes: Lanes) {
+export function includesNonIdleWork(lanes: Lanes): boolean {
   return (lanes & NonIdleLanes) !== NoLanes;
 }
-export function includesOnlyRetries(lanes: Lanes) {
+export function includesOnlyRetries(lanes: Lanes): boolean {
   return (lanes & RetryLanes) === lanes;
 }
-export function includesOnlyNonUrgentLanes(lanes: Lanes) {
+export function includesOnlyNonUrgentLanes(lanes: Lanes): boolean {
   const UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
   return (lanes & UrgentLanes) === NoLanes;
 }
-export function includesOnlyTransitions(lanes: Lanes) {
+export function includesOnlyTransitions(lanes: Lanes): boolean {
   return (lanes & TransitionLanes) === lanes;
 }
 
-export function includesBlockingLane(root: FiberRoot, lanes: Lanes) {
+export function includesBlockingLane(root: FiberRoot, lanes: Lanes): boolean {
   if (
     allowConcurrentByDefault &&
     (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
@@ -492,13 +492,13 @@ export function includesBlockingLane(root: FiberRoot, lanes: Lanes) {
   return (lanes & SyncDefaultLanes) !== NoLanes;
 }
 
-export function includesExpiredLane(root: FiberRoot, lanes: Lanes) {
+export function includesExpiredLane(root: FiberRoot, lanes: Lanes): boolean {
   // This is a separate check from includesBlockingLane because a lane can
   // expire after a render has already started.
   return (lanes & root.expiredLanes) !== NoLanes;
 }
 
-export function isTransitionLane(lane: Lane) {
+export function isTransitionLane(lane: Lane): boolean {
   return (lane & TransitionLanes) !== NoLanes;
 }
 
@@ -543,11 +543,11 @@ function laneToIndex(lane: Lane) {
   return pickArbitraryLaneIndex(lane);
 }
 
-export function includesSomeLane(a: Lanes | Lane, b: Lanes | Lane) {
+export function includesSomeLane(a: Lanes | Lane, b: Lanes | Lane): boolean {
   return (a & b) !== NoLanes;
 }
 
-export function isSubsetOfLanes(set: Lanes, subset: Lanes | Lane) {
+export function isSubsetOfLanes(set: Lanes, subset: Lanes | Lane): boolean {
   return (set & subset) === subset;
 }
 
@@ -569,7 +569,7 @@ export function laneToLanes(lane: Lane): Lanes {
   return lane;
 }
 
-export function higherPriorityLane(a: Lane, b: Lane) {
+export function higherPriorityLane(a: Lane, b: Lane): Lane {
   // This works because the bit ranges decrease in priority as you go left.
   return a !== NoLane && a < b ? a : b;
 }

@@ -20,7 +20,7 @@ import styles from './SidebarSelectedFiberInfo.css';
 
 export type Props = {};
 
-export default function SidebarSelectedFiberInfo(_: Props) {
+export default function SidebarSelectedFiberInfo(_: Props): React.Node {
   const {profilerStore} = useContext(StoreContext);
   const {
     rootID,

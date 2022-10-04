@@ -18,6 +18,7 @@ global.TextDecoder = require('util').TextDecoder;
 global.setImmediate = cb => cb();
 
 let act;
+let use;
 let clientExports;
 let clientModuleError;
 let webpackMap;
@@ -40,6 +41,7 @@ describe('ReactFlightDOM', () => {
 
     Stream = require('stream');
     React = require('react');
+    use = React.experimental_use;
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
     ReactServerDOMWriter = require('react-server-dom-webpack/writer.node.server');
@@ -80,20 +82,6 @@ describe('ReactFlightDOM', () => {
     };
   }
 
-  async function waitForSuspense(fn) {
-    while (true) {
-      try {
-        return fn();
-      } catch (promise) {
-        if (typeof promise.then === 'function') {
-          await promise;
-        } else {
-          throw promise;
-        }
-      }
-    }
-  }
-
   const theInfinitePromise = new Promise(() => {});
   function InfiniteSuspend() {
     throw theInfinitePromise;
@@ -126,19 +114,18 @@ describe('ReactFlightDOM', () => {
     );
     pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
-    await waitForSuspense(() => {
-      const model = response.readRoot();
-      expect(model).toEqual({
-        html: (
-          <div>
-            <span>hello</span>
-            <span>world</span>
-          </div>
-        ),
-      });
+    const model = await response;
+    expect(model).toEqual({
+      html: (
+        <div>
+          <span>hello</span>
+          <span>world</span>
+        </div>
+      ),
     });
   });
 
+  // @gate enableUseHook
   it('should resolve the root', async () => {
     // Model
     function Text({children}) {
@@ -160,7 +147,7 @@ describe('ReactFlightDOM', () => {
 
     // View
     function Message({response}) {
-      return <section>{response.readRoot().html}</section>;
+      return <section>{use(response).html}</section>;
     }
     function App({response}) {
       return (
@@ -188,6 +175,7 @@ describe('ReactFlightDOM', () => {
     );
   });
 
+  // @gate enableUseHook
   it('should not get confused by $', async () => {
     // Model
     function RootModel() {
@@ -196,7 +184,7 @@ describe('ReactFlightDOM', () => {
 
     // View
     function Message({response}) {
-      return <p>{response.readRoot().text}</p>;
+      return <p>{use(response).text}</p>;
     }
     function App({response}) {
       return (
@@ -222,6 +210,7 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>$1</p>');
   });
 
+  // @gate enableUseHook
   it('should not get confused by @', async () => {
     // Model
     function RootModel() {
@@ -230,7 +219,7 @@ describe('ReactFlightDOM', () => {
 
     // View
     function Message({response}) {
-      return <p>{response.readRoot().text}</p>;
+      return <p>{use(response).text}</p>;
     }
     function App({response}) {
       return (
@@ -256,6 +245,7 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
+  // @gate enableUseHook
   it('should unwrap async module references', async () => {
     const AsyncModule = Promise.resolve(function AsyncModule({text}) {
       return 'Async: ' + text;
@@ -266,7 +256,7 @@ describe('ReactFlightDOM', () => {
     });
 
     function Print({response}) {
-      return <p>{response.readRoot()}</p>;
+      return <p>{use(response)}</p>;
     }
 
     function App({response}) {
@@ -296,6 +286,7 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>Async: Module</p>');
   });
 
+  // @gate enableUseHook
   it('should be able to import a name called "then"', async () => {
     const thenExports = {
       then: function then() {
@@ -304,7 +295,7 @@ describe('ReactFlightDOM', () => {
     };
 
     function Print({response}) {
-      return <p>{response.readRoot()}</p>;
+      return <p>{use(response)}</p>;
     }
 
     function App({response}) {
@@ -333,6 +324,7 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>and then</p>');
   });
 
+  // @gate enableUseHook
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 
@@ -340,7 +332,13 @@ describe('ReactFlightDOM', () => {
 
     function MyErrorBoundary({children}) {
       return (
-        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+        <ErrorBoundary
+          fallback={e => (
+            <p>
+              {__DEV__ ? e.message + ' + ' : null}
+              {e.digest}
+            </p>
+          )}>
           {children}
         </ErrorBoundary>
       );
@@ -432,7 +430,7 @@ describe('ReactFlightDOM', () => {
     };
 
     function ProfilePage({response}) {
-      return response.readRoot().rootContent;
+      return use(response).rootContent;
     }
 
     const {writable, readable} = getTestStream();
@@ -442,6 +440,7 @@ describe('ReactFlightDOM', () => {
       {
         onError(x) {
           reportedErrors.push(x);
+          return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
         },
       },
     );
@@ -485,11 +484,14 @@ describe('ReactFlightDOM', () => {
     await act(async () => {
       rejectGames(theError);
     });
+    const expectedGamesValue = __DEV__
+      ? '<p>Game over + a dev digest</p>'
+      : '<p>digest("Game over")</p>';
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
         '<p>(loading sidebar)</p>' +
         '<p>(loading posts)</p>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        expectedGamesValue,
     );
 
     expect(reportedErrors).toEqual([theError]);
@@ -503,7 +505,7 @@ describe('ReactFlightDOM', () => {
       '<div>:name::avatar:</div>' +
         '<div>:photos::friends:</div>' +
         '<p>(loading posts)</p>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        expectedGamesValue,
     );
 
     // Show everything.
@@ -514,17 +516,18 @@ describe('ReactFlightDOM', () => {
       '<div>:name::avatar:</div>' +
         '<div>:photos::friends:</div>' +
         '<div>:posts:</div>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
+        expectedGamesValue,
     );
 
     expect(reportedErrors).toEqual([]);
   });
 
+  // @gate enableUseHook
   it('should preserve state of client components on refetch', async () => {
     // Client
 
     function Page({response}) {
-      return response.readRoot();
+      return use(response);
     }
 
     function Input() {
@@ -605,6 +608,7 @@ describe('ReactFlightDOM', () => {
     expect(inputB.value).toBe('goodbye');
   });
 
+  // @gate enableUseHook
   it('should be able to complete after aborting and throw the reason client-side', async () => {
     const reportedErrors = [];
 
@@ -617,6 +621,8 @@ describe('ReactFlightDOM', () => {
       {
         onError(x) {
           reportedErrors.push(x);
+          const message = typeof x === 'string' ? x : x.message;
+          return __DEV__ ? 'a dev digest' : `digest("${message}")`;
         },
       },
     );
@@ -627,12 +633,18 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOMClient.createRoot(container);
 
     function App({res}) {
-      return res.readRoot();
+      return use(res);
     }
 
     await act(async () => {
       root.render(
-        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+        <ErrorBoundary
+          fallback={e => (
+            <p>
+              {__DEV__ ? e.message + ' + ' : null}
+              {e.digest}
+            </p>
+          )}>
           <Suspense fallback={<p>(loading)</p>}>
             <App res={response} />
           </Suspense>
@@ -644,11 +656,18 @@ describe('ReactFlightDOM', () => {
     await act(async () => {
       abort('for reasons');
     });
-    expect(container.innerHTML).toBe('<p>Error: for reasons</p>');
+    if (__DEV__) {
+      expect(container.innerHTML).toBe(
+        '<p>Error: for reasons + a dev digest</p>',
+      );
+    } else {
+      expect(container.innerHTML).toBe('<p>digest("for reasons")</p>');
+    }
 
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
+  // @gate enableUseHook
   it('should be able to recover from a direct reference erroring client-side', async () => {
     const reportedErrors = [];
 
@@ -677,7 +696,7 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOMClient.createRoot(container);
 
     function App({res}) {
-      return res.readRoot();
+      return use(res);
     }
 
     await act(async () => {
@@ -694,6 +713,7 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
+  // @gate enableUseHook
   it('should be able to recover from a direct reference erroring client-side async', async () => {
     const reportedErrors = [];
 
@@ -727,7 +747,7 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOMClient.createRoot(container);
 
     function App({res}) {
-      return res.readRoot();
+      return use(res);
     }
 
     await act(async () => {
@@ -751,6 +771,7 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
+  // @gate enableUseHook
   it('should be able to recover from a direct reference erroring server-side', async () => {
     const reportedErrors = [];
 
@@ -775,7 +796,8 @@ describe('ReactFlightDOM', () => {
       webpackMap,
       {
         onError(x) {
-          reportedErrors.push(x);
+          reportedErrors.push(x.message);
+          return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
         },
       },
     );
@@ -787,20 +809,32 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOMClient.createRoot(container);
 
     function App({res}) {
-      return res.readRoot();
+      return use(res);
     }
 
     await act(async () => {
       root.render(
-        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+        <ErrorBoundary
+          fallback={e => (
+            <p>
+              {__DEV__ ? e.message + ' + ' : null}
+              {e.digest}
+            </p>
+          )}>
           <Suspense fallback={<p>(loading)</p>}>
             <App res={response} />
           </Suspense>
         </ErrorBoundary>,
       );
     });
-    expect(container.innerHTML).toBe('<p>bug in the bundler</p>');
+    if (__DEV__) {
+      expect(container.innerHTML).toBe(
+        '<p>bug in the bundler + a dev digest</p>',
+      );
+    } else {
+      expect(container.innerHTML).toBe('<p>digest("bug in the bundler")</p>');
+    }
 
-    expect(reportedErrors).toEqual([]);
+    expect(reportedErrors).toEqual(['bug in the bundler']);
   });
 });

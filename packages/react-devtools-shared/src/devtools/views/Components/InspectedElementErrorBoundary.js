@@ -24,7 +24,7 @@ type WrapperProps = {
 
 export default function InspectedElementErrorBoundaryWrapper({
   children,
-}: WrapperProps) {
+}: WrapperProps): React.Node {
   // Key on the selected element ID so that changing the selected element automatically hides the boundary.
   // This seems best since an error inspecting one element isn't likely to be relevant to another element.
   const {selectedElementID} = useContext(TreeStateContext);

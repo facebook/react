@@ -56,7 +56,17 @@ const InitialState: State = {
 export default class ErrorBoundary extends Component<Props, State> {
   state: State = InitialState;
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(
+    error: any,
+  ): {
+    callStack: string | null,
+    errorMessage: string | null,
+    hasError: boolean,
+    isTimeout: boolean,
+    isUnknownHookError: boolean,
+    isUnsupportedBridgeOperationError: boolean,
+    isUserError: boolean,
+  } {
     const errorMessage =
       typeof error === 'object' &&
       error !== null &&
@@ -112,7 +122,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  render() {
+  render(): React.Node {
     const {canDismiss: canDismissProp, children} = this.props;
     const {
       callStack,
@@ -201,7 +211,10 @@ export default class ErrorBoundary extends Component<Props, State> {
     return children;
   }
 
-  _logError = (error: any, componentStack: string | null) => {
+  _logError: (error: any, componentStack: string | null) => void = (
+    error,
+    componentStack,
+  ) => {
     logEvent({
       event_name: 'error',
       error_message: error.message ?? null,
@@ -210,7 +223,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     });
   };
 
-  _dismissError = () => {
+  _dismissError: () => void = () => {
     const onBeforeDismissCallback = this.props.onBeforeDismissCallback;
     if (typeof onBeforeDismissCallback === 'function') {
       onBeforeDismissCallback();
@@ -219,7 +232,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     this.setState(InitialState);
   };
 
-  _onStoreError = (error: Error) => {
+  _onStoreError: (error: Error) => void = error => {
     if (!this.state.hasError) {
       this._logError(error, null);
       this.setState({

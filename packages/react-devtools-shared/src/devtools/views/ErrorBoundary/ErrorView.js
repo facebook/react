@@ -26,7 +26,7 @@ export default function ErrorView({
   componentStack,
   dismissError = null,
   errorMessage,
-}: Props) {
+}: Props): React.Node {
   return (
     <div className={styles.ErrorBoundary}>
       {children}

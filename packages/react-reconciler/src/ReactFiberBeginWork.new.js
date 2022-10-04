@@ -40,6 +40,7 @@ import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new
 import {
   enableCPUSuspense,
   enableUseMutableSource,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 
 import checkPropTypes from 'shared/checkPropTypes';
@@ -54,6 +55,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
+  HostResource,
   HostText,
   HostPortal,
   ForwardRef,
@@ -161,7 +163,9 @@ import {
   getSuspenseInstanceFallbackErrorDetails,
   registerSuspenseInstanceRetry,
   supportsHydration,
+  supportsResources,
   isPrimaryRenderer,
+  getResource,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
@@ -281,7 +285,7 @@ let didWarnAboutModulePatternComponent;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
-export let didWarnAboutReassigningProps;
+export let didWarnAboutReassigningProps: boolean;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
 let didWarnAboutDefaultPropsOnFunctionComponent;
@@ -677,6 +681,8 @@ function updateOffscreenComponent(
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
 
+  markRef(current, workInProgress);
+
   if (
     nextProps.mode === 'hidden' ||
     (enableLegacyHidden && nextProps.mode === 'unstable-defer-without-hiding')
@@ -811,8 +817,8 @@ function updateOffscreenComponent(
         // We have now gone from hidden to visible, so any transitions should
         // be added to the stack to get added to any Offscreen/suspense children
         const instance: OffscreenInstance | null = workInProgress.stateNode;
-        if (instance !== null && instance.transitions != null) {
-          transitions = Array.from(instance.transitions);
+        if (instance !== null && instance._transitions != null) {
+          transitions = Array.from(instance._transitions);
         }
       }
 
@@ -1575,6 +1581,24 @@ function updateHostComponent(
 
   markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
+
+function updateHostResource(current, workInProgress, renderLanes) {
+  pushHostContext(workInProgress);
+  markRef(current, workInProgress);
+  const currentProps = current === null ? null : current.memoizedProps;
+  workInProgress.memoizedState = getResource(
+    workInProgress.type,
+    workInProgress.pendingProps,
+    currentProps,
+  );
+  reconcileChildren(
+    current,
+    workInProgress,
+    workInProgress.pendingProps.children,
+    renderLanes,
+  );
   return workInProgress.child;
 }
 
@@ -2746,6 +2770,7 @@ function updateDehydratedSuspenseComponent(
             'client rendering.',
         );
       }
+      (error: any).digest = digest;
       const capturedValue = createCapturedValue(error, digest, stack);
       return retrySuspenseComponentWithoutHydrating(
         current,
@@ -3479,7 +3504,7 @@ export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
 
-export function checkIfWorkInProgressReceivedUpdate() {
+export function checkIfWorkInProgressReceivedUpdate(): boolean {
   return didReceiveUpdate;
 }
 
@@ -3648,6 +3673,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       }
       resetHydrationState();
       break;
+    case HostResource:
     case HostComponent:
       pushHostContext(workInProgress);
       break;
@@ -3982,6 +4008,11 @@ function beginWork(
     }
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderLanes);
+    case HostResource:
+      if (enableFloat && supportsResources) {
+        return updateHostResource(current, workInProgress, renderLanes);
+      }
+    // eslint-disable-next-line no-fallthrough
     case HostComponent:
       return updateHostComponent(current, workInProgress, renderLanes);
     case HostText:

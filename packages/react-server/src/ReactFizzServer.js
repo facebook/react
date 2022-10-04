@@ -24,6 +24,8 @@ import type {
   SuspenseBoundaryID,
   ResponseState,
   FormatContext,
+  Resources,
+  BoundaryResources,
 } from './ReactServerFormatConfig';
 import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
@@ -63,6 +65,15 @@ import {
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
+  writeInitialResources,
+  writeImmediateResources,
+  hoistResources,
+  hoistResourcesToRoot,
+  prepareToRender,
+  cleanupAfterRender,
+  setCurrentlyRenderingBoundaryResourcesTarget,
+  createResources,
+  createBoundaryResources,
 } from './ReactServerFormatConfig';
 import {
   constructClassInstance,
@@ -147,6 +158,7 @@ type SuspenseBoundary = {
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
   byteSize: number, // used to determine whether to inline children boundaries.
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
+  resources: BoundaryResources,
 };
 
 export type Task = {
@@ -199,9 +211,10 @@ export opaque type Request = {
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
+  resources: Resources,
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
   abortableTasks: Set<Task>,
-  pingedTasks: Array<Task>,
+  pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
   // Queues to flush in order of priority
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
@@ -262,6 +275,7 @@ export function createRequest(
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
+  const resources: Resources = createResources();
   const request = {
     destination: null,
     responseState,
@@ -274,6 +288,7 @@ export function createRequest(
     nextSegmentId: 0,
     allPendingTasks: 0,
     pendingRootTasks: 0,
+    resources,
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
@@ -337,6 +352,7 @@ function createSuspenseBoundary(
     byteSize: 0,
     fallbackAbortableTasks,
     errorDigest: null,
+    resources: createBoundaryResources(),
   };
 }
 
@@ -562,6 +578,12 @@ function renderSuspenseBoundary(
   // we're writing to. If something suspends, it'll spawn new suspended task with that context.
   task.blockedBoundary = newBoundary;
   task.blockedSegment = contentRootSegment;
+  if (enableFloat) {
+    setCurrentlyRenderingBoundaryResourcesTarget(
+      request.resources,
+      newBoundary.resources,
+    );
+  }
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
     renderNode(request, task, content);
@@ -572,6 +594,11 @@ function renderSuspenseBoundary(
       contentRootSegment.textEmbedded,
     );
     contentRootSegment.status = COMPLETED;
+    if (enableFloat) {
+      if (newBoundary.pendingTasks === 0) {
+        hoistCompletedBoundaryResources(request, newBoundary);
+      }
+    }
     queueCompletedSegment(newBoundary, contentRootSegment);
     if (newBoundary.pendingTasks === 0) {
       // This must have been the last segment we were waiting on. This boundary is now complete.
@@ -592,6 +619,12 @@ function renderSuspenseBoundary(
     // We don't need to schedule any task because we know the parent has written yet.
     // We do need to fallthrough to create the fallback though.
   } finally {
+    if (enableFloat) {
+      setCurrentlyRenderingBoundaryResourcesTarget(
+        request.resources,
+        parentBoundary ? parentBoundary.resources : null,
+      );
+    }
     task.blockedBoundary = parentBoundary;
     task.blockedSegment = parentSegment;
   }
@@ -619,6 +652,19 @@ function renderSuspenseBoundary(
   popComponentStackInDEV(task);
 }
 
+function hoistCompletedBoundaryResources(
+  request: Request,
+  completedBoundary: SuspenseBoundary,
+): void {
+  if (request.completedRootSegment !== null || request.pendingRootTasks > 0) {
+    // The Shell has not flushed yet. we can hoist Resources for this boundary
+    // all the way to the Root.
+    hoistResourcesToRoot(request.resources, completedBoundary.resources);
+  }
+  // We don't hoist if the root already flushed because late resources will be hoisted
+  // as boundaries flush
+}
+
 function renderBackupSuspenseBoundary(
   request: Request,
   task: Task,
@@ -644,6 +690,7 @@ function renderHostElement(
 ): void {
   pushBuiltInComponentStackInDEV(task, type);
   const segment = task.blockedSegment;
+
   const children = pushStartInstance(
     segment.chunks,
     request.preamble,
@@ -651,10 +698,12 @@ function renderHostElement(
     props,
     request.responseState,
     segment.formatContext,
+    segment.lastPushedText,
   );
   segment.lastPushedText = false;
   const prevContext = segment.formatContext;
   segment.formatContext = getChildFormatContext(prevContext, type, props);
+
   // We use the non-destructive form because if something suspends, we still
   // need to pop back up and finish this subtree of HTML.
   renderNode(request, task, children);
@@ -1733,11 +1782,15 @@ function finishedTask(
           queueCompletedSegment(boundary, segment);
         }
       }
+      if (enableFloat) {
+        hoistCompletedBoundaryResources(request, boundary);
+      }
       if (boundary.parentFlushed) {
         // The segment might be part of a segment that didn't flush yet, but if the boundary's
         // parent flushed, we need to schedule the boundary to be emitted.
         request.completedBoundaries.push(boundary);
       }
+
       // We can now cancel any pending task on the fallback since we won't need to show it anymore.
       // This needs to happen after we read the parentFlushed flags because aborting can finish
       // work which can trigger user code, which can start flushing, which can change those flags.
@@ -1774,6 +1827,13 @@ function finishedTask(
 }
 
 function retryTask(request: Request, task: Task): void {
+  if (enableFloat) {
+    const blockedBoundary = task.blockedBoundary;
+    setCurrentlyRenderingBoundaryResourcesTarget(
+      request.resources,
+      blockedBoundary ? blockedBoundary.resources : null,
+    );
+  }
   const segment = task.blockedSegment;
   if (segment.status !== PENDING) {
     // We completed this by other means before we had a chance to retry it.
@@ -1825,6 +1885,9 @@ function retryTask(request: Request, task: Task): void {
       erroredTask(request, task.blockedBoundary, segment, x);
     }
   } finally {
+    if (enableFloat) {
+      setCurrentlyRenderingBoundaryResourcesTarget(request.resources, null);
+    }
     if (__DEV__) {
       currentTaskInDEV = prevTaskInDEV;
     }
@@ -1838,6 +1901,7 @@ export function performWork(request: Request): void {
   const prevContext = getActiveContext();
   const prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = Dispatcher;
+  const previousHostDispatcher = prepareToRender(request.resources);
   let prevGetCurrentStackImpl;
   if (__DEV__) {
     prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
@@ -1862,6 +1926,8 @@ export function performWork(request: Request): void {
   } finally {
     setCurrentResponseState(prevResponseState);
     ReactCurrentDispatcher.current = prevDispatcher;
+    cleanupAfterRender(previousHostDispatcher);
+
     if (__DEV__) {
       ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
     }
@@ -1900,6 +1966,7 @@ function flushSubtree(
       const chunks = segment.chunks;
       let chunkIdx = 0;
       const children = segment.children;
+
       for (let childIdx = 0; childIdx < children.length; childIdx++) {
         const nextChild = children[childIdx];
         // Write all the chunks up until the next child.
@@ -1998,6 +2065,9 @@ function flushSegment(
 
     return writeEndPendingSuspenseBoundary(destination, request.responseState);
   } else {
+    if (enableFloat) {
+      hoistResources(request.resources, boundary.resources);
+    }
     // We can inline this boundary's content as a complete boundary.
     writeStartCompletedSuspenseBoundary(destination, request.responseState);
 
@@ -2017,6 +2087,25 @@ function flushSegment(
       request.responseState,
     );
   }
+}
+
+function flushInitialResources(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+): void {
+  writeInitialResources(destination, resources, responseState);
+}
+
+function flushImmediateResources(
+  destination: Destination,
+  request: Request,
+): void {
+  writeImmediateResources(
+    destination,
+    request.resources,
+    request.responseState,
+  );
 }
 
 function flushClientRenderedBoundary(
@@ -2054,6 +2143,12 @@ function flushCompletedBoundary(
   destination: Destination,
   boundary: SuspenseBoundary,
 ): boolean {
+  if (enableFloat) {
+    setCurrentlyRenderingBoundaryResourcesTarget(
+      request.resources,
+      boundary.resources,
+    );
+  }
   const completedSegments = boundary.completedSegments;
   let i = 0;
   for (; i < completedSegments.length; i++) {
@@ -2067,6 +2162,7 @@ function flushCompletedBoundary(
     request.responseState,
     boundary.id,
     boundary.rootSegmentID,
+    boundary.resources,
   );
 }
 
@@ -2075,6 +2171,12 @@ function flushPartialBoundary(
   destination: Destination,
   boundary: SuspenseBoundary,
 ): boolean {
+  if (enableFloat) {
+    setCurrentlyRenderingBoundaryResourcesTarget(
+      request.resources,
+      boundary.resources,
+    );
+  }
   const completedSegments = boundary.completedSegments;
   let i = 0;
   for (; i < completedSegments.length; i++) {
@@ -2138,8 +2240,6 @@ function flushCompletedQueues(
     // that item fully and then yield. At that point we remove the already completed
     // items up until the point we completed them.
 
-    // TODO: Emit preloading.
-
     let i;
     const completedRootSegment = request.completedRootSegment;
     if (completedRootSegment !== null) {
@@ -2150,15 +2250,23 @@ function flushCompletedQueues(
             // we expect the preamble to be tiny and will ignore backpressure
             writeChunk(destination, preamble[i]);
           }
+
+          flushInitialResources(
+            destination,
+            request.resources,
+            request.responseState,
+          );
         }
 
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
         writeCompletedRoot(destination, request.responseState);
       } else {
-        // We haven't flushed the root yet so we don't need to check boundaries further down
+        // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
       }
+    } else if (enableFloat) {
+      flushImmediateResources(destination, request);
     }
 
     // We emit client rendering instructions for already emitted boundaries first.

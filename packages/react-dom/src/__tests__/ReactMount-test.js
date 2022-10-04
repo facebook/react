@@ -9,7 +9,7 @@
 
 'use strict';
 
-const {COMMENT_NODE} = require('../shared/HTMLNodeType');
+const {COMMENT_NODE} = require('react-dom-bindings/src/shared/HTMLNodeType');
 
 let React;
 let ReactDOM;

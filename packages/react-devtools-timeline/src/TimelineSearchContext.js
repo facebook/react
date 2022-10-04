@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import * as React from 'react';
 import {createContext, useMemo, useReducer} from 'react';
 
@@ -122,7 +124,9 @@ export type Context = {
   searchText: string,
 };
 
-const TimelineSearchContext = createContext<Context>(((null: any): Context));
+const TimelineSearchContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 TimelineSearchContext.displayName = 'TimelineSearchContext';
 
 type Props = {
@@ -135,7 +139,7 @@ function TimelineSearchContextController({
   children,
   profilerData,
   viewState,
-}: Props) {
+}: Props): React.Node {
   const [state, dispatch] = useReducer<State, State, Action>(reducer, {
     profilerData,
     searchIndex: -1,

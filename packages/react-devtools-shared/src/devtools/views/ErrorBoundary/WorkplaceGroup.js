@@ -13,7 +13,7 @@ import {REACT_DEVTOOLS_WORKPLACE_URL} from 'react-devtools-shared/src/constants'
 import Icon from '../Icon';
 import styles from './shared.css';
 
-export default function WorkplaceGroup() {
+export default function WorkplaceGroup(): React.Node {
   if (!isInternalFacebookBuild) {
     return null;
   }

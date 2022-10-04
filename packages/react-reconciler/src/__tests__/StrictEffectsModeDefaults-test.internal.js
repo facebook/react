@@ -379,6 +379,7 @@ describe('StrictEffectsMode defaults', () => {
       expect(Scheduler).toHaveYielded([]);
     });
 
+    //@gate useModernStrictMode
     it('disconnects refs during double invoking', () => {
       const onRefMock = jest.fn();
       function App({text}) {

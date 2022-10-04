@@ -18,7 +18,7 @@ const objectOne = {};
 const objectTwo = {objectOne};
 objectOne.objectTwo = objectTwo;
 
-export default function CircularReferences() {
+export default function CircularReferences(): React.Node {
   return <ChildComponent arrayOne={arrayOne} objectOne={objectOne} />;
 }
 

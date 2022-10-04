@@ -44,9 +44,9 @@ export function resolveModuleReference<T>(
   return resolveModuleReferenceImpl(moduleData);
 }
 
-function parseModelRecursively(response: Response, parentObj, value) {
+function parseModelRecursively(response: Response, parentObj, key, value) {
   if (typeof value === 'string') {
-    return parseModelString(response, parentObj, value);
+    return parseModelString(response, parentObj, key, value);
   }
   if (typeof value === 'object' && value !== null) {
     if (isArray(value)) {
@@ -55,6 +55,7 @@ function parseModelRecursively(response: Response, parentObj, value) {
         (parsedValue: any)[i] = parseModelRecursively(
           response,
           value,
+          '' + i,
           value[i],
         );
       }
@@ -65,6 +66,7 @@ function parseModelRecursively(response: Response, parentObj, value) {
         (parsedValue: any)[innerKey] = parseModelRecursively(
           response,
           value,
+          innerKey,
           value[innerKey],
         );
       }
@@ -77,5 +79,5 @@ function parseModelRecursively(response: Response, parentObj, value) {
 const dummy = {};
 
 export function parseModel<T>(response: Response, json: UninitializedModel): T {
-  return (parseModelRecursively(response, dummy, json): any);
+  return (parseModelRecursively(response, dummy, '', json): any);
 }

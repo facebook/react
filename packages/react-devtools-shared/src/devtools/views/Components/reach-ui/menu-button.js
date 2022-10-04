@@ -16,7 +16,13 @@ import {
 } from '@reach/menu-button';
 import useThemeStyles from '../../useThemeStyles';
 
-const MenuList = ({children, ...props}: {children: React$Node, ...}) => {
+const MenuList = ({
+  children,
+  ...props
+}: {
+  children: React$Node,
+  ...
+}): React.Node => {
   const style = useThemeStyles();
   return (
     // $FlowFixMe unsafe spread

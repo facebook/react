@@ -26,8 +26,9 @@ export type RowEncoding =
       'E',
       number,
       {
-        message: string,
-        stack: string,
+        digest: string,
+        message?: string,
+        stack?: string,
         ...
       },
     ];

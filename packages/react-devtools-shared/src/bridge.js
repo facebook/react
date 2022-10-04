@@ -375,7 +375,7 @@ class Bridge<
     }
   }
 
-  _flush = () => {
+  _flush: () => void = () => {
     // This method is used after the bridge is marked as destroyed in shutdown sequence,
     // so we do not bail out if the bridge marked as destroyed.
     // It is a private method that the bridge ensures is only called at the right times.
@@ -400,7 +400,7 @@ class Bridge<
 
   // Temporarily support older standalone backends by forwarding "overrideValueAtPath" commands
   // to the older message types they may be listening to.
-  overrideValueAtPath = ({
+  overrideValueAtPath: OverrideValueAtPath => void = ({
     id,
     path,
     rendererID,

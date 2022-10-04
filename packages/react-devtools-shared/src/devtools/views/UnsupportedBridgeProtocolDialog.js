@@ -24,7 +24,7 @@ const INSTRUCTIONS_FB_URL =
   'https://fb.me/devtools-unsupported-bridge-protocol';
 const MODAL_DIALOG_ID = 'UnsupportedBridgeProtocolDialog';
 
-export default function UnsupportedBridgeProtocolDialog(_: {}) {
+export default function UnsupportedBridgeProtocolDialog(_: {}): null {
   const {dialogs, dispatch} = useContext(ModalDialogContext);
   const store = useContext(StoreContext);
 

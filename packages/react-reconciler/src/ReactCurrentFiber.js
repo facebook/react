@@ -73,7 +73,7 @@ export function setIsRendering(rendering: boolean) {
   }
 }
 
-export function getIsRendering() {
+export function getIsRendering(): void | boolean {
   if (__DEV__) {
     return isRendering;
   }

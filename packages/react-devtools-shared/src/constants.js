@@ -395,11 +395,11 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any, ...} = {
 //
 // Sometimes the inline target is rendered before root styles are applied,
 // which would result in e.g. NaN itemSize being passed to react-window list.
-const COMFORTABLE_LINE_HEIGHT = parseInt(
+const COMFORTABLE_LINE_HEIGHT: number = parseInt(
   THEME_STYLES.comfortable['--line-height-data'],
   10,
 );
-const COMPACT_LINE_HEIGHT = parseInt(
+const COMPACT_LINE_HEIGHT: number = parseInt(
   THEME_STYLES.compact['--line-height-data'],
   10,
 );

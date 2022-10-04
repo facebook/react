@@ -59,7 +59,7 @@ function isControlled(props) {
  * See http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 
-export function getHostProps(element: Element, props: Object) {
+export function getHostProps(element: Element, props: Object): Object {
   const node = ((element: any): InputWithWrapperState);
   const checked = props.checked;
 
@@ -177,6 +177,7 @@ export function updateWrapper(element: Element, props: Object) {
   if (value != null) {
     if (type === 'number') {
       if (
+        // $FlowFixMe[incompatible-type]
         (value === 0 && node.value === '') ||
         // We explicitly want to coerce to number here if possible.
         // eslint-disable-next-line

@@ -1382,7 +1382,7 @@ describe('ResponderEventPlugin', () => {
     const getLowestCommonAncestor = require('react-native-renderer/src/legacy-events/ResponderEventPlugin')
       .getLowestCommonAncestor;
     // This works by accident and will likely break in the future.
-    const ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
+    const ReactDOMComponentTree = require('react-dom-bindings/src/client/ReactDOMComponentTree');
 
     class ChildComponent extends React.Component {
       render() {

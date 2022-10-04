@@ -12,7 +12,7 @@ import RecordToggle from './RecordToggle';
 
 import styles from './Profiler.css';
 
-export default function RecordingInProgress() {
+export default function RecordingInProgress(): React.Node {
   return (
     <div className={styles.Column}>
       <div className={styles.Header}>Profiling is in progress...</div>

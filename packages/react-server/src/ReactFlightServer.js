@@ -35,7 +35,8 @@ import {
   processModuleChunk,
   processProviderChunk,
   processSymbolChunk,
-  processErrorChunk,
+  processErrorChunkProd,
+  processErrorChunkDev,
   processReferenceChunk,
   resolveModuleMetaData,
   getModuleKey,
@@ -125,7 +126,7 @@ export type Request = {
   writtenProviders: Map<string, number>,
   identifierPrefix: string,
   identifierCount: number,
-  onError: (error: mixed) => void,
+  onError: (error: mixed) => ?string,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
 
@@ -143,7 +144,7 @@ const CLOSED = 2;
 export function createRequest(
   model: ReactModel,
   bundlerConfig: BundlerConfig,
-  onError: void | ((error: mixed) => void),
+  onError: void | ((error: mixed) => ?string),
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
 ): Request {
@@ -364,7 +365,13 @@ function serializeModuleReference(
   } catch (x) {
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
-    emitErrorChunk(request, errorId, x);
+    const digest = logRecoverableError(request, x);
+    if (__DEV__) {
+      const {message, stack} = getErrorMessageAndStackDev(x);
+      emitErrorChunkDev(request, errorId, digest, message, stack);
+    } else {
+      emitErrorChunkProd(request, errorId, digest);
+    }
     return serializeByValueID(errorId);
   }
 }
@@ -629,7 +636,13 @@ export function resolveModelToJSON(
         // once it gets rendered.
         request.pendingChunks++;
         const errorId = request.nextChunkId++;
-        emitErrorChunk(request, errorId, x);
+        const digest = logRecoverableError(request, x);
+        if (__DEV__) {
+          const {message, stack} = getErrorMessageAndStackDev(x);
+          emitErrorChunkDev(request, errorId, digest, message, stack);
+        } else {
+          emitErrorChunkProd(request, errorId, digest);
+        }
         return serializeByRefID(errorId);
       }
     }
@@ -797,9 +810,47 @@ export function resolveModelToJSON(
   );
 }
 
-function logRecoverableError(request: Request, error: mixed): void {
+function logRecoverableError(request: Request, error: mixed): string {
   const onError = request.onError;
-  onError(error);
+  const errorDigest = onError(error);
+  if (errorDigest != null && typeof errorDigest !== 'string') {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorDigest}" instead`,
+    );
+  }
+  return errorDigest || '';
+}
+
+function getErrorMessageAndStackDev(
+  error: mixed,
+): {message: string, stack: string} {
+  if (__DEV__) {
+    let message;
+    let stack = '';
+    try {
+      if (error instanceof Error) {
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        message = String(error.message);
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        stack = String(error.stack);
+      } else {
+        message = 'Error: ' + (error: any);
+      }
+    } catch (x) {
+      message = 'An error occurred but serializing the error message failed.';
+    }
+    return {
+      message,
+      stack,
+    };
+  } else {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'getErrorMessageAndStackDev should never be called from production mode. This is a bug in React.',
+    );
+  }
 }
 
 function fatalError(request: Request, error: mixed): void {
@@ -813,26 +864,29 @@ function fatalError(request: Request, error: mixed): void {
   }
 }
 
-function emitErrorChunk(request: Request, id: number, error: mixed): void {
-  // TODO: We should not leak error messages to the client in prod.
-  // Give this an error code instead and log on the server.
-  // We can serialize the error in DEV as a convenience.
-  let message;
-  let stack = '';
-  try {
-    if (error instanceof Error) {
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      message = String(error.message);
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      stack = String(error.stack);
-    } else {
-      message = 'Error: ' + (error: any);
-    }
-  } catch (x) {
-    message = 'An error occurred but serializing the error message failed.';
-  }
+function emitErrorChunkProd(
+  request: Request,
+  id: number,
+  digest: string,
+): void {
+  const processedChunk = processErrorChunkProd(request, id, digest);
+  request.completedErrorChunks.push(processedChunk);
+}
 
-  const processedChunk = processErrorChunk(request, id, message, stack);
+function emitErrorChunkDev(
+  request: Request,
+  id: number,
+  digest: string,
+  message: string,
+  stack: string,
+): void {
+  const processedChunk = processErrorChunkDev(
+    request,
+    id,
+    digest,
+    message,
+    stack,
+  );
   request.completedErrorChunks.push(processedChunk);
 }
 
@@ -935,9 +989,13 @@ function retryTask(request: Request, task: Task): void {
     } else {
       request.abortableTasks.delete(task);
       task.status = ERRORED;
-      logRecoverableError(request, x);
-      // This errored, we need to serialize this error to the
-      emitErrorChunk(request, task.id, x);
+      const digest = logRecoverableError(request, x);
+      if (__DEV__) {
+        const {message, stack} = getErrorMessageAndStackDev(x);
+        emitErrorChunkDev(request, task.id, digest, message, stack);
+      } else {
+        emitErrorChunkProd(request, task.id, digest);
+      }
     }
   }
 }
@@ -1077,10 +1135,15 @@ export function abort(request: Request, reason: mixed): void {
           ? new Error('The render was aborted by the server without a reason.')
           : reason;
 
-      logRecoverableError(request, error);
+      const digest = logRecoverableError(request, error);
       request.pendingChunks++;
       const errorId = request.nextChunkId++;
-      emitErrorChunk(request, errorId, error);
+      if (__DEV__) {
+        const {message, stack} = getErrorMessageAndStackDev(error);
+        emitErrorChunkDev(request, errorId, digest, message, stack);
+      } else {
+        emitErrorChunkProd(request, errorId, digest);
+      }
       abortableTasks.forEach(task => abortTask(task, request, errorId));
       abortableTasks.clear();
     }

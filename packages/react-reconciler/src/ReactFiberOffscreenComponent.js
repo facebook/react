@@ -48,8 +48,8 @@ export const OffscreenVisible = /*                     */ 0b01;
 export const OffscreenPassiveEffectsConnected = /*     */ 0b10;
 
 export type OffscreenInstance = {
-  visibility: OffscreenVisibility,
-  pendingMarkers: Set<TracingMarkerInstance> | null,
-  transitions: Set<Transition> | null,
-  retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,
+  _visibility: OffscreenVisibility,
+  _pendingMarkers: Set<TracingMarkerInstance> | null,
+  _transitions: Set<Transition> | null,
+  _retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,
 };

@@ -48,7 +48,7 @@ export function flushSyncCallbacksOnlyInLegacyMode() {
   }
 }
 
-export function flushSyncCallbacks() {
+export function flushSyncCallbacks(): null {
   if (!isFlushingSyncQueue && syncQueue !== null) {
     // Prevent re-entrance.
     isFlushingSyncQueue = true;

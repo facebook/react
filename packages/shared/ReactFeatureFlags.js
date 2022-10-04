@@ -120,11 +120,13 @@ export const enableUseHook = __EXPERIMENTAL__;
 // auto-memoization.
 export const enableUseMemoCacheHook = __EXPERIMENTAL__;
 
+export const enableUseEventHook = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
 // Planned feature deprecations and breaking changes. Sorted roughly in order of
-// when we we plan to enable them.
+// when we plan to enable them.
 // -----------------------------------------------------------------------------
 
 // This flag enables Strict Effects by default. We're not turning this on until
@@ -258,3 +260,8 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableProfilerNestedUpdateScheduledHook = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
+
+// Modern <StrictMode /> behaviour aligns more with what components
+// components will encounter in production, especially when used With <Offscreen />.
+// TODO: clean up legacy <StrictMode /> once tests pass WWW.
+export const useModernStrictMode = false;

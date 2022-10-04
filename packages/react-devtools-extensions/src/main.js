@@ -472,7 +472,7 @@ function createPanelIfReactLoaded() {
       let needsToSyncElementSelection = false;
 
       chrome.devtools.panels.create(
-        isChrome ? '⚛️ Components' : 'Components',
+        isChrome || isEdge ? '⚛️ Components' : 'Components',
         '',
         'panel.html',
         extensionPanel => {
@@ -503,7 +503,7 @@ function createPanelIfReactLoaded() {
       );
 
       chrome.devtools.panels.create(
-        isChrome ? '⚛️ Profiler' : 'Profiler',
+        isChrome || isEdge ? '⚛️ Profiler' : 'Profiler',
         '',
         'panel.html',
         extensionPanel => {

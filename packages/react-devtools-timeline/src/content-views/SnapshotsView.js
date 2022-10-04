@@ -45,7 +45,7 @@ export class SnapshotsView extends View {
     this._profilerData = profilerData;
   }
 
-  desiredSize() {
+  desiredSize(): Size {
     return this._intrinsicSize;
   }
 

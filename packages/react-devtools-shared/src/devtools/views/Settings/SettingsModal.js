@@ -28,7 +28,7 @@ import styles from './SettingsModal.css';
 
 type TabID = 'general' | 'components' | 'profiler';
 
-export default function SettingsModal(_: {}) {
+export default function SettingsModal(_: {}): React.Node {
   const {isModalShowing, setIsModalShowing} = useContext(SettingsModalContext);
   const store = useContext(StoreContext);
   const {profilerStore} = store;

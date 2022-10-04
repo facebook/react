@@ -19,7 +19,7 @@ import styles from './SidebarCommitInfo.css';
 
 export type Props = {};
 
-export default function SidebarCommitInfo(_: Props) {
+export default function SidebarCommitInfo(_: Props): React.Node {
   const {selectedCommitIndex, rootID} = useContext(ProfilerContext);
 
   const {profilerStore} = useContext(StoreContext);

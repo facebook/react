@@ -158,8 +158,6 @@ export function useDebugValue<T>(
   }
 }
 
-export const emptyObject = {};
-
 export function useTransition(): [
   boolean,
   (callback: () => void, options?: StartTransitionOptions) => void,
@@ -216,4 +214,10 @@ export function useMemoCache(size: number): Array<any> {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe This is unstable, thus optional
   return dispatcher.useMemoCache(size);
+}
+
+export function useEvent<T>(callback: T): void {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.useEvent(callback);
 }

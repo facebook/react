@@ -23,7 +23,7 @@ export default function SuspendingErrorView({
   callStack,
   componentStack,
   errorMessage,
-}: Props) {
+}: Props): React.Node {
   const maybeItem =
     errorMessage !== null ? findGitHubIssue(errorMessage) : null;
 

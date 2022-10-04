@@ -57,7 +57,7 @@ function hookNamesModuleLoaderFunction() {
   );
 }
 
-function setContentDOMNode(value: HTMLElement) {
+function setContentDOMNode(value: HTMLElement): typeof DevtoolsUI {
   node = value;
 
   // Save so we can restore the exact waiting message between sessions.
@@ -70,12 +70,14 @@ function setProjectRoots(value: Array<string>) {
   projectRoots = value;
 }
 
-function setStatusListener(value: StatusListener) {
+function setStatusListener(value: StatusListener): typeof DevtoolsUI {
   statusListener = value;
   return DevtoolsUI;
 }
 
-function setDisconnectedCallback(value: OnDisconnectedCallback) {
+function setDisconnectedCallback(
+  value: OnDisconnectedCallback,
+): typeof DevtoolsUI {
   disconnectedCallback = value;
   return DevtoolsUI;
 }
@@ -266,7 +268,7 @@ function initialize(socket: WebSocket) {
 
 let startServerTimeoutID: TimeoutID | null = null;
 
-function connectToSocket(socket: WebSocket) {
+function connectToSocket(socket: WebSocket): {close(): void} {
   socket.onerror = err => {
     onDisconnected();
     log.error('Error with websocket connection', err);
@@ -298,7 +300,7 @@ function startServer(
   host?: string = 'localhost',
   httpsOptions?: ServerOptions,
   loggerOptions?: LoggerOptions,
-) {
+): {close(): void} {
   registerDevToolsEventLogger(loggerOptions?.surface ?? 'standalone');
 
   const useHttps = !!httpsOptions;

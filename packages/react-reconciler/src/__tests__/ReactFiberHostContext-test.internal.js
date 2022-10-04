@@ -66,7 +66,10 @@ describe('ReactFiberHostContext', () => {
       getCurrentEventPriority: function() {
         return DefaultEventPriority;
       },
+      prepareRendererToRender: function() {},
+      resetRendererAfterRender: function() {},
       supportsMutation: true,
+      requestPostPaintCallback: function() {},
     });
 
     const container = Renderer.createContainer(
@@ -129,6 +132,9 @@ describe('ReactFiberHostContext', () => {
       getCurrentEventPriority: function() {
         return DefaultEventPriority;
       },
+      requestPostPaintCallback: function() {},
+      prepareRendererToRender: function() {},
+      resetRendererAfterRender: function() {},
       supportsMutation: true,
     });
 

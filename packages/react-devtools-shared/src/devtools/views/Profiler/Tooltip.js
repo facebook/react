@@ -7,7 +7,12 @@ import styles from './Tooltip.css';
 
 const initialTooltipState = {height: 0, mouseX: 0, mouseY: 0, width: 0};
 
-export default function Tooltip({children, className, label, style}: any) {
+export default function Tooltip({
+  children,
+  className,
+  label,
+  style,
+}: any): React.Node {
   const containerRef = useRef(null);
   const tooltipRef = useRef(null);
 

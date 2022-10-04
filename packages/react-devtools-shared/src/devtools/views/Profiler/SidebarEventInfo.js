@@ -90,7 +90,7 @@ function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
   );
 }
 
-export default function SidebarEventInfo(_: Props) {
+export default function SidebarEventInfo(_: Props): React.Node {
   const {selectedEvent} = useContext(TimelineContext);
   // (TODO) Refactor in next PR so this supports multiple types of events
   if (selectedEvent && selectedEvent.schedulingEvent) {

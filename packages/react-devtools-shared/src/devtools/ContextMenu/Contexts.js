@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import {createContext} from 'react';
 
 export type ShowFn = ({data: Object, pageX: number, pageY: number}) => void;
@@ -61,7 +63,7 @@ function showMenu({
   }
 }
 
-function registerMenu(id: string, showFn: ShowFn, hideFn: HideFn) {
+function registerMenu(id: string, showFn: ShowFn, hideFn: HideFn): () => void {
   if (idToShowFnMap.has(id)) {
     throw Error(`Context menu with id "${id}" already registered.`);
   }
@@ -81,8 +83,10 @@ export type RegistryContextType = {
   registerMenu: typeof registerMenu,
 };
 
-export const RegistryContext = createContext<RegistryContextType>({
-  hideMenu,
-  showMenu,
-  registerMenu,
-});
+export const RegistryContext: ReactContext<RegistryContextType> = createContext<RegistryContextType>(
+  {
+    hideMenu,
+    showMenu,
+    registerMenu,
+  },
+);

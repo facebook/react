@@ -30,7 +30,7 @@ export default function InspectedElementStyleXPlugin({
   element,
   inspectedElement,
   store,
-}: Props) {
+}: Props): React.Node {
   if (!enableStyleXFeatures) {
     return null;
   }

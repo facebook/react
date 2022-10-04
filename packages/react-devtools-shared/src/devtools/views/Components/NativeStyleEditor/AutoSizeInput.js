@@ -26,7 +26,7 @@ export default function AutoSizeInput({
   testName,
   value,
   ...rest
-}: Props) {
+}: Props): React.Node {
   const onFocusWrapper = event => {
     const input = event.target;
     if (input !== null) {

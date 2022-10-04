@@ -18,7 +18,7 @@ import {TreeStateContext} from '../TreeContext';
 
 type Props = {};
 
-export default function NativeStyleEditorWrapper(_: Props) {
+export default function NativeStyleEditorWrapper(_: Props): React.Node {
   const store = useContext(StoreContext);
 
   const subscription = useMemo(

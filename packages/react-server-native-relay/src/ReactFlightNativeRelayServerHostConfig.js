@@ -57,16 +57,47 @@ export function resolveModuleMetaData<T>(
 
 export type Chunk = RowEncoding;
 
-export function processErrorChunk(
+export function processErrorChunkProd(
   request: Request,
   id: number,
-  message: string,
-  stack: string,
+  digest: string,
 ): Chunk {
+  if (__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'processErrorChunkProd should never be called while in development mode. Use processErrorChunkDev instead. This is a bug in React.',
+    );
+  }
+
   return [
     'E',
     id,
     {
+      digest,
+    },
+  ];
+}
+export function processErrorChunkDev(
+  request: Request,
+  id: number,
+  digest: string,
+  message: string,
+  stack: string,
+): Chunk {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'processErrorChunkDev should never be called while in production mode. Use processErrorChunkProd instead. This is a bug in React.',
+    );
+  }
+
+  return [
+    'E',
+    id,
+    {
+      digest,
       message,
       stack,
     },

@@ -148,4 +148,10 @@ jest.mock('shared/ReactSharedInternals', () =>
   jest.requireActual('react/src/ReactSharedInternals')
 );
 
+// Make it possible to import this module inside
+// the ReactDOM package itself.
+jest.mock('shared/ReactDOMSharedInternals', () =>
+  jest.requireActual('react-dom/src/ReactDOMSharedInternals')
+);
+
 jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));

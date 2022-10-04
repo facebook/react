@@ -19,6 +19,7 @@ import {
   HostRoot,
   HostPortal,
   HostComponent,
+  HostResource,
   HostText,
   Fragment,
   Mode,
@@ -77,6 +78,7 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
       return getWrappedName(type, type.render, 'ForwardRef');
     case Fragment:
       return 'Fragment';
+    case HostResource:
     case HostComponent:
       // Host component type is the display name (e.g. "div", "View")
       return type;

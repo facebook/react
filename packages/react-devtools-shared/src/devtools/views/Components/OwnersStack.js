@@ -77,7 +77,7 @@ function dialogReducer(state, action) {
   }
 }
 
-export default function OwnerStack() {
+export default function OwnerStack(): React.Node {
   const read = useContext(OwnersListContext);
   const {ownerID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);

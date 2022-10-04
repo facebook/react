@@ -20,7 +20,7 @@ export default function useSmartTooltip({
   canvasRef: {current: HTMLCanvasElement | null},
   mouseX: number,
   mouseY: number,
-}) {
+}): {current: HTMLElement | null} {
   const ref = useRef<HTMLElement | null>(null);
 
   // HACK: Browser extension reports window.innerHeight of 0,

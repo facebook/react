@@ -44,10 +44,6 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
   // If the thenable doesn't have a status, set it to "pending" and attach
   // a listener that will update its status and result when it resolves.
   switch (thenable.status) {
-    case 'pending':
-      // Since the status is already "pending", we can assume it will be updated
-      // when it resolves, either by React or something in userspace.
-      break;
     case 'fulfilled':
     case 'rejected':
       // A thenable that already resolved shouldn't have been thrown, so this is
@@ -57,9 +53,12 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
       // TODO: Log a warning?
       break;
     default: {
-      // TODO: Only instrument the thenable if the status if not defined. If
-      // it's defined, but an unknown value, assume it's been instrumented by
-      // some custom userspace implementation.
+      if (typeof thenable.status === 'string') {
+        // Only instrument the thenable if the status if not defined. If
+        // it's defined, but an unknown value, assume it's been instrumented by
+        // some custom userspace implementation. We treat it as "pending".
+        break;
+      }
       const pendingThenable: PendingThenable<mixed> = (thenable: any);
       pendingThenable.status = 'pending';
       pendingThenable.then(

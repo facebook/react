@@ -32,7 +32,7 @@ export default function InspectedElementStateTree({
   element,
   inspectedElement,
   store,
-}: Props) {
+}: Props): React.Node {
   const {state} = inspectedElement;
 
   const entries = state != null ? Object.entries(state) : null;

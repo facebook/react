@@ -10,7 +10,7 @@
 // Renderers that don't support test selectors
 // can re-export everything from this module.
 
-function shim(...args: any) {
+function shim(...args: any): empty {
   throw new Error(
     'The current renderer does not support test selectors. ' +
       'This error is likely caused by a bug in React. ' +

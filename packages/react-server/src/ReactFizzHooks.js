@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  Dispatcher as DispatcherType,
+  EventFunctionWrapper,
+} from 'react-reconciler/src/ReactInternalTypes';
 
 import type {
   MutableSource,
@@ -36,6 +39,7 @@ import {makeId} from './ReactServerFormatConfig';
 import {
   enableCache,
   enableUseHook,
+  enableUseEventHook,
   enableUseMemoCacheHook,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
@@ -239,13 +243,13 @@ export function finishHooks(
   return children;
 }
 
-export function getThenableStateAfterSuspending() {
+export function getThenableStateAfterSuspending(): null | ThenableState {
   const state = thenableState;
   thenableState = null;
   return state;
 }
 
-export function checkDidRenderIdHook() {
+export function checkDidRenderIdHook(): boolean {
   // This should be called immediately after every finishHooks call.
   // Conceptually, it's part of the return value of finishHooks; it's only a
   // separate function to avoid using an array tuple.
@@ -502,6 +506,19 @@ export function useCallback<T>(
   return useMemo(() => callback, deps);
 }
 
+function throwOnUseEventCall() {
+  throw new Error(
+    "A function wrapped in useEvent can't be called during rendering.",
+  );
+}
+
+export function useEvent<Args, Return, F: (...Array<Args>) => Return>(
+  callback: F,
+): EventFunctionWrapper<Args, Return, F> {
+  // $FlowIgnore[incompatible-return] useEvent doesn't work in Fizz
+  return throwOnUseEventCall;
+}
+
 // TODO Decide on how to implement this hook for server rendering.
 // If a mutation occurs during render, consider triggering a Suspense boundary
 // and falling back to client rendering.
@@ -674,6 +691,9 @@ export const Dispatcher: DispatcherType = {
 if (enableCache) {
   Dispatcher.getCacheForType = getCacheForType;
   Dispatcher.useCacheRefresh = useCacheRefresh;
+}
+if (enableUseEventHook) {
+  Dispatcher.useEvent = useEvent;
 }
 if (enableUseMemoCacheHook) {
   Dispatcher.useMemoCache = useMemoCache;

@@ -38,7 +38,7 @@ export default function NewKeyValue({
   path,
   store,
   type,
-}: Props) {
+}: Props): React.Node {
   const [newPropKey, setNewPropKey] = useState<number>(0);
   const [newPropName, setNewPropName] = useState<string>('');
 

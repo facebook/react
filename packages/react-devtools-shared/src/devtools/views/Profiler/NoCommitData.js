@@ -11,7 +11,7 @@ import * as React from 'react';
 
 import styles from './NoCommitData.css';
 
-export default function NoCommitData(_: {}) {
+export default function NoCommitData(_: {}): React.Node {
   return (
     <div className={styles.NoCommitData}>
       <div className={styles.Header}>

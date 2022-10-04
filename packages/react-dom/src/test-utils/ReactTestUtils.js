@@ -13,14 +13,16 @@ import {
   ClassComponent,
   FunctionComponent,
   HostComponent,
+  HostResource,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
-import {SyntheticEvent} from '../events/SyntheticEvent';
-import {ELEMENT_NODE} from '../shared/HTMLNodeType';
+import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
+import {ELEMENT_NODE} from 'react-dom-bindings/src/shared/HTMLNodeType';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
+import {enableFloat} from 'shared/ReactFeatureFlags';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 
@@ -59,7 +61,8 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       node.tag === HostComponent ||
       node.tag === HostText ||
       node.tag === ClassComponent ||
-      node.tag === FunctionComponent
+      node.tag === FunctionComponent ||
+      (enableFloat ? node.tag === HostResource : false)
     ) {
       const publicInst = node.stateNode;
       if (test(publicInst)) {

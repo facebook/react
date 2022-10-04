@@ -828,10 +828,10 @@ export default class Store extends EventEmitter<{
     }
   }
 
-  _adjustParentTreeWeight = (
+  _adjustParentTreeWeight: (
     parentElement: Element | null,
     weightDelta: number,
-  ) => {
+  ) => void = (parentElement, weightDelta) => {
     let isInsideCollapsedSubTree = false;
 
     while (parentElement != null) {
@@ -869,20 +869,17 @@ export default class Store extends EventEmitter<{
     }
   }
 
-  onBridgeNativeStyleEditorSupported = ({
-    isSupported,
-    validAttributes,
-  }: {
+  onBridgeNativeStyleEditorSupported: ({
     isSupported: boolean,
     validAttributes: ?$ReadOnlyArray<string>,
-  }) => {
+  }) => void = ({isSupported, validAttributes}) => {
     this._isNativeStyleEditorSupported = isSupported;
     this._nativeStyleEditorValidAttributes = validAttributes || null;
 
     this.emit('supportsNativeStyleEditor');
   };
 
-  onBridgeOperations = (operations: Array<number>) => {
+  onBridgeOperations: (operations: Array<number>) => void = operations => {
     if (__DEBUG__) {
       console.groupCollapsed('onBridgeOperations');
       debug('onBridgeOperations', operations.join(','));
@@ -1328,15 +1325,15 @@ export default class Store extends EventEmitter<{
   // this message enables the backend to override the frontend's current ("saved") filters.
   // This action should also override the saved filters too,
   // else reloading the frontend without reloading the backend would leave things out of sync.
-  onBridgeOverrideComponentFilters = (
+  onBridgeOverrideComponentFilters: (
     componentFilters: Array<ComponentFilter>,
-  ) => {
+  ) => void = componentFilters => {
     this._componentFilters = componentFilters;
 
     setSavedComponentFilters(componentFilters);
   };
 
-  onBridgeShutdown = () => {
+  onBridgeShutdown: () => void = () => {
     if (__DEBUG__) {
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
     }
@@ -1373,30 +1370,36 @@ export default class Store extends EventEmitter<{
     }
   };
 
-  onBackendStorageAPISupported = (isBackendStorageAPISupported: boolean) => {
+  onBackendStorageAPISupported: (
+    isBackendStorageAPISupported: boolean,
+  ) => void = isBackendStorageAPISupported => {
     this._isBackendStorageAPISupported = isBackendStorageAPISupported;
 
     this.emit('supportsReloadAndProfile');
   };
 
-  onBridgeSynchronousXHRSupported = (isSynchronousXHRSupported: boolean) => {
+  onBridgeSynchronousXHRSupported: (
+    isSynchronousXHRSupported: boolean,
+  ) => void = isSynchronousXHRSupported => {
     this._isSynchronousXHRSupported = isSynchronousXHRSupported;
 
     this.emit('supportsReloadAndProfile');
   };
 
-  onBridgeUnsupportedRendererVersion = () => {
+  onBridgeUnsupportedRendererVersion: () => void = () => {
     this._unsupportedRendererVersionDetected = true;
 
     this.emit('unsupportedRendererVersionDetected');
   };
 
-  onBridgeBackendVersion = (backendVersion: string) => {
+  onBridgeBackendVersion: (backendVersion: string) => void = backendVersion => {
     this._backendVersion = backendVersion;
     this.emit('backendVersion');
   };
 
-  onBridgeProtocol = (bridgeProtocol: BridgeProtocol) => {
+  onBridgeProtocol: (
+    bridgeProtocol: BridgeProtocol,
+  ) => void = bridgeProtocol => {
     if (this._onBridgeProtocolTimeoutID !== null) {
       clearTimeout(this._onBridgeProtocolTimeoutID);
       this._onBridgeProtocolTimeoutID = null;
@@ -1411,7 +1414,7 @@ export default class Store extends EventEmitter<{
     }
   };
 
-  onBridgeProtocolTimeout = () => {
+  onBridgeProtocolTimeout: () => void = () => {
     this._onBridgeProtocolTimeoutID = null;
 
     // If we timed out, that indicates the backend predates the bridge protocol,

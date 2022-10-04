@@ -100,6 +100,13 @@ function isInsideComponentOrHook(node) {
   return false;
 }
 
+function isUseEventIdentifier(node) {
+  if (__EXPERIMENTAL__) {
+    return node.type === 'Identifier' && node.name === 'useEvent';
+  }
+  return false;
+}
+
 export default {
   meta: {
     type: 'problem',
@@ -110,8 +117,33 @@ export default {
     },
   },
   create(context) {
+    let lastEffect = null;
     const codePathReactHooksMapStack = [];
     const codePathSegmentStack = [];
+    const useEventFunctions = new WeakSet();
+
+    // For a given scope, iterate through the references and add all useEvent definitions. We can
+    // do this in non-Program nodes because we can rely on the assumption that useEvent functions
+    // can only be declared within a component or hook at its top level.
+    function recordAllUseEventFunctions(scope) {
+      for (const reference of scope.references) {
+        const parent = reference.identifier.parent;
+        if (
+          parent.type === 'VariableDeclarator' &&
+          parent.init &&
+          parent.init.type === 'CallExpression' &&
+          parent.init.callee &&
+          isUseEventIdentifier(parent.init.callee)
+        ) {
+          for (const ref of reference.resolved.references) {
+            if (ref !== reference) {
+              useEventFunctions.add(ref.identifier);
+            }
+          }
+        }
+      }
+    }
+
     return {
       // Maintain code segment path stack as we traverse.
       onCodePathSegmentStart: segment => codePathSegmentStack.push(segment),
@@ -521,6 +553,58 @@ export default {
             reactHooksMap.set(codePathSegment, reactHooks);
           }
           reactHooks.push(node.callee);
+        }
+
+        // useEvent: useEvent functions can be passed by reference within useEffect as well as in
+        // another useEvent
+        if (
+          node.callee.type === 'Identifier' &&
+          (node.callee.name === 'useEffect' ||
+            isUseEventIdentifier(node.callee)) &&
+          node.arguments.length > 0
+        ) {
+          // Denote that we have traversed into a useEffect call, and stash the CallExpr for
+          // comparison later when we exit
+          lastEffect = node;
+        }
+      },
+
+      Identifier(node) {
+        // This identifier resolves to a useEvent function, but isn't being referenced in an
+        // effect or another event function. It isn't being called either.
+        if (
+          lastEffect == null &&
+          useEventFunctions.has(node) &&
+          node.parent.type !== 'CallExpression'
+        ) {
+          context.report({
+            node,
+            message:
+              `\`${context.getSource(
+                node,
+              )}\` is a function created with React Hook "useEvent", and can only be called from ` +
+              'the same component. They cannot be assigned to variables or passed down.',
+          });
+        }
+      },
+
+      'CallExpression:exit'(node) {
+        if (node === lastEffect) {
+          lastEffect = null;
+        }
+      },
+
+      FunctionDeclaration(node) {
+        // function MyComponent() { const onClick = useEvent(...) }
+        if (isInsideComponentOrHook(node)) {
+          recordAllUseEventFunctions(context.getScope());
+        }
+      },
+
+      ArrowFunctionExpression(node) {
+        // const MyComponent = () => { const onClick = useEvent(...) }
+        if (isInsideComponentOrHook(node)) {
+          recordAllUseEventFunctions(context.getScope());
         }
       },
     };
