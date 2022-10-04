@@ -468,7 +468,8 @@ export default {
 
           for (const hook of reactHooks) {
             // Report an error if a hook may be called more then once.
-            if (cycled) {
+            // `use(...)` can be called in loops.
+            if (cycled && !isUseIdentifier(hook)) {
               context.report({
                 node: hook,
                 message:
@@ -539,7 +540,8 @@ export default {
               // anonymous function expressions. Hopefully this is clarifying
               // enough in the common case that the incorrect message in
               // uncommon cases doesn't matter.
-              if (isSomewhereInsideComponentOrHook) {
+              // `use(...)` can be called in callbacks.
+              if (isSomewhereInsideComponentOrHook && !isUseIdentifier(hook)) {
                 const message =
                   `React Hook "${context.getSource(hook)}" cannot be called ` +
                   'inside a callback. React Hooks must be called in a ' +
