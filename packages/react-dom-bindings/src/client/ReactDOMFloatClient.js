@@ -657,6 +657,7 @@ function acquireStyleResource(resource: StyleResource): Instance {
     }
   }
   resource.count++;
+  // $FlowFixMe[incompatible-return] found when upgrading Flow
   return resource.instance;
 }
 
