@@ -182,6 +182,7 @@ function createWorkInProgressHook(): Hook {
     if (workInProgressHook.next === null) {
       isReRender = false;
       // Append to the end of the list
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       workInProgressHook = workInProgressHook.next = createHook();
     } else {
       // There's already a work-in-progress. Reuse it.
@@ -339,7 +340,9 @@ export function useReducer<S, I, A>(
       // Render phase updates are stored in a map of queue -> linked list
       const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
       if (firstRenderPhaseUpdate !== undefined) {
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         renderPhaseUpdates.delete(queue);
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         let newState = workInProgressHook.memoizedState;
         let update = firstRenderPhaseUpdate;
         do {
@@ -357,11 +360,13 @@ export function useReducer<S, I, A>(
           update = update.next;
         } while (update !== null);
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         workInProgressHook.memoizedState = newState;
 
         return [newState, dispatch];
       }
     }
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     return [workInProgressHook.memoizedState, dispatch];
   } else {
     if (__DEV__) {
@@ -381,7 +386,9 @@ export function useReducer<S, I, A>(
     if (__DEV__) {
       isInHookUserCodeInDev = false;
     }
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     workInProgressHook.memoizedState = initialState;
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     const queue: UpdateQueue<A> = (workInProgressHook.queue = {
       last: null,
       dispatch: null,
@@ -391,6 +398,7 @@ export function useReducer<S, I, A>(
       currentlyRenderingComponent,
       queue,
     ): any));
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     return [workInProgressHook.memoizedState, dispatch];
   }
 }
@@ -420,6 +428,7 @@ function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
   if (__DEV__) {
     isInHookUserCodeInDev = false;
   }
+  // $FlowFixMe[incompatible-use] found when upgrading Flow
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
@@ -483,6 +492,7 @@ function dispatchAction<A>(
     }
     const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
     if (firstRenderPhaseUpdate === undefined) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       renderPhaseUpdates.set(queue, update);
     } else {
       // Append the update to the end of the list.

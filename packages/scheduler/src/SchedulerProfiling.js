@@ -47,6 +47,7 @@ function logEvent(entries) {
         return;
       }
       const newEventLog = new Int32Array(eventLogSize * 4);
+      // $FlowFixMe[incompatible-call] found when upgrading Flow
       newEventLog.set(eventLog);
       eventLogBuffer = newEventLog.buffer;
       eventLog = newEventLog;

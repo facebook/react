@@ -83,6 +83,7 @@ export const Dispatcher: DispatcherType = {
     if (entry === undefined) {
       entry = resourceType();
       // TODO: Warn if undefined?
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentCache.set(resourceType, entry);
     }
     return entry;

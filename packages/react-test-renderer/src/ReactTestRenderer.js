@@ -593,6 +593,7 @@ function create(
         } else {
           // However, we give you the root if there's more than one root child.
           // We could make this the behavior for all cases but it would be a breaking change.
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           return wrapFiber(root.current);
         }
       },
