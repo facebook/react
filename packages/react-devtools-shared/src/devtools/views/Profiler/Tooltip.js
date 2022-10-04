@@ -57,8 +57,8 @@ const TOOLTIP_OFFSET = 5;
 // Method used to find the position of the tooltip based on current mouse position
 function getTooltipPosition(element, mousePosition) {
   const {height, mouseX, mouseY, width} = mousePosition;
-  let top = 0;
-  let left = 0;
+  let top: number | string = 0;
+  let left: number | string = 0;
 
   if (mouseY + TOOLTIP_OFFSET + element.offsetHeight >= height) {
     if (mouseY - TOOLTIP_OFFSET - element.offsetHeight > 0) {

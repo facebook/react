@@ -303,7 +303,7 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
       );
     }
 
-    let node = fiber;
+    let node: Fiber = fiber;
     do {
       switch (node.tag) {
         case HostRoot:
@@ -316,6 +316,7 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
           break;
         }
       }
+      // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.return;
     } while (node !== null);
 

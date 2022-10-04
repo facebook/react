@@ -82,7 +82,7 @@ Pool.prototype.query = function(query: string, values?: Array<mixed>) {
   const outerMap = unstable_getCacheForType(this.createRecordMap);
 
   let innerMap: NestedMap = outerMap;
-  let key = query;
+  let key: mixed = query;
   if (values != null) {
     // If we have parameters, each becomes as a nesting layer for Maps.
     // We want to find (or create as needed) the innermost Map, and return that.

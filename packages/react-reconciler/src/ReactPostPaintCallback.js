@@ -9,7 +9,7 @@
 import {requestPostPaintCallback} from './ReactFiberHostConfig';
 
 let postPaintCallbackScheduled = false;
-let callbacks = [];
+let callbacks: Array<any | ((endTime: number) => void)> = [];
 
 export function schedulePostPaintCallback(callback: (endTime: number) => void) {
   callbacks.push(callback);

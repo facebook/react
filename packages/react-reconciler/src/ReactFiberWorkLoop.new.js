@@ -742,7 +742,7 @@ export function scheduleUpdateOnFiber(
         root === rootCommittingMutationOrLayoutEffects
       ) {
         if (fiber.mode & ProfileMode) {
-          let current = fiber;
+          let current: null | Fiber = fiber;
           while (current !== null) {
             if (current.tag === Profiler) {
               const {id, onNestedUpdateScheduled} = current.memoizedProps;
@@ -2195,7 +2195,7 @@ function resumeSuspendedUnitOfWork(
 function completeUnitOfWork(unitOfWork: Fiber): void {
   // Attempt to complete the current unit of work, then move to the next
   // sibling. If there are no more siblings, return to the parent fiber.
-  let completedWork = unitOfWork;
+  let completedWork: Fiber = unitOfWork;
   do {
     // The current, flushed, state of this fiber is the alternate. Ideally
     // nothing should rely on this, but relying on it here means that we don't
@@ -2281,6 +2281,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
       return;
     }
     // Otherwise, return to the parent
+    // $FlowFixMe[incompatible-type] we bail out when we get a null
     completedWork = returnFiber;
     // Update the next thing we're working on in case something throws.
     workInProgress = completedWork;
@@ -3388,7 +3389,7 @@ function invokeEffectsInDev(
   fiberFlags: Flags,
   invokeEffectFn: (fiber: Fiber) => void,
 ) {
-  let current = firstChild;
+  let current: null | Fiber = firstChild;
   let subtreeRoot = null;
   while (current != null) {
     const primarySubtreeFlag = current.subtreeFlags & fiberFlags;
@@ -3445,6 +3446,7 @@ export function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber: Fiber) {
       if (didWarnStateUpdateForNotYetMountedComponent.has(componentName)) {
         return;
       }
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       didWarnStateUpdateForNotYetMountedComponent.add(componentName);
     } else {
       didWarnStateUpdateForNotYetMountedComponent = new Set([componentName]);

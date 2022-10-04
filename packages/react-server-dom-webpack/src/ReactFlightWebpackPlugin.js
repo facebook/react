@@ -88,6 +88,7 @@ export default class ReactFlightWebpackPlugin {
     ) {
       this.clientReferences = [(options.clientReferences: $FlowFixMe)];
     } else {
+      // $FlowFixMe[incompatible-type] found when upgrading Flow
       this.clientReferences = options.clientReferences;
     }
     if (typeof options.chunkName === 'string') {

@@ -488,7 +488,7 @@ function throwException(
   // We didn't find a boundary that could handle this type of exception. Start
   // over and traverse parent path again, this time treating the exception
   // as an error.
-  let workInProgress = returnFiber;
+  let workInProgress: Fiber = returnFiber;
   do {
     switch (workInProgress.tag) {
       case HostRoot: {
@@ -528,6 +528,7 @@ function throwException(
       default:
         break;
     }
+    // $FlowFixMe[incompatible-type] we bail out when we get a null
     workInProgress = workInProgress.return;
   } while (workInProgress !== null);
 }

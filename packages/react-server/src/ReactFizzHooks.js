@@ -147,7 +147,9 @@ function areHookInputsEqual(
       );
     }
   }
+  // $FlowFixMe[incompatible-use] found when upgrading Flow
   for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     if (is(nextDeps[i], prevDeps[i])) {
       continue;
     }
@@ -344,7 +346,7 @@ export function useReducer<S, I, A>(
         renderPhaseUpdates.delete(queue);
         // $FlowFixMe[incompatible-use] found when upgrading Flow
         let newState = workInProgressHook.memoizedState;
-        let update = firstRenderPhaseUpdate;
+        let update: Update<any> = firstRenderPhaseUpdate;
         do {
           // Process this render phase update. We don't have to check the
           // priority because it will always be the same as the current
@@ -357,6 +359,7 @@ export function useReducer<S, I, A>(
           if (__DEV__) {
             isInHookUserCodeInDev = false;
           }
+          // $FlowFixMe[incompatible-type] we bail out when we get a null
           update = update.next;
         } while (update !== null);
 
@@ -442,6 +445,7 @@ function useRef<T>(initialValue: T): {current: T} {
     if (__DEV__) {
       Object.seal(ref);
     }
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     workInProgressHook.memoizedState = ref;
     return ref;
   } else {

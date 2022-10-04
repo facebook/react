@@ -42,6 +42,7 @@ function recomputePluginOrdering(): void {
   }
   for (const pluginName in namesToPlugins) {
     const pluginModule = namesToPlugins[pluginName];
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     const pluginIndex = eventPluginOrder.indexOf(pluginName);
 
     if (pluginIndex <= -1) {

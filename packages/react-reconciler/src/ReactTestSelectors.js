@@ -28,11 +28,11 @@ import {
   supportsTestSelectors,
 } from './ReactFiberHostConfig';
 
-let COMPONENT_TYPE = 0b000;
-let HAS_PSEUDO_CLASS_TYPE = 0b001;
-let ROLE_TYPE = 0b010;
-let TEST_NAME_TYPE = 0b011;
-let TEXT_TYPE = 0b100;
+let COMPONENT_TYPE: symbol | number = 0b000;
+let HAS_PSEUDO_CLASS_TYPE: symbol | number = 0b001;
+let ROLE_TYPE: symbol | number = 0b010;
+let TEST_NAME_TYPE: symbol | number = 0b011;
+let TEXT_TYPE: symbol | number = 0b100;
 
 if (typeof Symbol === 'function' && Symbol.for) {
   const symbolFor = Symbol.for;

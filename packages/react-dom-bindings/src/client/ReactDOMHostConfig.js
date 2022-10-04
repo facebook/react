@@ -593,7 +593,7 @@ export function clearSuspenseBoundary(
   parentInstance: Instance,
   suspenseInstance: SuspenseInstance,
 ): void {
-  let node = suspenseInstance;
+  let node: Node = suspenseInstance;
   // Delete all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
   // deep we are and only break out when we're back on top.
@@ -620,6 +620,7 @@ export function clearSuspenseBoundary(
         depth++;
       }
     }
+    // $FlowFixMe[incompatible-type] we bail out when we get a null
     node = nextNode;
   } while (node);
   // TODO: Warn, we didn't find the end comment boundary.

@@ -57,7 +57,7 @@ export default function NewKeyValue({
     const {id} = inspectedElement;
     const rendererID = store.getRendererIDForElement(id);
     if (rendererID !== null) {
-      let basePath = newPath;
+      let basePath: Array<string | number> = newPath;
       if (hookID != null) {
         basePath = parseHookPathForEdit(basePath);
       }

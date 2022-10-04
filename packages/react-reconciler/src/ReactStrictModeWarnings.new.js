@@ -31,7 +31,7 @@ if (__DEV__) {
   const findStrictRoot = (fiber: Fiber): Fiber | null => {
     let maybeStrictRoot = null;
 
-    let node = fiber;
+    let node: null | Fiber = fiber;
     while (node !== null) {
       if (node.mode & StrictLegacyMode) {
         maybeStrictRoot = node;

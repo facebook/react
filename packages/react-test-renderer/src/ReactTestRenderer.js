@@ -468,6 +468,7 @@ function create(
   let concurrentUpdatesByDefault = null;
   if (typeof options === 'object' && options !== null) {
     if (typeof options.createNodeMock === 'function') {
+      // $FlowFixMe[incompatible-type] found when upgrading Flow
       createNodeMock = options.createNodeMock;
     }
     if (options.unstable_isConcurrent === true) {
@@ -561,6 +562,7 @@ function create(
         return;
       }
       updateContainer(null, root, null, null);
+      // $FlowFixMe[incompatible-type] found when upgrading Flow
       container = null;
       root = null;
     },

@@ -294,7 +294,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           ) {
             const leafElement = store.getElementByID(ownerSubtreeLeafElementID);
             if (leafElement !== null) {
-              let currentElement = leafElement;
+              let currentElement: null | Element = leafElement;
               while (currentElement !== null) {
                 if (currentElement.ownerID === selectedElementID) {
                   selectedElementIndex = store.getIndexOfElementID(

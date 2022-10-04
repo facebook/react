@@ -427,7 +427,7 @@ function addTrappedEventListener(
   );
   // If passive option is not supported, then the event will be
   // active and not passive.
-  let isPassiveListener = undefined;
+  let isPassiveListener: void | boolean = undefined;
   if (passiveBrowserEventsSupported) {
     // Browsers introduced an intervention, making these events
     // passive by default on document. React doesn't bind them
@@ -578,7 +578,7 @@ export function dispatchEventForPluginEventSystem(
       // root boundaries that match that of our current "rootContainer".
       // If we find that "rootContainer", we find the parent fiber
       // sub-tree for that root and make that our ancestor instance.
-      let node = targetInst;
+      let node: null | Fiber = targetInst;
 
       mainLoop: while (true) {
         if (node === null) {
@@ -823,6 +823,7 @@ function getParent(inst: Fiber | null): Fiber | null {
     return null;
   }
   do {
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     inst = inst.return;
     // TODO: If this is a HostRoot we might want to bail out.
     // That is depending on if we want nested subtrees (layers) to bubble
@@ -841,14 +842,14 @@ function getParent(inst: Fiber | null): Fiber | null {
  * different trees.
  */
 function getLowestCommonAncestor(instA: Fiber, instB: Fiber): Fiber | null {
-  let nodeA = instA;
-  let nodeB = instB;
+  let nodeA: null | Fiber = instA;
+  let nodeB: null | Fiber = instB;
   let depthA = 0;
-  for (let tempA = nodeA; tempA; tempA = getParent(tempA)) {
+  for (let tempA: null | Fiber = nodeA; tempA; tempA = getParent(tempA)) {
     depthA++;
   }
   let depthB = 0;
-  for (let tempB = nodeB; tempB; tempB = getParent(tempB)) {
+  for (let tempB: null | Fiber = nodeB; tempB; tempB = getParent(tempB)) {
     depthB++;
   }
 
@@ -886,7 +887,7 @@ function accumulateEnterLeaveListenersForEvent(
   const registrationName = event._reactName;
   const listeners: Array<DispatchListener> = [];
 
-  let instance = target;
+  let instance: null | Fiber = target;
   while (instance !== null) {
     if (instance === common) {
       break;

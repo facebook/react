@@ -303,6 +303,7 @@ function scheduleFibersWithFamiliesRecursively(
     if (failedBoundaries !== null) {
       if (
         failedBoundaries.has(fiber) ||
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         (alternate !== null && failedBoundaries.has(alternate))
       ) {
         needsRemount = true;

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import * as React from 'react';
+import type { Element } from './types';import * as React from 'react';
 import {useContext, useMemo} from 'react';
 import {TreeStateContext} from './TreeContext';
 import {SettingsContext} from '../Settings/SettingsContext';
@@ -53,7 +53,7 @@ export default function SelectedTreeHighlight(_: {}): React.Node {
         }
 
         let stopIndex = null;
-        let current = element;
+        let current: null | Element = element;
         while (current !== null) {
           if (current.isCollapsed || current.children.length === 0) {
             // We've found the last/deepest descendant.

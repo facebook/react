@@ -325,7 +325,7 @@ export function enqueueCapturedUpdate<State>(
       const firstBaseUpdate = queue.firstBaseUpdate;
       if (firstBaseUpdate !== null) {
         // Loop through the updates and clone them.
-        let update = firstBaseUpdate;
+        let update: Update<State> = firstBaseUpdate;
         do {
           const clone: Update<State> = {
             eventTime: update.eventTime,
@@ -345,6 +345,7 @@ export function enqueueCapturedUpdate<State>(
             newLast.next = clone;
             newLast = clone;
           }
+          // $FlowFixMe[incompatible-type] we bail out when we get a null
           update = update.next;
         } while (update !== null);
 
@@ -534,7 +535,7 @@ export function processUpdateQueue<State>(
     let newFirstBaseUpdate = null;
     let newLastBaseUpdate = null;
 
-    let update = firstBaseUpdate;
+    let update: Update<State> = firstBaseUpdate;
     do {
       // TODO: Don't need this field anymore
       const updateEventTime = update.eventTime;
@@ -620,6 +621,7 @@ export function processUpdateQueue<State>(
           }
         }
       }
+      // $FlowFixMe[incompatible-type] we bail out when we get a null
       update = update.next;
       if (update === null) {
         pendingQueue = queue.shared.pending;

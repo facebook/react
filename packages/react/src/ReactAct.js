@@ -207,6 +207,7 @@ function flushActQueue(queue) {
         for (; i < queue.length; i++) {
           let callback = queue[i];
           do {
+            // $FlowFixMe[incompatible-type] found when upgrading Flow
             callback = callback(true);
           } while (callback !== null);
         }

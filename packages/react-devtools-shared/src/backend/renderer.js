@@ -2269,7 +2269,7 @@ export function attach(
 
     // This is a naive implementation that shallowly recourses children.
     // We might want to revisit this if it proves to be too inefficient.
-    let child = childSet;
+    let child: null | Fiber = childSet;
     while (child !== null) {
       findReorderedChildrenRecursively(child, nextChildren);
       child = child.sibling;
@@ -2846,11 +2846,11 @@ export function attach(
   // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
   function getNearestMountedFiber(fiber: Fiber): null | Fiber {
     let node = fiber;
-    let nearestMounted = fiber;
+    let nearestMounted: null | Fiber = fiber;
     if (!fiber.alternate) {
       // If there is no alternate, this might be a new tree that isn't inserted
       // yet. If it is, then it will have a pending insertion effect on it.
-      let nextNode = node;
+      let nextNode: Fiber = node;
       do {
         node = nextNode;
         if ((node.flags & (Placement | Hydrating)) !== NoFlags) {
@@ -2859,6 +2859,7 @@ export function attach(
           // if that one is still mounted.
           nearestMounted = node.return;
         }
+        // $FlowFixMe[incompatible-type] we bail out when we get a null
         nextNode = node.return;
       } while (nextNode);
     } else {
@@ -3097,7 +3098,7 @@ export function attach(
     const owners: Array<SerializedElement> = [fiberToSerializedElement(fiber)];
 
     if (_debugOwner) {
-      let owner = _debugOwner;
+      let owner: null | Fiber = _debugOwner;
       while (owner !== null) {
         owners.unshift(fiberToSerializedElement(owner));
         owner = owner._debugOwner || null;
@@ -3256,7 +3257,7 @@ export function attach(
     let owners = null;
     if (_debugOwner) {
       owners = [];
-      let owner = _debugOwner;
+      let owner: null | Fiber = _debugOwner;
       while (owner !== null) {
         owners.push(fiberToSerializedElement(owner));
         owner = owner._debugOwner || null;
@@ -3687,18 +3688,22 @@ export function attach(
     // This will enable us to send patches without re-inspecting if hydrated paths are requested.
     // (Reducing how often we shallow-render is a better DX for function components that use hooks.)
     const cleanedInspectedElement = {...mostRecentlyInspectedElement};
+    // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.context = cleanForBridge(
       cleanedInspectedElement.context,
       createIsPathAllowed('context', null),
     );
+    // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.hooks = cleanForBridge(
       cleanedInspectedElement.hooks,
       createIsPathAllowed('hooks', 'hooks'),
     );
+    // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.props = cleanForBridge(
       cleanedInspectedElement.props,
       createIsPathAllowed('props', null),
     );
+    // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.state = cleanForBridge(
       cleanedInspectedElement.state,
       createIsPathAllowed('state', null),
@@ -3709,6 +3714,7 @@ export function attach(
       responseID: requestID,
       type: 'full-data',
       // $FlowFixMe[incompatible-return] found when upgrading Flow
+      // $FlowFixMe[prop-missing] found when upgrading Flow
       value: cleanedInspectedElement,
     };
   }
@@ -4420,13 +4426,15 @@ export function attach(
   // The return path will contain Fibers that are "invisible" to the store
   // because their keys and indexes are important to restoring the selection.
   function getPathForElement(id: number): Array<PathFrame> | null {
-    let fiber = idToArbitraryFiberMap.get(id);
+    let fiber: ?Fiber = idToArbitraryFiberMap.get(id);
     if (fiber == null) {
       return null;
     }
     const keyPath = [];
     while (fiber !== null) {
+      // $FlowFixMe[incompatible-call] found when upgrading Flow
       keyPath.push(getPathFrame(fiber));
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       fiber = fiber.return;
     }
     keyPath.reverse();
@@ -4443,7 +4451,7 @@ export function attach(
       return null;
     }
     // Find the closest Fiber store is aware of.
-    let fiber = trackedPathMatchFiber;
+    let fiber: null | Fiber = trackedPathMatchFiber;
     while (fiber !== null && shouldFilterFiber(fiber)) {
       fiber = fiber.return;
     }

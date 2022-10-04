@@ -319,7 +319,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     // instead.
     const existingChildren: Map<string | number, Fiber> = new Map();
 
-    let existingChild = currentFirstChild;
+    let existingChild: null | Fiber = currentFirstChild;
     while (existingChild !== null) {
       if (existingChild.key !== null) {
         existingChildren.set(existingChild.key, existingChild);

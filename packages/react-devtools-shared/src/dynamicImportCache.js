@@ -136,7 +136,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
     );
 
     // Eventually timeout and stop trying to load the module.
-    let timeoutID = setTimeout(function onTimeout() {
+    let timeoutID: null | TimeoutID = setTimeout(function onTimeout() {
       if (__DEBUG__) {
         console.log(
           `[dynamicImportCache] loadModule("${moduleLoaderFunction.name}") onTimeout()`,

@@ -592,6 +592,7 @@ function updateSimpleMemoComponent(
         try {
           outerMemoType = init(payload);
         } catch (x) {
+          // $FlowFixMe[incompatible-type] found when upgrading Flow
           outerMemoType = null;
         }
         // Inner propTypes will be validated in the function component path.
@@ -2990,12 +2991,15 @@ function propagateSuspenseContextChange(
     if (node === workInProgress) {
       return;
     }
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     while (node.sibling === null) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       if (node.return === null || node.return === workInProgress) {
         return;
       }
       node = node.return;
     }
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     node.sibling.return = node.return;
     node = node.sibling;
   }
@@ -3596,13 +3600,16 @@ function remountFiber(
         // eslint-disable-next-line react-internal/prod-error-codes
         throw new Error('Expected parent to have a child.');
       }
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       while (prevSibling.sibling !== oldWorkInProgress) {
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         prevSibling = prevSibling.sibling;
         if (prevSibling === null) {
           // eslint-disable-next-line react-internal/prod-error-codes
           throw new Error('Expected to find the previous sibling.');
         }
       }
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       prevSibling.sibling = newWorkInProgress;
     }
 
