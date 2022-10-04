@@ -66,9 +66,11 @@ const resource: Resource<
       return request.promise;
     }
 
-    let resolveFn: 
-  | ResolveFn
-  | ((result: Promise<StyleAndLayoutFrontend> | StyleAndLayoutFrontend) => void) = ((null: any): ResolveFn);
+    let resolveFn:
+      | ResolveFn
+      | ((
+          result: Promise<StyleAndLayoutFrontend> | StyleAndLayoutFrontend,
+        ) => void) = ((null: any): ResolveFn);
     const promise = new Promise(resolve => {
       resolveFn = resolve;
     });
