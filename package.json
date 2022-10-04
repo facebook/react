@@ -63,7 +63,7 @@
     "eslint-plugin-react-internal": "link:./scripts/eslint-rules",
     "fbjs-scripts": "1.2.0",
     "filesize": "^6.0.1",
-    "flow-bin": "^0.143.0",
+    "flow-bin": "^0.145.0",
     "glob": "^7.1.6",
     "glob-stream": "^6.1.0",
     "google-closure-compiler": "^20200517.0.0",
