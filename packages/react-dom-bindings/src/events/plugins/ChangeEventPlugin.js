@@ -59,7 +59,6 @@ function createAndAccumulateChangeEvent(
   enqueueStateRestore(((target: any): Node));
   const listeners = accumulateTwoPhaseListeners(inst, 'onChange');
   if (listeners.length > 0) {
-    // $FlowFixMe[incompatible-type]
     const event: ReactSyntheticEvent = new SyntheticEvent(
       'onChange',
       'change',

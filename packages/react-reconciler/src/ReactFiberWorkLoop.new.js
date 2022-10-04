@@ -415,8 +415,6 @@ export function addMarkerProgressCallbackToPendingTransition(
     }
 
     if (currentPendingTransitionCallbacks.markerProgress === null) {
-      // $FlowFixMe[incompatible-use]
-      // $FlowFixMe[incompatible-type]
       currentPendingTransitionCallbacks.markerProgress = new Map();
     }
 
@@ -445,8 +443,6 @@ export function addMarkerIncompleteCallbackToPendingTransition(
     }
 
     if (currentPendingTransitionCallbacks.markerIncomplete === null) {
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
-      // $FlowFixMe[incompatible-type] found when upgrading Flow
       currentPendingTransitionCallbacks.markerIncomplete = new Map();
     }
 
@@ -474,8 +470,6 @@ export function addMarkerCompleteCallbackToPendingTransition(
     }
 
     if (currentPendingTransitionCallbacks.markerComplete === null) {
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
-      // $FlowFixMe[incompatible-type] found when upgrading Flow
       currentPendingTransitionCallbacks.markerComplete = new Map();
     }
 
@@ -503,8 +497,6 @@ export function addTransitionProgressCallbackToPendingTransition(
     }
 
     if (currentPendingTransitionCallbacks.transitionProgress === null) {
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
-      // $FlowFixMe[incompatible-type] found when upgrading Flow
       currentPendingTransitionCallbacks.transitionProgress = new Map();
     }
 
@@ -1680,8 +1672,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   if (workInProgress !== null) {
     let interruptedWork = workInProgressIsSuspended
       ? workInProgress
-      : // $FlowFixMe[incompatible-use] found when upgrading Flow
-        workInProgress.return;
+      : workInProgress.return;
     while (interruptedWork !== null) {
       const current = interruptedWork.alternate;
       unwindInterruptedWork(
@@ -3065,12 +3056,10 @@ export function attachPingListener(
       pingCache.set(wakeable, threadIDs);
     }
   }
-  // $FlowFixMe[incompatible-use] found when upgrading Flow
   if (!threadIDs.has(lanes)) {
     workInProgressRootDidAttachPingListener = true;
 
     // Memoize using the thread ID to prevent redundant listeners.
-    // $FlowFixMe[incompatible-use] found when upgrading Flow
     threadIDs.add(lanes);
     const ping = pingSuspendedRoot.bind(null, root, wakeable, lanes);
     if (enableUpdaterTracking) {

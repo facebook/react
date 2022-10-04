@@ -116,7 +116,6 @@ function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
       'onSelect',
     );
     if (listeners.length > 0) {
-      // $FlowFixMe[incompatible-type]
       const event: ReactSyntheticEvent = new SyntheticEvent(
         'onSelect',
         'select',

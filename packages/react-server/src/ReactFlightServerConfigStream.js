@@ -121,7 +121,6 @@ export function processModelChunk(
   id: number,
   model: ReactModel,
 ): Chunk {
-  // $FlowFixMe: `json` might be `undefined` when model is a symbol.
   const json: string = stringify(model, request.toJSON);
   const row = serializeRowHeader('J', id) + json + '\n';
   return stringToChunk(row);
@@ -142,7 +141,6 @@ export function processModuleChunk(
   id: number,
   moduleMetaData: ReactModel,
 ): Chunk {
-  // $FlowFixMe: `json` might be `undefined` when moduleMetaData is a symbol.
   const json: string = stringify(moduleMetaData);
   const row = serializeRowHeader('M', id) + json + '\n';
   return stringToChunk(row);

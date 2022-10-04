@@ -123,7 +123,6 @@ export function shouldRemoveAttributeWithWarning(
   }
   switch (typeof value) {
     case 'function':
-    // $FlowFixMe symbol is perfectly valid here
     case 'symbol': // eslint-disable-line
       return true;
     case 'boolean': {

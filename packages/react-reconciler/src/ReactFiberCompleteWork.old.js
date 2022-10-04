@@ -357,7 +357,6 @@ if (supportsMutation) {
         node = node.child;
         continue;
       }
-      // $FlowFixMe This is correct but Flow is confused by the labeled break.
       node = (node: Fiber);
       if (node === workInProgress) {
         return;
@@ -425,7 +424,6 @@ if (supportsMutation) {
         node = node.child;
         continue;
       }
-      // $FlowFixMe This is correct but Flow is confused by the labeled break.
       node = (node: Fiber);
       if (node === workInProgress) {
         return;

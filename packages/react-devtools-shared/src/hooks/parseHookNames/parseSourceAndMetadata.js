@@ -186,7 +186,6 @@ function findHookNames(
     }
 
     const key = getHookSourceLocationKey(hookSource);
-    // $FlowFixMe[incompatible-call] found when upgrading Flow
     map.set(key, name);
   });
 

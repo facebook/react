@@ -129,7 +129,6 @@ function measureStyle(
     return;
   }
 
-  // $FlowFixMe the parameter types of an unknown function are unknown
   instance.measure((x, y, width, height, left, top) => {
     // RN Android sometimes returns undefined here. Don't send measurements in this case.
     // https://github.com/jhen0409/react-native-debugger/issues/84#issuecomment-304611817

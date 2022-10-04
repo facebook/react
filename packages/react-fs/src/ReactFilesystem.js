@@ -121,7 +121,6 @@ export function access(path: string, mode?: number): void {
     record = createRecordFromThenable(thenable);
     accessCache.push(mode, record);
   }
-  // $FlowFixMe[incompatible-call] found when upgrading Flow
   readRecord(record); // No return value.
 }
 

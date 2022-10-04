@@ -53,7 +53,6 @@ let supportsUserTimingV3 = false;
 if (supportsUserTiming) {
   const CHECK_V3_MARK = '__v3';
   const markOptions = {};
-  // $FlowFixMe: Ignore Flow complaining about needing a value
   Object.defineProperty(markOptions, 'startTime', {
     get: function() {
       supportsUserTimingV3 = true;
