@@ -41,6 +41,7 @@ import {
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
+  getOwnerDocumentFromRootContainer,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -129,15 +130,10 @@ export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
-  rootNode: Document | ShadowRoot,
   ancestorInfo: mixed,
   ...
 };
-type HostContextProd = {
-  namespace: string,
-  rootNode: Document | ShadowRoot,
-  ...
-};
+type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
 export type UpdatePayload = Array<mixed>;
 export type ChildSet = void; // Unused
@@ -189,15 +185,12 @@ export function getRootHostContext(
       break;
     }
   }
-  const rootNode = (((rootContainerInstance: Node).getRootNode(): any):
-    | Document
-    | ShadowRoot);
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
     const ancestorInfo = updatedAncestorInfo(null, validatedTag);
-    return {namespace, ancestorInfo, rootNode};
+    return {namespace, ancestorInfo};
   }
-  return {namespace, rootNode};
+  return namespace;
 }
 
 export function getChildHostContext(
@@ -211,17 +204,10 @@ export function getChildHostContext(
       parentHostContextDev.ancestorInfo,
       type,
     );
-    return ({
-      namespace,
-      ancestorInfo,
-      rootNode: parentHostContext.rootNode,
-    }: HostContextDev);
+    return {namespace, ancestorInfo};
   }
   const parentNamespace = ((parentHostContext: any): HostContextProd);
-  return {
-    namespace: getChildNamespace(parentNamespace.namespace, type),
-    rootNode: parentHostContext.rootNode,
-  };
+  return getChildNamespace(parentNamespace, type);
 }
 
 export function getPublicInstance(instance: Instance): Instance {
@@ -293,7 +279,7 @@ export function createInstance(
     }
     parentNamespace = hostContextDev.namespace;
   } else {
-    parentNamespace = hostContext.namespace;
+    parentNamespace = ((hostContext: any): HostContextProd);
   }
   const domElement: Instance = createElement(
     type,
@@ -868,7 +854,7 @@ export function hydrateInstance(
     const hostContextDev = ((hostContext: any): HostContextDev);
     parentNamespace = hostContextDev.namespace;
   } else {
-    parentNamespace = hostContext.namespace;
+    parentNamespace = ((hostContext: any): HostContextProd);
   }
 
   // TODO: Temporary hack to check if we're in a concurrent root. We can delete
