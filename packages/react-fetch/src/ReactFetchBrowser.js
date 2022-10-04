@@ -98,27 +98,36 @@ Response.prototype = {
   constructor: Response,
   arrayBuffer() {
     return readRecordValue(
+      // $FlowFixMe[object-this-reference] found when upgrading Flow
       this._arrayBuffer ||
+        // $FlowFixMe[object-this-reference] found when upgrading Flow
         (this._arrayBuffer = createRecordFromThenable(
+          // $FlowFixMe[object-this-reference] found when upgrading Flow
           this._response.arrayBuffer(),
         )),
     );
   },
   blob() {
     return readRecordValue(
+      // $FlowFixMe[object-this-reference] found when upgrading Flow
       this._blob ||
+        // $FlowFixMe[object-this-reference] found when upgrading Flow
         (this._blob = createRecordFromThenable(this._response.blob())),
     );
   },
   json() {
     return readRecordValue(
+      // $FlowFixMe[object-this-reference] found when upgrading Flow
       this._json ||
+        // $FlowFixMe[object-this-reference] found when upgrading Flow
         (this._json = createRecordFromThenable(this._response.json())),
     );
   },
   text() {
     return readRecordValue(
+      // $FlowFixMe[object-this-reference] found when upgrading Flow
       this._text ||
+        // $FlowFixMe[object-this-reference] found when upgrading Flow
         (this._text = createRecordFromThenable(this._response.text())),
     );
   },
