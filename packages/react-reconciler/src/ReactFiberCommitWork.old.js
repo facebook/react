@@ -2336,6 +2336,7 @@ function getRetryCache(finishedWork) {
       const instance: OffscreenInstance = finishedWork.stateNode;
       let retryCache = instance._retryCache;
       if (retryCache === null) {
+        // $FlowFixMe[incompatible-type]
         retryCache = instance._retryCache = new PossiblyWeakSet();
       }
       return retryCache;

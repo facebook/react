@@ -59,6 +59,7 @@ module.exports = function register() {
                 async: true,
               };
               return Promise.resolve(
+                // $FlowFixMe[incompatible-call] found when upgrading Flow
                 resolve(new Proxy(moduleReference, proxyHandlers)),
               );
             };

@@ -115,6 +115,7 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
+  // $FlowFixMe[method-unbinding]
   if (typeof destination.error === 'function') {
     // $FlowFixMe: This is an Error object or the destination accepts other types.
     destination.error(error);

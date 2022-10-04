@@ -60,6 +60,7 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
     if (
       result !== null &&
       typeof result === 'object' &&
+      // $FlowFixMe[method-unbinding]
       typeof result.then === 'function'
     ) {
       const thenableResult: Thenable<T> = (result: any);

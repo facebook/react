@@ -1213,6 +1213,7 @@ export function queueRecoverableErrors(errors: Array<CapturedValue<mixed>>) {
   if (workInProgressRootRecoverableErrors === null) {
     workInProgressRootRecoverableErrors = errors;
   } else {
+    // $FlowFixMe[method-unbinding]
     workInProgressRootRecoverableErrors.push.apply(
       workInProgressRootRecoverableErrors,
       errors,
@@ -3169,6 +3170,7 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
       break;
     case OffscreenComponent: {
       const instance: OffscreenInstance = boundaryFiber.stateNode;
+      // $FlowFixMe[incompatible-type] found when upgrading Flow
       retryCache = instance._retryCache;
       break;
     }
