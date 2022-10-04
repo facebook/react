@@ -33,6 +33,8 @@ import type {Element} from 'react-devtools-shared/src/devtools/views/Components/
 import type {Element as ReactElement} from 'react';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 type Type = 'props' | 'state' | 'context' | 'hooks';
 
 type KeyValueProps = {
