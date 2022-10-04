@@ -7,7 +7,8 @@
  * @flow
  */
 
-import type { Element } from './types';import * as React from 'react';
+import type {Element} from './types';
+import * as React from 'react';
 import {useContext, useMemo} from 'react';
 import {TreeStateContext} from './TreeContext';
 import {SettingsContext} from '../Settings/SettingsContext';
