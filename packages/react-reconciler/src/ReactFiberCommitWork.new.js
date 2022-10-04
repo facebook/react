@@ -1237,6 +1237,7 @@ function abortRootTransitions(
             transitionInstance.pendingBoundaries !== null &&
             transitionInstance.pendingBoundaries.has(deletedOffscreenInstance)
           ) {
+            // $FlowFixMe[incompatible-use] found when upgrading Flow
             transitionInstance.pendingBoundaries.delete(
               deletedOffscreenInstance,
             );

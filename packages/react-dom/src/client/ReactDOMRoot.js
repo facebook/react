@@ -94,6 +94,7 @@ function ReactDOMRoot(internalRoot: FiberRoot) {
   this._internalRoot = internalRoot;
 }
 
+// $FlowFixMe[prop-missing] found when upgrading Flow
 ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = function(
   children: ReactNodeList,
 ): void {
@@ -139,6 +140,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = functio
   updateContainer(children, root, null, null);
 };
 
+// $FlowFixMe[prop-missing] found when upgrading Flow
 ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = function(): void {
   if (__DEV__) {
     if (typeof arguments[0] === 'function') {
@@ -260,6 +262,7 @@ function scheduleHydration(target: Node) {
     queueExplicitHydrationTarget(target);
   }
 }
+// $FlowFixMe[prop-missing] found when upgrading Flow
 ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = scheduleHydration;
 
 export function hydrateRoot(

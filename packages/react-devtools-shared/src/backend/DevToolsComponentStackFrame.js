@@ -121,6 +121,7 @@ export function describeNativeComponentFrame(
         } catch (x) {
           control = x;
         }
+        // $FlowFixMe[prop-missing] found when upgrading Flow
         fn.call(Fake.prototype);
       }
     } else {
