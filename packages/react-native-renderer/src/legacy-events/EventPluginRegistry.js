@@ -219,6 +219,7 @@ export function injectEventPluginOrder(
   }
 
   // Clone the ordering so it cannot be dynamically mutated.
+  // $FlowFixMe[method-unbinding] found when upgrading Flow
   eventPluginOrder = Array.prototype.slice.call(injectedEventPluginOrder);
   recomputePluginOrdering();
 }

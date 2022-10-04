@@ -117,12 +117,14 @@ export type EventTargetChildElement = {
   ...
 };
 export type Container =
-  | (Element & {_reactRootContainer?: FiberRoot, ...})
-  | (Document & {_reactRootContainer?: FiberRoot, ...})
-  | (DocumentFragment & {_reactRootContainer?: FiberRoot, ...});
+  | interface extends Element {_reactRootContainer?: FiberRoot}
+  | interface extends Document {_reactRootContainer?: FiberRoot}
+  | interface extends DocumentFragment {_reactRootContainer?: FiberRoot};
 export type Instance = Element;
 export type TextInstance = Text;
-export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
+export interface SuspenseInstance extends Comment {
+  _reactRetry?: () => void;
+}
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
@@ -644,6 +646,7 @@ export function hideInstance(instance: Instance): void {
   // pass host context to this method?
   instance = ((instance: any): HTMLElement);
   const style = instance.style;
+  // $FlowFixMe[method-unbinding]
   if (typeof style.setProperty === 'function') {
     style.setProperty('display', 'none', 'important');
   } else {
@@ -679,6 +682,7 @@ export function clearContainer(container: Container): void {
     ((container: any): Element).textContent = '';
   } else if (container.nodeType === DOCUMENT_NODE) {
     if (container.documentElement) {
+      // $FlowFixMe[incompatible-call]
       container.removeChild(container.documentElement);
     }
   }
@@ -1267,6 +1271,7 @@ export function setFocusIfFocusable(node: Instance): boolean {
   const element = ((node: any): HTMLElement);
   try {
     element.addEventListener('focus', handleFocus);
+    // $FlowFixMe[method-unbinding]
     (element.focus || HTMLElement.prototype.focus).call(element);
   } finally {
     element.removeEventListener('focus', handleFocus);
@@ -1349,11 +1354,13 @@ export const supportsResources = true;
 export {isHostResourceType};
 function isHostResourceInstance(instance: Instance | Container): boolean {
   if (instance.nodeType === ELEMENT_NODE) {
+    // $FlowFixMe[prop-missing] Flow doesn't understand `nodeType` test.
     switch (instance.tagName.toLowerCase()) {
       case 'link': {
         const rel = ((instance: any): HTMLLinkElement).rel;
         return (
           rel === 'preload' ||
+          // $FlowFixMe[prop-missing] Flow doesn't understand `nodeType` test.
           (rel === 'stylesheet' && instance.hasAttribute('data-rprec'))
         );
       }

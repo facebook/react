@@ -26,6 +26,7 @@ const REMEASUREMENT_AFTER_DURATION = 250;
 
 // Some environments (e.g. React Native / Hermes) don't support the performance API yet.
 const getCurrentTime =
+  // $FlowFixMe[method-unbinding]
   typeof performance === 'object' && typeof performance.now === 'function'
     ? () => performance.now()
     : () => Date.now();

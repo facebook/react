@@ -61,6 +61,7 @@ export function installHook(target: any): DevToolsHook | null {
         // it happens *outside* of the renderer injection. See `checkDCE` below.
       }
 
+      // $FlowFixMe[method-unbinding]
       const toString = Function.prototype.toString;
       if (renderer.Mount && renderer.Mount._renderNewRootComponent) {
         // React DOM Stack
@@ -147,6 +148,7 @@ export function installHook(target: any): DevToolsHook | null {
     // This runs for production versions of React.
     // Needs to be super safe.
     try {
+      // $FlowFixMe[method-unbinding]
       const toString = Function.prototype.toString;
       const code = toString.call(fn);
 
