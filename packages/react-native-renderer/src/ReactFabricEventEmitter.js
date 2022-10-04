@@ -117,6 +117,7 @@ export function dispatchEvent(
     const event = {eventName: topLevelType, nativeEvent};
     // $FlowFixMe[class-object-subtyping] found when upgrading Flow
     RawEventEmitter.emit(topLevelType, event);
+    // $FlowFixMe[class-object-subtyping] found when upgrading Flow
     RawEventEmitter.emit('*', event);
 
     // Heritage plugin event system
