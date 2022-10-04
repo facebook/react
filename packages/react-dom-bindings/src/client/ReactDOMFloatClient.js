@@ -110,9 +110,12 @@ export function cleanupAfterRenderResources() {
 // from Internals -> ReactDOM -> FloatClient -> Internals so this doesn't introduce a new one.
 export const ReactDOMClientDispatcher = {preload, preinit};
 
-type FloatDocument = Document & {_rstyles?: Map<string, StyleResource>};
-type FloatShadowRoot = ShadowRoot & {_rstyles?: Map<string, StyleResource>};
-type FloatRoot = FloatDocument | FloatShadowRoot;
+const randomKey = Math.random()
+  .toString(36)
+  .slice(2);
+const stylesCacheKey = '__reactStyles$' + randomKey;
+
+type FloatRoot = Document | ShadowRoot;
 
 // global maps of Resources
 const preloadResources: Map<string, PreloadResource> = new Map();
@@ -144,6 +147,14 @@ function getDocumentForPreloads(): ?Document {
 
 function getDocumentFromRoot(root: FloatRoot): Document {
   return root.ownerDocument || root;
+}
+
+function getStylesFromRoot(root: FloatRoot): Map<string, StyleResource> {
+  let styles = (root: any)[stylesCacheKey];
+  if (!styles) {
+    styles = (root: any)[stylesCacheKey] = new Map();
+  }
+  return styles;
 }
 
 // --------------------------------------
@@ -242,10 +253,7 @@ function preinit(href: string, options: PreinitOptions) {
 
     switch (as) {
       case 'style': {
-        let styleResources = resourceRoot._rstyles;
-        if (!styleResources) {
-          styleResources = resourceRoot._rstyles = new Map();
-        }
+        const styleResources = getStylesFromRoot(resourceRoot);
         const precedence = options.precedence || 'default';
         let resource = styleResources.get(href);
         if (resource) {
@@ -337,10 +345,7 @@ export function getResource(
       const {rel} = pendingProps;
       switch (rel) {
         case 'stylesheet': {
-          let styleResources = resourceRoot._rstyles;
-          if (!styleResources) {
-            styleResources = resourceRoot._rstyles = new Map();
-          }
+          const styleResources = getStylesFromRoot(resourceRoot);
           let didWarn;
           if (__DEV__) {
             if (currentProps) {
