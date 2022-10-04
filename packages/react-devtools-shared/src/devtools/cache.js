@@ -26,7 +26,9 @@ import {createContext} from 'react';
 
 export type {Thenable};
 
-type Suspender = {then(resolve: () => mixed, reject: () => mixed): mixed, ...};
+interface Suspender {
+  then(resolve: () => mixed, reject: () => mixed): mixed;
+}
 
 type PendingResult = {
   status: 0,
@@ -124,6 +126,7 @@ function accessResult<Input, Key, Value>(
     );
     const newResult: PendingResult = {
       status: Pending,
+      // $FlowFixMe[method-unbinding]
       value: thenable,
     };
     entriesForResource.set(key, newResult);

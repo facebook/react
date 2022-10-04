@@ -228,6 +228,7 @@ function coerceRef(
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+  // $FlowFixMe[method-unbinding]
   const childString = Object.prototype.toString.call(newChild);
 
   throw new Error(

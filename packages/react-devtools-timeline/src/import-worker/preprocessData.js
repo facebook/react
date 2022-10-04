@@ -968,8 +968,11 @@ function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
   const profile = parsedData.profiles[0]; // TODO: Choose the main CPU thread only
 
   const speedscopeFlamechart = new SpeedscopeFlamechart({
+    // $FlowFixMe[method-unbinding]
     getTotalWeight: profile.getTotalWeight.bind(profile),
+    // $FlowFixMe[method-unbinding]
     forEachCall: profile.forEachCall.bind(profile),
+    // $FlowFixMe[method-unbinding]
     formatValue: profile.formatValue.bind(profile),
     getColorBucketForFrame: () => 0,
   });
