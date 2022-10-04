@@ -243,4 +243,63 @@ describe('ReactTestRendererTraversal', () => {
       ).root.findAllByType('div').length,
     ).toBe(2);
   });
+
+  it('renders JSON for elements correctly', () => {
+    const render = ReactTestRenderer.create(<Example />);
+
+    expect(render.root.findByProps({foo: 'foo'}).toJSON()).toEqual({
+      type: 'RCTView',
+      props: {foo: 'foo'},
+      children: [
+        {type: 'RCTView', children: null, props: {bar: 'bar'}},
+        {
+          type: 'RCTView',
+          children: null,
+          props: {bar: 'bar', baz: 'baz', itself: 'itself'},
+        },
+        {type: 'RCTView', children: null, props: {}},
+        {type: 'RCTView', children: null, props: {bar: 'bar'}},
+        {type: 'RCTView', children: null, props: {baz: 'baz'}},
+        {type: 'RCTView', children: null, props: {qux: 'qux'}},
+        {type: 'RCTView', children: null, props: {nested: true}},
+        {type: 'RCTView', children: null, props: {nested: true}},
+        {type: 'RCTView', children: null, props: {nested: true}},
+      ],
+    });
+
+    expect(render.root.findByProps({itself: 'itself'}).toJSON()).toEqual({
+      type: 'RCTView',
+      children: null,
+      props: {bar: 'bar', baz: 'baz', itself: 'itself'},
+    });
+
+    expect(render.root.findByType(ExampleSpread).toJSON()).toEqual({
+      type: 'RCTView',
+      children: null,
+      props: {bar: 'bar'},
+    });
+
+    expect(render.root.findByType(ExampleFn).toJSON()).toEqual({
+      type: 'RCTView',
+      children: null,
+      props: {baz: 'baz'},
+    });
+
+    expect(render.root.findByType(ExampleForwardRef).toJSON()).toEqual({
+      type: 'RCTView',
+      children: null,
+      props: {qux: 'qux'},
+    });
+
+    const nullComposites = render.root.findAllByType(ExampleNull);
+    expect(nullComposites[0].toJSON()).toEqual(null);
+    expect(nullComposites[1].toJSON()).toEqual(null);
+
+    const nestedViews = render.root.findAllByProps({nested: true});
+    expect(nestedViews[0].toJSON()).toEqual({
+      type: 'RCTView',
+      children: null,
+      props: {nested: true},
+    });
+  });
 });
