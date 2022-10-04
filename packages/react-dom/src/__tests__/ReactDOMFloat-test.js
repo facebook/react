@@ -552,6 +552,53 @@ describe('ReactDOMFloat', () => {
     });
   });
 
+  describe('document encapsulation', () => {
+    // @gate enableFloat
+    it('can support styles inside shadowRoots', async () => {
+      const shadow = document.body.attachShadow({mode: 'open'});
+      const root = ReactDOMClient.createRoot(container);
+      root.render(
+        <>
+          <link rel="stylesheet" href="foo" precedence="default" />
+          {ReactDOM.createPortal(
+            <div>
+              <link
+                rel="stylesheet"
+                href="foo"
+                data-extra-prop="foo"
+                precedence="different"
+              />
+              shadow
+            </div>,
+            shadow,
+          )}
+          container
+        </>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-rprec="default" />
+            <link rel="preload" href="foo" as="style" />
+          </head>
+          <body>
+            <div id="container">container</div>
+          </body>
+        </html>,
+      );
+      expect(getVisibleChildren(shadow)).toEqual([
+        <link
+          rel="stylesheet"
+          href="foo"
+          data-rprec="different"
+          data-extra-prop="foo"
+        />,
+        <div>shadow</div>,
+      ]);
+    });
+  });
+
   describe('style resources', () => {
     // @gate enableFloat
     it('treats link rel stylesheet elements as a style resource when it includes a precedence when server rendering', async () => {

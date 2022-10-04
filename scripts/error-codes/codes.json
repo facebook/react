@@ -431,6 +431,6 @@
   "443": "acquireResource encountered a resource type it did not expect: \"%s\". this is a bug in React.",
   "444": "getResource encountered a resource type it did not expect: \"%s\". this is a bug in React.",
   "445": "\"currentResources\" was expected to exist. This is a bug in React.",
-  "446": "\"currentDocument\" was expected to exist. This is a bug in React.",
+  "446": "\"resourceRoot\" was expected to exist. This is a bug in React.",
   "447": "While attempting to insert a Resource, React expected the Document to contain a head element but it was not found."
 }
