@@ -101,6 +101,7 @@ module.exports = function register() {
       name: '*', // Represents the whole object instead of a particular import.
       async: false,
     };
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     module.exports = new Proxy(moduleReference, proxyHandlers);
   };
 

@@ -321,6 +321,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       initializingChunkBlockedModel !== null &&
       initializingChunkBlockedModel.deps > 0
     ) {
+      // $FlowFixMe[incompatible-type]: found when upgrading Flow
       initializingChunkBlockedModel.value = value;
       // We discovered new dependencies on modules that are not yet resolved.
       // We have to go the BLOCKED state until they're resolved.

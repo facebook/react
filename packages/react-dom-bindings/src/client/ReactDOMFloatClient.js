@@ -528,6 +528,7 @@ function createStyleResource(
   } else {
     const hint = preloadResources.get(href);
     if (hint) {
+      // $FlowFixMe[incompatible-type]: found when upgrading Flow
       resource.hint = hint;
       // If a preload for this style Resource already exists there are certain props we want to adopt
       // on the style Resource, primarily focussed on making sure the style network pathways utilize
