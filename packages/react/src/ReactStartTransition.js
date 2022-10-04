@@ -20,7 +20,6 @@ export function startTransition(
   const currentTransition = ReactCurrentBatchConfig.transition;
 
   if (__DEV__) {
-    // $FlowFixMe[incompatible-use] found when upgrading Flow
     ReactCurrentBatchConfig.transition._updatedFibers = new Set();
   }
 
@@ -48,7 +47,6 @@ export function startTransition(
               'Otherwise concurrent mode guarantees are off the table.',
           );
         }
-        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentTransition._updatedFibers.clear();
       }
     }

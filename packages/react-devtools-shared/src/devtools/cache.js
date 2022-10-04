@@ -128,7 +128,6 @@ function accessResult<Input, Key, Value>(
     );
     const newResult: PendingResult = {
       status: Pending,
-      // $FlowFixMe[method-unbinding]
       value: thenable,
     };
     entriesForResource.set(key, newResult);

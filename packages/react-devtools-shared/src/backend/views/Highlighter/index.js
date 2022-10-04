@@ -119,7 +119,6 @@ export default function setupHighlighter(
       if (scrollIntoView && typeof node.scrollIntoView === 'function') {
         // If the node isn't visible show it before highlighting it.
         // We may want to reconsider this; it might be a little disruptive.
-        // $FlowFixMe Flow only knows about 'start' | 'end'
         node.scrollIntoView({block: 'nearest', inline: 'nearest'});
       }
 

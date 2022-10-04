@@ -137,7 +137,6 @@ export function inspectElement({
 
         // A path has been hydrated.
         // Merge it with the latest copy we have locally and resolve with the merged value.
-        // $FlowFixMe[incompatible-type] found when upgrading Flow
         inspectedElement = inspectedElementCache.get(id) || null;
         if (inspectedElement !== null) {
           // Clone element
@@ -151,7 +150,6 @@ export function inspectElement({
             hydrateHelper(value, ((path: any): Path)),
           );
 
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
           inspectedElementCache.set(id, inspectedElement);
 
           return [inspectedElement, type];

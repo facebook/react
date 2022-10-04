@@ -273,7 +273,6 @@ function attemptResolveElement(
             );
           }
         }
-        // $FlowFixMe issue discovered when updating Flow
         return [
           REACT_ELEMENT_TYPE,
           type,
@@ -768,7 +767,6 @@ export function resolveModelToJSON(
     // $FlowFixMe `description` might be undefined
     const name: string = value.description;
 
-    // $FlowFixMe `name` might be undefined
     if (Symbol.for(name) !== value) {
       throw new Error(
         'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
@@ -898,7 +896,6 @@ function emitModuleChunk(
   id: number,
   moduleMetaData: ModuleMetaData,
 ): void {
-  // $FlowFixMe ModuleMetaData is not a ReactModel
   const processedChunk = processModuleChunk(request, id, moduleMetaData);
   request.completedModuleChunks.push(processedChunk);
 }

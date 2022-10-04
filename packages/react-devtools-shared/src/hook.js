@@ -250,7 +250,6 @@ export function installHook(target: any): DevToolsHook | null {
     unpatchFn = () => {
       for (const method in originalConsoleMethods) {
         try {
-          // $FlowFixMe property error|warn is not writable.
           targetConsole[method] = originalConsoleMethods[method];
         } catch (error) {}
       }
@@ -302,7 +301,6 @@ export function installHook(target: any): DevToolsHook | null {
         overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ = originalMethod;
         originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ = overrideMethod;
 
-        // $FlowFixMe property error|warn is not writable.
         targetConsole[method] = overrideMethod;
       } catch (error) {}
     });

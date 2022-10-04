@@ -138,7 +138,6 @@ export function InnerHooksTreeView({
   inspectedElement,
   path,
 }: InnerHooksTreeViewProps): React.Node {
-  // $FlowFixMe "Missing type annotation for U" whatever that means
   return hooks.map((hook, index) => (
     <HookView
       key={index}
@@ -356,7 +355,6 @@ function HookView({
               className={name !== '' ? styles.Name : styles.NameAnonymous}>
               {hookDisplayName || 'Anonymous'}
             </span>{' '}
-            {/* $FlowFixMe */}
             <span className={styles.Value} onClick={toggleIsOpen}>
               {displayValue}
             </span>
