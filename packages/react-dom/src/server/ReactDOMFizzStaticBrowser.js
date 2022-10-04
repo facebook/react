@@ -50,7 +50,7 @@ function prerender(
       const stream = new ReadableStream(
         {
           type: 'bytes',
-          pull(controller): ?Promise<void> {
+          pull: (controller): ?Promise<void> => {
             startFlowing(request, controller);
           },
         },
