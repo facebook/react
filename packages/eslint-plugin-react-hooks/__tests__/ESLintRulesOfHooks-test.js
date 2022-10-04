@@ -1162,6 +1162,26 @@ if (__EXPERIMENTAL__) {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function App() {
+          let data = [];
+          for (const query of queries) {
+            const text = use(item);
+            data.push(text);
+          }
+          return <Child data={data} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          const data = someCallback((x) => use(x));
+          return <Child data={data} />
+        }
+      `,
+    },
   ];
   tests.invalid = [
     ...tests.invalid,
@@ -1260,22 +1280,6 @@ if (__EXPERIMENTAL__) {
         }
       `,
       errors: [functionError('use', 'notAComponent')],
-    },
-    {
-      code: normalizeIndent`
-        function App() {
-          const data = useUserQuery((searchStrings) => {
-            const query = Promise.all(fetch(user, searchStrings));
-            return use(query);
-          });
-          return (
-            <ul>
-              {data.map(d => <li>{d.title}</li>)}
-            </ul>
-          );
-        }
-      `,
-      errors: [genericError('use')],
     },
     {
       code: normalizeIndent`
