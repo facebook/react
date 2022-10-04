@@ -20,6 +20,7 @@ export function startTransition(
   const currentTransition = ReactCurrentBatchConfig.transition;
 
   if (__DEV__) {
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     ReactCurrentBatchConfig.transition._updatedFibers = new Set();
   }
 

@@ -350,6 +350,7 @@ function commitBeforeMutationEffects_begin() {
     // Let's skip the whole loop if it's off.
     if (enableCreateEventHandleAPI) {
       // TODO: Should wrap this in flags check, too, as optimization
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       const deletions = fiber.deletions;
       if (deletions !== null) {
         for (let i = 0; i < deletions.length; i++) {
@@ -359,8 +360,10 @@ function commitBeforeMutationEffects_begin() {
       }
     }
 
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     const child = fiber.child;
     if (
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       (fiber.subtreeFlags & BeforeMutationMask) !== NoFlags &&
       child !== null
     ) {
@@ -405,6 +408,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
       if (
         finishedWork.tag === SuspenseComponent &&
         isSuspenseBoundaryBeingHidden(current, finishedWork) &&
+        // $FlowFixMe[incompatible-call] found when upgrading Flow
         doesFiberContain(finishedWork, focusedInstanceHandle)
       ) {
         shouldFireAfterActiveInstanceBlur = true;

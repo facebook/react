@@ -159,7 +159,9 @@ export default class ReactFlightWebpackPlugin {
             clientFileNameFound = true;
 
             if (resolvedClientReferences) {
+              // $FlowFixMe[incompatible-use] found when upgrading Flow
               for (let i = 0; i < resolvedClientReferences.length; i++) {
+                // $FlowFixMe[incompatible-use] found when upgrading Flow
                 const dep = resolvedClientReferences[i];
 
                 const chunkName = _this.chunkName

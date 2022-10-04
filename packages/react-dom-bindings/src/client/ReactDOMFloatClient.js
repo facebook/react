@@ -241,6 +241,7 @@ function preinit(href: string, options: PreinitOptions) {
             options,
           );
           resource = createStyleResource(
+            // $FlowFixMe[incompatible-call] found when upgrading Flow
             currentDocument,
             href,
             precedence,
@@ -347,6 +348,7 @@ export function getResource(
             } else {
               const resourceProps = stylePropsFromRawProps(styleRawProps);
               resource = createStyleResource(
+                // $FlowFixMe[incompatible-call] found when upgrading Flow
                 currentDocument,
                 href,
                 precedence,
@@ -382,6 +384,7 @@ export function getResource(
             } else {
               const resourceProps = preloadPropsFromRawProps(preloadRawProps);
               resource = createPreloadResource(
+                // $FlowFixMe[incompatible-call] found when upgrading Flow
                 currentDocument,
                 href,
                 resourceProps,
