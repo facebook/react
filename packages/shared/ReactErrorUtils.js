@@ -109,7 +109,7 @@ export function hasCaughtError(): boolean {
   return hasError;
 }
 
-export function clearCaughtError() {
+export function clearCaughtError(): mixed {
   if (hasError) {
     const error = caughtError;
     hasError = false;

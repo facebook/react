@@ -82,7 +82,7 @@ well_formed_exports.includes=<PROJECT_ROOT>/packages/react-server-native-relay
 well_formed_exports.includes=<PROJECT_ROOT>/packages/react-suspense-test-utils
 ; well_formed_exports.includes=<PROJECT_ROOT>/packages/react-test-renderer
 well_formed_exports.includes=<PROJECT_ROOT>/packages/scheduler
-; well_formed_exports.includes=<PROJECT_ROOT>/packages/shared
+well_formed_exports.includes=<PROJECT_ROOT>/packages/shared
 well_formed_exports.includes=<PROJECT_ROOT>/packages/use-subscription
 well_formed_exports.includes=<PROJECT_ROOT>/packages/use-sync-external-store
 
