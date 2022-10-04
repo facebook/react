@@ -248,6 +248,7 @@ export function createRoot(
       : container;
   listenToAllSupportedEvents(rootContainerElement);
 
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   return new ReactDOMRoot(root);
 }
 
@@ -340,6 +341,7 @@ export function hydrateRoot(
     }
   }
 
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   return new ReactDOMHydrationRoot(root);
 }
 

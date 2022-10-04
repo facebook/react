@@ -128,7 +128,10 @@ export function inspectElement(
       path,
       rendererID: ((rendererID: any): number),
     }).then(
-      ([inspectedElement: InspectedElementFrontend]) => {
+      ([inspectedElement]: [
+        InspectedElementFrontend,
+        InspectedElementResponseType,
+      ]) => {
         const resolvedRecord = ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
         resolvedRecord.status = Resolved;
         resolvedRecord.value = inspectedElement;
@@ -183,9 +186,9 @@ export function checkForUpdate({
       path: null,
       rendererID: ((rendererID: any): number),
     }).then(
-      ([
-        inspectedElement: InspectedElementFrontend,
-        responseType: InspectedElementResponseType,
+      ([inspectedElement, responseType]: [
+        InspectedElementFrontend,
+        InspectedElementResponseType,
       ]) => {
         if (responseType === 'full-data') {
           startTransition(() => {

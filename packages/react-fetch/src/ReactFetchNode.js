@@ -46,6 +46,7 @@ function nodeFetch(
   // $FlowFixMe: node flow type has `port` as a number
   const request = nodeImpl.request(nodeOptions, response => {
     // TODO: support redirects.
+    // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
     onResolve(new Response(response));
   });
   request.on('error', error => {

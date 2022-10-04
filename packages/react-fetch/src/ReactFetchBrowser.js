@@ -163,6 +163,7 @@ export function fetch(url: string, options: mixed): Object {
   if (nativeResponse._reactResponse) {
     return nativeResponse._reactResponse;
   } else {
+    // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
     return (nativeResponse._reactResponse = new Response(nativeResponse));
   }
 }
