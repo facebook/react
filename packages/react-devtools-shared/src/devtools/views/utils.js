@@ -14,6 +14,8 @@ import isArray from 'react-devtools-shared/src/isArray';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 export function alphaSortEntries(
   entryA: [string, mixed],
   entryB: [string, mixed],

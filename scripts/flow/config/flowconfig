@@ -40,9 +40,6 @@ untyped-type-import=error
 
 [options]
 %CI_MAX_WORKERS%
-esproposal.class_static_fields=enable
-esproposal.class_instance_fields=enable
-esproposal.optional_chaining=enable
 exact_by_default=true
 munge_underscores=false
 
@@ -50,4 +47,4 @@ munge_underscores=false
 %REACT_RENDERER_FLOW_OPTIONS%
 
 [version]
-^0.146.0
+^0.152.0
