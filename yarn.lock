@@ -7912,10 +7912,10 @@ flatted@^2.0.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-2.0.2.tgz#4575b21e2bcee7434aa9be662f4b7b5f9c2b5138"
   integrity sha512-r5wGx7YeOwNWNlCA0wQ86zKyDLMQr+/RB8xy74M4hTphfmjlijTSSXGuH8rnvKZnfT9i+75zmd8jcKdMR4O6jA==
 
-flow-bin@^0.182.0:
-  version "0.182.0"
-  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.182.0.tgz#1dacbd72465743670412ada015d3182deda6f966"
-  integrity sha512-Ux90c2sMfoV/VVjOEFT2OHFJFnyfoIbTK/5AKAMnU4Skfru1G+FyS5YLu3XxQl0R6mpA9+rrFlPfYZq/5B+J3w==
+flow-bin@^0.185.0:
+  version "0.185.2"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.185.2.tgz#b45a07d45cf641198e86e47848e35f64b0688c4c"
+  integrity sha512-Vphs8Z4Qo17dzlPKe/l8M85JvGn1Tf5NV6xESZLg8p9ktdIbNUYaxnq/WBQPoESiLrGdrC2v+rfezfh3tvxkvQ==
 
 fluent-syntax@0.13.0:
   version "0.13.0"

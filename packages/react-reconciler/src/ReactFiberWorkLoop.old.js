@@ -404,18 +404,19 @@ export function addMarkerProgressCallbackToPendingTransition(
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {
-      currentPendingTransitionCallbacks = {
+      currentPendingTransitionCallbacks = ({
         transitionStart: null,
         transitionProgress: null,
         transitionComplete: null,
         markerProgress: new Map(),
         markerIncomplete: null,
         markerComplete: null,
-      };
+      }: PendingTransitionCallbacks);
     }
 
     if (currentPendingTransitionCallbacks.markerProgress === null) {
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
+      // $FlowFixMe[incompatible-use]
+      // $FlowFixMe[incompatible-type]
       currentPendingTransitionCallbacks.markerProgress = new Map();
     }
 
@@ -445,6 +446,7 @@ export function addMarkerIncompleteCallbackToPendingTransition(
 
     if (currentPendingTransitionCallbacks.markerIncomplete === null) {
       // $FlowFixMe[incompatible-use] found when upgrading Flow
+      // $FlowFixMe[incompatible-type] found when upgrading Flow
       currentPendingTransitionCallbacks.markerIncomplete = new Map();
     }
 
@@ -473,6 +475,7 @@ export function addMarkerCompleteCallbackToPendingTransition(
 
     if (currentPendingTransitionCallbacks.markerComplete === null) {
       // $FlowFixMe[incompatible-use] found when upgrading Flow
+      // $FlowFixMe[incompatible-type] found when upgrading Flow
       currentPendingTransitionCallbacks.markerComplete = new Map();
     }
 
@@ -501,6 +504,7 @@ export function addTransitionProgressCallbackToPendingTransition(
 
     if (currentPendingTransitionCallbacks.transitionProgress === null) {
       // $FlowFixMe[incompatible-use] found when upgrading Flow
+      // $FlowFixMe[incompatible-type] found when upgrading Flow
       currentPendingTransitionCallbacks.transitionProgress = new Map();
     }
 
