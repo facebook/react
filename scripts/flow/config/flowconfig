@@ -14,6 +14,7 @@
 .*/node_modules/devtools-timeline-model/.*
 .*/node_modules/create-react-class/.*
 .*/node_modules/react-native-web/.*
+.*/node_modules/fbjs/lib/keyMirrorRecursive.js.flow
 .*/__mocks__/.*
 .*/__tests__/.*
 
@@ -47,4 +48,4 @@ munge_underscores=false
 %REACT_RENDERER_FLOW_OPTIONS%
 
 [version]
-^0.155.0
+^0.175.0
