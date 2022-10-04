@@ -9,7 +9,11 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import type {Instance, TextInstance} from './ReactTestHostConfig';
+import type {
+  PublicInstance,
+  Instance,
+  TextInstance,
+} from './ReactTestHostConfig';
 
 import * as React from 'react';
 import * as Scheduler from 'scheduler/unstable_mock';
@@ -303,7 +307,7 @@ class ReactTestInstance {
     this._fiber = fiber;
   }
 
-  get instance() {
+  get instance(): $FlowFixMe {
     if (this._fiber.tag === HostComponent || this._fiber.tag === HostResource) {
       return getPublicInstance(this._fiber.stateNode);
     } else {
@@ -311,7 +315,7 @@ class ReactTestInstance {
     }
   }
 
-  get type() {
+  get type(): any {
     return this._fiber.type;
   }
 
@@ -445,7 +449,19 @@ function onRecoverableError(error) {
   console.error(error);
 }
 
-function create(element: React$Element<any>, options: TestRendererOptions) {
+function create(
+  element: React$Element<any>,
+  options: TestRendererOptions,
+): {
+  _Scheduler: typeof Scheduler,
+  root: void,
+  toJSON(): Array<ReactTestRendererNode> | ReactTestRendererNode | null,
+  toTree(): mixed,
+  update(newElement: React$Element<any>): any,
+  unmount(): void,
+  getInstance(): React$Component<any, any> | PublicInstance | null,
+  unstable_flushSync: typeof flushSync,
+} {
   let createNodeMock = defaultTestOptions.createNodeMock;
   let isConcurrent = false;
   let isStrictMode = false;
@@ -534,7 +550,7 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
       }
       return toTree(root.current);
     },
-    update(newElement: React$Element<any>) {
+    update(newElement: React$Element<any>): number | void {
       if (root == null || root.current == null) {
         return;
       }

@@ -37,7 +37,7 @@ type TextAreaWithWrapperState = HTMLTextAreaElement & {
  * `defaultValue` if specified, or the children content (deprecated).
  */
 
-export function getHostProps(element: Element, props: Object) {
+export function getHostProps(element: Element, props: Object): Object {
   const node = ((element: any): TextAreaWithWrapperState);
 
   if (props.dangerouslySetInnerHTML != null) {

@@ -16,7 +16,6 @@ import getEventCharCode from './getEventCharCode';
 
 type EventInterfaceType = {
   [propName: string]: 0 | ((event: {[propName: string]: mixed, ...}) => mixed),
-  ...,
 };
 
 function functionThatReturnsTrue() {
@@ -153,14 +152,16 @@ const EventInterface = {
   defaultPrevented: 0,
   isTrusted: 0,
 };
-export const SyntheticEvent = createSyntheticEvent(EventInterface);
+export const SyntheticEvent: $FlowFixMe = createSyntheticEvent(EventInterface);
 
 const UIEventInterface: EventInterfaceType = {
   ...EventInterface,
   view: 0,
   detail: 0,
 };
-export const SyntheticUIEvent = createSyntheticEvent(UIEventInterface);
+export const SyntheticUIEvent: $FlowFixMe = createSyntheticEvent(
+  UIEventInterface,
+);
 
 let lastMovementX;
 let lastMovementY;
@@ -225,7 +226,9 @@ const MouseEventInterface: EventInterfaceType = {
     return lastMovementY;
   },
 };
-export const SyntheticMouseEvent = createSyntheticEvent(MouseEventInterface);
+export const SyntheticMouseEvent: $FlowFixMe = createSyntheticEvent(
+  MouseEventInterface,
+);
 
 /**
  * @interface DragEvent
@@ -235,7 +238,9 @@ const DragEventInterface: EventInterfaceType = {
   ...MouseEventInterface,
   dataTransfer: 0,
 };
-export const SyntheticDragEvent = createSyntheticEvent(DragEventInterface);
+export const SyntheticDragEvent: $FlowFixMe = createSyntheticEvent(
+  DragEventInterface,
+);
 
 /**
  * @interface FocusEvent
@@ -245,7 +250,9 @@ const FocusEventInterface: EventInterfaceType = {
   ...UIEventInterface,
   relatedTarget: 0,
 };
-export const SyntheticFocusEvent = createSyntheticEvent(FocusEventInterface);
+export const SyntheticFocusEvent: $FlowFixMe = createSyntheticEvent(
+  FocusEventInterface,
+);
 
 /**
  * @interface Event
@@ -258,7 +265,7 @@ const AnimationEventInterface: EventInterfaceType = {
   elapsedTime: 0,
   pseudoElement: 0,
 };
-export const SyntheticAnimationEvent = createSyntheticEvent(
+export const SyntheticAnimationEvent: $FlowFixMe = createSyntheticEvent(
   AnimationEventInterface,
 );
 
@@ -274,7 +281,7 @@ const ClipboardEventInterface: EventInterfaceType = {
       : window.clipboardData;
   },
 };
-export const SyntheticClipboardEvent = createSyntheticEvent(
+export const SyntheticClipboardEvent: $FlowFixMe = createSyntheticEvent(
   ClipboardEventInterface,
 );
 
@@ -286,7 +293,7 @@ const CompositionEventInterface: EventInterfaceType = {
   ...EventInterface,
   data: 0,
 };
-export const SyntheticCompositionEvent = createSyntheticEvent(
+export const SyntheticCompositionEvent: $FlowFixMe = createSyntheticEvent(
   CompositionEventInterface,
 );
 
@@ -487,7 +494,7 @@ const KeyboardEventInterface = {
     return 0;
   },
 };
-export const SyntheticKeyboardEvent = createSyntheticEvent(
+export const SyntheticKeyboardEvent: $FlowFixMe = createSyntheticEvent(
   KeyboardEventInterface,
 );
 
@@ -508,7 +515,7 @@ const PointerEventInterface = {
   pointerType: 0,
   isPrimary: 0,
 };
-export const SyntheticPointerEvent = createSyntheticEvent(
+export const SyntheticPointerEvent: $FlowFixMe = createSyntheticEvent(
   PointerEventInterface,
 );
 
@@ -527,7 +534,9 @@ const TouchEventInterface = {
   shiftKey: 0,
   getModifierState: getEventModifierState,
 };
-export const SyntheticTouchEvent = createSyntheticEvent(TouchEventInterface);
+export const SyntheticTouchEvent: $FlowFixMe = createSyntheticEvent(
+  TouchEventInterface,
+);
 
 /**
  * @interface Event
@@ -540,7 +549,7 @@ const TransitionEventInterface = {
   elapsedTime: 0,
   pseudoElement: 0,
 };
-export const SyntheticTransitionEvent = createSyntheticEvent(
+export const SyntheticTransitionEvent: $FlowFixMe = createSyntheticEvent(
   TransitionEventInterface,
 );
 
@@ -580,4 +589,6 @@ const WheelEventInterface = {
   // ~40 pixels, for DOM_DELTA_SCREEN (2) it is 87.5% of viewport size.
   deltaMode: 0,
 };
-export const SyntheticWheelEvent = createSyntheticEvent(WheelEventInterface);
+export const SyntheticWheelEvent: $FlowFixMe = createSyntheticEvent(
+  WheelEventInterface,
+);

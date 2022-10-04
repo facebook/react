@@ -593,7 +593,7 @@ export function replaceContainerChildren(
   newChildren: ChildSet,
 ): void {}
 
-export function getInstanceFromNode(node: any) {
+export function getInstanceFromNode(node: any): empty {
   throw new Error('Not yet implemented.');
 }
 
