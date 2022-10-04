@@ -411,7 +411,7 @@ export default function KeyValue({
       const hasChildren = entries.length > 0 || canEditValues;
       const displayName = getMetaValueLabel(value);
 
-      children = entries.map<ReactElement<any>>(([key, keyValue]) => (
+      children = entries.map(([key, keyValue]): ReactElement<any> => (
         <KeyValue
           key={key}
           alphaSort={alphaSort}
