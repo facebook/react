@@ -20,11 +20,11 @@ type FiberArray = Array<Fiber>;
 type FiberToFiberComponentsMap = Map<Fiber, FiberArray>;
 
 const ReactStrictModeWarnings = {
-  recordUnsafeLifecycleWarnings(fiber: Fiber, instance: any): void {},
-  flushPendingUnsafeLifecycleWarnings(): void {},
-  recordLegacyContextWarning(fiber: Fiber, instance: any): void {},
-  flushLegacyContextWarning(): void {},
-  discardPendingWarnings(): void {},
+  recordUnsafeLifecycleWarnings: (fiber: Fiber, instance: any): void => {},
+  flushPendingUnsafeLifecycleWarnings: (): void => {},
+  recordLegacyContextWarning: (fiber: Fiber, instance: any): void => {},
+  flushLegacyContextWarning: (): void => {},
+  discardPendingWarnings: (): void => {},
 };
 
 if (__DEV__) {

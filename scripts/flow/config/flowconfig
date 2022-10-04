@@ -45,11 +45,9 @@ esproposal.class_instance_fields=enable
 esproposal.optional_chaining=enable
 exact_by_default=true
 munge_underscores=false
-types_first=true
-well_formed_exports=true
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
 
 [version]
-^0.142.0
+^0.143.0
