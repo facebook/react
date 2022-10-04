@@ -806,10 +806,10 @@ export default class Store extends EventEmitter<{
 
           currentElement =
             currentElement.parentID !== 0
-              // $FlowFixMe[incompatible-type] found when upgrading Flow
-              ? this.getElementByID(currentElement.parentID)
-              // $FlowFixMe[incompatible-type] found when upgrading Flow
-              : null;
+              ? // $FlowFixMe[incompatible-type] found when upgrading Flow
+                this.getElementByID(currentElement.parentID)
+              : // $FlowFixMe[incompatible-type] found when upgrading Flow
+                null;
         }
       }
 
