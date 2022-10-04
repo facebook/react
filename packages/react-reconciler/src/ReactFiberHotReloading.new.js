@@ -37,6 +37,7 @@ import {
   FunctionComponent,
   ForwardRef,
   HostComponent,
+  HostResource,
   HostPortal,
   HostRoot,
   MemoComponent,
@@ -47,6 +48,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
+import {enableFloat} from 'shared/ReactFeatureFlags';
 
 let resolveFamily: RefreshHandler | null = null;
 // $FlowFixMe Flow gets confused by a WeakSet feature check below.
@@ -189,6 +191,7 @@ export function isCompatibleFamilyForHotReloading(
       // then we would risk falsely saying two separate memo(Foo)
       // calls are equivalent because they wrap the same Foo function.
       const prevFamily = resolveFamily(prevType);
+      // $FlowFixMe[not-a-function] found when upgrading Flow
       if (prevFamily !== undefined && prevFamily === resolveFamily(nextType)) {
         return true;
       }
@@ -449,7 +452,10 @@ function findChildHostInstancesForFiberShallowly(
     let node: Fiber = fiber;
     let foundHostInstances = false;
     while (true) {
-      if (node.tag === HostComponent) {
+      if (
+        node.tag === HostComponent ||
+        (enableFloat ? node.tag === HostResource : false)
+      ) {
         // We got a match.
         foundHostInstances = true;
         hostInstances.add(node.stateNode);

@@ -24,7 +24,8 @@ if (__DEV__) {
   warnedAboutMissingGetChildContext = {};
 }
 
-export const emptyContextObject = {};
+// $FlowFixMe[incompatible-exact]
+export const emptyContextObject: {} = {};
 if (__DEV__) {
   Object.freeze(emptyContextObject);
 }

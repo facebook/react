@@ -8,7 +8,10 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Container} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
+import type {
+  Container,
+  PublicInstance,
+} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
 import type {
   RootType,
   HydrateRootOptions,
@@ -50,7 +53,12 @@ import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
 import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 
-import {getClosestInstanceFromNode} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
+import {
+  getClosestInstanceFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
+  getFiberCurrentPropsFromNode,
+} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import {restoreControlledState} from 'react-dom-bindings/src/client/ReactDOMComponent';
 import {
   setAttemptSynchronousHydration,
@@ -61,7 +69,11 @@ import {
   setAttemptHydrationAtPriority,
 } from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {setBatchingImplementation} from 'react-dom-bindings/src/events/ReactDOMUpdateBatching';
-import {setRestoreImplementation} from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
+import {
+  setRestoreImplementation,
+  enqueueStateRestore,
+  restoreStateIfNeeded,
+} from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
 import Internals from '../ReactDOMSharedInternals';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
@@ -116,7 +128,7 @@ function renderSubtreeIntoContainer(
   element: React$Element<any>,
   containerNode: Container,
   callback: ?Function,
-) {
+): React$Component<any, any> | PublicInstance | null {
   return unstable_renderSubtreeIntoContainer(
     parentComponent,
     element,
@@ -162,7 +174,7 @@ declare function flushSync<R>(fn: () => R): R;
 // eslint-disable-next-line no-redeclare
 declare function flushSync(): void;
 // eslint-disable-next-line no-redeclare
-function flushSync(fn) {
+function flushSync<R>(fn: (() => R) | void): R | void {
   if (__DEV__) {
     if (isAlreadyRendering()) {
       console.error(
@@ -197,6 +209,17 @@ export {
   // This should only be used by React internals.
   runWithPriority as unstable_runWithPriority,
 };
+
+// Keep in sync with ReactTestUtils.js.
+// This is an array for better minification.
+Internals.Events = [
+  getInstanceFromNode,
+  getNodeFromInstance,
+  getFiberCurrentPropsFromNode,
+  enqueueStateRestore,
+  restoreStateIfNeeded,
+  batchedUpdates,
+];
 
 const foundDevTools = injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,

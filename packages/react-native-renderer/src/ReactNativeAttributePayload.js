@@ -98,6 +98,7 @@ function restoreDeletedValuesInNestedArray(
             : nextProp;
         updatePayload[propKey] = nextValue;
       }
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       removedKeys[propKey] = false;
       removedKeyCount--;
     }
@@ -356,7 +357,8 @@ function diffProperties(
       if (shouldUpdate) {
         const nextValue =
           typeof attributeConfig.process === 'function'
-            ? attributeConfig.process(nextProp)
+            ? // $FlowFixMe[incompatible-use] found when upgrading Flow
+              attributeConfig.process(nextProp)
             : nextProp;
         (updatePayload || (updatePayload = {}))[propKey] = nextValue;
       }

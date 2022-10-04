@@ -67,13 +67,23 @@ import {
   enableScopeAPI,
   enableFloat,
 } from 'shared/ReactFeatureFlags';
-import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
+import {
+  HostComponent,
+  HostResource,
+  HostText,
+} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 // TODO: Remove this deep import when we delete the legacy root API
 import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
+
+import {
+  prepareToRenderResources,
+  cleanupAfterRenderResources,
+  isHostResourceType,
+} from './ReactDOMFloatClient';
 
 export type Type = string;
 export type Props = {
@@ -680,14 +690,6 @@ export function clearContainer(container: Container): void {
 
 export const supportsHydration = true;
 
-export function isHydratableResource(type: string, props: Props): boolean {
-  return (
-    type === 'link' &&
-    typeof (props: any).precedence === 'string' &&
-    (props: any).rel === 'stylesheet'
-  );
-}
-
 export function canHydrateInstance(
   instance: HydratableInstance,
   type: string,
@@ -761,18 +763,6 @@ export function getSuspenseInstanceFallbackErrorDetails(
       digest,
     };
   }
-
-  // let value = {message: undefined, hash: undefined};
-  // const nextSibling = instance.nextSibling;
-  // if (nextSibling) {
-  //   const dataset = ((nextSibling: any): HTMLTemplateElement).dataset;
-  //   value.message = dataset.msg;
-  //   value.hash = dataset.hash;
-  //   if (__DEV__) {
-  //     value.stack = dataset.stack;
-  //   }
-  // }
-  // return value;
 }
 
 export function registerSuspenseInstanceRetry(
@@ -788,15 +778,11 @@ function getNextHydratable(node) {
     const nodeType = node.nodeType;
     if (enableFloat) {
       if (nodeType === ELEMENT_NODE) {
-        if (
-          ((node: any): Element).tagName === 'LINK' &&
-          ((node: any): Element).hasAttribute('data-rprec')
-        ) {
+        if (isHostResourceInstance(((node: any): Element))) {
           continue;
         }
         break;
-      }
-      if (nodeType === TEXT_NODE) {
+      } else if (nodeType === TEXT_NODE) {
         break;
       }
     } else {
@@ -901,43 +887,6 @@ export function hydrateSuspenseInstance(
   internalInstanceHandle: Object,
 ) {
   precacheFiberNode(internalInstanceHandle, suspenseInstance);
-}
-
-export function getMatchingResourceInstance(
-  type: string,
-  props: Props,
-  rootHostContainer: Container,
-): ?Instance {
-  if (enableFloat) {
-    switch (type) {
-      case 'link': {
-        if (typeof (props: any).href !== 'string') {
-          return null;
-        }
-        const selector = `link[rel="stylesheet"][data-rprec][href="${
-          (props: any).href
-        }"]`;
-        const link = getOwnerDocumentFromRootContainer(
-          rootHostContainer,
-        ).querySelector(selector);
-        if (__DEV__) {
-          const allLinks = getOwnerDocumentFromRootContainer(
-            rootHostContainer,
-          ).querySelectorAll(selector);
-          if (allLinks.length > 1) {
-            console.error(
-              'Stylesheet resources need a unique representation in the DOM while hydrating' +
-                ' and more than one matching DOM Node was found. To fix, ensure you are only' +
-                ' rendering one stylesheet link with an href attribute of "%s".',
-              (props: any).href,
-            );
-          }
-        }
-        return link;
-      }
-    }
-  }
-  return null;
 }
 
 export function getNextHydratableInstanceAfterSuspenseInstance(
@@ -1281,6 +1230,7 @@ export function matchAccessibilityRole(node: Instance, role: string): boolean {
 
 export function getTextContent(fiber: Fiber): string | null {
   switch (fiber.tag) {
+    case HostResource:
     case HostComponent:
       let textContent = '';
       const childNodes = fiber.stateNode.childNodes;
@@ -1390,3 +1340,45 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
     localRequestAnimationFrame(time => callback(time));
   });
 }
+// -------------------
+//     Resources
+// -------------------
+
+export const supportsResources = true;
+
+export {isHostResourceType};
+function isHostResourceInstance(instance: Instance | Container): boolean {
+  if (instance.nodeType === ELEMENT_NODE) {
+    switch (instance.tagName.toLowerCase()) {
+      case 'link': {
+        const rel = ((instance: any): HTMLLinkElement).rel;
+        return (
+          rel === 'preload' ||
+          (rel === 'stylesheet' && instance.hasAttribute('data-rprec'))
+        );
+      }
+      default: {
+        return false;
+      }
+    }
+  }
+  return false;
+}
+
+export function prepareRendererToRender(rootContainer: Container) {
+  if (enableFloat) {
+    prepareToRenderResources(getOwnerDocumentFromRootContainer(rootContainer));
+  }
+}
+
+export function resetRendererAfterRender() {
+  if (enableFloat) {
+    cleanupAfterRenderResources();
+  }
+}
+
+export {
+  getResource,
+  acquireResource,
+  releaseResource,
+} from './ReactDOMFloatClient';

@@ -45,6 +45,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
+  HostResource,
   HostText,
   HostPortal,
   ContextProvider,
@@ -92,6 +93,7 @@ import {
   prepareUpdate,
   supportsMutation,
   supportsPersistence,
+  supportsResources,
   cloneInstance,
   cloneHiddenInstance,
   cloneHiddenTextInstance,
@@ -144,6 +146,7 @@ import {
   enableProfilerTimer,
   enableCache,
   enableTransitionTracing,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 import {
   renderDidSuspend,
@@ -954,6 +957,26 @@ function completeWork(
       }
       return null;
     }
+    case HostResource: {
+      if (enableFloat && supportsResources) {
+        popHostContext(workInProgress);
+        const currentRef = current ? current.ref : null;
+        if (currentRef !== workInProgress.ref) {
+          markRef(workInProgress);
+        }
+        if (
+          current === null ||
+          current.memoizedState !== workInProgress.memoizedState
+        ) {
+          // The workInProgress resource is different than the current one or the current
+          // one does not exist
+          markUpdate(workInProgress);
+        }
+        bubbleProperties(workInProgress);
+        return null;
+      }
+    }
+    // eslint-disable-next-line-no-fallthrough
     case HostComponent: {
       popHostContext(workInProgress);
       const type = workInProgress.type;
