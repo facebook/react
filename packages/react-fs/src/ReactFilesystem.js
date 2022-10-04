@@ -121,6 +121,7 @@ export function access(path: string, mode?: number): void {
     record = createRecordFromThenable(thenable);
     accessCache.push(mode, record);
   }
+  // $FlowFixMe[incompatible-call] found when upgrading Flow
   readRecord(record); // No return value.
 }
 
@@ -154,6 +155,7 @@ export function lstat(path: string, options?: {bigint?: boolean}): mixed {
     record = createRecordFromThenable(thenable);
     lstatCache.push(bigint, record);
   }
+  // $FlowFixMe[incompatible-call] found when upgrading Flow
   const stats = readRecord(record).value;
   return stats;
 }
@@ -203,6 +205,7 @@ export function readdir(
     record = createRecordFromThenable(thenable);
     readdirCache.push(encoding, withFileTypes, record);
   }
+  // $FlowFixMe[incompatible-call] found when upgrading Flow
   const files = readRecord(record).value;
   return files;
 }
@@ -301,6 +304,7 @@ export function readlink(
     record = createRecordFromThenable(thenable);
     readlinkCache.push(encoding, record);
   }
+  // $FlowFixMe[incompatible-call] found when upgrading Flow
   const linkString = readRecord(record).value;
   return linkString;
 }
@@ -342,6 +346,7 @@ export function realpath(
     record = createRecordFromThenable(thenable);
     realpathCache.push(encoding, record);
   }
+  // $FlowFixMe[incompatible-call] found when upgrading Flow
   const resolvedPath = readRecord(record).value;
   return resolvedPath;
 }
@@ -376,6 +381,7 @@ export function stat(path: string, options?: {bigint?: boolean}): mixed {
     record = createRecordFromThenable(thenable);
     statCache.push(bigint, record);
   }
+  // $FlowFixMe[incompatible-call] found when upgrading Flow
   const stats = readRecord(record).value;
   return stats;
 }

@@ -227,6 +227,7 @@ function extractCompositionEvent(
     }
   }
 
+  // $FlowFixMe[incompatible-call] found when upgrading Flow
   const listeners = accumulateTwoPhaseListeners(targetInst, eventType);
   if (listeners.length > 0) {
     // $FlowFixMe[incompatible-type]

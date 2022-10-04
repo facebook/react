@@ -350,7 +350,9 @@ export function createProfilingHooks({
           );
         }
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentReactComponentMeasure.duration =
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           getRelativeTime() - currentReactComponentMeasure.timestamp;
         currentReactComponentMeasure = null;
       }
@@ -393,7 +395,9 @@ export function createProfilingHooks({
           );
         }
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentReactComponentMeasure.duration =
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           getRelativeTime() - currentReactComponentMeasure.timestamp;
         currentReactComponentMeasure = null;
       }
@@ -438,7 +442,9 @@ export function createProfilingHooks({
           );
         }
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentReactComponentMeasure.duration =
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           getRelativeTime() - currentReactComponentMeasure.timestamp;
         currentReactComponentMeasure = null;
       }
@@ -481,7 +487,9 @@ export function createProfilingHooks({
           );
         }
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentReactComponentMeasure.duration =
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           getRelativeTime() - currentReactComponentMeasure.timestamp;
         currentReactComponentMeasure = null;
       }
@@ -526,7 +534,9 @@ export function createProfilingHooks({
           );
         }
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentReactComponentMeasure.duration =
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           getRelativeTime() - currentReactComponentMeasure.timestamp;
         currentReactComponentMeasure = null;
       }

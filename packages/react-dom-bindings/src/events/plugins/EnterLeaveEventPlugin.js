@@ -104,6 +104,7 @@ function extractEvents(
       const nearestMounted = getNearestMountedFiber(to);
       if (
         to !== nearestMounted ||
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         (to.tag !== HostComponent && to.tag !== HostText)
       ) {
         to = null;
