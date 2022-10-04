@@ -115,6 +115,7 @@ export default function setupHighlighter(
 
     if (nodes != null && nodes[0] != null) {
       const node = nodes[0];
+      // $FlowFixMe[method-unbinding]
       if (scrollIntoView && typeof node.scrollIntoView === 'function') {
         // If the node isn't visible show it before highlighting it.
         // We may want to reconsider this; it might be a little disruptive.

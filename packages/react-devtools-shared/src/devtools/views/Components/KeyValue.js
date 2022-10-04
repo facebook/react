@@ -33,6 +33,9 @@ import type {Element} from 'react-devtools-shared/src/devtools/views/Components/
 import type {Element as ReactElement} from 'react';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
+// $FlowFixMe[method-unbinding]
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 type Type = 'props' | 'state' | 'context' | 'hooks';
 
 type KeyValueProps = {
@@ -408,7 +411,7 @@ export default function KeyValue({
       const hasChildren = entries.length > 0 || canEditValues;
       const displayName = getMetaValueLabel(value);
 
-      children = entries.map<ReactElement<any>>(([key, keyValue]) => (
+      children = entries.map(([key, keyValue]): ReactElement<any> => (
         <KeyValue
           key={key}
           alphaSort={alphaSort}

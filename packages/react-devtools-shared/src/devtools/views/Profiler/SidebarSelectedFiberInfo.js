@@ -67,6 +67,7 @@ export default function SidebarSelectedFiberInfo(_: Props): React.Node {
     const selectedElement = selectedListItemRef.current;
     if (
       selectedElement !== null &&
+      // $FlowFixMe[method-unbinding]
       typeof selectedElement.scrollIntoView === 'function'
     ) {
       selectedElement.scrollIntoView({block: 'nearest', inline: 'nearest'});

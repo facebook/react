@@ -13,7 +13,9 @@ import * as React from 'react';
 
 import {createLRU} from './LRU';
 
-type Suspender = {then(resolve: () => mixed, reject: () => mixed): mixed, ...};
+interface Suspender {
+  then(resolve: () => mixed, reject: () => mixed): mixed;
+}
 
 type PendingResult = {
   status: 0,
@@ -120,6 +122,7 @@ function accessResult<I, K, V>(
     );
     const newResult: PendingResult = {
       status: Pending,
+      // $FlowFixMe[method-unbinding]
       value: thenable,
     };
     // $FlowFixMe[escaped-generic] discovered when updating Flow

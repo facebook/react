@@ -351,6 +351,7 @@ export default class ReactFlightWebpackPlugin {
         if (err) return callback(err);
         const flat = [];
         for (let i = 0; i < result.length; i++) {
+          // $FlowFixMe[method-unbinding]
           flat.push.apply(flat, result[i]);
         }
         callback(null, flat);
