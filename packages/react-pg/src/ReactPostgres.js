@@ -67,6 +67,7 @@ function readRecordValue(record: Record) {
 }
 
 export function Pool(options: mixed) {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   this.pool = new PostgresPool(options);
   // Unique function per instance because it's used for cache identity.
   this.createRecordMap = function() {

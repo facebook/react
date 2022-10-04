@@ -242,6 +242,7 @@ function IndexedSourceMapConsumer(sourceMapJSON: IndexSourceMap) {
 
     if (section.sourceMapConsumer === null) {
       // Lazily parse the section only when it's needed.
+      // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
       section.sourceMapConsumer = new SourceMapConsumer(section.map);
     }
 
