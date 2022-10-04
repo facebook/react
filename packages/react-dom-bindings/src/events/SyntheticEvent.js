@@ -81,6 +81,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
     return this;
   }
 
+  // $FlowFixMe[prop-missing] found when upgrading Flow
   assign(SyntheticBaseEvent.prototype, {
     preventDefault: function() {
       this.defaultPrevented = true;

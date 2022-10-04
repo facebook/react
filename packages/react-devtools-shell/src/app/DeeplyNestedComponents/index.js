@@ -18,6 +18,7 @@ function wrapWithHoc(Component, index) {
   // $FlowFixMe
   const displayName = Component.displayName || Component.name;
 
+  // $FlowFixMe[incompatible-type] found when upgrading Flow
   HOC.displayName = `withHoc${index}(${displayName})`;
   return HOC;
 }

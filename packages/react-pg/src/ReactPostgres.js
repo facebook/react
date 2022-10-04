@@ -77,6 +77,7 @@ export function Pool(options: mixed) {
 
 type NestedMap = Map<any, Record | NestedMap>;
 
+// $FlowFixMe[prop-missing] found when upgrading Flow
 Pool.prototype.query = function(query: string, values?: Array<mixed>) {
   const pool = this.pool;
   const outerMap = unstable_getCacheForType(this.createRecordMap);

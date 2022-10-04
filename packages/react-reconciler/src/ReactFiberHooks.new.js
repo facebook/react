@@ -1944,6 +1944,7 @@ function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
         "A function wrapped in useEvent can't be called during rendering.",
       );
     }
+    // $FlowFixMe[prop-missing] found when upgrading Flow
     return eventFn._impl.apply(undefined, arguments);
   };
   eventFn._impl = callback;
