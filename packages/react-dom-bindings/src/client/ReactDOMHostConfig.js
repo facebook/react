@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -209,7 +210,7 @@ export function getChildHostContext(
   return getChildNamespace(parentNamespace, type);
 }
 
-export function getPublicInstance(instance: Instance): * {
+export function getPublicInstance(instance: Instance): Instance {
   return instance;
 }
 
@@ -370,7 +371,7 @@ export function createTextInstance(
   return textNode;
 }
 
-export function getCurrentEventPriority(): * {
+export function getCurrentEventPriority(): EventPriority {
   const currentEvent = window.event;
   if (currentEvent === undefined) {
     return DefaultEventPriority;

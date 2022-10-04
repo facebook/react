@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
@@ -407,7 +408,7 @@ export function findInstanceBlockingEvent(
   return null;
 }
 
-export function getEventPriority(domEventName: DOMEventName): * {
+export function getEventPriority(domEventName: DOMEventName): EventPriority {
   switch (domEventName) {
     // Used by SimpleEventPlugin:
     case 'cancel':

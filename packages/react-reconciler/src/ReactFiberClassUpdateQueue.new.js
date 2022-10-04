@@ -207,8 +207,8 @@ export function cloneUpdateQueue<State>(
   }
 }
 
-export function createUpdate(eventTime: number, lane: Lane): Update<*> {
-  const update: Update<*> = {
+export function createUpdate(eventTime: number, lane: Lane): Update<mixed> {
+  const update: Update<mixed> = {
     eventTime,
     lane,
 
