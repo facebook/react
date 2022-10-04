@@ -17,6 +17,15 @@ function isEmptyLiteral(node) {
   );
 }
 
+function isStringLiteral(node) {
+  return (
+    // TaggedTemplateExpressions can return non-strings
+    (node.type === 'TemplateLiteral' &&
+      node.parent.type !== 'TaggedTemplateExpression') ||
+    (node.type === 'Literal' && typeof node.value === 'string')
+  );
+}
+
 // Symbols and Temporal.* objects will throw when using `'' + value`, but that
 // pattern can be faster than `String(value)` because JS engines can optimize
 // `+` better in some cases. Therefore, in perf-sensitive production codepaths
@@ -120,9 +129,9 @@ function isSafeTypeofExpression(originalValueNode, node) {
   return false;
 }
 
-/** 
+/**
   Returns true if the code is inside an `if` block that validates the value
-  excludes symbols and objects. Examples: 
+  excludes symbols and objects. Examples:
   * if (typeof value === 'string') { }
   * if (typeof value === 'string' || typeof value === 'number') { }
   * if (typeof value === 'string' || someOtherTest) { }
@@ -259,7 +268,24 @@ function hasCoercionCheck(node) {
   }
 }
 
-function plusEmptyString(context, node) {
+function isOnlyAddingStrings(node) {
+  if (node.operator !== '+') {
+    return;
+  }
+  if (isStringLiteral(node.left) && isStringLiteral(node.right)) {
+    // It's always safe to add string literals
+    return true;
+  }
+  if (node.left.type === 'BinaryExpression' && isStringLiteral(node.right)) {
+    return isOnlyAddingStrings(node.left);
+  }
+}
+
+function checkBinaryExpression(context, node) {
+  if (isOnlyAddingStrings(node)) {
+    return;
+  }
+
   if (
     node.operator === '+' &&
     (isEmptyLiteral(node.left) || isEmptyLiteral(node.right))
@@ -337,7 +363,7 @@ module.exports = {
   },
   create(context) {
     return {
-      BinaryExpression: node => plusEmptyString(context, node),
+      BinaryExpression: node => checkBinaryExpression(context, node),
       CallExpression: node => coerceWithStringConstructor(context, node),
     };
   },
