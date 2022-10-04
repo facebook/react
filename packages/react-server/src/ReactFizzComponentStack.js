@@ -39,7 +39,7 @@ export function getStackByComponentStackNode(
 ): string {
   try {
     let info = '';
-    let node = componentStack;
+    let node: ComponentStackNode = componentStack;
     do {
       switch (node.tag) {
         case 0:
@@ -52,6 +52,7 @@ export function getStackByComponentStackNode(
           info += describeClassComponentFrame(node.type, null, null);
           break;
       }
+      // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.parent;
     } while (node);
     return info;

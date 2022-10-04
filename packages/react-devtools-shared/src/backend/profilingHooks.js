@@ -799,7 +799,7 @@ export function createProfilingHooks({
 
   function getParentFibers(fiber: Fiber): Array<Fiber> {
     const parents = [];
-    let parent = fiber;
+    let parent: null | Fiber = fiber;
     while (parent !== null) {
       parents.push(parent);
       parent = parent.return;
@@ -824,6 +824,7 @@ export function createProfilingHooks({
             warning: null,
           };
           currentFiberStacks.set(event, getParentFibers(fiber));
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           currentTimelineData.schedulingEvents.push(event);
         }
       }

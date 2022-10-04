@@ -238,7 +238,7 @@ export function useModalDismissSignal(
     // Delay until after the current call stack is empty,
     // in case this effect is being run while an event is currently bubbling.
     // In that case, we don't want to listen to the pre-existing event.
-    let timeoutID = setTimeout(() => {
+    let timeoutID: null | TimeoutID = setTimeout(() => {
       timeoutID = null;
 
       // It's important to listen to the ownerDocument to support the browser extension.

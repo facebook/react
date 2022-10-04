@@ -248,6 +248,7 @@ export function attach(
           parentIDStack.pop();
           return result;
         } catch (err) {
+          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -284,6 +285,7 @@ export function attach(
           parentIDStack.pop();
           return result;
         } catch (err) {
+          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -320,6 +322,7 @@ export function attach(
           parentIDStack.pop();
           return result;
         } catch (err) {
+          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -351,6 +354,7 @@ export function attach(
 
           return result;
         } catch (err) {
+          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {

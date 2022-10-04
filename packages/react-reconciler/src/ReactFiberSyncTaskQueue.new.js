@@ -63,8 +63,9 @@ export function flushSyncCallbacks(): null {
       // $FlowFixMe[incompatible-use] found when upgrading Flow
       for (; i < queue.length; i++) {
         // $FlowFixMe[incompatible-use] found when upgrading Flow
-        let callback = queue[i];
+        let callback: SchedulerCallback = queue[i];
         do {
+          // $FlowFixMe[incompatible-type] we bail out when we get a null
           callback = callback(isSync);
         } while (callback !== null);
       }

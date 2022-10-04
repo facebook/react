@@ -30,11 +30,11 @@ const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;
-  let nearestMounted = fiber;
+  let nearestMounted: null | Fiber = fiber;
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
-    let nextNode = node;
+    let nextNode: Fiber = node;
     do {
       node = nextNode;
       if ((node.flags & (Placement | Hydrating)) !== NoFlags) {
@@ -43,6 +43,7 @@ export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
         // if that one is still mounted.
         nearestMounted = node.return;
       }
+      // $FlowFixMe[incompatible-type] we bail out when we get a null
       nextNode = node.return;
     } while (nextNode);
   } else {
@@ -339,7 +340,7 @@ export function doesFiberContain(
   parentFiber: Fiber,
   childFiber: Fiber,
 ): boolean {
-  let node = childFiber;
+  let node: null | Fiber = childFiber;
   const parentFiberAlternate = parentFiber.alternate;
   while (node !== null) {
     if (node === parentFiber || node === parentFiberAlternate) {

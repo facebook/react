@@ -84,9 +84,10 @@ export function getStackByFiberInDevAndProd(
 ): string {
   try {
     let info = '';
-    let node = workInProgress;
+    let node: Fiber = workInProgress;
     do {
       info += describeFiber(workTagMap, node, currentDispatcherRef);
+      // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.return;
     } while (node);
     return info;

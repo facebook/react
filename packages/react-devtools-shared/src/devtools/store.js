@@ -763,7 +763,7 @@ export default class Store extends EventEmitter<{
 
           const weightDelta = 1 - element.weight;
 
-          let parentElement = ((this._idToElement.get(
+          let parentElement: void | Element = ((this._idToElement.get(
             element.parentID,
           ): any): Element);
           while (parentElement != null) {
@@ -789,7 +789,7 @@ export default class Store extends EventEmitter<{
               : currentElement.weight;
             const weightDelta = newWeight - oldWeight;
 
-            let parentElement = ((this._idToElement.get(
+            let parentElement: void | Element = ((this._idToElement.get(
               currentElement.parentID,
             ): any): Element);
             while (parentElement != null) {
@@ -806,8 +806,10 @@ export default class Store extends EventEmitter<{
 
           currentElement =
             currentElement.parentID !== 0
-              ? this.getElementByID(currentElement.parentID)
-              : null;
+              ? // $FlowFixMe[incompatible-type] found when upgrading Flow
+                this.getElementByID(currentElement.parentID)
+              : // $FlowFixMe[incompatible-type] found when upgrading Flow
+                null;
         }
       }
 

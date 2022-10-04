@@ -86,7 +86,7 @@ function collectScopedNodesFromChildren(
   fn: ReactScopeQuery,
   scopedNodes: Array<any>,
 ): void {
-  let child = startingChild;
+  let child: null | Fiber = startingChild;
   while (child !== null) {
     collectScopedNodes(child, fn, scopedNodes);
     child = child.sibling;
@@ -97,7 +97,7 @@ function collectFirstScopedNodeFromChildren(
   startingChild: Fiber,
   fn: ReactScopeQuery,
 ): Object | null {
-  let child = startingChild;
+  let child: null | Fiber = startingChild;
   while (child !== null) {
     const scopedNode = collectFirstScopedNode(child, fn);
     if (scopedNode !== null) {

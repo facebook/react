@@ -64,6 +64,7 @@ function restoreDeletedValuesInNestedArray(
   } else if (node && removedKeyCount > 0) {
     const obj = node;
     for (const propKey in removedKeys) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       if (!removedKeys[propKey]) {
         continue;
       }
@@ -78,9 +79,11 @@ function restoreDeletedValuesInNestedArray(
       }
 
       if (typeof nextProp === 'function') {
+        // $FlowFixMe[incompatible-type] found when upgrading Flow
         nextProp = true;
       }
       if (typeof nextProp === 'undefined') {
+        // $FlowFixMe[incompatible-type] found when upgrading Flow
         nextProp = null;
       }
 

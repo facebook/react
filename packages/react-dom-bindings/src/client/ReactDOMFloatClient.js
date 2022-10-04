@@ -595,7 +595,7 @@ function createPreloadResource(
   const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
     href,
   );
-  let element = ownerDocument.querySelector(
+  let element: null | Instance | HTMLElement = ownerDocument.querySelector(
     `link[rel="preload"][href="${limitedEscapedHref}"]`,
   );
   if (!element) {

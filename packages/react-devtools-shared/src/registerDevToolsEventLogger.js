@@ -13,7 +13,7 @@ import {registerEventLogger} from 'react-devtools-shared/src/Logger';
 import {enableLogger} from 'react-devtools-feature-flags';
 
 let loggingIFrame = null;
-let missedEvents = [];
+let missedEvents: Array<LoggerEvent> = [];
 
 type LoggerContext = {
   page_url: ?string,

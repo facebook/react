@@ -43,7 +43,6 @@ untyped-type-import=error
 %CI_MAX_WORKERS%
 exact_by_default=true
 munge_underscores=false
-inference_mode=classic
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%

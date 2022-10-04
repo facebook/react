@@ -153,6 +153,7 @@ export function lstat(path: string, options?: {bigint?: boolean}): mixed {
   if (!record) {
     const thenable = fs.lstat(path, {bigint});
     record = createRecordFromThenable(thenable);
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     lstatCache.push(bigint, record);
   }
   // $FlowFixMe[incompatible-call] found when upgrading Flow
@@ -203,6 +204,7 @@ export function readdir(
   if (!record) {
     const thenable = fs.readdir(path, {encoding, withFileTypes});
     record = createRecordFromThenable(thenable);
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     readdirCache.push(encoding, withFileTypes, record);
   }
   // $FlowFixMe[incompatible-call] found when upgrading Flow
@@ -302,6 +304,7 @@ export function readlink(
   if (!record) {
     const thenable = fs.readlink(path, {encoding});
     record = createRecordFromThenable(thenable);
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     readlinkCache.push(encoding, record);
   }
   // $FlowFixMe[incompatible-call] found when upgrading Flow
@@ -344,6 +347,7 @@ export function realpath(
   if (!record) {
     const thenable = fs.realpath(path, {encoding});
     record = createRecordFromThenable(thenable);
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     realpathCache.push(encoding, record);
   }
   // $FlowFixMe[incompatible-call] found when upgrading Flow
@@ -379,6 +383,7 @@ export function stat(path: string, options?: {bigint?: boolean}): mixed {
   if (!record) {
     const thenable = fs.stat(path, {bigint});
     record = createRecordFromThenable(thenable);
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     statCache.push(bigint, record);
   }
   // $FlowFixMe[incompatible-call] found when upgrading Flow
