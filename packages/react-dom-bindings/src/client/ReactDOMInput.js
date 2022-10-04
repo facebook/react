@@ -415,7 +415,7 @@ function updateNamedCousins(rootNode, props) {
 export function setDefaultValue(
   node: InputWithWrapperState,
   type: ?string,
-  value: *,
+  value: ToStringValue,
 ) {
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js

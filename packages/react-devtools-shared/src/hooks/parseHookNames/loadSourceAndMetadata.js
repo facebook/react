@@ -134,7 +134,7 @@ function decodeBase64String(encoded: string): Object {
 
 function extractAndLoadSourceMapJSON(
   locationKeyToHookSourceAndMetadata: LocationKeyToHookSourceAndMetadata,
-): Promise<*> {
+): Promise<Array<$Call<<T>(p: Promise<T> | T) => T, Promise<void>>>> {
   // Deduplicate fetches, since there can be multiple location keys per source map.
   const dedupedFetchPromises = new Map();
 
@@ -459,7 +459,7 @@ function isUnnamedBuiltInHook(hook: HooksNode) {
 function loadSourceFiles(
   locationKeyToHookSourceAndMetadata: LocationKeyToHookSourceAndMetadata,
   fetchFileWithCaching: FetchFileWithCaching | null,
-): Promise<*> {
+): Promise<Array<$Call<<T>(p: Promise<T> | T) => T, Promise<void>>>> {
   // Deduplicate fetches, since there can be multiple location keys per file.
   const dedupedFetchPromises = new Map();
 
