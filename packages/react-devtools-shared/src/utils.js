@@ -56,6 +56,8 @@ import isArray from './isArray';
 import type {ComponentFilter, ElementType} from './types';
 import type {LRUCache} from 'react-devtools-shared/src/types';
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
 // On large trees, encoding takes significant time.
