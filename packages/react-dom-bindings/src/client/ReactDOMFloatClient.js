@@ -91,8 +91,9 @@ let lastCurrentDocument: ?Document = null;
 
 let previousDispatcher = null;
 export function prepareToRenderResources(rootContainer: Container) {
-  // $FlowFixMe all Container types are Node's and have a getRootNode method
-  const rootNode = rootContainer.getRootNode();
+  // Flot thinks that getRootNode returns a Node but it actually returns a
+  // Document or ShadowRoot
+  const rootNode: FloatRoot = (rootContainer.getRootNode(): any);
   lastCurrentDocument = getDocumentFromRoot(rootNode);
 
   previousDispatcher = Dispatcher.current;
