@@ -2,7 +2,7 @@ version: 2.1
 
 aliases:
   - &docker
-    - image: cimg/openjdk:17.0.0-node
+    - image: cimg/openjdk:18.0-node
 
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -121,7 +121,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Nodejs Version
+          name: NodeJS Version
           command: node --version
       - *restore_yarn_cache
       - *restore_node_modules

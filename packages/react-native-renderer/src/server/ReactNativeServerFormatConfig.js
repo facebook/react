@@ -57,6 +57,9 @@ SUSPENSE_UPDATE_TO_COMPLETE[0] = SUSPENSE_UPDATE_TO_COMPLETE_TAG;
 const SUSPENSE_UPDATE_TO_CLIENT_RENDER = new Uint8Array(1);
 SUSPENSE_UPDATE_TO_CLIENT_RENDER[0] = SUSPENSE_UPDATE_TO_CLIENT_RENDER_TAG;
 
+export type Resources = void;
+export type BoundaryResources = void;
+
 // Per response,
 export type ResponseState = {
   nextSuspenseID: number,
@@ -142,6 +145,7 @@ export function pushStartInstance(
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
+  textEmbedded: boolean,
 ): ReactNodeList {
   target.push(
     INSTANCE,
@@ -291,6 +295,7 @@ export function writeCompletedBoundaryInstruction(
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
   contentSegmentID: number,
+  resources: BoundaryResources,
 ): boolean {
   writeChunk(destination, SUSPENSE_UPDATE_TO_COMPLETE);
   writeChunk(destination, formatID(boundaryID));
@@ -309,3 +314,38 @@ export function writeClientRenderBoundaryInstruction(
   writeChunk(destination, SUSPENSE_UPDATE_TO_CLIENT_RENDER);
   return writeChunkAndReturn(destination, formatID(boundaryID));
 }
+
+export function writeInitialResources(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+): boolean {
+  return true;
+}
+
+export function writeImmediateResources(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+): boolean {
+  return true;
+}
+
+export function hoistResources(
+  resources: Resources,
+  boundaryResources: BoundaryResources,
+) {}
+
+export function hoistResourcesToRoot(
+  resources: Resources,
+  boundaryResources: BoundaryResources,
+) {}
+
+export function prepareToRender(resources: Resources) {}
+export function cleanupAfterRender(previousDispatcher: mixed) {}
+export function createResources() {}
+export function createBoundaryResources() {}
+export function setCurrentlyRenderingBoundaryResourcesTarget(
+  resources: Resources,
+  boundaryResources: ?BoundaryResources,
+) {}

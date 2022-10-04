@@ -51,6 +51,7 @@ import {
   enableTransitionTracing,
   enableUseEventHook,
   enableStrictEffects,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -58,6 +59,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
+  HostResource,
   HostText,
   HostPortal,
   Profiler,
@@ -73,7 +75,6 @@ import {
   CacheComponent,
   TracingMarkerComponent,
 } from './ReactWorkTags';
-import {detachDeletedInstance} from './ReactFiberHostConfig';
 import {
   NoFlags,
   ContentReset,
@@ -117,6 +118,7 @@ import {
   supportsMutation,
   supportsPersistence,
   supportsHydration,
+  supportsResources,
   commitMount,
   commitUpdate,
   resetTextContent,
@@ -141,6 +143,9 @@ import {
   prepareScopeUpdate,
   prepareForCommit,
   beforeActiveInstanceBlur,
+  detachDeletedInstance,
+  acquireResource,
+  releaseResource,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -345,6 +350,7 @@ function commitBeforeMutationEffects_begin() {
     // Let's skip the whole loop if it's off.
     if (enableCreateEventHandleAPI) {
       // TODO: Should wrap this in flags check, too, as optimization
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       const deletions = fiber.deletions;
       if (deletions !== null) {
         for (let i = 0; i < deletions.length; i++) {
@@ -354,8 +360,10 @@ function commitBeforeMutationEffects_begin() {
       }
     }
 
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     const child = fiber.child;
     if (
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       (fiber.subtreeFlags & BeforeMutationMask) !== NoFlags &&
       child !== null
     ) {
@@ -400,6 +408,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
       if (
         finishedWork.tag === SuspenseComponent &&
         isSuspenseBoundaryBeingHidden(current, finishedWork) &&
+        // $FlowFixMe[incompatible-call] found when upgrading Flow
         doesFiberContain(finishedWork, focusedInstanceHandle)
       ) {
         shouldFireAfterActiveInstanceBlur = true;
@@ -493,6 +502,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
       break;
     }
     case HostComponent:
+    case HostResource:
     case HostText:
     case HostPortal:
     case IncompleteClassComponent:
@@ -1064,6 +1074,34 @@ function commitLayoutEffectOnFiber(
       }
       break;
     }
+    case HostResource: {
+      if (enableFloat && supportsResources) {
+        recursivelyTraverseLayoutEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+        );
+
+        if (flags & Update) {
+          const newResource = finishedWork.memoizedState;
+          if (current !== null) {
+            const currentResource = current.memoizedState;
+            if (currentResource !== newResource) {
+              releaseResource(currentResource);
+            }
+          }
+          finishedWork.stateNode = newResource
+            ? acquireResource(newResource)
+            : null;
+        }
+
+        if (flags & Ref) {
+          safelyAttachRef(finishedWork, finishedWork.return);
+        }
+        break;
+      }
+    }
+    // eslint-disable-next-line-no-fallthrough
     case HostComponent: {
       recursivelyTraverseLayoutEffects(
         finishedRoot,
@@ -1450,7 +1488,10 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
     // children to find all the terminal nodes.
     let node: Fiber = finishedWork;
     while (true) {
-      if (node.tag === HostComponent) {
+      if (
+        node.tag === HostComponent ||
+        (enableFloat && supportsResources ? node.tag === HostResource : false)
+      ) {
         if (hostSubtreeRoot === null) {
           hostSubtreeRoot = node;
           try {
@@ -1522,6 +1563,7 @@ function commitAttachRef(finishedWork: Fiber) {
     const instance = finishedWork.stateNode;
     let instanceToUse;
     switch (finishedWork.tag) {
+      case HostResource:
       case HostComponent:
         instanceToUse = getPublicInstance(instance);
         break;
@@ -1726,7 +1768,8 @@ function isHostParent(fiber: Fiber): boolean {
   return (
     fiber.tag === HostComponent ||
     fiber.tag === HostRoot ||
-    fiber.tag === HostPortal
+    fiber.tag === HostPortal ||
+    (enableFloat && supportsResources ? fiber.tag === HostResource : false)
   );
 }
 
@@ -1973,6 +2016,23 @@ function commitDeletionEffectsOnFiber(
   // into their subtree. There are simpler cases in the inner switch
   // that don't modify the stack.
   switch (deletedFiber.tag) {
+    case HostResource: {
+      if (enableFloat && supportsResources) {
+        if (!offscreenSubtreeWasHidden) {
+          safelyDetachRef(deletedFiber, nearestMountedAncestor);
+        }
+
+        recursivelyTraverseDeletionEffects(
+          finishedRoot,
+          nearestMountedAncestor,
+          deletedFiber,
+        );
+
+        releaseResource(deletedFiber.memoizedState);
+        return;
+      }
+    }
+    // eslint-disable-next-line no-fallthrough
     case HostComponent: {
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
@@ -2469,6 +2529,20 @@ function commitMutationEffectsOnFiber(
       }
       return;
     }
+    case HostResource: {
+      if (enableFloat && supportsResources) {
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+        commitReconciliationEffects(finishedWork);
+
+        if (flags & Ref) {
+          if (current !== null) {
+            safelyDetachRef(current, current.return);
+          }
+        }
+        return;
+      }
+    }
+    // eslint-disable-next-line-no-fallthrough
     case HostComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
@@ -2860,6 +2934,7 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       recursivelyTraverseDisappearLayoutEffects(finishedWork);
       break;
     }
+    case HostResource:
     case HostComponent: {
       // TODO (Offscreen) Check: flags & RefStatic
       safelyDetachRef(finishedWork, finishedWork.return);
@@ -2961,6 +3036,7 @@ export function reappearLayoutEffects(
     // case HostRoot: {
     //  ...
     // }
+    case HostResource:
     case HostComponent: {
       recursivelyTraverseReappearLayoutEffects(
         finishedRoot,

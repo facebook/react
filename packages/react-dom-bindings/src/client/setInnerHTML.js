@@ -21,7 +21,10 @@ let reusableSVGContainer;
  * @param {string} html
  * @internal
  */
-const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
+const setInnerHTML: (
+  node: Element,
+  html: {valueOf(): {toString(): string, ...}, ...},
+) => void = createMicrosoftUnsafeLocalFunction(function(
   node: Element,
   html: {valueOf(): {toString(): string, ...}, ...},
 ): void {

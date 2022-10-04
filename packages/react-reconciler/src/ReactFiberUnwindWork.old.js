@@ -19,6 +19,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
+  HostResource,
   HostPortal,
   ContextProvider,
   SuspenseComponent,
@@ -62,7 +63,7 @@ function unwindWork(
   current: Fiber | null,
   workInProgress: Fiber,
   renderLanes: Lanes,
-) {
+): Fiber | null {
   // Note: This intentionally doesn't check if we're hydrating because comparing
   // to the current tree provider fiber is just as fast and less error-prone.
   // Ideally we would have a special version of the work loop only
@@ -115,6 +116,7 @@ function unwindWork(
       // We unwound to the root without completing it. Exit.
       return null;
     }
+    case HostResource:
     case HostComponent: {
       // TODO: popHydrationState
       popHostContext(workInProgress);
@@ -233,6 +235,7 @@ function unwindInterruptedWork(
       resetMutableSourceWorkInProgressVersions();
       break;
     }
+    case HostResource:
     case HostComponent: {
       popHostContext(interruptedWork);
       break;

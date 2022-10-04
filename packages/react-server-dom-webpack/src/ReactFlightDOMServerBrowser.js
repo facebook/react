@@ -52,13 +52,13 @@ function renderToReadableStream(
   const stream = new ReadableStream(
     {
       type: 'bytes',
-      start(controller): ?Promise<void> {
+      start: (controller): ?Promise<void> => {
         startWork(request);
       },
-      pull(controller): ?Promise<void> {
+      pull: (controller): ?Promise<void> => {
         startFlowing(request, controller);
       },
-      cancel(reason): ?Promise<void> {},
+      cancel: (reason): ?Promise<void> => {},
     },
     // $FlowFixMe size() methods are not allowed on byte streams.
     {highWaterMark: 0},

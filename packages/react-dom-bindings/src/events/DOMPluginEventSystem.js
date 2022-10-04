@@ -33,6 +33,7 @@ import {
   HostRoot,
   HostPortal,
   HostComponent,
+  HostResource,
   HostText,
   ScopeComponent,
 } from 'react-reconciler/src/ReactWorkTags';
@@ -52,6 +53,7 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 import {
   invokeGuardedCallbackAndCatchFirstError,
@@ -621,7 +623,11 @@ export function dispatchEventForPluginEventSystem(
               return;
             }
             const parentTag = parentNode.tag;
-            if (parentTag === HostComponent || parentTag === HostText) {
+            if (
+              parentTag === HostComponent ||
+              parentTag === HostText ||
+              (enableFloat ? parentTag === HostResource : false)
+            ) {
               node = ancestorInst = parentNode;
               continue mainLoop;
             }
@@ -675,7 +681,10 @@ export function accumulateSinglePhaseListeners(
   while (instance !== null) {
     const {stateNode, tag} = instance;
     // Handle listeners that are on HostComponents (i.e. <div>)
-    if (tag === HostComponent && stateNode !== null) {
+    if (
+      (tag === HostComponent || (enableFloat ? tag === HostResource : false)) &&
+      stateNode !== null
+    ) {
       lastHostComponent = stateNode;
 
       // createEventHandle listeners
@@ -786,7 +795,10 @@ export function accumulateTwoPhaseListeners(
   while (instance !== null) {
     const {stateNode, tag} = instance;
     // Handle listeners that are on HostComponents (i.e. <div>)
-    if (tag === HostComponent && stateNode !== null) {
+    if (
+      (tag === HostComponent || (enableFloat ? tag === HostResource : false)) &&
+      stateNode !== null
+    ) {
       const currentTarget = stateNode;
       const captureListener = getListener(instance, captureName);
       if (captureListener != null) {
@@ -883,7 +895,10 @@ function accumulateEnterLeaveListenersForEvent(
     if (alternate !== null && alternate === common) {
       break;
     }
-    if (tag === HostComponent && stateNode !== null) {
+    if (
+      (tag === HostComponent || (enableFloat ? tag === HostResource : false)) &&
+      stateNode !== null
+    ) {
       const currentTarget = stateNode;
       if (inCapturePhase) {
         const captureListener = getListener(instance, registrationName);

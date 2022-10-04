@@ -31,7 +31,7 @@ var Shape = ReactART.Shape;
 var Path = ReactART.Path;
 
 /**
- * Wedge is a React component for drawing circles, wedges and arcs.  Like other
+ * Wedge is a React component for drawing circles, wedges and arcs. Like other
  * ReactART components, it must be used in a <Surface>.
  */
 var Wedge = createReactClass({

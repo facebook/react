@@ -16,7 +16,7 @@ export function addEventBubbleListener(
   target: EventTarget,
   eventType: string,
   listener: Function,
-) {
+): mixed {
   return EventListenerWWW.listen(target, eventType, listener);
 }
 
@@ -24,7 +24,7 @@ export function addEventCaptureListener(
   target: EventTarget,
   eventType: string,
   listener: Function,
-) {
+): mixed {
   return EventListenerWWW.capture(target, eventType, listener);
 }
 
@@ -33,7 +33,7 @@ export function addEventCaptureListenerWithPassiveFlag(
   eventType: string,
   listener: Function,
   passive: boolean,
-) {
+): mixed {
   return EventListenerWWW.captureWithPassiveFlag(
     target,
     eventType,
@@ -47,7 +47,7 @@ export function addEventBubbleListenerWithPassiveFlag(
   eventType: string,
   listener: Function,
   passive: boolean,
-) {
+): mixed {
   return EventListenerWWW.bubbleWithPassiveFlag(
     target,
     eventType,

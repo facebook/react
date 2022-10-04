@@ -84,6 +84,8 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
+  prepareRendererToRender,
+  resetRendererAfterRender,
 } from './ReactFiberHostConfig';
 
 import {
@@ -413,6 +415,7 @@ export function addMarkerProgressCallbackToPendingTransition(
     }
 
     if (currentPendingTransitionCallbacks.markerProgress === null) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentPendingTransitionCallbacks.markerProgress = new Map();
     }
 
@@ -441,6 +444,7 @@ export function addMarkerIncompleteCallbackToPendingTransition(
     }
 
     if (currentPendingTransitionCallbacks.markerIncomplete === null) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentPendingTransitionCallbacks.markerIncomplete = new Map();
     }
 
@@ -468,6 +472,7 @@ export function addMarkerCompleteCallbackToPendingTransition(
     }
 
     if (currentPendingTransitionCallbacks.markerComplete === null) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentPendingTransitionCallbacks.markerComplete = new Map();
     }
 
@@ -495,6 +500,7 @@ export function addTransitionProgressCallbackToPendingTransition(
     }
 
     if (currentPendingTransitionCallbacks.transitionProgress === null) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentPendingTransitionCallbacks.transitionProgress = new Map();
     }
 
@@ -578,7 +584,7 @@ export function getWorkInProgressRootRenderLanes(): Lanes {
   return workInProgressRootRenderLanes;
 }
 
-export function requestEventTime() {
+export function requestEventTime(): number {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
     return now();
@@ -593,7 +599,7 @@ export function requestEventTime() {
   return currentEventTime;
 }
 
-export function getCurrentTime() {
+export function getCurrentTime(): number {
   return now();
 }
 
@@ -1563,9 +1569,9 @@ export function discreteUpdates<A, B, C, D, R>(
 // Warning, this opts-out of checking the function body.
 declare function flushSync<R>(fn: () => R): R;
 // eslint-disable-next-line no-redeclare
-declare function flushSync(): void;
+declare function flushSync(void): void;
 // eslint-disable-next-line no-redeclare
-export function flushSync(fn): void {
+export function flushSync<R>(fn: (() => R) | void): R | void {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
   if (
@@ -1613,7 +1619,7 @@ export function isAlreadyRendering(): boolean {
   );
 }
 
-export function isInvalidExecutionContextForEventFunction() {
+export function isInvalidExecutionContextForEventFunction(): boolean {
   // Used to throw if certain APIs are called from the wrong context.
   return (executionContext & RenderContext) !== NoContext;
 }
@@ -1668,7 +1674,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   if (workInProgress !== null) {
     let interruptedWork = workInProgressIsSuspended
       ? workInProgress
-      : workInProgress.return;
+      : // $FlowFixMe[incompatible-use] found when upgrading Flow
+        workInProgress.return;
     while (interruptedWork !== null) {
       const current = interruptedWork.alternate;
       unwindInterruptedWork(
@@ -1767,7 +1774,8 @@ function handleThrow(root, thrownValue): void {
   }
 }
 
-function pushDispatcher() {
+function pushDispatcher(container) {
+  prepareRendererToRender(container);
   const prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
   if (prevDispatcher === null) {
@@ -1781,6 +1789,7 @@ function pushDispatcher() {
 }
 
 function popDispatcher(prevDispatcher) {
+  resetRendererAfterRender();
   ReactCurrentDispatcher.current = prevDispatcher;
 }
 
@@ -1850,7 +1859,7 @@ export function renderHasNotSuspendedYet(): boolean {
 function renderRootSync(root: FiberRoot, lanes: Lanes) {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
-  const prevDispatcher = pushDispatcher();
+  const prevDispatcher = pushDispatcher(root.containerInfo);
 
   // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
@@ -1950,7 +1959,7 @@ function workLoopSync() {
 function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
-  const prevDispatcher = pushDispatcher();
+  const prevDispatcher = pushDispatcher(root.containerInfo);
 
   // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
@@ -3048,10 +3057,12 @@ export function attachPingListener(
       pingCache.set(wakeable, threadIDs);
     }
   }
+  // $FlowFixMe[incompatible-use] found when upgrading Flow
   if (!threadIDs.has(lanes)) {
     workInProgressRootDidAttachPingListener = true;
 
     // Memoize using the thread ID to prevent redundant listeners.
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     threadIDs.add(lanes);
     const ping = pingSuspendedRoot.bind(null, root, wakeable, lanes);
     if (enableUpdaterTracking) {

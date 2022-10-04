@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from './legacy-events/PluginModuleType';
+import type {
+  AnyNativeEvent,
+  EventTypes,
+} from './legacy-events/PluginModuleType';
 import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
 import SyntheticEvent from './legacy-events/SyntheticEvent';
 import type {PropagationPhases} from './legacy-events/PropagationPhases';
@@ -175,7 +178,7 @@ function accumulateDirectDispatches(events: ?(Array<Object> | Object)) {
 // End of inline
 
 const ReactNativeBridgeEventPlugin = {
-  eventTypes: {},
+  eventTypes: ({}: EventTypes),
 
   extractEvents: function(
     topLevelType: TopLevelType,

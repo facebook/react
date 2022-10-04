@@ -22,3 +22,5 @@ export {
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
   version,
 } from './src/client/ReactDOM';
+
+export {preinit, preload} from 'react-dom-bindings/src/shared/ReactDOMFloat';

@@ -83,6 +83,7 @@ export const Dispatcher: DispatcherType = {
     if (entry === undefined) {
       entry = resourceType();
       // TODO: Warn if undefined?
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentCache.set(resourceType, entry);
     }
     return entry;
@@ -122,12 +123,14 @@ function unsupportedRefresh(): void {
 
 let currentCache: Map<Function, mixed> | null = null;
 
-export function setCurrentCache(cache: Map<Function, mixed> | null) {
+export function setCurrentCache(
+  cache: Map<Function, mixed> | null,
+): Map<Function, mixed> | null {
   currentCache = cache;
   return currentCache;
 }
 
-export function getCurrentCache() {
+export function getCurrentCache(): Map<Function, mixed> | null {
   return currentCache;
 }
 

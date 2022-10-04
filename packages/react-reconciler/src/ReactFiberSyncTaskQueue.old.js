@@ -60,7 +60,9 @@ export function flushSyncCallbacks(): null {
       // TODO: Is this necessary anymore? The only user code that runs in this
       // queue is in the render or commit phases.
       setCurrentUpdatePriority(DiscreteEventPriority);
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       for (; i < queue.length; i++) {
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         let callback = queue[i];
         do {
           callback = callback(isSync);

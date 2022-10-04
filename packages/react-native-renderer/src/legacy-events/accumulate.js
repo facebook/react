@@ -39,6 +39,8 @@ function accumulate<T>(
   }
 
   if (isArray(next)) {
+    /* $FlowFixMe[incompatible-return] unsound if `next` is `T` and `T` an array,
+     * `isArray` might refine to the array element type of `T` */
     return [current].concat(next);
   }
 

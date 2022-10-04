@@ -8,6 +8,8 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {Resources, BoundaryResources} from './ReactDOMFloatServer';
+export type {Resources, BoundaryResources};
 
 import {
   checkHtmlStringCoercion,
@@ -58,6 +60,36 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
+import {
+  prepareToRenderResources,
+  finishRenderingResources,
+  resourcesFromLink,
+  ReactDOMServerDispatcher,
+} from './ReactDOMFloatServer';
+export {
+  createResources,
+  createBoundaryResources,
+  setCurrentlyRenderingBoundaryResourcesTarget,
+  hoistResources,
+  hoistResourcesToRoot,
+} from './ReactDOMFloatServer';
+
+import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
+const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
+
+export function prepareToRender(resources: Resources): mixed {
+  prepareToRenderResources(resources);
+
+  const previousHostDispatcher = ReactDOMCurrentDispatcher.current;
+  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
+  return previousHostDispatcher;
+}
+
+export function cleanupAfterRender(previousDispatcher: mixed) {
+  finishRenderingResources();
+  ReactDOMCurrentDispatcher.current = previousDispatcher;
+}
+
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.
 export const isPrimaryRenderer = true;
@@ -73,7 +105,8 @@ export type ResponseState = {
   nextSuspenseID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
-  sentClientRenderFunction: boolean, // We allow the legacy renderer to extend this object.
+  sentClientRenderFunction: boolean,
+  sentStyleInsertionFunction: boolean, // We allow the legacy renderer to extend this object.
   ...
 };
 
@@ -183,6 +216,7 @@ export function createResponseState(
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
+    sentStyleInsertionFunction: false,
   };
 }
 
@@ -1088,6 +1122,26 @@ function pushLink(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
+  textEmbedded: boolean,
+): ReactNodeList {
+  if (enableFloat && resourcesFromLink(props)) {
+    if (textEmbedded) {
+      // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+      // to be safe and assume text will follow by inserting a textSeparator
+      target.push(textSeparator);
+    }
+    // We have converted this link exclusively to a resource and no longer
+    // need to emit it
+    return null;
+  }
+
+  return pushLinkImpl(target, props, responseState);
+}
+
+function pushLinkImpl(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
 ): ReactNodeList {
   const isStylesheet = props.rel === 'stylesheet';
   target.push(startChunkForTag('link'));
@@ -1106,15 +1160,9 @@ function pushLink(
               'use `dangerouslySetInnerHTML`.',
           );
         case 'precedence': {
-          if (isStylesheet) {
-            if (propValue === true || typeof propValue === 'string') {
-              pushAttribute(target, responseState, 'data-rprec', propValue);
-            } else if (__DEV__) {
-              throw new Error(
-                `the "precedence" prop for links to stylesheets expects to receive a string but received something of type "${typeof propValue}" instead.`,
-              );
-            }
-            break;
+          if (enableFloat && isStylesheet) {
+            // precedence is a reversed property for stylesheets to opt-into resource semantcs
+            continue;
           }
           // intentionally fall through
         }
@@ -1270,10 +1318,12 @@ function pushStartHead(
   tag: string,
   responseState: ResponseState,
 ): ReactNodeList {
-  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
-  target = enableFloat ? preamble : target;
-
-  return pushStartGenericElement(target, props, tag, responseState);
+  return pushStartGenericElement(
+    enableFloat ? preamble : target,
+    props,
+    tag,
+    responseState,
+  );
 }
 
 function pushStartHtml(
@@ -1281,12 +1331,10 @@ function pushStartHtml(
   preamble: Array<Chunk | PrecomputedChunk>,
   props: Object,
   tag: string,
-  formatContext: FormatContext,
   responseState: ResponseState,
+  formatContext: FormatContext,
 ): ReactNodeList {
-  // Preamble type is nullable for feature off cases but is guaranteed when feature is on
   target = enableFloat ? preamble : target;
-
   if (formatContext.insertionMode === ROOT_HTML_MODE) {
     // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
     // then we also emit the DOCTYPE as part of the root content as a convenience for
@@ -1517,6 +1565,7 @@ export function pushStartInstance(
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
+  textEmbedded: boolean,
 ): ReactNodeList {
   if (__DEV__) {
     validateARIAProperties(type, props);
@@ -1570,7 +1619,7 @@ export function pushStartInstance(
     case 'title':
       return pushStartTitle(target, props, responseState);
     case 'link':
-      return pushLink(target, props, responseState);
+      return pushLink(target, props, responseState, textEmbedded);
     // Newline eating tags
     case 'listing':
     case 'pre': {
@@ -1613,8 +1662,8 @@ export function pushStartInstance(
         preamble,
         props,
         type,
-        formatContext,
         responseState,
+        formatContext,
       );
     }
     default: {
@@ -1658,17 +1707,24 @@ export function pushEndInstance(
     case 'track':
     case 'wbr': {
       // No close tag needed.
-      break;
+      return;
     }
     // Postamble end tags
-    case 'body':
-    case 'html':
-      target = enableFloat ? postamble : target;
-    // Intentional fallthrough
-    default: {
-      target.push(endTag1, stringToChunk(type), endTag2);
+    case 'body': {
+      if (enableFloat) {
+        postamble.unshift(endTag1, stringToChunk(type), endTag2);
+        return;
+      }
+      break;
     }
+    case 'html':
+      if (enableFloat) {
+        postamble.push(endTag1, stringToChunk(type), endTag2);
+        return;
+      }
+      break;
   }
+  target.push(endTag1, stringToChunk(type), endTag2);
 }
 
 export function writeCompletedRoot(
@@ -1977,7 +2033,9 @@ export function writeEndSegment(
 // const SUSPENSE_END_DATA = '/$';
 // const SUSPENSE_PENDING_START_DATA = '$?';
 // const SUSPENSE_FALLBACK_START_DATA = '$!';
-//
+// const LOADED = 'l';
+// const ERRORED = 'e';
+
 // function clientRenderBoundary(suspenseBoundaryID, errorDigest, errorMsg, errorComponentStack) {
 //   // Find the fallback's first element.
 //   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
@@ -2000,14 +2058,100 @@ export function writeEndSegment(
 //     suspenseNode._reactRetry();
 //   }
 // }
-//
-// function completeBoundary(suspenseBoundaryID, contentID) {
-//   // Find the fallback's first element.
-//   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
+
+// resourceMap = new Map();
+// function completeBoundaryWithStyles(suspenseBoundaryID, contentID, styles) {
+//   const precedences = new Map();
+//   const thisDocument = document;
+//   let lastResource, node;
+
+//   // Seed the precedence list with existing resources
+//   let nodes = thisDocument.querySelectorAll('link[data-rprec]');
+//   for (let i = 0;node = nodes[i++];) {
+//     precedences.set(node.dataset.rprec, lastResource = node);
+//   }
+
+//   let i = 0;
+//   let dependencies = [];
+//   let style, href, precedence, attr, loadingState, resourceEl;
+
+//   function setStatus(s) {
+//     this.s = s;
+//   }
+
+//   while (style = styles[i++]) {
+//     let j = 0;
+//     href = style[j++];
+//     // We check if this resource is already in our resourceMap and reuse it if so.
+//     // If it is already loaded we don't return it as a depenendency since there is nothing
+//     // to wait for
+//     loadingState = resourceMap.get(href);
+//     if (loadingState) {
+//       if (loadingState.s !== 'l') {
+//         dependencies.push(loadingState);
+//       }
+//       continue;
+//     }
+
+//     // We construct our new resource element, looping over remaining attributes if any
+//     // setting them to the Element.
+//     resourceEl = thisDocument.createElement("link");
+//     resourceEl.href = href;
+//     resourceEl.rel = 'stylesheet';
+//     resourceEl.dataset.rprec = precedence = style[j++];
+//     while(attr = style[j++]) {
+//       resourceEl.setAttribute(attr, style[j++]);
+//     }
+
+//     // We stash a pending promise in our map by href which will resolve or reject
+//     // when the underlying resource loads or errors. We add it to the dependencies
+//     // array to be returned.
+//     loadingState = resourceEl._p = new Promise((re, rj) => {
+//       resourceEl.onload = re;
+//       resourceEl.onerror = rj;
+//     })
+//     loadingState.then(
+//       setStatus.bind(loadingState, LOADED),
+//       setStatus.bind(loadingState, ERRORED)
+//     );
+//     resourceMap.set(href, loadingState);
+//     dependencies.push(loadingState);
+
+//     // The prior style resource is the last one placed at a given
+//     // precedence or the last resource itself which may be null.
+//     // We grab this value and then update the last resource for this
+//     // precedence to be the inserted element, updating the lastResource
+//     // pointer if needed.
+//     let prior = precedences.get(precedence) || lastResource;
+//     if (prior === lastResource) {
+//       lastResource = resourceEl
+//     }
+//     precedences.set(precedence, resourceEl)
+
+//     // Finally, we insert the newly constructed instance at an appropriate location
+//     // in the Document.
+//     if (prior) {
+//       prior.parentNode.insertBefore(resourceEl, prior.nextSibling);
+//     } else {
+//       let head = thisDocument.head;
+//       head.insertBefore(resourceEl, head.firstChild);
+//     }
+//   }
+
+//   Promise.all(dependencies).then(
+//     completeBoundary.bind(null, suspenseBoundaryID, contentID, ''),
+//     completeBoundary.bind(null, suspenseBoundaryID, contentID, "Resource failed to load")
+//   );
+// }
+
+// function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {
 //   const contentNode = document.getElementById(contentID);
 //   // We'll detach the content node so that regardless of what happens next we don't leave in the tree.
 //   // This might also help by not causing recalcing each time we move a child from here to the target.
 //   contentNode.parentNode.removeChild(contentNode);
+
+//   // Find the fallback's first element.
+//   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
 //   if (!suspenseIdNode) {
 //     // The user must have already navigated away from this tree.
 //     // E.g. because the parent was hydrated. That's fine there's nothing to do
@@ -2016,51 +2160,57 @@ export function writeEndSegment(
 //   }
 //   // Find the boundary around the fallback. This is always the previous node.
 //   const suspenseNode = suspenseIdNode.previousSibling;
-//
-//   // Clear all the existing children. This is complicated because
-//   // there can be embedded Suspense boundaries in the fallback.
-//   // This is similar to clearSuspenseBoundary in ReactDOMHostConfig.
-//   // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
-//   // They never hydrate anyway. However, currently we support incrementally loading the fallback.
-//   const parentInstance = suspenseNode.parentNode;
-//   let node = suspenseNode.nextSibling;
-//   let depth = 0;
-//   do {
-//     if (node && node.nodeType === COMMENT_NODE) {
-//       const data = node.data;
-//       if (data === SUSPENSE_END_DATA) {
-//         if (depth === 0) {
-//           break;
-//         } else {
-//           depth--;
+
+//   if (!errorDigest) {
+//     // Clear all the existing children. This is complicated because
+//     // there can be embedded Suspense boundaries in the fallback.
+//     // This is similar to clearSuspenseBoundary in ReactDOMHostConfig.
+//     // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
+//     // They never hydrate anyway. However, currently we support incrementally loading the fallback.
+//     const parentInstance = suspenseNode.parentNode;
+//     let node = suspenseNode.nextSibling;
+//     let depth = 0;
+//     do {
+//       if (node && node.nodeType === COMMENT_NODE) {
+//         const data = node.data;
+//         if (data === SUSPENSE_END_DATA) {
+//           if (depth === 0) {
+//             break;
+//           } else {
+//             depth--;
+//           }
+//         } else if (
+//           data === SUSPENSE_START_DATA ||
+//           data === SUSPENSE_PENDING_START_DATA ||
+//           data === SUSPENSE_FALLBACK_START_DATA
+//         ) {
+//           depth++;
 //         }
-//       } else if (
-//         data === SUSPENSE_START_DATA ||
-//         data === SUSPENSE_PENDING_START_DATA ||
-//         data === SUSPENSE_FALLBACK_START_DATA
-//       ) {
-//         depth++;
 //       }
+
+//       const nextNode = node.nextSibling;
+//       parentInstance.removeChild(node);
+//       node = nextNode;
+//     } while (node);
+
+//     const endOfBoundary = node;
+
+//     // Insert all the children from the contentNode between the start and end of suspense boundary.
+//     while (contentNode.firstChild) {
+//       parentInstance.insertBefore(contentNode.firstChild, endOfBoundary);
 //     }
-//
-//     const nextNode = node.nextSibling;
-//     parentInstance.removeChild(node);
-//     node = nextNode;
-//   } while (node);
-//
-//   const endOfBoundary = node;
-//
-//   // Insert all the children from the contentNode between the start and end of suspense boundary.
-//   while (contentNode.firstChild) {
-//     parentInstance.insertBefore(contentNode.firstChild, endOfBoundary);
+
+//     suspenseNode.data = SUSPENSE_START_DATA;
+//   } else {
+//     suspenseNode.data = SUSPENSE_FALLBACK_START_DATA;
+//     suspenseIdNode.setAttribute('data-dgst', errorDigest)
 //   }
 
-//   suspenseNode.data = SUSPENSE_START_DATA;
 //   if (suspenseNode._reactRetry) {
 //     suspenseNode._reactRetry();
 //   }
 // }
-//
+
 // function completeSegment(containerID, placeholderID) {
 //   const segmentContainer = document.getElementById(containerID);
 //   const placeholderNode = document.getElementById(placeholderID);
@@ -2080,7 +2230,9 @@ export function writeEndSegment(
 const completeSegmentFunction =
   'function $RS(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)}';
 const completeBoundaryFunction =
-  'function $RC(a,b){a=document.getElementById(a);b=document.getElementById(b);b.parentNode.removeChild(b);if(a){a=a.previousSibling;var f=a.parentNode,c=a.nextSibling,e=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d)if(0===e)break;else e--;else"$"!==d&&"$?"!==d&&"$!"!==d||e++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;b.firstChild;)f.insertBefore(b.firstChild,c);a.data="$";a._reactRetry&&a._reactRetry()}}';
+  'function $RC(b,c,d){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(d)b.data="$!",a.setAttribute("data-dgst",d);else{d=b.parentNode;a=b.nextSibling;var e=0;do{if(a&&a.nodeType===8){var h=a.data;if(h==="/$")if(0===e)break;else e--;else h!=="$"&&h!=="$?"&&h!=="$!"||e++}h=a.nextSibling;d.removeChild(a);a=h}while(a);for(;c.firstChild;)d.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}}';
+const styleInsertionFunction =
+  '$RM=new Map;function $RR(p,q,t){function r(l){this.s=l}for(var m=new Map,n=document,g,e,f=n.querySelectorAll("link[data-rprec]"),d=0;e=f[d++];)m.set(e.dataset.rprec,g=e);e=0;f=[];for(var c,h,b,a;c=t[e++];){var k=0;h=c[k++];if(b=$RM.get(h))"l"!==b.s&&f.push(b);else{a=n.createElement("link");a.href=h;a.rel="stylesheet";for(a.dataset.rprec=d=c[k++];b=c[k++];)a.setAttribute(b,c[k++]);b=a._p=new Promise(function(l,u){a.onload=l;a.onerror=u});b.then(r.bind(b,"l"),r.bind(b,"e"));$RM.set(h,b);f.push(b);c=m.get(d)||g;c===g&&(g=a);m.set(d,a);c?c.parentNode.insertBefore(a,c.nextSibling):(d=n.head,d.insertBefore(a,d.firstChild))}}Promise.all(f).then($RC.bind(null,p,q,""),$RC.bind(null,p,q,"Resource failed to load"))}';
 const clientRenderFunction =
   'function $RX(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),b._reactRetry&&b._reactRetry())}';
 
@@ -2118,23 +2270,51 @@ const completeBoundaryScript1Full = stringToPrecomputedChunk(
   completeBoundaryFunction + ';$RC("',
 );
 const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
+
+const completeBoundaryWithStylesScript1FullBoth = stringToPrecomputedChunk(
+  completeBoundaryFunction + ';' + styleInsertionFunction + ';$RR("',
+);
+const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
+  styleInsertionFunction + ';$RR("',
+);
+const completeBoundaryWithStylesScript1Partial = stringToPrecomputedChunk(
+  '$RR("',
+);
 const completeBoundaryScript2 = stringToPrecomputedChunk('","');
-const completeBoundaryScript3 = stringToPrecomputedChunk('")</script>');
+const completeBoundaryScript2a = stringToPrecomputedChunk('",');
+const completeBoundaryScript3 = stringToPrecomputedChunk('"');
+const completeBoundaryScript4 = stringToPrecomputedChunk(')</script>');
 
 export function writeCompletedBoundaryInstruction(
   destination: Destination,
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
   contentSegmentID: number,
+  boundaryResources: BoundaryResources,
 ): boolean {
+  let hasStyleDependencies;
+  if (enableFloat) {
+    hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
+  }
   writeChunk(destination, responseState.startInlineScript);
-  if (!responseState.sentCompleteBoundaryFunction) {
-    // The first time we write this, we'll need to include the full implementation.
-    responseState.sentCompleteBoundaryFunction = true;
-    writeChunk(destination, completeBoundaryScript1Full);
+  if (enableFloat && hasStyleDependencies) {
+    if (!responseState.sentCompleteBoundaryFunction) {
+      responseState.sentCompleteBoundaryFunction = true;
+      responseState.sentStyleInsertionFunction = true;
+      writeChunk(destination, completeBoundaryWithStylesScript1FullBoth);
+    } else if (!responseState.sentStyleInsertionFunction) {
+      responseState.sentStyleInsertionFunction = true;
+      writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
+    } else {
+      writeChunk(destination, completeBoundaryWithStylesScript1Partial);
+    }
   } else {
-    // Future calls can just reuse the same function.
-    writeChunk(destination, completeBoundaryScript1Partial);
+    if (!responseState.sentCompleteBoundaryFunction) {
+      responseState.sentCompleteBoundaryFunction = true;
+      writeChunk(destination, completeBoundaryScript1Full);
+    } else {
+      writeChunk(destination, completeBoundaryScript1Partial);
+    }
   }
 
   if (boundaryID === null) {
@@ -2148,7 +2328,13 @@ export function writeCompletedBoundaryInstruction(
   writeChunk(destination, completeBoundaryScript2);
   writeChunk(destination, responseState.segmentPrefix);
   writeChunk(destination, formattedContentID);
-  return writeChunkAndReturn(destination, completeBoundaryScript3);
+  if (enableFloat && hasStyleDependencies) {
+    writeChunk(destination, completeBoundaryScript2a);
+    writeStyleResourceDependencies(destination, boundaryResources);
+  } else {
+    writeChunk(destination, completeBoundaryScript3);
+  }
+  return writeChunkAndReturn(destination, completeBoundaryScript4);
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
@@ -2209,10 +2395,10 @@ export function writeClientRenderBoundaryInstruction(
   return writeChunkAndReturn(destination, clientRenderScript2);
 }
 
-const regexForJSStringsInScripts = /[<\u2028\u2029]/g;
+const regexForJSStringsInInstructionScripts = /[<\u2028\u2029]/g;
 function escapeJSStringsForInstructionScripts(input: string): string {
   const escaped = JSON.stringify(input);
-  return escaped.replace(regexForJSStringsInScripts, match => {
+  return escaped.replace(regexForJSStringsInInstructionScripts, match => {
     switch (match) {
       // santizing breaking out of strings and script tags
       case '<':
@@ -2229,4 +2415,327 @@ function escapeJSStringsForInstructionScripts(input: string): string {
       }
     }
   });
+}
+
+const regexForJSStringsInScripts = /[&><\u2028\u2029]/g;
+function escapeJSObjectForInstructionScripts(input: Object): string {
+  const escaped = JSON.stringify(input);
+  return escaped.replace(regexForJSStringsInScripts, match => {
+    switch (match) {
+      // santizing breaking out of strings and script tags
+      case '&':
+        return '\\u0026';
+      case '>':
+        return '\\u003e';
+      case '<':
+        return '\\u003c';
+      case '\u2028':
+        return '\\u2028';
+      case '\u2029':
+        return '\\u2029';
+      default: {
+        // eslint-disable-next-line react-internal/prod-error-codes
+        throw new Error(
+          'escapeJSObjectForInstructionScripts encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React',
+        );
+      }
+    }
+  });
+}
+
+export function writeInitialResources(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+): boolean {
+  const explicitPreloadsTarget = [];
+  const remainingTarget = [];
+
+  const {precedences, explicitPreloads, implicitPreloads} = resources;
+
+  // Flush stylesheets first by earliest precedence
+  precedences.forEach(precedenceResources => {
+    precedenceResources.forEach(resource => {
+      // resources should not already be flushed so we elide this check
+      pushLinkImpl(remainingTarget, resource.props, responseState);
+      resource.flushed = true;
+      resource.inShell = true;
+      resource.hint.flushed = true;
+    });
+  });
+
+  explicitPreloads.forEach(resource => {
+    if (!resource.flushed) {
+      pushLinkImpl(explicitPreloadsTarget, resource.props, responseState);
+      resource.flushed = true;
+    }
+  });
+  explicitPreloads.clear();
+
+  implicitPreloads.forEach(resource => {
+    if (!resource.flushed) {
+      pushLinkImpl(remainingTarget, resource.props, responseState);
+      resource.flushed = true;
+    }
+  });
+  implicitPreloads.clear();
+
+  let i;
+  let r = true;
+  for (i = 0; i < explicitPreloadsTarget.length - 1; i++) {
+    writeChunk(destination, explicitPreloadsTarget[i]);
+  }
+  if (i < explicitPreloadsTarget.length) {
+    r = writeChunkAndReturn(destination, explicitPreloadsTarget[i]);
+  }
+
+  for (i = 0; i < remainingTarget.length - 1; i++) {
+    writeChunk(destination, remainingTarget[i]);
+  }
+  if (i < remainingTarget.length) {
+    r = writeChunkAndReturn(destination, remainingTarget[i]);
+  }
+  return r;
+}
+
+export function writeImmediateResources(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+): boolean {
+  const {explicitPreloads, implicitPreloads} = resources;
+  const target = [];
+
+  explicitPreloads.forEach(resource => {
+    if (!resource.flushed) {
+      pushLinkImpl(target, resource.props, responseState);
+      resource.flushed = true;
+    }
+  });
+  explicitPreloads.clear();
+
+  implicitPreloads.forEach(resource => {
+    if (!resource.flushed) {
+      pushLinkImpl(target, resource.props, responseState);
+      resource.flushed = true;
+    }
+  });
+  implicitPreloads.clear();
+
+  let i = 0;
+  for (; i < target.length - 1; i++) {
+    writeChunk(destination, target[i]);
+  }
+  if (i < target.length) {
+    return writeChunkAndReturn(destination, target[i]);
+  }
+  return false;
+}
+
+function hasStyleResourceDependencies(
+  boundaryResources: BoundaryResources,
+): boolean {
+  const iter = boundaryResources.values();
+  // At the moment boundaries only accumulate style resources
+  // so we assume the type is correct and don't check it
+  while (true) {
+    const {value: resource} = iter.next();
+    if (!resource) break;
+
+    // If every style Resource flushed in the shell we do not need to send
+    // any dependencies
+    if (!resource.inShell) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const arrayFirstOpenBracket = stringToPrecomputedChunk('[');
+const arraySubsequentOpenBracket = stringToPrecomputedChunk(',[');
+const arrayInterstitial = stringToPrecomputedChunk(',');
+const arrayCloseBracket = stringToPrecomputedChunk(']');
+
+function writeStyleResourceDependencies(
+  destination: Destination,
+  boundaryResources: BoundaryResources,
+): void {
+  writeChunk(destination, arrayFirstOpenBracket);
+
+  let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
+  boundaryResources.forEach(resource => {
+    if (resource.inShell) {
+      // We can elide this dependency because it was flushed in the shell and
+      // should be ready before content is shown on the client
+    } else if (resource.flushed) {
+      writeChunk(destination, nextArrayOpenBrackChunk);
+      writeStyleResourceDependencyHrefOnly(destination, resource.href);
+      writeChunk(destination, arrayCloseBracket);
+      nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
+    } else {
+      writeChunk(destination, nextArrayOpenBrackChunk);
+      writeStyleResourceDependency(
+        destination,
+        resource.href,
+        resource.precedence,
+        resource.props,
+      );
+      writeChunk(destination, arrayCloseBracket);
+      nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
+
+      resource.flushed = true;
+      resource.hint.flushed = true;
+    }
+  });
+  writeChunk(destination, arrayCloseBracket);
+}
+
+function writeStyleResourceDependencyHrefOnly(
+  destination: Destination,
+  href: string,
+) {
+  // We should actually enforce this earlier when the resource is created but for
+  // now we make sure we are actually dealing with a string here.
+  if (__DEV__) {
+    checkAttributeStringCoercion(href, 'href');
+  }
+  const coercedHref = '' + (href: any);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(coercedHref)),
+  );
+}
+
+function writeStyleResourceDependency(
+  destination: Destination,
+  href: string,
+  precedence: string,
+  props: Object,
+) {
+  if (__DEV__) {
+    checkAttributeStringCoercion(href, 'href');
+  }
+  const coercedHref = '' + (href: any);
+  sanitizeURL(coercedHref);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(coercedHref)),
+  );
+
+  if (__DEV__) {
+    checkAttributeStringCoercion(precedence, 'precedence');
+  }
+  const coercedPrecedence = '' + (precedence: any);
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(coercedPrecedence)),
+  );
+
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'href':
+        case 'rel':
+        case 'precedence':
+        case 'data-rprec': {
+          break;
+        }
+        case 'children':
+        case 'dangerouslySetInnerHTML':
+          throw new Error(
+            `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
+              'use `dangerouslySetInnerHTML`.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          writeStyleResourceAttribute(destination, propKey, propValue);
+          break;
+      }
+    }
+  }
+  return null;
+}
+
+function writeStyleResourceAttribute(
+  destination: Destination,
+  name: string,
+  value: string | boolean | number | Function | Object, // not null or undefined
+): void {
+  let attributeName = name.toLowerCase();
+  let attributeValue;
+  switch (typeof value) {
+    case 'function':
+    case 'symbol':
+      return;
+  }
+
+  switch (name) {
+    // Reserved names
+    case 'innerHTML':
+    case 'dangerouslySetInnerHTML':
+    case 'suppressContentEditableWarning':
+    case 'suppressHydrationWarning':
+    case 'style':
+      // Ignored
+      return;
+
+    // Attribute renames
+    case 'className':
+      attributeName = 'class';
+      break;
+
+    // Booleans
+    case 'hidden':
+      if (value === false) {
+        return;
+      }
+      attributeValue = '';
+      break;
+
+    // Santized URLs
+    case 'src':
+    case 'href': {
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+      attributeValue = '' + (value: any);
+      sanitizeURL(attributeValue);
+      break;
+    }
+    default: {
+      if (!isAttributeNameSafe(name)) {
+        return;
+      }
+    }
+  }
+
+  if (
+    // shouldIgnoreAttribute
+    // We have already filtered out null/undefined and reserved words.
+    name.length > 2 &&
+    (name[0] === 'o' || name[0] === 'O') &&
+    (name[1] === 'n' || name[1] === 'N')
+  ) {
+    return;
+  }
+
+  if (__DEV__) {
+    checkAttributeStringCoercion(value, attributeName);
+  }
+  attributeValue = '' + (value: any);
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(attributeName)),
+  );
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(attributeValue)),
+  );
 }

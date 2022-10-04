@@ -134,7 +134,7 @@ function updateOptions(
  * selected.
  */
 
-export function getHostProps(element: Element, props: Object) {
+export function getHostProps(element: Element, props: Object): Object {
   return assign({}, props, {
     value: undefined,
   });

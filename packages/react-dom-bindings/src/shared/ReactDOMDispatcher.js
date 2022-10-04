@@ -7,8 +7,12 @@
  * @flow
  */
 
-import type {ReactServerContext} from 'shared/ReactTypes';
+type DispatcherType = {
+  [string]: mixed,
+};
 
-export const ContextRegistry: {
-  [globalName: string]: ReactServerContext<any>,
-} = {};
+const Dispatcher: {current: null | DispatcherType} = {
+  current: null,
+};
+
+export default Dispatcher;

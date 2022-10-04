@@ -21,7 +21,9 @@ if (enableCreateEventHandleAPI) {
 /**
  * Mapping from registration name to event name
  */
-export const registrationNameDependencies = {};
+export const registrationNameDependencies: {
+  [registrationName: string]: Array<DOMEventName>,
+} = {};
 
 /**
  * Mapping from lowercase registration names to the properly cased version,
@@ -29,7 +31,9 @@ export const registrationNameDependencies = {};
  * only in __DEV__.
  * @type {Object}
  */
-export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
+export const possibleRegistrationNames: {
+  [lowerCasedName: string]: string,
+} = __DEV__ ? {} : (null: any);
 // Trust the developer to only use possibleRegistrationNames in __DEV__
 
 export function registerTwoPhaseEvent(

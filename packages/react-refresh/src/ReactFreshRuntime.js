@@ -460,20 +460,18 @@ export function injectIntoGlobalHook(globalObject: any): void {
       globalObject.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook = {
         renderers: new Map(),
         supportsFiber: true,
-        inject(injected) {
-          return nextID++;
-        },
-        onScheduleFiberRoot(
+        inject: injected => nextID++,
+        onScheduleFiberRoot: (
           id: number,
           root: FiberRoot,
           children: ReactNodeList,
-        ) {},
-        onCommitFiberRoot(
+        ) => {},
+        onCommitFiberRoot: (
           id: number,
           root: FiberRoot,
           maybePriorityLevel: mixed,
           didError: boolean,
-        ) {},
+        ) => {},
         onCommitFiberUnmount() {},
       };
     }
@@ -637,7 +635,12 @@ export function _getMountedRootCount(): number {
 //   'useState{[foo, setFoo]}(0)',
 //   () => [useCustomHook], /* Lazy to avoid triggering inline requires */
 // );
-export function createSignatureFunctionForTransform() {
+export function createSignatureFunctionForTransform(): <T>(
+  type: T,
+  key: string,
+  forceReset?: boolean,
+  getCustomHooks?: () => Array<Function>,
+) => T | void {
   if (__DEV__) {
     let savedType;
     let hasCustomHooks;

@@ -7,26 +7,25 @@
  * @flow
  */
 
-function invokeGuardedCallbackProd<A, B, C, D, E, F, Context>(
+function invokeGuardedCallbackProd<Args: Array<mixed>, Context>(
   name: string | null,
-  func: (a: A, b: B, c: C, d: D, e: E, f: F) => mixed,
+  func: (...Args) => mixed,
   context: Context,
-  a: A,
-  b: B,
-  c: C,
-  d: D,
-  e: E,
-  f: F,
-) {
+): void {
   const funcArgs = Array.prototype.slice.call(arguments, 3);
   try {
+    // $FlowFixMe[incompatible-call] Flow doesn't understand the arguments splicing.
     func.apply(context, funcArgs);
   } catch (error) {
     this.onError(error);
   }
 }
 
-let invokeGuardedCallbackImpl = invokeGuardedCallbackProd;
+let invokeGuardedCallbackImpl: <Args: Array<mixed>, Context>(
+  name: string | null,
+  func: (...Args) => mixed,
+  context: Context,
+) => void = invokeGuardedCallbackProd;
 
 if (__DEV__) {
   // In DEV mode, we swap out invokeGuardedCallback for a special version
@@ -59,24 +58,9 @@ if (__DEV__) {
     const fakeNode = document.createElement('react');
 
     invokeGuardedCallbackImpl = function invokeGuardedCallbackDev<
-      A,
-      B,
-      C,
-      D,
-      E,
-      F,
+      Args: Array<mixed>,
       Context,
-    >(
-      name: string | null,
-      func: (a: A, b: B, c: C, d: D, e: E, f: F) => mixed,
-      context: Context,
-      a: A,
-      b: B,
-      c: C,
-      d: D,
-      e: E,
-      f: F,
-    ) {
+    >(name: string | null, func: (...Args) => mixed, context: Context): void {
       // If document doesn't exist we know for sure we will crash in this method
       // when we call document.createEvent(). However this can cause confusing
       // errors: https://github.com/facebook/create-react-app/issues/3482
@@ -142,6 +126,7 @@ if (__DEV__) {
       function callCallback() {
         didCall = true;
         restoreAfterDispatch();
+        // $FlowFixMe[incompatible-call] Flow doesn't understand the arguments splicing.
         func.apply(context, funcArgs);
         didError = false;
       }

@@ -30,7 +30,9 @@ let createHierarchy;
 let getHostNode;
 let getHostProps;
 let lastNonHostInstance;
-let getInspectorDataForInstance;
+let getInspectorDataForInstance: (
+  closestInstance: Fiber | null,
+) => InspectorData;
 let getOwnerHierarchy;
 let traverseOwnerTreeUp;
 
@@ -142,8 +144,14 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
   };
 }
 
-let getInspectorDataForViewTag;
-let getInspectorDataForViewAtPoint;
+let getInspectorDataForViewTag: (viewTag: number) => Object;
+let getInspectorDataForViewAtPoint: (
+  findNodeHandle: (componentOrHandle: any) => ?number,
+  inspectedView: Object,
+  locationX: number,
+  locationY: number,
+  callback: (viewData: TouchedViewDataAtPoint) => mixed,
+) => void;
 
 if (__DEV__) {
   getInspectorDataForViewTag = function(viewTag: number): Object {
