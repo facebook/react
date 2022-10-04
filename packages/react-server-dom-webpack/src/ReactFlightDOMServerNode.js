@@ -8,6 +8,7 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 import type {Writable} from 'stream';
 import type {ServerContextJSONValue} from 'shared/ReactTypes';
@@ -19,7 +20,7 @@ import {
   abort,
 } from 'react-server/src/ReactFlightServer';
 
-function createDrainHandler(destination, request) {
+function createDrainHandler(destination: Destination, request) {
   return () => startFlowing(request, destination);
 }
 

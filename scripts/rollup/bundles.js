@@ -275,7 +275,7 @@ const bundles = [
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'react-dom'],
     babel: opts =>
       Object.assign({}, opts, {
         plugins: opts.plugins.concat([
@@ -288,7 +288,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-dom/src/server/ReactDOMLegacyServerNode.js',
     name: 'react-dom-server-legacy.node',
-    externals: ['react', 'stream'],
+    externals: ['react', 'stream', 'react-dom'],
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     babel: opts =>
@@ -308,7 +308,7 @@ const bundles = [
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'react-dom'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -318,7 +318,7 @@ const bundles = [
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util'],
+    externals: ['react', 'util', 'react-dom'],
   },
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
@@ -327,7 +327,7 @@ const bundles = [
     global: 'ReactDOMServerStreaming',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'react-dom'],
   },
 
   /******* React DOM Fizz Static *******/
@@ -338,7 +338,7 @@ const bundles = [
     global: 'ReactDOMStatic',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'react-dom'],
   },
   {
     bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
@@ -348,7 +348,7 @@ const bundles = [
     global: 'ReactDOMStatic',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'stream'],
+    externals: ['react', 'util', 'stream', 'react-dom'],
   },
 
   /******* React Server DOM Webpack Writer *******/
@@ -359,7 +359,7 @@ const bundles = [
     global: 'ReactServerDOMWriter',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'react-dom'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -368,7 +368,7 @@ const bundles = [
     global: 'ReactServerDOMWriter',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util'],
+    externals: ['react', 'util', 'react-dom'],
   },
 
   /******* React Server DOM Webpack Reader *******/

@@ -367,7 +367,11 @@ const DispatcherProxyHandler = {
   },
 };
 
-const DispatcherProxy = new Proxy(Dispatcher, DispatcherProxyHandler);
+// `Proxy` may not exist on some platforms
+const DispatcherProxy =
+  typeof Proxy === 'undefined'
+    ? Dispatcher
+    : new Proxy(Dispatcher, DispatcherProxyHandler);
 
 // Inspect
 
@@ -783,7 +787,7 @@ export function inspectHooksOfFiber(
   fiber: Fiber,
   currentDispatcher: ?CurrentDispatcherRef,
   includeHooksSource?: boolean = false,
-) {
+): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
   if (currentDispatcher == null) {

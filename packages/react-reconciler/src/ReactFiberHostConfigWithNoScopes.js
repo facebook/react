@@ -10,7 +10,7 @@
 // Renderers that don't support React Scopes
 // can re-export everything from this module.
 
-function shim(...args: any) {
+function shim(...args: any): empty {
   throw new Error(
     'The current renderer does not support React Scopes. ' +
       'This error is likely caused by a bug in React. ' +

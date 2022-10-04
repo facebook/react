@@ -61,7 +61,7 @@ export class UserTimingMarksView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): Size {
     return this._intrinsicSize;
   }
 

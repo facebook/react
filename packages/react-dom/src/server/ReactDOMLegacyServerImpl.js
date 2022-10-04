@@ -21,7 +21,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from './ReactDOMServerLegacyFormatConfig';
+} from 'react-dom-bindings/src/server/ReactDOMServerLegacyFormatConfig';
 
 type ServerOptions = {
   identifierPrefix?: string,

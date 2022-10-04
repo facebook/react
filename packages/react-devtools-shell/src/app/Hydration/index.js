@@ -106,7 +106,7 @@ function useInnerBaz() {
   return count;
 }
 
-export default function Hydration() {
+export default function Hydration(): React.Node {
   return (
     <Fragment>
       <h1>Hydration</h1>

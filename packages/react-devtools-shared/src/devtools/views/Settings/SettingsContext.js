@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import * as React from 'react';
 import {
   createContext,
@@ -67,7 +69,9 @@ type Context = {
   setTraceUpdatesEnabled: (value: boolean) => void,
 };
 
-const SettingsContext = createContext<Context>(((null: any): Context));
+const SettingsContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 SettingsContext.displayName = 'SettingsContext';
 
 function useLocalStorageWithLog<T>(
@@ -100,7 +104,7 @@ function SettingsContextController({
   children,
   componentsPortalContainer,
   profilerPortalContainer,
-}: Props) {
+}: Props): React.Node {
   const bridge = useContext(BridgeContext);
 
   const [

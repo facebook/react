@@ -264,11 +264,18 @@ function resolveLazy(lazyType) {
   return init(payload);
 }
 
+type ChildReconciler = (
+  returnFiber: Fiber,
+  currentFirstChild: Fiber | null,
+  newChild: any,
+  lanes: Lanes,
+) => Fiber | null;
+
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
-function ChildReconciler(shouldTrackSideEffects) {
+function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
   function deleteChild(returnFiber: Fiber, childToDelete: Fiber): void {
     if (!shouldTrackSideEffects) {
       // Noop.
@@ -1352,8 +1359,10 @@ function ChildReconciler(shouldTrackSideEffects) {
   return reconcileChildFibers;
 }
 
-export const reconcileChildFibers = ChildReconciler(true);
-export const mountChildFibers = ChildReconciler(false);
+export const reconcileChildFibers: ChildReconciler = createChildReconciler(
+  true,
+);
+export const mountChildFibers: ChildReconciler = createChildReconciler(false);
 
 export function cloneChildFibers(
   current: Fiber | null,

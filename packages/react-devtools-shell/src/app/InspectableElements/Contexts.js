@@ -237,7 +237,7 @@ class ModernClassContextConsumerWithUpdates extends Component<any> {
   }
 }
 
-export default function Contexts() {
+export default function Contexts(): React.Node {
   return (
     <div>
       <h1>Contexts</h1>

@@ -75,7 +75,7 @@ export default function KeyValue({
   pathRoot,
   store,
   value,
-}: KeyValueProps) {
+}: KeyValueProps): React.Node {
   const {readOnly: readOnlyGlobalFlag} = useContext(OptionsContext);
   canDeletePaths = !readOnlyGlobalFlag && canDeletePaths;
   canEditValues = !readOnlyGlobalFlag && canEditValues;

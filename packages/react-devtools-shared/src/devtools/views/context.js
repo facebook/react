@@ -7,18 +7,21 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
 import {createContext} from 'react';
 import Store from '../store';
 
 import type {ViewAttributeSource} from 'react-devtools-shared/src/devtools/views/DevTools';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
-export const BridgeContext = createContext<FrontendBridge>(
+export const BridgeContext: ReactContext<FrontendBridge> = createContext<FrontendBridge>(
   ((null: any): FrontendBridge),
 );
 BridgeContext.displayName = 'BridgeContext';
 
-export const StoreContext = createContext<Store>(((null: any): Store));
+export const StoreContext: ReactContext<Store> = createContext<Store>(
+  ((null: any): Store),
+);
 StoreContext.displayName = 'StoreContext';
 
 export type ContextMenuContextType = {
@@ -26,10 +29,12 @@ export type ContextMenuContextType = {
   viewAttributeSourceFunction: ViewAttributeSource | null,
 };
 
-export const ContextMenuContext = createContext<ContextMenuContextType>({
-  isEnabledForInspectedElement: false,
-  viewAttributeSourceFunction: null,
-});
+export const ContextMenuContext: ReactContext<ContextMenuContextType> = createContext<ContextMenuContextType>(
+  {
+    isEnabledForInspectedElement: false,
+    viewAttributeSourceFunction: null,
+  },
+);
 ContextMenuContext.displayName = 'ContextMenuContext';
 
 export type OptionsContextType = {
@@ -41,11 +46,13 @@ export type OptionsContextType = {
   hideViewSourceAction: boolean,
 };
 
-export const OptionsContext = createContext<OptionsContextType>({
-  readOnly: false,
-  hideSettings: false,
-  hideToggleErrorAction: false,
-  hideToggleSuspenseAction: false,
-  hideLogAction: false,
-  hideViewSourceAction: false,
-});
+export const OptionsContext: ReactContext<OptionsContextType> = createContext<OptionsContextType>(
+  {
+    readOnly: false,
+    hideSettings: false,
+    hideToggleErrorAction: false,
+    hideToggleSuspenseAction: false,
+    hideLogAction: false,
+    hideViewSourceAction: false,
+  },
+);

@@ -11,7 +11,7 @@ import * as React from 'react';
 import LoadingAnimation from 'react-devtools-shared/src/devtools/views/Components/LoadingAnimation';
 import styles from './shared.css';
 
-export default function SearchingGitHubIssues() {
+export default function SearchingGitHubIssues(): React.Node {
   return (
     <div className={styles.GitHubLinkRow}>
       <LoadingAnimation className={styles.LoadingIcon} />

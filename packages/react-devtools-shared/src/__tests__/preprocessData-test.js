@@ -1926,7 +1926,7 @@ describe('Timeline profiler', () => {
   });
 
   // Note the in-memory tests vary slightly (e.g. timestamp values, lane numbers) from the above tests.
-  // That's okay; the important thing is the the lane-to-label matches the subsequent events/measures.
+  // That's okay; the important thing is the lane-to-label matches the subsequent events/measures.
   describe('DevTools hook (in memory)', () => {
     let store;
 

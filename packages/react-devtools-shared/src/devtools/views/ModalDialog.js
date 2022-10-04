@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
 import * as React from 'react';
 import {
   createContext,
@@ -55,7 +56,7 @@ type ModalDialogContextType = {
   dispatch: Dispatch,
 };
 
-const ModalDialogContext = createContext<ModalDialogContextType>(
+const ModalDialogContext: ReactContext<ModalDialogContextType> = createContext<ModalDialogContextType>(
   ((null: any): ModalDialogContextType),
 );
 ModalDialogContext.displayName = 'ModalDialogContext';
@@ -87,7 +88,7 @@ type Props = {
   children: React$Node,
 };
 
-function ModalDialogContextController({children}: Props) {
+function ModalDialogContextController({children}: Props): React.Node {
   const [state, dispatch] = useReducer<State, State, Action>(dialogReducer, {
     dialogs: [],
   });
@@ -107,7 +108,7 @@ function ModalDialogContextController({children}: Props) {
   );
 }
 
-function ModalDialog(_: {}) {
+function ModalDialog(_: {}): React.Node {
   const {dialogs, dispatch} = useContext(ModalDialogContext);
 
   if (dialogs.length === 0) {

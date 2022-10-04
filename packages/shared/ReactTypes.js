@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+
 export type ReactNode =
   | React$Element<any>
   | ReactPortal
@@ -207,7 +209,8 @@ export type Thenable<T> =
 export type OffscreenMode =
   | 'hidden'
   | 'unstable-defer-without-hiding'
-  | 'visible';
+  | 'visible'
+  | 'manual';
 
 export type StartTransitionOptions = {
   name?: string,

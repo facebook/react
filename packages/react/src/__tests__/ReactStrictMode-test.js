@@ -67,7 +67,7 @@ describe('ReactStrictMode', () => {
     );
   });
 
-  // @gate __DEV__ && !enableStrictEffects
+  // @gate __DEV__
   it('should invoke precommit lifecycle methods twice', () => {
     let log = [];
     let shouldComponentUpdate = false;

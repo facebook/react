@@ -60,6 +60,8 @@
 // log2(32) = 5 bits. That means we can lop bits off the end 5 at a time without
 // affecting the final result.
 
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+
 import {getIsHydrating} from './ReactFiberHydrationContext.old';
 import {clz32} from './clz32';
 import {Forked, NoFlags} from './ReactFiberFlags';

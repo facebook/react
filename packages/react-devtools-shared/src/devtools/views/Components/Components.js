@@ -258,4 +258,6 @@ function setResizeCSSVariable(
   }
 }
 
-export default portaledContent(Components);
+export default (portaledContent(
+  Components,
+): React$StatelessFunctionalComponent<{}>);

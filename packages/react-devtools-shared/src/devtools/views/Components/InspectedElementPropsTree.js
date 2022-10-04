@@ -35,7 +35,7 @@ export default function InspectedElementPropsTree({
   element,
   inspectedElement,
   store,
-}: Props) {
+}: Props): React.Node {
   const {readOnly} = React.useContext(OptionsContext);
 
   const {

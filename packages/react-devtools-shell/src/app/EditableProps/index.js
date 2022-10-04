@@ -122,7 +122,7 @@ const ForwardRef = forwardRef<{name: string}, HTMLUListElement>(
   },
 );
 
-export default function EditableProps() {
+export default function EditableProps(): React.Node {
   return (
     <Fragment>
       <h1>Editable props</h1>

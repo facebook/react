@@ -36,7 +36,7 @@ export default function InspectedElementContextTree({
   element,
   inspectedElement,
   store,
-}: Props) {
+}: Props): React.Node {
   const {hasLegacyContext, context, type} = inspectedElement;
 
   const isReadOnly = type !== ElementTypeClass && type !== ElementTypeFunction;

@@ -599,13 +599,13 @@ export function injectIntoGlobalHook(globalObject: any): void {
   }
 }
 
-export function hasUnrecoverableErrors() {
+export function hasUnrecoverableErrors(): boolean {
   // TODO: delete this after removing dependency in RN.
   return false;
 }
 
 // Exposed for testing.
-export function _getMountedRootCount() {
+export function _getMountedRootCount(): number {
   if (__DEV__) {
     return mountedRoots.size;
   } else {
@@ -637,7 +637,12 @@ export function _getMountedRootCount() {
 //   'useState{[foo, setFoo]}(0)',
 //   () => [useCustomHook], /* Lazy to avoid triggering inline requires */
 // );
-export function createSignatureFunctionForTransform() {
+export function createSignatureFunctionForTransform(): <T>(
+  type: T,
+  key: string,
+  forceReset?: boolean,
+  getCustomHooks?: () => Array<Function>,
+) => T | void {
   if (__DEV__) {
     let savedType;
     let hasCustomHooks;
@@ -654,6 +659,7 @@ export function createSignatureFunctionForTransform() {
         // in HOC chains like _s(hoc1(_s(hoc2(_s(actualFunction))))).
         if (!savedType) {
           // We're in the innermost call, so this is the actual type.
+          // $FlowFixMe[escaped-generic] discovered when updating Flow
           savedType = type;
           hasCustomHooks = typeof getCustomHooks === 'function';
         }

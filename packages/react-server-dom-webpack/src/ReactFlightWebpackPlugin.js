@@ -29,7 +29,7 @@ class ClientReferenceDependency extends ModuleDependency {
     super(request);
   }
 
-  get type() {
+  get type(): string {
     return 'client-reference';
   }
 }
@@ -327,7 +327,7 @@ export default class ReactFlightWebpackPlugin {
             contextModuleFactory.resolveDependencies(
               fs,
               options,
-              (err2: null | Error, deps: Array<ModuleDependency>) => {
+              (err2: null | Error, deps: Array<any /*ModuleDependency*/>) => {
                 if (err2) return cb(err2);
                 const clientRefDeps = deps.map(dep => {
                   // use userRequest instead of request. request always end with undefined which is wrong

@@ -28,7 +28,7 @@ function getChangeLogUrl(version: ?string): string | null {
   return `${CHANGE_LOG_URL}#${versionAnchor}`;
 }
 
-export default function GeneralSettings(_: {}) {
+export default function GeneralSettings(_: {}): React.Node {
   const {
     displayDensity,
     setDisplayDensity,

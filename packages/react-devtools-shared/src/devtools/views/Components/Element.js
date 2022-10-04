@@ -32,7 +32,7 @@ type Props = {
   ...
 };
 
-export default function Element({data, index, style}: Props) {
+export default function Element({data, index, style}: Props): React.Node {
   const store = useContext(StoreContext);
   const {ownerFlatTree, ownerID, selectedElementID} = useContext(
     TreeStateContext,

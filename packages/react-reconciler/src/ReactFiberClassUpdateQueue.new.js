@@ -164,7 +164,7 @@ let hasForceUpdate = false;
 
 let didWarnUpdateInsideUpdate;
 let currentlyProcessingQueue;
-export let resetCurrentlyProcessingQueue;
+export let resetCurrentlyProcessingQueue: () => void;
 if (__DEV__) {
   didWarnUpdateInsideUpdate = false;
   currentlyProcessingQueue = null;
@@ -476,6 +476,7 @@ export function processUpdateQueue<State>(
   hasForceUpdate = false;
 
   if (__DEV__) {
+    // $FlowFixMe[escaped-generic] discovered when updating Flow
     currentlyProcessingQueue = queue.shared;
   }
 

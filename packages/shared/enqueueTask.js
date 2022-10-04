@@ -10,7 +10,7 @@
 let didWarnAboutMessageChannel = false;
 let enqueueTaskImpl = null;
 
-export default function enqueueTask(task: () => void) {
+export default function enqueueTask(task: () => void): void {
   if (enqueueTaskImpl === null) {
     try {
       // read require off the module object to get around the bundlers.

@@ -13,7 +13,10 @@ import type {
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
 
-import {queueExplicitHydrationTarget} from '../events/ReactDOMEventReplaying';
+import ReactDOMSharedInternals from '../ReactDOMSharedInternals';
+const {Dispatcher} = ReactDOMSharedInternals;
+import {ReactDOMClientDispatcher} from 'react-dom-bindings/src/client/ReactDOMFloatClient';
+import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {enableFloat} from 'shared/ReactFeatureFlags';
 
@@ -51,14 +54,14 @@ import {
   isContainerMarkedAsRoot,
   markContainerAsRoot,
   unmarkContainerAsRoot,
-} from './ReactDOMComponentTree';
-import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
+} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
+import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
 import {
   ELEMENT_NODE,
   COMMENT_NODE,
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
-} from '../shared/HTMLNodeType';
+} from 'react-dom-bindings/src/shared/HTMLNodeType';
 
 import {
   createContainer,
@@ -235,6 +238,10 @@ export function createRoot(
   );
   markContainerAsRoot(root.current, container);
 
+  if (enableFloat) {
+    // Set the default dispatcher to the client dispatcher
+    Dispatcher.current = ReactDOMClientDispatcher;
+  }
   const rootContainerElement: Document | Element | DocumentFragment =
     container.nodeType === COMMENT_NODE
       ? (container.parentNode: any)
@@ -319,6 +326,10 @@ export function hydrateRoot(
     transitionCallbacks,
   );
   markContainerAsRoot(root.current, container);
+  if (enableFloat) {
+    // Set the default dispatcher to the client dispatcher
+    Dispatcher.current = ReactDOMClientDispatcher;
+  }
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
   listenToAllSupportedEvents(container);
 

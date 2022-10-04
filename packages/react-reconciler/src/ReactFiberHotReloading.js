@@ -7,16 +7,13 @@
  * @flow
  */
 
-import {enableNewReconciler} from 'shared/ReactFeatureFlags';
+import type {Fiber} from './ReactInternalTypes';
+import type {ReactElement} from '../../shared/ReactElementType';
+import type {Instance} from './ReactFiberHostConfig';
+import type {FiberRoot} from './ReactInternalTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
-export type {
-  Family,
-  RefreshUpdate,
-  SetRefreshHandler,
-  ScheduleRefresh,
-  ScheduleRoot,
-  FindHostInstancesForRefresh,
-} from './ReactFiberHotReloading';
+import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 
 import {
   setRefreshHandler as setRefreshHandler_old,
@@ -42,30 +39,56 @@ import {
   findHostInstancesForRefresh as findHostInstancesForRefresh_new,
 } from './ReactFiberHotReloading.new';
 
-export const setRefreshHandler = enableNewReconciler
-  ? setRefreshHandler_new
-  : setRefreshHandler_old;
-export const resolveFunctionForHotReloading = enableNewReconciler
+export type Family = {
+  current: any,
+};
+
+export type RefreshUpdate = {
+  staleFamilies: Set<Family>,
+  updatedFamilies: Set<Family>,
+};
+
+// Resolves type to a family.
+export type RefreshHandler = any => Family | void;
+
+// Used by React Refresh runtime through DevTools Global Hook.
+export type SetRefreshHandler = (handler: RefreshHandler | null) => void;
+export type ScheduleRefresh = (root: FiberRoot, update: RefreshUpdate) => void;
+export type ScheduleRoot = (root: FiberRoot, element: ReactNodeList) => void;
+export type FindHostInstancesForRefresh = (
+  root: FiberRoot,
+  families: Array<Family>,
+) => Set<Instance>;
+
+export const setRefreshHandler: (
+  handler: RefreshHandler | null,
+) => void = enableNewReconciler ? setRefreshHandler_new : setRefreshHandler_old;
+export const resolveFunctionForHotReloading: typeof resolveFunctionForHotReloading_new = enableNewReconciler
   ? resolveFunctionForHotReloading_new
   : resolveFunctionForHotReloading_old;
-export const resolveClassForHotReloading = enableNewReconciler
+export const resolveClassForHotReloading: typeof resolveClassForHotReloading_new = enableNewReconciler
   ? resolveClassForHotReloading_new
   : resolveClassForHotReloading_old;
-export const resolveForwardRefForHotReloading = enableNewReconciler
+export const resolveForwardRefForHotReloading: typeof resolveForwardRefForHotReloading_new = enableNewReconciler
   ? resolveForwardRefForHotReloading_new
   : resolveForwardRefForHotReloading_old;
-export const isCompatibleFamilyForHotReloading = enableNewReconciler
+export const isCompatibleFamilyForHotReloading: (
+  fiber: Fiber,
+  element: ReactElement,
+) => boolean = enableNewReconciler
   ? isCompatibleFamilyForHotReloading_new
   : isCompatibleFamilyForHotReloading_old;
-export const markFailedErrorBoundaryForHotReloading = enableNewReconciler
+export const markFailedErrorBoundaryForHotReloading: (
+  fiber: Fiber,
+) => void = enableNewReconciler
   ? markFailedErrorBoundaryForHotReloading_new
   : markFailedErrorBoundaryForHotReloading_old;
-export const scheduleRefresh = enableNewReconciler
+export const scheduleRefresh: ScheduleRefresh = enableNewReconciler
   ? scheduleRefresh_new
   : scheduleRefresh_old;
-export const scheduleRoot = enableNewReconciler
+export const scheduleRoot: ScheduleRoot = enableNewReconciler
   ? scheduleRoot_new
   : scheduleRoot_old;
-export const findHostInstancesForRefresh = enableNewReconciler
+export const findHostInstancesForRefresh: FindHostInstancesForRefresh = enableNewReconciler
   ? findHostInstancesForRefresh_new
   : findHostInstancesForRefresh_old;

@@ -10,10 +10,18 @@
 /* eslint-disable react-internal/prod-error-codes */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {Fiber} from './ReactInternalTypes';
-import type {FiberRoot} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
+
+import type {
+  Family,
+  FindHostInstancesForRefresh,
+  RefreshHandler,
+  RefreshUpdate,
+  ScheduleRefresh,
+  ScheduleRoot,
+} from './ReactFiberHotReloading';
 
 import {
   flushSync,
@@ -29,6 +37,7 @@ import {
   FunctionComponent,
   ForwardRef,
   HostComponent,
+  HostResource,
   HostPortal,
   HostRoot,
   MemoComponent,
@@ -39,27 +48,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-
-export type Family = {
-  current: any,
-};
-
-export type RefreshUpdate = {
-  staleFamilies: Set<Family>,
-  updatedFamilies: Set<Family>,
-};
-
-// Resolves type to a family.
-type RefreshHandler = any => Family | void;
-
-// Used by React Refresh runtime through DevTools Global Hook.
-export type SetRefreshHandler = (handler: RefreshHandler | null) => void;
-export type ScheduleRefresh = (root: FiberRoot, update: RefreshUpdate) => void;
-export type ScheduleRoot = (root: FiberRoot, element: ReactNodeList) => void;
-export type FindHostInstancesForRefresh = (
-  root: FiberRoot,
-  families: Array<Family>,
-) => Set<Instance>;
+import {enableFloat} from 'shared/ReactFeatureFlags';
 
 let resolveFamily: RefreshHandler | null = null;
 // $FlowFixMe Flow gets confused by a WeakSet feature check below.
@@ -462,7 +451,10 @@ function findChildHostInstancesForFiberShallowly(
     let node: Fiber = fiber;
     let foundHostInstances = false;
     while (true) {
-      if (node.tag === HostComponent) {
+      if (
+        node.tag === HostComponent ||
+        (enableFloat ? node.tag === HostResource : false)
+      ) {
         // We got a match.
         foundHostInstances = true;
         hostInstances.add(node.stateNode);

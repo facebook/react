@@ -78,13 +78,40 @@ function serializeRowHeader(tag: string, id: number) {
   return tag + id.toString(16) + ':';
 }
 
-export function processErrorChunk(
+export function processErrorChunkProd(
   request: Request,
   id: number,
+  digest: string,
+): Chunk {
+  if (__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'processErrorChunkProd should never be called while in development mode. Use processErrorChunkDev instead. This is a bug in React.',
+    );
+  }
+
+  const errorInfo: any = {digest};
+  const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
+  return stringToChunk(row);
+}
+
+export function processErrorChunkDev(
+  request: Request,
+  id: number,
+  digest: string,
   message: string,
   stack: string,
 ): Chunk {
-  const errorInfo = {message, stack};
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'processErrorChunkDev should never be called while in production mode. Use processErrorChunkProd instead. This is a bug in React.',
+    );
+  }
+
+  const errorInfo: any = {digest, message, stack};
   const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
   return stringToChunk(row);
 }

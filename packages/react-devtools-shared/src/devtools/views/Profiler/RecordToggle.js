@@ -19,7 +19,7 @@ export type Props = {
   disabled?: boolean,
 };
 
-export default function RecordToggle({disabled}: Props) {
+export default function RecordToggle({disabled}: Props): React.Node {
   const {isProfiling, startProfiling, stopProfiling} = useContext(
     ProfilerContext,
   );

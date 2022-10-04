@@ -12,7 +12,7 @@ import {Fragment, useState} from 'react';
 // $FlowFixMe
 import {Button, Text, View} from 'react-native-web';
 
-export default function ReactNativeWeb() {
+export default function ReactNativeWeb(): React.Node {
   const [backgroundColor, setBackgroundColor] = useState('purple');
   const toggleColor = () =>
     setBackgroundColor(backgroundColor === 'purple' ? 'green' : 'purple');

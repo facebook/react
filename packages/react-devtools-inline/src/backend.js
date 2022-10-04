@@ -9,7 +9,7 @@ import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyl
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {Wall} from 'react-devtools-shared/src/types';
 
-function startActivation(contentWindow: window, bridge: BackendBridge) {
+function startActivation(contentWindow: any, bridge: BackendBridge) {
   const onSavedPreferences = data => {
     // This is the only message we're listening for,
     // so it's safe to cleanup after we've received it.
@@ -55,7 +55,7 @@ function startActivation(contentWindow: window, bridge: BackendBridge) {
   bridge.send('getSavedPreferences');
 }
 
-function finishActivation(contentWindow: window, bridge: BackendBridge) {
+function finishActivation(contentWindow: any, bridge: BackendBridge) {
   const agent = new Agent(bridge);
 
   const hook = contentWindow.__REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -75,7 +75,7 @@ function finishActivation(contentWindow: window, bridge: BackendBridge) {
 }
 
 export function activate(
-  contentWindow: window,
+  contentWindow: any,
   {
     bridge,
   }: {
@@ -89,10 +89,7 @@ export function activate(
   startActivation(contentWindow, bridge);
 }
 
-export function createBridge(
-  contentWindow: window,
-  wall?: Wall,
-): BackendBridge {
+export function createBridge(contentWindow: any, wall?: Wall): BackendBridge {
   const {parent} = contentWindow;
 
   if (wall == null) {
@@ -115,6 +112,6 @@ export function createBridge(
   return (new Bridge(wall): BackendBridge);
 }
 
-export function initialize(contentWindow: window): void {
+export function initialize(contentWindow: any): void {
   installHook(contentWindow);
 }

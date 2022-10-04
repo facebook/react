@@ -97,7 +97,7 @@ function guessEditor(): Array<string> {
     }
   }
 
-  // Last resort, use old skool env vars
+  // Last resort, use old-school env vars
   if (process.env.VISUAL) {
     return [process.env.VISUAL];
   } else if (process.env.EDITOR) {

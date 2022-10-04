@@ -59,7 +59,7 @@ export default function InspectedElementView({
   inspectedElement,
   parseHookNames,
   toggleParseHookNames,
-}: Props) {
+}: Props): React.Node {
   const {id} = element;
   const {
     owners,

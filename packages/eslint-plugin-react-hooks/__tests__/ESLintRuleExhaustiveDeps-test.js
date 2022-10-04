@@ -1630,7 +1630,7 @@ const tests = {
                     }, 1000);
                     return () => clearInterval(id);
                   }, [setCount]);
-        
+
                   return <h1>{count}</h1>;
                 }
               `,
@@ -7629,6 +7629,24 @@ const tests = {
     },
   ],
 };
+
+if (__EXPERIMENTAL__) {
+  tests.valid = [
+    ...tests.valid,
+    {
+      code: normalizeIndent`
+      function MyComponent({ theme }) {
+        const onStuff = useEvent(() => {
+          showNotification(theme);
+        });
+        useEffect(() => {
+          onStuff();
+        }, []);
+      }
+    `,
+    },
+  ];
+}
 
 // Tests that are only valid/invalid across parsers supporting Flow
 const testsFlow = {

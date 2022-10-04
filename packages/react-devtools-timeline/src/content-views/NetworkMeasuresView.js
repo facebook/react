@@ -81,7 +81,7 @@ export class NetworkMeasuresView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): IntrinsicSize {
     return this._intrinsicSize;
   }
 

@@ -58,7 +58,7 @@ export function getCurrentUpdatePriority(): EventPriority {
     : (getCurrentUpdatePriority_old(): any);
 }
 
-export function setCurrentUpdatePriority(priority: EventPriority) {
+export function setCurrentUpdatePriority(priority: EventPriority): void {
   return enableNewReconciler
     ? setCurrentUpdatePriority_new((priority: any))
     : setCurrentUpdatePriority_old((priority: any));

@@ -473,6 +473,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     logRecoverableError() {
       // no-op
     },
+
+    requestPostPaintCallback(callback) {
+      const endTime = Scheduler.unstable_now();
+      callback(endTime);
+    },
+    prepareRendererToRender() {},
+    resetRendererAfterRender() {},
   };
 
   const hostConfig = useMutation

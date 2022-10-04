@@ -59,7 +59,7 @@ module.exports = {
     'space-before-blocks': ERROR,
     'space-before-function-paren': OFF,
     'valid-typeof': [ERROR, {requireStringLiterals: true}],
-    // Flow fails with with non-string literal keys
+    // Flow fails with non-string literal keys
     'no-useless-computed-key': OFF,
 
     // We apply these settings to files that should run on Node.

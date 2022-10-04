@@ -9,7 +9,7 @@
 
 'use strict';
 
-jest.mock('../events/isEventSupported');
+jest.mock('react-dom-bindings/src/events/isEventSupported');
 
 describe('InvalidEventListeners', () => {
   let React;

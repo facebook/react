@@ -148,8 +148,8 @@ class OverlayTip {
 }
 
 export default class Overlay {
-  window: window;
-  tipBoundsWindow: window;
+  window: any;
+  tipBoundsWindow: any;
   container: HTMLElement;
   tip: OverlayTip;
   rects: Array<OverlayRect>;

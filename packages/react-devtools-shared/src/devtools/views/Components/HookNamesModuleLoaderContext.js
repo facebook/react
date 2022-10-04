@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import type {Thenable} from 'shared/ReactTypes';
 
 import {createContext} from 'react';
@@ -16,7 +18,9 @@ export type HookNamesModuleLoaderFunction = () => Thenable<ParseHookNamesModule>
 export type Context = HookNamesModuleLoaderFunction | null;
 
 // TODO (Webpack 5) Hopefully we can remove this context entirely once the Webpack 5 upgrade is completed.
-const HookNamesModuleLoaderContext = createContext<Context>(null);
+const HookNamesModuleLoaderContext: ReactContext<Context> = createContext<Context>(
+  null,
+);
 HookNamesModuleLoaderContext.displayName = 'HookNamesModuleLoaderContext';
 
 export default HookNamesModuleLoaderContext;

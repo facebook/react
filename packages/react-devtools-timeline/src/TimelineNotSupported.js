@@ -12,7 +12,7 @@ import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 
 import styles from './TimelineNotSupported.css';
 
-export default function TimelineNotSupported() {
+export default function TimelineNotSupported(): React.Node {
   return (
     <div className={styles.Column}>
       <div className={styles.Header}>Timeline profiling not supported.</div>

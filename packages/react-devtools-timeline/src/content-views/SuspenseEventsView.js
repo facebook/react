@@ -85,7 +85,7 @@ export class SuspenseEventsView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): IntrinsicSize {
     return this._intrinsicSize;
   }
 

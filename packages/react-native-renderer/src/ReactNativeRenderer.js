@@ -8,7 +8,7 @@
  */
 
 import type {HostComponent} from './ReactNativeTypes';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactPortal, ReactNodeList} from 'shared/ReactTypes';
 import type {ElementRef, Element, ElementType} from 'react';
 
 import './ReactNativeInjection';
@@ -248,7 +248,7 @@ function createPortal(
   children: ReactNodeList,
   containerTag: number,
   key: ?string = null,
-) {
+): ReactPortal {
   return createPortalImpl(children, containerTag, null, key);
 }
 

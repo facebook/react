@@ -102,7 +102,7 @@ class FlamechartStackLayerView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): Size {
     return this._intrinsicSize;
   }
 
@@ -342,7 +342,12 @@ export class FlamechartView extends View {
     this._flamechartRowViews.forEach(rowView => (rowView._onHover = onHover));
   }
 
-  desiredSize() {
+  desiredSize(): {
+    height: number,
+    hideScrollBarIfLessThanHeight?: number,
+    maxInitialHeight?: number,
+    width: number,
+  } {
     // Ignore the wishes of the background color view
     const intrinsicSize = this._verticalStackView.desiredSize();
     return {

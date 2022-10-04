@@ -15,7 +15,7 @@ import SearchInput from '../SearchInput';
 
 type Props = {};
 
-export default function ComponentSearchInput(props: Props) {
+export default function ComponentSearchInput(props: Props): React.Node {
   const {searchIndex, searchResults, searchText} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
 

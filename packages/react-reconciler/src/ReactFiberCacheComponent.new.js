@@ -8,6 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import {enableCache} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
@@ -17,7 +18,7 @@ import * as Scheduler from 'scheduler';
 
 // In environments without AbortController (e.g. tests)
 // replace it with a lightweight shim that only has the features we use.
-const AbortControllerLocal = enableCache
+const AbortControllerLocal: typeof AbortController = enableCache
   ? typeof AbortController !== 'undefined'
     ? AbortController
     : (function AbortControllerShim() {

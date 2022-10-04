@@ -9,7 +9,9 @@
 
 // TODO: This is pretty well supported by browsers. Maybe we can drop it.
 
-export const clz32 = Math.clz32 ? Math.clz32 : clz32Fallback;
+export const clz32: (x: number) => number = Math.clz32
+  ? Math.clz32
+  : clz32Fallback;
 
 // Count leading zeros.
 // Based on:

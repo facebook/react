@@ -23,7 +23,7 @@ export default function ReloadAndProfileButton({
   disabled,
 }: {
   disabled: boolean,
-}) {
+}): React.Node {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 

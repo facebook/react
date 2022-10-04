@@ -46,6 +46,11 @@ function writeConfig(renderer, rendererInfo, isServerSupported) {
 
   const config = configTemplate
     .replace(
+      '%CI_MAX_WORKERS%\n',
+      // On CI, we seem to need to limit workers.
+      process.env.CI ? 'server.max_workers=4\n' : '',
+    )
+    .replace(
       '%REACT_RENDERER_FLOW_OPTIONS%',
       `
 module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${renderer}'

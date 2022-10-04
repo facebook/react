@@ -50,7 +50,7 @@ export default function SnapshotCommitList({
   selectedFilteredCommitIndex,
   selectCommitIndex,
   totalDurations,
-}: Props) {
+}: Props): React.Node {
   return (
     <AutoSizer>
       {({height, width}) => (
@@ -99,6 +99,7 @@ function List({
   totalDurations,
   width,
 }: ListProps) {
+  // $FlowFixMe[incompatible-use]
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
   const divRef = useRef<HTMLDivElement | null>(null);
   const prevCommitIndexRef = useRef<number | null>(null);

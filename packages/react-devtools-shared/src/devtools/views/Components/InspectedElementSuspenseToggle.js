@@ -27,7 +27,7 @@ export default function InspectedElementSuspenseToggle({
   bridge,
   inspectedElement,
   store,
-}: Props) {
+}: Props): React.Node {
   const {readOnly} = React.useContext(OptionsContext);
 
   const {id, state, type} = inspectedElement;

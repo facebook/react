@@ -53,7 +53,7 @@ function Component({label}) {
   return <div>{label}</div>;
 }
 
-export default function ErrorBoundaries() {
+export default function ErrorBoundaries(): React.Node {
   return (
     <Fragment>
       <h1>Nested error boundaries demo</h1>

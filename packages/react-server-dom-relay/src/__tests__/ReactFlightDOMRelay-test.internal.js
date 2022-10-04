@@ -31,13 +31,22 @@ describe('ReactFlightDOMRelay', () => {
   });
 
   function readThrough(data) {
-    const response = ReactDOMFlightRelayClient.createResponse(null);
+    const response = ReactDOMFlightRelayClient.createResponse();
     for (let i = 0; i < data.length; i++) {
       const chunk = data[i];
       ReactDOMFlightRelayClient.resolveRow(response, chunk);
     }
     ReactDOMFlightRelayClient.close(response);
-    const model = response.readRoot();
+    const promise = ReactDOMFlightRelayClient.getRoot(response);
+    let model;
+    let error;
+    promise.then(
+      m => (model = m),
+      e => (error = e),
+    );
+    if (error) {
+      throw error;
+    }
     return model;
   }
 

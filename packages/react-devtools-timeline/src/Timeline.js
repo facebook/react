@@ -32,7 +32,7 @@ import {TimelineSearchContextController} from './TimelineSearchContext';
 
 import styles from './Timeline.css';
 
-export function Timeline(_: {}) {
+export function Timeline(_: {}): React.Node {
   const {
     file,
     inMemoryTimelineData,

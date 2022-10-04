@@ -67,6 +67,33 @@ const forks = Object.freeze({
     return null;
   },
 
+  // Without this fork, importing `shared/ReactDOMSharedInternals` inside
+  // the `react-dom` package itself would not work due to a cyclical dependency.
+  './packages/shared/ReactDOMSharedInternals.js': (
+    bundleType,
+    entry,
+    dependencies
+  ) => {
+    if (entry === 'react-dom') {
+      return './packages/react-dom/src/ReactDOMSharedInternals.js';
+    }
+    if (
+      !entry.startsWith('react-dom/') &&
+      dependencies.indexOf('react-dom') === -1
+    ) {
+      // React DOM internals are unavailable if we can't reference the package.
+      // We return an error because we only want to throw if this module gets used.
+      return new Error(
+        'Cannot use a module that depends on ReactDOMSharedInternals ' +
+          'from "' +
+          entry +
+          '" because it does not declare "react-dom" in the package ' +
+          'dependencies or peerDependencies.'
+      );
+    }
+    return null;
+  },
+
   // We have a few forks for different environments.
   './packages/shared/ReactFeatureFlags.js': (bundleType, entry) => {
     switch (entry) {
@@ -458,7 +485,10 @@ const forks = Object.freeze({
   },
 
   // We wrap top-level listeners into guards on www.
-  './packages/react-dom/src/events/EventListener.js': (bundleType, entry) => {
+  './packages/react-dom-bindings/src/events/EventListener.js': (
+    bundleType,
+    entry
+  ) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
@@ -468,7 +498,7 @@ const forks = Object.freeze({
           return null;
         } else {
           // Use the www fork which is integrated with TimeSlice profiling.
-          return './packages/react-dom/src/events/forks/EventListener-www.js';
+          return './packages/react-dom-bindings/src/events/forks/EventListener-www.js';
         }
       default:
         return null;

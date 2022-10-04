@@ -24,6 +24,8 @@
 // For this reason, changes to the tree context are processed in sequence: tree -> search -> owners
 // This enables each section to potentially override (or mask) previous values.
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import * as React from 'react';
 import {
   createContext,
@@ -148,12 +150,12 @@ type Action =
 
 export type DispatcherContext = (action: Action) => void;
 
-const TreeStateContext = createContext<StateContext>(
+const TreeStateContext: ReactContext<StateContext> = createContext<StateContext>(
   ((null: any): StateContext),
 );
 TreeStateContext.displayName = 'TreeStateContext';
 
-const TreeDispatcherContext = createContext<DispatcherContext>(
+const TreeDispatcherContext: ReactContext<DispatcherContext> = createContext<DispatcherContext>(
   ((null: any): DispatcherContext),
 );
 TreeDispatcherContext.displayName = 'TreeDispatcherContext';
@@ -505,6 +507,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
         if (numPrevSearchResults > 0) {
           didRequestSearch = true;
           searchIndex =
+            // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
             searchIndex + 1 < numPrevSearchResults ? searchIndex + 1 : 0;
         }
         break;
@@ -834,7 +837,7 @@ function TreeContextController({
   defaultOwnerID,
   defaultSelectedElementID,
   defaultSelectedElementIndex,
-}: Props) {
+}: Props): React.Node {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 

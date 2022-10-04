@@ -67,6 +67,9 @@ export const prepareScopeUpdate = $$$hostConfig.prepareScopeUpdate;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
 export const detachDeletedInstance = $$$hostConfig.detachDeletedInstance;
+export const requestPostPaintCallback = $$$hostConfig.requestPostPaintCallback;
+export const prepareRendererToRender = $$$hostConfig.prepareRendererToRender;
+export const resetRendererAfterRender = $$$hostConfig.resetRendererAfterRender;
 
 // -------------------
 //      Microtasks
@@ -186,6 +189,13 @@ export const didNotFindHydratableTextInstance =
 export const didNotFindHydratableSuspenseInstance =
   $$$hostConfig.didNotFindHydratableSuspenseInstance;
 export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
-export const isHydratableResource = $$$hostConfig.isHydratableResource;
-export const getMatchingResourceInstance =
-  $$$hostConfig.getMatchingResourceInstance;
+
+// -------------------
+//     Resources
+//     (optional)
+// -------------------
+export const supportsResources = $$$hostConfig.supportsResources;
+export const isHostResourceType = $$$hostConfig.isHostResourceType;
+export const getResource = $$$hostConfig.getResource;
+export const acquireResource = $$$hostConfig.acquireResource;
+export const releaseResource = $$$hostConfig.releaseResource;

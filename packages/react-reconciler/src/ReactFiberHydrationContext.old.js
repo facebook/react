@@ -34,7 +34,6 @@ import {
   NoFlags,
   DidCapture,
 } from './ReactFiberFlags';
-import {enableFloat} from 'shared/ReactFeatureFlags';
 
 import {
   createFiberFromHostInstanceForDeletion,
@@ -46,9 +45,7 @@ import {
   canHydrateInstance,
   canHydrateTextInstance,
   canHydrateSuspenseInstance,
-  isHydratableResource,
   getNextHydratableSibling,
-  getMatchingResourceInstance,
   getFirstHydratableChild,
   getFirstHydratableChildWithinContainer,
   getFirstHydratableChildWithinSuspenseInstance,
@@ -78,7 +75,6 @@ import {
   restoreSuspendedTreeContext,
 } from './ReactFiberTreeContext.old';
 import {queueRecoverableErrors} from './ReactFiberWorkLoop.old';
-import {getRootHostContainer} from './ReactFiberHostContext.old';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -109,7 +105,7 @@ export function markDidThrowWhileHydratingDEV() {
   }
 }
 
-export function didSuspendOrErrorWhileHydratingDEV() {
+export function didSuspendOrErrorWhileHydratingDEV(): boolean {
   if (__DEV__) {
     return didSuspendOrErrorDEV;
   }
@@ -408,19 +404,6 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
     return;
   }
-  if (enableFloat) {
-    if (
-      fiber.tag === HostComponent &&
-      isHydratableResource(fiber.type, fiber.pendingProps)
-    ) {
-      fiber.stateNode = getMatchingResourceInstance(
-        fiber.type,
-        fiber.pendingProps,
-        getRootHostContainer(),
-      );
-      return;
-    }
-  }
   let nextInstance = nextHydratableInstance;
   if (!nextInstance) {
     if (shouldClientRenderOnMismatch(fiber)) {
@@ -613,30 +596,6 @@ function popHydrationState(fiber: Fiber): boolean {
   if (!supportsHydration) {
     return false;
   }
-  if (
-    enableFloat &&
-    isHydrating &&
-    isHydratableResource(fiber.type, fiber.memoizedProps)
-  ) {
-    if (fiber.stateNode === null) {
-      if (__DEV__) {
-        const rel = fiber.memoizedProps.rel
-          ? `rel="${fiber.memoizedProps.rel}" `
-          : '';
-        const href = fiber.memoizedProps.href
-          ? `href="${fiber.memoizedProps.href}"`
-          : '';
-        console.error(
-          'A matching Hydratable Resource was not found in the DOM for <%s %s%s>.',
-          fiber.type,
-          rel,
-          href,
-        );
-      }
-      throwOnHydrationMismatch(fiber);
-    }
-    return true;
-  }
   if (fiber !== hydrationParentFiber) {
     // We're deeper than the current hydration context, inside an inserted
     // tree.
@@ -685,7 +644,7 @@ function popHydrationState(fiber: Fiber): boolean {
   return true;
 }
 
-function hasUnhydratedTailNodes() {
+function hasUnhydratedTailNodes(): boolean {
   return isHydrating && nextHydratableInstance !== null;
 }
 

@@ -69,7 +69,7 @@ const data = Object.create(base, {
   },
 });
 
-export default function SymbolKeys() {
+export default function SymbolKeys(): React.Node {
   return <ChildComponent data={data} />;
 }
 

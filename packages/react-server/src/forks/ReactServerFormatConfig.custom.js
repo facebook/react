@@ -26,6 +26,8 @@
 declare var $$$hostConfig: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
 export opaque type ResponseState = mixed;
+export opaque type Resources = mixed;
+export opaque type BoundaryResources = mixed;
 export opaque type FormatContext = mixed;
 export opaque type SuspenseBoundaryID = mixed;
 
@@ -66,3 +68,17 @@ export const writeCompletedBoundaryInstruction =
   $$$hostConfig.writeCompletedBoundaryInstruction;
 export const writeClientRenderBoundaryInstruction =
   $$$hostConfig.writeClientRenderBoundaryInstruction;
+export const prepareToRender = $$$hostConfig.prepareToRender;
+export const cleanupAfterRender = $$$hostConfig.cleanupAfterRender;
+
+// -------------------------
+//     Resources
+// -------------------------
+export const writeInitialResources = $$$hostConfig.writeInitialResources;
+export const writeImmediateResources = $$$hostConfig.writeImmediateResources;
+export const hoistResources = $$$hostConfig.hoistResources;
+export const hoistResourcesToRoot = $$$hostConfig.hoistResourcesToRoot;
+export const createResources = $$$hostConfig.createResources;
+export const createBoundaryResources = $$$hostConfig.createBoundaryResources;
+export const setCurrentlyRenderingBoundaryResourcesTarget =
+  $$$hostConfig.setCurrentlyRenderingBoundaryResourcesTarget;
