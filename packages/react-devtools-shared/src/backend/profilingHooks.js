@@ -44,7 +44,9 @@ let performanceTarget: Performance | null = null;
 // If performance exists and supports the subset of the User Timing API that we require.
 let supportsUserTiming =
   typeof performance !== 'undefined' &&
+  // $FlowFixMe[method-unbinding]
   typeof performance.mark === 'function' &&
+  // $FlowFixMe[method-unbinding]
   typeof performance.clearMarks === 'function';
 
 let supportsUserTimingV3 = false;
@@ -76,6 +78,7 @@ if (supportsUserTimingV3) {
 
 // Some environments (e.g. React Native / Hermes) don't support the performance API yet.
 const getCurrentTime =
+  // $FlowFixMe[method-unbinding]
   typeof performance === 'object' && typeof performance.now === 'function'
     ? () => performance.now()
     : () => Date.now();

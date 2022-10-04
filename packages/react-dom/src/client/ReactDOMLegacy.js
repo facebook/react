@@ -145,6 +145,7 @@ function legacyCreateRootFromDOMContainer(
 
     const rootContainerElement =
       container.nodeType === COMMENT_NODE ? container.parentNode : container;
+    // $FlowFixMe[incompatible-call]
     listenToAllSupportedEvents(rootContainerElement);
 
     flushSync();
@@ -179,6 +180,7 @@ function legacyCreateRootFromDOMContainer(
 
     const rootContainerElement =
       container.nodeType === COMMENT_NODE ? container.parentNode : container;
+    // $FlowFixMe[incompatible-call]
     listenToAllSupportedEvents(rootContainerElement);
 
     // Initial mount should not be batched.
@@ -435,6 +437,8 @@ export function unmountComponentAtNode(container: Container): boolean {
       const isContainerReactRoot =
         container.nodeType === ELEMENT_NODE &&
         isValidContainerLegacy(container.parentNode) &&
+        // $FlowFixMe[prop-missing]
+        // $FlowFixMe[incompatible-use]
         !!container.parentNode._reactRootContainer;
 
       if (hasNonRootReactChild) {

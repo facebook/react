@@ -74,6 +74,7 @@ export function preloadModule<T>(
     if (entry === undefined) {
       const thenable = __webpack_chunk_load__(chunkId);
       promises.push(thenable);
+      // $FlowFixMe[method-unbinding]
       const resolve = chunkCache.set.bind(chunkCache, chunkId, null);
       thenable.then(resolve, ignoreReject);
       chunkCache.set(chunkId, thenable);

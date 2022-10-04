@@ -455,6 +455,7 @@ export function createElement(
     if (namespaceURI === HTML_NAMESPACE) {
       if (
         !isCustomComponentTag &&
+        // $FlowFixMe[method-unbinding]
         Object.prototype.toString.call(domElement) ===
           '[object HTMLUnknownElement]' &&
         !hasOwnProperty.call(warnedUnknownTags, type)

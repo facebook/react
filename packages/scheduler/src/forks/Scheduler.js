@@ -58,6 +58,7 @@ type Task = {
 
 let getCurrentTime: () => number | DOMHighResTimeStamp;
 const hasPerformanceNow =
+  // $FlowFixMe[method-unbinding]
   typeof performance === 'object' && typeof performance.now === 'function';
 
 if (hasPerformanceNow) {

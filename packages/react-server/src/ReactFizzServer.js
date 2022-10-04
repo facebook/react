@@ -1455,6 +1455,7 @@ function renderNodeDestructiveImpl(
       }
     }
 
+    // $FlowFixMe[method-unbinding]
     const childString = Object.prototype.toString.call(node);
 
     throw new Error(

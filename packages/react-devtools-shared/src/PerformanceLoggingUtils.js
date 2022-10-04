@@ -11,10 +11,13 @@ import {__PERFORMANCE_PROFILE__} from './constants';
 
 const supportsUserTiming =
   typeof performance !== 'undefined' &&
+  // $FlowFixMe[method-unbinding]
   typeof performance.mark === 'function' &&
+  // $FlowFixMe[method-unbinding]
   typeof performance.clearMarks === 'function';
 
 const supportsPerformanceNow =
+  // $FlowFixMe[method-unbinding]
   typeof performance !== 'undefined' && typeof performance.now === 'function';
 
 function mark(markName: string): void {

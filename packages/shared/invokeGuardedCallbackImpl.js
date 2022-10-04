@@ -12,6 +12,7 @@ function invokeGuardedCallbackProd<Args: Array<mixed>, Context>(
   func: (...Args) => mixed,
   context: Context,
 ): void {
+  // $FlowFixMe[method-unbinding]
   const funcArgs = Array.prototype.slice.call(arguments, 3);
   try {
     // $FlowFixMe[incompatible-call] Flow doesn't understand the arguments splicing.
@@ -53,6 +54,7 @@ if (__DEV__) {
     typeof window !== 'undefined' &&
     typeof window.dispatchEvent === 'function' &&
     typeof document !== 'undefined' &&
+    // $FlowFixMe[method-unbinding]
     typeof document.createEvent === 'function'
   ) {
     const fakeNode = document.createElement('react');
@@ -122,6 +124,7 @@ if (__DEV__) {
       // Create an event handler for our fake event. We will synchronously
       // dispatch our fake event using `dispatchEvent`. Inside the handler, we
       // call the user-provided callback.
+      // $FlowFixMe[method-unbinding]
       const funcArgs = Array.prototype.slice.call(arguments, 3);
       function callCallback() {
         didCall = true;

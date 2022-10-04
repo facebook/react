@@ -435,6 +435,7 @@ function isSimpleObject(object): boolean {
 }
 
 function objectName(object): string {
+  // $FlowFixMe[method-unbinding]
   const name = Object.prototype.toString.call(object);
   return name.replace(/^\[object (.*)\]$/, function(m, p0) {
     return p0;
@@ -494,6 +495,7 @@ function describeObjectForErrorMessage(
         typeof value === 'object' &&
         value !== null
       ) {
+        // $FlowFixMe[incompatible-call] found when upgrading Flow
         str += describeObjectForErrorMessage(value);
       } else {
         str += describeValueForErrorMessage(value);
@@ -521,6 +523,7 @@ function describeObjectForErrorMessage(
         typeof value === 'object' &&
         value !== null
       ) {
+        // $FlowFixMe[incompatible-call] found when upgrading Flow
         str += describeObjectForErrorMessage(value);
       } else {
         str += describeValueForErrorMessage(value);
