@@ -8,6 +8,7 @@
  */
 
 import type {Instance, Container} from './ReactDOMHostConfig';
+
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
 const {Dispatcher} = ReactDOMSharedInternals;
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
@@ -22,6 +23,7 @@ import {
   validatePreinitArguments,
 } from '../shared/ReactDOMResourceValidation';
 import {createElement, setInitialProperties} from './ReactDOMComponent';
+import {getStylesFromRoot} from './ReactDOMComponentTree';
 import {HTML_NAMESPACE} from '../shared/DOMNamespaces';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
@@ -49,7 +51,7 @@ type StyleProps = {
   'data-rprec': string,
   [string]: mixed,
 };
-type StyleResource = {
+export type StyleResource = {
   type: 'style',
 
   // Ref count for resource
@@ -110,12 +112,7 @@ export function cleanupAfterRenderResources() {
 // from Internals -> ReactDOM -> FloatClient -> Internals so this doesn't introduce a new one.
 export const ReactDOMClientDispatcher = {preload, preinit};
 
-const randomKey = Math.random()
-  .toString(36)
-  .slice(2);
-const stylesCacheKey = '__reactStyles$' + randomKey;
-
-type FloatRoot = Document | ShadowRoot;
+export type FloatRoot = Document | ShadowRoot;
 
 // global maps of Resources
 const preloadResources: Map<string, PreloadResource> = new Map();
@@ -147,14 +144,6 @@ function getDocumentForPreloads(): ?Document {
 
 function getDocumentFromRoot(root: FloatRoot): Document {
   return root.ownerDocument || root;
-}
-
-function getStylesFromRoot(root: FloatRoot): Map<string, StyleResource> {
-  let styles = (root: any)[stylesCacheKey];
-  if (!styles) {
-    styles = (root: any)[stylesCacheKey] = new Map();
-  }
-  return styles;
 }
 
 // --------------------------------------
