@@ -552,6 +552,122 @@ describe('ReactDOMFloat', () => {
     });
   });
 
+  describe('document encapsulation', () => {
+    // @gate enableFloat
+    it('can support styles inside portals to a shadowRoot', async () => {
+      const shadow = document.body.attachShadow({mode: 'open'});
+      const root = ReactDOMClient.createRoot(container);
+      root.render(
+        <>
+          <link rel="stylesheet" href="foo" precedence="default" />
+          {ReactDOM.createPortal(
+            <div>
+              <link
+                rel="stylesheet"
+                href="foo"
+                data-extra-prop="foo"
+                precedence="different"
+              />
+              shadow
+            </div>,
+            shadow,
+          )}
+          container
+        </>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-rprec="default" />
+            <link rel="preload" href="foo" as="style" />
+          </head>
+          <body>
+            <div id="container">container</div>
+          </body>
+        </html>,
+      );
+      expect(getVisibleChildren(shadow)).toEqual([
+        <link
+          rel="stylesheet"
+          href="foo"
+          data-rprec="different"
+          data-extra-prop="foo"
+        />,
+        <div>shadow</div>,
+      ]);
+    });
+    // @gate enableFloat
+    it('can support styles inside portals to an element in shadowRoots', async () => {
+      const template = document.createElement('template');
+      template.innerHTML =
+        "<div><div id='shadowcontainer1'></div><div id='shadowcontainer2'></div></div>";
+      const shadow = document.body.attachShadow({mode: 'open'});
+      shadow.appendChild(template.content);
+
+      const shadowContainer1 = shadow.getElementById('shadowcontainer1');
+      const shadowContainer2 = shadow.getElementById('shadowcontainer2');
+      const root = ReactDOMClient.createRoot(container);
+      root.render(
+        <>
+          <link rel="stylesheet" href="foo" precedence="default" />
+          {ReactDOM.createPortal(
+            <div>
+              <link rel="stylesheet" href="foo" precedence="one" />
+              <link rel="stylesheet" href="bar" precedence="two" />1
+            </div>,
+            shadow,
+          )}
+          {ReactDOM.createPortal(
+            <div>
+              <link rel="stylesheet" href="foo" precedence="one" />
+              <link rel="stylesheet" href="baz" precedence="one" />2
+            </div>,
+            shadowContainer1,
+          )}
+          {ReactDOM.createPortal(
+            <div>
+              <link rel="stylesheet" href="bar" precedence="two" />
+              <link rel="stylesheet" href="qux" precedence="three" />3
+            </div>,
+            shadowContainer2,
+          )}
+          container
+        </>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-rprec="default" />
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preload" href="bar" as="style" />
+            <link rel="preload" href="baz" as="style" />
+            <link rel="preload" href="qux" as="style" />
+          </head>
+          <body>
+            <div id="container">container</div>
+          </body>
+        </html>,
+      );
+      expect(getVisibleChildren(shadow)).toEqual([
+        <link rel="stylesheet" href="foo" data-rprec="one" />,
+        <link rel="stylesheet" href="baz" data-rprec="one" />,
+        <link rel="stylesheet" href="bar" data-rprec="two" />,
+        <link rel="stylesheet" href="qux" data-rprec="three" />,
+        <div>
+          <div id="shadowcontainer1">
+            <div>2</div>
+          </div>
+          <div id="shadowcontainer2">
+            <div>3</div>
+          </div>
+        </div>,
+        <div>1</div>,
+      ]);
+    });
+  });
+
   describe('style resources', () => {
     // @gate enableFloat
     it('treats link rel stylesheet elements as a style resource when it includes a precedence when server rendering', async () => {

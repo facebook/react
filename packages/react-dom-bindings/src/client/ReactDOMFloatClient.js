@@ -7,9 +7,11 @@
  * @flow
  */
 
-import type {Instance} from './ReactDOMHostConfig';
+import type {Instance, Container} from './ReactDOMHostConfig';
+
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
 const {Dispatcher} = ReactDOMSharedInternals;
+import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import {
   validateUnmatchedLinkResourceProps,
   validatePreloadResourceDifference,
@@ -21,7 +23,9 @@ import {
   validatePreinitArguments,
 } from '../shared/ReactDOMResourceValidation';
 import {createElement, setInitialProperties} from './ReactDOMComponent';
+import {getStylesFromRoot} from './ReactDOMComponentTree';
 import {HTML_NAMESPACE} from '../shared/DOMNamespaces';
+import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
@@ -47,7 +51,7 @@ type StyleProps = {
   'data-rprec': string,
   [string]: mixed,
 };
-type StyleResource = {
+export type StyleResource = {
   type: 'style',
 
   // Ref count for resource
@@ -66,7 +70,7 @@ type StyleResource = {
   loaded: boolean,
   error: mixed,
   instance: ?Element,
-  ownerDocument: Document,
+  root: FloatRoot,
 };
 
 type Props = {[string]: mixed};
@@ -79,11 +83,6 @@ type Resource = StyleResource | PreloadResource;
 // e = errored
 type StyleResourceLoadingState = Promise<mixed> & {s?: 'l' | 'e'};
 
-// When rendering we set the currentDocument if one exists. we use this for Resources
-// we encounter during render. If this is null and we are dispatching preloads and
-// other calls on the ReactDOM module we look for the window global and get the document from there
-let currentDocument: ?Document = null;
-
 // It is valid to preload even when we aren't actively rendering. For cases where Float functions are
 // called when there is no rendering we track the last used document. It is not safe to insert
 // arbitrary resources into the lastCurrentDocument b/c it may not actually be the document
@@ -93,14 +92,17 @@ let currentDocument: ?Document = null;
 let lastCurrentDocument: ?Document = null;
 
 let previousDispatcher = null;
-export function prepareToRenderResources(ownerDocument: Document) {
-  currentDocument = lastCurrentDocument = ownerDocument;
+export function prepareToRenderResources(rootContainer: Container) {
+  // Flot thinks that getRootNode returns a Node but it actually returns a
+  // Document or ShadowRoot
+  const rootNode: FloatRoot = (rootContainer.getRootNode(): any);
+  lastCurrentDocument = getDocumentFromRoot(rootNode);
+
   previousDispatcher = Dispatcher.current;
   Dispatcher.current = ReactDOMClientDispatcher;
 }
 
 export function cleanupAfterRenderResources() {
-  currentDocument = null;
   Dispatcher.current = previousDispatcher;
   previousDispatcher = null;
 }
@@ -110,9 +112,16 @@ export function cleanupAfterRenderResources() {
 // from Internals -> ReactDOM -> FloatClient -> Internals so this doesn't introduce a new one.
 export const ReactDOMClientDispatcher = {preload, preinit};
 
+export type FloatRoot = Document | ShadowRoot;
+
 // global maps of Resources
 const preloadResources: Map<string, PreloadResource> = new Map();
-const styleResources: Map<string, StyleResource> = new Map();
+
+function getCurrentResourceRoot(): null | FloatRoot {
+  const currentContainer = getCurrentRootHostContainer();
+  // $FlowFixMe flow should know currentContainer is a Node and has getRootNode
+  return currentContainer ? currentContainer.getRootNode() : null;
+}
 
 // Preloads are somewhat special. Even if we don't have the Document
 // used by the root that is rendering a component trying to insert a preload
@@ -121,11 +130,20 @@ const styleResources: Map<string, StyleResource> = new Map();
 // lastCurrentDocument if that exists. As a fallback we will use the window.document
 // if available.
 function getDocumentForPreloads(): ?Document {
-  try {
-    return currentDocument || lastCurrentDocument || window.document;
-  } catch (error) {
-    return null;
+  const root = getCurrentResourceRoot();
+  if (root) {
+    return root.ownerDocument || root;
+  } else {
+    try {
+      return lastCurrentDocument || window.document;
+    } catch (error) {
+      return null;
+    }
   }
+}
+
+function getDocumentFromRoot(root: FloatRoot): Document {
+  return root.ownerDocument || root;
 }
 
 // --------------------------------------
@@ -200,8 +218,9 @@ function preinit(href: string, options: PreinitOptions) {
     typeof options === 'object' &&
     options !== null
   ) {
+    const resourceRoot = getCurrentResourceRoot();
     const as = options.as;
-    if (!currentDocument) {
+    if (!resourceRoot) {
       // We are going to emit a preload as a best effort fallback since this preinit
       // was called outside of a render. Given the passive nature of this fallback
       // we do not warn in dev when props disagree if there happens to already be a
@@ -223,6 +242,7 @@ function preinit(href: string, options: PreinitOptions) {
 
     switch (as) {
       case 'style': {
+        const styleResources = getStylesFromRoot(resourceRoot);
         const precedence = options.precedence || 'default';
         let resource = styleResources.get(href);
         if (resource) {
@@ -241,8 +261,8 @@ function preinit(href: string, options: PreinitOptions) {
             options,
           );
           resource = createStyleResource(
-            // $FlowFixMe[incompatible-call] found when upgrading Flow
-            currentDocument,
+            styleResources,
+            resourceRoot,
             href,
             precedence,
             resourceProps,
@@ -303,9 +323,10 @@ export function getResource(
   pendingProps: Props,
   currentProps: null | Props,
 ): null | Resource {
-  if (!currentDocument) {
+  const resourceRoot = getCurrentResourceRoot();
+  if (!resourceRoot) {
     throw new Error(
-      '"currentDocument" was expected to exist. This is a bug in React.',
+      '"resourceRoot" was expected to exist. This is a bug in React.',
     );
   }
   switch (type) {
@@ -313,6 +334,7 @@ export function getResource(
       const {rel} = pendingProps;
       switch (rel) {
         case 'stylesheet': {
+          const styleResources = getStylesFromRoot(resourceRoot);
           let didWarn;
           if (__DEV__) {
             if (currentProps) {
@@ -348,8 +370,8 @@ export function getResource(
             } else {
               const resourceProps = stylePropsFromRawProps(styleRawProps);
               resource = createStyleResource(
-                // $FlowFixMe[incompatible-call] found when upgrading Flow
-                currentDocument,
+                styleResources,
+                resourceRoot,
                 href,
                 precedence,
                 resourceProps,
@@ -384,8 +406,7 @@ export function getResource(
             } else {
               const resourceProps = preloadPropsFromRawProps(preloadRawProps);
               resource = createPreloadResource(
-                // $FlowFixMe[incompatible-call] found when upgrading Flow
-                currentDocument,
+                getDocumentFromRoot(resourceRoot),
                 href,
                 resourceProps,
               );
@@ -463,7 +484,8 @@ function createResourceInstance(
 }
 
 function createStyleResource(
-  ownerDocument: Document,
+  styleResources: Map<string, StyleResource>,
+  root: FloatRoot,
   href: string,
   precedence: string,
   props: StyleProps,
@@ -479,7 +501,7 @@ function createStyleResource(
   const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
     href,
   );
-  const existingEl = ownerDocument.querySelector(
+  const existingEl = root.querySelector(
     `link[rel="stylesheet"][href="${limitedEscapedHref}"]`,
   );
   const resource = {
@@ -492,7 +514,7 @@ function createStyleResource(
     preloaded: false,
     loaded: false,
     error: false,
-    ownerDocument,
+    root,
     instance: null,
   };
   styleResources.set(href, resource);
@@ -567,7 +589,7 @@ function immediatelyPreloadStyleResource(resource: StyleResource) {
     const {href, props} = resource;
     const preloadProps = preloadPropsFromStyleProps(props);
     resource.hint = createPreloadResource(
-      resource.ownerDocument,
+      getDocumentFromRoot(resource.root),
       href,
       preloadProps,
     );
@@ -613,11 +635,11 @@ function createPreloadResource(
 
 function acquireStyleResource(resource: StyleResource): Instance {
   if (!resource.instance) {
-    const {props, ownerDocument, precedence} = resource;
+    const {props, root, precedence} = resource;
     const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
       props.href,
     );
-    const existingEl = ownerDocument.querySelector(
+    const existingEl = root.querySelector(
       `link[rel="stylesheet"][data-rprec][href="${limitedEscapedHref}"]`,
     );
     if (existingEl) {
@@ -649,11 +671,11 @@ function acquireStyleResource(resource: StyleResource): Instance {
       const instance = createResourceInstance(
         'link',
         resource.props,
-        ownerDocument,
+        getDocumentFromRoot(root),
       );
 
       attachLoadListeners(instance, resource);
-      insertStyleInstance(instance, precedence, ownerDocument);
+      insertStyleInstance(instance, precedence, root);
       resource.instance = instance;
     }
   }
@@ -724,11 +746,9 @@ function onResourceError(
 function insertStyleInstance(
   instance: Instance,
   precedence: string,
-  ownerDocument: Document,
+  root: FloatRoot,
 ): void {
-  const nodes = ownerDocument.querySelectorAll(
-    'link[rel="stylesheet"][data-rprec]',
-  );
+  const nodes = root.querySelectorAll('link[rel="stylesheet"][data-rprec]');
   const last = nodes.length ? nodes[nodes.length - 1] : null;
   let prior = last;
   for (let i = 0; i < nodes.length; i++) {
@@ -746,9 +766,8 @@ function insertStyleInstance(
     // must exist.
     ((prior.parentNode: any): Node).insertBefore(instance, prior.nextSibling);
   } else {
-    // @TODO call getRootNode on root.container. if it is a Document, insert into head
-    // if it is a ShadowRoot insert it into the root node.
-    const parent = ownerDocument.head;
+    const parent =
+      root.nodeType === DOCUMENT_NODE ? ((root: any): Document).head : root;
     if (parent) {
       parent.insertBefore(instance, parent.firstChild);
     } else {

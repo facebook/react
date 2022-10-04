@@ -41,7 +41,6 @@ import {
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
-  getOwnerDocumentFromRootContainer,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -1376,7 +1375,7 @@ function isHostResourceInstance(instance: Instance | Container): boolean {
 
 export function prepareRendererToRender(rootContainer: Container) {
   if (enableFloat) {
-    prepareToRenderResources(getOwnerDocumentFromRootContainer(rootContainer));
+    prepareToRenderResources(rootContainer);
   }
 }
 

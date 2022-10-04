@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {FloatRoot, StyleResource} from './ReactDOMFloatClient';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
@@ -42,6 +43,7 @@ const internalContainerInstanceKey = '__reactContainer$' + randomKey;
 const internalEventHandlersKey = '__reactEvents$' + randomKey;
 const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
+const internalRootNodeStylesSetKey = '__reactStyles$' + randomKey;
 
 export function detachDeletedInstance(node: Instance): void {
   // TODO: This function is only called on host components. I don't think all of
@@ -265,4 +267,12 @@ export function doesTargetHaveEventHandle(
     return false;
   }
   return eventHandles.has(eventHandle);
+}
+
+export function getStylesFromRoot(root: FloatRoot): Map<string, StyleResource> {
+  let styles = (root: any)[internalRootNodeStylesSetKey];
+  if (!styles) {
+    styles = (root: any)[internalRootNodeStylesSetKey] = new Map();
+  }
+  return styles;
 }
