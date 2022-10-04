@@ -61,14 +61,17 @@ export function precacheFiberNode(
 }
 
 export function markContainerAsRoot(hostRoot: Fiber, node: Container): void {
+  // $FlowFixMe[prop-missing]
   node[internalContainerInstanceKey] = hostRoot;
 }
 
 export function unmarkContainerAsRoot(node: Container): void {
+  // $FlowFixMe[prop-missing]
   node[internalContainerInstanceKey] = null;
 }
 
 export function isContainerMarkedAsRoot(node: Container): boolean {
+  // $FlowFixMe[prop-missing]
   return !!node[internalContainerInstanceKey];
 }
 
@@ -132,6 +135,7 @@ export function getClosestInstanceFromNode(targetNode: Node): null | Fiber {
           // have had an internalInstanceKey on it.
           // Let's get the fiber associated with the SuspenseComponent
           // as the deepest instance.
+          // $FlowFixMe[prop-missing]
           const targetSuspenseInst = suspenseInstance[internalInstanceKey];
           if (targetSuspenseInst) {
             return targetSuspenseInst;

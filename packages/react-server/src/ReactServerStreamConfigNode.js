@@ -10,10 +10,9 @@
 import type {Writable} from 'stream';
 import {TextEncoder} from 'util';
 
-type MightBeFlushable = {
-  flush?: () => void,
-  ...
-};
+interface MightBeFlushable {
+  flush?: () => void;
+}
 
 export type Destination = Writable & MightBeFlushable;
 

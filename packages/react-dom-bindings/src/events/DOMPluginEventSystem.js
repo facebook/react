@@ -761,7 +761,7 @@ export function accumulateSinglePhaseListeners(
     // current instance fiber. In which case, we should clear all existing
     // listeners.
     if (enableCreateEventHandleAPI && nativeEvent.type === 'beforeblur') {
-      // $FlowFixMe: internal field
+      // $FlowFixMe[prop-missing] internal field
       const detachedInterceptFiber = nativeEvent._detachedInterceptFiber;
       if (
         detachedInterceptFiber !== null &&

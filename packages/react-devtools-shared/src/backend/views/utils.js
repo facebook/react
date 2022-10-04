@@ -7,15 +7,14 @@
  * @flow
  */
 
-export type Rect = {
-  bottom: number,
-  height: number,
-  left: number,
-  right: number,
-  top: number,
-  width: number,
-  ...
-};
+export interface Rect {
+  bottom: number;
+  height: number;
+  left: number;
+  right: number;
+  top: number;
+  width: number;
+}
 
 // Get the window object for the document that a node belongs to,
 // or return null if it cannot be found (node not attached to DOM,

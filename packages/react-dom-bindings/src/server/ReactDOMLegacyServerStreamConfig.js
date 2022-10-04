@@ -7,11 +7,10 @@
  * @flow
  */
 
-export type Destination = {
-  push(chunk: string | null): boolean,
-  destroy(error: Error): mixed,
-  ...
-};
+export interface Destination {
+  push(chunk: string | null): boolean;
+  destroy(error: Error): mixed;
+}
 
 export type PrecomputedChunk = string;
 export type Chunk = string;
