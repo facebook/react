@@ -169,7 +169,9 @@ function flushWork(hasTimeRemaining: boolean, initialTime: number) {
       } catch (error) {
         if (currentTask !== null) {
           const currentTime = getCurrentTime();
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
           markTaskErrored(currentTask, currentTime);
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           currentTask.isQueued = false;
         }
         throw error;
@@ -204,12 +206,17 @@ function workLoop(hasTimeRemaining, initialTime: number): boolean {
       // This currentTask hasn't expired, and we've reached the deadline.
       break;
     }
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     const callback = currentTask.callback;
     if (typeof callback === 'function') {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentTask.callback = null;
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentPriorityLevel = currentTask.priorityLevel;
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
       if (enableProfiling) {
+        // $FlowFixMe[incompatible-call] found when upgrading Flow
         markTaskRun(currentTask, currentTime);
       }
       const continuationCallback = callback(didUserCallbackTimeout);
@@ -217,8 +224,10 @@ function workLoop(hasTimeRemaining, initialTime: number): boolean {
       if (typeof continuationCallback === 'function') {
         // If a continuation is returned, immediately yield to the main thread
         // regardless of how much time is left in the current time slice.
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentTask.callback = continuationCallback;
         if (enableProfiling) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
           markTaskYield(currentTask, currentTime);
         }
         advanceTimers(currentTime);
@@ -233,7 +242,9 @@ function workLoop(hasTimeRemaining, initialTime: number): boolean {
         }
       } else {
         if (enableProfiling) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
           markTaskCompleted(currentTask, currentTime);
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           currentTask.isQueued = false;
         }
         if (currentTask === peek(taskQueue)) {
@@ -509,6 +520,7 @@ function unstable_flushNumberOfYields(count: number): void {
     try {
       let hasMoreWork = true;
       do {
+        // $FlowFixMe[not-a-function] found when upgrading Flow
         hasMoreWork = cb(true, currentMockTime);
       } while (hasMoreWork && !didStop);
       if (!hasMoreWork) {
@@ -534,6 +546,7 @@ function unstable_flushUntilNextPaint(): false {
     try {
       let hasMoreWork = true;
       do {
+        // $FlowFixMe[not-a-function] found when upgrading Flow
         hasMoreWork = cb(true, currentMockTime);
       } while (hasMoreWork && !didStop);
       if (!hasMoreWork) {
@@ -580,6 +593,7 @@ function unstable_flushAllWithoutAsserting(): boolean {
     try {
       let hasMoreWork = true;
       do {
+        // $FlowFixMe[not-a-function] found when upgrading Flow
         hasMoreWork = cb(true, currentMockTime);
       } while (hasMoreWork);
       if (!hasMoreWork) {
