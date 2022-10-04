@@ -115,6 +115,7 @@ export function dispatchEvent(
     // Note that extracted events are *not* emitted,
     // only events that have a 1:1 mapping with a native event, at least for now.
     const event = {eventName: topLevelType, nativeEvent};
+    // $FlowFixMe[class-object-subtyping] found when upgrading Flow
     RawEventEmitter.emit(topLevelType, event);
     RawEventEmitter.emit('*', event);
 

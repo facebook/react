@@ -26,7 +26,7 @@ export default function Updaters({commitTree, updaters}: Props): React.Node {
 
   const children =
     updaters.length > 0 ? (
-      updaters.map<React$Node>((serializedElement: SerializedElement) => {
+      updaters.map((serializedElement: SerializedElement): React$Node => {
         const {displayName, id, key, type} = serializedElement;
         const isVisibleInTree =
           commitTree.nodes.has(id) && type !== ElementTypeRoot;
