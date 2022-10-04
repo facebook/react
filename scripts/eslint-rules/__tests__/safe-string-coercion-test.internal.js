@@ -11,6 +11,15 @@
 
 const rule = require('../safe-string-coercion');
 const {RuleTester} = require('eslint');
+
+RuleTester.setDefaultConfig({
+  parser: require.resolve('babel-eslint'),
+  parserOptions: {
+    ecmaVersion: 6,
+    sourceType: 'module',
+  },
+});
+
 const ruleTester = new RuleTester();
 
 const missingDevCheckMessage =
@@ -89,6 +98,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
     "if (typeof obj === 'string') if (typeof obj === 'string' && obj.length) {} else {'' + obj}",
     "'' + ''",
     "'' + '' + ''",
+    "`test${foo}` + ''",
   ],
   invalid: [
     {
@@ -269,6 +279,10 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
         {message: missingDevCheckMessage + '\n' + message},
         {message: missingDevCheckMessage + '\n' + message},
       ],
+    },
+    {
+      code: `foo\`text\` + ""`,
+      errors: [{message: missingDevCheckMessage + '\n' + message}],
     },
   ],
 });

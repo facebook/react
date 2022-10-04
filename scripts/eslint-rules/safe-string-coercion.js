@@ -19,7 +19,9 @@ function isEmptyLiteral(node) {
 
 function isStringLiteral(node) {
   return (
-    node.type === 'TemplateLiteral' ||
+    // TaggedTemplateExpressions can return non-strings
+    (node.type === 'TemplateLiteral' &&
+      node.parent.type !== 'TaggedTemplateExpression') ||
     (node.type === 'Literal' && typeof node.value === 'string')
   );
 }
