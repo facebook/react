@@ -84,7 +84,6 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
-  isFrameAlignedTask,
   cancelFrameAlignedTask,
   scheduleFrameAlignedTask,
   supportsFrameAlignedTask,
@@ -902,9 +901,8 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
     if (
       enableFrameEndScheduling &&
-      newCallbackPriority === DefaultLane &&
-      root.hasUnknownUpdates &&
-      !isFrameAlignedTask(existingCallbackNode)
+      supportsFrameAlignedTask &&
+      newCallbackPriority === DefaultLane
     ) {
       // Do nothing, we need to schedule a new rAF.
     } else {
@@ -918,7 +916,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     if (
       enableFrameEndScheduling &&
       supportsFrameAlignedTask &&
-      isFrameAlignedTask(existingCallbackNode)
+      existingCallbackPriority === DefaultLane
     ) {
       cancelFrameAlignedTask(existingCallbackNode);
     } else {
@@ -970,8 +968,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   } else if (
     enableFrameEndScheduling &&
     supportsFrameAlignedTask &&
-    newCallbackPriority === DefaultLane &&
-    root.hasUnknownUpdates
+    newCallbackPriority === DefaultLane
   ) {
     if (__DEV__ && ReactCurrentActQueue.current !== null) {
       // Inside `act`, use our internal `act` queue so that these get flushed

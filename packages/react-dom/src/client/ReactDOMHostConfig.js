@@ -70,7 +70,7 @@ import {
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
-import {UnknownEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 // TODO: Remove this deep import when we delete the legacy root API
 import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
@@ -362,7 +362,7 @@ export function createTextInstance(
 export function getCurrentEventPriority(): * {
   const currentEvent = window.event;
   if (currentEvent === undefined) {
-    return UnknownEventPriority;
+    return DefaultEventPriority;
   }
   return getEventPriority(currentEvent.type);
 }
@@ -421,10 +421,6 @@ function performFrameAlignedWork() {
       task();
     }
   }
-}
-
-export function isFrameAlignedTask(task: any): boolean {
-  return task != null && task.rafNode != null && task.task != null;
 }
 
 export function scheduleFrameAlignedTask(task: any): any {
