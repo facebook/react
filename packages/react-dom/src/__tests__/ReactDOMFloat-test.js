@@ -408,6 +408,7 @@ describe('ReactDOMFloat', () => {
       );
     });
 
+    // @gate enableFloat
     it('supports script preloads', async () => {
       function ServerApp() {
         ReactDOM.preload('foo', {as: 'script', integrity: 'foo hash'});
