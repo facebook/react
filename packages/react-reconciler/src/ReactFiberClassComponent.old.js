@@ -206,13 +206,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(
-        root,
-        fiber,
-        lane,
-        eventTime,
-        updateType,
-      );
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime, updateType);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -248,13 +242,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(
-        root,
-        fiber,
-        lane,
-        eventTime,
-        updateType,
-      );
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime, updateType);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -289,13 +277,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(
-        root,
-        fiber,
-        lane,
-        eventTime,
-        updateType,
-      );
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime, updateType);
       entangleTransitions(root, fiber, lane);
     }
 

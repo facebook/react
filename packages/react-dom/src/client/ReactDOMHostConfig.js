@@ -415,7 +415,9 @@ function performFrameAlignedWork() {
   if (currentTask != null) {
     const task = currentTask.task;
     localCancelAnimationFrame(currentTask.rafNode);
-    Scheduler.unstable_cancelCallback(currentTask.schedulerNode);
+    if (currentTask.schedulerNode != null) {
+      Scheduler.unstable_cancelCallback(currentTask.schedulerNode);
+    }
     currentTask = null;
     if (task != null) {
       task();

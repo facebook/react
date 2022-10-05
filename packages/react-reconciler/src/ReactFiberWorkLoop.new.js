@@ -161,7 +161,6 @@ import {
   movePendingFibersToMemoized,
   addTransitionToLanesMap,
   getTransitionsForLanes,
-  DefaultLane,
 } from './ReactFiberLane.new';
 import {
   DiscreteEventPriority,
@@ -172,8 +171,9 @@ import {
   setCurrentUpdatePriority,
   lowerEventPriority,
   lanesToEventPriority,
+  laneaAndUpdateTypeToEventPriority,
 } from './ReactEventPriorities.new';
-import {AsynchronousUpdate, DefaultUpdate} from './ReactUpdateTypes.new';
+import {AsynchronousUpdate, SynchronousUpdate} from './ReactUpdateTypes.new';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.new';
 import {completeWork} from './ReactFiberCompleteWork.new';
@@ -595,7 +595,7 @@ export function getCurrentTime() {
   return now();
 }
 
-let currentUpdateType = AsynchronousUpdate;
+let currentUpdateType = SynchronousUpdate;
 
 export function requestUpdateLane_getUpdateType(): UpdateType {
   return currentUpdateType;
@@ -606,6 +606,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // Special cases
   const mode = fiber.mode;
   if ((mode & ConcurrentMode) === NoMode) {
+    currentUpdateType = SynchronousUpdate;
     return (SyncLane: Lane);
   } else if (
     !deferRenderPhaseUpdateToNextBatch &&
@@ -654,8 +655,12 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // The opaque type returned by the host config is internally a lane, so we can
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
-  const updateLane: Lane = (getCurrentUpdatePriority(): any);
+  let updateLane: Lane = (getCurrentUpdatePriority(): any);
   if (updateLane !== NoLane) {
+    if ((updateLane & SyncLane) !== NoLane) {
+      currentUpdateType = updateLane >> 1;
+      updateLane = SyncLane;
+    }
     return updateLane;
   }
 
@@ -666,9 +671,9 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
   let eventLane: Lane = (getCurrentEventPriority(): any);
-  if (eventLane === NoLane) {
-    currentUpdateType = DefaultUpdate;
-    eventLane = DefaultLane;
+  if ((eventLane & SyncLane) !== NoLane) {
+    currentUpdateType = eventLane >> 1;
+    eventLane = SyncLane;
   }
   return eventLane;
 }
@@ -791,7 +796,6 @@ export function scheduleUpdateOnFiber(
         markRootSuspended(root, workInProgressRootRenderLanes);
       }
     }
-
     ensureRootIsScheduled(root, eventTime);
     if (
       lane === SyncLane &&
@@ -872,10 +876,14 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   }
 
   // We use the highest priority lane to represent the priority of the callback.
-  const newCallbackPriority = getHighestPriorityLane(nextLanes);
+  const newCallbackPriority = laneaAndUpdateTypeToEventPriority(
+    getHighestPriorityLane(nextLanes),
+    root.updateType,
+  );
 
   // Check if there's an existing task. We may be able to reuse it.
   const existingCallbackPriority = root.callbackPriority;
+
   if (
     existingCallbackPriority === newCallbackPriority &&
     // Special case related to `act`. If the currently scheduled task is a
@@ -893,7 +901,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       // TODO: Temporary until we confirm this warning is not fired.
       if (
         existingCallbackNode == null &&
-        existingCallbackPriority !== SyncLane
+        existingCallbackPriority !== DiscreteEventPriority
       ) {
         console.error(
           'Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue.',
@@ -904,7 +912,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     if (
       enableFrameEndScheduling &&
       supportsFrameAlignedTask &&
-      newCallbackPriority === DefaultLane
+      newCallbackPriority === DefaultEventPriority
     ) {
       // Do nothing, we need to schedule a new rAF.
     } else {
@@ -918,7 +926,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     if (
       enableFrameEndScheduling &&
       supportsFrameAlignedTask &&
-      existingCallbackPriority === DefaultLane
+      existingCallbackPriority === DefaultEventPriority
     ) {
       cancelFrameAlignedTask(existingCallbackNode);
     } else {
@@ -928,7 +936,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Schedule a new callback.
   let newCallbackNode;
-  if (newCallbackPriority === SyncLane) {
+  if (newCallbackPriority === DiscreteEventPriority) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     if (root.tag === LegacyRoot) {
@@ -970,7 +978,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   } else if (
     enableFrameEndScheduling &&
     supportsFrameAlignedTask &&
-    newCallbackPriority === DefaultLane
+    newCallbackPriority === DefaultEventPriority
   ) {
     if (__DEV__ && ReactCurrentActQueue.current !== null) {
       // Inside `act`, use our internal `act` queue so that these get flushed
@@ -1070,6 +1078,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   let exitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes);
+
   if (exitStatus !== RootInProgress) {
     if (exitStatus === RootErrored) {
       // If something threw an error, try rendering one more time. We'll
@@ -2801,7 +2810,10 @@ export function flushPassiveEffects(): boolean {
     const remainingLanes = pendingPassiveEffectsRemainingLanes;
     pendingPassiveEffectsRemainingLanes = NoLanes;
 
-    const renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
+    const renderPriority = lanesToEventPriority(
+      pendingPassiveEffectsLanes,
+      root.updateType,
+    );
     const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
     const prevTransition = ReactCurrentBatchConfig.transition;
     const previousPriority = getCurrentUpdatePriority();

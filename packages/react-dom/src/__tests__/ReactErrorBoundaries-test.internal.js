@@ -715,6 +715,7 @@ describe('ReactErrorBoundaries', () => {
     }).toThrow('Hello');
 
     container = document.createElement('div');
+    console.log('========== render BrokenComponentDidMount');
     expect(() => {
       ReactDOM.render(<BrokenComponentDidMount />, container);
     }).toThrow('Hello');

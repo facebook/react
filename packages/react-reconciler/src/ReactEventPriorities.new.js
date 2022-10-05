@@ -8,22 +8,25 @@
  */
 
 import type {Lane, Lanes} from './ReactFiberLane.new';
+import type {UpdateType} from './ReactUpdateTypes.new';
 
 import {
   NoLane,
   SyncLane,
   InputContinuousLane,
-  DefaultLane,
   IdleLane,
   getHighestPriorityLane,
   includesNonIdleWork,
 } from './ReactFiberLane.new';
 
-export opaque type EventPriority = Lane;
+import {DefaultUpdate} from './ReactUpdateTypes.new';
+
+export type EventPriority = number;
 
 export const DiscreteEventPriority: EventPriority = SyncLane;
 export const ContinuousEventPriority: EventPriority = InputContinuousLane;
-export const DefaultEventPriority: EventPriority = DefaultLane;
+export const DefaultEventPriority: EventPriority =
+  SyncLane | (DefaultUpdate << 1);
 export const IdleEventPriority: EventPriority = IdleLane;
 
 let currentUpdatePriority: EventPriority = NoLane;
@@ -67,9 +70,15 @@ export function isHigherEventPriority(
   return a !== 0 && a < b;
 }
 
-export function lanesToEventPriority(lanes: Lanes): EventPriority {
+export function lanesToEventPriority(
+  lanes: Lanes,
+  updateType: ?UpdateType,
+): EventPriority {
   const lane = getHighestPriorityLane(lanes);
   if (!isHigherEventPriority(DiscreteEventPriority, lane)) {
+    if (updateType === DefaultUpdate) {
+      return DefaultEventPriority;
+    }
     return DiscreteEventPriority;
   }
   if (!isHigherEventPriority(ContinuousEventPriority, lane)) {
@@ -79,4 +88,14 @@ export function lanesToEventPriority(lanes: Lanes): EventPriority {
     return DefaultEventPriority;
   }
   return IdleEventPriority;
+}
+
+export function laneaAndUpdateTypeToEventPriority(
+  lane: Lane,
+  updateType: ?UpdateType,
+): EventPriority {
+  if (lane === SyncLane && updateType) {
+    return SyncLane | (updateType << 1);
+  }
+  return lane;
 }

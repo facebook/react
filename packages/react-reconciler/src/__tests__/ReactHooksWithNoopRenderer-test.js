@@ -3218,6 +3218,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Counter(props) {
         useLayoutEffect(() => {
+          console.log('use layout effect');
           // Normally this would go in a mutation effect, but this test
           // intentionally omits a mutation effect.
           committedText = String(props.count);
@@ -3232,6 +3233,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           };
         });
         useEffect(() => {
+          console.log('use effect', new Error().stack);
           Scheduler.unstable_yieldValue(
             `Mount normal [current: ${committedText}]`,
           );
@@ -3251,24 +3253,23 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(Scheduler).toFlushAndYieldThrough([
           'Mount layout [current: 0]',
           'Sync effect',
+          'Mount normal [current: 0]',
         ]);
         expect(committedText).toEqual('0');
         ReactNoop.render(<Counter count={1} />, () =>
           Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
-          'Mount normal [current: 0]',
           'Unmount layout [current: 0]',
           'Mount layout [current: 1]',
           'Sync effect',
+          'Unmount normal [current: 1]',
+          'Mount normal [current: 1]',
         ]);
         expect(committedText).toEqual('1');
       });
 
-      expect(Scheduler).toHaveYielded([
-        'Unmount normal [current: 1]',
-        'Mount normal [current: 1]',
-      ]);
+      expect(Scheduler).toHaveYielded([]);
     });
 
     // @gate skipUnmountedBoundaries

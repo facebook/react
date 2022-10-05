@@ -65,7 +65,7 @@ describe('ReactDOMFiberAsync', () => {
       }
       render() {
         instance = this;
-      return <span>{this.state.text}</span>;
+        return <span>{this.state.text}</span>;
       }
     }
 
@@ -274,18 +274,18 @@ describe('ReactDOMFiberAsync', () => {
         expect(container.textContent).toEqual('');
         expect(ops).toEqual([]);
       });
-      // Only the active updates have flushed
-      expect(container.textContent).toEqual('BC');
-      expect(ops).toEqual(['BC']);
+      // DefaultUpdates are batched on the sync lane
+      expect(container.textContent).toEqual('ABC');
+      expect(ops).toEqual(['ABC']);
 
       instance.push('D');
-      expect(container.textContent).toEqual('BC');
-      expect(ops).toEqual(['BC']);
+      expect(container.textContent).toEqual('ABC');
+      expect(ops).toEqual(['ABC']);
 
       // Flush the async updates
       Scheduler.unstable_flushAll();
       expect(container.textContent).toEqual('ABCD');
-      expect(ops).toEqual(['BC', 'ABCD']);
+      expect(ops).toEqual(['ABC', 'ABCD']);
     });
 
     // @gate www
@@ -730,7 +730,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling || !allowConcurrentByDefault
-    it.skip('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced', () => {
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced', () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -758,7 +758,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling || !allowConcurrentByDefault
-    it.skip('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default first', () => {
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default first', () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -789,7 +789,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling || !allowConcurrentByDefault
-    it.skip('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default after', () => {
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default after', () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -858,12 +858,13 @@ describe('ReactDOMFiberAsync', () => {
 
       await null;
 
-      expect(Scheduler).toHaveYielded(['Count: 1']);
-      expect(counterRef.current.textContent).toBe('Count: 1');
-
-      global.flushRequestAnimationFrameQueue();
+      // Unknown(default) updates is batched on the sync lane
       expect(Scheduler).toHaveYielded(['Count: 2']);
       expect(counterRef.current.textContent).toBe('Count: 2');
+
+      console.log('flushRAF');
+      global.flushRequestAnimationFrameQueue();
+      expect(Scheduler).toHaveYielded([]);
     });
 
     // @gate enableFrameEndScheduling
@@ -927,15 +928,15 @@ describe('ReactDOMFiberAsync', () => {
       expect(counterRef.current.textContent).toBe('Count: 1');
 
       unsuspend();
-      // Should not be scheduled in a rAF.
+      // Default update is scheduled in a rAF.
       window.event = 'test';
       setThrowing(false);
       setState(2);
 
       global.flushRequestAnimationFrameQueue();
-      expect(Scheduler).toHaveYielded([]);
+      expect(Scheduler).toHaveYielded(['Count: 2']);
 
-      expect(Scheduler).toFlushAndYield(['Count: 2']);
+      expect(Scheduler).toFlushAndYield([]);
       expect(counterRef.current.textContent).toBe('Count: 2');
     });
   });
