@@ -16,44 +16,42 @@ export function validateUnmatchedLinkResourceProps(
   currentProps: ?Props,
 ) {
   if (__DEV__) {
-    if (pendingProps.rel !== 'font' && pendingProps.rel !== 'style') {
-      if (currentProps != null) {
-        const originalResourceName =
-          typeof currentProps.href === 'string'
-            ? `Resource with href "${currentProps.href}"`
-            : 'Resource';
-        const originalRelStatement = getValueDescriptorExpectingEnumForWarning(
-          currentProps.rel,
-        );
-        const pendingRelStatement = getValueDescriptorExpectingEnumForWarning(
-          pendingProps.rel,
-        );
-        const pendingHrefStatement =
-          typeof pendingProps.href === 'string'
-            ? ` and the updated href is "${pendingProps.href}"`
-            : '';
-        console.error(
-          'A <link> previously rendered as a %s but was updated with a rel type that is not' +
-            ' valid for a Resource type. Generally Resources are not expected to ever have updated' +
-            ' props however in some limited circumstances it can be valid when changing the href.' +
-            ' When React encounters props that invalidate the Resource it is the same as not rendering' +
-            ' a Resource at all. valid rel types for Resources are "font" and "style". The previous' +
-            ' rel for this instance was %s. The updated rel is %s%s.',
-          originalResourceName,
-          originalRelStatement,
-          pendingRelStatement,
-          pendingHrefStatement,
-        );
-      } else {
-        const pendingRelStatement = getValueDescriptorExpectingEnumForWarning(
-          pendingProps.rel,
-        );
-        console.error(
-          'A <link> is rendering as a Resource but has an invalid rel property. The rel encountered is %s.' +
-            ' This is a bug in React.',
-          pendingRelStatement,
-        );
-      }
+    if (currentProps != null) {
+      const originalResourceName =
+        typeof currentProps.href === 'string'
+          ? `Resource with href "${currentProps.href}"`
+          : 'Resource';
+      const originalRelStatement = getValueDescriptorExpectingEnumForWarning(
+        currentProps.rel,
+      );
+      const pendingRelStatement = getValueDescriptorExpectingEnumForWarning(
+        pendingProps.rel,
+      );
+      const pendingHrefStatement =
+        typeof pendingProps.href === 'string'
+          ? ` and the updated href is "${pendingProps.href}"`
+          : '';
+      console.error(
+        'A <link> previously rendered as a %s but was updated with a rel type that is not' +
+          ' valid for a Resource type. Generally Resources are not expected to ever have updated' +
+          ' props however in some limited circumstances it can be valid when changing the href.' +
+          ' When React encounters props that invalidate the Resource it is the same as not rendering' +
+          ' a Resource at all. valid rel types for Resources are "stylesheet" and "preload". The previous' +
+          ' rel for this instance was %s. The updated rel is %s%s.',
+        originalResourceName,
+        originalRelStatement,
+        pendingRelStatement,
+        pendingHrefStatement,
+      );
+    } else {
+      const pendingRelStatement = getValueDescriptorExpectingEnumForWarning(
+        pendingProps.rel,
+      );
+      console.error(
+        'A <link> is rendering as a Resource but has an invalid rel property. The rel encountered is %s.' +
+          ' This is a bug in React.',
+        pendingRelStatement,
+      );
     }
   }
 }
@@ -517,6 +515,7 @@ export function validatePreloadArguments(href: mixed, options: mixed) {
           }
           break;
         }
+        case 'script':
         case 'style': {
           break;
         }
@@ -529,7 +528,7 @@ export function validatePreloadArguments(href: mixed, options: mixed) {
               ' Please use one of the following valid values instead: %s. The href for the preload call where this' +
               ' warning originated is "%s".',
             typeOfAs,
-            '"style" and "font"',
+            '"style", "font", or "script"',
             href,
           );
         }
@@ -557,7 +556,6 @@ export function validatePreinitArguments(href: mixed, options: mixed) {
     } else {
       const as = options.as;
       switch (as) {
-        case 'font':
         case 'style': {
           break;
         }
