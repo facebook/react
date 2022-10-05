@@ -65,7 +65,7 @@ describe('ReactDOMFiberAsync', () => {
       }
       render() {
         instance = this;
-      return <span>{this.state.text}</span>;
+        return <span>{this.state.text}</span>;
       }
     }
 
@@ -730,7 +730,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling || !allowConcurrentByDefault
-    it.skip('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced', () => {
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced', () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -758,7 +758,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling || !allowConcurrentByDefault
-    it.skip('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default first', () => {
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default first', () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -789,7 +789,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling || !allowConcurrentByDefault
-    it.skip('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default after', () => {
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default after', () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -927,15 +927,13 @@ describe('ReactDOMFiberAsync', () => {
       expect(counterRef.current.textContent).toBe('Count: 1');
 
       unsuspend();
-      // Should not be scheduled in a rAF.
+      // Default update should be scheduled in a rAF.
       window.event = 'test';
       setThrowing(false);
       setState(2);
 
       global.flushRequestAnimationFrameQueue();
-      expect(Scheduler).toHaveYielded([]);
-
-      expect(Scheduler).toFlushAndYield(['Count: 2']);
+      expect(Scheduler).toHaveYielded(['Count: 2']);
       expect(counterRef.current.textContent).toBe('Count: 2');
     });
   });
