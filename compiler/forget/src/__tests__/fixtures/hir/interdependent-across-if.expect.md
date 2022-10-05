@@ -76,14 +76,14 @@ function Foo$0() {
 
 ```
 bb0:
-  mutable a$2 = Call mutable compute$3(frozen props$1.a)
-  mutable b$4 = Call mutable compute$3(frozen props$1.b)
+  readonly a$2 = Call mutable compute$3(frozen props$1.a)
+  readonly b$4 = Call mutable compute$3(frozen props$1.b)
   If (frozen props$1.c) then:bb2 else:bb1
 bb2:
   Call mutable foo$5(mutable a$2, mutable b$4)
   Goto bb1
 bb1:
-  frozen $7 = JSX <frozen Foo$6 a={readonly a$2} b={readonly b$4} ></frozen Foo$6>
+  readonly $7 = JSX <frozen Foo$6 a={frozen a$2} b={frozen b$4} ></frozen Foo$6>
   Return frozen $7
 ```
 

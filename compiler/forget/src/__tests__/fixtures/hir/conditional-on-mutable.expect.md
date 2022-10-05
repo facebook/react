@@ -67,9 +67,9 @@ function mayMutate() {}
 
 ```
 bb0:
-  mutable a$2 = Array []
-  mutable b$3 = Array []
-  If (mutable b$3) then:bb2 else:bb1
+  readonly a$2 = Array []
+  readonly b$3 = Array []
+  If (readonly b$3) then:bb2 else:bb1
 bb2:
   Call mutable a$2.push(frozen props$1.p0)
   Goto bb1
@@ -79,7 +79,7 @@ bb4:
   Call mutable b$3.push(frozen props$1.p2)
   Goto bb3
 bb3:
-  frozen $5 = JSX <frozen Foo$4 a={readonly a$2} b={readonly b$3} ></frozen Foo$4>
+  readonly $5 = JSX <frozen Foo$4 a={frozen a$2} b={frozen b$3} ></frozen Foo$4>
   Return frozen $5
 ```
 
@@ -107,10 +107,10 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  mutable a$2 = Array []
-  mutable b$3 = Array []
-  mutable $5 = Call mutable mayMutate$4(mutable b$3)
-  If (mutable $5) then:bb2 else:bb1
+  readonly a$2 = Array []
+  readonly b$3 = Array []
+  readonly $5 = Call mutable mayMutate$4(mutable b$3)
+  If (readonly $5) then:bb2 else:bb1
 bb2:
   Call mutable a$2.push(frozen props$1.p0)
   Goto bb1
@@ -120,7 +120,7 @@ bb4:
   Call mutable b$3.push(frozen props$1.p2)
   Goto bb3
 bb3:
-  frozen $7 = JSX <frozen Foo$6 a={readonly a$2} b={readonly b$3} ></frozen Foo$6>
+  readonly $7 = JSX <frozen Foo$6 a={frozen a$2} b={frozen b$3} ></frozen Foo$6>
   Return frozen $7
 ```
 

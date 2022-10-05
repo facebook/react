@@ -17,13 +17,13 @@ function foo(x, y) {
 bb0:
   If (frozen x$1) then:bb2 else:bb1
 bb2:
-  frozen $3 = false
-  frozen $4 = Call mutable foo$0(frozen $3, frozen y$2)
+  readonly $3 = false
+  readonly $4 = Call mutable foo$0(mutable $3, frozen y$2)
   Return frozen $4
 bb1:
-  frozen $5 = 10
-  frozen $6 = Binary frozen y$2 * frozen $5
-  frozen $7 = Array [frozen $6]
+  readonly $5 = 10
+  frozen $6 = Binary frozen y$2 * readonly $5
+  readonly $7 = Array [frozen $6]
   Return frozen $7
 ```
 

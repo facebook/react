@@ -489,8 +489,8 @@ function lowerStatement(
               .get("consequent")
               .forEach((consequent) => lowerStatement(builder, consequent));
             /**
-             * always generate a fallthrough, this may be dead code if there was
-             * an explicit break
+             * always generate a fallthrough to the next block, this may be dead code
+             * if there was an explicit break, but if so it will be pruned later.
              */
             return {
               kind: "goto",

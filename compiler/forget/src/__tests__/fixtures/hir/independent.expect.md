@@ -28,9 +28,9 @@ function Foo() {}
 
 ```
 bb0:
-  frozen a$2 = Call mutable compute$3(frozen props$1.a)
-  frozen b$4 = Call mutable compute$3(frozen props$1.b)
-  frozen $6 = JSX <frozen Foo$5 a={frozen a$2} b={frozen b$4} ></frozen Foo$5>
+  readonly a$2 = Call mutable compute$3(frozen props$1.a)
+  readonly b$4 = Call mutable compute$3(frozen props$1.b)
+  readonly $6 = JSX <frozen Foo$5 a={frozen a$2} b={frozen b$4} ></frozen Foo$5>
   Return frozen $6
 ```
 

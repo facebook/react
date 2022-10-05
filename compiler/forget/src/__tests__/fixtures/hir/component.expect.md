@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @Out DefUseGraph
 function Component(props) {
   const items = props.items;
   const maxItems = props.maxItems;
@@ -36,42 +37,42 @@ function Component(props) {
 bb0:
   frozen items$2 = frozen props$1.items
   frozen maxItems$3 = frozen props$1.maxItems
-  mutable renderedItems$4 = Array []
-  mutable seen$5 = New mutable Set$6()
-  frozen $9 = 0
-  frozen max$7 = Call mutable Math$8.max(frozen $9, frozen maxItems$3)
+  readonly renderedItems$4 = Array []
+  readonly seen$5 = New mutable Set$6()
+  readonly $9 = 0
+  readonly max$7 = Call mutable Math$8.max(mutable $9, frozen maxItems$3)
   Goto bb1
 bb1:
   If (frozen items$2) then:bb3 else:bb2
 bb3:
-  frozen $11 = null
-  frozen $12 = Binary mutable item$10 == frozen $11
+  readonly $11 = null
+  frozen $12 = Binary frozen item$10 == readonly $11
   If (frozen $12) then:bb8 else:bb9
 bb2:
-  frozen count$17 = readonly renderedItems$4.length
-  frozen $18 = "div"
-  frozen $19 = "\n      "
-  frozen $20 = "h1"
-  frozen $21 = " Items"
-  frozen $22 = JSX <frozen $20>{frozen count$17}{frozen $21}</frozen $20>
-  frozen $23 = "\n      "
-  frozen $24 = "\n    "
-  frozen $25 = JSX <frozen $18>{frozen $19}{frozen $22}{frozen $23}{readonly renderedItems$4}{frozen $24}</frozen $18>
+  readonly count$17 = readonly renderedItems$4.length
+  readonly $18 = "div"
+  readonly $19 = "\n      "
+  readonly $20 = "h1"
+  readonly $21 = " Items"
+  readonly $22 = JSX <frozen $20>{frozen count$17}{frozen $21}</frozen $20>
+  readonly $23 = "\n      "
+  readonly $24 = "\n    "
+  readonly $25 = JSX <frozen $18>{frozen $19}{frozen $22}{frozen $23}{frozen renderedItems$4}{frozen $24}</frozen $18>
   Return frozen $25
 bb8:
   frozen $13 = frozen $12
   Goto bb7
 bb9:
-  mutable $13 = Call mutable seen$5.has(mutable item$10)
+  readonly $13 = Call mutable seen$5.has(frozen item$10)
   Goto bb7
 bb7:
   If (frozen $13) then:bb1 else:bb4
 bb4:
-  Call mutable seen$5.add(mutable item$10)
-  frozen $14 = "div"
-  mutable $15 = JSX <frozen $14>{mutable item$10}</frozen $14>
+  Call mutable seen$5.add(frozen item$10)
+  readonly $14 = "div"
+  readonly $15 = JSX <frozen $14>{frozen item$10}</frozen $14>
   Call mutable renderedItems$4.push(mutable $15)
-  frozen $16 = Binary mutable renderedItems$4.length >= frozen max$7
+  frozen $16 = Binary readonly renderedItems$4.length >= readonly max$7
   If (frozen $16) then:bb2 else:bb1
 ```
 

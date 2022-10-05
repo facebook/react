@@ -369,7 +369,7 @@ function getTargetIfIndirection(block: BasicBlock): number | null {
 /**
  * Maps a terminal node's block assignments using the provided function.
  */
-function mapTerminalSuccessors(
+export function mapTerminalSuccessors(
   terminal: Terminal,
   fn: (block: BlockId, isFallthrough: boolean) => BlockId
 ): Terminal {

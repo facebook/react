@@ -78,11 +78,11 @@ function Component(props) {
 
 ```
 bb0:
-  mutable a_DEBUG$2 = Array []
+  readonly a_DEBUG$2 = Array []
   Call mutable a_DEBUG$2.push(frozen props$1.a)
   If (frozen props$1.b) then:bb2 else:bb1
 bb2:
-  frozen $3 = null
+  readonly $3 = null
   Return frozen $3
 bb1:
   Call mutable a_DEBUG$2.push(frozen props$1.d)
@@ -108,7 +108,7 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  mutable a$2 = Array []
+  readonly a$2 = Array []
   Call mutable a$2.push(frozen props$1.a)
   If (frozen props$1.b) then:bb2 else:bb1
 bb2:
@@ -139,12 +139,12 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  mutable a$2 = Array []
+  readonly a$2 = Array []
   Call mutable a$2.push(frozen props$1.a)
   If (frozen props$1.b) then:bb2 else:bb1
 bb2:
   Call mutable a$2.push(frozen props$1.c)
-  frozen $3 = null
+  readonly $3 = null
   Return frozen $3
 bb1:
   Call mutable a$2.push(frozen props$1.d)
@@ -171,7 +171,7 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  mutable a$2 = Array []
+  readonly a$2 = Array []
   Call mutable a$2.push(frozen props$1.a)
   If (frozen props$1.b) then:bb2 else:bb1
 bb2:
@@ -202,7 +202,7 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  mutable a$2 = Array []
+  readonly a$2 = Array []
   Call mutable a$2.push(frozen props$1.a)
   If (frozen props$1.b) then:bb1 else:bb2
 bb1:

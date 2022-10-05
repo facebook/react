@@ -11,14 +11,14 @@ import generate from "@babel/generator";
 import * as parser from "@babel/parser";
 import traverse from "@babel/traverse";
 import { graphviz, wasmFolder } from "@hpcc-js/wasm";
-import { writeFileSync } from "fs";
+import { existsSync, unlinkSync, writeFileSync } from "fs";
 import invariant from "invariant";
 import path from "path";
 import prettier from "prettier";
+import buildDefUseGraph, { printGraph } from "../HIR/BuildDefUseGraph";
 import { lower } from "../HIR/BuildHIR";
 import codegen from "../HIR/Codegen";
 import { HIRFunction } from "../HIR/HIR";
-import inferLifetimes, { printGraph } from "../HIR/InferMutability";
 import printHIR from "../HIR/PrintHIR";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
@@ -45,7 +45,7 @@ describe("React Forget (HIR version)", () => {
         FunctionDeclaration: {
           enter(nodePath) {
             const ir: HIRFunction = lower(nodePath);
-            const lifetimeGraph = inferLifetimes(ir);
+            const lifetimeGraph = buildDefUseGraph(ir);
             const textHIR = printHIR(ir.body);
             const textLifetimeGraph = printGraph(lifetimeGraph);
             const graphvizFile = path.join(
@@ -54,9 +54,13 @@ describe("React Forget (HIR version)", () => {
               "hir-svg",
               file + ".svg"
             );
-            graphviz.layout(textLifetimeGraph, "svg", "dot").then((svg) => {
-              writeFileSync(graphvizFile, svg);
-            });
+            if (input.indexOf("@Out DefUseGraph") !== -1) {
+              graphviz.layout(textLifetimeGraph, "svg", "dot").then((svg) => {
+                writeFileSync(graphvizFile, svg);
+              });
+            } else if (existsSync(graphvizFile)) {
+              unlinkSync(graphvizFile);
+            }
 
             const ast = codegen(ir);
             const text = prettier.format(

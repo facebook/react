@@ -17,12 +17,12 @@ function Component(props) {
 
 ```
 bb0:
-  mutable x$2 = Object {  }
-  mutable y$3 = Array []
-  mutable x$2.y = mutable y$3
-  mutable child$4 = JSX <frozen Component$0 data={mutable y$3} ></frozen Component$0>
+  readonly x$2 = Object {  }
+  readonly y$3 = Array []
+  readonly x$2.y = readonly y$3
+  readonly child$4 = JSX <frozen Component$0 data={frozen y$3} ></frozen Component$0>
   Call mutable x$2.y.push(frozen props$1.p0)
-  frozen $5 = JSX <frozen Component$0 data={readonly x$2} >{readonly child$4}</frozen Component$0>
+  readonly $5 = JSX <frozen Component$0 data={frozen x$2} >{frozen child$4}</frozen Component$0>
   Return frozen $5
 ```
 

@@ -1,3 +1,4 @@
+// @Out DefUseGraph
 function Component(props) {
   const items = props.items;
   const maxItems = props.maxItems;

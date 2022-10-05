@@ -23,17 +23,17 @@ function Component(props) {
 
 ```
 bb0:
-  mutable x$2 = Array []
+  readonly x$2 = Array []
   Call mutable x$2.push(frozen props$1.p0)
-  mutable y$3 = mutable x$2
+  readonly y$3 = readonly x$2
   If (frozen props$1.p1) then:bb2 else:bb1
 bb2:
-  mutable x$2 = Array []
+  readonly x$2 = Array []
   Goto bb1
 bb1:
-  mutable _$4 = JSX <frozen Component$0 x={mutable x$2} ></frozen Component$0>
+  readonly _$4 = JSX <frozen Component$0 x={frozen x$2} ></frozen Component$0>
   Call mutable y$3.push(frozen props$1.p2)
-  frozen $5 = JSX <frozen Component$0 x={readonly x$2} y={readonly y$3} ></frozen Component$0>
+  readonly $5 = JSX <frozen Component$0 x={frozen x$2} y={frozen y$3} ></frozen Component$0>
   Return frozen $5
 ```
 

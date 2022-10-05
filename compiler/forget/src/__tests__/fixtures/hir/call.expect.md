@@ -34,14 +34,14 @@ function foo$0() {
 
 ```
 bb0:
-  mutable a$2 = Array []
-  mutable b$3 = Object {  }
+  readonly a$2 = Array []
+  readonly b$3 = Object {  }
   Call mutable foo$4(mutable a$2, mutable b$3)
-  frozen $6 = "div"
-  mutable _$5 = JSX <frozen $6 a={mutable a$2} ></frozen $6>
+  readonly $6 = "div"
+  readonly _$5 = JSX <frozen $6 a={frozen a$2} ></frozen $6>
   Call mutable foo$4(mutable b$3)
-  frozen $7 = "div"
-  frozen $8 = JSX <frozen $7 a={readonly a$2} b={readonly b$3} ></frozen $7>
+  readonly $7 = "div"
+  readonly $8 = JSX <frozen $7 a={frozen a$2} b={frozen b$3} ></frozen $7>
   Return frozen $8
 ```
 

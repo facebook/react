@@ -53,13 +53,13 @@ function foo$0() {
 
 ```
 bb0:
-  frozen x$2 = Array []
+  readonly x$2 = Array []
   frozen y$3 = Call frozen useFreeze$4(frozen x$2)
   Call mutable foo$5(frozen y$3, frozen x$2)
-  frozen $6 = "\n      "
-  frozen $7 = "\n      "
-  frozen $8 = "\n    "
-  frozen $9 = JSX <frozen Component$0>{frozen $6}{frozen x$2}{frozen $7}{frozen y$3}{frozen $8}</frozen Component$0>
+  readonly $6 = "\n      "
+  readonly $7 = "\n      "
+  readonly $8 = "\n    "
+  readonly $9 = JSX <frozen Component$0>{frozen $6}{frozen x$2}{frozen $7}{frozen y$3}{frozen $8}</frozen Component$0>
   Return frozen $9
 ```
 

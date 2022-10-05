@@ -21,13 +21,13 @@ function Component(props) {
 
 ```
 bb0:
-  mutable x$2 = Array []
+  readonly x$2 = Array []
   Call mutable x$2.push(frozen props$1.p0)
-  mutable y$3 = mutable x$2
-  frozen x$2 = Array []
-  frozen _$4 = JSX <frozen Component$0 x={frozen x$2} ></frozen Component$0>
+  readonly y$3 = readonly x$2
+  readonly x$2 = Array []
+  readonly _$4 = JSX <frozen Component$0 x={frozen x$2} ></frozen Component$0>
   Call mutable y$3.push(frozen props$1.p1)
-  frozen $5 = JSX <frozen Component$0 x={frozen x$2} y={readonly y$3} ></frozen Component$0>
+  readonly $5 = JSX <frozen Component$0 x={frozen x$2} y={frozen y$3} ></frozen Component$0>
   Return frozen $5
 ```
 
