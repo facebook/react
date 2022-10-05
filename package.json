@@ -112,7 +112,7 @@
     "build-for-devtools-dev": "yarn build-for-devtools --type=NODE_DEV",
     "build-for-devtools-prod": "yarn build-for-devtools --type=NODE_PROD",
     "linc": "node ./scripts/tasks/linc.js",
-    "lint": "node ./scripts/tasks/eslint.js",
+    "lint": "node ./scripts/tasks/eslint.js --cache",
     "lint-build": "node ./scripts/rollup/validate/index.js",
     "extract-errors": "node scripts/error-codes/extract-errors.js",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json && node ./scripts/flow/createFlowConfigs.js && node ./scripts/yarn/downloadReactIsForPrettyFormat.js",
