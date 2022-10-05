@@ -511,7 +511,6 @@ function pushAttribute(
     // shouldRemoveAttribute
     switch (typeof value) {
       case 'function':
-      // $FlowFixMe symbol is perfectly valid here
       case 'symbol': // eslint-disable-line
         return;
       case 'boolean': {
@@ -620,7 +619,6 @@ function pushAttribute(
     // shouldRemoveAttribute
     switch (typeof value) {
       case 'function':
-      // $FlowFixMe symbol is perfectly valid here
       case 'symbol': // eslint-disable-line
         return;
       case 'boolean': {

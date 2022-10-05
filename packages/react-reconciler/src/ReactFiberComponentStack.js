@@ -60,9 +60,10 @@ function describeFiber(fiber: Fiber): string {
 export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
   try {
     let info = '';
-    let node = workInProgress;
+    let node: Fiber = workInProgress;
     do {
       info += describeFiber(node);
+      // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.return;
     } while (node);
     return info;

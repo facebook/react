@@ -59,7 +59,7 @@ function isControlled(props) {
  * See http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 
-export function getHostProps(element: Element, props: Object) {
+export function getHostProps(element: Element, props: Object): Object {
   const node = ((element: any): InputWithWrapperState);
   const checked = props.checked;
 
@@ -415,7 +415,7 @@ function updateNamedCousins(rootNode, props) {
 export function setDefaultValue(
   node: InputWithWrapperState,
   type: ?string,
-  value: *,
+  value: ToStringValue,
 ) {
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js

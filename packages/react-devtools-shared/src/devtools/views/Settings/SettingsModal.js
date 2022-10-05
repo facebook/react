@@ -82,6 +82,7 @@ function SettingsModalImpl(_: {}) {
     case 'components':
       view = <ComponentsSettings />;
       break;
+    // $FlowFixMe[incompatible-type] is this missing in TabID?
     case 'debugging':
       view = <DebuggingSettings />;
       break;

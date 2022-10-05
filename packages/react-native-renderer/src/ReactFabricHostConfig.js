@@ -316,6 +316,8 @@ class ReactFabricHostComponent {
 }
 
 // eslint-disable-next-line no-unused-expressions
+// $FlowFixMe[class-object-subtyping] found when upgrading Flow
+// $FlowFixMe[method-unbinding] found when upgrading Flow
 (ReactFabricHostComponent.prototype: $ReadOnly<{...NativeMethods, ...}>);
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
@@ -593,7 +595,7 @@ export function replaceContainerChildren(
   newChildren: ChildSet,
 ): void {}
 
-export function getInstanceFromNode(node: any) {
+export function getInstanceFromNode(node: any): empty {
   throw new Error('Not yet implemented.');
 }
 

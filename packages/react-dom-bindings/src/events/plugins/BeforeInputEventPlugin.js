@@ -229,7 +229,6 @@ function extractCompositionEvent(
 
   const listeners = accumulateTwoPhaseListeners(targetInst, eventType);
   if (listeners.length > 0) {
-    // $FlowFixMe[incompatible-type]
     const event: ReactSyntheticEvent = new SyntheticCompositionEvent(
       eventType,
       domEventName,
@@ -402,7 +401,6 @@ function extractBeforeInputEvent(
 
   const listeners = accumulateTwoPhaseListeners(targetInst, 'onBeforeInput');
   if (listeners.length > 0) {
-    // $FlowFixMe[incompatible-type]
     const event: ReactSyntheticEvent = new SyntheticInputEvent(
       'onBeforeInput',
       'beforeinput',

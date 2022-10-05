@@ -73,11 +73,7 @@ function updateOptions(
   propValue: any,
   setDefaultSelected: boolean,
 ) {
-  type IndexableHTMLOptionsCollection = HTMLOptionsCollection & {
-    [key: number]: HTMLOptionElement,
-    ...,
-  };
-  const options: IndexableHTMLOptionsCollection = node.options;
+  const options: HTMLOptionsCollection = node.options;
 
   if (multiple) {
     const selectedValues = (propValue: Array<string>);
@@ -134,7 +130,7 @@ function updateOptions(
  * selected.
  */
 
-export function getHostProps(element: Element, props: Object) {
+export function getHostProps(element: Element, props: Object): Object {
   return assign({}, props, {
     value: undefined,
   });

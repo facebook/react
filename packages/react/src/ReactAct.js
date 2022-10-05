@@ -60,6 +60,7 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
     if (
       result !== null &&
       typeof result === 'object' &&
+      // $FlowFixMe[method-unbinding]
       typeof result.then === 'function'
     ) {
       const thenableResult: Thenable<T> = (result: any);
@@ -206,6 +207,7 @@ function flushActQueue(queue) {
         for (; i < queue.length; i++) {
           let callback = queue[i];
           do {
+            // $FlowFixMe[incompatible-type] found when upgrading Flow
             callback = callback(true);
           } while (callback !== null);
         }

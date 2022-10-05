@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {FloatRoot, StyleResource} from './ReactDOMFloatClient';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
@@ -42,6 +43,7 @@ const internalContainerInstanceKey = '__reactContainer$' + randomKey;
 const internalEventHandlersKey = '__reactEvents$' + randomKey;
 const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
+const internalRootNodeStylesSetKey = '__reactStyles$' + randomKey;
 
 export function detachDeletedInstance(node: Instance): void {
   // TODO: This function is only called on host components. I don't think all of
@@ -61,14 +63,17 @@ export function precacheFiberNode(
 }
 
 export function markContainerAsRoot(hostRoot: Fiber, node: Container): void {
+  // $FlowFixMe[prop-missing]
   node[internalContainerInstanceKey] = hostRoot;
 }
 
 export function unmarkContainerAsRoot(node: Container): void {
+  // $FlowFixMe[prop-missing]
   node[internalContainerInstanceKey] = null;
 }
 
 export function isContainerMarkedAsRoot(node: Container): boolean {
+  // $FlowFixMe[prop-missing]
   return !!node[internalContainerInstanceKey];
 }
 
@@ -132,6 +137,7 @@ export function getClosestInstanceFromNode(targetNode: Node): null | Fiber {
           // have had an internalInstanceKey on it.
           // Let's get the fiber associated with the SuspenseComponent
           // as the deepest instance.
+          // $FlowFixMe[prop-missing]
           const targetSuspenseInst = suspenseInstance[internalInstanceKey];
           if (targetSuspenseInst) {
             return targetSuspenseInst;
@@ -261,4 +267,12 @@ export function doesTargetHaveEventHandle(
     return false;
   }
   return eventHandles.has(eventHandle);
+}
+
+export function getStylesFromRoot(root: FloatRoot): Map<string, StyleResource> {
+  let styles = (root: any)[internalRootNodeStylesSetKey];
+  if (!styles) {
+    styles = (root: any)[internalRootNodeStylesSetKey] = new Map();
+  }
+  return styles;
 }

@@ -134,8 +134,6 @@ function extractEvents(
   const fromNode = from == null ? win : getNodeFromInstance(from);
   const toNode = to == null ? win : getNodeFromInstance(to);
 
-  // $FlowFixMe[prop-missing]
-  // $FlowFixMe[incompatible-type]
   const leave: KnownReactSyntheticEvent = new SyntheticEventCtor(
     leaveEventType,
     eventTypePrefix + 'leave',
@@ -152,7 +150,6 @@ function extractEvents(
   // the first ancestor. Next time, we will ignore the event.
   const nativeTargetInst = getClosestInstanceFromNode((nativeEventTarget: any));
   if (nativeTargetInst === targetInst) {
-    // $FlowFixMe[prop-missing]
     const enterEvent: KnownReactSyntheticEvent = new SyntheticEventCtor(
       enterEventType,
       eventTypePrefix + 'enter',

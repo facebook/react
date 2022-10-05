@@ -29,7 +29,5 @@ export const enableProfilerComponentTree = true;
 import typeof * as FeatureFlagsType from './DevToolsFeatureFlags.default';
 import typeof * as ExportsType from './DevToolsFeatureFlags.core-fb';
 
-// eslint-disable-next-line no-unused-vars
-type Check<_X, Y: _X, X: Y = _X> = null;
-// eslint-disable-next-line no-unused-expressions
-(null: Check<ExportsType, FeatureFlagsType>);
+// Flow magic to verify the exports of this file match the original version.
+((((null: any): ExportsType): FeatureFlagsType): ExportsType);

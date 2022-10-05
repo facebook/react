@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -40,7 +41,6 @@ import {
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
-  getOwnerDocumentFromRootContainer,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -117,12 +117,14 @@ export type EventTargetChildElement = {
   ...
 };
 export type Container =
-  | (Element & {_reactRootContainer?: FiberRoot, ...})
-  | (Document & {_reactRootContainer?: FiberRoot, ...})
-  | (DocumentFragment & {_reactRootContainer?: FiberRoot, ...});
+  | interface extends Element {_reactRootContainer?: FiberRoot}
+  | interface extends Document {_reactRootContainer?: FiberRoot}
+  | interface extends DocumentFragment {_reactRootContainer?: FiberRoot};
 export type Instance = Element;
 export type TextInstance = Text;
-export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
+export interface SuspenseInstance extends Comment {
+  _reactRetry?: () => void;
+}
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
@@ -207,7 +209,7 @@ export function getChildHostContext(
   return getChildNamespace(parentNamespace, type);
 }
 
-export function getPublicInstance(instance: Instance): * {
+export function getPublicInstance(instance: Instance): Instance {
   return instance;
 }
 
@@ -368,7 +370,7 @@ export function createTextInstance(
   return textNode;
 }
 
-export function getCurrentEventPriority(): * {
+export function getCurrentEventPriority(): EventPriority {
   const currentEvent = window.event;
   if (currentEvent === undefined) {
     return DefaultEventPriority;
@@ -590,7 +592,7 @@ export function clearSuspenseBoundary(
   parentInstance: Instance,
   suspenseInstance: SuspenseInstance,
 ): void {
-  let node = suspenseInstance;
+  let node: Node = suspenseInstance;
   // Delete all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
   // deep we are and only break out when we're back on top.
@@ -617,6 +619,7 @@ export function clearSuspenseBoundary(
         depth++;
       }
     }
+    // $FlowFixMe[incompatible-type] we bail out when we get a null
     node = nextNode;
   } while (node);
   // TODO: Warn, we didn't find the end comment boundary.
@@ -644,6 +647,7 @@ export function hideInstance(instance: Instance): void {
   // pass host context to this method?
   instance = ((instance: any): HTMLElement);
   const style = instance.style;
+  // $FlowFixMe[method-unbinding]
   if (typeof style.setProperty === 'function') {
     style.setProperty('display', 'none', 'important');
   } else {
@@ -679,6 +683,7 @@ export function clearContainer(container: Container): void {
     ((container: any): Element).textContent = '';
   } else if (container.nodeType === DOCUMENT_NODE) {
     if (container.documentElement) {
+      // $FlowFixMe[incompatible-call]
       container.removeChild(container.documentElement);
     }
   }
@@ -1267,6 +1272,7 @@ export function setFocusIfFocusable(node: Instance): boolean {
   const element = ((node: any): HTMLElement);
   try {
     element.addEventListener('focus', handleFocus);
+    // $FlowFixMe[method-unbinding]
     (element.focus || HTMLElement.prototype.focus).call(element);
   } finally {
     element.removeEventListener('focus', handleFocus);
@@ -1349,11 +1355,13 @@ export const supportsResources = true;
 export {isHostResourceType};
 function isHostResourceInstance(instance: Instance | Container): boolean {
   if (instance.nodeType === ELEMENT_NODE) {
+    // $FlowFixMe[prop-missing] Flow doesn't understand `nodeType` test.
     switch (instance.tagName.toLowerCase()) {
       case 'link': {
         const rel = ((instance: any): HTMLLinkElement).rel;
         return (
           rel === 'preload' ||
+          // $FlowFixMe[prop-missing] Flow doesn't understand `nodeType` test.
           (rel === 'stylesheet' && instance.hasAttribute('data-rprec'))
         );
       }
@@ -1367,7 +1375,7 @@ function isHostResourceInstance(instance: Instance | Container): boolean {
 
 export function prepareRendererToRender(rootContainer: Container) {
   if (enableFloat) {
-    prepareToRenderResources(getOwnerDocumentFromRootContainer(rootContainer));
+    prepareToRenderResources(rootContainer);
   }
 }
 

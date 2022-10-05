@@ -14,5 +14,8 @@ import {useSyncExternalStore as builtInAPI} from 'react';
 
 const shim = isServerEnvironment ? server : client;
 
-export const useSyncExternalStore =
-  builtInAPI !== undefined ? ((builtInAPI: any): typeof shim) : shim;
+export const useSyncExternalStore: <T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+  getServerSnapshot?: () => T,
+) => T = builtInAPI !== undefined ? builtInAPI : shim;

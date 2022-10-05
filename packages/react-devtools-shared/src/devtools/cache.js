@@ -26,7 +26,9 @@ import {createContext} from 'react';
 
 export type {Thenable};
 
-type Suspender = {then(resolve: () => mixed, reject: () => mixed): mixed, ...};
+interface Suspender {
+  then(resolve: () => mixed, reject: () => mixed): mixed;
+}
 
 type PendingResult = {
   status: 0,
@@ -86,7 +88,9 @@ const resourceConfigs: Map<Resource<any, any, any>, Config> = new Map();
 function getEntriesForResource(
   resource: any,
 ): Map<any, any> | WeakMap<any, any> {
-  let entriesForResource = ((entries.get(resource): any): Map<any, any>);
+  let entriesForResource: Map<any, any> | WeakMap<any, any> = ((entries.get(
+    resource,
+  ): any): Map<any, any>);
   if (entriesForResource === undefined) {
     const config = resourceConfigs.get(resource);
     entriesForResource =

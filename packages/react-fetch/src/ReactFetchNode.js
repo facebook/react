@@ -46,6 +46,7 @@ function nodeFetch(
   // $FlowFixMe: node flow type has `port` as a number
   const request = nodeImpl.request(nodeOptions, response => {
     // TODO: support redirects.
+    // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
     onResolve(new Response(response));
   });
   request.on('error', error => {
@@ -143,6 +144,7 @@ function Response(nativeResponse) {
 Response.prototype = {
   constructor: Response,
   arrayBuffer() {
+    // $FlowFixMe[object-this-reference] found when upgrading Flow
     const buffer = readRecordValue(this._bufferRecord);
     return buffer;
   },
@@ -151,20 +153,28 @@ Response.prototype = {
     throw new Error('Not implemented.');
   },
   json() {
+    // $FlowFixMe[object-this-reference] found when upgrading Flow
     if (this._json !== null) {
+      // $FlowFixMe[object-this-reference] found when upgrading Flow
       return this._json;
     }
+    // $FlowFixMe[object-this-reference] found when upgrading Flow
     const buffer = readRecordValue(this._bufferRecord);
     const json = JSON.parse(buffer.toString());
+    // $FlowFixMe[object-this-reference] found when upgrading Flow
     this._json = json;
     return json;
   },
   text() {
+    // $FlowFixMe[object-this-reference] found when upgrading Flow
     if (this._text !== null) {
+      // $FlowFixMe[object-this-reference] found when upgrading Flow
       return this._text;
     }
+    // $FlowFixMe[object-this-reference] found when upgrading Flow
     const buffer = readRecordValue(this._bufferRecord);
     const text = buffer.toString();
+    // $FlowFixMe[object-this-reference] found when upgrading Flow
     this._text = text;
     return text;
   },

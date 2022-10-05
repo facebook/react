@@ -238,7 +238,7 @@ type BaseFiberRootProperties = {
 
   // Node returned by Scheduler.scheduleCallback. Represents the next rendering
   // task that the root will work on.
-  callbackNode: *,
+  callbackNode: any,
   callbackPriority: Lane,
   eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,

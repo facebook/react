@@ -38,6 +38,11 @@ function requiredContext<Value>(c: Value | NoContextT): Value {
   return (c: any);
 }
 
+function getCurrentRootHostContainer(): null | Container {
+  const container = rootInstanceStackCursor.current;
+  return container === NO_CONTEXT ? null : (container: any);
+}
+
 function getRootHostContainer(): Container {
   const rootInstance = requiredContext(rootInstanceStackCursor.current);
   return rootInstance;
@@ -101,6 +106,7 @@ function popHostContext(fiber: Fiber): void {
 }
 
 export {
+  getCurrentRootHostContainer,
   getHostContext,
   getRootHostContainer,
   popHostContainer,

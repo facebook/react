@@ -14,8 +14,9 @@ type ValueTracker = {
   setValue(value: string): void,
   stopTracking(): void,
 };
-type WrapperState = {_valueTracker?: ?ValueTracker, ...};
-type ElementWithValueTracker = HTMLInputElement & WrapperState;
+interface ElementWithValueTracker extends HTMLInputElement {
+  _valueTracker?: ?ValueTracker;
+}
 
 function isCheckable(elem: HTMLInputElement) {
   const type = elem.type;

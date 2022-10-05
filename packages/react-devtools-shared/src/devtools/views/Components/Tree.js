@@ -409,7 +409,6 @@ export default function Tree(props: Props): React.Node {
           tabIndex={0}>
           <AutoSizer>
             {({height, width}) => (
-              // $FlowFixMe https://github.com/facebook/flow/issues/7341
               <FixedSizeList
                 className={styles.List}
                 height={height}

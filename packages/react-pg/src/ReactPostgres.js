@@ -67,6 +67,7 @@ function readRecordValue(record: Record) {
 }
 
 export function Pool(options: mixed) {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   this.pool = new PostgresPool(options);
   // Unique function per instance because it's used for cache identity.
   this.createRecordMap = function() {
@@ -76,12 +77,13 @@ export function Pool(options: mixed) {
 
 type NestedMap = Map<any, Record | NestedMap>;
 
+// $FlowFixMe[prop-missing] found when upgrading Flow
 Pool.prototype.query = function(query: string, values?: Array<mixed>) {
   const pool = this.pool;
   const outerMap = unstable_getCacheForType(this.createRecordMap);
 
   let innerMap: NestedMap = outerMap;
-  let key = query;
+  let key: mixed = query;
   if (values != null) {
     // If we have parameters, each becomes as a nesting layer for Maps.
     // We want to find (or create as needed) the innermost Map, and return that.

@@ -43,7 +43,7 @@ export function useSyncExternalStoreWithSelector<Snapshot, Selection>(
     // copies of the hook/component.
     let hasMemo = false;
     let memoizedSnapshot;
-    let memoizedSelection;
+    let memoizedSelection: Selection;
     const memoizedSelector = nextSnapshot => {
       if (!hasMemo) {
         // The first time the hook is called, there is no memoized result.

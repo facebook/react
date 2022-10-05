@@ -386,7 +386,9 @@ function areHookInputsEqual(
       );
     }
   }
+  // $FlowFixMe[incompatible-use] found when upgrading Flow
   for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     if (is(nextDeps[i], prevDeps[i])) {
       continue;
     }
@@ -763,6 +765,7 @@ if (enableUseMemoCacheHook) {
 
 function use<T>(usable: Usable<T>): T {
   if (usable !== null && typeof usable === 'object') {
+    // $FlowFixMe[method-unbinding]
     if (typeof usable.then === 'function') {
       // This is a thenable.
       const thenable: Thenable<T> = (usable: any);
@@ -1934,6 +1937,7 @@ function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
         "A function wrapped in useEvent can't be called during rendering.",
       );
     }
+    // $FlowFixMe[prop-missing] found when upgrading Flow
     return eventFn._impl.apply(undefined, arguments);
   };
   eventFn._impl = callback;

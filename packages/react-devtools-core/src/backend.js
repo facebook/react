@@ -146,6 +146,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
         }
       },
     );
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     bridge.addListener(
       'updateComponentFilters',
       (componentFilters: Array<ComponentFilter>) => {
@@ -165,10 +166,12 @@ export function connectToDevTools(options: ?ConnectOptions) {
     // Ideally the backend would save the filters itself, but RN doesn't provide a sync storage solution.
     // So for now we just fall back to using the default filters...
     if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ == null) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       bridge.send('overrideComponentFilters', savedComponentFilters);
     }
 
     // TODO (npm-packages) Warn if "isBackendStorageAPISupported"
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     const agent = new Agent(bridge);
     agent.addListener('shutdown', () => {
       // If we received 'shutdown' from `agent`, we assume the `bridge` is already shutting down,
@@ -181,6 +184,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     // Setup React Native style editor if the environment supports it.
     if (resolveRNStyle != null || hook.resolveRNStyle != null) {
       setupNativeStyleEditor(
+        // $FlowFixMe[incompatible-call] found when upgrading Flow
         bridge,
         agent,
         ((resolveRNStyle || hook.resolveRNStyle: any): ResolveNativeStyle),

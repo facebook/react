@@ -9,7 +9,6 @@
 
 const url = require('url');
 
-// $FlowFixMe
 const Module = require('module');
 
 module.exports = function register() {
@@ -59,6 +58,7 @@ module.exports = function register() {
                 async: true,
               };
               return Promise.resolve(
+                // $FlowFixMe[incompatible-call] found when upgrading Flow
                 resolve(new Proxy(moduleReference, proxyHandlers)),
               );
             };
@@ -91,6 +91,7 @@ module.exports = function register() {
     },
   };
 
+  // $FlowFixMe[prop-missing] found when upgrading Flow
   Module._extensions['.client.js'] = function(module, path) {
     const moduleId = url.pathToFileURL(path).href;
     const moduleReference: {[string]: any, ...} = {
@@ -99,11 +100,14 @@ module.exports = function register() {
       name: '*', // Represents the whole object instead of a particular import.
       async: false,
     };
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     module.exports = new Proxy(moduleReference, proxyHandlers);
   };
 
+  // $FlowFixMe[prop-missing] found when upgrading Flow
   const originalResolveFilename = Module._resolveFilename;
 
+  // $FlowFixMe[prop-missing] found when upgrading Flow
   Module._resolveFilename = function(request, parent, isMain, options) {
     const resolved = originalResolveFilename.apply(this, arguments);
     if (resolved.endsWith('.server.js')) {

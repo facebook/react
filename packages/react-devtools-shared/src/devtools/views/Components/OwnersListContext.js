@@ -45,14 +45,20 @@ const resource: Resource<
   (element: Element) => {
     const request = inProgressRequests.get(element);
     if (request != null) {
+      // $FlowFixMe[incompatible-call] found when upgrading Flow
       return request.promise;
     }
 
-    let resolveFn = ((null: any): ResolveFn);
+    let resolveFn:
+      | ResolveFn
+      | ((
+          result: Promise<Array<SerializedElement>> | Array<SerializedElement>,
+        ) => void) = ((null: any): ResolveFn);
     const promise = new Promise(resolve => {
       resolveFn = resolve;
     });
 
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     inProgressRequests.set(element, {promise, resolveFn});
 
     return promise;

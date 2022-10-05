@@ -273,7 +273,6 @@ function attemptResolveElement(
             );
           }
         }
-        // $FlowFixMe issue discovered when updating Flow
         return [
           REACT_ELEMENT_TYPE,
           type,
@@ -435,6 +434,7 @@ function isSimpleObject(object): boolean {
 }
 
 function objectName(object): string {
+  // $FlowFixMe[method-unbinding]
   const name = Object.prototype.toString.call(object);
   return name.replace(/^\[object (.*)\]$/, function(m, p0) {
     return p0;
@@ -494,6 +494,7 @@ function describeObjectForErrorMessage(
         typeof value === 'object' &&
         value !== null
       ) {
+        // $FlowFixMe[incompatible-call] found when upgrading Flow
         str += describeObjectForErrorMessage(value);
       } else {
         str += describeValueForErrorMessage(value);
@@ -521,6 +522,7 @@ function describeObjectForErrorMessage(
         typeof value === 'object' &&
         value !== null
       ) {
+        // $FlowFixMe[incompatible-call] found when upgrading Flow
         str += describeObjectForErrorMessage(value);
       } else {
         str += describeValueForErrorMessage(value);
@@ -765,7 +767,6 @@ export function resolveModelToJSON(
     // $FlowFixMe `description` might be undefined
     const name: string = value.description;
 
-    // $FlowFixMe `name` might be undefined
     if (Symbol.for(name) !== value) {
       throw new Error(
         'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
@@ -895,7 +896,6 @@ function emitModuleChunk(
   id: number,
   moduleMetaData: ModuleMetaData,
 ): void {
-  // $FlowFixMe ModuleMetaData is not a ReactModel
   const processedChunk = processModuleChunk(request, id, moduleMetaData);
   request.completedModuleChunks.push(processedChunk);
 }

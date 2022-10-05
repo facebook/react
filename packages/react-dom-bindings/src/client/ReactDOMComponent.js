@@ -419,7 +419,6 @@ export function createElement(
       const firstChild = ((div.firstChild: any): HTMLScriptElement);
       domElement = div.removeChild(firstChild);
     } else if (typeof props.is === 'string') {
-      // $FlowFixMe `createElement` should be updated for Web Components
       domElement = ownerDocument.createElement(type, {is: props.is});
     } else {
       // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
@@ -455,6 +454,7 @@ export function createElement(
     if (namespaceURI === HTML_NAMESPACE) {
       if (
         !isCustomComponentTag &&
+        // $FlowFixMe[method-unbinding]
         Object.prototype.toString.call(domElement) ===
           '[object HTMLUnknownElement]' &&
         !hasOwnProperty.call(warnedUnknownTags, type)

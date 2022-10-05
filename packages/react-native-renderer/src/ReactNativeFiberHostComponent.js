@@ -127,6 +127,8 @@ class ReactNativeFiberHostComponent {
 }
 
 // eslint-disable-next-line no-unused-expressions
+// $FlowFixMe[class-object-subtyping] found when upgrading Flow
+// $FlowFixMe[method-unbinding] found when upgrading Flow
 (ReactNativeFiberHostComponent.prototype: $ReadOnly<{...NativeMethods, ...}>);
 
 export default ReactNativeFiberHostComponent;

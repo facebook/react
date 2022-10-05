@@ -13,7 +13,7 @@ import type {ScrollState} from './view-base/utils/scrollState';
 // eslint-disable-next-line no-unused-vars
 type Return_<R, F: (...args: Array<any>) => R> = R;
 /** Get return type of a function. */
-export type Return<T> = Return_<*, T>;
+export type Return<T> = Return_<mixed, T>;
 
 // Project types
 

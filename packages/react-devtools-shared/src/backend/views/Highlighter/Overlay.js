@@ -282,7 +282,7 @@ function findTipPos(dims, bounds, tipSize) {
   const tipWidth = Math.max(tipSize.width, 60);
   const margin = 5;
 
-  let top;
+  let top: number | string;
   if (dims.top + dims.height + tipHeight <= bounds.top + bounds.height) {
     if (dims.top + dims.height < bounds.top + 0) {
       top = bounds.top + margin;
@@ -299,7 +299,7 @@ function findTipPos(dims, bounds, tipSize) {
     top = bounds.top + bounds.height - tipHeight - margin;
   }
 
-  let left = dims.left + margin;
+  let left: number | string = dims.left + margin;
   if (dims.left < bounds.left) {
     left = bounds.left + margin;
   }

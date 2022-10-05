@@ -228,6 +228,7 @@ function coerceRef(
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+  // $FlowFixMe[method-unbinding]
   const childString = Object.prototype.toString.call(newChild);
 
   throw new Error(
@@ -318,7 +319,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     // instead.
     const existingChildren: Map<string | number, Fiber> = new Map();
 
-    let existingChild = currentFirstChild;
+    let existingChild: null | Fiber = currentFirstChild;
     while (existingChild !== null) {
       if (existingChild.key !== null) {
         existingChildren.set(existingChild.key, existingChild);
@@ -474,7 +475,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
   function updateFragment(
     returnFiber: Fiber,
     current: Fiber | null,
-    fragment: Iterable<*>,
+    fragment: Iterable<React$Node>,
     lanes: Lanes,
     key: null | string,
   ): Fiber {
@@ -749,7 +750,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
   function reconcileChildrenArray(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
-    newChildren: Array<*>,
+    newChildren: Array<any>,
     lanes: Lanes,
   ): Fiber | null {
     // This algorithm can't optimize by searching from both ends since we
@@ -916,7 +917,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
   function reconcileChildrenIterator(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
-    newChildrenIterable: Iterable<*>,
+    newChildrenIterable: Iterable<mixed>,
     lanes: Lanes,
   ): Fiber | null {
     // This is the same implementation as reconcileChildrenArray(),

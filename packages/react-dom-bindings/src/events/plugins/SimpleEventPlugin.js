@@ -173,7 +173,6 @@ function extractEvents(
     );
     if (listeners.length > 0) {
       // Intentionally create event lazily.
-      // $FlowFixMe[incompatible-type]
       const event: ReactSyntheticEvent = new SyntheticEventCtor(
         reactName,
         reactEventType,
@@ -206,7 +205,6 @@ function extractEvents(
     );
     if (listeners.length > 0) {
       // Intentionally create event lazily.
-      // $FlowFixMe[incompatible-type]
       const event: ReactSyntheticEvent = new SyntheticEventCtor(
         reactName,
         reactEventType,

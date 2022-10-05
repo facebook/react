@@ -151,6 +151,7 @@ function getFiberFlags(fiber: Fiber): number {
 
 // Some environments (e.g. React Native / Hermes) don't support the performance API yet.
 const getCurrentTime =
+  // $FlowFixMe[method-unbinding]
   typeof performance === 'object' && typeof performance.now === 'function'
     ? () => performance.now()
     : () => Date.now();
@@ -386,7 +387,6 @@ export function getInternalReactConstants(
     const symbolOrNumber =
       typeof type === 'object' && type !== null ? type.$$typeof : type;
 
-    // $FlowFixMe Flow doesn't know about typeof "symbol"
     return typeof symbolOrNumber === 'symbol'
       ? // $FlowFixMe `toString()` doesn't match the type signature?
         symbolOrNumber.toString()
@@ -1310,6 +1310,7 @@ export function attach(
           const id = getFiberIDThrows(fiber);
           const contexts = getContextsForFiber(fiber);
           if (contexts !== null) {
+            // $FlowFixMe[incompatible-use] found when upgrading Flow
             idToContextsMap.set(id, contexts);
           }
         }
@@ -1380,8 +1381,10 @@ export function attach(
   function getContextChangedKeys(fiber: Fiber): null | boolean | Array<string> {
     if (idToContextsMap !== null) {
       const id = getFiberIDThrows(fiber);
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       const prevContexts = idToContextsMap.has(id)
-        ? idToContextsMap.get(id)
+        ? // $FlowFixMe[incompatible-use] found when upgrading Flow
+          idToContextsMap.get(id)
         : null;
       const nextContexts = getContextsForFiber(fiber);
 
@@ -2265,7 +2268,7 @@ export function attach(
 
     // This is a naive implementation that shallowly recourses children.
     // We might want to revisit this if it proves to be too inefficient.
-    let child = childSet;
+    let child: null | Fiber = childSet;
     while (child !== null) {
       findReorderedChildrenRecursively(child, nextChildren);
       child = child.sibling;
@@ -2636,7 +2639,9 @@ export function attach(
         const {effectDuration, passiveEffectDuration} = getEffectDurations(
           root,
         );
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentCommitProfilingMetadata.effectDuration = effectDuration;
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentCommitProfilingMetadata.passiveEffectDuration = passiveEffectDuration;
       }
     }
@@ -2840,11 +2845,11 @@ export function attach(
   // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
   function getNearestMountedFiber(fiber: Fiber): null | Fiber {
     let node = fiber;
-    let nearestMounted = fiber;
+    let nearestMounted: null | Fiber = fiber;
     if (!fiber.alternate) {
       // If there is no alternate, this might be a new tree that isn't inserted
       // yet. If it is, then it will have a pending insertion effect on it.
-      let nextNode = node;
+      let nextNode: Fiber = node;
       do {
         node = nextNode;
         if ((node.flags & (Placement | Hydrating)) !== NoFlags) {
@@ -2853,6 +2858,7 @@ export function attach(
           // if that one is still mounted.
           nearestMounted = node.return;
         }
+        // $FlowFixMe[incompatible-type] we bail out when we get a null
         nextNode = node.return;
       } while (nextNode);
     } else {
@@ -3091,7 +3097,7 @@ export function attach(
     const owners: Array<SerializedElement> = [fiberToSerializedElement(fiber)];
 
     if (_debugOwner) {
-      let owner = _debugOwner;
+      let owner: null | Fiber = _debugOwner;
       while (owner !== null) {
         owners.unshift(fiberToSerializedElement(owner));
         owner = owner._debugOwner || null;
@@ -3250,7 +3256,7 @@ export function attach(
     let owners = null;
     if (_debugOwner) {
       owners = [];
-      let owner = _debugOwner;
+      let owner: null | Fiber = _debugOwner;
       while (owner !== null) {
         owners.push(fiberToSerializedElement(owner));
         owner = owner._debugOwner || null;
@@ -3268,7 +3274,6 @@ export function attach(
       for (const method in console) {
         try {
           originalConsoleMethods[method] = console[method];
-          // $FlowFixMe property error|warn is not writable.
           console[method] = () => {};
         } catch (error) {}
       }
@@ -3283,7 +3288,6 @@ export function attach(
         // Restore original console functionality.
         for (const method in originalConsoleMethods) {
           try {
-            // $FlowFixMe property error|warn is not writable.
             console[method] = originalConsoleMethods[method];
           } catch (error) {}
         }
@@ -3681,18 +3685,22 @@ export function attach(
     // This will enable us to send patches without re-inspecting if hydrated paths are requested.
     // (Reducing how often we shallow-render is a better DX for function components that use hooks.)
     const cleanedInspectedElement = {...mostRecentlyInspectedElement};
+    // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.context = cleanForBridge(
       cleanedInspectedElement.context,
       createIsPathAllowed('context', null),
     );
+    // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.hooks = cleanForBridge(
       cleanedInspectedElement.hooks,
       createIsPathAllowed('hooks', 'hooks'),
     );
+    // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.props = cleanForBridge(
       cleanedInspectedElement.props,
       createIsPathAllowed('props', null),
     );
+    // $FlowFixMe[prop-missing] found when upgrading Flow
     cleanedInspectedElement.state = cleanForBridge(
       cleanedInspectedElement.state,
       createIsPathAllowed('state', null),
@@ -3702,6 +3710,7 @@ export function attach(
       id,
       responseID: requestID,
       type: 'full-data',
+      // $FlowFixMe[prop-missing] found when upgrading Flow
       value: cleanedInspectedElement,
     };
   }
@@ -4276,6 +4285,7 @@ export function attach(
     ) {
       // Is this the next Fiber we should select? Let's compare the frames.
       const actualFrame = getPathFrame(fiber);
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       const expectedFrame = trackedPath[trackedPathMatchDepth + 1];
       if (expectedFrame === undefined) {
         throw new Error('Expected to see a frame at the next depth.');
@@ -4289,6 +4299,7 @@ export function attach(
         trackedPathMatchFiber = fiber;
         trackedPathMatchDepth++;
         // Are we out of frames to match?
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         if (trackedPathMatchDepth === trackedPath.length - 1) {
           // There's nothing that can possibly match afterwards.
           // Don't check the children.
@@ -4411,13 +4422,15 @@ export function attach(
   // The return path will contain Fibers that are "invisible" to the store
   // because their keys and indexes are important to restoring the selection.
   function getPathForElement(id: number): Array<PathFrame> | null {
-    let fiber = idToArbitraryFiberMap.get(id);
+    let fiber: ?Fiber = idToArbitraryFiberMap.get(id);
     if (fiber == null) {
       return null;
     }
     const keyPath = [];
     while (fiber !== null) {
+      // $FlowFixMe[incompatible-call] found when upgrading Flow
       keyPath.push(getPathFrame(fiber));
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       fiber = fiber.return;
     }
     keyPath.reverse();
@@ -4434,7 +4447,7 @@ export function attach(
       return null;
     }
     // Find the closest Fiber store is aware of.
-    let fiber = trackedPathMatchFiber;
+    let fiber: null | Fiber = trackedPathMatchFiber;
     while (fiber !== null && shouldFilterFiber(fiber)) {
       fiber = fiber.return;
     }
@@ -4443,6 +4456,7 @@ export function attach(
     }
     return {
       id: getFiberIDThrows(fiber),
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       isFullMatch: trackedPathMatchDepth === trackedPath.length - 1,
     };
   }

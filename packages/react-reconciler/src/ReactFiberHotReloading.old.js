@@ -51,7 +51,6 @@ import {
 import {enableFloat} from 'shared/ReactFeatureFlags';
 
 let resolveFamily: RefreshHandler | null = null;
-// $FlowFixMe Flow gets confused by a WeakSet feature check below.
 let failedBoundaries: WeakSet<Fiber> | null = null;
 
 export const setRefreshHandler = (handler: RefreshHandler | null): void => {
@@ -191,6 +190,7 @@ export function isCompatibleFamilyForHotReloading(
       // then we would risk falsely saying two separate memo(Foo)
       // calls are equivalent because they wrap the same Foo function.
       const prevFamily = resolveFamily(prevType);
+      // $FlowFixMe[not-a-function] found when upgrading Flow
       if (prevFamily !== undefined && prevFamily === resolveFamily(nextType)) {
         return true;
       }
@@ -211,7 +211,6 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
       return;
     }
     if (failedBoundaries === null) {
-      // $FlowFixMe Flow got confused by the feature check above.
       failedBoundaries = new WeakSet();
     }
     failedBoundaries.add(fiber);
@@ -302,6 +301,7 @@ function scheduleFibersWithFamiliesRecursively(
     if (failedBoundaries !== null) {
       if (
         failedBoundaries.has(fiber) ||
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         (alternate !== null && failedBoundaries.has(alternate))
       ) {
         needsRemount = true;

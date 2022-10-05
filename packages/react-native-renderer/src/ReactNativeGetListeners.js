@@ -122,9 +122,6 @@ export default function getListeners(
           detail: syntheticEvent.nativeEvent,
         });
         eventInst.isTrusted = true;
-        // setSyntheticEvent is present on the React Native Event shim.
-        // It is used to forward method calls on Event to the underlying SyntheticEvent.
-        // $FlowFixMe
         eventInst.setSyntheticEvent(syntheticEvent);
 
         listenerObj.listener(eventInst, ...args);

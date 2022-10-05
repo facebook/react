@@ -63,7 +63,7 @@
     "eslint-plugin-react-internal": "link:./scripts/eslint-rules",
     "fbjs-scripts": "1.2.0",
     "filesize": "^6.0.1",
-    "flow-bin": "^0.142.0",
+    "flow-bin": "^0.188.0",
     "glob": "^7.1.6",
     "glob-stream": "^6.1.0",
     "google-closure-compiler": "^20200517.0.0",
@@ -100,7 +100,7 @@
     "yargs": "^15.3.1"
   },
   "devEngines": {
-    "node": "^12.17.0 || 13.x || 14.x || 15.x || 16.x || 17.x"
+    "node": "^12.17.0 || 13.x || 14.x || 15.x || 16.x || 17.x || 18.x"
   },
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"

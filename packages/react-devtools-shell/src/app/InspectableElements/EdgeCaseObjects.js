@@ -16,7 +16,9 @@ const objectWithModifiedHasOwnProperty = {
 };
 
 const objectWithNullProto = Object.create(null);
+// $FlowFixMe[prop-missing] found when upgrading Flow
 objectWithNullProto.foo = 'abc';
+// $FlowFixMe[prop-missing] found when upgrading Flow
 objectWithNullProto.bar = 123;
 
 export default function EdgeCaseObjects(): React.Node {

@@ -57,10 +57,10 @@ function renderToReadableStream(
       const stream: ReactDOMServerReadableStream = (new ReadableStream(
         {
           type: 'bytes',
-          pull(controller): ?Promise<void> {
+          pull: (controller): ?Promise<void> => {
             startFlowing(request, controller);
           },
-          cancel(reason): ?Promise<void> {
+          cancel: (reason): ?Promise<void> => {
             abort(request);
           },
         },

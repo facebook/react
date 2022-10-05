@@ -72,6 +72,7 @@ export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
     if (
       typeof result === 'object' &&
       result !== null &&
+      // $FlowFixMe[method-unbinding]
       typeof result.then === 'function'
     ) {
       const thenableResult: Thenable<T> = (result: any);

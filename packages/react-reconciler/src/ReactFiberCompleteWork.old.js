@@ -239,12 +239,15 @@ if (supportsMutation) {
       if (node === workInProgress) {
         return;
       }
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       while (node.sibling === null) {
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         if (node.return === null || node.return === workInProgress) {
           return;
         }
         node = node.return;
       }
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       node.sibling.return = node.return;
       node = node.sibling;
     }
@@ -354,17 +357,19 @@ if (supportsMutation) {
         node = node.child;
         continue;
       }
-      // $FlowFixMe This is correct but Flow is confused by the labeled break.
       node = (node: Fiber);
       if (node === workInProgress) {
         return;
       }
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       while (node.sibling === null) {
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         if (node.return === null || node.return === workInProgress) {
           return;
         }
         node = node.return;
       }
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       node.sibling.return = node.return;
       node = node.sibling;
     }
@@ -419,17 +424,19 @@ if (supportsMutation) {
         node = node.child;
         continue;
       }
-      // $FlowFixMe This is correct but Flow is confused by the labeled break.
       node = (node: Fiber);
       if (node === workInProgress) {
         return;
       }
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       while (node.sibling === null) {
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         if (node.return === null || node.return === workInProgress) {
           return;
         }
         node = node.return;
       }
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       node.sibling.return = node.return;
       node = node.sibling;
     }

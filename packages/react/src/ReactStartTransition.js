@@ -25,7 +25,9 @@ export function startTransition(
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       ReactCurrentBatchConfig.transition.name = options.name;
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       ReactCurrentBatchConfig.transition.startTime = -1;
     }
   }

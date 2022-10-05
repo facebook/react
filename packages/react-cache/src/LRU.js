@@ -57,7 +57,7 @@ export function createLRU<T>(limit: number): LRU<T> {
     // Delete entries from the cache, starting from the end of the list.
     if (first !== null) {
       const resolvedFirst: Entry<T> = (first: any);
-      let last = resolvedFirst.previous;
+      let last: null | Entry<T> = resolvedFirst.previous;
       while (size > targetSize && last !== null) {
         const onDelete = last.onDelete;
         const previous = last.previous;

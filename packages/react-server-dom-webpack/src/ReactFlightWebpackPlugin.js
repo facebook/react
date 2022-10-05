@@ -88,6 +88,7 @@ export default class ReactFlightWebpackPlugin {
     ) {
       this.clientReferences = [(options.clientReferences: $FlowFixMe)];
     } else {
+      // $FlowFixMe[incompatible-type] found when upgrading Flow
       this.clientReferences = options.clientReferences;
     }
     if (typeof options.chunkName === 'string') {
@@ -159,7 +160,9 @@ export default class ReactFlightWebpackPlugin {
             clientFileNameFound = true;
 
             if (resolvedClientReferences) {
+              // $FlowFixMe[incompatible-use] found when upgrading Flow
               for (let i = 0; i < resolvedClientReferences.length; i++) {
+                // $FlowFixMe[incompatible-use] found when upgrading Flow
                 const dep = resolvedClientReferences[i];
 
                 const chunkName = _this.chunkName
@@ -349,6 +352,7 @@ export default class ReactFlightWebpackPlugin {
         if (err) return callback(err);
         const flat = [];
         for (let i = 0; i < result.length; i++) {
+          // $FlowFixMe[method-unbinding]
           flat.push.apply(flat, result[i]);
         }
         callback(null, flat);

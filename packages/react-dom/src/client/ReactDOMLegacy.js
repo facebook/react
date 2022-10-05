@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {Container} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
+import type {
+  Container,
+  PublicInstance,
+} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
@@ -142,6 +145,7 @@ function legacyCreateRootFromDOMContainer(
 
     const rootContainerElement =
       container.nodeType === COMMENT_NODE ? container.parentNode : container;
+    // $FlowFixMe[incompatible-call]
     listenToAllSupportedEvents(rootContainerElement);
 
     flushSync();
@@ -176,6 +180,7 @@ function legacyCreateRootFromDOMContainer(
 
     const rootContainerElement =
       container.nodeType === COMMENT_NODE ? container.parentNode : container;
+    // $FlowFixMe[incompatible-call]
     listenToAllSupportedEvents(rootContainerElement);
 
     // Initial mount should not be batched.
@@ -206,7 +211,7 @@ function legacyRenderSubtreeIntoContainer(
   container: Container,
   forceHydrate: boolean,
   callback: ?Function,
-) {
+): React$Component<any, any> | PublicInstance | null {
   if (__DEV__) {
     topLevelUpdateWarnings(container);
     warnOnInvalidCallback(callback === undefined ? null : callback, 'render');
@@ -274,7 +279,7 @@ export function hydrate(
   element: React$Node,
   container: Container,
   callback: ?Function,
-) {
+): React$Component<any, any> | PublicInstance | null {
   if (__DEV__) {
     console.error(
       'ReactDOM.hydrate is no longer supported in React 18. Use hydrateRoot ' +
@@ -314,7 +319,7 @@ export function render(
   element: React$Element<any>,
   container: Container,
   callback: ?Function,
-) {
+): React$Component<any, any> | PublicInstance | null {
   if (__DEV__) {
     console.error(
       'ReactDOM.render is no longer supported in React 18. Use createRoot ' +
@@ -354,7 +359,7 @@ export function unstable_renderSubtreeIntoContainer(
   element: React$Element<any>,
   containerNode: Container,
   callback: ?Function,
-) {
+): React$Component<any, any> | PublicInstance | null {
   if (__DEV__) {
     console.error(
       'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported ' +
@@ -381,7 +386,7 @@ export function unstable_renderSubtreeIntoContainer(
   );
 }
 
-export function unmountComponentAtNode(container: Container) {
+export function unmountComponentAtNode(container: Container): boolean {
   if (!isValidContainerLegacy(container)) {
     throw new Error(
       'unmountComponentAtNode(...): Target container is not a DOM element.',
@@ -432,6 +437,8 @@ export function unmountComponentAtNode(container: Container) {
       const isContainerReactRoot =
         container.nodeType === ELEMENT_NODE &&
         isValidContainerLegacy(container.parentNode) &&
+        // $FlowFixMe[prop-missing]
+        // $FlowFixMe[incompatible-use]
         !!container.parentNode._reactRootContainer;
 
       if (hasNonRootReactChild) {

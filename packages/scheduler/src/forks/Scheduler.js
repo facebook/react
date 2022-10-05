@@ -58,6 +58,7 @@ type Task = {
 
 let getCurrentTime: () => number | DOMHighResTimeStamp;
 const hasPerformanceNow =
+  // $FlowFixMe[method-unbinding]
   typeof performance === 'object' && typeof performance.now === 'function';
 
 if (hasPerformanceNow) {
@@ -183,7 +184,9 @@ function flushWork(hasTimeRemaining, initialTime) {
       } catch (error) {
         if (currentTask !== null) {
           const currentTime = getCurrentTime();
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
           markTaskErrored(currentTask, currentTime);
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           currentTask.isQueued = false;
         }
         throw error;
@@ -218,12 +221,17 @@ function workLoop(hasTimeRemaining, initialTime) {
       // This currentTask hasn't expired, and we've reached the deadline.
       break;
     }
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     const callback = currentTask.callback;
     if (typeof callback === 'function') {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentTask.callback = null;
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentPriorityLevel = currentTask.priorityLevel;
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
       if (enableProfiling) {
+        // $FlowFixMe[incompatible-call] found when upgrading Flow
         markTaskRun(currentTask, currentTime);
       }
       const continuationCallback = callback(didUserCallbackTimeout);
@@ -231,15 +239,19 @@ function workLoop(hasTimeRemaining, initialTime) {
       if (typeof continuationCallback === 'function') {
         // If a continuation is returned, immediately yield to the main thread
         // regardless of how much time is left in the current time slice.
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentTask.callback = continuationCallback;
         if (enableProfiling) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
           markTaskYield(currentTask, currentTime);
         }
         advanceTimers(currentTime);
         return true;
       } else {
         if (enableProfiling) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
           markTaskCompleted(currentTask, currentTime);
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           currentTask.isQueued = false;
         }
         if (currentTask === peek(taskQueue)) {
@@ -564,6 +576,7 @@ const performWorkUntilDeadline = () => {
     // `hasMoreWork` will remain true, and we'll continue the work loop.
     let hasMoreWork = true;
     try {
+      // $FlowFixMe[not-a-function] found when upgrading Flow
       hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
     } finally {
       if (hasMoreWork) {

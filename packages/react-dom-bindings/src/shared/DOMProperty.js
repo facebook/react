@@ -123,7 +123,6 @@ export function shouldRemoveAttributeWithWarning(
   }
   switch (typeof value) {
     case 'function':
-    // $FlowFixMe symbol is perfectly valid here
     case 'symbol': // eslint-disable-line
       return true;
     case 'boolean': {
@@ -260,6 +259,7 @@ if (enableCustomElementPropertySupport) {
 }
 
 reservedProps.forEach(name => {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     RESERVED,
@@ -279,6 +279,7 @@ reservedProps.forEach(name => {
   ['htmlFor', 'for'],
   ['httpEquiv', 'http-equiv'],
 ].forEach(([name, attributeName]) => {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     STRING,
@@ -294,6 +295,7 @@ reservedProps.forEach(name => {
 // In React, we let users pass `true` and `false` even though technically
 // these aren't boolean attributes (they are coerced to strings).
 ['contentEditable', 'draggable', 'spellCheck', 'value'].forEach(name => {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     BOOLEANISH_STRING,
@@ -315,6 +317,7 @@ reservedProps.forEach(name => {
   'focusable',
   'preserveAlpha',
 ].forEach(name => {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     BOOLEANISH_STRING,
@@ -355,6 +358,7 @@ reservedProps.forEach(name => {
   // Microdata
   'itemScope',
 ].forEach(name => {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     BOOLEAN,
@@ -380,6 +384,7 @@ reservedProps.forEach(name => {
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
 ].forEach(name => {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     BOOLEAN,
@@ -401,6 +406,7 @@ reservedProps.forEach(name => {
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
 ].forEach(name => {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     OVERLOADED_BOOLEAN,
@@ -423,6 +429,7 @@ reservedProps.forEach(name => {
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
 ].forEach(name => {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     POSITIVE_NUMERIC,
@@ -436,6 +443,7 @@ reservedProps.forEach(name => {
 
 // These are HTML attributes that must be numbers.
 ['rowSpan', 'start'].forEach(name => {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     NUMERIC,
@@ -535,6 +543,7 @@ const capitalize = token => token[1].toUpperCase();
   // instead in the assignment below.
 ].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     STRING,
@@ -560,6 +569,7 @@ const capitalize = token => token[1].toUpperCase();
   // instead in the assignment below.
 ].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     STRING,
@@ -582,6 +592,7 @@ const capitalize = token => token[1].toUpperCase();
   // instead in the assignment below.
 ].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
     name,
     STRING,
@@ -597,6 +608,7 @@ const capitalize = token => token[1].toUpperCase();
 // The attribute name is case-sensitive in SVG so we can't just use
 // the React name like we do for attributes that exist only in HTML.
 ['tabIndex', 'crossOrigin'].forEach(attributeName => {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
     STRING,
@@ -611,6 +623,7 @@ const capitalize = token => token[1].toUpperCase();
 // These attributes accept URLs. These must not allow javascript: URLS.
 // These will also need to accept Trusted Types object in the future.
 const xlinkHref = 'xlinkHref';
+// $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 properties[xlinkHref] = new PropertyInfoRecord(
   'xlinkHref',
   STRING,
@@ -622,6 +635,7 @@ properties[xlinkHref] = new PropertyInfoRecord(
 );
 
 ['src', 'href', 'action', 'formAction'].forEach(attributeName => {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
     attributeName,
     STRING,

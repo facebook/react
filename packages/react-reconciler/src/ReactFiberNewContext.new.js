@@ -525,7 +525,7 @@ function propagateParentContextChanges(
   // Collect all the parent providers that changed. Since this is usually small
   // number, we use an Array instead of Set.
   let contexts = null;
-  let parent = workInProgress;
+  let parent: null | Fiber = workInProgress;
   let isInsidePropagationBailout = false;
   while (parent !== null) {
     if (!isInsidePropagationBailout) {

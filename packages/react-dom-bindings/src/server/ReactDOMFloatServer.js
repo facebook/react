@@ -144,6 +144,7 @@ function preload(href: string, options: PreloadOptions) {
     options !== null
   ) {
     const as = options.as;
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     let resource = currentResources.preloadsMap.get(href);
     if (resource) {
       if (__DEV__) {
@@ -159,12 +160,14 @@ function preload(href: string, options: PreloadOptions) {
       }
     } else {
       resource = createPreloadResource(
+        // $FlowFixMe[incompatible-call] found when upgrading Flow
         currentResources,
         href,
         as,
         preloadPropsFromPreloadOptions(href, as, options),
       );
     }
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     captureExplicitPreloadResourceDependency(currentResources, resource);
   }
 }
@@ -199,6 +202,7 @@ function preinit(href: string, options: PreinitOptions) {
       case 'style': {
         const precedence = options.precedence || 'default';
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         let resource = currentResources.stylesMap.get(href);
         if (resource) {
           if (__DEV__) {
@@ -216,6 +220,7 @@ function preinit(href: string, options: PreinitOptions) {
             options,
           );
           resource = createStyleResource(
+            // $FlowFixMe[incompatible-call] found when upgrading Flow
             currentResources,
             href,
             precedence,
@@ -224,6 +229,7 @@ function preinit(href: string, options: PreinitOptions) {
         }
 
         // Do not associate preinit style resources with any specific boundary regardless of where it is called
+        // $FlowFixMe[incompatible-call] found when upgrading Flow
         captureStyleResourceDependency(currentResources, null, resource);
 
         return;
@@ -459,9 +465,11 @@ export function resourcesFromLink(props: Props): boolean {
         if (__DEV__) {
           validateLinkPropsForStyleResource(props);
         }
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         let preloadResource = currentResources.preloadsMap.get(href);
         if (!preloadResource) {
           preloadResource = createPreloadResource(
+            // $FlowFixMe[incompatible-call] found when upgrading Flow
             currentResources,
             href,
             'style',
@@ -472,6 +480,7 @@ export function resourcesFromLink(props: Props): boolean {
           }
         }
         captureImplicitPreloadResourceDependency(
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
           currentResources,
           preloadResource,
         );
@@ -492,6 +501,7 @@ export function resourcesFromLink(props: Props): boolean {
         } else {
           const resourceProps = stylePropsFromRawProps(href, precedence, props);
           resource = createStyleResource(
+            // $FlowFixMe[incompatible-call] found when upgrading Flow
             currentResources,
             href,
             precedence,
@@ -499,7 +509,9 @@ export function resourcesFromLink(props: Props): boolean {
           );
         }
         captureStyleResourceDependency(
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
           currentResources,
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           currentResources.boundaryResources,
           resource,
         );
@@ -519,6 +531,7 @@ export function resourcesFromLink(props: Props): boolean {
           if (__DEV__) {
             validateLinkPropsForPreloadResource(props);
           }
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           let resource = currentResources.preloadsMap.get(href);
           if (resource) {
             if (__DEV__) {
@@ -534,12 +547,14 @@ export function resourcesFromLink(props: Props): boolean {
             }
           } else {
             resource = createPreloadResource(
+              // $FlowFixMe[incompatible-call] found when upgrading Flow
               currentResources,
               href,
               as,
               preloadPropsFromRawProps(href, as, props),
             );
           }
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
           captureExplicitPreloadResourceDependency(currentResources, resource);
           return true;
         }
