@@ -794,6 +794,20 @@ export function bindInstance(
 
 export const supportsHydration = true;
 
+// With Resources, some HostComponent types will never be server rendered and need to be
+// inserted without breaking hydration
+export function isHydratable(type: string, props: Props): boolean {
+  if (enableFloat) {
+    if (type === 'script') {
+      const {async, onLoad, onError} = (props: any);
+      return !(async && (onLoad || onError));
+    }
+    return true;
+  } else {
+    return true;
+  }
+}
+
 export function canHydrateInstance(
   instance: HydratableInstance,
   type: string,
@@ -895,6 +909,20 @@ function getNextHydratable(node) {
             }
             break;
           }
+          case 'STYLE': {
+            const styleEl: HTMLStyleElement = (element: any);
+            if (styleEl.hasAttribute('data-rprec')) {
+              continue;
+            }
+            break;
+          }
+          case 'SCRIPT': {
+            const scriptEl: HTMLScriptElement = (element: any);
+            if (scriptEl.hasAttribute('async')) {
+              continue;
+            }
+            break;
+          }
           case 'HTML':
           case 'HEAD':
           case 'BODY': {
@@ -908,14 +936,31 @@ function getNextHydratable(node) {
     } else if (enableFloat) {
       if (nodeType === ELEMENT_NODE) {
         const element: Element = (node: any);
-        if (element.tagName === 'LINK') {
-          const linkEl: HTMLLinkElement = (element: any);
-          const rel = linkEl.rel;
-          if (
-            rel === 'preload' ||
-            (rel === 'stylesheet' && linkEl.hasAttribute('data-rprec'))
-          ) {
-            continue;
+        switch (element.tagName) {
+          case 'LINK': {
+            const linkEl: HTMLLinkElement = (element: any);
+            const rel = linkEl.rel;
+            if (
+              rel === 'preload' ||
+              (rel === 'stylesheet' && linkEl.hasAttribute('data-rprec'))
+            ) {
+              continue;
+            }
+            break;
+          }
+          case 'STYLE': {
+            const styleEl: HTMLStyleElement = (element: any);
+            if (styleEl.hasAttribute('data-rprec')) {
+              continue;
+            }
+            break;
+          }
+          case 'SCRIPT': {
+            const scriptEl: HTMLScriptElement = (element: any);
+            if (scriptEl.hasAttribute('async')) {
+              continue;
+            }
+            break;
           }
         }
         break;

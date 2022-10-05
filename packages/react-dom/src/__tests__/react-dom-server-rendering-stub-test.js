@@ -50,7 +50,7 @@ describe('react-dom-server-rendering-stub', () => {
     }
     const html = ReactDOMFizzServer.renderToString(<App />);
     expect(html).toEqual(
-      '<link href="foo" rel="preload" as="style"/><link rel="stylesheet" href="bar" data-rprec="default"/><div>foo</div>',
+      '<style data-rprec="default"></style><link href="foo" rel="preload" as="style"/><link rel="preload" as="style" href="bar"/><div>foo</div>',
     );
   });
 

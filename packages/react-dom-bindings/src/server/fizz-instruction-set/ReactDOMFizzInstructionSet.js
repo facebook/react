@@ -57,7 +57,7 @@ export function completeBoundaryWithStyles(
   let lastResource, node;
 
   // Seed the precedence list with existing resources
-  const nodes = thisDocument.querySelectorAll('link[data-rprec]');
+  const nodes = thisDocument.querySelectorAll('[data-rprec]');
   for (let i = 0; (node = nodes[i++]); ) {
     precedences.set(node.dataset['rprec'], (lastResource = node));
   }

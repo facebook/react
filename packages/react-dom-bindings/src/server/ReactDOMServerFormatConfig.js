@@ -64,6 +64,7 @@ import {
   prepareToRenderResources,
   finishRenderingResources,
   resourcesFromLink,
+  resourcesFromScript,
   ReactDOMServerDispatcher,
 } from './ReactDOMFloatServer';
 export {
@@ -1349,6 +1350,26 @@ function pushStartHtml(
   return pushStartGenericElement(target, props, tag, responseState);
 }
 
+function pushStartScript(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+  textEmbedded: boolean,
+): ReactNodeList {
+  if (enableFloat && resourcesFromScript(props)) {
+    if (textEmbedded) {
+      // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+      // to be safe and assume text will follow by inserting a textSeparator
+      target.push(textSeparator);
+    }
+    // We have converted this link exclusively to a resource and no longer
+    // need to emit it
+    return null;
+  }
+
+  return pushStartGenericElement(target, props, 'script', responseState);
+}
+
 function pushStartGenericElement(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -1625,6 +1646,8 @@ export function pushStartInstance(
       return pushStartTitle(target, props, responseState);
     case 'link':
       return pushLink(target, props, responseState, textEmbedded);
+    case 'script':
+      return pushStartScript(target, props, responseState, textEmbedded);
     // Newline eating tags
     case 'listing':
     case 'pre': {
@@ -2235,57 +2258,105 @@ function escapeJSObjectForInstructionScripts(input: Object): string {
   });
 }
 
+const precedencePlaceholderStart = stringToPrecomputedChunk(
+  '<style data-rprec="',
+);
+const precedencePlaceholderEnd = stringToPrecomputedChunk('"></style>');
+
 export function writeInitialResources(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
 ): boolean {
-  const explicitPreloadsTarget = [];
-  const remainingTarget = [];
+  const target = [];
 
-  const {precedences, explicitPreloads, implicitPreloads} = resources;
+  const {
+    fontPreloads,
+    precedences,
+    usedStylePreloads,
+    scripts,
+    usedScriptPreloads,
+    explicitStylePreloads,
+    explicitScriptPreloads,
+  } = resources;
+
+  fontPreloads.forEach(r => {
+    // font preload Resources should not already be flushed so we elide this check
+    pushLinkImpl(target, r.props, responseState);
+    r.flushed = true;
+  });
+  fontPreloads.clear();
 
   // Flush stylesheets first by earliest precedence
-  precedences.forEach(precedenceResources => {
-    precedenceResources.forEach(resource => {
-      // resources should not already be flushed so we elide this check
-      pushLinkImpl(remainingTarget, resource.props, responseState);
-      resource.flushed = true;
-      resource.inShell = true;
-      resource.hint.flushed = true;
-    });
-  });
-
-  explicitPreloads.forEach(resource => {
-    if (!resource.flushed) {
-      pushLinkImpl(explicitPreloadsTarget, resource.props, responseState);
-      resource.flushed = true;
+  precedences.forEach((p, precedence) => {
+    if (p.size) {
+      p.forEach(r => {
+        // resources should not already be flushed so we elide this check
+        pushLinkImpl(target, r.props, responseState);
+        r.flushed = true;
+        r.inShell = true;
+        r.hint.flushed = true;
+      });
+      p.clear();
+    } else {
+      target.push(
+        precedencePlaceholderStart,
+        escapeTextForBrowser(stringToChunk(precedence)),
+        precedencePlaceholderEnd,
+      );
     }
   });
-  explicitPreloads.clear();
 
-  implicitPreloads.forEach(resource => {
-    if (!resource.flushed) {
-      pushLinkImpl(remainingTarget, resource.props, responseState);
-      resource.flushed = true;
+  usedStylePreloads.forEach(r => {
+    // style preloads could very likely have been flushed already so we check
+    if (!r.flushed) {
+      pushLinkImpl(target, r.props, responseState);
+      r.flushed = true;
     }
   });
-  implicitPreloads.clear();
+  usedStylePreloads.clear();
+
+  scripts.forEach(r => {
+    // should never be flushed already
+    pushStartGenericElement(target, r.props, 'script', responseState);
+    pushEndInstance(target, target, 'script', r.props);
+    r.flushed = true;
+    r.hint.flushed = true;
+  });
+  scripts.clear();
+
+  usedScriptPreloads.forEach(r => {
+    // may have been flushed so we check
+    if (!r.flushed) {
+      pushLinkImpl(target, r.props, responseState);
+      r.flushed = true;
+    }
+  });
+  usedScriptPreloads.clear();
+
+  explicitStylePreloads.forEach(r => {
+    if (!r.flushed) {
+      pushLinkImpl(target, r.props, responseState);
+      r.flushed = true;
+    }
+  });
+  explicitStylePreloads.clear();
+
+  explicitScriptPreloads.forEach(r => {
+    if (!r.flushed) {
+      pushLinkImpl(target, r.props, responseState);
+      r.flushed = true;
+    }
+  });
+  explicitScriptPreloads.clear();
 
   let i;
   let r = true;
-  for (i = 0; i < explicitPreloadsTarget.length - 1; i++) {
-    writeChunk(destination, explicitPreloadsTarget[i]);
+  for (i = 0; i < target.length - 1; i++) {
+    writeChunk(destination, target[i]);
   }
-  if (i < explicitPreloadsTarget.length) {
-    r = writeChunkAndReturn(destination, explicitPreloadsTarget[i]);
-  }
-
-  for (i = 0; i < remainingTarget.length - 1; i++) {
-    writeChunk(destination, remainingTarget[i]);
-  }
-  if (i < remainingTarget.length) {
-    r = writeChunkAndReturn(destination, remainingTarget[i]);
+  if (i < target.length) {
+    r = writeChunkAndReturn(destination, target[i]);
   }
   return r;
 }
@@ -2295,33 +2366,76 @@ export function writeImmediateResources(
   resources: Resources,
   responseState: ResponseState,
 ): boolean {
-  const {explicitPreloads, implicitPreloads} = resources;
   const target = [];
 
-  explicitPreloads.forEach(resource => {
-    if (!resource.flushed) {
-      pushLinkImpl(target, resource.props, responseState);
-      resource.flushed = true;
+  const {
+    fontPreloads,
+    usedStylePreloads,
+    scripts,
+    usedScriptPreloads,
+    explicitStylePreloads,
+    explicitScriptPreloads,
+  } = resources;
+
+  fontPreloads.forEach(r => {
+    // font preload Resources should not already be flushed so we elide this check
+    pushLinkImpl(target, r.props, responseState);
+    r.flushed = true;
+  });
+  fontPreloads.clear();
+
+  usedStylePreloads.forEach(r => {
+    // style preloads could very likely have been flushed already so we check
+    if (!r.flushed) {
+      pushLinkImpl(target, r.props, responseState);
+      r.flushed = true;
     }
   });
-  explicitPreloads.clear();
+  usedStylePreloads.clear();
 
-  implicitPreloads.forEach(resource => {
-    if (!resource.flushed) {
-      pushLinkImpl(target, resource.props, responseState);
-      resource.flushed = true;
+  scripts.forEach(r => {
+    // should never be flushed already
+    pushStartGenericElement(target, r.props, 'script', responseState);
+    pushEndInstance(target, target, 'script', r.props);
+    r.flushed = true;
+    r.hint.flushed = true;
+  });
+  scripts.clear();
+
+  usedScriptPreloads.forEach(r => {
+    // may have been flushed so we check
+    if (!r.flushed) {
+      pushLinkImpl(target, r.props, responseState);
+      r.flushed = true;
     }
   });
-  implicitPreloads.clear();
+  usedScriptPreloads.clear();
 
-  let i = 0;
-  for (; i < target.length - 1; i++) {
+  explicitStylePreloads.forEach(r => {
+    if (!r.flushed) {
+      pushLinkImpl(target, r.props, responseState);
+      r.flushed = true;
+    }
+  });
+  explicitStylePreloads.clear();
+
+  explicitScriptPreloads.forEach(r => {
+    if (!r.flushed) {
+      pushLinkImpl(target, r.props, responseState);
+      r.flushed = true;
+    }
+  });
+  explicitScriptPreloads.clear();
+
+  let i;
+  let r = true;
+  for (i = 0; i < target.length - 1; i++) {
     writeChunk(destination, target[i]);
   }
   if (i < target.length) {
-    return writeChunkAndReturn(destination, target[i]);
+    r = writeChunkAndReturn(destination, target[i]);
   }
-  return false;
+  return r;
 }
 
 function hasStyleResourceDependencies(
