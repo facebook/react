@@ -22,7 +22,7 @@ export default {
 };
 
 const ANNOTATIONS_IMMUT = ["immut", "readonly"];
-const ANNOTATIONS_MUT = ["mut", "mutable"];
+const ANNOTATIONS_MUT = ["mut", "mutable", "writable"];
 
 /**
  * Eventually, we probably want to move RefKind refinements
@@ -195,7 +195,7 @@ function refineUses(
 function hasLeadingComment(path: NodePath, annotation: string): boolean {
   return (
     path.node.leadingComments?.some(
-      (comment) => comment.value.trim() === annotation
+      (comment) => comment.value.trim().toLowerCase() === annotation
     ) ?? false
   );
 }
