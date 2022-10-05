@@ -77,7 +77,10 @@ export class FuncTopLevel {
   }
 
   /**
-   * All "uses" of {@link Val}.
+   * All usages.
+   * - all references to declarations, regardless of the ref kind.
+   * - all references to expressions.
+   * - all references to free variables (behind a flag).
    */
   get uses(): Ref<Val>[] {
     return [
@@ -88,16 +91,23 @@ export class FuncTopLevel {
   }
 
   /**
-   * All mutable uses. This needs to be lazy so it's computed after refinements.
+   * All usages that are considered potentially mutable (not readonly).
    */
   get mutableUses(): Ref<Val>[] {
     return this.uses.filter((use) => !use.immutable);
   }
 
   /**
-   * All defs. This needs to be lazy since it depends on {@link mutableUses}.
+   * All "defs".
+   * - all declarations
+   * - all expressions (yea they are immediately defined and referenced)
+   * - all mutable uses
    */
   get defs(): Val[] {
-    return [...this.decls, ...this.mutableUses.map((use) => use.val)];
+    return [
+      ...this.decls,
+      ...this.refsToExprs.map((use) => use.val),
+      ...this.mutableUses.map((use) => use.val),
+    ];
   }
 }

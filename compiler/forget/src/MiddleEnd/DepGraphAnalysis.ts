@@ -132,8 +132,12 @@ function populateValGraph(valGraph: DepGraph.ValGraph, irFunc: IR.Func) {
     const basicBlock = cfg.blocks.get(blockId)!;
     basicBlock.parents.forEach((parent) => {
       for (const dep of controlDeps) {
-        for (const use of parent.uses) {
-          valGraph.getOrCreateVertex(use.val).addDependency(dep);
+        for (const val of parent.defs) {
+          invariant(
+            !IR.isInputVal(val),
+            "No inputs should be control dependent."
+          );
+          valGraph.getOrCreateVertex(val).addDependency(dep);
         }
       }
     });
