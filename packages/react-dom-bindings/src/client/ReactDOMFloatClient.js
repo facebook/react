@@ -29,7 +29,7 @@ import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostCo
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
-type ResourceType = 'style' | 'font';
+type ResourceType = 'style' | 'font' | 'script';
 
 type PreloadProps = {
   rel: 'preload',
@@ -150,7 +150,7 @@ function getDocumentFromRoot(root: FloatRoot): Document {
 //      ReactDOM.Preload
 // --------------------------------------
 type PreloadAs = ResourceType;
-type PreloadOptions = {as: PreloadAs, crossOrigin?: string};
+type PreloadOptions = {as: PreloadAs, crossOrigin?: string, integrity?: string};
 function preload(href: string, options: PreloadOptions) {
   if (__DEV__) {
     validatePreloadArguments(href, options);
@@ -194,6 +194,7 @@ function preloadPropsFromPreloadOptions(
     rel: 'preload',
     as,
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
+    integrity: options.integrity,
   };
 }
 
@@ -832,7 +833,7 @@ export function isHostResourceType(type: string, props: Props): boolean {
 }
 
 function isResourceAsType(as: mixed): boolean {
-  return as === 'style' || as === 'font';
+  return as === 'style' || as === 'font' || as === 'script';
 }
 
 // When passing user input into querySelector(All) the embedded string must not alter

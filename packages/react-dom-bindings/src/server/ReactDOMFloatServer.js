@@ -19,7 +19,7 @@ import {
 
 type Props = {[string]: mixed};
 
-type ResourceType = 'style' | 'font';
+type ResourceType = 'style' | 'font' | 'script';
 
 type PreloadProps = {
   rel: 'preload',
@@ -123,7 +123,7 @@ export const ReactDOMServerDispatcher = {
 };
 
 type PreloadAs = ResourceType;
-type PreloadOptions = {as: PreloadAs, crossOrigin?: string};
+type PreloadOptions = {as: PreloadAs, crossOrigin?: string, integrity?: string};
 function preload(href: string, options: PreloadOptions) {
   if (!currentResources) {
     // While we expect that preload calls are primarily going to be observed
@@ -248,6 +248,7 @@ function preloadPropsFromPreloadOptions(
     rel: 'preload',
     as,
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
+    integrity: options.integrity,
   };
 }
 
@@ -526,6 +527,7 @@ export function resourcesFromLink(props: Props): boolean {
         return false;
       }
       switch (as) {
+        case 'script':
         case 'style':
         case 'font': {
           if (__DEV__) {

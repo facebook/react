@@ -270,7 +270,7 @@ describe('ReactDOMFloat', () => {
           ' valid for a Resource type. Generally Resources are not expected to ever have updated' +
           ' props however in some limited circumstances it can be valid when changing the href.' +
           ' When React encounters props that invalidate the Resource it is the same as not rendering' +
-          ' a Resource at all. valid rel types for Resources are "font" and "style". The previous' +
+          ' a Resource at all. valid rel types for Resources are "stylesheet" and "preload". The previous' +
           ' rel for this instance was "stylesheet". The updated rel is "author" and the updated href is "bar".',
       );
       expect(getVisibleChildren(document)).toEqual(
@@ -404,6 +404,97 @@ describe('ReactDOMFloat', () => {
             <link rel="preload" as="style" href="bar" />
           </head>
           <body />
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('supports script preloads', async () => {
+      function ServerApp() {
+        ReactDOM.preload('foo', {as: 'script', integrity: 'foo hash'});
+        ReactDOM.preload('bar', {
+          as: 'script',
+          crossOrigin: 'use-credentials',
+          integrity: 'bar hash',
+        });
+        return (
+          <html>
+            <link rel="preload" href="baz" as="script" />
+            <head>
+              <title>hi</title>
+            </head>
+            <body>foo</body>
+          </html>
+        );
+      }
+      function ClientApp() {
+        ReactDOM.preload('foo', {as: 'script', integrity: 'foo hash'});
+        ReactDOM.preload('qux', {as: 'script'});
+        return (
+          <html>
+            <head>
+              <title>hi</title>
+            </head>
+            <body>foo</body>
+            <link
+              rel="preload"
+              href="quux"
+              as="script"
+              crossOrigin=""
+              integrity="quux hash"
+            />
+          </html>
+        );
+      }
+
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<ServerApp />);
+        pipe(writable);
+      });
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preload" as="script" href="foo" integrity="foo hash" />
+            <link
+              rel="preload"
+              as="script"
+              href="bar"
+              crossorigin="use-credentials"
+              integrity="bar hash"
+            />
+            <link rel="preload" as="script" href="baz" />
+            <title>hi</title>
+          </head>
+          <body>foo</body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(document, <ClientApp />);
+      expect(Scheduler).toFlushWithoutYielding();
+
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preload" as="script" href="foo" integrity="foo hash" />
+            <link
+              rel="preload"
+              as="script"
+              href="bar"
+              crossorigin="use-credentials"
+              integrity="bar hash"
+            />
+            <link rel="preload" as="script" href="baz" />
+            <title>hi</title>
+            <link rel="preload" as="script" href="qux" />
+            <link
+              rel="preload"
+              as="script"
+              href="quux"
+              crossorigin=""
+              integrity="quux hash"
+            />
+          </head>
+          <body>foo</body>
         </html>,
       );
     });
@@ -2885,7 +2976,11 @@ describe('ReactDOMFloat', () => {
               (mockError, scenarioNumber) => {
                 if (__DEV__) {
                   expect(mockError.mock.calls[scenarioNumber]).toEqual(
-                    makeArgs('undefined', '"style" and "font"', 'foo'),
+                    makeArgs(
+                      'undefined',
+                      '"style", "font", or "script"',
+                      'foo',
+                    ),
                   );
                 } else {
                   expect(mockError).not.toHaveBeenCalled();
@@ -2898,7 +2993,7 @@ describe('ReactDOMFloat', () => {
               (mockError, scenarioNumber) => {
                 if (__DEV__) {
                   expect(mockError.mock.calls[scenarioNumber]).toEqual(
-                    makeArgs('null', '"style" and "font"', 'bar'),
+                    makeArgs('null', '"style", "font", or "script"', 'bar'),
                   );
                 } else {
                   expect(mockError).not.toHaveBeenCalled();
@@ -2913,7 +3008,7 @@ describe('ReactDOMFloat', () => {
                   expect(mockError.mock.calls[scenarioNumber]).toEqual(
                     makeArgs(
                       'something with type "number"',
-                      '"style" and "font"',
+                      '"style", "font", or "script"',
                       'baz',
                     ),
                   );
@@ -2930,7 +3025,7 @@ describe('ReactDOMFloat', () => {
                   expect(mockError.mock.calls[scenarioNumber]).toEqual(
                     makeArgs(
                       'something with type "object"',
-                      '"style" and "font"',
+                      '"style", "font", or "script"',
                       'qux',
                     ),
                   );
@@ -2945,7 +3040,7 @@ describe('ReactDOMFloat', () => {
               (mockError, scenarioNumber) => {
                 if (__DEV__) {
                   expect(mockError.mock.calls[scenarioNumber]).toEqual(
-                    makeArgs('"bar"', '"style" and "font"', 'quux'),
+                    makeArgs('"bar"', '"style", "font", or "script"', 'quux'),
                   );
                 } else {
                   expect(mockError).not.toHaveBeenCalled();
