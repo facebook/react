@@ -247,14 +247,26 @@ export class Func {
    *   let output1, output2;
    */
   emitReactiveBlockOutputDecls(block: LIR.ReactiveBlock) {
-    if (block.outputDecls.size > 0) {
+    const vars: t.VariableDeclarator[] = [];
+    const lets: t.VariableDeclarator[] = [];
+
+    for (const decl of block.outputDecls) {
+      if (decl.binding.kind === "var") {
+        vars.push(t.variableDeclarator(decl.binding.identifier));
+      } else {
+        lets.push(t.variableDeclarator(decl.binding.identifier));
+      }
+    }
+
+    if (vars.length > 0) {
       this.code.push(
-        t.variableDeclaration(
-          /*kind*/ "let",
-          /*declarators*/ [...block.outputDecls.values()].map((output) =>
-            t.variableDeclarator(/*id*/ output.binding.identifier)
-          )
-        )
+        t.variableDeclaration(/*kind*/ "var", /*declarators*/ vars)
+      );
+    }
+
+    if (lets.length > 0) {
+      this.code.push(
+        t.variableDeclaration(/*kind*/ "let", /*declarators*/ lets)
       );
     }
   }
