@@ -49,6 +49,7 @@
       "browser": "./server.browser.js",
       "default": "./server.node.js"
     },
+    "./server-rendering-stub": "./server-rendering-stub.js",
     "./server.browser": "./server.browser.js",
     "./server.node": "./server.node.js",
     "./static": {
