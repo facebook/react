@@ -47,6 +47,7 @@ function run(
   }
 
   const sccGraph = valGraph.condense();
+  checkSCCGraph(sccGraph, context);
 
   if (outputKinds.includes(OutputKind.SCCGraph)) {
     context.outputs[OutputKind.SCCGraph].push(sccGraph.snapshot());
@@ -180,6 +181,24 @@ function checkValGraph(valGraph: DepGraph.ValGraph) {
         vertex.inputs.size === 1 && vertex.inputs.has(val),
         "Input vertices must only contain itself."
       );
+    }
+  }
+}
+
+function checkSCCGraph(sccGraph: DepGraph.SCCGraph, context: CompilerContext) {
+  for (const scc of sccGraph.vertices) {
+    if (scc.isInput()) continue;
+
+    for (const valVertex of scc.members) {
+      if (IR.isInputVal(valVertex.val)) {
+        context.bailout("InputInDepGraphCycle", {
+          code: "E0021",
+          path: valVertex.val.ast.path,
+          context: {
+            name: valVertex.val.binding.identifier.name,
+          },
+        });
+      }
     }
   }
 }

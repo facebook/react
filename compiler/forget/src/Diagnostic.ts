@@ -126,6 +126,7 @@ export type ErrorCode =
   | ParseCode<"E0018">
   | ParseCode<"E0019">
   | ParseCode<"E0020">
+  | ParseCode<"E0021">
   ;
 
 // prettier-ignore
@@ -168,6 +169,7 @@ export type DiagnosticOpts =
   | { code: "E0018"; path: NodePath; context: null }
   | { code: "E0019"; path: NodePath; context: null }
   | { code: "E0020"; path: NodePath; context: null }
+  | { code: "E0021"; path: NodePath; context: { name: Name } }
   ;
 
 function getDiagnosticMessage(opts: DiagnosticOpts): DiagnosticMessage {
@@ -318,6 +320,12 @@ ${getSource(opts.path)}
       return {
         level: DiagnosticLevel.Error,
         body: "Forget does not support the use of the arguments object.",
+        suggestion: null,
+      };
+    case "E0021":
+      return {
+        level: DiagnosticLevel.Error,
+        body: `Input "${opts.context.name}" is detected in a DepGraph cycle. This is dangenrous since Forget may (though not always) generate broken code like accessing "c_input" before it is defined.`,
         suggestion: null,
       };
     default:
