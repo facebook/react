@@ -195,7 +195,7 @@ function refineUses(
 function hasLeadingComment(path: NodePath, annotation: string): boolean {
   return (
     path.node.leadingComments?.some(
-      (comment) => comment.value === annotation
+      (comment) => comment.value.trim() === annotation
     ) ?? false
   );
 }
