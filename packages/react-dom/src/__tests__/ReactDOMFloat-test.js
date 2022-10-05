@@ -248,6 +248,60 @@ describe('ReactDOMFloat', () => {
     );
   });
 
+  // @gate enableFloat
+  it('emits resources before everything else when rendering with no head', async () => {
+    function App() {
+      return (
+        <>
+          <title>foo</title>
+          <link rel="preload" href="foo" as="style" />
+        </>
+      );
+    }
+
+    await actIntoEmptyDocument(() => {
+      buffer = `<!DOCTYPE html><html><head>${ReactDOMFizzServer.renderToString(
+        <App />,
+      )}</head><body>foo</body></html>`;
+    });
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+          <title>foo</title>
+        </head>
+        <body>foo</body>
+      </html>,
+    );
+  });
+
+  // @gate enableFloat
+  it('emits resources before everything else when rendering with just a head', async () => {
+    function App() {
+      return (
+        <head>
+          <title>foo</title>
+          <link rel="preload" href="foo" as="style" />
+        </head>
+      );
+    }
+
+    await actIntoEmptyDocument(() => {
+      buffer = `<!DOCTYPE html><html>${ReactDOMFizzServer.renderToString(
+        <App />,
+      )}<body>foo</body></html>`;
+    });
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+          <title>foo</title>
+        </head>
+        <body>foo</body>
+      </html>,
+    );
+  });
+
   describe('HostResource', () => {
     // @gate enableFloat
     it('warns when you update props to an invalid type', async () => {
