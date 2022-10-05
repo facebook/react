@@ -47,7 +47,7 @@ describe('ReactIncrementalUpdates', () => {
       state = {};
       componentDidMount() {
         Scheduler.unstable_yieldValue('commit');
-        ReactNoop.deferredUpdates(() => {
+        React.startTransition(() => {
           // Has low priority
           this.setState({b: 'b'});
           this.setState({c: 'c'});
@@ -111,13 +111,13 @@ describe('ReactIncrementalUpdates', () => {
     expect(Scheduler).toFlushAndYield(['render', 'componentDidMount']);
 
     ReactNoop.flushSync(() => {
-      ReactNoop.deferredUpdates(() => {
+      React.startTransition(() => {
         instance.setState({x: 'x'});
         instance.setState({y: 'y'});
       });
       instance.setState({a: 'a'});
       instance.setState({b: 'b'});
-      ReactNoop.deferredUpdates(() => {
+      React.startTransition(() => {
         instance.updater.enqueueReplaceState(instance, {c: 'c'});
         instance.setState({d: 'd'});
       });
@@ -190,18 +190,13 @@ describe('ReactIncrementalUpdates', () => {
       });
 
       // The sync updates should have flushed, but not the async ones
-      expect(Scheduler).toHaveYielded(['e', 'f']);
-      expect(ReactNoop.getChildren()).toEqual([span('ef')]);
+      expect(Scheduler).toHaveYielded(['d', 'e', 'f']);
+      expect(ReactNoop.getChildren()).toEqual([span('def')]);
 
       // Now flush the remaining work. Even though e and f were already processed,
       // they should be processed again, to ensure that the terminal state
       // is deterministic.
       expect(Scheduler).toFlushAndYield([
-        // Since 'g' is in a transition, we'll process 'd' separately first.
-        // That causes us to process 'd' with 'e' and 'f' rebased.
-        'd',
-        'e',
-        'f',
         // Then we'll re-process everything for 'g'.
         'a',
         'b',
@@ -292,18 +287,13 @@ describe('ReactIncrementalUpdates', () => {
       });
 
       // The sync updates should have flushed, but not the async ones.
-      expect(Scheduler).toHaveYielded(['e', 'f']);
+      expect(Scheduler).toHaveYielded(['d', 'e', 'f']);
       expect(ReactNoop.getChildren()).toEqual([span('f')]);
 
       // Now flush the remaining work. Even though e and f were already processed,
       // they should be processed again, to ensure that the terminal state
       // is deterministic.
       expect(Scheduler).toFlushAndYield([
-        // Since 'g' is in a transition, we'll process 'd' separately first.
-        // That causes us to process 'd' with 'e' and 'f' rebased.
-        'd',
-        'e',
-        'f',
         // Then we'll re-process everything for 'g'.
         'a',
         'b',

@@ -568,8 +568,8 @@ describe('ReactHooks', () => {
       });
     };
 
-    // Update at normal priority
-    ReactTestRenderer.unstable_batchedUpdates(() => update(n => n * 100));
+    // Update on the transition lane
+    React.startTransition(() => update(n => n * 100));
 
     // The new state is eagerly computed.
     expect(Scheduler).toHaveYielded(['Compute state (1 -> 100)']);

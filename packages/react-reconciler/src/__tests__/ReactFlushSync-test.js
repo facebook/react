@@ -53,6 +53,7 @@ describe('ReactFlushSync', () => {
 
       // The passive effect will schedule a sync update and a normal update.
       // They should commit in two separate batches. First the sync one.
+      //// TODO: ???
       expect(() => {
         expect(Scheduler).toFlushUntilNextPaint(['1, 0']);
       }).toErrorDev('flushSync was called from inside a lifecycle method');

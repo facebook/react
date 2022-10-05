@@ -815,7 +815,9 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.discreteUpdates(() => {
           setRow(5);
         });
-        setRow(20);
+        React.startTransition(() => {
+          setRow(20);
+        });
       });
       expect(Scheduler).toHaveYielded(['Up', 'Down']);
       expect(root).toMatchRenderedOutput(<span prop="Down" />);
@@ -947,9 +949,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
       ReactNoop.batchedUpdates(() => {
-        counter.current.dispatch(INCREMENT);
-        counter.current.dispatch(INCREMENT);
-        counter.current.dispatch(INCREMENT);
+        React.startTransition(() => {
+          counter.current.dispatch(INCREMENT);
+          counter.current.dispatch(INCREMENT);
+          counter.current.dispatch(INCREMENT);
+        });
       });
 
       ReactNoop.flushSync(() => {
@@ -1696,7 +1700,9 @@ describe('ReactHooksWithNoopRenderer', () => {
         _updateCount = updateCount;
         useEffect(() => {
           Scheduler.unstable_yieldValue(`Will set count to 1`);
-          updateCount(1);
+          React.startTransition(() => {
+            updateCount(1);
+          });
         }, []);
         return <Text text={'Count: ' + count} />;
       }
@@ -3251,24 +3257,23 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(Scheduler).toFlushAndYieldThrough([
           'Mount layout [current: 0]',
           'Sync effect',
+          'Mount normal [current: 0]',
         ]);
         expect(committedText).toEqual('0');
         ReactNoop.render(<Counter count={1} />, () =>
           Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
-          'Mount normal [current: 0]',
           'Unmount layout [current: 0]',
           'Mount layout [current: 1]',
           'Sync effect',
+          'Unmount normal [current: 1]',
+          'Mount normal [current: 1]',
         ]);
         expect(committedText).toEqual('1');
       });
 
-      expect(Scheduler).toHaveYielded([
-        'Unmount normal [current: 1]',
-        'Mount normal [current: 1]',
-      ]);
+      expect(Scheduler).toHaveYielded([]);
     });
 
     // @gate skipUnmountedBoundaries

@@ -274,18 +274,18 @@ describe('ReactDOMFiberAsync', () => {
         expect(container.textContent).toEqual('');
         expect(ops).toEqual([]);
       });
-      // Only the active updates have flushed
-      expect(container.textContent).toEqual('BC');
-      expect(ops).toEqual(['BC']);
+      // DefaultUpdates are batched on the sync lane
+      expect(container.textContent).toEqual('ABC');
+      expect(ops).toEqual(['ABC']);
 
       instance.push('D');
-      expect(container.textContent).toEqual('BC');
-      expect(ops).toEqual(['BC']);
+      expect(container.textContent).toEqual('ABC');
+      expect(ops).toEqual(['ABC']);
 
       // Flush the async updates
       Scheduler.unstable_flushAll();
       expect(container.textContent).toEqual('ABCD');
-      expect(ops).toEqual(['BC', 'ABCD']);
+      expect(ops).toEqual(['ABC', 'ABCD']);
     });
 
     // @gate www
@@ -858,12 +858,12 @@ describe('ReactDOMFiberAsync', () => {
 
       await null;
 
-      expect(Scheduler).toHaveYielded(['Count: 1']);
-      expect(counterRef.current.textContent).toBe('Count: 1');
-
-      global.flushRequestAnimationFrameQueue();
+      // Unknown(default) updates is batched on the sync lane
       expect(Scheduler).toHaveYielded(['Count: 2']);
       expect(counterRef.current.textContent).toBe('Count: 2');
+
+      global.flushRequestAnimationFrameQueue();
+      expect(Scheduler).toHaveYielded([]);
     });
 
     // @gate enableFrameEndScheduling

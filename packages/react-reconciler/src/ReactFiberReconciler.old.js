@@ -88,6 +88,7 @@ import {
   NoTimestamp,
   getHighestPriorityPendingLanes,
   higherPriorityLane,
+  NoLane,
 } from './ReactFiberLane.old';
 import {
   getCurrentUpdatePriority,
@@ -314,7 +315,6 @@ export function createHydrationContainer(
   const current = root.current;
   const eventTime = requestEventTime();
   const lane = requestUpdateLane(current);
-  // TODO what to do about isUnknownEventPriority here
   const update = createUpdate(eventTime, lane);
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
@@ -426,6 +426,9 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       if (isRootDehydrated(root)) {
         // Flush the first scheduled "update".
         const lanes = getHighestPriorityPendingLanes(root);
+        if ((lanes & SyncLane) !== NoLane) {
+          root.updatePriority = DiscreteEventPriority;
+        }
         flushRoot(root, lanes);
       }
       break;

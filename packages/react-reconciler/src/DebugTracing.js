@@ -9,6 +9,7 @@
 
 import type {Lane, Lanes} from './ReactFiberLane.old';
 import type {Wakeable} from 'shared/ReactTypes';
+import type {EventPriority} from './ReactEventPriorities.old';
 
 import {enableDebugTracing} from 'shared/ReactFeatureFlags';
 
@@ -62,11 +63,14 @@ function log(...logArgs): void {
 const REACT_LOGO_STYLE =
   'background-color: #20232a; color: #61dafb; padding: 0 2px;';
 
-export function logCommitStarted(lanes: Lanes): void {
+export function logCommitStarted(
+  lanes: Lanes,
+  updatePriority: EventPriority,
+): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       group(
-        `%c⚛️%c commit%c (${formatLanes(lanes)})`,
+        `%c⚛️%c commit%c (${formatLanes(lanes)}) (${updatePriority})`,
         REACT_LOGO_STYLE,
         '',
         'font-weight: normal;',
@@ -133,11 +137,14 @@ export function logComponentSuspended(
   }
 }
 
-export function logLayoutEffectsStarted(lanes: Lanes): void {
+export function logLayoutEffectsStarted(
+  lanes: Lanes,
+  updatePriority: EventPriority,
+): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       group(
-        `%c⚛️%c layout effects%c (${formatLanes(lanes)})`,
+        `%c⚛️%c layout effects%c (${formatLanes(lanes)}) (${updatePriority})`,
         REACT_LOGO_STYLE,
         '',
         'font-weight: normal;',
@@ -154,11 +161,14 @@ export function logLayoutEffectsStopped(): void {
   }
 }
 
-export function logPassiveEffectsStarted(lanes: Lanes): void {
+export function logPassiveEffectsStarted(
+  lanes: Lanes,
+  updatePriority: EventPriority,
+): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       group(
-        `%c⚛️%c passive effects%c (${formatLanes(lanes)})`,
+        `%c⚛️%c passive effects%c (${formatLanes(lanes)}) (${updatePriority})`,
         REACT_LOGO_STYLE,
         '',
         'font-weight: normal;',
@@ -175,11 +185,14 @@ export function logPassiveEffectsStopped(): void {
   }
 }
 
-export function logRenderStarted(lanes: Lanes): void {
+export function logRenderStarted(
+  lanes: Lanes,
+  updatePriority: EventPriority,
+): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       group(
-        `%c⚛️%c render%c (${formatLanes(lanes)})`,
+        `%c⚛️%c render%c (${formatLanes(lanes)}) (${updatePriority})`,
         REACT_LOGO_STYLE,
         '',
         'font-weight: normal;',

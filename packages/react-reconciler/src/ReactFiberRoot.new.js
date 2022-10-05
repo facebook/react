@@ -25,7 +25,11 @@ import {
   TotalLanes,
   createLaneMap,
 } from './ReactFiberLane.new';
-import {NoEventPriority} from './ReactEventPriorities.new';
+import {
+  DiscreteEventPriority,
+  NoEventPriority,
+  DefaultEventPriority,
+} from './ReactEventPriorities.new';
 import {
   enableSuspenseCallback,
   enableCache,
@@ -62,7 +66,8 @@ function FiberRootNode(
   this.pendingContext = null;
   this.callbackNode = null;
   this.callbackPriority = NoEventPriority;
-  this.updatePriority = NoEventPriority;
+  this.updatePriority =
+    tag === LegacyRoot ? DiscreteEventPriority : DefaultEventPriority;
   this.eventTimes = createLaneMap(NoLanes);
   this.expirationTimes = createLaneMap(NoTimestamp);
 

@@ -339,7 +339,9 @@ describe('ReactExpiration', () => {
     // Before the update can finish, update again. Even though no time has
     // advanced, this update should be given a different expiration time than
     // the currently rendering one. So, C and D should render with 1, not 2.
-    subscribers.forEach(s => s.setState({text: '2'}));
+    React.startTransition(() => {
+      subscribers.forEach(s => s.setState({text: '2'}));
+    });
     expect(Scheduler).toFlushAndYieldThrough([
       '1 [C] [render]',
       '1 [D] [render]',

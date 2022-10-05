@@ -556,8 +556,11 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       // Update a value both inside and outside the hidden tree. These values
       // must always be consistent.
-      setOuter(1);
-      setInner(1);
+      //// TODO: is this right to use start transition?
+      React.startTransition(() => {
+        setOuter(1);
+        setInner(1);
+      });
       // Only the outer updates finishes because the inner update is inside a
       // hidden tree. The outer update is deferred to a later render.
       expect(Scheduler).toFlushUntilNextPaint(['Outer: 1']);
@@ -569,8 +572,10 @@ describe('ReactOffscreen', () => {
       );
 
       // Before the inner update can finish, we receive another pair of updates.
-      setOuter(2);
-      setInner(2);
+      React.startTransition(() => {
+        setOuter(2);
+        setInner(2);
+      });
 
       // Also, before either of these new updates are processed, the hidden
       // tree is revealed at high priority.

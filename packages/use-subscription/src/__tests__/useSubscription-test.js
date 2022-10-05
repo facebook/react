@@ -456,6 +456,7 @@ describe('useSubscription', () => {
       // Update again
       renderer.update(<Parent observed={observableA} />);
 
+      //// TODO: ???
       // Flush everything and ensure that the correct subscribable is used
       expect(Scheduler).toFlushAndYield([
         'Child: a-2',

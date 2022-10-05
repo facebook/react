@@ -13,7 +13,6 @@ import {
   NoLane,
   SyncLane,
   InputContinuousLane,
-  DefaultLane,
   IdleLane,
   getHighestPriorityLane,
   includesNonIdleWork,
@@ -70,10 +69,13 @@ export function isHigherEventPriority(
   return a !== 0 && a < b;
 }
 
-export function lanesToEventPriority(lanes: Lanes): EventPriority {
+export function lanesToEventPriority(
+  lanes: Lanes,
+  syncUpdatePriority: EventPriority,
+): EventPriority {
   const lane = getHighestPriorityLane(lanes);
   if (!isHigherEventPriority(DiscreteEventPriority, lane)) {
-    return DiscreteEventPriority;
+    return syncUpdatePriority;
   }
   if (!isHigherEventPriority(ContinuousEventPriority, lane)) {
     return ContinuousEventPriority;
@@ -84,9 +86,12 @@ export function lanesToEventPriority(lanes: Lanes): EventPriority {
   return IdleEventPriority;
 }
 
-export function laneToEventPriority(lane: Lane): EventPriority {
-  if (lane === DefaultLane) {
-    return DefaultEventPriority;
+export function laneToEventPriority(
+  lane: Lane,
+  syncUpdatePriority: EventPriority,
+): EventPriority {
+  if (lane === SyncLane) {
+    return syncUpdatePriority;
   }
   if (lane === InputContinuousLane) {
     return ContinuousEventPriority;

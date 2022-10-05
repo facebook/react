@@ -16,8 +16,10 @@ describe('DebugTracing', () => {
 
   let logs;
 
-  const DEFAULT_LANE_STRING = '0b0000000000000000000000000010000';
+  const SYNC_LANE_STRING = '0b0000000000000000000000000000001';
   const RETRY_LANE_STRING = '0b0000000010000000000000000000000';
+  const SYNC_EVENT_PRIORITY = 1;
+  const DEFAULT_EVENT_PRIORITY = 3;
 
   global.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -87,9 +89,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      'group: ⚛️ render (0b0000000000000000000000000000001)',
+      'group: ⚛️ render (0b0000000000000000000000000000001) (1)',
       'log: ⚛️ Example suspended',
-      'groupEnd: ⚛️ render (0b0000000000000000000000000000001)',
+      'groupEnd: ⚛️ render (0b0000000000000000000000000000001) (1)',
     ]);
 
     logs.splice(0);
@@ -121,9 +123,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      'group: ⚛️ render (0b0000000000000000000000000000001)',
+      'group: ⚛️ render (0b0000000000000000000000000000001) (1)',
       'log: <Wrapper/>',
-      'groupEnd: ⚛️ render (0b0000000000000000000000000000001)',
+      'groupEnd: ⚛️ render (0b0000000000000000000000000000001) (1)',
     ]);
 
     logs.splice(0);
@@ -131,9 +133,9 @@ describe('DebugTracing', () => {
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${RETRY_LANE_STRING})`,
+      `group: ⚛️ render (${RETRY_LANE_STRING}) (${SYNC_EVENT_PRIORITY})`,
       'log: <Example/>',
-      `groupEnd: ⚛️ render (${RETRY_LANE_STRING})`,
+      `groupEnd: ⚛️ render (${RETRY_LANE_STRING}) (${SYNC_EVENT_PRIORITY})`,
     ]);
   });
 
@@ -167,9 +169,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `group: ⚛️ render (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
       'log: ⚛️ Example suspended',
-      `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `groupEnd: ⚛️ render (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
     ]);
 
     logs.splice(0);
@@ -204,12 +206,12 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `group: ⚛️ render (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
       'log: <Wrapper/>',
-      `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
-      `group: ⚛️ render (${RETRY_LANE_STRING})`,
+      `groupEnd: ⚛️ render (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
+      `group: ⚛️ render (${RETRY_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
       'log: <Example/>',
-      `groupEnd: ⚛️ render (${RETRY_LANE_STRING})`,
+      `groupEnd: ⚛️ render (${RETRY_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
     ]);
   });
 
@@ -235,11 +237,11 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ commit (${DEFAULT_LANE_STRING})`,
-      `group: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
+      `group: ⚛️ commit (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
+      `group: ⚛️ layout effects (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
       'log: ⚛️ Example updated state (0b0000000000000000000000000000001)',
-      `groupEnd: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
-      `groupEnd: ⚛️ commit (${DEFAULT_LANE_STRING})`,
+      `groupEnd: ⚛️ layout effects (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
+      `groupEnd: ⚛️ commit (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
     ]);
   });
 
@@ -267,9 +269,9 @@ describe('DebugTracing', () => {
     }).toErrorDev('Cannot update during an existing state transition');
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `group: ⚛️ render (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
+      `log: ⚛️ Example updated state (${SYNC_LANE_STRING})`,
+      `groupEnd: ⚛️ render (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
     ]);
   });
 
@@ -293,11 +295,11 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ commit (${DEFAULT_LANE_STRING})`,
-      `group: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
+      `group: ⚛️ commit (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
+      `group: ⚛️ layout effects (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
       'log: ⚛️ Example updated state (0b0000000000000000000000000000001)',
-      `groupEnd: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
-      `groupEnd: ⚛️ commit (${DEFAULT_LANE_STRING})`,
+      `groupEnd: ⚛️ layout effects (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
+      `groupEnd: ⚛️ commit (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
     ]);
   });
 
@@ -320,9 +322,9 @@ describe('DebugTracing', () => {
       );
     });
     expect(logs).toEqual([
-      `group: ⚛️ passive effects (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `groupEnd: ⚛️ passive effects (${DEFAULT_LANE_STRING})`,
+      `group: ⚛️ passive effects (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
+      `log: ⚛️ Example updated state (${SYNC_LANE_STRING})`,
+      `groupEnd: ⚛️ passive effects (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
     ]);
   });
 
@@ -346,9 +348,9 @@ describe('DebugTracing', () => {
     });
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `group: ⚛️ render (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
+      `log: ⚛️ Example updated state (${SYNC_LANE_STRING})`,
+      `groupEnd: ⚛️ render (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
     ]);
   });
 
@@ -369,9 +371,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `group: ⚛️ render (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
       'log: Hello from user code',
-      `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
+      `groupEnd: ⚛️ render (${SYNC_LANE_STRING}) (${DEFAULT_EVENT_PRIORITY})`,
     ]);
   });
 

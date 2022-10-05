@@ -124,6 +124,7 @@ describe('ReactBlockingMode', () => {
     );
   });
 
+  //// TODO: ???
   it('flushSync does not flush batched work', () => {
     const {useState, forwardRef, useImperativeHandle} = React;
     const root = ReactNoop.createRoot();

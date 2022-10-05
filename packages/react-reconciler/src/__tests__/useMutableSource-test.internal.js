@@ -1566,6 +1566,7 @@ describe('useMutableSource', () => {
         // read during render will happen to match the latest value. But it should
         // still entangle the updates to prevent the previous update (a1) from
         // rendering by itself.
+        //// TODO: where does this happen?
         React.startTransition(() => {
           mutateA('a0');
           mutateB('b0');

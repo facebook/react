@@ -167,7 +167,6 @@ import {
   addTransitionToLanesMap,
   getTransitionsForLanes,
   InputContinuousLane,
-  DefaultLane,
 } from './ReactFiberLane.new';
 import {
   DiscreteEventPriority,
@@ -613,7 +612,6 @@ export function requestUpdateLane_getUpdatePriority(): EventPriority {
 }
 
 export function requestUpdateLane(fiber: Fiber): Lane {
-  currentUpdatePriority = NoEventPriority;
   // Special cases
   const mode = fiber.mode;
   if ((mode & ConcurrentMode) === NoMode) {
@@ -668,7 +666,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   if (updatePriority !== NoEventPriority) {
     currentUpdatePriority = updatePriority;
     if (updatePriority === DefaultEventPriority) {
-      return DefaultLane;
+      return SyncLane;
     }
     if (updatePriority === ContinuousEventPriority) {
       return InputContinuousLane;
@@ -683,7 +681,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   const eventPriority = getCurrentEventPriority();
   currentUpdatePriority = eventPriority;
   if (eventPriority === DefaultEventPriority) {
-    return DefaultLane;
+    return SyncLane;
   }
   if (eventPriority === ContinuousEventPriority) {
     return InputContinuousLane;
@@ -809,7 +807,6 @@ export function scheduleUpdateOnFiber(
         markRootSuspended(root, workInProgressRootRenderLanes);
       }
     }
-
     ensureRootIsScheduled(root, eventTime);
     if (
       lane === SyncLane &&
@@ -892,10 +889,12 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   // We use the highest priority lane to represent the priority of the callback.
   const newCallbackPriority = laneToEventPriority(
     getHighestPriorityLane(nextLanes),
+    root.updatePriority,
   );
 
   // Check if there's an existing task. We may be able to reuse it.
   const existingCallbackPriority = root.callbackPriority;
+
   if (
     existingCallbackPriority === newCallbackPriority &&
     // Special case related to `act`. If the currently scheduled task is a
@@ -1006,7 +1005,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     }
   } else {
     let schedulerPriorityLevel;
-    switch (lanesToEventPriority(nextLanes)) {
+    switch (lanesToEventPriority(nextLanes, root.updatePriority)) {
       case DiscreteEventPriority:
         schedulerPriorityLevel = ImmediateSchedulerPriority;
         break;
@@ -1090,6 +1089,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   let exitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes);
+
   if (exitStatus !== RootInProgress) {
     if (exitStatus === RootErrored) {
       // If something threw an error, try rendering one more time. We'll
@@ -1944,7 +1944,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
 
   if (__DEV__) {
     if (enableDebugTracing) {
-      logRenderStarted(lanes);
+      logRenderStarted(lanes, root.updatePriority);
     }
   }
 
@@ -2045,7 +2045,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 
   if (__DEV__) {
     if (enableDebugTracing) {
-      logRenderStarted(lanes);
+      logRenderStarted(lanes, root.updatePriority);
     }
   }
 
@@ -2400,7 +2400,7 @@ function commitRootImpl(
 
   if (__DEV__) {
     if (enableDebugTracing) {
-      logCommitStarted(lanes);
+      logCommitStarted(lanes, root.updatePriority);
     }
   }
 
@@ -2567,7 +2567,7 @@ function commitRootImpl(
     // layout, but class component lifecycles also fire here for legacy reasons.
     if (__DEV__) {
       if (enableDebugTracing) {
-        logLayoutEffectsStarted(lanes);
+        logLayoutEffectsStarted(lanes, root.updatePriority);
       }
     }
     if (enableSchedulingProfiler) {
@@ -2828,7 +2828,10 @@ export function flushPassiveEffects(): boolean {
     const remainingLanes = pendingPassiveEffectsRemainingLanes;
     pendingPassiveEffectsRemainingLanes = NoLanes;
 
-    const renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
+    const renderPriority = lanesToEventPriority(
+      pendingPassiveEffectsLanes,
+      root.updatePriority,
+    );
     const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
     const prevTransition = ReactCurrentBatchConfig.transition;
     const previousPriority = getCurrentUpdatePriority();
@@ -2889,7 +2892,7 @@ function flushPassiveEffectsImpl() {
     didScheduleUpdateDuringPassiveEffects = false;
 
     if (enableDebugTracing) {
-      logPassiveEffectsStarted(lanes);
+      logPassiveEffectsStarted(lanes, root.updatePriority);
     }
   }
 

@@ -381,7 +381,9 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true}>A0</span>);
 
     await act(async () => {
-      setStep(1);
+      startTransition(() => {
+        setStep(1);
+      });
       ReactNoop.flushSync(() => {
         setText('B');
       });
@@ -523,8 +525,11 @@ describe('ReactOffscreen', () => {
 
       // Before the tree commits, schedule a concurrent event. The inner update
       // is to a tree that's just about to be hidden.
-      setOuter(2);
-      setInner(2);
+      //// TODO: is it right to test with startTranstiion?
+      startTransition(() => {
+        setOuter(2);
+        setInner(2);
+      });
 
       // Commit the previous render.
       jest.runAllTimers();
