@@ -15,11 +15,7 @@ let ReactDOMFizzServer;
 
 describe('react-dom-server-rendering-stub', () => {
   beforeEach(() => {
-    jest.mock('react-dom', () => {
-      return __EXPERIMENTAL__
-        ? jest.requireActual('react-dom/server-rendering-stub.experimental')
-        : jest.requireActual('react-dom/server-rendering-stub');
-    });
+    jest.mock('react-dom', () => require('react-dom/server-rendering-stub'));
 
     React = require('react');
     ReactDOM = require('react-dom');
