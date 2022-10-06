@@ -52,7 +52,7 @@ describe('react-dom-server-rendering-stub', () => {
       ReactDOM.preinit('bar', {as: 'style'});
       return <div>foo</div>;
     }
-    let html = ReactDOMFizzServer.renderToString(<App />);
+    const html = ReactDOMFizzServer.renderToString(<App />);
     expect(html).toEqual(
       '<link href="foo" rel="preload" as="style"/><link rel="stylesheet" href="bar" data-rprec="default"/><div>foo</div>',
     );
@@ -75,5 +75,6 @@ describe('react-dom-server-rendering-stub', () => {
       'Warning: flushSync was called on the server. This is likely caused by a function being called during render or in module scope that was supposed to be called from an effect or event handler. On the server, flushSync does nothing.',
       {withoutStack: true},
     );
+    expect(x).toBe(false);
   });
 });
