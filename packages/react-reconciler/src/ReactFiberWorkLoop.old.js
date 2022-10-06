@@ -173,7 +173,7 @@ import {
   lanesToEventPriority,
   laneaAndUpdateTypeToEventPriority,
 } from './ReactEventPriorities.old';
-import {AsynchronousUpdate, SynchronousUpdate} from './ReactUpdateTypes.old';
+import {SynchronousUpdate} from './ReactUpdateTypes.old';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.old';
 import {completeWork} from './ReactFiberCompleteWork.old';
@@ -595,14 +595,14 @@ export function getCurrentTime() {
   return now();
 }
 
-let currentUpdateType = SynchronousUpdate;
+let currentUpdateType = null;
 
-export function requestUpdateLane_getUpdateType(): UpdateType {
+export function requestUpdateLane_getUpdateType(): UpdateType | null {
   return currentUpdateType;
 }
 
 export function requestUpdateLane(fiber: Fiber): Lane {
-  currentUpdateType = AsynchronousUpdate;
+  currentUpdateType = null;
   // Special cases
   const mode = fiber.mode;
   if ((mode & ConcurrentMode) === NoMode) {
@@ -697,7 +697,7 @@ export function scheduleUpdateOnFiber(
   fiber: Fiber,
   lane: Lane,
   eventTime: number,
-  synchronousUpdateType: UpdateType,
+  synchronousUpdateType: UpdateType | null,
 ) {
   if (__DEV__) {
     if (isRunningInsertionEffect) {
@@ -831,7 +831,7 @@ export function scheduleInitialHydrationOnRoot(
   // match what was rendered on the server.
   const current = root.current;
   current.lanes = lane;
-  markRootUpdated(root, lane, eventTime, AsynchronousUpdate);
+  markRootUpdated(root, lane, eventTime, null);
   ensureRootIsScheduled(root, eventTime);
 }
 
@@ -994,7 +994,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     }
   } else {
     let schedulerPriorityLevel;
-    switch (lanesToEventPriority(nextLanes)) {
+    switch (lanesToEventPriority(nextLanes, root.updateType)) {
       case DiscreteEventPriority:
         schedulerPriorityLevel = ImmediateSchedulerPriority;
         break;
@@ -2998,7 +2998,7 @@ function captureCommitPhaseErrorOnRoot(
   const root = enqueueUpdate(rootFiber, update, (SyncLane: Lane));
   const eventTime = requestEventTime();
   if (root !== null) {
-    markRootUpdated(root, SyncLane, eventTime, AsynchronousUpdate);
+    markRootUpdated(root, SyncLane, eventTime, null);
     ensureRootIsScheduled(root, eventTime);
   }
 }
@@ -3047,7 +3047,7 @@ export function captureCommitPhaseError(
         const root = enqueueUpdate(fiber, update, (SyncLane: Lane));
         const eventTime = requestEventTime();
         if (root !== null) {
-          markRootUpdated(root, SyncLane, eventTime, AsynchronousUpdate);
+          markRootUpdated(root, SyncLane, eventTime, null);
           ensureRootIsScheduled(root, eventTime);
         }
         return;
@@ -3183,7 +3183,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   const eventTime = requestEventTime();
   const root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   if (root !== null) {
-    markRootUpdated(root, retryLane, eventTime, AsynchronousUpdate);
+    markRootUpdated(root, retryLane, eventTime, null);
     ensureRootIsScheduled(root, eventTime);
   }
 }

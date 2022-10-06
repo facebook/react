@@ -29,7 +29,7 @@ import {
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
 import {clz32} from './clz32';
-import {AsynchronousUpdate, DefaultUpdate} from './ReactUpdateTypes.new';
+import {DefaultUpdate} from './ReactUpdateTypes.new';
 
 // Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-timeline.
 // If those values are changed that package should be rebuilt and redeployed.
@@ -597,11 +597,11 @@ export function markRootUpdated(
   root: FiberRoot,
   updateLane: Lane,
   eventTime: number,
-  updateType: UpdateType,
+  updateType: UpdateType | null,
 ) {
   root.pendingLanes |= updateLane;
 
-  if (updateType !== AsynchronousUpdate) {
+  if (updateType !== null) {
     root.updateType = updateType;
   }
   // If there are any suspended transitions, it's possible this new update
@@ -631,7 +631,7 @@ export function markRootUpdated(
 export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
-  root.updateType = AsynchronousUpdate;
+  root.updateType = null;
 
   // The suspended lanes are no longer CPU-bound. Clear their expiration times.
   const expirationTimes = root.expirationTimes;
@@ -664,7 +664,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.pendingLanes = remainingLanes;
 
   if ((root.pendingLanes & SyncLane) === NoLane) {
-    root.updateType = AsynchronousUpdate;
+    root.updateType = null;
   }
 
   // Let's try everything again

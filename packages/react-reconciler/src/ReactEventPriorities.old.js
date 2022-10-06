@@ -72,7 +72,7 @@ export function isHigherEventPriority(
 
 export function lanesToEventPriority(
   lanes: Lanes,
-  updateType: ?UpdateType,
+  updateType: UpdateType | null,
 ): EventPriority {
   const lane = getHighestPriorityLane(lanes);
   if (!isHigherEventPriority(DiscreteEventPriority, lane)) {
@@ -92,7 +92,7 @@ export function lanesToEventPriority(
 
 export function laneaAndUpdateTypeToEventPriority(
   lane: Lane,
-  updateType: ?UpdateType,
+  updateType: UpdateType | null,
 ): EventPriority {
   if (lane === SyncLane && updateType) {
     return SyncLane | (updateType << 1);

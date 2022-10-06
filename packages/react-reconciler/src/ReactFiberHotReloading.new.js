@@ -32,7 +32,6 @@ import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.new'
 import {updateContainer} from './ReactFiberReconciler.new';
 import {emptyContextObject} from './ReactFiberContext.new';
 import {SyncLane, NoTimestamp} from './ReactFiberLane.new';
-import {AsynchronousUpdate} from './ReactUpdateTypes.new';
 import {
   ClassComponent,
   FunctionComponent,
@@ -314,13 +313,7 @@ function scheduleFibersWithFamiliesRecursively(
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
       if (root !== null) {
-        scheduleUpdateOnFiber(
-          root,
-          fiber,
-          SyncLane,
-          NoTimestamp,
-          AsynchronousUpdate,
-        );
+        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp, null);
       }
     }
     if (child !== null && !needsRemount) {
