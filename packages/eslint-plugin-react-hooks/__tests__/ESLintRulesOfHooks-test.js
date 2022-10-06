@@ -479,6 +479,32 @@ const tests = {
         }
       `,
     },
+    {
+      // Nested component declarations are bad but should be covered by other ESLint rules
+      code: normalizeIndent`
+        function App() {
+          return createElement(Child, {
+            Component: () => {
+              const [myState, setMyState] = useState(null);
+            },
+          });
+        }
+      `,
+    },
+    {
+      // Nested component declarations are bad but should be covered by other ESLint rules
+      code: normalizeIndent`
+        function JSXApp() {
+          return (
+            <Child
+              Component={() => {
+                const [myState, setMyState] = useState(null);
+              }}
+            />
+          );
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -1041,6 +1067,38 @@ const tests = {
         (class {i() { useState(); }});
       `,
       errors: [classError('useState')],
+    },
+    {
+      // Nested component declarations are bad but should be covered by other ESLint rules
+      code: normalizeIndent`
+        function App() {
+          return createElement(Child, {
+            Component: () => {
+              if (flag) {
+                const [myState, setMyState] = useState(null);
+              }
+            },
+          });
+        }
+      `,
+      errors: [conditionalError('useState')],
+    },
+    {
+      // Nested component declarations are bad but should be covered by other ESLint rules
+      code: normalizeIndent`
+        function App() {
+          return (
+            <Child
+              Component={({ flag }) => {
+                if (flag) {
+                  const [myState, setMyState] = useState(null);
+                }
+              }}
+            />
+          );
+        }
+      `,
+      errors: [conditionalError('useState')],
     },
   ],
 };
