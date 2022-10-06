@@ -21,13 +21,13 @@ function Component(props) {
 
 ```
 bb0:
-  readonly x$2 = Array []
+  Let readonly x$2 = Array []
   Call mutable x$2.push(frozen props$1.p0)
-  readonly y$3 = readonly x$2
-  readonly x$2 = Array []
-  readonly _$4 = JSX <frozen Component$0 x={frozen x$2} ></frozen Component$0>
+  Let readonly y$3 = readonly x$2
+  Reassign readonly x$2 = Array []
+  Let readonly _$4 = JSX <frozen Component$0 x={frozen x$2} ></frozen Component$0>
   Call mutable y$3.push(frozen props$1.p1)
-  readonly $5 = JSX <frozen Component$0 x={frozen x$2} y={frozen y$3} ></frozen Component$0>
+  Const readonly $5 = JSX <frozen Component$0 x={frozen x$2} y={frozen y$3} ></frozen Component$0>
   Return frozen $5
 ```
 
@@ -35,11 +35,12 @@ bb0:
 
 ```javascript
 function Component$0(props$1) {
-  x$2 = [];
+  let x$2 = [];
   x$2.push(props$1.p0);
-  y$3 = x$2;
+  let y$3 = x$2;
   x$2 = [];
-  _$4 = <Component$0 x={x$2}></Component$0>;
+  let _$4 = <Component$0 x={x$2}></Component$0>;
+
   y$3.push(props$1.p1);
   return <Component$0 x={x$2} y={y$3}></Component$0>;
 }

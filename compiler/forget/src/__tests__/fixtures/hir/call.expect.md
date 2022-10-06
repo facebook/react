@@ -34,14 +34,14 @@ function foo$0() {
 
 ```
 bb0:
-  readonly a$2 = Array []
-  readonly b$3 = Object {  }
+  Const readonly a$2 = Array []
+  Const readonly b$3 = Object {  }
   Call mutable foo$4(mutable a$2, mutable b$3)
-  readonly $6 = "div"
-  readonly _$5 = JSX <frozen $6 a={frozen a$2} ></frozen $6>
+  Const readonly $6 = "div"
+  Let readonly _$5 = JSX <frozen $6 a={frozen a$2} ></frozen $6>
   Call mutable foo$4(mutable b$3)
-  readonly $7 = "div"
-  readonly $8 = JSX <frozen $7 a={frozen a$2} b={frozen b$3} ></frozen $7>
+  Const readonly $7 = "div"
+  Const readonly $8 = JSX <frozen $7 a={frozen a$2} b={frozen b$3} ></frozen $7>
   Return frozen $8
 ```
 
@@ -49,10 +49,11 @@ bb0:
 
 ```javascript
 function Component$0(props$1) {
-  a$2 = [];
-  b$3 = {};
+  const a$2 = [];
+  const b$3 = {};
   foo$4(a$2, b$3);
-  _$5 = <div a={a$2}></div>;
+  let _$5 = <div a={a$2}></div>;
+
   foo$4(b$3);
   return <div a={a$2} b={b$3}></div>;
 }

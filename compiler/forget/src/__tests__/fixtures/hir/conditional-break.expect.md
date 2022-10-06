@@ -78,11 +78,11 @@ function Component(props) {
 
 ```
 bb0:
-  readonly a_DEBUG$2 = Array []
+  Const readonly a_DEBUG$2 = Array []
   Call mutable a_DEBUG$2.push(frozen props$1.a)
   If (frozen props$1.b) then:bb2 else:bb1
 bb2:
-  readonly $3 = null
+  Const readonly $3 = null
   Return frozen $3
 bb1:
   Call mutable a_DEBUG$2.push(frozen props$1.d)
@@ -93,7 +93,7 @@ bb1:
 
 ```javascript
 function Component$0(props$1) {
-  a_DEBUG$2 = [];
+  const a_DEBUG$2 = [];
   a_DEBUG$2.push(props$1.a);
   if (props$1.b) {
     return null;
@@ -108,7 +108,7 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  readonly a$2 = Array []
+  Const readonly a$2 = Array []
   Call mutable a$2.push(frozen props$1.a)
   If (frozen props$1.b) then:bb2 else:bb1
 bb2:
@@ -123,7 +123,7 @@ bb1:
 
 ```javascript
 function Component$0(props$1) {
-  a$2 = [];
+  const a$2 = [];
   a$2.push(props$1.a);
   if (props$1.b) {
     a$2.push(props$1.c);
@@ -139,12 +139,12 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  readonly a$2 = Array []
+  Const readonly a$2 = Array []
   Call mutable a$2.push(frozen props$1.a)
   If (frozen props$1.b) then:bb2 else:bb1
 bb2:
   Call mutable a$2.push(frozen props$1.c)
-  readonly $3 = null
+  Const readonly $3 = null
   Return frozen $3
 bb1:
   Call mutable a$2.push(frozen props$1.d)
@@ -155,7 +155,7 @@ bb1:
 
 ```javascript
 function Component$0(props$1) {
-  a$2 = [];
+  const a$2 = [];
   a$2.push(props$1.a);
   if (props$1.b) {
     a$2.push(props$1.c);
@@ -171,7 +171,7 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  readonly a$2 = Array []
+  Const readonly a$2 = Array []
   Call mutable a$2.push(frozen props$1.a)
   If (frozen props$1.b) then:bb2 else:bb1
 bb2:
@@ -186,7 +186,7 @@ bb1:
 
 ```javascript
 function Component$0(props$1) {
-  a$2 = [];
+  const a$2 = [];
   a$2.push(props$1.a);
   if (props$1.b) {
     a$2.push(props$1.c);
@@ -202,7 +202,7 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  readonly a$2 = Array []
+  Const readonly a$2 = Array []
   Call mutable a$2.push(frozen props$1.a)
   If (frozen props$1.b) then:bb1 else:bb2
 bb1:
@@ -217,7 +217,7 @@ bb2:
 
 ```javascript
 function Component$0(props$1) {
-  a$2 = [];
+  const a$2 = [];
   a$2.push(props$1.a);
   if (props$1.b) {
     a$2.push(props$1.d);

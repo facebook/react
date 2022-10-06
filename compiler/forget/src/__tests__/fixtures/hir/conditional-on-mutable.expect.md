@@ -67,8 +67,8 @@ function mayMutate() {}
 
 ```
 bb0:
-  readonly a$2 = Array []
-  readonly b$3 = Array []
+  Const readonly a$2 = Array []
+  Const readonly b$3 = Array []
   If (readonly b$3) then:bb2 else:bb1
 bb2:
   Call mutable a$2.push(frozen props$1.p0)
@@ -79,7 +79,7 @@ bb4:
   Call mutable b$3.push(frozen props$1.p2)
   Goto bb3
 bb3:
-  readonly $5 = JSX <frozen Foo$4 a={frozen a$2} b={frozen b$3} ></frozen Foo$4>
+  Const readonly $5 = JSX <frozen Foo$4 a={frozen a$2} b={frozen b$3} ></frozen Foo$4>
   Return frozen $5
 ```
 
@@ -87,8 +87,8 @@ bb3:
 
 ```javascript
 function Component$0(props$1) {
-  a$2 = [];
-  b$3 = [];
+  const a$2 = [];
+  const b$3 = [];
   if (b$3) {
     a$2.push(props$1.p0);
     ("<<TODO: handle complex control flow in codegen>>");
@@ -107,9 +107,9 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  readonly a$2 = Array []
-  readonly b$3 = Array []
-  readonly $5 = Call mutable mayMutate$4(mutable b$3)
+  Const readonly a$2 = Array []
+  Const readonly b$3 = Array []
+  Const readonly $5 = Call mutable mayMutate$4(mutable b$3)
   If (readonly $5) then:bb2 else:bb1
 bb2:
   Call mutable a$2.push(frozen props$1.p0)
@@ -120,7 +120,7 @@ bb4:
   Call mutable b$3.push(frozen props$1.p2)
   Goto bb3
 bb3:
-  readonly $7 = JSX <frozen Foo$6 a={frozen a$2} b={frozen b$3} ></frozen Foo$6>
+  Const readonly $7 = JSX <frozen Foo$6 a={frozen a$2} b={frozen b$3} ></frozen Foo$6>
   Return frozen $7
 ```
 
@@ -128,8 +128,8 @@ bb3:
 
 ```javascript
 function Component$0(props$1) {
-  a$2 = [];
-  b$3 = [];
+  const a$2 = [];
+  const b$3 = [];
   if (mayMutate$4(b$3)) {
     a$2.push(props$1.p0);
     ("<<TODO: handle complex control flow in codegen>>");

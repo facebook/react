@@ -14,6 +14,7 @@ import {
   HIRFunction,
   Identifier,
   IfTerminal,
+  InstructionKind,
   InstructionValue,
   Place,
   ReturnTerminal,
@@ -546,11 +547,13 @@ function lowerStatement(
     }
     case "VariableDeclaration": {
       const stmt = stmtPath as NodePath<t.VariableDeclaration>;
-      const kind: string = stmt.node.kind;
+      const nodeKind: string = stmt.node.kind;
       invariant(
-        kind === "let" || kind === "const",
+        nodeKind === "let" || nodeKind === "const",
         "`var` declarations are not supported, use let or const"
       );
+      const kind =
+        nodeKind === "let" ? InstructionKind.Let : InstructionKind.Const;
       for (const declaration of stmt.get("declarations")) {
         const id = lowerLVal(builder, declaration.get("id"));
         const init = declaration.get("init");
@@ -565,7 +568,7 @@ function lowerStatement(
           };
         }
         builder.push({
-          place: id,
+          lvalue: { place: id, kind },
           value,
           path: stmt,
         });
@@ -581,7 +584,7 @@ function lowerStatement(
         return;
       }
       builder.push({
-        place: null,
+        lvalue: null,
         value,
         path: stmt,
       });
@@ -620,7 +623,7 @@ function lowerStatement(
     case "WithStatement": {
       builder.push({
         path: stmtPath,
-        place: null,
+        lvalue: null,
         value: { kind: "OtherStatement", path: stmtPath },
       });
       return;
@@ -816,9 +819,9 @@ function lowerExpression(
       const operator = expr.node.operator;
       todoInvariant(operator === "=", "todo: support non-simple assignment");
       builder.push({
+        lvalue: { place: left, kind: InstructionKind.Reassign },
         path: exprPath,
         value: right,
-        place: left,
       });
       return left;
     }
@@ -907,7 +910,11 @@ function lowerConditional(
   //  Block for the consequent (if the test is truthy)
   const consequentBlock = builder.enter((blockId) => {
     let value = consequent();
-    builder.push({ value, place: { ...place }, path: value.path });
+    builder.push({
+      value,
+      lvalue: { place: { ...place }, kind: InstructionKind.Const },
+      path: value.path,
+    });
     return {
       kind: "goto",
       block: continuationBlock.id,
@@ -916,7 +923,11 @@ function lowerConditional(
   //  Block for the alternate (if the test is not truthy)
   const alternateBlock = builder.enter((blockId) => {
     let value = alternate();
-    builder.push({ value, place: { ...place }, path: value.path });
+    builder.push({
+      value,
+      lvalue: { place: { ...place }, kind: InstructionKind.Const },
+      path: value.path,
+    });
     return {
       kind: "goto",
       block: continuationBlock.id,
@@ -969,7 +980,7 @@ function lowerJsxElementName(
     builder.push({
       value: { kind: "Primitive", value: tag, path: exprPath },
       path: exprPath,
-      place,
+      lvalue: { place, kind: InstructionKind.Const },
     });
     return { ...place };
   }
@@ -1002,7 +1013,7 @@ function lowerJsxElement(
     builder.push({
       value: { kind: "JSXText", value: exprPath.node.value, path: exprPath },
       path: exprPath,
-      place: { ...place },
+      lvalue: { place: { ...place }, kind: InstructionKind.Const },
     });
     return place;
   } else {
@@ -1016,7 +1027,7 @@ function lowerJsxElement(
     builder.push({
       value: { kind: "OtherStatement", path: exprPath },
       path: exprPath,
-      place: { ...place },
+      lvalue: { place: { ...place }, kind: InstructionKind.Const },
     });
     return place;
   }
@@ -1040,7 +1051,7 @@ function lowerExpressionToPlace(
   builder.push({
     value: instr,
     path: exprPath,
-    place: { ...place },
+    lvalue: { place: { ...place }, kind: InstructionKind.Const },
   });
   return place;
 }

@@ -220,11 +220,11 @@ function flowMutabilityBackwards(vertex: Vertex, epoch: number) {
 
 function inferBlock(graph: UseGraph, block: BasicBlock) {
   for (const instr of block.instructions) {
-    if (instr.place !== null) {
-      if (instr.place.memberPath == null) {
-        graph.init(instr.place, instr);
+    if (instr.lvalue !== null) {
+      if (instr.lvalue.place.memberPath == null) {
+        graph.init(instr.lvalue.place, instr);
       } else {
-        graph.reference(instr.place, instr, Capability.Mutable);
+        graph.reference(instr.lvalue.place, instr, Capability.Mutable);
       }
     }
     const instrValue = instr.value;
@@ -239,8 +239,8 @@ function inferBlock(graph: UseGraph, block: BasicBlock) {
       case "ArrayExpression": {
         for (const element of instrValue.elements) {
           graph.reference(element, instrValue, Capability.Readonly);
-          if (instr.place !== null) {
-            graph.capture(instr.place, instr, element);
+          if (instr.lvalue !== null) {
+            graph.capture(instr.lvalue.place, instr, element);
           }
         }
         break;
@@ -250,8 +250,8 @@ function inferBlock(graph: UseGraph, block: BasicBlock) {
         let prevArg: Place | null = null;
         for (const arg of instrValue.args) {
           graph.reference(arg, instrValue, Capability.Mutable);
-          if (instr.place !== null) {
-            graph.capture(instr.place, instr, arg);
+          if (instr.lvalue !== null) {
+            graph.capture(instr.lvalue.place, instr, arg);
           }
           if (prevArg !== null) {
             graph.capture(prevArg, instr, arg);
@@ -271,8 +271,8 @@ function inferBlock(graph: UseGraph, block: BasicBlock) {
         let prevArg: Place | null = null;
         for (const arg of instrValue.args) {
           graph.reference(arg, instrValue, capability);
-          if (instr.place !== null) {
-            graph.capture(instr.place, instr, arg);
+          if (instr.lvalue !== null) {
+            graph.capture(instr.lvalue.place, instr, arg);
           }
           if (prevArg !== null) {
             graph.capture(prevArg, instr, arg);
@@ -286,8 +286,8 @@ function inferBlock(graph: UseGraph, block: BasicBlock) {
         if (instrValue.properties !== null) {
           for (const [_key, value] of Object.entries(instrValue.properties)) {
             graph.reference(value, instrValue, Capability.Readonly);
-            if (instr.place !== null) {
-              graph.capture(instr.place, instr, value);
+            if (instr.lvalue !== null) {
+              graph.capture(instr.lvalue.place, instr, value);
             }
           }
         }
@@ -306,15 +306,15 @@ function inferBlock(graph: UseGraph, block: BasicBlock) {
         graph.reference(instrValue.tag, instrValue, Capability.Readonly);
         for (const [_prop, value] of Object.entries(instrValue.props)) {
           graph.reference(value, instrValue, Capability.Readonly);
-          if (instr.place !== null) {
-            graph.capture(instr.place, instr, value);
+          if (instr.lvalue !== null) {
+            graph.capture(instr.lvalue.place, instr, value);
           }
         }
         if (instrValue.children !== null) {
           for (const child of instrValue.children) {
             graph.reference(child, instrValue, Capability.Readonly);
-            if (instr.place !== null) {
-              graph.capture(instr.place, instr, child);
+            if (instr.lvalue !== null) {
+              graph.capture(instr.lvalue.place, instr, child);
             }
           }
         }
@@ -327,8 +327,8 @@ function inferBlock(graph: UseGraph, block: BasicBlock) {
       }
       case "Identifier": {
         graph.reference(instrValue, instrValue, Capability.Readonly);
-        if (instr.place !== null) {
-          graph.assign(instr.place, instr, instrValue);
+        if (instr.lvalue !== null) {
+          graph.assign(instr.lvalue.place, instr, instrValue);
         }
         valueCapability = instrValue.capability;
         break;
@@ -337,8 +337,8 @@ function inferBlock(graph: UseGraph, block: BasicBlock) {
         assertExhaustive(instrValue, "Unexpected instruction kind");
       }
     }
-    if (instr.place !== null) {
-      instr.place.capability = valueCapability;
+    if (instr.lvalue !== null) {
+      instr.lvalue.place.capability = valueCapability;
     }
   }
 }

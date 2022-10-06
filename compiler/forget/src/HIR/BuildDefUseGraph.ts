@@ -329,9 +329,9 @@ function buildInputsOutputsForBlock(
       case "Identifier": {
         builder.reference(instrValue, instrValue, Capability.Readonly);
         valueCapability = instrValue.capability;
-        if (instr.place !== null && instr.place.memberPath === null) {
-          builder.assign(instr.place, instr, instrValue);
-          instr.place.capability = valueCapability;
+        if (instr.lvalue !== null && instr.lvalue.place.memberPath === null) {
+          builder.assign(instr.lvalue.place, instr, instrValue);
+          instr.lvalue.place.capability = valueCapability;
           continue;
         }
         break;
@@ -340,12 +340,12 @@ function buildInputsOutputsForBlock(
         assertExhaustive(instrValue, "Unexpected instruction kind");
       }
     }
-    if (instr.place !== null) {
-      if (instr.place.memberPath == null) {
-        builder.init(instr.place, instr, true);
-        instr.place.capability = valueCapability;
+    if (instr.lvalue !== null) {
+      if (instr.lvalue.place.memberPath == null) {
+        builder.init(instr.lvalue.place, instr, true);
+        instr.lvalue.place.capability = valueCapability;
       } else {
-        builder.reference(instr.place, instr, valueCapability);
+        builder.reference(instr.lvalue.place, instr, valueCapability);
       }
     }
   }

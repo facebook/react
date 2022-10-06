@@ -15,6 +15,8 @@ import {
   Identifier,
   IdentifierId,
   Instruction,
+  InstructionKind,
+  LValue,
   Place,
 } from "./HIR";
 import { todoInvariant } from "./todo";
@@ -269,20 +271,46 @@ function writeInstr(cx: Context, instr: Instruction, body: Array<t.Statement>) {
       assertExhaustive(instrValue, "Unexpected instruction kind");
     }
   }
-  if (instr.place !== null) {
+  if (instr.lvalue !== null) {
     if (
-      instr.place.kind === "Identifier" &&
-      instr.place.value.name === null &&
-      instr.place.memberPath === null
+      instr.lvalue.place.value.name === null &&
+      instr.lvalue.place.memberPath === null
     ) {
       // Temporary value: don't immediately emit, instead save the value to refer to later
-      cx.temp.set(instr.place.value.id, value);
+      cx.temp.set(instr.lvalue.place.value.id, value);
     } else {
-      body.push(
-        t.expressionStatement(
-          t.assignmentExpression("=", codegenLVal(instr.place), value)
-        )
-      );
+      switch (instr.lvalue.kind) {
+        case InstructionKind.Const: {
+          body.push(
+            t.variableDeclaration("const", [
+              t.variableDeclarator(codegenLVal(instr.lvalue), value),
+            ])
+          );
+          break;
+        }
+        case InstructionKind.Let: {
+          body.push(
+            t.variableDeclaration("let", [
+              t.variableDeclarator(codegenLVal(instr.lvalue), value),
+            ])
+          );
+          break;
+        }
+        case InstructionKind.Reassign: {
+          body.push(
+            t.expressionStatement(
+              t.assignmentExpression("=", codegenLVal(instr.lvalue), value)
+            )
+          );
+          break;
+        }
+        default: {
+          assertExhaustive(
+            instr.lvalue.kind,
+            `Unexpected instruction kind '${instr.lvalue.kind}'`
+          );
+        }
+      }
     }
   } else {
     body.push(t.expressionStatement(value));
@@ -309,15 +337,8 @@ function codegenJsxElement(
   }
 }
 
-function codegenLVal(place: Place): t.LVal {
-  switch (place.kind) {
-    case "Identifier": {
-      return convertIdentifier(place.value);
-    }
-    default: {
-      throw new Error("todo other lval kinds");
-    }
-  }
+function codegenLVal(lval: LValue): t.LVal {
+  return convertIdentifier(lval.place.value);
 }
 
 function codegenValue(

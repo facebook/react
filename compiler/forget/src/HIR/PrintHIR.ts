@@ -6,7 +6,15 @@
  */
 
 import { assertExhaustive } from "../Common/utils";
-import { HIR, Instruction, InstructionValue, Place, Terminal } from "./HIR";
+import {
+  HIR,
+  Instruction,
+  InstructionKind,
+  InstructionValue,
+  LValue,
+  Place,
+  Terminal,
+} from "./HIR";
 
 export type Options = {
   indent: number;
@@ -63,8 +71,8 @@ export function printMixedHIR(
 function printInstruction(instr: Instruction): string {
   const value = printInstructionValue(instr.value);
 
-  if (instr.place !== null) {
-    return `${printPlace(instr.place)} = ${value}`;
+  if (instr.lvalue !== null) {
+    return `${printLValue(instr.lvalue)} = ${value}`;
   } else {
     return value;
   }
@@ -202,6 +210,24 @@ function printInstructionValue(instrValue: InstructionValue): string {
     }
   }
   return value;
+}
+
+export function printLValue(lval: LValue): string {
+  const place = printPlace(lval.place);
+  switch (lval.kind) {
+    case InstructionKind.Let: {
+      return `Let ${place}`;
+    }
+    case InstructionKind.Const: {
+      return `Const ${place}`;
+    }
+    case InstructionKind.Reassign: {
+      return `Reassign ${place}`;
+    }
+    default: {
+      assertExhaustive(lval.kind, `Unexpected lvalue kind '${lval.kind}'`);
+    }
+  }
 }
 
 export function printPlace(place: Place): string {

@@ -128,10 +128,21 @@ export type SwitchTerminal = {
  * or may occur only for side-effects (many expression statements).
  */
 export type Instruction = {
-  place: Place | null;
+  lvalue: LValue | null;
   value: InstructionValue;
   path: NodePath;
 };
+
+export type LValue = {
+  place: Place;
+  kind: InstructionKind;
+};
+
+export enum InstructionKind {
+  Const, // const declaration
+  Let, // let declaration
+  Reassign, // assing a new value to a let binding
+}
 
 /**
  * A value that may be assigned to a place. Similar to instructions, values

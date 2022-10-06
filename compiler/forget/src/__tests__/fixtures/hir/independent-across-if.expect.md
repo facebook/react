@@ -97,15 +97,15 @@ function Foo$0() {
 
 ```
 bb0:
-  readonly a$2 = Call mutable compute$3(frozen props$1.a)
-  readonly b$4 = Call mutable compute$3(frozen props$1.b)
+  Const readonly a$2 = Call mutable compute$3(frozen props$1.a)
+  Const readonly b$4 = Call mutable compute$3(frozen props$1.b)
   If (frozen props$1.c) then:bb2 else:bb1
 bb2:
   Call mutable mutate$5(mutable a$2)
   Call mutable mutate$5(mutable b$4)
   Goto bb1
 bb1:
-  readonly $7 = JSX <frozen Foo$6 a={frozen a$2} b={frozen b$4} ></frozen Foo$6>
+  Const readonly $7 = JSX <frozen Foo$6 a={frozen a$2} b={frozen b$4} ></frozen Foo$6>
   Return frozen $7
 ```
 
@@ -113,8 +113,8 @@ bb1:
 
 ```javascript
 function Component$0(props$1) {
-  a$2 = compute$3(props$1.a);
-  b$4 = compute$3(props$1.b);
+  const a$2 = compute$3(props$1.a);
+  const b$4 = compute$3(props$1.b);
   if (props$1.c) {
     mutate$5(a$2);
     mutate$5(b$4);

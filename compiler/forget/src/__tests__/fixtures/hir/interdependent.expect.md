@@ -28,10 +28,10 @@ function Foo() {}
 
 ```
 bb0:
-  readonly a$2 = Call mutable compute$3(frozen props$1.a)
-  readonly b$4 = Call mutable compute$3(frozen props$1.b)
+  Const readonly a$2 = Call mutable compute$3(frozen props$1.a)
+  Const readonly b$4 = Call mutable compute$3(frozen props$1.b)
   Call mutable foo$5(mutable a$2, mutable b$4)
-  readonly $7 = JSX <frozen Foo$6 a={frozen a$2} b={frozen b$4} ></frozen Foo$6>
+  Const readonly $7 = JSX <frozen Foo$6 a={frozen a$2} b={frozen b$4} ></frozen Foo$6>
   Return frozen $7
 ```
 
@@ -39,8 +39,8 @@ bb0:
 
 ```javascript
 function Component$0(props$1) {
-  a$2 = compute$3(props$1.a);
-  b$4 = compute$3(props$1.b);
+  const a$2 = compute$3(props$1.a);
+  const b$4 = compute$3(props$1.b);
   foo$5(a$2, b$4);
   return <Foo$6 a={a$2} b={b$4}></Foo$6>;
 }

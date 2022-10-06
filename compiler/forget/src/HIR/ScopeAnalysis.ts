@@ -5,26 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { assertExhaustive } from "../Common/utils";
-import { invariant } from "../CompilerError";
-import DisjointSet from "./DisjointSet";
 import {
-  BasicBlock,
-  BlockId,
   Capability,
-  HIR,
   HIRFunction,
-  IdentifierId,
-  Instruction,
-  InstructionValue,
   makeScopeId,
-  Place,
   ReactFunction,
   ReactiveScope,
   ScopeId,
-  Terminal,
 } from "./HIR";
-import todo from "./todo";
 
 // import * as t from "@babel/types";
 
@@ -197,11 +185,6 @@ function analyze(fn: HIRFunction): ReactFunction {
   const returnScopeId = makeScopeId(0);
   const scopes: Map<ScopeId, ReactiveScope> = new Map();
 
-  const block = fn.body.blocks.get(fn.body.entry)!;
-  const context = new Context(fn.body);
-  analyzeBlock(context, fn.body.entry, block);
-  context.analyzeControls();
-
   return {
     path: fn.path,
     id: fn.id,
@@ -209,222 +192,4 @@ function analyze(fn: HIRFunction): ReactFunction {
     returnScope: returnScopeId,
     scopes,
   };
-}
-
-class Context {
-  #blocks: Map<IdentifierId, Set<BasicBlock>> = new Map();
-  #groups: DisjointSet<IdentifierId | Instruction | BasicBlock> =
-    new DisjointSet();
-  body: HIR;
-
-  constructor(body: HIR) {
-    this.body = body;
-  }
-
-  union(items: Array<IdentifierId | Instruction>, block: BasicBlock) {
-    this.#groups.union(items);
-    for (const item of items) {
-      if (typeof item === "number") {
-        // IdentifierId
-        let set = this.#blocks.get(item);
-        if (set == null) {
-          set = new Set();
-          this.#blocks.set(item, set);
-        }
-        set.add(block);
-      }
-    }
-  }
-
-  /**
-   * Find items that participate in control flow together
-   */
-  analyzeControls() {
-    const mergeSets: Array<Array<BasicBlock>> = [];
-    const blocks: Map<BlockId, BasicBlock> = new Map();
-    this.#groups.forEach((prevItem, prevGroup) => {
-      this.#groups.forEach((nextItem, nextGroup) => {
-        if (
-          prevGroup === nextGroup ||
-          typeof prevItem !== "number" ||
-          typeof nextItem !== "number"
-        ) {
-          // Already part of the same group, by definition this includes item === nextItem
-          return;
-        }
-        const prevBlocks = this.#blocks.get(prevItem)!;
-        const nextBlocks = this.#blocks.get(nextItem)!;
-
-        const overlap = [];
-        for (const block of prevBlocks) {
-          if (nextBlocks.has(block)) {
-            overlap.push(block);
-          }
-        }
-        if (overlap.length > 1) {
-          mergeSets.push(overlap);
-        }
-      });
-    });
-    for (const set of mergeSets) {
-      this.#groups.union(set);
-    }
-  }
-}
-
-function analyzeBlock(cx: Context, id: BlockId, block: BasicBlock) {
-  for (const instr of block.instructions) {
-    const instrValue = instr.value;
-    let mutables: Array<IdentifierId | Instruction> = [];
-    switch (instrValue.kind) {
-      case "JSXText":
-      case "Primitive": {
-        // no mutable values
-        break;
-      }
-      case "Identifier": {
-        const value = getMutable(instrValue);
-        if (value !== null) {
-          mutables.push(value);
-        }
-        break;
-      }
-      case "UnaryExpression": {
-        const value = getMutable(instrValue.value);
-        if (value !== null) {
-          mutables.push(value);
-        }
-        break;
-      }
-      case "BinaryExpression": {
-        const left = getMutable(instrValue.left);
-        const right = getMutable(instrValue.right);
-        if (left !== null) {
-          mutables.push(left);
-        }
-        if (right !== null) {
-          mutables.push(right);
-        }
-        break;
-      }
-      case "ArrayExpression": {
-        for (const _element of instrValue.elements) {
-          const element = getMutable(_element);
-          if (element !== null) {
-            mutables.push(element);
-          }
-        }
-        break;
-      }
-      case "ObjectExpression": {
-        if (instrValue.properties !== null) {
-          for (const _value of Object.values(instrValue.properties)) {
-            const value = getMutable(_value);
-            if (value !== null) {
-              mutables.push(value);
-            }
-          }
-        }
-        break;
-      }
-      case "JsxExpression": {
-        const tag = getMutable(instrValue.tag);
-        if (tag !== null) {
-          mutables.push(tag);
-        }
-        for (const _prop of Object.values(instrValue.props)) {
-          const prop = getMutable(_prop);
-          if (prop !== null) {
-            mutables.push(prop);
-          }
-        }
-        if (instrValue.children !== null) {
-          for (const _child of instrValue.children) {
-            const child = getMutable(_child);
-            if (child !== null) {
-              mutables.push(child);
-            }
-          }
-        }
-        break;
-      }
-      case "NewExpression":
-      case "CallExpression": {
-        const callee = getMutable(instrValue.callee);
-        if (callee !== null) {
-          mutables.push(callee);
-        }
-        for (const _arg of instrValue.args) {
-          const arg = getMutable(_arg);
-          if (arg !== null) {
-            mutables.push(arg);
-          }
-        }
-        break;
-      }
-      case "OtherStatement": {
-        // no-op for the value itself
-        break;
-      }
-      default: {
-        assertExhaustive(
-          instrValue,
-          `Unexpected instruction kind '${
-            (instrValue as any as InstructionValue).kind
-          }'`
-        );
-      }
-    }
-    const place = instr.place !== null ? getMutable(instr.place) : null;
-    invariant(
-      instr.place === null ||
-        instr.place.kind !== "Identifier" ||
-        place !== null,
-      "Expected instruction assignment target to be inferred as mutable if present."
-    );
-    if (place !== null) {
-      mutables.push(place);
-    }
-    if (mutables.length !== 0) {
-      mutables.push(instr);
-      cx.union(mutables, block);
-    }
-  }
-  switch (block.terminal.kind) {
-    case "if": {
-      const consequent = cx.body.blocks.get(block.terminal.consequent)!;
-      analyzeBlock(cx, block.terminal.consequent, consequent);
-      const alternate = cx.body.blocks.get(block.terminal.alternate)!;
-      analyzeBlock(cx, block.terminal.alternate, alternate);
-      if (
-        block.terminal.fallthrough !== null &&
-        block.terminal.fallthrough !== block.terminal.alternate
-      ) {
-        const fallthrough = cx.body.blocks.get(block.terminal.fallthrough)!;
-        analyzeBlock(cx, block.terminal.fallthrough, fallthrough);
-      }
-      break;
-    }
-    case "switch": {
-      todo("implement scope analysis for switch statements");
-    }
-    case "throw":
-    case "return":
-    case "goto": {
-      // no-op
-      break;
-    }
-    default: {
-      assertExhaustive(
-        block.terminal,
-        `Unexpected terminal kind '${(block.terminal as any as Terminal).kind}'`
-      );
-    }
-  }
-}
-
-function getMutable(place: Place): IdentifierId | null {
-  return place.kind === "Identifier" && place.capability === Capability.Mutable
-    ? place.value.id
-    : null;
 }
