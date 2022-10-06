@@ -52,6 +52,7 @@ import {
   enableUseEventHook,
   enableStrictEffects,
   enableFloat,
+  enableLegacyHidden,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -3419,7 +3420,23 @@ function commitPassiveMountOnFiber(
       }
       break;
     }
-    case LegacyHiddenComponent:
+    case LegacyHiddenComponent: {
+      if (enableLegacyHidden) {
+        recursivelyTraversePassiveMountEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions,
+        );
+
+        if (flags & Passive) {
+          const current = finishedWork.alternate;
+          const instance: OffscreenInstance = finishedWork.stateNode;
+          commitOffscreenPassiveMountEffects(current, finishedWork, instance);
+        }
+      }
+      break;
+    }
     case OffscreenComponent: {
       // TODO: Pass `current` as argument to this function
       const instance: OffscreenInstance = finishedWork.stateNode;
@@ -3600,7 +3617,25 @@ export function reconnectPassiveEffects(
     // case HostRoot: {
     //  ...
     // }
-    case LegacyHiddenComponent:
+    case LegacyHiddenComponent: {
+      if (enableLegacyHidden) {
+        recursivelyTraverseReconnectPassiveEffects(
+          finishedRoot,
+          finishedWork,
+          committedLanes,
+          committedTransitions,
+          includeWorkInProgressEffects,
+        );
+
+        if (includeWorkInProgressEffects && flags & Passive) {
+          // TODO: Pass `current` as argument to this function
+          const current: Fiber | null = finishedWork.alternate;
+          const instance: OffscreenInstance = finishedWork.stateNode;
+          commitOffscreenPassiveMountEffects(current, finishedWork, instance);
+        }
+      }
+      break;
+    }
     case OffscreenComponent: {
       const instance: OffscreenInstance = finishedWork.stateNode;
       const nextState: OffscreenState | null = finishedWork.memoizedState;
