@@ -73,42 +73,41 @@ function writeBlock(cx: Context, block: BasicBlock, body: Array<t.Statement>) {
   for (const instr of block.instructions) {
     writeInstr(cx, instr, body);
   }
-  switch (block.terminal.kind) {
+  const terminal = block.terminal;
+  switch (terminal.kind) {
     case "return": {
       const value =
-        block.terminal.value != null
-          ? codegenPlace(cx, block.terminal.value)
-          : null;
+        terminal.value != null ? codegenPlace(cx, terminal.value) : null;
       body.push(t.returnStatement(value));
       break;
     }
     case "throw": {
-      const value = codegenPlace(cx, block.terminal.value);
+      const value = codegenPlace(cx, terminal.value);
       body.push(t.throwStatement(value));
       break;
     }
     case "if": {
-      const test = codegenPlace(cx, block.terminal.test);
+      const test = codegenPlace(cx, terminal.test);
       const consequent = codegenBlock(
         cx,
-        cx.ir.blocks.get(block.terminal.consequent)!
+        cx.ir.blocks.get(terminal.consequent)!
       );
       const fallthrough =
-        block.terminal.fallthrough !== null &&
-        block.terminal.fallthrough !== block.terminal.alternate
-          ? block.terminal.fallthrough
+        terminal.fallthrough !== null &&
+        terminal.fallthrough !== terminal.alternate
+          ? terminal.fallthrough
           : null;
       if (fallthrough !== null) {
         const alternate = codegenBlock(
           cx,
-          cx.ir.blocks.get(block.terminal.alternate)!
+          cx.ir.blocks.get(terminal.alternate)!
         );
         body.push(t.ifStatement(test, consequent, alternate));
         const fallthroughBlock = cx.ir.blocks.get(fallthrough)!;
         writeBlock(cx, fallthroughBlock, body);
       } else {
         body.push(t.ifStatement(test, consequent));
-        writeBlock(cx, cx.ir.blocks.get(block.terminal.alternate)!, body);
+        writeBlock(cx, cx.ir.blocks.get(terminal.alternate)!, body);
       }
       break;
     }
@@ -121,15 +120,37 @@ function writeBlock(cx: Context, block: BasicBlock, body: Array<t.Statement>) {
       break;
     }
     case "switch": {
-      body.push(
-        t.expressionStatement(
-          t.stringLiteral("<<TODO: handle switch in codegen>>")
-        )
-      );
+      const cases: Array<t.SwitchCase> = [];
+      terminal.cases.forEach((case_, index) => {
+        const test = case_.test !== null ? codegenPlace(cx, case_.test) : null;
+        // If the final case is a `default` *and* points directly to the
+        // fallthrough branch, then we can skip emitting `default: break`
+        // since this implied. For a default in any other position, or
+        // for a default pointing to a different block, emit a case
+        // normally.
+        if (
+          index === terminal.cases.length - 1 &&
+          test === null &&
+          case_.block === terminal.fallthrough
+        ) {
+          return;
+        } else if (case_.block === terminal.fallthrough) {
+          // Otherwise for any block that points directly to the fallthrough,
+          // emit a break instead
+          cases.push(t.switchCase(test, [t.breakStatement()]));
+        } else {
+          const consequent = codegenBlock(cx, cx.ir.blocks.get(case_.block)!);
+          cases.push(t.switchCase(test, [consequent]));
+        }
+      });
+      body.push(t.switchStatement(codegenPlace(cx, terminal.test), cases));
+      if (terminal.fallthrough !== null) {
+        writeBlock(cx, cx.ir.blocks.get(terminal.fallthrough)!, body);
+      }
       break;
     }
     default: {
-      assertExhaustive(block.terminal, "Unexpected terminal");
+      assertExhaustive(terminal, "Unexpected terminal");
     }
   }
 }
