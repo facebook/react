@@ -35,6 +35,7 @@
     "static.js",
     "static.browser.js",
     "static.node.js",
+    "server-rendering-stub.js",
     "test-utils.js",
     "unstable_testing.js",
     "cjs/",
@@ -49,7 +50,6 @@
       "browser": "./server.browser.js",
       "default": "./server.node.js"
     },
-    "./server-rendering-stub": "./server-rendering-stub.js",
     "./server.browser": "./server.browser.js",
     "./server.node": "./server.node.js",
     "./static": {
@@ -60,6 +60,7 @@
     },
     "./static.browser": "./static.browser.js",
     "./static.node": "./static.node.js",
+    "./server-rendering-stub": "./server-rendering-stub.js",
     "./profiling": "./profiling.js",
     "./test-utils": "./test-utils.js",
     "./unstable_testing": "./unstable_testing.js",

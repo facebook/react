@@ -9,4 +9,13 @@
 
 // Export all exports so that they're available in tests.
 // We can't use export * from in Flow for some reason.
+
+import ReactVersion from 'shared/ReactVersion';
+export {ReactVersion as version};
+
 export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/ReactDOMSharedInternals';
+
+export {
+  createPortal,
+  flushSync,
+} from './src/server/ReactDOMServerRenderingStub';
