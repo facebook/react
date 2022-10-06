@@ -8,7 +8,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && scripts/hash-dist.sh",
     "bundle:meta": "scripts/bundle-meta.sh",
     "dev": "concurrently \"yarn:build --watch\" \"yarn:playground\"",
     "playground": "cd packages/playground && yarn && yarn dev",

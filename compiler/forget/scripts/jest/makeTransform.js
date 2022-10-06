@@ -7,6 +7,7 @@
 
 const ReactForgetBabelPlugin = require("../../dist").default;
 const babelJest = require("babel-jest");
+const { readFileSync } = require("fs");
 
 module.exports = (useForget) => {
   function createTransformer() {
@@ -17,7 +18,17 @@ module.exports = (useForget) => {
         {
           plugins: [
             "@babel/plugin-syntax-jsx",
-            ...(useForget ? [ReactForgetBabelPlugin, {}] : []),
+            ...(useForget
+              ? [
+                  [
+                    ReactForgetBabelPlugin,
+                    {
+                      // Jest hashes the babel config as a cache breaker.
+                      cacheBreaker: readFileSync("dist/HASH", "utf8"),
+                    },
+                  ],
+                ]
+              : []),
           ],
         },
         "@babel/preset-react",
