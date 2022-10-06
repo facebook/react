@@ -138,6 +138,7 @@ type InspectorDataGetter = (
 }>;
 
 export type InspectorData = $ReadOnly<{
+  closestInstance?: mixed,
   hierarchy: Array<{
     name: ?string,
     getInspectorData: InspectorDataGetter,
@@ -150,7 +151,6 @@ export type InspectorData = $ReadOnly<{
 export type TouchedViewDataAtPoint = $ReadOnly<{
   pointerY: number,
   touchedViewTag?: number,
-  closestInstance?: mixed,
   frame: $ReadOnly<{
     top: number,
     left: number,

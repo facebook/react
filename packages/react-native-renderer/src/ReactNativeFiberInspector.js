@@ -112,6 +112,7 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     const selectedIndex = fiberHierarchy.indexOf(instance);
 
     return {
+      closestInstance: instance,
       hierarchy,
       props,
       selectedIndex,
@@ -225,7 +226,6 @@ if (__DEV__) {
                 pointerY: locationY,
                 frame: {left: pageX, top: pageY, width, height},
                 touchedViewTag: nativeViewTag,
-                closestInstance,
               });
             },
           );
