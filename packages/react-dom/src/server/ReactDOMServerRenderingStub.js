@@ -8,22 +8,18 @@
  */
 
 export function createPortal() {
-  if (__DEV__) {
-    console.error(
-      'createPortal was called on the server. Portals are not currently' +
-        ' supported on the server. Update your program to conditionally call' +
-        ' createPortal on the client only.',
-    );
-  }
+  throw new Error(
+    'createPortal was called on the server. Portals are not currently' +
+      ' supported on the server. Update your program to conditionally call' +
+      ' createPortal on the client only.',
+  );
 }
 
 export function flushSync() {
-  if (__DEV__) {
-    console.error(
-      'flushSync was called on the server. This is likely caused by a' +
-        ' function being called during render or in module scope that was' +
-        ' supposed to be called from an effect or event handler. On the' +
-        ' server, flushSync does nothing.',
-    );
-  }
+  throw new Error(
+    'flushSync was called on the server. This is likely caused by a' +
+      ' function being called during render or in module scope that was' +
+      ' intended to be called from an effect or event handler. Update your' +
+      ' to not call flushSync no the server.',
+  );
 }

@@ -57,9 +57,8 @@ describe('react-dom-server-rendering-stub', () => {
   it('provides a stub for createPortal', async () => {
     expect(() => {
       ReactDOM.createPortal();
-    }).toErrorDev(
-      'Warning: createPortal was called on the server. Portals are not currently supported on the server. Update your program to conditionally call createPortal on the client only.',
-      {withoutStack: true},
+    }).toThrow(
+      'createPortal was called on the server. Portals are not currently supported on the server. Update your program to conditionally call createPortal on the client only.',
     );
   });
 
@@ -67,9 +66,8 @@ describe('react-dom-server-rendering-stub', () => {
     let x = false;
     expect(() => {
       ReactDOM.flushSync(() => (x = true));
-    }).toErrorDev(
-      'Warning: flushSync was called on the server. This is likely caused by a function being called during render or in module scope that was supposed to be called from an effect or event handler. On the server, flushSync does nothing.',
-      {withoutStack: true},
+    }).toThrow(
+      'flushSync was called on the server. This is likely caused by a function being called during render or in module scope that was intended to be called from an effect or event handler. Update your to not call flushSync no the server.',
     );
     expect(x).toBe(false);
   });
