@@ -133,7 +133,7 @@ export function getModernOffsetsFromPoints(
   }
 
   return {
-    start: start,
+    start,
     end: end,
   };
 }

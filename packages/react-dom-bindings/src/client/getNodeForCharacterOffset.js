@@ -56,7 +56,7 @@ function getNodeForCharacterOffset(root: Element, offset: number): ?Object {
 
       if (nodeStart <= offset && nodeEnd >= offset) {
         return {
-          node: node,
+          node,
           offset: offset - nodeStart,
         };
       }

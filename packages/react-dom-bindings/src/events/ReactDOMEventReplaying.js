@@ -429,7 +429,7 @@ export function queueExplicitHydrationTarget(target: Node): void {
   const updatePriority = getCurrentUpdatePriority();
   const queuedTarget: QueuedHydrationTarget = {
     blockedOn: null,
-    target: target,
+    target,
     priority: updatePriority,
   };
   let i = 0;

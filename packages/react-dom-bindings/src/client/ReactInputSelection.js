@@ -100,7 +100,7 @@ export function hasSelectionCapabilities(elem) {
 export function getSelectionInformation() {
   const focusedElem = getActiveElementDeep();
   return {
-    focusedElem: focusedElem,
+    focusedElem,
     selectionRange: hasSelectionCapabilities(focusedElem)
       ? getSelection(focusedElem)
       : null,

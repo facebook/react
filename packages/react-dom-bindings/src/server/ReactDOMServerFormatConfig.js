@@ -206,12 +206,12 @@ export function createResponseState(
     }
   }
   return {
-    bootstrapChunks: bootstrapChunks,
+    bootstrapChunks,
     startInlineScript: inlineScriptWithNonce,
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: idPrefix + 'B:',
-    idPrefix: idPrefix,
+    idPrefix,
     nextSuspenseID: 0,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,

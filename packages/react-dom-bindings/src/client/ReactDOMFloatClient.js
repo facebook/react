@@ -627,7 +627,7 @@ function createPreloadResource(
   }
   return {
     type: 'preload',
-    href: href,
+    href,
     ownerDocument,
     props,
     instance: element,
