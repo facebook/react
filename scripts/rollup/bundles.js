@@ -351,6 +351,18 @@ const bundles = [
     externals: ['react', 'util', 'stream', 'react-dom'],
   },
 
+  /******* React DOM Server Render Stub *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/server-rendering-stub',
+    name: 'react-dom-server-rendering-stub',
+    global: 'ReactDOMServerRenderingStub',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+
   /******* React Server DOM Webpack Writer *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
