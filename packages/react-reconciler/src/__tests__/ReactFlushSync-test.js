@@ -116,6 +116,8 @@ describe('ReactFlushSync', () => {
     }
 
     const root = ReactNoop.createRoot();
+
+    //// TODO: updateType is not set correctly
     await act(async () => {
       ReactNoop.flushSync(() => {
         root.render(<App />);

@@ -811,6 +811,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded(['Up']);
       expect(root).toMatchRenderedOutput(<span prop="Up" />);
 
+      //// TODO set states are batched, test passes if using flushSync
       await act(async () => {
         ReactNoop.discreteUpdates(() => {
           setRow(5);
@@ -955,10 +956,9 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flushSync(() => {
         counter.current.dispatch(INCREMENT);
       });
-      expect(Scheduler).toHaveYielded(['Count: 1']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-
-      expect(Scheduler).toFlushAndYield(['Count: 4']);
+      //// TODO: now these are batched?
+      expect(Scheduler).toHaveYielded(['Count: 4']);
+      expect(Scheduler).toFlushAndYield([]);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
     });
   });
@@ -1689,6 +1689,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
+    //// TODO: this is changed
     it('does not flush non-discrete passive effects when flushing sync', () => {
       let _updateCount;
       function Counter(props) {
@@ -1709,6 +1710,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // A flush sync doesn't cause the passive effects to fire.
       // So we haven't added the other update yet.
       act(() => {
+        console.log('flush sync');
         ReactNoop.flushSync(() => {
           _updateCount(2);
         });
@@ -3218,7 +3220,6 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Counter(props) {
         useLayoutEffect(() => {
-          console.log('use layout effect');
           // Normally this would go in a mutation effect, but this test
           // intentionally omits a mutation effect.
           committedText = String(props.count);
@@ -3233,7 +3234,6 @@ describe('ReactHooksWithNoopRenderer', () => {
           };
         });
         useEffect(() => {
-          console.log('use effect', new Error().stack);
           Scheduler.unstable_yieldValue(
             `Mount normal [current: ${committedText}]`,
           );
@@ -3253,23 +3253,24 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(Scheduler).toFlushAndYieldThrough([
           'Mount layout [current: 0]',
           'Sync effect',
-          'Mount normal [current: 0]',
         ]);
         expect(committedText).toEqual('0');
         ReactNoop.render(<Counter count={1} />, () =>
           Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
+          'Mount normal [current: 0]',
           'Unmount layout [current: 0]',
           'Mount layout [current: 1]',
           'Sync effect',
-          'Unmount normal [current: 1]',
-          'Mount normal [current: 1]',
         ]);
         expect(committedText).toEqual('1');
       });
 
-      expect(Scheduler).toHaveYielded([]);
+      expect(Scheduler).toHaveYielded([
+        'Unmount normal [current: 1]',
+        'Mount normal [current: 1]',
+      ]);
     });
 
     // @gate skipUnmountedBoundaries

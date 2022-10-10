@@ -9,6 +9,5 @@
 
 // TODO: Ideally these types would be opaque
 export type UpdateType = number;
-export const AsynchronousUpdate: ?UpdateType = null;
 export const DefaultUpdate: UpdateType = 1;
 export const SynchronousUpdate: UpdateType = 0;

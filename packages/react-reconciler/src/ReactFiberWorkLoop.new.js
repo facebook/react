@@ -171,7 +171,7 @@ import {
   setCurrentUpdatePriority,
   lowerEventPriority,
   lanesToEventPriority,
-  laneaAndUpdateTypeToEventPriority,
+  laneAndUpdateTypeToEventPriority,
 } from './ReactEventPriorities.new';
 import {SynchronousUpdate} from './ReactUpdateTypes.new';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
@@ -876,7 +876,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   }
 
   // We use the highest priority lane to represent the priority of the callback.
-  const newCallbackPriority = laneaAndUpdateTypeToEventPriority(
+  const newCallbackPriority = laneAndUpdateTypeToEventPriority(
     getHighestPriorityLane(nextLanes),
     root.updateType,
   );
@@ -2681,6 +2681,7 @@ function commitRootImpl(
   // are consolidated.
   if (
     includesSomeLane(pendingPassiveEffectsLanes, SyncLane) &&
+    root.updateType === SynchronousUpdate &&
     root.tag !== LegacyRoot
   ) {
     flushPassiveEffects();
@@ -2688,7 +2689,10 @@ function commitRootImpl(
 
   // Read this again, since a passive effect might have updated it
   remainingLanes = root.pendingLanes;
-  if (includesSomeLane(remainingLanes, (SyncLane: Lane))) {
+  if (
+    includesSomeLane(remainingLanes, (SyncLane: Lane)) &&
+    root.updateType === SynchronousUpdate
+  ) {
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
       markNestedUpdateScheduled();
     }

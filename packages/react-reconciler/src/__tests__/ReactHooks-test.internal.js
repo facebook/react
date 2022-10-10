@@ -574,22 +574,14 @@ describe('ReactHooks', () => {
     // The new state is eagerly computed.
     expect(Scheduler).toHaveYielded(['Compute state (1 -> 100)']);
 
-    // but before it's flushed, a higher priority update interrupts it.
+    //// TODO: should this be batched now?
+    // before it's flushed, a higher priority update interrupts it.
+    // but they are batched together on the sync lane
     root.unstable_flushSync(() => {
       update(n => n + 5);
     });
     expect(Scheduler).toHaveYielded([
       // The eagerly computed state was completely skipped
-      'Compute state (1 -> 6)',
-      'Parent: 6',
-      'Child: 6',
-    ]);
-    expect(root).toMatchRenderedOutput('6');
-
-    // Now when we finish the first update, the second update is rebased on top.
-    // Notice we didn't have to recompute the first update even though it was
-    // skipped in the previous render.
-    expect(Scheduler).toFlushAndYield([
       'Compute state (100 -> 105)',
       'Parent: 105',
       'Child: 105',

@@ -90,7 +90,7 @@ export function lanesToEventPriority(
   return IdleEventPriority;
 }
 
-export function laneaAndUpdateTypeToEventPriority(
+export function laneAndUpdateTypeToEventPriority(
   lane: Lane,
   updateType: UpdateType | null,
 ): EventPriority {

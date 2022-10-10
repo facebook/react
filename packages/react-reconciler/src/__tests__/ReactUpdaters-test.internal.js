@@ -374,6 +374,7 @@ describe('updaters', () => {
       triggerError();
     });
     expect(Scheduler).toHaveYielded(['onCommitRoot', 'error', 'onCommitRoot']);
+    //// TODO: not sure what this is
     expect(allSchedulerTypes).toEqual([[Parent], [ErrorBoundary]]);
 
     // Verify no outstanding flushes
