@@ -33,6 +33,10 @@ const {
   RN_FB_DEV,
   RN_FB_PROD,
   RN_FB_PROFILING,
+  IIFE_DEV,
+  IIFE_PROD,
+  FB_IIFE_DEV,
+  FB_IIFE_PROD,
 } = Bundles.bundleTypes;
 
 function getPackageName(name) {
@@ -59,6 +63,8 @@ function getBundleOutputPath(bundleType, filename, packageName) {
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
+    case FB_IIFE_DEV:
+    case FB_IIFE_PROD:
       return `build/facebook-www/${filename}`;
     case RN_OSS_DEV:
     case RN_OSS_PROD:
@@ -88,6 +94,9 @@ function getBundleOutputPath(bundleType, filename, packageName) {
         default:
           throw new Error('Unknown RN package.');
       }
+    case IIFE_DEV:
+    case IIFE_PROD:
+      return `build/node_modules/${packageName}/iife/${filename}`;
     default:
       throw new Error('Unknown bundle type.');
   }

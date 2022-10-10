@@ -60,6 +60,10 @@ const {
   RN_FB_DEV,
   RN_FB_PROD,
   RN_FB_PROFILING,
+  IIFE_DEV,
+  IIFE_PROD,
+  FB_IIFE_DEV,
+  FB_IIFE_PROD,
 } = Bundles.bundleTypes;
 
 const {getFilename} = Bundles;
@@ -224,6 +228,11 @@ function getFormat(bundleType) {
       return `cjs`;
     case NODE_ESM:
       return `es`;
+    case IIFE_DEV:
+    case IIFE_PROD:
+    case FB_IIFE_DEV:
+    case FB_IIFE_PROD:
+      return 'iife';
   }
 }
 
@@ -236,6 +245,8 @@ function isProductionBundleType(bundleType) {
     case FB_WWW_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:
+    case IIFE_DEV:
+    case FB_IIFE_DEV:
       return false;
     case UMD_PROD:
     case NODE_PROD:
@@ -247,6 +258,8 @@ function isProductionBundleType(bundleType) {
     case RN_OSS_PROFILING:
     case RN_FB_PROD:
     case RN_FB_PROFILING:
+    case IIFE_PROD:
+    case FB_IIFE_PROD:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
@@ -267,6 +280,10 @@ function isProfilingBundleType(bundleType) {
     case RN_OSS_PROD:
     case UMD_DEV:
     case UMD_PROD:
+    case IIFE_DEV:
+    case IIFE_PROD:
+    case FB_IIFE_DEV:
+    case FB_IIFE_PROD:
       return false;
     case FB_WWW_PROFILING:
     case NODE_PROFILING:
@@ -315,7 +332,9 @@ function getPlugins(
   const isFBWWWBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
-    bundleType === FB_WWW_PROFILING;
+    bundleType === FB_WWW_PROFILING ||
+    bundleType === FB_IIFE_DEV ||
+    bundleType === FB_IIFE_PROD;
   const isRNBundle =
     bundleType === RN_OSS_DEV ||
     bundleType === RN_OSS_PROD ||
@@ -509,7 +528,9 @@ async function createBundle(bundle, bundleType) {
   const isFBWWWBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
-    bundleType === FB_WWW_PROFILING;
+    bundleType === FB_WWW_PROFILING ||
+    bundleType === FB_IIFE_DEV ||
+    bundleType === FB_IIFE_PROD;
 
   const isFBRNBundle =
     bundleType === RN_FB_DEV ||
@@ -724,7 +745,11 @@ async function buildEverything() {
       [bundle, RN_OSS_PROFILING],
       [bundle, RN_FB_DEV],
       [bundle, RN_FB_PROD],
-      [bundle, RN_FB_PROFILING]
+      [bundle, RN_FB_PROFILING],
+      [bundle, IIFE_DEV],
+      [bundle, IIFE_PROD],
+      [bundle, FB_IIFE_DEV],
+      [bundle, FB_IIFE_PROD]
     );
   }
 

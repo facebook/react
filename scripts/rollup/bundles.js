@@ -25,6 +25,10 @@ const bundleTypes = {
   RN_FB_DEV: 'RN_FB_DEV',
   RN_FB_PROD: 'RN_FB_PROD',
   RN_FB_PROFILING: 'RN_FB_PROFILING',
+  IIFE_DEV: 'IIFE_DEV',
+  IIFE_PROD: 'IIFE_PROD',
+  FB_IIFE_DEV: 'FB_IIFE_DEV',
+  FB_IIFE_PROD: 'FB_IIFE_PROD',
 };
 
 const {
@@ -45,6 +49,10 @@ const {
   RN_FB_DEV,
   RN_FB_PROD,
   RN_FB_PROFILING,
+  IIFE_DEV,
+  IIFE_PROD,
+  FB_IIFE_DEV,
+  FB_IIFE_PROD,
 } = bundleTypes;
 
 const moduleTypes = {
@@ -328,6 +336,19 @@ const bundles = [
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'react-dom'],
+  },
+
+  {
+    bundleTypes: __EXPERIMENTAL__
+      ? [IIFE_DEV, IIFE_PROD, FB_IIFE_DEV, FB_IIFE_PROD]
+      : [],
+    moduleType: RENDERER,
+    entry: 'react-dom/instruction-streaming-runtime',
+    name: 'instruction-streaming-runtime',
+    global: 'ReactDOMInstructionStreamingRuntime',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: false,
+    externals: [],
   },
 
   /******* React DOM Fizz Static *******/
@@ -1006,6 +1027,8 @@ function getOriginalFilename(bundle, bundleType) {
       return `${name}.js`;
     case NODE_ESM:
       return `${name}.js`;
+    case IIFE_DEV:
+      return `${name}.development.js`;
     case UMD_DEV:
       return `${name}.development.js`;
     case UMD_PROD:
@@ -1018,13 +1041,17 @@ function getOriginalFilename(bundle, bundleType) {
       return `${name}.production.min.js`;
     case NODE_PROFILING:
       return `${name}.profiling.min.js`;
+    case IIFE_PROD:
+      return `${name}.production.min.js`;
     case FB_WWW_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:
+    case FB_IIFE_DEV:
       return `${globalName}-dev.js`;
     case FB_WWW_PROD:
     case RN_OSS_PROD:
     case RN_FB_PROD:
+    case FB_IIFE_PROD:
       return `${globalName}-prod.js`;
     case FB_WWW_PROFILING:
     case RN_FB_PROFILING:

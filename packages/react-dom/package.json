@@ -29,6 +29,7 @@
     "index.js",
     "client.js",
     "profiling.js",
+    "instruction-streaming-runtime.js",
     "server.js",
     "server.browser.js",
     "server.node.js",
@@ -39,7 +40,8 @@
     "test-utils.js",
     "unstable_testing.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "iife/"
   ],
   "exports": {
     ".": "./index.js",
@@ -61,6 +63,7 @@
     "./static.browser": "./static.browser.js",
     "./static.node": "./static.node.js",
     "./server-rendering-stub": "./server-rendering-stub.js",
+    "./instruction-streaming-runtime": "./instruction-streaming-runtime.js",
     "./profiling": "./profiling.js",
     "./test-utils": "./test-utils.js",
     "./unstable_testing": "./unstable_testing.js",

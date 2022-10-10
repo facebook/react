@@ -22,6 +22,10 @@ const {
   RN_FB_DEV,
   RN_FB_PROD,
   RN_FB_PROFILING,
+  IIFE_DEV,
+  IIFE_PROD,
+  FB_IIFE_DEV,
+  FB_IIFE_PROD,
 } = bundleTypes;
 
 const {RECONCILER} = moduleTypes;
@@ -292,6 +296,55 @@ ${license}
  * @nolint
  * @preventMunge
  * ${'@gen' + 'erated'}
+ */
+
+${source}`;
+  },
+
+  [IIFE_DEV](source, globalName, filename, moduleType) {
+    return `/**
+ * @license React
+ * ${filename}
+ *
+${license}
+ */
+${source}`;
+  },
+  [IIFE_PROD](source, globalName, filename, moduleType) {
+    return `/**
+ * @license React
+ * ${filename}
+ *
+${license}
+ */
+${source}`;
+  },
+  [FB_IIFE_DEV](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @nolint
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
+'use strict';
+
+if (__DEV__) {
+  (function() {
+${source}
+  })();
+}`;
+  },
+  [FB_IIFE_PROD](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @nolint
+ * @preventMunge
+ * @preserve-invariant-messages
  */
 
 ${source}`;
