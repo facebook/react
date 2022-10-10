@@ -213,7 +213,7 @@ export function getPropertyInfo(name: string): PropertyInfo | null {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 }
 
-function PropertyInfoRecord(
+function createPropertyInfo(
   name: string,
   type: PropertyType,
   mustUseProperty: boolean,
@@ -221,18 +221,20 @@ function PropertyInfoRecord(
   attributeNamespace: string | null,
   sanitizeURL: boolean,
   removeEmptyString: boolean,
-) {
-  this.acceptsBooleans =
-    type === BOOLEANISH_STRING ||
-    type === BOOLEAN ||
-    type === OVERLOADED_BOOLEAN;
-  this.attributeName = attributeName;
-  this.attributeNamespace = attributeNamespace;
-  this.mustUseProperty = mustUseProperty;
-  this.propertyName = name;
-  this.type = type;
-  this.sanitizeURL = sanitizeURL;
-  this.removeEmptyString = removeEmptyString;
+): PropertyInfo {
+  return {
+    acceptsBooleans:
+      type === BOOLEANISH_STRING ||
+      type === BOOLEAN ||
+      type === OVERLOADED_BOOLEAN,
+    attributeName: attributeName,
+    attributeNamespace: attributeNamespace,
+    mustUseProperty: mustUseProperty,
+    propertyName: name,
+    type: type,
+    sanitizeURL: sanitizeURL,
+    removeEmptyString: removeEmptyString,
+  };
 }
 
 // When adding attributes to this list, be sure to also add them to
@@ -259,8 +261,7 @@ if (enableCustomElementPropertySupport) {
 }
 
 reservedProps.forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     RESERVED,
     false, // mustUseProperty
@@ -279,8 +280,7 @@ reservedProps.forEach(name => {
   ['htmlFor', 'for'],
   ['httpEquiv', 'http-equiv'],
 ].forEach(([name, attributeName]) => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     STRING,
     false, // mustUseProperty
@@ -295,8 +295,7 @@ reservedProps.forEach(name => {
 // In React, we let users pass `true` and `false` even though technically
 // these aren't boolean attributes (they are coerced to strings).
 ['contentEditable', 'draggable', 'spellCheck', 'value'].forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     BOOLEANISH_STRING,
     false, // mustUseProperty
@@ -317,8 +316,7 @@ reservedProps.forEach(name => {
   'focusable',
   'preserveAlpha',
 ].forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     BOOLEANISH_STRING,
     false, // mustUseProperty
@@ -358,8 +356,7 @@ reservedProps.forEach(name => {
   // Microdata
   'itemScope',
 ].forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     BOOLEAN,
     false, // mustUseProperty
@@ -384,8 +381,7 @@ reservedProps.forEach(name => {
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
 ].forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     BOOLEAN,
     true, // mustUseProperty
@@ -406,8 +402,7 @@ reservedProps.forEach(name => {
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
 ].forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     OVERLOADED_BOOLEAN,
     false, // mustUseProperty
@@ -429,8 +424,7 @@ reservedProps.forEach(name => {
   // you'll need to set attributeName to name.toLowerCase()
   // instead in the assignment below.
 ].forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     POSITIVE_NUMERIC,
     false, // mustUseProperty
@@ -443,8 +437,7 @@ reservedProps.forEach(name => {
 
 // These are HTML attributes that must be numbers.
 ['rowSpan', 'start'].forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     NUMERIC,
     false, // mustUseProperty
@@ -543,8 +536,7 @@ const capitalize = token => token[1].toUpperCase();
   // instead in the assignment below.
 ].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     STRING,
     false, // mustUseProperty
@@ -569,8 +561,7 @@ const capitalize = token => token[1].toUpperCase();
   // instead in the assignment below.
 ].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     STRING,
     false, // mustUseProperty
@@ -592,8 +583,7 @@ const capitalize = token => token[1].toUpperCase();
   // instead in the assignment below.
 ].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
+  properties[name] = createPropertyInfo(
     name,
     STRING,
     false, // mustUseProperty
@@ -608,8 +598,7 @@ const capitalize = token => token[1].toUpperCase();
 // The attribute name is case-sensitive in SVG so we can't just use
 // the React name like we do for attributes that exist only in HTML.
 ['tabIndex', 'crossOrigin'].forEach(attributeName => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
+  properties[attributeName] = createPropertyInfo(
     attributeName,
     STRING,
     false, // mustUseProperty
@@ -623,8 +612,7 @@ const capitalize = token => token[1].toUpperCase();
 // These attributes accept URLs. These must not allow javascript: URLS.
 // These will also need to accept Trusted Types object in the future.
 const xlinkHref = 'xlinkHref';
-// $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-properties[xlinkHref] = new PropertyInfoRecord(
+properties[xlinkHref] = createPropertyInfo(
   'xlinkHref',
   STRING,
   false, // mustUseProperty
@@ -635,8 +623,7 @@ properties[xlinkHref] = new PropertyInfoRecord(
 );
 
 ['src', 'href', 'action', 'formAction'].forEach(attributeName => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
+  properties[attributeName] = createPropertyInfo(
     attributeName,
     STRING,
     false, // mustUseProperty
