@@ -432,5 +432,7 @@
   "444": "getResource encountered a resource type it did not expect: \"%s\". this is a bug in React.",
   "445": "\"currentResources\" was expected to exist. This is a bug in React.",
   "446": "\"resourceRoot\" was expected to exist. This is a bug in React.",
-  "447": "While attempting to insert a Resource, React expected the Document to contain a head element but it was not found."
+  "447": "While attempting to insert a Resource, React expected the Document to contain a head element but it was not found.",
+  "448": "createPortal was called on the server. Portals are not currently supported on the server. Update your program to conditionally call createPortal on the client only.",
+  "449": "flushSync was called on the server. This is likely caused by a function being called during render or in module scope that was intended to be called from an effect or event handler. Update your to not call flushSync no the server."
 }
