@@ -22,7 +22,8 @@ import type {
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
-import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
+import type {Lanes, LaneMap} from './ReactFiberLane.old';
+import type {EventPriority} from './ReactEventPriorities';
 import type {RootTag} from './ReactRootTags';
 import type {
   Container,
@@ -239,7 +240,7 @@ type BaseFiberRootProperties = {
   // Node returned by Scheduler.scheduleCallback. Represents the next rendering
   // task that the root will work on.
   callbackNode: any,
-  callbackPriority: Lane,
+  callbackPriority: EventPriority,
   eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
   hiddenUpdates: LaneMap<Array<ConcurrentUpdate> | null>,

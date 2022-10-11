@@ -20,12 +20,12 @@ import type {Container} from './ReactFiberHostConfig';
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.new';
 import {
-  NoLane,
   NoLanes,
   NoTimestamp,
   TotalLanes,
   createLaneMap,
 } from './ReactFiberLane.new';
+import {NoEventPriority} from './ReactEventPriorities.new';
 import {
   enableSuspenseCallback,
   enableCache,
@@ -61,7 +61,7 @@ function FiberRootNode(
   this.context = null;
   this.pendingContext = null;
   this.callbackNode = null;
-  this.callbackPriority = NoLane;
+  this.callbackPriority = NoEventPriority;
   this.eventTimes = createLaneMap(NoLanes);
   this.expirationTimes = createLaneMap(NoTimestamp);
 

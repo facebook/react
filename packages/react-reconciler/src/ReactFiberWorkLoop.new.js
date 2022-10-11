@@ -163,16 +163,20 @@ import {
   movePendingFibersToMemoized,
   addTransitionToLanesMap,
   getTransitionsForLanes,
+  InputContinuousLane,
+  DefaultLane,
 } from './ReactFiberLane.new';
 import {
   DiscreteEventPriority,
   ContinuousEventPriority,
   DefaultEventPriority,
+  NoEventPriority,
   IdleEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
   lowerEventPriority,
   lanesToEventPriority,
+  laneToEventPriority,
 } from './ReactEventPriorities.new';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.new';
@@ -648,22 +652,30 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // Updates originating inside certain React methods, like flushSync, have
   // their priority set by tracking it with a context variable.
   //
-  // The opaque type returned by the host config is internally a lane, so we can
-  // use that directly.
   // TODO: Move this type conversion to the event priority module.
-  const updateLane: Lane = (getCurrentUpdatePriority(): any);
-  if (updateLane !== NoLane) {
-    return updateLane;
+  const updatePriority = getCurrentUpdatePriority();
+  if (updatePriority !== NoEventPriority) {
+    if (updatePriority === DefaultEventPriority) {
+      return DefaultLane;
+    }
+    if (updatePriority === ContinuousEventPriority) {
+      return InputContinuousLane;
+    }
+    return (updatePriority: any);
   }
 
   // This update originated outside React. Ask the host environment for an
   // appropriate priority, based on the type of event.
   //
-  // The opaque type returned by the host config is internally a lane, so we can
-  // use that directly.
   // TODO: Move this type conversion to the event priority module.
-  const eventLane: Lane = (getCurrentEventPriority(): any);
-  return eventLane;
+  const eventPriority = getCurrentEventPriority();
+  if (eventPriority === DefaultEventPriority) {
+    return DefaultLane;
+  }
+  if (eventPriority === ContinuousEventPriority) {
+    return InputContinuousLane;
+  }
+  return (eventPriority: any);
 }
 
 function requestRetryLane(fiber: Fiber) {
@@ -860,12 +872,14 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       cancelCallback(existingCallbackNode);
     }
     root.callbackNode = null;
-    root.callbackPriority = NoLane;
+    root.callbackPriority = NoEventPriority;
     return;
   }
 
   // We use the highest priority lane to represent the priority of the callback.
-  const newCallbackPriority = getHighestPriorityLane(nextLanes);
+  const newCallbackPriority = laneToEventPriority(
+    getHighestPriorityLane(nextLanes),
+  );
 
   // Check if there's an existing task. We may be able to reuse it.
   const existingCallbackPriority = root.callbackPriority;
@@ -886,7 +900,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       // TODO: Temporary until we confirm this warning is not fired.
       if (
         existingCallbackNode == null &&
-        existingCallbackPriority !== SyncLane
+        existingCallbackPriority !== DiscreteEventPriority
       ) {
         console.error(
           'Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue.',
@@ -904,7 +918,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Schedule a new callback.
   let newCallbackNode;
-  if (newCallbackPriority === SyncLane) {
+  if (newCallbackPriority === DiscreteEventPriority) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     if (root.tag === LegacyRoot) {
@@ -2382,7 +2396,7 @@ function commitRootImpl(
   // commitRoot never returns a continuation; it always finishes synchronously.
   // So we can clear these now to allow a new callback to be scheduled.
   root.callbackNode = null;
-  root.callbackPriority = NoLane;
+  root.callbackPriority = NoEventPriority;
 
   // Check which lanes no longer have any work scheduled on them, and mark
   // those as finished.
