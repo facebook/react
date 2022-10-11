@@ -47,6 +47,7 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoResources';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoSingletons';
 
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};

@@ -272,6 +272,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   }
 
   const sharedHostConfig = {
+    supportsSingletons: false,
+
     getRootHostContext() {
       return NO_CONTEXT;
     },

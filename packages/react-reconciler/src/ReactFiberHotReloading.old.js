@@ -23,6 +23,7 @@ import type {
   ScheduleRoot,
 } from './ReactFiberHotReloading';
 
+import {enableHostSingletons, enableFloat} from 'shared/ReactFeatureFlags';
 import {
   flushSync,
   scheduleUpdateOnFiber,
@@ -38,6 +39,7 @@ import {
   ForwardRef,
   HostComponent,
   HostResource,
+  HostSingleton,
   HostPortal,
   HostRoot,
   MemoComponent,
@@ -48,7 +50,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-import {enableFloat} from 'shared/ReactFeatureFlags';
+import {supportsSingletons} from './ReactFiberHostConfig';
 
 let resolveFamily: RefreshHandler | null = null;
 let failedBoundaries: WeakSet<Fiber> | null = null;
@@ -425,6 +427,7 @@ function findHostInstancesForFiberShallowly(
     let node = fiber;
     while (true) {
       switch (node.tag) {
+        case HostSingleton:
         case HostComponent:
           hostInstances.add(node.stateNode);
           return;
@@ -453,7 +456,10 @@ function findChildHostInstancesForFiberShallowly(
     while (true) {
       if (
         node.tag === HostComponent ||
-        (enableFloat ? node.tag === HostResource : false)
+        (enableFloat ? node.tag === HostResource : false) ||
+        (enableHostSingletons && supportsSingletons
+          ? node.tag === HostSingleton
+          : false)
       ) {
         // We got a match.
         foundHostInstances = true;

@@ -199,3 +199,14 @@ export const isHostResourceType = $$$hostConfig.isHostResourceType;
 export const getResource = $$$hostConfig.getResource;
 export const acquireResource = $$$hostConfig.acquireResource;
 export const releaseResource = $$$hostConfig.releaseResource;
+
+// -------------------
+//     Singletons
+//     (optional)
+// -------------------
+export const supportsSingletons = $$$hostConfig.supportsSingletons;
+export const resolveSingletonInstance = $$$hostConfig.resolveSingletonInstance;
+export const clearSingleton = $$$hostConfig.clearSingleton;
+export const acquireSingletonInstance = $$$hostConfig.acquireSingletonInstance;
+export const releaseSingletonInstance = $$$hostConfig.releaseSingletonInstance;
+export const isHostSingletonType = $$$hostConfig.isHostSingletonType;

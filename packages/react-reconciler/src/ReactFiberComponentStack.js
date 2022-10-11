@@ -12,6 +12,7 @@ import type {Fiber} from './ReactInternalTypes';
 import {
   HostComponent,
   HostResource,
+  HostSingleton,
   LazyComponent,
   SuspenseComponent,
   SuspenseListComponent,
@@ -36,6 +37,7 @@ function describeFiber(fiber: Fiber): string {
   const source = __DEV__ ? fiber._debugSource : null;
   switch (fiber.tag) {
     case HostResource:
+    case HostSingleton:
     case HostComponent:
       return describeBuiltInComponentFrame(fiber.type, source, owner);
     case LazyComponent:
