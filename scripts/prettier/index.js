@@ -68,7 +68,7 @@ files.forEach(file => {
           );
           didWarn = true;
         }
-        console.log(file);
+        console.log(file + "\nThis File ");
       }
     }
   } catch (error) {
