@@ -2897,7 +2897,7 @@ function commitMutationEffectsOnFiber(
 
         // Offscreen with manual mode manages visibility manually.
         const shouldControlChildrenVisibility =
-          finishedWork.memoizedProps == null ||
+          finishedWork.memoizedProps === null ||
           finishedWork.memoizedProps.mode !== 'manual';
         if (supportsMutation && shouldControlChildrenVisibility) {
           // TODO: This needs to run whenever there's an insertion or update
