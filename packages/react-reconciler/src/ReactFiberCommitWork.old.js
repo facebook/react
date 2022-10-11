@@ -2895,10 +2895,8 @@ function commitMutationEffectsOnFiber(
           }
         }
 
-        if (
-          supportsMutation &&
-          !(offscreenInstance._visibility & OffscreenDetached)
-        ) {
+        // Offscreen with manual mode manages visibility manually.
+        if (supportsMutation && finishedWork.memoizedProps.mode !== 'manual') {
           // TODO: This needs to run whenever there's an insertion or update
           // inside a hidden Offscreen tree.
           hideOrUnhideAllChildren(offscreenBoundary, isHidden);
