@@ -17,13 +17,13 @@ function Component(props) {
 
 ```
 bb0:
-  Const readonly x$2 = Object {  }
-  Const readonly y$3 = Array []
-  Reassign readonly x$2.y = readonly y$3
-  Const readonly child$4 = JSX <frozen Component$0 data={frozen y$3} ></frozen Component$0>
-  Call mutable x$2.y.push(frozen props$1.p0)
-  Const readonly $5 = JSX <frozen Component$0 data={frozen x$2} >{frozen child$4}</frozen Component$0>
-  Return frozen $5
+  Const mutable x$2 = Object {  }
+  Const mutable y$3 = Array []
+  Reassign mutable x$2.y = readonly y$3
+  Const mutable child$4 = JSX <readonly Component$0 data={freeze y$3} ></readonly Component$0>
+  Call mutable x$2.y.push(readonly props$1.p0)
+  Const mutable $5 = JSX <readonly Component$0 data={freeze x$2} >{readonly child$4}</readonly Component$0>
+  Return readonly $5
 ```
 
 ## Code

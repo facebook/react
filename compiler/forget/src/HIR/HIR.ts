@@ -221,12 +221,11 @@ export type Identifier = {
 export enum Capability {
   // Default value: not allowed after lifetime inference
   Unknown = "<unknown>",
-  // The value is known to be deeply, permanently mutable at this point.
-  Frozen = "frozen",
-  // The value is not modified at this point or thereafter, but is not guaranteed to be
-  // frozen. It would be safe to freeze the value at this point.
+  // The value is made frozen at this point.
+  Freeze = "freeze",
+  // The value is not modified at this point.
   Readonly = "readonly",
-  // The value is mutated at this point or at some later point.
+  // The value is modified at this point.
   Mutable = "mutable",
 }
 

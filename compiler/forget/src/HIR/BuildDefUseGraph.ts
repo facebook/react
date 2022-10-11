@@ -22,8 +22,8 @@ import { mapTerminalSuccessors } from "./HIRBuilder";
 import { printMixedHIR, printPlace } from "./PrintHIR";
 
 const HOOKS: Map<string, Hook> = new Map([
-  ["useState", { kind: "State", capability: Capability.Frozen }],
-  ["useRef", { kind: "Ref", capability: Capability.Frozen }],
+  ["useState", { kind: "State", capability: Capability.Freeze }],
+  ["useRef", { kind: "Ref", capability: Capability.Freeze }],
 ]);
 
 type HookKind = { kind: "State" } | { kind: "Ref" } | { kind: "Custom" };
@@ -86,7 +86,7 @@ export default function buildDefUseGraph(fn: HIRFunction): Array<Vertex> {
       memberPath: null,
       value: param,
       path: null as any, // TODO
-      capability: Capability.Frozen,
+      capability: Capability.Freeze,
     };
     preambleBuilder.init(place, null, true);
   }
@@ -131,7 +131,7 @@ export default function buildDefUseGraph(fn: HIRFunction): Array<Vertex> {
     // Vertices derived from a frozen value are also frozen
     if (
       vertex.place !== null &&
-      vertex.place.capability === Capability.Frozen
+      vertex.place.capability === Capability.Freeze
     ) {
       flowFrozennessForwards(vertex, 0);
     }
@@ -157,7 +157,7 @@ function flowFrozennessForwards(vertex: Vertex, epoch: number) {
   }
   vertex.epoch = epoch;
   if (vertex.place !== null) {
-    vertex.place.capability = Capability.Frozen;
+    vertex.place.capability = Capability.Freeze;
   }
   for (const outgoing of vertex.outgoing) {
     flowFrozennessForwards(outgoing, epoch);
@@ -260,7 +260,7 @@ function buildInputsOutputsForBlock(
     let valueCapability = Capability.Readonly;
     switch (instrValue.kind) {
       case "BinaryExpression": {
-        valueCapability = Capability.Frozen;
+        valueCapability = Capability.Freeze;
         builder.reference(instrValue.left, instrValue, Capability.Readonly);
         builder.reference(instrValue.right, instrValue, Capability.Readonly);
         break;
@@ -301,7 +301,7 @@ function buildInputsOutputsForBlock(
         break;
       }
       case "UnaryExpression": {
-        valueCapability = Capability.Frozen; // TODO check that value must be a primitive, or make conditional based on the operator
+        valueCapability = Capability.Freeze; // TODO check that value must be a primitive, or make conditional based on the operator
         builder.reference(instrValue.value, instrValue, Capability.Readonly);
         break;
       }
@@ -310,13 +310,13 @@ function buildInputsOutputsForBlock(
         break;
       }
       case "JsxExpression": {
-        builder.reference(instrValue.tag, instrValue, Capability.Frozen);
+        builder.reference(instrValue.tag, instrValue, Capability.Freeze);
         for (const [_prop, value] of Object.entries(instrValue.props)) {
-          builder.reference(value, instrValue, Capability.Frozen);
+          builder.reference(value, instrValue, Capability.Freeze);
         }
         if (instrValue.children !== null) {
           for (const child of instrValue.children) {
-            builder.reference(child, instrValue, Capability.Frozen);
+            builder.reference(child, instrValue, Capability.Freeze);
           }
         }
         break;
@@ -354,7 +354,7 @@ function buildInputsOutputsForBlock(
       builder.reference(
         block.terminal.value,
         block.terminal,
-        Capability.Frozen
+        Capability.Freeze
       );
       break;
     }
@@ -363,7 +363,7 @@ function buildInputsOutputsForBlock(
         builder.reference(
           block.terminal.value,
           block.terminal,
-          Capability.Frozen
+          Capability.Freeze
         );
       }
       break;
@@ -416,7 +416,7 @@ function parseHookCall(place: Place): Hook | null {
   if (hook != null) {
     return hook;
   }
-  return { kind: "Custom", capability: Capability.Frozen };
+  return { kind: "Custom", capability: Capability.Freeze };
 }
 
 type BlockResult = {

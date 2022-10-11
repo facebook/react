@@ -32,27 +32,27 @@ function Component(props) {
 
 ```
 bb0:
-  Let readonly x$2 = Array []
-  Let readonly y$3 = undefined
-  Const readonly $4 = false
-  Const readonly $5 = true
-  Const readonly $6 = 1
-  Switch (frozen props$1.p0)
+  Let mutable x$2 = Array []
+  Let mutable y$3 = undefined
+  Const mutable $4 = false
+  Const mutable $5 = true
+  Const mutable $6 = 1
+  Switch (<unknown> props$1.p0)
     Case readonly $6: bb1
     Case readonly $5: bb6
     Default: bb1
     Case readonly $4: bb2
 bb1:
-  Const readonly child$7 = JSX <frozen Component$0 data={frozen x$2} ></frozen Component$0>
-  Call mutable y$3.push(frozen props$1.p4)
-  Const readonly $8 = JSX <frozen Component$0 data={frozen y$3} >{frozen child$7}</frozen Component$0>
-  Return frozen $8
+  Const mutable child$7 = JSX <readonly Component$0 data={freeze x$2} ></readonly Component$0>
+  Call readonly y$3.push(readonly props$1.p4)
+  Const mutable $8 = JSX <readonly Component$0 data={freeze y$3} >{readonly child$7}</readonly Component$0>
+  Return readonly $8
 bb6:
-  Call mutable x$2.push(frozen props$1.p2)
-  Reassign readonly y$3 = Array []
+  Call mutable x$2.push(readonly props$1.p2)
+  Reassign mutable y$3 = Array []
   Goto bb1
 bb2:
-  Reassign readonly y$3 = readonly x$2
+  Reassign mutable y$3 = readonly x$2
   Goto bb1
 ```
 

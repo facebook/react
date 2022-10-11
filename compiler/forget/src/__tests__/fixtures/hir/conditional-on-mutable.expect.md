@@ -67,20 +67,20 @@ function mayMutate() {}
 
 ```
 bb0:
-  Const readonly a$2 = Array []
-  Const readonly b$3 = Array []
+  Const mutable a$2 = Array []
+  Const mutable b$3 = Array []
   If (readonly b$3) then:bb2 else:bb1
 bb2:
-  Call mutable a$2.push(frozen props$1.p0)
+  Call mutable a$2.push(readonly props$1.p0)
   Goto bb1
 bb1:
-  If (frozen props$1.p1) then:bb4 else:bb3
+  If (readonly props$1.p1) then:bb4 else:bb3
 bb4:
-  Call mutable b$3.push(frozen props$1.p2)
+  Call mutable b$3.push(readonly props$1.p2)
   Goto bb3
 bb3:
-  Const readonly $5 = JSX <frozen Foo$4 a={frozen a$2} b={frozen b$3} ></frozen Foo$4>
-  Return frozen $5
+  Const mutable $5 = JSX <readonly Foo$4 a={freeze a$2} b={freeze b$3} ></readonly Foo$4>
+  Return readonly $5
 ```
 
 ## Code
@@ -105,21 +105,21 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  Const readonly a$2 = Array []
-  Const readonly b$3 = Array []
-  Const readonly $5 = Call mutable mayMutate$4(mutable b$3)
+  Const mutable a$2 = Array []
+  Const mutable b$3 = Array []
+  Const mutable $5 = Call mutable mayMutate$4(mutable b$3)
   If (readonly $5) then:bb2 else:bb1
 bb2:
-  Call mutable a$2.push(frozen props$1.p0)
+  Call mutable a$2.push(readonly props$1.p0)
   Goto bb1
 bb1:
-  If (frozen props$1.p1) then:bb4 else:bb3
+  If (readonly props$1.p1) then:bb4 else:bb3
 bb4:
-  Call mutable b$3.push(frozen props$1.p2)
+  Call mutable b$3.push(readonly props$1.p2)
   Goto bb3
 bb3:
-  Const readonly $7 = JSX <frozen Foo$6 a={frozen a$2} b={frozen b$3} ></frozen Foo$6>
-  Return frozen $7
+  Const mutable $7 = JSX <readonly Foo$6 a={freeze a$2} b={freeze b$3} ></readonly Foo$6>
+  Return readonly $7
 ```
 
 ## Code

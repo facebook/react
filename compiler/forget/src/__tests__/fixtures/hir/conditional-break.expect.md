@@ -78,15 +78,15 @@ function Component(props) {
 
 ```
 bb0:
-  Const readonly a_DEBUG$2 = Array []
-  Call mutable a_DEBUG$2.push(frozen props$1.a)
-  If (frozen props$1.b) then:bb2 else:bb1
+  Const mutable a_DEBUG$2 = Array []
+  Call mutable a_DEBUG$2.push(readonly props$1.a)
+  If (readonly props$1.b) then:bb2 else:bb1
 bb2:
-  Const readonly $3 = null
-  Return frozen $3
+  Const mutable $3 = null
+  Return readonly $3
 bb1:
-  Call mutable a_DEBUG$2.push(frozen props$1.d)
-  Return frozen a_DEBUG$2
+  Call mutable a_DEBUG$2.push(readonly props$1.d)
+  Return freeze a_DEBUG$2
 ```
 
 ## Code
@@ -107,15 +107,15 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  Const readonly a$2 = Array []
-  Call mutable a$2.push(frozen props$1.a)
-  If (frozen props$1.b) then:bb2 else:bb1
+  Const mutable a$2 = Array []
+  Call mutable a$2.push(readonly props$1.a)
+  If (readonly props$1.b) then:bb2 else:bb1
 bb2:
-  Call mutable a$2.push(frozen props$1.c)
+  Call mutable a$2.push(readonly props$1.c)
   Goto bb1
 bb1:
-  Call mutable a$2.push(frozen props$1.d)
-  Return frozen a$2
+  Call mutable a$2.push(readonly props$1.d)
+  Return freeze a$2
 ```
 
 ## Code
@@ -137,16 +137,16 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  Const readonly a$2 = Array []
-  Call mutable a$2.push(frozen props$1.a)
-  If (frozen props$1.b) then:bb2 else:bb1
+  Const mutable a$2 = Array []
+  Call mutable a$2.push(readonly props$1.a)
+  If (readonly props$1.b) then:bb2 else:bb1
 bb2:
-  Call mutable a$2.push(frozen props$1.c)
-  Const readonly $3 = null
-  Return frozen $3
+  Call mutable a$2.push(readonly props$1.c)
+  Const mutable $3 = null
+  Return readonly $3
 bb1:
-  Call mutable a$2.push(frozen props$1.d)
-  Return frozen a$2
+  Call mutable a$2.push(readonly props$1.d)
+  Return freeze a$2
 ```
 
 ## Code
@@ -168,15 +168,15 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  Const readonly a$2 = Array []
-  Call mutable a$2.push(frozen props$1.a)
-  If (frozen props$1.b) then:bb2 else:bb1
+  Const mutable a$2 = Array []
+  Call mutable a$2.push(readonly props$1.a)
+  If (readonly props$1.b) then:bb2 else:bb1
 bb2:
-  Call mutable a$2.push(frozen props$1.c)
-  Return frozen a$2
+  Call mutable a$2.push(readonly props$1.c)
+  Return freeze a$2
 bb1:
-  Call mutable a$2.push(frozen props$1.d)
-  Return frozen a$2
+  Call mutable a$2.push(readonly props$1.d)
+  Return freeze a$2
 ```
 
 ## Code
@@ -198,14 +198,14 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  Const readonly a$2 = Array []
-  Call mutable a$2.push(frozen props$1.a)
-  If (frozen props$1.b) then:bb1 else:bb2
+  Const mutable a$2 = Array []
+  Call mutable a$2.push(readonly props$1.a)
+  If (readonly props$1.b) then:bb1 else:bb2
 bb1:
-  Call mutable a$2.push(frozen props$1.d)
-  Return frozen a$2
+  Call mutable a$2.push(readonly props$1.d)
+  Return freeze a$2
 bb2:
-  Call mutable a$2.push(frozen props$1.c)
+  Call mutable a$2.push(readonly props$1.c)
   Goto bb1
 ```
 

@@ -35,45 +35,45 @@ function Component(props) {
 
 ```
 bb0:
-  Const frozen items$2 = frozen props$1.items
-  Const frozen maxItems$3 = frozen props$1.maxItems
-  Const readonly renderedItems$4 = Array []
-  Const readonly seen$5 = New mutable Set$6()
-  Const readonly $9 = 0
-  Const readonly max$7 = Call mutable Math$8.max(mutable $9, frozen maxItems$3)
+  Const mutable items$2 = readonly props$1.items
+  Const mutable maxItems$3 = readonly props$1.maxItems
+  Const mutable renderedItems$4 = Array []
+  Const mutable seen$5 = New mutable Set$6()
+  Const mutable $9 = 0
+  Const mutable max$7 = Call mutable Math$8.max(readonly $9, readonly maxItems$3)
   Goto bb1
 bb1:
-  If (frozen items$2) then:bb3 else:bb2
+  If (readonly items$2) then:bb3 else:bb2
 bb3:
-  Const readonly $11 = null
-  Const frozen $12 = Binary frozen item$10 == readonly $11
-  If (frozen $12) then:bb8 else:bb9
+  Const mutable $11 = null
+  Const mutable $12 = Binary readonly item$10 == readonly $11
+  If (readonly $12) then:bb8 else:bb9
 bb2:
-  Const readonly count$17 = readonly renderedItems$4.length
-  Const readonly $18 = "div"
-  Const readonly $19 = "\n      "
-  Const readonly $20 = "h1"
-  Const readonly $21 = " Items"
-  Const readonly $22 = JSX <frozen $20>{frozen count$17}{frozen $21}</frozen $20>
-  Const readonly $23 = "\n      "
-  Const readonly $24 = "\n    "
-  Const readonly $25 = JSX <frozen $18>{frozen $19}{frozen $22}{frozen $23}{frozen renderedItems$4}{frozen $24}</frozen $18>
-  Return frozen $25
+  Const mutable count$17 = readonly renderedItems$4.length
+  Const mutable $18 = "div"
+  Const mutable $19 = "\n      "
+  Const mutable $20 = "h1"
+  Const mutable $21 = " Items"
+  Const mutable $22 = JSX <readonly $20>{freeze count$17}{readonly $21}</readonly $20>
+  Const mutable $23 = "\n      "
+  Const mutable $24 = "\n    "
+  Const mutable $25 = JSX <readonly $18>{readonly $19}{readonly $22}{readonly $23}{freeze renderedItems$4}{readonly $24}</readonly $18>
+  Return readonly $25
 bb8:
-  Const frozen $13 = frozen $12
+  Const mutable $13 = readonly $12
   Goto bb7
 bb9:
-  Const readonly $13 = Call mutable seen$5.has(frozen item$10)
+  Const mutable $13 = Call mutable seen$5.has(mutable item$10)
   Goto bb7
 bb7:
-  If (frozen $13) then:bb1 else:bb4
+  If (readonly $13) then:bb1 else:bb4
 bb4:
-  Call mutable seen$5.add(frozen item$10)
-  Const readonly $14 = "div"
-  Const readonly $15 = JSX <frozen $14>{frozen item$10}</frozen $14>
-  Call mutable renderedItems$4.push(mutable $15)
-  Const frozen $16 = Binary readonly renderedItems$4.length >= readonly max$7
-  If (frozen $16) then:bb2 else:bb1
+  Call mutable seen$5.add(mutable item$10)
+  Const mutable $14 = "div"
+  Const mutable $15 = JSX <readonly $14>{readonly item$10}</readonly $14>
+  Call mutable renderedItems$4.push(readonly $15)
+  Const mutable $16 = Binary readonly renderedItems$4.length >= readonly max$7
+  If (readonly $16) then:bb2 else:bb1
 ```
 
 ## Code

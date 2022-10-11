@@ -66,7 +66,7 @@ export default function analyzeScopes(fn: HIRFunction): ReactFunction {
         kind: "Identifier",
         value: param,
         memberPath: null,
-        capability: Capability.Frozen,
+        capability: Capability.Freeze,
         path: null as any,
       }))
     ),
