@@ -70,6 +70,7 @@ import {readContext, checkIfContextChanged} from './ReactFiberNewContext.new';
 import {
   requestEventTime,
   requestUpdateLane,
+  requestUpdateLane_getUpdatePriority,
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.new';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
@@ -204,6 +205,7 @@ const classComponentUpdater = {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
+    const updatePriority = requestUpdateLane_getUpdatePriority();
 
     const update = createUpdate(eventTime, lane);
     update.payload = payload;
@@ -216,7 +218,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime, updatePriority);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -237,6 +239,7 @@ const classComponentUpdater = {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
+    const updatePriority = requestUpdateLane_getUpdatePriority();
 
     const update = createUpdate(eventTime, lane);
     update.tag = ReplaceState;
@@ -251,7 +254,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime, updatePriority);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -272,6 +275,7 @@ const classComponentUpdater = {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
+    const updatePriority = requestUpdateLane_getUpdatePriority();
 
     const update = createUpdate(eventTime, lane);
     update.tag = ForceUpdate;
@@ -285,7 +289,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime, updatePriority);
       entangleTransitions(root, fiber, lane);
     }
 

@@ -77,6 +77,7 @@ import {
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
   higherEventPriority,
+  DiscreteEventPriority,
 } from './ReactEventPriorities.old';
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext.old';
 import {HostRoot, CacheComponent} from './ReactWorkTags';
@@ -104,6 +105,7 @@ import {
   requestEventTime,
   markSkippedUpdateLanes,
   isInvalidExecutionContextForEventFunction,
+  requestUpdateLane_getUpdatePriority,
 } from './ReactFiberWorkLoop.old';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -1670,7 +1672,13 @@ function checkIfSnapshotChanged<T>(inst: StoreInstance<T>): boolean {
 function forceStoreRerender(fiber) {
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
   if (root !== null) {
-    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+    scheduleUpdateOnFiber(
+      root,
+      fiber,
+      SyncLane,
+      NoTimestamp,
+      DiscreteEventPriority,
+    );
   }
 }
 
@@ -2381,11 +2389,18 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
       case HostRoot: {
         // Schedule an update on the cache boundary to trigger a refresh.
         const lane = requestUpdateLane(provider);
+        const updatePriority = requestUpdateLane_getUpdatePriority();
         const eventTime = requestEventTime();
         const refreshUpdate = createLegacyQueueUpdate(eventTime, lane);
         const root = enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         if (root !== null) {
-          scheduleUpdateOnFiber(root, provider, lane, eventTime);
+          scheduleUpdateOnFiber(
+            root,
+            provider,
+            lane,
+            eventTime,
+            updatePriority,
+          );
           entangleLegacyQueueTransitions(root, provider, lane);
         }
 
@@ -2427,6 +2442,7 @@ function dispatchReducerAction<S, A>(
   }
 
   const lane = requestUpdateLane(fiber);
+  const updatePriority = requestUpdateLane_getUpdatePriority();
 
   const update: Update<S, A> = {
     lane,
@@ -2442,7 +2458,7 @@ function dispatchReducerAction<S, A>(
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
       const eventTime = requestEventTime();
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime, updatePriority);
       entangleTransitionUpdate(root, queue, lane);
     }
   }
@@ -2466,6 +2482,7 @@ function dispatchSetState<S, A>(
   }
 
   const lane = requestUpdateLane(fiber);
+  const updatePriority = requestUpdateLane_getUpdatePriority();
 
   const update: Update<S, A> = {
     lane,
@@ -2524,7 +2541,7 @@ function dispatchSetState<S, A>(
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
       const eventTime = requestEventTime();
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime, updatePriority);
       entangleTransitionUpdate(root, queue, lane);
     }
   }

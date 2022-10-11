@@ -603,10 +603,18 @@ export function getCurrentTime(): number {
   return now();
 }
 
+let currentUpdatePriority = NoEventPriority;
+
+export function requestUpdateLane_getUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
+}
+
 export function requestUpdateLane(fiber: Fiber): Lane {
+  currentUpdatePriority = NoEventPriority;
   // Special cases
   const mode = fiber.mode;
   if ((mode & ConcurrentMode) === NoMode) {
+    currentUpdatePriority = DiscreteEventPriority;
     return (SyncLane: Lane);
   } else if (
     !deferRenderPhaseUpdateToNextBatch &&
@@ -655,6 +663,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // TODO: Move this type conversion to the event priority module.
   const updatePriority = getCurrentUpdatePriority();
   if (updatePriority !== NoEventPriority) {
+    currentUpdatePriority = updatePriority;
     if (updatePriority === DefaultEventPriority) {
       return DefaultLane;
     }
@@ -669,6 +678,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   //
   // TODO: Move this type conversion to the event priority module.
   const eventPriority = getCurrentEventPriority();
+  currentUpdatePriority = eventPriority;
   if (eventPriority === DefaultEventPriority) {
     return DefaultLane;
   }
@@ -697,6 +707,7 @@ export function scheduleUpdateOnFiber(
   fiber: Fiber,
   lane: Lane,
   eventTime: number,
+  updatePriority: EventPriority,
 ) {
   if (__DEV__) {
     if (isRunningInsertionEffect) {
@@ -711,7 +722,7 @@ export function scheduleUpdateOnFiber(
   }
 
   // Mark that the root has a pending update.
-  markRootUpdated(root, lane, eventTime);
+  markRootUpdated(root, lane, eventTime, updatePriority);
 
   if (
     (executionContext & RenderContext) !== NoLanes &&
@@ -832,7 +843,7 @@ export function scheduleInitialHydrationOnRoot(
   // match what was rendered on the server.
   const current = root.current;
   current.lanes = lane;
-  markRootUpdated(root, lane, eventTime);
+  markRootUpdated(root, lane, eventTime, root.updatePriority);
   ensureRootIsScheduled(root, eventTime);
 }
 
@@ -2651,6 +2662,7 @@ function commitRootImpl(
   // are consolidated.
   if (
     includesSomeLane(pendingPassiveEffectsLanes, SyncLane) &&
+    root.updatePriority === DiscreteEventPriority &&
     root.tag !== LegacyRoot
   ) {
     flushPassiveEffects();
@@ -2965,7 +2977,7 @@ function captureCommitPhaseErrorOnRoot(
   const root = enqueueUpdate(rootFiber, update, (SyncLane: Lane));
   const eventTime = requestEventTime();
   if (root !== null) {
-    markRootUpdated(root, SyncLane, eventTime);
+    markRootUpdated(root, SyncLane, eventTime, DiscreteEventPriority);
     ensureRootIsScheduled(root, eventTime);
   }
 }
@@ -3014,7 +3026,7 @@ export function captureCommitPhaseError(
         const root = enqueueUpdate(fiber, update, (SyncLane: Lane));
         const eventTime = requestEventTime();
         if (root !== null) {
-          markRootUpdated(root, SyncLane, eventTime);
+          markRootUpdated(root, SyncLane, eventTime, DiscreteEventPriority);
           ensureRootIsScheduled(root, eventTime);
         }
         return;
@@ -3150,7 +3162,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   const eventTime = requestEventTime();
   const root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   if (root !== null) {
-    markRootUpdated(root, retryLane, eventTime);
+    markRootUpdated(root, retryLane, eventTime, root.updatePriority);
     ensureRootIsScheduled(root, eventTime);
   }
 }

@@ -49,6 +49,7 @@ import {
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 import {enableFloat} from 'shared/ReactFeatureFlags';
+import {DiscreteEventPriority} from './ReactEventPriorities';
 
 let resolveFamily: RefreshHandler | null = null;
 let failedBoundaries: WeakSet<Fiber> | null = null;
@@ -314,7 +315,13 @@ function scheduleFibersWithFamiliesRecursively(
     if (needsRemount || needsRender) {
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+        scheduleUpdateOnFiber(
+          root,
+          fiber,
+          SyncLane,
+          NoTimestamp,
+          DiscreteEventPriority,
+        );
       }
     }
     if (child !== null && !needsRemount) {

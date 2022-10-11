@@ -275,6 +275,7 @@ import {
   pushRootMarkerInstance,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent.new';
+import {NoEventPriority} from './ReactEventPriorities.new';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -2821,6 +2822,7 @@ function updateDehydratedSuspenseComponent(
             current,
             attemptHydrationAtLane,
             eventTime,
+            NoEventPriority,
           );
         } else {
           // We have already tried to ping at a higher priority than we're rendering with

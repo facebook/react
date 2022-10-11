@@ -10,6 +10,7 @@
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Transition} from './ReactFiberTracingMarkerComponent.new';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
+import type {EventPriority} from './ReactEventPriorities.new';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -588,9 +589,11 @@ export function markRootUpdated(
   root: FiberRoot,
   updateLane: Lane,
   eventTime: number,
+  updatePriority: EventPriority,
 ) {
   root.pendingLanes |= updateLane;
 
+  root.updatePriority = updatePriority;
   // If there are any suspended transitions, it's possible this new update
   // could unblock them. Clear the suspended lanes so that we can try rendering
   // them again.
