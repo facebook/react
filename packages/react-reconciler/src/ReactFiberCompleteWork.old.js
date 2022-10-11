@@ -428,8 +428,8 @@ if (supportsMutation) {
         if (child !== null) {
           child.return = node;
         }
-        // Detached tree is hidden from user space.
-        const _needsVisibilityToggle = node.memoizedState !== null;
+        // If Offscreen is not in manual mode, detached tree is hidden from user space.
+        const _needsVisibilityToggle = node.memoizedProps.mode !== 'manual';
         appendAllChildrenToContainer(
           containerChildSet,
           node,
