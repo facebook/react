@@ -19,14 +19,17 @@ import {
   includesNonIdleWork,
 } from './ReactFiberLane.old';
 
-export opaque type EventPriority = Lane;
+// TODO: Ideally this would be opaque but that doesn't work well with
+// our reconciler fork infra, since these leak into non-reconciler packages.
+export type EventPriority = number;
 
+export const NoEventPriority: EventPriority = NoLane;
 export const DiscreteEventPriority: EventPriority = SyncLane;
-export const ContinuousEventPriority: EventPriority = InputContinuousLane;
-export const DefaultEventPriority: EventPriority = DefaultLane;
+export const ContinuousEventPriority: EventPriority = SyncLane | (2 << 1);
+export const DefaultEventPriority: EventPriority = SyncLane | (1 << 1);
 export const IdleEventPriority: EventPriority = IdleLane;
 
-let currentUpdatePriority: EventPriority = NoLane;
+let currentUpdatePriority: EventPriority = NoEventPriority;
 
 export function getCurrentUpdatePriority(): EventPriority {
   return currentUpdatePriority;
@@ -79,4 +82,14 @@ export function lanesToEventPriority(lanes: Lanes): EventPriority {
     return DefaultEventPriority;
   }
   return IdleEventPriority;
+}
+
+export function laneToEventPriority(lane: Lane): EventPriority {
+  if (lane === DefaultLane) {
+    return DefaultEventPriority;
+  }
+  if (lane === InputContinuousLane) {
+    return ContinuousEventPriority;
+  }
+  return (lane: any);
 }

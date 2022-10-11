@@ -31,7 +31,7 @@ import {
   isHigherEventPriority as isHigherEventPriority_new,
 } from './ReactEventPriorities.new';
 
-export opaque type EventPriority = number;
+export type EventPriority = number;
 
 export const DiscreteEventPriority: EventPriority = enableNewReconciler
   ? (DiscreteEventPriority_new: any)
