@@ -40,7 +40,6 @@ function Component$0(props$1) {
   let y$3 = x$2;
   x$2 = [];
   let _$4 = <Component$0 x={x$2}></Component$0>;
-
   y$3.push(props$1.p1);
   return <Component$0 x={x$2} y={y$3}></Component$0>;
 }

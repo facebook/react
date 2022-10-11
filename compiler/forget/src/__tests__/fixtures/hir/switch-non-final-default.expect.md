@@ -65,22 +65,18 @@ function Component$0(props$1) {
   switch (props$1.p0) {
     case 1:
       break;
-
     case true: {
       x$2.push(props$1.p2);
       y$3 = [];
       ("<<TODO: handle complex control flow in codegen>>");
     }
-
     default:
       break;
-
     case false: {
       y$3 = x$2;
       ("<<TODO: handle complex control flow in codegen>>");
     }
   }
-
   const child$7 = <Component$0 data={x$2}></Component$0>;
   y$3.push(props$1.p4);
   return <Component$0 data={y$3}>{child$7}</Component$0>;

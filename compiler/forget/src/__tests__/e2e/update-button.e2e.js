@@ -9,7 +9,7 @@ import { render } from "@testing-library/react";
 import * as React from "react";
 import { useMemoCacheStub } from "../test-utils/useMemoCacheStub";
 
-React.useMemoCache = useMemoCacheStub;
+React.unstable_useMemoCache = useMemoCacheStub;
 
 function Button({ label }) {
   const theme = useTheme();

@@ -10,7 +10,7 @@ import * as React from "react";
 import { render } from "@testing-library/react";
 import { expectLogsAndClear, log } from "./expectLogs";
 
-React.useMemoCache = useMemoCacheStub;
+React.unstable_useMemoCache = useMemoCacheStub;
 
 function Hello({ name }) {
   "use forget";

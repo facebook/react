@@ -53,7 +53,6 @@ function Component$0(props$1) {
   const b$3 = {};
   foo$4(a$2, b$3);
   let _$5 = <div a={a$2}></div>;
-
   foo$4(b$3);
   return <div a={a$2} b={b$3}></div>;
 }

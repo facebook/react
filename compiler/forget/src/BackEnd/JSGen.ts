@@ -36,7 +36,7 @@ export function run(lirProg: LIR.Prog, context: CompilerContext) {
         /*specifier*/ [
           t.importSpecifier(
             t.identifier("useMemoCache"),
-            t.identifier("useMemoCache")
+            t.identifier("unstable_useMemoCache")
           ),
         ],
         /*source*/ t.stringLiteral("react")

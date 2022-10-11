@@ -130,7 +130,7 @@ export default function patchUseMemoCache(reactSource: string) {
       () => true, // always read-only
     );
 
-    React.useMemoCache = useMemoCache;
+    React.unstable_useMemoCache = React.useMemoCache = useMemoCache;
 
     export default React;
   `;
