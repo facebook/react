@@ -29,6 +29,7 @@ import type {
   OffscreenQueue,
   OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
+import {OffscreenDetached} from './ReactFiberOffscreenComponent';
 import type {
   Cache,
   CacheComponentState,
