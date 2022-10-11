@@ -1,3 +1,5 @@
+const {REACT_USE_MEMO_CACHE_SENTINEL} = require('shared/ReactSymbols');
+
 let React;
 let ReactNoop;
 let act;
@@ -46,7 +48,7 @@ describe('useMemoCache()', () => {
       const cache = useMemoCache(1);
       expect(Array.isArray(cache)).toBe(true);
       expect(cache.length).toBe(1);
-      expect(cache[0]).toBe(undefined);
+      expect(cache[0]).toBe(REACT_USE_MEMO_CACHE_SENTINEL);
       return 'Ok';
     }
     const root = ReactNoop.createRoot();
