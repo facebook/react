@@ -558,6 +558,45 @@ describe('useEvent', () => {
   });
 
   // @gate enableUseEventHook
+  it("doesn't provide a stable identity", () => {
+    function Counter({shouldRender, value}) {
+      const onClick = useEvent(() => {
+        Scheduler.unstable_yieldValue(
+          'onClick, shouldRender=' + shouldRender + ', value=' + value,
+        );
+      });
+
+      // onClick doesn't have a stable function identity so this effect will fire on every render.
+      // In a real app useEvent functions should *not* be passed as a dependency, this is for
+      // testing purposes only.
+      useEffect(() => {
+        onClick();
+      }, [onClick]);
+
+      useEffect(() => {
+        onClick();
+      }, [shouldRender]);
+
+      return <></>;
+    }
+
+    ReactNoop.render(<Counter shouldRender={true} value={0} />);
+    expect(Scheduler).toFlushAndYield([
+      'onClick, shouldRender=true, value=0',
+      'onClick, shouldRender=true, value=0',
+    ]);
+
+    ReactNoop.render(<Counter shouldRender={true} value={1} />);
+    expect(Scheduler).toFlushAndYield(['onClick, shouldRender=true, value=1']);
+
+    ReactNoop.render(<Counter shouldRender={false} value={2} />);
+    expect(Scheduler).toFlushAndYield([
+      'onClick, shouldRender=false, value=2',
+      'onClick, shouldRender=false, value=2',
+    ]);
+  });
+
+  // @gate enableUseEventHook
   it('integration: implements docs chat room example', () => {
     function createConnection() {
       let connectedCallback;
@@ -597,7 +636,7 @@ describe('useEvent', () => {
         });
         connection.connect();
         return () => connection.disconnect();
-      }, [roomId, onConnected]);
+      }, [roomId]);
 
       return <Text text={`Welcome to the ${roomId} room!`} />;
     }
@@ -676,7 +715,7 @@ describe('useEvent', () => {
 
       const onVisit = useEvent(visitedUrl => {
         Scheduler.unstable_yieldValue(
-          'url: ' + url + ', numberOfItems: ' + numberOfItems,
+          'url: ' + visitedUrl + ', numberOfItems: ' + numberOfItems,
         );
       });
 

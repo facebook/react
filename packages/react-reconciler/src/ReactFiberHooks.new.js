@@ -1928,10 +1928,9 @@ function useEventImpl<Args, Return, F: (...Array<Args>) => Return>(
   }
 }
 
-function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
+function wrapEventFunction<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): EventFunctionWrapper<Args, Return, F> {
-  const hook = mountWorkInProgressHook();
   const eventFn: EventFunctionWrapper<Args, Return, F> = function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
@@ -1942,17 +1941,21 @@ function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
     return eventFn._impl.apply(undefined, arguments);
   };
   eventFn._impl = callback;
+  return eventFn;
+}
 
+function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
+  callback: F,
+): EventFunctionWrapper<Args, Return, F> {
+  const eventFn = wrapEventFunction(callback);
   useEventImpl(eventFn, callback);
-  hook.memoizedState = eventFn;
   return eventFn;
 }
 
 function updateEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): EventFunctionWrapper<Args, Return, F> {
-  const hook = updateWorkInProgressHook();
-  const eventFn = hook.memoizedState;
+  const eventFn = wrapEventFunction(callback);
   useEventImpl(eventFn, callback);
   return eventFn;
 }
