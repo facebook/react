@@ -31,7 +31,6 @@ import type {
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.old';
 import type {RootState} from './ReactFiberRoot.old';
-import {scheduleMicrotask} from './ReactFiberHostConfig';
 import type {
   Transition,
   TracingMarkerInstance,
@@ -154,6 +153,7 @@ import {
   clearSingleton,
   acquireSingletonInstance,
   releaseSingletonInstance,
+  scheduleMicrotask,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,

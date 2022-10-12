@@ -73,8 +73,6 @@ import {
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-
-import {detachOffscreenInstance} from './ReactFiberCommitWork.new';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 import {
   resolveClassForHotReloading,
@@ -110,6 +108,7 @@ import {
   REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent.new';
+import {detachOffscreenInstance} from './ReactFiberCommitWork.new';
 
 export type {Fiber};
 
