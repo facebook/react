@@ -201,12 +201,12 @@ bb0:
   Const mutable a$2 = Array []
   Call mutable a$2.push(readonly props$1.a)
   If (readonly props$1.b) then:bb1 else:bb2
-bb1:
-  Call mutable a$2.push(readonly props$1.d)
-  Return freeze a$2
 bb2:
   Call mutable a$2.push(readonly props$1.c)
   Goto bb1
+bb1:
+  Call mutable a$2.push(readonly props$1.d)
+  Return freeze a$2
 ```
 
 ## Code

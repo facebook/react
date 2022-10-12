@@ -72,6 +72,13 @@ export type HIRFunction = {
  */
 export type HIR = {
   entry: BlockId;
+
+  /**
+   * Basic blocks are stored as a map to aid certain operations that need to
+   * lookup blocks by their id. However, the order of the items in the map is
+   * reverse postorder, that is, barring cycles, predecessors appear before
+   * successors. This is designed to facilitate forward data flow analysis.
+   */
   blocks: Map<BlockId, BasicBlock>;
 };
 
@@ -84,6 +91,7 @@ export type HIR = {
  * statements and not implicit exceptions which may occur.
  */
 export type BasicBlock = {
+  id: BlockId;
   instructions: Array<Instruction>;
   terminal: Terminal;
 };

@@ -42,11 +42,6 @@ bb0:
     Case readonly $5: bb6
     Default: bb1
     Case readonly $4: bb2
-bb1:
-  Const mutable child$7 = JSX <readonly Component$0 data={freeze x$2} ></readonly Component$0>
-  Call readonly y$3.push(readonly props$1.p4)
-  Const mutable $8 = JSX <readonly Component$0 data={freeze y$3} >{readonly child$7}</readonly Component$0>
-  Return readonly $8
 bb6:
   Call mutable x$2.push(readonly props$1.p2)
   Reassign mutable y$3 = Array []
@@ -54,6 +49,11 @@ bb6:
 bb2:
   Reassign mutable y$3 = readonly x$2
   Goto bb1
+bb1:
+  Const mutable child$7 = JSX <readonly Component$0 data={freeze x$2} ></readonly Component$0>
+  Call readonly y$3.push(readonly props$1.p4)
+  Const mutable $8 = JSX <readonly Component$0 data={freeze y$3} >{readonly child$7}</readonly Component$0>
+  Return readonly $8
 ```
 
 ## Code

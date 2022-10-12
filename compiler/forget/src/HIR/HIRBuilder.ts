@@ -111,6 +111,7 @@ export default class HIRBuilder {
   build(): HIR {
     const { id: blockId, instructions } = this.#current;
     this.#completed.set(blockId, {
+      id: blockId,
       instructions,
       terminal: { kind: "return", value: null },
     });
@@ -126,6 +127,7 @@ export default class HIRBuilder {
   terminate(terminal: Terminal) {
     const { id: blockId, instructions } = this.#current;
     this.#completed.set(blockId, {
+      id: blockId,
       instructions,
       terminal,
     });
@@ -140,6 +142,7 @@ export default class HIRBuilder {
   terminateWithContinuation(terminal: Terminal, continuation: WipBlock) {
     const { id: blockId, instructions } = this.#current;
     this.#completed.set(blockId, {
+      id: blockId,
       instructions,
       terminal,
     });
@@ -160,7 +163,7 @@ export default class HIRBuilder {
    */
   complete(block: WipBlock, terminal: Terminal) {
     const { id: blockId, instructions } = block;
-    this.#completed.set(blockId, { instructions, terminal });
+    this.#completed.set(blockId, { id: blockId, instructions, terminal });
   }
 
   /**
@@ -175,7 +178,7 @@ export default class HIRBuilder {
     this.#current = newBlock(nextId);
     const terminal = fn(nextId);
     const { id: blockId, instructions } = this.#current;
-    this.#completed.set(blockId, { instructions, terminal });
+    this.#completed.set(blockId, { id: blockId, instructions, terminal });
     this.#current = current;
     return nextId;
   }
@@ -288,7 +291,10 @@ export default class HIRBuilder {
 /**
  * Helper to shrink a CFG to eliminate unreachable node and eliminate jump-only blocks.
  */
-function shrink(func: HIR): HIR {
+function shrink(func: {
+  blocks: Map<BlockId, BasicBlock>;
+  entry: BlockId;
+}): HIR {
   const gotos = new Map();
   /**
    * Given a target block for some terminator, resolves the ideal block that should be
@@ -313,45 +319,49 @@ function shrink(func: HIR): HIR {
     }
   }
 
-  /**
-   * Fixpoint iteration to explore all blocks reachable from the entry block,
-   * and to resolve their terminator targets to avoid indirections.
-   * This implicitly prunes unreachable blocks since they are never visited and
-   * therefore not added to the output.
-   */
-  const queue = [func.entry];
-  //  new set of output blocks
+  const visited: Set<BlockId> = new Set();
   const blocks: Map<BlockId, BasicBlock> = new Map();
-  while (queue.length !== 0) {
-    const blockId = queue.shift()!;
-    if (blocks.has(blockId)) {
-      continue;
-    }
-    const { instructions, terminal: prevTerminal } = func.blocks.get(blockId)!;
-    const terminal = mapTerminalSuccessors(prevTerminal, (prevTarget) => {
-      const target = resolveBlockTarget(prevTarget);
-      queue.push(target);
-      return target;
-    });
-    blocks.set(blockId, {
-      instructions,
-      terminal,
-    });
-  }
 
-  for (const block of blocks.values()) {
+  // Visit all the blocks and map their successors to remove indirections,
+  // and eliminate unreachable blocks. Stores blocks in postorder,
+  // successors before predecessors.
+  function visit(blockId: BlockId) {
+    visited.add(blockId);
+    const block = func.blocks.get(blockId)!;
+    const { instructions, terminal: prevTerminal } = block;
+    const terminal = mapTerminalSuccessors(
+      prevTerminal,
+      (prevTarget, isFallthrough) => {
+        const target = resolveBlockTarget(prevTarget);
+        if (!visited.has(target) && !isFallthrough) {
+          visit(target);
+        }
+        return target;
+      }
+    );
+    block.terminal = terminal;
+    blocks.set(blockId, block);
+  }
+  visit(func.entry);
+
+  // Cleanup any fallthrough blocks that weren't visited
+  // also store into reverse postorder.
+  const reversedBlocks: Map<BlockId, BasicBlock> = new Map();
+  for (const blockId of Array.from(blocks.keys()).reverse()) {
+    const block = blocks.get(blockId)!;
     if (block.terminal.kind === "if" || block.terminal.kind === "switch") {
       if (
         block.terminal.fallthrough !== null &&
-        !blocks.has(block.terminal.fallthrough)
+        !visited.has(block.terminal.fallthrough)
       ) {
         block.terminal.fallthrough = null;
       }
     }
+    reversedBlocks.set(blockId, block);
   }
 
   return {
-    blocks,
+    blocks: reversedBlocks,
     entry: func.entry,
   };
 }
@@ -368,6 +378,9 @@ function getTargetIfIndirection(block: BasicBlock): number | null {
 
 /**
  * Maps a terminal node's block assignments using the provided function.
+ *
+ * TODO: this visits successors in reverse ordering to facilitate shrink()'s
+ * goal of producing a reverse postorder graph where siblings are in-order.
  */
 export function mapTerminalSuccessors(
   terminal: Terminal,
@@ -382,10 +395,10 @@ export function mapTerminalSuccessors(
       };
     }
     case "if": {
-      const consequent = fn(terminal.consequent, false);
-      const alternate = fn(terminal.alternate, false);
       const fallthrough =
         terminal.fallthrough !== null ? fn(terminal.fallthrough, true) : null;
+      const alternate = fn(terminal.alternate, false);
+      const consequent = fn(terminal.consequent, false);
       return {
         kind: "if",
         test: terminal.test,
@@ -395,19 +408,19 @@ export function mapTerminalSuccessors(
       };
     }
     case "switch": {
-      const cases = terminal.cases.map((case_) => {
+      const fallthrough =
+        terminal.fallthrough !== null ? fn(terminal.fallthrough, true) : null;
+      const cases = [...terminal.cases].reverse().map((case_) => {
         const target = fn(case_.block, false);
         return {
           test: case_.test,
           block: target,
         };
       });
-      const fallthrough =
-        terminal.fallthrough !== null ? fn(terminal.fallthrough, true) : null;
       return {
         kind: "switch",
         test: terminal.test,
-        cases,
+        cases: cases.reverse(),
         fallthrough,
       };
     }

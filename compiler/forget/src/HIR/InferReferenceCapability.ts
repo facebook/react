@@ -99,51 +99,58 @@ export default function inferReferenceCapability(fn: HIRFunction) {
     initialEnvironment.define(place, value);
   }
 
-  // Queue of blocks to visit, with block and the incoming Environment value
-  const queue: Array<QueueEntry> = [
-    { blockId: fn.body.entry, environment: initialEnvironment },
-  ];
-  // Map of blocks to the last incoming environment that was processed
+  // Map of blocks to the last (merged) incoming environment that was processed
   const environmentsByBlock: Map<BlockId, Environment> = new Map();
 
-  while (queue.length !== 0) {
-    const { blockId, environment: incomingEnvironment } = queue.shift()!;
-
-    let previousEnvironment = environmentsByBlock.get(blockId);
-    let nextEnvironment: Environment | null = null;
-    if (previousEnvironment === undefined) {
-      // If no previous environment, save the incoming environment and
-      // infer the block with this environment
-      environmentsByBlock.set(blockId, incomingEnvironment);
-      nextEnvironment = incomingEnvironment.clone();
+  // Multiple predecessors may be visited prior to reaching a given successor,
+  // so track the list of incoming environments for each successor block.
+  // These are merged when reaching that block again.
+  const queuedEnvironments: Map<BlockId, Environment> = new Map();
+  function queue(blockId: BlockId, environment: Environment) {
+    let queuedEnvironment = queuedEnvironments.get(blockId);
+    if (queuedEnvironment != null) {
+      // merge the queued environments for this block
+      environment = queuedEnvironment.merge(environment) ?? environment;
+      queuedEnvironments.set(blockId, environment);
     } else {
-      // If there's a previous environment, merge the previous/new incoming
-      // environments. If there are no changes, then the block can be skipped.
-      // otherwise save the merged environment and revisit the block with it.
-      const mergedEnvironment = previousEnvironment.merge(incomingEnvironment);
-      if (mergedEnvironment !== null) {
-        environmentsByBlock.set(blockId, mergedEnvironment);
-        nextEnvironment = mergedEnvironment.clone();
-      } else {
-        continue;
+      // this is the first queued environment for this block, see whether
+      // there are changed relative to the last time it was processed.
+      const prevEnvironment = environmentsByBlock.get(blockId);
+      const nextEnvironment =
+        prevEnvironment != null
+          ? prevEnvironment.merge(environment)
+          : environment;
+      if (nextEnvironment != null) {
+        queuedEnvironments.set(blockId, nextEnvironment);
       }
     }
+  }
+  queue(fn.body.entry, initialEnvironment);
 
-    const environment = nextEnvironment; // rebind to preserve the non-null refinement
-    const block = fn.body.blocks.get(blockId)!;
-    inferBlock(environment, block);
-
-    // TODO: add a `forEachTerminalSuccessor` helper, we don't actually want the result
-    // here
-    const _ = mapTerminalSuccessors(
-      block.terminal,
-      (nextBlockId, isFallthrough) => {
-        if (!isFallthrough) {
-          queue.push({ blockId: nextBlockId, environment });
-        }
-        return nextBlockId;
+  while (queuedEnvironments.size !== 0) {
+    for (const [blockId, block] of fn.body.blocks) {
+      const incomingEnvironment = queuedEnvironments.get(blockId);
+      queuedEnvironments.delete(blockId);
+      if (incomingEnvironment == null) {
+        continue;
       }
-    );
+
+      environmentsByBlock.set(blockId, incomingEnvironment);
+      const environment = incomingEnvironment.clone();
+      inferBlock(environment, block);
+
+      // TODO: add a `forEachTerminalSuccessor` helper, we don't actually want the result
+      // here
+      const _ = mapTerminalSuccessors(
+        block.terminal,
+        (nextBlockId, isFallthrough) => {
+          if (!isFallthrough) {
+            queue(nextBlockId, environment);
+          }
+          return nextBlockId;
+        }
+      );
+    }
   }
 }
 

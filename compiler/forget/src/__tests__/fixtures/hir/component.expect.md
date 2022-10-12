@@ -48,17 +48,6 @@ bb3:
   Const mutable $11 = null
   Const mutable $12 = Binary readonly item$10 == readonly $11
   If (readonly $12) then:bb8 else:bb9
-bb2:
-  Const mutable count$17 = readonly renderedItems$4.length
-  Const mutable $18 = "div"
-  Const mutable $19 = "\n      "
-  Const mutable $20 = "h1"
-  Const mutable $21 = " Items"
-  Const mutable $22 = JSX <readonly $20>{freeze count$17}{readonly $21}</readonly $20>
-  Const mutable $23 = "\n      "
-  Const mutable $24 = "\n    "
-  Const mutable $25 = JSX <readonly $18>{readonly $19}{readonly $22}{readonly $23}{freeze renderedItems$4}{readonly $24}</readonly $18>
-  Return readonly $25
 bb8:
   Const mutable $13 = readonly $12
   Goto bb7
@@ -74,6 +63,17 @@ bb4:
   Call mutable renderedItems$4.push(readonly $15)
   Const mutable $16 = Binary readonly renderedItems$4.length >= readonly max$7
   If (readonly $16) then:bb2 else:bb1
+bb2:
+  Const mutable count$17 = readonly renderedItems$4.length
+  Const mutable $18 = "div"
+  Const mutable $19 = "\n      "
+  Const mutable $20 = "h1"
+  Const mutable $21 = " Items"
+  Const mutable $22 = JSX <readonly $20>{freeze count$17}{readonly $21}</readonly $20>
+  Const mutable $23 = "\n      "
+  Const mutable $24 = "\n    "
+  Const mutable $25 = JSX <readonly $18>{readonly $19}{readonly $22}{readonly $23}{freeze renderedItems$4}{readonly $24}</readonly $18>
+  Return readonly $25
 ```
 
 ## Code
