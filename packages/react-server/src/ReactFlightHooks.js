@@ -74,6 +74,9 @@ export const Dispatcher: DispatcherType = {
   useDebugValue(): void {},
   useDeferredValue: (unsupportedHook: any),
   useTransition: (unsupportedHook: any),
+  getCacheSignal(): AbortSignal {
+    throw new Error('Not implemented.');
+  },
   getCacheForType<T>(resourceType: () => T): T {
     if (!currentCache) {
       throw new Error('Reading the cache is only supported while rendering.');

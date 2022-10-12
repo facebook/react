@@ -274,9 +274,11 @@ export function resetHooksState(): void {
   workInProgressHook = null;
 }
 
+function getCacheSignal(): AbortSignal {
+  throw new Error('Not implemented.');
+}
+
 function getCacheForType<T>(resourceType: () => T): T {
-  // TODO: This should silently mark this as client rendered since it's not necessarily
-  // considered an error. It needs to work for things like Flight though.
   throw new Error('Not implemented.');
 }
 
@@ -702,6 +704,7 @@ export const Dispatcher: DispatcherType = {
 };
 
 if (enableCache) {
+  Dispatcher.getCacheSignal = getCacheSignal;
   Dispatcher.getCacheForType = getCacheForType;
   Dispatcher.useCacheRefresh = useCacheRefresh;
 }
