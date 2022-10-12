@@ -246,9 +246,10 @@ export function finishHooks(
 }
 
 export function getThenableStateAfterSuspending(): null | ThenableState {
-  const state = thenableState;
-  thenableState = null;
-  return state;
+  return null;
+  // const state = thenableState;
+  // thenableState = null;
+  // return state;
 }
 
 export function checkDidRenderIdHook(): boolean {

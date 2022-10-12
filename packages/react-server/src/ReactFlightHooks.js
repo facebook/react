@@ -40,9 +40,10 @@ export function prepareToUseHooksForComponent(
 }
 
 export function getThenableStateAfterSuspending(): null | ThenableState {
-  const state = thenableState;
-  thenableState = null;
-  return state;
+  return null;
+  // const state = thenableState;
+  // thenableState = null;
+  // return state;
 }
 
 function readContext<T>(context: ReactServerContext<T>): T {
