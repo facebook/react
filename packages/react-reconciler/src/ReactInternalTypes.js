@@ -377,8 +377,6 @@ type Dispatch<A> = A => void;
 
 export type Dispatcher = {
   use?: <T>(Usable<T>) => T,
-  getCacheSignal?: () => AbortSignal,
-  getCacheForType?: <T>(resourceType: () => T) => T,
   readContext<T>(context: ReactContext<T>): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, I, A>(
@@ -431,4 +429,9 @@ export type Dispatcher = {
   useMemoCache?: (size: number) => Array<any>,
 
   unstable_isNewReconciler?: boolean,
+};
+
+export type CacheDispatcher = {
+  getCacheSignal: () => AbortSignal,
+  getCacheForType: <T>(resourceType: () => T) => T,
 };

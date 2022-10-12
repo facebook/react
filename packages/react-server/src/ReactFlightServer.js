@@ -44,14 +44,17 @@ import {
 } from './ReactFlightServerConfig';
 
 import {
-  Dispatcher,
-  getCurrentCache,
+  HooksDispatcher,
   prepareToUseHooksForRequest,
   prepareToUseHooksForComponent,
   getThenableStateAfterSuspending,
   resetHooksForRequest,
-  setCurrentCache,
 } from './ReactFlightHooks';
+import {
+  DefaultCacheDispatcher,
+  getCurrentCache,
+  setCurrentCache,
+} from './ReactFlightCache';
 import {
   pushProvider,
   popProvider,
@@ -131,6 +134,7 @@ export type Request = {
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 
 function defaultErrorHandler(error: mixed) {
   console['error'](error);
@@ -1002,8 +1006,10 @@ function retryTask(request: Request, task: Task): void {
 
 function performWork(request: Request): void {
   const prevDispatcher = ReactCurrentDispatcher.current;
+  const prevCacheDispatcher = ReactCurrentCache.current;
   const prevCache = getCurrentCache();
-  ReactCurrentDispatcher.current = Dispatcher;
+  ReactCurrentDispatcher.current = HooksDispatcher;
+  ReactCurrentCache.current = DefaultCacheDispatcher;
   setCurrentCache(request.cache);
   prepareToUseHooksForRequest(request);
 
@@ -1022,6 +1028,7 @@ function performWork(request: Request): void {
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
+    ReactCurrentCache.current = prevCacheDispatcher;
     setCurrentCache(prevCache);
     resetHooksForRequest();
   }

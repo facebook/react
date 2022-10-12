@@ -7,6 +7,7 @@
 
 import * as Scheduler from 'scheduler';
 import ReactCurrentDispatcher from '../ReactCurrentDispatcher';
+import ReactCurrentCache from '../ReactCurrentCache';
 import ReactCurrentActQueue from '../ReactCurrentActQueue';
 import ReactCurrentOwner from '../ReactCurrentOwner';
 import ReactDebugCurrentFrame from '../ReactDebugCurrentFrame';
@@ -16,6 +17,7 @@ import {ContextRegistry} from '../ReactServerContextRegistry';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
+  ReactCurrentCache,
   ReactCurrentOwner,
   ReactCurrentBatchConfig,
 

@@ -6,6 +6,7 @@
  */
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
+import ReactCurrentCache from './ReactCurrentCache';
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 import ReactCurrentActQueue from './ReactCurrentActQueue';
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -15,6 +16,7 @@ import {ContextRegistry} from './ReactServerContextRegistry';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
+  ReactCurrentCache,
   ReactCurrentBatchConfig,
   ReactCurrentOwner,
 };
