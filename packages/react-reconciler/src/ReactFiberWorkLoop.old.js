@@ -2095,7 +2095,7 @@ function resumeSuspendedUnitOfWork(
   unitOfWork: Fiber,
   thrownValue: mixed,
 ): void {
-  // This is a fork of performUnitOfWork specifcally for resuming a fiber that
+  // This is a fork of performUnitOfWork specifically for resuming a fiber that
   // just suspended. In some cases, we may choose to retry the fiber immediately
   // instead of unwinding the stack. It's a separate function to keep the
   // additional logic out of the work loop's hot path.
