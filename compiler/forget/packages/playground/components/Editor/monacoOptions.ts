@@ -17,4 +17,8 @@ export const monacoOptions: Partial<EditorProps["options"]> = {
   formatOnType: true,
   fontFamily: '"Source Code Pro", monospace',
   glyphMargin: true,
+
+  autoClosingBrackets: "languageDefined",
+  autoClosingDelete: "always",
+  autoClosingOvertype: "always",
 };
