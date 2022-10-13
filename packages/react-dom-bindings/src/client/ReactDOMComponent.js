@@ -739,12 +739,6 @@ export function diffProperties(
         }
       } else {
         // Relies on `updateStylesByID` not mutating `styleUpdates`.
-        if (!styleUpdates) {
-          if (!updatePayload) {
-            updatePayload = [];
-          }
-          updatePayload.push(propKey, styleUpdates);
-        }
         styleUpdates = nextProp;
       }
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
