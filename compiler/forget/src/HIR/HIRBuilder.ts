@@ -115,10 +115,13 @@ export default class HIRBuilder {
       instructions,
       terminal: { kind: "return", value: null },
     });
-    return shrink({
+    // First reduce indirections and prune unreachable blocks
+    let reduced = shrink({
       blocks: this.#completed,
       entry: this.#entry,
     });
+    // then convert to reverse postorder
+    return reversePostorderBlocks(reduced);
   }
 
   /**
@@ -291,10 +294,7 @@ export default class HIRBuilder {
 /**
  * Helper to shrink a CFG to eliminate unreachable node and eliminate jump-only blocks.
  */
-function shrink(func: {
-  blocks: Map<BlockId, BasicBlock>;
-  entry: BlockId;
-}): HIR {
+function shrink(func: HIR): HIR {
   const gotos = new Map();
   /**
    * Given a target block for some terminator, resolves the ideal block that should be
@@ -319,49 +319,121 @@ function shrink(func: {
     }
   }
 
-  const visited: Set<BlockId> = new Set();
+  const queue = [func.entry];
   const blocks: Map<BlockId, BasicBlock> = new Map();
-
-  // Visit all the blocks and map their successors to remove indirections,
-  // and eliminate unreachable blocks. Stores blocks in postorder,
-  // successors before predecessors.
-  function visit(blockId: BlockId) {
-    visited.add(blockId);
-    const block = func.blocks.get(blockId)!;
-    const { instructions, terminal: prevTerminal } = block;
-    const terminal = mapTerminalSuccessors(
-      prevTerminal,
-      (prevTarget, isFallthrough) => {
-        const target = resolveBlockTarget(prevTarget);
-        if (!visited.has(target) && !isFallthrough) {
-          visit(target);
-        }
-        return target;
-      }
-    );
-    block.terminal = terminal;
-    blocks.set(blockId, block);
+  while (queue.length !== 0) {
+    const blockId = queue.shift()!;
+    if (blocks.has(blockId)) {
+      continue;
+    }
+    const { instructions, terminal: prevTerminal } = func.blocks.get(blockId)!;
+    const terminal = mapTerminalSuccessors(prevTerminal, (prevTarget) => {
+      const target = resolveBlockTarget(prevTarget);
+      queue.push(target);
+      return target;
+    });
+    blocks.set(blockId, {
+      id: blockId,
+      instructions,
+      terminal,
+    });
   }
-  visit(func.entry);
 
   // Cleanup any fallthrough blocks that weren't visited
-  // also store into reverse postorder.
-  const reversedBlocks: Map<BlockId, BasicBlock> = new Map();
-  for (const blockId of Array.from(blocks.keys()).reverse()) {
-    const block = blocks.get(blockId)!;
+  for (const block of blocks.values()) {
     if (block.terminal.kind === "if" || block.terminal.kind === "switch") {
       if (
         block.terminal.fallthrough !== null &&
-        !visited.has(block.terminal.fallthrough)
+        !blocks.has(block.terminal.fallthrough)
       ) {
         block.terminal.fallthrough = null;
       }
     }
-    reversedBlocks.set(blockId, block);
   }
+  return { blocks, entry: func.entry };
+}
 
+/**
+ * Converts the graph to reverse-postorder, with predecessor blocks appearing
+ * before successors except in the case of back links (ie loops).
+ */
+function reversePostorderBlocks(func: HIR): HIR {
+  const visited: Set<BlockId> = new Set();
+  const postorder: Array<BlockId> = [];
+  function visit(blockId: BlockId) {
+    if (visited.has(blockId)) {
+      return;
+    }
+    visited.add(blockId);
+    const block = func.blocks.get(blockId)!;
+    const { terminal } = block;
+
+    /**
+     * Note that we visit successors in reverse order. This ensures that when we
+     * reverse the list at the end, that "sibling" edges appear in-order. For example,
+     * ```
+     * // bb0
+     * let x;
+     * if (c) {
+     *   // bb1
+     *   x = 1;
+     * } else {
+     *   // b2
+     *   x = 2;
+     * }
+     * // bb3
+     * x;
+     * ```
+     *
+     * We want the output to be bb0, bb1, bb2, bb3 just to line up with the original
+     * program order for visual debugging. By visiting the successors in reverse order
+     * (eg bb2 then bb1), we ensure that they get reversed back to the correct order.
+     */
+    switch (terminal.kind) {
+      case "return":
+      case "throw": {
+        // no-op, no successors
+        break;
+      }
+      case "goto": {
+        visit(terminal.block);
+        break;
+      }
+      case "if": {
+        // can ignore fallthrough, if its reachable it will be reached through
+        // consequent/alternate
+        const { consequent, alternate } = terminal;
+        visit(alternate);
+        visit(consequent);
+        break;
+      }
+      case "switch": {
+        // can ignore fallthrough, if its reachable it will be reached through
+        // a case
+        const { cases } = terminal;
+        for (const case_ of [...cases].reverse()) {
+          visit(case_.block);
+        }
+        break;
+      }
+      default: {
+        assertExhaustive(
+          terminal,
+          `Unexpected terminal kind '${(terminal as any).kind}'`
+        );
+      }
+    }
+
+    postorder.push(blockId);
+  }
+  visit(func.entry);
+
+  const blocks = new Map();
+  for (const blockId of postorder.reverse()) {
+    blocks.set(blockId, func.blocks.get(blockId)!);
+  }
   return {
-    blocks: reversedBlocks,
+    blocks,
     entry: func.entry,
   };
 }
@@ -395,10 +467,10 @@ export function mapTerminalSuccessors(
       };
     }
     case "if": {
+      const consequent = fn(terminal.consequent, false);
+      const alternate = fn(terminal.alternate, false);
       const fallthrough =
         terminal.fallthrough !== null ? fn(terminal.fallthrough, true) : null;
-      const alternate = fn(terminal.alternate, false);
-      const consequent = fn(terminal.consequent, false);
       return {
         kind: "if",
         test: terminal.test,
@@ -408,19 +480,19 @@ export function mapTerminalSuccessors(
       };
     }
     case "switch": {
-      const fallthrough =
-        terminal.fallthrough !== null ? fn(terminal.fallthrough, true) : null;
-      const cases = [...terminal.cases].reverse().map((case_) => {
+      const cases = terminal.cases.map((case_) => {
         const target = fn(case_.block, false);
         return {
           test: case_.test,
           block: target,
         };
       });
+      const fallthrough =
+        terminal.fallthrough !== null ? fn(terminal.fallthrough, true) : null;
       return {
         kind: "switch",
         test: terminal.test,
-        cases: cases.reverse(),
+        cases,
         fallthrough,
       };
     }
