@@ -40,7 +40,6 @@ import {
   enableUpdaterTracking,
   enableCache,
   enableTransitionTracing,
-  useModernStrictMode,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -117,7 +116,6 @@ import {
   Profiler,
 } from './ReactWorkTags';
 import {ConcurrentRoot, LegacyRoot} from './ReactRootTags';
-import type {Flags} from './ReactFiberFlags';
 import {
   NoFlags,
   Incomplete,
@@ -130,8 +128,6 @@ import {
   PassiveMask,
   PlacementDEV,
   Visibility,
-  MountPassiveDev,
-  MountLayoutDev,
 } from './ReactFiberFlags';
 import {
   NoLanes,
@@ -196,10 +192,6 @@ import {
   reappearLayoutEffects,
   disconnectPassiveEffect,
   reportUncaughtErrorInDEV,
-  invokeLayoutEffectMountInDEV,
-  invokePassiveEffectMountInDEV,
-  invokeLayoutEffectUnmountInDEV,
-  invokePassiveEffectUnmountInDEV,
 } from './ReactFiberCommitWork.new';
 import {enqueueUpdate} from './ReactFiberClassUpdateQueue.new';
 import {resetContextDependencies} from './ReactFiberNewContext.new';
@@ -3370,76 +3362,22 @@ function commitDoubleInvokeEffectsInDEV(
   hasPassiveEffects: boolean,
 ) {
   if (__DEV__ && enableStrictEffects) {
-    if (useModernStrictMode) {
-      let doubleInvokeEffects = true;
+    let doubleInvokeEffects = true;
 
-      if (root.tag === LegacyRoot && !(root.current.mode & StrictLegacyMode)) {
-        doubleInvokeEffects = false;
-      }
-      if (
-        root.tag === ConcurrentRoot &&
-        !(root.current.mode & (StrictLegacyMode | StrictEffectsMode))
-      ) {
-        doubleInvokeEffects = false;
-      }
-      recursivelyTraverseAndDoubleInvokeEffectsInDEV(
-        root,
-        root.current,
-        doubleInvokeEffects,
-      );
-    } else {
-      legacyCommitDoubleInvokeEffectsInDEV(root.current, hasPassiveEffects);
+    if (root.tag === LegacyRoot && !(root.current.mode & StrictLegacyMode)) {
+      doubleInvokeEffects = false;
     }
-  }
-}
-
-function legacyCommitDoubleInvokeEffectsInDEV(
-  fiber: Fiber,
-  hasPassiveEffects: boolean,
-) {
-  // TODO (StrictEffects) Should we set a marker on the root if it contains strict effects
-  // so we don't traverse unnecessarily? similar to subtreeFlags but just at the root level.
-  // Maybe not a big deal since this is DEV only behavior.
-
-  setCurrentDebugFiberInDEV(fiber);
-  invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectUnmountInDEV);
-  if (hasPassiveEffects) {
-    invokeEffectsInDev(fiber, MountPassiveDev, invokePassiveEffectUnmountInDEV);
-  }
-
-  invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectMountInDEV);
-  if (hasPassiveEffects) {
-    invokeEffectsInDev(fiber, MountPassiveDev, invokePassiveEffectMountInDEV);
-  }
-  resetCurrentDebugFiberInDEV();
-}
-
-function invokeEffectsInDev(
-  firstChild: Fiber,
-  fiberFlags: Flags,
-  invokeEffectFn: (fiber: Fiber) => void,
-) {
-  let current: null | Fiber = firstChild;
-  let subtreeRoot = null;
-  while (current != null) {
-    const primarySubtreeFlag = current.subtreeFlags & fiberFlags;
     if (
-      current !== subtreeRoot &&
-      current.child != null &&
-      primarySubtreeFlag !== NoFlags
+      root.tag === ConcurrentRoot &&
+      !(root.current.mode & (StrictLegacyMode | StrictEffectsMode))
     ) {
-      current = current.child;
-    } else {
-      if ((current.flags & fiberFlags) !== NoFlags) {
-        invokeEffectFn(current);
-      }
-
-      if (current.sibling !== null) {
-        current = current.sibling;
-      } else {
-        current = subtreeRoot = current.return;
-      }
+      doubleInvokeEffects = false;
     }
+    recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+      root,
+      root.current,
+      doubleInvokeEffects,
+    );
   }
 }
 
