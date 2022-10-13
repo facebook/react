@@ -62,3 +62,10 @@ export type OffscreenInstance = {
 
   // TODO: attach
 };
+
+export function isOffscreenManual(offscreenFiber: Fiber): boolean {
+  return (
+    offscreenFiber.memoizedProps !== null &&
+    offscreenFiber.memoizedProps.mode === 'manual'
+  );
+}

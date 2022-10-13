@@ -22,6 +22,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {Wakeable} from 'shared/ReactTypes';
+import {isOffscreenManual} from './ReactFiberOffscreenComponent';
 import type {
   OffscreenState,
   OffscreenInstance,
@@ -2896,10 +2897,7 @@ function commitMutationEffectsOnFiber(
         }
 
         // Offscreen with manual mode manages visibility manually.
-        const shouldControlChildrenVisibility =
-          finishedWork.memoizedProps === null ||
-          finishedWork.memoizedProps.mode !== 'manual';
-        if (supportsMutation && shouldControlChildrenVisibility) {
+        if (supportsMutation && !isOffscreenManual(finishedWork)) {
           // TODO: This needs to run whenever there's an insertion or update
           // inside a hidden Offscreen tree.
           hideOrUnhideAllChildren(offscreenBoundary, isHidden);

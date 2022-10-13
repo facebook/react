@@ -27,6 +27,7 @@ import type {
   SuspenseState,
   SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent.old';
+import {isOffscreenManual} from './ReactFiberOffscreenComponent';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old';
 import type {Cache} from './ReactFiberCacheComponent.old';
@@ -429,8 +430,7 @@ if (supportsMutation) {
           child.return = node;
         }
         // If Offscreen is not in manual mode, detached tree is hidden from user space.
-        const _needsVisibilityToggle =
-          node.memoizedProps === null || node.memoizedProps.mode !== 'manual';
+        const _needsVisibilityToggle = !isOffscreenManual(node);
         appendAllChildrenToContainer(
           containerChildSet,
           node,
