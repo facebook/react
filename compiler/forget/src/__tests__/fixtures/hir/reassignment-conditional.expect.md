@@ -23,18 +23,18 @@ function Component(props) {
 
 ```
 bb0:
-  Let mutable x$2 = Array []
-  Call mutable x$2.push(readonly props$1.p0)
-  Let mutable y$3 = readonly x$2
-  If (readonly props$1.p1) then:bb2 else:bb1
+  Let mutate x$2 = Array []
+  Call mutate x$2.push(read props$1.p0)
+  Let mutate y$3 = read x$2
+  If (read props$1.p1) then:bb2 else:bb1
 bb2:
-  Reassign mutable x$2 = Array []
+  Reassign mutate x$2 = Array []
   Goto bb1
 bb1:
-  Let mutable _$4 = JSX <readonly Component$0 x={freeze x$2} ></readonly Component$0>
-  Call readonly y$3.push(readonly props$1.p2)
-  Const mutable $5 = JSX <readonly Component$0 x={readonly x$2} y={readonly y$3} ></readonly Component$0>
-  Return readonly $5
+  Let mutate _$4 = JSX <read Component$0 x={freeze x$2} ></read Component$0>
+  Call read y$3.push(read props$1.p2)
+  Const mutate $5 = JSX <read Component$0 x={read x$2} y={read y$3} ></read Component$0>
+  Return read $5
 ```
 
 ## Code

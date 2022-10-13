@@ -200,9 +200,9 @@ export type InstructionData =
  */
 export type Place = {
   kind: "Identifier";
-  value: Identifier;
+  identifier: Identifier;
   memberPath: Array<string> | null;
-  capability: Capability;
+  effect: Effect;
   path: NodePath;
 };
 
@@ -224,17 +224,28 @@ export type Identifier = {
 };
 
 /**
- * The capability with which a value is modified.
+ * Distinguish between different kinds of values relevant to inference purposes:
+ * see the main docblock for the module for details.
  */
-export enum Capability {
+export enum ValueKind {
+  MaybeFrozen = "maybefrozen",
+  Frozen = "frozen",
+  Immutable = "immutable",
+  Mutable = "mutable",
+}
+
+/**
+ * The effect with which a value is modified.
+ */
+export enum Effect {
   // Default value: not allowed after lifetime inference
   Unknown = "<unknown>",
-  // The value is made frozen at this point.
+  // This reference freezes the value (corresponds to a place where codegen should emit a freeze instruction)
   Freeze = "freeze",
-  // The value is not modified at this point.
-  Readonly = "readonly",
-  // The value is modified at this point.
-  Mutable = "mutable",
+  // This reference reads the value
+  Read = "read",
+  // This reference may write to (mutate) the value
+  Mutate = "mutate",
 }
 
 /**

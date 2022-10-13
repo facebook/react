@@ -54,25 +54,25 @@ function mutate$0(x$1, y$2) {
 
 ```
 bb0:
-  Const mutable a$2 = Object {  }
-  Const mutable b$3 = Array [readonly a$2]
-  Const mutable c$4 = Object {  }
-  Const mutable d$5 = Object { c: readonly c$4 }
-  Const mutable x$6 = Object {  }
-  Reassign mutable x$6.b = readonly b$3
-  Const mutable y$7 = Call mutable mutate$8(mutable x$6, mutable d$5)
-  If (readonly a$2) then:bb1 else:bb1
+  Const mutate a$2 = Object {  }
+  Const mutate b$3 = Array [read a$2]
+  Const mutate c$4 = Object {  }
+  Const mutate d$5 = Object { c: read c$4 }
+  Const mutate x$6 = Object {  }
+  Reassign mutate x$6.b = read b$3
+  Const mutate y$7 = Call mutate mutate$8(mutate x$6, mutate d$5)
+  If (read a$2) then:bb1 else:bb1
 bb1:
-  If (readonly b$3) then:bb3 else:bb3
+  If (read b$3) then:bb3 else:bb3
 bb3:
-  If (readonly c$4) then:bb5 else:bb5
+  If (read c$4) then:bb5 else:bb5
 bb5:
-  If (readonly d$5) then:bb7 else:bb7
+  If (read d$5) then:bb7 else:bb7
 bb7:
-  If (readonly y$7) then:bb9 else:bb9
+  If (read y$7) then:bb9 else:bb9
 bb9:
-  Const mutable $9 = null
-  Call mutable mutate$8(mutable x$6, readonly $9)
+  Const mutate $9 = null
+  Call mutate mutate$8(mutate x$6, read $9)
   Return
 ```
 

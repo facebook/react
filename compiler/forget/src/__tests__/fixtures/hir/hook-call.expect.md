@@ -53,14 +53,14 @@ function foo$0() {
 
 ```
 bb0:
-  Const mutable x$2 = Array []
-  Const mutable y$3 = Call readonly useFreeze$4(freeze x$2)
-  Call mutable foo$5(readonly y$3, readonly x$2)
-  Const mutable $6 = "\n      "
-  Const mutable $7 = "\n      "
-  Const mutable $8 = "\n    "
-  Const mutable $9 = JSX <readonly Component$0>{readonly $6}{readonly x$2}{readonly $7}{readonly y$3}{readonly $8}</readonly Component$0>
-  Return readonly $9
+  Const mutate x$2 = Array []
+  Const mutate y$3 = Call read useFreeze$4(freeze x$2)
+  Call mutate foo$5(read y$3, read x$2)
+  Const mutate $6 = "\n      "
+  Const mutate $7 = "\n      "
+  Const mutate $8 = "\n    "
+  Const mutate $9 = JSX <read Component$0>{read $6}{read x$2}{read $7}{read y$3}{read $8}</read Component$0>
+  Return read $9
 ```
 
 ## Code

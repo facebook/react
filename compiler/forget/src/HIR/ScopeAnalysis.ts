@@ -6,7 +6,6 @@
  */
 
 import {
-  Capability,
   HIRFunction,
   makeScopeId,
   ReactFunction,
@@ -61,15 +60,7 @@ export default function analyzeScopes(fn: HIRFunction): ReactFunction {
   const returnScopeId = makeScopeId(0);
   const scopes: Map<ScopeId, ReactiveScope> = new Map();
   scopes.set(returnScopeId, {
-    inputs: new Set(
-      fn.params.map((param) => ({
-        kind: "Identifier",
-        value: param.value,
-        memberPath: null,
-        capability: Capability.Freeze,
-        path: null as any,
-      }))
-    ),
+    inputs: new Set([...fn.params]),
     outputs: new Set(),
     instructions: fn.body,
   });

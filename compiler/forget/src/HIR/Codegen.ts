@@ -50,7 +50,7 @@ export default function codegen(fn: HIRFunction): t.Function {
     t.isFunctionDeclaration(node),
     "todo: handle other than function declaration"
   );
-  const params = fn.params.map((param) => convertIdentifier(param.value));
+  const params = fn.params.map((param) => convertIdentifier(param.identifier));
   return t.functionDeclaration(
     fn.id !== null ? convertIdentifier(fn.id) : null,
     params,
@@ -273,11 +273,11 @@ function writeInstr(cx: Context, instr: Instruction, body: Array<t.Statement>) {
   }
   if (instr.lvalue !== null) {
     if (
-      instr.lvalue.place.value.name === null &&
+      instr.lvalue.place.identifier.name === null &&
       instr.lvalue.place.memberPath === null
     ) {
       // Temporary value: don't immediately emit, instead save the value to refer to later
-      cx.temp.set(instr.lvalue.place.value.id, value);
+      cx.temp.set(instr.lvalue.place.identifier.id, value);
     } else {
       switch (instr.lvalue.kind) {
         case InstructionKind.Const: {
@@ -338,7 +338,7 @@ function codegenJsxElement(
 }
 
 function codegenLVal(lval: LValue): t.LVal {
-  return convertIdentifier(lval.place.value);
+  return convertIdentifier(lval.place.identifier);
 }
 
 function codegenValue(
@@ -363,13 +363,13 @@ function codegenValue(
 function codegenPlace(cx: Context, place: Place): t.Expression {
   todoInvariant(place.kind === "Identifier", "support scope values");
   if (place.memberPath === null) {
-    let tmp = cx.temp.get(place.value.id);
+    let tmp = cx.temp.get(place.identifier.id);
     if (tmp != null) {
       return tmp;
     }
-    return convertIdentifier(place.value);
+    return convertIdentifier(place.identifier);
   } else {
-    let object: t.Expression = convertIdentifier(place.value);
+    let object: t.Expression = convertIdentifier(place.identifier);
     for (const path of place.memberPath) {
       object = t.memberExpression(object, t.identifier(path));
     }

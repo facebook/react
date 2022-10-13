@@ -10,19 +10,20 @@ import { invariant } from "../CompilerError";
 import {
   BasicBlock,
   BlockId,
-  Capability,
+  Effect,
   HIRFunction,
   IdentifierId,
   Instruction,
   InstructionValue,
   Place,
   Terminal,
+  ValueKind,
 } from "./HIR";
 import { mapTerminalSuccessors } from "./HIRBuilder";
 import { printMixedHIR } from "./PrintHIR";
 
 /**
- * For every usage of a value in the given function, infers the capability or action
+ * For every usage of a value in the given function, infers the effect or action
  * taken at that reference. Each reference is inferred as exactly one of:
  * - freeze: this usage freezes the value, ie converts it to frozen. This is only inferred
  *   when the value *may* not already be frozen.
@@ -50,7 +51,7 @@ import { printMixedHIR } from "./PrintHIR";
  *   is created.
  *
  * Internally, the inference tracks the approximate type of value held by each variable,
- * and iterates over the control flow graph. The inferred capability of reach reference is
+ * and iterates over the control flow graph. The inferred effect of reach reference is
  * a combination of the operation performed (ie, assignment into an object mutably uses the
  * object; an if condition reads the condition) and the type of the value. The types of values
  * are:
@@ -70,9 +71,9 @@ export default function inferReferenceCapability(fn: HIRFunction) {
   const id: Place = {
     kind: "Identifier",
     memberPath: null,
-    value: fn.id as any,
+    identifier: fn.id as any,
     path: null as any, // TODO
-    capability: Capability.Freeze,
+    effect: Effect.Freeze,
   };
   const value: InstructionValue = {
     kind: "Primitive",
@@ -83,20 +84,13 @@ export default function inferReferenceCapability(fn: HIRFunction) {
   initialEnvironment.define(id, value);
 
   for (const param of fn.params) {
-    const place: Place = {
-      kind: "Identifier",
-      memberPath: null,
-      value: param.value,
-      path: null as any, // TODO
-      capability: Capability.Freeze,
-    };
     const value: InstructionValue = {
       kind: "Primitive",
       path: null as any, // TODO
       value: undefined,
     };
     initialEnvironment.initialize(value, ValueKind.Frozen);
-    initialEnvironment.define(place, value);
+    initialEnvironment.define(param, value);
   }
 
   // Map of blocks to the last (merged) incoming environment that was processed
@@ -154,11 +148,6 @@ export default function inferReferenceCapability(fn: HIRFunction) {
   }
 }
 
-type QueueEntry = {
-  blockId: BlockId;
-  environment: Environment;
-};
-
 /**
  * Maintains a mapping of top-level variables to the kind of value they hold
  */
@@ -201,7 +190,7 @@ class Environment {
    * Lookup the kind of the given @param value.
    */
   kind(place: Place): ValueKind {
-    const values = this.#variables.get(place.value.id);
+    const values = this.#variables.get(place.identifier.id);
     invariant(
       values != null,
       `Expected value kind to be initialized at '${String(place.path)}'`
@@ -219,14 +208,14 @@ class Environment {
    * Updates the value at @param place to point to the same value as @param value.
    */
   alias(place: Place, value: Place) {
-    const values = this.#variables.get(value.value.id);
+    const values = this.#variables.get(value.identifier.id);
     invariant(
       values != null,
       `Expected value to be populated at '${String(value.path)}' in '${String(
         value.path.parentPath
       )}'`
     );
-    this.#variables.set(place.value.id, new Set(values));
+    this.#variables.set(place.identifier.id, new Set(values));
   }
 
   /**
@@ -243,12 +232,12 @@ class Environment {
         value.path?.parentPath
       )}'`
     );
-    this.#variables.set(place.value.id, new Set([value]));
+    this.#variables.set(place.identifier.id, new Set([value]));
   }
 
   /**
    * Records that a given Place was accessed with the given kind and:
-   * - Updates the capability of @param place based on the kind of value
+   * - Updates the effect of @param place based on the kind of value
    *   and the kind of reference (@param effectKind).
    * - Updates the value kind to reflect the effect of the reference.
    *
@@ -258,55 +247,50 @@ class Environment {
    * Similarly, a freeze reference is converted to readonly if the
    * value is already frozen or is immutable.
    */
-  reference(place: Place, effectKind: EffectKind) {
-    const values = this.#variables.get(place.value.id);
+  reference(place: Place, effectKind: Effect) {
+    const values = this.#variables.get(place.identifier.id);
     if (values === undefined) {
-      place.capability =
-        effectKind === EffectKind.Write
-          ? Capability.Mutable
-          : Capability.Readonly;
+      place.effect = effectKind === Effect.Mutate ? Effect.Mutate : Effect.Read;
       return;
     }
-    let capability: Capability | null = null;
+    let valueKind: ValueKind | null = null;
+    for (const value of values) {
+      const kind = this.#values.get(value)!;
+      valueKind = valueKind !== null ? mergeValues(valueKind, kind) : kind;
+    }
+    invariant(valueKind !== null, "Expected a value to be set");
+    let effect: Effect | null = null;
     switch (effectKind) {
-      case EffectKind.Freeze: {
-        values.forEach((value) => {
-          const valueKind = this.#values.get(value)!;
-          if (
-            valueKind === ValueKind.Mutable ||
-            valueKind === ValueKind.MaybeFrozen
-          ) {
-            this.#values.set(value, ValueKind.Frozen);
-            capability = Capability.Freeze;
-          }
-        });
-        capability = capability ?? Capability.Readonly;
+      case Effect.Freeze: {
+        if (
+          valueKind === ValueKind.Mutable ||
+          valueKind === ValueKind.MaybeFrozen
+        ) {
+          effect = Effect.Freeze;
+          valueKind = ValueKind.Frozen;
+          values.forEach((value) => this.#values.set(value, ValueKind.Frozen));
+        } else {
+          effect = Effect.Read;
+        }
         break;
       }
-      case EffectKind.Write: {
-        let maybeFrozen = false;
-        let maybeMutable = false;
-        values.forEach((value) => {
-          const valueKind = this.#values.get(value)!;
-          if (
-            valueKind === ValueKind.Frozen ||
-            valueKind === ValueKind.MaybeFrozen
-          ) {
-            maybeFrozen = true;
-          } else if (valueKind === ValueKind.Mutable) {
-            maybeMutable = true;
-          }
-        });
-        capability = maybeFrozen
-          ? Capability.Readonly
-          : maybeMutable
-          ? Capability.Mutable
-          : Capability.Readonly;
+      case Effect.Mutate: {
+        if (valueKind === ValueKind.Mutable) {
+          effect = Effect.Mutate;
+        } else {
+          effect = Effect.Read;
+        }
         break;
       }
-      case EffectKind.Read: {
-        capability = Capability.Readonly;
+      case Effect.Read: {
+        effect = Effect.Read;
         break;
+      }
+      case Effect.Unknown: {
+        invariant(
+          false,
+          "Unexpected unknown effect, expected to infer a precise effect kind"
+        );
       }
       default: {
         assertExhaustive(
@@ -315,8 +299,8 @@ class Environment {
         );
       }
     }
-    invariant(capability !== null, "Expected capability to be set");
-    place.capability = capability;
+    invariant(effect !== null, "Expected effect to be set");
+    place.effect = effect;
   }
 
   /**
@@ -448,8 +432,21 @@ class Environment {
  * └─────────────────────────┘
  *
  * == Join Lattice ==
- * - immutable | frozen => frozen
+ * - immutable | mutable => mutable
+ *    The justification is that immutable and mutable values are different types,
+ *    and functions can introspect them to tell the difference (if the argument
+ *    is null return early, else if its an object mutate it).
  * - frozen | mutable => maybe-frozen
+ *    Frozen values are indistinguishable from mutable values at runtime, so callers
+ *    cannot dynamically avoid mutation of "frozen" values. If a value could be
+ *    frozen we have to distinguish it from a mutable value. But it also isn't known
+ *    frozen yet, so we distinguish as maybe-frozen.
+ * - immutable | frozen => frozen
+ *    This is subtle and falls out of the above rules. If a value could be any of
+ *    immutable, mutable, or frozen, then at runtime it could either be a primitive
+ *    or a reference type, and callers can't distinguish frozen or not for reference
+ *    types. To ensure that any sequence of joins btw those three states yields the
+ *    correct maybe-frozen, these two have to produce a frozen value.
  * - <any> | maybe-frozen => maybe-frozen
  *
  * ┌──────────────────────────┐
@@ -487,26 +484,6 @@ function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
 }
 
 /**
- * Distinguish between different kinds of values relevant to inference purposes:
- * see the main docblock for the module for details.
- */
-enum ValueKind {
-  MaybeFrozen = "MaybeFrozen",
-  Frozen = "Frozen",
-  Immutable = "Immutable",
-  Mutable = "Mutable",
-}
-
-/**
- * Distinguish between different kinds of references.
- */
-enum EffectKind {
-  Write = "Write",
-  Read = "Read",
-  Freeze = "Freeze",
-}
-
-/**
  * Iterates over the given @param block, defining variables and
  * recording references on the @param env according to JS semantics.
  */
@@ -517,27 +494,27 @@ function inferBlock(env: Environment, block: BasicBlock) {
     switch (instrValue.kind) {
       case "BinaryExpression": {
         valueKind = ValueKind.Immutable;
-        env.reference(instrValue.left, EffectKind.Read);
-        env.reference(instrValue.right, EffectKind.Read);
+        env.reference(instrValue.left, Effect.Read);
+        env.reference(instrValue.right, Effect.Read);
         break;
       }
       case "ArrayExpression": {
         valueKind = ValueKind.Mutable;
         for (const element of instrValue.elements) {
-          env.reference(element, EffectKind.Read);
+          env.reference(element, Effect.Read);
         }
         break;
       }
       case "NewExpression": {
         valueKind = ValueKind.Mutable;
-        env.reference(instrValue.callee, EffectKind.Write);
+        env.reference(instrValue.callee, Effect.Mutate);
         for (const arg of instrValue.args) {
-          env.reference(arg, EffectKind.Write);
+          env.reference(arg, Effect.Mutate);
         }
         break;
       }
       case "CallExpression": {
-        let effectKind = EffectKind.Write;
+        let effectKind = Effect.Mutate;
         valueKind = ValueKind.Mutable;
         const hook = parseHookCall(instrValue.callee);
         if (hook !== null) {
@@ -555,7 +532,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         // Object construction captures but does not modify the key/property values
         if (instrValue.properties !== null) {
           for (const [_key, value] of Object.entries(instrValue.properties)) {
-            env.reference(value, EffectKind.Read);
+            env.reference(value, Effect.Read);
           }
         }
         break;
@@ -563,7 +540,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
       case "UnaryExpression": {
         // TODO check that value must be a primitive, or make conditional based on the operator
         valueKind = ValueKind.Immutable;
-        env.reference(instrValue.value, EffectKind.Read);
+        env.reference(instrValue.value, Effect.Read);
         break;
       }
       case "OtherStatement": {
@@ -573,13 +550,13 @@ function inferBlock(env: Environment, block: BasicBlock) {
       }
       case "JsxExpression": {
         valueKind = ValueKind.Frozen;
-        env.reference(instrValue.tag, EffectKind.Freeze);
+        env.reference(instrValue.tag, Effect.Freeze);
         for (const [_prop, value] of Object.entries(instrValue.props)) {
-          env.reference(value, EffectKind.Freeze);
+          env.reference(value, Effect.Freeze);
         }
         if (instrValue.children !== null) {
           for (const child of instrValue.children) {
-            env.reference(child, EffectKind.Freeze);
+            env.reference(child, Effect.Freeze);
           }
         }
         break;
@@ -590,10 +567,10 @@ function inferBlock(env: Environment, block: BasicBlock) {
         break;
       }
       case "Identifier": {
-        env.reference(instrValue, EffectKind.Read);
+        env.reference(instrValue, Effect.Read);
         const lvalue = instr.lvalue;
         if (lvalue !== null) {
-          lvalue.place.capability = Capability.Mutable;
+          lvalue.place.effect = Effect.Mutate;
           if (
             lvalue.place.memberPath === null &&
             instrValue.memberPath === null
@@ -606,10 +583,10 @@ function inferBlock(env: Environment, block: BasicBlock) {
             env.define(lvalue.place, instrValue);
           } else if (instrValue.memberPath === null) {
             // no-op: `a.b.c = d`
-            env.reference(lvalue.place, EffectKind.Write);
+            env.reference(lvalue.place, Effect.Mutate);
           } else {
             // no-op: `a.b.c = d.e.f`
-            env.reference(lvalue.place, EffectKind.Write);
+            env.reference(lvalue.place, Effect.Mutate);
           }
         }
         continue;
@@ -623,30 +600,30 @@ function inferBlock(env: Environment, block: BasicBlock) {
       if (instr.lvalue.place.memberPath === null) {
         env.define(instr.lvalue.place, instrValue);
       } else {
-        env.reference(instr.lvalue.place, EffectKind.Write);
+        env.reference(instr.lvalue.place, Effect.Mutate);
       }
-      instr.lvalue.place.capability = Capability.Mutable;
+      instr.lvalue.place.effect = Effect.Mutate;
     }
   }
   switch (block.terminal.kind) {
     case "throw": {
-      env.reference(block.terminal.value, EffectKind.Freeze);
+      env.reference(block.terminal.value, Effect.Freeze);
       break;
     }
     case "return": {
       if (block.terminal.value !== null) {
-        env.reference(block.terminal.value, EffectKind.Freeze);
+        env.reference(block.terminal.value, Effect.Freeze);
       }
       break;
     }
     case "if": {
-      env.reference(block.terminal.test, EffectKind.Read);
+      env.reference(block.terminal.test, Effect.Read);
       break;
     }
     case "switch": {
       for (const case_ of block.terminal.cases) {
         if (case_.test !== null) {
-          env.reference(case_.test, EffectKind.Read);
+          env.reference(case_.test, Effect.Read);
         }
       }
       break;
@@ -663,18 +640,12 @@ function inferBlock(env: Environment, block: BasicBlock) {
   }
 }
 
-const GLOBALS: Map<string, ValueKind> = new Map([
-  ["Map", ValueKind.Mutable],
-  ["Set", ValueKind.Mutable],
-  ["Math.max", ValueKind.Immutable],
-]);
-
 const HOOKS: Map<string, Hook> = new Map([
   [
     "useState",
     {
       kind: "State",
-      effectKind: EffectKind.Freeze,
+      effectKind: Effect.Freeze,
       valueKind: ValueKind.Frozen,
     },
   ],
@@ -682,21 +653,21 @@ const HOOKS: Map<string, Hook> = new Map([
     "useRef",
     {
       kind: "Ref",
-      effectKind: EffectKind.Read,
+      effectKind: Effect.Read,
       valueKind: ValueKind.Mutable,
     },
   ],
 ]);
 
 type HookKind = { kind: "State" } | { kind: "Ref" } | { kind: "Custom" };
-type Hook = HookKind & { effectKind: EffectKind; valueKind: ValueKind };
+type Hook = HookKind & { effectKind: Effect; valueKind: ValueKind };
 
 function parseHookCall(place: Place): Hook | null {
   if (place.memberPath !== null) {
     // Hook calls must be statically resolved
     return null;
   }
-  const name = place.value.name;
+  const name = place.identifier.name;
   if (name === null || !name.match(/^_?use/)) {
     return null;
   }
@@ -706,7 +677,7 @@ function parseHookCall(place: Place): Hook | null {
   }
   return {
     kind: "Custom",
-    effectKind: EffectKind.Freeze,
+    effectKind: Effect.Freeze,
     valueKind: ValueKind.Frozen,
   };
 }

@@ -36,36 +36,36 @@ function Component(props) {
 
 ```
 bb0:
-  Let mutable x$2 = undefined
-  If (readonly props$1.cond) then:bb2 else:bb10
+  Let mutate x$2 = undefined
+  If (read props$1.cond) then:bb2 else:bb10
 bb2:
-  Const mutable $3 = 2
-  Const mutable $4 = 1
-  Const mutable $5 = 0
+  Const mutate $3 = 2
+  Const mutate $4 = 1
+  Const mutate $5 = 0
   Switch (<unknown> props$1.test)
-    Case readonly $5: bb8
-    Case readonly $4: bb6
-    Case readonly $3: bb4
+    Case read $5: bb8
+    Case read $4: bb6
+    Case read $3: bb4
     Default: bb4
 bb8:
-  Reassign mutable x$2 = readonly props$1.v0
+  Reassign mutate x$2 = read props$1.v0
   Goto bb1
 bb6:
-  Reassign mutable x$2 = readonly props$1.v1
+  Reassign mutate x$2 = read props$1.v1
   Goto bb1
 bb4:
-  Reassign mutable x$2 = readonly props$1.v2
+  Reassign mutate x$2 = read props$1.v2
   Goto bb1
 bb10:
-  If (readonly props$1.cond2) then:bb12 else:bb13
+  If (read props$1.cond2) then:bb12 else:bb13
 bb12:
-  Reassign mutable x$2 = readonly props$1.b
+  Reassign mutate x$2 = read props$1.b
   Goto bb1
 bb13:
-  Reassign mutable x$2 = readonly props$1.c
+  Reassign mutate x$2 = read props$1.c
   Goto bb1
 bb1:
-  readonly x$2
+  read x$2
   Return
 ```
 

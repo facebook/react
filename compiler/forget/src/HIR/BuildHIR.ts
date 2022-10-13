@@ -10,7 +10,7 @@ import * as t from "@babel/types";
 import { assertExhaustive } from "../Common/utils";
 import { invariant } from "../CompilerError";
 import {
-  Capability,
+  Effect,
   HIRFunction,
   IfTerminal,
   InstructionKind,
@@ -60,9 +60,9 @@ export function lower(func: NodePath<t.Function>): HIRFunction {
     const identifier = builder.resolveIdentifier(param);
     const place: Place = {
       kind: "Identifier",
-      value: identifier,
+      identifier,
       memberPath: null,
-      capability: Capability.Unknown,
+      effect: Effect.Unknown,
       path: null as any,
     };
     params.push(place);
@@ -843,9 +843,9 @@ function lowerExpression(
       );
       const place: Place = {
         kind: "Identifier",
-        value: object.value,
+        identifier: object.identifier,
         memberPath: [...(object.memberPath ?? []), property.node.name],
-        capability: Capability.Unknown,
+        effect: Effect.Unknown,
         path: exprPath,
       };
       return place;
@@ -907,9 +907,9 @@ function lowerConditional(
 ): Place {
   const place: Place = {
     kind: "Identifier",
-    value: builder.makeTemporary(),
+    identifier: builder.makeTemporary(),
     memberPath: null,
-    capability: Capability.Readonly,
+    effect: Effect.Read,
     path: null as any, // TODO
   };
   //  Block for code following the if
@@ -970,18 +970,18 @@ function lowerJsxElementName(
     const identifier = builder.resolveIdentifier(binding);
     const place: Place = {
       kind: "Identifier",
-      value: identifier,
+      identifier: identifier,
       memberPath: null,
-      capability: Capability.Unknown,
+      effect: Effect.Unknown,
       path: exprPath,
     };
     return place;
   } else {
     const place: Place = {
       kind: "Identifier",
-      value: builder.makeTemporary(),
+      identifier: builder.makeTemporary(),
       memberPath: null,
-      capability: Capability.Unknown,
+      effect: Effect.Unknown,
       path: exprPath,
     };
     builder.push({
@@ -1012,9 +1012,9 @@ function lowerJsxElement(
   } else if (exprPath.isJSXText()) {
     const place: Place = {
       kind: "Identifier",
-      value: builder.makeTemporary(),
+      identifier: builder.makeTemporary(),
       memberPath: null,
-      capability: Capability.Unknown,
+      effect: Effect.Unknown,
       path: exprPath,
     };
     builder.push({
@@ -1026,9 +1026,9 @@ function lowerJsxElement(
   } else {
     const place: Place = {
       kind: "Identifier",
-      value: builder.makeTemporary(),
+      identifier: builder.makeTemporary(),
       memberPath: null,
-      capability: Capability.Unknown,
+      effect: Effect.Unknown,
       path: exprPath,
     };
     builder.push({
@@ -1050,9 +1050,9 @@ function lowerExpressionToPlace(
   }
   const place: Place = {
     kind: "Identifier",
-    value: builder.makeTemporary(),
+    identifier: builder.makeTemporary(),
     memberPath: null,
-    capability: Capability.Unknown,
+    effect: Effect.Unknown,
     path: exprPath,
   };
   builder.push({
@@ -1080,9 +1080,9 @@ function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
       const identifier = builder.resolveIdentifier(binding);
       const place: Place = {
         kind: "Identifier",
-        value: identifier,
+        identifier: identifier,
         memberPath: null,
-        capability: Capability.Unknown,
+        effect: Effect.Unknown,
         path: exprPath,
       };
       return place;
@@ -1099,9 +1099,9 @@ function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
       );
       const place: Place = {
         kind: "Identifier",
-        value: object.value,
+        identifier: object.identifier,
         memberPath: [...(object.memberPath ?? []), propertyPath.node.name],
-        capability: Capability.Unknown,
+        effect: Effect.Unknown,
         path: exprPath,
       };
       return place;

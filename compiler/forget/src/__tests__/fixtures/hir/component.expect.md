@@ -35,45 +35,45 @@ function Component(props) {
 
 ```
 bb0:
-  Const mutable items$2 = readonly props$1.items
-  Const mutable maxItems$3 = readonly props$1.maxItems
-  Const mutable renderedItems$4 = Array []
-  Const mutable seen$5 = New mutable Set$6()
-  Const mutable $9 = 0
-  Const mutable max$7 = Call mutable Math$8.max(readonly $9, readonly maxItems$3)
+  Const mutate items$2 = read props$1.items
+  Const mutate maxItems$3 = read props$1.maxItems
+  Const mutate renderedItems$4 = Array []
+  Const mutate seen$5 = New mutate Set$6()
+  Const mutate $9 = 0
+  Const mutate max$7 = Call mutate Math$8.max(read $9, read maxItems$3)
   Goto bb1
 bb1:
-  If (readonly items$2) then:bb3 else:bb2
+  If (read items$2) then:bb3 else:bb2
 bb3:
-  Const mutable $11 = null
-  Const mutable $12 = Binary readonly item$10 == readonly $11
-  If (readonly $12) then:bb8 else:bb9
+  Const mutate $11 = null
+  Const mutate $12 = Binary read item$10 == read $11
+  If (read $12) then:bb8 else:bb9
 bb8:
-  Const mutable $13 = readonly $12
+  Const mutate $13 = read $12
   Goto bb7
 bb9:
-  Const mutable $13 = Call mutable seen$5.has(mutable item$10)
+  Const mutate $13 = Call mutate seen$5.has(mutate item$10)
   Goto bb7
 bb7:
-  If (readonly $13) then:bb1 else:bb4
+  If (read $13) then:bb1 else:bb4
 bb4:
-  Call mutable seen$5.add(mutable item$10)
-  Const mutable $14 = "div"
-  Const mutable $15 = JSX <readonly $14>{readonly item$10}</readonly $14>
-  Call mutable renderedItems$4.push(readonly $15)
-  Const mutable $16 = Binary readonly renderedItems$4.length >= readonly max$7
-  If (readonly $16) then:bb2 else:bb1
+  Call mutate seen$5.add(mutate item$10)
+  Const mutate $14 = "div"
+  Const mutate $15 = JSX <read $14>{read item$10}</read $14>
+  Call mutate renderedItems$4.push(read $15)
+  Const mutate $16 = Binary read renderedItems$4.length >= read max$7
+  If (read $16) then:bb2 else:bb1
 bb2:
-  Const mutable count$17 = readonly renderedItems$4.length
-  Const mutable $18 = "div"
-  Const mutable $19 = "\n      "
-  Const mutable $20 = "h1"
-  Const mutable $21 = " Items"
-  Const mutable $22 = JSX <readonly $20>{freeze count$17}{readonly $21}</readonly $20>
-  Const mutable $23 = "\n      "
-  Const mutable $24 = "\n    "
-  Const mutable $25 = JSX <readonly $18>{readonly $19}{readonly $22}{readonly $23}{freeze renderedItems$4}{readonly $24}</readonly $18>
-  Return readonly $25
+  Const mutate count$17 = read renderedItems$4.length
+  Const mutate $18 = "div"
+  Const mutate $19 = "\n      "
+  Const mutate $20 = "h1"
+  Const mutate $21 = " Items"
+  Const mutate $22 = JSX <read $20>{freeze count$17}{read $21}</read $20>
+  Const mutate $23 = "\n      "
+  Const mutate $24 = "\n    "
+  Const mutate $25 = JSX <read $18>{read $19}{read $22}{read $23}{freeze renderedItems$4}{read $24}</read $18>
+  Return read $25
 ```
 
 ## Code

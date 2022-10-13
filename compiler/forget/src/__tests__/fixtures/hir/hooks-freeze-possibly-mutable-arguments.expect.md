@@ -26,21 +26,21 @@ function call(x) {}
 
 ```
 bb0:
-  Const mutable cond$2 = readonly props$1.cond
-  Const mutable x$3 = readonly props$1.x
-  Let mutable a$4 = undefined
-  If (readonly cond$2) then:bb2 else:bb3
+  Const mutate cond$2 = read props$1.cond
+  Const mutate x$3 = read props$1.x
+  Let mutate a$4 = undefined
+  If (read cond$2) then:bb2 else:bb3
 bb2:
-  Reassign mutable a$4 = readonly x$3
+  Reassign mutate a$4 = read x$3
   Goto bb1
 bb3:
-  Reassign mutable a$4 = Array []
+  Reassign mutate a$4 = Array []
   Goto bb1
 bb1:
-  Call readonly useFreeze$5(freeze a$4)
-  Call readonly useFreeze$5(readonly a$4)
-  Call mutable call$6(readonly a$4)
-  Return readonly a$4
+  Call read useFreeze$5(freeze a$4)
+  Call read useFreeze$5(read a$4)
+  Call mutate call$6(read a$4)
+  Return read a$4
 ```
 
 ## Code

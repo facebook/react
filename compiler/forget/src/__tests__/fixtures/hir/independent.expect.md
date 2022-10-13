@@ -28,10 +28,10 @@ function Foo() {}
 
 ```
 bb0:
-  Const mutable a$2 = Call mutable compute$3(readonly props$1.a)
-  Const mutable b$4 = Call mutable compute$3(readonly props$1.b)
-  Const mutable $6 = JSX <readonly Foo$5 a={freeze a$2} b={freeze b$4} ></readonly Foo$5>
-  Return readonly $6
+  Const mutate a$2 = Call mutate compute$3(read props$1.a)
+  Const mutate b$4 = Call mutate compute$3(read props$1.b)
+  Const mutate $6 = JSX <read Foo$5 a={freeze a$2} b={freeze b$4} ></read Foo$5>
+  Return read $6
 ```
 
 ## Code

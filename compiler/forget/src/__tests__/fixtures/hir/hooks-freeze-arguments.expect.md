@@ -19,11 +19,11 @@ function call(x) {}
 
 ```
 bb0:
-  Const mutable a$1 = Array []
-  Call readonly useFreeze$2(freeze a$1)
-  Call readonly useFreeze$2(readonly a$1)
-  Call mutable call$3(readonly a$1)
-  Return readonly a$1
+  Const mutate a$1 = Array []
+  Call read useFreeze$2(freeze a$1)
+  Call read useFreeze$2(read a$1)
+  Call mutate call$3(read a$1)
+  Return read a$1
 ```
 
 ## Code

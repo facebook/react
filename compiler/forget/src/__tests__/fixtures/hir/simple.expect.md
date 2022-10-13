@@ -15,15 +15,15 @@ function foo(x, y) {
 
 ```
 bb0:
-  If (readonly x$1) then:bb2 else:bb1
+  If (read x$1) then:bb2 else:bb1
 bb2:
-  Const mutable $3 = false
-  Const mutable $4 = Call readonly foo$0(readonly $3, readonly y$2)
+  Const mutate $3 = false
+  Const mutate $4 = Call read foo$0(read $3, read y$2)
   Return freeze $4
 bb1:
-  Const mutable $5 = 10
-  Const mutable $6 = Binary readonly y$2 * readonly $5
-  Const mutable $7 = Array [readonly $6]
+  Const mutate $5 = 10
+  Const mutate $6 = Binary read y$2 * read $5
+  Const mutate $7 = Array [read $6]
   Return freeze $7
 ```
 

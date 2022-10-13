@@ -97,16 +97,16 @@ function Foo$0() {
 
 ```
 bb0:
-  Const mutable a$2 = Call mutable compute$3(readonly props$1.a)
-  Const mutable b$4 = Call mutable compute$3(readonly props$1.b)
-  If (readonly props$1.c) then:bb2 else:bb1
+  Const mutate a$2 = Call mutate compute$3(read props$1.a)
+  Const mutate b$4 = Call mutate compute$3(read props$1.b)
+  If (read props$1.c) then:bb2 else:bb1
 bb2:
-  Call mutable mutate$5(mutable a$2)
-  Call mutable mutate$5(mutable b$4)
+  Call mutate mutate$5(mutate a$2)
+  Call mutate mutate$5(mutate b$4)
   Goto bb1
 bb1:
-  Const mutable $7 = JSX <readonly Foo$6 a={freeze a$2} b={freeze b$4} ></readonly Foo$6>
-  Return readonly $7
+  Const mutate $7 = JSX <read Foo$6 a={freeze a$2} b={freeze b$4} ></read Foo$6>
+  Return read $7
 ```
 
 ## Code

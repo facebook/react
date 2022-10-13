@@ -73,34 +73,34 @@ function cond$0(x$1) {
 
 ```
 bb0:
-  Let mutable a$2 = Object {  }
-  Let mutable b$3 = Object {  }
-  Let mutable c$4 = Object {  }
-  Let mutable d$5 = Object {  }
+  Let mutate a$2 = Object {  }
+  Let mutate b$3 = Object {  }
+  Let mutate c$4 = Object {  }
+  Let mutate d$5 = Object {  }
   Goto bb1
 bb1:
-  Const mutable $10 = true
-  If (readonly $10) then:bb3 else:bb2
+  Const mutate $10 = true
+  If (read $10) then:bb3 else:bb2
 bb3:
-  Let mutable z$6 = readonly a$2
-  Reassign mutable a$2 = readonly b$3
-  Reassign mutable b$3 = readonly c$4
-  Reassign mutable c$4 = readonly d$5
-  Reassign mutable d$5 = readonly z$6
-  Call mutable mutate$7(mutable a$2, mutable b$3)
-  Const mutable $9 = Call mutable cond$8(mutable a$2)
-  If (readonly $9) then:bb2 else:bb1
+  Let mutate z$6 = read a$2
+  Reassign mutate a$2 = read b$3
+  Reassign mutate b$3 = read c$4
+  Reassign mutate c$4 = read d$5
+  Reassign mutate d$5 = read z$6
+  Call mutate mutate$7(mutate a$2, mutate b$3)
+  Const mutate $9 = Call mutate cond$8(mutate a$2)
+  If (read $9) then:bb2 else:bb1
 bb2:
-  If (readonly a$2) then:bb7 else:bb7
+  If (read a$2) then:bb7 else:bb7
 bb7:
-  If (readonly b$3) then:bb9 else:bb9
+  If (read b$3) then:bb9 else:bb9
 bb9:
-  If (readonly c$4) then:bb11 else:bb11
+  If (read c$4) then:bb11 else:bb11
 bb11:
-  If (readonly d$5) then:bb13 else:bb13
+  If (read d$5) then:bb13 else:bb13
 bb13:
-  Const mutable $11 = null
-  Call mutable mutate$7(mutable d$5, readonly $11)
+  Const mutate $11 = null
+  Call mutate mutate$7(mutate d$5, read $11)
   Return
 ```
 

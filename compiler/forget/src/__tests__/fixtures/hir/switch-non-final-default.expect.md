@@ -32,28 +32,28 @@ function Component(props) {
 
 ```
 bb0:
-  Let mutable x$2 = Array []
-  Let mutable y$3 = undefined
-  Const mutable $4 = false
-  Const mutable $5 = true
-  Const mutable $6 = 1
+  Let mutate x$2 = Array []
+  Let mutate y$3 = undefined
+  Const mutate $4 = false
+  Const mutate $5 = true
+  Const mutate $6 = 1
   Switch (<unknown> props$1.p0)
-    Case readonly $6: bb1
-    Case readonly $5: bb6
+    Case read $6: bb1
+    Case read $5: bb6
     Default: bb1
-    Case readonly $4: bb2
+    Case read $4: bb2
 bb6:
-  Call mutable x$2.push(readonly props$1.p2)
-  Reassign mutable y$3 = Array []
+  Call mutate x$2.push(read props$1.p2)
+  Reassign mutate y$3 = Array []
   Goto bb1
 bb2:
-  Reassign mutable y$3 = readonly x$2
+  Reassign mutate y$3 = read x$2
   Goto bb1
 bb1:
-  Const mutable child$7 = JSX <readonly Component$0 data={freeze x$2} ></readonly Component$0>
-  Call readonly y$3.push(readonly props$1.p4)
-  Const mutable $8 = JSX <readonly Component$0 data={freeze y$3} >{readonly child$7}</readonly Component$0>
-  Return readonly $8
+  Const mutate child$7 = JSX <read Component$0 data={freeze x$2} ></read Component$0>
+  Call read y$3.push(read props$1.p4)
+  Const mutate $8 = JSX <read Component$0 data={freeze y$3} >{read child$7}</read Component$0>
+  Return read $8
 ```
 
 ## Code

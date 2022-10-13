@@ -18,10 +18,10 @@ function foo(x) {}
 
 ```
 bb0:
-  Const mutable a$1 = Array []
-  Const mutable b$2 = readonly a$1
-  Call readonly useFreeze$3(freeze a$1)
-  Call mutable foo$4(readonly b$2)
+  Const mutate a$1 = Array []
+  Const mutate b$2 = read a$1
+  Call read useFreeze$3(freeze a$1)
+  Call mutate foo$4(read b$2)
   Return
 ```
 

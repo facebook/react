@@ -231,7 +231,13 @@ export function printLValue(lval: LValue): string {
 }
 
 export function printPlace(place: Place): string {
-  const items = [place.capability, " ", place.value.name, "$", place.value.id];
+  const items = [
+    place.effect,
+    " ",
+    place.identifier.name,
+    "$",
+    place.identifier.id,
+  ];
   if (place.memberPath != null) {
     for (const path of place.memberPath) {
       items.push(".");

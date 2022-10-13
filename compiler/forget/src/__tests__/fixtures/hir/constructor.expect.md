@@ -34,15 +34,15 @@ function Foo$0() {
 
 ```
 bb0:
-  Const mutable a$2 = Array []
-  Const mutable b$3 = Object {  }
-  New mutable Foo$4(mutable a$2, mutable b$3)
-  Const mutable $6 = "div"
-  Let mutable _$5 = JSX <readonly $6 a={freeze a$2} ></readonly $6>
-  New mutable Foo$4(mutable b$3)
-  Const mutable $7 = "div"
-  Const mutable $8 = JSX <readonly $7 a={readonly a$2} b={freeze b$3} ></readonly $7>
-  Return readonly $8
+  Const mutate a$2 = Array []
+  Const mutate b$3 = Object {  }
+  New mutate Foo$4(mutate a$2, mutate b$3)
+  Const mutate $6 = "div"
+  Let mutate _$5 = JSX <read $6 a={freeze a$2} ></read $6>
+  New mutate Foo$4(mutate b$3)
+  Const mutate $7 = "div"
+  Const mutate $8 = JSX <read $7 a={read a$2} b={freeze b$3} ></read $7>
+  Return read $8
 ```
 
 ## Code
