@@ -64,7 +64,7 @@ export default function analyzeScopes(fn: HIRFunction): ReactFunction {
     inputs: new Set(
       fn.params.map((param) => ({
         kind: "Identifier",
-        value: param,
+        value: param.value,
         memberPath: null,
         capability: Capability.Freeze,
         path: null as any,

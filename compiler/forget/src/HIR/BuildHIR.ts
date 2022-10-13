@@ -12,7 +12,6 @@ import { invariant } from "../CompilerError";
 import {
   Capability,
   HIRFunction,
-  Identifier,
   IfTerminal,
   InstructionKind,
   InstructionValue,
@@ -55,10 +54,18 @@ export function lower(func: NodePath<t.Function>): HIRFunction {
       ? builder.resolveIdentifier(func.node.id)
       : null;
 
-  const params: Array<Identifier> = [];
+  const params: Array<Place> = [];
   func.node.params.forEach((param) => {
     todoInvariant(t.isIdentifier(param), "todo: support non-identifier params");
-    params.push(builder.resolveIdentifier(param));
+    const identifier = builder.resolveIdentifier(param);
+    const place: Place = {
+      kind: "Identifier",
+      value: identifier,
+      memberPath: null,
+      capability: Capability.Unknown,
+      path: null as any,
+    };
+    params.push(place);
   });
 
   const body = func.get("body");

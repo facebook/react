@@ -50,7 +50,7 @@ export default function codegen(fn: HIRFunction): t.Function {
     t.isFunctionDeclaration(node),
     "todo: handle other than function declaration"
   );
-  const params = fn.params.map((param) => convertIdentifier(param));
+  const params = fn.params.map((param) => convertIdentifier(param.value));
   return t.functionDeclaration(
     fn.id !== null ? convertIdentifier(fn.id) : null,
     params,

@@ -86,7 +86,7 @@ export default function inferReferenceCapability(fn: HIRFunction) {
     const place: Place = {
       kind: "Identifier",
       memberPath: null,
-      value: param,
+      value: param.value,
       path: null as any, // TODO
       capability: Capability.Freeze,
     };

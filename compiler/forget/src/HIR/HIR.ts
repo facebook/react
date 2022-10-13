@@ -39,7 +39,7 @@ import { invariant } from "../CompilerError";
 export type ReactFunction = {
   path: NodePath<t.Function>;
   id: Identifier | null;
-  params: Array<Identifier>;
+  params: Array<Place>;
   returnScope: ScopeId;
   scopes: Map<ScopeId, ReactiveScope>;
 };
@@ -61,7 +61,7 @@ export type ReactiveScope = {
 export type HIRFunction = {
   path: NodePath<t.Function>;
   id: Identifier | null;
-  params: Array<Identifier>;
+  params: Array<Place>;
   body: HIR;
 };
 
