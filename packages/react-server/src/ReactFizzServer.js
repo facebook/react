@@ -97,11 +97,12 @@ import {
   finishHooks,
   checkDidRenderIdHook,
   resetHooksState,
-  Dispatcher,
+  HooksDispatcher,
   currentResponseState,
   setCurrentResponseState,
   getThenableStateAfterSuspending,
 } from './ReactFizzHooks';
+import {DefaultCacheDispatcher} from './ReactFizzCache';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
 import {emptyTreeContext, pushTreeContext} from './ReactFizzTreeContext';
 
@@ -132,6 +133,7 @@ import {
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
   enableFloat,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -140,6 +142,7 @@ import isArray from 'shared/isArray';
 import {trackSuspendedWakeable} from './ReactFizzWakeable';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
 type LegacyContext = {
@@ -1901,7 +1904,13 @@ export function performWork(request: Request): void {
   }
   const prevContext = getActiveContext();
   const prevDispatcher = ReactCurrentDispatcher.current;
-  ReactCurrentDispatcher.current = Dispatcher;
+  ReactCurrentDispatcher.current = HooksDispatcher;
+  let prevCacheDispatcher;
+  if (enableCache) {
+    prevCacheDispatcher = ReactCurrentCache.current;
+    ReactCurrentCache.current = DefaultCacheDispatcher;
+  }
+
   const previousHostDispatcher = prepareToRender(request.resources);
   let prevGetCurrentStackImpl;
   if (__DEV__) {
@@ -1927,12 +1936,15 @@ export function performWork(request: Request): void {
   } finally {
     setCurrentResponseState(prevResponseState);
     ReactCurrentDispatcher.current = prevDispatcher;
+    if (enableCache) {
+      ReactCurrentCache.current = prevCacheDispatcher;
+    }
     cleanupAfterRender(previousHostDispatcher);
 
     if (__DEV__) {
       ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
     }
-    if (prevDispatcher === Dispatcher) {
+    if (prevDispatcher === HooksDispatcher) {
       // This means that we were in a reentrant work loop. This could happen
       // in a renderer that supports synchronous work like renderToString,
       // when it's called from within another renderer.

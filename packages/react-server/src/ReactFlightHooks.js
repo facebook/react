@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
+import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Request} from './ReactFlightServer';
 import type {ReactServerContext, Thenable, Usable} from 'shared/ReactTypes';
 import type {ThenableState} from './ReactFlightWakeable';
@@ -52,7 +52,7 @@ function readContext<T>(context: ReactServerContext<T>): T {
         'Only createServerContext is supported in Server Components.',
       );
     }
-    if (currentCache === null) {
+    if (currentRequest === null) {
       console.error(
         'Context can only be read while React is rendering. ' +
           'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
@@ -64,7 +64,7 @@ function readContext<T>(context: ReactServerContext<T>): T {
   return readContextImpl(context);
 }
 
-export const Dispatcher: DispatcherType = {
+export const HooksDispatcher: Dispatcher = {
   useMemo<T>(nextCreate: () => T): T {
     return nextCreate();
   },
@@ -74,20 +74,6 @@ export const Dispatcher: DispatcherType = {
   useDebugValue(): void {},
   useDeferredValue: (unsupportedHook: any),
   useTransition: (unsupportedHook: any),
-  getCacheForType<T>(resourceType: () => T): T {
-    if (!currentCache) {
-      throw new Error('Reading the cache is only supported while rendering.');
-    }
-
-    let entry: T | void = (currentCache.get(resourceType): any);
-    if (entry === undefined) {
-      entry = resourceType();
-      // TODO: Warn if undefined?
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
-      currentCache.set(resourceType, entry);
-    }
-    return entry;
-  },
   readContext,
   useContext: readContext,
   useReducer: (unsupportedHook: any),
@@ -114,24 +100,9 @@ function unsupportedHook(): void {
 }
 
 function unsupportedRefresh(): void {
-  if (!currentCache) {
-    throw new Error(
-      'Refreshing the cache is not supported in Server Components.',
-    );
-  }
-}
-
-let currentCache: Map<Function, mixed> | null = null;
-
-export function setCurrentCache(
-  cache: Map<Function, mixed> | null,
-): Map<Function, mixed> | null {
-  currentCache = cache;
-  return currentCache;
-}
-
-export function getCurrentCache(): Map<Function, mixed> | null {
-  return currentCache;
+  throw new Error(
+    'Refreshing the cache is not supported in Server Components.',
+  );
 }
 
 function useId(): string {

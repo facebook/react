@@ -8,7 +8,7 @@
  */
 
 import type {
-  Dispatcher as DispatcherType,
+  Dispatcher,
   EventFunctionWrapper,
 } from 'react-reconciler/src/ReactInternalTypes';
 
@@ -272,12 +272,6 @@ export function resetHooksState(): void {
   numberOfReRenders = 0;
   renderPhaseUpdates = null;
   workInProgressHook = null;
-}
-
-function getCacheForType<T>(resourceType: () => T): T {
-  // TODO: This should silently mark this as client rendered since it's not necessarily
-  // considered an error. It needs to work for things like Flight though.
-  throw new Error('Not implemented.');
 }
 
 function readContext<T>(context: ReactContext<T>): T {
@@ -677,7 +671,7 @@ function useMemoCache(size: number): Array<any> {
 
 function noop(): void {}
 
-export const Dispatcher: DispatcherType = {
+export const HooksDispatcher: Dispatcher = {
   readContext,
   useContext,
   useMemo,
@@ -702,17 +696,16 @@ export const Dispatcher: DispatcherType = {
 };
 
 if (enableCache) {
-  Dispatcher.getCacheForType = getCacheForType;
-  Dispatcher.useCacheRefresh = useCacheRefresh;
+  HooksDispatcher.useCacheRefresh = useCacheRefresh;
 }
 if (enableUseEventHook) {
-  Dispatcher.useEvent = useEvent;
+  HooksDispatcher.useEvent = useEvent;
 }
 if (enableUseMemoCacheHook) {
-  Dispatcher.useMemoCache = useMemoCache;
+  HooksDispatcher.useMemoCache = useMemoCache;
 }
 if (enableUseHook) {
-  Dispatcher.use = use;
+  HooksDispatcher.use = use;
 }
 
 export let currentResponseState: null | ResponseState = (null: any);
