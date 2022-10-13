@@ -36,13 +36,6 @@ const __EXPERIMENTAL__ =
 // algorithm because 1) require.resolve doesn't work with ESM modules, and 2)
 // the behavior is easier to predict.
 const forks = Object.freeze({
-  // NOTE: This is hard-coded to the main entry point of the (third-party)
-  // react-shallow-renderer package.
-  './node_modules/react-shallow-renderer/index.js': () => {
-    // Use ESM build of `react-shallow-renderer`.
-    return './node_modules/react-shallow-renderer/esm/index.js';
-  },
-
   // Without this fork, importing `shared/ReactSharedInternals` inside
   // the `react` package itself would not work due to a cyclical dependency.
   './packages/shared/ReactSharedInternals.js': (
