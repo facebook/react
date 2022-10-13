@@ -14,3 +14,4 @@ export { default as DumpLIR } from "./DumpLIR";
 export { default as JSGen } from "./JSGen";
 export { default as LIRGen } from "./LIRGen";
 export { default as MemoCacheAlloc } from "./MemoCacheAlloc";
+export { default as SanityCheck } from "./SanityCheck";

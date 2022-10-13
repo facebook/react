@@ -53,6 +53,7 @@ export function createCompilerDriver(
       passManager.addPass(BE.LIRGen);
       passManager.addPass(BE.MemoCacheAlloc);
       passManager.addPass(BE.DumpLIR);
+      passManager.addPass(BE.SanityCheck);
 
       // JS Generation.
       passManager.addPass(BE.JSGen);
