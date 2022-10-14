@@ -11,7 +11,10 @@ import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Request} from './ReactFlightServer';
 import type {ReactServerContext, Thenable, Usable} from 'shared/ReactTypes';
 import type {ThenableState} from './ReactFlightWakeable';
-import {REACT_SERVER_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_SERVER_CONTEXT_TYPE,
+  REACT_MEMO_CACHE_SENTINEL,
+} from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
 import {enableUseHook} from 'shared/ReactFeatureFlags';
 import {
@@ -90,7 +93,11 @@ export const HooksDispatcher: Dispatcher = {
     return unsupportedRefresh;
   },
   useMemoCache(size: number): Array<any> {
-    return new Array(size);
+    const data = new Array(size);
+    for (let i = 0; i < size; i++) {
+      data[i] = REACT_MEMO_CACHE_SENTINEL;
+    }
+    return data;
   },
   use: enableUseHook ? use : (unsupportedHook: any),
 };

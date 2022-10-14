@@ -46,6 +46,7 @@ import {
 import {
   REACT_CONTEXT_TYPE,
   REACT_SERVER_CONTEXT_TYPE,
+  REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
 
 import {
@@ -845,8 +846,6 @@ function useMemoCache(size: number): Array<any> {
     memoCache = updateQueue.memoCache;
   }
   // Otherwise clone from the current fiber
-  // TODO: not sure how to access the current fiber here other than going through
-  // currentlyRenderingFiber.alternate
   if (memoCache == null) {
     const current: Fiber | null = currentlyRenderingFiber.alternate;
     if (current !== null) {
@@ -878,6 +877,9 @@ function useMemoCache(size: number): Array<any> {
   let data = memoCache.data[memoCache.index];
   if (data === undefined) {
     data = memoCache.data[memoCache.index] = new Array(size);
+    for (let i = 0; i < size; i++) {
+      data[i] = REACT_MEMO_CACHE_SENTINEL;
+    }
   } else if (data.length !== size) {
     // TODO: consider warning or throwing here
     if (__DEV__) {
