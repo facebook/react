@@ -20,7 +20,7 @@ import {
   REACT_SCOPE_TYPE,
   REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
-  REACT_USE_MEMO_CACHE_SENTINEL,
+  REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -140,7 +140,7 @@ export {
   REACT_CACHE_TYPE as unstable_Cache,
   use as experimental_use,
   useMemoCache as unstable_useMemoCache,
-  REACT_USE_MEMO_CACHE_SENTINEL as unstable_MemoCacheSentinel,
+  REACT_MEMO_CACHE_SENTINEL as unstable_MemoCacheSentinel,
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
   // enableTransitionTracing

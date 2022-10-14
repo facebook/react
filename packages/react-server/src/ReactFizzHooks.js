@@ -46,7 +46,7 @@ import is from 'shared/objectIs';
 import {
   REACT_SERVER_CONTEXT_TYPE,
   REACT_CONTEXT_TYPE,
-  REACT_USE_MEMO_CACHE_SENTINEL,
+  REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
 
 type BasicStateAction<S> = (S => S) | S;
@@ -669,7 +669,7 @@ function useCacheRefresh(): <T>(?() => T, ?T) => void {
 function useMemoCache(size: number): Array<any> {
   const data = new Array(size);
   for (let i = 0; i < size; i++) {
-    data[i] = REACT_USE_MEMO_CACHE_SENTINEL;
+    data[i] = REACT_MEMO_CACHE_SENTINEL;
   }
   return data;
 }

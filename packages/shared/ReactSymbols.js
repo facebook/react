@@ -45,7 +45,7 @@ export const REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED: symbol = Symbol.for(
   'react.default_value',
 );
 
-export const REACT_USE_MEMO_CACHE_SENTINEL: symbol = Symbol.for(
+export const REACT_MEMO_CACHE_SENTINEL: symbol = Symbol.for(
   'react.use_memo_cache_sentinel',
 );
 

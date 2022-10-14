@@ -13,7 +13,7 @@ import type {ReactServerContext, Thenable, Usable} from 'shared/ReactTypes';
 import type {ThenableState} from './ReactFlightWakeable';
 import {
   REACT_SERVER_CONTEXT_TYPE,
-  REACT_USE_MEMO_CACHE_SENTINEL,
+  REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
 import {enableUseHook} from 'shared/ReactFeatureFlags';
@@ -95,7 +95,7 @@ export const HooksDispatcher: Dispatcher = {
   useMemoCache(size: number): Array<any> {
     const data = new Array(size);
     for (let i = 0; i < size; i++) {
-      data[i] = REACT_USE_MEMO_CACHE_SENTINEL;
+      data[i] = REACT_MEMO_CACHE_SENTINEL;
     }
     return data;
   },
