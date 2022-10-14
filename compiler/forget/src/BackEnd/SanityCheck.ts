@@ -7,14 +7,14 @@
 
 import type { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import type { CompilerContext } from "../CompilerContext";
-import { OutputKind } from "../CompilerOutputs";
-import * as LIR from "../LIR";
-import * as IR from "../IR";
-import { PassKind, PassName } from "../Pass";
 import { assertExhaustive } from "../Common/utils";
-import invariant from "invariant";
+import type { CompilerContext } from "../CompilerContext";
+import { invariant } from "../CompilerError";
+import { OutputKind } from "../CompilerOutputs";
+import * as IR from "../IR";
+import * as LIR from "../LIR";
 import { isReactiveBlock, isRenderBlock } from "../LIR";
+import { PassKind, PassName } from "../Pass";
 
 /**
  * An optional debug step when the output {@link OutputKind.IR} is enabled.

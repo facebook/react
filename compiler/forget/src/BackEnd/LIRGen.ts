@@ -7,9 +7,9 @@
 
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import invariant from "invariant";
 import { setEmpty, setEq, setIntersect, setSubset } from "../Common/utils";
 import type { CompilerContext } from "../CompilerContext";
+import { invariant } from "../CompilerError";
 import * as IR from "../IR";
 import * as LIR from "../LIR";
 import { PassKind, PassName } from "../Pass";
