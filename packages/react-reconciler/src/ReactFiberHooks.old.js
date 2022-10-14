@@ -46,7 +46,7 @@ import {
 import {
   REACT_CONTEXT_TYPE,
   REACT_SERVER_CONTEXT_TYPE,
-  REACT_USE_MEMO_CACHE_SENTINEL,
+  REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
 
 import {
@@ -878,7 +878,7 @@ function useMemoCache(size: number): Array<any> {
   if (data === undefined) {
     data = memoCache.data[memoCache.index] = new Array(size);
     for (let i = 0; i < size; i++) {
-      data[i] = REACT_USE_MEMO_CACHE_SENTINEL;
+      data[i] = REACT_MEMO_CACHE_SENTINEL;
     }
   } else if (data.length !== size) {
     // TODO: consider warning or throwing here
