@@ -4,6 +4,13 @@
 
 ---
 
+### 4.26.1
+October 13, 2022
+
+* [standalone] Stop highlighting events when a component is selected ([tyao1](https://github.com/tyao1) in [#25448](https://github.com/facebook/react/pull/25448))
+
+---
+
 ### 4.26.0
 September 16, 2022
 
