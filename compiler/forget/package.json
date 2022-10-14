@@ -12,7 +12,8 @@
     "bundle:meta": "scripts/bundle-meta.sh",
     "dev": "concurrently \"yarn:build --watch\" \"yarn:playground\"",
     "playground": "cd packages/playground && yarn && yarn dev",
-    "test": "yarn build && jest"
+    "test": "yarn build && jest",
+    "ts:analyze-trace": "scripts/ts-analyze-trace.sh"
   },
   "repository": {
     "type": "git",
