@@ -505,11 +505,12 @@ function matchHookCallRetVals(
 
   function matchVoid(_pattern: Void, lvals: NodePath<t.LVal>) {
     if (lvals.isPatternLike()) {
+      let init = lvals.parentPath.get("init");
       let callee = lvals.parentPath.get("init.callee");
       context.createDiagnostic({
         code: "E0007",
         path: lvals.parentPath,
-        context: { callee },
+        context: { callee, init },
       });
     }
   }

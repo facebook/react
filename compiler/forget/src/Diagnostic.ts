@@ -154,6 +154,7 @@ export type DiagnosticOpts =
     path: NodePath;
     context: {
       callee: NodePath | NodePath[];
+      init: NodePath | NodePath[];
     };
   }
   | { code: "E0008"; path: NodePath; context: { input: NodePath } }
@@ -224,7 +225,7 @@ function getDiagnosticMessage(opts: DiagnosticOpts): DiagnosticMessage {
         body: `\`${getSource(
           opts.context.callee
         )}\` does not have a return value.`,
-        suggestion: `Do \`${getSource(opts.path.get("init"))}\` instead.`,
+        suggestion: `Do \`${getSource(opts.context.init)}\` instead.`,
       };
     case "E0008":
       return {
