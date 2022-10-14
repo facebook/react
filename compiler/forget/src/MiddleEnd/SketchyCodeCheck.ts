@@ -23,7 +23,7 @@ export default {
   run,
 };
 
-const ALLOWED_CAPITALIZED_FUNCTIONS = new Set([
+const ALLOWED_CAPITALIZED_STDLIB_FUNCTIONS = new Set([
   "AggregateError",
   "Array",
   "BigInt",
@@ -58,7 +58,10 @@ export function run(
         const callee = path.get("callee");
         if (t.isIdentifier(callee.node)) {
           const name = callee.node.name;
-          if (ALLOWED_CAPITALIZED_FUNCTIONS.has(name)) {
+          if (
+            ALLOWED_CAPITALIZED_STDLIB_FUNCTIONS.has(name) ||
+            context.opts.allowedCapitalizedUserFunctions.has(name)
+          ) {
             return;
           }
           // Allow `Module().method()`;

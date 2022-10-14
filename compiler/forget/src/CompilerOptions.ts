@@ -6,15 +6,15 @@
  */
 
 import { PluginOptions } from "@babel/core";
+import { hasOwnProperty } from "./Common/utils";
 import {
-  createCompilerFlags,
   CompilerFlags,
+  createCompilerFlags,
   parseCompilerFlags,
 } from "./CompilerFlags";
 import { isOutputKind, OutputKind } from "./CompilerOutputs";
 import { Logger, noopLogger } from "./Logger";
 import { PassName } from "./Pass";
-import { hasOwnProperty } from "./Common/utils";
 
 export type CompilerOptions = {
   outputKinds: OutputKind[];
@@ -38,6 +38,11 @@ export type CompilerOptions = {
    * By default, logs are disabled.
    */
   logger: Logger;
+
+  /**
+   * Capitalized identifier names that can be used in call expressions.
+   */
+  allowedCapitalizedUserFunctions: Set<string>;
 };
 
 /**
@@ -98,6 +103,17 @@ export function parseCompilerOptions(
     }
     resOpts.logger = logger;
   }
+  if (hasOwnProperty(inputOpts, "allowedCapitalizedUserFunctions")) {
+    const allowedCapitalizedUserFunctions =
+      inputOpts.allowedCapitalizedUserFunctions;
+    if (
+      typeof allowedCapitalizedUserFunctions !== "object" ||
+      !(allowedCapitalizedUserFunctions instanceof Set)
+    ) {
+      throw `Invalid value for 'allowedCapitalizedUserFunctions': ${allowedCapitalizedUserFunctions}`;
+    }
+    resOpts.allowedCapitalizedUserFunctions = allowedCapitalizedUserFunctions;
+  }
   return resOpts;
 }
 
@@ -111,5 +127,6 @@ export function createCompilerOptions(): CompilerOptions {
     stopPass: PassName.JSGen,
     optIn: false,
     logger: noopLogger,
+    allowedCapitalizedUserFunctions: new Set(),
   };
 }

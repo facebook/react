@@ -116,6 +116,9 @@ describe("React Forget", () => {
           stopPass,
           flags,
           logger: createArrayLogger(logs),
+          allowedCapitalizedUserFunctions: new Set([
+            "ReactForgetSecretInternals",
+          ]),
         },
         compileOptions
       );
