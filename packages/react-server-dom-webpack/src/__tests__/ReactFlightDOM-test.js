@@ -350,25 +350,19 @@ describe('ReactFlightDOM', () => {
     }
 
     function makeDelayedText() {
-      let error, _resolve, _reject;
+      let _resolve, _reject;
       let promise = new Promise((resolve, reject) => {
         _resolve = () => {
           promise = null;
           resolve();
         };
         _reject = e => {
-          error = e;
           promise = null;
           reject(e);
         };
       });
-      function DelayedText({children}, data) {
-        if (promise) {
-          throw promise;
-        }
-        if (error) {
-          throw error;
-        }
+      async function DelayedText({children}) {
+        await promise;
         return <Text>{children}</Text>;
       }
       return [DelayedText, _resolve, _reject];
@@ -469,7 +463,9 @@ describe('ReactFlightDOM', () => {
       resolveName();
     });
     // Advance time enough to trigger a nested fallback.
-    jest.advanceTimersByTime(500);
+    await act(async () => {
+      jest.advanceTimersByTime(500);
+    });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
         '<p>(loading sidebar)</p>' +
@@ -482,7 +478,8 @@ describe('ReactFlightDOM', () => {
     const theError = new Error('Game over');
     // Let's *fail* loading games.
     await act(async () => {
-      rejectGames(theError);
+      await rejectGames(theError);
+      await 'the inner async function';
     });
     const expectedGamesValue = __DEV__
       ? '<p>Game over + a dev digest</p>'
@@ -499,7 +496,8 @@ describe('ReactFlightDOM', () => {
 
     // We can now show the sidebar.
     await act(async () => {
-      resolvePhotos();
+      await resolvePhotos();
+      await 'the inner async function';
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -510,7 +508,8 @@ describe('ReactFlightDOM', () => {
 
     // Show everything.
     await act(async () => {
-      resolvePosts();
+      await resolvePosts();
+      await 'the inner async function';
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
