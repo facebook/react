@@ -131,21 +131,6 @@ export function connectToDevTools(options: ?ConnectOptions) {
         }
       },
     });
-    bridge.addListener(
-      'inspectElement',
-      ({id, rendererID}: {id: number, rendererID: number, ...}) => {
-        const renderer = agent.rendererInterfaces[rendererID];
-        if (renderer != null) {
-          // Send event for RN to highlight.
-          const nodes: ?Array<HTMLElement> = renderer.findNativeNodesForFiberID(
-            id,
-          );
-          if (nodes != null && nodes[0] != null) {
-            agent.emit('showNativeHighlight', nodes[0]);
-          }
-        }
-      },
-    );
     // $FlowFixMe[incompatible-use] found when upgrading Flow
     bridge.addListener(
       'updateComponentFilters',
