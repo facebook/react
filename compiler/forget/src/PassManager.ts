@@ -38,10 +38,6 @@ export class PassManager {
         runPass(pass, this.program, this.context);
       } catch (e) {
         this.context.bailoutWithoutDiagnostic(`UnexpectedError: ${e}`);
-        // console log stacktrace in jest
-        if (global.__DEV__) {
-          console.error(e.stack);
-        }
         if (hasMutatedBabelAST) {
           // The AST has been mutated, we can't bail out anymore.
           throw e;
