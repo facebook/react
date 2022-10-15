@@ -33,6 +33,7 @@ const {
   RN_FB_DEV,
   RN_FB_PROD,
   RN_FB_PROFILING,
+  BROWSER_SCRIPT,
 } = Bundles.bundleTypes;
 
 function getPackageName(name) {
@@ -42,7 +43,7 @@ function getPackageName(name) {
   return name;
 }
 
-function getBundleOutputPath(bundleType, filename, packageName) {
+function getBundleOutputPath(bundle, bundleType, filename, packageName) {
   switch (bundleType) {
     case NODE_ES2015:
       return `build/node_modules/${packageName}/cjs/${filename}`;
@@ -88,6 +89,23 @@ function getBundleOutputPath(bundleType, filename, packageName) {
         default:
           throw new Error('Unknown RN package.');
       }
+    case BROWSER_SCRIPT: {
+      // Bundles that are served as browser scripts need to be able to be sent
+      // straight to the browser with any additional bundling. We shouldn't use
+      // a module to re-export. Depending on how they are served, they also may
+      // not go through package.json module resolution, so we shouldn't rely on
+      // that either. We should consider the output path as part of the public
+      // contract, and explicitly specify its location within the package's
+      // directory structure.
+      const outputPath = bundle.outputPath;
+      if (!outputPath) {
+        throw new Error(
+          'Bundles with type BROWSER_SCRIPT must specific an explicit ' +
+            'output path.'
+        );
+      }
+      return `build/node_modules/${packageName}/${outputPath}`;
+    }
     default:
       throw new Error('Unknown bundle type.');
   }

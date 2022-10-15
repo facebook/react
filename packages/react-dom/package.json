@@ -38,6 +38,7 @@
     "server-rendering-stub.js",
     "test-utils.js",
     "unstable_testing.js",
+    "unstable_server-external-runtime.js",
     "cjs/",
     "umd/"
   ],
