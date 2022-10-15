@@ -25,6 +25,7 @@ const bundleTypes = {
   RN_FB_DEV: 'RN_FB_DEV',
   RN_FB_PROD: 'RN_FB_PROD',
   RN_FB_PROFILING: 'RN_FB_PROFILING',
+  BROWSER_SCRIPT: 'BROWSER_SCRIPT',
 };
 
 const {
@@ -45,6 +46,7 @@ const {
   RN_FB_DEV,
   RN_FB_PROD,
   RN_FB_PROFILING,
+  BROWSER_SCRIPT,
 } = bundleTypes;
 
 const moduleTypes = {
@@ -349,6 +351,18 @@ const bundles = [
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'util', 'stream', 'react-dom'],
+  },
+
+  /******* React DOM Fizz Server External Runtime *******/
+  {
+    bundleTypes: [BROWSER_SCRIPT],
+    moduleType: RENDERER,
+    entry: 'react-dom/src/server/ReactDOMServerExternalRuntime.js',
+    outputPath: 'unstable_server-external-runtime.js',
+    global: 'ReactDOMServerExternalRuntime',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: [],
   },
 
   /******* React DOM Server Render Stub *******/
@@ -1030,6 +1044,8 @@ function getOriginalFilename(bundle, bundleType) {
     case RN_FB_PROFILING:
     case RN_OSS_PROFILING:
       return `${globalName}-profiling.js`;
+    case BROWSER_SCRIPT:
+      return `${name}.js`;
   }
 }
 

@@ -60,6 +60,7 @@ const {
   RN_FB_DEV,
   RN_FB_PROD,
   RN_FB_PROFILING,
+  BROWSER_SCRIPT,
 } = Bundles.bundleTypes;
 
 const {getFilename} = Bundles;
@@ -224,6 +225,8 @@ function getFormat(bundleType) {
       return `cjs`;
     case NODE_ESM:
       return `es`;
+    case BROWSER_SCRIPT:
+      return `iife`;
   }
 }
 
@@ -247,6 +250,7 @@ function isProductionBundleType(bundleType) {
     case RN_OSS_PROFILING:
     case RN_FB_PROD:
     case RN_FB_PROFILING:
+    case BROWSER_SCRIPT:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
@@ -267,6 +271,7 @@ function isProfilingBundleType(bundleType) {
     case RN_OSS_PROD:
     case UMD_DEV:
     case UMD_PROD:
+    case BROWSER_SCRIPT:
       return false;
     case FB_WWW_PROFILING:
     case NODE_PROFILING:
@@ -582,6 +587,7 @@ async function createBundle(bundle, bundleType) {
     },
   };
   const mainOutputPath = Packaging.getBundleOutputPath(
+    bundle,
     bundleType,
     filename,
     packageName
@@ -724,7 +730,8 @@ async function buildEverything() {
       [bundle, RN_OSS_PROFILING],
       [bundle, RN_FB_DEV],
       [bundle, RN_FB_PROD],
-      [bundle, RN_FB_PROFILING]
+      [bundle, RN_FB_PROFILING],
+      [bundle, BROWSER_SCRIPT]
     );
   }
 
