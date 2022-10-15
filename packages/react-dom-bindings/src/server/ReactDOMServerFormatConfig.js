@@ -74,10 +74,12 @@ export {
   hoistResourcesToRoot,
 } from './ReactDOMFloatServer';
 
-import completeSegmentFunction from './fizz-instruction-set/completeSegmentFunctionString';
-import completeBoundaryFunction from './fizz-instruction-set/completeBoundaryFunctionString';
-import styleInsertionFunction from './fizz-instruction-set/styleInsertionFunctionString';
-import clientRenderFunction from './fizz-instruction-set/clientRenderFunctionString';
+import {
+  clientRenderBoundary as clientRenderFunction,
+  completeBoundary as completeBoundaryFunction,
+  completeBoundaryWithStyles as styleInsertionFunction,
+  completeSegment as completeSegmentFunction,
+} from './fizz-instruction-set/ReactDOMFizzInstructionSetInlineCodeStrings';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
