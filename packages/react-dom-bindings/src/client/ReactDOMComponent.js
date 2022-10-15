@@ -91,7 +91,9 @@ const CHILDREN = 'children';
 const STYLE = 'style';
 const HTML = '__html';
 
-let warnedUnknownTags;
+let warnedUnknownTags: {
+  [key: string]: boolean,
+};
 
 let validatePropertiesInDevelopment;
 let warnForPropDifference;
