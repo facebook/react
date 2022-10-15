@@ -94,19 +94,6 @@ const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
 const syncWWWPath = argv['sync-www'];
 
-const closureOptions = {
-  compilation_level: 'SIMPLE',
-  language_in: 'ECMASCRIPT_2015',
-  language_out: 'ECMASCRIPT5_STRICT',
-  env: 'CUSTOM',
-  warning_level: 'QUIET',
-  apply_input_source_maps: false,
-  use_types_for_optimization: false,
-  process_common_js_modules: false,
-  rewrite_polyfills: false,
-  inject_libraries: false,
-};
-
 // Non-ES2015 stuff applied before closure compiler.
 const babelPlugins = [
   // These plugins filter out non-ES2015.
@@ -376,14 +363,24 @@ function getPlugins(
     isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
     isProduction &&
-      closure(
-        Object.assign({}, closureOptions, {
-          // Don't let it create global variables in the browser.
-          // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: !isUMDBundle,
-          renaming: !shouldStayReadable,
-        })
-      ),
+      closure({
+        compilation_level: 'SIMPLE',
+        language_in: 'ECMASCRIPT_2015',
+        language_out:
+          bundleType === BROWSER_SCRIPT ? 'ECMASCRIPT5' : 'ECMASCRIPT5_STRICT',
+        env: 'CUSTOM',
+        warning_level: 'QUIET',
+        apply_input_source_maps: false,
+        use_types_for_optimization: false,
+        process_common_js_modules: false,
+        rewrite_polyfills: false,
+        inject_libraries: false,
+
+        // Don't let it create global variables in the browser.
+        // https://github.com/facebook/react/issues/10909
+        assume_function_wrapper: !isUMDBundle,
+        renaming: !shouldStayReadable,
+      }),
     // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
     // Note that this plugin must be called after closure applies DCE.
     isProduction && stripUnusedImports(pureExternalModules),
