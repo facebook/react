@@ -233,7 +233,7 @@ function attemptResolveElement(
     // throw for functions. We could probably relax it to a DEV warning for other
     // cases.
     throw new Error(
-      'Refs cannot be used in server components, nor passed to client components.',
+      'Refs cannot be used in Server Components, nor passed to Client Components.',
     );
   }
   if (__DEV__) {
@@ -244,7 +244,7 @@ function attemptResolveElement(
   }
   if (typeof type === 'function') {
     if (isModuleReference(type)) {
-      // This is a reference to a client component.
+      // This is a reference to a Client Component.
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     // This is a server-side component.
@@ -266,7 +266,7 @@ function attemptResolveElement(
       // For key-less fragments, we add a small optimization to avoid serializing
       // it as a wrapper.
       // TODO: If a key is specified, we should propagate its key to any children.
-      // Same as if a server component has a key.
+      // Same as if a Server Component has a key.
       return props.children;
     }
     // This might be a built-in React component. We'll let the client decide.
@@ -274,7 +274,7 @@ function attemptResolveElement(
     return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (type != null && typeof type === 'object') {
     if (isModuleReference(type)) {
-      // This is a reference to a client component.
+      // This is a reference to a Client Component.
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     switch (type.$$typeof) {
@@ -331,7 +331,7 @@ function attemptResolveElement(
     }
   }
   throw new Error(
-    `Unsupported server component type: ${describeValueForErrorMessage(type)}`,
+    `Unsupported Server Component type: ${describeValueForErrorMessage(type)}`,
   );
 }
 
@@ -713,14 +713,14 @@ export function resolveModelToJSON(
     if (typeof originalValue === 'object' && originalValue !== value) {
       if (objectName(originalValue) !== 'Object') {
         console.error(
-          'Only plain objects can be passed to client components from server components. ' +
+          'Only plain objects can be passed to Client Components from Server Components. ' +
             'Built-ins like %s are not supported.%s',
           objectName(originalValue),
           describeObjectForErrorMessage(parent, key),
         );
       } else {
         console.error(
-          'Only plain objects can be passed to client components from server components. ' +
+          'Only plain objects can be passed to Client Components from Server Components. ' +
             'Objects with toJSON methods are not supported. Convert it manually ' +
             'to a simple value before passing it to props.%s',
           describeObjectForErrorMessage(parent, key),
@@ -750,7 +750,7 @@ export function resolveModelToJSON(
     }
   }
 
-  // Resolve server components.
+  // Resolve Server Components.
   while (
     typeof value === 'object' &&
     value !== null &&
@@ -768,7 +768,7 @@ export function resolveModelToJSON(
         case REACT_ELEMENT_TYPE: {
           // TODO: Concatenate keys of parents onto children.
           const element: React$Element<any> = (value: any);
-          // Attempt to render the server component.
+          // Attempt to render the Server Component.
           value = attemptResolveElement(
             element.type,
             element.key,
@@ -854,14 +854,14 @@ export function resolveModelToJSON(
         // Verify that this is a simple plain object.
         if (objectName(value) !== 'Object') {
           console.error(
-            'Only plain objects can be passed to client components from server components. ' +
+            'Only plain objects can be passed to Client Components from Server Components. ' +
               'Built-ins like %s are not supported.%s',
             objectName(value),
             describeObjectForErrorMessage(parent, key),
           );
         } else if (!isSimpleObject(value)) {
           console.error(
-            'Only plain objects can be passed to client components from server components. ' +
+            'Only plain objects can be passed to Client Components from Server Components. ' +
               'Classes or other objects with methods are not supported.%s',
             describeObjectForErrorMessage(parent, key),
           );
@@ -869,7 +869,7 @@ export function resolveModelToJSON(
           const symbols = Object.getOwnPropertySymbols(value);
           if (symbols.length > 0) {
             console.error(
-              'Only plain objects can be passed to client components from server components. ' +
+              'Only plain objects can be passed to Client Components from Server Components. ' +
                 'Objects with symbol properties like %s are not supported.%s',
               symbols[0].description,
               describeObjectForErrorMessage(parent, key),
@@ -901,13 +901,13 @@ export function resolveModelToJSON(
     }
     if (/^on[A-Z]/.test(key)) {
       throw new Error(
-        'Event handlers cannot be passed to client component props.' +
+        'Event handlers cannot be passed to Client Component props.' +
           describeObjectForErrorMessage(parent, key) +
-          '\nIf you need interactivity, consider converting part of this to a client component.',
+          '\nIf you need interactivity, consider converting part of this to a Client Component.',
       );
     } else {
       throw new Error(
-        'Functions cannot be passed directly to client components ' +
+        'Functions cannot be passed directly to Client Components ' +
           "because they're not serializable." +
           describeObjectForErrorMessage(parent, key),
       );
@@ -925,7 +925,7 @@ export function resolveModelToJSON(
 
     if (Symbol.for(name) !== value) {
       throw new Error(
-        'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
+        'Only global symbols received from Symbol.for(...) can be passed to Client Components. ' +
           `The symbol Symbol.for(${
             // $FlowFixMe `description` might be undefined
             value.description
@@ -944,13 +944,13 @@ export function resolveModelToJSON(
   // $FlowFixMe: bigint isn't added to Flow yet.
   if (typeof value === 'bigint') {
     throw new Error(
-      `BigInt (${value}) is not yet supported in client component props.` +
+      `BigInt (${value}) is not yet supported in Client Component props.` +
         describeObjectForErrorMessage(parent, key),
     );
   }
 
   throw new Error(
-    `Type ${typeof value} is not supported in client component props.` +
+    `Type ${typeof value} is not supported in Client Component props.` +
       describeObjectForErrorMessage(parent, key),
   );
 }
@@ -1079,7 +1079,7 @@ function retryTask(request: Request, task: Task): void {
       // previous attempt.
       const prevThenableState = task.thenableState;
 
-      // Attempt to render the server component.
+      // Attempt to render the Server Component.
       // Doing this here lets us reuse this same task if the next component
       // also suspends.
       task.model = value;
