@@ -45,6 +45,10 @@ export const REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED: symbol = Symbol.for(
   'react.default_value',
 );
 
+export const REACT_MEMO_CACHE_SENTINEL: symbol = Symbol.for(
+  'react.memo_cache_sentinel',
+);
+
 const MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';
 

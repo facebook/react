@@ -20,6 +20,7 @@ import {
   HostPortal,
   HostComponent,
   HostResource,
+  HostSingleton,
   HostText,
   Fragment,
   Mode,
@@ -79,6 +80,7 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
     case Fragment:
       return 'Fragment';
     case HostResource:
+    case HostSingleton:
     case HostComponent:
       // Host component type is the display name (e.g. "div", "View")
       return type;

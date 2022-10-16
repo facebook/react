@@ -248,6 +248,60 @@ describe('ReactDOMFloat', () => {
     );
   });
 
+  // @gate enableFloat
+  it('emits resources before everything else when rendering with no head', async () => {
+    function App() {
+      return (
+        <>
+          <title>foo</title>
+          <link rel="preload" href="foo" as="style" />
+        </>
+      );
+    }
+
+    await actIntoEmptyDocument(() => {
+      buffer = `<!DOCTYPE html><html><head>${ReactDOMFizzServer.renderToString(
+        <App />,
+      )}</head><body>foo</body></html>`;
+    });
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+          <title>foo</title>
+        </head>
+        <body>foo</body>
+      </html>,
+    );
+  });
+
+  // @gate enableFloat
+  it('emits resources before everything else when rendering with just a head', async () => {
+    function App() {
+      return (
+        <head>
+          <title>foo</title>
+          <link rel="preload" href="foo" as="style" />
+        </head>
+      );
+    }
+
+    await actIntoEmptyDocument(() => {
+      buffer = `<!DOCTYPE html><html>${ReactDOMFizzServer.renderToString(
+        <App />,
+      )}<body>foo</body></html>`;
+    });
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+          <title>foo</title>
+        </head>
+        <body>foo</body>
+      </html>,
+    );
+  });
+
   describe('HostResource', () => {
     // @gate enableFloat
     it('warns when you update props to an invalid type', async () => {
@@ -974,8 +1028,60 @@ describe('ReactDOMFloat', () => {
       );
     });
 
-    // @gate enableFloat
+    // @gate enableFloat && enableHostSingletons
     it('retains styles even when a new html, head, and/body mount', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <head />
+            <body>
+              <link rel="stylesheet" href="foo" precedence="foo" />
+              <link rel="stylesheet" href="bar" precedence="bar" />
+              server
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      const errors = [];
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head>
+            <link rel="stylesheet" href="qux" precedence="qux" />
+            <link rel="stylesheet" href="foo" precedence="foo" />
+          </head>
+          <body>client</body>
+        </html>,
+        {
+          onRecoverableError(error) {
+            errors.push(error.message);
+          },
+        },
+      );
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toErrorDev(
+        [
+          'Warning: Text content did not match. Server: "server" Client: "client"',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+        ],
+        {withoutStack: 1},
+      );
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-rprec="foo" />
+            <link rel="stylesheet" href="bar" data-rprec="bar" />
+            <link rel="stylesheet" href="qux" data-rprec="qux" />
+          </head>
+          <body>client</body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat && !enableHostSingletons
+    it('retains styles even when a new html, head, and/body mount - without HostSingleton', async () => {
       await actIntoEmptyDocument(() => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
           <html>
@@ -1025,10 +1131,8 @@ describe('ReactDOMFloat', () => {
       );
     });
 
-    // Disabling for now since we are going to live with not having a restore step while we consider
-    // HostSingletons or other solutions
-    // @gate enableFloat
-    xit('retains styles in head through head remounts', async () => {
+    // @gate enableFloat && enableHostSingletons
+    it('retains styles in head through head remounts', async () => {
       const root = ReactDOMClient.createRoot(document);
       root.render(
         <html>
@@ -1036,6 +1140,7 @@ describe('ReactDOMFloat', () => {
           <body>
             <link rel="stylesheet" href="foo" precedence="foo" />
             <link rel="stylesheet" href="bar" precedence="bar" />
+            {null}
             hello
           </body>
         </html>,
@@ -1056,17 +1161,21 @@ describe('ReactDOMFloat', () => {
           <head key={2} />
           <body>
             <link rel="stylesheet" href="foo" precedence="foo" />
-            <link rel="stylesheet" href="bar" precedence="bar" />
+            {null}
+            <link rel="stylesheet" href="baz" precedence="baz" />
             hello
           </body>
         </html>,
       );
       expect(Scheduler).toFlushWithoutYielding();
+      // The reason we do not see preloads in the head is they are inserted synchronously
+      // during render and then when the new singleton mounts it resets it's content, retaining only styles
       expect(getVisibleChildren(document)).toEqual(
         <html>
           <head>
             <link rel="stylesheet" href="foo" data-rprec="foo" />
             <link rel="stylesheet" href="bar" data-rprec="bar" />
+            <link rel="stylesheet" href="baz" data-rprec="baz" />
           </head>
           <body>hello</body>
         </html>,

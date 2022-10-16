@@ -73,6 +73,7 @@ export const enableUseMutableSource = false;
 export const enableTransitionTracing = false;
 
 export const enableFloat = false;
+export const enableHostSingletons = false;
 
 export const useModernStrictMode = false;
 

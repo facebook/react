@@ -21,7 +21,9 @@ import type {
   ReactProviderType,
   ServerContextJSONValue,
   Wakeable,
+  Thenable,
 } from 'shared/ReactTypes';
+import type {LazyComponent} from 'react/src/ReactLazy';
 
 import {
   scheduleWork,
@@ -44,14 +46,17 @@ import {
 } from './ReactFlightServerConfig';
 
 import {
-  Dispatcher,
-  getCurrentCache,
+  HooksDispatcher,
   prepareToUseHooksForRequest,
   prepareToUseHooksForComponent,
   getThenableStateAfterSuspending,
   resetHooksForRequest,
-  setCurrentCache,
 } from './ReactFlightHooks';
+import {
+  DefaultCacheDispatcher,
+  getCurrentCache,
+  setCurrentCache,
+} from './ReactFlightCache';
 import {
   pushProvider,
   popProvider,
@@ -84,6 +89,7 @@ type ReactJSONValue =
 
 export type ReactModel =
   | React$Element<any>
+  | LazyComponent<any, any>
   | string
   | boolean
   | number
@@ -131,6 +137,7 @@ export type Request = {
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 
 function defaultErrorHandler(error: mixed) {
   console['error'](error);
@@ -188,6 +195,25 @@ function createRootContext(
 
 const POP = {};
 
+function readThenable<T>(thenable: Thenable<T>): T {
+  if (thenable.status === 'fulfilled') {
+    return thenable.value;
+  } else if (thenable.status === 'rejected') {
+    throw thenable.reason;
+  }
+  throw thenable;
+}
+
+function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
+  trackSuspendedWakeable(wakeable);
+  const lazyType: LazyComponent<any, Thenable<any>> = {
+    $$typeof: REACT_LAZY_TYPE,
+    _payload: (wakeable: any),
+    _init: readThenable,
+  };
+  return lazyType;
+}
+
 function attemptResolveElement(
   type: any,
   key: null | React$Key,
@@ -210,7 +236,15 @@ function attemptResolveElement(
     }
     // This is a server-side component.
     prepareToUseHooksForComponent(prevThenableState);
-    return type(props);
+    const result = type(props);
+    if (
+      typeof result === 'object' &&
+      result !== null &&
+      typeof result.then === 'function'
+    ) {
+      return createLazyWrapperAroundWakeable(result);
+    }
+    return result;
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
     return [REACT_ELEMENT_TYPE, type, key, props];
@@ -632,7 +666,6 @@ export function resolveModelToJSON(
 
         return serializeByRefID(newTask.id);
       } else {
-        logRecoverableError(request, x);
         // Something errored. We'll still send everything we have up until this point.
         // We'll replace this element with a lazy reference that throws on the client
         // once it gets rendered.
@@ -1002,8 +1035,10 @@ function retryTask(request: Request, task: Task): void {
 
 function performWork(request: Request): void {
   const prevDispatcher = ReactCurrentDispatcher.current;
+  const prevCacheDispatcher = ReactCurrentCache.current;
   const prevCache = getCurrentCache();
-  ReactCurrentDispatcher.current = Dispatcher;
+  ReactCurrentDispatcher.current = HooksDispatcher;
+  ReactCurrentCache.current = DefaultCacheDispatcher;
   setCurrentCache(request.cache);
   prepareToUseHooksForRequest(request);
 
@@ -1022,6 +1057,7 @@ function performWork(request: Request): void {
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
+    ReactCurrentCache.current = prevCacheDispatcher;
     setCurrentCache(prevCache);
     resetHooksForRequest();
   }

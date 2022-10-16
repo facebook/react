@@ -101,10 +101,6 @@ function nextHook(): null | Hook {
   return hook;
 }
 
-function getCacheForType<T>(resourceType: () => T): T {
-  throw new Error('Not implemented.');
-}
-
 function readContext<T>(context: ReactContext<T>): T {
   // For now we don't expose readContext usage in the hooks debugging info.
   return context._currentValue;
@@ -331,7 +327,6 @@ function useId(): string {
 }
 
 const Dispatcher: DispatcherType = {
-  getCacheForType,
   readContext,
   useCacheRefresh,
   useCallback,

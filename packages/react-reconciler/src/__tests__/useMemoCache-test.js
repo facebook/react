@@ -1,8 +1,19 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @emails react-core
+ * @jest-environment node
+ */
+
 let React;
 let ReactNoop;
 let act;
 let useState;
 let useMemoCache;
+let MemoCacheSentinel;
 let ErrorBoundary;
 
 describe('useMemoCache()', () => {
@@ -14,6 +25,7 @@ describe('useMemoCache()', () => {
     act = require('jest-react').act;
     useState = React.useState;
     useMemoCache = React.unstable_useMemoCache;
+    MemoCacheSentinel = Symbol.for('react.memo_cache_sentinel');
 
     class _ErrorBoundary extends React.Component {
       constructor(props) {
@@ -46,7 +58,8 @@ describe('useMemoCache()', () => {
       const cache = useMemoCache(1);
       expect(Array.isArray(cache)).toBe(true);
       expect(cache.length).toBe(1);
-      expect(cache[0]).toBe(undefined);
+      expect(cache[0]).toBe(MemoCacheSentinel);
+
       return 'Ok';
     }
     const root = ReactNoop.createRoot();

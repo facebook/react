@@ -102,22 +102,49 @@ describe('validateDOMNesting', () => {
           '    in html (at **)',
       ],
     );
-    expectWarnings(
-      ['body', 'body'],
-      [
-        'render(): Rendering components directly into document.body is discouraged',
-        'validateDOMNesting(...): <body> cannot appear as a child of <body>.\n' +
-          '    in body (at **)',
-      ],
-      1,
-    );
-    expectWarnings(
-      ['svg', 'foreignObject', 'body', 'p'],
-      [
-        'validateDOMNesting(...): <body> cannot appear as a child of <foreignObject>.\n' +
-          '    in body (at **)\n' +
-          '    in foreignObject (at **)',
-      ],
-    );
+    if (gate(flags => flags.enableHostSingletons)) {
+      expectWarnings(
+        ['body', 'body'],
+        [
+          'render(): Rendering components directly into document.body is discouraged',
+          'validateDOMNesting(...): <body> cannot appear as a child of <body>.\n' +
+            '    in body (at **)',
+          'Warning: You are mounting a new body component when a previous one has not first unmounted. It is an error to render more than one body component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <body> and if you need to mount a new one, ensure any previous ones have unmounted first.\n' +
+            '    in body (at **)',
+        ],
+        1,
+      );
+    } else {
+      expectWarnings(
+        ['body', 'body'],
+        [
+          'render(): Rendering components directly into document.body is discouraged',
+          'validateDOMNesting(...): <body> cannot appear as a child of <body>.\n' +
+            '    in body (at **)',
+        ],
+        1,
+      );
+    }
+    if (gate(flags => flags.enableHostSingletons)) {
+      expectWarnings(
+        ['svg', 'foreignObject', 'body', 'p'],
+        [
+          'validateDOMNesting(...): <body> cannot appear as a child of <foreignObject>.\n' +
+            '    in body (at **)\n' +
+            '    in foreignObject (at **)',
+          'Warning: You are mounting a new body component when a previous one has not first unmounted. It is an error to render more than one body component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <body> and if you need to mount a new one, ensure any previous ones have unmounted first.\n' +
+            '    in body (at **)',
+        ],
+      );
+    } else {
+      expectWarnings(
+        ['svg', 'foreignObject', 'body', 'p'],
+        [
+          'validateDOMNesting(...): <body> cannot appear as a child of <foreignObject>.\n' +
+            '    in body (at **)\n' +
+            '    in foreignObject (at **)',
+        ],
+      );
+    }
   });
 });

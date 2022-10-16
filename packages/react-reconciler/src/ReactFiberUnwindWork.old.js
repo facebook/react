@@ -20,6 +20,7 @@ import {
   HostRoot,
   HostComponent,
   HostResource,
+  HostSingleton,
   HostPortal,
   ContextProvider,
   SuspenseComponent,
@@ -117,6 +118,7 @@ function unwindWork(
       return null;
     }
     case HostResource:
+    case HostSingleton:
     case HostComponent: {
       // TODO: popHydrationState
       popHostContext(workInProgress);
@@ -236,6 +238,7 @@ function unwindInterruptedWork(
       break;
     }
     case HostResource:
+    case HostSingleton:
     case HostComponent: {
       popHostContext(interruptedWork);
       break;

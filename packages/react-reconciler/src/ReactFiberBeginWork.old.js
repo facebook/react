@@ -37,11 +37,6 @@ import type {
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {RootState} from './ReactFiberRoot.old';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old';
-import {
-  enableCPUSuspense,
-  enableUseMutableSource,
-  enableFloat,
-} from 'shared/ReactFeatureFlags';
 
 import checkPropTypes from 'shared/checkPropTypes';
 import {
@@ -56,6 +51,7 @@ import {
   HostRoot,
   HostComponent,
   HostResource,
+  HostSingleton,
   HostText,
   HostPortal,
   ForwardRef,
@@ -107,6 +103,10 @@ import {
   enableSchedulingProfiler,
   enableTransitionTracing,
   enableLegacyHidden,
+  enableCPUSuspense,
+  enableUseMutableSource,
+  enableFloat,
+  enableHostSingletons,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -164,6 +164,7 @@ import {
   registerSuspenseInstanceRetry,
   supportsHydration,
   supportsResources,
+  supportsSingletons,
   isPrimaryRenderer,
   getResource,
 } from './ReactFiberHostConfig';
@@ -218,6 +219,7 @@ import {
   enterHydrationState,
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
+  claimHydratableSingleton,
   tryToClaimNextHydratableInstance,
   warnIfHydrating,
   queueHydrationError,
@@ -1600,6 +1602,36 @@ function updateHostResource(current, workInProgress, renderLanes) {
     workInProgress.pendingProps.children,
     renderLanes,
   );
+  return workInProgress.child;
+}
+
+function updateHostSingleton(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  pushHostContext(workInProgress);
+
+  if (current === null) {
+    claimHydratableSingleton(workInProgress);
+  }
+
+  const nextChildren = workInProgress.pendingProps.children;
+
+  if (current === null && !getIsHydrating()) {
+    // Similar to Portals we append Singleton children in the commit phase. So we
+    // Track insertions even on mount.
+    // TODO: Consider unifying this with how the root works.
+    workInProgress.child = reconcileChildFibers(
+      workInProgress,
+      null,
+      nextChildren,
+      renderLanes,
+    );
+  } else {
+    reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  }
+  markRef(current, workInProgress);
   return workInProgress.child;
 }
 
@@ -3681,6 +3713,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       resetHydrationState();
       break;
     case HostResource:
+    case HostSingleton:
     case HostComponent:
       pushHostContext(workInProgress);
       break;
@@ -4018,6 +4051,11 @@ function beginWork(
     case HostResource:
       if (enableFloat && supportsResources) {
         return updateHostResource(current, workInProgress, renderLanes);
+      }
+    // eslint-disable-next-line no-fallthrough
+    case HostSingleton:
+      if (enableHostSingletons && supportsSingletons) {
+        return updateHostSingleton(current, workInProgress, renderLanes);
       }
     // eslint-disable-next-line no-fallthrough
     case HostComponent:

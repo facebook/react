@@ -942,6 +942,62 @@ describe('ReactOffscreen', () => {
     ]);
   });
 
+  // @gate enableLegacyHidden
+  it('do not defer passive effects when prerendering a new LegacyHidden tree', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showMore}) {
+      return (
+        <>
+          <Child label="Shell" />
+          <LegacyHidden
+            mode={showMore ? 'visible' : 'unstable-defer-without-hiding'}>
+            <Child label="More" />
+          </LegacyHidden>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Mount the app without showing the extra content
+    await act(async () => {
+      root.render(<App showMore={false} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      // First mount the outer visible shell
+      'Shell',
+      'Mount Shell',
+
+      // Then prerender the hidden extra context. Unlike Offscreen, the passive
+      // effects in the hidden tree *should* fire
+      'More',
+      'Mount More',
+    ]);
+
+    // The hidden content has been prerendered
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Shell" />
+        <span prop="More" />
+      </>,
+    );
+
+    // Reveal the prerendered tree
+    await act(async () => {
+      root.render(<App showMore={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Shell', 'More']);
+  });
+
   // @gate enableOffscreen
   it('passive effects are connected and disconnected when the visibility changes', async () => {
     function Child({step}) {

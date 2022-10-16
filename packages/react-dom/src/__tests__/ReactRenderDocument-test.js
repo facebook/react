@@ -62,7 +62,8 @@ describe('rendering React components at document', () => {
       expect(body === testDocument.body).toBe(true);
     });
 
-    it('should not be able to unmount component from document node', () => {
+    // @gate enableHostSingletons
+    it('should be able to unmount component from document node, but leaves singleton nodes intact', () => {
       class Root extends React.Component {
         render() {
           return (
@@ -81,7 +82,40 @@ describe('rendering React components at document', () => {
       ReactDOM.hydrate(<Root />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
 
-      // In Fiber this actually works. It might not be a good idea though.
+      const originalDocEl = testDocument.documentElement;
+      const originalHead = testDocument.head;
+      const originalBody = testDocument.body;
+
+      // When we unmount everything is removed except the singleton nodes of html, head, and body
+      ReactDOM.unmountComponentAtNode(testDocument);
+      expect(testDocument.firstChild).toBe(originalDocEl);
+      expect(testDocument.head).toBe(originalHead);
+      expect(testDocument.body).toBe(originalBody);
+      expect(originalBody.firstChild).toEqual(null);
+      expect(originalHead.firstChild).toEqual(null);
+    });
+
+    // @gate !enableHostSingletons
+    it('should be able to unmount component from document node', () => {
+      class Root extends React.Component {
+        render() {
+          return (
+            <html>
+              <head>
+                <title>Hello World</title>
+              </head>
+              <body>Hello world</body>
+            </html>
+          );
+        }
+      }
+
+      const markup = ReactDOMServer.renderToString(<Root />);
+      const testDocument = getTestDocument(markup);
+      ReactDOM.hydrate(<Root />, testDocument);
+      expect(testDocument.body.innerHTML).toBe('Hello world');
+
+      // When we unmount everything is removed except the persistent nodes of html, head, and body
       ReactDOM.unmountComponentAtNode(testDocument);
       expect(testDocument.firstChild).toBe(null);
     });

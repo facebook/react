@@ -18,13 +18,14 @@ import {
   ClassComponent,
   HostComponent,
   HostResource,
+  HostSingleton,
   HostRoot,
   HostPortal,
   HostText,
   SuspenseComponent,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
-import {enableFloat} from 'shared/ReactFeatureFlags';
+import {enableFloat, enableHostSingletons} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -276,10 +277,12 @@ export function findCurrentHostFiber(parent: Fiber): Fiber | null {
 
 function findCurrentHostFiberImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
+  const tag = node.tag;
   if (
-    node.tag === HostComponent ||
-    node.tag === HostText ||
-    (enableFloat ? node.tag === HostResource : false)
+    tag === HostComponent ||
+    (enableFloat ? tag === HostResource : false) ||
+    (enableHostSingletons ? tag === HostSingleton : false) ||
+    tag === HostText
   ) {
     return node;
   }
@@ -305,10 +308,12 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
 
 function findCurrentHostFiberWithNoPortalsImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
+  const tag = node.tag;
   if (
-    node.tag === HostComponent ||
-    node.tag === HostText ||
-    (enableFloat ? node.tag === HostResource : false)
+    tag === HostComponent ||
+    (enableFloat ? tag === HostResource : false) ||
+    (enableHostSingletons ? tag === HostSingleton : false) ||
+    tag === HostText
   ) {
     return node;
   }

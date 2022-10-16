@@ -358,22 +358,27 @@ describe('ReactDOMRoot', () => {
     );
   });
 
-  // @gate !__DEV__ || !enableFloat
   it('warns if updating a root that has had its contents removed', async () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     container.innerHTML = '';
 
-    expect(() => {
+    if (gate(flags => flags.enableFloat || flags.enableHostSingletons)) {
+      // When either of these flags are on this validation is turned off so we
+      // expect there to be no warnings
       root.render(<div>Hi</div>);
-    }).toErrorDev(
-      'render(...): It looks like the React-rendered content of the ' +
-        'root container was removed without using React. This is not ' +
-        'supported and will cause errors. Instead, call ' +
-        "root.unmount() to empty a root's container.",
-      {withoutStack: true},
-    );
+    } else {
+      expect(() => {
+        root.render(<div>Hi</div>);
+      }).toErrorDev(
+        'render(...): It looks like the React-rendered content of the ' +
+          'root container was removed without using React. This is not ' +
+          'supported and will cause errors. Instead, call ' +
+          "root.unmount() to empty a root's container.",
+        {withoutStack: true},
+      );
+    }
   });
 
   it('opts-in to concurrent default updates', async () => {
