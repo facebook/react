@@ -19,7 +19,7 @@ async function getBuildIdForCommit(sha, allowBrokenCI = false) {
   const retryLimit = Date.now() + RETRY_TIMEOUT;
   retry: while (true) {
     const statusesResponse = await fetch(
-      `https://api.github.com/repos/facebook/react/commits/${sha}/status`
+      `https://api.github.com/repos/facebook/react/commits/${sha}/status?per_page=100`
     );
 
     if (!statusesResponse.ok) {
