@@ -511,33 +511,41 @@ function describeObjectForErrorMessage(
     | $ReadOnlyArray<ReactModel>,
   expandedName?: string,
 ): string {
+  const objKind = objectName(objectOrArray);
+  if (objKind !== 'Object' && objKind !== 'Array') {
+    return objKind;
+  }
+  let str = '';
+  let start = -1;
+  let length = 0;
   if (isArray(objectOrArray)) {
-    let str = '[';
+    str = '[';
     const array: $ReadOnlyArray<ReactModel> = objectOrArray;
     for (let i = 0; i < array.length; i++) {
       if (i > 0) {
         str += ', ';
       }
-      if (i > 6) {
-        str += '...';
-        break;
-      }
       const value = array[i];
-      if (
-        '' + i === expandedName &&
-        typeof value === 'object' &&
-        value !== null
-      ) {
+      let substr;
+      if (typeof value === 'object' && value !== null) {
         // $FlowFixMe[incompatible-call] found when upgrading Flow
-        str += describeObjectForErrorMessage(value);
+        substr = describeObjectForErrorMessage(value);
       } else {
-        str += describeValueForErrorMessage(value);
+        substr = describeValueForErrorMessage(value);
+      }
+      if ('' + i === expandedName) {
+        start = str.length;
+        length = substr.length;
+        str += substr;
+      } else if (substr.length < 10 && str.length + substr.length < 40) {
+        str += substr;
+      } else {
+        str += '...';
       }
     }
     str += ']';
-    return str;
   } else {
-    let str = '{';
+    str = '{';
     const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
     const names = Object.keys(object);
     for (let i = 0; i < names.length; i++) {
@@ -551,20 +559,37 @@ function describeObjectForErrorMessage(
       const name = names[i];
       str += describeKeyForErrorMessage(name) + ': ';
       const value = object[name];
+      let substr;
       if (
         name === expandedName &&
         typeof value === 'object' &&
         value !== null
       ) {
         // $FlowFixMe[incompatible-call] found when upgrading Flow
-        str += describeObjectForErrorMessage(value);
+        substr = describeObjectForErrorMessage(value);
       } else {
-        str += describeValueForErrorMessage(value);
+        substr = describeValueForErrorMessage(value);
+      }
+      if (name === expandedName) {
+        start = str.length;
+        length = substr.length;
+        str += substr;
+      } else if (substr.length < 10 && str.length + substr.length < 40) {
+        str += substr;
+      } else {
+        str += '...';
       }
     }
     str += '}';
+  }
+  if (expandedName === undefined) {
     return str;
   }
+  if (start > -1 && length > 0) {
+    const highlight = ' '.repeat(start) + '^'.repeat(length);
+    return '\n  ' + str + '\n  ' + highlight;
+  }
+  return '\n  ' + str;
 }
 
 let insideContextProps = null;
@@ -580,14 +605,21 @@ export function resolveModelToJSON(
     // $FlowFixMe
     const originalValue = parent[key];
     if (typeof originalValue === 'object' && originalValue !== value) {
-      console.error(
-        'Only plain objects can be passed to client components from server components. ' +
-          'Objects with toJSON methods are not supported. Convert it manually ' +
-          'to a simple value before passing it to props. ' +
-          'Remove %s from these props: %s',
-        describeKeyForErrorMessage(key),
-        describeObjectForErrorMessage(parent),
-      );
+      if (objectName(originalValue) !== 'Object') {
+        console.error(
+          'Only plain objects can be passed to client components from server components. ' +
+            'Built-ins like %s are not supported.%s',
+          objectName(originalValue),
+          describeObjectForErrorMessage(parent, key),
+        );
+      } else {
+        console.error(
+          'Only plain objects can be passed to client components from server components. ' +
+            'Objects with toJSON methods are not supported. Convert it manually ' +
+            'to a simple value before passing it to props.%s',
+          describeObjectForErrorMessage(parent, key),
+        );
+      }
     }
   }
 
@@ -717,18 +749,14 @@ export function resolveModelToJSON(
         if (objectName(value) !== 'Object') {
           console.error(
             'Only plain objects can be passed to client components from server components. ' +
-              'Built-ins like %s are not supported. ' +
-              'Remove %s from these props: %s',
+              'Built-ins like %s are not supported.%s',
             objectName(value),
-            describeKeyForErrorMessage(key),
-            describeObjectForErrorMessage(parent),
+            describeObjectForErrorMessage(parent, key),
           );
         } else if (!isSimpleObject(value)) {
           console.error(
             'Only plain objects can be passed to client components from server components. ' +
-              'Classes or other objects with methods are not supported. ' +
-              'Remove %s from these props: %s',
-            describeKeyForErrorMessage(key),
+              'Classes or other objects with methods are not supported.%s',
             describeObjectForErrorMessage(parent, key),
           );
         } else if (Object.getOwnPropertySymbols) {
@@ -736,10 +764,8 @@ export function resolveModelToJSON(
           if (symbols.length > 0) {
             console.error(
               'Only plain objects can be passed to client components from server components. ' +
-                'Objects with symbol properties like %s are not supported. ' +
-                'Remove %s from these props: %s',
+                'Objects with symbol properties like %s are not supported.%s',
               symbols[0].description,
-              describeKeyForErrorMessage(key),
               describeObjectForErrorMessage(parent, key),
             );
           }
@@ -769,24 +795,15 @@ export function resolveModelToJSON(
     }
     if (/^on[A-Z]/.test(key)) {
       throw new Error(
-        'Event handlers cannot be passed to client component props. ' +
-          `Remove ${describeKeyForErrorMessage(
-            key,
-          )} from these props if possible: ${describeObjectForErrorMessage(
-            parent,
-          )}
-` +
-          'If you need interactivity, consider converting part of this to a client component.',
+        'Event handlers cannot be passed to client component props.' +
+          describeObjectForErrorMessage(parent, key) +
+          '\nIf you need interactivity, consider converting part of this to a client component.',
       );
     } else {
       throw new Error(
         'Functions cannot be passed directly to client components ' +
-          "because they're not serializable. " +
-          `Remove ${describeKeyForErrorMessage(key)} (${value.displayName ||
-            value.name ||
-            'function'}) from this object, or avoid the entire object: ${describeObjectForErrorMessage(
-            parent,
-          )}`,
+          "because they're not serializable." +
+          describeObjectForErrorMessage(parent, key),
       );
     }
   }
@@ -806,12 +823,8 @@ export function resolveModelToJSON(
           `The symbol Symbol.for(${
             // $FlowFixMe `description` might be undefined
             value.description
-          }) cannot be found among global symbols. ` +
-          `Remove ${describeKeyForErrorMessage(
-            key,
-          )} from this object, or avoid the entire object: ${describeObjectForErrorMessage(
-            parent,
-          )}`,
+          }) cannot be found among global symbols.` +
+          describeObjectForErrorMessage(parent, key),
       );
     }
 
@@ -825,22 +838,14 @@ export function resolveModelToJSON(
   // $FlowFixMe: bigint isn't added to Flow yet.
   if (typeof value === 'bigint') {
     throw new Error(
-      `BigInt (${value}) is not yet supported in client component props. ` +
-        `Remove ${describeKeyForErrorMessage(
-          key,
-        )} from this object or use a plain number instead: ${describeObjectForErrorMessage(
-          parent,
-        )}`,
+      `BigInt (${value}) is not yet supported in client component props.` +
+        describeObjectForErrorMessage(parent, key),
     );
   }
 
   throw new Error(
-    `Type ${typeof value} is not supported in client component props. ` +
-      `Remove ${describeKeyForErrorMessage(
-        key,
-      )} from this object, or avoid the entire object: ${describeObjectForErrorMessage(
-        parent,
-      )}`,
+    `Type ${typeof value} is not supported in client component props.` +
+      describeObjectForErrorMessage(parent, key),
   );
 }
 

@@ -475,7 +475,23 @@ describe('ReactFlight', () => {
       );
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
-      'Only plain objects can be passed to client components from server components. ',
+      'Only plain objects can be passed to client components from server components. ' +
+        'Built-ins like Date are not supported.',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn in DEV if a toJSON instance is passed to a host component child', () => {
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(
+        <div>Current date: {new Date()}</div>,
+      );
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev(
+      'Only plain objects can be passed to client components from server components. ' +
+        'Built-ins like Date are not supported.\n' +
+        '  [..., Date]\n' +
+        '        ^^^^',
       {withoutStack: true},
     );
   });
@@ -486,14 +502,11 @@ describe('ReactFlight', () => {
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Only plain objects can be passed to client components from server components. ' +
-        'Built-ins like Math are not supported.',
+        'Built-ins like Math are not supported.\n' +
+        '  {value: Math}\n' +
+        '          ^^^^',
       {withoutStack: true},
     );
-  });
-
-  it('should NOT warn in DEV for key getters', () => {
-    const transport = ReactNoopFlightServer.render(<div key="a" />);
-    ReactNoopFlightClient.read(transport);
   });
 
   it('should warn in DEV if an object with symbols is passed to a host component', () => {
@@ -507,6 +520,11 @@ describe('ReactFlight', () => {
         'Objects with symbol properties like Symbol.iterator are not supported.',
       {withoutStack: true},
     );
+  });
+
+  it('should NOT warn in DEV for key getters', () => {
+    const transport = ReactNoopFlightServer.render(<div key="a" />);
+    ReactNoopFlightClient.read(transport);
   });
 
   it('should warn in DEV if a class instance is passed to a host component', () => {
