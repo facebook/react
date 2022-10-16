@@ -7,8 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   PublicInstance,
   Instance,
