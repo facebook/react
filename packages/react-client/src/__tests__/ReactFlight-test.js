@@ -363,6 +363,11 @@ describe('ReactFlight', () => {
 
   // @gate enableUseHook
   it('should error if a non-serializable value is passed to a host component', async () => {
+    function ClientImpl({children}) {
+      return children;
+    }
+    const Client = moduleReference(ClientImpl);
+
     function EventHandlerProp() {
       return (
         <div className="foo" onClick={function() {}}>
@@ -382,6 +387,24 @@ describe('ReactFlight', () => {
       return <div ref={ref} />;
     }
 
+    function EventHandlerPropClient() {
+      return (
+        <Client className="foo" onClick={function() {}}>
+          Test
+        </Client>
+      );
+    }
+    function FunctionPropClient() {
+      return <Client>{() => {}}</Client>;
+    }
+    function SymbolPropClient() {
+      return <Client foo={Symbol('foo')} />;
+    }
+
+    function RefPropClient() {
+      return <Client ref={ref} />;
+    }
+
     const options = {
       onError(x) {
         return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
@@ -391,8 +414,21 @@ describe('ReactFlight', () => {
     const fn = ReactNoopFlightServer.render(<FunctionProp />, options);
     const symbol = ReactNoopFlightServer.render(<SymbolProp />, options);
     const refs = ReactNoopFlightServer.render(<RefProp />, options);
+    const eventClient = ReactNoopFlightServer.render(
+      <EventHandlerPropClient />,
+      options,
+    );
+    const fnClient = ReactNoopFlightServer.render(
+      <FunctionPropClient />,
+      options,
+    );
+    const symbolClient = ReactNoopFlightServer.render(
+      <SymbolPropClient />,
+      options,
+    );
+    const refsClient = ReactNoopFlightServer.render(<RefPropClient />, options);
 
-    function Client({promise}) {
+    function Render({promise}) {
       return use(promise);
     }
 
@@ -401,16 +437,28 @@ describe('ReactFlight', () => {
         ReactNoop.render(
           <>
             <ErrorBoundary expectedMessage="Event handlers cannot be passed to client component props.">
-              <Client promise={ReactNoopFlightClient.read(event)} />
+              <Render promise={ReactNoopFlightClient.read(event)} />
             </ErrorBoundary>
             <ErrorBoundary expectedMessage="Functions cannot be passed directly to client components because they're not serializable.">
-              <Client promise={ReactNoopFlightClient.read(fn)} />
+              <Render promise={ReactNoopFlightClient.read(fn)} />
             </ErrorBoundary>
             <ErrorBoundary expectedMessage="Only global symbols received from Symbol.for(...) can be passed to client components.">
-              <Client promise={ReactNoopFlightClient.read(symbol)} />
+              <Render promise={ReactNoopFlightClient.read(symbol)} />
             </ErrorBoundary>
             <ErrorBoundary expectedMessage="Refs cannot be used in server components, nor passed to client components.">
-              <Client promise={ReactNoopFlightClient.read(refs)} />
+              <Render promise={ReactNoopFlightClient.read(refs)} />
+            </ErrorBoundary>
+            <ErrorBoundary expectedMessage="Event handlers cannot be passed to client component props.">
+              <Render promise={ReactNoopFlightClient.read(eventClient)} />
+            </ErrorBoundary>
+            <ErrorBoundary expectedMessage="Functions cannot be passed directly to client components because they're not serializable.">
+              <Render promise={ReactNoopFlightClient.read(fnClient)} />
+            </ErrorBoundary>
+            <ErrorBoundary expectedMessage="Only global symbols received from Symbol.for(...) can be passed to client components.">
+              <Render promise={ReactNoopFlightClient.read(symbolClient)} />
+            </ErrorBoundary>
+            <ErrorBoundary expectedMessage="Refs cannot be used in server components, nor passed to client components.">
+              <Render promise={ReactNoopFlightClient.read(refsClient)} />
             </ErrorBoundary>
           </>,
         );
@@ -490,8 +538,8 @@ describe('ReactFlight', () => {
     }).toErrorDev(
       'Only plain objects can be passed to client components from server components. ' +
         'Built-ins like Date are not supported.\n' +
-        '  [..., Date]\n' +
-        '        ^^^^',
+        '  <div>Current date: {Date}</div>\n' +
+        '                     ^^^^^^',
       {withoutStack: true},
     );
   });
@@ -503,8 +551,8 @@ describe('ReactFlight', () => {
     }).toErrorDev(
       'Only plain objects can be passed to client components from server components. ' +
         'Built-ins like Math are not supported.\n' +
-        '  {value: Math}\n' +
-        '          ^^^^',
+        '  <input value={Math}>\n' +
+        '               ^^^^^^',
       {withoutStack: true},
     );
   });
@@ -518,6 +566,116 @@ describe('ReactFlight', () => {
     }).toErrorDev(
       'Only plain objects can be passed to client components from server components. ' +
         'Objects with symbol properties like Symbol.iterator are not supported.',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn in DEV if a toJSON instance is passed to a client component', () => {
+    function ClientImpl({value}) {
+      return <div>{value}</div>;
+    }
+    const Client = moduleReference(ClientImpl);
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(
+        <Client value={new Date()} />,
+      );
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev(
+      'Only plain objects can be passed to client components from server components. ' +
+        'Built-ins like Date are not supported.',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn in DEV if a toJSON instance is passed to a client component child', () => {
+    function ClientImpl({children}) {
+      return <div>{children}</div>;
+    }
+    const Client = moduleReference(ClientImpl);
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(
+        <Client>Current date: {new Date()}</Client>,
+      );
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev(
+      'Only plain objects can be passed to client components from server components. ' +
+        'Built-ins like Date are not supported.\n' +
+        '  <>Current date: {Date}</>\n' +
+        '                  ^^^^^^',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn in DEV if a special object is passed to a client component', () => {
+    function ClientImpl({value}) {
+      return <div>{value}</div>;
+    }
+    const Client = moduleReference(ClientImpl);
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(<Client value={Math} />);
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev(
+      'Only plain objects can be passed to client components from server components. ' +
+        'Built-ins like Math are not supported.\n' +
+        '  <... value={Math}>\n' +
+        '             ^^^^^^',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn in DEV if an object with symbols is passed to a client component', () => {
+    function ClientImpl({value}) {
+      return <div>{value}</div>;
+    }
+    const Client = moduleReference(ClientImpl);
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(
+        <Client value={{[Symbol.iterator]: {}}} />,
+      );
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev(
+      'Only plain objects can be passed to client components from server components. ' +
+        'Objects with symbol properties like Symbol.iterator are not supported.',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn in DEV if a special object is passed to a nested object in client component', () => {
+    function ClientImpl({value}) {
+      return <div>{value}</div>;
+    }
+    const Client = moduleReference(ClientImpl);
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(
+        <Client value={{hello: Math, title: <h1>hi</h1>}} />,
+      );
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev(
+      'Only plain objects can be passed to client components from server components. ' +
+        'Built-ins like Math are not supported.\n' +
+        '  {hello: Math, title: <h1/>}\n' +
+        '          ^^^^',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn in DEV if a special object is passed to a nested array in client component', () => {
+    function ClientImpl({value}) {
+      return <div>{value}</div>;
+    }
+    const Client = moduleReference(ClientImpl);
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(
+        <Client
+          value={['looooong string takes up noise', Math, <h1>hi</h1>]}
+        />,
+      );
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev(
+      'Only plain objects can be passed to client components from server components. ' +
+        'Built-ins like Math are not supported.\n' +
+        '  [..., Math, <h1/>]\n' +
+        '        ^^^^',
       {withoutStack: true},
     );
   });

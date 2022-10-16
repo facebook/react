@@ -73,6 +73,8 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
+  REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
 } from 'shared/ReactSymbols';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
@@ -195,6 +197,11 @@ function createRootContext(
 
 const POP = {};
 
+// Used for DEV messages to keep track of which parent rendered some props,
+// in case they error.
+const jsxPropsParents: WeakMap<any, any> = new WeakMap();
+const jsxChildrenParents: WeakMap<any, any> = new WeakMap();
+
 function readThenable<T>(thenable: Thenable<T>): T {
   if (thenable.status === 'fulfilled') {
     return thenable.value;
@@ -228,6 +235,12 @@ function attemptResolveElement(
     throw new Error(
       'Refs cannot be used in server components, nor passed to client components.',
     );
+  }
+  if (__DEV__) {
+    jsxPropsParents.set(props, type);
+    if (typeof props.children === 'object') {
+      jsxChildrenParents.set(props.children, type);
+    }
   }
   if (typeof type === 'function') {
     if (isModuleReference(type)) {
@@ -505,6 +518,36 @@ function describeValueForErrorMessage(value: ReactModel): string {
   }
 }
 
+function describeElementType(type: any): string {
+  if (typeof type === 'string') {
+    return type;
+  }
+  switch (type) {
+    case REACT_SUSPENSE_TYPE:
+      return 'Suspense';
+    case REACT_SUSPENSE_LIST_TYPE:
+      return 'SuspenseList';
+  }
+  if (typeof type === 'object') {
+    switch (type.$$typeof) {
+      case REACT_FORWARD_REF_TYPE:
+        return describeElementType(type.render);
+      case REACT_MEMO_TYPE:
+        return describeElementType(type.type);
+      case REACT_LAZY_TYPE: {
+        const lazyComponent: LazyComponent<any, any> = (type: any);
+        const payload = lazyComponent._payload;
+        const init = lazyComponent._init;
+        try {
+          // Lazy may contain any component type so we recursively resolve it.
+          return describeElementType(init(payload));
+        } catch (x) {}
+      }
+    }
+  }
+  return '';
+}
+
 function describeObjectForErrorMessage(
   objectOrArray:
     | {+[key: string | number]: ReactModel, ...}
@@ -519,68 +562,131 @@ function describeObjectForErrorMessage(
   let start = -1;
   let length = 0;
   if (isArray(objectOrArray)) {
-    str = '[';
-    const array: $ReadOnlyArray<ReactModel> = objectOrArray;
-    for (let i = 0; i < array.length; i++) {
-      if (i > 0) {
-        str += ', ';
+    if (__DEV__ && jsxChildrenParents.has(objectOrArray)) {
+      // Print JSX Children
+      const type = jsxChildrenParents.get(objectOrArray);
+      str = '<' + describeElementType(type) + '>';
+      const array: $ReadOnlyArray<ReactModel> = objectOrArray;
+      for (let i = 0; i < array.length; i++) {
+        const value = array[i];
+        let substr;
+        if (typeof value === 'string') {
+          substr = value;
+        } else if (typeof value === 'object' && value !== null) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
+          substr = '{' + describeObjectForErrorMessage(value) + '}';
+        } else {
+          substr = '{' + describeValueForErrorMessage(value) + '}';
+        }
+        if ('' + i === expandedName) {
+          start = str.length;
+          length = substr.length;
+          str += substr;
+        } else if (substr.length < 15 && str.length + substr.length < 40) {
+          str += substr;
+        } else {
+          str += '{...}';
+        }
       }
-      const value = array[i];
-      let substr;
-      if (typeof value === 'object' && value !== null) {
-        // $FlowFixMe[incompatible-call] found when upgrading Flow
-        substr = describeObjectForErrorMessage(value);
-      } else {
-        substr = describeValueForErrorMessage(value);
+      str += '</' + describeElementType(type) + '>';
+    } else {
+      // Print Array
+      str = '[';
+      const array: $ReadOnlyArray<ReactModel> = objectOrArray;
+      for (let i = 0; i < array.length; i++) {
+        if (i > 0) {
+          str += ', ';
+        }
+        const value = array[i];
+        let substr;
+        if (typeof value === 'object' && value !== null) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
+          substr = describeObjectForErrorMessage(value);
+        } else {
+          substr = describeValueForErrorMessage(value);
+        }
+        if ('' + i === expandedName) {
+          start = str.length;
+          length = substr.length;
+          str += substr;
+        } else if (substr.length < 10 && str.length + substr.length < 40) {
+          str += substr;
+        } else {
+          str += '...';
+        }
       }
-      if ('' + i === expandedName) {
-        start = str.length;
-        length = substr.length;
-        str += substr;
-      } else if (substr.length < 10 && str.length + substr.length < 40) {
-        str += substr;
-      } else {
-        str += '...';
-      }
+      str += ']';
     }
-    str += ']';
   } else {
-    str = '{';
-    const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
-    const names = Object.keys(object);
-    for (let i = 0; i < names.length; i++) {
-      if (i > 0) {
-        str += ', ';
+    if (objectOrArray.$$typeof === REACT_ELEMENT_TYPE) {
+      str = '<' + describeElementType(objectOrArray.type) + '/>';
+    } else if (__DEV__ && jsxPropsParents.has(objectOrArray)) {
+      // Print JSX
+      const type = jsxPropsParents.get(objectOrArray);
+      str = '<' + (describeElementType(type) || '...');
+      const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
+      const names = Object.keys(object);
+      for (let i = 0; i < names.length; i++) {
+        str += ' ';
+        const name = names[i];
+        str += describeKeyForErrorMessage(name) + '=';
+        const value = object[name];
+        let substr;
+        if (
+          name === expandedName &&
+          typeof value === 'object' &&
+          value !== null
+        ) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
+          substr = describeObjectForErrorMessage(value);
+        } else {
+          substr = describeValueForErrorMessage(value);
+        }
+        if (typeof value !== 'string') {
+          substr = '{' + substr + '}';
+        }
+        if (name === expandedName) {
+          start = str.length;
+          length = substr.length;
+          str += substr;
+        } else if (substr.length < 10 && str.length + substr.length < 40) {
+          str += substr;
+        } else {
+          str += '...';
+        }
       }
-      if (i > 6) {
-        str += '...';
-        break;
+      str += '>';
+    } else {
+      // Print Object
+      str = '{';
+      const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
+      const names = Object.keys(object);
+      for (let i = 0; i < names.length; i++) {
+        if (i > 0) {
+          str += ', ';
+        }
+        const name = names[i];
+        str += describeKeyForErrorMessage(name) + ': ';
+        const value = object[name];
+        let substr;
+        if (typeof value === 'object' && value !== null) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
+          substr = describeObjectForErrorMessage(value);
+        } else {
+          substr = describeValueForErrorMessage(value);
+        }
+        if (name === expandedName) {
+          start = str.length;
+          length = substr.length;
+          str += substr;
+        } else if (substr.length < 10 && str.length + substr.length < 40) {
+          str += substr;
+        } else {
+          str += '...';
+        }
       }
-      const name = names[i];
-      str += describeKeyForErrorMessage(name) + ': ';
-      const value = object[name];
-      let substr;
-      if (
-        name === expandedName &&
-        typeof value === 'object' &&
-        value !== null
-      ) {
-        // $FlowFixMe[incompatible-call] found when upgrading Flow
-        substr = describeObjectForErrorMessage(value);
-      } else {
-        substr = describeValueForErrorMessage(value);
-      }
-      if (name === expandedName) {
-        start = str.length;
-        length = substr.length;
-        str += substr;
-      } else if (substr.length < 10 && str.length + substr.length < 40) {
-        str += substr;
-      } else {
-        str += '...';
-      }
+      str += '}';
     }
-    str += '}';
   }
   if (expandedName === undefined) {
     return str;
