@@ -11,10 +11,7 @@ import type {JSONValue, ResponseBase} from 'react-client/src/ReactFlightClient';
 
 import type {JSResourceReference} from 'JSResourceReference';
 
-import type {
-  ModuleMetaData,
-  resolveModuleReference as resolveModuleReferenceImpl,
-} from 'ReactFlightDOMRelayClientIntegration';
+import type {ModuleMetaData} from 'ReactFlightDOMRelayClientIntegration';
 
 export type ModuleReference<T> = JSResourceReference<T>;
 
@@ -27,6 +24,8 @@ export {
   preloadModule,
   requireModule,
 } from 'ReactFlightDOMRelayClientIntegration';
+
+import {resolveModuleReference as resolveModuleReferenceImpl} from 'ReactFlightDOMRelayClientIntegration';
 
 import isArray from 'shared/isArray';
 
