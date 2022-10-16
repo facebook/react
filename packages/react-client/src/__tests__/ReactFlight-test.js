@@ -524,7 +524,7 @@ describe('ReactFlight', () => {
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Only plain objects can be passed to Client Components from Server Components. ' +
-        'Built-ins like Date are not supported.',
+        'Date objects are not supported.',
       {withoutStack: true},
     );
   });
@@ -536,8 +536,7 @@ describe('ReactFlight', () => {
       );
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
-      'Only plain objects can be passed to Client Components from Server Components. ' +
-        'Built-ins like Date are not supported.\n' +
+      'Date objects cannot be rendered as text children. Try formatting it using toString().\n' +
         '  <div>Current date: {Date}</div>\n' +
         '                     ^^^^^^',
       {withoutStack: true},
@@ -550,7 +549,7 @@ describe('ReactFlight', () => {
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Only plain objects can be passed to Client Components from Server Components. ' +
-        'Built-ins like Math are not supported.\n' +
+        'Math objects are not supported.\n' +
         '  <input value={Math}>\n' +
         '               ^^^^^^',
       {withoutStack: true},
@@ -582,7 +581,7 @@ describe('ReactFlight', () => {
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Only plain objects can be passed to Client Components from Server Components. ' +
-        'Built-ins like Date are not supported.',
+        'Date objects are not supported.',
       {withoutStack: true},
     );
   });
@@ -599,7 +598,7 @@ describe('ReactFlight', () => {
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Only plain objects can be passed to Client Components from Server Components. ' +
-        'Built-ins like Date are not supported.\n' +
+        'Date objects are not supported.\n' +
         '  <>Current date: {Date}</>\n' +
         '                  ^^^^^^',
       {withoutStack: true},
@@ -616,7 +615,7 @@ describe('ReactFlight', () => {
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Only plain objects can be passed to Client Components from Server Components. ' +
-        'Built-ins like Math are not supported.\n' +
+        'Math objects are not supported.\n' +
         '  <... value={Math}>\n' +
         '             ^^^^^^',
       {withoutStack: true},
@@ -652,7 +651,7 @@ describe('ReactFlight', () => {
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Only plain objects can be passed to Client Components from Server Components. ' +
-        'Built-ins like Math are not supported.\n' +
+        'Math objects are not supported.\n' +
         '  {hello: Math, title: <h1/>}\n' +
         '          ^^^^',
       {withoutStack: true},
@@ -673,7 +672,7 @@ describe('ReactFlight', () => {
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Only plain objects can be passed to Client Components from Server Components. ' +
-        'Built-ins like Math are not supported.\n' +
+        'Math objects are not supported.\n' +
         '  [..., Math, <h1/>]\n' +
         '        ^^^^',
       {withoutStack: true},

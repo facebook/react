@@ -712,12 +712,21 @@ export function resolveModelToJSON(
     const originalValue = parent[key];
     if (typeof originalValue === 'object' && originalValue !== value) {
       if (objectName(originalValue) !== 'Object') {
-        console.error(
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Built-ins like %s are not supported.%s',
-          objectName(originalValue),
-          describeObjectForErrorMessage(parent, key),
-        );
+        const jsxParentType = jsxChildrenParents.get(parent);
+        if (typeof jsxParentType === 'string') {
+          console.error(
+            '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
+            objectName(originalValue),
+            describeObjectForErrorMessage(parent, key),
+          );
+        } else {
+          console.error(
+            'Only plain objects can be passed to Client Components from Server Components. ' +
+              '%s objects are not supported.%s',
+            objectName(originalValue),
+            describeObjectForErrorMessage(parent, key),
+          );
+        }
       } else {
         console.error(
           'Only plain objects can be passed to Client Components from Server Components. ' +
@@ -855,7 +864,7 @@ export function resolveModelToJSON(
         if (objectName(value) !== 'Object') {
           console.error(
             'Only plain objects can be passed to Client Components from Server Components. ' +
-              'Built-ins like %s are not supported.%s',
+              '%s objects are not supported.%s',
             objectName(value),
             describeObjectForErrorMessage(parent, key),
           );
