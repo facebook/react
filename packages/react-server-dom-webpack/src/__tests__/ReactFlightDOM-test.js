@@ -41,7 +41,7 @@ describe('ReactFlightDOM', () => {
 
     Stream = require('stream');
     React = require('react');
-    use = React.experimental_use;
+    use = React.use;
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
     ReactServerDOMWriter = require('react-server-dom-webpack/server.node');
