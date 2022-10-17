@@ -50,7 +50,7 @@ describe('ReactFlightDOMRelay', () => {
     return model;
   }
 
-  it('can render a server component', () => {
+  it('can render a Server Component', () => {
     function Bar({text}) {
       return text.toUpperCase();
     }
@@ -85,7 +85,7 @@ describe('ReactFlightDOMRelay', () => {
     });
   });
 
-  it('can render a client component using a module reference and render there', () => {
+  it('can render a Client Component using a module reference and render there', () => {
     function UserClient(props) {
       return (
         <span>
@@ -233,7 +233,7 @@ describe('ReactFlightDOMRelay', () => {
       ReactDOMFlightRelayServer.render(<input value={new Foo()} />, transport);
       readThrough(transport);
     }).toErrorDev(
-      'Only plain objects can be passed to client components from server components. ',
+      'Only plain objects can be passed to Client Components from Server Components. ',
       {withoutStack: true},
     );
   });

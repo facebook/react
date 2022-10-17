@@ -73,6 +73,8 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
+  REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
 } from 'shared/ReactSymbols';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
@@ -195,6 +197,11 @@ function createRootContext(
 
 const POP = {};
 
+// Used for DEV messages to keep track of which parent rendered some props,
+// in case they error.
+const jsxPropsParents: WeakMap<any, any> = new WeakMap();
+const jsxChildrenParents: WeakMap<any, any> = new WeakMap();
+
 function readThenable<T>(thenable: Thenable<T>): T {
   if (thenable.status === 'fulfilled') {
     return thenable.value;
@@ -226,12 +233,18 @@ function attemptResolveElement(
     // throw for functions. We could probably relax it to a DEV warning for other
     // cases.
     throw new Error(
-      'Refs cannot be used in server components, nor passed to client components.',
+      'Refs cannot be used in Server Components, nor passed to Client Components.',
     );
+  }
+  if (__DEV__) {
+    jsxPropsParents.set(props, type);
+    if (typeof props.children === 'object') {
+      jsxChildrenParents.set(props.children, type);
+    }
   }
   if (typeof type === 'function') {
     if (isModuleReference(type)) {
-      // This is a reference to a client component.
+      // This is a reference to a Client Component.
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     // This is a server-side component.
@@ -253,7 +266,7 @@ function attemptResolveElement(
       // For key-less fragments, we add a small optimization to avoid serializing
       // it as a wrapper.
       // TODO: If a key is specified, we should propagate its key to any children.
-      // Same as if a server component has a key.
+      // Same as if a Server Component has a key.
       return props.children;
     }
     // This might be a built-in React component. We'll let the client decide.
@@ -261,7 +274,7 @@ function attemptResolveElement(
     return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (type != null && typeof type === 'object') {
     if (isModuleReference(type)) {
-      // This is a reference to a client component.
+      // This is a reference to a Client Component.
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     switch (type.$$typeof) {
@@ -318,7 +331,7 @@ function attemptResolveElement(
     }
   }
   throw new Error(
-    `Unsupported server component type: ${describeValueForErrorMessage(type)}`,
+    `Unsupported Server Component type: ${describeValueForErrorMessage(type)}`,
   );
 }
 
@@ -505,66 +518,184 @@ function describeValueForErrorMessage(value: ReactModel): string {
   }
 }
 
+function describeElementType(type: any): string {
+  if (typeof type === 'string') {
+    return type;
+  }
+  switch (type) {
+    case REACT_SUSPENSE_TYPE:
+      return 'Suspense';
+    case REACT_SUSPENSE_LIST_TYPE:
+      return 'SuspenseList';
+  }
+  if (typeof type === 'object') {
+    switch (type.$$typeof) {
+      case REACT_FORWARD_REF_TYPE:
+        return describeElementType(type.render);
+      case REACT_MEMO_TYPE:
+        return describeElementType(type.type);
+      case REACT_LAZY_TYPE: {
+        const lazyComponent: LazyComponent<any, any> = (type: any);
+        const payload = lazyComponent._payload;
+        const init = lazyComponent._init;
+        try {
+          // Lazy may contain any component type so we recursively resolve it.
+          return describeElementType(init(payload));
+        } catch (x) {}
+      }
+    }
+  }
+  return '';
+}
+
 function describeObjectForErrorMessage(
   objectOrArray:
     | {+[key: string | number]: ReactModel, ...}
     | $ReadOnlyArray<ReactModel>,
   expandedName?: string,
 ): string {
+  const objKind = objectName(objectOrArray);
+  if (objKind !== 'Object' && objKind !== 'Array') {
+    return objKind;
+  }
+  let str = '';
+  let start = -1;
+  let length = 0;
   if (isArray(objectOrArray)) {
-    let str = '[';
-    const array: $ReadOnlyArray<ReactModel> = objectOrArray;
-    for (let i = 0; i < array.length; i++) {
-      if (i > 0) {
-        str += ', ';
+    if (__DEV__ && jsxChildrenParents.has(objectOrArray)) {
+      // Print JSX Children
+      const type = jsxChildrenParents.get(objectOrArray);
+      str = '<' + describeElementType(type) + '>';
+      const array: $ReadOnlyArray<ReactModel> = objectOrArray;
+      for (let i = 0; i < array.length; i++) {
+        const value = array[i];
+        let substr;
+        if (typeof value === 'string') {
+          substr = value;
+        } else if (typeof value === 'object' && value !== null) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
+          substr = '{' + describeObjectForErrorMessage(value) + '}';
+        } else {
+          substr = '{' + describeValueForErrorMessage(value) + '}';
+        }
+        if ('' + i === expandedName) {
+          start = str.length;
+          length = substr.length;
+          str += substr;
+        } else if (substr.length < 15 && str.length + substr.length < 40) {
+          str += substr;
+        } else {
+          str += '{...}';
+        }
       }
-      if (i > 6) {
-        str += '...';
-        break;
+      str += '</' + describeElementType(type) + '>';
+    } else {
+      // Print Array
+      str = '[';
+      const array: $ReadOnlyArray<ReactModel> = objectOrArray;
+      for (let i = 0; i < array.length; i++) {
+        if (i > 0) {
+          str += ', ';
+        }
+        const value = array[i];
+        let substr;
+        if (typeof value === 'object' && value !== null) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
+          substr = describeObjectForErrorMessage(value);
+        } else {
+          substr = describeValueForErrorMessage(value);
+        }
+        if ('' + i === expandedName) {
+          start = str.length;
+          length = substr.length;
+          str += substr;
+        } else if (substr.length < 10 && str.length + substr.length < 40) {
+          str += substr;
+        } else {
+          str += '...';
+        }
       }
-      const value = array[i];
-      if (
-        '' + i === expandedName &&
-        typeof value === 'object' &&
-        value !== null
-      ) {
-        // $FlowFixMe[incompatible-call] found when upgrading Flow
-        str += describeObjectForErrorMessage(value);
-      } else {
-        str += describeValueForErrorMessage(value);
-      }
+      str += ']';
     }
-    str += ']';
-    return str;
   } else {
-    let str = '{';
-    const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
-    const names = Object.keys(object);
-    for (let i = 0; i < names.length; i++) {
-      if (i > 0) {
-        str += ', ';
+    if (objectOrArray.$$typeof === REACT_ELEMENT_TYPE) {
+      str = '<' + describeElementType(objectOrArray.type) + '/>';
+    } else if (__DEV__ && jsxPropsParents.has(objectOrArray)) {
+      // Print JSX
+      const type = jsxPropsParents.get(objectOrArray);
+      str = '<' + (describeElementType(type) || '...');
+      const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
+      const names = Object.keys(object);
+      for (let i = 0; i < names.length; i++) {
+        str += ' ';
+        const name = names[i];
+        str += describeKeyForErrorMessage(name) + '=';
+        const value = object[name];
+        let substr;
+        if (
+          name === expandedName &&
+          typeof value === 'object' &&
+          value !== null
+        ) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
+          substr = describeObjectForErrorMessage(value);
+        } else {
+          substr = describeValueForErrorMessage(value);
+        }
+        if (typeof value !== 'string') {
+          substr = '{' + substr + '}';
+        }
+        if (name === expandedName) {
+          start = str.length;
+          length = substr.length;
+          str += substr;
+        } else if (substr.length < 10 && str.length + substr.length < 40) {
+          str += substr;
+        } else {
+          str += '...';
+        }
       }
-      if (i > 6) {
-        str += '...';
-        break;
+      str += '>';
+    } else {
+      // Print Object
+      str = '{';
+      const object: {+[key: string | number]: ReactModel, ...} = objectOrArray;
+      const names = Object.keys(object);
+      for (let i = 0; i < names.length; i++) {
+        if (i > 0) {
+          str += ', ';
+        }
+        const name = names[i];
+        str += describeKeyForErrorMessage(name) + ': ';
+        const value = object[name];
+        let substr;
+        if (typeof value === 'object' && value !== null) {
+          // $FlowFixMe[incompatible-call] found when upgrading Flow
+          substr = describeObjectForErrorMessage(value);
+        } else {
+          substr = describeValueForErrorMessage(value);
+        }
+        if (name === expandedName) {
+          start = str.length;
+          length = substr.length;
+          str += substr;
+        } else if (substr.length < 10 && str.length + substr.length < 40) {
+          str += substr;
+        } else {
+          str += '...';
+        }
       }
-      const name = names[i];
-      str += describeKeyForErrorMessage(name) + ': ';
-      const value = object[name];
-      if (
-        name === expandedName &&
-        typeof value === 'object' &&
-        value !== null
-      ) {
-        // $FlowFixMe[incompatible-call] found when upgrading Flow
-        str += describeObjectForErrorMessage(value);
-      } else {
-        str += describeValueForErrorMessage(value);
-      }
+      str += '}';
     }
-    str += '}';
+  }
+  if (expandedName === undefined) {
     return str;
   }
+  if (start > -1 && length > 0) {
+    const highlight = ' '.repeat(start) + '^'.repeat(length);
+    return '\n  ' + str + '\n  ' + highlight;
+  }
+  return '\n  ' + str;
 }
 
 let insideContextProps = null;
@@ -580,14 +711,30 @@ export function resolveModelToJSON(
     // $FlowFixMe
     const originalValue = parent[key];
     if (typeof originalValue === 'object' && originalValue !== value) {
-      console.error(
-        'Only plain objects can be passed to client components from server components. ' +
-          'Objects with toJSON methods are not supported. Convert it manually ' +
-          'to a simple value before passing it to props. ' +
-          'Remove %s from these props: %s',
-        describeKeyForErrorMessage(key),
-        describeObjectForErrorMessage(parent),
-      );
+      if (objectName(originalValue) !== 'Object') {
+        const jsxParentType = jsxChildrenParents.get(parent);
+        if (typeof jsxParentType === 'string') {
+          console.error(
+            '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
+            objectName(originalValue),
+            describeObjectForErrorMessage(parent, key),
+          );
+        } else {
+          console.error(
+            'Only plain objects can be passed to Client Components from Server Components. ' +
+              '%s objects are not supported.%s',
+            objectName(originalValue),
+            describeObjectForErrorMessage(parent, key),
+          );
+        }
+      } else {
+        console.error(
+          'Only plain objects can be passed to Client Components from Server Components. ' +
+            'Objects with toJSON methods are not supported. Convert it manually ' +
+            'to a simple value before passing it to props.%s',
+          describeObjectForErrorMessage(parent, key),
+        );
+      }
     }
   }
 
@@ -612,7 +759,7 @@ export function resolveModelToJSON(
     }
   }
 
-  // Resolve server components.
+  // Resolve Server Components.
   while (
     typeof value === 'object' &&
     value !== null &&
@@ -630,7 +777,7 @@ export function resolveModelToJSON(
         case REACT_ELEMENT_TYPE: {
           // TODO: Concatenate keys of parents onto children.
           const element: React$Element<any> = (value: any);
-          // Attempt to render the server component.
+          // Attempt to render the Server Component.
           value = attemptResolveElement(
             element.type,
             element.key,
@@ -716,30 +863,24 @@ export function resolveModelToJSON(
         // Verify that this is a simple plain object.
         if (objectName(value) !== 'Object') {
           console.error(
-            'Only plain objects can be passed to client components from server components. ' +
-              'Built-ins like %s are not supported. ' +
-              'Remove %s from these props: %s',
+            'Only plain objects can be passed to Client Components from Server Components. ' +
+              '%s objects are not supported.%s',
             objectName(value),
-            describeKeyForErrorMessage(key),
-            describeObjectForErrorMessage(parent),
+            describeObjectForErrorMessage(parent, key),
           );
         } else if (!isSimpleObject(value)) {
           console.error(
-            'Only plain objects can be passed to client components from server components. ' +
-              'Classes or other objects with methods are not supported. ' +
-              'Remove %s from these props: %s',
-            describeKeyForErrorMessage(key),
+            'Only plain objects can be passed to Client Components from Server Components. ' +
+              'Classes or other objects with methods are not supported.%s',
             describeObjectForErrorMessage(parent, key),
           );
         } else if (Object.getOwnPropertySymbols) {
           const symbols = Object.getOwnPropertySymbols(value);
           if (symbols.length > 0) {
             console.error(
-              'Only plain objects can be passed to client components from server components. ' +
-                'Objects with symbol properties like %s are not supported. ' +
-                'Remove %s from these props: %s',
+              'Only plain objects can be passed to Client Components from Server Components. ' +
+                'Objects with symbol properties like %s are not supported.%s',
               symbols[0].description,
-              describeKeyForErrorMessage(key),
               describeObjectForErrorMessage(parent, key),
             );
           }
@@ -769,24 +910,15 @@ export function resolveModelToJSON(
     }
     if (/^on[A-Z]/.test(key)) {
       throw new Error(
-        'Event handlers cannot be passed to client component props. ' +
-          `Remove ${describeKeyForErrorMessage(
-            key,
-          )} from these props if possible: ${describeObjectForErrorMessage(
-            parent,
-          )}
-` +
-          'If you need interactivity, consider converting part of this to a client component.',
+        'Event handlers cannot be passed to Client Component props.' +
+          describeObjectForErrorMessage(parent, key) +
+          '\nIf you need interactivity, consider converting part of this to a Client Component.',
       );
     } else {
       throw new Error(
-        'Functions cannot be passed directly to client components ' +
-          "because they're not serializable. " +
-          `Remove ${describeKeyForErrorMessage(key)} (${value.displayName ||
-            value.name ||
-            'function'}) from this object, or avoid the entire object: ${describeObjectForErrorMessage(
-            parent,
-          )}`,
+        'Functions cannot be passed directly to Client Components ' +
+          "because they're not serializable." +
+          describeObjectForErrorMessage(parent, key),
       );
     }
   }
@@ -802,16 +934,12 @@ export function resolveModelToJSON(
 
     if (Symbol.for(name) !== value) {
       throw new Error(
-        'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
+        'Only global symbols received from Symbol.for(...) can be passed to Client Components. ' +
           `The symbol Symbol.for(${
             // $FlowFixMe `description` might be undefined
             value.description
-          }) cannot be found among global symbols. ` +
-          `Remove ${describeKeyForErrorMessage(
-            key,
-          )} from this object, or avoid the entire object: ${describeObjectForErrorMessage(
-            parent,
-          )}`,
+          }) cannot be found among global symbols.` +
+          describeObjectForErrorMessage(parent, key),
       );
     }
 
@@ -825,22 +953,14 @@ export function resolveModelToJSON(
   // $FlowFixMe: bigint isn't added to Flow yet.
   if (typeof value === 'bigint') {
     throw new Error(
-      `BigInt (${value}) is not yet supported in client component props. ` +
-        `Remove ${describeKeyForErrorMessage(
-          key,
-        )} from this object or use a plain number instead: ${describeObjectForErrorMessage(
-          parent,
-        )}`,
+      `BigInt (${value}) is not yet supported in Client Component props.` +
+        describeObjectForErrorMessage(parent, key),
     );
   }
 
   throw new Error(
-    `Type ${typeof value} is not supported in client component props. ` +
-      `Remove ${describeKeyForErrorMessage(
-        key,
-      )} from this object, or avoid the entire object: ${describeObjectForErrorMessage(
-        parent,
-      )}`,
+    `Type ${typeof value} is not supported in Client Component props.` +
+      describeObjectForErrorMessage(parent, key),
   );
 }
 
@@ -968,7 +1088,7 @@ function retryTask(request: Request, task: Task): void {
       // previous attempt.
       const prevThenableState = task.thenableState;
 
-      // Attempt to render the server component.
+      // Attempt to render the Server Component.
       // Doing this here lets us reuse this same task if the next component
       // also suspends.
       task.model = value;
