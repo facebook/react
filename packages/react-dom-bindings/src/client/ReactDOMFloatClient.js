@@ -15,15 +15,16 @@ import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import {
   validateUnmatchedLinkResourceProps,
   validatePreloadResourceDifference,
-  validateHrefKeyedUpdatedProps,
+  validateURLKeyedUpdatedProps,
   validateStyleResourceDifference,
+  validateScriptResourceDifference,
   validateLinkPropsForStyleResource,
   validateLinkPropsForPreloadResource,
   validatePreloadArguments,
   validatePreinitArguments,
 } from '../shared/ReactDOMResourceValidation';
 import {createElement, setInitialProperties} from './ReactDOMComponent';
-import {getStylesFromRoot} from './ReactDOMComponentTree';
+import {getResourcesFromRoot} from './ReactDOMComponentTree';
 import {HTML_NAMESPACE} from '../shared/DOMNamespaces';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
@@ -33,7 +34,6 @@ type ResourceType = 'style' | 'font' | 'script';
 
 type PreloadProps = {
   rel: 'preload',
-  as: ResourceType,
   href: string,
   [string]: mixed,
 };
@@ -48,7 +48,7 @@ type PreloadResource = {
 type StyleProps = {
   rel: 'stylesheet',
   href: string,
-  'data-rprec': string,
+  'data-precedence': string,
   [string]: mixed,
 };
 export type StyleResource = {
@@ -72,10 +72,22 @@ export type StyleResource = {
   instance: ?Element,
   root: FloatRoot,
 };
+type ScriptProps = {
+  src: string,
+  [string]: mixed,
+};
+export type ScriptResource = {
+  type: 'script',
+  src: string,
+  props: ScriptProps,
+
+  instance: ?Element,
+  root: FloatRoot,
+};
 
 type Props = {[string]: mixed};
 
-type Resource = StyleResource | PreloadResource;
+type Resource = StyleResource | ScriptResource | PreloadResource;
 
 // Brief on purpose due to insertion by script when streaming late boundaries
 // s = Status
@@ -202,11 +214,12 @@ function preloadPropsFromPreloadOptions(
 //      ReactDOM.preinit
 // --------------------------------------
 
-type PreinitAs = 'style';
+type PreinitAs = 'style' | 'script';
 type PreinitOptions = {
   as: PreinitAs,
-  crossOrigin?: string,
   precedence?: string,
+  crossOrigin?: string,
+  integrity?: string,
 };
 function preinit(href: string, options: PreinitOptions) {
   if (__DEV__) {
@@ -243,7 +256,7 @@ function preinit(href: string, options: PreinitOptions) {
 
     switch (as) {
       case 'style': {
-        const styleResources = getStylesFromRoot(resourceRoot);
+        const styleResources = getResourcesFromRoot(resourceRoot).styles;
         const precedence = options.precedence || 'default';
         let resource = styleResources.get(href);
         if (resource) {
@@ -270,6 +283,28 @@ function preinit(href: string, options: PreinitOptions) {
           );
         }
         acquireResource(resource);
+        return;
+      }
+      case 'script': {
+        const src = href;
+        const scriptResources = getResourcesFromRoot(resourceRoot).scripts;
+        let resource = scriptResources.get(src);
+        if (resource) {
+          if (__DEV__) {
+            const latestProps = scriptPropsFromPreinitOptions(src, options);
+            validateScriptResourceDifference(resource.props, latestProps);
+          }
+        } else {
+          const resourceProps = scriptPropsFromPreinitOptions(src, options);
+          resource = createScriptResource(
+            scriptResources,
+            resourceRoot,
+            src,
+            resourceProps,
+          );
+        }
+        acquireResource(resource);
+        return;
       }
     }
   }
@@ -285,6 +320,7 @@ function preloadPropsFromPreinitOptions(
     rel: 'preload',
     as,
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
+    integrity: options.integrity,
   };
 }
 
@@ -296,8 +332,20 @@ function stylePropsFromPreinitOptions(
   return {
     rel: 'stylesheet',
     href,
-    'data-rprec': precedence,
+    'data-precedence': precedence,
     crossOrigin: options.crossOrigin,
+  };
+}
+
+function scriptPropsFromPreinitOptions(
+  src: string,
+  options: PreinitOptions,
+): ScriptProps {
+  return {
+    src,
+    async: true,
+    crossOrigin: options.crossOrigin,
+    integrity: options.integrity,
   };
 }
 
@@ -314,7 +362,11 @@ type StyleQualifyingProps = {
 type PreloadQualifyingProps = {
   rel: 'preload',
   href: string,
-  as: ResourceType,
+  [string]: mixed,
+};
+type ScriptQualifyingProps = {
+  src: string,
+  async: true,
   [string]: mixed,
 };
 
@@ -335,13 +387,15 @@ export function getResource(
       const {rel} = pendingProps;
       switch (rel) {
         case 'stylesheet': {
-          const styleResources = getStylesFromRoot(resourceRoot);
+          const styleResources = getResourcesFromRoot(resourceRoot).styles;
           let didWarn;
           if (__DEV__) {
             if (currentProps) {
-              didWarn = validateHrefKeyedUpdatedProps(
+              didWarn = validateURLKeyedUpdatedProps(
                 pendingProps,
                 currentProps,
+                'style',
+                'href',
               );
             }
             if (!didWarn) {
@@ -360,7 +414,7 @@ export function getResource(
                 if (!didWarn) {
                   const latestProps = stylePropsFromRawProps(styleRawProps);
                   if ((resource: any)._dev_preload_props) {
-                    adoptPreloadProps(
+                    adoptPreloadPropsForStyle(
                       latestProps,
                       (resource: any)._dev_preload_props,
                     );
@@ -387,8 +441,8 @@ export function getResource(
           if (__DEV__) {
             validateLinkPropsForPreloadResource(pendingProps);
           }
-          const {href, as} = pendingProps;
-          if (typeof href === 'string' && isResourceAsType(as)) {
+          const {href} = pendingProps;
+          if (typeof href === 'string') {
             // We've asserted all the specific types for PreloadQualifyingProps
             const preloadRawProps: PreloadQualifyingProps = (pendingProps: any);
             let resource = preloadResources.get(href);
@@ -424,6 +478,49 @@ export function getResource(
         }
       }
     }
+    case 'script': {
+      const scriptResources = getResourcesFromRoot(resourceRoot).scripts;
+      let didWarn;
+      if (__DEV__) {
+        if (currentProps) {
+          didWarn = validateURLKeyedUpdatedProps(
+            pendingProps,
+            currentProps,
+            'script',
+            'src',
+          );
+        }
+      }
+      const {src, async} = pendingProps;
+      if (async && typeof src === 'string') {
+        const scriptRawProps: ScriptQualifyingProps = (pendingProps: any);
+        let resource = scriptResources.get(src);
+        if (resource) {
+          if (__DEV__) {
+            if (!didWarn) {
+              const latestProps = scriptPropsFromRawProps(scriptRawProps);
+              if ((resource: any)._dev_preload_props) {
+                adoptPreloadPropsForScript(
+                  latestProps,
+                  (resource: any)._dev_preload_props,
+                );
+              }
+              validateScriptResourceDifference(resource.props, latestProps);
+            }
+          }
+        } else {
+          const resourceProps = scriptPropsFromRawProps(scriptRawProps);
+          resource = createScriptResource(
+            scriptResources,
+            resourceRoot,
+            src,
+            resourceProps,
+          );
+        }
+        return resource;
+      }
+      return null;
+    }
     default: {
       throw new Error(
         `getResource encountered a resource type it did not expect: "${type}". this is a bug in React.`,
@@ -440,9 +537,14 @@ function preloadPropsFromRawProps(
 
 function stylePropsFromRawProps(rawProps: StyleQualifyingProps): StyleProps {
   const props: StyleProps = Object.assign({}, rawProps);
-  props['data-rprec'] = rawProps.precedence;
+  props['data-precedence'] = rawProps.precedence;
   props.precedence = null;
 
+  return props;
+}
+
+function scriptPropsFromRawProps(rawProps: ScriptQualifyingProps): ScriptProps {
+  const props: ScriptProps = Object.assign({}, rawProps);
   return props;
 }
 
@@ -454,6 +556,9 @@ export function acquireResource(resource: Resource): Instance {
   switch (resource.type) {
     case 'style': {
       return acquireStyleResource(resource);
+    }
+    case 'script': {
+      return acquireScriptResource(resource);
     }
     case 'preload': {
       return resource.instance;
@@ -558,7 +663,7 @@ function createStyleResource(
       // the preload pathways. For instance if you have diffreent crossOrigin attributes for a preload
       // and a stylesheet the stylesheet will make a new request even if the preload had already loaded
       const preloadProps = hint.props;
-      adoptPreloadProps(resource.props, hint.props);
+      adoptPreloadPropsForStyle(resource.props, hint.props);
       if (__DEV__) {
         (resource: any)._dev_preload_props = preloadProps;
       }
@@ -568,7 +673,7 @@ function createStyleResource(
   return resource;
 }
 
-function adoptPreloadProps(
+function adoptPreloadPropsForStyle(
   styleProps: StyleProps,
   preloadProps: PreloadProps,
 ): void {
@@ -576,7 +681,6 @@ function adoptPreloadProps(
     styleProps.crossOrigin = preloadProps.crossOrigin;
   if (styleProps.referrerPolicy == null)
     styleProps.referrerPolicy = preloadProps.referrerPolicy;
-  if (styleProps.media == null) styleProps.media = preloadProps.media;
   if (styleProps.title == null) styleProps.title = preloadProps.title;
 }
 
@@ -610,6 +714,63 @@ function preloadPropsFromStyleProps(props: StyleProps): PreloadProps {
   };
 }
 
+function createScriptResource(
+  scriptResources: Map<string, ScriptResource>,
+  root: FloatRoot,
+  src: string,
+  props: ScriptProps,
+): ScriptResource {
+  if (__DEV__) {
+    if (scriptResources.has(src)) {
+      console.error(
+        'createScriptResource was called when a script Resource matching the same src already exists. This is a bug in React.',
+      );
+    }
+  }
+
+  const limitedEscapedSrc = escapeSelectorAttributeValueInsideDoubleQuotes(src);
+  const existingEl = root.querySelector(
+    `script[async][src="${limitedEscapedSrc}"]`,
+  );
+  const resource = {
+    type: 'script',
+    src,
+    props,
+    root,
+    instance: existingEl || null,
+  };
+  scriptResources.set(src, resource);
+
+  if (!existingEl) {
+    const hint = preloadResources.get(src);
+    if (hint) {
+      // If a preload for this style Resource already exists there are certain props we want to adopt
+      // on the style Resource, primarily focussed on making sure the style network pathways utilize
+      // the preload pathways. For instance if you have diffreent crossOrigin attributes for a preload
+      // and a stylesheet the stylesheet will make a new request even if the preload had already loaded
+      const preloadProps = hint.props;
+      adoptPreloadPropsForScript(props, hint.props);
+      if (__DEV__) {
+        (resource: any)._dev_preload_props = preloadProps;
+      }
+    }
+  }
+
+  return resource;
+}
+
+function adoptPreloadPropsForScript(
+  scriptProps: ScriptProps,
+  preloadProps: PreloadProps,
+): void {
+  if (scriptProps.crossOrigin == null)
+    scriptProps.crossOrigin = preloadProps.crossOrigin;
+  if (scriptProps.referrerPolicy == null)
+    scriptProps.referrerPolicy = preloadProps.referrerPolicy;
+  if (scriptProps.integrity == null)
+    scriptProps.referrerPolicy = preloadProps.integrity;
+}
+
 function createPreloadResource(
   ownerDocument: Document,
   href: string,
@@ -623,7 +784,7 @@ function createPreloadResource(
   );
   if (!element) {
     element = createResourceInstance('link', props, ownerDocument);
-    insertPreloadInstance(element, ownerDocument);
+    insertResourceInstance(element, ownerDocument);
   }
   return {
     type: 'preload',
@@ -641,7 +802,7 @@ function acquireStyleResource(resource: StyleResource): Instance {
       props.href,
     );
     const existingEl = root.querySelector(
-      `link[rel="stylesheet"][data-rprec][href="${limitedEscapedHref}"]`,
+      `link[rel="stylesheet"][data-precedence][href="${limitedEscapedHref}"]`,
     );
     if (existingEl) {
       resource.instance = existingEl;
@@ -682,6 +843,31 @@ function acquireStyleResource(resource: StyleResource): Instance {
   }
   resource.count++;
   // $FlowFixMe[incompatible-return] found when upgrading Flow
+  return resource.instance;
+}
+
+function acquireScriptResource(resource: ScriptResource): Instance {
+  if (!resource.instance) {
+    const {props, root} = resource;
+    const limitedEscapedSrc = escapeSelectorAttributeValueInsideDoubleQuotes(
+      props.src,
+    );
+    const existingEl = root.querySelector(
+      `script[async][src="${limitedEscapedSrc}"]`,
+    );
+    if (existingEl) {
+      resource.instance = existingEl;
+    } else {
+      const instance = createResourceInstance(
+        'script',
+        resource.props,
+        getDocumentFromRoot(root),
+      );
+
+      insertResourceInstance(instance, getDocumentFromRoot(root));
+      resource.instance = instance;
+    }
+  }
   return resource.instance;
 }
 
@@ -749,12 +935,14 @@ function insertStyleInstance(
   precedence: string,
   root: FloatRoot,
 ): void {
-  const nodes = root.querySelectorAll('link[rel="stylesheet"][data-rprec]');
+  const nodes = root.querySelectorAll(
+    'link[rel="stylesheet"][data-precedence]',
+  );
   const last = nodes.length ? nodes[nodes.length - 1] : null;
   let prior = last;
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
-    const nodePrecedence = node.dataset.rprec;
+    const nodePrecedence = node.dataset.precedence;
     if (nodePrecedence === precedence) {
       prior = node;
     } else if (prior !== last) {
@@ -780,20 +968,26 @@ function insertStyleInstance(
   }
 }
 
-function insertPreloadInstance(
+function insertResourceInstance(
   instance: Instance,
   ownerDocument: Document,
 ): void {
-  if (!ownerDocument.contains(instance)) {
-    const parent = ownerDocument.head;
-    if (parent) {
-      parent.appendChild(instance);
-    } else {
-      throw new Error(
-        'While attempting to insert a Resource, React expected the Document to contain' +
-          ' a head element but it was not found.',
+  if (__DEV__) {
+    if (instance.tagName === 'LINK' && (instance: any).rel === 'stylesheet') {
+      console.error(
+        'insertResourceInstance was called with a stylesheet. Stylesheets must be' +
+          ' inserted with insertStyleInstance instead. This is a bug in React.',
       );
     }
+  }
+  const parent = ownerDocument.head;
+  if (parent) {
+    parent.appendChild(instance);
+  } else {
+    throw new Error(
+      'While attempting to insert a Resource, React expected the Document to contain' +
+        ' a head element but it was not found.',
+    );
   }
 }
 
@@ -815,25 +1009,20 @@ export function isHostResourceType(type: string, props: Props): boolean {
           );
         }
         case 'preload': {
-          if (__DEV__) {
-            validateLinkPropsForStyleResource(props);
-          }
-          const {href, as, onLoad, onError} = props;
-          return (
-            !onLoad &&
-            !onError &&
-            typeof href === 'string' &&
-            isResourceAsType(as)
-          );
+          const {href, onLoad, onError} = props;
+          return !onLoad && !onError && typeof href === 'string';
         }
       }
+      return false;
+    }
+    case 'script': {
+      // We don't validate because it is valid to use async with onLoad/onError unlike combining
+      // precedence with these for style resources
+      const {src, async, onLoad, onError} = props;
+      return (async: any) && typeof src === 'string' && !onLoad && !onError;
     }
   }
   return false;
-}
-
-function isResourceAsType(as: mixed): boolean {
-  return as === 'style' || as === 'font' || as === 'script';
 }
 
 // When passing user input into querySelector(All) the embedded string must not alter

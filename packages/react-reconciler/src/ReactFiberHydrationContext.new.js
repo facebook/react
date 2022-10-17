@@ -35,7 +35,7 @@ import {
   NoFlags,
   DidCapture,
 } from './ReactFiberFlags';
-import {enableHostSingletons} from 'shared/ReactFeatureFlags';
+import {enableHostSingletons, enableFloat} from 'shared/ReactFeatureFlags';
 
 import {
   createFiberFromHostInstanceForDeletion,
@@ -45,6 +45,7 @@ import {
   shouldSetTextContent,
   supportsHydration,
   supportsSingletons,
+  isHydratable,
   canHydrateInstance,
   canHydrateTextInstance,
   canHydrateSuspenseInstance,
@@ -436,6 +437,13 @@ function claimHydratableSingleton(fiber: Fiber): void {
 
 function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
+    return;
+  }
+  if (enableFloat && !isHydratable(fiber.type, fiber.pendingProps)) {
+    // This fiber never hydrates from the DOM and always does an insert
+    fiber.flags = (fiber.flags & ~Hydrating) | Placement;
+    isHydrating = false;
+    hydrationParentFiber = fiber;
     return;
   }
   let nextInstance = nextHydratableInstance;
