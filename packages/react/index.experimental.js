@@ -24,7 +24,7 @@ export {
   createFactory,
   createRef,
   createServerContext,
-  experimental_use,
+  use,
   forwardRef,
   isValidElement,
   lazy,

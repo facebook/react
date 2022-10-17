@@ -26,7 +26,7 @@ export {
   createMutableSource as unstable_createMutableSource,
   createRef,
   createServerContext,
-  experimental_use,
+  use,
   forwardRef,
   isValidElement,
   lazy,
