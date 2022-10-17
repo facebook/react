@@ -69,13 +69,13 @@ import {
   includesSomeLane,
   mergeLanes,
   pickArbitraryLane,
-  includesSyncLane,
 } from './ReactFiberLane.old';
 import {
   getIsHydrating,
   markDidThrowWhileHydratingDEV,
   queueHydrationError,
 } from './ReactFiberHydrationContext.old';
+import {ConcurrentRoot} from './ReactRootTags';
 
 function createRootErrorUpdate(
   fiber: Fiber,
@@ -421,32 +421,26 @@ function throwException(
       // No boundary was found. Unless this is a sync update, this is OK.
       // We can suspend and wait for more data to arrive.
 
-      if (!includesSyncLane(rootRenderLanes)) {
-        // This is not a sync update. Suspend. Since we're not activating a
-        // Suspense boundary, this will unwind all the way to the root without
-        // performing a second pass to render a fallback. (This is arguably how
-        // refresh transitions should work, too, since we're not going to commit
-        // the fallbacks anyway.)
+      if (root.tag === ConcurrentRoot) {
+        // In a concurrent root, suspending without a Suspense boundary is
+        // allowed. It will suspend indefinitely without committing.
         //
-        // This case also applies to initial hydration.
+        // TODO: Should we have different behavior for discrete updates? What
+        // about flushSync? Maybe it should put the tree into an inert state,
+        // and potentially log a warning. Revisit this for a future release.
         attachPingListener(root, wakeable, rootRenderLanes);
         renderDidSuspendDelayIfPossible();
         return;
+      } else {
+        // In a legacy root, suspending without a boundary is always an error.
+        const uncaughtSuspenseError = new Error(
+          'A component suspended while responding to synchronous input. This ' +
+            'will cause the UI to be replaced with a loading indicator. To ' +
+            'fix, updates that suspend should be wrapped ' +
+            'with startTransition.',
+        );
+        value = uncaughtSuspenseError;
       }
-
-      // This is a sync/discrete update. We treat this case like an error
-      // because discrete renders are expected to produce a complete tree
-      // synchronously to maintain consistency with external state.
-      const uncaughtSuspenseError = new Error(
-        'A component suspended while responding to synchronous input. This ' +
-          'will cause the UI to be replaced with a loading indicator. To ' +
-          'fix, updates that suspend should be wrapped ' +
-          'with startTransition.',
-      );
-
-      // If we're outside a transition, fall through to the regular error path.
-      // The error will be caught by the nearest suspense boundary.
-      value = uncaughtSuspenseError;
     }
   } else {
     // This is a regular error, not a Suspense wakeable.
