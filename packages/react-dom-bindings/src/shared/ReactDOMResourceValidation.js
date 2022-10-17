@@ -115,6 +115,7 @@ export function validatePreloadResourceDifference(
       if (missingProps || extraProps || differentProps) {
         warnDifferentProps(
           href,
+          'href',
           originalWarningName,
           latestWarningName,
           extraProps,
@@ -156,7 +157,7 @@ export function validateStyleResourceDifference(
       const originalValue = originalProps[propName];
 
       if (propValue != null && propValue !== originalValue) {
-        propName = propName === 'data-rprec' ? 'precedence' : propName;
+        propName = propName === 'data-precedence' ? 'precedence' : propName;
         if (originalValue == null) {
           extraProps = extraProps || {};
           extraProps[propName] = propValue;
@@ -173,10 +174,63 @@ export function validateStyleResourceDifference(
     if (missingProps || extraProps || differentProps) {
       warnDifferentProps(
         href,
+        'href',
         originalWarningName,
         latestWarningName,
         extraProps,
         missingProps,
+        differentProps,
+      );
+    }
+  }
+}
+
+export function validateScriptResourceDifference(
+  originalProps: any,
+  latestProps: any,
+) {
+  if (__DEV__) {
+    const {src} = originalProps;
+    // eslint-disable-next-line no-labels
+    const originalWarningName = getResourceNameForWarning(
+      'script',
+      originalProps,
+      false,
+    );
+    const latestWarningName = getResourceNameForWarning(
+      'script',
+      latestProps,
+      false,
+    );
+    let extraProps = null;
+    let differentProps = null;
+
+    for (const propName in latestProps) {
+      const propValue = latestProps[propName];
+      const originalValue = originalProps[propName];
+
+      if (propValue != null && propValue !== originalValue) {
+        if (originalValue == null) {
+          extraProps = extraProps || {};
+          extraProps[propName] = propValue;
+        } else {
+          differentProps = differentProps || {};
+          differentProps[propName] = {
+            original: originalValue,
+            latest: propValue,
+          };
+        }
+      }
+    }
+
+    if (extraProps || differentProps) {
+      warnDifferentProps(
+        src,
+        'src',
+        originalWarningName,
+        latestWarningName,
+        extraProps,
+        null,
         differentProps,
       );
     }
@@ -205,7 +259,7 @@ export function validateStyleAndHintProps(
     if (preloadProps.as !== 'style') {
       console.error(
         'While creating a %s for href "%s" a %s for this same href was found. When preloading a stylesheet the' +
-          ' "as" prop must be of type "style". This most likely ocurred by rending a preload link with an incorrect' +
+          ' "as" prop must be of type "style". This most likely ocurred by rendering a preload link with an incorrect' +
           ' "as" prop or by calling ReactDOM.preload with an incorrect "as" option.',
         latestWarningName,
         href,
@@ -252,6 +306,86 @@ export function validateStyleAndHintProps(
     if (missingProps || extraProps || differentProps) {
       warnDifferentProps(
         href,
+        'href',
+        originalWarningName,
+        latestWarningName,
+        extraProps,
+        missingProps,
+        differentProps,
+      );
+    }
+  }
+}
+
+export function validateScriptAndHintProps(
+  preloadProps: any,
+  scriptProps: any,
+  implicitPreload: boolean,
+) {
+  if (__DEV__) {
+    const {href} = preloadProps;
+
+    const originalWarningName = getResourceNameForWarning(
+      'preload',
+      preloadProps,
+      implicitPreload,
+    );
+    const latestWarningName = getResourceNameForWarning(
+      'script',
+      scriptProps,
+      false,
+    );
+
+    if (preloadProps.as !== 'script') {
+      console.error(
+        'While creating a %s for href "%s" a %s for this same url was found. When preloading a script the' +
+          ' "as" prop must be of type "script". This most likely ocurred by rendering a preload link with an incorrect' +
+          ' "as" prop or by calling ReactDOM.preload with an incorrect "as" option.',
+        latestWarningName,
+        href,
+        originalWarningName,
+      );
+    }
+
+    let missingProps = null;
+    let extraProps = null;
+    let differentProps = null;
+
+    for (const propName in scriptProps) {
+      const scriptValue = scriptProps[propName];
+      const preloadValue = preloadProps[propName];
+      switch (propName) {
+        // Check for difference on specific props that cross over or influence
+        // the relationship between the preload and stylesheet
+        case 'crossOrigin':
+        case 'referrerPolicy':
+        case 'integrity': {
+          if (
+            preloadValue !== scriptValue &&
+            !(preloadValue == null && scriptValue == null)
+          ) {
+            if (scriptValue == null) {
+              missingProps = missingProps || {};
+              missingProps[propName] = preloadValue;
+            } else if (preloadValue == null) {
+              extraProps = extraProps || {};
+              extraProps[propName] = scriptValue;
+            } else {
+              differentProps = differentProps || {};
+              differentProps[propName] = {
+                original: preloadValue,
+                latest: scriptValue,
+              };
+            }
+          }
+        }
+      }
+    }
+
+    if (missingProps || extraProps || differentProps) {
+      warnDifferentProps(
+        href,
+        'href',
         originalWarningName,
         latestWarningName,
         extraProps,
@@ -263,7 +397,8 @@ export function validateStyleAndHintProps(
 }
 
 function warnDifferentProps(
-  href: string,
+  url: string,
+  urlPropKey: string,
   originalName: string,
   latestName: string,
   extraProps: ?{[string]: any},
@@ -274,7 +409,7 @@ function warnDifferentProps(
     const juxtaposedNameStatement =
       latestName === originalName
         ? 'an earlier instance of this Resource'
-        : `a ${originalName} with the same href`;
+        : `a ${originalName} with the same ${urlPropKey}`;
 
     let comparisonStatement = '';
     if (missingProps !== null && typeof missingProps === 'object') {
@@ -294,12 +429,14 @@ function warnDifferentProps(
     }
 
     console.error(
-      'A %s with href "%s" has props that disagree with those found on %s. Resources always use the props' +
+      'A %s with %s "%s" has props that disagree with those found on %s. Resources always use the props' +
         ' that were provided the first time they are encountered so any differences will be ignored. Please' +
-        ' update Resources that share an href to have props that agree. The differences are described below.%s',
+        ' update Resources that share an %s to have props that agree. The differences are described below.%s',
       latestName,
-      href,
+      urlPropKey,
+      url,
       juxtaposedNameStatement,
+      urlPropKey,
       comparisonStatement,
     );
   }
@@ -315,6 +452,9 @@ function getResourceNameForWarning(
       case 'style': {
         return 'style Resource';
       }
+      case 'script': {
+        return 'script Resource';
+      }
       case 'preload': {
         if (implicit) {
           return `preload for a ${props.as} Resource`;
@@ -326,15 +466,17 @@ function getResourceNameForWarning(
   return 'Resource';
 }
 
-export function validateHrefKeyedUpdatedProps(
+export function validateURLKeyedUpdatedProps(
   pendingProps: Props,
   currentProps: Props,
+  resourceType: 'style' | 'script' | 'href',
+  urlPropKey: 'href' | 'src',
 ): boolean {
   if (__DEV__) {
-    // This function should never be called if we don't have hrefs so we don't bother considering
+    // This function should never be called if we don't have /srcs so we don't bother considering
     // Whether they are null or undefined
-    if (pendingProps.href === currentProps.href) {
-      // If we have the same href we need all other props to be the same
+    if (pendingProps[urlPropKey] === currentProps[urlPropKey]) {
+      // If we have the same href/src we need all other props to be the same
       let missingProps;
       let extraProps;
       let differentProps;
@@ -366,7 +508,7 @@ export function validateHrefKeyedUpdatedProps(
       }
       if (missingProps || extraProps || differentProps) {
         const latestWarningName = getResourceNameForWarning(
-          'style',
+          resourceType,
           currentProps,
           false,
         );
@@ -388,14 +530,17 @@ export function validateHrefKeyedUpdatedProps(
           }
         }
         console.error(
-          'A %s with href "%s" recieved new props with different values from the props used' +
+          'A %s with %s "%s" recieved new props with different values from the props used' +
             ' when this Resource was first rendered. React will only use the props provided when' +
-            ' this resource was first rendered until a new href is provided. Unlike conventional' +
+            ' this resource was first rendered until a new %s is provided. Unlike conventional' +
             ' DOM elements, Resources instances do not have a one to one correspondence with Elements' +
             ' in the DOM and as such, every instance of a Resource for a single Resource identifier' +
-            ' (href) must have props that agree with each other. The differences are described below.%s',
+            ' (%s) must have props that agree with each other. The differences are described below.%s',
           latestWarningName,
-          currentProps.href,
+          urlPropKey,
+          currentProps[urlPropKey],
+          urlPropKey,
+          urlPropKey,
           comparisonStatement,
         );
         return true;
@@ -556,7 +701,8 @@ export function validatePreinitArguments(href: mixed, options: mixed) {
     } else {
       const as = options.as;
       switch (as) {
-        case 'style': {
+        case 'style':
+        case 'script': {
           break;
         }
 
@@ -565,8 +711,8 @@ export function validatePreinitArguments(href: mixed, options: mixed) {
           const typeOfAs = getValueDescriptorExpectingEnumForWarning(as);
           console.error(
             'ReactDOM.preinit() expected the second argument to be an options argument containing at least an "as" property' +
-              ' specifying the Resource type. It found %s instead. Currently, the only valid resource type for preinit is "style".' +
-              ' The href for the preinit call where this warning originated is "%s".',
+              ' specifying the Resource type. It found %s instead. Currently, valid resource types for for preinit are "style"' +
+              ' and "script". The href for the preinit call where this warning originated is "%s".',
             typeOfAs,
             href,
           );
