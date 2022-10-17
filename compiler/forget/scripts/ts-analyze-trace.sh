@@ -6,4 +6,4 @@
 set -eo pipefail
 
 tmp_dir=$(mktemp -d -t forget-XXXXXXXXXX)
-tsc -p ./tsconfig.json --generateTrace $tmp_dir --incremental false && npx @typescript/analyze-trace $tmp_dir "$@"
+./node_modules/typescript/bin/tsc -p ./tsconfig.json --generateTrace $tmp_dir --incremental false && npx @typescript/analyze-trace $tmp_dir "$@"
