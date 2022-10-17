@@ -18,6 +18,7 @@ import type {
 } from 'shared/ReactTypes';
 import type {
   Fiber,
+  FiberRoot,
   Dispatcher,
   HookType,
   MemoCache,
@@ -25,7 +26,6 @@ import type {
 } from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {HookFlags} from './ReactHookEffectTags';
-import type {FiberRoot} from './ReactInternalTypes';
 import type {Flags} from './ReactFiberFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';

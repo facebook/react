@@ -22,6 +22,7 @@ import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 import {
   warnAboutUpdateOnNotYetMountedFiberInDEV,
   throwIfInfiniteUpdateLoopDetected,
+  getWorkInProgressRoot,
 } from './ReactFiberWorkLoop.old';
 import {
   NoLane,
@@ -32,7 +33,6 @@ import {
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {HostRoot, OffscreenComponent} from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberOffscreenComponent';
-import {getWorkInProgressRoot} from './ReactFiberWorkLoop.old';
 
 export type ConcurrentUpdate = {
   next: ConcurrentUpdate,

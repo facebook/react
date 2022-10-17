@@ -9,18 +9,18 @@
 
 import type {
   Fiber,
+  FiberRoot,
   SuspenseHydrationCallbacks,
   TransitionTracingCallbacks,
 } from './ReactInternalTypes';
-import type {FiberRoot} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {
   Instance,
   TextInstance,
   Container,
   PublicInstance,
+  RendererInspectionConfig,
 } from './ReactFiberHostConfig';
-import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';

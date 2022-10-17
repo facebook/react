@@ -43,10 +43,12 @@ import {
   accumulateSinglePhaseListeners,
   accumulateEventHandleNonManagedNodeListeners,
 } from '../DOMPluginEventSystem';
-import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../EventSystemFlags';
+import {
+  IS_EVENT_HANDLE_NON_MANAGED_NODE,
+  IS_CAPTURE_PHASE,
+} from '../EventSystemFlags';
 
 import getEventCharCode from '../getEventCharCode';
-import {IS_CAPTURE_PHASE} from '../EventSystemFlags';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
