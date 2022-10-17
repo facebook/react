@@ -125,6 +125,9 @@ export const enableUseMemoCacheHook = __EXPERIMENTAL__;
 
 export const enableUseEventHook = __EXPERIMENTAL__;
 
+// Test in www before enabling in open source.
+export const enableFizzExternalRuntime = false;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //

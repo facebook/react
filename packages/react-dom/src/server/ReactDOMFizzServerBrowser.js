@@ -34,6 +34,7 @@ type Options = {
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
 };
 
 // TODO: Move to sub-classing ReadableStream.
@@ -86,6 +87,7 @@ function renderToReadableStream(
         options ? options.bootstrapScriptContent : undefined,
         options ? options.bootstrapScripts : undefined,
         options ? options.bootstrapModules : undefined,
+        options ? options.unstable_externalRuntimeSrc : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
