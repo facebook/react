@@ -14,7 +14,7 @@ const {
   useRef,
 } = React;
 
-export const $empty = Symbol.for("react.usememocache_sentinel");
+export const $empty = Symbol.for("react.memo_cache_sentinel");
 
 export function unstable_useMemoCache(size) {
   "use no forget";
