@@ -16,9 +16,12 @@ const {
 
 export const $empty = Symbol.for("react.usememocache_sentinel");
 
-export function unstable_useMemoCache(i) {
+export function unstable_useMemoCache(size) {
   "use no forget";
-  const $ = new Array(i).fill($empty);
+  const $ = new Array(size);
+  for (let ii = 0; ii < size; ii++) {
+    $[ii] = $empty;
+  }
   return useRef($).current;
 }
 
@@ -78,7 +81,9 @@ export function $endLazy() {
 }
 
 export function $reset($) {
-  $.fill($empty);
+  for (let ii = 0; ii < $.length; ii++) {
+    $[ii] = $empty;
+  }
 }
 
 export function $makeReadOnly() {
