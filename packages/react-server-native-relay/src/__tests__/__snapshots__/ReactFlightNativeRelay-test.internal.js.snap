@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ReactFlightNativeRelay can render a client component using a module reference and render there 1`] = `
+exports[`ReactFlightNativeRelay can render a Client Component using a module reference and render there 1`] = `
 "1
  RCTText null
    RCTRawText {\\"text\\":\\"Hello\\"}
@@ -8,7 +8,7 @@ exports[`ReactFlightNativeRelay can render a client component using a module ref
    RCTRawText {\\"text\\":\\"Seb Smith\\"}"
 `;
 
-exports[`ReactFlightNativeRelay can render a server component 1`] = `
+exports[`ReactFlightNativeRelay can render a Server Component 1`] = `
 Object {
   "foo": Object {
     "bar": <RCTView>
