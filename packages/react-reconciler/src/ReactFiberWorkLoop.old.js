@@ -1063,10 +1063,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       // The render unwound without completing the tree. This happens in special
       // cases where need to exit the current render without producing a
       // consistent tree or committing.
-      //
-      // This should only happen during a concurrent render, not a discrete or
-      // synchronous update. We should have already checked for this when we
-      // unwound the stack.
       markRootSuspended(root, lanes);
     } else {
       // The render completed.
@@ -1111,6 +1107,9 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           ensureRootIsScheduled(root, now());
           throw fatalError;
         }
+
+        // FIXME: Need to check for RootDidNotComplete again. The factoring here
+        // isn't ideal.
       }
 
       // We now have a consistent tree. The next step is either to commit it,
@@ -1473,7 +1472,12 @@ function performSyncWorkOnRoot(root) {
   }
 
   if (exitStatus === RootDidNotComplete) {
-    throw new Error('Root did not complete. This is a bug in React.');
+    // The render unwound without completing the tree. This happens in special
+    // cases where need to exit the current render without producing a
+    // consistent tree or committing.
+    markRootSuspended(root, lanes);
+    ensureRootIsScheduled(root, now());
+    return null;
   }
 
   // We now have a consistent tree. Because this is a sync render, we
