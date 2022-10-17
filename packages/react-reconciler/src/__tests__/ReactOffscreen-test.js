@@ -1561,6 +1561,7 @@ describe('ReactOffscreen', () => {
           <span prop="Child 2" />
         </>,
       );
+      expect(offscreenRef.current).not.toBeNull();
     });
 
     // @gate enableOffscreen

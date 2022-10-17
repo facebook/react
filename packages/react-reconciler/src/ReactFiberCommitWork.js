@@ -2418,13 +2418,29 @@ export function detachOffscreenInstance(instance: OffscreenInstance): void {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     scheduleMicrotask(() => {
       instance._visibility |= OffscreenDetached;
-      disappearLayoutEffects(currentOffscreenFiber);
-      disconnectPassiveEffect(currentOffscreenFiber);
+    const children = [currentOffscreenFiber.child];
+    let node = currentOffscreenFiber.child.sibling;
+    while (node != null) {
+      children.push(node);
+      node = node.sibling;
+    }
+    children.forEach((child) => {
+      disappearLayoutEffects(child);
+      disconnectPassiveEffect(child);
+    });
     });
   } else {
     instance._visibility |= OffscreenDetached;
-    disappearLayoutEffects(currentOffscreenFiber);
-    disconnectPassiveEffect(currentOffscreenFiber);
+    const children = [currentOffscreenFiber.child];
+    let node = currentOffscreenFiber.child.sibling;
+    while (node != null) {
+      children.push(node);
+      node = node.sibling;
+    }
+    children.forEach((child) => {
+      disappearLayoutEffects(child);
+      disconnectPassiveEffect(child);
+    });
   }
 }
 
