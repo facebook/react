@@ -36,12 +36,12 @@ import {
   UIManager,
   legacySendAccessibilityEvent,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
-import {getInspectorDataForInstance} from './ReactNativeFiberInspector';
 
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 import {
   getInspectorDataForViewTag,
   getInspectorDataForViewAtPoint,
+  getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';

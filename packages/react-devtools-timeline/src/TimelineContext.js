@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactContext, RefObject} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import {
@@ -27,7 +27,6 @@ import type {
   ViewState,
   ReactEventInfo,
 } from './types';
-import type {RefObject} from 'shared/ReactTypes';
 
 export type Context = {
   file: File | null,

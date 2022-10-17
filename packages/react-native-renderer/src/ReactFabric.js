@@ -23,7 +23,6 @@ import {
   injectIntoDevTools,
   getPublicRootInstance,
 } from 'react-reconciler/src/ReactFiberReconciler';
-import {getInspectorDataForInstance} from './ReactNativeFiberInspector';
 
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';
@@ -39,6 +38,7 @@ import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
 import {
   getInspectorDataForViewTag,
   getInspectorDataForViewAtPoint,
+  getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
 import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';

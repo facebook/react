@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {RootState} from './ReactFiberRoot.new';
 import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {
@@ -15,7 +15,6 @@ import type {
   ReactContext,
   Wakeable,
 } from 'shared/ReactTypes';
-import type {FiberRoot} from './ReactInternalTypes';
 import type {
   Instance,
   Type,
@@ -34,6 +33,12 @@ import {
   enableSuspenseAvoidThisFallback,
   enableLegacyHidden,
   enableHostSingletons,
+  enableSuspenseCallback,
+  enableScopeAPI,
+  enableProfilerTimer,
+  enableCache,
+  enableTransitionTracing,
+  enableFloat,
 } from 'shared/ReactFeatureFlags';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
@@ -144,14 +149,6 @@ import {
   hasUnhydratedTailNodes,
   upgradeHydrationErrorsToRecoverable,
 } from './ReactFiberHydrationContext.new';
-import {
-  enableSuspenseCallback,
-  enableScopeAPI,
-  enableProfilerTimer,
-  enableCache,
-  enableTransitionTracing,
-  enableFloat,
-} from 'shared/ReactFeatureFlags';
 import {
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,

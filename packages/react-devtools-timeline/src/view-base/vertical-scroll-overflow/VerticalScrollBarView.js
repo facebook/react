@@ -7,10 +7,10 @@
  * @flow
  */
 
-import type {Interaction} from '../useCanvasInteraction';
 import type {Rect} from '../geometry';
 import type {Surface, ViewRefs} from '../Surface';
 import type {
+  Interaction,
   ClickInteraction,
   MouseDownInteraction,
   MouseMoveInteraction,

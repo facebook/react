@@ -18,7 +18,12 @@ const {Dispatcher} = ReactDOMSharedInternals;
 import {ReactDOMClientDispatcher} from 'react-dom-bindings/src/client/ReactDOMFloatClient';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import {enableFloat, enableHostSingletons} from 'shared/ReactFeatureFlags';
+import {
+  enableFloat,
+  enableHostSingletons,
+  allowConcurrentByDefault,
+  disableCommentsAsDOMContainers,
+} from 'shared/ReactFeatureFlags';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -73,10 +78,6 @@ import {
   isAlreadyRendering,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
-import {
-  allowConcurrentByDefault,
-  disableCommentsAsDOMContainers,
-} from 'shared/ReactFeatureFlags';
 
 /* global reportError */
 const defaultOnRecoverableError =
