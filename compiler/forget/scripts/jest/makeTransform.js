@@ -33,7 +33,28 @@ module.exports = (useForget) => {
         },
         "@babel/preset-react",
         {
-          plugins: ["@babel/plugin-transform-modules-commonjs"],
+          plugins: [
+            [
+              function BabelPluginRewriteRequirePath(babel) {
+                return {
+                  visitor: {
+                    CallExpression(path) {
+                      if (path.node.callee.name === "require") {
+                        const arg = path.node.arguments[0];
+                        if (arg.type === "StringLiteral") {
+                          if (arg.value === "react-forget-runtime") {
+                            arg.value =
+                              "../../../packages/react-forget-runtime";
+                          }
+                        }
+                      }
+                    },
+                  },
+                };
+              },
+            ],
+            "@babel/plugin-transform-modules-commonjs",
+          ],
         },
       ],
       targets: {

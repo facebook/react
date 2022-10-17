@@ -42,6 +42,30 @@ export function run(lirProg: LIR.Prog, context: CompilerContext) {
         /*source*/ t.stringLiteral("react")
       )
     );
+    const utils = ["$empty"];
+    if (context.opts.flags.guardHooks) {
+      utils.push("$startLazy", "$endLazy");
+    }
+    if (context.opts.flags.guardReads) {
+      utils.push("$read");
+    }
+    if (context.opts.flags.addFreeze) {
+      utils.push("$makeReadOnly");
+    }
+    if (context.opts.flags.guardThrows) {
+      utils.push("$reset");
+    }
+    if (utils.length > 0) {
+      prog.unshiftContainer(
+        "body",
+        t.importDeclaration(
+          utils.map((name) =>
+            t.importSpecifier(t.identifier(name), t.identifier(name))
+          ),
+          t.stringLiteral("react-forget-runtime")
+        )
+      );
+    }
   }
 
   for (const [irFunc, lirFunc] of lirProg.funcs) {

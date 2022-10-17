@@ -100,13 +100,13 @@ class MemoCache {
   }
 
   /**
-   * `$[entry] == $._`
+   * `$[entry] == $empty`
    */
   isEmpty(entry: LIR.MemoCache.Entry): t.BinaryExpression {
     return t.binaryExpression(
       "===",
       this.#cacheMember(entry.index),
-      t.memberExpression(this.id, t.identifier("_"))
+      t.identifier("$empty")
     );
   }
 
@@ -122,10 +122,10 @@ class MemoCache {
 
   #readIndex(index: number): t.Expression {
     if (this.#guardReads) {
-      return t.callExpression(
-        t.memberExpression(t.identifier("useMemoCache"), t.identifier("read")),
-        [this.id, t.numericLiteral(index)]
-      );
+      return t.callExpression(t.identifier("$read"), [
+        this.id,
+        t.numericLiteral(index),
+      ]);
     } else {
       return this.#cacheMember(index);
     }
@@ -193,7 +193,7 @@ export class Func {
     if (this.context.opts.flags.addFreeze === true) {
       this.code.push(
         t.expressionStatement(
-          t.callExpression(t.identifier("useMemoCache.makeReadOnly"), [
+          t.callExpression(t.identifier("$makeReadOnly"), [
             val.binding.identifier,
           ])
         )
@@ -382,22 +382,10 @@ export class Func {
 
     if (this.context.opts.flags.guardHooks) {
       const startLazyCall = t.expressionStatement(
-        t.callExpression(
-          t.memberExpression(
-            t.identifier("useMemoCache"),
-            t.identifier("startLazy")
-          ),
-          []
-        )
+        t.callExpression(t.identifier("$startLazy"), [])
       );
       const endLazyCall = t.expressionStatement(
-        t.callExpression(
-          t.memberExpression(
-            t.identifier("useMemoCache"),
-            t.identifier("endLazy")
-          ),
-          []
-        )
+        t.callExpression(t.identifier("$endLazy"), [])
       );
       evalBody = [
         t.tryStatement(

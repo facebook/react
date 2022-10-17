@@ -1,0 +1,10 @@
+{
+  "name": "react-forget-runtime",
+  "version": "0.0.1",
+  "description": "Runtime for React Forget",
+  "main": "index.js",
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ]
+}

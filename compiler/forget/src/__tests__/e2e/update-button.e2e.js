@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { render } from "@testing-library/react";
 import * as React from "react";
-import { useMemoCacheStub } from "../test-utils/useMemoCacheStub";
+import { render } from "@testing-library/react";
 
-React.unstable_useMemoCache = useMemoCacheStub;
+import { unstable_useMemoCache } from "react-forget-runtime";
+React.unstable_useMemoCache = unstable_useMemoCache;
 
 function Button({ label }) {
   const theme = useTheme();
