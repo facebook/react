@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Size, IntrinsicSize} from './geometry';
+import type {Size, IntrinsicSize, Rect} from './geometry';
 import type {
   Interaction,
   MouseDownInteraction,
@@ -16,7 +16,6 @@ import type {
   WheelPlainInteraction,
   WheelWithShiftInteraction,
 } from './useCanvasInteraction';
-import type {Rect} from './geometry';
 import type {ScrollState} from './utils/scrollState';
 import type {ViewRefs} from './Surface';
 import type {ViewState} from '../types';

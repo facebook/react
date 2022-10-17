@@ -24,8 +24,8 @@ import {
   getFiberFromScopeInstance,
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
+  detachDeletedInstance,
 } from './ReactDOMComponentTree';
-import {detachDeletedInstance} from './ReactDOMComponentTree';
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
 import {

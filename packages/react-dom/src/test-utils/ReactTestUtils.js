@@ -23,10 +23,9 @@ import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
-import {enableFloat} from 'shared/ReactFeatureFlags';
+import {enableFloat, enableHostSingletons} from 'shared/ReactFeatureFlags';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
-import {enableHostSingletons} from 'shared/ReactFeatureFlags';
 
 // Keep in sync with ReactDOM.js:
 const SecretInternals =
