@@ -1012,15 +1012,21 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate enableCache
-  it('errors when an update suspends without a placeholder during a sync update', () => {
-    // This is an error because sync/discrete updates are expected to produce
-    // a complete tree immediately to maintain consistency with external state
-    // — we can't delay the commit.
+  it('in concurrent mode, does not error when an update suspends without a Suspense boundary during a sync update', () => {
+    // NOTE: We may change this to be a warning in the future.
     expect(() => {
       ReactNoop.flushSync(() => {
         ReactNoop.render(<AsyncText text="Async" />);
       });
-    }).toThrow('A component suspended while responding to synchronous input.');
+    }).not.toThrow();
+  });
+
+  // @gate enableCache
+  it('in legacy mode, errors when an update suspends without a Suspense boundary during a sync update', () => {
+    const root = ReactNoop.createLegacyRoot();
+    expect(() => root.render(<AsyncText text="Async" />)).toThrow(
+      'A component suspended while responding to synchronous input.',
+    );
   });
 
   // @gate enableCache
