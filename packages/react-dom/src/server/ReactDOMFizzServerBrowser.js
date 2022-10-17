@@ -34,7 +34,7 @@ type Options = {
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
-  unstable_externalRuntimeSrc?: string,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
 };
 
 // TODO: Move to sub-classing ReadableStream.
