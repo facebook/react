@@ -22,7 +22,7 @@ export {
   createElement,
   createRef,
   createServerContext,
-  experimental_use,
+  use,
   forwardRef,
   isValidElement,
   lazy,

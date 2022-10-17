@@ -7,7 +7,27 @@
  * @flow
  */
 
-// eslint-disable-next-line react-internal/prod-error-codes
-throw new Error(
-  'This entry point is not yet supported outside of experimental channels',
-);
+export {
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  Children,
+  Fragment,
+  Profiler,
+  StrictMode,
+  Suspense,
+  cloneElement,
+  createElement,
+  createRef,
+  createServerContext,
+  use,
+  forwardRef,
+  isValidElement,
+  lazy,
+  memo,
+  startTransition,
+  useId,
+  useCallback,
+  useContext,
+  useDebugValue,
+  useMemo,
+  version,
+} from './React';
