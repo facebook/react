@@ -1086,19 +1086,6 @@ function commitLayoutEffectOnFiber(
           committedLanes,
         );
 
-        if (flags & Update) {
-          const newResource = finishedWork.memoizedState;
-          if (current !== null) {
-            const currentResource = current.memoizedState;
-            if (currentResource !== newResource) {
-              releaseResource(currentResource);
-            }
-          }
-          finishedWork.stateNode = newResource
-            ? acquireResource(newResource)
-            : null;
-        }
-
         if (flags & Ref) {
           safelyAttachRef(finishedWork, finishedWork.return);
         }
@@ -2613,6 +2600,19 @@ function commitMutationEffectsOnFiber(
           if (current !== null) {
             safelyDetachRef(current, current.return);
           }
+        }
+
+        if (flags & Update) {
+          const newResource = finishedWork.memoizedState;
+          if (current !== null) {
+            const currentResource = current.memoizedState;
+            if (currentResource !== newResource) {
+              releaseResource(currentResource);
+            }
+          }
+          finishedWork.stateNode = newResource
+            ? acquireResource(newResource)
+            : null;
         }
         return;
       }
