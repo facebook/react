@@ -50,7 +50,7 @@ export const deferRenderPhaseUpdateToNextBatch = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
-export const enableUseHook = false;
+export const enableUseHook = true;
 export const enableUseMemoCacheHook = false;
 export const enableUseEventHook = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
@@ -65,13 +65,13 @@ export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
-export const enableServerContext = false;
+export const enableServerContext = true;
 export const enableUseMutableSource = false;
 
 export const enableTransitionTracing = false;
 
-export const enableFloat = false;
-export const enableHostSingletons = false;
+export const enableFloat = true;
+export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
 

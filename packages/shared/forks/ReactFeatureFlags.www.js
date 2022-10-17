@@ -50,11 +50,11 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
-export const enableFloat = false;
+export const enableFloat = true;
 export const enableUseHook = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEventHook = true;
-export const enableHostSingletons = false;
+export const enableHostSingletons = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =

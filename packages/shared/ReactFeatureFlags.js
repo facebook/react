@@ -101,9 +101,9 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-export const enableHostSingletons = __EXPERIMENTAL__;
+export const enableHostSingletons = true;
 
-export const enableFloat = __EXPERIMENTAL__;
+export const enableFloat = true;
 
 // When a node is unmounted, recurse into the Fiber subtree and clean out
 // references. Each level cleans up more fiber fields than the previous level.
@@ -118,7 +118,7 @@ export const enableFloat = __EXPERIMENTAL__;
 // aggressiveness.
 export const deletedTreeCleanUpLevel = 3;
 
-export const enableUseHook = __EXPERIMENTAL__;
+export const enableUseHook = true;
 
 // Enables unstable_useMemoCache hook, intended as a compilation target for
 // auto-memoization.
@@ -253,7 +253,7 @@ export const enableUpdaterTracking = __PROFILE__;
 
 // Only enabled in RN, related to enableComponentStackLocations
 export const disableNativeComponentFrames = false;
-export const enableServerContext = __EXPERIMENTAL__;
+export const enableServerContext = true;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
