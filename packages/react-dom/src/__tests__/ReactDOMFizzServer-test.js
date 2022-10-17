@@ -3546,6 +3546,36 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
+  // @gate enableFizzExternalRuntime
+  it('supports option to load runtime as an external script', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+        {
+          unstable_externalRuntimeSrc: 'src-of-external-runtime',
+        },
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+    expect(
+      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
+    ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
+  });
+
   it('#24384: Suspending should halt hydration warnings and not emit any if hydration completes successfully after unsuspending', async () => {
     const makeApp = () => {
       let resolve, resolved;
