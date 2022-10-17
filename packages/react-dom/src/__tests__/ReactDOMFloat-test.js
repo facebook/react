@@ -137,26 +137,23 @@ describe('ReactDOMFloat', () => {
     buffer = '';
   }
 
-  function getVisibleChildrenAndResources(element) {
+  function getMeaningfulChildren(element) {
     const children = [];
     let node = element.firstChild;
     while (node) {
       if (node.nodeType === 1) {
         if (
-          // Only include scripts with src elements, this will hide instruction scripts
-          !(node.tagName === 'SCRIPT' && !node.hasAttribute('src')) &&
-          // Only include style tags with actual content if they have a data-rprec attribute
-          // We use this to hide the placeholders which are used to emit insertion points when
-          // a style is not used in the shell but the precedence is encoded there
-          !(
-            node.tagName === 'STYLE' &&
-            node.hasAttribute('data-rprec') &&
-            node.textContent === ''
-          ) &&
-          node.tagName !== 'TEMPLATE' &&
-          node.tagName !== 'template' &&
-          !node.hasAttribute('hidden') &&
-          !node.hasAttribute('aria-hidden')
+          // some tags are ambiguous and might be hidden because they look like non-meaningful children
+          // so we have a global override where if this data attribute is included we also include the node
+          node.hasAttribute('data-meaningful') ||
+          (node.tagName === 'SCRIPT' &&
+            node.hasAttribute('src') &&
+            node.hasAttribute('async')) ||
+          (node.tagName !== 'SCRIPT' &&
+            node.tagName !== 'TEMPLATE' &&
+            node.tagName !== 'template' &&
+            !node.hasAttribute('hidden') &&
+            !node.hasAttribute('aria-hidden'))
         ) {
           const props = {};
           const attributes = node.attributes;
@@ -170,7 +167,7 @@ describe('ReactDOMFloat', () => {
             }
             props[attributes[i].name] = attributes[i].value;
           }
-          props.children = getVisibleChildrenAndResources(node);
+          props.children = getMeaningfulChildren(node);
           children.push(React.createElement(node.tagName.toLowerCase(), props));
         }
       } else if (node.nodeType === 3) {
@@ -273,7 +270,7 @@ describe('ReactDOMFloat', () => {
         <App />,
       )}</head><body>foo</body></html>`;
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
           <link rel="preload" href="foo" as="style" />
@@ -300,7 +297,7 @@ describe('ReactDOMFloat', () => {
         <App />,
       )}<body>foo</body></html>`;
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
           <link rel="preload" href="foo" as="style" />
@@ -336,10 +333,10 @@ describe('ReactDOMFloat', () => {
           ' a Resource at all. valid rel types for Resources are "stylesheet" and "preload". The previous' +
           ' rel for this instance was "stylesheet". The updated rel is "author" and the updated href is "bar".',
       );
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="foo" data-rprec="foo" />
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
             <link rel="preload" as="style" href="foo" />
           </head>
           <body>
@@ -370,7 +367,7 @@ describe('ReactDOMFloat', () => {
         );
         pipe(writable);
       });
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="style" href="foo" />
@@ -389,7 +386,7 @@ describe('ReactDOMFloat', () => {
       const root = ReactDOMClient.createRoot(container);
       root.render(<Component />);
       expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="style" href="foo" />
@@ -413,7 +410,7 @@ describe('ReactDOMFloat', () => {
       root.render(<App />);
       expect(Scheduler).toFlushWithoutYielding();
 
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="style" href="foo" />
@@ -437,7 +434,7 @@ describe('ReactDOMFloat', () => {
       root.render(<App />);
       expect(Scheduler).toFlushWithoutYielding();
 
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="style" href="foo" />
@@ -461,7 +458,7 @@ describe('ReactDOMFloat', () => {
       // to the window.document global when no other documents have been used
       // The way the JSDOM runtim is created for these tests the local document
       // global does not point to the global.document
-      expect(getVisibleChildrenAndResources(global.document)).toEqual(
+      expect(getMeaningfulChildren(global.document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="style" href="bar" />
@@ -514,7 +511,7 @@ describe('ReactDOMFloat', () => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<ServerApp />);
         pipe(writable);
       });
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="script" href="foo" integrity="foo hash" />
@@ -535,7 +532,7 @@ describe('ReactDOMFloat', () => {
       ReactDOMClient.hydrateRoot(document, <ClientApp />);
       expect(Scheduler).toFlushWithoutYielding();
 
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="script" href="foo" integrity="foo hash" />
@@ -565,11 +562,10 @@ describe('ReactDOMFloat', () => {
 
   describe('ReactDOM.preinit as style', () => {
     // @gate enableFloat
-    it('creates a style Resource when called during server rendering before first flush if dependended on', async () => {
+    it('creates a style Resource when called during server rendering before first flush', async () => {
       function Component() {
         ReactDOM.preinit('foo', {as: 'style'});
-        ReactDOM.preinit('bar', {as: 'style'});
-        return 'foobar';
+        return 'foo';
       }
       await actIntoEmptyDocument(() => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -577,19 +573,17 @@ describe('ReactDOMFloat', () => {
             <head />
             <body>
               <Component />
-              <link rel="stylesheet" href="foo" precedence="default" />
             </body>
           </html>,
         );
         pipe(writable);
       });
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="foo" data-rprec="default" />
-            <link rel="preload" href="bar" as="style" />
+            <link rel="stylesheet" href="foo" data-precedence="default" />
           </head>
-          <body>foobar</body>
+          <body>foo</body>
         </html>,
       );
     });
@@ -622,7 +616,7 @@ describe('ReactDOMFloat', () => {
       await act(() => {
         resolveText('unblock');
       });
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head />
           <body>
@@ -642,10 +636,10 @@ describe('ReactDOMFloat', () => {
       const root = ReactDOMClient.createRoot(container);
       root.render(<Component />);
       expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="foo" data-rprec="foo" />
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
           </head>
           <body>
             <div id="container">foo</div>
@@ -672,7 +666,7 @@ describe('ReactDOMFloat', () => {
       root.render(<App />);
       expect(Scheduler).toFlushWithoutYielding();
 
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="style" href="insertion" />
@@ -698,7 +692,7 @@ describe('ReactDOMFloat', () => {
       // to the window.document global when no other documents have been used
       // The way the JSDOM runtim is created for these tests the local document
       // global does not point to the global.document
-      expect(getVisibleChildrenAndResources(global.document)).toEqual(
+      expect(getMeaningfulChildren(global.document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="style" href="bar" />
@@ -729,7 +723,7 @@ describe('ReactDOMFloat', () => {
         );
         pipe(writable);
       });
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <script src="server" async="" />
@@ -742,7 +736,7 @@ describe('ReactDOMFloat', () => {
 
       ReactDOMClient.hydrateRoot(document, <App srcs={['client', 'shared']} />);
       expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <script src="server" async="" />
@@ -780,10 +774,10 @@ describe('ReactDOMFloat', () => {
         </>,
       );
       expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="foo" data-rprec="default" />
+            <link rel="stylesheet" href="foo" data-precedence="default" />
             <link rel="preload" href="foo" as="style" />
           </head>
           <body>
@@ -791,11 +785,11 @@ describe('ReactDOMFloat', () => {
           </body>
         </html>,
       );
-      expect(getVisibleChildrenAndResources(shadow)).toEqual([
+      expect(getMeaningfulChildren(shadow)).toEqual([
         <link
           rel="stylesheet"
           href="foo"
-          data-rprec="different"
+          data-precedence="different"
           data-extra-prop="foo"
         />,
         <div>shadow</div>,
@@ -840,10 +834,10 @@ describe('ReactDOMFloat', () => {
         </>,
       );
       expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="foo" data-rprec="default" />
+            <link rel="stylesheet" href="foo" data-precedence="default" />
             <link rel="preload" href="foo" as="style" />
             <link rel="preload" href="bar" as="style" />
             <link rel="preload" href="baz" as="style" />
@@ -854,11 +848,11 @@ describe('ReactDOMFloat', () => {
           </body>
         </html>,
       );
-      expect(getVisibleChildrenAndResources(shadow)).toEqual([
-        <link rel="stylesheet" href="foo" data-rprec="one" />,
-        <link rel="stylesheet" href="baz" data-rprec="one" />,
-        <link rel="stylesheet" href="bar" data-rprec="two" />,
-        <link rel="stylesheet" href="qux" data-rprec="three" />,
+      expect(getMeaningfulChildren(shadow)).toEqual([
+        <link rel="stylesheet" href="foo" data-precedence="one" />,
+        <link rel="stylesheet" href="baz" data-precedence="one" />,
+        <link rel="stylesheet" href="bar" data-precedence="two" />,
+        <link rel="stylesheet" href="qux" data-precedence="three" />,
         <div>
           <div id="shadowcontainer1">
             <div>2</div>
@@ -888,10 +882,10 @@ describe('ReactDOMFloat', () => {
         pipe(writable);
       });
 
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="aresource" data-rprec="foo" />
+            <link rel="stylesheet" href="aresource" data-precedence="foo" />
           </head>
           <body>
             <div>hello world</div>
@@ -914,10 +908,10 @@ describe('ReactDOMFloat', () => {
       );
       expect(Scheduler).toFlushWithoutYielding();
 
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="aresource" data-rprec="foo" />
+            <link rel="stylesheet" href="aresource" data-precedence="foo" />
           </head>
           <body>
             <div>hello world</div>
@@ -952,10 +946,10 @@ describe('ReactDOMFloat', () => {
       );
       expect(Scheduler).toFlushWithoutYielding();
 
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="aresource" data-rprec="foo" />
+            <link rel="stylesheet" href="aresource" data-precedence="foo" />
           </head>
           <body>
             <div>hello world</div>
@@ -979,7 +973,7 @@ describe('ReactDOMFloat', () => {
         pipe(writable);
       });
 
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="style" href="notaresource" />
@@ -1008,12 +1002,12 @@ describe('ReactDOMFloat', () => {
         );
         pipe(writable);
       });
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="foo1" data-rprec="foo" />
-            <link rel="stylesheet" href="foo2" data-rprec="foo" />
-            <link rel="stylesheet" href="default1" data-rprec="default" />
+            <link rel="stylesheet" href="foo1" data-precedence="foo" />
+            <link rel="stylesheet" href="foo2" data-precedence="foo" />
+            <link rel="stylesheet" href="default1" data-precedence="default" />
           </head>
           <body>
             <div>hello world</div>
@@ -1034,15 +1028,15 @@ describe('ReactDOMFloat', () => {
         </html>,
       );
       expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="foo1" data-rprec="foo" />
-            <link rel="stylesheet" href="foo2" data-rprec="foo" />
-            <link rel="stylesheet" href="foo3" data-rprec="foo" />
-            <link rel="stylesheet" href="default1" data-rprec="default" />
-            <link rel="stylesheet" href="default2" data-rprec="default" />
-            <link rel="stylesheet" href="bar1" data-rprec="bar" />
+            <link rel="stylesheet" href="foo1" data-precedence="foo" />
+            <link rel="stylesheet" href="foo2" data-precedence="foo" />
+            <link rel="stylesheet" href="foo3" data-precedence="foo" />
+            <link rel="stylesheet" href="default1" data-precedence="default" />
+            <link rel="stylesheet" href="default2" data-precedence="default" />
+            <link rel="stylesheet" href="bar1" data-precedence="bar" />
             <link rel="preload" as="style" href="bar1" />
             <link rel="preload" as="style" href="foo3" />
             <link rel="preload" as="style" href="default2" />
@@ -1077,10 +1071,10 @@ describe('ReactDOMFloat', () => {
         </html>,
       );
       expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="foo" data-rprec="foo" />
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
           </head>
           <body>hello world</body>
         </html>,
@@ -1127,12 +1121,12 @@ describe('ReactDOMFloat', () => {
         ],
         {withoutStack: 1},
       );
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="foo" data-rprec="foo" />
-            <link rel="stylesheet" href="bar" data-rprec="bar" />
-            <link rel="stylesheet" href="qux" data-rprec="qux" />
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <link rel="stylesheet" href="bar" data-precedence="bar" />
+            <link rel="stylesheet" href="qux" data-precedence="qux" />
           </head>
           <body>client</body>
         </html>,
@@ -1179,11 +1173,11 @@ describe('ReactDOMFloat', () => {
         ],
         {withoutStack: 1},
       );
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="qux" data-rprec="qux" />
-            <link rel="stylesheet" href="foo" data-rprec="foo" />
+            <link rel="stylesheet" href="qux" data-precedence="qux" />
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
           </head>
           <body>client</body>
         </html>,
@@ -1205,11 +1199,11 @@ describe('ReactDOMFloat', () => {
         </html>,
       );
       expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="foo" data-rprec="foo" />
-            <link rel="stylesheet" href="bar" data-rprec="bar" />
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <link rel="stylesheet" href="bar" data-precedence="bar" />
           </head>
           <body>hello</body>
         </html>,
@@ -1229,12 +1223,12 @@ describe('ReactDOMFloat', () => {
       expect(Scheduler).toFlushWithoutYielding();
       // The reason we do not see preloads in the head is they are inserted synchronously
       // during render and then when the new singleton mounts it resets it's content, retaining only styles
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="foo" data-rprec="foo" />
-            <link rel="stylesheet" href="bar" data-rprec="bar" />
-            <link rel="stylesheet" href="baz" data-rprec="baz" />
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <link rel="stylesheet" href="bar" data-precedence="bar" />
+            <link rel="stylesheet" href="baz" data-precedence="baz" />
           </head>
           <body>hello</body>
         </html>,
@@ -1252,7 +1246,7 @@ describe('ReactDOMFloat', () => {
             <body>
               <script src="foo" async={true} />
               <script src="bar" async={true} onLoad={() => {}} />
-              <script src="baz" />
+              <script src="baz" data-meaningful="" />
               hello world
             </body>
           </html>,
@@ -1264,14 +1258,14 @@ describe('ReactDOMFloat', () => {
       // during hydration. This is novel, the script is NOT a HostResource but it also will
       // never hydrate
       // The regular script is just a normal html that should hydrate with a HostComponent
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <script src="foo" async="" />
             <link rel="preload" href="bar" as="script" />
           </head>
           <body>
-            <script src="baz" />
+            <script src="baz" data-meaningful="" />
             hello world
           </body>
         </html>,
@@ -1284,7 +1278,7 @@ describe('ReactDOMFloat', () => {
           <body>
             <script src="foo" async={true} />
             <script src="bar" async={true} onLoad={() => {}} />
-            <script src="baz" />
+            <script src="baz" data-meaningful="" />
             hello world
           </body>
         </html>,
@@ -1292,7 +1286,7 @@ describe('ReactDOMFloat', () => {
       expect(Scheduler).toFlushWithoutYielding();
       // The async script with onLoad is inserted in the right place but does not cause the hydration
       // to fail.
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <script src="foo" async="" />
@@ -1300,7 +1294,7 @@ describe('ReactDOMFloat', () => {
           </head>
           <body>
             <script src="bar" async="" />
-            <script src="baz" />
+            <script src="baz" data-meaningful="" />
             hello world
           </body>
         </html>,
@@ -1339,11 +1333,11 @@ describe('ReactDOMFloat', () => {
       resolveText('unblock');
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="arbitrary" />
-          <link rel="stylesheet" href="bar" data-rprec="arbitrary" />
+          <link rel="stylesheet" href="foo" data-precedence="arbitrary" />
+          <link rel="stylesheet" href="bar" data-precedence="arbitrary" />
         </head>
         <body>
           loading...
@@ -1370,11 +1364,11 @@ describe('ReactDOMFloat', () => {
       'Resource failed to load',
     );
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="arbitrary" />
-          <link rel="stylesheet" href="bar" data-rprec="arbitrary" />
+          <link rel="stylesheet" href="foo" data-precedence="arbitrary" />
+          <link rel="stylesheet" href="bar" data-precedence="arbitrary" />
         </head>
         <body>
           loading...
@@ -1392,11 +1386,11 @@ describe('ReactDOMFloat', () => {
       },
     });
     expect(Scheduler).toFlushWithoutYielding();
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="arbitrary" />
-          <link rel="stylesheet" href="bar" data-rprec="arbitrary" />
+          <link rel="stylesheet" href="foo" data-precedence="arbitrary" />
+          <link rel="stylesheet" href="bar" data-precedence="arbitrary" />
         </head>
         <body>
           <link rel="preload" href="foo" as="style" />
@@ -1425,10 +1419,10 @@ describe('ReactDOMFloat', () => {
       );
       pipe(writable);
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="arbitrary" />
+          <link rel="stylesheet" href="foo" data-precedence="arbitrary" />
         </head>
         <body>Hello</body>
       </html>,
@@ -1442,10 +1436,10 @@ describe('ReactDOMFloat', () => {
       </html>,
     );
     expect(Scheduler).toFlushWithoutYielding();
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="arbitrary" />
+          <link rel="stylesheet" href="foo" data-precedence="arbitrary" />
         </head>
         <body>Hello</body>
       </html>,
@@ -1483,12 +1477,12 @@ describe('ReactDOMFloat', () => {
       resolveText('baz');
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="one" />
-          <link rel="stylesheet" href="bar" data-rprec="two" />
-          <link rel="stylesheet" href="baz" data-rprec="three" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="bar" data-precedence="two" />
+          <link rel="stylesheet" href="baz" data-precedence="three" />
         </head>
         <body>
           {'foo'}
@@ -1564,11 +1558,6 @@ describe('ReactDOMFloat', () => {
                     href="qux"
                     precedence="one"
                   />
-                  <AsyncListItemWithResource
-                    text="qux"
-                    href="preset"
-                    precedence="preset"
-                  />
                 </ul>
               </Suspense>
             </div>
@@ -1601,12 +1590,12 @@ describe('ReactDOMFloat', () => {
       pipe(writable);
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="initial" data-rprec="one" />
+          <link rel="stylesheet" href="initial" data-precedence="one" />
+          <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="preset" as="style" />
         </head>
         <body>
           <div>loading foo bar...</div>
@@ -1621,20 +1610,20 @@ describe('ReactDOMFloat', () => {
       resolveText('bar');
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="initial" data-rprec="one" />
-          <link rel="stylesheet" href="foo" data-rprec="one" />
+          <link rel="stylesheet" href="initial" data-precedence="one" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link
             rel="stylesheet"
             href="bar"
-            data-rprec="default"
+            data-precedence="default"
             data-foo="foo"
             crossorigin="anonymous"
           />
           <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="preset" as="style" />
         </head>
         <body>
           <div>loading foo bar...</div>
@@ -1652,20 +1641,20 @@ describe('ReactDOMFloat', () => {
       link.dispatchEvent(event);
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="initial" data-rprec="one" />
-          <link rel="stylesheet" href="foo" data-rprec="one" />
+          <link rel="stylesheet" href="initial" data-precedence="one" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link
             rel="stylesheet"
             href="bar"
-            data-rprec="default"
+            data-precedence="default"
             data-foo="foo"
             crossorigin="anonymous"
           />
           <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="preset" as="style" />
         </head>
         <body>
           <div>loading foo bar...</div>
@@ -1683,20 +1672,20 @@ describe('ReactDOMFloat', () => {
       link.dispatchEvent(event);
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="initial" data-rprec="one" />
-          <link rel="stylesheet" href="foo" data-rprec="one" />
+          <link rel="stylesheet" href="initial" data-precedence="one" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link
             rel="stylesheet"
             href="bar"
-            data-rprec="default"
+            data-precedence="default"
             data-foo="foo"
             crossorigin="anonymous"
           />
           <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="preset" as="style" />
         </head>
         <body>
           <div>
@@ -1716,20 +1705,20 @@ describe('ReactDOMFloat', () => {
       resolveText('baz');
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="initial" data-rprec="one" />
-          <link rel="stylesheet" href="foo" data-rprec="one" />
+          <link rel="stylesheet" href="initial" data-precedence="one" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link
             rel="stylesheet"
             href="bar"
-            data-rprec="default"
+            data-precedence="default"
             data-foo="foo"
             crossorigin="anonymous"
           />
           <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="preset" as="style" />
         </head>
         <body>
           <div>
@@ -1750,23 +1739,22 @@ describe('ReactDOMFloat', () => {
       resolveText('qux');
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="initial" data-rprec="one" />
-          <link rel="stylesheet" href="foo" data-rprec="one" />
-          <link rel="stylesheet" href="qux" data-rprec="one" />
-          <link rel="stylesheet" href="preset" data-rprec="preset" />
+          <link rel="stylesheet" href="initial" data-precedence="one" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="qux" data-precedence="one" />
+          <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link
             rel="stylesheet"
             href="bar"
-            data-rprec="default"
+            data-precedence="default"
             data-foo="foo"
             crossorigin="anonymous"
           />
-          <link rel="stylesheet" href="baz" data-rprec="two" />
+          <link rel="stylesheet" href="baz" data-precedence="two" />
           <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="preset" as="style" />
         </head>
         <body>
           <div>
@@ -1801,23 +1789,22 @@ describe('ReactDOMFloat', () => {
       presetLink.dispatchEvent(event);
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="initial" data-rprec="one" />
-          <link rel="stylesheet" href="foo" data-rprec="one" />
-          <link rel="stylesheet" href="qux" data-rprec="one" />
-          <link rel="stylesheet" href="preset" data-rprec="preset" />
+          <link rel="stylesheet" href="initial" data-precedence="one" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="qux" data-precedence="one" />
+          <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link
             rel="stylesheet"
             href="bar"
-            data-rprec="default"
+            data-precedence="default"
             data-foo="foo"
             crossorigin="anonymous"
           />
-          <link rel="stylesheet" href="baz" data-rprec="two" />
+          <link rel="stylesheet" href="baz" data-precedence="two" />
           <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="preset" as="style" />
         </head>
         <body>
           <div>
@@ -1830,7 +1817,6 @@ describe('ReactDOMFloat', () => {
             <ul>
               <li>bar</li>
               <li>baz</li>
-              <li>qux</li>
               <li>qux</li>
             </ul>
           </div>
@@ -1846,23 +1832,22 @@ describe('ReactDOMFloat', () => {
       resolveText('unblock');
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="initial" data-rprec="one" />
-          <link rel="stylesheet" href="foo" data-rprec="one" />
-          <link rel="stylesheet" href="qux" data-rprec="one" />
-          <link rel="stylesheet" href="preset" data-rprec="preset" />
+          <link rel="stylesheet" href="initial" data-precedence="one" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="qux" data-precedence="one" />
+          <link rel="stylesheet" href="preset" data-precedence="preset" />
           <link
             rel="stylesheet"
             href="bar"
-            data-rprec="default"
+            data-precedence="default"
             data-foo="foo"
             crossorigin="anonymous"
           />
-          <link rel="stylesheet" href="baz" data-rprec="two" />
+          <link rel="stylesheet" href="baz" data-precedence="two" />
           <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="preset" as="style" />
         </head>
         <body>
           <div>
@@ -1875,7 +1860,6 @@ describe('ReactDOMFloat', () => {
             <ul>
               <li>bar</li>
               <li>baz</li>
-              <li>qux</li>
               <li>qux</li>
             </ul>
           </div>
@@ -1946,30 +1930,30 @@ describe('ReactDOMFloat', () => {
     // early. The reason precedences are still ordered correctly between child and parent is because
     // the precedence ordering is determined upon first discovernig a resource rather than on hoist and
     // so it follows render order
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="1one" data-rprec="one" />
-          <link rel="stylesheet" href="3one" data-rprec="one" />
-          <link rel="stylesheet" href="2one" data-rprec="one" />
-          <link rel="stylesheet" href="4one" data-rprec="one" />
+          <link rel="stylesheet" href="1one" data-precedence="one" />
+          <link rel="stylesheet" href="3one" data-precedence="one" />
+          <link rel="stylesheet" href="2one" data-precedence="one" />
+          <link rel="stylesheet" href="4one" data-precedence="one" />
 
-          <link rel="stylesheet" href="1two" data-rprec="two" />
-          <link rel="stylesheet" href="3two" data-rprec="two" />
-          <link rel="stylesheet" href="2two" data-rprec="two" />
-          <link rel="stylesheet" href="4two" data-rprec="two" />
+          <link rel="stylesheet" href="1two" data-precedence="two" />
+          <link rel="stylesheet" href="3two" data-precedence="two" />
+          <link rel="stylesheet" href="2two" data-precedence="two" />
+          <link rel="stylesheet" href="4two" data-precedence="two" />
 
-          <link rel="stylesheet" href="1three" data-rprec="three" />
-          <link rel="stylesheet" href="3three" data-rprec="three" />
-          <link rel="stylesheet" href="2three" data-rprec="three" />
-          <link rel="stylesheet" href="4three" data-rprec="three" />
+          <link rel="stylesheet" href="1three" data-precedence="three" />
+          <link rel="stylesheet" href="3three" data-precedence="three" />
+          <link rel="stylesheet" href="2three" data-precedence="three" />
+          <link rel="stylesheet" href="4three" data-precedence="three" />
 
-          <link rel="stylesheet" href="1four" data-rprec="four" />
-          <link rel="stylesheet" href="3four" data-rprec="four" />
-          <link rel="stylesheet" href="2four" data-rprec="four" />
-          <link rel="stylesheet" href="4four" data-rprec="four" />
+          <link rel="stylesheet" href="1four" data-precedence="four" />
+          <link rel="stylesheet" href="3four" data-precedence="four" />
+          <link rel="stylesheet" href="2four" data-precedence="four" />
+          <link rel="stylesheet" href="4four" data-precedence="four" />
 
-          <link rel="stylesheet" href="3five" data-rprec="five" />
+          <link rel="stylesheet" href="3five" data-precedence="five" />
         </head>
         <body>
           <div>
@@ -2002,11 +1986,11 @@ describe('ReactDOMFloat', () => {
       pipe(writable);
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="one" />
-          <link rel="stylesheet" href="bar" data-rprec="two" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="bar" data-precedence="two" />
         </head>
         <body>
           <div>Hello</div>
@@ -2028,11 +2012,11 @@ describe('ReactDOMFloat', () => {
       </html>,
     );
     expect(Scheduler).toFlushWithoutYielding();
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="one" />
-          <link rel="stylesheet" href="bar" data-rprec="two" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="bar" data-precedence="two" />
         </head>
         <body>
           <div>Hello</div>
@@ -2050,12 +2034,12 @@ describe('ReactDOMFloat', () => {
       </html>,
     );
     expect(Scheduler).toFlushWithoutYielding();
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="one" />
-          <link rel="stylesheet" href="baz" data-rprec="one" />
-          <link rel="stylesheet" href="bar" data-rprec="two" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="baz" data-precedence="one" />
+          <link rel="stylesheet" href="bar" data-precedence="two" />
           <link rel="preload" as="style" href="baz" />
         </head>
         <body>
@@ -2095,7 +2079,7 @@ describe('ReactDOMFloat', () => {
       </ErrorBoundary>,
     );
     expect(Scheduler).toFlushWithoutYielding();
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
           <link rel="preload" href="foo" as="style" />
@@ -2137,11 +2121,11 @@ describe('ReactDOMFloat', () => {
       pipe(writable);
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="one" />
-          <link rel="stylesheet" href="bar" data-rprec="two" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="bar" data-precedence="two" />
         </head>
         <body>
           <div>Hello</div>
@@ -2153,11 +2137,11 @@ describe('ReactDOMFloat', () => {
     await act(() => {
       resolveText('foo');
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="one" />
-          <link rel="stylesheet" href="bar" data-rprec="two" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="bar" data-precedence="two" />
         </head>
         <body>
           <div>Hello</div>
@@ -2171,11 +2155,11 @@ describe('ReactDOMFloat', () => {
     await act(() => {
       resolveText('bar');
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="one" />
-          <link rel="stylesheet" href="bar" data-rprec="two" />
+          <link rel="stylesheet" href="foo" data-precedence="one" />
+          <link rel="stylesheet" href="bar" data-precedence="two" />
         </head>
         <body>
           <div>Hello</div>
@@ -2228,7 +2212,7 @@ describe('ReactDOMFloat', () => {
       pipe(writable);
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head />
         <body>
@@ -2240,7 +2224,7 @@ describe('ReactDOMFloat', () => {
     await act(() => {
       resolveText('bar');
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head />
         <body>
@@ -2252,7 +2236,7 @@ describe('ReactDOMFloat', () => {
     await act(() => {
       resolveText('baz');
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head />
         <body>
@@ -2264,12 +2248,12 @@ describe('ReactDOMFloat', () => {
     await act(() => {
       resolveText('foo');
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="default" />
-          <link rel="stylesheet" href="bar" data-rprec="default" />
-          <link rel="stylesheet" href="baz" data-rprec="default" />
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="stylesheet" href="baz" data-precedence="default" />
         </head>
         <body>
           <div>loading foo...</div>
@@ -2289,12 +2273,12 @@ describe('ReactDOMFloat', () => {
         },
       );
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="default" />
-          <link rel="stylesheet" href="bar" data-rprec="default" />
-          <link rel="stylesheet" href="baz" data-rprec="default" />
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="stylesheet" href="baz" data-precedence="default" />
         </head>
         <body>
           <div>
@@ -2363,7 +2347,7 @@ describe('ReactDOMFloat', () => {
       pipe(writable);
     });
 
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head />
         <body>
@@ -2376,7 +2360,7 @@ describe('ReactDOMFloat', () => {
     await act(() => {
       resolveText('baz');
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head />
         <body>
@@ -2389,7 +2373,7 @@ describe('ReactDOMFloat', () => {
     await act(() => {
       resolveText('bar');
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head />
         <body>
@@ -2405,7 +2389,7 @@ describe('ReactDOMFloat', () => {
     await act(() => {
       resolveText('foo');
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head />
         <body>
@@ -2422,13 +2406,13 @@ describe('ReactDOMFloat', () => {
     await act(() => {
       resolveText('qux');
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="default" />
-          <link rel="stylesheet" href="bar" data-rprec="default" />
-          <link rel="stylesheet" href="baz" data-rprec="default" />
-          <link rel="stylesheet" href="qux" data-rprec="default" />
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="stylesheet" href="baz" data-precedence="default" />
+          <link rel="stylesheet" href="qux" data-precedence="default" />
         </head>
         <body>
           <div>loading...</div>
@@ -2450,13 +2434,13 @@ describe('ReactDOMFloat', () => {
         },
       );
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-rprec="default" />
-          <link rel="stylesheet" href="bar" data-rprec="default" />
-          <link rel="stylesheet" href="baz" data-rprec="default" />
-          <link rel="stylesheet" href="qux" data-rprec="default" />
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="stylesheet" href="baz" data-precedence="default" />
+          <link rel="stylesheet" href="qux" data-precedence="default" />
         </head>
         <body>
           <div>
@@ -2552,7 +2536,7 @@ describe('ReactDOMFloat', () => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
         pipe(writable);
       });
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link
@@ -2603,13 +2587,13 @@ describe('ReactDOMFloat', () => {
         resolveText('unblock');
       });
 
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link
               rel="stylesheet"
               href="foo"
-              data-rprec="default"
+              data-precedence="default"
               crossorigin="anonymous"
               media="all"
               integrity="somehash"
@@ -2686,7 +2670,7 @@ describe('ReactDOMFloat', () => {
       );
       pipe(writable);
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head />
         <body>
@@ -2700,7 +2684,7 @@ describe('ReactDOMFloat', () => {
       resolveText('AAAA');
       resolveText('AA');
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head />
         <body>
@@ -2723,11 +2707,11 @@ describe('ReactDOMFloat', () => {
         l.dispatchEvent(event);
       });
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="A" data-rprec="A" />
-          <link rel="stylesheet" href="AA" data-rprec="AA" />
+          <link rel="stylesheet" href="A" data-precedence="A" />
+          <link rel="stylesheet" href="AA" data-precedence="AA" />
         </head>
         <body>
           <div>
@@ -2753,13 +2737,13 @@ describe('ReactDOMFloat', () => {
         l.dispatchEvent(event);
       });
     });
-    expect(getVisibleChildrenAndResources(document)).toEqual(
+    expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="A" data-rprec="A" />
-          <link rel="stylesheet" href="AA" data-rprec="AA" />
-          <link rel="stylesheet" href="AAA" data-rprec="AAA" />
-          <link rel="stylesheet" href="AAAA" data-rprec="AAAA" />
+          <link rel="stylesheet" href="A" data-precedence="A" />
+          <link rel="stylesheet" href="AA" data-precedence="AA" />
+          <link rel="stylesheet" href="AAA" data-precedence="AAA" />
+          <link rel="stylesheet" href="AAAA" data-precedence="AAAA" />
         </head>
         <body>
           <div>
@@ -2809,7 +2793,7 @@ describe('ReactDOMFloat', () => {
         );
         pipe(writable);
       });
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link rel="preload" as="font" href="foo" crossorigin="" />
@@ -3461,25 +3445,25 @@ describe('ReactDOMFloat', () => {
           '\n  data-something-extra: missing or null in latest props, "extra" in original props' +
           '\n  data-something-new: "new" in latest props, missing or null in original props',
       ]);
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link
               rel="stylesheet"
               href="foo"
-              data-rprec="foo"
+              data-precedence="foo"
               data-something-extra="extra"
             />
             <link
               rel="stylesheet"
               href="bar"
-              data-rprec="bar"
+              data-precedence="bar"
               data-something-extra="extra"
             />
             <link
               rel="stylesheet"
               href="baz"
-              data-rprec="baz"
+              data-precedence="baz"
               data-something-new="new"
             />
             <link rel="preload" as="style" href="foo" />
@@ -3543,13 +3527,23 @@ describe('ReactDOMFloat', () => {
           );
           pipe(writable);
         });
-        expect(getVisibleChildrenAndResources(document)).toEqual(
+        expect(getMeaningfulChildren(document)).toEqual(
           <html>
             <head>
-              <link rel="stylesheet" href="foo" data-rprec="foo" media="all" />
-              <link rel="stylesheet" href="bar" data-rprec="bar" />
+              <link
+                rel="stylesheet"
+                href="foo"
+                data-precedence="foo"
+                media="all"
+              />
+              <link rel="stylesheet" href="bar" data-precedence="bar" />
 
-              <link rel="stylesheet" href="baz" data-rprec="baz" media="some" />
+              <link
+                rel="stylesheet"
+                href="baz"
+                data-precedence="baz"
+                media="some"
+              />
             </head>
             <body />
           </html>,
@@ -3647,20 +3641,20 @@ describe('ReactDOMFloat', () => {
           );
           pipe(writable);
         });
-        expect(getVisibleChildrenAndResources(document)).toEqual(
+        expect(getMeaningfulChildren(document)).toEqual(
           <html>
             <head>
               <link
                 rel="stylesheet"
                 href="foo"
-                data-rprec="foo"
+                data-precedence="foo"
                 data-foo="an original value"
               />
-              <link rel="stylesheet" href="bar" data-rprec="bar" />
+              <link rel="stylesheet" href="bar" data-precedence="bar" />
               <link
                 rel="stylesheet"
                 href="baz"
-                data-rprec="baz"
+                data-precedence="baz"
                 data-foo="an original value"
               />
             </head>
@@ -3759,7 +3753,7 @@ describe('ReactDOMFloat', () => {
         });
         // precedence is removed from the stylesheets because it is considered a reserved prop for
         // stylesheets to opt into resource semantics.
-        expect(getVisibleChildrenAndResources(document)).toEqual(
+        expect(getMeaningfulChildren(document)).toEqual(
           <html>
             <head>
               <link rel="preload" as="style" href="foo" />
@@ -3844,7 +3838,7 @@ describe('ReactDOMFloat', () => {
           );
           pipe(writable);
         });
-        expect(getVisibleChildrenAndResources(document)).toEqual(
+        expect(getMeaningfulChildren(document)).toEqual(
           <html>
             <head>
               <script src="foo" async="" data-foo="a current value" />
@@ -3918,7 +3912,7 @@ describe('ReactDOMFloat', () => {
           );
           pipe(writable);
         });
-        expect(getVisibleChildrenAndResources(document)).toEqual(
+        expect(getMeaningfulChildren(document)).toEqual(
           <html>
             <head>
               <link
@@ -3999,13 +3993,13 @@ describe('ReactDOMFloat', () => {
           );
           pipe(writable);
         });
-        expect(getVisibleChildrenAndResources(document)).toEqual(
+        expect(getMeaningfulChildren(document)).toEqual(
           <html>
             <head>
               <link
                 rel="stylesheet"
                 href="foo"
-                data-rprec="foo"
+                data-precedence="foo"
                 crossorigin="style value"
               />
             </head>
@@ -4071,15 +4065,19 @@ describe('ReactDOMFloat', () => {
         </div>,
       );
       expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="style" data-rprec="style" />
-            <link rel="stylesheet" href="with\slashes" data-rprec="style" />
+            <link rel="stylesheet" href="style" data-precedence="style" />
+            <link
+              rel="stylesheet"
+              href="with\slashes"
+              data-precedence="style"
+            />
             <link
               rel="stylesheet"
               href={'style"][rel="stylesheet'}
-              data-rprec="style"
+              data-precedence="style"
             />
             <link rel="preload" as="style" href="preload" />
             <link rel="preload" href={'with\nnewline'} as="style" />
@@ -4131,15 +4129,19 @@ describe('ReactDOMFloat', () => {
       const root = ReactDOMClient.createRoot(container);
       root.render(<App />);
       expect(Scheduler).toFlushWithoutYielding();
-      expect(getVisibleChildrenAndResources(document)).toEqual(
+      expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="stylesheet" href="style" data-rprec="style" />
-            <link rel="stylesheet" href="with\slashes" data-rprec="style" />
+            <link rel="stylesheet" href="style" data-precedence="style" />
+            <link
+              rel="stylesheet"
+              href="with\slashes"
+              data-precedence="style"
+            />
             <link
               rel="stylesheet"
               href={'style"][rel="stylesheet'}
-              data-rprec="style"
+              data-precedence="style"
             />
             <link rel="preload" as="style" href="preload" />
             <link rel="preload" href={'with\nnewline'} as="style" />

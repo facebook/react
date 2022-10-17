@@ -40,7 +40,7 @@ type PreloadResource = {
 type StyleProps = {
   rel: 'stylesheet',
   href: string,
-  'data-rprec': string,
+  'data-precedence': string,
   [string]: mixed,
 };
 type StyleResource = {
@@ -52,6 +52,7 @@ type StyleResource = {
   flushed: boolean,
   inShell: boolean, // flushedInShell
   hint: PreloadResource,
+  set: Set<StyleResource>, // the precedence set this resource should be flushed in
 };
 
 type ScriptProps = {
@@ -236,19 +237,18 @@ function preinit(href: string, options: PreinitOptions) {
     const as = options.as;
     switch (as) {
       case 'style': {
-        const precedence = options.precedence || 'default';
-
         let resource = resources.stylesMap.get(href);
         if (resource) {
           if (__DEV__) {
             const latestProps = stylePropsFromPreinitOptions(
               href,
-              precedence,
+              resource.precedence,
               options,
             );
             validateStyleResourceDifference(resource.props, latestProps);
           }
         } else {
+          const precedence = options.precedence || 'default';
           const resourceProps = stylePropsFromPreinitOptions(
             href,
             precedence,
@@ -261,6 +261,7 @@ function preinit(href: string, options: PreinitOptions) {
             resourceProps,
           );
         }
+        resource.set.add(resource);
         resources.explicitStylePreloads.add(resource.hint);
 
         return;
@@ -380,7 +381,7 @@ function stylePropsFromRawProps(
   const props: StyleProps = Object.assign({}, rawProps);
   props.href = href;
   props.rel = 'stylesheet';
-  props['data-rprec'] = precedence;
+  props['data-precedence'] = precedence;
   delete props.precedence;
 
   return props;
@@ -394,7 +395,7 @@ function stylePropsFromPreinitOptions(
   return {
     rel: 'stylesheet',
     href,
-    'data-rprec': precedence,
+    'data-precedence': precedence,
     crossOrigin: options.crossOrigin,
   };
 }
@@ -416,8 +417,10 @@ function createStyleResource(
 
   // If this is the first time we've seen this precedence we encode it's position in our set even though
   // we don't add the resource to this set yet
-  if (!precedences.has(precedence)) {
-    precedences.set(precedence, new Set());
+  let precedenceSet = precedences.get(precedence);
+  if (!precedenceSet) {
+    precedenceSet = new Set();
+    precedences.set(precedence, precedenceSet);
   }
 
   let hint = preloadsMap.get(href);
@@ -457,6 +460,7 @@ function createStyleResource(
     inShell: false,
     props,
     hint,
+    set: precedenceSet,
   };
   stylesMap.set(href, resource);
 
@@ -633,14 +637,7 @@ export function resourcesFromLink(props: Props): boolean {
         if (resources.boundaryResources) {
           resources.boundaryResources.add(resource);
         } else {
-          // Precedences are constructed eagerly when encountered so this will always exist
-          // Note that it is important to read the precedence from the resource. It is possible
-          // that the props precedence is new and does not match the precedence on an earlier
-          // constructed version of this resource.
-          const set: Set<StyleResource> = (resources.precedences.get(
-            resource.precedence,
-          ): any);
-          set.add(resource);
+          resource.set.add(resource);
         }
         return true;
       }
@@ -765,11 +762,6 @@ export function hoistResourcesToRoot(
   resources: Resources,
   boundaryResources: BoundaryResources,
 ): void {
-  const {precedences} = resources;
-  boundaryResources.forEach(resource => {
-    // all precedences are set upon discovery. so we know we will have a set here
-    const set: Set<StyleResource> = (precedences.get(resource.precedence): any);
-    set.add(resource);
-  });
+  boundaryResources.forEach(resource => resource.set.add(resource));
   boundaryResources.clear();
 }

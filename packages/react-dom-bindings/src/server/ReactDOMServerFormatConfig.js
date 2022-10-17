@@ -2259,7 +2259,7 @@ function escapeJSObjectForInstructionScripts(input: Object): string {
 }
 
 const precedencePlaceholderStart = stringToPrecomputedChunk(
-  '<style data-rprec="',
+  '<style data-precedence="',
 );
 const precedencePlaceholderEnd = stringToPrecomputedChunk('"></style>');
 
@@ -2268,6 +2268,13 @@ export function writeInitialResources(
   resources: Resources,
   responseState: ResponseState,
 ): boolean {
+  function flushLinkResource(resource) {
+    if (!resource.flushed) {
+      pushLinkImpl(target, resource.props, responseState);
+      resource.flushed = true;
+    }
+  }
+
   const target = [];
 
   const {
@@ -2307,13 +2314,7 @@ export function writeInitialResources(
     }
   });
 
-  usedStylePreloads.forEach(r => {
-    // style preloads could very likely have been flushed already so we check
-    if (!r.flushed) {
-      pushLinkImpl(target, r.props, responseState);
-      r.flushed = true;
-    }
-  });
+  usedStylePreloads.forEach(flushLinkResource);
   usedStylePreloads.clear();
 
   scripts.forEach(r => {
@@ -2325,29 +2326,13 @@ export function writeInitialResources(
   });
   scripts.clear();
 
-  usedScriptPreloads.forEach(r => {
-    // may have been flushed so we check
-    if (!r.flushed) {
-      pushLinkImpl(target, r.props, responseState);
-      r.flushed = true;
-    }
-  });
+  usedScriptPreloads.forEach(flushLinkResource);
   usedScriptPreloads.clear();
 
-  explicitStylePreloads.forEach(r => {
-    if (!r.flushed) {
-      pushLinkImpl(target, r.props, responseState);
-      r.flushed = true;
-    }
-  });
+  explicitStylePreloads.forEach(flushLinkResource);
   explicitStylePreloads.clear();
 
-  explicitScriptPreloads.forEach(r => {
-    if (!r.flushed) {
-      pushLinkImpl(target, r.props, responseState);
-      r.flushed = true;
-    }
-  });
+  explicitScriptPreloads.forEach(flushLinkResource);
   explicitScriptPreloads.clear();
 
   let i;
@@ -2366,6 +2351,13 @@ export function writeImmediateResources(
   resources: Resources,
   responseState: ResponseState,
 ): boolean {
+  function flushLinkResource(resource) {
+    if (!resource.flushed) {
+      pushLinkImpl(target, resource.props, responseState);
+      resource.flushed = true;
+    }
+  }
+
   const target = [];
 
   const {
@@ -2384,13 +2376,7 @@ export function writeImmediateResources(
   });
   fontPreloads.clear();
 
-  usedStylePreloads.forEach(r => {
-    // style preloads could very likely have been flushed already so we check
-    if (!r.flushed) {
-      pushLinkImpl(target, r.props, responseState);
-      r.flushed = true;
-    }
-  });
+  usedStylePreloads.forEach(flushLinkResource);
   usedStylePreloads.clear();
 
   scripts.forEach(r => {
@@ -2402,29 +2388,13 @@ export function writeImmediateResources(
   });
   scripts.clear();
 
-  usedScriptPreloads.forEach(r => {
-    // may have been flushed so we check
-    if (!r.flushed) {
-      pushLinkImpl(target, r.props, responseState);
-      r.flushed = true;
-    }
-  });
+  usedScriptPreloads.forEach(flushLinkResource);
   usedScriptPreloads.clear();
 
-  explicitStylePreloads.forEach(r => {
-    if (!r.flushed) {
-      pushLinkImpl(target, r.props, responseState);
-      r.flushed = true;
-    }
-  });
+  explicitStylePreloads.forEach(flushLinkResource);
   explicitStylePreloads.clear();
 
-  explicitScriptPreloads.forEach(r => {
-    if (!r.flushed) {
-      pushLinkImpl(target, r.props, responseState);
-      r.flushed = true;
-    }
-  });
+  explicitScriptPreloads.forEach(flushLinkResource);
   explicitScriptPreloads.clear();
 
   let i;
@@ -2548,7 +2518,7 @@ function writeStyleResourceDependency(
         case 'href':
         case 'rel':
         case 'precedence':
-        case 'data-rprec': {
+        case 'data-precedence': {
           break;
         }
         case 'children':

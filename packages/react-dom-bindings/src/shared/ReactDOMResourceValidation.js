@@ -157,7 +157,7 @@ export function validateStyleResourceDifference(
       const originalValue = originalProps[propName];
 
       if (propValue != null && propValue !== originalValue) {
-        propName = propName === 'data-rprec' ? 'precedence' : propName;
+        propName = propName === 'data-precedence' ? 'precedence' : propName;
         if (originalValue == null) {
           extraProps = extraProps || {};
           extraProps[propName] = propValue;

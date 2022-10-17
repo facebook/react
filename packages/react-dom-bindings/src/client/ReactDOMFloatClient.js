@@ -34,7 +34,6 @@ type ResourceType = 'style' | 'font' | 'script';
 
 type PreloadProps = {
   rel: 'preload',
-  as: ResourceType,
   href: string,
   [string]: mixed,
 };
@@ -49,7 +48,7 @@ type PreloadResource = {
 type StyleProps = {
   rel: 'stylesheet',
   href: string,
-  'data-rprec': string,
+  'data-precedence': string,
   [string]: mixed,
 };
 export type StyleResource = {
@@ -333,7 +332,7 @@ function stylePropsFromPreinitOptions(
   return {
     rel: 'stylesheet',
     href,
-    'data-rprec': precedence,
+    'data-precedence': precedence,
     crossOrigin: options.crossOrigin,
   };
 }
@@ -363,7 +362,6 @@ type StyleQualifyingProps = {
 type PreloadQualifyingProps = {
   rel: 'preload',
   href: string,
-  as: ResourceType,
   [string]: mixed,
 };
 type ScriptQualifyingProps = {
@@ -443,8 +441,8 @@ export function getResource(
           if (__DEV__) {
             validateLinkPropsForPreloadResource(pendingProps);
           }
-          const {href, as} = pendingProps;
-          if (typeof href === 'string' && isResourceAsType(as)) {
+          const {href} = pendingProps;
+          if (typeof href === 'string') {
             // We've asserted all the specific types for PreloadQualifyingProps
             const preloadRawProps: PreloadQualifyingProps = (pendingProps: any);
             let resource = preloadResources.get(href);
@@ -539,7 +537,7 @@ function preloadPropsFromRawProps(
 
 function stylePropsFromRawProps(rawProps: StyleQualifyingProps): StyleProps {
   const props: StyleProps = Object.assign({}, rawProps);
-  props['data-rprec'] = rawProps.precedence;
+  props['data-precedence'] = rawProps.precedence;
   props.precedence = null;
 
   return props;
@@ -804,7 +802,7 @@ function acquireStyleResource(resource: StyleResource): Instance {
       props.href,
     );
     const existingEl = root.querySelector(
-      `link[rel="stylesheet"][data-rprec][href="${limitedEscapedHref}"]`,
+      `link[rel="stylesheet"][data-precedence][href="${limitedEscapedHref}"]`,
     );
     if (existingEl) {
       resource.instance = existingEl;
@@ -937,12 +935,14 @@ function insertStyleInstance(
   precedence: string,
   root: FloatRoot,
 ): void {
-  const nodes = root.querySelectorAll('link[rel="stylesheet"][data-rprec]');
+  const nodes = root.querySelectorAll(
+    'link[rel="stylesheet"][data-precedence]',
+  );
   const last = nodes.length ? nodes[nodes.length - 1] : null;
   let prior = last;
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
-    const nodePrecedence = node.dataset.rprec;
+    const nodePrecedence = node.dataset.precedence;
     if (nodePrecedence === precedence) {
       prior = node;
     } else if (prior !== last) {
@@ -1009,13 +1009,8 @@ export function isHostResourceType(type: string, props: Props): boolean {
           );
         }
         case 'preload': {
-          const {href, as, onLoad, onError} = props;
-          return (
-            !onLoad &&
-            !onError &&
-            typeof href === 'string' &&
-            isResourceAsType(as)
-          );
+          const {href, onLoad, onError} = props;
+          return !onLoad && !onError && typeof href === 'string';
         }
       }
       return false;
@@ -1028,10 +1023,6 @@ export function isHostResourceType(type: string, props: Props): boolean {
     }
   }
   return false;
-}
-
-function isResourceAsType(as: mixed): boolean {
-  return as === 'style' || as === 'font' || as === 'script';
 }
 
 // When passing user input into querySelector(All) the embedded string must not alter

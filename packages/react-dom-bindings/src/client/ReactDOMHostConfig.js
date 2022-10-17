@@ -903,7 +903,7 @@ function getNextHydratable(node) {
             const rel = linkEl.rel;
             if (
               rel === 'preload' ||
-              (rel === 'stylesheet' && linkEl.hasAttribute('data-rprec'))
+              (rel === 'stylesheet' && linkEl.hasAttribute('data-precedence'))
             ) {
               continue;
             }
@@ -911,7 +911,7 @@ function getNextHydratable(node) {
           }
           case 'STYLE': {
             const styleEl: HTMLStyleElement = (element: any);
-            if (styleEl.hasAttribute('data-rprec')) {
+            if (styleEl.hasAttribute('data-precedence')) {
               continue;
             }
             break;
@@ -942,7 +942,7 @@ function getNextHydratable(node) {
             const rel = linkEl.rel;
             if (
               rel === 'preload' ||
-              (rel === 'stylesheet' && linkEl.hasAttribute('data-rprec'))
+              (rel === 'stylesheet' && linkEl.hasAttribute('data-precedence'))
             ) {
               continue;
             }
@@ -950,7 +950,7 @@ function getNextHydratable(node) {
           }
           case 'STYLE': {
             const styleEl: HTMLStyleElement = (element: any);
-            if (styleEl.hasAttribute('data-rprec')) {
+            if (styleEl.hasAttribute('data-precedence')) {
               continue;
             }
             break;
