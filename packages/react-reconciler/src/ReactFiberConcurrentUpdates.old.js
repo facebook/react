@@ -20,9 +20,9 @@ import type {Lane, Lanes} from './ReactFiberLane.old';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 
 import {
-  getWorkInProgressRoot,
   warnAboutUpdateOnNotYetMountedFiberInDEV,
   throwIfInfiniteUpdateLoopDetected,
+  getWorkInProgressRoot,
 } from './ReactFiberWorkLoop.old';
 import {
   NoLane,
