@@ -23,6 +23,7 @@ import {
   enableFilterEmptyStringAttributesDOM,
   enableCustomElementPropertySupport,
   enableFloat,
+  enableFizzExternalRuntime,
 } from 'shared/ReactFeatureFlags';
 
 import type {
@@ -157,6 +158,7 @@ export function createResponseState(
   bootstrapScriptContent: string | void,
   bootstrapScripts: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
   bootstrapModules: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
+  externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
 ): ResponseState {
   const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
   const inlineScriptWithNonce =
@@ -172,6 +174,29 @@ export function createResponseState(
       stringToChunk(escapeBootstrapScriptContent(bootstrapScriptContent)),
       endInlineScript,
     );
+  }
+  if (enableFizzExternalRuntime) {
+    if (externalRuntimeConfig !== undefined) {
+      const src =
+        typeof externalRuntimeConfig === 'string'
+          ? externalRuntimeConfig
+          : externalRuntimeConfig.src;
+      const integrity =
+        typeof externalRuntimeConfig === 'string'
+          ? undefined
+          : externalRuntimeConfig.integrity;
+      bootstrapChunks.push(
+        startScriptSrc,
+        stringToChunk(escapeTextForBrowser(src)),
+      );
+      if (integrity) {
+        bootstrapChunks.push(
+          scriptIntegirty,
+          stringToChunk(escapeTextForBrowser(integrity)),
+        );
+      }
+      bootstrapChunks.push(endAsyncScript);
+    }
   }
   if (bootstrapScripts !== undefined) {
     for (let i = 0; i < bootstrapScripts.length; i++) {
