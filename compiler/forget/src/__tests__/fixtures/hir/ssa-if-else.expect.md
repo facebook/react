@@ -19,16 +19,16 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$1000 = 1
-  Let mutate y$1001 = 2
-  If (mutate y$1001) then:bb2 else:bb3
+  Let mutate x$5 = 1
+  Let mutate y$6 = 2
+  If (mutate y$6) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  Let mutate z$1003 = Binary mutate x$1000 + mutate y$1001
+  Let mutate z$8 = Binary mutate x$5 + mutate y$6
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Let mutate z$1002 = mutate x$1000
+  Let mutate z$7 = mutate x$5
   Goto bb1
 bb1:
   predecessor blocks: bb3 bb2
@@ -39,13 +39,13 @@ bb1:
 
 ```javascript
 function foo$0() {
-  let x$1000 = 1;
-  let y$1001 = 2;
-  if (y$1001) {
-    let z$1003 = x$1000 + y$1001;
+  let x$5 = 1;
+  let y$6 = 2;
+  if (y$6) {
+    let z$8 = x$5 + y$6;
     ("<<TODO: handle complex control flow in codegen>>");
   } else {
-    let z$1002 = x$1000;
+    let z$7 = x$5;
     ("<<TODO: handle complex control flow in codegen>>");
   }
   return;

@@ -20,7 +20,7 @@ import {
   Terminal,
   ThrowTerminal,
 } from "./HIR";
-import HIRBuilder from "./HIRBuilder";
+import HIRBuilder, { Environment } from "./HIRBuilder";
 import todo, { todoInvariant } from "./todo";
 
 // *******************************************************************************************
@@ -46,8 +46,11 @@ const GLOBALS: Map<string, t.Identifier> = new Map([
  * TODO: consider modeling control-flow at expression level for even more fine-
  * grained reactivity.
  */
-export function lower(func: NodePath<t.Function>): HIRFunction {
-  const builder = new HIRBuilder();
+export function lower(
+  func: NodePath<t.Function>,
+  env: Environment
+): HIRFunction {
+  const builder = new HIRBuilder(env);
 
   const id =
     func.isFunctionDeclaration() && func.node.id != null

@@ -28,34 +28,34 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$1000 = 1
-  Const mutate $1001 = 2
-  Const mutate $1002 = Binary mutate x$1000 === mutate $1001
-  Const mutate $1003 = 1
-  Const mutate $1004 = Binary mutate x$1000 === mutate $1003
-  Switch (mutate x$1000)
-    Case mutate $1004: bb5
-    Case mutate $1002: bb3
+  Let mutate x$10 = 1
+  Const mutate $11 = 2
+  Const mutate $12 = Binary mutate x$10 === mutate $11
+  Const mutate $13 = 1
+  Const mutate $14 = Binary mutate x$10 === mutate $13
+  Switch (mutate x$10)
+    Case mutate $14: bb5
+    Case mutate $12: bb3
     Default: bb2
 bb5:
   predecessor blocks: bb0
-  Const mutate $1011 = 1
-  Reassign mutate x$1012 = Binary mutate x$1000 + mutate $1011
+  Const mutate $21 = 1
+  Reassign mutate x$22 = Binary mutate x$10 + mutate $21
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Const mutate $1009 = 2
-  Reassign mutate x$1010 = Binary mutate x$1000 + mutate $1009
+  Const mutate $19 = 2
+  Reassign mutate x$20 = Binary mutate x$10 + mutate $19
   Goto bb1
 bb2:
   predecessor blocks: bb0
-  Const mutate $1005 = 3
-  Reassign mutate x$1006 = Binary mutate x$1000 + mutate $1005
+  Const mutate $15 = 3
+  Reassign mutate x$16 = Binary mutate x$10 + mutate $15
   Goto bb1
 bb1:
   predecessor blocks: bb5 bb3 bb2
-  Const mutate x$1007: phi(bb5: mutate x$1012, bb3: mutate x$1010, bb2: mutate x$1006)
-  Let mutate y$1008 = mutate x$1007
+  Const mutate x$17: phi(bb5: mutate x$22, bb3: mutate x$20, bb2: mutate x$16)
+  Let mutate y$18 = mutate x$17
   Return
 ```
 
@@ -63,22 +63,22 @@ bb1:
 
 ```javascript
 function foo$0() {
-  let x$1000 = 1;
-  switch (x$1000) {
-    case x$1000 === 1: {
-      x$1012 = x$1000 + 1;
+  let x$10 = 1;
+  switch (x$10) {
+    case x$10 === 1: {
+      x$22 = x$10 + 1;
       ("<<TODO: handle complex control flow in codegen>>");
     }
-    case x$1000 === 2: {
-      x$1010 = x$1000 + 2;
+    case x$10 === 2: {
+      x$20 = x$10 + 2;
       ("<<TODO: handle complex control flow in codegen>>");
     }
     default: {
-      x$1006 = x$1000 + 3;
+      x$16 = x$10 + 3;
       ("<<TODO: handle complex control flow in codegen>>");
     }
   }
-  let y$1008 = x$1007;
+  let y$18 = x$17;
   return;
 }
 

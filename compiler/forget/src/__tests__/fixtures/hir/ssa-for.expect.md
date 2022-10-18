@@ -16,29 +16,29 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$1000 = 0
+  Let mutate x$5 = 0
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb4
-  Const mutate x$1002: phi(bb0: mutate x$1000, bb4: mutate x$1005)
-  Const mutate $1001 = 10
-  Const mutate $1003 = Binary mutate x$1002 < mutate $1001
-  If (mutate $1003) then:bb4 else:bb2
+  Const mutate x$7: phi(bb0: mutate x$5, bb4: mutate x$10)
+  Const mutate $6 = 10
+  Const mutate $8 = Binary mutate x$7 < mutate $6
+  If (mutate $8) then:bb4 else:bb2
 bb4:
   predecessor blocks: bb1
-  Const mutate $1004 = 1
-  Reassign mutate x$1005 = Binary mutate x$1002 + mutate $1004
+  Const mutate $9 = 1
+  Reassign mutate x$10 = Binary mutate x$7 + mutate $9
   Goto bb1
 bb2:
   predecessor blocks: bb1
-  Return mutate x$1002
+  Return mutate x$7
 ```
 
 ## Code
 
 ```javascript
 function foo$0() {
-  let x$1000 = 0;
+  let x$5 = 0;
   ("<<TODO: handle complex control flow in codegen>>");
 }
 

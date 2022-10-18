@@ -17,6 +17,7 @@ import prettier from "prettier";
 import { lower } from "../HIR/BuildHIR";
 import codegen from "../HIR/Codegen";
 import { HIRFunction } from "../HIR/HIR";
+import { Environment } from "../HIR/HIRBuilder";
 import inferReferenceEffects from "../HIR/InferReferenceEffects";
 import printHIR from "../HIR/PrintHIR";
 import buildSSA from "../HIR/SSAify";
@@ -44,10 +45,11 @@ describe("React Forget (HIR version)", () => {
       traverse(ast, {
         FunctionDeclaration: {
           enter(nodePath) {
-            const ir: HIRFunction = lower(nodePath);
+            const env: Environment = new Environment();
+            const ir: HIRFunction = lower(nodePath, env);
             inferReferenceEffects(ir);
             if (file.startsWith("ssa")) {
-              buildSSA(ir);
+              buildSSA(ir, env);
             }
             // const lifetimeGraph = buildDefUseGraph(ir);
             const textHIR = printHIR(ir.body);

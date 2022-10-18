@@ -18,19 +18,19 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$1000 = 1
-  Let mutate y$1001 = 2
-  Const mutate $1002 = 2
-  Const mutate $1003 = Binary mutate y$1001 === mutate $1002
-  If (mutate $1003) then:bb2 else:bb1
+  Let mutate x$5 = 1
+  Let mutate y$6 = 2
+  Const mutate $7 = 2
+  Const mutate $8 = Binary mutate y$6 === mutate $7
+  If (mutate $8) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Reassign mutate x$1006 = 3
+  Reassign mutate x$11 = 3
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  Const mutate x$1004: phi(bb0: mutate x$1000, bb2: mutate x$1006)
-  Reassign mutate y$1005 = mutate x$1004
+  Const mutate x$9: phi(bb0: mutate x$5, bb2: mutate x$11)
+  Reassign mutate y$10 = mutate x$9
   Return
 ```
 
@@ -38,13 +38,13 @@ bb1:
 
 ```javascript
 function foo$0() {
-  let x$1000 = 1;
-  let y$1001 = 2;
-  if (y$1001 === 2) {
-    x$1006 = 3;
+  let x$5 = 1;
+  let y$6 = 2;
+  if (y$6 === 2) {
+    x$11 = 3;
     ("<<TODO: handle complex control flow in codegen>>");
   }
-  y$1005 = x$1004;
+  y$10 = x$9;
   return;
 }
 

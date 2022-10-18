@@ -17,12 +17,12 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$1000 = 1
-  Let mutate y$1001 = 2
-  If (mutate y$1001) then:bb2 else:bb1
+  Let mutate x$4 = 1
+  Let mutate y$5 = 2
+  If (mutate y$5) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Let mutate z$1002 = Binary mutate x$1000 + mutate y$1001
+  Let mutate z$6 = Binary mutate x$4 + mutate y$5
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
@@ -33,10 +33,10 @@ bb1:
 
 ```javascript
 function foo$0() {
-  let x$1000 = 1;
-  let y$1001 = 2;
-  if (y$1001) {
-    let z$1002 = x$1000 + y$1001;
+  let x$4 = 1;
+  let y$5 = 2;
+  if (y$5) {
+    let z$6 = x$4 + y$5;
     ("<<TODO: handle complex control flow in codegen>>");
   }
   return;

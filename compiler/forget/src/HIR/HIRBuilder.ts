@@ -16,7 +16,6 @@ import {
   IdentifierId,
   Instruction,
   makeBlockId,
-  makeIdentifierId,
   Terminal,
 } from "./HIR";
 
@@ -56,6 +55,22 @@ function newBlock(id: BlockId): WipBlock {
   return { id, instructions: [] };
 }
 
+export class Environment {
+  #nextIdentifer: number = 0;
+
+  #makeIdentifierId(id: number): IdentifierId {
+    invariant(
+      id >= 0 && Number.isInteger(id),
+      "Expected identifier id to be a non-negative integer"
+    );
+    return id as IdentifierId;
+  }
+
+  get nextIdentifierId(): IdentifierId {
+    return this.#makeIdentifierId(this.#nextIdentifer++);
+  }
+}
+
 /**
  * Helper class for constructing a CFG
  */
@@ -65,8 +80,16 @@ export default class HIRBuilder {
   #current: WipBlock = newBlock(makeBlockId(0));
   #entry: BlockId = makeBlockId(0);
   #scopes: Array<Scope> = [];
-  #nextIdentifier: IdentifierId = makeIdentifierId(0);
   #bindings: Map<t.Identifier, Identifier> = new Map();
+  #env: Environment;
+
+  get nextIdentifierId() {
+    return this.#env.nextIdentifierId;
+  }
+
+  constructor(env: Environment) {
+    this.#env = env;
+  }
 
   debug(): string {
     return JSON.stringify(
@@ -88,7 +111,7 @@ export default class HIRBuilder {
   }
 
   makeTemporary(): Identifier {
-    const id = makeIdentifierId(this.#nextIdentifier++);
+    const id = this.nextIdentifierId;
     return {
       id,
       name: null,
@@ -98,7 +121,7 @@ export default class HIRBuilder {
   resolveIdentifier(node: t.Identifier): Identifier {
     let identifier = this.#bindings.get(node);
     if (identifier == null) {
-      const id = makeIdentifierId(this.#nextIdentifier++);
+      const id = this.nextIdentifierId;
       identifier = { id, name: node.name };
       this.#bindings.set(node, identifier);
     }

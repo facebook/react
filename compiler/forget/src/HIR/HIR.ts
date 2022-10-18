@@ -292,11 +292,3 @@ export function makeScopeId(id: number): ScopeId {
  */
 const opaqueIdentifierId = Symbol();
 export type IdentifierId = number & { [opaqueIdentifierId]: "IdentifierId" };
-
-export function makeIdentifierId(id: number): IdentifierId {
-  invariant(
-    id >= 0 && Number.isInteger(id),
-    "Expected identifier id to be a non-negative integer"
-  );
-  return id as IdentifierId;
-}

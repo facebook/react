@@ -8,10 +8,10 @@ import {
   IdentifierId,
   Instruction,
   InstructionKind,
-  makeIdentifierId,
   Phi,
   Place,
 } from "./HIR";
+import { Environment } from "./HIRBuilder";
 
 type IncompletePhi = {
   old: Place;
@@ -29,6 +29,15 @@ class SSABuilder {
   #states: Map<BasicBlock, State> = new Map();
   #current: BasicBlock | null = null;
   visitedBlocks: Set<BasicBlock> = new Set();
+  #env: Environment;
+
+  constructor(env: Environment) {
+    this.#env = env;
+  }
+
+  get nextIdentifierId() {
+    return this.#env.nextIdentifierId;
+  }
 
   // Hack(gsn): Start from the last stored id in HIRBuilder.
   // Need to refactor makeTemporary and relevant state out of HIR Builder.
@@ -47,7 +56,7 @@ class SSABuilder {
   makePlace(oldPlace: Place): Place {
     const identifier = {
       ...oldPlace.identifier,
-      id: makeIdentifierId(this.#id++),
+      id: this.nextIdentifierId,
     };
     return {
       ...oldPlace,
@@ -58,7 +67,7 @@ class SSABuilder {
   makePlaceForPhi(oldPlace: Place): Place {
     const identifier = {
       ...oldPlace.identifier,
-      id: makeIdentifierId(this.#id++),
+      id: this.nextIdentifierId,
     };
     return {
       identifier,
@@ -173,9 +182,8 @@ class SSABuilder {
   }
 }
 
-export default function buildSSA(func: HIRFunction) {
-  const builder = new SSABuilder();
-
+export default function buildSSA(func: HIRFunction, env: Environment) {
+  const builder = new SSABuilder(env);
   function visit(blockId: BlockId) {
     const block = func.body.blocks.get(blockId)!;
     if (builder.visitedBlocks.has(block)) {

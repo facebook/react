@@ -13,8 +13,8 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$1000 = 1
-  Let mutate y$1001 = 2
+  Let mutate x$3 = 1
+  Let mutate y$4 = 2
   Return
 ```
 
@@ -22,8 +22,8 @@ bb0:
 
 ```javascript
 function foo$0() {
-  let x$1000 = 1;
-  let y$1001 = 2;
+  let x$3 = 1;
+  let y$4 = 2;
   return;
 }
 

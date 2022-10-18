@@ -21,30 +21,30 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$1000 = 1
-  Let mutate y$1001 = 2
-  Const mutate $1002 = 2
-  Const mutate $1003 = Binary mutate y$1001 === mutate $1002
-  If (mutate $1003) then:bb2 else:bb1
+  Let mutate x$7 = 1
+  Let mutate y$8 = 2
+  Const mutate $9 = 2
+  Const mutate $10 = Binary mutate y$8 === mutate $9
+  If (mutate $10) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Reassign mutate x$1011 = 3
+  Reassign mutate x$18 = 3
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  Const mutate y$1005: phi(bb0: mutate y$1001, bb2: mutate y$1001)
-  Const mutate x$1010: phi(bb0: mutate x$1000, bb2: mutate x$1011)
-  Const mutate $1004 = 3
-  Const mutate $1006 = Binary mutate y$1005 === mutate $1004
-  If (mutate $1006) then:bb4 else:bb3
+  Const mutate y$12: phi(bb0: mutate y$8, bb2: mutate y$8)
+  Const mutate x$17: phi(bb0: mutate x$7, bb2: mutate x$18)
+  Const mutate $11 = 3
+  Const mutate $13 = Binary mutate y$12 === mutate $11
+  If (mutate $13) then:bb4 else:bb3
 bb4:
   predecessor blocks: bb1
-  Reassign mutate x$1009 = 5
+  Reassign mutate x$16 = 5
   Goto bb3
 bb3:
   predecessor blocks: bb1 bb4
-  Const mutate x$1007: phi(bb1: mutate x$1010, bb4: mutate x$1009)
-  Reassign mutate y$1008 = mutate x$1007
+  Const mutate x$14: phi(bb1: mutate x$17, bb4: mutate x$16)
+  Reassign mutate y$15 = mutate x$14
   Return
 ```
 
@@ -52,17 +52,17 @@ bb3:
 
 ```javascript
 function foo$0() {
-  let x$1000 = 1;
-  let y$1001 = 2;
-  if (y$1001 === 2) {
-    x$1011 = 3;
+  let x$7 = 1;
+  let y$8 = 2;
+  if (y$8 === 2) {
+    x$18 = 3;
     ("<<TODO: handle complex control flow in codegen>>");
   }
-  if (y$1005 === 3) {
-    x$1009 = 5;
+  if (y$12 === 3) {
+    x$16 = 5;
     ("<<TODO: handle complex control flow in codegen>>");
   }
-  y$1008 = x$1007;
+  y$15 = x$14;
   return;
 }
 
