@@ -193,10 +193,7 @@ export default function buildSSA(func: HIRFunction, env: Environment) {
 
     builder.startBlock(block);
     for (const instr of block.instructions) {
-      const uses = collectUses(instr);
-      for (const { place, updateFn } of uses) {
-        updateFn(builder.getPlace(place));
-      }
+      rewriteUses(instr, builder);
 
       if (instr.lvalue != null) {
         const oldPlace = instr.lvalue.place;
@@ -205,11 +202,7 @@ export default function buildSSA(func: HIRFunction, env: Environment) {
       }
     }
 
-    const { uses, outputs } = collectOutputs(block);
-    for (const { place, updateFn } of uses) {
-      updateFn(builder.getPlace(place));
-    }
-
+    const outputs = rewriteUsesAndCollectOutputs(block, builder);
     const outputBlocks = outputs.map((id) => func.body.blocks.get(id)!);
     for (const output of outputBlocks) {
       let count;
@@ -233,23 +226,17 @@ export default function buildSSA(func: HIRFunction, env: Environment) {
   visit(func.body.entry);
 }
 
-function collectOutputs(block: BasicBlock): {
-  uses: Array<Uses>;
-  outputs: Array<BlockId>;
-} {
+function rewriteUsesAndCollectOutputs(
+  block: BasicBlock,
+  builder: SSABuilder
+): Array<BlockId> {
   const outputs: Array<BlockId> = [];
-  const uses: Array<Uses> = [];
   const { terminal } = block;
   switch (terminal.kind) {
     case "return":
     case "throw": {
       if (terminal.value) {
-        uses.push({
-          place: terminal.value,
-          updateFn: (newPlace) => {
-            terminal.value = newPlace;
-          },
-        });
+        terminal.value = builder.getPlace(terminal.value);
       }
       break;
     }
@@ -258,33 +245,18 @@ function collectOutputs(block: BasicBlock): {
       break;
     }
     case "if": {
-      const { test, consequent, alternate } = terminal;
-      uses.push({
-        place: test,
-        updateFn: (newPlace) => {
-          terminal.test = newPlace;
-        },
-      });
+      const { consequent, alternate } = terminal;
+      terminal.test = builder.getPlace(terminal.test);
       outputs.push(alternate);
       outputs.push(consequent);
       break;
     }
     case "switch": {
-      const { test, cases } = terminal;
-      uses.push({
-        place: test,
-        updateFn: (newPlace) => {
-          terminal.test = newPlace;
-        },
-      });
+      const { cases } = terminal;
+      terminal.test = builder.getPlace(terminal.test);
       for (const case_ of [...cases].reverse()) {
         if (case_.test) {
-          uses.push({
-            place: case_.test,
-            updateFn: (newPlace) => {
-              case_.test = newPlace;
-            },
-          });
+          case_.test = builder.getPlace(case_.test);
         }
         outputs.push(case_.block);
       }
@@ -298,44 +270,22 @@ function collectOutputs(block: BasicBlock): {
     }
   }
 
-  return { uses, outputs };
+  return outputs;
 }
 
-type Uses = {
-  place: Place;
-  updateFn: (place: Place) => void;
-};
-
-function collectUses(instr: Instruction): Array<Uses> {
-  const uses: Array<Uses> = [];
+function rewriteUses(instr: Instruction, builder: SSABuilder) {
   const instrValue = instr.value;
 
   // TODO(gsn): Handle more kinds of Instructions
   switch (instrValue.kind) {
     case "BinaryExpression": {
-      uses.push({
-        place: instrValue.left,
-        updateFn: (newPlace) => {
-          instrValue.left = newPlace;
-        },
-      });
-      uses.push({
-        place: instrValue.right,
-        updateFn: (newPlace) => {
-          instrValue.right = newPlace;
-        },
-      });
+      instrValue.left = builder.getPlace(instrValue.left);
+      instrValue.right = builder.getPlace(instrValue.right);
       break;
     }
     case "Identifier": {
-      uses.push({
-        place: instrValue,
-        updateFn: (newPlace) => {
-          instr.value = newPlace;
-        },
-      });
+      instr.value = builder.getPlace(instrValue);
       break;
     }
   }
-  return uses;
 }
