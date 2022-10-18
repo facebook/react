@@ -31,7 +31,7 @@ const TaskYieldEvent = 6;
 const SchedulerSuspendEvent = 7;
 const SchedulerResumeEvent = 8;
 
-function logEvent(entries) {
+function logEvent(entries: Array<number | PriorityLevel>) {
   if (eventLog !== null) {
     const offset = eventLogIndex;
     eventLogIndex += entries.length;

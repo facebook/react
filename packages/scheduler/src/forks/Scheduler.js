@@ -637,7 +637,7 @@ function requestHostCallback(callback) {
   }
 }
 
-function requestHostTimeout(callback, ms) {
+function requestHostTimeout(callback, ms: number) {
   // $FlowFixMe[not-a-function] nullable value
   taskTimeoutID = localSetTimeout(() => {
     callback(getCurrentTime());

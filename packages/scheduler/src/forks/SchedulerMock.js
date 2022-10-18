@@ -191,7 +191,7 @@ function flushWork(hasTimeRemaining: boolean, initialTime: number) {
   }
 }
 
-function workLoop(hasTimeRemaining, initialTime: number): boolean {
+function workLoop(hasTimeRemaining: boolean, initialTime: number): boolean {
   let currentTime = initialTime;
   advanceTimers(currentTime);
   currentTask = peek(taskQueue);
