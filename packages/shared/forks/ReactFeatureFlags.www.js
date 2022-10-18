@@ -74,6 +74,7 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 
 export const enableCache = true;
 export const enableCacheElement = true;
+export const enableFetchInstrumentation = false;
 
 export const disableJavaScriptURLs = true;
 
