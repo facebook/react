@@ -64,7 +64,7 @@ import { printMixedHIR } from "./PrintHIR";
  * When control flow paths converge the types of values are merged together, with the value
  * types forming a lattice to ensure convergence.
  */
-export default function inferReferenceCapability(fn: HIRFunction) {
+export default function inferReferenceEffects(fn: HIRFunction) {
   // Initial environment contains function params
   // TODO: include module declarations here as well
   const initialEnvironment = Environment.empty();

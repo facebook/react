@@ -17,7 +17,7 @@ import prettier from "prettier";
 import { lower } from "../HIR/BuildHIR";
 import codegen from "../HIR/Codegen";
 import { HIRFunction } from "../HIR/HIR";
-import inferReferenceCapability from "../HIR/InferReferenceCapability";
+import inferReferenceEffects from "../HIR/InferReferenceEffects";
 import printHIR from "../HIR/PrintHIR";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
@@ -44,7 +44,7 @@ describe("React Forget (HIR version)", () => {
         FunctionDeclaration: {
           enter(nodePath) {
             const ir: HIRFunction = lower(nodePath);
-            inferReferenceCapability(ir);
+            inferReferenceEffects(ir);
             // const lifetimeGraph = buildDefUseGraph(ir);
             const textHIR = printHIR(ir.body);
             // const textLifetimeGraph = printGraph(lifetimeGraph);
