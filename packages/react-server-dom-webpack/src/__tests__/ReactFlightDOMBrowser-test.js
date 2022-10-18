@@ -37,8 +37,8 @@ describe('ReactFlightDOMBrowser', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server.browser');
-    ReactServerDOMWriter = require('react-server-dom-webpack/writer.browser.server');
-    ReactServerDOMReader = require('react-server-dom-webpack');
+    ReactServerDOMWriter = require('react-server-dom-webpack/server.browser');
+    ReactServerDOMReader = require('react-server-dom-webpack/client');
     Suspense = React.Suspense;
     use = React.experimental_use;
   });
