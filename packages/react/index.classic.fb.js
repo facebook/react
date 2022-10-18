@@ -32,6 +32,7 @@ export {
   isValidElement,
   lazy,
   memo,
+  experimental_cache,
   startTransition,
   startTransition as unstable_startTransition, // TODO: Remove once call sights updated to startTransition
   unstable_Cache,
