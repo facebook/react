@@ -16,8 +16,8 @@ module.exports = [
       'react-dom/static.node',
       'react-dom/server-rendering-stub',
       'react-dom/src/server/ReactDOMServerExternalRuntime.js',
-      'react-server-dom-webpack/writer.node.server',
-      'react-server-dom-webpack',
+      'react-server-dom-webpack/server.node',
+      'react-server-dom-webpack/client',
     ],
     paths: [
       'react-dom',
@@ -30,9 +30,10 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
       'react-server-dom-webpack',
-      'react-server-dom-webpack/writer',
-      'react-server-dom-webpack/writer.node.server',
-      'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/writer.node.server
+      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/server',
+      'react-server-dom-webpack/server.node',
+      'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',
       'react-devtools-core',
@@ -53,8 +54,8 @@ module.exports = [
       'react-dom/static.browser',
       'react-dom/server-rendering-stub',
       'react-dom/src/server/ReactDOMServerExternalRuntime.js',
-      'react-server-dom-webpack/writer.browser.server',
-      'react-server-dom-webpack',
+      'react-server-dom-webpack/server.browser',
+      'react-server-dom-webpack/client',
     ],
     paths: [
       'react-dom',
@@ -66,8 +67,9 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMFizzStaticBrowser.js',
       'react-server-dom-webpack',
-      'react-server-dom-webpack/writer.browser.server',
-      'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/writer.browser.server
+      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/server.browser',
+      'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/server.browser
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',
       'react-devtools-core',

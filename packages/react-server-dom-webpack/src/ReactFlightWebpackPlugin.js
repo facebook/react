@@ -39,7 +39,7 @@ class ClientReferenceDependency extends ModuleDependency {
 // We use the Flight client implementation because you can't get to these
 // without the client runtime so it's the first time in the loading sequence
 // you might want them.
-const clientImportName = 'react-server-dom-webpack';
+const clientImportName = 'react-server-dom-webpack/client';
 const clientFileName = require.resolve('../');
 
 type ClientReferenceSearchPath = {
