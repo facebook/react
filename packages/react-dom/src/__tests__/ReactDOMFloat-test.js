@@ -2243,7 +2243,7 @@ describe('ReactDOMFloat', () => {
       );
     });
 
-    // @gate enableFloat && enableHostSingletons
+    // @gate enableFloat && enableHostSingletons && enableClientRenderFallbackOnTextMismatch
     it('retains styles even when a new html, head, and/body mount', async () => {
       await actIntoEmptyDocument(() => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
