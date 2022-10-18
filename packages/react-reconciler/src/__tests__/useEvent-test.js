@@ -597,6 +597,56 @@ describe('useEvent', () => {
   });
 
   // @gate enableUseEventHook
+  it('event handlers always see the latest committed value', async () => {
+    let committedEventHandler = null;
+
+    function App({value}) {
+      const event = useEvent(() => {
+        return 'Value seen by useEvent: ' + value;
+      });
+
+      // Set up an effect that registers the event handler with an external
+      // event system (e.g. addEventListener).
+      useEffect(
+        () => {
+          // Log when the effect fires. In the test below, we'll assert that this
+          // only happens during initial render, not during updates.
+          Scheduler.unstable_yieldValue('Commit new event handler');
+          committedEventHandler = event;
+          return () => {
+            committedEventHandler = null;
+          };
+        },
+        // Note that we've intentionally omitted the event from the dependency
+        // array. But it will still be able to see the latest `value`. This is the
+        // key feature of useEvent that makes it different from a regular closure.
+        [],
+      );
+      return 'Latest rendered value ' + value;
+    }
+
+    // Initial render
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App value={1} />);
+    });
+    expect(Scheduler).toHaveYielded(['Commit new event handler']);
+    expect(root).toMatchRenderedOutput('Latest rendered value 1');
+    expect(committedEventHandler()).toBe('Value seen by useEvent: 1');
+
+    // Update
+    await act(async () => {
+      root.render(<App value={2} />);
+    });
+    // No new event handler should be committed, because it was omitted from
+    // the dependency array.
+    expect(Scheduler).toHaveYielded([]);
+    // But the event handler should still be able to see the latest value.
+    expect(root).toMatchRenderedOutput('Latest rendered value 2');
+    expect(committedEventHandler()).toBe('Value seen by useEvent: 2');
+  });
+
+  // @gate enableUseEventHook
   it('integration: implements docs chat room example', () => {
     function createConnection() {
       let connectedCallback;
