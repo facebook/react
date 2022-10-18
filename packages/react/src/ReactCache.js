@@ -45,10 +45,10 @@ function createCacheRoot<T>(): WeakMap<Function | Object, CacheNode<T>> {
 
 function createCacheNode<T>(): CacheNode<T> {
   return {
-    s: UNTERMINATED,
-    v: undefined,
-    o: null,
-    p: null,
+    s: UNTERMINATED, // status, represents whether the cached computation returned a value or threw an error
+    v: undefined, // value, either the cached result or an error, depending on s
+    o: null, // object cache, a WeakMap where non-primitive arguments are stored
+    p: null, // primitive cache, a regular Map where primitive arguments are stored.
   };
 }
 
