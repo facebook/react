@@ -94,11 +94,12 @@
 
       function renderResult(data) {
         let container = document.getElementById('container');
-        ReactDOM.render(
+        ReactDOM.createRoot(
+          container
+        ).render(
           <Suspense fallback="Loading...">
             <Shell data={data} />
           </Suspense>,
-          container
         );
       }
     </script>
