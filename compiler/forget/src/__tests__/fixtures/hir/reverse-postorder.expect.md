@@ -39,6 +39,7 @@ bb0:
   Let mutate x$2 = undefined
   If (read props$1.cond) then:bb2 else:bb10
 bb2:
+  predecessor blocks: bb0
   Const mutate $3 = 2
   Const mutate $4 = 1
   Const mutate $5 = 0
@@ -48,23 +49,30 @@ bb2:
     Case read $3: bb4
     Default: bb4
 bb8:
+  predecessor blocks: bb2
   Reassign mutate x$2 = read props$1.v0
   Goto bb1
 bb6:
+  predecessor blocks: bb2
   Reassign mutate x$2 = read props$1.v1
   Goto bb1
 bb4:
+  predecessor blocks: bb2
   Reassign mutate x$2 = read props$1.v2
   Goto bb1
 bb10:
+  predecessor blocks: bb0
   If (read props$1.cond2) then:bb12 else:bb13
 bb12:
+  predecessor blocks: bb10
   Reassign mutate x$2 = read props$1.b
   Goto bb1
 bb13:
+  predecessor blocks: bb10
   Reassign mutate x$2 = read props$1.c
   Goto bb1
 bb1:
+  predecessor blocks: bb13 bb12 bb8 bb6 bb4
   read x$2
   Return
 ```

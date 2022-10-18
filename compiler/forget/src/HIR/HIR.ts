@@ -94,6 +94,8 @@ export type BasicBlock = {
   id: BlockId;
   instructions: Array<Instruction>;
   terminal: Terminal;
+  preds: Set<BasicBlock>;
+  phis: Set<Phi>;
 };
 
 /**
@@ -161,6 +163,12 @@ export enum InstructionKind {
  * Values are therefore only a Place or a primitive value.
  */
 export type InstructionValue = (InstructionData & { path: NodePath }) | Place;
+
+export type Phi = {
+  kind: "Phi";
+  lvalue: LValue;
+  operands: Map<BasicBlock, Place>;
+};
 
 export type InstructionData =
   | { kind: "Primitive"; value: number | boolean | string | null | undefined }

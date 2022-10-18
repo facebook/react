@@ -101,10 +101,12 @@ bb0:
   Const mutate b$4 = Call mutate compute$3(read props$1.b)
   If (read props$1.c) then:bb2 else:bb1
 bb2:
+  predecessor blocks: bb0
   Call mutate mutate$5(mutate a$2)
   Call mutate mutate$5(mutate b$4)
   Goto bb1
 bb1:
+  predecessor blocks: bb0 bb2
   Const mutate $7 = JSX <read Foo$6 a={freeze a$2} b={freeze b$4} ></read Foo$6>
   Return read $7
 ```

@@ -31,12 +31,15 @@ bb0:
   Let mutate a$4 = undefined
   If (read cond$2) then:bb2 else:bb3
 bb2:
+  predecessor blocks: bb0
   Reassign mutate a$4 = read x$3
   Goto bb1
 bb3:
+  predecessor blocks: bb0
   Reassign mutate a$4 = Array []
   Goto bb1
 bb1:
+  predecessor blocks: bb3 bb2
   Call read useFreeze$5(freeze a$4)
   Call read useFreeze$5(read a$4)
   Call mutate call$6(read a$4)

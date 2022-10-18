@@ -43,13 +43,16 @@ bb0:
     Default: bb1
     Case read $4: bb2
 bb6:
+  predecessor blocks: bb0
   Call mutate x$2.push(read props$1.p2)
   Reassign mutate y$3 = Array []
   Goto bb1
 bb2:
+  predecessor blocks: bb0
   Reassign mutate y$3 = read x$2
   Goto bb1
 bb1:
+  predecessor blocks: bb0 bb6 bb2
   Const mutate child$7 = JSX <read Component$0 data={freeze x$2} ></read Component$0>
   Call read y$3.push(read props$1.p4)
   Const mutate $8 = JSX <read Component$0 data={freeze y$3} >{read child$7}</read Component$0>

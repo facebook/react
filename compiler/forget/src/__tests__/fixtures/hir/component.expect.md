@@ -43,20 +43,26 @@ bb0:
   Const mutate max$7 = Call mutate Math$8.max(read $9, read maxItems$3)
   Goto bb1
 bb1:
+  predecessor blocks: bb0 bb4 bb7
   If (read items$2) then:bb3 else:bb2
 bb3:
+  predecessor blocks: bb1
   Const mutate $11 = null
   Const mutate $12 = Binary read item$10 == read $11
   If (read $12) then:bb8 else:bb9
 bb8:
+  predecessor blocks: bb3
   Const mutate $13 = read $12
   Goto bb7
 bb9:
+  predecessor blocks: bb3
   Const mutate $13 = Call mutate seen$5.has(mutate item$10)
   Goto bb7
 bb7:
+  predecessor blocks: bb9 bb8
   If (read $13) then:bb1 else:bb4
 bb4:
+  predecessor blocks: bb7
   Call mutate seen$5.add(mutate item$10)
   Const mutate $14 = "div"
   Const mutate $15 = JSX <read $14>{read item$10}</read $14>
@@ -64,6 +70,7 @@ bb4:
   Const mutate $16 = Binary read renderedItems$4.length >= read max$7
   If (read $16) then:bb2 else:bb1
 bb2:
+  predecessor blocks: bb1 bb4
   Const mutate count$17 = read renderedItems$4.length
   Const mutate $18 = "div"
   Const mutate $19 = "\n      "

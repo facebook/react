@@ -114,6 +114,8 @@ export default class HIRBuilder {
       id: blockId,
       instructions,
       terminal: { kind: "return", value: null },
+      preds: new Set(),
+      phis: new Set(),
     });
     // First reduce indirections and prune unreachable blocks
     let reduced = shrink({
@@ -121,7 +123,9 @@ export default class HIRBuilder {
       entry: this.#entry,
     });
     // then convert to reverse postorder
-    return reversePostorderBlocks(reduced);
+    const blocks = reversePostorderBlocks(reduced);
+    markPredecessors(blocks);
+    return blocks;
   }
 
   /**
@@ -133,6 +137,8 @@ export default class HIRBuilder {
       id: blockId,
       instructions,
       terminal,
+      preds: new Set(),
+      phis: new Set(),
     });
     const nextId = makeBlockId(this.#nextId++);
     this.#current = newBlock(nextId);
@@ -148,6 +154,8 @@ export default class HIRBuilder {
       id: blockId,
       instructions,
       terminal,
+      preds: new Set(),
+      phis: new Set(),
     });
     this.#current = continuation;
   }
@@ -166,7 +174,13 @@ export default class HIRBuilder {
    */
   complete(block: WipBlock, terminal: Terminal) {
     const { id: blockId, instructions } = block;
-    this.#completed.set(blockId, { id: blockId, instructions, terminal });
+    this.#completed.set(blockId, {
+      id: blockId,
+      instructions,
+      terminal,
+      preds: new Set(),
+      phis: new Set(),
+    });
   }
 
   /**
@@ -181,7 +195,13 @@ export default class HIRBuilder {
     this.#current = newBlock(nextId);
     const terminal = fn(nextId);
     const { id: blockId, instructions } = this.#current;
-    this.#completed.set(blockId, { id: blockId, instructions, terminal });
+    this.#completed.set(blockId, {
+      id: blockId,
+      instructions,
+      terminal,
+      preds: new Set(),
+      phis: new Set(),
+    });
     this.#current = current;
     return nextId;
   }
@@ -336,6 +356,8 @@ function shrink(func: HIR): HIR {
       id: blockId,
       instructions,
       terminal,
+      preds: new Set(),
+      phis: new Set(),
     });
   }
 
@@ -436,6 +458,54 @@ function reversePostorderBlocks(func: HIR): HIR {
     blocks,
     entry: func.entry,
   };
+}
+
+function markPredecessors(func: HIR) {
+  const visited: Set<BlockId> = new Set();
+  function visit(blockId: BlockId, prevBlock?: BasicBlock) {
+    const block = func.blocks.get(blockId)!;
+    if (prevBlock) {
+      block.preds.add(prevBlock);
+    }
+
+    if (visited.has(blockId)) {
+      return;
+    }
+    visited.add(blockId);
+
+    const { terminal } = block;
+
+    switch (terminal.kind) {
+      case "return":
+      case "throw": {
+        break;
+      }
+      case "goto": {
+        visit(terminal.block, block);
+        break;
+      }
+      case "if": {
+        const { consequent, alternate } = terminal;
+        visit(alternate, block);
+        visit(consequent, block);
+        break;
+      }
+      case "switch": {
+        const { cases } = terminal;
+        for (const case_ of [...cases]) {
+          visit(case_.block, block);
+        }
+        break;
+      }
+      default: {
+        assertExhaustive(
+          terminal,
+          `Unexpected terminal kind '${(terminal as any).kind}'`
+        );
+      }
+    }
+  }
+  visit(func.entry);
 }
 
 /**

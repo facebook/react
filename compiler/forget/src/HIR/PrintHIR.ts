@@ -12,6 +12,7 @@ import {
   InstructionKind,
   InstructionValue,
   LValue,
+  Phi,
   Place,
   Terminal,
 } from "./HIR";
@@ -31,6 +32,16 @@ export default function printHIR(
   };
   for (const [blockId, block] of ir.blocks) {
     output.push(`bb${blockId}:`);
+    if (block.preds.size > 0) {
+      const preds = ["predecessor blocks:"];
+      for (const pred of block.preds) {
+        preds.push(`bb${pred.id}`);
+      }
+      push(preds.join(" "));
+    }
+    for (const phi of block.phis) {
+      push(printPhi(phi));
+    }
     for (const instr of block.instructions) {
       push(printInstruction(instr));
     }
@@ -76,6 +87,20 @@ function printInstruction(instr: Instruction): string {
   } else {
     return value;
   }
+}
+
+function printPhi(phi: Phi): string {
+  const items = [];
+  items.push(printLValue(phi.lvalue));
+  items.push(": phi(");
+  const phis = [];
+  for (const [block, place] of phi.operands) {
+    phis.push(`bb${block.id}: ${printPlace(place)}`);
+  }
+
+  items.push(phis.join(", "));
+  items.push(")");
+  return items.join("");
 }
 
 function printTerminal(terminal: Terminal): Array<string> | string {

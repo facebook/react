@@ -82,9 +82,11 @@ bb0:
   Call mutate a_DEBUG$2.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
+  predecessor blocks: bb0
   Const mutate $3 = null
   Return read $3
 bb1:
+  predecessor blocks: bb0
   Call mutate a_DEBUG$2.push(read props$1.d)
   Return freeze a_DEBUG$2
 ```
@@ -111,9 +113,11 @@ bb0:
   Call mutate a$2.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
+  predecessor blocks: bb0
   Call mutate a$2.push(read props$1.c)
   Goto bb1
 bb1:
+  predecessor blocks: bb0 bb2
   Call mutate a$2.push(read props$1.d)
   Return freeze a$2
 ```
@@ -141,10 +145,12 @@ bb0:
   Call mutate a$2.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
+  predecessor blocks: bb0
   Call mutate a$2.push(read props$1.c)
   Const mutate $3 = null
   Return read $3
 bb1:
+  predecessor blocks: bb0
   Call mutate a$2.push(read props$1.d)
   Return freeze a$2
 ```
@@ -172,9 +178,11 @@ bb0:
   Call mutate a$2.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
+  predecessor blocks: bb0
   Call mutate a$2.push(read props$1.c)
   Return freeze a$2
 bb1:
+  predecessor blocks: bb0
   Call mutate a$2.push(read props$1.d)
   Return freeze a$2
 ```
@@ -202,9 +210,11 @@ bb0:
   Call mutate a$2.push(read props$1.a)
   If (read props$1.b) then:bb1 else:bb2
 bb2:
+  predecessor blocks: bb0
   Call mutate a$2.push(read props$1.c)
   Goto bb1
 bb1:
+  predecessor blocks: bb2 bb0
   Call mutate a$2.push(read props$1.d)
   Return freeze a$2
 ```

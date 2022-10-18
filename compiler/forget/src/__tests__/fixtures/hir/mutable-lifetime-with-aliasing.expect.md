@@ -63,14 +63,19 @@ bb0:
   Const mutate y$7 = Call mutate mutate$8(mutate x$6, mutate d$5)
   If (read a$2) then:bb1 else:bb1
 bb1:
+  predecessor blocks: bb0
   If (read b$3) then:bb3 else:bb3
 bb3:
+  predecessor blocks: bb1
   If (read c$4) then:bb5 else:bb5
 bb5:
+  predecessor blocks: bb3
   If (read d$5) then:bb7 else:bb7
 bb7:
+  predecessor blocks: bb5
   If (read y$7) then:bb9 else:bb9
 bb9:
+  predecessor blocks: bb7
   Const mutate $9 = null
   Call mutate mutate$8(mutate x$6, read $9)
   Return

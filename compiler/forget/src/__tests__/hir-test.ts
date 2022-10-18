@@ -19,6 +19,7 @@ import codegen from "../HIR/Codegen";
 import { HIRFunction } from "../HIR/HIR";
 import inferReferenceEffects from "../HIR/InferReferenceEffects";
 import printHIR from "../HIR/PrintHIR";
+import buildSSA from "../HIR/SSAify";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
 function wrapWithTripleBackticks(s: string, ext?: string) {
@@ -45,6 +46,9 @@ describe("React Forget (HIR version)", () => {
           enter(nodePath) {
             const ir: HIRFunction = lower(nodePath);
             inferReferenceEffects(ir);
+            if (file.startsWith("ssa")) {
+              buildSSA(ir);
+            }
             // const lifetimeGraph = buildDefUseGraph(ir);
             const textHIR = printHIR(ir.body);
             // const textLifetimeGraph = printGraph(lifetimeGraph);

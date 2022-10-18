@@ -28,9 +28,11 @@ bb0:
   Let mutate y$3 = read x$2
   If (read props$1.p1) then:bb2 else:bb1
 bb2:
+  predecessor blocks: bb0
   Reassign mutate x$2 = Array []
   Goto bb1
 bb1:
+  predecessor blocks: bb0 bb2
   Let mutate _$4 = JSX <read Component$0 x={freeze x$2} ></read Component$0>
   Call read y$3.push(read props$1.p2)
   Const mutate $5 = JSX <read Component$0 x={read x$2} y={read y$3} ></read Component$0>
