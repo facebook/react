@@ -7,7 +7,7 @@
 
 import generate from "@babel/generator";
 import * as t from "@babel/types";
-import * as IR from ".";
+import * as IR from "../IR";
 import * as LIR from "../LIR";
 
 export default function prettyPrint(irFunc: IR.Func) {

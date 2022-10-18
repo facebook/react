@@ -8,7 +8,7 @@
 import generate from "@babel/generator";
 import * as t from "@babel/types";
 import invariant from "invariant";
-import * as LIR from ".";
+import * as LIR from "../LIR";
 import { assertExhaustive } from "../Common/utils";
 import * as IR from "../IR";
 import {
