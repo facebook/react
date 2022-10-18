@@ -73,7 +73,6 @@ import {
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 import {
   resolveClassForHotReloading,
@@ -109,6 +108,7 @@ import {
   REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent.old';
+import {detachOffscreenInstance} from './ReactFiberCommitWork.old';
 
 export type {Fiber};
 
@@ -755,6 +755,8 @@ export function createFiberFromOffscreen(
     _pendingMarkers: null,
     _retryCache: null,
     _transitions: null,
+    _current: null,
+    detach: () => detachOffscreenInstance(primaryChildInstance),
   };
   fiber.stateNode = primaryChildInstance;
   return fiber;
@@ -776,6 +778,8 @@ export function createFiberFromLegacyHidden(
     _pendingMarkers: null,
     _transitions: null,
     _retryCache: null,
+    _current: null,
+    detach: () => detachOffscreenInstance(instance),
   };
   fiber.stateNode = instance;
   return fiber;

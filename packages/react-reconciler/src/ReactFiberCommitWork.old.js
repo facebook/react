@@ -25,6 +25,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {Wakeable} from 'shared/ReactTypes';
+import {isOffscreenManual} from './ReactFiberOffscreenComponent';
 import type {
   OffscreenState,
   OffscreenInstance,
@@ -156,6 +157,7 @@ import {
   clearSingleton,
   acquireSingletonInstance,
   releaseSingletonInstance,
+  scheduleMicrotask,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -172,6 +174,7 @@ import {
   setIsRunningInsertionEffect,
   getExecutionContext,
   CommitContext,
+  RenderContext,
   NoContext,
 } from './ReactFiberWorkLoop.old';
 import {
@@ -200,6 +203,7 @@ import {releaseCache, retainCache} from './ReactFiberCacheComponent.old';
 import {clearTransitionsForLanes} from './ReactFiberLane.old';
 import {
   OffscreenVisible,
+  OffscreenDetached,
   OffscreenPassiveEffectsConnected,
 } from './ReactFiberOffscreenComponent';
 import {
@@ -2416,6 +2420,28 @@ function getRetryCache(finishedWork) {
   }
 }
 
+export function detachOffscreenInstance(instance: OffscreenInstance): void {
+  const currentOffscreenFiber = instance._current;
+  if (currentOffscreenFiber === null) {
+    throw new Error(
+      'Calling Offscreen.detach before instance handle has been set.',
+    );
+  }
+
+  const executionContext = getExecutionContext();
+  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+    scheduleMicrotask(() => {
+      instance._visibility |= OffscreenDetached;
+      disappearLayoutEffects(currentOffscreenFiber);
+      disconnectPassiveEffect(currentOffscreenFiber);
+    });
+  } else {
+    instance._visibility |= OffscreenDetached;
+    disappearLayoutEffects(currentOffscreenFiber);
+    disconnectPassiveEffect(currentOffscreenFiber);
+  }
+}
+
 function attachSuspenseRetryListeners(
   finishedWork: Fiber,
   wakeables: Set<Wakeable>,
@@ -2845,6 +2871,8 @@ function commitMutationEffectsOnFiber(
       }
 
       commitReconciliationEffects(finishedWork);
+      // TODO: Add explicit effect flag to set _current.
+      finishedWork.stateNode._current = finishedWork;
 
       if (flags & Visibility) {
         const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
@@ -2871,7 +2899,8 @@ function commitMutationEffectsOnFiber(
           }
         }
 
-        if (supportsMutation) {
+        // Offscreen with manual mode manages visibility manually.
+        if (supportsMutation && !isOffscreenManual(finishedWork)) {
           // TODO: This needs to run whenever there's an insertion or update
           // inside a hidden Offscreen tree.
           hideOrUnhideAllChildren(offscreenBoundary, isHidden);

@@ -440,5 +440,6 @@
   "452": "React expected an <html> element (document.documentElement) to exist in the Document but one was not found. React never removes the documentElement for any Document it renders into so the cause is likely in some other script running on this page.",
   "453": "React expected a <head> element (document.head) to exist in the Document but one was not found. React never removes the head for any Document it renders into so the cause is likely in some other script running on this page.",
   "454": "React expected a <body> element (document.body) to exist in the Document but one was not found. React never removes the body for any Document it renders into so the cause is likely in some other script running on this page.",
-  "455": "This CacheSignal was requested outside React which means that it is immediately aborted."
+  "455": "This CacheSignal was requested outside React which means that it is immediately aborted.",
+  "456": "Calling Offscreen.detach before instance handle has been set."
 }
