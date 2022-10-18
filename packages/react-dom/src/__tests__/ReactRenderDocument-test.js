@@ -84,15 +84,17 @@ describe('rendering React components at document', () => {
 
       const originalDocEl = testDocument.documentElement;
       const originalHead = testDocument.head;
+      const originalTitle = testDocument.head.querySelector('title');
       const originalBody = testDocument.body;
 
-      // When we unmount everything is removed except the singleton nodes of html, head, and body
+      // When we unmount everything is removed except the singleton nodes of html, head, body, and title
       ReactDOM.unmountComponentAtNode(testDocument);
       expect(testDocument.firstChild).toBe(originalDocEl);
       expect(testDocument.head).toBe(originalHead);
       expect(testDocument.body).toBe(originalBody);
       expect(originalBody.firstChild).toEqual(null);
-      expect(originalHead.firstChild).toEqual(null);
+      expect(originalHead.firstChild).toBe(originalTitle);
+      expect(originalTitle.firstChild).toEqual(null);
     });
 
     // @gate !enableHostSingletons
@@ -253,10 +255,23 @@ describe('rendering React components at document', () => {
         }
       }
 
-      // getTestDocument() has an extra <meta> that we didn't render.
-      expect(() =>
-        ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
-      ).toErrorDev('Did not expect server HTML to contain a <meta> in <head>.');
+      if (gate(flags => flags.enableHostSingletons)) {
+        // with singletons the title hydrates out of band and the extra meta tag is
+        // treated like a trailing extra node. We still get a hydration warning because
+        // the title content did not match
+        expect(() =>
+          ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
+        ).toErrorDev(
+          'Text content did not match. Server: "test doc" Client: "Hello World"',
+        );
+      } else {
+        // getTestDocument() has an extra <meta> that we didn't render.
+        expect(() =>
+          ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
+        ).toErrorDev(
+          'Did not expect server HTML to contain a <meta> in <head>.',
+        );
+      }
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 

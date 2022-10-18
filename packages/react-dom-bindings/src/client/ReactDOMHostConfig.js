@@ -614,7 +614,7 @@ export function removeChildFromContainer(
 ): void {
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).removeChild(child);
-  } else {
+  } else if (child.parentNode !== null) {
     container.removeChild(child);
   }
 }
@@ -726,7 +726,8 @@ export function clearContainer(container: Container): void {
             switch (nodeName) {
               case 'HTML':
               case 'HEAD':
-              case 'BODY': {
+              case 'BODY':
+              case 'TITLE': {
                 clearContainer((node: any));
                 // If these singleton instances had previously been rendered with React they
                 // may still hold on to references to the previous fiber tree. We detatch them
@@ -923,6 +924,7 @@ function getNextHydratable(node) {
             }
             break;
           }
+          case 'TITLE':
           case 'HTML':
           case 'HEAD':
           case 'BODY': {
@@ -970,7 +972,12 @@ function getNextHydratable(node) {
     } else if (enableHostSingletons) {
       if (nodeType === ELEMENT_NODE) {
         const tag: string = (node: any).tagName;
-        if (tag === 'HTML' || tag === 'HEAD' || tag === 'BODY') {
+        if (
+          tag === 'HTML' ||
+          tag === 'HEAD' ||
+          tag === 'BODY' ||
+          tag === 'TITLE'
+        ) {
           continue;
         }
         break;
@@ -1547,7 +1554,9 @@ export {
 export const supportsSingletons = true;
 
 export function isHostSingletonType(type: string): boolean {
-  return type === 'html' || type === 'head' || type === 'body';
+  return (
+    type === 'html' || type === 'head' || type === 'body' || type === 'title'
+  );
 }
 
 export function resolveSingletonInstance(
@@ -1600,6 +1609,19 @@ export function resolveSingletonInstance(
       }
       return body;
     }
+    case 'title': {
+      if (!ownerDocument.head) {
+        throw new Error(
+          'React expected a <head> element (document.head) to exist in the Document but one was' +
+            ' not found. React never removes the head for any Document it renders into so' +
+            ' the cause is likely in some other script running on this page.',
+        );
+      }
+      // This will initialize a title element if it didn't already exist
+      ownerDocument.title = ownerDocument.title;
+      // We assert the type here because we ensured the title existed above
+      return (ownerDocument.querySelector('title'): any);
+    }
     default: {
       throw new Error(
         'resolveSingletonInstance was called with an element type that is not supported. This is a bug in React.',
@@ -1629,6 +1651,7 @@ export function acquireSingletonInstance(
       );
     }
     switch (type) {
+      case 'title':
       case 'html':
       case 'head':
       case 'body': {
@@ -1671,6 +1694,7 @@ export function clearSingleton(instance: Instance): void {
     } else if (
       nodeName === 'HEAD' ||
       nodeName === 'BODY' ||
+      nodeName === 'TITLE' ||
       nodeName === 'STYLE' ||
       (nodeName === 'LINK' &&
         ((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet')

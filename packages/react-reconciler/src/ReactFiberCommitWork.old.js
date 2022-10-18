@@ -1995,7 +1995,11 @@ function commitDeletionEffects(
     let parent: null | Fiber = returnFiber;
     findParent: while (parent !== null) {
       switch (parent.tag) {
-        case HostSingleton:
+        case HostSingleton: {
+          hostParent = parent.stateNode;
+          hostParentIsContainer = true;
+          break findParent;
+        }
         case HostComponent: {
           hostParent = parent.stateNode;
           hostParentIsContainer = false;
@@ -2080,6 +2084,7 @@ function commitDeletionEffectsOnFiber(
         const prevHostParent = hostParent;
         const prevHostParentIsContainer = hostParentIsContainer;
         hostParent = deletedFiber.stateNode;
+        hostParentIsContainer = true;
         recursivelyTraverseDeletionEffects(
           finishedRoot,
           nearestMountedAncestor,

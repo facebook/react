@@ -1192,7 +1192,7 @@ describe('ReactDOMFiber', () => {
     // It's an error of type 'NotFoundError' with no message
     container.innerHTML = '<div>MEOW.</div>';
 
-    expect(() => {
+    if (gate(flags => flags.enableHostSingletons)) {
       expect(() =>
         ReactDOM.render(<div key="2">baz</div>, container),
       ).toErrorDev(
@@ -1203,7 +1203,20 @@ describe('ReactDOMFiber', () => {
           'to empty a container.',
         {withoutStack: true},
       );
-    }).toThrowError();
+    } else {
+      expect(() => {
+        expect(() =>
+          ReactDOM.render(<div key="2">baz</div>, container),
+        ).toErrorDev(
+          'render(...): ' +
+            'It looks like the React-rendered content of this container was ' +
+            'removed without using React. This is not supported and will ' +
+            'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+            'to empty a container.',
+          {withoutStack: true},
+        );
+      }).toThrowError();
+    }
   });
 
   it('should warn when doing an update to a container manually updated outside of React', () => {

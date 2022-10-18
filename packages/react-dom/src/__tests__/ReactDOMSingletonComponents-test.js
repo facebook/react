@@ -149,13 +149,13 @@ describe('ReactDOM HostSingleton', () => {
     );
     expect(() => {
       expect(Scheduler).toFlushWithoutYielding();
-    }).toErrorDev(
+    }).toErrorDev([
       'Warning: You are mounting a new head component when a previous one has not first unmounted. It is an error to render more than one head component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <head> and if you need to mount a new one, ensure any previous ones have unmounted first',
-    );
+      'Warning: You are mounting a new title component when a previous one has not first unmounted. It is an error to render more than one title component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <title> and if you need to mount a new one, ensure any previous ones have unmounted first',
+    ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head lang="es" data-foo="foo">
-          <title>Hello</title>
           <title>Hola</title>
         </head>
         <body />
@@ -288,9 +288,9 @@ describe('ReactDOM HostSingleton', () => {
       <html data-client-foo="foo">
         <head>
           <link rel="stylesheet" href="resource" />
+          <title>a client title</title>
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
-          <title>a client title</title>
         </head>
         <body data-client-baz="baz">
           <style>
@@ -327,9 +327,9 @@ describe('ReactDOM HostSingleton', () => {
       <html data-client-foo="foo">
         <head>
           <link rel="stylesheet" href="resource" />
+          <title>a client title</title>
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
-          <title>a client title</title>
           <meta />
         </head>
         <body data-client-baz="baz">
@@ -366,9 +366,9 @@ describe('ReactDOM HostSingleton', () => {
       <html data-client-foo="foo">
         <head>
           <link rel="stylesheet" href="resource" />
+          <title>a client title</title>
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
-          <title>a client title</title>
         </head>
         <body data-client-baz="baz">
           <style>
@@ -402,9 +402,9 @@ describe('ReactDOM HostSingleton', () => {
       <html data-client-foo="foo">
         <head>
           <link rel="stylesheet" href="resource" />
+          <title>a client title</title>
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
-          <title>a client title</title>
         </head>
         <body>
           <style>
@@ -429,6 +429,7 @@ describe('ReactDOM HostSingleton', () => {
       <html>
         <head>
           <link rel="stylesheet" href="resource" />
+          <title />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
         </head>
@@ -472,7 +473,7 @@ describe('ReactDOM HostSingleton', () => {
       expect(Scheduler).toFlushWithoutYielding();
     }).toErrorDev(
       [
-        `Warning: Expected server HTML to contain a matching <title> in <head>.
+        `Warning: Expected server HTML to contain a matching text node for \"a client title\" in <title>.
     in title (at **)
     in head (at **)
     in html (at **)`,
@@ -503,9 +504,9 @@ describe('ReactDOM HostSingleton', () => {
       <html data-client-foo="foo">
         <head>
           <link rel="stylesheet" href="resource" />
+          <title>a client title</title>
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
-          <title>a client title</title>
         </head>
         <body data-client-baz="baz">
           <style>
@@ -570,6 +571,7 @@ describe('ReactDOM HostSingleton', () => {
       <html>
         <head>
           <link rel="stylesheet" href="resource" />
+          <title />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
         </head>
@@ -594,7 +596,9 @@ describe('ReactDOM HostSingleton', () => {
     ]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
-        <head />
+        <head>
+          <title />
+        </head>
         <body />
       </html>,
     );
@@ -769,8 +773,8 @@ describe('ReactDOM HostSingleton', () => {
       <html>
         <head>
           <link rel="stylesheet" href="headbefore" />
-          <link rel="stylesheet" href="headafter" />
           <title>something new</title>
+          <link rel="stylesheet" href="headafter" />
         </head>
         <body>
           <link rel="stylesheet" href="bodybefore" />
@@ -805,8 +809,8 @@ describe('ReactDOM HostSingleton', () => {
       <html>
         <head>
           <link rel="stylesheet" href="before" />
-          <link rel="stylesheet" href="after" />
           <title>something new</title>
+          <link rel="stylesheet" href="after" />
         </head>
         <body />
       </html>,

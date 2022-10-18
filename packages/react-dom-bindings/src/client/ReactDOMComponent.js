@@ -316,7 +316,7 @@ function setInitialDOMProperties(
         // show within the <textarea> until it has been focused and blurred again.
         // https://github.com/facebook/react/issues/6731#issuecomment-254874553
         const canSetTextContent =
-          (!enableHostSingletons || tag !== 'body') &&
+          (!enableHostSingletons || (tag !== 'body' && tag !== 'title')) &&
           (tag !== 'textarea' || nextProp !== '');
         if (canSetTextContent) {
           setTextContent(domElement, nextProp);
