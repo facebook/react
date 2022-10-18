@@ -1947,7 +1947,9 @@ function wrapEventFunction<Args, Return, F: (...Array<Args>) => Return>(
 function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): EventFunctionWrapper<Args, Return, F> {
+  const hook = mountWorkInProgressHook();
   const eventFn = wrapEventFunction(callback);
+  hook.memoizedState = eventFn;
   useEventImpl(eventFn, callback);
   return eventFn;
 }
@@ -1955,9 +1957,11 @@ function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
 function updateEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): EventFunctionWrapper<Args, Return, F> {
-  const eventFn = wrapEventFunction(callback);
+  const hook = updateWorkInProgressHook();
+  const eventFn = hook.memoizedState;
   useEventImpl(eventFn, callback);
-  return eventFn;
+  // Always return a new function
+  return wrapEventFunction(callback);
 }
 
 function mountInsertionEffect(
