@@ -45,6 +45,24 @@ const ALLOWED_CAPITALIZED_STDLIB_FUNCTIONS = new Set([
   "URIError",
 ]);
 
+function getStaticCallee(expression: t.Node): string | null {
+  if (t.isIdentifier(expression)) {
+    return expression.name;
+  }
+  if (
+    t.isMemberExpression(expression) ||
+    t.isOptionalMemberExpression(expression)
+  ) {
+    const { object, property } = expression;
+    const objectName = getStaticCallee(object);
+    const propertyName = getStaticCallee(property);
+    if (objectName && propertyName) {
+      return `${objectName}.${propertyName}`;
+    }
+  }
+  return null;
+}
+
 export function run(
   _irFunc: IR.Func,
   func: NodePath<t.Function>,
@@ -53,11 +71,14 @@ export function run(
   const funcBody = func.get("body");
 
   if (context.opts.flags.bailOnCapitalizedFunctionCalls) {
-    function isValidFunctionCallName(name: string): boolean {
+    function isValidFunctionCallName(
+      functionName: string,
+      fullName: string
+    ): boolean {
       return (
-        ALLOWED_CAPITALIZED_STDLIB_FUNCTIONS.has(name) ||
-        context.opts.allowedCapitalizedUserFunctions.has(name) ||
-        !/^[A-Z]/.test(name)
+        ALLOWED_CAPITALIZED_STDLIB_FUNCTIONS.has(fullName) ||
+        context.opts.allowedCapitalizedUserFunctions.has(fullName) ||
+        !/^[A-Z]/.test(functionName)
       );
     }
 
@@ -73,7 +94,7 @@ export function run(
             return;
           }
           const name = callee.node.name;
-          if (!isValidFunctionCallName(name)) {
+          if (!isValidFunctionCallName(name, name)) {
             context.bailout("BailOnCapitalizedFunctionCalls", {
               code: "E0018",
               path: callee,
@@ -84,9 +105,12 @@ export function run(
           t.isMemberExpression(callee.node) ||
           t.isOptionalMemberExpression(callee.node)
         ) {
-          const { object, property } = callee.node;
-          if (t.isIdentifier(object) && t.isIdentifier(property)) {
-            if (!isValidFunctionCallName(`${object.name}.${property.name}`)) {
+          if (t.isIdentifier(callee.node.property)) {
+            const fullName = getStaticCallee(callee.node);
+            if (
+              fullName &&
+              !isValidFunctionCallName(callee.node.property.name, fullName)
+            ) {
               context.bailout("BailOnCapitalizedFunctionCalls", {
                 code: "E0018",
                 path: callee,
