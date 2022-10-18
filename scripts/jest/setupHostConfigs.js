@@ -50,6 +50,14 @@ jest.mock('react', () => {
   return jest.requireActual(resolvedEntryPoint);
 });
 
+jest.mock('react/react.shared-subset', () => {
+  const resolvedEntryPoint = resolveEntryFork(
+    require.resolve('react/src/ReactSharedSubset'),
+    global.__WWW__
+  );
+  return jest.requireActual(resolvedEntryPoint);
+});
+
 jest.mock('react-reconciler/src/ReactFiberReconciler', () => {
   return jest.requireActual(
     __VARIANT__
