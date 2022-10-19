@@ -2406,15 +2406,12 @@ export function writeInitialResources(
 
   headResources.forEach(r => {
     switch (r.type) {
-      case 'head':
       case 'title': {
-        if (r.instanceType === 'title') {
-          pushStartTitleImpl(target, r.props, responseState);
-          if (typeof r.props.children === 'string') {
-            target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
-          }
-          pushEndInstance(target, target, 'title', r.props);
+        pushStartTitleImpl(target, r.props, responseState);
+        if (typeof r.props.children === 'string') {
+          target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
         }
+        pushEndInstance(target, target, 'title', r.props);
         break;
       }
       case 'meta': {
@@ -2498,15 +2495,12 @@ export function writeImmediateResources(
 
   headResources.forEach(r => {
     switch (r.type) {
-      case 'head':
       case 'title': {
-        if (r.instanceType === 'title') {
-          pushStartTitleImpl(target, r.props, responseState);
-          if (typeof r.props.children === 'string') {
-            target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
-          }
-          pushEndInstance(target, target, 'title', r.props);
+        pushStartTitleImpl(target, r.props, responseState);
+        if (typeof r.props.children === 'string') {
+          target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
         }
+        pushEndInstance(target, target, 'title', r.props);
         break;
       }
       case 'meta': {

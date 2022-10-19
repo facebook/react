@@ -122,7 +122,7 @@ type Resource = StyleResource | ScriptResource | PreloadResource | HeadResource;
 export type RootResources = {
   styles: Map<string, StyleResource>,
   scripts: Map<string, ScriptResource>,
-  head: Map<string, HeadResource | TitleResource | MetaResource>,
+  head: Map<string, HeadResource>,
 };
 
 // Brief on purpose due to insertion by script when streaming late boundaries

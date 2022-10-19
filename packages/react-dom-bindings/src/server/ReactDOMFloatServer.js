@@ -68,24 +68,11 @@ type ScriptResource = {
   hint: PreloadResource,
 };
 
-type HeadProps = {
-  [string]: mixed,
-};
-type HeadResource = {
-  type: 'head',
-  instanceType: string,
-  props: HeadProps,
-
-  flushed: boolean,
-  allowLate: boolean,
-};
-
 type TitleProps = {
   [string]: mixed,
 };
 type TitleResource = {
   type: 'title',
-  instanceType: string,
   props: TitleProps,
 
   flushed: boolean,
@@ -102,13 +89,14 @@ type MetaResource = {
 };
 
 export type Resource = PreloadResource | StyleResource | ScriptResource;
+export type HeadResource = TitleResource | MetaResource;
 
 export type Resources = {
   // Request local cache
   preloadsMap: Map<string, PreloadResource>,
   stylesMap: Map<string, StyleResource>,
   scriptsMap: Map<string, ScriptResource>,
-  headsMap: Map<string, HeadResource | TitleResource | MetaResource>,
+  headsMap: Map<string, HeadResource>,
 
   // Flushing queues for Resource dependencies
   charset: null | MetaResource,
@@ -121,7 +109,7 @@ export type Resources = {
   explicitStylePreloads: Set<PreloadResource>,
   // explicitImagePreloads: Set<PreloadResource>,
   explicitScriptPreloads: Set<PreloadResource>,
-  headResources: Set<HeadResource | TitleResource | MetaResource>,
+  headResources: Set<HeadResource>,
 
   // Module-global-like reference for current boundary resources
   boundaryResources: ?BoundaryResources,
@@ -602,32 +590,6 @@ function adoptPreloadPropsForScriptProps(
     resourceProps.integrity = preloadProps.integrity;
 }
 
-function createHeadResource(
-  resources: Resources,
-  key: string,
-  instanceType: string,
-  props: HeadProps,
-): HeadResource {
-  if (__DEV__) {
-    if (resources.headsMap.has(key)) {
-      console.error(
-        'createScriptResource was called when a script Resource matching the same src already exists. This is a bug in React.',
-      );
-    }
-  }
-
-  const resource: HeadResource = {
-    type: 'head',
-    instanceType,
-    props,
-
-    flushed: false,
-    allowLate: true,
-  };
-  resources.headsMap.set(key, resource);
-  return resource;
-}
-
 function getTitleKey(child: string | number): string {
   return 'title' + child;
 }
@@ -650,7 +612,7 @@ function getMetaKey(props: Props): ?string {
 function titlePropsFromRawProps(
   child: string | number,
   rawProps: Props,
-): HeadProps {
+): TitleProps {
   const props = Object.assign({}, rawProps);
   props.children = child;
   return props;
@@ -673,8 +635,12 @@ export function resourcesFromElement(type: string, props: Props): boolean {
         const key = getTitleKey(child);
         let resource = resources.headsMap.get(key);
         if (!resource) {
-          const titleProps = titlePropsFromRawProps(child, props);
-          resource = createHeadResource(resources, key, 'title', titleProps);
+          resource = {
+            type: 'title',
+            props: titlePropsFromRawProps(child, props),
+            flushed: false,
+          };
+          resources.headsMap.set(key, resource);
           resources.headResources.add(resource);
         }
         return true;
