@@ -1950,7 +1950,6 @@ function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
   const hook = mountWorkInProgressHook();
   const eventFn = wrapEventFunction(callback);
   hook.memoizedState = eventFn;
-  useEventImpl(eventFn, callback);
   return eventFn;
 }
 
