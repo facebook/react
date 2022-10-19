@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@actuallyworks/node-fetch@^2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@actuallyworks/node-fetch/-/node-fetch-2.6.0.tgz#d1adc48813ab2866d86481950b99287c8d22d677"
+  integrity sha512-4G5iCA6JJk5TYy9GqSyyjGIOnf1w/K+XvCdVDm/Q6ryQGPhAwIGyZpIkPMLFStdjoswlgJTiY64j3yMw4S6l8g==
+
 "@babel/cli@^7.10.5":
   version "7.10.5"
   resolved "https://registry.yarnpkg.com/@babel/cli/-/cli-7.10.5.tgz#57df2987c8cf89d0fc7d4b157ec59d7619f1b77a"

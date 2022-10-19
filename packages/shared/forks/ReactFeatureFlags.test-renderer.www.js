@@ -22,6 +22,7 @@ export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = false;
 export const enableCache = true;
 export const enableCacheElement = true;
+export const enableFetchInstrumentation = false;
 export const enableSchedulerDebugging = false;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
