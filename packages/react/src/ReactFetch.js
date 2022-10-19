@@ -118,6 +118,9 @@ if (enableCache && enableFetchInstrumentation) {
         // of the body so that it can be read multiple times.
         return match.then(response => response.clone());
       };
+      // We don't expect to see any extra properties on fetch but if there are any,
+      // copy them over. Useful for extended fetch environments or mocks.
+      Object.assign(fetch, originalFetch);
     } catch (error) {
       // Log even in production just to make sure this is seen if only prod is frozen.
       // eslint-disable-next-line react-internal/no-production-logging
