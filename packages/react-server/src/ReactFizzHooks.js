@@ -7,10 +7,7 @@
  * @flow
  */
 
-import type {
-  Dispatcher,
-  EventFunctionWrapper,
-} from 'react-reconciler/src/ReactInternalTypes';
+import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
 import type {
   MutableSource,
@@ -522,7 +519,8 @@ function throwOnUseEventCall() {
 
 export function useEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
-): EventFunctionWrapper<Args, Return, F> {
+): F {
+  // $FlowIgnore[incompatible-return]
   return throwOnUseEventCall;
 }
 
