@@ -7635,15 +7635,54 @@ if (__EXPERIMENTAL__) {
     ...tests.valid,
     {
       code: normalizeIndent`
-      function MyComponent({ theme }) {
-        const onStuff = useEvent(() => {
-          showNotification(theme);
-        });
-        useEffect(() => {
-          onStuff();
-        }, []);
-      }
-    `,
+        function MyComponent({ theme }) {
+          const onStuff = useEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onStuff();
+          }, []);
+        }
+      `,
+    },
+  ];
+
+  tests.invalid = [
+    ...tests.invalid,
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          const onStuff = useEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onStuff();
+          }, [onStuff]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            '`useEvent` functions always return a new identity for every render. This means that ' +
+            'it should not be included in dependency lists, as it would cause the callback to be ' +
+            'run on every render. You can safely remove this.',
+          suggestions: [
+            {
+              desc: 'Remove the dependency `onStuff`',
+              output: normalizeIndent`
+                function MyComponent({ theme }) {
+                  const onStuff = useEvent(() => {
+                    showNotification(theme);
+                  });
+                  useEffect(() => {
+                    onStuff();
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+      ],
     },
   ];
 }
