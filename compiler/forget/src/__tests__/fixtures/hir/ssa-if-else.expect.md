@@ -48,6 +48,7 @@ function foo$0() {
     let z$7 = x$5;
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   return;
 }
 

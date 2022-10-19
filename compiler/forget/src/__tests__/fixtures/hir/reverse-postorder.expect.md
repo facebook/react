@@ -88,19 +88,23 @@ function Component$0(props$1) {
         x$2 = props$1.v0;
         ("<<TODO: handle complex control flow in codegen>>");
       }
+
       case 1: {
         x$2 = props$1.v1;
         ("<<TODO: handle complex control flow in codegen>>");
       }
+
       case 2: {
         x$2 = props$1.v2;
         ("<<TODO: handle complex control flow in codegen>>");
       }
+
       default: {
         x$2 = props$1.v2;
         ("<<TODO: handle complex control flow in codegen>>");
       }
     }
+
     x$2;
     return;
   } else {
@@ -111,9 +115,11 @@ function Component$0(props$1) {
       x$2 = props$1.c;
       ("<<TODO: handle complex control flow in codegen>>");
     }
+
     x$2;
     return;
   }
+
   x$2;
   return;
 }

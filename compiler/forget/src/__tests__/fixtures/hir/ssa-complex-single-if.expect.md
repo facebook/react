@@ -44,6 +44,7 @@ function foo$0() {
     x$11 = 3;
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   y$10 = x$9;
   return;
 }

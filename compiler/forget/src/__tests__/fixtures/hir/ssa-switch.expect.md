@@ -69,15 +69,18 @@ function foo$0() {
       x$22 = x$10 + 1;
       ("<<TODO: handle complex control flow in codegen>>");
     }
+
     case x$10 === 2: {
       x$20 = x$10 + 2;
       ("<<TODO: handle complex control flow in codegen>>");
     }
+
     default: {
       x$16 = x$10 + 3;
       ("<<TODO: handle complex control flow in codegen>>");
     }
   }
+
   let y$18 = x$17;
   return;
 }

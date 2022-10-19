@@ -39,6 +39,7 @@ function foo$0() {
     x$8 = 2;
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   throw x$7;
 }
 

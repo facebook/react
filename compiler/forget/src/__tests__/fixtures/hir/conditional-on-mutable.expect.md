@@ -97,10 +97,12 @@ function Component$0(props$1) {
     a$2.push(props$1.p0);
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   if (props$1.p1) {
     b$3.push(props$1.p2);
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   return <Foo$4 a={a$2} b={b$3}></Foo$4>;
 }
 
@@ -140,10 +142,12 @@ function Component$0(props$1) {
     a$2.push(props$1.p0);
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   if (props$1.p1) {
     b$3.push(props$1.p2);
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   return <Foo$6 a={a$2} b={b$3}></Foo$6>;
 }
 

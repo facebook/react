@@ -58,10 +58,12 @@ function foo$0() {
     x$18 = 3;
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   if (y$12 === 3) {
     x$16 = 5;
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   y$15 = x$14;
   return;
 }

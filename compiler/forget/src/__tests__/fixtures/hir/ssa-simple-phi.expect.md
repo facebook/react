@@ -51,6 +51,7 @@ function foo$0() {
     y$8 = 2;
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   let x$10 = y$9;
   return;
 }

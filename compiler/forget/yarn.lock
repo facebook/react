@@ -63,7 +63,7 @@
     json5 "^2.2.1"
     semver "^6.3.0"
 
-"@babel/generator@7.2.0", "@babel/generator@^7.1.6", "@babel/generator@^7.19.4", "@babel/generator@^7.2.0", "@babel/generator@^7.7.2":
+"@babel/generator@7.2.0", "@babel/generator@^7.1.6", "@babel/generator@^7.2.0":
   version "7.2.0"
   resolved "https://registry.yarnpkg.com/@babel/generator/-/generator-7.2.0.tgz#eaf3821fa0301d9d4aef88e63d4bcc19b73ba16c"
   integrity sha512-BA75MVfRlFQG2EZgFYIwyT1r6xSkwfP2bdkY/kLZusEYWiJs4xCowab/alaEaT0wSvmVuXGqiefeBlP+7V1yKg==
@@ -74,7 +74,7 @@
     source-map "^0.5.0"
     trim-right "^1.0.1"
 
-"@babel/generator@^7.19.0":
+"@babel/generator@^7.19.0", "@babel/generator@^7.19.4", "@babel/generator@^7.7.2":
   version "7.19.5"
   resolved "https://registry.yarnpkg.com/@babel/generator/-/generator-7.19.5.tgz#da3f4b301c8086717eee9cab14da91b1fa5dcca7"
   integrity sha512-DxbNz9Lz4aMZ99qPpO1raTbcrI1ZeYh+9NR9qhfkQIbFtVEqotHojEBxHzmxhVONkGt6VyrqVQcgpefMy9pqcg==

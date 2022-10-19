@@ -60,6 +60,7 @@ function Component$0(props$1) {
     a$4 = [];
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   useFreeze$5(a$4);
   useFreeze$5(a$4);
   call$6(a$4);

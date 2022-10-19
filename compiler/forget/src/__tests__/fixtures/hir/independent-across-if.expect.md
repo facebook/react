@@ -122,6 +122,7 @@ function Component$0(props$1) {
     mutate$5(b$4);
     ("<<TODO: handle complex control flow in codegen>>");
   }
+
   return <Foo$6 a={a$2} b={b$4}></Foo$6>;
 }
 
