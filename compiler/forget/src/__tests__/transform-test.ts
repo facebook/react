@@ -24,6 +24,7 @@ import { printDiagnostic } from "../Diagnostic";
 import { createArrayLogger } from "../Logger";
 import { PassName } from "../Pass";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
+import validateNoUseBeforeDefine from "./test-utils/validateNoUseBeforeDefine";
 import * as TestDriver from "./TestDriver";
 
 enum DebugPragma {
@@ -55,7 +56,7 @@ describe("React Forget", () => {
       };
       let flags: CompilerFlags = createCompilerFlags();
       let outputKinds: OutputKind[] = [];
-      let stopPass: PassName = PassName.JSGen;
+      let stopPass: PassName = PassName.Validator;
       for (const match of matches) {
         const [, key, value] = match;
         switch (key as DebugPragma) {
@@ -109,28 +110,48 @@ describe("React Forget", () => {
       let realConsoleLog = console.log;
 
       const logs: string[] = [];
-      const compilerOutputs = TestDriver.compile(
-        input,
-        {
-          outputKinds,
-          stopPass,
-          flags,
-          logger: createArrayLogger(logs),
-          allowedCapitalizedUserFunctions: new Set([
-            "ReactForgetSecretInternals",
-          ]),
-        },
-        compileOptions
-      );
+      let compilerOutputs = null;
+      let error = null;
+      try {
+        compilerOutputs = TestDriver.compile(
+          input,
+          {
+            outputKinds,
+            stopPass,
+            flags,
+            logger: createArrayLogger(logs),
+            allowedCapitalizedUserFunctions: new Set([
+              "ReactForgetSecretInternals",
+            ]),
+            postCodegenValidator: validateNoUseBeforeDefine,
+          },
+          compileOptions
+        );
+      } catch (_error) {
+        error = _error;
+      }
       const context = getMostRecentCompilerContext();
       const logOutput =
         logs.length === 0
           ? "(Empty)"
           : `${wrapWithTripleBackticks(logs.join("\n\n"))}`;
 
+      const expectError = file.startsWith("error.");
+      const hasError = error !== null;
+      if (hasError !== expectError) {
+        if (expectError) {
+          throw new Error(
+            `Expected Forget to error on '${file}' but it did not.\nLogs:\n${logOutput}`
+          );
+        } else {
+          console.error(error);
+          throw new Error(`Expected '${file}' to succeed but it errored`);
+        }
+      }
+
       const hasBailout = context.bailouts.length > 0;
       const expectBailout = file.startsWith("bailout.");
-      if (hasBailout !== expectBailout) {
+      if (!hasError && hasBailout !== expectBailout) {
         if (expectBailout) {
           throw new Error(
             `Expected Forget to bail out on '${file}' but it did not.\nLogs:\n${logOutput}`
@@ -141,20 +162,25 @@ describe("React Forget", () => {
         }
       }
 
-      const prettyOutputs = stringifyCompilerOutputs(compilerOutputs);
-
       const outputs: string[] = [];
-      outputKinds.forEach((outputKind) => {
-        const prettyOutput = prettyOutputs[outputKind];
-        const isJS = isSyntacticallyValidJS(outputKind);
+      if (compilerOutputs !== null) {
+        const prettyOutputs = stringifyCompilerOutputs(compilerOutputs);
 
-        outputs.push(
-          `## ${outputKind}\n\n${wrapWithTripleBackticks(
-            prettyOutput ?? "",
-            isJS ? "js" : ""
-          )}`
-        );
-      });
+        outputKinds.forEach((outputKind) => {
+          const prettyOutput = prettyOutputs[outputKind];
+          const isJS = isSyntacticallyValidJS(outputKind);
+
+          outputs.push(
+            `## ${outputKind}\n\n${wrapWithTripleBackticks(
+              prettyOutput ?? "",
+              isJS ? "js" : ""
+            )}`
+          );
+        });
+      }
+      if (error !== null) {
+        outputs.push(error.message);
+      }
 
       const diagnosticsOutput =
         context.diagnostics.length === 0

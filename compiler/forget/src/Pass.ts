@@ -28,6 +28,7 @@ export enum PassName {
   DumpLIR,
   JSGen,
   DumpCFG,
+  Validator,
 }
 
 export function isBackEndPass(pass: PassName) {

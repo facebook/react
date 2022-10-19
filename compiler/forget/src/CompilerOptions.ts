@@ -43,6 +43,23 @@ export type CompilerOptions = {
    * Capitalized identifier names that can be used in call expressions.
    */
   allowedCapitalizedUserFunctions: Set<string>;
+
+  /**
+   * Function to validate source code after codegen. The function is called
+   * with the *transformed* source code and should return:
+   * - null or an empty array if there are no errors
+   * - a list of validation erros with line and column information as well
+   *   as a message describing the error.
+   */
+  postCodegenValidator:
+    | ((source: string) => Array<PostCodegenValidationError> | null)
+    | null;
+};
+
+type PostCodegenValidationError = {
+  line: number;
+  column: number;
+  message: string;
 };
 
 /**
@@ -114,6 +131,16 @@ export function parseCompilerOptions(
     }
     resOpts.allowedCapitalizedUserFunctions = allowedCapitalizedUserFunctions;
   }
+  if (hasOwnProperty(inputOpts, "postCodegenValidator")) {
+    const postCodegenValidator = inputOpts.postCodegenValidator;
+    if (
+      postCodegenValidator !== null &&
+      typeof postCodegenValidator !== "function"
+    ) {
+      throw `Invalid value for 'postCodegenValidator'`;
+    }
+    resOpts.postCodegenValidator = postCodegenValidator;
+  }
   return resOpts;
 }
 
@@ -128,5 +155,6 @@ export function createCompilerOptions(): CompilerOptions {
     optIn: false,
     logger: noopLogger,
     allowedCapitalizedUserFunctions: new Set(),
+    postCodegenValidator: null,
   };
 }

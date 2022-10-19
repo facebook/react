@@ -65,6 +65,7 @@ describe("CompilerOptions", () => {
       stopPass: PassName.JSGen,
       logger: noopLogger,
       allowedCapitalizedUserFunctions: new Set(),
+      postCodegenValidator: null,
     };
     expect(parseCompilerOptions(fullInput)).toEqual(fullInput);
   });

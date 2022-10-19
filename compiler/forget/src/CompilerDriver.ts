@@ -58,6 +58,9 @@ export function createCompilerDriver(
       // JS Generation.
       passManager.addPass(BE.JSGen);
 
+      // Optionally sanity-check the transformed output
+      passManager.addPass(BE.PostCodegenValidator);
+
       passManager.runAll();
     },
   };
