@@ -7635,15 +7635,53 @@ if (__EXPERIMENTAL__) {
     ...tests.valid,
     {
       code: normalizeIndent`
-      function MyComponent({ theme }) {
-        const onStuff = useEvent(() => {
-          showNotification(theme);
-        });
-        useEffect(() => {
-          onStuff();
-        }, []);
-      }
-    `,
+        function MyComponent({ theme }) {
+          const onStuff = useEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onStuff();
+          }, []);
+        }
+      `,
+    },
+  ];
+
+  tests.invalid = [
+    ...tests.invalid,
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          const onStuff = useEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onStuff();
+          }, [onStuff]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            'Functions returned from `useEvent` must not be included in the dependency array. ' +
+            'Remove `onStuff` from the list.',
+          suggestions: [
+            {
+              desc: 'Remove the dependency `onStuff`',
+              output: normalizeIndent`
+                function MyComponent({ theme }) {
+                  const onStuff = useEvent(() => {
+                    showNotification(theme);
+                  });
+                  useEffect(() => {
+                    onStuff();
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+      ],
     },
   ];
 }
