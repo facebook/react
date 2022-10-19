@@ -59,8 +59,7 @@ export type OffscreenInstance = {
   // Represents the current Offscreen fiber
   _current: Fiber | null,
   detach: () => void,
-
-  // TODO: attach
+  attach: () => void,
 };
 
 export function isOffscreenManual(offscreenFiber: Fiber): boolean {
