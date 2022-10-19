@@ -714,13 +714,14 @@ export function unhideTextInstance(
 export function clearContainer(container: Container): void {
   if (enableHostSingletons) {
     const nodeType = container.nodeType;
-    if (nodeType === DOCUMENT_NODE || nodeType === ELEMENT_NODE) {
+    if (nodeType === DOCUMENT_NODE) {
+      clearContainerSparingly(container);
+    } else if (nodeType === ELEMENT_NODE) {
       switch (container.nodeName) {
-        case '#document':
         case 'HTML':
         case 'HEAD':
         case 'BODY':
-          clearContainerChildren(container);
+          clearContainerSparingly(container);
           return;
         default: {
           container.textContent = '';
@@ -742,7 +743,7 @@ export function clearContainer(container: Container): void {
   }
 }
 
-function clearContainerChildren(container: Node) {
+function clearContainerSparingly(container: Node) {
   let node;
   let nextNode: ?Node = container.firstChild;
   if (nextNode && nextNode.nodeType === DOCUMENT_TYPE_NODE) {
@@ -756,7 +757,7 @@ function clearContainerChildren(container: Node) {
       case 'HEAD':
       case 'BODY': {
         const element: Element = (node: any);
-        clearContainerChildren(element);
+        clearContainerSparingly(element);
         // If these singleton instances had previously been rendered with React they
         // may still hold on to references to the previous fiber tree. We detatch them
         // prospectively to reset them to a baseline starting state since we cannot create

@@ -287,10 +287,10 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-client-foo="foo">
         <head>
-          <title>a client title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
+          <title>a client title</title>
         </head>
         <body data-client-baz="baz">
           <style>
@@ -326,11 +326,10 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-client-foo="foo">
         <head>
-          <title>a client title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
-          <meta />
+          <title>a client title</title>
         </head>
         <body data-client-baz="baz">
           <style>
@@ -365,10 +364,10 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-client-foo="foo">
         <head>
-          <title>a client title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
+          <title>a client title</title>
         </head>
         <body data-client-baz="baz">
           <style>
@@ -401,10 +400,10 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-client-foo="foo">
         <head>
-          <title>a client title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
+          <title>a client title</title>
         </head>
         <body>
           <style>
@@ -498,10 +497,10 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-client-foo="foo">
         <head>
-          <title>a client title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
+          <title>a client title</title>
         </head>
         <body data-client-baz="baz">
           <style>
@@ -764,9 +763,9 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head>
-          <title>something new</title>
           <link rel="stylesheet" href="headbefore" />
           <link rel="stylesheet" href="headafter" />
+          <title>something new</title>
         </head>
         <body>
           <link rel="stylesheet" href="bodybefore" />
@@ -800,9 +799,9 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head>
-          <title>something new</title>
           <link rel="stylesheet" href="before" />
           <link rel="stylesheet" href="after" />
+          <title>something new</title>
         </head>
         <body />
       </html>,

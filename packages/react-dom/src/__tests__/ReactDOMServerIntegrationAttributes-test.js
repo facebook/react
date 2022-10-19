@@ -497,9 +497,9 @@ describe('ReactDOMServerIntegration', () => {
       itRenders(
         'badly cased aliased HTML attribute with a warning',
         async render => {
-          const e = await render(<meta httpequiv="refresh" />, 1);
-          expect(e.hasAttribute('http-equiv')).toBe(false);
-          expect(e.getAttribute('httpequiv')).toBe('refresh');
+          const e = await render(<form acceptcharset="utf-8" />, 1);
+          expect(e.hasAttribute('accept-charset')).toBe(false);
+          expect(e.getAttribute('acceptcharset')).toBe('utf-8');
         },
       );
 

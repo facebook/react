@@ -80,6 +80,27 @@ type HeadResource = {
   allowLate: boolean,
 };
 
+type TitleProps = {
+  [string]: mixed,
+};
+type TitleResource = {
+  type: 'title',
+  instanceType: string,
+  props: TitleProps,
+
+  flushed: boolean,
+};
+
+type MetaProps = {
+  [string]: mixed,
+};
+type MetaResource = {
+  type: 'meta',
+  props: MetaProps,
+
+  flushed: boolean,
+};
+
 export type Resource = PreloadResource | StyleResource | ScriptResource;
 
 export type Resources = {
@@ -87,10 +108,10 @@ export type Resources = {
   preloadsMap: Map<string, PreloadResource>,
   stylesMap: Map<string, StyleResource>,
   scriptsMap: Map<string, ScriptResource>,
-  headsMap: Map<string, HeadResource>,
+  headsMap: Map<string, HeadResource | TitleResource | MetaResource>,
 
   // Flushing queues for Resource dependencies
-  charset: null | HeadResource,
+  charset: null | MetaResource,
   fontPreloads: Set<PreloadResource>,
   // usedImagePreloads: Set<PreloadResource>,
   precedences: Map<string, Set<StyleResource>>,
@@ -100,7 +121,7 @@ export type Resources = {
   explicitStylePreloads: Set<PreloadResource>,
   // explicitImagePreloads: Set<PreloadResource>,
   explicitScriptPreloads: Set<PreloadResource>,
-  headResources: Set<HeadResource>,
+  headResources: Set<HeadResource | TitleResource | MetaResource>,
 
   // Module-global-like reference for current boundary resources
   boundaryResources: ?BoundaryResources,
@@ -611,6 +632,21 @@ function getTitleKey(child: string | number): string {
   return 'title' + child;
 }
 
+function getMetaKey(props: Props): ?string {
+  if (typeof props.charSet === 'string') {
+    return 'charSet';
+  } else if (typeof props.httpEquiv === 'string') {
+    return 'httpEquiv::' + props.httpEquiv;
+  } else if (typeof props.name === 'string') {
+    return 'name::' + props.name;
+  } else if (typeof props.itemProp === 'string') {
+    return 'itemProp::' + props.itemProp;
+  } else if (typeof props.property === 'string') {
+    return 'property::' + props.property;
+  }
+  return null;
+}
+
 function titlePropsFromRawProps(
   child: string | number,
   rawProps: Props,
@@ -640,6 +676,26 @@ export function resourcesFromElement(type: string, props: Props): boolean {
           const titleProps = titlePropsFromRawProps(child, props);
           resource = createHeadResource(resources, key, 'title', titleProps);
           resources.headResources.add(resource);
+        }
+        return true;
+      }
+      return false;
+    }
+    case 'meta': {
+      const key = getMetaKey(props);
+      if (key) {
+        if (!resources.headsMap.has(key)) {
+          const resource = {
+            type: 'meta',
+            props: Object.assign({}, props),
+            flushed: false,
+          };
+          resources.headsMap.set(key, resource);
+          if (key === 'charSet') {
+            resources.charset = resource;
+          } else {
+            resources.headResources.add(resource);
+          }
         }
         return true;
       }
