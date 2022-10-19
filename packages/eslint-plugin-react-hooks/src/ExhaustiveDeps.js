@@ -649,9 +649,10 @@ export default {
             reportProblem({
               node: declaredDependencyNode,
               message:
-                '`useEvent` functions always return a new identity for every render. This means ' +
-                'that it should not be included in dependency lists, as it would cause the ' +
-                'callback to be run on every render. You can safely remove this.',
+                'Functions wrapped in `useEvent` must not be included in the dependency array. ' +
+                `Remove \`${context.getSource(
+                  declaredDependencyNode,
+                )}\` from the list.`,
               suggest: [
                 {
                   desc: `Remove the dependency \`${context.getSource(

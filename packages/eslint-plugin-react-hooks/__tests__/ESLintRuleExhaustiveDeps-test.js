@@ -7663,9 +7663,8 @@ if (__EXPERIMENTAL__) {
       errors: [
         {
           message:
-            '`useEvent` functions always return a new identity for every render. This means that ' +
-            'it should not be included in dependency lists, as it would cause the callback to be ' +
-            'run on every render. You can safely remove this.',
+            'Functions wrapped in `useEvent` must not be included in the dependency array. ' +
+            'Remove `onStuff` from the list.',
           suggestions: [
             {
               desc: 'Remove the dependency `onStuff`',
