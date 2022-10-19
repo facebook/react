@@ -17,9 +17,11 @@ import type {
 } from './ReactFiberHostConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
+import {NoTimestamp, SyncLane} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
+import {NoLanes} from './ReactFiberLane.new';
 import type {Wakeable} from 'shared/ReactTypes';
 import {isOffscreenManual} from './ReactFiberOffscreenComponent';
 import type {
@@ -205,6 +207,8 @@ import {
   TransitionRoot,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent.new';
+import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop.new';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.new';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -2419,33 +2423,43 @@ export function detachOffscreenInstance(instance: OffscreenInstance): void {
     );
   }
 
+  const _detachOffscreen = () => {
+    instance._visibility |= OffscreenDetached;
+    let node = currentOffscreenFiber.child?.sibling;
+    while (node != null) {
+      disappearLayoutEffects(node);
+      disconnectPassiveEffect(node);
+      node = node.sibling;
+    }
+  };
+
   const executionContext = getExecutionContext();
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    scheduleMicrotask(() => {
-      instance._visibility |= OffscreenDetached;
-    const children = [currentOffscreenFiber.child];
-    let node = currentOffscreenFiber.child.sibling;
-    while (node != null) {
-      children.push(node);
-      node = node.sibling;
-    }
-    children.forEach((child) => {
-      disappearLayoutEffects(child);
-      disconnectPassiveEffect(child);
-    });
-    });
+    scheduleMicrotask(_detachOffscreen);
   } else {
-    instance._visibility |= OffscreenDetached;
-    const children = [currentOffscreenFiber.child];
-    let node = currentOffscreenFiber.child.sibling;
-    while (node != null) {
-      children.push(node);
-      node = node.sibling;
+    _detachOffscreen();
+  }
+}
+
+export function attachOffscreenInstance(instance: OffscreenInstance): void {
+  const fiber = instance._current;
+  if (fiber === null) {
+    throw new Error(
+      'Calling Offscreen.detach before instance handle has been set.',
+    );
+  }
+
+  instance._visibility &= ~OffscreenDetached;
+
+  const executionContext = getExecutionContext();
+  const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+  if (root !== null) {
+    if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+    } else {
+      reappearLayoutEffects(root, fiber.alternate, fiber, false);
+      reconnectPassiveEffects(root, fiber, NoLanes, null, false);
     }
-    children.forEach((child) => {
-      disappearLayoutEffects(child);
-      disconnectPassiveEffect(child);
-    });
   }
 }
 
