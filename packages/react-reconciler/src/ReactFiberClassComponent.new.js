@@ -26,7 +26,6 @@ import {
   enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
   enableLazyContextPropagation,
-  enableStrictEffects,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -908,11 +907,7 @@ function mountClassInstance(
 
   if (typeof instance.componentDidMount === 'function') {
     let fiberFlags: Flags = Update | LayoutStatic;
-    if (
-      __DEV__ &&
-      enableStrictEffects &&
-      (workInProgress.mode & StrictEffectsMode) !== NoMode
-    ) {
+    if (__DEV__ && (workInProgress.mode & StrictEffectsMode) !== NoMode) {
       fiberFlags |= MountLayoutDev;
     }
     workInProgress.flags |= fiberFlags;
@@ -986,11 +981,7 @@ function resumeMountClassInstance(
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
       let fiberFlags: Flags = Update | LayoutStatic;
-      if (
-        __DEV__ &&
-        enableStrictEffects &&
-        (workInProgress.mode & StrictEffectsMode) !== NoMode
-      ) {
+      if (__DEV__ && (workInProgress.mode & StrictEffectsMode) !== NoMode) {
         fiberFlags |= MountLayoutDev;
       }
       workInProgress.flags |= fiberFlags;
@@ -1037,11 +1028,7 @@ function resumeMountClassInstance(
     }
     if (typeof instance.componentDidMount === 'function') {
       let fiberFlags: Flags = Update | LayoutStatic;
-      if (
-        __DEV__ &&
-        enableStrictEffects &&
-        (workInProgress.mode & StrictEffectsMode) !== NoMode
-      ) {
+      if (__DEV__ && (workInProgress.mode & StrictEffectsMode) !== NoMode) {
         fiberFlags |= MountLayoutDev;
       }
       workInProgress.flags |= fiberFlags;
@@ -1051,11 +1038,7 @@ function resumeMountClassInstance(
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
       let fiberFlags: Flags = Update | LayoutStatic;
-      if (
-        __DEV__ &&
-        enableStrictEffects &&
-        (workInProgress.mode & StrictEffectsMode) !== NoMode
-      ) {
+      if (__DEV__ && (workInProgress.mode & StrictEffectsMode) !== NoMode) {
         fiberFlags |= MountLayoutDev;
       }
       workInProgress.flags |= fiberFlags;
