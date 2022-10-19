@@ -15,11 +15,7 @@ import type {
   ChildSet,
   UpdatePayload,
 } from './ReactFiberHostConfig';
-import type {
-  Fiber,
-  FiberRoot,
-  EventFunctionWrapper,
-} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
@@ -689,13 +685,9 @@ function commitUseEventMount(finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const eventPayloads = updateQueue !== null ? updateQueue.events : null;
   if (eventPayloads !== null) {
-    // FunctionComponentUpdateQueue.events is a flat array of
-    // [EventFunctionWrapper, EventFunction, ...], so increment by 2 each iteration to find the next
-    // pair.
-    for (let ii = 0; ii < eventPayloads.length; ii += 2) {
-      const eventFn: EventFunctionWrapper<any, any, any> = eventPayloads[ii];
-      const nextImpl = eventPayloads[ii + 1];
-      eventFn._impl = nextImpl;
+    for (let ii = 0; ii < eventPayloads.length; ii++) {
+      const {ref, nextImpl} = eventPayloads[ii];
+      ref.impl = nextImpl;
     }
   }
 }
