@@ -71,6 +71,9 @@ import ReactSharedInternals from './ReactSharedInternals';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
 
+// Patch fetch
+import './ReactFetch';
+
 // TODO: Move this branching into the other module instead and just re-export.
 const createElement: any = __DEV__
   ? createElementWithValidation

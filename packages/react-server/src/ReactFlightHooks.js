@@ -121,6 +121,8 @@ function useId(): string {
   return ':' + currentRequest.identifierPrefix + 'S' + id.toString(32) + ':';
 }
 
+function noop(): void {}
+
 function use<T>(usable: Usable<T>): T {
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
@@ -147,6 +149,11 @@ function use<T>(usable: Usable<T>): T {
             index,
           );
           if (prevThenableAtIndex !== null) {
+            if (thenable !== prevThenableAtIndex) {
+              // Avoid an unhandled rejection errors for the Promises that we'll
+              // intentionally ignore.
+              thenable.then(noop, noop);
+            }
             switch (prevThenableAtIndex.status) {
               case 'fulfilled': {
                 const fulfilledValue: T = prevThenableAtIndex.value;
