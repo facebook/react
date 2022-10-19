@@ -866,6 +866,261 @@ describe('ReactDOMFloat', () => {
     });
   });
 
+  describe('head resources', () => {
+    // @gate enableFloat
+    it('can rendering title tags anywhere in the tree', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <>
+            <title>before</title>
+            <>
+              <html>
+                <head>
+                  <title>in head</title>
+                </head>
+                <body>
+                  <div>
+                    <title>during</title>
+                    hello world
+                  </div>
+                </body>
+              </html>
+            </>
+            <title>after</title>
+          </>,
+        );
+        pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>before</title>
+            <title>in head</title>
+            <title>during</title>
+            <title>after</title>
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <>
+          <title>before</title>
+          <>
+            <html>
+              <head>
+                <title>in head</title>
+              </head>
+              <body>
+                <div>
+                  <title>during</title>
+                  hello world
+                </div>
+              </body>
+            </html>
+          </>
+          <title>after</title>
+        </>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>before</title>
+            <title>in head</title>
+            <title>during</title>
+            <title>after</title>
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('prepends new titles on the client so newer ones override older ones, including orphaned server rendered titles', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <head>
+              <title>server</title>
+            </head>
+            <body>
+              <div>hello world</div>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>server</title>
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <title>html</title>
+          <head>
+            <title>head</title>
+          </head>
+          <body>
+            <title>body</title>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>body</title>
+            <title>head</title>
+            <title>html</title>
+            <title>server</title>
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('keys titles on text children and only removes them when no more instances refer to that title', async () => {
+      const root = ReactDOMClient.createRoot(container);
+      root.render(
+        <div>
+          <title>{[2]}</title>hello world<title>2</title>
+        </div>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>2</title>
+          </head>
+          <body>
+            <div id="container">
+              <div>hello world</div>
+            </div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <div>
+          {null}hello world<title>2</title>
+        </div>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>2</title>
+          </head>
+          <body>
+            <div id="container">
+              <div>hello world</div>
+            </div>
+          </body>
+        </html>,
+      );
+      root.render(
+        <div>
+          {null}hello world{null}
+        </div>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div id="container">
+              <div>hello world</div>
+            </div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can render a title before a singleton even if that singleton clears its contents', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <>
+            <title>foo</title>
+            <html>
+              <head />
+              <body>
+                <div>server</div>
+              </body>
+            </html>
+            ,
+          </>,
+        );
+        pipe(writable);
+      });
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(
+        document,
+        <>
+          <title>foo</title>
+          <html>
+            <head />
+            <body>
+              <div>client</div>
+            </body>
+          </html>
+        </>,
+        {
+          onRecoverableError(err) {
+            errors.push(err.message);
+          },
+        },
+      );
+      try {
+        expect(() => {
+          expect(Scheduler).toFlushWithoutYielding();
+        }).toErrorDev(
+          [
+            'Warning: Text content did not match. Server: "server" Client: "client"',
+            'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+          ],
+          {withoutStack: 1},
+        );
+      } catch (e) {
+        // When gates are false this test fails on a DOMException if you don't clear the scheduler after catching.
+        // When gates are true this branch should not be hit
+        expect(Scheduler).toFlushWithoutYielding();
+        throw e;
+      }
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>foo</title>
+          </head>
+          <body>
+            <div>client</div>
+          </body>
+        </html>,
+      );
+    });
+  });
+
   describe('style resources', () => {
     // @gate enableFloat
     it('treats link rel stylesheet elements as a style resource when it includes a precedence when server rendering', async () => {
@@ -912,6 +1167,7 @@ describe('ReactDOMFloat', () => {
         <html>
           <head>
             <link rel="stylesheet" href="aresource" data-precedence="foo" />
+            <link rel="preload" href="aresource" as="style" />
           </head>
           <body>
             <div>hello world</div>
@@ -1075,6 +1331,7 @@ describe('ReactDOMFloat', () => {
         <html>
           <head>
             <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <link rel="preload" href="foo" as="style" />
           </head>
           <body>hello world</body>
         </html>,
@@ -1127,6 +1384,7 @@ describe('ReactDOMFloat', () => {
             <link rel="stylesheet" href="foo" data-precedence="foo" />
             <link rel="stylesheet" href="bar" data-precedence="bar" />
             <link rel="stylesheet" href="qux" data-precedence="qux" />
+            <link rel="preload" href="qux" as="style" />
           </head>
           <body>client</body>
         </html>,
@@ -1204,6 +1462,8 @@ describe('ReactDOMFloat', () => {
           <head>
             <link rel="stylesheet" href="foo" data-precedence="foo" />
             <link rel="stylesheet" href="bar" data-precedence="bar" />
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preload" href="bar" as="style" />
           </head>
           <body>hello</body>
         </html>,
@@ -1229,6 +1489,9 @@ describe('ReactDOMFloat', () => {
             <link rel="stylesheet" href="foo" data-precedence="foo" />
             <link rel="stylesheet" href="bar" data-precedence="bar" />
             <link rel="stylesheet" href="baz" data-precedence="baz" />
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preload" href="bar" as="style" />
+            <link rel="preload" href="baz" as="style" />
           </head>
           <body>hello</body>
         </html>,

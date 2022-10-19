@@ -1599,13 +1599,13 @@ function updateHostResource(current, workInProgress, renderLanes) {
     workInProgress.pendingProps,
     currentProps,
   );
-  reconcileChildren(
-    current,
-    workInProgress,
-    workInProgress.pendingProps.children,
-    renderLanes,
-  );
-  return workInProgress.child;
+  // Resources never have reconciler managed children. It is possible for
+  // the host implementation of getResource to consider children in the
+  // resource construction but they will otherwise be discarded. In practice
+  // this precludes all but the simplest children and Host specific warnings
+  // should be implemented to warn when children are passsed when otherwise not
+  // expected
+  return null;
 }
 
 function updateHostSingleton(

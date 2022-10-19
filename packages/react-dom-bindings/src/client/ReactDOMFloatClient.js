@@ -24,7 +24,10 @@ import {
   validatePreinitArguments,
 } from '../shared/ReactDOMResourceValidation';
 import {createElement, setInitialProperties} from './ReactDOMComponent';
-import {getResourcesFromRoot} from './ReactDOMComponentTree';
+import {
+  getResourcesFromRoot,
+  markNodeAsResource,
+} from './ReactDOMComponentTree';
 import {HTML_NAMESPACE} from '../shared/DOMNamespaces';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
@@ -85,9 +88,28 @@ export type ScriptResource = {
   root: FloatRoot,
 };
 
+type HeadProps = {
+  [string]: mixed,
+};
+export type HeadResource = {
+  type: 'head',
+  instanceType: string,
+  props: HeadProps,
+
+  count: number,
+  instance: ?Element,
+  root: Document,
+};
+
 type Props = {[string]: mixed};
 
-type Resource = StyleResource | ScriptResource | PreloadResource;
+type Resource = StyleResource | ScriptResource | PreloadResource | HeadResource;
+
+export type RootResources = {
+  styles: Map<string, StyleResource>,
+  scripts: Map<string, ScriptResource>,
+  head: Map<string, HeadResource>,
+};
 
 // Brief on purpose due to insertion by script when streaming late boundaries
 // s = Status
@@ -370,6 +392,10 @@ type ScriptQualifyingProps = {
   [string]: mixed,
 };
 
+function getTitleKey(child: string | number): string {
+  return 'title:' + child;
+}
+
 // This function is called in begin work and we should always have a currentDocument set
 export function getResource(
   type: string,
@@ -383,6 +409,30 @@ export function getResource(
     );
   }
   switch (type) {
+    case 'title': {
+      let child = pendingProps.children;
+      if (Array.isArray(child) && child.length === 1) {
+        child = child[0];
+      }
+      if (typeof child === 'string' || typeof child === 'number') {
+        const headRoot: Document = getDocumentFromRoot(resourceRoot);
+        const headResources = getResourcesFromRoot(headRoot).head;
+        const key = getTitleKey(child);
+        let resource = headResources.get(key);
+        if (!resource) {
+          const titleProps = titlePropsFromRawProps(child, pendingProps);
+          resource = createHeadResource(
+            headResources,
+            headRoot,
+            'title',
+            key,
+            titleProps,
+          );
+        }
+        return resource;
+      }
+      return null;
+    }
     case 'link': {
       const {rel} = pendingProps;
       switch (rel) {
@@ -535,6 +585,15 @@ function preloadPropsFromRawProps(
   return Object.assign({}, rawBorrowedProps);
 }
 
+function titlePropsFromRawProps(
+  child: string | number,
+  rawProps: Props,
+): HeadProps {
+  const props: HeadProps = Object.assign({}, rawProps);
+  props.children = child;
+  return props;
+}
+
 function stylePropsFromRawProps(rawProps: StyleQualifyingProps): StyleProps {
   const props: StyleProps = Object.assign({}, rawProps);
   props['data-precedence'] = rawProps.precedence;
@@ -554,6 +613,9 @@ function scriptPropsFromRawProps(rawProps: ScriptQualifyingProps): ScriptProps {
 
 export function acquireResource(resource: Resource): Instance {
   switch (resource.type) {
+    case 'head': {
+      return acquireHeadResource(resource);
+    }
     case 'style': {
       return acquireStyleResource(resource);
     }
@@ -571,11 +633,27 @@ export function acquireResource(resource: Resource): Instance {
   }
 }
 
-export function releaseResource(resource: Resource) {
+export function releaseResource(resource: Resource): void {
   switch (resource.type) {
+    case 'head': {
+      return releaseHeadResource(resource);
+    }
     case 'style': {
       resource.count--;
+      return;
     }
+  }
+}
+
+function releaseHeadResource(resource: HeadResource): void {
+  if (--resource.count === 0) {
+    // the instance will have existed since we acquired it
+    const instance: Instance = (resource.instance: any);
+    const parent = instance.parentNode;
+    if (parent) {
+      parent.removeChild(instance);
+    }
+    resource.instance = null;
   }
 }
 
@@ -586,7 +664,37 @@ function createResourceInstance(
 ): Instance {
   const element = createElement(type, props, ownerDocument, HTML_NAMESPACE);
   setInitialProperties(element, type, props);
+  markNodeAsResource(element);
   return element;
+}
+
+function createHeadResource(
+  headResources: Map<string, HeadResource>,
+  root: Document,
+  instanceType: string,
+  key: string,
+  props: HeadProps,
+): HeadResource {
+  if (__DEV__) {
+    if (headResources.has(key)) {
+      console.error(
+        'createHeadResource was called when a head Resource matching the same key already exists. This is a bug in React.',
+      );
+    }
+  }
+
+  const resource: HeadResource = {
+    type: 'head',
+    instanceType,
+    props,
+
+    count: 0,
+    instance: null,
+    root,
+  };
+
+  headResources.set(key, resource);
+  return resource;
 }
 
 function createStyleResource(
@@ -754,6 +862,8 @@ function createScriptResource(
         (resource: any)._dev_preload_props = preloadProps;
       }
     }
+  } else {
+    markNodeAsResource(existingEl);
   }
 
   return resource;
@@ -784,7 +894,9 @@ function createPreloadResource(
   );
   if (!element) {
     element = createResourceInstance('link', props, ownerDocument);
-    insertResourceInstance(element, ownerDocument);
+    appendResourceInstance(element, ownerDocument);
+  } else {
+    markNodeAsResource(element);
   }
   return {
     type: 'preload',
@@ -795,8 +907,41 @@ function createPreloadResource(
   };
 }
 
+function acquireHeadResource(resource: HeadResource): Instance {
+  resource.count++;
+  let instance = resource.instance;
+  if (!instance) {
+    const {props, root, instanceType} = resource;
+    switch (instanceType) {
+      case 'title': {
+        const titles = root.querySelectorAll('title');
+        for (let i = 0; i < titles.length; i++) {
+          if (titles[i].textContent === props.children) {
+            instance = resource.instance = titles[i];
+            markNodeAsResource(instance);
+            return instance;
+          }
+        }
+      }
+    }
+    instance = resource.instance = createResourceInstance(
+      instanceType,
+      props,
+      root,
+    );
+
+    if (instanceType === 'title') {
+      prependResourceInstance(instance, root);
+    } else {
+      appendResourceInstance(instance, root);
+    }
+  }
+  return instance;
+}
+
 function acquireStyleResource(resource: StyleResource): Instance {
-  if (!resource.instance) {
+  let instance = resource.instance;
+  if (!instance) {
     const {props, root, precedence} = resource;
     const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
       props.href,
@@ -805,7 +950,8 @@ function acquireStyleResource(resource: StyleResource): Instance {
       `link[rel="stylesheet"][data-precedence][href="${limitedEscapedHref}"]`,
     );
     if (existingEl) {
-      resource.instance = existingEl;
+      instance = resource.instance = existingEl;
+      markNodeAsResource(instance);
       resource.preloaded = true;
       const loadingState: ?StyleResourceLoadingState = (existingEl: any)._p;
       if (loadingState) {
@@ -830,7 +976,7 @@ function acquireStyleResource(resource: StyleResource): Instance {
         resource.loaded = true;
       }
     } else {
-      const instance = createResourceInstance(
+      instance = resource.instance = createResourceInstance(
         'link',
         resource.props,
         getDocumentFromRoot(root),
@@ -838,16 +984,15 @@ function acquireStyleResource(resource: StyleResource): Instance {
 
       attachLoadListeners(instance, resource);
       insertStyleInstance(instance, precedence, root);
-      resource.instance = instance;
     }
   }
   resource.count++;
-  // $FlowFixMe[incompatible-return] found when upgrading Flow
-  return resource.instance;
+  return instance;
 }
 
 function acquireScriptResource(resource: ScriptResource): Instance {
-  if (!resource.instance) {
+  let instance = resource.instance;
+  if (!instance) {
     const {props, root} = resource;
     const limitedEscapedSrc = escapeSelectorAttributeValueInsideDoubleQuotes(
       props.src,
@@ -856,19 +1001,19 @@ function acquireScriptResource(resource: ScriptResource): Instance {
       `script[async][src="${limitedEscapedSrc}"]`,
     );
     if (existingEl) {
-      resource.instance = existingEl;
+      instance = resource.instance = existingEl;
+      markNodeAsResource(instance);
     } else {
-      const instance = createResourceInstance(
+      instance = resource.instance = createResourceInstance(
         'script',
         resource.props,
         getDocumentFromRoot(root),
       );
 
-      insertResourceInstance(instance, getDocumentFromRoot(root));
-      resource.instance = instance;
+      appendResourceInstance(instance, getDocumentFromRoot(root));
     }
   }
-  return resource.instance;
+  return instance;
 }
 
 function attachLoadListeners(instance: Instance, resource: StyleResource) {
@@ -968,14 +1113,38 @@ function insertStyleInstance(
   }
 }
 
-function insertResourceInstance(
+function prependResourceInstance(
   instance: Instance,
   ownerDocument: Document,
 ): void {
   if (__DEV__) {
     if (instance.tagName === 'LINK' && (instance: any).rel === 'stylesheet') {
       console.error(
-        'insertResourceInstance was called with a stylesheet. Stylesheets must be' +
+        'prependResourceInstance was called with a stylesheet. Stylesheets must be' +
+          ' inserted with insertStyleInstance instead. This is a bug in React.',
+      );
+    }
+  }
+
+  const parent = ownerDocument.head;
+  if (parent) {
+    parent.insertBefore(instance, parent.firstChild);
+  } else {
+    throw new Error(
+      'While attempting to insert a Resource, React expected the Document to contain' +
+        ' a head element but it was not found.',
+    );
+  }
+}
+
+function appendResourceInstance(
+  instance: Instance,
+  ownerDocument: Document,
+): void {
+  if (__DEV__) {
+    if (instance.tagName === 'LINK' && (instance: any).rel === 'stylesheet') {
+      console.error(
+        'appendResourceInstance was called with a stylesheet. Stylesheets must be' +
           ' inserted with insertStyleInstance instead. This is a bug in React.',
       );
     }
@@ -993,6 +1162,9 @@ function insertResourceInstance(
 
 export function isHostResourceType(type: string, props: Props): boolean {
   switch (type) {
+    case 'title': {
+      return true;
+    }
     case 'link': {
       switch (props.rel) {
         case 'stylesheet': {
