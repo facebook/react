@@ -7663,7 +7663,7 @@ if (__EXPERIMENTAL__) {
       errors: [
         {
           message:
-            'Functions wrapped in `useEvent` must not be included in the dependency array. ' +
+            'Functions returned from `useEvent` must not be included in the dependency array. ' +
             'Remove `onStuff` from the list.',
           suggestions: [
             {

@@ -649,7 +649,7 @@ export default {
             reportProblem({
               node: declaredDependencyNode,
               message:
-                'Functions wrapped in `useEvent` must not be included in the dependency array. ' +
+                'Functions returned from `useEvent` must not be included in the dependency array. ' +
                 `Remove \`${context.getSource(
                   declaredDependencyNode,
                 )}\` from the list.`,
