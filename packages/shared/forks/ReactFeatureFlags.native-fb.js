@@ -65,7 +65,6 @@ export const enableGetInspectorDataForInstanceInProduction = true;
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = false;
 
-export const enableStrictEffects = __DEV__;
 export const createRootStrictEffectsByDefault = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;

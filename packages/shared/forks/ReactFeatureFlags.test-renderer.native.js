@@ -54,7 +54,6 @@ export const enableUseMemoCacheHook = false;
 export const enableUseEventHook = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
-export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
 

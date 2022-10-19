@@ -229,10 +229,6 @@ export const enableSchedulingProfiler = __PROFILE__;
 // reducers by double invoking them in StrictLegacyMode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
-// Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
-// this feature flag only impacts StrictEffectsMode.
-export const enableStrictEffects = __DEV__;
-
 // To preserve the "Pause on caught exceptions" behavior of the debugger, we
 // replay the begin phase of a failed component inside invokeGuardedCallback.
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
