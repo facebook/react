@@ -74,6 +74,7 @@ export default {
     const stateVariables = new WeakSet();
     const stableKnownValueCache = new WeakMap();
     const functionWithoutCapturedValueCache = new WeakMap();
+    const useEventVariables = new WeakSet();
     function memoizeWithWeakMap(fn, map) {
       return function(arg) {
         if (map.has(arg)) {
@@ -226,7 +227,12 @@ export default {
           // useRef() return value is stable.
           return true;
         } else if (isUseEventIdentifier(callee) && id.type === 'Identifier') {
-          // useEvent() return value is stable.
+          for (const ref of resolved.references) {
+            if (ref !== id) {
+              useEventVariables.add(ref.identifier);
+            }
+          }
+          // useEvent() return value is always unstable.
           return true;
         } else if (name === 'useState' || name === 'useReducer') {
           // Only consider second value in initializing tuple stable.
@@ -638,6 +644,26 @@ export default {
                 'correct dependencies.',
             });
             return;
+          }
+          if (useEventVariables.has(declaredDependencyNode)) {
+            reportProblem({
+              node: declaredDependencyNode,
+              message:
+                'Functions returned from `useEvent` must not be included in the dependency array. ' +
+                `Remove \`${context.getSource(
+                  declaredDependencyNode,
+                )}\` from the list.`,
+              suggest: [
+                {
+                  desc: `Remove the dependency \`${context.getSource(
+                    declaredDependencyNode,
+                  )}\``,
+                  fix(fixer) {
+                    return fixer.removeRange(declaredDependencyNode.range);
+                  },
+                },
+              ],
+            });
           }
           // Try to normalize the declared dependency. If we can't then an error
           // will be thrown. We will catch that error and report an error.
