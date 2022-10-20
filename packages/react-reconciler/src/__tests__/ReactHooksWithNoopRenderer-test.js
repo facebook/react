@@ -815,9 +815,13 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.discreteUpdates(() => {
           setRow(5);
         });
-        React.startTransition(() => {
+        if (gate(flags => flags.enableUnifiedSyncLane)) {
+          React.startTransition(() => {
+            setRow(20);
+          });
+        } else {
           setRow(20);
-        });
+        }
       });
       expect(Scheduler).toHaveYielded(['Up', 'Down']);
       expect(root).toMatchRenderedOutput(<span prop="Down" />);
@@ -949,21 +953,24 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
       ReactNoop.batchedUpdates(() => {
-        React.startTransition(() => {
-          counter.current.dispatch(INCREMENT);
-          counter.current.dispatch(INCREMENT);
-          counter.current.dispatch(INCREMENT);
-        });
+        counter.current.dispatch(INCREMENT);
+        counter.current.dispatch(INCREMENT);
+        counter.current.dispatch(INCREMENT);
       });
 
       ReactNoop.flushSync(() => {
         counter.current.dispatch(INCREMENT);
       });
-      expect(Scheduler).toHaveYielded(['Count: 1']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        expect(Scheduler).toHaveYielded(['Count: 4']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
+      } else {
+        expect(Scheduler).toHaveYielded(['Count: 1']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
-      expect(Scheduler).toFlushAndYield(['Count: 4']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
+        expect(Scheduler).toFlushAndYield(['Count: 4']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
+      }
     });
   });
 
@@ -1700,9 +1707,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         _updateCount = updateCount;
         useEffect(() => {
           Scheduler.unstable_yieldValue(`Will set count to 1`);
-          React.startTransition(() => {
-            updateCount(1);
-          });
+          updateCount(1);
         }, []);
         return <Text text={'Count: ' + count} />;
       }
@@ -1723,11 +1728,16 @@ describe('ReactHooksWithNoopRenderer', () => {
       // As a result we, somewhat surprisingly, commit them in the opposite order.
       // This should be fine because any non-discrete set of work doesn't guarantee order
       // and easily could've happened slightly later too.
-      expect(Scheduler).toHaveYielded([
-        'Will set count to 1',
-        'Count: 2',
-        'Count: 1',
-      ]);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        // updateCounts are batched
+        expect(Scheduler).toHaveYielded(['Will set count to 1', 'Count: 1']);
+      } else {
+        expect(Scheduler).toHaveYielded([
+          'Will set count to 1',
+          'Count: 2',
+          'Count: 1',
+        ]);
+      }
 
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });
@@ -3257,23 +3267,24 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(Scheduler).toFlushAndYieldThrough([
           'Mount layout [current: 0]',
           'Sync effect',
-          'Mount normal [current: 0]',
         ]);
         expect(committedText).toEqual('0');
         ReactNoop.render(<Counter count={1} />, () =>
           Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
+          'Mount normal [current: 0]',
           'Unmount layout [current: 0]',
           'Mount layout [current: 1]',
           'Sync effect',
-          'Unmount normal [current: 1]',
-          'Mount normal [current: 1]',
         ]);
         expect(committedText).toEqual('1');
       });
 
-      expect(Scheduler).toHaveYielded([]);
+      expect(Scheduler).toHaveYielded([
+        'Unmount normal [current: 1]',
+        'Mount normal [current: 1]',
+      ]);
     });
 
     // @gate skipUnmountedBoundaries

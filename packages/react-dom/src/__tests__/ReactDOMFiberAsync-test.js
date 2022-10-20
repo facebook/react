@@ -274,18 +274,32 @@ describe('ReactDOMFiberAsync', () => {
         expect(container.textContent).toEqual('');
         expect(ops).toEqual([]);
       });
-      // DefaultUpdates are batched on the sync lane
-      expect(container.textContent).toEqual('ABC');
-      expect(ops).toEqual(['ABC']);
-
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        // DefaultUpdates are batched on the sync lane
+        expect(container.textContent).toEqual('ABC');
+        expect(ops).toEqual(['ABC']);
+      } else {
+        // Only the active updates have flushed
+        expect(container.textContent).toEqual('BC');
+        expect(ops).toEqual(['BC']);
+      }
       instance.push('D');
-      expect(container.textContent).toEqual('ABC');
-      expect(ops).toEqual(['ABC']);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        expect(container.textContent).toEqual('ABC');
+        expect(ops).toEqual(['ABC']);
+      } else {
+        expect(container.textContent).toEqual('BC');
+        expect(ops).toEqual(['BC']);
+      }
 
       // Flush the async updates
       Scheduler.unstable_flushAll();
       expect(container.textContent).toEqual('ABCD');
-      expect(ops).toEqual(['ABC', 'ABCD']);
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        expect(ops).toEqual(['ABC', 'ABCD']);
+      } else {
+        expect(ops).toEqual(['BC', 'ABCD']);
+      }
     });
 
     // @gate www
@@ -858,12 +872,20 @@ describe('ReactDOMFiberAsync', () => {
 
       await null;
 
-      // Unknown(default) updates is batched on the sync lane
-      expect(Scheduler).toHaveYielded(['Count: 2']);
-      expect(counterRef.current.textContent).toBe('Count: 2');
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        expect(Scheduler).toHaveYielded(['Count: 2']);
+        expect(counterRef.current.textContent).toBe('Count: 2');
 
-      global.flushRequestAnimationFrameQueue();
-      expect(Scheduler).toHaveYielded([]);
+        global.flushRequestAnimationFrameQueue();
+        expect(Scheduler).toHaveYielded([]);
+      } else {
+        expect(Scheduler).toHaveYielded(['Count: 1']);
+        expect(counterRef.current.textContent).toBe('Count: 1');
+
+        global.flushRequestAnimationFrameQueue();
+        expect(Scheduler).toHaveYielded(['Count: 2']);
+        expect(counterRef.current.textContent).toBe('Count: 2');
+      }
     });
 
     // @gate enableFrameEndScheduling

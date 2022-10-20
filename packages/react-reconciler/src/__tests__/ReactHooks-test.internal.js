@@ -568,8 +568,13 @@ describe('ReactHooks', () => {
       });
     };
 
-    // Update on the transition lane
-    React.startTransition(() => update(n => n * 100));
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
+      // Update at low priority
+      React.startTransition(() => update(n => n * 100));
+    } else {
+      // Update at normal priority
+      ReactTestRenderer.unstable_batchedUpdates(() => update(n => n * 100));
+    }
 
     // The new state is eagerly computed.
     expect(Scheduler).toHaveYielded(['Compute state (1 -> 100)']);

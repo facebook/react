@@ -41,6 +41,7 @@ import {
   enableCache,
   enableTransitionTracing,
   enableFrameEndScheduling,
+  enableUnifiedSyncLane,
   useModernStrictMode,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -167,6 +168,7 @@ import {
   addTransitionToLanesMap,
   getTransitionsForLanes,
   InputContinuousLane,
+  DefaultLane,
 } from './ReactFiberLane.new';
 import {
   DiscreteEventPriority,
@@ -666,7 +668,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   if (updatePriority !== NoEventPriority) {
     currentUpdatePriority = updatePriority;
     if (updatePriority === DefaultEventPriority) {
-      return SyncLane;
+      return enableUnifiedSyncLane ? SyncLane : DefaultLane;
     }
     if (updatePriority === ContinuousEventPriority) {
       return InputContinuousLane;
@@ -681,7 +683,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   const eventPriority = getCurrentEventPriority();
   currentUpdatePriority = eventPriority;
   if (eventPriority === DefaultEventPriority) {
-    return SyncLane;
+    return enableUnifiedSyncLane ? SyncLane : DefaultLane;
   }
   if (eventPriority === ContinuousEventPriority) {
     return InputContinuousLane;
@@ -807,6 +809,7 @@ export function scheduleUpdateOnFiber(
         markRootSuspended(root, workInProgressRootRenderLanes);
       }
     }
+
     ensureRootIsScheduled(root, eventTime);
     if (
       lane === SyncLane &&
@@ -894,7 +897,6 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Check if there's an existing task. We may be able to reuse it.
   const existingCallbackPriority = root.callbackPriority;
-
   if (
     existingCallbackPriority === newCallbackPriority &&
     // Special case related to `act`. If the currently scheduled task is a
@@ -1089,7 +1091,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   let exitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes);
-
   if (exitStatus !== RootInProgress) {
     if (exitStatus === RootErrored) {
       // If something threw an error, try rendering one more time. We'll
@@ -2697,8 +2698,9 @@ function commitRootImpl(
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
   if (
-    includesSomeLane(pendingPassiveEffectsLanes, SyncLane) &&
-    root.updatePriority === DiscreteEventPriority &&
+    (enableUnifiedSyncLane
+      ? root.updatePriority === DiscreteEventPriority
+      : includesSomeLane(pendingPassiveEffectsLanes, SyncLane)) &&
     root.tag !== LegacyRoot
   ) {
     flushPassiveEffects();

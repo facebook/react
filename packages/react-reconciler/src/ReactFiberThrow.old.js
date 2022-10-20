@@ -40,6 +40,7 @@ import {
   enableDebugTracing,
   enableLazyContextPropagation,
   enableUpdaterTracking,
+  enableUnifiedSyncLane,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValueAtFiber} from './ReactCapturedValue';
 import {
@@ -425,7 +426,10 @@ function throwException(
       if (
         !(
           includesSyncLane(rootRenderLanes) &&
-          root.callbackPriority === DiscreteEventPriority
+          !(
+            enableUnifiedSyncLane &&
+            root.updatePriority !== DiscreteEventPriority
+          )
         )
       ) {
         // This is not a sync update. Suspend. Since we're not activating a

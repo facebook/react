@@ -525,7 +525,6 @@ describe('ReactOffscreen', () => {
 
       // Before the tree commits, schedule a concurrent event. The inner update
       // is to a tree that's just about to be hidden.
-      //// TODO: is it right to test with startTranstiion?
       startTransition(() => {
         setOuter(2);
         setInner(2);

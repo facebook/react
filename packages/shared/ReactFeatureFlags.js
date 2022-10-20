@@ -124,6 +124,8 @@ export const enableUseMemoCacheHook = __EXPERIMENTAL__;
 
 export const enableUseEventHook = __EXPERIMENTAL__;
 
+export const enableUnifiedSyncLane = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //

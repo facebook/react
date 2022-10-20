@@ -26,6 +26,7 @@ import {
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableFrameEndScheduling,
+  enableUnifiedSyncLane,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
@@ -46,6 +47,7 @@ export const InputContinuousHydrationLane: Lane = /*    */ 0b0000000000000000000
 export const InputContinuousLane: Lane = /*             */ 0b0000000000000000000000000000100;
 
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000001000;
+export const DefaultLane: Lane = /*                     */ 0b0000000000000000000000000010000;
 
 const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000000100000;
 const TransitionLanes: Lanes = /*                       */ 0b0000000001111111111111111000000;
@@ -130,7 +132,6 @@ let nextTransitionLane: Lane = TransitionLane1;
 let nextRetryLane: Lane = RetryLane1;
 
 function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
-  //// TODO: Default prioriy is bumped?
   switch (getHighestPriorityLane(lanes)) {
     case SyncLane:
       return SyncLane;
@@ -140,6 +141,8 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
       return InputContinuousLane;
     case DefaultHydrationLane:
       return DefaultHydrationLane;
+    case DefaultLane:
+      return DefaultLane;
     case TransitionHydrationLane:
       return TransitionHydrationLane;
     case TransitionLane1:
@@ -246,8 +249,10 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       // Default priority updates should not interrupt transition updates. The
       // only difference between default updates and transition updates is that
       // default updates do not support refresh transitions.
-      (nextLane === SyncLane &&
-        root.callbackPriority === DefaultEventPriority &&
+      ((enableUnifiedSyncLane
+        ? nextLane === SyncLane &&
+          root.callbackPriority === DefaultEventPriority
+        : nextLane === DefaultLane) &&
         (wipLane & TransitionLanes) !== NoLanes)
     ) {
       // Keep working on the existing in-progress tree. Do not interrupt.
@@ -265,7 +270,8 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     // and default updates, so they render in the same batch. The only reason
     // they use separate lanes is because continuous updates should interrupt
     // transitions, but default updates should not.
-    nextLanes |= pendingLanes & SyncLane;
+    nextLanes |=
+      pendingLanes & (enableUnifiedSyncLane ? SyncLane : DefaultLane);
   }
 
   // Check for entangled lanes and add them to the batch.
@@ -326,19 +332,10 @@ export function getMostRecentEventTime(root: FiberRoot, lanes: Lanes): number {
   return mostRecentEventTime;
 }
 
-function computeExpirationTime(
-  lane: Lane,
-  currentTime: number,
-  updatePriority: EventPriority,
-) {
+////
+function computeExpirationTime(lane: Lane, currentTime: number) {
   switch (lane) {
-    //// TODO: expiration time?
     case SyncLane:
-      if (updatePriority === DefaultEventPriority) {
-        return currentTime + 5000;
-      } else {
-        return currentTime + 250;
-      }
     case InputContinuousHydrationLane:
     case InputContinuousLane:
       // User interactions should expire slightly more quickly.
@@ -351,6 +348,7 @@ function computeExpirationTime(
       // expiration times are an important safeguard when starvation
       // does happen.
       return currentTime + 250;
+    case DefaultLane:
     case DefaultHydrationLane:
     case TransitionHydrationLane:
     case TransitionLane1:
@@ -432,11 +430,7 @@ export function markStarvedLanesAsExpired(
         (lane & pingedLanes) !== NoLanes
       ) {
         // Assumes timestamps are monotonically increasing.
-        expirationTimes[index] = computeExpirationTime(
-          lane,
-          currentTime,
-          root.updatePriority,
-        );
+        expirationTimes[index] = computeExpirationTime(lane, currentTime);
       }
     } else if (expirationTime <= currentTime) {
       // This lane expired
@@ -483,7 +477,8 @@ export function includesOnlyRetries(lanes: Lanes): boolean {
   return (lanes & RetryLanes) === lanes;
 }
 export function includesOnlyNonUrgentLanes(lanes: Lanes): boolean {
-  const UrgentLanes = SyncLane | InputContinuousLane;
+  const UrgentLanes =
+    SyncLane | InputContinuousLane | (enableUnifiedSyncLane ? 0 : DefaultLane);
   return (lanes & UrgentLanes) === NoLanes;
 }
 export function includesOnlyTransitions(lanes: Lanes): boolean {
@@ -497,7 +492,7 @@ export function includesBlockingLane(root: FiberRoot, lanes: Lanes): boolean {
   ) {
     if (
       enableFrameEndScheduling &&
-      (lanes & SyncLane) !== NoLanes &&
+      (lanes & (enableUnifiedSyncLane ? SyncLane : DefaultLane)) !== NoLanes &&
       root.updatePriority === DefaultEventPriority
     ) {
       // Unknown updates should flush synchronously, even in concurrent by default.
@@ -511,7 +506,7 @@ export function includesBlockingLane(root: FiberRoot, lanes: Lanes): boolean {
     InputContinuousHydrationLane |
     InputContinuousLane |
     DefaultHydrationLane |
-    SyncLane;
+    (enableUnifiedSyncLane ? SyncLane : DefaultLane);
   return (lanes & SyncDefaultLanes) !== NoLanes;
 }
 
@@ -786,11 +781,17 @@ export function getBumpedLaneForHydration(
       lane = InputContinuousHydrationLane;
       break;
     case SyncLane:
-      if (root.callbackPriority === DefaultEventPriority) {
+      if (
+        enableUnifiedSyncLane &&
+        root.updatePriority === DefaultEventPriority
+      ) {
         lane = DefaultHydrationLane;
       } else {
         lane = NoLane;
       }
+      break;
+    case DefaultLane:
+      lane = DefaultHydrationLane;
       break;
     case TransitionLane1:
     case TransitionLane2:

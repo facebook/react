@@ -454,9 +454,12 @@ describe('useSubscription', () => {
       observableA.next('a-2');
 
       // Update again
-      renderer.update(<Parent observed={observableA} />);
-
       //// TODO: ???
+      // renderer.update(<Parent observed={observableA} />);
+      React.startTransition(() => {
+        renderer.update(<Parent observed={observableA} />);
+      });
+
       // Flush everything and ensure that the correct subscribable is used
       expect(Scheduler).toFlushAndYield([
         'Child: a-2',

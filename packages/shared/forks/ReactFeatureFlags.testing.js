@@ -23,6 +23,7 @@ export const enableUpdaterTracking = false;
 export const enableCache = __EXPERIMENTAL__;
 export const enableCacheElement = __EXPERIMENTAL__;
 export const enableFrameEndScheduling = __EXPERIMENTAL__;
+export const enableUnifiedSyncLane = __EXPERIMENTAL__;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;

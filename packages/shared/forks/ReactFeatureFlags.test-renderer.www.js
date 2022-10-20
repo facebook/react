@@ -79,5 +79,7 @@ export const enableFloat = false;
 
 export const useModernStrictMode = false;
 
+export const enableUnifiedSyncLane = false;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
