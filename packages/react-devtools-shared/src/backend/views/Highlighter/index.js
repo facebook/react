@@ -46,7 +46,7 @@ export default function setupHighlighter(
       window.addEventListener('mouseover', onMouseEvent, true);
       window.addEventListener('mouseup', onMouseEvent, true);
       window.addEventListener('pointerdown', onPointerDown, true);
-      window.addEventListener('pointerover', onPointerOver, true);
+      window.addEventListener('pointermove', onPointerMove, true);
       window.addEventListener('pointerup', onPointerUp, true);
     } else {
       agent.emit('startInspectingNative');
@@ -74,7 +74,7 @@ export default function setupHighlighter(
       window.removeEventListener('mouseover', onMouseEvent, true);
       window.removeEventListener('mouseup', onMouseEvent, true);
       window.removeEventListener('pointerdown', onPointerDown, true);
-      window.removeEventListener('pointerover', onPointerOver, true);
+      window.removeEventListener('pointermove', onPointerMove, true);
       window.removeEventListener('pointerup', onPointerUp, true);
     } else {
       agent.emit('stopInspectingNative');
@@ -151,14 +151,16 @@ export default function setupHighlighter(
     event.preventDefault();
     event.stopPropagation();
 
-    selectFiberForNode(((event.target: any): HTMLElement));
+    selectFiberForNode((((event.composed ? event.composedPath()[0] : event.target): any): HTMLElement));
   }
 
-  function onPointerOver(event: MouseEvent) {
+  let lastHoveredNode: HTMLElement | null = null;
+  function onPointerMove(event: MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
 
-    const target = ((event.target: any): HTMLElement);
+    const target: HTMLElement = ((event.composed ? event.composedPath()[0] : event.target): any);
+    if (lastHoveredNode === target) return;
 
     if (target.tagName === 'IFRAME') {
       const iframe: HTMLIFrameElement = (target: any);
