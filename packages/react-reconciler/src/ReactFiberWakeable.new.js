@@ -15,6 +15,9 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+const {ReactCurrentActQueue} = ReactSharedInternals;
+
 let suspendedThenable: Thenable<mixed> | null = null;
 let adHocSuspendCount: number = 0;
 
@@ -124,6 +127,10 @@ export function trackUsedThenable<T>(thenable: Thenable<T>, index: number) {
   }
   usedThenables[index] = thenable;
   lastUsedThenable = thenable;
+
+  if (__DEV__ && ReactCurrentActQueue.current !== null) {
+    ReactCurrentActQueue.didUsePromise = true;
+  }
 }
 
 export function getPreviouslyUsedThenableAtIndex<T>(
