@@ -161,6 +161,7 @@ export default function setupHighlighter(
 
     const target: HTMLElement = ((event.composed ? event.composedPath()[0] : event.target): any);
     if (lastHoveredNode === target) return;
+    lastHoveredNode = target;
 
     if (target.tagName === 'IFRAME') {
       const iframe: HTMLIFrameElement = (target: any);
