@@ -83,6 +83,7 @@ type MetaProps = {
 };
 type MetaResource = {
   type: 'meta',
+  key: string,
   props: MetaProps,
 
   flushed: boolean,
@@ -111,6 +112,9 @@ export type Resources = {
   explicitScriptPreloads: Set<PreloadResource>,
   headResources: Set<HeadResource>,
 
+  // cache for tracking structured meta tags
+  structuredMetaKeys: Map<string, MetaResource>,
+
   // Module-global-like reference for current boundary resources
   boundaryResources: ?BoundaryResources,
   ...
@@ -137,6 +141,9 @@ export function createResources(): Resources {
     // explicitImagePreloads: new Set(),
     explicitScriptPreloads: new Set(),
     headResources: new Set(),
+
+    // cache for tracking structured meta tags
+    structuredMetaKeys: new Map(),
 
     // like a module global for currently rendering boundary
     boundaryResources: null,
@@ -590,25 +597,6 @@ function adoptPreloadPropsForScriptProps(
     resourceProps.integrity = preloadProps.integrity;
 }
 
-function getTitleKey(child: string | number): string {
-  return 'title' + child;
-}
-
-function getMetaKey(props: Props): ?string {
-  if (typeof props.charSet === 'string') {
-    return 'charSet';
-  } else if (typeof props.httpEquiv === 'string') {
-    return 'httpEquiv::' + props.httpEquiv;
-  } else if (typeof props.name === 'string') {
-    return 'name::' + props.name;
-  } else if (typeof props.itemProp === 'string') {
-    return 'itemProp::' + props.itemProp;
-  } else if (typeof props.property === 'string') {
-    return 'property::' + props.property;
-  }
-  return null;
-}
-
 function titlePropsFromRawProps(
   child: string | number,
   rawProps: Props,
@@ -632,7 +620,7 @@ export function resourcesFromElement(type: string, props: Props): boolean {
         child = child[0];
       }
       if (typeof child === 'string' || typeof child === 'number') {
-        const key = getTitleKey(child);
+        const key = 'title::' + child;
         let resource = resources.headsMap.get(key);
         if (!resource) {
           resource = {
@@ -648,11 +636,36 @@ export function resourcesFromElement(type: string, props: Props): boolean {
       return false;
     }
     case 'meta': {
-      const key = getMetaKey(props);
+      let key, propertyPath;
+      if (typeof props.charSet === 'string') {
+        key = 'charSet';
+      } else if (typeof props.content === 'string') {
+        const contentKey = '::' + props.content;
+        if (typeof props.httpEquiv === 'string') {
+          key = 'httpEquiv::' + props.httpEquiv + contentKey;
+        } else if (typeof props.name === 'string') {
+          key = 'name::' + props.name + contentKey;
+        } else if (typeof props.itemProp === 'string') {
+          key = 'itemProp::' + props.itemProp + contentKey;
+        } else if (typeof props.property === 'string') {
+          const {property} = props;
+          key = 'property::' + property + contentKey;
+          propertyPath = property;
+          const parentPath = property
+            .split(':')
+            .slice(0, -1)
+            .join(':');
+          const parentResource = resources.structuredMetaKeys.get(parentPath);
+          if (parentResource) {
+            key = parentResource.key + '::child::' + key;
+          }
+        }
+      }
       if (key) {
         if (!resources.headsMap.has(key)) {
           const resource = {
             type: 'meta',
+            key,
             props: Object.assign({}, props),
             flushed: false,
           };
@@ -660,6 +673,9 @@ export function resourcesFromElement(type: string, props: Props): boolean {
           if (key === 'charSet') {
             resources.charset = resource;
           } else {
+            if (propertyPath) {
+              resources.structuredMetaKeys.set(propertyPath, resource);
+            }
             resources.headResources.add(resource);
           }
         }

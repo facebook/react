@@ -107,7 +107,10 @@ type MetaProps = {
 };
 export type MetaResource = {
   type: 'meta',
-  matcher: string,
+  key: string,
+  matchValue: string,
+  matchAttr: 'charset' | 'http-equiv' | 'name' | 'itemprop' | 'property',
+  parentResource: ?MetaResource,
   props: MetaProps,
 
   count: number,
@@ -123,6 +126,7 @@ export type RootResources = {
   styles: Map<string, StyleResource>,
   scripts: Map<string, ScriptResource>,
   head: Map<string, HeadResource>,
+  lastStructuredMeta: Map<string, MetaResource>,
 };
 
 // Brief on purpose due to insertion by script when streaming late boundaries
@@ -424,41 +428,70 @@ export function getResource(
   }
   switch (type) {
     case 'meta': {
-      let matcher;
-      if (typeof pendingProps.charSet === 'string') {
-        // We don't support charSet metas on the client since they are for describing the encoding
-        // of the streamed in html and don't make sense to set from the client
-      } else if (typeof pendingProps.httpEquiv === 'string') {
-        matcher = `[http-equiv="${escapeSelectorAttributeValueInsideDoubleQuotes(
-          pendingProps.httpEquiv,
-        )}"]`;
-      } else if (typeof pendingProps.name === 'string') {
-        matcher = `[name="${escapeSelectorAttributeValueInsideDoubleQuotes(
-          pendingProps.name,
-        )}"]`;
-      } else if (typeof pendingProps.itemProp === 'string') {
-        matcher = `[itemprop="${escapeSelectorAttributeValueInsideDoubleQuotes(
-          pendingProps.itemProp,
-        )}"]`;
-      } else if (typeof pendingProps.property === 'string') {
-        matcher = `[property="${escapeSelectorAttributeValueInsideDoubleQuotes(
-          pendingProps.property,
-        )}"]`;
+      let key, matchAttr, matchValue, propertyPath, parentResource;
+      const {
+        charSet,
+        content,
+        httpEquiv,
+        name,
+        itemProp,
+        property,
+      } = pendingProps;
+      const headRoot: Document = getDocumentFromRoot(resourceRoot);
+      const {head: headResources, lastStructuredMeta} = getResourcesFromRoot(
+        headRoot,
+      );
+      if (typeof charSet === 'string') {
+        matchValue = charSet;
+        key = matchAttr = 'charset';
+      } else if (typeof content === 'string') {
+        const contentKey = '::' + content;
+        if (typeof httpEquiv === 'string') {
+          matchValue = httpEquiv;
+          matchAttr = 'http-equiv';
+          key = matchAttr + '::' + httpEquiv + contentKey;
+        } else if (typeof property === 'string') {
+          matchValue = property;
+          matchAttr = 'property';
+          key = matchAttr + '::' + property + contentKey;
+          propertyPath = property;
+          const parentPropertyPath = property
+            .split(':')
+            .slice(0, -1)
+            .join(':');
+          parentResource = lastStructuredMeta.get(parentPropertyPath);
+          if (parentResource) {
+            key = parentResource.key + '::child::' + key;
+          }
+        } else if (typeof name === 'string') {
+          matchValue = name;
+          matchAttr = 'name';
+          key = matchAttr + '::' + name + contentKey;
+        } else if (typeof itemProp === 'string') {
+          matchValue = itemProp;
+          matchAttr = 'itemprop';
+          key = matchAttr + '::' + itemProp + contentKey;
+        }
       }
-      if (matcher) {
-        const headRoot: Document = getDocumentFromRoot(resourceRoot);
-        const headResources = getResourcesFromRoot(headRoot).head;
-        let resource = headResources.get(matcher);
+      if (key && matchAttr) {
+        let resource = headResources.get(key);
         if (!resource) {
           resource = {
             type: 'meta',
-            matcher,
+            matchValue: ((matchValue: any): string),
+            matchAttr,
+            key,
+            parentResource,
             props: Object.assign({}, pendingProps),
             count: 0,
             instance: null,
             root: headRoot,
           };
-          headResources.set(matcher, resource);
+          headResources.set(key, resource);
+        }
+        if (propertyPath) {
+          // We cast because flow doesn't know that this resource must be a Meta resource
+          lastStructuredMeta.set(propertyPath, (resource: any));
         }
         return resource;
       }
@@ -960,22 +993,64 @@ function acquireHeadResource(resource: HeadResource): Instance {
         break;
       }
       case 'meta': {
-        instance = resource.instance = createResourceInstance(
-          type,
-          props,
-          root,
-        );
+        let existingEl = null;
+        let insertBefore = null;
+
         const metaResource: MetaResource = (resource: any);
-        const metas = root.querySelectorAll('meta' + metaResource.matcher);
-        // For keymatched metas we simply remove them all because this new meta
-        // will supercede it. It's possibly, likely even that they may match props
-        // and another approach is to check if the props are equal and just use the node
-        // however for simplicity we will purge any server rendered metas before
-        // constructing a new one here on the client
-        insertResourceInstanceBefore(root, instance, metas.item(0));
-        for (let i = 0; i < metas.length; i++) {
-          const meta = metas[i];
-          (meta.parentNode: any).removeChild(meta);
+        const {matchAttr, matchValue, parentResource} = metaResource;
+
+        if (matchAttr === 'charset') {
+          existingEl = root.querySelector('meta[charset]');
+        } else {
+          let scope: Document | Element = root;
+          let parent = null;
+          let parentProperty = null;
+          if (matchAttr === 'property' && parentResource) {
+            const parentInstance = parentResource.instance;
+            if (parentInstance && parentInstance.parentElement) {
+              parent = parentInstance;
+              insertBefore = parent.nextSibling;
+              parentProperty = parentResource.matchValue;
+              scope = parentInstance.parentElement;
+            }
+          }
+          const metas = scope.querySelectorAll('meta');
+          for (let i = 0; i < metas.length; i++) {
+            const meta = metas[i];
+            if (parent) {
+              if (meta === parent) {
+                parent = null;
+              }
+              continue;
+            } else if (
+              meta.getAttribute('content') === props.content &&
+              meta.getAttribute(matchAttr) === matchValue
+            ) {
+              existingEl = meta;
+              break;
+            } else {
+              const metaProperty = meta.getAttribute('property');
+              if (
+                parentProperty &&
+                metaProperty &&
+                parentProperty.startsWith(metaProperty)
+              ) {
+                // We have found aother matching parent meta and need to stop
+                break;
+              }
+            }
+          }
+        }
+        if (existingEl) {
+          instance = resource.instance = existingEl;
+          markNodeAsResource(instance);
+        } else {
+          instance = resource.instance = createResourceInstance(
+            type,
+            props,
+            root,
+          );
+          insertResourceInstanceBefore(root, instance, insertBefore);
         }
         break;
       }
@@ -1166,7 +1241,7 @@ function insertStyleInstance(
 function insertResourceInstanceBefore(
   ownerDocument: Document,
   instance: Instance,
-  before: null | Node,
+  before: ?Node,
 ): void {
   if (__DEV__) {
     if (instance.tagName === 'LINK' && (instance: any).rel === 'stylesheet') {
