@@ -92,9 +92,11 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
 
       if (__DEV__) {
         if (!didWarnNoAwaitAct && typeof Promise !== 'undefined') {
-          // eslint-disable-next-line no-undef
-          Promise.resolve()
-            .then(() => {})
+          Promise.resolve(result)
+            .then(
+              () => {},
+              () => {},
+            )
             .then(() => {
               if (!wasAwaited) {
                 didWarnNoAwaitAct = true;

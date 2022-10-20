@@ -487,7 +487,7 @@ function runActTests(label, render, unmount, rerender) {
       });
 
       // @gate __DEV__
-      it('warns if you do not await an act call', async () => {
+      it('warns if you do not await an act call with promise', async () => {
         spyOnDevAndProd(console, 'error');
         act(async () => {});
         // it's annoying that we have to wait a tick before this warning comes in
@@ -498,6 +498,14 @@ function runActTests(label, render, unmount, rerender) {
             'You called act(async () => ...) without await.',
           );
         }
+      });
+
+      // @gate __DEV__
+      test('does not warn if you await an act call with Promise', async () => {
+        spyOnDevAndProd(console, 'error');
+        await act(async () => {});
+        await sleep(0);
+        expect(console.error.calls.count()).toEqual(0);
       });
 
       // @gate __DEV__
