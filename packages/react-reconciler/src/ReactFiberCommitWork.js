@@ -2420,7 +2420,7 @@ export function detachOffscreenInstance(instance: OffscreenInstance): void {
 
   const _detachOffscreen = () => {
     instance._visibility |= OffscreenDetached;
-    let node = currentOffscreenFiber.child?.sibling;
+    let node = currentOffscreenFiber.child;
     while (node != null) {
       disappearLayoutEffects(node);
       disconnectPassiveEffect(node);
