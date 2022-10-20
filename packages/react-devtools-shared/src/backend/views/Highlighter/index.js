@@ -151,7 +151,11 @@ export default function setupHighlighter(
     event.preventDefault();
     event.stopPropagation();
 
-    selectFiberForNode((((event.composed ? event.composedPath()[0] : event.target): any): HTMLElement));
+    selectFiberForNode(
+      (((event.composed
+        ? event.composedPath()[0]
+        : event.target): any): HTMLElement),
+    );
   }
 
   let lastHoveredNode: HTMLElement | null = null;
@@ -159,7 +163,9 @@ export default function setupHighlighter(
     event.preventDefault();
     event.stopPropagation();
 
-    const target: HTMLElement = ((event.composed ? event.composedPath()[0] : event.target): any);
+    const target: HTMLElement = ((event.composed
+      ? event.composedPath()[0]
+      : event.target): any);
     if (lastHoveredNode === target) return;
     lastHoveredNode = target;
 
