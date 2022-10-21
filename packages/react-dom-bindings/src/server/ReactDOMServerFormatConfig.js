@@ -1150,6 +1150,26 @@ function pushStartTextArea(
   return null;
 }
 
+function pushMeta(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+  textEmbedded: boolean,
+): ReactNodeList {
+  if (enableFloat && resourcesFromElement('meta', props)) {
+    if (textEmbedded) {
+      // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+      // to be safe and assume text will follow by inserting a textSeparator
+      target.push(textSeparator);
+    }
+    // We have converted this link exclusively to a resource and no longer
+    // need to emit it
+    return null;
+  }
+
+  return pushSelfClosing(target, props, 'meta', responseState);
+}
+
 function pushLink(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -1688,6 +1708,8 @@ export function pushStartInstance(
       return pushLink(target, props, responseState, textEmbedded);
     case 'script':
       return pushStartScript(target, props, responseState, textEmbedded);
+    case 'meta':
+      return pushMeta(target, props, responseState, textEmbedded);
     // Newline eating tags
     case 'listing':
     case 'pre': {
@@ -1702,7 +1724,6 @@ export function pushStartInstance(
     case 'hr':
     case 'img':
     case 'keygen':
-    case 'meta':
     case 'param':
     case 'source':
     case 'track':
@@ -2318,6 +2339,7 @@ export function writeInitialResources(
   const target = [];
 
   const {
+    charset,
     fontPreloads,
     precedences,
     usedStylePreloads,
@@ -2327,6 +2349,12 @@ export function writeInitialResources(
     explicitScriptPreloads,
     headResources,
   } = resources;
+
+  if (charset) {
+    pushSelfClosing(target, charset.props, 'meta', responseState);
+    charset.flushed = true;
+    resources.charset = null;
+  }
 
   fontPreloads.forEach(r => {
     // font preload Resources should not already be flushed so we elide this check
@@ -2377,12 +2405,19 @@ export function writeInitialResources(
   explicitScriptPreloads.clear();
 
   headResources.forEach(r => {
-    if (r.instanceType === 'title') {
-      pushStartTitleImpl(target, r.props, responseState);
-      if (typeof r.props.children === 'string') {
-        target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
+    switch (r.type) {
+      case 'title': {
+        pushStartTitleImpl(target, r.props, responseState);
+        if (typeof r.props.children === 'string') {
+          target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
+        }
+        pushEndInstance(target, target, 'title', r.props);
+        break;
       }
-      pushEndInstance(target, target, 'title', r.props);
+      case 'meta': {
+        pushSelfClosing(target, r.props, 'meta', responseState);
+        break;
+      }
     }
     r.flushed = true;
   });
@@ -2414,6 +2449,7 @@ export function writeImmediateResources(
   const target = [];
 
   const {
+    charset,
     fontPreloads,
     usedStylePreloads,
     scripts,
@@ -2422,6 +2458,12 @@ export function writeImmediateResources(
     explicitScriptPreloads,
     headResources,
   } = resources;
+
+  if (charset) {
+    pushSelfClosing(target, charset.props, 'meta', responseState);
+    charset.flushed = true;
+    resources.charset = null;
+  }
 
   fontPreloads.forEach(r => {
     // font preload Resources should not already be flushed so we elide this check
@@ -2452,12 +2494,19 @@ export function writeImmediateResources(
   explicitScriptPreloads.clear();
 
   headResources.forEach(r => {
-    if (r.instanceType === 'title') {
-      pushStartTitle(target, r.props, responseState);
-      if (typeof r.props.children === 'string') {
-        target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
+    switch (r.type) {
+      case 'title': {
+        pushStartTitleImpl(target, r.props, responseState);
+        if (typeof r.props.children === 'string') {
+          target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
+        }
+        pushEndInstance(target, target, 'title', r.props);
+        break;
       }
-      pushEndInstance(target, target, 'title', r.props);
+      case 'meta': {
+        pushSelfClosing(target, r.props, 'meta', responseState);
+        break;
+      }
     }
     r.flushed = true;
   });
