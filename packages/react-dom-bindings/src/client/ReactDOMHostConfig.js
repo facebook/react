@@ -25,6 +25,7 @@ import {
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
   detachDeletedInstance,
+  isMarkedResource,
 } from './ReactDOMComponentTree';
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
@@ -58,6 +59,7 @@ import {
   TEXT_NODE,
   COMMENT_NODE,
   DOCUMENT_NODE,
+  DOCUMENT_TYPE_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
@@ -711,50 +713,15 @@ export function unhideTextInstance(
 
 export function clearContainer(container: Container): void {
   if (enableHostSingletons) {
-    // We have refined the container to Element type
     const nodeType = container.nodeType;
     if (nodeType === DOCUMENT_NODE || nodeType === ELEMENT_NODE) {
       switch (container.nodeName) {
         case '#document':
         case 'HTML':
         case 'HEAD':
-        case 'BODY': {
-          let node = container.firstChild;
-          while (node) {
-            const nextNode = node.nextSibling;
-            const nodeName = node.nodeName;
-            switch (nodeName) {
-              case 'HTML':
-              case 'HEAD':
-              case 'BODY': {
-                clearContainer((node: any));
-                // If these singleton instances had previously been rendered with React they
-                // may still hold on to references to the previous fiber tree. We detatch them
-                // prospectiveyl to reset them to a baseline starting state since we cannot create
-                // new instances.
-                detachDeletedInstance((node: any));
-                break;
-              }
-              case 'STYLE': {
-                break;
-              }
-              case 'LINK': {
-                if (
-                  ((node: any): HTMLLinkElement).rel.toLowerCase() ===
-                  'stylesheet'
-                ) {
-                  break;
-                }
-              }
-              // eslint-disable-next-line no-fallthrough
-              default: {
-                container.removeChild(node);
-              }
-            }
-            node = nextNode;
-          }
+        case 'BODY':
+          clearContainerChildren(container);
           return;
-        }
         default: {
           container.textContent = '';
         }
@@ -773,6 +740,42 @@ export function clearContainer(container: Container): void {
       }
     }
   }
+}
+
+function clearContainerChildren(container: Node) {
+  let node;
+  let nextNode: ?Node = container.firstChild;
+  if (nextNode && nextNode.nodeType === DOCUMENT_TYPE_NODE) {
+    nextNode = nextNode.nextSibling;
+  }
+  while (nextNode) {
+    node = nextNode;
+    nextNode = nextNode.nextSibling;
+    switch (node.nodeName) {
+      case 'HTML':
+      case 'HEAD':
+      case 'BODY': {
+        const element: Element = (node: any);
+        clearContainerChildren(element);
+        // If these singleton instances had previously been rendered with React they
+        // may still hold on to references to the previous fiber tree. We detatch them
+        // prospectively to reset them to a baseline starting state since we cannot create
+        // new instances.
+        detachDeletedInstance(element);
+        continue;
+      }
+      case 'STYLE': {
+        continue;
+      }
+      case 'LINK': {
+        if (((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet') {
+          continue;
+        }
+      }
+    }
+    container.removeChild(node);
+  }
+  return;
 }
 
 // Making this so we can eventually move all of the instance caching to the commit phase.
@@ -923,6 +926,7 @@ function getNextHydratable(node) {
             }
             break;
           }
+          case 'TITLE':
           case 'HTML':
           case 'HEAD':
           case 'BODY': {
@@ -947,6 +951,9 @@ function getNextHydratable(node) {
               continue;
             }
             break;
+          }
+          case 'TITLE': {
+            continue;
           }
           case 'STYLE': {
             const styleEl: HTMLStyleElement = (element: any);
@@ -1666,9 +1673,8 @@ export function clearSingleton(instance: Instance): void {
   while (node) {
     const nextNode = node.nextSibling;
     const nodeName = node.nodeName;
-    if (getInstanceFromNodeDOMTree(node)) {
-      // retain nodes owned by React
-    } else if (
+    if (
+      isMarkedResource(node) ||
       nodeName === 'HEAD' ||
       nodeName === 'BODY' ||
       nodeName === 'STYLE' ||

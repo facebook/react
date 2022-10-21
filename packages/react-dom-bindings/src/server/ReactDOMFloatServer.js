@@ -68,6 +68,18 @@ type ScriptResource = {
   hint: PreloadResource,
 };
 
+type HeadProps = {
+  [string]: mixed,
+};
+type HeadResource = {
+  type: 'head',
+  instanceType: string,
+  props: HeadProps,
+
+  flushed: boolean,
+  allowLate: boolean,
+};
+
 export type Resource = PreloadResource | StyleResource | ScriptResource;
 
 export type Resources = {
@@ -75,8 +87,10 @@ export type Resources = {
   preloadsMap: Map<string, PreloadResource>,
   stylesMap: Map<string, StyleResource>,
   scriptsMap: Map<string, ScriptResource>,
+  headsMap: Map<string, HeadResource>,
 
   // Flushing queues for Resource dependencies
+  charset: null | HeadResource,
   fontPreloads: Set<PreloadResource>,
   // usedImagePreloads: Set<PreloadResource>,
   precedences: Map<string, Set<StyleResource>>,
@@ -86,6 +100,7 @@ export type Resources = {
   explicitStylePreloads: Set<PreloadResource>,
   // explicitImagePreloads: Set<PreloadResource>,
   explicitScriptPreloads: Set<PreloadResource>,
+  headResources: Set<HeadResource>,
 
   // Module-global-like reference for current boundary resources
   boundaryResources: ?BoundaryResources,
@@ -99,8 +114,10 @@ export function createResources(): Resources {
     preloadsMap: new Map(),
     stylesMap: new Map(),
     scriptsMap: new Map(),
+    headsMap: new Map(),
 
     // cleared on flush
+    charset: null,
     fontPreloads: new Set(),
     // usedImagePreloads: new Set(),
     precedences: new Map(),
@@ -110,6 +127,7 @@ export function createResources(): Resources {
     explicitStylePreloads: new Set(),
     // explicitImagePreloads: new Set(),
     explicitScriptPreloads: new Set(),
+    headResources: new Set(),
 
     // like a module global for currently rendering boundary
     boundaryResources: null,
@@ -561,6 +579,74 @@ function adoptPreloadPropsForScriptProps(
     resourceProps.referrerPolicy = preloadProps.referrerPolicy;
   if (resourceProps.integrity == null)
     resourceProps.integrity = preloadProps.integrity;
+}
+
+function createHeadResource(
+  resources: Resources,
+  key: string,
+  instanceType: string,
+  props: HeadProps,
+): HeadResource {
+  if (__DEV__) {
+    if (resources.headsMap.has(key)) {
+      console.error(
+        'createScriptResource was called when a script Resource matching the same src already exists. This is a bug in React.',
+      );
+    }
+  }
+
+  const resource: HeadResource = {
+    type: 'head',
+    instanceType,
+    props,
+
+    flushed: false,
+    allowLate: true,
+  };
+  resources.headsMap.set(key, resource);
+  return resource;
+}
+
+function getTitleKey(child: string | number): string {
+  return 'title' + child;
+}
+
+function titlePropsFromRawProps(
+  child: string | number,
+  rawProps: Props,
+): HeadProps {
+  const props = Object.assign({}, rawProps);
+  props.children = child;
+  return props;
+}
+
+export function resourcesFromElement(type: string, props: Props): boolean {
+  if (!currentResources) {
+    throw new Error(
+      '"currentResources" was expected to exist. This is a bug in React.',
+    );
+  }
+  const resources = currentResources;
+  switch (type) {
+    case 'title': {
+      let child = props.children;
+      if (Array.isArray(child) && child.length === 1) {
+        child = child[0];
+      }
+      if (typeof child === 'string' || typeof child === 'number') {
+        const key = getTitleKey(child);
+        let resource = resources.headsMap.get(key);
+        if (!resource) {
+          const titleProps = titlePropsFromRawProps(child, props);
+          resource = createHeadResource(resources, key, 'title', titleProps);
+          resources.headResources.add(resource);
+        }
+        return true;
+      }
+      return false;
+    }
+  }
+  return false;
 }
 
 // Construct a resource from link props.

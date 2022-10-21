@@ -253,10 +253,21 @@ describe('rendering React components at document', () => {
         }
       }
 
-      // getTestDocument() has an extra <meta> that we didn't render.
-      expect(() =>
-        ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
-      ).toErrorDev('Did not expect server HTML to contain a <meta> in <head>.');
+      if (gate(flags => flags.enableFloat)) {
+        // with float the title no longer is a hydration mismatch so we get an error on the body mismatch
+        expect(() =>
+          ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
+        ).toErrorDev(
+          'Expected server HTML to contain a matching text node for "Hello world" in <body>',
+        );
+      } else {
+        // getTestDocument() has an extra <meta> that we didn't render.
+        expect(() =>
+          ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
+        ).toErrorDev(
+          'Did not expect server HTML to contain a <meta> in <head>.',
+        );
+      }
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
