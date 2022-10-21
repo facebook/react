@@ -69,7 +69,6 @@ export default function compile(
   const forgetPlaygroundOptions: Partial<CompilerOptions> = {
     logger: createArrayLogger(forgetLogs),
     outputKinds: Object.values(OutputKind),
-    postCodegenValidator: validateNoUseBeforeDefine,
     stopPass: PassName.Validator,
   };
   if (compilerFlags) {
@@ -100,7 +99,24 @@ export default function compile(
     // assign to global for interactive debugging
     globalThis.Forget$Context = context;
     const { outputs } = context;
-    outputs[OutputKind.JS] = result.code;
+    let code = result.code;
+
+    const errors: Array<{ ruleId: string; message: string }> =
+      validateNoUseBeforeDefine(code);
+    // Filter out parse errors
+    const noUseBeforeDefineErrors =
+      errors != null
+        ? errors.filter((error) => error.ruleId === "no-use-before-define")
+        : [];
+    if (noUseBeforeDefineErrors.length !== 0) {
+      const comments = noUseBeforeDefineErrors
+        .map((error) => `// - ${error.message}`)
+        .join("\n");
+      code = `// !!! INVALID OUTPUT !!!!\n${comments}\n${code}`;
+    } else if (errors != null && errors.length !== 0) {
+      code = `// NOTE: Could not validate output, the validator does not yet support JSX\n${code}`;
+    }
+    outputs[OutputKind.JS] = code;
 
     return {
       outputs,
@@ -108,17 +124,6 @@ export default function compile(
     };
   } catch (e) {
     const context = getMostRecentCompilerContext();
-
-    outputs[OutputKind.JS] = `
-      function __COMPILATION_FAILED__() {
-        /**
-        ${(e as Error).message
-          .split("\n")
-          .map((line) => "   * " + line)
-          .join("\n")}
-         */
-      }
-    `;
 
     return {
       outputs,
