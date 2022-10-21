@@ -7,11 +7,7 @@
  * @flow
  */
 
-import type {
-  FloatRoot,
-  StyleResource,
-  ScriptResource,
-} from './ReactDOMFloatClient';
+import type {FloatRoot, RootResources} from './ReactDOMFloatClient';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
@@ -53,6 +49,7 @@ const internalEventHandlersKey = '__reactEvents$' + randomKey;
 const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
 const internalRootNodeResourcesKey = '__reactResources$' + randomKey;
+const internalResourceMarker = '__reactMarker$' + randomKey;
 
 export function detachDeletedInstance(node: Instance): void {
   // TODO: This function is only called on host components. I don't think all of
@@ -282,15 +279,22 @@ export function doesTargetHaveEventHandle(
   return eventHandles.has(eventHandle);
 }
 
-export function getResourcesFromRoot(
-  root: FloatRoot,
-): {styles: Map<string, StyleResource>, scripts: Map<string, ScriptResource>} {
+export function getResourcesFromRoot(root: FloatRoot): RootResources {
   let resources = (root: any)[internalRootNodeResourcesKey];
   if (!resources) {
     resources = (root: any)[internalRootNodeResourcesKey] = {
       styles: new Map(),
       scripts: new Map(),
+      head: new Map(),
     };
   }
   return resources;
+}
+
+export function isMarkedResource(node: Node): boolean {
+  return !!(node: any)[internalResourceMarker];
+}
+
+export function markNodeAsResource(node: Node) {
+  (node: any)[internalResourceMarker] = true;
 }
