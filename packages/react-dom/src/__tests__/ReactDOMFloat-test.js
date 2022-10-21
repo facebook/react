@@ -2036,6 +2036,40 @@ describe('ReactDOMFloat', () => {
         </html>,
       );
     });
+
+    it('warns if you render a non-resource link above higher than head or body', async () => {
+      const root = ReactDOMClient.createRoot(document);
+      root.render(
+        <>
+          <link rel="stylesheet" href="foo" />
+          <html>
+            <body>foo</body>
+          </html>
+        </>,
+      );
+      let caughtError = null;
+      let nextCaughtError = null;
+      expect(() => {
+        try {
+          expect(Scheduler).toFlushWithoutYielding();
+        } catch (e) {
+          caughtError = e;
+          try {
+            // We need to bleed off another error because this will flush after the
+            // the test finishes and cause it to fail.
+            expect(Scheduler).toFlushWithoutYielding();
+          } catch (f) {
+            nextCaughtError = f;
+          }
+        }
+      }).toErrorDev(
+        'Warning: validateDOMNesting(...): <link> cannot appear as a child of <#document>.' +
+          'If you are trying to render a link as a Resource make sure there are no props' +
+          ' that disqualify it from being treated as such. For stylesheets you need a "precedence" prop and' +
+          ' must not have a disabled prop. For all links including stylesheets you must not have an onLoad' +
+          ' or onError prop.',
+      );
+    });
   });
 
   describe('script resources', () => {
