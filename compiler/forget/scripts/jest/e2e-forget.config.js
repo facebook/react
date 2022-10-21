@@ -7,4 +7,7 @@
 
 const makeE2EConfig = require("../jest/makeE2EConfig");
 
-module.exports = makeE2EConfig("e2e with forget", true);
+const config = makeE2EConfig("e2e with forget", true);
+config.setupFilesAfterEnv = ["<rootDir>/../scripts/jest/setupEnvE2E.js"];
+
+module.exports = config;

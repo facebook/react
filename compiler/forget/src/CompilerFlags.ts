@@ -74,14 +74,6 @@ export type CompilerFlags = {
   guardHooks: boolean;
 
   /**
-   * Adds a guard around the whole function to ensure the memo cache is reset
-   * on any throw.
-   *
-   * When https://github.com/facebook/react/pull/25143 lands on internally, we
-   * can remove this flag.
-   */
-  guardThrows: boolean;
-  /**
    * Experimental runtime logging to collect data
    */
   addFreeze: boolean;
@@ -98,7 +90,6 @@ export function createCompilerFlags(): CompilerFlags {
     condCache: false,
     guardReads: false,
     guardHooks: false,
-    guardThrows: false,
     addFreeze: false,
   };
 }
@@ -119,13 +110,18 @@ export function parseCompilerFlags(
       case "condCache":
       case "guardReads":
       case "guardHooks":
-      case "guardThrows":
       case "addFreeze":
         if (typeof value !== "boolean") {
           throw `Expected boolean for flag '${key}': ${value}`;
         }
         res[key] = value;
         break;
+      case "guardThrows": {
+        console.warn(
+          `the 'guardThrows' flag is no longer supported, this feature is built into React now`
+        );
+        break;
+      }
       default:
         if (!ignoreInvalidInput) {
           throw `Unknown flag: ${key}`;

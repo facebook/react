@@ -52,17 +52,36 @@ export function run(lirProg: LIR.Prog, context: CompilerContext) {
     if (context.opts.flags.addFreeze) {
       utils.push("$makeReadOnly");
     }
-    if (context.opts.flags.guardThrows) {
-      utils.push("$reset");
-    }
     if (utils.length > 0) {
       prog.unshiftContainer(
         "body",
-        t.importDeclaration(
-          utils.map((name) =>
-            t.importSpecifier(t.identifier(name), t.identifier(name))
+        t.variableDeclaration("const", [
+          t.variableDeclarator(
+            t.objectPattern(
+              utils.map((util) =>
+                t.objectProperty(
+                  t.identifier(util),
+                  t.identifier(util),
+                  false,
+                  true,
+                  null
+                )
+              )
+            ),
+            t.identifier("$ForgetRuntime")
           ),
-          t.stringLiteral("react-forget-runtime")
+        ])
+      );
+      prog.unshiftContainer(
+        "body",
+        t.importDeclaration(
+          [
+            t.importSpecifier(
+              t.identifier("$ForgetRuntime"),
+              t.identifier("unstable_ForgetRuntime")
+            ),
+          ],
+          t.stringLiteral("React")
         )
       );
     }
@@ -155,42 +174,7 @@ export function runFunc(
   const directives = funcBody.node.directives;
 
   let code = jsFunc.code;
-  if (context.opts.flags.guardThrows) {
-    code = [
-      jsFunc.useMemoCacheCall(lirFunc.memoCache.size),
-      t.tryStatement(
-        t.blockStatement(
-          code.map((node) => {
-            if (t.isStatement(node)) {
-              return node;
-            } else if (t.isExpression(node)) {
-              return t.expressionStatement(node);
-            } else {
-              throw new Error(`unhandled node type: ${node.type}`);
-            }
-          })
-        ),
-        t.catchClause(
-          t.identifier("e"),
-          t.blockStatement([
-            t.expressionStatement(
-              t.callExpression(
-                t.memberExpression(
-                  t.identifier("useMemoCache"),
-                  t.identifier("reset")
-                ),
-                [jsFunc.memoCache.id]
-              )
-            ),
-            t.throwStatement(t.identifier("e")),
-          ])
-        ),
-        null
-      ),
-    ];
-  } else {
-    code.unshift(jsFunc.useMemoCacheCall(lirFunc.memoCache.size));
-  }
+  code.unshift(jsFunc.useMemoCacheCall(lirFunc.memoCache.size));
   funcBody.replaceWithMultiple(code);
 
   // recover directives.

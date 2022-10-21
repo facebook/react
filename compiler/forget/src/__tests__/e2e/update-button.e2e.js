@@ -8,9 +8,6 @@
 import * as React from "react";
 import { render } from "@testing-library/react";
 
-import { unstable_useMemoCache } from "react-forget-runtime";
-React.unstable_useMemoCache = unstable_useMemoCache;
-
 function Button({ label }) {
   const theme = useTheme();
   const style = computeStyle(theme);

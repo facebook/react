@@ -53,7 +53,6 @@ describe("CompilerOptions", () => {
         condCache: true,
         guardReads: true,
         guardHooks: true,
-        guardThrows: true,
         localMutationThroughFreeVars: false,
         bailOnMultipleReturns: true,
         bailOnCapitalizedFunctionCalls: true,

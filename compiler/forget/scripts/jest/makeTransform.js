@@ -42,9 +42,10 @@ module.exports = (useForget) => {
                       if (path.node.callee.name === "require") {
                         const arg = path.node.arguments[0];
                         if (arg.type === "StringLiteral") {
-                          if (arg.value === "react-forget-runtime") {
-                            arg.value =
-                              "../../../packages/react-forget-runtime";
+                          // The compiler adds requires of "React", which is expected to be a wrapper
+                          // around the "react" package. For tests, we just rewrite the require.
+                          if (arg.value === "React") {
+                            arg.value = "react";
                           }
                         }
                       }

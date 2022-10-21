@@ -9,9 +9,6 @@ import * as React from "react";
 import { render } from "@testing-library/react";
 import { expectLogsAndClear, log } from "./expectLogs";
 
-import { unstable_useMemoCache } from "react-forget-runtime";
-React.unstable_useMemoCache = unstable_useMemoCache;
-
 function Hello({ name }) {
   "use forget";
   const items = [1, 2, 3].map((item) => <div key={item}>Item {item}</div>);
