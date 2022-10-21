@@ -107,9 +107,8 @@ type MetaProps = {
 };
 export type MetaResource = {
   type: 'meta',
-  key: string,
-  matchValue: string,
-  matchAttr: 'charset' | 'http-equiv' | 'name' | 'itemprop' | 'property',
+  matcher: string,
+  property: ?string,
   parentResource: ?MetaResource,
   props: MetaProps,
 
@@ -428,7 +427,7 @@ export function getResource(
   }
   switch (type) {
     case 'meta': {
-      let key, matchAttr, matchValue, propertyPath, parentResource;
+      let matcher, propertyString, parentResource;
       const {
         charSet,
         content,
@@ -442,56 +441,48 @@ export function getResource(
         headRoot,
       );
       if (typeof charSet === 'string') {
-        matchValue = charSet;
-        key = matchAttr = 'charset';
+        matcher = 'meta[charset]';
       } else if (typeof content === 'string') {
-        const contentKey = '::' + content;
         if (typeof httpEquiv === 'string') {
-          matchValue = httpEquiv;
-          matchAttr = 'http-equiv';
-          key = matchAttr + '::' + httpEquiv + contentKey;
+          matcher = `meta[http-equiv="${httpEquiv}"][content="${content}"]`;
         } else if (typeof property === 'string') {
-          matchValue = property;
-          matchAttr = 'property';
-          key = matchAttr + '::' + property + contentKey;
-          propertyPath = property;
+          propertyString = property;
+          matcher = `meta[property="${property}"][content="${content}"]`;
+
           const parentPropertyPath = property
             .split(':')
             .slice(0, -1)
             .join(':');
           parentResource = lastStructuredMeta.get(parentPropertyPath);
           if (parentResource) {
-            key = parentResource.key + '::child::' + key;
+            // When using parentResource the matcher is not functional for locating
+            // the instance in the DOM but it still serves as a unique key.
+            matcher = parentResource.matcher + matcher;
           }
         } else if (typeof name === 'string') {
-          matchValue = name;
-          matchAttr = 'name';
-          key = matchAttr + '::' + name + contentKey;
+          matcher = `meta[name="${name}"][content="${content}"]`;
         } else if (typeof itemProp === 'string') {
-          matchValue = itemProp;
-          matchAttr = 'itemprop';
-          key = matchAttr + '::' + itemProp + contentKey;
+          matcher = `meta[itemprop="${itemProp}"][content="${content}"]`;
         }
       }
-      if (key && matchAttr) {
-        let resource = headResources.get(key);
+      if (matcher) {
+        let resource = headResources.get(matcher);
         if (!resource) {
           resource = {
             type: 'meta',
-            matchValue: ((matchValue: any): string),
-            matchAttr,
-            key,
+            matcher,
+            property: propertyString,
             parentResource,
             props: Object.assign({}, pendingProps),
             count: 0,
             instance: null,
             root: headRoot,
           };
-          headResources.set(key, resource);
+          headResources.set(matcher, resource);
         }
-        if (propertyPath) {
+        if (typeof resource.property === 'string') {
           // We cast because flow doesn't know that this resource must be a Meta resource
-          lastStructuredMeta.set(propertyPath, (resource: any));
+          lastStructuredMeta.set(resource.property, (resource: any));
         }
         return resource;
       }
@@ -993,65 +984,54 @@ function acquireHeadResource(resource: HeadResource): Instance {
         break;
       }
       case 'meta': {
-        let existingEl = null;
         let insertBefore = null;
 
         const metaResource: MetaResource = (resource: any);
-        const {matchAttr, matchValue, parentResource} = metaResource;
+        const {matcher, property, parentResource} = metaResource;
 
-        if (matchAttr === 'charset') {
-          existingEl = root.querySelector('meta[charset]');
-        } else {
-          let scope: Document | Element = root;
-          let parent = null;
-          let parentProperty = null;
-          if (matchAttr === 'property' && parentResource) {
-            const parentInstance = parentResource.instance;
-            if (parentInstance && parentInstance.parentElement) {
-              parent = parentInstance;
-              insertBefore = parent.nextSibling;
-              parentProperty = parentResource.matchValue;
-              scope = parentInstance.parentElement;
-            }
-          }
-          const metas = scope.querySelectorAll('meta');
-          for (let i = 0; i < metas.length; i++) {
-            const meta = metas[i];
-            if (parent) {
-              if (meta === parent) {
-                parent = null;
-              }
-              continue;
-            } else if (
-              meta.getAttribute('content') === props.content &&
-              meta.getAttribute(matchAttr) === matchValue
-            ) {
-              existingEl = meta;
-              break;
-            } else {
-              const metaProperty = meta.getAttribute('property');
-              if (
-                parentProperty &&
-                metaProperty &&
-                parentProperty.startsWith(metaProperty)
-              ) {
-                // We have found aother matching parent meta and need to stop
-                break;
+        if (parentResource && typeof property === 'string') {
+          // This resoruce is a structured meta type with a parent.
+          // Instead of using the matcher we just traverse forward
+          // siblings of the parent instance until we find a match
+          // or exhaust.
+          const parent = parentResource.instance;
+          if (parent) {
+            let node = null;
+            let nextNode = (insertBefore = parent.nextSibling);
+            while ((node = nextNode)) {
+              nextNode = node.nextSibling;
+              if (node.nodeName === 'META') {
+                const meta: Element = (node: any);
+                const propertyAttr = meta.getAttribute('property');
+                if (typeof propertyAttr !== 'string') {
+                  continue;
+                } else if (
+                  propertyAttr === property &&
+                  meta.getAttribute('content') === props.content
+                ) {
+                  resource.instance = meta;
+                  markNodeAsResource(meta);
+                  return meta;
+                } else if (property.startsWith(propertyAttr + ':')) {
+                  // This meta starts a new instance of a parent structure for this meta type
+                  // We need to halt our search here because even if we find a later match it
+                  // is for a different parent element
+                  break;
+                }
               }
             }
           }
-        }
-        if (existingEl) {
-          instance = resource.instance = existingEl;
+        } else if ((instance = root.querySelector(matcher))) {
+          resource.instance = instance;
           markNodeAsResource(instance);
-        } else {
-          instance = resource.instance = createResourceInstance(
-            type,
-            props,
-            root,
-          );
-          insertResourceInstanceBefore(root, instance, insertBefore);
+          return instance;
         }
+        instance = resource.instance = createResourceInstance(
+          type,
+          props,
+          root,
+        );
+        insertResourceInstanceBefore(root, instance, insertBefore);
         break;
       }
       default: {

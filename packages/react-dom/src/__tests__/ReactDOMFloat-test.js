@@ -942,6 +942,98 @@ describe('ReactDOMFloat', () => {
 
   describe('head resources', () => {
     // @gate enableFloat
+    it('can hydrate the right instances for deeply nested structured metas', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <>
+            <html>
+              <head />
+              <body>
+                <div>hello world</div>
+              </body>
+            </html>
+            <meta property="og:foo" content="one" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+            <meta property="og:foo" content="two" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:foo" content="one" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+            <meta property="og:foo" content="two" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(
+        document,
+        <>
+          <html>
+            <head />
+            <body>
+              <div>hello world</div>
+            </body>
+          </html>
+          <meta property="og:foo" content="one" />
+          <meta property="og:foo:bar" content="bar" />
+          <meta property="og:foo:bar:baz" content="baz" />
+          <meta property="og:foo" content="two" />
+          <meta property="og:foo:bar" content="bar" />
+          <meta property="og:foo:bar:baz" content="baz" />
+        </>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:foo" content="one" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+            <meta property="og:foo" content="two" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <>
+          <html>
+            <head />
+            <body>
+              <div>hello world</div>
+            </body>
+          </html>
+        </>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
     it('can insert meta tags in the expected location', async () => {
       await actIntoEmptyDocument(() => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
