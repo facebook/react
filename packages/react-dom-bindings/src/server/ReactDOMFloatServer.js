@@ -849,7 +849,7 @@ export function resourcesFromLink(props: Props): boolean {
     resources.headsMap.set(key, resource);
     switch (rel) {
       case 'preconnect':
-      case 'prefetch-dns': {
+      case 'dns-prefetch': {
         resources.preconnects.add(resource);
         break;
       }

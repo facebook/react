@@ -955,7 +955,7 @@ describe('ReactDOMFloat', () => {
             <link rel="preload" href="bar" as="style" />
             <link rel="stylesheet" href="bar" precedence="default" />
             <link rel="preconnect" href="bar" />
-            <link rel="prefetch-dns" href="bar" />
+            <link rel="dns-prefetch" href="bar" />
             <link rel="icon" href="bar" />
             <link rel="icon" href="bar" sizes="1x1" />
             <link rel="icon" href="bar" media="foo" />
@@ -965,7 +965,7 @@ describe('ReactDOMFloat', () => {
         );
         pipe(writable);
       });
-      // "preconnect" and "prefetch-dns" get hoisted to the front.
+      // "preconnect" and "dns-prefetch" get hoisted to the front.
       // All other generic links (not styles, or typed preloads)
       // get emitted after styles and other higher priority Resources
       // Sizes and Media are part of generic link keys
@@ -973,7 +973,7 @@ describe('ReactDOMFloat', () => {
         <html>
           <head>
             <link rel="preconnect" href="bar" />
-            <link rel="prefetch-dns" href="bar" />
+            <link rel="dns-prefetch" href="bar" />
             <link rel="stylesheet" href="bar" data-precedence="default" />
             <link rel="foo" href="bar" />
             <link rel="preload" href="bar" />
@@ -1001,7 +1001,7 @@ describe('ReactDOMFloat', () => {
           <link rel="preload" href="bar" as="style" />
           <link rel="stylesheet" href="bar" precedence="default" />
           <link rel="preconnect" href="bar" />
-          <link rel="prefetch-dns" href="bar" />
+          <link rel="dns-prefetch" href="bar" />
           <link rel="icon" href="bar" />
           <link rel="icon" href="bar" sizes="1x1" />
           <link rel="icon" href="bar" media="foo" />
@@ -1014,7 +1014,7 @@ describe('ReactDOMFloat', () => {
         <html>
           <head>
             <link rel="preconnect" href="bar" />
-            <link rel="prefetch-dns" href="bar" />
+            <link rel="dns-prefetch" href="bar" />
             <link rel="stylesheet" href="bar" data-precedence="default" />
             <link rel="foo" href="bar" />
             <link rel="preload" href="bar" />
