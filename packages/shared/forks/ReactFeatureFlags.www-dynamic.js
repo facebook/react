@@ -19,7 +19,6 @@ export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const skipUnmountedBoundaries = __VARIANT__;
 export const enableUseRefAccessWarning = __VARIANT__;
-export const deletedTreeCleanUpLevel: number = __VARIANT__ ? 3 : 1;
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;
