@@ -88,13 +88,29 @@ export type ScriptResource = {
   root: FloatRoot,
 };
 
-type HeadProps = {
+export type HeadResource = TitleResource | MetaResource;
+
+type TitleProps = {
   [string]: mixed,
 };
-export type HeadResource = {
-  type: 'head',
-  instanceType: string,
-  props: HeadProps,
+export type TitleResource = {
+  type: 'title',
+  props: TitleProps,
+
+  count: number,
+  instance: ?Element,
+  root: Document,
+};
+
+type MetaProps = {
+  [string]: mixed,
+};
+export type MetaResource = {
+  type: 'meta',
+  matcher: string,
+  property: ?string,
+  parentResource: ?MetaResource,
+  props: MetaProps,
 
   count: number,
   instance: ?Element,
@@ -109,6 +125,7 @@ export type RootResources = {
   styles: Map<string, StyleResource>,
   scripts: Map<string, ScriptResource>,
   head: Map<string, HeadResource>,
+  lastStructuredMeta: Map<string, MetaResource>,
 };
 
 // Brief on purpose due to insertion by script when streaming late boundaries
@@ -409,6 +426,84 @@ export function getResource(
     );
   }
   switch (type) {
+    case 'meta': {
+      let matcher, propertyString, parentResource;
+      const {
+        charSet,
+        content,
+        httpEquiv,
+        name,
+        itemProp,
+        property,
+      } = pendingProps;
+      const headRoot: Document = getDocumentFromRoot(resourceRoot);
+      const {head: headResources, lastStructuredMeta} = getResourcesFromRoot(
+        headRoot,
+      );
+      if (typeof charSet === 'string') {
+        matcher = 'meta[charset]';
+      } else if (typeof content === 'string') {
+        if (typeof httpEquiv === 'string') {
+          matcher = `meta[http-equiv="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            httpEquiv,
+          )}"][content="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            content,
+          )}"]`;
+        } else if (typeof property === 'string') {
+          propertyString = property;
+          matcher = `meta[property="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            property,
+          )}"][content="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            content,
+          )}"]`;
+
+          const parentPropertyPath = property
+            .split(':')
+            .slice(0, -1)
+            .join(':');
+          parentResource = lastStructuredMeta.get(parentPropertyPath);
+          if (parentResource) {
+            // When using parentResource the matcher is not functional for locating
+            // the instance in the DOM but it still serves as a unique key.
+            matcher = parentResource.matcher + matcher;
+          }
+        } else if (typeof name === 'string') {
+          matcher = `meta[name="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            name,
+          )}"][content="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            content,
+          )}"]`;
+        } else if (typeof itemProp === 'string') {
+          matcher = `meta[itemprop="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            itemProp,
+          )}"][content="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            content,
+          )}"]`;
+        }
+      }
+      if (matcher) {
+        let resource = headResources.get(matcher);
+        if (!resource) {
+          resource = {
+            type: 'meta',
+            matcher,
+            property: propertyString,
+            parentResource,
+            props: Object.assign({}, pendingProps),
+            count: 0,
+            instance: null,
+            root: headRoot,
+          };
+          headResources.set(matcher, resource);
+        }
+        if (typeof resource.property === 'string') {
+          // We cast because flow doesn't know that this resource must be a Meta resource
+          lastStructuredMeta.set(resource.property, (resource: any));
+        }
+        return resource;
+      }
+      return null;
+    }
     case 'title': {
       let child = pendingProps.children;
       if (Array.isArray(child) && child.length === 1) {
@@ -421,13 +516,14 @@ export function getResource(
         let resource = headResources.get(key);
         if (!resource) {
           const titleProps = titlePropsFromRawProps(child, pendingProps);
-          resource = createHeadResource(
-            headResources,
-            headRoot,
-            'title',
-            key,
-            titleProps,
-          );
+          resource = {
+            type: 'title',
+            props: titleProps,
+            count: 0,
+            instance: null,
+            root: headRoot,
+          };
+          headResources.set(key, resource);
         }
         return resource;
       }
@@ -588,8 +684,8 @@ function preloadPropsFromRawProps(
 function titlePropsFromRawProps(
   child: string | number,
   rawProps: Props,
-): HeadProps {
-  const props: HeadProps = Object.assign({}, rawProps);
+): TitleProps {
+  const props: TitleProps = Object.assign({}, rawProps);
   props.children = child;
   return props;
 }
@@ -613,7 +709,8 @@ function scriptPropsFromRawProps(rawProps: ScriptQualifyingProps): ScriptProps {
 
 export function acquireResource(resource: Resource): Instance {
   switch (resource.type) {
-    case 'head': {
+    case 'title':
+    case 'meta': {
       return acquireHeadResource(resource);
     }
     case 'style': {
@@ -635,7 +732,8 @@ export function acquireResource(resource: Resource): Instance {
 
 export function releaseResource(resource: Resource): void {
   switch (resource.type) {
-    case 'head': {
+    case 'title':
+    case 'meta': {
       return releaseHeadResource(resource);
     }
     case 'style': {
@@ -666,35 +764,6 @@ function createResourceInstance(
   setInitialProperties(element, type, props);
   markNodeAsResource(element);
   return element;
-}
-
-function createHeadResource(
-  headResources: Map<string, HeadResource>,
-  root: Document,
-  instanceType: string,
-  key: string,
-  props: HeadProps,
-): HeadResource {
-  if (__DEV__) {
-    if (headResources.has(key)) {
-      console.error(
-        'createHeadResource was called when a head Resource matching the same key already exists. This is a bug in React.',
-      );
-    }
-  }
-
-  const resource: HeadResource = {
-    type: 'head',
-    instanceType,
-    props,
-
-    count: 0,
-    instance: null,
-    root,
-  };
-
-  headResources.set(key, resource);
-  return resource;
 }
 
 function createStyleResource(
@@ -894,7 +963,7 @@ function createPreloadResource(
   );
   if (!element) {
     element = createResourceInstance('link', props, ownerDocument);
-    appendResourceInstance(element, ownerDocument);
+    insertResourceInstanceBefore(ownerDocument, element, null);
   } else {
     markNodeAsResource(element);
   }
@@ -911,8 +980,8 @@ function acquireHeadResource(resource: HeadResource): Instance {
   resource.count++;
   let instance = resource.instance;
   if (!instance) {
-    const {props, root, instanceType} = resource;
-    switch (instanceType) {
+    const {props, root, type} = resource;
+    switch (type) {
       case 'title': {
         const titles = root.querySelectorAll('title');
         for (let i = 0; i < titles.length; i++) {
@@ -922,18 +991,70 @@ function acquireHeadResource(resource: HeadResource): Instance {
             return instance;
           }
         }
+        instance = resource.instance = createResourceInstance(
+          type,
+          props,
+          root,
+        );
+        insertResourceInstanceBefore(root, instance, titles.item(0));
+        break;
       }
-    }
-    instance = resource.instance = createResourceInstance(
-      instanceType,
-      props,
-      root,
-    );
+      case 'meta': {
+        let insertBefore = null;
 
-    if (instanceType === 'title') {
-      prependResourceInstance(instance, root);
-    } else {
-      appendResourceInstance(instance, root);
+        const metaResource: MetaResource = (resource: any);
+        const {matcher, property, parentResource} = metaResource;
+
+        if (parentResource && typeof property === 'string') {
+          // This resoruce is a structured meta type with a parent.
+          // Instead of using the matcher we just traverse forward
+          // siblings of the parent instance until we find a match
+          // or exhaust.
+          const parent = parentResource.instance;
+          if (parent) {
+            let node = null;
+            let nextNode = (insertBefore = parent.nextSibling);
+            while ((node = nextNode)) {
+              nextNode = node.nextSibling;
+              if (node.nodeName === 'META') {
+                const meta: Element = (node: any);
+                const propertyAttr = meta.getAttribute('property');
+                if (typeof propertyAttr !== 'string') {
+                  continue;
+                } else if (
+                  propertyAttr === property &&
+                  meta.getAttribute('content') === props.content
+                ) {
+                  resource.instance = meta;
+                  markNodeAsResource(meta);
+                  return meta;
+                } else if (property.startsWith(propertyAttr + ':')) {
+                  // This meta starts a new instance of a parent structure for this meta type
+                  // We need to halt our search here because even if we find a later match it
+                  // is for a different parent element
+                  break;
+                }
+              }
+            }
+          }
+        } else if ((instance = root.querySelector(matcher))) {
+          resource.instance = instance;
+          markNodeAsResource(instance);
+          return instance;
+        }
+        instance = resource.instance = createResourceInstance(
+          type,
+          props,
+          root,
+        );
+        insertResourceInstanceBefore(root, instance, insertBefore);
+        break;
+      }
+      default: {
+        throw new Error(
+          `acquireHeadResource encountered a resource type it did not expect: "${type}". This is a bug in React.`,
+        );
+      }
     }
   }
   return instance;
@@ -1010,7 +1131,7 @@ function acquireScriptResource(resource: ScriptResource): Instance {
         getDocumentFromRoot(root),
       );
 
-      appendResourceInstance(instance, getDocumentFromRoot(root));
+      insertResourceInstanceBefore(getDocumentFromRoot(root), instance, null);
     }
   }
   return instance;
@@ -1113,45 +1234,22 @@ function insertStyleInstance(
   }
 }
 
-function prependResourceInstance(
-  instance: Instance,
+function insertResourceInstanceBefore(
   ownerDocument: Document,
+  instance: Instance,
+  before: ?Node,
 ): void {
   if (__DEV__) {
     if (instance.tagName === 'LINK' && (instance: any).rel === 'stylesheet') {
       console.error(
-        'prependResourceInstance was called with a stylesheet. Stylesheets must be' +
+        'insertResourceInstanceBefore was called with a stylesheet. Stylesheets must be' +
           ' inserted with insertStyleInstance instead. This is a bug in React.',
       );
     }
   }
-
-  const parent = ownerDocument.head;
+  const parent = (before && before.parentNode) || ownerDocument.head;
   if (parent) {
-    parent.insertBefore(instance, parent.firstChild);
-  } else {
-    throw new Error(
-      'While attempting to insert a Resource, React expected the Document to contain' +
-        ' a head element but it was not found.',
-    );
-  }
-}
-
-function appendResourceInstance(
-  instance: Instance,
-  ownerDocument: Document,
-): void {
-  if (__DEV__) {
-    if (instance.tagName === 'LINK' && (instance: any).rel === 'stylesheet') {
-      console.error(
-        'appendResourceInstance was called with a stylesheet. Stylesheets must be' +
-          ' inserted with insertStyleInstance instead. This is a bug in React.',
-      );
-    }
-  }
-  const parent = ownerDocument.head;
-  if (parent) {
-    parent.appendChild(instance);
+    parent.insertBefore(instance, before);
   } else {
     throw new Error(
       'While attempting to insert a Resource, React expected the Document to contain' +
@@ -1162,6 +1260,7 @@ function appendResourceInstance(
 
 export function isHostResourceType(type: string, props: Props): boolean {
   switch (type) {
+    case 'meta':
     case 'title': {
       return true;
     }

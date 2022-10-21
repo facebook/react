@@ -942,6 +942,478 @@ describe('ReactDOMFloat', () => {
 
   describe('head resources', () => {
     // @gate enableFloat
+    it('can hydrate the right instances for deeply nested structured metas', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <>
+            <html>
+              <head />
+              <body>
+                <div>hello world</div>
+              </body>
+            </html>
+            <meta property="og:foo" content="one" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+            <meta property="og:foo" content="two" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:foo" content="one" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+            <meta property="og:foo" content="two" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(
+        document,
+        <>
+          <html>
+            <head />
+            <body>
+              <div>hello world</div>
+            </body>
+          </html>
+          <meta property="og:foo" content="one" />
+          <meta property="og:foo:bar" content="bar" />
+          <meta property="og:foo:bar:baz" content="baz" />
+          <meta property="og:foo" content="two" />
+          <meta property="og:foo:bar" content="bar" />
+          <meta property="og:foo:bar:baz" content="baz" />
+        </>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:foo" content="one" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+            <meta property="og:foo" content="two" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <>
+          <html>
+            <head />
+            <body>
+              <div>hello world</div>
+            </body>
+          </html>
+        </>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can insert meta tags in the expected location', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <>
+            <html>
+              <head />
+              <body>
+                <div>hello world</div>
+              </body>
+            </html>
+            <meta charSet="utf-8" />
+            <meta name="google-site-verification" content="somehash1" />
+            <meta name="google-site-verification" content="somehash2" />
+            <meta
+              name="description"
+              property="og:description"
+              content="my site"
+            />
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta httpEquiv="refresh" content="dont actually" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta itemProp="someprop" content="somevalue" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:description:foo" content="foo" />
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="google-site-verification" content="somehash1" />
+            <meta name="google-site-verification" content="somehash2" />
+            <meta
+              name="description"
+              property="og:description"
+              content="my site"
+            />
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta http-equiv="refresh" content="dont actually" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta itemprop="someprop" content="somevalue" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:description:foo" content="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head>
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="google-site-verification" content="somehash1" />
+            <meta name="google-site-verification" content="somehash2" />
+            <meta
+              name="description"
+              property="og:description"
+              content="my site"
+            />
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta http-equiv="refresh" content="dont actually" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta itemprop="someprop" content="somevalue" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:description:foo" content="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <html>
+          <head>
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:description" content="my site" />
+            <meta
+              itemProp="description bar"
+              property="og:description:bar"
+              content="bar"
+            />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="google-site-verification" content="somehash1" />
+            <meta name="google-site-verification" content="somehash2" />
+            <meta
+              name="description"
+              property="og:description"
+              content="my site"
+            />
+            <meta
+              itemprop="description bar"
+              property="og:description:bar"
+              content="bar"
+            />
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta http-equiv="refresh" content="dont actually" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta itemprop="someprop" content="somevalue" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:description:foo" content="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can render meta tags with og properties with structured data', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <>
+            <html>
+              <head />
+              <body>
+                <div>hello world</div>
+              </body>
+            </html>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head />
+          <body>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <html>
+          <head />
+          <body>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <html>
+          <head />
+          <body>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image:foo" content="foo" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:foo" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <html>
+          <head />
+          <body>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:width:bar" content="bar" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image:foo" content="foo" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:foo" content="foo" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:width:bar" content="bar" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can render meta tags as resources', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <>
+            <html>
+              <head />
+              <body>
+                <div>hello world</div>
+              </body>
+            </html>
+            <meta name="robots" content="noindex" />
+            <meta httpEquiv="content-security-policy" content="foo" />
+            <meta itemProp="description" content="desc" />
+            <meta property="description" content="desc2" />
+            <meta charSet="utf-8" />
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="robots" content="noindex" />
+            <meta http-equiv="content-security-policy" content="foo" />
+            <meta itemprop="description" content="desc" />
+            <meta property="description" content="desc2" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head>
+            <meta charSet="utf-8" />
+          </head>
+          <body>
+            <meta name="robots" content="noindex" />
+            <meta httpEquiv="content-security-policy" content="foo" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="robots" content="noindex" />
+            <meta http-equiv="content-security-policy" content="foo" />
+            <meta itemprop="description" content="desc" />
+            <meta property="description" content="desc2" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
     it('can rendering title tags anywhere in the tree', async () => {
       await actIntoEmptyDocument(() => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(

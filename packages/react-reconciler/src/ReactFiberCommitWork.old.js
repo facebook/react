@@ -2059,7 +2059,9 @@ function commitDeletionEffectsOnFiber(
           nearestMountedAncestor,
           deletedFiber,
         );
-        releaseResource(deletedFiber.memoizedState);
+        if (deletedFiber.memoizedState) {
+          releaseResource(deletedFiber.memoizedState);
+        }
         return;
       }
     }

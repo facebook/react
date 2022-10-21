@@ -68,19 +68,29 @@ type ScriptResource = {
   hint: PreloadResource,
 };
 
-type HeadProps = {
+type TitleProps = {
   [string]: mixed,
 };
-type HeadResource = {
-  type: 'head',
-  instanceType: string,
-  props: HeadProps,
+type TitleResource = {
+  type: 'title',
+  props: TitleProps,
 
   flushed: boolean,
-  allowLate: boolean,
+};
+
+type MetaProps = {
+  [string]: mixed,
+};
+type MetaResource = {
+  type: 'meta',
+  key: string,
+  props: MetaProps,
+
+  flushed: boolean,
 };
 
 export type Resource = PreloadResource | StyleResource | ScriptResource;
+export type HeadResource = TitleResource | MetaResource;
 
 export type Resources = {
   // Request local cache
@@ -90,7 +100,7 @@ export type Resources = {
   headsMap: Map<string, HeadResource>,
 
   // Flushing queues for Resource dependencies
-  charset: null | HeadResource,
+  charset: null | MetaResource,
   fontPreloads: Set<PreloadResource>,
   // usedImagePreloads: Set<PreloadResource>,
   precedences: Map<string, Set<StyleResource>>,
@@ -101,6 +111,9 @@ export type Resources = {
   // explicitImagePreloads: Set<PreloadResource>,
   explicitScriptPreloads: Set<PreloadResource>,
   headResources: Set<HeadResource>,
+
+  // cache for tracking structured meta tags
+  structuredMetaKeys: Map<string, MetaResource>,
 
   // Module-global-like reference for current boundary resources
   boundaryResources: ?BoundaryResources,
@@ -128,6 +141,9 @@ export function createResources(): Resources {
     // explicitImagePreloads: new Set(),
     explicitScriptPreloads: new Set(),
     headResources: new Set(),
+
+    // cache for tracking structured meta tags
+    structuredMetaKeys: new Map(),
 
     // like a module global for currently rendering boundary
     boundaryResources: null,
@@ -581,40 +597,10 @@ function adoptPreloadPropsForScriptProps(
     resourceProps.integrity = preloadProps.integrity;
 }
 
-function createHeadResource(
-  resources: Resources,
-  key: string,
-  instanceType: string,
-  props: HeadProps,
-): HeadResource {
-  if (__DEV__) {
-    if (resources.headsMap.has(key)) {
-      console.error(
-        'createScriptResource was called when a script Resource matching the same src already exists. This is a bug in React.',
-      );
-    }
-  }
-
-  const resource: HeadResource = {
-    type: 'head',
-    instanceType,
-    props,
-
-    flushed: false,
-    allowLate: true,
-  };
-  resources.headsMap.set(key, resource);
-  return resource;
-}
-
-function getTitleKey(child: string | number): string {
-  return 'title' + child;
-}
-
 function titlePropsFromRawProps(
   child: string | number,
   rawProps: Props,
-): HeadProps {
+): TitleProps {
   const props = Object.assign({}, rawProps);
   props.children = child;
   return props;
@@ -634,12 +620,64 @@ export function resourcesFromElement(type: string, props: Props): boolean {
         child = child[0];
       }
       if (typeof child === 'string' || typeof child === 'number') {
-        const key = getTitleKey(child);
+        const key = 'title::' + child;
         let resource = resources.headsMap.get(key);
         if (!resource) {
-          const titleProps = titlePropsFromRawProps(child, props);
-          resource = createHeadResource(resources, key, 'title', titleProps);
+          resource = {
+            type: 'title',
+            props: titlePropsFromRawProps(child, props),
+            flushed: false,
+          };
+          resources.headsMap.set(key, resource);
           resources.headResources.add(resource);
+        }
+        return true;
+      }
+      return false;
+    }
+    case 'meta': {
+      let key, propertyPath;
+      if (typeof props.charSet === 'string') {
+        key = 'charSet';
+      } else if (typeof props.content === 'string') {
+        const contentKey = '::' + props.content;
+        if (typeof props.httpEquiv === 'string') {
+          key = 'httpEquiv::' + props.httpEquiv + contentKey;
+        } else if (typeof props.name === 'string') {
+          key = 'name::' + props.name + contentKey;
+        } else if (typeof props.itemProp === 'string') {
+          key = 'itemProp::' + props.itemProp + contentKey;
+        } else if (typeof props.property === 'string') {
+          const {property} = props;
+          key = 'property::' + property + contentKey;
+          propertyPath = property;
+          const parentPath = property
+            .split(':')
+            .slice(0, -1)
+            .join(':');
+          const parentResource = resources.structuredMetaKeys.get(parentPath);
+          if (parentResource) {
+            key = parentResource.key + '::child::' + key;
+          }
+        }
+      }
+      if (key) {
+        if (!resources.headsMap.has(key)) {
+          const resource = {
+            type: 'meta',
+            key,
+            props: Object.assign({}, props),
+            flushed: false,
+          };
+          resources.headsMap.set(key, resource);
+          if (key === 'charSet') {
+            resources.charset = resource;
+          } else {
+            if (propertyPath) {
+              resources.structuredMetaKeys.set(propertyPath, resource);
+            }
+            resources.headResources.add(resource);
+          }
         }
         return true;
       }
