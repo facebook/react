@@ -236,6 +236,32 @@ describe('ReactDOMFloat', () => {
   }
 
   // @gate enableFloat
+  it('can render resources before singletons', async () => {
+    const root = ReactDOMClient.createRoot(document);
+    root.render(
+      <>
+        <title>foo</title>
+        <html>
+          <head>
+            <link rel="foo" href="foo" />
+          </head>
+          <body>hello world</body>
+        </html>
+      </>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <title>foo</title>
+          <link rel="foo" href="foo" />
+        </head>
+        <body>hello world</body>
+      </html>,
+    );
+  });
+
+  // @gate enableFloat
   it('can acquire a resource after releasing it in the same commit', async () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(
@@ -1208,7 +1234,6 @@ describe('ReactDOMFloat', () => {
         <html>
           <head>
             <link rel="stylesheet" href="aresource" data-precedence="foo" />
-            <link rel="preload" href="aresource" as="style" />
           </head>
           <body>
             <div>hello world</div>
@@ -1372,7 +1397,6 @@ describe('ReactDOMFloat', () => {
         <html>
           <head>
             <link rel="stylesheet" href="foo" data-precedence="foo" />
-            <link rel="preload" href="foo" as="style" />
           </head>
           <body>hello world</body>
         </html>,
@@ -1425,7 +1449,6 @@ describe('ReactDOMFloat', () => {
             <link rel="stylesheet" href="foo" data-precedence="foo" />
             <link rel="stylesheet" href="bar" data-precedence="bar" />
             <link rel="stylesheet" href="qux" data-precedence="qux" />
-            <link rel="preload" href="qux" as="style" />
           </head>
           <body>client</body>
         </html>,
@@ -1503,8 +1526,6 @@ describe('ReactDOMFloat', () => {
           <head>
             <link rel="stylesheet" href="foo" data-precedence="foo" />
             <link rel="stylesheet" href="bar" data-precedence="bar" />
-            <link rel="preload" href="foo" as="style" />
-            <link rel="preload" href="bar" as="style" />
           </head>
           <body>hello</body>
         </html>,
@@ -1530,8 +1551,6 @@ describe('ReactDOMFloat', () => {
             <link rel="stylesheet" href="foo" data-precedence="foo" />
             <link rel="stylesheet" href="bar" data-precedence="bar" />
             <link rel="stylesheet" href="baz" data-precedence="baz" />
-            <link rel="preload" href="foo" as="style" />
-            <link rel="preload" href="bar" as="style" />
             <link rel="preload" href="baz" as="style" />
           </head>
           <body>hello</body>

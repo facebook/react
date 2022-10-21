@@ -745,6 +745,9 @@ export function clearContainer(container: Container): void {
 function clearContainerChildren(container: Node) {
   let node;
   let nextNode: ?Node = container.firstChild;
+  if (nextNode && nextNode.nodeType === DOCUMENT_TYPE_NODE) {
+    nextNode = nextNode.nextSibling;
+  }
   while (nextNode) {
     node = nextNode;
     nextNode = nextNode.nextSibling;
@@ -770,11 +773,7 @@ function clearContainerChildren(container: Node) {
         }
       }
     }
-    if (node.nodeType === DOCUMENT_TYPE_NODE || isMarkedResource(node)) {
-      // we retain document nodes and resources
-    } else {
-      container.removeChild(node);
-    }
+    container.removeChild(node);
   }
   return;
 }
@@ -1674,10 +1673,8 @@ export function clearSingleton(instance: Instance): void {
   while (node) {
     const nextNode = node.nextSibling;
     const nodeName = node.nodeName;
-    if (getInstanceFromNodeDOMTree(node) || isMarkedResource(node)) {
-      // retain nodes owned by React
-    } else if (
-      nodeName === 'TITLE' ||
+    if (
+      isMarkedResource(node) ||
       nodeName === 'HEAD' ||
       nodeName === 'BODY' ||
       nodeName === 'STYLE' ||
