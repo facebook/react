@@ -236,6 +236,47 @@ describe('ReactDOMFloat', () => {
   }
 
   // @gate enableFloat
+  it('can acquire a resource after releasing it in the same commit', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    root.render(
+      <>
+        <title>foo</title>
+      </>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <title>foo</title>
+        </head>
+        <body>
+          <div id="container" />
+        </body>
+      </html>,
+    );
+
+    // title is keyed off children so this second resource should match the first one
+    root.render(
+      <>
+        {null}
+        <title data-new="new">foo</title>
+      </>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    // we don't see the attribute because the resource is the same and was not reconstructed
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <title>foo</title>
+        </head>
+        <body>
+          <div id="container" />
+        </body>
+      </html>,
+    );
+  });
+
+  // @gate enableFloat
   it('errors if the document does not contain a head when inserting a resource', async () => {
     document.head.parentNode.removeChild(document.head);
     const root = ReactDOMClient.createRoot(document);
