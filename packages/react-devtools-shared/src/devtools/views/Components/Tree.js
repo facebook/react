@@ -346,7 +346,7 @@ export default function Tree(props: Props): React.Node {
 
   const zeroElementsNotice = (
     <div className={styles.ZeroElementsNotice}>
-      <p>Loading elements from the React app...</p>
+      <p>Loading React Element Tree...</p>
       <p>
         If this seems stuck, please follow the{' '}
         <a
