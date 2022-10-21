@@ -444,10 +444,18 @@ export function getResource(
         matcher = 'meta[charset]';
       } else if (typeof content === 'string') {
         if (typeof httpEquiv === 'string') {
-          matcher = `meta[http-equiv="${httpEquiv}"][content="${content}"]`;
+          matcher = `meta[http-equiv="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            httpEquiv,
+          )}"][content="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            content,
+          )}"]`;
         } else if (typeof property === 'string') {
           propertyString = property;
-          matcher = `meta[property="${property}"][content="${content}"]`;
+          matcher = `meta[property="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            property,
+          )}"][content="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            content,
+          )}"]`;
 
           const parentPropertyPath = property
             .split(':')
@@ -460,9 +468,17 @@ export function getResource(
             matcher = parentResource.matcher + matcher;
           }
         } else if (typeof name === 'string') {
-          matcher = `meta[name="${name}"][content="${content}"]`;
+          matcher = `meta[name="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            name,
+          )}"][content="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            content,
+          )}"]`;
         } else if (typeof itemProp === 'string') {
-          matcher = `meta[itemprop="${itemProp}"][content="${content}"]`;
+          matcher = `meta[itemprop="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            itemProp,
+          )}"][content="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            content,
+          )}"]`;
         }
       }
       if (matcher) {
