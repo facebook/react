@@ -249,7 +249,14 @@ describe('ReactDOMFloat', () => {
         </html>
       </>,
     );
-    expect(Scheduler).toFlushWithoutYielding();
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+    } catch (e) {
+      // for DOMExceptions that happen when expecting this test to fail we need
+      // to clear the scheduler first otherwise the expected failure will fail
+      expect(Scheduler).toFlushWithoutYielding();
+      throw e;
+    }
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
