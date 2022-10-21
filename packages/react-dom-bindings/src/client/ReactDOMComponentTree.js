@@ -286,6 +286,7 @@ export function getResourcesFromRoot(root: FloatRoot): RootResources {
       styles: new Map(),
       scripts: new Map(),
       head: new Map(),
+      lastStructuredMeta: new Map(),
     };
   }
   return resources;
