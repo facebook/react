@@ -2,9 +2,9 @@
  * Copyright (c) Facebook, Inc. and its affiliates.
  */
 
-import type { PluginItem, TransformOptions } from "@babel/core";
+import type { TransformOptions } from "@babel/core";
 import { transform } from "@babel/standalone";
-import ReactForgetBabelPlugin, {
+import {
   createArrayLogger,
   createCompilerOutputs,
   getMostRecentCompilerContext,
@@ -14,6 +14,9 @@ import ReactForgetBabelPlugin, {
   type CompilerOutputs,
   type Diagnostic,
 } from "babel-plugin-react-forget";
+import { PassName } from "../../../dist/Pass";
+// @ts-ignore
+import ESLint from "eslint-browser";
 import type { InputFile } from "./stores";
 import { getBabelPlugins } from "./utils";
 
@@ -25,6 +28,27 @@ export type ForgetCompilerFlags = CompilerOptions["flags"];
 interface CompileResult {
   outputs: CompilerOutputs;
   diagnostics: Diagnostic[];
+}
+
+const ESLINT_CONFIG = {
+  parserOptions: {
+    ecmaVersion: "latest",
+    sourceType: "module",
+  },
+  rules: {
+    "no-use-before-define": "error",
+  },
+};
+
+/**
+ * Post-codegen pass to validate that the generated code does not introduce bugs.
+ * Note that the compiler currently incorrectly reorders code in some cases: this
+ * step detects this using ESLint's no-use-before-define rule at its strictest
+ * setting.
+ */
+function validateNoUseBeforeDefine(source: string) {
+  const linter = new ESLint.index.Linter();
+  return linter.verify(source, ESLINT_CONFIG);
 }
 
 export default function compile(
@@ -45,6 +69,8 @@ export default function compile(
   const forgetPlaygroundOptions: Partial<CompilerOptions> = {
     logger: createArrayLogger(forgetLogs),
     outputKinds: Object.values(OutputKind),
+    postCodegenValidator: validateNoUseBeforeDefine,
+    stopPass: PassName.Validator,
   };
   if (compilerFlags) {
     forgetPlaygroundOptions.flags = compilerFlags;
@@ -82,6 +108,17 @@ export default function compile(
     };
   } catch (e) {
     const context = getMostRecentCompilerContext();
+
+    outputs[OutputKind.JS] = `
+      function __COMPILATION_FAILED__() {
+        /**
+        ${(e as Error).message
+          .split("\n")
+          .map((line) => "   * " + line)
+          .join("\n")}
+         */
+      }
+    `;
 
     return {
       outputs,

@@ -1,0 +1,18 @@
+{
+  "name": "eslint-browser",
+  "version": "0.0.1",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "webpack --mode=development"
+  },
+  "dependencies": {
+    "eslint": "^8.25.0",
+    "hermes-eslint": "^0.9.0"
+  },
+  "devDependencies": {
+    "node-polyfill-webpack-plugin": "^2.0.1",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
+  }
+}
