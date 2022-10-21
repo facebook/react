@@ -64,6 +64,7 @@ import isArray from 'shared/isArray';
 import {
   prepareToRenderResources,
   finishRenderingResources,
+  resourcesFromElement,
   resourcesFromLink,
   resourcesFromScript,
   ReactDOMServerDispatcher,
@@ -1278,6 +1279,20 @@ function pushStartTitle(
   props: Object,
   responseState: ResponseState,
 ): ReactNodeList {
+  if (enableFloat && resourcesFromElement('title', props)) {
+    // We have converted this link exclusively to a resource and no longer
+    // need to emit it
+    return null;
+  }
+
+  return pushStartTitleImpl(target, props, responseState);
+}
+
+function pushStartTitleImpl(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+): ReactNodeList {
   target.push(startChunkForTag('title'));
 
   let children = null;
@@ -2310,6 +2325,7 @@ export function writeInitialResources(
     usedScriptPreloads,
     explicitStylePreloads,
     explicitScriptPreloads,
+    headResources,
   } = resources;
 
   fontPreloads.forEach(r => {
@@ -2360,6 +2376,18 @@ export function writeInitialResources(
   explicitScriptPreloads.forEach(flushLinkResource);
   explicitScriptPreloads.clear();
 
+  headResources.forEach(r => {
+    if (r.instanceType === 'title') {
+      pushStartTitleImpl(target, r.props, responseState);
+      if (typeof r.props.children === 'string') {
+        target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
+      }
+      pushEndInstance(target, target, 'title', r.props);
+    }
+    r.flushed = true;
+  });
+  headResources.clear();
+
   let i;
   let r = true;
   for (i = 0; i < target.length - 1; i++) {
@@ -2392,6 +2420,7 @@ export function writeImmediateResources(
     usedScriptPreloads,
     explicitStylePreloads,
     explicitScriptPreloads,
+    headResources,
   } = resources;
 
   fontPreloads.forEach(r => {
@@ -2421,6 +2450,18 @@ export function writeImmediateResources(
 
   explicitScriptPreloads.forEach(flushLinkResource);
   explicitScriptPreloads.clear();
+
+  headResources.forEach(r => {
+    if (r.instanceType === 'title') {
+      pushStartTitle(target, r.props, responseState);
+      if (typeof r.props.children === 'string') {
+        target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
+      }
+      pushEndInstance(target, target, 'title', r.props);
+    }
+    r.flushed = true;
+  });
+  headResources.clear();
 
   let i;
   let r = true;

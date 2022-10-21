@@ -155,8 +155,8 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head lang="es" data-foo="foo">
-          <title>Hello</title>
           <title>Hola</title>
+          <title>Hello</title>
         </head>
         <body />
       </html>,
@@ -241,8 +241,8 @@ describe('ReactDOM HostSingleton', () => {
           <link rel="preload" href="resource" as="style" />
           <link rel="preload" href="3rdparty" as="style" />
           <link rel="preload" href="3rdparty2" as="style" />
-          <link rel="stylesheet" href="resource" />
           <title>a server title</title>
+          <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
         </head>
@@ -287,10 +287,10 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-client-foo="foo">
         <head>
+          <title>a client title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
-          <title>a client title</title>
         </head>
         <body data-client-baz="baz">
           <style>
@@ -326,10 +326,10 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-client-foo="foo">
         <head>
+          <title>a client title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
-          <title>a client title</title>
           <meta />
         </head>
         <body data-client-baz="baz">
@@ -365,10 +365,10 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-client-foo="foo">
         <head>
+          <title>a client title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
-          <title>a client title</title>
         </head>
         <body data-client-baz="baz">
           <style>
@@ -401,10 +401,10 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-client-foo="foo">
         <head>
+          <title>a client title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
-          <title>a client title</title>
         </head>
         <body>
           <style>
@@ -472,19 +472,15 @@ describe('ReactDOM HostSingleton', () => {
       expect(Scheduler).toFlushWithoutYielding();
     }).toErrorDev(
       [
-        `Warning: Expected server HTML to contain a matching <title> in <head>.
-    in title (at **)
-    in head (at **)
+        `Warning: Expected server HTML to contain a matching <div> in <body>.
+    in div (at **)
+    in body (at **)
     in html (at **)`,
         `Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.`,
       ],
       {withoutStack: 1},
     );
     expect(hydrationErrors).toEqual([
-      [
-        'Hydration failed because the initial UI does not match what was rendered on the server.',
-        'at title',
-      ],
       [
         'Hydration failed because the initial UI does not match what was rendered on the server.',
         'at div',
@@ -502,10 +498,10 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-client-foo="foo">
         <head>
+          <title>a client title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
           <link rel="stylesheet" href="3rdparty2" />
-          <title>a client title</title>
         </head>
         <body data-client-baz="baz">
           <style>
@@ -768,9 +764,9 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head>
+          <title>something new</title>
           <link rel="stylesheet" href="headbefore" />
           <link rel="stylesheet" href="headafter" />
-          <title>something new</title>
         </head>
         <body>
           <link rel="stylesheet" href="bodybefore" />
@@ -804,9 +800,9 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head>
+          <title>something new</title>
           <link rel="stylesheet" href="before" />
           <link rel="stylesheet" href="after" />
-          <title>something new</title>
         </head>
         <body />
       </html>,
@@ -976,6 +972,39 @@ describe('ReactDOM HostSingleton', () => {
         <body>
           <div>foo</div>
         </body>
+      </html>,
+    );
+  });
+
+  // @gate enableHostSingletons
+  it('allows for hydrating without a head', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <body>foo</body>
+        </html>,
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>foo</body>
+      </html>,
+    );
+
+    ReactDOMClient.hydrateRoot(
+      document,
+      <html>
+        <body>foo</body>
+      </html>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>foo</body>
       </html>,
     );
   });
