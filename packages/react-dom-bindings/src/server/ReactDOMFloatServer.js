@@ -89,8 +89,20 @@ type MetaResource = {
   flushed: boolean,
 };
 
+type LinkProps = {
+  href: string,
+  rel: string,
+  [string]: mixed,
+};
+type LinkResource = {
+  type: 'link',
+  props: LinkProps,
+
+  flushed: boolean,
+};
+
 export type Resource = PreloadResource | StyleResource | ScriptResource;
-export type HeadResource = TitleResource | MetaResource;
+export type HeadResource = TitleResource | MetaResource | LinkResource;
 
 export type Resources = {
   // Request local cache
@@ -101,6 +113,7 @@ export type Resources = {
 
   // Flushing queues for Resource dependencies
   charset: null | MetaResource,
+  preconnects: Set<LinkResource>,
   fontPreloads: Set<PreloadResource>,
   // usedImagePreloads: Set<PreloadResource>,
   precedences: Map<string, Set<StyleResource>>,
@@ -131,6 +144,7 @@ export function createResources(): Resources {
 
     // cleared on flush
     charset: null,
+    preconnects: new Set(),
     fontPreloads: new Set(),
     // usedImagePreloads: new Set(),
     precedences: new Map(),
@@ -697,10 +711,11 @@ export function resourcesFromLink(props: Props): boolean {
   const resources = currentResources;
 
   const {rel, href} = props;
-  if (!href || typeof href !== 'string') {
+  if (!href || typeof href !== 'string' || !rel || typeof rel !== 'string') {
     return false;
   }
 
+  let key = '';
   switch (rel) {
     case 'stylesheet': {
       const {onLoad, onError, precedence, disabled} = props;
@@ -813,10 +828,37 @@ export function resourcesFromLink(props: Props): boolean {
           return true;
         }
       }
-      return false;
+      break;
     }
   }
-  return false;
+  if (props.onLoad || props.onError) {
+    return false;
+  }
+
+  const sizes = typeof props.sizes === 'string' ? props.sizes : '';
+  const media = typeof props.media === 'string' ? props.media : '';
+  key =
+    'rel:' + rel + '::href:' + href + '::sizes:' + sizes + '::media:' + media;
+  let resource = resources.headsMap.get(key);
+  if (!resource) {
+    resource = {
+      type: 'link',
+      props: Object.assign({}, props),
+      flushed: false,
+    };
+    resources.headsMap.set(key, resource);
+    switch (rel) {
+      case 'preconnect':
+      case 'dns-prefetch': {
+        resources.preconnects.add(resource);
+        break;
+      }
+      default: {
+        resources.headResources.add(resource);
+      }
+    }
+  }
+  return true;
 }
 
 // Construct a resource from link props.

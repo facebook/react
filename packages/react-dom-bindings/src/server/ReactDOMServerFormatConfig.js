@@ -2340,6 +2340,7 @@ export function writeInitialResources(
 
   const {
     charset,
+    preconnects,
     fontPreloads,
     precedences,
     usedStylePreloads,
@@ -2355,6 +2356,13 @@ export function writeInitialResources(
     charset.flushed = true;
     resources.charset = null;
   }
+
+  preconnects.forEach(r => {
+    // font preload Resources should not already be flushed so we elide this check
+    pushLinkImpl(target, r.props, responseState);
+    r.flushed = true;
+  });
+  preconnects.clear();
 
   fontPreloads.forEach(r => {
     // font preload Resources should not already be flushed so we elide this check
@@ -2418,6 +2426,10 @@ export function writeInitialResources(
         pushSelfClosing(target, r.props, 'meta', responseState);
         break;
       }
+      case 'link': {
+        pushLinkImpl(target, r.props, responseState);
+        break;
+      }
     }
     r.flushed = true;
   });
@@ -2450,6 +2462,7 @@ export function writeImmediateResources(
 
   const {
     charset,
+    preconnects,
     fontPreloads,
     usedStylePreloads,
     scripts,
@@ -2464,6 +2477,13 @@ export function writeImmediateResources(
     charset.flushed = true;
     resources.charset = null;
   }
+
+  preconnects.forEach(r => {
+    // font preload Resources should not already be flushed so we elide this check
+    pushLinkImpl(target, r.props, responseState);
+    r.flushed = true;
+  });
+  preconnects.clear();
 
   fontPreloads.forEach(r => {
     // font preload Resources should not already be flushed so we elide this check
@@ -2505,6 +2525,10 @@ export function writeImmediateResources(
       }
       case 'meta': {
         pushSelfClosing(target, r.props, 'meta', responseState);
+        break;
+      }
+      case 'link': {
+        pushLinkImpl(target, r.props, responseState);
         break;
       }
     }
