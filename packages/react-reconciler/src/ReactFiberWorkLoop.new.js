@@ -22,6 +22,7 @@ import type {
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent.new';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
+import type {ThenableState} from './ReactFiberThenable.new';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -265,10 +266,8 @@ import {
 } from './ReactFiberAct.new';
 import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent.new';
 import {
-  resetWakeableStateAfterEachAttempt,
-  resetThenableStateOnCompletion,
-  suspendedThenableDidResolve,
-  isTrackingSuspendedThenable,
+  getThenableStateAfterSuspending,
+  isThenableStateResolved,
 } from './ReactFiberThenable.new';
 import {schedulePostPaintCallback} from './ReactPostPaintCallback';
 
@@ -315,6 +314,7 @@ let workInProgressRootRenderLanes: Lanes = NoLanes;
 // immediately instead of unwinding the stack.
 let workInProgressIsSuspended: boolean = false;
 let workInProgressThrownValue: mixed = null;
+let workInProgressSuspendedThenableState: ThenableState | null = null;
 
 // Whether a ping listener was attached during this render. This is slightly
 // different that whether something suspended, because we don't add multiple
@@ -1686,8 +1686,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
       );
       interruptedWork = interruptedWork.return;
     }
-    resetWakeableStateAfterEachAttempt();
-    resetThenableStateOnCompletion();
   }
   workInProgressRoot = root;
   const rootWorkInProgress = createWorkInProgress(root.current, null);
@@ -1695,6 +1693,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressRootRenderLanes = renderLanes = lanes;
   workInProgressIsSuspended = false;
   workInProgressThrownValue = null;
+  workInProgressSuspendedThenableState = null;
   workInProgressRootDidAttachPingListener = false;
   workInProgressRootExitStatus = RootInProgress;
   workInProgressRootFatalError = null;
@@ -1729,6 +1728,7 @@ function handleThrow(root, thrownValue): void {
   // as suspending the execution of the work loop.
   workInProgressIsSuspended = true;
   workInProgressThrownValue = thrownValue;
+  workInProgressSuspendedThenableState = getThenableStateAfterSuspending();
 
   const erroredWork = workInProgress;
   if (erroredWork === null) {
@@ -2014,7 +2014,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
       break;
     } catch (thrownValue) {
       handleThrow(root, thrownValue);
-      if (isTrackingSuspendedThenable()) {
+      if (workInProgressSuspendedThenableState !== null) {
         // If this fiber just suspended, it's possible the data is already
         // cached. Yield to the main thread to give it a chance to ping. If
         // it does, we can retry immediately without unwinding the stack.
@@ -2117,13 +2117,14 @@ function resumeSuspendedUnitOfWork(
   // instead of unwinding the stack. It's a separate function to keep the
   // additional logic out of the work loop's hot path.
 
-  const wasPinged = suspendedThenableDidResolve();
-  resetWakeableStateAfterEachAttempt();
+  const wasPinged =
+    workInProgressSuspendedThenableState !== null &&
+    isThenableStateResolved(workInProgressSuspendedThenableState);
 
   if (!wasPinged) {
     // The thenable wasn't pinged. Return to the normal work loop. This will
     // unwind the stack, and potentially result in showing a fallback.
-    resetThenableStateOnCompletion();
+    workInProgressSuspendedThenableState = null;
 
     const returnFiber = unitOfWork.return;
     if (returnFiber === null || workInProgressRoot === null) {
@@ -2188,7 +2189,7 @@ function resumeSuspendedUnitOfWork(
   // The begin phase finished successfully without suspending. Reset the state
   // used to track the fiber while it was suspended. Then return to the normal
   // work loop.
-  resetThenableStateOnCompletion();
+  workInProgressSuspendedThenableState = null;
 
   resetCurrentDebugFiberInDEV();
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
@@ -2200,6 +2201,10 @@ function resumeSuspendedUnitOfWork(
   }
 
   ReactCurrentOwner.current = null;
+}
+
+export function getSuspendedThenableState(): ThenableState | null {
+  return workInProgressSuspendedThenableState;
 }
 
 function completeUnitOfWork(unitOfWork: Fiber): void {

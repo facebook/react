@@ -17,19 +17,49 @@ import type {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
 
-let suspendedThenable: Thenable<any> | null = null;
-let usedThenables: Array<Thenable<any> | void> | null = null;
+// TODO: Sparse arrays are bad for performance.
+export opaque type ThenableState = Array<Thenable<any> | void>;
 
-export function isTrackingSuspendedThenable(): boolean {
-  return suspendedThenable !== null;
+let thenableState: ThenableState | null = null;
+
+export function createThenableState(): ThenableState {
+  // The ThenableState is created the first time a component suspends. If it
+  // suspends again, we'll reuse the same state.
+  return [];
 }
 
-export function suspendedThenableDidResolve(): boolean {
-  if (suspendedThenable !== null) {
-    const status = suspendedThenable.status;
+export function prepareThenableState(prevThenableState: ThenableState | null) {
+  // This function is called before every function that might suspend
+  // with `use`. Right now, that's only Hooks, but in the future we'll use the
+  // same mechanism for unwrapping promises during reconciliation.
+  thenableState = prevThenableState;
+}
+
+export function getThenableStateAfterSuspending(): ThenableState | null {
+  // Called by the work loop so it can stash the thenable state. It will use
+  // the state to replay the component when the promise resolves.
+  if (
+    thenableState !== null &&
+    // If we only `use`-ed resolved promises, then there is no suspended state
+    // TODO: The only reason we do this is to distinguish between throwing a
+    // promise (old Suspense pattern) versus `use`-ing one. A better solution is
+    // for `use` to throw a special, opaque value instead of a promise.
+    !isThenableStateResolved(thenableState)
+  ) {
+    const state = thenableState;
+    thenableState = null;
+    return state;
+  }
+  return null;
+}
+
+export function isThenableStateResolved(thenables: ThenableState): boolean {
+  const lastThenable = thenables[thenables.length - 1];
+  if (lastThenable !== undefined) {
+    const status = lastThenable.status;
     return status === 'fulfilled' || status === 'rejected';
   }
-  return false;
+  return true;
 }
 
 export function trackUsedThenable<T>(thenable: Thenable<T>, index: number) {
@@ -37,13 +67,11 @@ export function trackUsedThenable<T>(thenable: Thenable<T>, index: number) {
     ReactCurrentActQueue.didUsePromise = true;
   }
 
-  if (usedThenables === null) {
-    usedThenables = [thenable];
+  if (thenableState === null) {
+    thenableState = [thenable];
   } else {
-    usedThenables[index] = thenable;
+    thenableState[index] = thenable;
   }
-
-  suspendedThenable = thenable;
 
   // We use an expando to track the status and result of a thenable so that we
   // can synchronously unwrap the value. Think of this as an extension of the
@@ -59,7 +87,6 @@ export function trackUsedThenable<T>(thenable: Thenable<T>, index: number) {
       // this thenable, because if we keep trying it will likely infinite loop
       // without ever resolving.
       // TODO: Log a warning?
-      suspendedThenable = null;
       break;
     default: {
       if (typeof thenable.status === 'string') {
@@ -91,19 +118,11 @@ export function trackUsedThenable<T>(thenable: Thenable<T>, index: number) {
   }
 }
 
-export function resetWakeableStateAfterEachAttempt() {
-  suspendedThenable = null;
-}
-
-export function resetThenableStateOnCompletion() {
-  usedThenables = null;
-}
-
 export function getPreviouslyUsedThenableAtIndex<T>(
   index: number,
 ): Thenable<T> | null {
-  if (usedThenables !== null) {
-    const thenable = usedThenables[index];
+  if (thenableState !== null) {
+    const thenable = thenableState[index];
     if (thenable !== undefined) {
       return thenable;
     }
