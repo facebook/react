@@ -30,6 +30,8 @@ export function createThenableState(): ThenableState {
   return [];
 }
 
+// TODO: Unify this with trackSuspendedThenable. It needs to support not only
+// `use`, but async components, too.
 export function trackSuspendedWakeable(wakeable: Wakeable) {
   // If this wakeable isn't already a thenable, turn it into one now. Then,
   // when we resume the work loop, we can check if its status is

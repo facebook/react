@@ -267,10 +267,9 @@ import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent.old
 import {
   resetWakeableStateAfterEachAttempt,
   resetThenableStateOnCompletion,
-  trackSuspendedWakeable,
   suspendedThenableDidResolve,
   isTrackingSuspendedThenable,
-} from './ReactFiberWakeable.old';
+} from './ReactFiberThenable.old';
 import {schedulePostPaintCallback} from './ReactPostPaintCallback';
 
 const ceil = Math.ceil;
@@ -1739,11 +1738,6 @@ function handleThrow(root, thrownValue): void {
     return;
   }
 
-  const isWakeable =
-    thrownValue !== null &&
-    typeof thrownValue === 'object' &&
-    typeof thrownValue.then === 'function';
-
   if (enableProfilerTimer && erroredWork.mode & ProfileMode) {
     // Record the time spent rendering before an error was thrown. This
     // avoids inaccurate Profiler durations in the case of a
@@ -1753,7 +1747,11 @@ function handleThrow(root, thrownValue): void {
 
   if (enableSchedulingProfiler) {
     markComponentRenderStopped();
-    if (isWakeable) {
+    if (
+      thrownValue !== null &&
+      typeof thrownValue === 'object' &&
+      typeof thrownValue.then === 'function'
+    ) {
       const wakeable: Wakeable = (thrownValue: any);
       markComponentSuspended(
         erroredWork,
@@ -1767,12 +1765,6 @@ function handleThrow(root, thrownValue): void {
         workInProgressRootRenderLanes,
       );
     }
-  }
-
-  if (isWakeable) {
-    const wakeable: Wakeable = (thrownValue: any);
-
-    trackSuspendedWakeable(wakeable);
   }
 }
 

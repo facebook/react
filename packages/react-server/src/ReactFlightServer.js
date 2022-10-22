@@ -16,7 +16,7 @@ import type {
   ModuleKey,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
-import type {ThenableState} from './ReactFlightWakeable';
+import type {ThenableState} from './ReactFlightThenable';
 import type {
   ReactProviderType,
   ServerContextJSONValue,
@@ -64,7 +64,7 @@ import {
   getActiveContext,
   rootContextSnapshot,
 } from './ReactFlightNewContext';
-import {trackSuspendedWakeable} from './ReactFlightWakeable';
+import {trackSuspendedWakeable} from './ReactFlightThenable';
 
 import {
   REACT_ELEMENT_TYPE,

@@ -26,6 +26,11 @@ describe('ReactWakeable', () => {
     return props.text;
   }
 
+  // This behavior was intentionally disabled to derisk the rollout of `use`.
+  // It changes the behavior of old, pre-`use` Suspense implementations. We may
+  // add this back; however, the plan is to migrate all existing Suspense code
+  // to `use`, so the extra code probably isn't worth it.
+  // @gate TODO
   test('if suspended fiber is pinged in a microtask, retry immediately without unwinding the stack', async () => {
     let resolved = false;
     function Async() {
