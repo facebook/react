@@ -106,8 +106,8 @@ function popHostContext(fiber: Fiber): void {
 }
 
 export {
-  getCurrentRootHostContainer,
   getHostContext,
+  getCurrentRootHostContainer,
   getRootHostContainer,
   popHostContainer,
   popHostContext,

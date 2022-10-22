@@ -153,6 +153,8 @@ if (__DEV__) {
 
     listItemTagAutoclosing: null,
     dlItemTagAutoclosing: null,
+
+    resourceFormOnly: true,
   };
 
   updatedAncestorInfo = function(oldInfo, tag) {
@@ -178,6 +180,10 @@ if (__DEV__) {
     ) {
       ancestorInfo.listItemTagAutoclosing = null;
       ancestorInfo.dlItemTagAutoclosing = null;
+    }
+
+    if (tag !== '#document' && tag !== 'html') {
+      ancestorInfo.resourceFormOnly = false;
     }
 
     ancestorInfo.current = info;
