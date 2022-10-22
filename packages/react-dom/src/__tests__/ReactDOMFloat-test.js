@@ -2047,20 +2047,15 @@ describe('ReactDOMFloat', () => {
           </html>
         </>,
       );
-      let caughtError = null;
-      let nextCaughtError = null;
       expect(() => {
         try {
           expect(Scheduler).toFlushWithoutYielding();
         } catch (e) {
-          caughtError = e;
           try {
             // We need to bleed off another error because this will flush after the
             // the test finishes and cause it to fail.
             expect(Scheduler).toFlushWithoutYielding();
-          } catch (f) {
-            nextCaughtError = f;
-          }
+          } catch (f) {}
         }
       }).toErrorDev(
         'Warning: validateDOMNesting(...): <link> cannot appear as a child of <#document>.' +
