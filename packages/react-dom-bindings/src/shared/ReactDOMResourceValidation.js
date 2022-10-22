@@ -11,7 +11,7 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 
 type Props = {[string]: mixed};
 
-export function validateUnmatchedLinkResourceProps(
+export function warnOnMissingHrefAndRel(
   pendingProps: Props,
   currentProps: ?Props,
 ) {
@@ -24,34 +24,52 @@ export function validateUnmatchedLinkResourceProps(
       const originalRelStatement = getValueDescriptorExpectingEnumForWarning(
         currentProps.rel,
       );
-      const pendingRelStatement = getValueDescriptorExpectingEnumForWarning(
+      const pendingRel = getValueDescriptorExpectingEnumForWarning(
         pendingProps.rel,
       );
-      const pendingHrefStatement =
-        typeof pendingProps.href === 'string'
-          ? ` and the updated href is "${pendingProps.href}"`
-          : '';
-      console.error(
-        'A <link> previously rendered as a %s but was updated with a rel type that is not' +
-          ' valid for a Resource type. Generally Resources are not expected to ever have updated' +
-          ' props however in some limited circumstances it can be valid when changing the href.' +
-          ' When React encounters props that invalidate the Resource it is the same as not rendering' +
-          ' a Resource at all. valid rel types for Resources are "stylesheet" and "preload". The previous' +
-          ' rel for this instance was %s. The updated rel is %s%s.',
-        originalResourceName,
-        originalRelStatement,
-        pendingRelStatement,
-        pendingHrefStatement,
+      const pendingHref = getValueDescriptorExpectingEnumForWarning(
+        pendingProps.href,
       );
+      if (typeof pendingProps.rel !== 'string') {
+        console.error(
+          'A <link> previously rendered as a %s with rel "%s" but was updated with an invalid rel: %s. When a link' +
+            ' does not have a valid rel prop it is not represented in the DOM. If this is intentional, instead' +
+            ' do not render the <link> anymore.',
+          originalResourceName,
+          originalRelStatement,
+          pendingRel,
+        );
+      } else if (typeof pendingProps.href !== 'string') {
+        console.error(
+          'A <link> previously rendered as a %s but was updated with an invalid href prop: %s. When a link' +
+            ' does not have a valid href prop it is not represented in the DOM. If this is intentional, instead' +
+            ' do not render the <link> anymore.',
+          originalResourceName,
+          pendingHref,
+        );
+      }
     } else {
-      const pendingRelStatement = getValueDescriptorExpectingEnumForWarning(
+      const pendingRel = getValueDescriptorExpectingEnumForWarning(
         pendingProps.rel,
       );
-      console.error(
-        'A <link> is rendering as a Resource but has an invalid rel property. The rel encountered is %s.' +
-          ' This is a bug in React.',
-        pendingRelStatement,
+      const pendingHref = getValueDescriptorExpectingEnumForWarning(
+        pendingProps.href,
       );
+      if (typeof pendingProps.rel !== 'string') {
+        console.error(
+          'A <link> is rendering with an invalid rel: %s. When a link' +
+            ' does not have a valid rel prop it is not represented in the DOM. If this is intentional, instead' +
+            ' do not render the <link> anymore.',
+          pendingRel,
+        );
+      } else if (typeof pendingProps.href !== 'string') {
+        console.error(
+          'A <link> is rendering with an invalid href: %s. When a link' +
+            ' does not have a valid href prop it is not represented in the DOM. If this is intentional, instead' +
+            ' do not render the <link> anymore.',
+          pendingHref,
+        );
+      }
     }
   }
 }

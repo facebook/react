@@ -389,29 +389,29 @@ describe('ReactDOMFloat', () => {
       root.render(
         <div>
           <link rel="stylesheet" href="foo" precedence="foo" />
+          <link rel="stylesheet" href="bar" precedence="foo" />
         </div>,
       );
       expect(Scheduler).toFlushWithoutYielding();
       root.render(
         <div>
-          <link rel="author" href="bar" />
+          <link rel={() => {}} href="bar" />
+          <link rel="foo" href={() => {}} />
         </div>,
       );
       expect(() => {
         expect(Scheduler).toFlushWithoutYielding();
-      }).toErrorDev(
-        'Warning: A <link> previously rendered as a Resource with href "foo" but was updated with a rel type that is not' +
-          ' valid for a Resource type. Generally Resources are not expected to ever have updated' +
-          ' props however in some limited circumstances it can be valid when changing the href.' +
-          ' When React encounters props that invalidate the Resource it is the same as not rendering' +
-          ' a Resource at all. valid rel types for Resources are "stylesheet" and "preload". The previous' +
-          ' rel for this instance was "stylesheet". The updated rel is "author" and the updated href is "bar".',
-      );
+      }).toErrorDev([
+        'Warning: A <link> previously rendered as a Resource with href "foo" with rel ""stylesheet"" but was updated with an invalid rel: something with type "function". When a link does not have a valid rel prop it is not represented in the DOM. If this is intentional, instead do not render the <link> anymore.',
+        'Warning: A <link> previously rendered as a Resource with href "bar" but was updated with an invalid href prop: something with type "function". When a link does not have a valid href prop it is not represented in the DOM. If this is intentional, instead do not render the <link> anymore.',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <link rel="stylesheet" href="bar" data-precedence="foo" />
             <link rel="preload" as="style" href="foo" />
+            <link rel="preload" as="style" href="bar" />
           </head>
           <body>
             <div id="container">
@@ -941,6 +941,170 @@ describe('ReactDOMFloat', () => {
   });
 
   describe('head resources', () => {
+    // @gate enableFloat
+    it('supports preconnects, prefetc-dns, and arbitrary other link types', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <head />
+            <body>
+              <div>hello world</div>
+            </body>
+            <link rel="foo" href="bar" />
+            <link rel="preload" href="bar" />
+            <link rel="preload" href="bar" as="style" />
+            <link rel="stylesheet" href="bar" precedence="default" />
+            <link rel="preconnect" href="bar" />
+            <link rel="dns-prefetch" href="bar" />
+            <link rel="icon" href="bar" />
+            <link rel="icon" href="bar" sizes="1x1" />
+            <link rel="icon" href="bar" media="foo" />
+            <link rel="shortcut icon" href="bar" />
+            <link rel="apple-touch-icon" href="bar" />
+          </html>,
+        );
+        pipe(writable);
+      });
+      // "preconnect" and "dns-prefetch" get hoisted to the front.
+      // All other generic links (not styles, or typed preloads)
+      // get emitted after styles and other higher priority Resources
+      // Sizes and Media are part of generic link keys
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preconnect" href="bar" />
+            <link rel="dns-prefetch" href="bar" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="foo" href="bar" />
+            <link rel="preload" href="bar" />
+            <link rel="icon" href="bar" />
+            <link rel="icon" href="bar" sizes="1x1" />
+            <link rel="icon" href="bar" media="foo" />
+            <link rel="shortcut icon" href="bar" />
+            <link rel="apple-touch-icon" href="bar" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+          <link rel="foo" href="bar" />
+          <link rel="preload" href="bar" />
+          <link rel="preload" href="bar" as="style" />
+          <link rel="stylesheet" href="bar" precedence="default" />
+          <link rel="preconnect" href="bar" />
+          <link rel="dns-prefetch" href="bar" />
+          <link rel="icon" href="bar" />
+          <link rel="icon" href="bar" sizes="1x1" />
+          <link rel="icon" href="bar" media="foo" />
+          <link rel="shortcut icon" href="bar" />
+          <link rel="apple-touch-icon" href="bar" />
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preconnect" href="bar" />
+            <link rel="dns-prefetch" href="bar" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="foo" href="bar" />
+            <link rel="preload" href="bar" />
+            <link rel="icon" href="bar" />
+            <link rel="icon" href="bar" sizes="1x1" />
+            <link rel="icon" href="bar" media="foo" />
+            <link rel="shortcut icon" href="bar" />
+            <link rel="apple-touch-icon" href="bar" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="preload" href="bar" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+    // @gate enableFloat
+    it('can render icons and apple-touch-icons as resources', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <>
+            <html>
+              <head />
+              <body>
+                <link rel="icon" href="foo" />
+                <div>hello world</div>
+              </body>
+            </html>
+            <link rel="apple-touch-icon" href="foo" />
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="icon" href="foo" />
+            <link rel="apple-touch-icon" href="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <link rel="apple-touch-icon" href="foo" />
+          <head />
+          <body>
+            <link rel="icon" href="foo" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="icon" href="foo" />
+            <link rel="apple-touch-icon" href="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
     // @gate enableFloat
     it('can hydrate the right instances for deeply nested structured metas', async () => {
       await actIntoEmptyDocument(() => {

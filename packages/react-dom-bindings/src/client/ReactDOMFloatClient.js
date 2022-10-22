@@ -13,7 +13,7 @@ import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
 const {Dispatcher} = ReactDOMSharedInternals;
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import {
-  validateUnmatchedLinkResourceProps,
+  warnOnMissingHrefAndRel,
   validatePreloadResourceDifference,
   validateURLKeyedUpdatedProps,
   validateStyleResourceDifference,
@@ -54,7 +54,7 @@ type StyleProps = {
   'data-precedence': string,
   [string]: mixed,
 };
-export type StyleResource = {
+type StyleResource = {
   type: 'style',
 
   // Ref count for resource
@@ -79,7 +79,7 @@ type ScriptProps = {
   src: string,
   [string]: mixed,
 };
-export type ScriptResource = {
+type ScriptResource = {
   type: 'script',
   src: string,
   props: ScriptProps,
@@ -88,12 +88,10 @@ export type ScriptResource = {
   root: FloatRoot,
 };
 
-export type HeadResource = TitleResource | MetaResource;
-
 type TitleProps = {
   [string]: mixed,
 };
-export type TitleResource = {
+type TitleResource = {
   type: 'title',
   props: TitleProps,
 
@@ -105,7 +103,7 @@ export type TitleResource = {
 type MetaProps = {
   [string]: mixed,
 };
-export type MetaResource = {
+type MetaResource = {
   type: 'meta',
   matcher: string,
   property: ?string,
@@ -117,8 +115,23 @@ export type MetaResource = {
   root: Document,
 };
 
+type LinkProps = {
+  href: string,
+  rel: string,
+  [string]: mixed,
+};
+type LinkResource = {
+  type: 'link',
+  props: LinkProps,
+
+  count: number,
+  instance: ?Element,
+  root: Document,
+};
+
 type Props = {[string]: mixed};
 
+type HeadResource = TitleResource | MetaResource | LinkResource;
 type Resource = StyleResource | ScriptResource | PreloadResource | HeadResource;
 
 export type RootResources = {
@@ -617,8 +630,30 @@ export function getResource(
           return null;
         }
         default: {
+          const {href, sizes, media} = pendingProps;
+          if (typeof rel === 'string' && typeof href === 'string') {
+            const sizeKey =
+              '::sizes:' + (typeof sizes === 'string' ? sizes : '');
+            const mediaKey =
+              '::media:' + (typeof media === 'string' ? media : '');
+            const key = 'rel:' + rel + '::href:' + href + sizeKey + mediaKey;
+            const headRoot = getDocumentFromRoot(resourceRoot);
+            const headResources = getResourcesFromRoot(headRoot).head;
+            let resource = headResources.get(key);
+            if (!resource) {
+              resource = {
+                type: 'link',
+                props: Object.assign({}, pendingProps),
+                count: 0,
+                instance: null,
+                root: headRoot,
+              };
+              headResources.set(key, resource);
+            }
+            return resource;
+          }
           if (__DEV__) {
-            validateUnmatchedLinkResourceProps(pendingProps, currentProps);
+            warnOnMissingHrefAndRel(pendingProps, currentProps);
           }
           return null;
         }
@@ -710,6 +745,7 @@ function scriptPropsFromRawProps(rawProps: ScriptQualifyingProps): ScriptProps {
 export function acquireResource(resource: Resource): Instance {
   switch (resource.type) {
     case 'title':
+    case 'link':
     case 'meta': {
       return acquireHeadResource(resource);
     }
@@ -732,6 +768,7 @@ export function acquireResource(resource: Resource): Instance {
 
 export function releaseResource(resource: Resource): void {
   switch (resource.type) {
+    case 'link':
     case 'title':
     case 'meta': {
       return releaseHeadResource(resource);
@@ -1050,6 +1087,41 @@ function acquireHeadResource(resource: HeadResource): Instance {
         insertResourceInstanceBefore(root, instance, insertBefore);
         break;
       }
+      case 'link': {
+        const linkProps: LinkProps = (props: any);
+        const limitedEscapedRel = escapeSelectorAttributeValueInsideDoubleQuotes(
+          linkProps.rel,
+        );
+        const limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(
+          linkProps.href,
+        );
+        let selector = `link[rel="${limitedEscapedRel}"][href="${limitedEscapedHref}"]`;
+        if (typeof linkProps.sizes === 'string') {
+          const limitedEscapedSizes = escapeSelectorAttributeValueInsideDoubleQuotes(
+            linkProps.sizes,
+          );
+          selector += `[sizes="${limitedEscapedSizes}"]`;
+        }
+        if (typeof linkProps.media === 'string') {
+          const limitedEscapedMedia = escapeSelectorAttributeValueInsideDoubleQuotes(
+            linkProps.media,
+          );
+          selector += `[media="${limitedEscapedMedia}"]`;
+        }
+        const existingEl = root.querySelector(selector);
+        if (existingEl) {
+          instance = resource.instance = existingEl;
+          markNodeAsResource(instance);
+          return instance;
+        }
+        instance = resource.instance = createResourceInstance(
+          type,
+          props,
+          root,
+        );
+        insertResourceInstanceBefore(root, instance, null);
+        return instance;
+      }
       default: {
         throw new Error(
           `acquireHeadResource encountered a resource type it did not expect: "${type}". This is a bug in React.`,
@@ -1265,26 +1337,27 @@ export function isHostResourceType(type: string, props: Props): boolean {
       return true;
     }
     case 'link': {
+      const {onLoad, onError} = props;
+      if (onLoad || onError) {
+        return false;
+      }
       switch (props.rel) {
         case 'stylesheet': {
           if (__DEV__) {
             validateLinkPropsForStyleResource(props);
           }
-          const {href, precedence, onLoad, onError, disabled} = props;
+          const {href, precedence, disabled} = props;
           return (
             typeof href === 'string' &&
             typeof precedence === 'string' &&
-            !onLoad &&
-            !onError &&
             disabled == null
           );
         }
-        case 'preload': {
-          const {href, onLoad, onError} = props;
-          return !onLoad && !onError && typeof href === 'string';
+        default: {
+          const {rel, href} = props;
+          return typeof href === 'string' && typeof rel === 'string';
         }
       }
-      return false;
     }
     case 'script': {
       // We don't validate because it is valid to use async with onLoad/onError unlike combining
