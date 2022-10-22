@@ -1421,7 +1421,6 @@ function pushStartTitle(
   target.push(endOfStartTag);
 
   if (__DEV__) {
-    const children = props.children;
     const childForValidation =
       Array.isArray(children) && children.length < 2
         ? children[0] || null
