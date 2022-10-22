@@ -8,7 +8,6 @@
  */
 
 import type {
-  Wakeable,
   Thenable,
   PendingThenable,
   FulfilledThenable,
@@ -18,14 +17,8 @@ import type {
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
 
-let suspendedThenable: Thenable<mixed> | null = null;
-let adHocSuspendCount: number = 0;
-
-// TODO: Sparse arrays are bad for performance.
+let suspendedThenable: Thenable<any> | null = null;
 let usedThenables: Array<Thenable<any> | void> | null = null;
-let lastUsedThenable: Thenable<any> | null = null;
-
-const MAX_AD_HOC_SUSPEND_COUNT = 50;
 
 export function isTrackingSuspendedThenable(): boolean {
   return suspendedThenable !== null;
@@ -39,22 +32,17 @@ export function suspendedThenableDidResolve(): boolean {
   return false;
 }
 
-export function trackSuspendedWakeable(wakeable: Wakeable) {
-  // If this wakeable isn't already a thenable, turn it into one now. Then,
-  // when we resume the work loop, we can check if its status is
-  // still pending.
-  // TODO: Get rid of the Wakeable type? It's superseded by UntrackedThenable.
-  const thenable: Thenable<mixed> = (wakeable: any);
-
-  if (thenable !== lastUsedThenable) {
-    // If this wakeable was not just `use`-d, it must be an ad hoc wakeable
-    // that was thrown by an older Suspense implementation. Keep a count of
-    // these so that we can detect an infinite ping loop.
-    // TODO: Once `use` throws an opaque signal instead of the actual thenable,
-    // a better way to count ad hoc suspends is whether an actual thenable
-    // is caught by the work loop.
-    adHocSuspendCount++;
+export function trackUsedThenable<T>(thenable: Thenable<T>, index: number) {
+  if (__DEV__ && ReactCurrentActQueue.current !== null) {
+    ReactCurrentActQueue.didUsePromise = true;
   }
+
+  if (usedThenables === null) {
+    usedThenables = [thenable];
+  } else {
+    usedThenables[index] = thenable;
+  }
+
   suspendedThenable = thenable;
 
   // We use an expando to track the status and result of a thenable so that we
@@ -105,32 +93,10 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
 
 export function resetWakeableStateAfterEachAttempt() {
   suspendedThenable = null;
-  adHocSuspendCount = 0;
-  lastUsedThenable = null;
 }
 
 export function resetThenableStateOnCompletion() {
   usedThenables = null;
-}
-
-export function throwIfInfinitePingLoopDetected() {
-  if (adHocSuspendCount > MAX_AD_HOC_SUSPEND_COUNT) {
-    // TODO: Guard against an infinite loop by throwing an error if the same
-    // component suspends too many times in a row. This should be thrown from
-    // the render phase so that it gets the component stack.
-  }
-}
-
-export function trackUsedThenable<T>(thenable: Thenable<T>, index: number) {
-  if (usedThenables === null) {
-    usedThenables = [];
-  }
-  usedThenables[index] = thenable;
-  lastUsedThenable = thenable;
-
-  if (__DEV__ && ReactCurrentActQueue.current !== null) {
-    ReactCurrentActQueue.didUsePromise = true;
-  }
 }
 
 export function getPreviouslyUsedThenableAtIndex<T>(

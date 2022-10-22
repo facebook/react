@@ -21,7 +21,7 @@ import type {
 
 import type {ResponseState} from './ReactServerFormatConfig';
 import type {Task} from './ReactFizzServer';
-import type {ThenableState} from './ReactFizzWakeable';
+import type {ThenableState} from './ReactFizzThenable';
 
 import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
@@ -29,7 +29,7 @@ import {
   getPreviouslyUsedThenableAtIndex,
   createThenableState,
   trackUsedThenable,
-} from './ReactFizzWakeable';
+} from './ReactFizzThenable';
 
 import {makeId} from './ReactServerFormatConfig';
 
@@ -593,6 +593,7 @@ function use<T>(usable: Usable<T>): T {
       const index = thenableIndexCounter;
       thenableIndexCounter += 1;
 
+      // TODO: Unify this switch statement with the one in trackUsedThenable.
       switch (thenable.status) {
         case 'fulfilled': {
           const fulfilledValue: T = thenable.value;
