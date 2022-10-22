@@ -1,11 +1,19 @@
 /* global chrome */
 
 import nullthrows from 'nullthrows';
-import {installHook} from 'react-devtools-shared/src/hook';
 import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
+import {IS_FIREFOX} from '../utils';
 
-function injectCode(code) {
+function injectScriptSync(src) {
+  let code = '';
+  const request = new XMLHttpRequest();
+  request.addEventListener('load', function() {
+    code = this.responseText;
+  });
+  request.open('GET', src, false);
+  request.send();
+
   const script = document.createElement('script');
   script.textContent = code;
 
@@ -13,6 +21,15 @@ function injectCode(code) {
   // so we add the script to <html> instead.
   nullthrows(document.documentElement).appendChild(script);
   nullthrows(script.parentNode).removeChild(script);
+}
+
+function injectScriptAsync(src) {
+  const script = document.createElement('script');
+  script.src = src;
+  script.onload = function() {
+    script.remove();
+  };
+  nullthrows(document.documentElement).appendChild(script);
 }
 
 let lastDetectionResult;
@@ -77,10 +94,9 @@ window.addEventListener('message', function onMessage({data, source}) {
       }
       break;
     case 'react-devtools-inject-backend':
-      const script = document.createElement('script');
-      script.src = chrome.runtime.getURL('build/react_devtools_backend.js');
-      document.documentElement.appendChild(script);
-      script.parentNode.removeChild(script);
+      injectScriptAsync(
+        chrome.runtime.getURL('build/react_devtools_backend.js'),
+      );
       break;
   }
 });
@@ -96,38 +112,18 @@ window.addEventListener('pageshow', function({target}) {
   chrome.runtime.sendMessage(lastDetectionResult);
 });
 
-const detectReact = `
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on('renderer', function({reactBuildType}) {
-  window.postMessage({
-    source: 'react-devtools-detector',
-    reactBuildType,
-  }, '*');
-});
-`;
-const saveNativeValues = `
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeObjectCreate = Object.create;
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeMap = Map;
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeWeakMap = WeakMap;
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeSet = Set;
-`;
+// We create a "sync" script tag to page to inject the global hook on Manifest V2 extensions.
+// To comply with the new security policy in V3, we use chrome.scripting.registerContentScripts instead (see background.js).
+// However, the new API only works for Chrome v102+.
+// We insert a "async" script tag as a fallback for older versions.
+// It has known issues if JS on the page is faster than the extension.
+// Users will see a notice in components tab when that happens (see <Tree>).
+// For Firefox, V3 is not ready, so sync injection is still the best approach.
+const injectScript = IS_FIREFOX ? injectScriptSync : injectScriptAsync;
 
 // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
 if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
-  const rendererURL = chrome.runtime.getURL('build/renderer.js');
-  let rendererCode;
-
-  // We need to inject in time to catch the initial mount.
-  // This means we need to synchronously read the renderer code itself,
-  // and synchronously inject it into the page.
-  // There are very few ways to actually do this.
-  // This seems to be the best approach.
-  const request = new XMLHttpRequest();
-  request.addEventListener('load', function() {
-    rendererCode = this.responseText;
-  });
-  request.open('GET', rendererURL, false);
-  request.send();
-  injectCode(rendererCode);
+  injectScript(chrome.runtime.getURL('build/renderer.js'));
 }
 
 // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
@@ -138,13 +134,7 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
 switch (document.contentType) {
   case 'text/html':
   case 'application/xhtml+xml': {
-    injectCode(
-      ';(' +
-        installHook.toString() +
-        '(window))' +
-        saveNativeValues +
-        detectReact,
-    );
+    injectScript(chrome.runtime.getURL('build/installHook.js'));
     break;
   }
 }

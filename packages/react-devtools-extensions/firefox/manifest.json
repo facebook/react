@@ -31,7 +31,9 @@
     "main.html",
     "panel.html",
     "build/react_devtools_backend.js",
-    "build/renderer.js"
+    "build/proxy.js",
+    "build/renderer.js",
+    "build/installHook.js"
   ],
   "background": {
     "scripts": [
@@ -50,7 +52,7 @@
         "<all_urls>"
       ],
       "js": [
-        "build/injectGlobalHook.js"
+        "build/prepareInjection.js"
       ],
       "run_at": "document_start"
     }

@@ -105,7 +105,12 @@ Or you could develop with a local HTTP server like [`serve`](https://www.npmjs.c
 
 **If your app is inside an iframe, a Chrome extension, React Native, or in another unusual environment**, try [the standalone version instead](https://github.com/facebook/react/tree/main/packages/react-devtools). Chrome apps are currently not inspectable.
 
+**If your Components tab is empty, refer to "Chrome v101 and earlier" section below**, please read the "the issue with Chrome v101 and earlier versions" part below.
+
 **If you still have issues** please [report them](https://github.com/facebook/react/issues/new?labels=Component:%20Developer%20Tools). Don't forget to specify your OS, browser version, extension version, and the exact instructions to reproduce the issue with a screenshot.
+
+### The Issue with Chrome v101 and earlier
+As we migrate to a Chrome Extension Manifest V3, we start to use a new method to hook the DevTools with the inspected page. This new method is more secure, but relies on a new API that's only supported in Chrome v102+. For Chrome v101 or earlier, we use a fallback method, which can cause malfunctions (e.g. empty React component tab) if the JS resources on your page is loaded from cache. Please upgrade to Chrome v102+ to avoid this issue.
 
 ## Local development
 The standalone DevTools app can be built and tested from source following the instructions below.
