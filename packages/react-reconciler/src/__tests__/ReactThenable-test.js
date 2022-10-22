@@ -8,7 +8,7 @@ let use;
 let Suspense;
 let startTransition;
 
-describe('ReactWakeable', () => {
+describe('ReactThenable', () => {
   beforeEach(() => {
     jest.resetModules();
 
@@ -241,6 +241,76 @@ describe('ReactWakeable', () => {
       });
     });
     expect(Scheduler).toHaveYielded(['Oops!', 'Oops!']);
+  });
+
+  // @gate enableUseHook
+  test('use(promise) in multiple components', async () => {
+    // This tests that the state for tracking promises is reset per component.
+    const promiseA = Promise.resolve('A');
+    const promiseB = Promise.resolve('B');
+    const promiseC = Promise.resolve('C');
+    const promiseD = Promise.resolve('D');
+
+    function Child({prefix}) {
+      return <Text text={prefix + use(promiseC) + use(promiseD)} />;
+    }
+
+    function Parent() {
+      return <Child prefix={use(promiseA) + use(promiseB)} />;
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Parent />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['ABCD']);
+    expect(root).toMatchRenderedOutput('ABCD');
+  });
+
+  // @gate enableUseHook
+  test('use(promise) in multiple sibling components', async () => {
+    // This tests that the state for tracking promises is reset per component.
+
+    const promiseA = {then: () => {}, status: 'pending', value: null};
+    const promiseB = {then: () => {}, status: 'pending', value: null};
+    const promiseC = {then: () => {}, status: 'fulfilled', value: 'C'};
+    const promiseD = {then: () => {}, status: 'fulfilled', value: 'D'};
+
+    function Sibling1({prefix}) {
+      return <Text text={use(promiseA) + use(promiseB)} />;
+    }
+
+    function Sibling2() {
+      return <Text text={use(promiseC) + use(promiseD)} />;
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Sibling1 />
+          <Sibling2 />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['CD', 'Loading...']);
+    expect(root).toMatchRenderedOutput('Loading...');
   });
 
   // @gate enableUseHook

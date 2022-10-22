@@ -102,6 +102,7 @@ import {
   requestEventTime,
   markSkippedUpdateLanes,
   isInvalidExecutionContextForEventFunction,
+  getSuspendedThenableState,
 } from './ReactFiberWorkLoop.new';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -134,6 +135,7 @@ import {
 import {getTreeId} from './ReactFiberTreeContext.new';
 import {now} from './Scheduler';
 import {
+  prepareThenableState,
   trackUsedThenable,
   getPreviouslyUsedThenableAtIndex,
 } from './ReactFiberThenable.new';
@@ -465,6 +467,9 @@ export function renderWithHooks<Props, SecondArg>(
         : HooksDispatcherOnUpdate;
   }
 
+  // If this is a replay, restore the thenable state from the previous attempt.
+  const prevThenableState = getSuspendedThenableState();
+  prepareThenableState(prevThenableState);
   let children = Component(props, secondArg);
 
   // Check if there was a render phase update
@@ -506,6 +511,7 @@ export function renderWithHooks<Props, SecondArg>(
         ? HooksDispatcherOnRerenderInDEV
         : HooksDispatcherOnRerender;
 
+      prepareThenableState(prevThenableState);
       children = Component(props, secondArg);
     } while (didScheduleRenderPhaseUpdateDuringThisPass);
   }
