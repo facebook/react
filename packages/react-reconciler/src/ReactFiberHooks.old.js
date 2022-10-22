@@ -136,7 +136,7 @@ import {now} from './Scheduler';
 import {
   trackUsedThenable,
   getPreviouslyUsedThenableAtIndex,
-} from './ReactFiberWakeable.old';
+} from './ReactFiberThenable.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 

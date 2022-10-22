@@ -30,7 +30,7 @@ import type {
 import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
-import type {ThenableState} from './ReactFizzWakeable';
+import type {ThenableState} from './ReactFizzThenable';
 
 import {
   scheduleWork,
@@ -139,7 +139,7 @@ import {
 import assign from 'shared/assign';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
-import {trackSuspendedWakeable} from './ReactFizzWakeable';
+import {trackSuspendedWakeable} from './ReactFizzThenable';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;

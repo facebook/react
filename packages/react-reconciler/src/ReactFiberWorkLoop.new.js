@@ -270,7 +270,7 @@ import {
   trackSuspendedWakeable,
   suspendedThenableDidResolve,
   isTrackingSuspendedThenable,
-} from './ReactFiberWakeable.new';
+} from './ReactFiberThenable.new';
 import {schedulePostPaintCallback} from './ReactPostPaintCallback';
 
 const ceil = Math.ceil;

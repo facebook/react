@@ -10,7 +10,7 @@
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Request} from './ReactFlightServer';
 import type {ReactServerContext, Thenable, Usable} from 'shared/ReactTypes';
-import type {ThenableState} from './ReactFlightWakeable';
+import type {ThenableState} from './ReactFlightThenable';
 import {
   REACT_SERVER_CONTEXT_TYPE,
   REACT_MEMO_CACHE_SENTINEL,
@@ -21,7 +21,7 @@ import {
   getPreviouslyUsedThenableAtIndex,
   createThenableState,
   trackUsedThenable,
-} from './ReactFlightWakeable';
+} from './ReactFlightThenable';
 
 let currentRequest = null;
 let thenableIndexCounter = 0;
