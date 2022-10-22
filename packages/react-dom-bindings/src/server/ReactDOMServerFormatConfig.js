@@ -1294,21 +1294,102 @@ function pushStartMenuItem(
   return null;
 }
 
-function pushStartTitle(
+function pushTitle(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
 ): ReactNodeList {
+  if (__DEV__) {
+    const children = props.children;
+    const childForValidation =
+      Array.isArray(children) && children.length < 2
+        ? children[0] || null
+        : children;
+    if (Array.isArray(children) && children.length > 1) {
+      console.error(
+        'A title element received an array with more than 1 element as children. ' +
+          'In browsers title Elements can only have Text Nodes as children. If ' +
+          'the children being rendered output more than a single text node in aggregate the browser ' +
+          'will display markup and comments as text in the title and hydration will likely fail and ' +
+          'fall back to client rendering',
+      );
+    } else if (
+      childForValidation != null &&
+      childForValidation.$$typeof != null
+    ) {
+      console.error(
+        'A title element received a React element for children. ' +
+          'In the browser title Elements can only have Text Nodes as children. If ' +
+          'the children being rendered output more than a single text node in aggregate the browser ' +
+          'will display markup and comments as text in the title and hydration will likely fail and ' +
+          'fall back to client rendering',
+      );
+    } else if (
+      childForValidation != null &&
+      typeof childForValidation !== 'string' &&
+      typeof childForValidation !== 'number'
+    ) {
+      console.error(
+        'A title element received a value that was not a string or number for children. ' +
+          'In the browser title Elements can only have Text Nodes as children. If ' +
+          'the children being rendered output more than a single text node in aggregate the browser ' +
+          'will display markup and comments as text in the title and hydration will likely fail and ' +
+          'fall back to client rendering',
+      );
+    }
+  }
+
   if (enableFloat && resourcesFromElement('title', props)) {
     // We have converted this link exclusively to a resource and no longer
     // need to emit it
     return null;
   }
-
-  return pushStartTitleImpl(target, props, responseState);
+  return pushTitleImpl(target, props, responseState);
 }
 
-function pushStartTitleImpl(
+function pushTitleImpl(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+): null {
+  target.push(startChunkForTag('title'));
+
+  let children = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          throw new Error(
+            '`dangerouslySetInnerHTML` does not make sense on <title>.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+  target.push(endOfStartTag);
+
+  const child =
+    Array.isArray(children) && children.length < 2
+      ? children[0] || null
+      : children;
+  if (typeof child === 'string' || typeof child === 'number') {
+    target.push(stringToChunk(escapeTextForBrowser(child)));
+  }
+  target.push(endTag1, stringToChunk('title'), endTag2);
+  return null;
+}
+
+function pushStartTitle(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
@@ -1340,7 +1421,7 @@ function pushStartTitleImpl(
   target.push(endOfStartTag);
 
   if (__DEV__) {
-    const child =
+    const childForValidation =
       Array.isArray(children) && children.length < 2
         ? children[0] || null
         : children;
@@ -1352,7 +1433,10 @@ function pushStartTitleImpl(
           'will display markup and comments as text in the title and hydration will likely fail and ' +
           'fall back to client rendering',
       );
-    } else if (child != null && child.$$typeof != null) {
+    } else if (
+      childForValidation != null &&
+      childForValidation.$$typeof != null
+    ) {
       console.error(
         'A title element received a React element for children. ' +
           'In the browser title Elements can only have Text Nodes as children. If ' +
@@ -1361,9 +1445,9 @@ function pushStartTitleImpl(
           'fall back to client rendering',
       );
     } else if (
-      child != null &&
-      typeof child !== 'string' &&
-      typeof child !== 'number'
+      childForValidation != null &&
+      typeof childForValidation !== 'string' &&
+      typeof childForValidation !== 'number'
     ) {
       console.error(
         'A title element received a value that was not a string or number for children. ' +
@@ -1374,6 +1458,7 @@ function pushStartTitleImpl(
       );
     }
   }
+
   return children;
 }
 
@@ -1410,12 +1495,12 @@ function pushStartHtml(
   return pushStartGenericElement(target, props, tag, responseState);
 }
 
-function pushStartScript(
+function pushScript(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
-): ReactNodeList {
+): null {
   if (enableFloat && resourcesFromScript(props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
@@ -1427,7 +1512,61 @@ function pushStartScript(
     return null;
   }
 
-  return pushStartGenericElement(target, props, 'script', responseState);
+  return pushScriptImpl(target, props, responseState);
+}
+
+function pushScriptImpl(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+): null {
+  target.push(startChunkForTag('script'));
+
+  let children = null;
+  let innerHTML = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          innerHTML = propValue;
+          break;
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+  target.push(endOfStartTag);
+
+  if (__DEV__) {
+    if (children != null && typeof children !== 'string') {
+      const descriptiveStatement =
+        typeof children === 'number'
+          ? 'a number for children'
+          : Array.isArray(children)
+          ? 'an array for children'
+          : 'something unexpected for children';
+      console.error(
+        'A script element was rendered with %s. If script element has children it must be a single string.' +
+          ' Consider using dangerouslySetInnerHTML or passing a plain string as children.',
+        descriptiveStatement,
+      );
+    }
+  }
+
+  pushInnerHTML(target, innerHTML, children);
+  if (typeof children === 'string') {
+    target.push(stringToChunk(encodeHTMLTextNode(children)));
+  }
+  target.push(endTag1, stringToChunk('script'), endTag2);
+  return null;
 }
 
 function pushStartGenericElement(
@@ -1703,11 +1842,15 @@ export function pushStartInstance(
     case 'menuitem':
       return pushStartMenuItem(target, props, responseState);
     case 'title':
-      return pushStartTitle(target, props, responseState);
+      return enableFloat
+        ? pushTitle(target, props, responseState)
+        : pushStartTitle(target, props, responseState);
     case 'link':
       return pushLink(target, props, responseState, textEmbedded);
     case 'script':
-      return pushStartScript(target, props, responseState, textEmbedded);
+      return enableFloat
+        ? pushScript(target, props, responseState, textEmbedded)
+        : pushStartGenericElement(target, props, type, responseState);
     case 'meta':
       return pushMeta(target, props, responseState, textEmbedded);
     // Newline eating tags
@@ -1777,9 +1920,19 @@ export function pushEndInstance(
   props: Object,
 ): void {
   switch (type) {
+    // When float is on we expect title and script tags to always be pushed in
+    // a unit and never return children. when we end up pushing the end tag we
+    // want to ensure there is no extra closing tag pushed
+    case 'title':
+    case 'script': {
+      if (!enableFloat) {
+        break;
+      }
+    }
     // Omitted close tags
     // TODO: Instead of repeating this switch we could try to pass a flag from above.
     // That would require returning a tuple. Which might be ok if it gets inlined.
+    // eslint-disable-next-line-no-fallthrough
     case 'area':
     case 'base':
     case 'br':
@@ -2396,8 +2549,7 @@ export function writeInitialResources(
 
   scripts.forEach(r => {
     // should never be flushed already
-    pushStartGenericElement(target, r.props, 'script', responseState);
-    pushEndInstance(target, target, 'script', r.props);
+    pushScriptImpl(target, r.props, responseState);
     r.flushed = true;
     r.hint.flushed = true;
   });
@@ -2415,11 +2567,7 @@ export function writeInitialResources(
   headResources.forEach(r => {
     switch (r.type) {
       case 'title': {
-        pushStartTitleImpl(target, r.props, responseState);
-        if (typeof r.props.children === 'string') {
-          target.push(stringToChunk(escapeTextForBrowser(r.props.children)));
-        }
-        pushEndInstance(target, target, 'title', r.props);
+        pushTitleImpl(target, r.props, responseState);
         break;
       }
       case 'meta': {
@@ -2516,11 +2664,7 @@ export function writeImmediateResources(
   headResources.forEach(r => {
     switch (r.type) {
       case 'title': {
-        pushStartTitleImpl(target, r.props, responseState);
-        if (typeof r.props.children === 'string') {
-          target.push(stringToChunk(escapeTextForBrowser(r.props.children)));
-        }
-        pushEndInstance(target, target, 'title', r.props);
+        pushTitleImpl(target, r.props, responseState);
         break;
       }
       case 'meta': {

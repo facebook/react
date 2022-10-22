@@ -4957,9 +4957,14 @@ describe('ReactDOMFizzServer', () => {
           expect(mockError).not.toHaveBeenCalled();
         }
 
-        expect(getVisibleChildren(container)).toEqual(
-          <title>{'hello1<!-- -->hello2'}</title>,
-        );
+        if (gate(flags => flags.enableFloat)) {
+          // This title was invalid so it is not emitted
+          expect(getVisibleChildren(container)).toEqual(undefined);
+        } else {
+          expect(getVisibleChildren(container)).toEqual(
+            <title>{'hello1<!-- -->hello2'}</title>,
+          );
+        }
 
         const errors = [];
         ReactDOMClient.hydrateRoot(container, <App />, {
@@ -4970,11 +4975,8 @@ describe('ReactDOMFizzServer', () => {
         expect(Scheduler).toFlushAndYield([]);
         if (gate(flags => flags.enableFloat)) {
           expect(errors).toEqual([]);
-          // with float, the title doesn't render on the client because it is not a simple child
-          // we end up seeing the server rendered title
-          expect(getVisibleChildren(container)).toEqual(
-            <title>{'hello1<!-- -->hello2'}</title>,
-          );
+          // with float, the title doesn't render on the client or on the server
+          expect(getVisibleChildren(container)).toEqual(undefined);
         } else {
           expect(errors).toEqual(
             [
@@ -5039,7 +5041,12 @@ describe('ReactDOMFizzServer', () => {
           expect(mockError).not.toHaveBeenCalled();
         }
 
-        expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+        if (gate(flags => flags.enableFloat)) {
+          // invalid titles are not emitted on the server when float is on
+          expect(getVisibleChildren(container)).toEqual(undefined);
+        } else {
+          expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+        }
 
         const errors = [];
         ReactDOMClient.hydrateRoot(container, <App />, {
@@ -5049,7 +5056,12 @@ describe('ReactDOMFizzServer', () => {
         });
         expect(Scheduler).toFlushAndYield([]);
         expect(errors).toEqual([]);
-        expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+        if (gate(flags => flags.enableFloat)) {
+          // invalid titles are not emitted on the server when float is on
+          expect(getVisibleChildren(container)).toEqual(undefined);
+        } else {
+          expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
+        }
       } finally {
         console.error = originalConsoleError;
       }
@@ -5413,5 +5425,79 @@ describe('ReactDOMFizzServer', () => {
       expect(errors.length).toEqual(2);
       expect(getVisibleChildren(container)).toEqual(<span />);
     });
+  });
+
+  it('can render scripts with simple children', async () => {
+    await actIntoEmptyDocument(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <body>
+            <script>{'try { foo() } catch (e) {} ;'}</script>
+          </body>
+        </html>,
+      );
+      pipe(writable);
+    });
+
+    expect(document.documentElement.outerHTML).toEqual(
+      '<html><head></head><body><script>try { foo() } catch (e) {} ;</script></body></html>',
+    );
+  });
+
+  // @gate enableFloat
+  it('warns if script has complex children', async () => {
+    function MyScript() {
+      return 'bar();';
+    }
+    const originalConsoleError = console.error;
+    const mockError = jest.fn();
+    console.error = (...args) => {
+      mockError(...args.map(normalizeCodeLocInfo));
+    };
+
+    try {
+      await actIntoEmptyDocument(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <body>
+              <script>{2}</script>
+              <script>
+                {[
+                  'try { foo() } catch (e) {} ;',
+                  'try { bar() } catch (e) {} ;',
+                ]}
+              </script>
+              <script>
+                <MyScript />
+              </script>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+
+      if (__DEV__) {
+        expect(mockError.mock.calls.length).toBe(3);
+        expect(mockError.mock.calls[0]).toEqual([
+          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'a number for children',
+          componentStack(['script', 'body', 'html']),
+        ]);
+        expect(mockError.mock.calls[1]).toEqual([
+          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'an array for children',
+          componentStack(['script', 'body', 'html']),
+        ]);
+        expect(mockError.mock.calls[2]).toEqual([
+          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'something unexpected for children',
+          componentStack(['script', 'body', 'html']),
+        ]);
+      } else {
+        expect(mockError.mock.calls.length).toBe(0);
+      }
+    } finally {
+      console.error = originalConsoleError;
+    }
   });
 });
