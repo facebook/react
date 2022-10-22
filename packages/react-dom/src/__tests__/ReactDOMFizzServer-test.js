@@ -5432,7 +5432,7 @@ describe('ReactDOMFizzServer', () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <html>
           <body>
-            <script>{'foo();'}</script>
+            <script>{'try { foo() } catch (e) {} ;'}</script>
           </body>
         </html>,
       );
@@ -5440,7 +5440,7 @@ describe('ReactDOMFizzServer', () => {
     });
 
     expect(document.documentElement.outerHTML).toEqual(
-      '<html><head></head><body><script>foo();</script></body></html>',
+      '<html><head></head><body><script>try { foo() } catch (e) {} ;</script></body></html>',
     );
   });
 
@@ -5461,7 +5461,12 @@ describe('ReactDOMFizzServer', () => {
           <html>
             <body>
               <script>{2}</script>
-              <script>{['foo();', 'bar();']}</script>
+              <script>
+                {[
+                  'try { foo() } catch (e) {} ;',
+                  'try { bar() } catch (e) {} ;',
+                ]}
+              </script>
               <script>
                 <MyScript />
               </script>
@@ -5471,22 +5476,26 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
 
-      expect(mockError.mock.calls.length).toBe(3);
-      expect(mockError.mock.calls[0]).toEqual([
-        'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
-        'a number for children',
-        componentStack(['script', 'body', 'html']),
-      ]);
-      expect(mockError.mock.calls[1]).toEqual([
-        'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
-        'an array for children',
-        componentStack(['script', 'body', 'html']),
-      ]);
-      expect(mockError.mock.calls[2]).toEqual([
-        'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
-        'something unexpected for children',
-        componentStack(['script', 'body', 'html']),
-      ]);
+      if (__DEV__) {
+        expect(mockError.mock.calls.length).toBe(3);
+        expect(mockError.mock.calls[0]).toEqual([
+          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'a number for children',
+          componentStack(['script', 'body', 'html']),
+        ]);
+        expect(mockError.mock.calls[1]).toEqual([
+          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'an array for children',
+          componentStack(['script', 'body', 'html']),
+        ]);
+        expect(mockError.mock.calls[2]).toEqual([
+          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'something unexpected for children',
+          componentStack(['script', 'body', 'html']),
+        ]);
+      } else {
+        expect(mockError.mock.calls.length).toBe(0);
+      }
     } finally {
       console.error = originalConsoleError;
     }
