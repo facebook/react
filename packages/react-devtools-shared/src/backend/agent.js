@@ -156,6 +156,8 @@ export default class Agent extends EventEmitter<{
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
   _traceUpdatesEnabled: boolean = false;
+  startInspectingNative: () => void;
+  stopInspectingNative: () => void;
 
   constructor(bridge: BackendBridge) {
     super();

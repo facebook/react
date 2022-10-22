@@ -77,3 +77,21 @@ if (!backendInitialized) {
     }
   }, 500);
 }
+
+// listen message coming from background script
+chrome.runtime.onMessage.addListener(request => {
+  // If the message is related to hotkeys / command being triggered
+  if (request.command) {
+    // Pass hotkeys / command to page scripts since hotkeys is usually have something to do with the devtools itself
+    window.postMessage(
+      {
+        source: 'react-devtools-content-script',
+        payload: {
+          type: 'command',
+          command: request.command,
+        },
+      },
+      '*',
+    );
+  }
+});

@@ -105,4 +105,24 @@ function setup(hook) {
       hook.nativeStyleEditorValidAttributes,
     );
   }
+
+  // listen message coming from content script
+  window.addEventListener('message', event => {
+    if (
+      !event.data ||
+      event.data.source !== 'react-devtools-content-script' ||
+      !event.data.payload ||
+      event.data.payload.type !== 'command' ||
+      !event.data.payload.command
+    ) {
+      return;
+    }
+    switch (event.data.payload.command) {
+      case 'inspect_node':
+        agent.startInspectingNative();
+        return;
+      default:
+        return;
+    }
+  });
 }

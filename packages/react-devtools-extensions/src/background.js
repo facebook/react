@@ -141,3 +141,19 @@ chrome.runtime.onMessage.addListener((request, sender) => {
     }
   }
 });
+
+// Add hotkeys/commands here
+chrome.commands.onCommand.addListener(command => {
+  switch (command) {
+    case 'inspect_node': {
+      // this specific hotkey need to activate a function within the page scripts
+      // we need signal the action to content script first and then passed it on to page script
+      chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+        chrome.tabs.sendMessage(tabs[0].id, {command: 'inspect_node'});
+      });
+      return;
+    }
+    default:
+      return;
+  }
+});
