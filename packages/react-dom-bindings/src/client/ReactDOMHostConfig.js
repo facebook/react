@@ -133,7 +133,7 @@ export interface SuspenseInstance extends Comment {
 }
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
-export type HostContextDev = {
+type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
   ...

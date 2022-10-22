@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Instance, Container, HostContextDev} from './ReactDOMHostConfig';
+import type {Instance, Container} from './ReactDOMHostConfig';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
 const {Dispatcher} = ReactDOMSharedInternals;
@@ -33,6 +33,7 @@ import {
   getCurrentRootHostContainer,
   getHostContext,
 } from 'react-reconciler/src/ReactFiberHostContext';
+import {getResourceFormOnly} from './validateDOMNesting';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
@@ -1336,8 +1337,8 @@ function insertResourceInstanceBefore(
 export function isHostResourceType(type: string, props: Props): boolean {
   let resourceFormOnly: boolean;
   if (__DEV__) {
-    const hostContextDev: HostContextDev = (getHostContext(): any);
-    resourceFormOnly = (hostContextDev.ancestorInfo: any).resourceFormOnly;
+    const hostContext = getHostContext();
+    resourceFormOnly = getResourceFormOnly(hostContext);
   }
   switch (type) {
     case 'meta':

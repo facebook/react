@@ -7,6 +7,7 @@
 
 let validateDOMNesting = () => {};
 let updatedAncestorInfo = () => {};
+let getResourceFormOnly = () => false;
 
 if (__DEV__) {
   // This validation code was written based on the HTML5 parsing spec:
@@ -478,6 +479,10 @@ if (__DEV__) {
       );
     }
   };
+
+  getResourceFormOnly = hostContextDev => {
+    return hostContextDev.ancestorInfo.resourceFormOnly;
+  };
 }
 
-export {updatedAncestorInfo, validateDOMNesting};
+export {updatedAncestorInfo, validateDOMNesting, getResourceFormOnly};
