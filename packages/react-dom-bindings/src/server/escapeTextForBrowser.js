@@ -28,6 +28,8 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * @flow
  */
 
 // code copied and modified from escape-html
@@ -103,12 +105,12 @@ function escapeHtml(string) {
  * @param {*} text Text value to escape.
  * @return {string} An escaped string.
  */
-function escapeTextForBrowser(text) {
+function escapeTextForBrowser(text: string | number | boolean): string {
   if (typeof text === 'boolean' || typeof text === 'number') {
     // this shortcircuit helps perf for types that we know will never have
     // special characters, especially given that this function is used often
     // for numeric dom ids.
-    return '' + text;
+    return '' + (text: any);
   }
   return escapeHtml(text);
 }

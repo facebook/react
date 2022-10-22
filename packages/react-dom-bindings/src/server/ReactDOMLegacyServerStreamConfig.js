@@ -12,8 +12,8 @@ export interface Destination {
   destroy(error: Error): mixed;
 }
 
-export type PrecomputedChunk = string;
-export type Chunk = string;
+export opaque type PrecomputedChunk = string;
+export opaque type Chunk = string;
 
 export function scheduleWork(callback: () => void) {
   callback();

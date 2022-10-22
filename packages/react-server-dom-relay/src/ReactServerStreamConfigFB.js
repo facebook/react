@@ -14,8 +14,8 @@ export type Destination = {
   error: mixed,
 };
 
-export type PrecomputedChunk = string;
-export type Chunk = string;
+export opaque type PrecomputedChunk = string;
+export opaque type Chunk = string;
 
 export function scheduleWork(callback: () => void) {
   // We don't schedule work in this model, and instead expect performWork to always be called repeatedly.
