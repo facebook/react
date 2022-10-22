@@ -486,7 +486,7 @@ describe('ReactDOMFizzServerBrowser', () => {
   });
 
   // https://github.com/facebook/react/pull/25534/files - fix transposed escape functions
-  // @gate enableFloat
+  // not gated on enableFloat because this is also the correct behavior when float is off
   it('should encode title properly', async () => {
     const stream = await ReactDOMFizzServer.renderToReadableStream(
       <html>
