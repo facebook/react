@@ -82,3 +82,4 @@ export const createResources = $$$hostConfig.createResources;
 export const createBoundaryResources = $$$hostConfig.createBoundaryResources;
 export const setCurrentlyRenderingBoundaryResourcesTarget =
   $$$hostConfig.setCurrentlyRenderingBoundaryResourcesTarget;
+export const RESOURCE_SENTINAL = $$$hostConfig.RESOURCE_SENTINAL;

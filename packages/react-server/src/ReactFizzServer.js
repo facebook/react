@@ -74,6 +74,7 @@ import {
   setCurrentlyRenderingBoundaryResourcesTarget,
   createResources,
   createBoundaryResources,
+  RESOURCE_SENTINAL,
 } from './ReactServerFormatConfig';
 import {
   constructClassInstance,
@@ -694,7 +695,7 @@ function renderHostElement(
   pushBuiltInComponentStackInDEV(task, type);
   const segment = task.blockedSegment;
 
-  const children = pushStartInstance(
+  const childrenOrResource = pushStartInstance(
     segment.chunks,
     request.preamble,
     type,
@@ -703,6 +704,13 @@ function renderHostElement(
     segment.formatContext,
     segment.lastPushedText,
   );
+  if (enableFloat && childrenOrResource === RESOURCE_SENTINAL) {
+    // this push did not actually write to segment chunks because the element
+    // was a Resource. We pop the stack and return early.
+    popComponentStackInDEV(task);
+    return;
+  }
+  const children: ReactNodeList = (childrenOrResource: any);
   segment.lastPushedText = false;
   const prevContext = segment.formatContext;
   segment.formatContext = getChildFormatContext(prevContext, type, props);

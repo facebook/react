@@ -121,6 +121,8 @@ export function makeId(
 
 const RAW_TEXT = stringToPrecomputedChunk('RCTRawText');
 
+export const RESOURCE_SENTINAL: mixed = {};
+
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,

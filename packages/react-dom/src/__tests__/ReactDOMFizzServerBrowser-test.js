@@ -499,7 +499,7 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     const result = await readResult(stream);
     expect(result).toEqual(
-      '<!DOCTYPE html><html><head><title>foo</title></title></head><body>bar</body></html>',
+      '<!DOCTYPE html><html><head><title>foo</title></head><body>bar</body></html>',
     );
   });
 });

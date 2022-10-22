@@ -87,6 +87,7 @@ export {
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   makeId,
+  RESOURCE_SENTINAL,
   pushStartInstance,
   pushEndInstance,
   pushStartCompletedSuspenseBoundary,

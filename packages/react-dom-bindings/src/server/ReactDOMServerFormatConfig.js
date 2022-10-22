@@ -374,6 +374,11 @@ function encodeHTMLTextNode(text: string): string {
   return escapeTextForBrowser(text);
 }
 
+// This const is returned when a push is fully consumed as a Resource. The runtime
+// well compare it against the returned children and avoid pushing the end tag
+opaque type ResourceSentinel = mixed;
+export const RESOURCE_SENTINAL: ResourceSentinel = {};
+
 const textSeparator = stringToPrecomputedChunk('<!-- -->');
 
 export function pushTextInstance(
@@ -1155,7 +1160,7 @@ function pushMeta(
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
-): ReactNodeList {
+): ReactNodeList | ResourceSentinel {
   if (enableFloat && resourcesFromElement('meta', props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
@@ -1164,7 +1169,7 @@ function pushMeta(
     }
     // We have converted this link exclusively to a resource and no longer
     // need to emit it
-    return null;
+    return RESOURCE_SENTINAL;
   }
 
   return pushSelfClosing(target, props, 'meta', responseState);
@@ -1175,7 +1180,7 @@ function pushLink(
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
-): ReactNodeList {
+): ReactNodeList | ResourceSentinel {
   if (enableFloat && resourcesFromLink(props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
@@ -1184,7 +1189,7 @@ function pushLink(
     }
     // We have converted this link exclusively to a resource and no longer
     // need to emit it
-    return null;
+    return RESOURCE_SENTINAL;
   }
 
   return pushLinkImpl(target, props, responseState);
@@ -1298,11 +1303,11 @@ function pushStartTitle(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
-): ReactNodeList {
+): ReactNodeList | ResourceSentinel {
   if (enableFloat && resourcesFromElement('title', props)) {
     // We have converted this link exclusively to a resource and no longer
     // need to emit it
-    return null;
+    return RESOURCE_SENTINAL;
   }
 
   return pushStartTitleImpl(target, props, responseState);
@@ -1415,7 +1420,7 @@ function pushStartScript(
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
-): ReactNodeList {
+): ReactNodeList | ResourceSentinel {
   if (enableFloat && resourcesFromScript(props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
@@ -1424,7 +1429,7 @@ function pushStartScript(
     }
     // We have converted this link exclusively to a resource and no longer
     // need to emit it
-    return null;
+    return RESOURCE_SENTINAL;
   }
 
   return pushStartGenericElement(target, props, 'script', responseState);
@@ -1652,7 +1657,7 @@ export function pushStartInstance(
   responseState: ResponseState,
   formatContext: FormatContext,
   textEmbedded: boolean,
-): ReactNodeList {
+): ReactNodeList | ResourceSentinel {
   if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
@@ -1766,6 +1771,10 @@ export function pushStartInstance(
     }
   }
 }
+
+// function pushEndTitle(target: Array<Chunk | PrecomputedChunk>): void {
+//   if (enableFloat)
+// }
 
 const endTag1 = stringToPrecomputedChunk('</');
 const endTag2 = stringToPrecomputedChunk('>');
