@@ -2385,7 +2385,7 @@ export function writeInitialResources(
     } else {
       target.push(
         precedencePlaceholderStart,
-        escapeTextForBrowser(stringToChunk(precedence)),
+        stringToChunk(escapeTextForBrowser(precedence)),
         precedencePlaceholderEnd,
       );
     }
@@ -2417,7 +2417,7 @@ export function writeInitialResources(
       case 'title': {
         pushStartTitleImpl(target, r.props, responseState);
         if (typeof r.props.children === 'string') {
-          target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
+          target.push(stringToChunk(escapeTextForBrowser(r.props.children)));
         }
         pushEndInstance(target, target, 'title', r.props);
         break;
@@ -2518,7 +2518,7 @@ export function writeImmediateResources(
       case 'title': {
         pushStartTitleImpl(target, r.props, responseState);
         if (typeof r.props.children === 'string') {
-          target.push(escapeTextForBrowser(stringToChunk(r.props.children)));
+          target.push(stringToChunk(escapeTextForBrowser(r.props.children)));
         }
         pushEndInstance(target, target, 'title', r.props);
         break;
