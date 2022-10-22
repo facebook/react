@@ -48,6 +48,7 @@ const environmentFlags = {
 
   // Use this for tests that are known to be broken.
   FIXME: false,
+  TODO: false,
 
   // Turn these flags back on (or delete) once the effect list is removed in
   // favor of a depth-first traversal using `subtreeTags`.
