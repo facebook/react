@@ -486,7 +486,6 @@ describe('ReactDOMFizzServerBrowser', () => {
   });
 
   // https://github.com/facebook/react/pull/25534/files - fix transposed escape functions
-  // @gate enableFloat
   it('should encode title properly', async () => {
     const stream = await ReactDOMFizzServer.renderToReadableStream(
       <html>
@@ -499,7 +498,7 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     const result = await readResult(stream);
     expect(result).toEqual(
-      '<!DOCTYPE html><html><head><title>foo</title></title></head><body>bar</body></html>',
+      '<!DOCTYPE html><html><head><title>foo</title></head><body>bar</body></html>',
     );
   });
 });

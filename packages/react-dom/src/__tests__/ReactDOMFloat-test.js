@@ -382,6 +382,32 @@ describe('ReactDOMFloat', () => {
     );
   });
 
+  // @gate enableFloat
+  it('does not emit closing tags in out of order position when rendering a non-void resource type', async () => {
+    const chunks = [];
+
+    writable.on('data', chunk => {
+      chunks.push(chunk);
+    });
+
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <>
+          <title>foo</title>
+          <html>
+            <body>bar</body>
+          </html>
+          <script async={true} src="foo" />
+        </>,
+      );
+      pipe(writable);
+    });
+    expect(chunks).toEqual([
+      '<!DOCTYPE html><html><script async="" src="foo"></script><title>foo</title><body>bar',
+      '</body></html>',
+    ]);
+  });
+
   describe('HostResource', () => {
     // @gate enableFloat
     it('warns when you update props to an invalid type', async () => {
