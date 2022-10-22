@@ -268,6 +268,118 @@ describe('ReactDOMFloat', () => {
     );
   });
 
+  function renderSafelyAndExpect(root, children) {
+    root.render(children);
+    return expect(() => {
+      try {
+        expect(Scheduler).toFlushWithoutYielding();
+      } catch (e) {
+        try {
+          expect(Scheduler).toFlushWithoutYielding();
+        } catch (f) {}
+      }
+    });
+  }
+
+  // @gate enableFloat || !__DEV__
+  it('warns if you render resource-like elements above <head> or <body>', async () => {
+    const root = ReactDOMClient.createRoot(document);
+
+    renderSafelyAndExpect(
+      root,
+      <>
+        <noscript>foo</noscript>
+        <html>
+          <body>foo</body>
+        </html>
+      </>,
+    ).toErrorDev(
+      [
+        'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
+        'Warning: validateDOMNesting(...): <noscript> cannot appear as a child of <#document>.',
+      ],
+      {withoutStack: 1},
+    );
+
+    renderSafelyAndExpect(
+      root,
+      <html>
+        <template>foo</template>
+        <body>foo</body>
+      </html>,
+    ).toErrorDev([
+      'Cannot render <template> outside the main document. Try moving it into the root <head> tag.',
+      'Warning: validateDOMNesting(...): <template> cannot appear as a child of <html>.',
+    ]);
+
+    renderSafelyAndExpect(
+      root,
+      <html>
+        <body>foo</body>
+        <style>foo</style>
+      </html>,
+    ).toErrorDev([
+      'Cannot render <style> outside the main document. Try moving it into the root <head> tag.',
+      'Warning: validateDOMNesting(...): <style> cannot appear as a child of <html>.',
+    ]);
+
+    renderSafelyAndExpect(
+      root,
+      <>
+        <html>
+          <body>foo</body>
+        </html>
+        <link rel="stylesheet" href="foo" />
+      </>,
+    ).toErrorDev(
+      [
+        'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. Consider adding precedence="default" or moving it into the root <head> tag.',
+        'Warning: validateDOMNesting(...): <link> cannot appear as a child of <#document>.',
+      ],
+      {withoutStack: 1},
+    );
+
+    renderSafelyAndExpect(
+      root,
+      <>
+        <html>
+          <body>foo</body>
+          <script href="foo" />
+        </html>
+      </>,
+    ).toErrorDev([
+      'Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag.',
+      'Warning: validateDOMNesting(...): <script> cannot appear as a child of <html>.',
+    ]);
+
+    renderSafelyAndExpect(
+      root,
+      <>
+        <html>
+          <script async={true} onLoad={() => {}} href="bar" />
+          <body>foo</body>
+        </html>
+      </>,
+    ).toErrorDev([
+      'Cannot render a <script> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>.',
+    ]);
+
+    renderSafelyAndExpect(
+      root,
+      <>
+        <link rel="foo" onLoad={() => {}} href="bar" />
+        <html>
+          <body>foo</body>
+        </html>
+      </>,
+    ).toErrorDev(
+      [
+        'Cannot render a <link> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>.',
+      ],
+      {withoutStack: 1},
+    );
+  });
+
   // @gate enableFloat
   it('can acquire a resource after releasing it in the same commit', async () => {
     const root = ReactDOMClient.createRoot(container);

@@ -7,6 +7,7 @@
 
 let validateDOMNesting = () => {};
 let updatedAncestorInfo = () => {};
+let getResourceFormOnly = () => false;
 
 if (__DEV__) {
   // This validation code was written based on the HTML5 parsing spec:
@@ -153,6 +154,8 @@ if (__DEV__) {
 
     listItemTagAutoclosing: null,
     dlItemTagAutoclosing: null,
+
+    resourceFormOnly: true,
   };
 
   updatedAncestorInfo = function(oldInfo, tag) {
@@ -178,6 +181,10 @@ if (__DEV__) {
     ) {
       ancestorInfo.listItemTagAutoclosing = null;
       ancestorInfo.dlItemTagAutoclosing = null;
+    }
+
+    if (tag !== '#document' && tag !== 'html') {
+      ancestorInfo.resourceFormOnly = false;
     }
 
     ancestorInfo.current = info;
@@ -472,6 +479,10 @@ if (__DEV__) {
       );
     }
   };
+
+  getResourceFormOnly = hostContextDev => {
+    return hostContextDev.ancestorInfo.resourceFormOnly;
+  };
 }
 
-export {updatedAncestorInfo, validateDOMNesting};
+export {updatedAncestorInfo, validateDOMNesting, getResourceFormOnly};

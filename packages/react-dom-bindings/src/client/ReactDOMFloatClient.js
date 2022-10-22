@@ -29,7 +29,11 @@ import {
   markNodeAsResource,
 } from './ReactDOMComponentTree';
 import {HTML_NAMESPACE} from '../shared/DOMNamespaces';
-import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
+import {
+  getCurrentRootHostContainer,
+  getHostContext,
+} from 'react-reconciler/src/ReactFiberHostContext';
+import {getResourceFormOnly} from './validateDOMNesting';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
@@ -1331,6 +1335,11 @@ function insertResourceInstanceBefore(
 }
 
 export function isHostResourceType(type: string, props: Props): boolean {
+  let resourceFormOnly: boolean;
+  if (__DEV__) {
+    const hostContext = getHostContext();
+    resourceFormOnly = getResourceFormOnly(hostContext);
+  }
   switch (type) {
     case 'meta':
     case 'title': {
@@ -1339,14 +1348,29 @@ export function isHostResourceType(type: string, props: Props): boolean {
     case 'link': {
       const {onLoad, onError} = props;
       if (onLoad || onError) {
+        if (__DEV__) {
+          if (resourceFormOnly) {
+            console.error(
+              'Cannot render a <link> with onLoad or onError listeners outside the main document.' +
+                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
+                ' somewhere in the <body>.',
+            );
+          }
+        }
         return false;
       }
       switch (props.rel) {
         case 'stylesheet': {
+          const {href, precedence, disabled} = props;
           if (__DEV__) {
             validateLinkPropsForStyleResource(props);
+            if (typeof precedence !== 'string' && resourceFormOnly) {
+              console.error(
+                'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence.' +
+                  ' Consider adding precedence="default" or moving it into the root <head> tag.',
+              );
+            }
           }
-          const {href, precedence, disabled} = props;
           return (
             typeof href === 'string' &&
             typeof precedence === 'string' &&
@@ -1363,7 +1387,35 @@ export function isHostResourceType(type: string, props: Props): boolean {
       // We don't validate because it is valid to use async with onLoad/onError unlike combining
       // precedence with these for style resources
       const {src, async, onLoad, onError} = props;
+      if (__DEV__) {
+        if (async !== true && resourceFormOnly) {
+          console.error(
+            'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
+              ' Try adding async="" or moving it into the root <head> tag.',
+          );
+        } else if ((onLoad || onError) && resourceFormOnly) {
+          console.error(
+            'Cannot render a <script> with onLoad or onError listeners outside the main document.' +
+              ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
+              ' somewhere in the <body>.',
+          );
+        }
+      }
       return (async: any) && typeof src === 'string' && !onLoad && !onError;
+    }
+    case 'base':
+    case 'template':
+    case 'style':
+    case 'noscript': {
+      if (__DEV__) {
+        if (resourceFormOnly) {
+          console.error(
+            'Cannot render <%s> outside the main document. Try moving it into the root <head> tag.',
+            type,
+          );
+        }
+      }
+      return false;
     }
   }
   return false;
