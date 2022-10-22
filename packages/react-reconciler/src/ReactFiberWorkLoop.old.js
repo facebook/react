@@ -2497,6 +2497,7 @@ function commitRootImpl(
     }
   }
 
+  const rootUpdatePriorityBeforeLayoutEffect = root.updatePriority;
   // Check if there are any effects in the whole tree.
   // TODO: This is left over from the effect list implementation, where we had
   // to check for the existence of `firstEffect` to satisfy Flow. I think the
@@ -2697,9 +2698,11 @@ function commitRootImpl(
   // TODO: We can optimize this by not scheduling the callback earlier. Since we
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
+  //// TODO: Should we flushPassiveEffects When `pendingPassiveEffectsLanes` is a retry lane?
   if (
     (enableUnifiedSyncLane
-      ? root.updatePriority === DiscreteEventPriority
+      ? includesSomeLane(pendingPassiveEffectsLanes, SyncLane) &&
+        rootUpdatePriorityBeforeLayoutEffect === DiscreteEventPriority
       : includesSomeLane(pendingPassiveEffectsLanes, SyncLane)) &&
     root.tag !== LegacyRoot
   ) {
@@ -2708,7 +2711,7 @@ function commitRootImpl(
 
   // Read this again, since a passive effect might have updated it
   remainingLanes = root.pendingLanes;
-  if (includesSomeLane(remainingLanes, (SyncLane: Lane))) {
+  if (includesSomeLane(remainingLanes, SyncLane)) {
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
       markNestedUpdateScheduled();
     }

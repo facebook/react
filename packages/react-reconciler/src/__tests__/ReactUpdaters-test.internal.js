@@ -371,10 +371,15 @@ describe('updaters', () => {
     onCommitRootShouldYield = true;
 
     await act(async () => {
-      triggerError();
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        React.startTransition(() => {
+          triggerError();
+        });
+      } else {
+        triggerError();
+      }
     });
     expect(Scheduler).toHaveYielded(['onCommitRoot', 'error', 'onCommitRoot']);
-    //// TODO: ??
     expect(allSchedulerTypes).toEqual([[Parent], [ErrorBoundary]]);
 
     // Verify no outstanding flushes
