@@ -645,9 +645,8 @@ export function resourcesFromElement(type: string, props: Props): boolean {
           resources.headsMap.set(key, resource);
           resources.headResources.add(resource);
         }
-        return true;
       }
-      return false;
+      return true;
     }
     case 'meta': {
       let key, propertyPath;
