@@ -17,11 +17,7 @@ import {
 } from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
 import {enableUseHook} from 'shared/ReactFeatureFlags';
-import {
-  getPreviouslyUsedThenableAtIndex,
-  createThenableState,
-  trackUsedThenable,
-} from './ReactFlightThenable';
+import {createThenableState, trackUsedThenable} from './ReactFlightThenable';
 
 let currentRequest = null;
 let thenableIndexCounter = 0;
@@ -121,8 +117,6 @@ function useId(): string {
   return ':' + currentRequest.identifierPrefix + 'S' + id.toString(32) + ':';
 }
 
-function noop(): void {}
-
 function use<T>(usable: Usable<T>): T {
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
@@ -134,61 +128,10 @@ function use<T>(usable: Usable<T>): T {
       const index = thenableIndexCounter;
       thenableIndexCounter += 1;
 
-      switch (thenable.status) {
-        case 'fulfilled': {
-          const fulfilledValue: T = thenable.value;
-          return fulfilledValue;
-        }
-        case 'rejected': {
-          const rejectedError = thenable.reason;
-          throw rejectedError;
-        }
-        default: {
-          const prevThenableAtIndex: Thenable<T> | null = getPreviouslyUsedThenableAtIndex(
-            thenableState,
-            index,
-          );
-          if (prevThenableAtIndex !== null) {
-            if (thenable !== prevThenableAtIndex) {
-              // Avoid an unhandled rejection errors for the Promises that we'll
-              // intentionally ignore.
-              thenable.then(noop, noop);
-            }
-            switch (prevThenableAtIndex.status) {
-              case 'fulfilled': {
-                const fulfilledValue: T = prevThenableAtIndex.value;
-                return fulfilledValue;
-              }
-              case 'rejected': {
-                const rejectedError: mixed = prevThenableAtIndex.reason;
-                throw rejectedError;
-              }
-              default: {
-                // The thenable still hasn't resolved. Suspend with the same
-                // thenable as last time to avoid redundant listeners.
-                throw prevThenableAtIndex;
-              }
-            }
-          } else {
-            // This is the first time something has been used at this index.
-            // Stash the thenable at the current index so we can reuse it during
-            // the next attempt.
-            if (thenableState === null) {
-              thenableState = createThenableState();
-            }
-            trackUsedThenable(thenableState, thenable, index);
-
-            // Suspend.
-            // TODO: Throwing here is an implementation detail that allows us to
-            // unwind the call stack. But we shouldn't allow it to leak into
-            // userspace. Throw an opaque placeholder value instead of the
-            // actual thenable. If it doesn't get captured by the work loop, log
-            // a warning, because that means something in userspace must have
-            // caught it.
-            throw thenable;
-          }
-        }
+      if (thenableState === null) {
+        thenableState = createThenableState();
       }
+      return trackUsedThenable(thenableState, thenable, index);
     } else if (usable.$$typeof === REACT_SERVER_CONTEXT_TYPE) {
       const context: ReactServerContext<T> = (usable: any);
       return readContext(context);
