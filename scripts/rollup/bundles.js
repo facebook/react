@@ -320,7 +320,7 @@ const bundles = [
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'react-dom'],
+    externals: ['react', 'util', 'async-hooks', 'react-dom'],
   },
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
@@ -394,7 +394,7 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'react-dom'],
+    externals: ['react', 'util', 'async-hooks', 'react-dom'],
   },
 
   /******* React Server DOM Webpack Client *******/

@@ -77,6 +77,22 @@ describe('ReactFetch', () => {
   });
 
   // @gate enableFetchInstrumentation && enableCache
+  it('can dedupe fetches in micro tasks', async () => {
+    async function getData() {
+      const r1 = await fetch('hello');
+      const t1 = await r1.text();
+      const r2 = await fetch('hello');
+      const t2 = await r2.text();
+      return t1 + ' ' + t2;
+    }
+    function Component() {
+      return use(getData());
+    }
+    expect(await render(Component)).toMatchInlineSnapshot(`"GET world []"`);
+    expect(fetchCount).toBe(2);
+  });
+
+  // @gate enableFetchInstrumentation && enableCache
   it('can dedupe fetches using Request and not', async () => {
     function Component() {
       const response = use(fetch('world'));
