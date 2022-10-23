@@ -50,7 +50,7 @@ describe('ReactFetch', () => {
     React = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
-    use = React.experimental_use;
+    use = React.use;
     cache = React.cache;
   });
 
