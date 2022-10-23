@@ -21,4 +21,6 @@ export const monacoOptions: Partial<EditorProps["options"]> = {
   autoClosingBrackets: "languageDefined",
   autoClosingDelete: "always",
   autoClosingOvertype: "always",
+
+  automaticLayout: true,
 };

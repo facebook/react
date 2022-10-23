@@ -17,7 +17,7 @@
     "@hpcc-js/wasm": "^1.15.0",
     "@monaco-editor/react": "^4.4.5",
     "@mui/material": "^5.9.1",
-    "@use-gesture/react": "^10.2.17",
+    "@use-gesture/react": "^10.2.20",
     "fflate": "^0.7.3",
     "hermes-eslint": "^0.9.0",
     "invariant": "^2.2.4",

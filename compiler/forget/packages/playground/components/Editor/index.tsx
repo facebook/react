@@ -18,9 +18,9 @@ import {
   type Store,
 } from "../../lib/stores";
 import { useStore, useStoreDispatch } from "../StoreContext";
+import CompilerFlagsEditor from "./CompilerFlagsEditor";
 import Input from "./Input";
 import Output from "./Output";
-import CompilerFlagsEditor from "./CompilerFlagsEditor";
 
 export default function Editor() {
   const store = useStore();
@@ -89,22 +89,15 @@ export default function Editor() {
           })}
         >
           <Output store={deferredStore} updateDiagnostics={updateDiagnostics} />
-          <div
-            className={clsx("sm:block sm:min-h-[150px] border border-gray-200")}
-          >
-            <h3>Compiler Options</h3>
-            <CompilerFlagsEditor />
-          </div>
+          <CompilerFlagsEditor />
         </div>
       </div>
-      <div className="bottom-4 left-4 sm:hidden">
-        <button
-          className="px-3 py-2 font-mono text-sm rounded-lg shadow-md bg-highlight text-link"
-          onClick={() => setShowOutputOnMobile(!showOutputOnMobile)}
-        >
-          {showOutputOnMobile ? "< Code" : "Output >"}
-        </button>
-      </div>
+      <button
+        className="w-full px-3 py-2 font-mono text-sm bg-highlight text-link sm:hidden"
+        onClick={() => setShowOutputOnMobile(!showOutputOnMobile)}
+      >
+        {showOutputOnMobile ? "< Code" : "Output >"}
+      </button>
     </>
   );
 }
