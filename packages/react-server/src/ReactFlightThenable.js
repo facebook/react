@@ -14,7 +14,6 @@
 // instead of "Wakeable". Or some other more appropriate name.
 
 import type {
-  Wakeable,
   Thenable,
   PendingThenable,
   FulfilledThenable,
@@ -30,14 +29,12 @@ export function createThenableState(): ThenableState {
   return [];
 }
 
-// TODO: Unify this with trackSuspendedThenable. It needs to support not only
-// `use`, but async components, too.
-export function trackSuspendedWakeable(wakeable: Wakeable) {
-  // If this wakeable isn't already a thenable, turn it into one now. Then,
-  // when we resume the work loop, we can check if its status is
-  // still pending.
-  // TODO: Get rid of the Wakeable type? It's superseded by UntrackedThenable.
-  const thenable: Thenable<mixed> = (wakeable: any);
+export function trackUsedThenable<T>(
+  thenableState: ThenableState,
+  thenable: Thenable<T>,
+  index: number,
+) {
+  thenableState[index] = thenable;
 
   // We use an expando to track the status and result of a thenable so that we
   // can synchronously unwrap the value. Think of this as an extension of the
@@ -82,20 +79,6 @@ export function trackSuspendedWakeable(wakeable: Wakeable) {
       break;
     }
   }
-}
-
-export function trackUsedThenable<T>(
-  thenableState: ThenableState,
-  thenable: Thenable<T>,
-  index: number,
-) {
-  // This is only a separate function from trackSuspendedWakeable for symmetry
-  // with Fiber.
-  // TODO: Disallow throwing a thenable directly. It must go through `use` (or
-  // some equivalent for internal Suspense implementations). We can't do this in
-  // Fiber yet because it's a breaking change but we can do it in Server
-  // Components because Server Components aren't released yet.
-  thenableState[index] = thenable;
 }
 
 export function getPreviouslyUsedThenableAtIndex<T>(
