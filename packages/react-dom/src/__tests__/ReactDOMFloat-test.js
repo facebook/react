@@ -1189,8 +1189,67 @@ describe('ReactDOMFloat', () => {
         </html>,
       );
     });
+
     // @gate enableFloat
-    it('can render icons and apple-touch-icons as resources', async () => {
+    it('can render <base> as a Resource', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <head />
+            <body>
+              <base target="_blank" />
+              <base href="foo" />
+              <base target="_self" href="bar" />
+              <div>hello world</div>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <base target="_blank" />
+            <base href="foo" />
+            <base target="_self" href="bar" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head />
+          <body>
+            <base target="_blank" />
+            <base href="foo" />
+            <base target="_self" href="bar" />
+            <base target="_top" href="baz" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <base target="_top" href="baz" />
+            <base target="_blank" />
+            <base href="foo" />
+            <base target="_self" href="bar" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can render icons and apple-touch-icons as Resources', async () => {
       await actIntoEmptyDocument(() => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
           <>

@@ -133,9 +133,19 @@ type LinkResource = {
   root: Document,
 };
 
+type BaseResource = {
+  type: 'base',
+  matcher: string,
+  props: Props,
+
+  count: number,
+  instance: ?Element,
+  root: Document,
+};
+
 type Props = {[string]: mixed};
 
-type HeadResource = TitleResource | MetaResource | LinkResource;
+type HeadResource = TitleResource | MetaResource | LinkResource | BaseResource;
 type Resource = StyleResource | ScriptResource | PreloadResource | HeadResource;
 
 export type RootResources = {
@@ -443,6 +453,35 @@ export function getResource(
     );
   }
   switch (type) {
+    case 'base': {
+      const headRoot: Document = getDocumentFromRoot(resourceRoot);
+      const headResources = getResourcesFromRoot(headRoot).head;
+      const {target, href} = pendingProps;
+      let matcher = 'base';
+      matcher +=
+        typeof href === 'string'
+          ? `[href="${escapeSelectorAttributeValueInsideDoubleQuotes(href)}"]`
+          : ':not([href])';
+      matcher +=
+        typeof target === 'string'
+          ? `[target="${escapeSelectorAttributeValueInsideDoubleQuotes(
+              target,
+            )}"]`
+          : ':not([target])';
+      let resource = headResources.get(matcher);
+      if (!resource) {
+        resource = {
+          type: 'base',
+          matcher,
+          props: Object.assign({}, pendingProps),
+          count: 0,
+          instance: null,
+          root: headRoot,
+        };
+        headResources.set(matcher, resource);
+      }
+      return resource;
+    }
     case 'meta': {
       let matcher, propertyString, parentResource;
       const {
@@ -748,6 +787,7 @@ function scriptPropsFromRawProps(rawProps: ScriptQualifyingProps): ScriptProps {
 
 export function acquireResource(resource: Resource): Instance {
   switch (resource.type) {
+    case 'base':
     case 'title':
     case 'link':
     case 'meta': {
@@ -1126,6 +1166,27 @@ function acquireHeadResource(resource: HeadResource): Instance {
         insertResourceInstanceBefore(root, instance, null);
         return instance;
       }
+      case 'base': {
+        const baseResource: BaseResource = (resource: any);
+        const {matcher} = baseResource;
+        const base = root.querySelector(matcher);
+        if (base) {
+          instance = resource.instance = base;
+          markNodeAsResource(instance);
+        } else {
+          instance = resource.instance = createResourceInstance(
+            type,
+            props,
+            root,
+          );
+          insertResourceInstanceBefore(
+            root,
+            instance,
+            root.querySelector('base'),
+          );
+        }
+        return instance;
+      }
       default: {
         throw new Error(
           `acquireHeadResource encountered a resource type it did not expect: "${type}". This is a bug in React.`,
@@ -1341,6 +1402,7 @@ export function isHostResourceType(type: string, props: Props): boolean {
     resourceFormOnly = getResourceFormOnly(hostContext);
   }
   switch (type) {
+    case 'base':
     case 'meta':
     case 'title': {
       return true;
@@ -1403,7 +1465,6 @@ export function isHostResourceType(type: string, props: Props): boolean {
       }
       return (async: any) && typeof src === 'string' && !onLoad && !onError;
     }
-    case 'base':
     case 'template':
     case 'style':
     case 'noscript': {
