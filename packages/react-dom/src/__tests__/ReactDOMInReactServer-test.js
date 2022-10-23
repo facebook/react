@@ -15,7 +15,7 @@ describe('ReactDOMInReactServer', () => {
     jest.mock('react', () => require('react/react.shared-subset'));
   });
 
-  // @gate experimental && !www
+  // @gate !www
   it('can require react-dom', () => {
     // In RSC this will be aliased.
     require('react');
