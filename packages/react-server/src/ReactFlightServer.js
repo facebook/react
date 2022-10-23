@@ -22,6 +22,9 @@ import type {
   ServerContextJSONValue,
   Wakeable,
   Thenable,
+  PendingThenable,
+  FulfilledThenable,
+  RejectedThenable,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -66,7 +69,6 @@ import {
   getActiveContext,
   rootContextSnapshot,
 } from './ReactFlightNewContext';
-import {trackSuspendedWakeable} from './ReactFlightThenable';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -224,10 +226,44 @@ function readThenable<T>(thenable: Thenable<T>): T {
 }
 
 function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
-  trackSuspendedWakeable(wakeable);
+  // This is a temporary fork of the `use` implementation until we accept
+  // promises everywhere.
+  const thenable: Thenable<mixed> = (wakeable: any);
+  switch (thenable.status) {
+    case 'fulfilled':
+    case 'rejected':
+      break;
+    default: {
+      if (typeof thenable.status === 'string') {
+        // Only instrument the thenable if the status if not defined. If
+        // it's defined, but an unknown value, assume it's been instrumented by
+        // some custom userspace implementation. We treat it as "pending".
+        break;
+      }
+      const pendingThenable: PendingThenable<mixed> = (thenable: any);
+      pendingThenable.status = 'pending';
+      pendingThenable.then(
+        fulfilledValue => {
+          if (thenable.status === 'pending') {
+            const fulfilledThenable: FulfilledThenable<mixed> = (thenable: any);
+            fulfilledThenable.status = 'fulfilled';
+            fulfilledThenable.value = fulfilledValue;
+          }
+        },
+        (error: mixed) => {
+          if (thenable.status === 'pending') {
+            const rejectedThenable: RejectedThenable<mixed> = (thenable: any);
+            rejectedThenable.status = 'rejected';
+            rejectedThenable.reason = error;
+          }
+        },
+      );
+      break;
+    }
+  }
   const lazyType: LazyComponent<any, Thenable<any>> = {
     $$typeof: REACT_LAZY_TYPE,
-    _payload: (wakeable: any),
+    _payload: thenable,
     _init: readThenable,
   };
   return lazyType;
@@ -818,11 +854,7 @@ export function resolveModelToJSON(
         );
         const ping = newTask.ping;
         x.then(ping, ping);
-
-        const wakeable: Wakeable = x;
-        trackSuspendedWakeable(wakeable);
         newTask.thenableState = getThenableStateAfterSuspending();
-
         return serializeByRefID(newTask.id);
       } else {
         // Something errored. We'll still send everything we have up until this point.
@@ -1146,9 +1178,6 @@ function retryTask(request: Request, task: Task): void {
       // Something suspended again, let's pick it back up later.
       const ping = task.ping;
       x.then(ping, ping);
-
-      const wakeable: Wakeable = x;
-      trackSuspendedWakeable(wakeable);
       task.thenableState = getThenableStateAfterSuspending();
       return;
     } else {
