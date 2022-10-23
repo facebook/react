@@ -17,6 +17,7 @@ module.exports = {
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
+    HIDE_DOWNLOAD_REACT_DEVTOOLS_TIP: 'readonly',
     // UMD wrapper code
     // TODO: this is too permissive.
     // Ideally we should only allow these *inside* the UMD wrapper.

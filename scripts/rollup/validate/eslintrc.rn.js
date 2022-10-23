@@ -17,6 +17,7 @@ module.exports = {
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
+    HIDE_DOWNLOAD_REACT_DEVTOOLS_TIP: 'readonly',
     // FB
     __DEV__: 'readonly',
     // Fabric. See https://github.com/facebook/react/pull/15490
