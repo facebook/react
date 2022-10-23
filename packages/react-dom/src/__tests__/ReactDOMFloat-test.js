@@ -1975,7 +1975,6 @@ describe('ReactDOMFloat', () => {
                 <div>server</div>
               </body>
             </html>
-            ,
           </>,
         );
         pipe(writable);
