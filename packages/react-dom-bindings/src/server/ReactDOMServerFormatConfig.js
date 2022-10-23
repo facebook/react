@@ -1150,6 +1150,26 @@ function pushStartTextArea(
   return null;
 }
 
+function pushBase(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+  textEmbedded: boolean,
+): ReactNodeList {
+  if (enableFloat && resourcesFromElement('base', props)) {
+    if (textEmbedded) {
+      // This link follows text but we aren't writing a tag. while not as efficient as possible we need
+      // to be safe and assume text will follow by inserting a textSeparator
+      target.push(textSeparator);
+    }
+    // We have converted this link exclusively to a resource and no longer
+    // need to emit it
+    return null;
+  }
+
+  return pushSelfClosing(target, props, 'base', responseState);
+}
+
 function pushMeta(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -1853,6 +1873,8 @@ export function pushStartInstance(
         : pushStartGenericElement(target, props, type, responseState);
     case 'meta':
       return pushMeta(target, props, responseState, textEmbedded);
+    case 'base':
+      return pushBase(target, props, responseState, textEmbedded);
     // Newline eating tags
     case 'listing':
     case 'pre': {
@@ -1860,7 +1882,6 @@ export function pushStartInstance(
     }
     // Omitted close tags
     case 'area':
-    case 'base':
     case 'br':
     case 'col':
     case 'embed':
@@ -2493,6 +2514,7 @@ export function writeInitialResources(
 
   const {
     charset,
+    bases,
     preconnects,
     fontPreloads,
     precedences,
@@ -2509,6 +2531,12 @@ export function writeInitialResources(
     charset.flushed = true;
     resources.charset = null;
   }
+
+  bases.forEach(r => {
+    pushSelfClosing(target, r.props, 'base', responseState);
+    r.flushed = true;
+  });
+  bases.clear();
 
   preconnects.forEach(r => {
     // font preload Resources should not already be flushed so we elide this check
