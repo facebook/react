@@ -43,6 +43,8 @@ import {
   resolveModuleMetaData,
   getModuleKey,
   isModuleReference,
+  supportsRequestStorage,
+  requestStorage,
 } from './ReactFlightServerConfig';
 
 import {
@@ -157,6 +159,16 @@ export function createRequest(
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
 ): Request {
+  if (
+    ReactCurrentCache.current !== null &&
+    ReactCurrentCache.current !== DefaultCacheDispatcher
+  ) {
+    throw new Error(
+      'Currently React only supports one RSC renderer at a time.',
+    );
+  }
+  ReactCurrentCache.current = DefaultCacheDispatcher;
+
   const abortSet: Set<Task> = new Set();
   const pingedTasks = [];
   const request = {
@@ -1155,10 +1167,8 @@ function retryTask(request: Request, task: Task): void {
 
 function performWork(request: Request): void {
   const prevDispatcher = ReactCurrentDispatcher.current;
-  const prevCacheDispatcher = ReactCurrentCache.current;
   const prevCache = getCurrentCache();
   ReactCurrentDispatcher.current = HooksDispatcher;
-  ReactCurrentCache.current = DefaultCacheDispatcher;
   setCurrentCache(request.cache);
   prepareToUseHooksForRequest(request);
 
@@ -1177,7 +1187,6 @@ function performWork(request: Request): void {
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
-    ReactCurrentCache.current = prevCacheDispatcher;
     setCurrentCache(prevCache);
     resetHooksForRequest();
   }
@@ -1254,7 +1263,11 @@ function flushCompletedChunks(
 }
 
 export function startWork(request: Request): void {
-  scheduleWork(() => performWork(request));
+  if (supportsRequestStorage) {
+    scheduleWork(() => requestStorage.run(request.cache, performWork, request));
+  } else {
+    scheduleWork(() => performWork(request));
+  }
 }
 
 export function startFlowing(request: Request, destination: Destination): void {

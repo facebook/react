@@ -36,6 +36,9 @@ module.exports = {
     Uint8Array: 'readonly',
     Promise: 'readonly',
 
+    // Temp
+    AsyncLocalStorage: 'readonly',
+
     // Flight Webpack
     __webpack_chunk_load__: 'readonly',
     __webpack_require__: 'readonly',

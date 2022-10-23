@@ -320,7 +320,7 @@ const bundles = [
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'react-dom'],
+    externals: ['react', 'util', 'async_hooks', 'react-dom'],
   },
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
@@ -350,7 +350,7 @@ const bundles = [
     global: 'ReactDOMStatic',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'stream', 'react-dom'],
+    externals: ['react', 'util', 'async_hooks', 'stream', 'react-dom'],
   },
 
   /******* React DOM Fizz Server External Runtime *******/
@@ -394,7 +394,7 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'react-dom'],
+    externals: ['react', 'util', 'async_hooks', 'react-dom'],
   },
 
   /******* React Server DOM Webpack Client *******/
@@ -462,7 +462,7 @@ const bundles = [
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-relay',
-    global: 'ReactFlightDOMRelayClient', // TODO: Rename to Reader
+    global: 'ReactFlightDOMRelayClient',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
     externals: [
@@ -477,7 +477,7 @@ const bundles = [
     bundleTypes: [RN_FB_DEV, RN_FB_PROD],
     moduleType: RENDERER,
     entry: 'react-server-native-relay/server',
-    global: 'ReactFlightNativeRelayServer', // TODO: Rename to Writer
+    global: 'ReactFlightNativeRelayServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: [
@@ -486,6 +486,7 @@ const bundles = [
       'JSResourceReferenceImpl',
       'ReactNativeInternalFeatureFlags',
       'util',
+      'async_hooks',
     ],
   },
 

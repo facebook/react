@@ -157,3 +157,19 @@ declare module 'pg/lib/utils' {
     prepareValue(val: any): mixed,
   };
 }
+
+declare class AsyncLocalStorage<T> {
+  disable(): void;
+  getStore(): T | void;
+  run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
+  enterWith(store: T): void;
+}
+
+declare module 'async_hooks' {
+  declare class AsyncLocalStorage<T> {
+    disable(): void;
+    getStore(): T | void;
+    run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
+    enterWith(store: T): void;
+  }
+}
