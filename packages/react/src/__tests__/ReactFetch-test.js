@@ -41,6 +41,9 @@ describe('ReactFetch', () => {
     fetchCount = 0;
     global.fetch = fetchMock;
 
+    if (gate(flags => flags.experimental && !flags.www)) {
+      jest.mock('react', () => require('react/react.shared-subset'));
+    }
     React = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
