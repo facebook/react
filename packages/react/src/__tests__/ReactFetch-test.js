@@ -36,6 +36,7 @@ let React;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let use;
+let cache;
 
 describe('ReactFetch', () => {
   beforeEach(() => {
@@ -50,6 +51,7 @@ describe('ReactFetch', () => {
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     use = React.experimental_use;
+    cache = React.experimental_cache;
   });
 
   async function render(Component) {
@@ -92,6 +94,27 @@ describe('ReactFetch', () => {
     }
     expect(await render(Component)).toMatchInlineSnapshot(
       `"GET hello [] GET world []"`,
+    );
+    expect(fetchCount).toBe(2);
+  });
+
+  // @gate enableFetchInstrumentation && enableCache
+  it('can dedupe cache in micro tasks', async () => {
+    const cached = cache(async () => {
+      fetchCount++;
+      return 'world';
+    });
+    async function getData() {
+      const r1 = await fetch('hello');
+      const t1 = await r1.text();
+      const t2 = await cached();
+      return t1 + ' ' + t2;
+    }
+    function Component() {
+      return use(getData());
+    }
+    expect(await render(Component)).toMatchInlineSnapshot(
+      `"GET hello [] world"`,
     );
     expect(fetchCount).toBe(2);
   });

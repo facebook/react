@@ -32,21 +32,23 @@ function resolveCache(): Map<Function, mixed> {
 
 export const DefaultCacheDispatcher: CacheDispatcher = {
   getCacheSignal(): AbortSignal {
-    let entry: AbortSignal | void = (resolveCache().get(createSignal): any);
+    const cache = resolveCache();
+    let entry: AbortSignal | void = (cache.get(createSignal): any);
     if (entry === undefined) {
       entry = createSignal();
       // $FlowFixMe[incompatible-use] found when upgrading Flow
-      currentCache.set(createSignal, entry);
+      cache.set(createSignal, entry);
     }
     return entry;
   },
   getCacheForType<T>(resourceType: () => T): T {
-    let entry: T | void = (resolveCache().get(resourceType): any);
+    const cache = resolveCache();
+    let entry: T | void = (cache.get(resourceType): any);
     if (entry === undefined) {
       entry = resourceType();
       // TODO: Warn if undefined?
       // $FlowFixMe[incompatible-use] found when upgrading Flow
-      currentCache.set(resourceType, entry);
+      cache.set(resourceType, entry);
     }
     return entry;
   },
