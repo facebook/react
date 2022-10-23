@@ -37,6 +37,9 @@ module.exports = {
     Uint8Array: 'readonly',
     Promise: 'readonly',
 
+    // Temp
+    AsyncLocalStorage: 'readonly',
+
     // jest
     jest: 'readonly',
 

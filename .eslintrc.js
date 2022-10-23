@@ -276,5 +276,6 @@ module.exports = {
     gate: 'readonly',
     trustedTypes: 'readonly',
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
+    AsyncLocalStorage: 'readonly',
   },
 };

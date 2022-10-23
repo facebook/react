@@ -1263,7 +1263,11 @@ function flushCompletedChunks(
 }
 
 export function startWork(request: Request): void {
-  scheduleWork(() => performWork(request));
+  if (supportsRequestStorage) {
+    scheduleWork(() => requestStorage.run(request.cache, performWork, request));
+  } else {
+    scheduleWork(() => performWork(request));
+  }
 }
 
 export function startFlowing(request: Request, destination: Destination): void {

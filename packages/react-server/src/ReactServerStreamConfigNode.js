@@ -35,7 +35,9 @@ export function flushBuffered(destination: Destination) {
 }
 
 export const supportsRequestStorage = true;
-export const requestStorage = new AsyncLocalStorage();
+export const requestStorage: AsyncLocalStorage<
+  Map<Function, mixed>,
+> = new AsyncLocalStorage();
 
 const VIEW_SIZE = 2048;
 let currentView = null;

@@ -186,6 +186,11 @@ export function scheduleWork(callback: () => void) {
 
 export function flushBuffered(destination: Destination) {}
 
+export const supportsRequestStorage = false;
+export const requestStorage: AsyncLocalStorage<
+  Map<Function, mixed>,
+> = (null: any);
+
 export function beginWriting(destination: Destination) {}
 
 export function writeChunk(destination: Destination, chunk: Chunk): void {

@@ -443,5 +443,5 @@
   "455": "This CacheSignal was requested outside React which means that it is immediately aborted.",
   "456": "Calling Offscreen.detach before instance handle has been set.",
   "457": "acquireHeadResource encountered a resource type it did not expect: \"%s\". This is a bug in React.",
-  "458": "Currently React only supports one RSC renderer at a time"
+  "458": "Currently React only supports one RSC renderer at a time."
 }
