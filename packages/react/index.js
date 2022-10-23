@@ -54,7 +54,7 @@ export {
   isValidElement,
   lazy,
   memo,
-  experimental_cache,
+  cache,
   startTransition,
   unstable_Cache,
   unstable_DebugTracingMode,

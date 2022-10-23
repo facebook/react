@@ -51,7 +51,7 @@ describe('ReactFetch', () => {
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     use = React.experimental_use;
-    cache = React.experimental_cache;
+    cache = React.cache;
   });
 
   async function render(Component) {

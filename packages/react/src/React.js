@@ -101,7 +101,7 @@ export {
   forwardRef,
   lazy,
   memo,
-  cache as experimental_cache,
+  cache,
   useCallback,
   useContext,
   useEffect,
