@@ -30,6 +30,7 @@ const stablePackages = {
   react: ReactVersion,
   'react-art': ReactVersion,
   'react-dom': ReactVersion,
+  'react-server-dom-webpack': ReactVersion,
   'react-is': ReactVersion,
   'react-reconciler': '0.30.0',
   'react-refresh': '0.15.0',
