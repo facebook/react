@@ -28,6 +28,7 @@ export {
   isValidElement,
   lazy,
   memo,
+  cache,
   startTransition,
   useId,
   useCallback,
