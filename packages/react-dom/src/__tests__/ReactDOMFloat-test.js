@@ -1963,7 +1963,7 @@ describe('ReactDOMFloat', () => {
       );
     });
 
-    // @gate enableFloat
+    // @gate enableFloat && enableHostSingletons && (enableClientRenderFallbackOnTextMismatch || !__DEV__)
     it('can render a title before a singleton even if that singleton clears its contents', async () => {
       await actIntoEmptyDocument(() => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -1975,7 +1975,6 @@ describe('ReactDOMFloat', () => {
                 <div>server</div>
               </body>
             </html>
-            ,
           </>,
         );
         pipe(writable);
@@ -2243,7 +2242,7 @@ describe('ReactDOMFloat', () => {
       );
     });
 
-    // @gate enableFloat && enableHostSingletons
+    // @gate enableFloat && enableHostSingletons && enableClientRenderFallbackOnTextMismatch
     it('retains styles even when a new html, head, and/body mount', async () => {
       await actIntoEmptyDocument(() => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(

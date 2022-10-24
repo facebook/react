@@ -20,7 +20,7 @@ export {
   unstable_batchedUpdates,
   unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
+  preinit,
+  preload,
   version,
 } from './src/client/ReactDOM';
-
-export {preinit, preload} from 'react-dom-bindings/src/shared/ReactDOMFloat';

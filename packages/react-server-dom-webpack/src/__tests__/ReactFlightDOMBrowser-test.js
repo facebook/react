@@ -40,7 +40,7 @@ describe('ReactFlightDOMBrowser', () => {
     ReactServerDOMWriter = require('react-server-dom-webpack/server.browser');
     ReactServerDOMReader = require('react-server-dom-webpack/client');
     Suspense = React.Suspense;
-    use = React.experimental_use;
+    use = React.use;
   });
 
   async function readResult(stream) {

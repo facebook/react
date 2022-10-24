@@ -30,6 +30,7 @@ const stablePackages = {
   react: ReactVersion,
   'react-art': ReactVersion,
   'react-dom': ReactVersion,
+  'react-server-dom-webpack': ReactVersion,
   'react-is': ReactVersion,
   'react-reconciler': '0.30.0',
   'react-refresh': '0.15.0',
@@ -42,12 +43,7 @@ const stablePackages = {
 // These packages do not exist in the @next or @latest channel, only
 // @experimental. We don't use semver, just the commit sha, so this is just a
 // list of package names instead of a map.
-const experimentalPackages = [
-  'react-fetch',
-  'react-fs',
-  'react-pg',
-  'react-server-dom-webpack',
-];
+const experimentalPackages = ['react-fetch', 'react-fs', 'react-pg'];
 
 module.exports = {
   ReactVersion,

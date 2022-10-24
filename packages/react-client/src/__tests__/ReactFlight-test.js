@@ -27,7 +27,7 @@ describe('ReactFlight', () => {
 
     React = require('react');
     startTransition = React.startTransition;
-    use = React.experimental_use;
+    use = React.use;
     ReactNoop = require('react-noop-renderer');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');

@@ -16,7 +16,7 @@ describe('ReactThenable', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
-    use = React.experimental_use;
+    use = React.use;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
   });

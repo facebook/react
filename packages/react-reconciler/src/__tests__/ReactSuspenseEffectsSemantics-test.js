@@ -206,7 +206,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
   }
 
   describe('when a component suspends during initial mount', () => {
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should not change behavior in concurrent mode', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -323,7 +323,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should not change behavior in sync', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -442,7 +442,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
   });
 
   describe('layout effects within a tree that re-suspends in an update', () => {
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should not be destroyed or recreated in legacy roots', async () => {
       function App({children = null}) {
         Scheduler.unstable_yieldValue('App render');
@@ -565,7 +565,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be destroyed and recreated for function components', async () => {
       function App({children = null}) {
         Scheduler.unstable_yieldValue('App render');
@@ -693,7 +693,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be destroyed and recreated for class components', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -837,7 +837,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be destroyed and recreated when nested below host components', async () => {
       function App({children = null}) {
         Scheduler.unstable_yieldValue('App render');
@@ -946,7 +946,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be destroyed and recreated even if there is a bailout because of memoization', async () => {
       const MemoizedText = React.memo(Text, () => true);
 
@@ -1061,7 +1061,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should respect nested suspense boundaries', async () => {
       function App({innerChildren = null, outerChildren = null}) {
         return (
@@ -1283,7 +1283,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should show nested host nodes if multiple boundaries resolve at the same time', async () => {
       function App({innerChildren = null, outerChildren = null}) {
         return (
@@ -1392,7 +1392,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be cleaned up inside of a fallback that suspends', async () => {
       function App({fallbackChildren = null, outerChildren = null}) {
         return (
@@ -1534,7 +1534,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be cleaned up inside of a fallback that suspends (alternate)', async () => {
       function App({fallbackChildren = null, outerChildren = null}) {
         return (
@@ -1653,7 +1653,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be cleaned up deeper inside of a subtree that suspends', async () => {
       function ConditionalSuspense({shouldSuspend}) {
         if (shouldSuspend) {
@@ -1735,7 +1735,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
     });
 
     describe('that throw errors', () => {
-      // @gate enableCache
+      // @gate enableLegacyCache
       it('are properly handled for componentDidMount', async () => {
         let componentDidMountShouldThrow = false;
 
@@ -1873,7 +1873,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         expect(ReactNoop.getChildren()).toEqual([span('Error')]);
       });
 
-      // @gate enableCache
+      // @gate enableLegacyCache
       it('are properly handled for componentWillUnmount', async () => {
         class ThrowsInWillUnmount extends React.Component {
           componentDidMount() {
@@ -1984,7 +1984,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         expect(ReactNoop.getChildren()).toEqual([span('Error')]);
       });
 
-      // @gate enableCache
+      // @gate enableLegacyCache
       // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled for layout effect creation', async () => {
         let useLayoutEffectShouldThrow = false;
@@ -2123,7 +2123,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         expect(ReactNoop.getChildren()).toEqual([span('Error')]);
       });
 
-      // @gate enableCache
+      // @gate enableLegacyCache
       // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled for layout effect destruction', async () => {
         function ThrowsInLayoutEffectDestroy() {
@@ -2234,7 +2234,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be only destroy layout effects once if a tree suspends in multiple places', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -2372,7 +2372,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be only destroy layout effects once if a component suspends multiple times', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -2569,7 +2569,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       return null;
     }
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should not be cleared within legacy roots', async () => {
       class ClassComponent extends React.Component {
         render() {
@@ -2655,7 +2655,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be cleared and reset for host components', async () => {
       function App({children}) {
         Scheduler.unstable_yieldValue(`App render`);
@@ -2751,7 +2751,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be cleared and reset for class components', async () => {
       class ClassComponent extends React.Component {
         render() {
@@ -2851,7 +2851,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should be cleared and reset for function components with useImperativeHandle', async () => {
       const FunctionComponent = React.forwardRef((props, ref) => {
         Scheduler.unstable_yieldValue('FunctionComponent render');
@@ -2955,7 +2955,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    // @gate enableCache
+    // @gate enableLegacyCache
     it('should not reset for user-managed values', async () => {
       function RefChecker({forwardedRef}) {
         Scheduler.unstable_yieldValue(`RefChecker render`);
@@ -3052,7 +3052,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
     });
 
     describe('that throw errors', () => {
-      // @gate enableCache
+      // @gate enableLegacyCache
       // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled in ref callbacks', async () => {
         let useRefCallbackShouldThrow = false;
