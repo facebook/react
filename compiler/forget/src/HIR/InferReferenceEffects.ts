@@ -526,7 +526,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         valueKind = ValueKind.Mutable;
         // Object construction captures but does not modify the key/property values
         if (instrValue.properties !== null) {
-          for (const [_key, value] of Object.entries(instrValue.properties)) {
+          for (const [_key, value] of instrValue.properties) {
             env.reference(value, Effect.Read);
           }
         }

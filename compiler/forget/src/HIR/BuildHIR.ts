@@ -682,7 +682,7 @@ function lowerExpression(
     case "ObjectExpression": {
       const expr = exprPath as NodePath<t.ObjectExpression>;
       const propertyPaths = expr.get("properties");
-      const properties: { [name: string]: Place } = {};
+      const properties: Map<string, Place> = new Map();
       for (const propertyPath of propertyPaths) {
         todoInvariant(
           propertyPath.isObjectProperty(),
@@ -696,7 +696,7 @@ function lowerExpression(
           "Handle non-expression object values"
         );
         const value = lowerExpressionToPlace(builder, valuePath);
-        properties[key.name] = value;
+        properties.set(key.name, value);
       }
       return {
         kind: "ObjectExpression",

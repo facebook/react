@@ -200,7 +200,7 @@ function writeInstr(cx: Context, instr: Instruction, body: Array<t.Statement>) {
     case "ObjectExpression": {
       const properties = [];
       if (instrValue.properties !== null) {
-        for (const [property, value] of Object.entries(instrValue.properties)) {
+        for (const [property, value] of instrValue.properties) {
           properties.push(
             t.objectProperty(t.stringLiteral(property), codegenPlace(cx, value))
           );

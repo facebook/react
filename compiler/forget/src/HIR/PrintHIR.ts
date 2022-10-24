@@ -161,7 +161,7 @@ function printInstructionValue(instrValue: InstructionValue): string {
     case "ObjectExpression": {
       const properties = [];
       if (instrValue.properties !== null) {
-        for (const [key, value] of Object.entries(instrValue.properties)) {
+        for (const [key, value] of instrValue.properties) {
           properties.push(`${key}: ${printPlace(value)}`);
         }
       }

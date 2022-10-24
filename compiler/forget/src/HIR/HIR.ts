@@ -190,7 +190,7 @@ export type InstructionData =
     }
   | {
       kind: "ObjectExpression";
-      properties: { [property: string]: Place } | null; // null === empty object
+      properties: Map<string, Place> | null; // null === empty object
     }
   | { kind: "ArrayExpression"; elements: Array<Place> }
 
