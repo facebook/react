@@ -1936,6 +1936,42 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
 
   do {
     try {
+      if (
+        workInProgressSuspendedReason !== NotSuspended &&
+        workInProgress !== null
+      ) {
+        // The work loop is suspended. We need to either unwind the stack or
+        // replay the suspended component.
+        const unitOfWork = workInProgress;
+        const thrownValue = workInProgressThrownValue;
+        workInProgressSuspendedReason = NotSuspended;
+        workInProgressThrownValue = null;
+
+        // TODO: This check is only here to account for thenables that
+        // synchronously resolve. Otherwise we would always unwind when
+        // rendering with renderRootSync. (In the future, discrete updates will
+        // use renderRootConcurrent instead.) We should account for
+        // synchronously resolved thenables before hitting this path.
+        switch (workInProgressSuspendedReason) {
+          case SuspendedOnError: {
+            // Unwind then continue with the normal work loop.
+            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            break;
+          }
+          default: {
+            const wasPinged =
+              workInProgressSuspendedThenableState !== null &&
+              isThenableStateResolved(workInProgressSuspendedThenableState);
+            if (wasPinged) {
+              replaySuspendedUnitOfWork(unitOfWork, thrownValue);
+            } else {
+              unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            }
+            // Continue with the normal work loop.
+            break;
+          }
+        }
+      }
       workLoopSync();
       break;
     } catch (thrownValue) {
@@ -1980,18 +2016,6 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
 /** @noinline */
 function workLoopSync() {
   // Perform work without checking if we need to yield between fiber.
-
-  if (workInProgressSuspendedReason !== NotSuspended) {
-    // The current work-in-progress was already attempted. We need to unwind
-    // it before we continue the normal work loop.
-    const thrownValue = workInProgressThrownValue;
-    workInProgressSuspendedReason = NotSuspended;
-    workInProgressThrownValue = null;
-    if (workInProgress !== null) {
-      resumeSuspendedUnitOfWork(workInProgress, thrownValue);
-    }
-  }
-
   while (workInProgress !== null) {
     performUnitOfWork(workInProgress);
   }
@@ -2039,6 +2063,36 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 
   do {
     try {
+      if (
+        workInProgressSuspendedReason !== NotSuspended &&
+        workInProgress !== null
+      ) {
+        // The work loop is suspended. We need to either unwind the stack or
+        // replay the suspended component.
+        const unitOfWork = workInProgress;
+        const thrownValue = workInProgressThrownValue;
+        workInProgressSuspendedReason = NotSuspended;
+        workInProgressThrownValue = null;
+        switch (workInProgressSuspendedReason) {
+          case SuspendedOnError: {
+            // Unwind then continue with the normal work loop.
+            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            break;
+          }
+          default: {
+            const wasPinged =
+              workInProgressSuspendedThenableState !== null &&
+              isThenableStateResolved(workInProgressSuspendedThenableState);
+            if (wasPinged) {
+              replaySuspendedUnitOfWork(unitOfWork, thrownValue);
+            } else {
+              unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            }
+            // Continue with the normal work loop.
+            break;
+          }
+        }
+      }
       workLoopConcurrent();
       break;
     } catch (thrownValue) {
@@ -2091,18 +2145,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 /** @noinline */
 function workLoopConcurrent() {
   // Perform work until Scheduler asks us to yield
-
-  if (workInProgressSuspendedReason !== NotSuspended) {
-    // The current work-in-progress was already attempted. We need to unwind
-    // it before we continue the normal work loop.
-    const thrownValue = workInProgressThrownValue;
-    workInProgressSuspendedReason = NotSuspended;
-    workInProgressThrownValue = null;
-    if (workInProgress !== null) {
-      resumeSuspendedUnitOfWork(workInProgress, thrownValue);
-    }
-  }
-
   while (workInProgress !== null && !shouldYield()) {
     // $FlowFixMe[incompatible-call] found when upgrading Flow
     performUnitOfWork(workInProgress);
@@ -2137,69 +2179,15 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   ReactCurrentOwner.current = null;
 }
 
-function resumeSuspendedUnitOfWork(
+function replaySuspendedUnitOfWork(
   unitOfWork: Fiber,
   thrownValue: mixed,
 ): void {
-  // This is a fork of performUnitOfWork specifcally for resuming a fiber that
-  // just suspended. In some cases, we may choose to retry the fiber immediately
-  // instead of unwinding the stack. It's a separate function to keep the
-  // additional logic out of the work loop's hot path.
-
-  const wasPinged =
-    workInProgressSuspendedThenableState !== null &&
-    isThenableStateResolved(workInProgressSuspendedThenableState);
-
-  if (!wasPinged) {
-    // The thenable wasn't pinged. Return to the normal work loop. This will
-    // unwind the stack, and potentially result in showing a fallback.
-    workInProgressSuspendedThenableState = null;
-
-    const returnFiber = unitOfWork.return;
-    if (returnFiber === null || workInProgressRoot === null) {
-      // Expected to be working on a non-root fiber. This is a fatal error
-      // because there's no ancestor that can handle it; the root is
-      // supposed to capture all errors that weren't caught by an error
-      // boundary.
-      workInProgressRootExitStatus = RootFatalErrored;
-      workInProgressRootFatalError = thrownValue;
-      // Set `workInProgress` to null. This represents advancing to the next
-      // sibling, or the parent if there are no siblings. But since the root
-      // has no siblings nor a parent, we set it to null. Usually this is
-      // handled by `completeUnitOfWork` or `unwindWork`, but since we're
-      // intentionally not calling those, we need set it here.
-      // TODO: Consider calling `unwindWork` to pop the contexts.
-      workInProgress = null;
-      return;
-    }
-
-    try {
-      // Find and mark the nearest Suspense or error boundary that can handle
-      // this "exception".
-      throwException(
-        workInProgressRoot,
-        returnFiber,
-        unitOfWork,
-        thrownValue,
-        workInProgressRootRenderLanes,
-      );
-    } catch (error) {
-      // We had trouble processing the error. An example of this happening is
-      // when accessing the `componentDidCatch` property of an error boundary
-      // throws an error. A weird edge case. There's a regression test for this.
-      // To prevent an infinite loop, bubble the error up to the next parent.
-      workInProgress = returnFiber;
-      throw error;
-    }
-
-    // Return to the normal work loop.
-    completeUnitOfWork(unitOfWork);
-    return;
-  }
-
-  // The work-in-progress was immediately pinged. Instead of unwinding the
-  // stack and potentially showing a fallback, unwind only the last stack frame,
-  // reset the fiber, and try rendering it again.
+  // This is a fork of performUnitOfWork specifcally for replaying a fiber that
+  // just suspended.
+  //
+  // Instead of unwinding the stack and potentially showing a fallback, unwind
+  // only the last stack frame, reset the fiber, and try rendering it again.
   const current = unitOfWork.alternate;
   unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
   unitOfWork = workInProgress = resetWorkInProgress(unitOfWork, renderLanes);
@@ -2230,6 +2218,55 @@ function resumeSuspendedUnitOfWork(
   }
 
   ReactCurrentOwner.current = null;
+}
+
+function unwindSuspendedUnitOfWork(unitOfWork: Fiber, thrownValue: mixed) {
+  // This is a fork of performUnitOfWork specifcally for unwinding a fiber
+  // that threw an exception.
+  //
+  // Return to the normal work loop. This will unwind the stack, and potentially
+  // result in showing a fallback.
+  workInProgressSuspendedThenableState = null;
+
+  const returnFiber = unitOfWork.return;
+  if (returnFiber === null || workInProgressRoot === null) {
+    // Expected to be working on a non-root fiber. This is a fatal error
+    // because there's no ancestor that can handle it; the root is
+    // supposed to capture all errors that weren't caught by an error
+    // boundary.
+    workInProgressRootExitStatus = RootFatalErrored;
+    workInProgressRootFatalError = thrownValue;
+    // Set `workInProgress` to null. This represents advancing to the next
+    // sibling, or the parent if there are no siblings. But since the root
+    // has no siblings nor a parent, we set it to null. Usually this is
+    // handled by `completeUnitOfWork` or `unwindWork`, but since we're
+    // intentionally not calling those, we need set it here.
+    // TODO: Consider calling `unwindWork` to pop the contexts.
+    workInProgress = null;
+    return;
+  }
+
+  try {
+    // Find and mark the nearest Suspense or error boundary that can handle
+    // this "exception".
+    throwException(
+      workInProgressRoot,
+      returnFiber,
+      unitOfWork,
+      thrownValue,
+      workInProgressRootRenderLanes,
+    );
+  } catch (error) {
+    // We had trouble processing the error. An example of this happening is
+    // when accessing the `componentDidCatch` property of an error boundary
+    // throws an error. A weird edge case. There's a regression test for this.
+    // To prevent an infinite loop, bubble the error up to the next parent.
+    workInProgress = returnFiber;
+    throw error;
+  }
+
+  // Return to the normal work loop.
+  completeUnitOfWork(unitOfWork);
 }
 
 export function getSuspendedThenableState(): ThenableState | null {
