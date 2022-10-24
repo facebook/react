@@ -57,6 +57,9 @@ describe('ReactFlight', () => {
               ' may provide additional details about the nature of the error.',
           );
           expect(this.state.error.digest).toContain(this.props.expectedMessage);
+          expect(this.state.error.stack).toBe(
+            'Error: ' + this.state.error.message,
+          );
         }
       }
       render() {
