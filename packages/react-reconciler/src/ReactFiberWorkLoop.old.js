@@ -310,11 +310,18 @@ let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
+opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4;
+const NotSuspended: SuspendedReason = 0;
+const SuspendedOnError: SuspendedReason = 1;
+// const SuspendedOnData: SuspendedReason = 2;
+const SuspendedOnImmediate: SuspendedReason = 3;
+const SuspendedAndReadyToUnwind: SuspendedReason = 4;
+
 // When this is true, the work-in-progress fiber just suspended (or errored) and
 // we've yet to unwind the stack. In some cases, we may yield to the main thread
 // after this happens. If the fiber is pinged before we resume, we can retry
 // immediately instead of unwinding the stack.
-let workInProgressIsSuspended: boolean = false;
+let workInProgressSuspendedReason: SuspendedReason = NotSuspended;
 let workInProgressThrownValue: mixed = null;
 let workInProgressSuspendedThenableState: ThenableState | null = null;
 
@@ -1676,9 +1683,10 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   }
 
   if (workInProgress !== null) {
-    let interruptedWork = workInProgressIsSuspended
-      ? workInProgress
-      : workInProgress.return;
+    let interruptedWork =
+      workInProgressSuspendedReason === NotSuspended
+        ? workInProgress.return
+        : workInProgress;
     while (interruptedWork !== null) {
       const current = interruptedWork.alternate;
       unwindInterruptedWork(
@@ -1693,7 +1701,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   const rootWorkInProgress = createWorkInProgress(root.current, null);
   workInProgress = rootWorkInProgress;
   workInProgressRootRenderLanes = renderLanes = lanes;
-  workInProgressIsSuspended = false;
+  workInProgressSuspendedReason = NotSuspended;
   workInProgressThrownValue = null;
   workInProgressSuspendedThenableState = null;
   workInProgressRootDidAttachPingListener = false;
@@ -1732,17 +1740,27 @@ function handleThrow(root, thrownValue): void {
     // deprecate the old API in favor of `use`.
     thrownValue = getSuspendedThenable();
     workInProgressSuspendedThenableState = getThenableStateAfterSuspending();
+    workInProgressSuspendedReason = SuspendedOnImmediate;
   } else {
     // This is a regular error. If something earlier in the component already
     // suspended, we must clear the thenable state to unblock the work loop.
     workInProgressSuspendedThenableState = null;
+
+    const isWakeable =
+      thrownValue !== null &&
+      typeof thrownValue === 'object' &&
+      // $FlowFixMe[method-unbinding]
+      typeof thrownValue.then === 'function';
+
+    workInProgressSuspendedReason = isWakeable
+      ? // A wakeable object was thrown by a legacy Suspense implementation.
+        // This has slightly different behavior than suspending with `use`.
+        SuspendedAndReadyToUnwind
+      : // This is a regular error. If something earlier in the component already
+        // suspended, we must clear the thenable state to unblock the work loop.
+        SuspendedOnError;
   }
 
-  // Setting this to `true` tells the work loop to unwind the stack instead
-  // of entering the begin phase. It's called "suspended" because it usually
-  // happens because of Suspense, but it also applies to errors. Think of it
-  // as suspending the execution of the work loop.
-  workInProgressIsSuspended = true;
   workInProgressThrownValue = thrownValue;
 
   const erroredWork = workInProgress;
@@ -1762,12 +1780,7 @@ function handleThrow(root, thrownValue): void {
 
   if (enableSchedulingProfiler) {
     markComponentRenderStopped();
-    if (
-      thrownValue !== null &&
-      typeof thrownValue === 'object' &&
-      // $FlowFixMe[method-unbinding]
-      typeof thrownValue.then === 'function'
-    ) {
+    if (workInProgressSuspendedReason !== SuspendedOnError) {
       const wakeable: Wakeable = (thrownValue: any);
       markComponentSuspended(
         erroredWork,
@@ -1968,11 +1981,11 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
 function workLoopSync() {
   // Perform work without checking if we need to yield between fiber.
 
-  if (workInProgressIsSuspended) {
+  if (workInProgressSuspendedReason !== NotSuspended) {
     // The current work-in-progress was already attempted. We need to unwind
     // it before we continue the normal work loop.
     const thrownValue = workInProgressThrownValue;
-    workInProgressIsSuspended = false;
+    workInProgressSuspendedReason = NotSuspended;
     workInProgressThrownValue = null;
     if (workInProgress !== null) {
       resumeSuspendedUnitOfWork(workInProgress, thrownValue);
@@ -2079,11 +2092,11 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 function workLoopConcurrent() {
   // Perform work until Scheduler asks us to yield
 
-  if (workInProgressIsSuspended) {
+  if (workInProgressSuspendedReason !== NotSuspended) {
     // The current work-in-progress was already attempted. We need to unwind
     // it before we continue the normal work loop.
     const thrownValue = workInProgressThrownValue;
-    workInProgressIsSuspended = false;
+    workInProgressSuspendedReason = NotSuspended;
     workInProgressThrownValue = null;
     if (workInProgress !== null) {
       resumeSuspendedUnitOfWork(workInProgress, thrownValue);
