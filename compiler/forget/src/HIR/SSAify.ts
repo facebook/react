@@ -272,7 +272,6 @@ function rewriteUsesAndCollectOutputs(
 function rewriteUses(instr: Instruction, builder: SSABuilder) {
   const instrValue = instr.value;
 
-  // TODO(gsn): Handle more kinds of Instructions
   switch (instrValue.kind) {
     case "BinaryExpression": {
       instrValue.left = builder.getPlace(instrValue.left);
@@ -282,6 +281,48 @@ function rewriteUses(instr: Instruction, builder: SSABuilder) {
     case "Identifier": {
       instr.value = builder.getPlace(instrValue);
       break;
+    }
+    case "NewExpression":
+    case "CallExpression": {
+      instrValue.callee = builder.getPlace(instrValue.callee);
+      instrValue.args = instrValue.args.map((arg) => builder.getPlace(arg));
+      break;
+    }
+    case "UnaryExpression": {
+      instrValue.value = builder.getPlace(instrValue.value);
+      break;
+    }
+    case "JsxExpression": {
+      instrValue.tag = builder.getPlace(instrValue.tag);
+      for (const [prop, place] of instrValue.props.entries()) {
+        instrValue.props.set(prop, builder.getPlace(place));
+      }
+      if (instrValue.children) {
+        instrValue.children = instrValue.children.map((p) =>
+          builder.getPlace(p)
+        );
+      }
+      break;
+    }
+    case "ObjectExpression": {
+      if (instrValue.properties !== null) {
+        for (const [prop, place] of instrValue.properties) {
+          instrValue.properties?.set(prop, builder.getPlace(place));
+        }
+      }
+      break;
+    }
+    case "ArrayExpression": {
+      instrValue.elements = instrValue.elements.map((e) => builder.getPlace(e));
+      break;
+    }
+    case "OtherStatement":
+    case "Primitive":
+    case "JSXText": {
+      break;
+    }
+    default: {
+      assertExhaustive(instrValue, "Unexpected instruction kind");
     }
   }
 }
