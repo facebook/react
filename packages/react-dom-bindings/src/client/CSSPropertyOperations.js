@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import isArray from 'shared/isArray';
+
 import {shorthandToLonghand} from './CSSShorthandProperty';
 
 import dangerousStyleValue from '../shared/dangerousStyleValue';
@@ -25,24 +27,30 @@ export function createDangerousStringForStyles(styles) {
   if (__DEV__) {
     let serialized = '';
     let delimiter = '';
-    for (const styleName in styles) {
-      if (!styles.hasOwnProperty(styleName)) {
-        continue;
-      }
-      const styleValue = styles[styleName];
-      if (styleValue != null) {
-        const isCustomProperty = styleName.indexOf('--') === 0;
-        serialized +=
-          delimiter +
-          (isCustomProperty ? styleName : hyphenateStyleName(styleName)) +
-          ':';
-        serialized += dangerousStyleValue(
-          styleName,
-          styleValue,
-          isCustomProperty,
-        );
+    if (isArray(styles)) {
+      serialized += styles.map(style => {
+        return createDangerousStringForStyles(style);
+      }).filter(v => v).join(';');
+    } else {
+      for (const styleName in styles) {
+        if (!styles.hasOwnProperty(styleName)) {
+          continue;
+        }
+        const styleValue = styles[styleName];
+        if (styleValue != null) {
+          const isCustomProperty = styleName.indexOf('--') === 0;
+          serialized +=
+            delimiter +
+            (isCustomProperty ? styleName : hyphenateStyleName(styleName)) +
+            ':';
+          serialized += dangerousStyleValue(
+            styleName,
+            styleValue,
+            isCustomProperty,
+          );
 
-        delimiter = ';';
+          delimiter = ';';
+        }
       }
     }
     return serialized || null;
@@ -57,29 +65,35 @@ export function createDangerousStringForStyles(styles) {
  * @param {object} styles
  */
 export function setValueForStyles(node, styles) {
-  const style = node.style;
-  for (let styleName in styles) {
-    if (!styles.hasOwnProperty(styleName)) {
-      continue;
-    }
-    const isCustomProperty = styleName.indexOf('--') === 0;
-    if (__DEV__) {
-      if (!isCustomProperty) {
-        warnValidStyle(styleName, styles[styleName]);
+  if (isArray(styles)) {
+    styles.forEach(style => {
+      setValueForStyles(node, style);
+    });
+  } else {
+    const style = node.style;
+    for (let styleName in styles) {
+      if (!styles.hasOwnProperty(styleName)) {
+        continue;
       }
-    }
-    const styleValue = dangerousStyleValue(
-      styleName,
-      styles[styleName],
-      isCustomProperty,
-    );
-    if (styleName === 'float') {
-      styleName = 'cssFloat';
-    }
-    if (isCustomProperty) {
-      style.setProperty(styleName, styleValue);
-    } else {
-      style[styleName] = styleValue;
+      const isCustomProperty = styleName.indexOf('--') === 0;
+      if (__DEV__) {
+        if (!isCustomProperty) {
+          warnValidStyle(styleName, styles[styleName]);
+        }
+      }
+      const styleValue = dangerousStyleValue(
+        styleName,
+        styles[styleName],
+        isCustomProperty,
+      );
+      if (styleName === 'float') {
+        styleName = 'cssFloat';
+      }
+      if (isCustomProperty) {
+        style.setProperty(styleName, styleValue);
+      } else {
+        style[styleName] = styleValue;
+      }
     }
   }
 }

@@ -465,11 +465,7 @@ const styleAttributeStart = stringToPrecomputedChunk(' style="');
 const styleAssign = stringToPrecomputedChunk(':');
 const styleSeparator = stringToPrecomputedChunk(';');
 
-function pushStyle(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  style: Object,
-): void {
+function formatStyle(style: Object) {
   if (typeof style !== 'object') {
     throw new Error(
       'The `style` prop expects a mapping from style properties to values, ' +
@@ -477,10 +473,26 @@ function pushStyle(
         'using JSX.',
     );
   }
+  if (isArray(style)) {
+    style = style.reduce((styles: Object, _style: Object) => {
+      return {
+        ...styles,
+        ...formatStyle(_style),
+      };
+    }, {});
+  }
+  return style;
+}
 
+function pushStyle(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  style: Object,
+): void {
+  const styles = formatStyle(style);
   let isFirst = true;
-  for (const styleName in style) {
-    if (!hasOwnProperty.call(style, styleName)) {
+  for (const styleName in styles) {
+    if (!hasOwnProperty.call(styles, styleName)) {
       continue;
     }
     // If you provide unsafe user data here they can inject arbitrary CSS
@@ -490,7 +502,7 @@ function pushStyle(
     // This is not an XSS hole but instead a potential CSS injection issue
     // which has lead to a greater discussion about how we're going to
     // trust URLs moving forward. See #2115901
-    const styleValue = style[styleName];
+    const styleValue = styles[styleName];
     if (
       styleValue == null ||
       typeof styleValue === 'boolean' ||
