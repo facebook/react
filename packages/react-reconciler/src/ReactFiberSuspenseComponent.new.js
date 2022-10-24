@@ -27,6 +27,7 @@ export type SuspenseProps = {
   // TODO: Add "unstable_" prefix?
   suspenseCallback?: (Set<Wakeable> | null) => mixed,
 
+  unstable_avoidThisFallback?: boolean,
   unstable_expectedLoadTime?: number,
   unstable_name?: string,
 };
