@@ -85,7 +85,7 @@ describe('ReactCache', () => {
   });
 
   function readText(text) {
-    const signal = getCacheSignal();
+    const signal = getCacheSignal ? getCacheSignal() : null;
     const textCache = getTextCache();
     const record = textCache.data.get(text);
     if (record !== undefined) {
@@ -94,11 +94,13 @@ describe('ReactCache', () => {
         // schedule a cleanup function for it.
         // TODO: Add ability to cleanup entries seeded w useCacheRefresh()
         record.cleanupScheduled = true;
-        signal.addEventListener('abort', () => {
-          Scheduler.unstable_yieldValue(
-            `Cache cleanup: ${text} [v${textCache.version}]`,
-          );
-        });
+        if (getCacheSignal) {
+          signal.addEventListener('abort', () => {
+            Scheduler.unstable_yieldValue(
+              `Cache cleanup: ${text} [v${textCache.version}]`,
+            );
+          });
+        }
       }
       switch (record.status) {
         case 'pending':
@@ -140,11 +142,13 @@ describe('ReactCache', () => {
       };
       textCache.data.set(text, newRecord);
 
-      signal.addEventListener('abort', () => {
-        Scheduler.unstable_yieldValue(
-          `Cache cleanup: ${text} [v${textCache.version}]`,
-        );
-      });
+      if (getCacheSignal) {
+        signal.addEventListener('abort', () => {
+          Scheduler.unstable_yieldValue(
+            `Cache cleanup: ${text} [v${textCache.version}]`,
+          );
+        });
+      }
       throw thenable;
     }
   }
@@ -216,7 +220,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCache
   test('root acts as implicit cache boundary', async () => {
     const root = ReactNoop.createRoot();
     await act(async () => {
@@ -662,7 +666,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCache
   test('refresh a cache boundary', async () => {
     let refresh;
     function App() {
@@ -674,11 +678,9 @@ describe('ReactCache', () => {
     const root = ReactNoop.createRoot();
     await act(async () => {
       root.render(
-        <Cache>
-          <Suspense fallback={<Text text="Loading..." />}>
-            <App />
-          </Suspense>
-        </Cache>,
+        <Suspense fallback={<Text text="Loading..." />}>
+          <App />
+        </Suspense>,
       );
     });
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
@@ -701,15 +703,16 @@ describe('ReactCache', () => {
       resolveMostRecentTextCache('A');
     });
     // Note that the version has updated
-    expect(Scheduler).toHaveYielded(['A [v2]']);
+    if (getCacheSignal) {
+      expect(Scheduler).toHaveYielded(['A [v2]', 'Cache cleanup: A [v1]']);
+    } else {
+      expect(Scheduler).toHaveYielded(['A [v2]']);
+    }
     expect(root).toMatchRenderedOutput('A [v2]');
 
     await act(async () => {
       root.render('Bye');
     });
-    // the original cache instance does not cleanup since it is still referenced
-    // by the root, but the refreshed inner cache does cleanup
-    expect(Scheduler).toHaveYielded(['Cache cleanup: A [v2]']);
     expect(root).toMatchRenderedOutput('Bye');
   });
 
