@@ -153,7 +153,7 @@ function resolveMostRecentTextCache(text) {
 
 const resolveText = resolveMostRecentTextCache;
 
-// @gate enableCache
+// @gate enableLegacyCache
 // @gate enableSuspenseList
 test('regression (#20932): return pointer is correct before entering deleted tree', async () => {
   // Based on a production bug. Designed to trigger a very specific

@@ -41,9 +41,9 @@ describe('ReactDOMFizzServer', () => {
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
+    use = React.use;
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
-      use = React.experimental_use;
     }
 
     PropTypes = require('prop-types');

@@ -40,6 +40,7 @@ import {
   enableUseHook,
   enableUseMemoCacheHook,
   enableUseEventHook,
+  enableLegacyCache,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -2357,9 +2358,17 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
         // unmount that boundary before the refresh completes.
         const seededCache = createCache();
         if (seedKey !== null && seedKey !== undefined && root !== null) {
-          // Seed the cache with the value passed by the caller. This could be
-          // from a server mutation, or it could be a streaming response.
-          seededCache.data.set(seedKey, seedValue);
+          if (enableLegacyCache) {
+            // Seed the cache with the value passed by the caller. This could be
+            // from a server mutation, or it could be a streaming response.
+            seededCache.data.set(seedKey, seedValue);
+          } else {
+            if (__DEV__) {
+              console.error(
+                'The seed argument is not enabled outside experimental channels.',
+              );
+            }
+          }
         }
 
         const payload = {

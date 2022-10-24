@@ -25,7 +25,7 @@ describe('isomorphic act()', () => {
     DiscreteEventPriority = require('react-reconciler/constants')
       .DiscreteEventPriority;
     act = React.unstable_act;
-    use = React.experimental_use;
+    use = React.use;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
   });

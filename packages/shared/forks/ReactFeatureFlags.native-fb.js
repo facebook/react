@@ -28,6 +28,7 @@ export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = __PROFILE__;
 export const enableCache = false;
+export const enableLegacyCache = false;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
 export const enableSchedulerDebugging = false;
@@ -51,7 +52,7 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
-export const enableUseHook = false;
+export const enableUseHook = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEventHook = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
@@ -76,14 +77,14 @@ export const allowConcurrentByDefault = true;
 export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
-export const enableServerContext = false;
+export const enableServerContext = true;
 
 export const enableUseMutableSource = true;
 
 export const enableTransitionTracing = false;
 
-export const enableFloat = false;
-export const enableHostSingletons = false;
+export const enableFloat = true;
+export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = false;

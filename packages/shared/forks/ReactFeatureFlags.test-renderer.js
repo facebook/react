@@ -20,9 +20,10 @@ export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = false;
-export const enableCache = __EXPERIMENTAL__;
+export const enableCache = true;
+export const enableLegacyCache = __EXPERIMENTAL__;
 export const enableCacheElement = __EXPERIMENTAL__;
-export const enableFetchInstrumentation = __EXPERIMENTAL__;
+export const enableFetchInstrumentation = true;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
@@ -41,7 +42,7 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
-export const enableUseHook = false;
+export const enableUseHook = true;
 export const enableUseMemoCacheHook = false;
 export const enableUseEventHook = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
@@ -67,13 +68,13 @@ export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
-export const enableServerContext = false;
+export const enableServerContext = true;
 export const enableUseMutableSource = false;
 
 export const enableTransitionTracing = false;
 
-export const enableFloat = false;
-export const enableHostSingletons = false;
+export const enableFloat = true;
+export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = false;

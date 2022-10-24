@@ -44,14 +44,15 @@ describe('ReactFetch', () => {
     fetchCount = 0;
     global.fetch = fetchMock;
 
-    if (gate(flags => flags.experimental && !flags.www)) {
+    if (gate(flags => !flags.www)) {
       jest.mock('react', () => require('react/react.shared-subset'));
     }
+
     React = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
-    use = React.experimental_use;
-    cache = React.experimental_cache;
+    use = React.use;
+    cache = React.cache;
   });
 
   async function render(Component) {
