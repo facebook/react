@@ -39,10 +39,6 @@ class SSABuilder {
     return this.#env.nextIdentifierId;
   }
 
-  // Hack(gsn): Start from the last stored id in HIRBuilder.
-  // Need to refactor makeTemporary and relevant state out of HIR Builder.
-  #id = 1000;
-
   state(): State {
     invariant(
       this.#current !== null,
