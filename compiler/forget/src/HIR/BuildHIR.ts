@@ -860,7 +860,7 @@ function lowerExpression(
       const children = expr
         .get("children")
         .map((child) => lowerJsxElement(builder, child));
-      const props: { [prop: string]: Place } = {};
+      const props: Map<string, Place> = new Map();
       opening.get("attributes").forEach((attribute) => {
         todoInvariant(attribute.isJSXAttribute(), "handle spread attributes");
         const name = attribute.get("name");
@@ -882,7 +882,7 @@ function lowerExpression(
           value = lowerExpressionToPlace(builder, expression);
         }
         const prop: string = name.node.name;
-        props[prop] = value;
+        props.set(prop, value);
       });
       return {
         kind: "JsxExpression",

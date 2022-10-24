@@ -546,7 +546,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
       case "JsxExpression": {
         valueKind = ValueKind.Frozen;
         env.reference(instrValue.tag, Effect.Freeze);
-        for (const [_prop, value] of Object.entries(instrValue.props)) {
+        for (const [_prop, value] of instrValue.props) {
           env.reference(value, Effect.Freeze);
         }
         if (instrValue.children !== null) {

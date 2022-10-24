@@ -215,7 +215,7 @@ function writeInstr(cx: Context, instr: Instruction, body: Array<t.Statement>) {
     }
     case "JsxExpression": {
       const attributes: Array<t.JSXAttribute> = [];
-      for (const [prop, value] of Object.entries(instrValue.props)) {
+      for (const [prop, value] of instrValue.props) {
         attributes.push(
           t.jsxAttribute(
             t.jsxIdentifier(prop),

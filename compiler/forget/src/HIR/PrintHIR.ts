@@ -191,7 +191,7 @@ function printInstructionValue(instrValue: InstructionValue): string {
     }
     case "JsxExpression": {
       const propItems = [];
-      for (const [prop, value] of Object.entries(instrValue.props)) {
+      for (const [prop, value] of instrValue.props) {
         propItems.push(`${prop}={${printPlace(value)}}`);
       }
       const props = propItems.length !== 0 ? " " + propItems.join(" ") : "";

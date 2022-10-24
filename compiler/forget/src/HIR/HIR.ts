@@ -185,7 +185,7 @@ export type InstructionData =
   | {
       kind: "JsxExpression";
       tag: Place;
-      props: { [prop: string]: Place };
+      props: Map<string, Place>;
       children: Array<Place> | null; // null === no children
     }
   | {
