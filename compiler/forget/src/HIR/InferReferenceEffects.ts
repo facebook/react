@@ -253,12 +253,7 @@ class Environment {
       place.effect = effectKind === Effect.Mutate ? Effect.Mutate : Effect.Read;
       return;
     }
-    let valueKind: ValueKind | null = null;
-    for (const value of values) {
-      const kind = this.#values.get(value)!;
-      valueKind = valueKind !== null ? mergeValues(valueKind, kind) : kind;
-    }
-    invariant(valueKind !== null, "Expected a value to be set");
+    let valueKind: ValueKind | null = this.kind(place);
     let effect: Effect | null = null;
     switch (effectKind) {
       case Effect.Freeze: {
