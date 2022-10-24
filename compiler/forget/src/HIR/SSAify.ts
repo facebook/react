@@ -12,6 +12,7 @@ import {
   Place,
 } from "./HIR";
 import { Environment } from "./HIRBuilder";
+import { printPlace } from "./PrintHIR";
 
 type IncompletePhi = {
   old: Place;
@@ -94,7 +95,10 @@ class SSABuilder {
 
     if (block.preds.size == 0) {
       // We're at the entry block and haven't found our defintion yet.
-      throw new Error(`Unable to find \$${oldPlace.identifier.id}`);
+      console.log(
+        `Unable to find "${printPlace(oldPlace)}", assuming it's a global`
+      );
+      //return oldPlace;
     }
 
     if (unsealedPreds.get(block)! > 0) {
