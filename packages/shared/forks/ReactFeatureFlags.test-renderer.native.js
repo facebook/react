@@ -21,6 +21,7 @@ export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = false;
 export const enableCache = true;
+export const enableLegacyCache = false;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
 export const disableJavaScriptURLs = false;

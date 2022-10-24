@@ -131,7 +131,7 @@ describe('ReactSuspenseFallback', () => {
     return {type: 'span', children: [], prop, hidden: false};
   }
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   it('suspends and shows fallback', () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Loading..." />}>
@@ -143,7 +143,7 @@ describe('ReactSuspenseFallback', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   it('suspends and shows null fallback', () => {
     ReactNoop.render(
       <Suspense fallback={null}>
@@ -158,7 +158,7 @@ describe('ReactSuspenseFallback', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   it('suspends and shows undefined fallback', () => {
     ReactNoop.render(
       <Suspense>
@@ -173,7 +173,7 @@ describe('ReactSuspenseFallback', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   it('suspends and shows inner fallback', () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Should not show..." />}>
@@ -187,7 +187,7 @@ describe('ReactSuspenseFallback', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   it('suspends and shows inner undefined fallback', () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Should not show..." />}>
@@ -204,7 +204,7 @@ describe('ReactSuspenseFallback', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   it('suspends and shows inner null fallback', () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Should not show..." />}>

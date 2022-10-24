@@ -71,6 +71,7 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
 export const enableCache = true;
+export const enableLegacyCache = true;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
 
