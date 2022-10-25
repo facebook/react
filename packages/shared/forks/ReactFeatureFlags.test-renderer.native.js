@@ -58,6 +58,7 @@ export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
+export const enableUnifiedSyncLane = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;

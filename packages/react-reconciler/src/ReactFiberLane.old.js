@@ -11,7 +11,7 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Transition} from './ReactFiberTracingMarkerComponent.old';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.old';
 import type {EventPriority} from './ReactEventPriorities.old';
-import {DiscreteEventPriority} from './ReactEventPriorities.old';
+import {LegacyRoot} from './ReactRootTags';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -31,7 +31,6 @@ import {
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
 import {clz32} from './clz32';
-import {DefaultEventPriority} from './ReactEventPriorities.old';
 
 // Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-timeline.
 // If those values are changed that package should be rebuilt and redeployed.
@@ -85,6 +84,10 @@ export const IdleHydrationLane: Lane = /*               */ 0b0010000000000000000
 export const IdleLane: Lane = /*                        */ 0b0100000000000000000000000000000;
 
 export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
+
+// Copied from ReactEventPriorities to avoid cyclic dependencies
+const DiscreteEventPriority = SyncLane;
+const DefaultEventPriority = SyncLane | (1 << 1);
 
 // This function is used for the experimental timeline (react-devtools-timeline)
 // It should be kept in sync with the Lanes values above.
@@ -674,7 +677,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.pendingLanes = remainingLanes;
   if ((root.pendingLanes & SyncLane) !== NoLane) {
     root.updatePriority =
-      root.tag === 0 ? DiscreteEventPriority : DefaultEventPriority;
+      root.tag === LegacyRoot ? DiscreteEventPriority : DefaultEventPriority;
   }
 
   // Let's try everything again

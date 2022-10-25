@@ -682,7 +682,6 @@ describe(`onRender`, () => {
 
     expect(onRender).toHaveBeenCalledTimes(3);
     expect(onRender.mock.calls[0][1]).toBe('mount');
-    /// TODO: ??
     expect(onRender.mock.calls[1][1]).toBe('nested-update');
     expect(onRender.mock.calls[2][1]).toBe('update');
   });
@@ -2470,7 +2469,6 @@ describe(`onNestedUpdateScheduled`, () => {
 
     expect(onRender).toHaveBeenCalledTimes(2);
     expect(onRender.mock.calls[0][1]).toBe('mount');
-    /// TODO: ??
     expect(onRender.mock.calls[1][1]).toBe('nested-update');
 
     expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(1);
