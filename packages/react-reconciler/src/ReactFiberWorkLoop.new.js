@@ -9,10 +9,13 @@
 
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable, Thenable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
+import type {
+  SuspenseProps,
+  SuspenseState,
+} from './ReactFiberSuspenseComponent.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {EventPriority} from './ReactEventPriorities.new';
 import type {
@@ -271,6 +274,10 @@ import {
   isThenableStateResolved,
 } from './ReactFiberThenable.new';
 import {schedulePostPaintCallback} from './ReactPostPaintCallback';
+import {
+  getSuspenseHandler,
+  isBadSuspenseFallback,
+} from './ReactFiberSuspenseContext.new';
 
 const ceil = Math.ceil;
 
@@ -312,7 +319,7 @@ let workInProgressRootRenderLanes: Lanes = NoLanes;
 opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4;
 const NotSuspended: SuspendedReason = 0;
 const SuspendedOnError: SuspendedReason = 1;
-// const SuspendedOnData: SuspendedReason = 2;
+const SuspendedOnData: SuspendedReason = 2;
 const SuspendedOnImmediate: SuspendedReason = 3;
 const SuspendedAndReadyToUnwind: SuspendedReason = 4;
 
@@ -704,6 +711,18 @@ export function scheduleUpdateOnFiber(
     if (isFlushingPassiveEffects) {
       didScheduleUpdateDuringPassiveEffects = true;
     }
+  }
+
+  // Check if the work loop is currently suspended and waiting for data to
+  // finish loading.
+  if (
+    workInProgressSuspendedReason === SuspendedOnData &&
+    root === workInProgressRoot
+  ) {
+    // The incoming update might unblock the current render. Interrupt the
+    // current attempt and restart from the top.
+    prepareFreshStack(root, NoLanes);
+    markRootSuspended(root, workInProgressRootRenderLanes);
   }
 
   // Mark that the root has a pending update.
@@ -1130,6 +1149,20 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   if (root.callbackNode === originalCallbackNode) {
     // The task node scheduled for this root is the same one that's
     // currently executed. Need to return a continuation.
+    if (
+      workInProgressSuspendedReason === SuspendedOnData &&
+      workInProgressRoot === root
+    ) {
+      // Special case: The work loop is currently suspended and waiting for
+      // data to resolve. Unschedule the current task.
+      //
+      // TODO: The factoring is a little weird. Arguably this should be checked
+      // in ensureRootIsScheduled instead. I went back and forth, not totally
+      // sure yet.
+      root.callbackPriority = NoLane;
+      root.callbackNode = null;
+      return null;
+    }
     return performConcurrentWorkOnRoot.bind(null, root);
   }
   return null;
@@ -1739,7 +1772,9 @@ function handleThrow(root, thrownValue): void {
     // deprecate the old API in favor of `use`.
     thrownValue = getSuspendedThenable();
     workInProgressSuspendedThenableState = getThenableStateAfterSuspending();
-    workInProgressSuspendedReason = SuspendedOnImmediate;
+    workInProgressSuspendedReason = shouldAttemptToSuspendUntilDataResolves()
+      ? SuspendedOnData
+      : SuspendedOnImmediate;
   } else {
     // This is a regular error. If something earlier in the component already
     // suspended, we must clear the thenable state to unblock the work loop.
@@ -1794,6 +1829,48 @@ function handleThrow(root, thrownValue): void {
       );
     }
   }
+}
+
+function shouldAttemptToSuspendUntilDataResolves() {
+  // TODO: We should be able to move the
+  // renderDidSuspend/renderDidSuspendWithDelay logic into this function,
+  // instead of repeating it in the complete phase. Or something to that effect.
+
+  if (includesOnlyRetries(workInProgressRootRenderLanes)) {
+    // We can always wait during a retry.
+    return true;
+  }
+
+  // TODO: We should be able to remove the equivalent check in
+  // finishConcurrentRender, and rely just on this one.
+  if (includesOnlyTransitions(workInProgressRootRenderLanes)) {
+    const suspenseHandler = getSuspenseHandler();
+    if (suspenseHandler !== null && suspenseHandler.tag === SuspenseComponent) {
+      const currentSuspenseHandler = suspenseHandler.alternate;
+      const nextProps: SuspenseProps = suspenseHandler.memoizedProps;
+      if (isBadSuspenseFallback(currentSuspenseHandler, nextProps)) {
+        // The nearest Suspense boundary is already showing content. We should
+        // avoid replacing it with a fallback, and instead wait until the
+        // data finishes loading.
+        return true;
+      } else {
+        // This is not a bad fallback condition. We should show a fallback
+        // immediately instead of waiting for the data to resolve. This includes
+        // when suspending inside new trees.
+        return false;
+      }
+    }
+
+    // During a transition, if there is no Suspense boundary (i.e. suspending in
+    // the "shell" of an application), or if we're inside a hidden tree, then
+    // we should wait until the data finishes loading.
+    return true;
+  }
+
+  // For all other Lanes besides Transitions and Retries, we should not wait
+  // for the data to load.
+  // TODO: We should wait during Offscreen prerendering, too.
+  return false;
 }
 
 function pushDispatcher(container) {
@@ -2060,7 +2137,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     markRenderStarted(lanes);
   }
 
-  do {
+  outer: do {
     try {
       if (
         workInProgressSuspendedReason !== NotSuspended &&
@@ -2070,19 +2147,48 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
         // replay the suspended component.
         const unitOfWork = workInProgress;
         const thrownValue = workInProgressThrownValue;
-        workInProgressSuspendedReason = NotSuspended;
-        workInProgressThrownValue = null;
         switch (workInProgressSuspendedReason) {
           case SuspendedOnError: {
             // Unwind then continue with the normal work loop.
+            workInProgressSuspendedReason = NotSuspended;
+            workInProgressThrownValue = null;
             unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
             break;
           }
-          default: {
-            const wasPinged =
+          case SuspendedOnData: {
+            const didResolve =
               workInProgressSuspendedThenableState !== null &&
               isThenableStateResolved(workInProgressSuspendedThenableState);
-            if (wasPinged) {
+            if (didResolve) {
+              workInProgressSuspendedReason = NotSuspended;
+              workInProgressThrownValue = null;
+              replaySuspendedUnitOfWork(unitOfWork, thrownValue);
+            } else {
+              // The work loop is suspended on data. We should wait for it to
+              // resolve before continuing to render.
+              const thenable: Thenable<mixed> = (workInProgressThrownValue: any);
+              const onResolution = () => {
+                ensureRootIsScheduled(root, now());
+              };
+              thenable.then(onResolution, onResolution);
+              break outer;
+            }
+            break;
+          }
+          case SuspendedOnImmediate: {
+            // If this fiber just suspended, it's possible the data is already
+            // cached. Yield to the main thread to give it a chance to ping. If
+            // it does, we can retry immediately without unwinding the stack.
+            workInProgressSuspendedReason = SuspendedAndReadyToUnwind;
+            break outer;
+          }
+          default: {
+            workInProgressSuspendedReason = NotSuspended;
+            workInProgressThrownValue = null;
+            const didResolve =
+              workInProgressSuspendedThenableState !== null &&
+              isThenableStateResolved(workInProgressSuspendedThenableState);
+            if (didResolve) {
               replaySuspendedUnitOfWork(unitOfWork, thrownValue);
             } else {
               unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
@@ -2096,12 +2202,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
       break;
     } catch (thrownValue) {
       handleThrow(root, thrownValue);
-      if (workInProgressSuspendedThenableState !== null) {
-        // If this fiber just suspended, it's possible the data is already
-        // cached. Yield to the main thread to give it a chance to ping. If
-        // it does, we can retry immediately without unwinding the stack.
-        break;
-      }
     }
   } while (true);
   resetContextDependencies();
