@@ -151,7 +151,7 @@ export function createCompilerOptions(): CompilerOptions {
   return {
     outputKinds: [OutputKind.JS],
     flags: createCompilerFlags(),
-    stopPass: PassName.JSGen,
+    stopPass: PassName.Validator,
     optIn: false,
     logger: noopLogger,
     allowedCapitalizedUserFunctions: new Set(),

@@ -20,6 +20,11 @@ export default {
 };
 
 export function run(lirProg: LIR.Prog, context: CompilerContext) {
+  // Only run validation if the input has React functions and was successfully
+  // transformed (no bailouts)
+  if (lirProg.funcs.size === 0 || context.bailouts.length !== 0) {
+    return;
+  }
   const postCodegenValidator = context.opts.postCodegenValidator;
   if (postCodegenValidator === null) {
     return;
