@@ -28,63 +28,57 @@ export default {
 };
 
 export function run(lirProg: LIR.Prog, context: CompilerContext) {
-  if (lirProg.importUseMemoCache()) {
-    const prog = lirProg.ir.ast;
+  if (lirProg.funcs.size === 0) {
+    return;
+  }
+
+  const prog = lirProg.ir.ast;
+  const utils = ["$empty"];
+  if (context.opts.flags.guardHooks) {
+    utils.push("$startLazy", "$endLazy");
+  }
+  if (context.opts.flags.guardReads) {
+    utils.push("$read");
+  }
+  if (context.opts.flags.addFreeze) {
+    utils.push("$makeReadOnly");
+  }
+  if (utils.length > 0) {
+    prog.unshiftContainer(
+      "body",
+      t.variableDeclaration("const", [
+        t.variableDeclarator(
+          t.objectPattern(
+            utils.map((util) =>
+              t.objectProperty(
+                t.identifier(util),
+                t.identifier(util),
+                false,
+                true,
+                null
+              )
+            )
+          ),
+          t.identifier("$ForgetRuntime")
+        ),
+      ])
+    );
     prog.unshiftContainer(
       "body",
       t.importDeclaration(
-        /*specifier*/ [
+        [
           t.importSpecifier(
             t.identifier("useMemoCache"),
             t.identifier("unstable_useMemoCache")
           ),
+          t.importSpecifier(
+            t.identifier("$ForgetRuntime"),
+            t.identifier("unstable_ForgetRuntime")
+          ),
         ],
-        /*source*/ t.stringLiteral("react")
+        t.stringLiteral("react")
       )
     );
-    const utils = ["$empty"];
-    if (context.opts.flags.guardHooks) {
-      utils.push("$startLazy", "$endLazy");
-    }
-    if (context.opts.flags.guardReads) {
-      utils.push("$read");
-    }
-    if (context.opts.flags.addFreeze) {
-      utils.push("$makeReadOnly");
-    }
-    if (utils.length > 0) {
-      prog.unshiftContainer(
-        "body",
-        t.variableDeclaration("const", [
-          t.variableDeclarator(
-            t.objectPattern(
-              utils.map((util) =>
-                t.objectProperty(
-                  t.identifier(util),
-                  t.identifier(util),
-                  false,
-                  true,
-                  null
-                )
-              )
-            ),
-            t.identifier("$ForgetRuntime")
-          ),
-        ])
-      );
-      prog.unshiftContainer(
-        "body",
-        t.importDeclaration(
-          [
-            t.importSpecifier(
-              t.identifier("$ForgetRuntime"),
-              t.identifier("unstable_ForgetRuntime")
-            ),
-          ],
-          t.stringLiteral("React")
-        )
-      );
-    }
   }
 
   for (const [irFunc, lirFunc] of lirProg.funcs) {

@@ -16,11 +16,4 @@ export class Prog {
   constructor(ir: IR.Prog) {
     this.ir = ir;
   }
-
-  /**
-   * @return whether or not this prog needs to import useMemoCache.
-   */
-  importUseMemoCache(): boolean {
-    return this.funcs.size > 0;
-  }
 }
