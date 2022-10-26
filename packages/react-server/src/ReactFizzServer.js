@@ -523,7 +523,11 @@ function logRecoverableErrorProd(request: Request, error: any): ?string {
 }
 
 function fatalError(request: Request, error: mixed): void {
-  request.onError(error);
+  if (__DEV__) {
+    logRecoverableErrorDev(request, error);
+  } else {
+    logRecoverableErrorProd(request, error);
+  }
   // This is called outside error handling code such as if the root errors outside
   // a suspense boundary or if the root suspense boundary's fallback errors.
   // It's also called if React itself or its host configs errors.
@@ -1702,7 +1706,17 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     // We didn't complete the root so we have nothing to show. We can close
     // the request;
     if (request.status !== CLOSING && request.status !== CLOSED) {
-      fatalError(request, error);
+      if (__DEV__) {
+        const previousTaskInDev = currentTaskInDEV;
+        currentTaskInDEV = task;
+        try {
+          fatalError(request, error);
+        } finally {
+          currentTaskInDEV = previousTaskInDev;
+        }
+      } else {
+        fatalError(request, error);
+      }
     }
   } else {
     boundary.pendingTasks--;
