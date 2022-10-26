@@ -484,7 +484,11 @@ describe('ReactDOMFizzServer', () => {
 
     const theError = new Error('Test');
     const loggedErrors = [];
-    function onError(x) {
+    const stacks = [];
+    function onError(x, errorInfo) {
+      if (errorInfo && errorInfo.componentStack) {
+        stacks.push(normalizeCodeLocInfo(errorInfo.componentStack));
+      }
       loggedErrors.push(x);
       return 'Hash of (' + x.message + ')';
     }
@@ -502,6 +506,7 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     expect(loggedErrors).toEqual([]);
+    expect(stacks).toEqual([]);
     expect(bootstrapped).toBe(true);
 
     Scheduler.unstable_flushAll();
@@ -510,12 +515,16 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     expect(loggedErrors).toEqual([]);
+    expect(stacks).toEqual([]);
 
     await act(async () => {
       rejectComponent(theError);
     });
 
     expect(loggedErrors).toEqual([theError]);
+    expect(stacks).toEqual(
+      __DEV__ ? [componentStack(['Lazy', 'Suspense', 'div', 'App'])] : [],
+    );
 
     // We haven't ran the client hydration yet.
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
