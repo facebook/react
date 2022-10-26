@@ -369,7 +369,6 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
-    let fatalError;
     const errors = [];
     const stacks = [];
     try {
@@ -380,9 +379,6 @@ describe('ReactDOMFizzServer', () => {
             if (errInfo && errInfo.componentStack) {
               stacks.push(normalizeCodeLocInfo(errInfo.componentStack));
             }
-          },
-          onShellError(err) {
-            fatalError = err;
           },
         });
         pipe(writable);
