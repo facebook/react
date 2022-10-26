@@ -274,15 +274,18 @@ type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type FormatContext = {
   insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
+  allowResources: boolean,
 };
 
 function createFormatContext(
   insertionMode: InsertionMode,
   selectedValue: null | string,
+  allowResources: boolean,
 ): FormatContext {
   return {
     insertionMode,
     selectedValue,
+    allowResources,
   };
 }
 
@@ -293,7 +296,7 @@ export function createRootFormatContext(namespaceURI?: string): FormatContext {
       : namespaceURI === 'http://www.w3.org/1998/Math/MathML'
       ? MATHML_MODE
       : ROOT_HTML_MODE;
-  return createFormatContext(insertionMode, null);
+  return createFormatContext(insertionMode, null, true);
 }
 
 export function getChildFormatContext(
@@ -302,38 +305,61 @@ export function getChildFormatContext(
   props: Object,
 ): FormatContext {
   switch (type) {
+    case 'noscript':
+      return createFormatContext(HTML_MODE, null, false);
     case 'select':
       return createFormatContext(
         HTML_MODE,
         props.value != null ? props.value : props.defaultValue,
+        parentContext.allowResources,
       );
     case 'svg':
-      return createFormatContext(SVG_MODE, null);
+      return createFormatContext(SVG_MODE, null, parentContext.allowResources);
     case 'math':
-      return createFormatContext(MATHML_MODE, null);
+      return createFormatContext(
+        MATHML_MODE,
+        null,
+        parentContext.allowResources,
+      );
     case 'foreignObject':
-      return createFormatContext(HTML_MODE, null);
+      return createFormatContext(HTML_MODE, null, parentContext.allowResources);
     // Table parents are special in that their children can only be created at all if they're
     // wrapped in a table parent. So we need to encode that we're entering this mode.
     case 'table':
-      return createFormatContext(HTML_TABLE_MODE, null);
+      return createFormatContext(
+        HTML_TABLE_MODE,
+        null,
+        parentContext.allowResources,
+      );
     case 'thead':
     case 'tbody':
     case 'tfoot':
-      return createFormatContext(HTML_TABLE_BODY_MODE, null);
+      return createFormatContext(
+        HTML_TABLE_BODY_MODE,
+        null,
+        parentContext.allowResources,
+      );
     case 'colgroup':
-      return createFormatContext(HTML_COLGROUP_MODE, null);
+      return createFormatContext(
+        HTML_COLGROUP_MODE,
+        null,
+        parentContext.allowResources,
+      );
     case 'tr':
-      return createFormatContext(HTML_TABLE_ROW_MODE, null);
+      return createFormatContext(
+        HTML_TABLE_ROW_MODE,
+        null,
+        parentContext.allowResources,
+      );
   }
   if (parentContext.insertionMode >= HTML_TABLE_MODE) {
     // Whatever tag this was, it wasn't a table parent or other special parent, so we must have
     // entered plain HTML again.
-    return createFormatContext(HTML_MODE, null);
+    return createFormatContext(HTML_MODE, null, parentContext.allowResources);
   }
   if (parentContext.insertionMode === ROOT_HTML_MODE) {
     // We've emitted the root and is now in plain HTML mode.
-    return createFormatContext(HTML_MODE, null);
+    return createFormatContext(HTML_MODE, null, parentContext.allowResources);
   }
   return parentContext;
 }
@@ -1155,8 +1181,9 @@ function pushBase(
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
+  allowResources: boolean,
 ): ReactNodeList {
-  if (enableFloat && resourcesFromElement('base', props)) {
+  if (enableFloat && allowResources && resourcesFromElement('base', props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
       // to be safe and assume text will follow by inserting a textSeparator
@@ -1175,8 +1202,9 @@ function pushMeta(
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
+  allowResources: boolean,
 ): ReactNodeList {
-  if (enableFloat && resourcesFromElement('meta', props)) {
+  if (enableFloat && allowResources && resourcesFromElement('meta', props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
       // to be safe and assume text will follow by inserting a textSeparator
@@ -1195,8 +1223,9 @@ function pushLink(
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
+  allowResources: boolean,
 ): ReactNodeList {
-  if (enableFloat && resourcesFromLink(props)) {
+  if (enableFloat && allowResources && resourcesFromLink(props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
       // to be safe and assume text will follow by inserting a textSeparator
@@ -1318,6 +1347,7 @@ function pushTitle(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
+  allowResources: boolean,
 ): ReactNodeList {
   if (__DEV__) {
     const children = props.children;
@@ -1359,7 +1389,7 @@ function pushTitle(
     }
   }
 
-  if (enableFloat && resourcesFromElement('title', props)) {
+  if (enableFloat && allowResources && resourcesFromElement('title', props)) {
     // We have converted this link exclusively to a resource and no longer
     // need to emit it
     return null;
@@ -1520,8 +1550,9 @@ function pushScript(
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
+  allowResources: boolean,
 ): null {
-  if (enableFloat && resourcesFromScript(props)) {
+  if (enableFloat && allowResources && resourcesFromScript(props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
       // to be safe and assume text will follow by inserting a textSeparator
@@ -1863,18 +1894,42 @@ export function pushStartInstance(
       return pushStartMenuItem(target, props, responseState);
     case 'title':
       return enableFloat
-        ? pushTitle(target, props, responseState)
+        ? pushTitle(target, props, responseState, formatContext.allowResources)
         : pushStartTitle(target, props, responseState);
     case 'link':
-      return pushLink(target, props, responseState, textEmbedded);
+      return pushLink(
+        target,
+        props,
+        responseState,
+        textEmbedded,
+        formatContext.allowResources,
+      );
     case 'script':
       return enableFloat
-        ? pushScript(target, props, responseState, textEmbedded)
+        ? pushScript(
+            target,
+            props,
+            responseState,
+            textEmbedded,
+            formatContext.allowResources,
+          )
         : pushStartGenericElement(target, props, type, responseState);
     case 'meta':
-      return pushMeta(target, props, responseState, textEmbedded);
+      return pushMeta(
+        target,
+        props,
+        responseState,
+        textEmbedded,
+        formatContext.allowResources,
+      );
     case 'base':
-      return pushBase(target, props, responseState, textEmbedded);
+      return pushBase(
+        target,
+        props,
+        responseState,
+        textEmbedded,
+        formatContext.allowResources,
+      );
     // Newline eating tags
     case 'listing':
     case 'pre': {
