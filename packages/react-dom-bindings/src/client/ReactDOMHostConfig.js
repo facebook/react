@@ -802,7 +802,15 @@ export const supportsHydration = true;
 // inserted without breaking hydration
 export function isHydratable(type: string, props: Props): boolean {
   if (enableFloat) {
-    if (type === 'script') {
+    if (type === 'link') {
+      if (
+        (props: any).rel === 'stylesheet' &&
+        typeof (props: any).precedence !== 'string'
+      ) {
+        return true;
+      }
+      return false;
+    } else if (type === 'script') {
       const {async, onLoad, onError} = (props: any);
       return !(async && (onLoad || onError));
     }
@@ -902,16 +910,25 @@ function getNextHydratable(node) {
       if (nodeType === ELEMENT_NODE) {
         const element: Element = (node: any);
         switch (element.tagName) {
+          case 'TITLE':
+          case 'META':
+          case 'BASE':
+          case 'HTML':
+          case 'HEAD':
+          case 'BODY': {
+            continue;
+          }
           case 'LINK': {
             const linkEl: HTMLLinkElement = (element: any);
-            const rel = linkEl.rel;
+            // All links that are server rendered are resources except
+            // stylesheets that do not have a precedence
             if (
-              rel === 'preload' ||
-              (rel === 'stylesheet' && linkEl.hasAttribute('data-precedence'))
+              linkEl.rel === 'stylesheet' &&
+              !linkEl.hasAttribute('data-precedence')
             ) {
-              continue;
+              break;
             }
-            break;
+            continue;
           }
           case 'STYLE': {
             const styleEl: HTMLStyleElement = (element: any);
@@ -927,12 +944,6 @@ function getNextHydratable(node) {
             }
             break;
           }
-          case 'TITLE':
-          case 'HTML':
-          case 'HEAD':
-          case 'BODY': {
-            continue;
-          }
         }
         break;
       } else if (nodeType === TEXT_NODE) {
@@ -942,18 +953,21 @@ function getNextHydratable(node) {
       if (nodeType === ELEMENT_NODE) {
         const element: Element = (node: any);
         switch (element.tagName) {
+          case 'TITLE':
+          case 'META':
+          case 'BASE': {
+            continue;
+          }
           case 'LINK': {
             const linkEl: HTMLLinkElement = (element: any);
-            const rel = linkEl.rel;
+            // All links that are server rendered are resources except
+            // stylesheets that do not have a precedence
             if (
-              rel === 'preload' ||
-              (rel === 'stylesheet' && linkEl.hasAttribute('data-precedence'))
+              linkEl.rel === 'stylesheet' &&
+              !linkEl.hasAttribute('data-precedence')
             ) {
-              continue;
+              break;
             }
-            break;
-          }
-          case 'TITLE': {
             continue;
           }
           case 'STYLE': {
