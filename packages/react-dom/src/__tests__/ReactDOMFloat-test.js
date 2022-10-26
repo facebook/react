@@ -5536,7 +5536,7 @@ describe('ReactDOMFloat', () => {
       );
       expect(Scheduler).toHaveYielded(['Foo']);
 
-      const root = ReactDOMClient.hydrateRoot(document, <App />);
+      ReactDOMClient.hydrateRoot(document, <App />);
       expect(Scheduler).toFlushWithoutYielding();
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
