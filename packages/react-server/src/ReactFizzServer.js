@@ -522,16 +522,8 @@ function logRecoverableErrorProd(request: Request, error: any): ?string {
   );
 }
 
-function logFatalError(request: Request, error: any): void {
-  // Recoverable has the right semantics but we don't need the return type
-  if (__DEV__) {
-    logRecoverableErrorDev(request, error);
-  } else {
-    logRecoverableErrorProd(request, error);
-  }
-}
-
 function fatalError(request: Request, error: mixed): void {
+  request.onError(error);
   // This is called outside error handling code such as if the root errors outside
   // a suspense boundary or if the root suspense boundary's fallback errors.
   // It's also called if React itself or its host configs errors.
@@ -1652,12 +1644,7 @@ function erroredTask(
   error: mixed,
 ) {
   // Report the error to a global handler.
-  let errorInfo;
-  if (__DEV__) {
-    errorInfo = logRecoverableErrorDev(request, error);
-  } else {
-    errorInfo = logRecoverableErrorProd(request, error);
-  }
+
   if (boundary === null) {
     fatalError(request, error);
   } else {
@@ -1665,13 +1652,12 @@ function erroredTask(
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
       if (__DEV__) {
-        const errorInfoDev: ErrorInfoDev = (errorInfo: any);
+        const errorInfoDev = logRecoverableErrorDev(request, error);
         boundary.errorDigest = errorInfoDev.errorDigest;
         boundary.errorMessage = errorInfoDev.errorMessage;
         boundary.errorComponentStack = errorInfoDev.componentStack;
       } else {
-        const errorDigest: ?string = (errorInfo: any);
-        boundary.errorDigest = errorDigest;
+        boundary.errorDigest = logRecoverableErrorProd(request, error);
       }
 
       // Regardless of what happens next, this boundary won't be displayed,
@@ -1716,7 +1702,6 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     // We didn't complete the root so we have nothing to show. We can close
     // the request;
     if (request.status !== CLOSING && request.status !== CLOSED) {
-      logFatalError(request, error);
       fatalError(request, error);
     }
   } else {
@@ -1961,7 +1946,6 @@ export function performWork(request: Request): void {
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
-    logFatalError(request, error);
     fatalError(request, error);
   } finally {
     setCurrentResponseState(prevResponseState);
@@ -2431,7 +2415,6 @@ export function startFlowing(request: Request, destination: Destination): void {
   try {
     flushCompletedQueues(request, destination);
   } catch (error) {
-    logFatalError(request, error);
     fatalError(request, error);
   }
 }
@@ -2452,7 +2435,6 @@ export function abort(request: Request, reason: mixed): void {
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
-    logFatalError(request, error);
     fatalError(request, error);
   }
 }
