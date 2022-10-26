@@ -10,10 +10,7 @@
 import {emptyContextObject} from './ReactFizzContext';
 import {readContext} from './ReactFizzNewContext';
 
-import {
-  disableLegacyContext,
-  warnAboutDeprecatedLifecycles,
-} from 'shared/ReactFeatureFlags';
+import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
@@ -539,10 +536,7 @@ function callComponentWillMount(type: any, instance: any) {
 
   if (typeof instance.componentWillMount === 'function') {
     if (__DEV__) {
-      if (
-        warnAboutDeprecatedLifecycles &&
-        instance.componentWillMount.__suppressDeprecationWarning !== true
-      ) {
+      if (instance.componentWillMount.__suppressDeprecationWarning !== true) {
         const componentName = getComponentNameFromType(type) || 'Unknown';
 
         if (!didWarnAboutDeprecatedWillMount[componentName]) {

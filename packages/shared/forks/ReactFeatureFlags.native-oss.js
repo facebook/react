@@ -14,7 +14,6 @@ export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
 export const enableSchedulingProfiler = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-export const warnAboutDeprecatedLifecycles = true;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
