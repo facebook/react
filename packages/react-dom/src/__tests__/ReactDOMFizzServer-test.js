@@ -356,6 +356,46 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('provides a component stack in dev for fatal errors when associated with a task', async () => {
+    function Throw() {
+      throw new Error('fatal');
+    }
+
+    function App() {
+      return (
+        <html>
+          <Throw />
+        </html>
+      );
+    }
+
+    let fatalError;
+    const errors = [];
+    const stacks = [];
+    try {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+          onError(err, errInfo) {
+            errors.push(err.message);
+            if (errInfo && errInfo.componentStack) {
+              stacks.push(normalizeCodeLocInfo(errInfo.componentStack));
+            }
+          },
+          onShellError(err) {
+            fatalError = err;
+          },
+        });
+        pipe(writable);
+      });
+    } catch (error) {}
+
+    expect(fatalError.message).toEqual('fatal');
+    expect(errors).toEqual(['fatal']);
+    expect(stacks).toEqual(
+      __DEV__ ? [componentStack(['Throw', 'html', 'App'])] : [],
+    );
+  });
+
   it('#23331: does not warn about hydration mismatches if something suspended in an earlier sibling', async () => {
     const makeApp = () => {
       let resolve;
