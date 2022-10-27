@@ -225,7 +225,7 @@ export opaque type Request = {
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
   // Returning null/undefined will cause a defualt error message in production
-  onError: (error: mixed) => ?string,
+  onError: (error: mixed, errorInfo?: {componentStack?: string}) => ?string,
   // onAllReady is called when all pending task is done but it may not have flushed yet.
   // This is a good time to start writing if you want only HTML and no intermediate steps.
   onAllReady: () => void,
@@ -468,10 +468,12 @@ function popComponentStackInDEV(task: Task): void {
 // stash the component stack of an unwinding error until it is processed
 let lastBoundaryErrorComponentStackDev: ?string = null;
 
-function captureBoundaryErrorDetailsDev(
-  boundary: SuspenseBoundary,
-  error: mixed,
-) {
+type ErrorInfoDev = {
+  errorDigest: ?string,
+  errorMessage: string,
+  componentStack: string,
+};
+function logRecoverableErrorDev(request: Request, error: any): ErrorInfoDev {
   if (__DEV__) {
     let errorMessage;
     if (typeof error === 'string') {
@@ -483,29 +485,49 @@ function captureBoundaryErrorDetailsDev(
       errorMessage = String(error);
     }
 
-    const errorComponentStack =
+    const componentStack =
       lastBoundaryErrorComponentStackDev || getCurrentStackInDEV();
     lastBoundaryErrorComponentStackDev = null;
-
-    boundary.errorMessage = errorMessage;
-    boundary.errorComponentStack = errorComponentStack;
+    // If this callback errors, we intentionally let that error bubble up to become a fatal error
+    // so that someone fixes the error reporting instead of hiding it.
+    const errorDigest = request.onError(error, {componentStack});
+    if (errorDigest != null && typeof errorDigest !== 'string') {
+      // eslint-disable-next-line react-internal/prod-error-codes
+      throw new Error(
+        `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorDigest}" instead`,
+      );
+    }
+    return {errorDigest, errorMessage, componentStack};
   }
+  throw new Error(
+    'logRecoverableErrorDev was called in production mode. This is a bug in React.',
+  );
 }
 
-function logRecoverableError(request: Request, error: any): ?string {
-  // If this callback errors, we intentionally let that error bubble up to become a fatal error
-  // so that someone fixes the error reporting instead of hiding it.
-  const errorDigest = request.onError(error);
-  if (errorDigest != null && typeof errorDigest !== 'string') {
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorDigest}" instead`,
-    );
+function logRecoverableErrorProd(request: Request, error: any): ?string {
+  if (!__DEV__) {
+    // If this callback errors, we intentionally let that error bubble up to become a fatal error
+    // so that someone fixes the error reporting instead of hiding it.
+    const errorDigest = request.onError(error);
+    if (errorDigest != null && typeof errorDigest !== 'string') {
+      // eslint-disable-next-line react-internal/prod-error-codes
+      throw new Error(
+        `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorDigest}" instead`,
+      );
+    }
+    return errorDigest;
   }
-  return errorDigest;
+  throw new Error(
+    'logRecoverableErrorProd was called in development mode. This is a bug in React.',
+  );
 }
 
 function fatalError(request: Request, error: mixed): void {
+  if (__DEV__) {
+    logRecoverableErrorDev(request, error);
+  } else {
+    logRecoverableErrorProd(request, error);
+  }
   // This is called outside error handling code such as if the root errors outside
   // a suspense boundary or if the root suspense boundary's fallback errors.
   // It's also called if React itself or its host configs errors.
@@ -611,9 +633,13 @@ function renderSuspenseBoundary(
   } catch (error) {
     contentRootSegment.status = ERRORED;
     newBoundary.forceClientRender = true;
-    newBoundary.errorDigest = logRecoverableError(request, error);
     if (__DEV__) {
-      captureBoundaryErrorDetailsDev(newBoundary, error);
+      const errorDev = logRecoverableErrorDev(request, error);
+      newBoundary.errorDigest = errorDev.errorDigest;
+      newBoundary.errorMessage = errorDev.errorMessage;
+      newBoundary.errorComponentStack = errorDev.componentStack;
+    } else {
+      newBoundary.errorDigest = logRecoverableErrorProd(request, error);
     }
 
     // We don't need to decrement any task numbers because we didn't spawn any new task.
@@ -1622,16 +1648,20 @@ function erroredTask(
   error: mixed,
 ) {
   // Report the error to a global handler.
-  const errorDigest = logRecoverableError(request, error);
+
   if (boundary === null) {
     fatalError(request, error);
   } else {
     boundary.pendingTasks--;
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
-      boundary.errorDigest = errorDigest;
       if (__DEV__) {
-        captureBoundaryErrorDetailsDev(boundary, error);
+        const errorInfoDev = logRecoverableErrorDev(request, error);
+        boundary.errorDigest = errorInfoDev.errorDigest;
+        boundary.errorMessage = errorInfoDev.errorMessage;
+        boundary.errorComponentStack = errorInfoDev.componentStack;
+      } else {
+        boundary.errorDigest = logRecoverableErrorProd(request, error);
       }
 
       // Regardless of what happens next, this boundary won't be displayed,
@@ -1676,32 +1706,38 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     // We didn't complete the root so we have nothing to show. We can close
     // the request;
     if (request.status !== CLOSING && request.status !== CLOSED) {
-      logRecoverableError(request, error);
-      fatalError(request, error);
+      if (__DEV__) {
+        const previousTaskInDev = currentTaskInDEV;
+        currentTaskInDEV = task;
+        try {
+          fatalError(request, error);
+        } finally {
+          currentTaskInDEV = previousTaskInDev;
+        }
+      } else {
+        fatalError(request, error);
+      }
     }
   } else {
     boundary.pendingTasks--;
 
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
-      boundary.errorDigest = request.onError(error);
       if (__DEV__) {
-        const errorPrefix =
-          'The server did not finish this Suspense boundary: ';
-        let errorMessage;
-        if (error && typeof error.message === 'string') {
-          errorMessage = errorPrefix + error.message;
-        } else {
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          errorMessage = errorPrefix + String(error);
-        }
         const previousTaskInDev = currentTaskInDEV;
         currentTaskInDEV = task;
         try {
-          captureBoundaryErrorDetailsDev(boundary, errorMessage);
+          const errorInfoDev = logRecoverableErrorDev(request, error);
+          boundary.errorDigest = errorInfoDev.errorDigest;
+          boundary.errorMessage =
+            'The server did not finish this Suspense boundary: ' +
+            errorInfoDev.errorMessage;
+          boundary.errorComponentStack = errorInfoDev.componentStack;
         } finally {
           currentTaskInDEV = previousTaskInDev;
         }
+      } else {
+        boundary.errorDigest = logRecoverableErrorProd(request, error);
       }
       if (boundary.parentFlushed) {
         request.clientRenderedBoundaries.push(boundary);
@@ -1924,7 +1960,6 @@ export function performWork(request: Request): void {
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
-    logRecoverableError(request, error);
     fatalError(request, error);
   } finally {
     setCurrentResponseState(prevResponseState);
@@ -2394,7 +2429,6 @@ export function startFlowing(request: Request, destination: Destination): void {
   try {
     flushCompletedQueues(request, destination);
   } catch (error) {
-    logRecoverableError(request, error);
     fatalError(request, error);
   }
 }
@@ -2415,7 +2449,6 @@ export function abort(request: Request, reason: mixed): void {
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
-    logRecoverableError(request, error);
     fatalError(request, error);
   }
 }

@@ -356,6 +356,42 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('provides a component stack in dev for fatal errors when associated with a task', async () => {
+    function Throw() {
+      throw new Error('fatal');
+    }
+
+    function App() {
+      return (
+        <html>
+          <Throw />
+        </html>
+      );
+    }
+
+    const errors = [];
+    const stacks = [];
+    try {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+          onError(err, errInfo) {
+            errors.push(err.message);
+            if (errInfo && errInfo.componentStack) {
+              stacks.push(normalizeCodeLocInfo(errInfo.componentStack));
+            }
+          },
+        });
+        pipe(writable);
+      });
+    } catch (error) {}
+
+    expect(fatalError.message).toEqual('fatal');
+    expect(errors).toEqual(['fatal']);
+    expect(stacks).toEqual(
+      __DEV__ ? [componentStack(['Throw', 'html', 'App'])] : [],
+    );
+  });
+
   it('#23331: does not warn about hydration mismatches if something suspended in an earlier sibling', async () => {
     const makeApp = () => {
       let resolve;
@@ -484,7 +520,11 @@ describe('ReactDOMFizzServer', () => {
 
     const theError = new Error('Test');
     const loggedErrors = [];
-    function onError(x) {
+    const stacks = [];
+    function onError(x, errorInfo) {
+      if (errorInfo && errorInfo.componentStack) {
+        stacks.push(normalizeCodeLocInfo(errorInfo.componentStack));
+      }
       loggedErrors.push(x);
       return 'Hash of (' + x.message + ')';
     }
@@ -502,6 +542,7 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     expect(loggedErrors).toEqual([]);
+    expect(stacks).toEqual([]);
     expect(bootstrapped).toBe(true);
 
     Scheduler.unstable_flushAll();
@@ -510,12 +551,16 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     expect(loggedErrors).toEqual([]);
+    expect(stacks).toEqual([]);
 
     await act(async () => {
       rejectComponent(theError);
     });
 
     expect(loggedErrors).toEqual([theError]);
+    expect(stacks).toEqual(
+      __DEV__ ? [componentStack(['Lazy', 'Suspense', 'div', 'App'])] : [],
+    );
 
     // We haven't ran the client hydration yet.
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
