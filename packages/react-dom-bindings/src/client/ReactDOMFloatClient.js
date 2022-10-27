@@ -1465,9 +1465,9 @@ export function isHostResourceType(type: string, props: Props): boolean {
       }
       return (async: any) && typeof src === 'string' && !onLoad && !onError;
     }
+    case 'noscript':
     case 'template':
-    case 'style':
-    case 'noscript': {
+    case 'style': {
       if (__DEV__) {
         if (resourceFormOnly) {
           console.error(
