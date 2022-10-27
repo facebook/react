@@ -22,12 +22,12 @@ bb0:
   If (read $6) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Reassign mutate x$8 = 2
+  Reassign mutate x$7 = 2
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  x$7: phi(bb0: x$4, bb2: x$8)
-  Throw read x$7
+  x$8: phi(bb0: x$4, bb2: x$7)
+  Throw read x$8
 ```
 
 ## Code
@@ -36,11 +36,11 @@ bb1:
 function foo$0() {
   let x$4 = 1;
   if (x$4 === 1) {
-    x$8 = 2;
+    x$7 = 2;
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  throw x$7;
+  throw x$8;
 }
 
 ```

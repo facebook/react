@@ -165,11 +165,11 @@ class SSABuilder {
 
 export default function buildSSA(func: HIRFunction, env: Environment) {
   const builder = new SSABuilder(env);
-  function visit(blockId: BlockId) {
-    const block = func.body.blocks.get(blockId)!;
-    if (builder.visitedBlocks.has(block)) {
-      return;
-    }
+  for (const [blockId, block] of func.body.blocks) {
+    invariant(
+      !builder.visitedBlocks.has(block),
+      `found a cycle! visiting bb${block.id} again`
+    );
     builder.visitedBlocks.add(block);
 
     builder.startBlock(block);
@@ -208,13 +208,7 @@ export default function buildSSA(func: HIRFunction, env: Environment) {
         builder.fixIncompletePhis(output);
       }
     }
-
-    for (const output of outputs) {
-      visit(output);
-    }
   }
-
-  visit(func.body.entry);
 }
 
 function rewriteUsesAndCollectOutputs(
@@ -245,7 +239,7 @@ function rewriteUsesAndCollectOutputs(
     case "switch": {
       const { cases } = terminal;
       terminal.test = builder.getPlace(terminal.test);
-      for (const case_ of [...cases].reverse()) {
+      for (const case_ of [...cases]) {
         if (case_.test) {
           case_.test = builder.getPlace(case_.test);
         }

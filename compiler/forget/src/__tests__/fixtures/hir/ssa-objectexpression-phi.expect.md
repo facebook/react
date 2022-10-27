@@ -29,18 +29,18 @@ bb0:
   If (read $9) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  Reassign mutate x$14 = 2
+  Reassign mutate x$10 = 2
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Reassign mutate y$10 = 3
+  Reassign mutate y$11 = 3
   Goto bb1
 bb1:
   predecessor blocks: bb3 bb2
-  x$11: phi(bb3: x$6, bb2: x$14)
-  y$12: phi(bb3: y$10, bb2: y$7)
-  Let mutate t$13 = Object { x: read x$11, y: read y$12 }
-  Return freeze t$13
+  x$12: phi(bb3: x$6, bb2: x$10)
+  y$13: phi(bb3: y$11, bb2: y$7)
+  Let mutate t$14 = Object { x: read x$12, y: read y$13 }
+  Return freeze t$14
 ```
 
 ## Code
@@ -50,18 +50,18 @@ function foo$0() {
   let x$6 = 1;
   let y$7 = 2;
   if (x$6 > 1) {
-    x$14 = 2;
+    x$10 = 2;
     ("<<TODO: handle complex control flow in codegen>>");
   } else {
-    y$10 = 3;
+    y$11 = 3;
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  let t$13 = {
-    x: x$11,
-    y: y$12,
+  let t$14 = {
+    x: x$12,
+    y: y$13,
   };
-  return t$13;
+  return t$14;
 }
 
 ```

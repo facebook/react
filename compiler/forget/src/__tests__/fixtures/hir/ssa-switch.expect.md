@@ -39,23 +39,23 @@ bb0:
     Default: bb2
 bb5:
   predecessor blocks: bb0
-  Const mutate $21 = 1
-  Reassign mutate x$22 = Binary read x$10 + read $21
+  Const mutate $15 = 1
+  Reassign mutate x$16 = Binary read x$10 + read $15
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Const mutate $19 = 2
-  Reassign mutate x$20 = Binary read x$10 + read $19
+  Const mutate $17 = 2
+  Reassign mutate x$18 = Binary read x$10 + read $17
   Goto bb1
 bb2:
   predecessor blocks: bb0
-  Const mutate $15 = 3
-  Reassign mutate x$16 = Binary read x$10 + read $15
+  Const mutate $19 = 3
+  Reassign mutate x$20 = Binary read x$10 + read $19
   Goto bb1
 bb1:
   predecessor blocks: bb5 bb3 bb2
-  x$17: phi(bb5: x$22, bb3: x$20, bb2: x$16)
-  Let mutate y$18 = read x$17
+  x$21: phi(bb5: x$16, bb3: x$18, bb2: x$20)
+  Let mutate y$22 = read x$21
   Return
 ```
 
@@ -66,22 +66,22 @@ function foo$0() {
   let x$10 = 1;
   switch (x$10) {
     case x$10 === 1: {
-      x$22 = x$10 + 1;
+      x$16 = x$10 + 1;
       ("<<TODO: handle complex control flow in codegen>>");
     }
 
     case x$10 === 2: {
-      x$20 = x$10 + 2;
+      x$18 = x$10 + 2;
       ("<<TODO: handle complex control flow in codegen>>");
     }
 
     default: {
-      x$16 = x$10 + 3;
+      x$20 = x$10 + 3;
       ("<<TODO: handle complex control flow in codegen>>");
     }
   }
 
-  let y$18 = x$17;
+  let y$22 = x$21;
   return;
 }
 
