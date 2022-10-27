@@ -174,7 +174,12 @@ export default function buildSSA(func: HIRFunction, env: Environment) {
 
       if (instr.lvalue != null) {
         const oldPlace = instr.lvalue.place;
-        const newPlace: Place = builder.definePlace(oldPlace);
+        let newPlace: Place;
+        if (oldPlace.memberPath !== null) {
+          newPlace = builder.getPlace(oldPlace);
+        } else {
+          newPlace = builder.definePlace(oldPlace);
+        }
         instr.lvalue.place = newPlace;
       }
     }
