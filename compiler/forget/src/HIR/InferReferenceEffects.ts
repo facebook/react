@@ -410,7 +410,10 @@ class Environment {
         values.add(v);
       }
     }
-    this.#variables.set(phi.id.id, values);
+
+    if (values.size > 0) {
+      this.#variables.set(phi.id.id, values);
+    }
   }
 }
 
