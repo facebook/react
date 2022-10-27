@@ -104,7 +104,6 @@ bb2:
   b$31: phi(bb1: b$20, bb3: b$23)
   c$32: phi(bb1: c$22, bb3: c$25)
   d$33: phi(bb1: d$24, bb3: d$26)
-  mutate$35: phi(bb1: mutate$27, bb3: mutate$27)
   If (read a$30) then:bb7 else:bb7
 bb7:
   predecessor blocks: bb2
@@ -118,7 +117,7 @@ bb11:
 bb13:
   predecessor blocks: bb11
   Const mutate $34 = null
-  Call mutate mutate$35(mutate d$33, read $34)
+  Call mutate mutate$27(mutate d$33, read $34)
   Return
 ```
 

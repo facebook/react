@@ -76,21 +76,14 @@ bb2:
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  props$9: phi(bb0: props$6, bb2: props$6)
-  b$10: phi(bb0: b$8, bb2: b$8)
-  Foo$12: phi(bb0: Foo$4, bb2: Foo$4)
-  a$14: phi(bb0: a$7, bb2: a$7)
-  If (read props$9.p1) then:bb4 else:bb3
+  If (read props$6.p1) then:bb4 else:bb3
 bb4:
   predecessor blocks: bb1
-  Call mutate b$10.push(read props$9.p2)
+  Call mutate b$8.push(read props$6.p2)
   Goto bb3
 bb3:
   predecessor blocks: bb1 bb4
-  Foo$11: phi(bb1: Foo$12, bb4: Foo$12)
-  a$13: phi(bb1: a$14, bb4: a$14)
-  b$15: phi(bb1: b$10, bb4: b$10)
-  Const mutate $16 = JSX <read Foo$11 a={freeze a$13} b={freeze b$15} ></read Foo$11>
+  Const mutate $16 = JSX <read Foo$4 a={freeze a$7} b={freeze b$8} ></read Foo$4>
   Return read $16
 ```
 
@@ -105,12 +98,12 @@ function Component$0(props$6) {
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  if (props$9.p1) {
-    b$10.push(props$9.p2);
+  if (props$6.p1) {
+    b$8.push(props$6.p2);
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  return <Foo$11 a={a$13} b={b$15}></Foo$11>;
+  return <Foo$4 a={a$7} b={b$8}></Foo$4>;
 }
 
 ```
@@ -128,21 +121,14 @@ bb2:
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  props$12: phi(bb0: props$8, bb2: props$8)
-  b$13: phi(bb0: b$10, bb2: b$10)
-  Foo$15: phi(bb0: Foo$6, bb2: Foo$6)
-  a$17: phi(bb0: a$9, bb2: a$9)
-  If (read props$12.p1) then:bb4 else:bb3
+  If (read props$8.p1) then:bb4 else:bb3
 bb4:
   predecessor blocks: bb1
-  Call mutate b$13.push(read props$12.p2)
+  Call mutate b$10.push(read props$8.p2)
   Goto bb3
 bb3:
   predecessor blocks: bb1 bb4
-  Foo$14: phi(bb1: Foo$15, bb4: Foo$15)
-  a$16: phi(bb1: a$17, bb4: a$17)
-  b$18: phi(bb1: b$13, bb4: b$13)
-  Const mutate $19 = JSX <read Foo$14 a={freeze a$16} b={freeze b$18} ></read Foo$14>
+  Const mutate $19 = JSX <read Foo$6 a={freeze a$9} b={freeze b$10} ></read Foo$6>
   Return read $19
 ```
 
@@ -157,12 +143,12 @@ function Component$0(props$8) {
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  if (props$12.p1) {
-    b$13.push(props$12.p2);
+  if (props$8.p1) {
+    b$10.push(props$8.p2);
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  return <Foo$14 a={a$16} b={b$18}></Foo$14>;
+  return <Foo$6 a={a$9} b={b$10}></Foo$6>;
 }
 
 ```

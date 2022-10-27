@@ -53,13 +53,10 @@ bb2:
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb6 bb2
-  Component$17: phi(bb0: Component$0, bb6: Component$0, bb2: Component$0)
-  x$18: phi(bb0: x$10, bb6: x$10, bb2: x$10)
   y$20: phi(bb0: y$11, bb6: y$15, bb2: y$16)
-  props$21: phi(bb0: props$9, bb6: props$9, bb2: props$9)
-  Const mutate child$19 = JSX <read Component$17 data={freeze x$18} ></read Component$17>
-  Call read y$20.push(read props$21.p4)
-  Const mutate $22 = JSX <read Component$17 data={freeze y$20} >{read child$19}</read Component$17>
+  Const mutate child$19 = JSX <read Component$0 data={freeze x$10} ></read Component$0>
+  Call read y$20.push(read props$9.p4)
+  Const mutate $22 = JSX <read Component$0 data={freeze y$20} >{read child$19}</read Component$0>
   Return read $22
 ```
 
@@ -88,9 +85,9 @@ function Component$0(props$9) {
     }
   }
 
-  const child$19 = <Component$17 data={x$18}></Component$17>;
-  y$20.push(props$21.p4);
-  return <Component$17 data={y$20}>{child$19}</Component$17>;
+  const child$19 = <Component$0 data={x$10}></Component$0>;
+  y$20.push(props$9.p4);
+  return <Component$0 data={y$20}>{child$19}</Component$0>;
 }
 
 ```

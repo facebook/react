@@ -33,13 +33,10 @@ bb2:
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  Component$10: phi(bb0: Component$0, bb2: Component$0)
   x$11: phi(bb0: x$7, bb2: x$9)
-  y$13: phi(bb0: y$8, bb2: y$8)
-  props$14: phi(bb0: props$6, bb2: props$6)
-  Let mutate _$12 = JSX <read Component$10 x={freeze x$11} ></read Component$10>
-  Call read y$13.push(read props$14.p2)
-  Const mutate $15 = JSX <read Component$10 x={read x$11} y={read y$13} ></read Component$10>
+  Let mutate _$12 = JSX <read Component$0 x={freeze x$11} ></read Component$0>
+  Call read y$8.push(read props$6.p2)
+  Const mutate $15 = JSX <read Component$0 x={read x$11} y={read y$8} ></read Component$0>
   Return read $15
 ```
 
@@ -55,10 +52,10 @@ function Component$0(props$6) {
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  let _$12 = <Component$10 x={x$11}></Component$10>;
+  let _$12 = <Component$0 x={x$11}></Component$0>;
 
-  y$13.push(props$14.p2);
-  return <Component$10 x={x$11} y={y$13}></Component$10>;
+  y$8.push(props$6.p2);
+  return <Component$0 x={x$11} y={y$8}></Component$0>;
 }
 
 ```

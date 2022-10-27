@@ -22,11 +22,10 @@ type State = {
   incompletePhis: IncompletePhi[];
 };
 
-const unsealedPreds: Map<BasicBlock, number> = new Map();
-
 class SSABuilder {
   #states: Map<BasicBlock, State> = new Map();
   #current: BasicBlock | null = null;
+  unsealedPreds: Map<BasicBlock, number> = new Map();
   #env: Environment;
 
   constructor(env: Environment) {
@@ -73,13 +72,13 @@ class SSABuilder {
 
     if (block.preds.size == 0) {
       // We're at the entry block and haven't found our defintion yet.
-      console.log(
-        `Unable to find "${printIdentifier(oldId)}", assuming it's a global`
-      );
+      // console.log(
+      //   `Unable to find "${printIdentifier(oldId)}", assuming it's a global`
+      // );
       return oldId;
     }
 
-    if (unsealedPreds.get(block)! > 0) {
+    if (this.unsealedPreds.get(block)! > 0) {
       // We haven't visited all our predecessors, let's place an incomplete phi
       // for now.
       const newId = { ...oldId, id: this.nextIdentifierId };
@@ -96,17 +95,45 @@ class SSABuilder {
       return newId;
     }
 
-    // There are multiple predecessors, we need a phi.
-    const newId = { ...oldId, id: this.nextIdentifierId };
+    // There are multiple predecessors, we may need a phi.
+    return this.maybeAddPhi(block, oldId, state);
+  }
+
+  maybeAddPhi(block: BasicBlock, oldId: Identifier, state: State): Identifier {
     // Adding a phi may loop back to our block if there is a loop in the CFG.  We
     // update our defs before adding the phi to terminate the recursion rather than
     // looping infinitely.
+    const newId = { ...oldId, id: this.nextIdentifierId };
     state.defs.set(oldId, newId);
-    this.addPhi(block, oldId, newId);
 
-    // TODO(gsn): Can we just return `newPlace` rather than looking it up?
-    // `addPhi` _can_ mutate it, but _will_ it?
-    return state.defs.get(oldId)!;
+    const predDefs: Map<BasicBlock, Identifier> = new Map();
+    const predIds: Set<Identifier> = new Set();
+    for (const predBlock of block.preds) {
+      const predId = this.getIdAt(oldId, predBlock);
+      predDefs.set(predBlock, predId);
+      predIds.add(predId);
+    }
+
+    // if all predecessors have the same id, then there is no need for a phi node.
+    // note that in the case of a loop there are guaranteed to be multiple values,
+    // since we have already updated this block with a new identifier to terminate
+    // the recursion
+    if (predIds.size === 1) {
+      // there was only a single incoming id so we don't need a phi node,
+      // replace with that incoming id instead
+      const predId = [...predIds][0]!;
+      state.defs.set(oldId, predId);
+      return predId;
+    }
+
+    const phi: Phi = {
+      kind: "Phi",
+      id: newId,
+      operands: predDefs,
+    };
+
+    block.phis.add(phi);
+    return newId;
   }
 
   addPhi(block: BasicBlock, oldId: Identifier, newId: Identifier) {
@@ -197,14 +224,14 @@ export default function buildSSA(func: HIRFunction, env: Environment) {
     const outputBlocks = outputs.map((id) => func.body.blocks.get(id)!);
     for (const output of outputBlocks) {
       let count;
-      if (unsealedPreds.has(output)) {
-        count = unsealedPreds.get(output)! - 1;
+      if (builder.unsealedPreds.has(output)) {
+        count = builder.unsealedPreds.get(output)! - 1;
       } else {
         count = output.preds.size - 1;
       }
-      unsealedPreds.set(output, count);
+      builder.unsealedPreds.set(output, count);
 
-      if (count == 0 && visitedBlocks.has(output)) {
+      if (count === 0 && visitedBlocks.has(output)) {
         builder.fixIncompletePhis(output);
       }
     }

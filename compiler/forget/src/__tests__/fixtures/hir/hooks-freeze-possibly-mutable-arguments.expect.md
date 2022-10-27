@@ -40,12 +40,10 @@ bb3:
   Goto bb1
 bb1:
   predecessor blocks: bb3 bb2
-  useFreeze$13: phi(bb3: useFreeze$5, bb2: useFreeze$5)
   a$14: phi(bb3: a$12, bb2: a$11)
-  call$15: phi(bb3: call$6, bb2: call$6)
-  Call read useFreeze$13(freeze a$14)
-  Call read useFreeze$13(read a$14)
-  Call mutate call$15(read a$14)
+  Call read useFreeze$5(freeze a$14)
+  Call read useFreeze$5(read a$14)
+  Call mutate call$6(read a$14)
   Return read a$14
 ```
 
@@ -64,9 +62,9 @@ function Component$0(props$7) {
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  useFreeze$13(a$14);
-  useFreeze$13(a$14);
-  call$15(a$14);
+  useFreeze$5(a$14);
+  useFreeze$5(a$14);
+  call$6(a$14);
   return a$14;
 }
 

@@ -119,10 +119,8 @@ bb2:
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  a$5: phi(bb0: a$4, bb2: a$4)
-  props$6: phi(bb0: props$3, bb2: props$3)
-  Call mutate a$5.push(read props$6.d)
-  Return freeze a$5
+  Call mutate a$4.push(read props$3.d)
+  Return freeze a$4
 ```
 
 ## Code
@@ -136,8 +134,8 @@ function Component$0(props$3) {
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  a$5.push(props$6.d);
-  return a$5;
+  a$4.push(props$3.d);
+  return a$4;
 }
 
 ```
@@ -221,10 +219,8 @@ bb2:
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  a$5: phi(bb2: a$4, bb0: a$4)
-  props$6: phi(bb2: props$3, bb0: props$3)
-  Call mutate a$5.push(read props$6.d)
-  Return freeze a$5
+  Call mutate a$4.push(read props$3.d)
+  Return freeze a$4
 ```
 
 ## Code
@@ -234,8 +230,8 @@ function Component$0(props$3) {
   const a$4 = [];
   a$4.push(props$3.a);
   if (props$3.b) {
-    a$5.push(props$6.d);
-    return a$5;
+    a$4.push(props$3.d);
+    return a$4;
   }
 
   a$4.push(props$3.c);

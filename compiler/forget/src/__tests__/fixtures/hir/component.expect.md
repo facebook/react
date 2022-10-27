@@ -44,11 +44,11 @@ bb0:
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb4 bb7
-  items$33: phi(bb0: items$27, bb4: items$50, bb7: items$50)
-  item$35: phi(bb0: item$10, bb4: item$42, bb7: item$42)
-  seen$38: phi(bb0: seen$30, bb4: seen$41, bb7: seen$41)
-  renderedItems$46: phi(bb0: renderedItems$29, bb4: renderedItems$45, bb7: renderedItems$45)
-  max$48: phi(bb0: max$32, bb4: max$47, bb7: max$47)
+  items$33: phi(bb0: items$27, bb4: items$33, bb7: items$33)
+  item$35: phi(bb0: item$10, bb4: item$35, bb7: item$35)
+  seen$38: phi(bb0: seen$30, bb4: seen$38, bb7: seen$38)
+  renderedItems$46: phi(bb0: renderedItems$29, bb4: renderedItems$46, bb7: renderedItems$46)
+  max$48: phi(bb0: max$32, bb4: max$48, bb7: max$48)
   If (read items$33) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
@@ -66,24 +66,18 @@ bb9:
 bb7:
   predecessor blocks: bb9 bb8
   $40: phi(bb9: $39, bb8: $37)
-  seen$41: phi(bb9: seen$38, bb8: seen$38)
-  item$42: phi(bb9: item$35, bb8: item$35)
-  renderedItems$45: phi(bb9: renderedItems$46, bb8: renderedItems$46)
-  max$47: phi(bb9: max$48, bb8: max$48)
-  items$50: phi(bb9: items$33, bb8: items$33)
   If (read $40) then:bb1 else:bb4
 bb4:
   predecessor blocks: bb7
-  Call mutate seen$41.add(mutate item$42)
+  Call mutate seen$38.add(mutate item$35)
   Const mutate $43 = "div"
-  Const mutate $44 = JSX <read $43>{read item$42}</read $43>
-  Call mutate renderedItems$45.push(read $44)
-  Const mutate $49 = Binary read renderedItems$45.length >= read max$47
+  Const mutate $44 = JSX <read $43>{read item$35}</read $43>
+  Call mutate renderedItems$46.push(read $44)
+  Const mutate $49 = Binary read renderedItems$46.length >= read max$48
   If (read $49) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb1 bb4
-  renderedItems$51: phi(bb1: renderedItems$46, bb4: renderedItems$45)
-  Const mutate count$52 = read renderedItems$51.length
+  Const mutate count$52 = read renderedItems$46.length
   Const mutate $53 = "div"
   Const mutate $54 = "\n      "
   Const mutate $55 = "h1"
@@ -91,7 +85,7 @@ bb2:
   Const mutate $57 = JSX <read $55>{freeze count$52}{read $56}</read $55>
   Const mutate $58 = "\n      "
   Const mutate $59 = "\n    "
-  Const mutate $60 = JSX <read $53>{read $54}{read $57}{read $58}{freeze renderedItems$51}{read $59}</read $53>
+  Const mutate $60 = JSX <read $53>{read $54}{read $57}{read $58}{freeze renderedItems$46}{read $59}</read $53>
   Return read $60
 ```
 

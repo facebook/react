@@ -44,20 +44,14 @@ bb4:
   Goto bb2
 bb2:
   predecessor blocks: bb4 bb0
-  x$14: phi(bb4: x$9, bb0: x$9)
-  Component$17: phi(bb4: Component$0, bb0: Component$0)
-  props$22: phi(bb4: props$8, bb0: props$8)
-  Reassign mutate y$15 = read x$14
+  Reassign mutate y$15 = read x$9
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  Component$16: phi(bb2: Component$17, bb0: Component$0)
-  x$18: phi(bb2: x$14, bb0: x$9)
   y$20: phi(bb2: y$15, bb0: y$10)
-  props$21: phi(bb2: props$22, bb0: props$8)
-  Const mutate child$19 = JSX <read Component$16 data={freeze x$18} ></read Component$16>
-  Call read y$20.push(read props$21.p4)
-  Const mutate $23 = JSX <read Component$16 data={read y$20} >{read child$19}</read Component$16>
+  Const mutate child$19 = JSX <read Component$0 data={freeze x$9} ></read Component$0>
+  Call read y$20.push(read props$8.p4)
+  Const mutate $23 = JSX <read Component$0 data={read y$20} >{read child$19}</read Component$0>
   Return read $23
 ```
 
@@ -76,14 +70,14 @@ function Component$0(props$8) {
     }
 
     case false: {
-      y$15 = x$14;
+      y$15 = x$9;
       ("<<TODO: handle complex control flow in codegen>>");
     }
   }
 
-  const child$19 = <Component$16 data={x$18}></Component$16>;
-  y$20.push(props$21.p4);
-  return <Component$16 data={y$20}>{child$19}</Component$16>;
+  const child$19 = <Component$0 data={x$9}></Component$0>;
+  y$20.push(props$8.p4);
+  return <Component$0 data={y$20}>{child$19}</Component$0>;
 }
 
 ```

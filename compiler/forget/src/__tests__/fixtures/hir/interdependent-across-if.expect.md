@@ -85,10 +85,7 @@ bb2:
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  Foo$11: phi(bb0: Foo$6, bb2: Foo$6)
-  a$12: phi(bb0: a$9, bb2: a$9)
-  b$13: phi(bb0: b$10, bb2: b$10)
-  Const mutate $14 = JSX <read Foo$11 a={freeze a$12} b={freeze b$13} ></read Foo$11>
+  Const mutate $14 = JSX <read Foo$6 a={freeze a$9} b={freeze b$10} ></read Foo$6>
   Return read $14
 ```
 
@@ -103,7 +100,7 @@ function Component$0(props$8) {
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  return <Foo$11 a={a$12} b={b$13}></Foo$11>;
+  return <Foo$6 a={a$9} b={b$10}></Foo$6>;
 }
 
 ```

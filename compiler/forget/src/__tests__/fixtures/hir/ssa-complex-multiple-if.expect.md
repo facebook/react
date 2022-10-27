@@ -32,10 +32,9 @@ bb2:
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  y$13: phi(bb0: y$8, bb2: y$8)
   x$17: phi(bb0: x$7, bb2: x$11)
   Const mutate $12 = 3
-  Const mutate $14 = Binary read y$13 === read $12
+  Const mutate $14 = Binary read y$8 === read $12
   If (read $14) then:bb4 else:bb3
 bb4:
   predecessor blocks: bb1
@@ -59,7 +58,7 @@ function foo$0() {
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  if (y$13 === 3) {
+  if (y$8 === 3) {
     x$15 = 5;
     ("<<TODO: handle complex control flow in codegen>>");
   }
