@@ -12,6 +12,7 @@ import { CompilerContext } from "./CompilerContext";
 import { CompilerOptions } from "./CompilerOptions";
 import * as ME from "./MiddleEnd";
 import { PassManager } from "./PassManager";
+import * as Validation from "./Validation";
 
 /**
  * Compiler Driver
@@ -59,7 +60,7 @@ export function createCompilerDriver(
       passManager.addPass(BE.JSGen);
 
       // Optionally sanity-check the transformed output
-      passManager.addPass(BE.PostCodegenValidator);
+      passManager.addPass(Validation.PostCodegenValidator);
 
       passManager.runAll();
     },

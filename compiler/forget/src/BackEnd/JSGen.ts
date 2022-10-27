@@ -173,4 +173,16 @@ export function runFunc(
 
   // recover directives.
   funcBody.node.directives = directives;
+  if (
+    funcBody.node.directives.length === 0 ||
+    funcBody.node.directives[0]!.value?.value !== "use forget"
+  ) {
+    funcBody.node.directives.unshift({
+      type: "Directive",
+      value: {
+        type: "DirectiveLiteral",
+        value: "use forget",
+      },
+    });
+  }
 }

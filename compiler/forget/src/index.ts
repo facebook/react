@@ -19,5 +19,6 @@ export * from "./CompilerOptions";
 export * from "./CompilerOutputs";
 export * from "./Diagnostic";
 export * from "./Logger";
+export { NoUseBeforeDefineRule } from "./Validation";
 
 export default BabelPlugin;

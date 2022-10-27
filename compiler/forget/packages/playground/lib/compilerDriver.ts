@@ -8,6 +8,7 @@ import {
   createArrayLogger,
   createCompilerOutputs,
   getMostRecentCompilerContext,
+  NoUseBeforeDefineRule,
   OutputKind,
   type CompilerContext,
   type CompilerOptions,
@@ -36,7 +37,7 @@ const ESLINT_CONFIG = {
     sourceType: "module",
   },
   rules: {
-    "no-use-before-define": "error",
+    "custom-no-use-before-define": "error",
   },
 };
 
@@ -48,6 +49,7 @@ const ESLINT_CONFIG = {
  */
 function validateNoUseBeforeDefine(source: string) {
   const linter = new ESLint.index.Linter();
+  linter.defineRule("custom-no-use-before-define", NoUseBeforeDefineRule);
   return linter.verify(source, ESLINT_CONFIG);
 }
 
