@@ -72,6 +72,7 @@ export function createRootFormatContext(): FormatContext {
   return {
     insertionMode: HTML_MODE, // We skip the root mode because we don't want to emit the DOCTYPE in legacy mode.
     selectedValue: null,
+    noscriptTagInScope: false,
   };
 }
 

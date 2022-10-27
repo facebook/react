@@ -863,6 +863,10 @@ export function resourcesFromLink(props: Props): boolean {
     }
   }
   if (props.onLoad || props.onError) {
+    // When a link has these props we can't treat it is a Resource but if we rendered it on the
+    // server it would look like a Resource in the rendered html (the onLoad/onError aren't emitted)
+    // Instead we expect the client to insert them rather than hydrate them which also guarantees
+    // that the onLoad and onError won't fire before the event handlers are attached
     return true;
   }
 
