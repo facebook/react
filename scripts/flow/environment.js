@@ -18,6 +18,8 @@ declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/
 
+declare var globalThis: Object;
+
 declare var queueMicrotask: (fn: Function) => void;
 declare var reportError: (error: mixed) => void;
 
