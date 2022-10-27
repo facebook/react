@@ -8,6 +8,7 @@
 import { assertExhaustive } from "../Common/utils";
 import {
   HIR,
+  Identifier,
   Instruction,
   InstructionKind,
   InstructionValue,
@@ -91,11 +92,11 @@ function printInstruction(instr: Instruction): string {
 
 function printPhi(phi: Phi): string {
   const items = [];
-  items.push(printLValue(phi.lvalue));
+  items.push(printIdentifier(phi.id));
   items.push(": phi(");
   const phis = [];
-  for (const [block, place] of phi.operands) {
-    phis.push(`bb${block.id}: ${printPlace(place)}`);
+  for (const [block, id] of phi.operands) {
+    phis.push(`bb${block.id}: ${printIdentifier(id)}`);
   }
 
   items.push(phis.join(", "));
@@ -256,13 +257,7 @@ export function printLValue(lval: LValue): string {
 }
 
 export function printPlace(place: Place): string {
-  const items = [
-    place.effect,
-    " ",
-    place.identifier.name,
-    "$",
-    place.identifier.id,
-  ];
+  const items = [place.effect, " ", printIdentifier(place.identifier)];
   if (place.memberPath != null) {
     for (const path of place.memberPath) {
       items.push(".");
@@ -270,4 +265,8 @@ export function printPlace(place: Place): string {
     }
   }
   return items.filter((x) => x != null).join("");
+}
+
+export function printIdentifier(id: Identifier): string {
+  return `${id.name ?? ""}\$${id.id}`;
 }

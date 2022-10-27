@@ -17,8 +17,8 @@ function Component(props) {
 bb0:
   Const mutate a$5 = 1
   Const mutate b$6 = 2
-  Const mutate x$7 = Array [mutate a$5, mutate b$6]
-  Return mutate x$7
+  Const mutate x$7 = Array [read a$5, read b$6]
+  Return freeze x$7
 ```
 
 ## Code

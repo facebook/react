@@ -3,24 +3,22 @@ import { assertExhaustive } from "../Common/utils";
 import {
   BasicBlock,
   BlockId,
-  Effect,
   HIRFunction,
-  IdentifierId,
+  Identifier,
   Instruction,
-  InstructionKind,
   Phi,
   Place,
 } from "./HIR";
 import { Environment } from "./HIRBuilder";
-import { printPlace } from "./PrintHIR";
+import { printIdentifier } from "./PrintHIR";
 
 type IncompletePhi = {
-  old: Place;
-  new: Place;
+  oldId: Identifier;
+  newId: Identifier;
 };
 
 type State = {
-  defs: Map<IdentifierId, Place>;
+  defs: Map<Identifier, Identifier>;
   incompletePhis: IncompletePhi[];
 };
 
@@ -48,99 +46,80 @@ class SSABuilder {
     return this.#states.get(this.#current)!;
   }
 
-  // This tries to reuse all existing information about the oldPlace in case there's
-  // useful information from previous compiler passes.
-  makePlace(oldPlace: Place): Place {
-    const identifier = {
-      ...oldPlace.identifier,
-      id: this.nextIdentifierId,
-    };
+  definePlace(oldPlace: Place): Place {
+    const oldId = oldPlace.identifier;
+    const newId = { ...oldId, id: this.nextIdentifierId };
+    this.state().defs.set(oldId, newId);
     return {
       ...oldPlace,
-      identifier,
+      identifier: newId,
     };
-  }
-
-  makePlaceForPhi(oldPlace: Place): Place {
-    const identifier = {
-      ...oldPlace.identifier,
-      id: this.nextIdentifierId,
-    };
-    return {
-      identifier,
-      kind: "Identifier",
-      memberPath: null,
-      effect: Effect.Mutate,
-      path: null as any,
-    };
-  }
-
-  definePlace(oldPlace: Place): Place {
-    const newPlace = this.makePlace(oldPlace);
-    this.state().defs.set(oldPlace.identifier.id, newPlace);
-    return newPlace;
   }
 
   getPlace(oldPlace: Place): Place {
-    return this.getPlaceAt(oldPlace, this.#current!);
+    const newId = this.getIdAt(oldPlace.identifier, this.#current!);
+    return {
+      ...oldPlace,
+      identifier: newId,
+    };
   }
 
-  getPlaceAt(oldPlace: Place, block: BasicBlock): Place {
+  getIdAt(oldId: Identifier, block: BasicBlock): Identifier {
     // check if Place is defined locally
     const state = this.#states.get(block)!;
 
-    if (state.defs.has(oldPlace.identifier.id)) {
-      return state.defs.get(oldPlace.identifier.id)!;
+    if (state.defs.has(oldId)) {
+      return state.defs.get(oldId)!;
     }
 
     if (block.preds.size == 0) {
       // We're at the entry block and haven't found our defintion yet.
       console.log(
-        `Unable to find "${printPlace(oldPlace)}", assuming it's a global`
+        `Unable to find "${printIdentifier(oldId)}", assuming it's a global`
       );
-      //return oldPlace;
+      return oldId;
     }
 
     if (unsealedPreds.get(block)! > 0) {
       // We haven't visited all our predecessors, let's place an incomplete phi
       // for now.
-      const newPlace = this.makePlaceForPhi(oldPlace);
-      state.incompletePhis.push({ old: oldPlace, new: newPlace });
-      state.defs.set(oldPlace.identifier.id, newPlace);
-      return newPlace;
+      const newId = { ...oldId, id: this.nextIdentifierId };
+      state.incompletePhis.push({ oldId, newId });
+      state.defs.set(oldId, newId);
+      return newId;
     }
 
     // Only one predecessor, let's check there
     if (block.preds.size == 1) {
       const [pred] = block.preds;
-      const newPlace = this.getPlaceAt(oldPlace, pred);
-      state.defs.set(oldPlace.identifier.id, newPlace);
-      return newPlace;
+      const newId = this.getIdAt(oldId, pred);
+      state.defs.set(oldId, newId);
+      return newId;
     }
 
     // There are multiple predecessors, we need a phi.
-    const newPlace = this.makePlaceForPhi(oldPlace);
+    const newId = { ...oldId, id: this.nextIdentifierId };
     // Adding a phi may loop back to our block if there is a loop in the CFG.  We
     // update our defs before adding the phi to terminate the recursion rather than
     // looping infinitely.
-    state.defs.set(oldPlace.identifier.id, newPlace);
-    this.addPhi(block, oldPlace, newPlace);
+    state.defs.set(oldId, newId);
+    this.addPhi(block, oldId, newId);
 
     // TODO(gsn): Can we just return `newPlace` rather than looking it up?
     // `addPhi` _can_ mutate it, but _will_ it?
-    return state.defs.get(oldPlace.identifier.id)!;
+    return state.defs.get(oldId)!;
   }
 
-  addPhi(block: BasicBlock, oldPlace: Place, newPlace: Place) {
-    const predDefs: Map<BasicBlock, Place> = new Map();
+  addPhi(block: BasicBlock, oldId: Identifier, newId: Identifier) {
+    const predDefs: Map<BasicBlock, Identifier> = new Map();
     for (const predBlock of block.preds) {
-      const predPlace = this.getPlaceAt(oldPlace, predBlock);
-      predDefs.set(predBlock, predPlace);
+      const predId = this.getIdAt(oldId, predBlock);
+      predDefs.set(predBlock, predId);
     }
 
     const phi: Phi = {
       kind: "Phi",
-      lvalue: { place: newPlace, kind: InstructionKind.Const },
+      id: newId,
       operands: predDefs,
     };
 
@@ -150,7 +129,7 @@ class SSABuilder {
   fixIncompletePhis(block: BasicBlock) {
     const state = this.#states.get(block)!;
     for (const phi of state.incompletePhis) {
-      this.addPhi(block, phi.old, phi.new);
+      this.addPhi(block, phi.oldId, phi.newId);
     }
   }
 
@@ -166,14 +145,12 @@ class SSABuilder {
     const text = [];
     for (const [block, state] of this.#states) {
       text.push(`bb${block.id}:`);
-      for (const [id, place] of state.defs) {
-        text.push(`  \$${id} = \$${place.identifier.id}`);
+      for (const [oldId, newId] of state.defs) {
+        text.push(`  \$${oldId}: \$${newId}`);
       }
 
       for (const incompletePhi of state.incompletePhis) {
-        text.push(
-          `  iphi \$${incompletePhi.new.identifier} = \$${incompletePhi.old.identifier}`
-        );
+        text.push(`  iphi \$${incompletePhi.newId} = \$${incompletePhi.oldId}`);
       }
     }
 

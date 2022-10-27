@@ -24,27 +24,27 @@ bb0:
   Let mutate x$7 = 1
   Let mutate y$8 = 2
   Const mutate $9 = 2
-  Const mutate $10 = Binary mutate y$8 === mutate $9
-  If (mutate $10) then:bb2 else:bb1
+  Const mutate $10 = Binary read y$8 === read $9
+  If (read $10) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
   Reassign mutate x$18 = 3
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  Const mutate y$12: phi(bb0: mutate y$8, bb2: mutate y$8)
-  Const mutate x$17: phi(bb0: mutate x$7, bb2: mutate x$18)
+  y$12: phi(bb0: y$8, bb2: y$8)
+  x$17: phi(bb0: x$7, bb2: x$18)
   Const mutate $11 = 3
-  Const mutate $13 = Binary mutate y$12 === mutate $11
-  If (mutate $13) then:bb4 else:bb3
+  Const mutate $13 = Binary read y$12 === read $11
+  If (read $13) then:bb4 else:bb3
 bb4:
   predecessor blocks: bb1
   Reassign mutate x$16 = 5
   Goto bb3
 bb3:
   predecessor blocks: bb1 bb4
-  Const mutate x$14: phi(bb1: mutate x$17, bb4: mutate x$16)
-  Reassign mutate y$15 = mutate x$14
+  x$14: phi(bb1: x$17, bb4: x$16)
+  Reassign mutate y$15 = read x$14
   Return
 ```
 

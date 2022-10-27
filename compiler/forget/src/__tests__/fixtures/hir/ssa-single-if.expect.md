@@ -19,10 +19,10 @@ function foo() {
 bb0:
   Let mutate x$4 = 1
   Let mutate y$5 = 2
-  If (mutate y$5) then:bb2 else:bb1
+  If (read y$5) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Let mutate z$6 = Binary mutate x$4 + mutate y$5
+  Let mutate z$6 = Binary read x$4 + read y$5
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2

@@ -166,8 +166,8 @@ export type InstructionValue = (InstructionData & { path: NodePath }) | Place;
 
 export type Phi = {
   kind: "Phi";
-  lvalue: LValue;
-  operands: Map<BasicBlock, Place>;
+  id: Identifier;
+  operands: Map<BasicBlock, Identifier>;
 };
 
 export type InstructionData =

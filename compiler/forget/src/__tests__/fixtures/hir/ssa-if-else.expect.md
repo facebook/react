@@ -21,14 +21,14 @@ function foo() {
 bb0:
   Let mutate x$5 = 1
   Let mutate y$6 = 2
-  If (mutate y$6) then:bb2 else:bb3
+  If (read y$6) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  Let mutate z$8 = Binary mutate x$5 + mutate y$6
+  Let mutate z$8 = Binary read x$5 + read y$6
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Let mutate z$7 = mutate x$5
+  Let mutate z$7 = read x$5
   Goto bb1
 bb1:
   predecessor blocks: bb3 bb2

@@ -21,16 +21,16 @@ bb0:
   Let mutate x$5 = 1
   Let mutate y$6 = 2
   Const mutate $7 = 2
-  Const mutate $8 = Binary mutate y$6 === mutate $7
-  If (mutate $8) then:bb2 else:bb1
+  Const mutate $8 = Binary read y$6 === read $7
+  If (read $8) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
   Reassign mutate x$11 = 3
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  Const mutate x$9: phi(bb0: mutate x$5, bb2: mutate x$11)
-  Reassign mutate y$10 = mutate x$9
+  x$9: phi(bb0: x$5, bb2: x$11)
+  Reassign mutate y$10 = read x$9
   Return
 ```
 

@@ -21,18 +21,18 @@ bb0:
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb3
-  Const mutate x$7: phi(bb0: mutate x$5, bb3: mutate x$10)
+  x$7: phi(bb0: x$5, bb3: x$10)
   Const mutate $6 = 10
-  Const mutate $8 = Binary mutate x$7 < mutate $6
-  If (mutate $8) then:bb3 else:bb2
+  Const mutate $8 = Binary read x$7 < read $6
+  If (read $8) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
   Const mutate $9 = 1
-  Reassign mutate x$10 = Binary mutate x$7 + mutate $9
+  Reassign mutate x$10 = Binary read x$7 + read $9
   Goto bb1
 bb2:
   predecessor blocks: bb1
-  Return mutate x$7
+  Return read x$7
 ```
 
 ## Code
