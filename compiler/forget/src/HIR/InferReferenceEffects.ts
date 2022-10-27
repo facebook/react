@@ -14,6 +14,7 @@ import {
   HIRFunction,
   IdentifierId,
   InstructionValue,
+  Phi,
   Place,
   Terminal,
   ValueKind,
@@ -395,6 +396,19 @@ class Environment {
     }
     return result;
   }
+
+  inferPhi(phi: Phi) {
+    const values: Set<InstructionValue> = new Set();
+    for (const [_, operand] of phi.operands) {
+      const operandValues = this.#variables.get(operand.id);
+      // This is a backedge that will be handled later by Environment.merge
+      if (operandValues === undefined) continue;
+      for (const v of operandValues) {
+        values.add(v);
+      }
+    }
+    this.#variables.set(phi.id.id, values);
+  }
 }
 
 /**
@@ -478,6 +492,10 @@ function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
  * recording references on the @param env according to JS semantics.
  */
 function inferBlock(env: Environment, block: BasicBlock) {
+  for (const phi of block.phis) {
+    env.inferPhi(phi);
+  }
+
   for (const instr of block.instructions) {
     const instrValue = instr.value;
     let valueKind: ValueKind;
