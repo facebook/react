@@ -27,7 +27,6 @@ const unsealedPreds: Map<BasicBlock, number> = new Map();
 class SSABuilder {
   #states: Map<BasicBlock, State> = new Map();
   #current: BasicBlock | null = null;
-  visitedBlocks: Set<BasicBlock> = new Set();
   #env: Environment;
 
   constructor(env: Environment) {
@@ -164,13 +163,14 @@ class SSABuilder {
 }
 
 export default function buildSSA(func: HIRFunction, env: Environment) {
+  const visitedBlocks: Set<BasicBlock> = new Set();
   const builder = new SSABuilder(env);
   for (const [blockId, block] of func.body.blocks) {
     invariant(
-      !builder.visitedBlocks.has(block),
+      !visitedBlocks.has(block),
       `found a cycle! visiting bb${block.id} again`
     );
-    builder.visitedBlocks.add(block);
+    visitedBlocks.add(block);
 
     builder.startBlock(block);
 
@@ -204,7 +204,7 @@ export default function buildSSA(func: HIRFunction, env: Environment) {
       }
       unsealedPreds.set(output, count);
 
-      if (count == 0 && builder.visitedBlocks.has(output)) {
+      if (count == 0 && visitedBlocks.has(output)) {
         builder.fixIncompletePhis(output);
       }
     }
