@@ -34,28 +34,28 @@ function foo$0() {
 
 ```
 bb0:
-  Const mutate a$9 = Array []
-  Const mutate b$10 = Object {  }
-  Call mutate foo$4(mutate a$9, mutate b$10)
-  Const mutate $11 = "div"
-  Let mutate _$12 = JSX <read $11 a={freeze a$9} ></read $11>
-  Call mutate foo$4(mutate b$10)
-  Const mutate $13 = "div"
-  Const mutate $14 = JSX <read $13 a={read a$9} b={freeze b$10} ></read $13>
-  Return read $14
+  Const mutate a$10 = Array []
+  Const mutate b$11 = Object {  }
+  Call mutate foo$4(mutate a$10, mutate b$11)
+  Const mutate $12 = "div"
+  Let mutate _$13 = JSX <read $12 a={freeze a$10} ></read $12>
+  Call mutate foo$4(mutate b$11)
+  Const mutate $14 = "div"
+  Const mutate $15 = JSX <read $14 a={read a$10} b={freeze b$11} ></read $14>
+  Return read $15
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$9 = [];
-  const b$10 = {};
-  foo$4(a$9, b$10);
-  let _$12 = <div a={a$9}></div>;
+function Component$0(props$9) {
+  const a$10 = [];
+  const b$11 = {};
+  foo$4(a$10, b$11);
+  let _$13 = <div a={a$10}></div>;
 
-  foo$4(b$10);
-  return <div a={a$9} b={b$10}></div>;
+  foo$4(b$11);
+  return <div a={a$10} b={b$11}></div>;
 }
 
 ```

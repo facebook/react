@@ -15,23 +15,23 @@ function Component(props) {
 
 ```
 bb0:
-  Const mutate a$5 = 1
-  Const mutate b$6 = 2
-  Const mutate x$7 = Object { a: read a$5, b: read b$6 }
-  Return freeze x$7
+  Const mutate a$6 = 1
+  Const mutate b$7 = 2
+  Const mutate x$8 = Object { a: read a$6, b: read b$7 }
+  Return freeze x$8
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$5 = 1;
-  const b$6 = 2;
-  const x$7 = {
-    a: a$5,
-    b: b$6,
+function Component$0(props$5) {
+  const a$6 = 1;
+  const b$7 = 2;
+  const x$8 = {
+    a: a$6,
+    b: b$7,
   };
-  return x$7;
+  return x$8;
 }
 
 ```

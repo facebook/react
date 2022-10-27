@@ -32,20 +32,20 @@ function Foo$0() {
 
 ```
 bb0:
-  Const mutate a$6 = Array []
-  Const mutate b$7 = Object {  }
-  Let mutate c$8 = New mutate Foo$5(mutate a$6, mutate b$7)
-  Return freeze c$8
+  Const mutate a$7 = Array []
+  Const mutate b$8 = Object {  }
+  Let mutate c$9 = New mutate Foo$5(mutate a$7, mutate b$8)
+  Return freeze c$9
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$6 = [];
-  const b$7 = {};
-  let c$8 = new Foo$5(a$6, b$7);
-  return c$8;
+function Component$0(props$6) {
+  const a$7 = [];
+  const b$8 = {};
+  let c$9 = new Foo$5(a$7, b$8);
+  return c$9;
 }
 
 ```

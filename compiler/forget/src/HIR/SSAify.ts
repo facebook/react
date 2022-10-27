@@ -173,6 +173,11 @@ export default function buildSSA(func: HIRFunction, env: Environment) {
     builder.visitedBlocks.add(block);
 
     builder.startBlock(block);
+
+    if (func.body.entry === blockId) {
+      func.params = func.params.map((p) => builder.definePlace(p));
+    }
+
     for (const instr of block.instructions) {
       rewriteUses(instr, builder);
 
