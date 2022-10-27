@@ -281,6 +281,64 @@ describe('ReactDOMFloat', () => {
     });
   }
 
+  // @gate enableFloat
+  it('can hydrate non Resources in head when Resources are also inserted there', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <head>
+            <meta property="foo" content="bar" />
+            <link rel="foo" href="bar" onLoad={() => {}} />
+            <title>foo</title>
+            <base target="foo" href="bar" />
+            <script async={true} src="foo" onLoad={() => {}} />
+          </head>
+          <body>foo</body>
+        </html>,
+      );
+      pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <base target="foo" href="bar" />
+          <link rel="preload" href="foo" as="script" />
+          <meta property="foo" content="bar" />
+          <title>foo</title>
+        </head>
+        <body>foo</body>
+      </html>,
+    );
+
+    ReactDOMClient.hydrateRoot(
+      document,
+      <html>
+        <head>
+          <meta property="foo" content="bar" />
+          <link rel="foo" href="bar" onLoad={() => {}} />
+          <title>foo</title>
+          <base target="foo" href="bar" />
+          <script async={true} src="foo" onLoad={() => {}} />
+        </head>
+        <body>foo</body>
+      </html>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <base target="foo" href="bar" />
+          <link rel="preload" href="foo" as="script" />
+          <meta property="foo" content="bar" />
+          <title>foo</title>
+          <link rel="foo" href="bar" />
+          <script async="" src="foo" />
+        </head>
+        <body>foo</body>
+      </html>,
+    );
+  });
+
   // @gate enableFloat || !__DEV__
   it('warns if you render resource-like elements above <head> or <body>', async () => {
     const root = ReactDOMClient.createRoot(document);

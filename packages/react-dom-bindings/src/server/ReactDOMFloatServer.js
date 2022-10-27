@@ -863,7 +863,7 @@ export function resourcesFromLink(props: Props): boolean {
     }
   }
   if (props.onLoad || props.onError) {
-    return false;
+    return true;
   }
 
   const sizes = typeof props.sizes === 'string' ? props.sizes : '';
