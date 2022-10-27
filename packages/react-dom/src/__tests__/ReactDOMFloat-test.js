@@ -290,6 +290,9 @@ describe('ReactDOMFloat', () => {
             <meta property="foo" content="bar" />
             <link rel="foo" href="bar" onLoad={() => {}} />
             <title>foo</title>
+            <noscript>
+              <link rel="icon" href="icon" />
+            </noscript>
             <base target="foo" href="bar" />
             <script async={true} src="foo" onLoad={() => {}} />
           </head>
@@ -305,6 +308,7 @@ describe('ReactDOMFloat', () => {
           <link rel="preload" href="foo" as="script" />
           <meta property="foo" content="bar" />
           <title>foo</title>
+          <noscript>&lt;link rel="icon" href="icon"/&gt;</noscript>
         </head>
         <body>foo</body>
       </html>,
@@ -317,6 +321,9 @@ describe('ReactDOMFloat', () => {
           <meta property="foo" content="bar" />
           <link rel="foo" href="bar" onLoad={() => {}} />
           <title>foo</title>
+          <noscript>
+            <link rel="icon" href="icon" />
+          </noscript>
           <base target="foo" href="bar" />
           <script async={true} src="foo" onLoad={() => {}} />
         </head>
@@ -332,6 +339,7 @@ describe('ReactDOMFloat', () => {
           <meta property="foo" content="bar" />
           <title>foo</title>
           <link rel="foo" href="bar" />
+          <noscript>&lt;link rel="icon" href="icon"/&gt;</noscript>
           <script async="" src="foo" />
         </head>
         <body>foo</body>
@@ -5370,6 +5378,172 @@ describe('ReactDOMFloat', () => {
           <body>
             <div id="container">
               <div>foo</div>
+            </div>
+          </body>
+        </html>,
+      );
+    });
+  });
+
+  describe('noscript', () => {
+    // @gate enableFloat
+    it('should not turn children of noscript into resources', async () => {
+      function SomeResources() {
+        return (
+          <>
+            <link rel="stylesheet" href="foo" precedence="foo" />
+            <title>foo</title>
+            <link rel="foobar" href="foobar" />
+            <meta charSet="utf-8" />
+            <meta property="og:image" content="foo" />
+            <script async={true} src="script" />
+          </>
+        );
+      }
+      function Indirection({level, children}) {
+        if (level > 0) {
+          return <Indirection level={level - 1}>{children}</Indirection>;
+        } else {
+          return children;
+        }
+      }
+      function App() {
+        return (
+          <html>
+            <head>
+              <SomeResources />
+              <noscript>
+                <SomeResources />
+                <Indirection level={3}>
+                  <SomeResources />
+                </Indirection>
+              </noscript>
+              <SomeResources />
+            </head>
+          </html>
+        );
+      }
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            {/* the actual resources */}
+            <meta charset="utf-8" />
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <script async="" src="script" />
+            <title>foo</title>
+            <link rel="foobar" href="foobar" />
+            <meta property="og:image" content="foo" />
+            {/* the noscript children are encoded as a textNode when scripting is enabled */}
+            <noscript>
+              &lt;link rel="stylesheet"
+              href="foo"/&gt;&lt;title&gt;foo&lt;/title&gt;&lt;link rel="foobar"
+              href="foobar"/&gt;&lt;meta charSet="utf-8"/&gt;&lt;meta
+              property="og:image" content="foo"/&gt;&lt;script async=""
+              src="script"&gt;&lt;/script&gt;&lt;link rel="stylesheet"
+              href="foo"/&gt;&lt;title&gt;foo&lt;/title&gt;&lt;link rel="foobar"
+              href="foobar"/&gt;&lt;meta charSet="utf-8"/&gt;&lt;meta
+              property="og:image" content="foo"/&gt;&lt;script async=""
+              src="script"&gt;&lt;/script&gt;
+            </noscript>
+          </head>
+          <body />
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(document, <App />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            {/* the actual resources */}
+            <meta charset="utf-8" />
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <script async="" src="script" />
+            <title>foo</title>
+            <link rel="foobar" href="foobar" />
+            <meta property="og:image" content="foo" />
+            {/* the noscript children are encoded as a textNode when scripting is enabled */}
+            <noscript>
+              &lt;link rel="stylesheet"
+              href="foo"/&gt;&lt;title&gt;foo&lt;/title&gt;&lt;link rel="foobar"
+              href="foobar"/&gt;&lt;meta charSet="utf-8"/&gt;&lt;meta
+              property="og:image" content="foo"/&gt;&lt;script async=""
+              src="script"&gt;&lt;/script&gt;&lt;link rel="stylesheet"
+              href="foo"/&gt;&lt;title&gt;foo&lt;/title&gt;&lt;link rel="foobar"
+              href="foobar"/&gt;&lt;meta charSet="utf-8"/&gt;&lt;meta
+              property="og:image" content="foo"/&gt;&lt;script async=""
+              src="script"&gt;&lt;/script&gt;
+            </noscript>
+          </head>
+          <body />
+        </html>,
+      );
+
+      root.render(null);
+      expect(Scheduler).toFlushWithoutYielding();
+      // stylesheets and scripts currently don't unmount ever
+      // noscript is never hydrated so it also does not get cleared
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <script async="" src="script" />
+          </head>
+          <body />
+        </html>,
+      );
+    });
+
+    it('noscript runs on the server but does not emit resources and does not run on the client', async () => {
+      function App() {
+        return (
+          <html>
+            <body>
+              <div>
+                foo
+                <noscript>
+                  <Foo />
+                </noscript>
+              </div>
+            </body>
+          </html>
+        );
+      }
+      function Foo() {
+        Scheduler.unstable_yieldValue('Foo');
+
+        return <title>noscript title</title>;
+      }
+
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(container)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div>
+              foo<noscript>&lt;title&gt;noscript title&lt;/title&gt;</noscript>
+            </div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toHaveYielded(['Foo']);
+
+      ReactDOMClient.hydrateRoot(document, <App />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div>
+              foo<noscript>&lt;title&gt;noscript title&lt;/title&gt;</noscript>
             </div>
           </body>
         </html>,
