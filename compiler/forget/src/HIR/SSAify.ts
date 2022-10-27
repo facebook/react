@@ -298,7 +298,7 @@ function rewriteUses(instr: Instruction, builder: SSABuilder) {
     }
     case "JsxExpression": {
       instrValue.tag = builder.getPlace(instrValue.tag);
-      for (const [prop, place] of instrValue.props.entries()) {
+      for (const [prop, place] of instrValue.props) {
         instrValue.props.set(prop, builder.getPlace(place));
       }
       if (instrValue.children) {
@@ -310,8 +310,9 @@ function rewriteUses(instr: Instruction, builder: SSABuilder) {
     }
     case "ObjectExpression": {
       if (instrValue.properties !== null) {
-        for (const [prop, place] of instrValue.properties) {
-          instrValue.properties?.set(prop, builder.getPlace(place));
+        const props = instrValue.properties;
+        for (const [prop, place] of props) {
+          props.set(prop, builder.getPlace(place));
         }
       }
       break;
