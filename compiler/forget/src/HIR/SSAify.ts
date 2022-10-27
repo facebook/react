@@ -146,11 +146,15 @@ class SSABuilder {
     for (const [block, state] of this.#states) {
       text.push(`bb${block.id}:`);
       for (const [oldId, newId] of state.defs) {
-        text.push(`  \$${oldId}: \$${newId}`);
+        text.push(`  \$${printIdentifier(oldId)}: \$${printIdentifier(newId)}`);
       }
 
       for (const incompletePhi of state.incompletePhis) {
-        text.push(`  iphi \$${incompletePhi.newId} = \$${incompletePhi.oldId}`);
+        text.push(
+          `  iphi \$${printIdentifier(
+            incompletePhi.newId
+          )} = \$${printIdentifier(incompletePhi.oldId)}`
+        );
       }
     }
 
