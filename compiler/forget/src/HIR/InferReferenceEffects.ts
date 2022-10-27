@@ -20,7 +20,7 @@ import {
   ValueKind,
 } from "./HIR";
 import { mapTerminalSuccessors } from "./HIRBuilder";
-import { printMixedHIR } from "./PrintHIR";
+import { printMixedHIR, printPlace } from "./PrintHIR";
 
 /**
  * For every usage of a value in the given function, infers the effect or action
@@ -196,7 +196,10 @@ class Environment {
       const kind = this.#values.get(value)!;
       mergedKind = mergedKind !== null ? mergeValues(mergedKind, kind) : kind;
     }
-    invariant(mergedKind !== null, "Expected at least value");
+    invariant(
+      mergedKind !== null,
+      `Expected at least one value at ${printPlace(place)}`
+    );
     return mergedKind;
   }
 
