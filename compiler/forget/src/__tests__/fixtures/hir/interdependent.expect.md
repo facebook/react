@@ -28,21 +28,21 @@ function Foo() {}
 
 ```
 bb0:
-  Const mutate a$2 = Call mutate compute$3(read props$1.a)
-  Const mutate b$4 = Call mutate compute$3(read props$1.b)
-  Call mutate foo$5(mutate a$2, mutate b$4)
-  Const mutate $7 = JSX <read Foo$6 a={freeze a$2} b={freeze b$4} ></read Foo$6>
-  Return read $7
+  Const mutate a$9 = Call mutate compute$3(read props$8.a)
+  Const mutate b$10 = Call mutate compute$3(read props$8.b)
+  Call mutate foo$5(mutate a$9, mutate b$10)
+  Const mutate $11 = JSX <read Foo$6 a={freeze a$9} b={freeze b$10} ></read Foo$6>
+  Return read $11
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = compute$3(props$1.a);
-  const b$4 = compute$3(props$1.b);
-  foo$5(a$2, b$4);
-  return <Foo$6 a={a$2} b={b$4}></Foo$6>;
+function Component$0(props$8) {
+  const a$9 = compute$3(props$8.a);
+  const b$10 = compute$3(props$8.b);
+  foo$5(a$9, b$10);
+  return <Foo$6 a={a$9} b={b$10}></Foo$6>;
 }
 
 ```

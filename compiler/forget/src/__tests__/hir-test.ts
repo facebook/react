@@ -47,9 +47,7 @@ describe("React Forget (HIR version)", () => {
           enter(nodePath) {
             const env: Environment = new Environment();
             const ir: HIRFunction = lower(nodePath, env);
-            if (file.startsWith("ssa")) {
-              buildSSA(ir, env);
-            }
+            buildSSA(ir, env);
             inferReferenceEffects(ir);
             // const lifetimeGraph = buildDefUseGraph(ir);
             const textHIR = printHIR(ir.body);

@@ -97,33 +97,36 @@ function Foo$0() {
 
 ```
 bb0:
-  Const mutate a$2 = Call mutate compute$3(read props$1.a)
-  Const mutate b$4 = Call mutate compute$3(read props$1.b)
-  If (read props$1.c) then:bb2 else:bb1
+  Const mutate a$9 = Call mutate compute$3(read props$8.a)
+  Const mutate b$10 = Call mutate compute$3(read props$8.b)
+  If (read props$8.c) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Call mutate mutate$5(mutate a$2)
-  Call mutate mutate$5(mutate b$4)
+  Call mutate mutate$5(mutate a$9)
+  Call mutate mutate$5(mutate b$10)
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  Const mutate $7 = JSX <read Foo$6 a={freeze a$2} b={freeze b$4} ></read Foo$6>
-  Return read $7
+  Foo$11: phi(bb0: Foo$6, bb2: Foo$6)
+  a$12: phi(bb0: a$9, bb2: a$9)
+  b$13: phi(bb0: b$10, bb2: b$10)
+  Const mutate $14 = JSX <read Foo$11 a={freeze a$12} b={freeze b$13} ></read Foo$11>
+  Return read $14
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = compute$3(props$1.a);
-  const b$4 = compute$3(props$1.b);
-  if (props$1.c) {
-    mutate$5(a$2);
-    mutate$5(b$4);
+function Component$0(props$8) {
+  const a$9 = compute$3(props$8.a);
+  const b$10 = compute$3(props$8.b);
+  if (props$8.c) {
+    mutate$5(a$9);
+    mutate$5(b$10);
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  return <Foo$6 a={a$2} b={b$4}></Foo$6>;
+  return <Foo$11 a={a$12} b={b$13}></Foo$11>;
 }
 
 ```

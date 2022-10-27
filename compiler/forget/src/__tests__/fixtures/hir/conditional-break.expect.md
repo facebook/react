@@ -78,31 +78,31 @@ function Component(props) {
 
 ```
 bb0:
-  Const mutate a_DEBUG$2 = Array []
-  Call mutate a_DEBUG$2.push(read props$1.a)
-  If (read props$1.b) then:bb2 else:bb1
+  Const mutate a_DEBUG$5 = Array []
+  Call mutate a_DEBUG$5.push(read props$4.a)
+  If (read props$4.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Const mutate $3 = null
-  Return read $3
+  Const mutate $6 = null
+  Return read $6
 bb1:
   predecessor blocks: bb0
-  Call mutate a_DEBUG$2.push(read props$1.d)
-  Return freeze a_DEBUG$2
+  Call mutate a_DEBUG$5.push(read props$4.d)
+  Return freeze a_DEBUG$5
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a_DEBUG$2 = [];
-  a_DEBUG$2.push(props$1.a);
-  if (props$1.b) {
+function Component$0(props$4) {
+  const a_DEBUG$5 = [];
+  a_DEBUG$5.push(props$4.a);
+  if (props$4.b) {
     return null;
   }
 
-  a_DEBUG$2.push(props$1.d);
-  return a_DEBUG$2;
+  a_DEBUG$5.push(props$4.d);
+  return a_DEBUG$5;
 }
 
 ```
@@ -110,32 +110,34 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  Const mutate a$2 = Array []
-  Call mutate a$2.push(read props$1.a)
-  If (read props$1.b) then:bb2 else:bb1
+  Const mutate a$4 = Array []
+  Call mutate a$4.push(read props$3.a)
+  If (read props$3.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Call mutate a$2.push(read props$1.c)
+  Call mutate a$4.push(read props$3.c)
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  Call mutate a$2.push(read props$1.d)
-  Return freeze a$2
+  a$5: phi(bb0: a$4, bb2: a$4)
+  props$6: phi(bb0: props$3, bb2: props$3)
+  Call mutate a$5.push(read props$6.d)
+  Return freeze a$5
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = [];
-  a$2.push(props$1.a);
-  if (props$1.b) {
-    a$2.push(props$1.c);
+function Component$0(props$3) {
+  const a$4 = [];
+  a$4.push(props$3.a);
+  if (props$3.b) {
+    a$4.push(props$3.c);
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  a$2.push(props$1.d);
-  return a$2;
+  a$5.push(props$6.d);
+  return a$5;
 }
 
 ```
@@ -143,33 +145,33 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  Const mutate a$2 = Array []
-  Call mutate a$2.push(read props$1.a)
-  If (read props$1.b) then:bb2 else:bb1
+  Const mutate a$5 = Array []
+  Call mutate a$5.push(read props$4.a)
+  If (read props$4.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Call mutate a$2.push(read props$1.c)
-  Const mutate $3 = null
-  Return read $3
+  Call mutate a$5.push(read props$4.c)
+  Const mutate $6 = null
+  Return read $6
 bb1:
   predecessor blocks: bb0
-  Call mutate a$2.push(read props$1.d)
-  Return freeze a$2
+  Call mutate a$5.push(read props$4.d)
+  Return freeze a$5
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = [];
-  a$2.push(props$1.a);
-  if (props$1.b) {
-    a$2.push(props$1.c);
+function Component$0(props$4) {
+  const a$5 = [];
+  a$5.push(props$4.a);
+  if (props$4.b) {
+    a$5.push(props$4.c);
     return null;
   }
 
-  a$2.push(props$1.d);
-  return a$2;
+  a$5.push(props$4.d);
+  return a$5;
 }
 
 ```
@@ -177,32 +179,32 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  Const mutate a$2 = Array []
-  Call mutate a$2.push(read props$1.a)
-  If (read props$1.b) then:bb2 else:bb1
+  Const mutate a$4 = Array []
+  Call mutate a$4.push(read props$3.a)
+  If (read props$3.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Call mutate a$2.push(read props$1.c)
-  Return freeze a$2
+  Call mutate a$4.push(read props$3.c)
+  Return freeze a$4
 bb1:
   predecessor blocks: bb0
-  Call mutate a$2.push(read props$1.d)
-  Return freeze a$2
+  Call mutate a$4.push(read props$3.d)
+  Return freeze a$4
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = [];
-  a$2.push(props$1.a);
-  if (props$1.b) {
-    a$2.push(props$1.c);
-    return a$2;
+function Component$0(props$3) {
+  const a$4 = [];
+  a$4.push(props$3.a);
+  if (props$3.b) {
+    a$4.push(props$3.c);
+    return a$4;
   }
 
-  a$2.push(props$1.d);
-  return a$2;
+  a$4.push(props$3.d);
+  return a$4;
 }
 
 ```
@@ -210,31 +212,33 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  Const mutate a$2 = Array []
-  Call mutate a$2.push(read props$1.a)
-  If (read props$1.b) then:bb1 else:bb2
+  Const mutate a$4 = Array []
+  Call mutate a$4.push(read props$3.a)
+  If (read props$3.b) then:bb1 else:bb2
 bb2:
   predecessor blocks: bb0
-  Call mutate a$2.push(read props$1.c)
+  Call mutate a$4.push(read props$3.c)
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  Call mutate a$2.push(read props$1.d)
-  Return freeze a$2
+  a$5: phi(bb2: a$4, bb0: a$4)
+  props$6: phi(bb2: props$3, bb0: props$3)
+  Call mutate a$5.push(read props$6.d)
+  Return freeze a$5
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = [];
-  a$2.push(props$1.a);
-  if (props$1.b) {
-    a$2.push(props$1.d);
-    return a$2;
+function Component$0(props$3) {
+  const a$4 = [];
+  a$4.push(props$3.a);
+  if (props$3.b) {
+    a$5.push(props$6.d);
+    return a$5;
   }
 
-  a$2.push(props$1.c);
+  a$4.push(props$3.c);
   ("<<TODO: handle complex control flow in codegen>>");
 }
 

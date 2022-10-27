@@ -21,28 +21,28 @@ function Component(props) {
 
 ```
 bb0:
-  Let mutate x$2 = Array []
-  Call mutate x$2.push(read props$1.p0)
-  Let mutate y$3 = read x$2
-  Reassign mutate x$2 = Array []
-  Let mutate _$4 = JSX <read Component$0 x={freeze x$2} ></read Component$0>
-  Call mutate y$3.push(read props$1.p1)
-  Const mutate $5 = JSX <read Component$0 x={read x$2} y={freeze y$3} ></read Component$0>
-  Return read $5
+  Let mutate x$7 = Array []
+  Call mutate x$7.push(read props$6.p0)
+  Let mutate y$8 = read x$7
+  Reassign mutate x$9 = Array []
+  Let mutate _$10 = JSX <read Component$0 x={freeze x$9} ></read Component$0>
+  Call mutate y$8.push(read props$6.p1)
+  Const mutate $11 = JSX <read Component$0 x={read x$9} y={freeze y$8} ></read Component$0>
+  Return read $11
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  let x$2 = [];
-  x$2.push(props$1.p0);
-  let y$3 = x$2;
-  x$2 = [];
-  let _$4 = <Component$0 x={x$2}></Component$0>;
+function Component$0(props$6) {
+  let x$7 = [];
+  x$7.push(props$6.p0);
+  let y$8 = x$7;
+  x$9 = [];
+  let _$10 = <Component$0 x={x$9}></Component$0>;
 
-  y$3.push(props$1.p1);
-  return <Component$0 x={x$2} y={y$3}></Component$0>;
+  y$8.push(props$6.p1);
+  return <Component$0 x={x$9} y={y$8}></Component$0>;
 }
 
 ```

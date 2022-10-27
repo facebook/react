@@ -18,10 +18,10 @@ function foo(x) {}
 
 ```
 bb0:
-  Const mutate a$1 = Array []
-  Const mutate b$2 = read a$1
-  Call read useFreeze$3(freeze a$1)
-  Call mutate foo$4(read b$2)
+  Const mutate a$5 = Array []
+  Const mutate b$6 = read a$5
+  Call read useFreeze$3(freeze a$5)
+  Call mutate foo$4(read b$6)
   Return
 ```
 
@@ -29,10 +29,10 @@ bb0:
 
 ```javascript
 function Component$0() {
-  const a$1 = [];
-  const b$2 = a$1;
-  useFreeze$3(a$1);
-  foo$4(b$2);
+  const a$5 = [];
+  const b$6 = a$5;
+  useFreeze$3(a$5);
+  foo$4(b$6);
   return;
 }
 
@@ -62,7 +62,7 @@ bb0:
 ## Code
 
 ```javascript
-function foo$0(x$1) {
+function foo$0(x$2) {
   return;
 }
 

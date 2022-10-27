@@ -45,7 +45,7 @@ bb0:
 ## Code
 
 ```javascript
-function mutate$0(x$1, y$2) {
+function mutate$0(x$3, y$4) {
   return;
 }
 
@@ -54,202 +54,202 @@ function mutate$0(x$1, y$2) {
 
 ```
 bb0:
-  Const mutate a$2 = Object {  }
-  Const mutate b$3 = Array [read a$2]
-  Const mutate c$4 = Object {  }
-  Const mutate d$5 = Object { c: read c$4 }
-  Const mutate x$6 = Object {  }
-  Reassign mutate x$6.b = read b$3
-  Const mutate y$7 = Call mutate mutate$8(mutate x$6, mutate d$5)
-  If (read a$2) then:bb1 else:bb1
+  Const mutate a$11 = Object {  }
+  Const mutate b$12 = Array [read a$11]
+  Const mutate c$13 = Object {  }
+  Const mutate d$14 = Object { c: read c$13 }
+  Const mutate x$15 = Object {  }
+  Reassign mutate x$15.b = read b$12
+  Const mutate y$16 = Call mutate mutate$8(mutate x$15, mutate d$14)
+  If (read a$11) then:bb1 else:bb1
 bb1:
   predecessor blocks: bb0
-  If (read b$3) then:bb3 else:bb3
+  If (read b$12) then:bb3 else:bb3
 bb3:
   predecessor blocks: bb1
-  If (read c$4) then:bb5 else:bb5
+  If (read c$13) then:bb5 else:bb5
 bb5:
   predecessor blocks: bb3
-  If (read d$5) then:bb7 else:bb7
+  If (read d$14) then:bb7 else:bb7
 bb7:
   predecessor blocks: bb5
-  If (read y$7) then:bb9 else:bb9
+  If (read y$16) then:bb9 else:bb9
 bb9:
   predecessor blocks: bb7
-  Const mutate $9 = null
-  Call mutate mutate$8(mutate x$6, read $9)
+  Const mutate $17 = null
+  Call mutate mutate$8(mutate x$15, read $17)
   Return
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = {};
-  const b$3 = [a$2];
-  const c$4 = {};
-  const d$5 = {
-    c: c$4,
+function Component$0(props$10) {
+  const a$11 = {};
+  const b$12 = [a$11];
+  const c$13 = {};
+  const d$14 = {
+    c: c$13,
   };
-  const x$6 = {};
-  x$6 = b$3;
-  const y$7 = mutate$8(x$6, d$5);
-  if (a$2) {
-    if (b$3) {
-      if (c$4) {
-        if (d$5) {
-          if (y$7) {
-            mutate$8(x$6, null);
+  const x$15 = {};
+  x$15 = b$12;
+  const y$16 = mutate$8(x$15, d$14);
+  if (a$11) {
+    if (b$12) {
+      if (c$13) {
+        if (d$14) {
+          if (y$16) {
+            mutate$8(x$15, null);
             return;
           }
 
-          mutate$8(x$6, null);
+          mutate$8(x$15, null);
           return;
         }
 
-        if (y$7) {
-          mutate$8(x$6, null);
+        if (y$16) {
+          mutate$8(x$15, null);
           return;
         }
 
-        mutate$8(x$6, null);
+        mutate$8(x$15, null);
         return;
       }
 
-      if (d$5) {
-        if (y$7) {
-          mutate$8(x$6, null);
+      if (d$14) {
+        if (y$16) {
+          mutate$8(x$15, null);
           return;
         }
 
-        mutate$8(x$6, null);
+        mutate$8(x$15, null);
         return;
       }
 
-      if (y$7) {
-        mutate$8(x$6, null);
+      if (y$16) {
+        mutate$8(x$15, null);
         return;
       }
 
-      mutate$8(x$6, null);
+      mutate$8(x$15, null);
       return;
     }
 
-    if (c$4) {
-      if (d$5) {
-        if (y$7) {
-          mutate$8(x$6, null);
+    if (c$13) {
+      if (d$14) {
+        if (y$16) {
+          mutate$8(x$15, null);
           return;
         }
 
-        mutate$8(x$6, null);
+        mutate$8(x$15, null);
         return;
       }
 
-      if (y$7) {
-        mutate$8(x$6, null);
+      if (y$16) {
+        mutate$8(x$15, null);
         return;
       }
 
-      mutate$8(x$6, null);
+      mutate$8(x$15, null);
       return;
     }
 
-    if (d$5) {
-      if (y$7) {
-        mutate$8(x$6, null);
+    if (d$14) {
+      if (y$16) {
+        mutate$8(x$15, null);
         return;
       }
 
-      mutate$8(x$6, null);
+      mutate$8(x$15, null);
       return;
     }
 
-    if (y$7) {
-      mutate$8(x$6, null);
+    if (y$16) {
+      mutate$8(x$15, null);
       return;
     }
 
-    mutate$8(x$6, null);
+    mutate$8(x$15, null);
     return;
   }
 
-  if (b$3) {
-    if (c$4) {
-      if (d$5) {
-        if (y$7) {
-          mutate$8(x$6, null);
+  if (b$12) {
+    if (c$13) {
+      if (d$14) {
+        if (y$16) {
+          mutate$8(x$15, null);
           return;
         }
 
-        mutate$8(x$6, null);
+        mutate$8(x$15, null);
         return;
       }
 
-      if (y$7) {
-        mutate$8(x$6, null);
+      if (y$16) {
+        mutate$8(x$15, null);
         return;
       }
 
-      mutate$8(x$6, null);
+      mutate$8(x$15, null);
       return;
     }
 
-    if (d$5) {
-      if (y$7) {
-        mutate$8(x$6, null);
+    if (d$14) {
+      if (y$16) {
+        mutate$8(x$15, null);
         return;
       }
 
-      mutate$8(x$6, null);
+      mutate$8(x$15, null);
       return;
     }
 
-    if (y$7) {
-      mutate$8(x$6, null);
+    if (y$16) {
+      mutate$8(x$15, null);
       return;
     }
 
-    mutate$8(x$6, null);
+    mutate$8(x$15, null);
     return;
   }
 
-  if (c$4) {
-    if (d$5) {
-      if (y$7) {
-        mutate$8(x$6, null);
+  if (c$13) {
+    if (d$14) {
+      if (y$16) {
+        mutate$8(x$15, null);
         return;
       }
 
-      mutate$8(x$6, null);
+      mutate$8(x$15, null);
       return;
     }
 
-    if (y$7) {
-      mutate$8(x$6, null);
+    if (y$16) {
+      mutate$8(x$15, null);
       return;
     }
 
-    mutate$8(x$6, null);
+    mutate$8(x$15, null);
     return;
   }
 
-  if (d$5) {
-    if (y$7) {
-      mutate$8(x$6, null);
+  if (d$14) {
+    if (y$16) {
+      mutate$8(x$15, null);
       return;
     }
 
-    mutate$8(x$6, null);
+    mutate$8(x$15, null);
     return;
   }
 
-  if (y$7) {
-    mutate$8(x$6, null);
+  if (y$16) {
+    mutate$8(x$15, null);
     return;
   }
 
-  mutate$8(x$6, null);
+  mutate$8(x$15, null);
   return;
 }
 

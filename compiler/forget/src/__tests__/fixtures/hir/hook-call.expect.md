@@ -53,27 +53,27 @@ function foo$0() {
 
 ```
 bb0:
-  Const mutate x$2 = Array []
-  Const mutate y$3 = Call read useFreeze$4(freeze x$2)
-  Call mutate foo$5(read y$3, read x$2)
-  Const mutate $6 = "\n      "
-  Const mutate $7 = "\n      "
-  Const mutate $8 = "\n    "
-  Const mutate $9 = JSX <read Component$0>{read $6}{read x$2}{read $7}{read y$3}{read $8}</read Component$0>
-  Return read $9
+  Const mutate x$11 = Array []
+  Const mutate y$12 = Call read useFreeze$4(freeze x$11)
+  Call mutate foo$5(read y$12, read x$11)
+  Const mutate $13 = "\n      "
+  Const mutate $14 = "\n      "
+  Const mutate $15 = "\n    "
+  Const mutate $16 = JSX <read Component$0>{read $13}{read x$11}{read $14}{read y$12}{read $15}</read Component$0>
+  Return read $16
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const x$2 = [];
-  const y$3 = useFreeze$4(x$2);
-  foo$5(y$3, x$2);
+function Component$0(props$10) {
+  const x$11 = [];
+  const y$12 = useFreeze$4(x$11);
+  foo$5(y$12, x$11);
   return (
     <Component$0>
-      {x$2}
-      {y$3}
+      {x$11}
+      {y$12}
     </Component$0>
   );
 }

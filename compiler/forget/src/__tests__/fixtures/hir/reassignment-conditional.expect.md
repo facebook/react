@@ -23,38 +23,42 @@ function Component(props) {
 
 ```
 bb0:
-  Let mutate x$2 = Array []
-  Call mutate x$2.push(read props$1.p0)
-  Let mutate y$3 = read x$2
-  If (read props$1.p1) then:bb2 else:bb1
+  Let mutate x$7 = Array []
+  Call mutate x$7.push(read props$6.p0)
+  Let mutate y$8 = read x$7
+  If (read props$6.p1) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Reassign mutate x$2 = Array []
+  Reassign mutate x$9 = Array []
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  Let mutate _$4 = JSX <read Component$0 x={freeze x$2} ></read Component$0>
-  Call read y$3.push(read props$1.p2)
-  Const mutate $5 = JSX <read Component$0 x={read x$2} y={read y$3} ></read Component$0>
-  Return read $5
+  Component$10: phi(bb0: Component$0, bb2: Component$0)
+  x$11: phi(bb0: x$7, bb2: x$9)
+  y$13: phi(bb0: y$8, bb2: y$8)
+  props$14: phi(bb0: props$6, bb2: props$6)
+  Let mutate _$12 = JSX <read Component$10 x={freeze x$11} ></read Component$10>
+  Call read y$13.push(read props$14.p2)
+  Const mutate $15 = JSX <read Component$10 x={read x$11} y={read y$13} ></read Component$10>
+  Return read $15
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  let x$2 = [];
-  x$2.push(props$1.p0);
-  let y$3 = x$2;
-  if (props$1.p1) {
-    x$2 = [];
+function Component$0(props$6) {
+  let x$7 = [];
+  x$7.push(props$6.p0);
+  let y$8 = x$7;
+  if (props$6.p1) {
+    x$9 = [];
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  let _$4 = <Component$0 x={x$2}></Component$0>;
+  let _$12 = <Component$10 x={x$11}></Component$10>;
 
-  y$3.push(props$1.p2);
-  return <Component$0 x={x$2} y={y$3}></Component$0>;
+  y$13.push(props$14.p2);
+  return <Component$10 x={x$11} y={y$13}></Component$10>;
 }
 
 ```

@@ -26,45 +26,48 @@ function call(x) {}
 
 ```
 bb0:
-  Const mutate cond$2 = read props$1.cond
-  Const mutate x$3 = read props$1.x
-  Let mutate a$4 = undefined
-  If (read cond$2) then:bb2 else:bb3
+  Const mutate cond$8 = read props$7.cond
+  Const mutate x$9 = read props$7.x
+  Let mutate a$10 = undefined
+  If (read cond$8) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  Reassign mutate a$4 = read x$3
+  Reassign mutate a$11 = read x$9
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Reassign mutate a$4 = Array []
+  Reassign mutate a$12 = Array []
   Goto bb1
 bb1:
   predecessor blocks: bb3 bb2
-  Call read useFreeze$5(freeze a$4)
-  Call read useFreeze$5(read a$4)
-  Call mutate call$6(read a$4)
-  Return read a$4
+  useFreeze$13: phi(bb3: useFreeze$5, bb2: useFreeze$5)
+  a$14: phi(bb3: a$12, bb2: a$11)
+  call$15: phi(bb3: call$6, bb2: call$6)
+  Call read useFreeze$13(freeze a$14)
+  Call read useFreeze$13(read a$14)
+  Call mutate call$15(read a$14)
+  Return read a$14
 ```
 
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const cond$2 = props$1.cond;
-  const x$3 = props$1.x;
-  let a$4 = undefined;
-  if (cond$2) {
-    a$4 = x$3;
+function Component$0(props$7) {
+  const cond$8 = props$7.cond;
+  const x$9 = props$7.x;
+  let a$10 = undefined;
+  if (cond$8) {
+    a$11 = x$9;
     ("<<TODO: handle complex control flow in codegen>>");
   } else {
-    a$4 = [];
+    a$12 = [];
     ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  useFreeze$5(a$4);
-  useFreeze$5(a$4);
-  call$6(a$4);
-  return a$4;
+  useFreeze$13(a$14);
+  useFreeze$13(a$14);
+  call$15(a$14);
+  return a$14;
 }
 
 ```
@@ -78,7 +81,7 @@ bb0:
 ## Code
 
 ```javascript
-function useFreeze$0(x$1) {
+function useFreeze$0(x$2) {
   return;
 }
 
@@ -93,7 +96,7 @@ bb0:
 ## Code
 
 ```javascript
-function call$0(x$1) {
+function call$0(x$2) {
   return;
 }
 
