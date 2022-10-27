@@ -13,7 +13,6 @@ import {
   Effect,
   HIRFunction,
   IdentifierId,
-  Instruction,
   InstructionValue,
   Place,
   Terminal,
@@ -174,11 +173,7 @@ class Environment {
   /**
    * (Re)initializes a @param value with its default @param kind.
    */
-  initialize(
-    value: InstructionValue,
-    kind: ValueKind,
-    instr: Instruction | null = null
-  ) {
+  initialize(value: InstructionValue, kind: ValueKind) {
     invariant(
       value.kind !== "Identifier" || value.memberPath !== null,
       "Expected all top-level identifiers to be defined as variables, not values"
@@ -590,7 +585,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
         assertExhaustive(instrValue, "Unexpected instruction kind");
       }
     }
-    env.initialize(instrValue, valueKind, instr);
+    env.initialize(instrValue, valueKind);
     if (instr.lvalue !== null) {
       if (instr.lvalue.place.memberPath === null) {
         env.define(instr.lvalue.place, instrValue);
