@@ -56,7 +56,7 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs
 
 ## Contributing
 
-The main purpose of this repository is to continue evolving React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
+The main purpose of this repository is to continue evolving React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bug fixes and improvements. Read below to learn how you can take part in improving React.
 
 ### [Code of Conduct](https://code.fb.com/codeofconduct)
 
@@ -64,7 +64,7 @@ Facebook has adopted a Code of Conduct that we expect project participants to ad
 
 ### [Contributing Guide](https://reactjs.org/docs/how-to-contribute.html)
 
-Read our [contributing guide](https://reactjs.org/docs/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
+Read our [contributing guide](https://reactjs.org/docs/how-to-contribute.html) to learn about our development process, how to propose bug fixes and improvements, and how to build and test your changes to React.
 
 ### Good First Issues
 
