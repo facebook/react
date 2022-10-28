@@ -22,6 +22,18 @@ import type {
 
 export opaque type ThenableState = Array<Thenable<any>>;
 
+// An error that is thrown (e.g. by `use`) to trigger Suspense. If we
+// detect this is caught by userspace, we'll log a warning in development.
+export const SuspenseException: mixed = new Error(
+  "Suspense Exception: This is not a real error! It's an implementation " +
+    'detail of `use` to interrupt the current render. You must either ' +
+    'rethrow it immediately, or move the `use` call outside of the ' +
+    '`try/catch` block. Capturing without rethrowing will lead to ' +
+    'unexpected behavior.\n\n' +
+    'To handle async errors, wrap your component in an error boundary, or ' +
+    "call the promise's `.catch` method and pass the result to `use`",
+);
+
 export function createThenableState(): ThenableState {
   // The ThenableState is created the first time a component suspends. If it
   // suspends again, we'll reuse the same state.
@@ -92,13 +104,34 @@ export function trackUsedThenable<T>(
       }
 
       // Suspend.
-      // TODO: Throwing here is an implementation detail that allows us to
-      // unwind the call stack. But we shouldn't allow it to leak into
-      // userspace. Throw an opaque placeholder value instead of the
-      // actual thenable. If it doesn't get captured by the work loop, log
-      // a warning, because that means something in userspace must have
-      // caught it.
-      throw thenable;
+      //
+      // Throwing here is an implementation detail that allows us to unwind the
+      // call stack. But we shouldn't allow it to leak into userspace. Throw an
+      // opaque placeholder value instead of the actual thenable. If it doesn't
+      // get captured by the work loop, log a warning, because that means
+      // something in userspace must have caught it.
+      suspendedThenable = thenable;
+      throw SuspenseException;
     }
   }
+}
+
+// This is used to track the actual thenable that suspended so it can be
+// passed to the rest of the Suspense implementation — which, for historical
+// reasons, expects to receive a thenable.
+let suspendedThenable: Thenable<any> | null = null;
+export function getSuspendedThenable(): Thenable<mixed> {
+  // This is called right after `use` suspends by throwing an exception. `use`
+  // throws an opaque value instead of the thenable itself so that it can't be
+  // caught in userspace. Then the work loop accesses the actual thenable using
+  // this function.
+  if (suspendedThenable === null) {
+    throw new Error(
+      'Expected a suspended thenable. This is a bug in React. Please file ' +
+        'an issue.',
+    );
+  }
+  const thenable = suspendedThenable;
+  suspendedThenable = null;
+  return thenable;
 }

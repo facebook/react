@@ -84,6 +84,7 @@ import {
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import isArray from 'shared/isArray';
+import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
 type ReactJSONValue =
   | string
@@ -842,7 +843,17 @@ export function resolveModelToJSON(
           break;
         }
       }
-    } catch (x) {
+    } catch (thrownValue) {
+      const x =
+        thrownValue === SuspenseException
+          ? // This is a special type of exception used for Suspense. For historical
+            // reasons, the rest of the Suspense implementation expects the thrown
+            // value to be a thenable, because before `use` existed that was the
+            // (unstable) API for suspending. This implementation detail can change
+            // later, once we deprecate the old API in favor of `use`.
+            getSuspendedThenable()
+          : thrownValue;
+      // $FlowFixMe[method-unbinding]
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new task and resolve it later.
         request.pendingChunks++;
@@ -1173,7 +1184,17 @@ function retryTask(request: Request, task: Task): void {
     request.completedJSONChunks.push(processedChunk);
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
-  } catch (x) {
+  } catch (thrownValue) {
+    const x =
+      thrownValue === SuspenseException
+        ? // This is a special type of exception used for Suspense. For historical
+          // reasons, the rest of the Suspense implementation expects the thrown
+          // value to be a thenable, because before `use` existed that was the
+          // (unstable) API for suspending. This implementation detail can change
+          // later, once we deprecate the old API in favor of `use`.
+          getSuspendedThenable()
+        : thrownValue;
+    // $FlowFixMe[method-unbinding]
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       // Something suspended again, let's pick it back up later.
       const ping = task.ping;

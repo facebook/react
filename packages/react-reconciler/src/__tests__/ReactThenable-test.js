@@ -461,4 +461,40 @@ describe('ReactThenable', () => {
 
     expect(root).toMatchRenderedOutput(<div>Hello world!</div>);
   });
+
+  // @gate enableUseHook || !__DEV__
+  test('warns if use(promise) is wrapped with try/catch block', async () => {
+    function Async() {
+      try {
+        return <Text text={use(Promise.resolve('Async'))} />;
+      } catch (e) {
+        return <Text text="Fallback" />;
+      }
+    }
+
+    spyOnDev(console, 'error');
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Async />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+    });
+
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: `use` was called from inside a try/catch block. This is not ' +
+          'allowed and can lead to unexpected behavior. To handle errors ' +
+          'triggered by `use`, wrap your component in a error boundary.',
+      );
+    }
+  });
 });

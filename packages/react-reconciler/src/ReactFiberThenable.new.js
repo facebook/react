@@ -19,6 +19,18 @@ const {ReactCurrentActQueue} = ReactSharedInternals;
 
 export opaque type ThenableState = Array<Thenable<any>>;
 
+// An error that is thrown (e.g. by `use`) to trigger Suspense. If we
+// detect this is caught by userspace, we'll log a warning in development.
+export const SuspenseException: mixed = new Error(
+  "Suspense Exception: This is not a real error! It's an implementation " +
+    'detail of `use` to interrupt the current render. You must either ' +
+    'rethrow it immediately, or move the `use` call outside of the ' +
+    '`try/catch` block. Capturing without rethrowing will lead to ' +
+    'unexpected behavior.\n\n' +
+    'To handle async errors, wrap your component in an error boundary, or ' +
+    "call the promise's `.catch` method and pass the result to `use`",
+);
+
 let thenableState: ThenableState | null = null;
 
 export function createThenableState(): ThenableState {
@@ -37,19 +49,9 @@ export function prepareThenableState(prevThenableState: ThenableState | null) {
 export function getThenableStateAfterSuspending(): ThenableState | null {
   // Called by the work loop so it can stash the thenable state. It will use
   // the state to replay the component when the promise resolves.
-  if (
-    thenableState !== null &&
-    // If we only `use`-ed resolved promises, then there is no suspended state
-    // TODO: The only reason we do this is to distinguish between throwing a
-    // promise (old Suspense pattern) versus `use`-ing one. A better solution is
-    // for `use` to throw a special, opaque value instead of a promise.
-    !isThenableStateResolved(thenableState)
-  ) {
-    const state = thenableState;
-    thenableState = null;
-    return state;
-  }
-  return null;
+  const state = thenableState;
+  thenableState = null;
+  return state;
 }
 
 export function isThenableStateResolved(thenables: ThenableState): boolean {
@@ -129,13 +131,54 @@ export function trackUsedThenable<T>(thenable: Thenable<T>, index: number): T {
       }
 
       // Suspend.
-      // TODO: Throwing here is an implementation detail that allows us to
-      // unwind the call stack. But we shouldn't allow it to leak into
-      // userspace. Throw an opaque placeholder value instead of the
-      // actual thenable. If it doesn't get captured by the work loop, log
-      // a warning, because that means something in userspace must have
-      // caught it.
-      throw thenable;
+      //
+      // Throwing here is an implementation detail that allows us to unwind the
+      // call stack. But we shouldn't allow it to leak into userspace. Throw an
+      // opaque placeholder value instead of the actual thenable. If it doesn't
+      // get captured by the work loop, log a warning, because that means
+      // something in userspace must have caught it.
+      suspendedThenable = thenable;
+      if (__DEV__) {
+        needsToResetSuspendedThenableDEV = true;
+      }
+      throw SuspenseException;
     }
   }
+}
+
+// This is used to track the actual thenable that suspended so it can be
+// passed to the rest of the Suspense implementation — which, for historical
+// reasons, expects to receive a thenable.
+let suspendedThenable: Thenable<any> | null = null;
+let needsToResetSuspendedThenableDEV = false;
+export function getSuspendedThenable(): Thenable<mixed> {
+  // This is called right after `use` suspends by throwing an exception. `use`
+  // throws an opaque value instead of the thenable itself so that it can't be
+  // caught in userspace. Then the work loop accesses the actual thenable using
+  // this function.
+  if (suspendedThenable === null) {
+    throw new Error(
+      'Expected a suspended thenable. This is a bug in React. Please file ' +
+        'an issue.',
+    );
+  }
+  const thenable = suspendedThenable;
+  suspendedThenable = null;
+  if (__DEV__) {
+    needsToResetSuspendedThenableDEV = false;
+  }
+  return thenable;
+}
+
+export function checkIfUseWrappedInTryCatch(): boolean {
+  if (__DEV__) {
+    // This was set right before SuspenseException was thrown, and it should
+    // have been cleared when the exception was handled. If it wasn't,
+    // it must have been caught by userspace.
+    if (needsToResetSuspendedThenableDEV) {
+      needsToResetSuspendedThenableDEV = false;
+      return true;
+    }
+  }
+  return false;
 }
