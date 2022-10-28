@@ -2647,7 +2647,7 @@ export function attach(
     }
   }
 
-  function handleCommitFiberRoot(root, priorityLevel) {
+  function handleCommitFiberRoot(root: any, priorityLevel: void | number) {
     const current = root.current;
     const alternate = current.alternate;
 
@@ -2808,18 +2808,18 @@ export function attach(
     }
   }
 
-  function getDisplayNameForFiberID(id) {
+  function getDisplayNameForFiberID(id: number) {
     const fiber = idToArbitraryFiberMap.get(id);
     return fiber != null ? getDisplayNameForFiber(((fiber: any): Fiber)) : null;
   }
 
-  function getFiberForNative(hostInstance) {
+  function getFiberForNative(hostInstance: NativeType) {
     return renderer.findFiberByHostInstance(hostInstance);
   }
 
   function getFiberIDForNative(
-    hostInstance,
-    findNearestUnfilteredAncestor = false,
+    hostInstance: NativeType,
+    findNearestUnfilteredAncestor: boolean = false,
   ) {
     let fiber = renderer.findFiberByHostInstance(hostInstance);
     if (fiber != null) {
@@ -2835,7 +2835,7 @@ export function attach(
 
   // This function is copied from React and should be kept in sync:
   // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
-  function assertIsMounted(fiber) {
+  function assertIsMounted(fiber: Fiber) {
     if (getNearestMountedFiber(fiber) !== fiber) {
       throw new Error('Unable to find node on an unmounted component.');
     }
@@ -3715,7 +3715,7 @@ export function attach(
     };
   }
 
-  function logElementToConsole(id) {
+  function logElementToConsole(id: number) {
     const result = isMostRecentlyInspectedElementCurrent(id)
       ? mostRecentlyInspectedElement
       : inspectElementRaw(id);
@@ -4188,7 +4188,7 @@ export function attach(
     return status;
   }
 
-  function overrideError(id, forceError) {
+  function overrideError(id: number, forceError: boolean) {
     if (
       typeof setErrorHandler !== 'function' ||
       typeof scheduleUpdate !== 'function'
@@ -4222,7 +4222,7 @@ export function attach(
     return maybeID !== null && forceFallbackForSuspenseIDs.has(maybeID);
   }
 
-  function overrideSuspense(id, forceFallback) {
+  function overrideSuspense(id: number, forceFallback: boolean) {
     if (
       typeof setSuspenseHandler !== 'function' ||
       typeof scheduleUpdate !== 'function'
@@ -4320,7 +4320,9 @@ export function attach(
     return true;
   }
 
-  function updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath) {
+  function updateTrackedPathStateAfterMount(
+    mightSiblingsBeOnTrackedPath: boolean,
+  ) {
     // updateTrackedPathStateBeforeMount() told us whether to match siblings.
     // Now that we're entering siblings, let's use that information.
     mightBeOnTrackedPath = mightSiblingsBeOnTrackedPath;

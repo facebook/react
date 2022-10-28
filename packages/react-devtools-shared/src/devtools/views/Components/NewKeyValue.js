@@ -46,7 +46,7 @@ export default function NewKeyValue({
     setNewPropName(newPath[newPath.length - 1]);
   };
 
-  const overrideNewEntryValue = (newPath, value) => {
+  const overrideNewEntryValue = (newPath: Array<string | number>, value) => {
     if (!newPropName) {
       return;
     }

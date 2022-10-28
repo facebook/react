@@ -533,7 +533,7 @@ export function shouldError(fiber: Fiber): ?boolean {
   return shouldErrorImpl(fiber);
 }
 
-let shouldSuspendImpl = fiber => false;
+let shouldSuspendImpl = (fiber: Fiber) => false;
 
 export function shouldSuspend(fiber: Fiber): boolean {
   return shouldSuspendImpl(fiber);

@@ -52,7 +52,7 @@ function registerEvents() {
 function createAndAccumulateChangeEvent(
   dispatchQueue,
   inst,
-  nativeEvent,
+  nativeEvent: AnyNativeEvent,
   target,
 ) {
   // Flag this event loop as needing state restore.
@@ -109,7 +109,7 @@ function manualDispatchChangeEvent(nativeEvent) {
   batchedUpdates(runEventInBatch, dispatchQueue);
 }
 
-function runEventInBatch(dispatchQueue) {
+function runEventInBatch(dispatchQueue: DispatchQueue) {
   processDispatchQueue(dispatchQueue, 0);
 }
 
@@ -120,7 +120,10 @@ function getInstIfValueChanged(targetInst: Object) {
   }
 }
 
-function getTargetInstForChangeEvent(domEventName: DOMEventName, targetInst) {
+function getTargetInstForChangeEvent(
+  domEventName: DOMEventName,
+  targetInst: null | Fiber,
+) {
   if (domEventName === 'change') {
     return targetInst;
   }
@@ -178,7 +181,7 @@ function handlePropertyChange(nativeEvent) {
 function handleEventsForInputEventPolyfill(
   domEventName: DOMEventName,
   target,
-  targetInst,
+  targetInst: null | Fiber,
 ) {
   if (domEventName === 'focusin') {
     // In IE9, propertychange fires for most input events but is buggy and
@@ -201,7 +204,7 @@ function handleEventsForInputEventPolyfill(
 // For IE8 and IE9.
 function getTargetInstForInputEventPolyfill(
   domEventName: DOMEventName,
-  targetInst,
+  targetInst: null | Fiber,
 ) {
   if (
     domEventName === 'selectionchange' ||
@@ -237,7 +240,10 @@ function shouldUseClickEvent(elem) {
   );
 }
 
-function getTargetInstForClickEvent(domEventName: DOMEventName, targetInst) {
+function getTargetInstForClickEvent(
+  domEventName: DOMEventName,
+  targetInst: null | Fiber,
+) {
   if (domEventName === 'click') {
     return getInstIfValueChanged(targetInst);
   }
@@ -245,7 +251,7 @@ function getTargetInstForClickEvent(domEventName: DOMEventName, targetInst) {
 
 function getTargetInstForInputOrChangeEvent(
   domEventName: DOMEventName,
-  targetInst,
+  targetInst: null | Fiber,
 ) {
   if (domEventName === 'input' || domEventName === 'change') {
     return getInstIfValueChanged(targetInst);

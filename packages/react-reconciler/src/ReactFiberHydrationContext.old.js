@@ -341,7 +341,10 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
   warnNonhydratedInstance(returnFiber, fiber);
 }
 
-function tryHydrate(fiber, nextInstance) {
+function tryHydrate(
+  fiber: Fiber,
+  nextInstance: SuspenseInstance | HydratableInstance | Element | Text,
+) {
   switch (fiber.tag) {
     // HostSingleton is intentionally omitted. the hydration pathway for singletons is non-fallible
     // you can find it inlined in claimHydratableSingleton

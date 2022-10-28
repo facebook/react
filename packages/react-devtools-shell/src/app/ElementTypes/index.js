@@ -25,7 +25,7 @@ const Context = createContext('abc');
 Context.displayName = 'ExampleContext';
 
 class ClassComponent extends Component<any> {
-  render() {
+  render(): null {
     return null;
   }
 }

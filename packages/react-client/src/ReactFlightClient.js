@@ -465,7 +465,7 @@ function createModelResolver<T>(
 }
 
 function createModelReject<T>(chunk: SomeChunk<T>) {
-  return error => triggerErrorOnChunk(chunk, error);
+  return (error: mixed) => triggerErrorOnChunk(chunk, error);
 }
 
 export function parseModelString(

@@ -11,9 +11,9 @@ import * as React from 'react';
 import {Fragment} from 'react';
 
 class ErrorBoundary extends React.Component {
-  state = {hasError: false};
+  state: {hasError: boolean} = {hasError: false};
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error): {hasError: boolean} {
     return {hasError: true};
   }
 

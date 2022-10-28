@@ -276,7 +276,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     scheduleRetry();
   }
 
-  function handleMessage(event) {
+  function handleMessage(event: MessageEvent) {
     let data;
     try {
       if (typeof event.data === 'string') {

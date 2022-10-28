@@ -43,7 +43,10 @@ type UseEditableValueState = {
   parsedValue: any,
 };
 
-function useEditableValueReducer(state, action) {
+function useEditableValueReducer(
+  state: UseEditableValueState,
+  action: UseEditableValueAction,
+) {
   switch (action.type) {
     case 'RESET':
       return {

@@ -51,7 +51,7 @@ function PrimaryFallbackTest({initialSuspend}) {
   );
 }
 
-function useTestSequence(label, T1, T2) {
+function useTestSequence(label: string, T1, T2) {
   const [step, setStep] = useState(0);
   const next = (
     <button onClick={() => setStep(s => (s + 1) % allSteps.length)}>

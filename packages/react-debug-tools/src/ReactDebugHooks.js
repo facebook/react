@@ -350,7 +350,7 @@ const Dispatcher: DispatcherType = {
 // create a proxy to throw a custom error
 // in case future versions of React adds more hooks
 const DispatcherProxyHandler = {
-  get(target, prop) {
+  get(target: DispatcherType, prop: string) {
     if (target.hasOwnProperty(prop)) {
       return target[prop];
     }
@@ -404,7 +404,7 @@ export type HooksTree = Array<HooksNode>;
 
 let mostLikelyAncestorIndex = 0;
 
-function findSharedIndex(hookStack, rootStack, rootIndex) {
+function findSharedIndex(hookStack, rootStack, rootIndex: number) {
   const source = rootStack[rootIndex].source;
   hookSearch: for (let i = 0; i < hookStack.length; i++) {
     if (hookStack[i].source === source) {
@@ -460,7 +460,7 @@ function isReactWrapper(functionName, primitiveName) {
   );
 }
 
-function findPrimitiveIndex(hookStack, hook) {
+function findPrimitiveIndex(hookStack, hook: HookLogEntry) {
   const stackCache = getPrimitiveStackCache();
   const primitiveStack = stackCache.get(hook.primitive);
   if (primitiveStack === undefined) {
@@ -488,7 +488,7 @@ function findPrimitiveIndex(hookStack, hook) {
   return -1;
 }
 
-function parseTrimmedStack(rootStack, hook) {
+function parseTrimmedStack(rootStack, hook: HookLogEntry) {
   // Get the stack trace between the primitive hook function and
   // the root function call. I.e. the stack frames of custom hooks.
   const hookStack = ErrorStackParser.parse(hook.stackError);
@@ -521,7 +521,7 @@ function parseCustomHookName(functionName: void | string): string {
 
 function buildTree(
   rootStack,
-  readHookLog,
+  readHookLog: Array<HookLogEntry>,
   includeHooksSource: boolean,
 ): HooksTree {
   const rootChildren = [];

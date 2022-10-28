@@ -49,4 +49,4 @@ enforce_local_inference_annotations=false
 %REACT_RENDERER_FLOW_OPTIONS%
 
 [version]
-^0.190.0
+^0.190.1

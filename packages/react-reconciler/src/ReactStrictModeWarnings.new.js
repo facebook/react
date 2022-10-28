@@ -42,7 +42,7 @@ if (__DEV__) {
     return maybeStrictRoot;
   };
 
-  const setToSortedString = set => {
+  const setToSortedString = (set: $ReadOnlySet<string>) => {
     const array = [];
     set.forEach(value => {
       array.push(value);

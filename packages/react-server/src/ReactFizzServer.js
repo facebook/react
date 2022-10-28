@@ -1503,7 +1503,7 @@ function renderNodeDestructiveImpl(
   }
 }
 
-function renderChildrenArray(request, task, children) {
+function renderChildrenArray(request: Request, task: Task, children) {
   const totalChildren = children.length;
   for (let i = 0; i < totalChildren; i++) {
     const prevTreeContext = task.treeContext;
@@ -2000,7 +2000,7 @@ function flushSubtree(
 
 function flushSegment(
   request: Request,
-  destination,
+  destination: Destination,
   segment: Segment,
 ): boolean {
   const boundary = segment.boundary;

@@ -56,7 +56,7 @@ export function registerDevToolsEventLogger(
     }
   }
 
-  function handleLoggingIFrameLoaded(iframe) {
+  function handleLoggingIFrameLoaded(iframe: HTMLIFrameElement) {
     if (loggingIFrame != null) {
       return;
     }

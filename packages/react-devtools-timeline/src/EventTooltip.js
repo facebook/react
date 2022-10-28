@@ -15,11 +15,12 @@ import type {
   ReactComponentMeasure,
   ReactEventInfo,
   ReactMeasure,
-  TimelineData,
+  ReactMeasureType,
   SchedulingEvent,
   Snapshot,
   SuspenseEvent,
   ThrownError,
+  TimelineData,
   UserTimingMark,
 } from './types';
 
@@ -45,7 +46,7 @@ type Props = {
   width: number,
 };
 
-function getReactMeasureLabel(type): string | null {
+function getReactMeasureLabel(type: ReactMeasureType): string | null {
   switch (type) {
     case 'commit':
       return 'react commit';

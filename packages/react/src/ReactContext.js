@@ -9,7 +9,7 @@
 
 import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 
 export function createContext<T>(defaultValue: T): ReactContext<T> {
   // TODO: Second argument used to be an optional `calculateChangedBits`
@@ -66,7 +66,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
           }
           return context.Provider;
         },
-        set(_Provider) {
+        set(_Provider: ReactProviderType<T>) {
           context.Provider = _Provider;
         },
       },
@@ -74,7 +74,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
         get() {
           return context._currentValue;
         },
-        set(_currentValue) {
+        set(_currentValue: T) {
           context._currentValue = _currentValue;
         },
       },
@@ -82,7 +82,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
         get() {
           return context._currentValue2;
         },
-        set(_currentValue2) {
+        set(_currentValue2: T) {
           context._currentValue2 = _currentValue2;
         },
       },
@@ -90,7 +90,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
         get() {
           return context._threadCount;
         },
-        set(_threadCount) {
+        set(_threadCount: number) {
           context._threadCount = _threadCount;
         },
       },
@@ -110,7 +110,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
         get() {
           return context.displayName;
         },
-        set(displayName) {
+        set(displayName: void | string) {
           if (!hasWarnedAboutDisplayNameOnConsumer) {
             console.warn(
               'Setting `displayName` on Context.Consumer has no effect. ' +

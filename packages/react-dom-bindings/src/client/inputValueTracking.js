@@ -101,7 +101,7 @@ function trackValueOnNode(node: any): ?ValueTracker {
     getValue() {
       return currentValue;
     },
-    setValue(value) {
+    setValue(value: string) {
       if (__DEV__) {
         checkFormFieldValueStringCoercion(value);
       }

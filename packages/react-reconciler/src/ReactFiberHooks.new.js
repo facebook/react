@@ -1606,7 +1606,7 @@ function updateStoreInstance<T>(
   }
 }
 
-function subscribeToStore<T>(fiber, inst: StoreInstance<T>, subscribe) {
+function subscribeToStore<T>(fiber: Fiber, inst: StoreInstance<T>, subscribe) {
   const handleStoreChange = () => {
     // The store changed. Check if the snapshot changed since the last time we
     // read from the store.
@@ -1630,7 +1630,7 @@ function checkIfSnapshotChanged<T>(inst: StoreInstance<T>): boolean {
   }
 }
 
-function forceStoreRerender(fiber) {
+function forceStoreRerender(fiber: Fiber) {
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
   if (root !== null) {
     scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
@@ -2188,7 +2188,11 @@ function updateDeferredValueImpl<T>(hook: Hook, prevValue: T, value: T): T {
   }
 }
 
-function startTransition(setPending, callback, options) {
+function startTransition(
+  setPending: Dispatch<BasicStateAction<boolean>>,
+  callback: () => void,
+  options: void | StartTransitionOptions,
+) {
   const previousPriority = getCurrentUpdatePriority();
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority),
@@ -2557,7 +2561,7 @@ function entangleTransitionUpdate<S, A>(
   }
 }
 
-function markUpdateInDevTools<A>(fiber, lane, action: A) {
+function markUpdateInDevTools<A>(fiber: Fiber, lane: Lane, action: A) {
   if (__DEV__) {
     if (enableDebugTracing) {
       if (fiber.mode & DebugTracingMode) {

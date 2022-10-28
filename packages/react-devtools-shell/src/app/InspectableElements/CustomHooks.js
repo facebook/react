@@ -127,7 +127,7 @@ export default function CustomHooks(): React.Node {
 }
 
 // Below copied from https://usehooks.com/
-function useDebounce(value, delay) {
+function useDebounce(value: number, delay: number) {
   // State and setters for debounced value
   const [debouncedValue, setDebouncedValue] = useState(value);
 

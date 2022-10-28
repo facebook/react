@@ -10,7 +10,7 @@
 import * as React from 'react';
 import {Fragment} from 'react';
 
-function wrapWithHoc(Component, index) {
+function wrapWithHoc(Component, index: number) {
   function HOC() {
     return <Component />;
   }
@@ -22,7 +22,7 @@ function wrapWithHoc(Component, index) {
   return HOC;
 }
 
-function wrapWithNested(Component, times) {
+function wrapWithNested(Component, times: number) {
   for (let i = 0; i < times; i++) {
     Component = wrapWithHoc(Component, i);
   }

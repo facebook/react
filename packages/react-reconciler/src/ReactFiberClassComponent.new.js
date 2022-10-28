@@ -306,7 +306,7 @@ const classComponentUpdater = {
 };
 
 function checkShouldComponentUpdate(
-  workInProgress,
+  workInProgress: Fiber,
   ctor,
   oldProps,
   newProps,
@@ -767,7 +767,7 @@ function constructClassInstance(
   return instance;
 }
 
-function callComponentWillMount(workInProgress, instance) {
+function callComponentWillMount(workInProgress: Fiber, instance) {
   const oldState = instance.state;
 
   if (typeof instance.componentWillMount === 'function') {
@@ -791,7 +791,7 @@ function callComponentWillMount(workInProgress, instance) {
 }
 
 function callComponentWillReceiveProps(
-  workInProgress,
+  workInProgress: Fiber,
   instance,
   newProps,
   nextContext,

@@ -276,7 +276,9 @@ type ChildReconciler = (
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
-function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
+function createChildReconciler(
+  shouldTrackSideEffects: boolean,
+): ChildReconciler {
   function deleteChild(returnFiber: Fiber, childToDelete: Fiber): void {
     if (!shouldTrackSideEffects) {
       // Noop.
