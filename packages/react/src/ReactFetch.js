@@ -131,7 +131,7 @@ if (enableCache && enableFetchInstrumentation) {
         // eslint-disable-next-line react-internal/no-production-logging
         console.warn(
           'React was unable to patch the fetch() function in this environment. ' +
-            'Suspensey APIs might not work correctly as a result.',
+            'Suspense APIs might not work correctly as a result.',
         );
       }
     }
