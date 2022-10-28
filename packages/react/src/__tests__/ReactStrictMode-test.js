@@ -15,6 +15,10 @@ let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
 let PropTypes;
+let act;
+let useMemo;
+let useState;
+let useReducer;
 
 const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
@@ -25,6 +29,10 @@ describe('ReactStrictMode', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
+    act = require('jest-react').act;
+    useMemo = React.useMemo;
+    useState = React.useState;
+    useReducer = React.useReducer;
   });
 
   it('should appear in the client component stack', () => {
@@ -330,6 +338,183 @@ describe('ReactStrictMode', () => {
     expect(setStateCount).toBe(__DEV__ ? 2 : 1);
     // But each time `state` should be the previous value
     expect(instance.state.count).toBe(2);
+  });
+
+  // @gate debugRenderPhaseSideEffectsForStrictMode
+  it('double invokes useMemo functions', async () => {
+    let log = [];
+
+    function Uppercased({text}) {
+      return useMemo(() => {
+        const uppercased = text.toUpperCase();
+        log.push('Compute toUpperCase: ' + uppercased);
+        return uppercased;
+      }, [text]);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    // Mount
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <Uppercased text="hello" />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('HELLO');
+    expect(log).toEqual([
+      'Compute toUpperCase: HELLO',
+      'Compute toUpperCase: HELLO',
+    ]);
+
+    log = [];
+
+    // Update
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <Uppercased text="goodbye" />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('GOODBYE');
+    expect(log).toEqual([
+      'Compute toUpperCase: GOODBYE',
+      'Compute toUpperCase: GOODBYE',
+    ]);
+  });
+
+  // @gate debugRenderPhaseSideEffectsForStrictMode
+  it('double invokes useMemo functions', async () => {
+    let log = [];
+    function Uppercased({text}) {
+      const memoizedResult = useMemo(() => {
+        const uppercased = text.toUpperCase();
+        log.push('Compute toUpperCase: ' + uppercased);
+        return {uppercased};
+      }, [text]);
+
+      // Push this to the log so we can check whether the same memoized result
+      // it returned during both invocations.
+      log.push(memoizedResult);
+
+      return memoizedResult.uppercased;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    // Mount
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <Uppercased text="hello" />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('HELLO');
+    expect(log).toEqual([
+      'Compute toUpperCase: HELLO',
+      'Compute toUpperCase: HELLO',
+      {uppercased: 'HELLO'},
+      {uppercased: 'HELLO'},
+    ]);
+
+    // Even though the memoized function is invoked twice, the same object
+    // is returned both times.
+    expect(log[2]).toBe(log[3]);
+
+    log = [];
+
+    // Update
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <Uppercased text="goodbye" />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('GOODBYE');
+    expect(log).toEqual([
+      'Compute toUpperCase: GOODBYE',
+      'Compute toUpperCase: GOODBYE',
+      {uppercased: 'GOODBYE'},
+      {uppercased: 'GOODBYE'},
+    ]);
+
+    // Even though the memoized function is invoked twice, the same object
+    // is returned both times.
+    expect(log[2]).toBe(log[3]);
+  });
+
+  // @gate debugRenderPhaseSideEffectsForStrictMode
+  it('double invokes setState updater functions', async () => {
+    const log = [];
+
+    let setCount;
+    function App() {
+      const [count, _setCount] = useState(0);
+      setCount = _setCount;
+      return count;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('0');
+
+    await act(() => {
+      setCount(() => {
+        log.push('Compute count: 1');
+        return 1;
+      });
+    });
+    expect(container.textContent).toBe('1');
+    expect(log).toEqual(['Compute count: 1', 'Compute count: 1']);
+  });
+
+  // @gate debugRenderPhaseSideEffectsForStrictMode
+  it('double invokes reducer functions', async () => {
+    const log = [];
+
+    function reducer(prevState, action) {
+      log.push('Compute new state: ' + action);
+      return action;
+    }
+
+    let dispatch;
+    function App() {
+      const [count, _dispatch] = useReducer(reducer, 0);
+      dispatch = _dispatch;
+      return count;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('0');
+
+    await act(() => {
+      dispatch(1);
+    });
+    expect(container.textContent).toBe('1');
+    expect(log).toEqual(['Compute new state: 1', 'Compute new state: 1']);
   });
 });
 

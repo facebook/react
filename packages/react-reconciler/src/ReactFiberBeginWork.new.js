@@ -418,25 +418,6 @@ function updateForwardRef(
       renderLanes,
     );
     hasId = checkDidRenderIdHook();
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictLegacyMode
-    ) {
-      setIsStrictModeForDevtools(true);
-      try {
-        nextChildren = renderWithHooks(
-          current,
-          workInProgress,
-          render,
-          nextProps,
-          ref,
-          renderLanes,
-        );
-        hasId = checkDidRenderIdHook();
-      } finally {
-        setIsStrictModeForDevtools(false);
-      }
-    }
     setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
@@ -1125,25 +1106,6 @@ function updateFunctionComponent(
       renderLanes,
     );
     hasId = checkDidRenderIdHook();
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictLegacyMode
-    ) {
-      setIsStrictModeForDevtools(true);
-      try {
-        nextChildren = renderWithHooks(
-          current,
-          workInProgress,
-          Component,
-          nextProps,
-          context,
-          renderLanes,
-        );
-        hasId = checkDidRenderIdHook();
-      } finally {
-        setIsStrictModeForDevtools(false);
-      }
-    }
     setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
@@ -1968,26 +1930,6 @@ function mountIndeterminateComponent(
             'Use React.createContext() with React.useContext() instead.',
           getComponentNameFromType(Component) || 'Unknown',
         );
-      }
-
-      if (
-        debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictLegacyMode
-      ) {
-        setIsStrictModeForDevtools(true);
-        try {
-          value = renderWithHooks(
-            null,
-            workInProgress,
-            Component,
-            props,
-            context,
-            renderLanes,
-          );
-          hasId = checkDidRenderIdHook();
-        } finally {
-          setIsStrictModeForDevtools(false);
-        }
       }
     }
 
