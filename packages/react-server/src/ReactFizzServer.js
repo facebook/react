@@ -17,6 +17,7 @@ import type {
   ReactContext,
   ReactProviderType,
   OffscreenMode,
+  Wakeable,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -138,6 +139,7 @@ import {
 import assign from 'shared/assign';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
+import {SuspenseException, getSuspendedThenable} from './ReactFizzThenable';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
@@ -1522,7 +1524,7 @@ function spawnNewSuspendedTask(
   request: Request,
   task: Task,
   thenableState: ThenableState | null,
-  x: Promise<any>,
+  x: Wakeable,
 ): void {
   // Something suspended, we'll need to create a new segment and resolve it later.
   const segment = task.blockedSegment;
@@ -1580,11 +1582,24 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
   }
   try {
     return renderNodeDestructive(request, task, null, node);
-  } catch (x) {
+  } catch (thrownValue) {
     resetHooksState();
+
+    const x =
+      thrownValue === SuspenseException
+        ? // This is a special type of exception used for Suspense. For historical
+          // reasons, the rest of the Suspense implementation expects the thrown
+          // value to be a thenable, because before `use` existed that was the
+          // (unstable) API for suspending. This implementation detail can change
+          // later, once we deprecate the old API in favor of `use`.
+          getSuspendedThenable()
+        : thrownValue;
+
+    // $FlowFixMe[method-unbinding]
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
+      const wakeable: Wakeable = (x: any);
       const thenableState = getThenableStateAfterSuspending();
-      spawnNewSuspendedTask(request, task, thenableState, x);
+      spawnNewSuspendedTask(request, task, thenableState, wakeable);
 
       // Restore the context. We assume that this will be restored by the inner
       // functions in case nothing throws so we don't use "finally" here.
@@ -1869,8 +1884,20 @@ function retryTask(request: Request, task: Task): void {
     task.abortSet.delete(task);
     segment.status = COMPLETED;
     finishedTask(request, task.blockedBoundary, segment);
-  } catch (x) {
+  } catch (thrownValue) {
     resetHooksState();
+
+    const x =
+      thrownValue === SuspenseException
+        ? // This is a special type of exception used for Suspense. For historical
+          // reasons, the rest of the Suspense implementation expects the thrown
+          // value to be a thenable, because before `use` existed that was the
+          // (unstable) API for suspending. This implementation detail can change
+          // later, once we deprecate the old API in favor of `use`.
+          getSuspendedThenable()
+        : thrownValue;
+
+    // $FlowFixMe[method-unbinding]
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       // Something suspended again, let's pick it back up later.
       const ping = task.ping;

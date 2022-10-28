@@ -266,6 +266,8 @@ import {
 } from './ReactFiberAct.new';
 import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent.new';
 import {
+  SuspenseException,
+  getSuspendedThenable,
   getThenableStateAfterSuspending,
   isThenableStateResolved,
 } from './ReactFiberThenable.new';
@@ -1722,13 +1724,26 @@ function handleThrow(root, thrownValue): void {
   // separate issue. Write a regression test using string refs.
   ReactCurrentOwner.current = null;
 
+  if (thrownValue === SuspenseException) {
+    // This is a special type of exception used for Suspense. For historical
+    // reasons, the rest of the Suspense implementation expects the thrown value
+    // to be a thenable, because before `use` existed that was the (unstable)
+    // API for suspending. This implementation detail can change later, once we
+    // deprecate the old API in favor of `use`.
+    thrownValue = getSuspendedThenable();
+    workInProgressSuspendedThenableState = getThenableStateAfterSuspending();
+  } else {
+    // This is a regular error. If something earlier in the component already
+    // suspended, we must clear the thenable state to unblock the work loop.
+    workInProgressSuspendedThenableState = null;
+  }
+
   // Setting this to `true` tells the work loop to unwind the stack instead
   // of entering the begin phase. It's called "suspended" because it usually
   // happens because of Suspense, but it also applies to errors. Think of it
   // as suspending the execution of the work loop.
   workInProgressIsSuspended = true;
   workInProgressThrownValue = thrownValue;
-  workInProgressSuspendedThenableState = getThenableStateAfterSuspending();
 
   const erroredWork = workInProgress;
   if (erroredWork === null) {
@@ -1750,6 +1765,7 @@ function handleThrow(root, thrownValue): void {
     if (
       thrownValue !== null &&
       typeof thrownValue === 'object' &&
+      // $FlowFixMe[method-unbinding]
       typeof thrownValue.then === 'function'
     ) {
       const wakeable: Wakeable = (thrownValue: any);
@@ -3503,6 +3519,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     } catch (originalError) {
       if (
         didSuspendOrErrorWhileHydratingDEV() ||
+        originalError === SuspenseException ||
         (originalError !== null &&
           typeof originalError === 'object' &&
           typeof originalError.then === 'function')

@@ -138,6 +138,7 @@ import {now} from './Scheduler';
 import {
   prepareThenableState,
   trackUsedThenable,
+  checkIfUseWrappedInTryCatch,
 } from './ReactFiberThenable.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
@@ -160,8 +161,10 @@ export type UpdateQueue<S, A> = {
 
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnUncachedGetSnapshot;
+let didWarnAboutUseWrappedInTryCatch;
 if (__DEV__) {
   didWarnAboutMismatchedHooksForComponent = new Set();
+  didWarnAboutUseWrappedInTryCatch = new Set();
 }
 
 export type Hook = {
@@ -594,6 +597,22 @@ export function renderWithHooks<Props, SecondArg>(
       }
     }
   }
+
+  if (__DEV__) {
+    if (checkIfUseWrappedInTryCatch()) {
+      const componentName =
+        getComponentNameFromFiber(workInProgress) || 'Unknown';
+      if (!didWarnAboutUseWrappedInTryCatch.has(componentName)) {
+        didWarnAboutUseWrappedInTryCatch.add(componentName);
+        console.error(
+          '`use` was called from inside a try/catch block. This is not allowed ' +
+            'and can lead to unexpected behavior. To handle errors triggered ' +
+            'by `use`, wrap your component in a error boundary.',
+        );
+      }
+    }
+  }
+
   return children;
 }
 
