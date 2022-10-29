@@ -13,6 +13,7 @@ module.exports = [
       'react-dom',
       'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerNode.js',
+      // 'react-dom/src/server/ReactDOMFizzServerBun.js',
       'react-dom/static.node',
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
@@ -29,6 +30,7 @@ module.exports = [
       'react-dom/static.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      // 'react-dom/src/server/ReactDOMFizzServerBun.js', // react-dom/server.bun
       'react-server-dom-webpack',
       'react-server-dom-webpack/client',
       'react-server-dom-webpack/server',
@@ -41,6 +43,18 @@ module.exports = [
       'react-devtools-shared',
       'react-interactions',
       'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'bun',
+    entryPoints: ['react-dom', 'react-dom/src/server/ReactDOMFizzServerBun.js'],
+    paths: [
+      'react-dom',
+      'react-dom/server',
+      'react-dom/server.bun',
+      'react-dom/src/server/ReactDOMFizzServerBun.js', // react-dom/server.bun
     ],
     isFlowTyped: true,
     isServerSupported: true,

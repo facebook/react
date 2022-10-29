@@ -51,6 +51,8 @@ const {
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
+  BUN_DEV,
+  BUN_PROD,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -89,6 +91,8 @@ const requestedBundleTypes = argv.type
   ? parseRequestedNames([argv.type], 'uppercase')
   : [];
 const requestedBundleNames = parseRequestedNames(argv._, 'lowercase');
+console.log('argv._', argv._);
+console.log('requestedBundleNames', requestedBundleNames);
 const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
@@ -211,6 +215,8 @@ function getFormat(bundleType) {
     case RN_FB_PROFILING:
       return `cjs`;
     case NODE_ESM:
+    case BUN_DEV:
+    case BUN_PROD:
       return `es`;
     case BROWSER_SCRIPT:
       return `iife`;
@@ -223,6 +229,7 @@ function isProductionBundleType(bundleType) {
     case NODE_ESM:
     case UMD_DEV:
     case NODE_DEV:
+    case BUN_DEV:
     case FB_WWW_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:
@@ -231,6 +238,7 @@ function isProductionBundleType(bundleType) {
     case NODE_PROD:
     case UMD_PROFILING:
     case NODE_PROFILING:
+    case BUN_PROD:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
     case RN_OSS_PROD:
@@ -252,6 +260,8 @@ function isProfilingBundleType(bundleType) {
     case FB_WWW_PROD:
     case NODE_DEV:
     case NODE_PROD:
+    case BUN_DEV:
+    case BUN_PROD:
     case RN_FB_DEV:
     case RN_FB_PROD:
     case RN_OSS_DEV:
@@ -315,7 +325,9 @@ function getPlugins(
     bundleType === RN_FB_DEV ||
     bundleType === RN_FB_PROD ||
     bundleType === RN_FB_PROFILING;
+  const isBunBundle = bundleType === BUN_DEV || bundleType === BUN_PROD;
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
+  const skipClosureTranspilation = isBunBundle;
   return [
     // Shim any modules that need forking in this environment.
     useForks(forks),
@@ -363,6 +375,7 @@ function getPlugins(
     isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
     isProduction &&
+      !skipClosureTranspilation &&
       closure({
         compilation_level: 'SIMPLE',
         language_in: 'ECMASCRIPT_2015',
@@ -502,6 +515,9 @@ async function createBundle(bundle, bundleType) {
     return;
   }
 
+  console.log(`not skipping`);
+  console.log(bundle);
+
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
@@ -518,10 +534,13 @@ async function createBundle(bundle, bundleType) {
     bundleType === RN_FB_PROD ||
     bundleType === RN_FB_PROFILING;
 
+  console.log(`entry`);
+  console.log(bundle.entry);
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle
   );
+  console.log(resolvedEntry);
 
   const shouldBundleDependencies =
     bundleType === UMD_DEV ||
@@ -589,6 +608,7 @@ async function createBundle(bundle, bundleType) {
     filename,
     packageName
   );
+  console.log(`mainOutputPath`, mainOutputPath);
   const rollupOutputOptions = getRollupOutputOptions(
     mainOutputPath,
     format,
@@ -618,9 +638,20 @@ async function createBundle(bundle, bundleType) {
   } else {
     console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
     try {
+      // console.log(rollupConfig);
+      // console.log(rollupOutputOptions);
       const result = await rollup.rollup(rollupConfig);
+      // console.log(`rollup result`, result);
+      console.log('rollupOutputOptions', rollupOutputOptions);
+      // rollupOutputOptions.dir = rollupOutputOptions.file;
+      // delete rollupOutputOptions.file;
+      // console.log(rollupOutputOptions.output[0].exports);
+      // console.log(rollupOutputOptions.output[0].imports);
+      // console.log(rollupOutputOptions.output[0].name);
+      // console.log(rollupOutputOptions.output[0].modules);
       await result.write(rollupOutputOptions);
     } catch (error) {
+      console.log(error);
       console.log(`${chalk.bgRed.black(' OH NOES! ')} ${logKey}\n`);
       handleRollupError(error);
       throw error;
@@ -719,6 +750,8 @@ async function buildEverything() {
       [bundle, NODE_DEV],
       [bundle, NODE_PROD],
       [bundle, NODE_PROFILING],
+      [bundle, BUN_DEV],
+      [bundle, BUN_PROD],
       [bundle, FB_WWW_DEV],
       [bundle, FB_WWW_PROD],
       [bundle, FB_WWW_PROFILING],
