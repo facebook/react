@@ -28,7 +28,7 @@ function isHookName(s) {
  */
 
 function isHook(node) {
-  if (node.type === 'Identifier') {
+  if (node.type === 'Identifier' || node.type === 'JSXIdentifier') {
     return isHookName(node.name);
   } else if (
     node.type === 'MemberExpression' &&

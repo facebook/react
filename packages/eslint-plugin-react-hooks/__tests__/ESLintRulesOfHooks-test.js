@@ -505,6 +505,28 @@ const tests = {
         }
       `,
     },
+    {
+      // because
+      // const useNamed = async () => useQuery();
+      // <Foo useData={useNamed} />;
+      // would also be valid
+      code: normalizeIndent`
+        function useQuery() {
+          return React.useState(null);
+        }
+        function App() {
+          const useNamed = async () => useQuery();
+
+          return (
+            <div className="App">
+              <Foo useData={async () => useQuery()} />
+              <Foo useData={useNamed} />
+              <Foo {...useHooks()} />
+            </div>
+          );
+        }
+      `,
+    },
   ],
   invalid: [
     {
