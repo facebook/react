@@ -7,6 +7,8 @@ let Offscreen;
 let useState;
 let useLayoutEffect;
 let useEffect;
+let useMemo;
+let useRef;
 let startTransition;
 
 describe('ReactOffscreen', () => {
@@ -22,6 +24,8 @@ describe('ReactOffscreen', () => {
     useState = React.useState;
     useLayoutEffect = React.useLayoutEffect;
     useEffect = React.useEffect;
+    useMemo = React.useMemo;
+    useRef = React.useRef;
     startTransition = React.startTransition;
   });
 
@@ -486,22 +490,29 @@ describe('ReactOffscreen', () => {
     // hidden tree share the same lane, but are processed at different times
     // because of the timing of when they were scheduled.
 
+    // This functions checks whether the "outer" and "inner" states are
+    // consistent in the rendered output.
+    let currentOuter = null;
+    let currentInner = null;
+    function areOuterAndInnerConsistent() {
+      return (
+        currentOuter === null ||
+        currentInner === null ||
+        currentOuter === currentInner
+      );
+    }
+
     let setInner;
-    function Child({outer}) {
+    function Child() {
       const [inner, _setInner] = useState(0);
       setInner = _setInner;
 
       useEffect(() => {
-        // Inner and outer values are always updated simultaneously, so they
-        // should always be consistent.
-        if (inner !== outer) {
-          Scheduler.unstable_yieldValue(
-            'Tearing! Inner and outer are inconsistent!',
-          );
-        } else {
-          Scheduler.unstable_yieldValue('Inner and outer are consistent');
-        }
-      }, [inner, outer]);
+        currentInner = inner;
+        return () => {
+          currentInner = null;
+        };
+      }, [inner]);
 
       return <Text text={'Inner: ' + inner} />;
     }
@@ -510,11 +521,19 @@ describe('ReactOffscreen', () => {
     function App({show}) {
       const [outer, _setOuter] = useState(0);
       setOuter = _setOuter;
+
+      useEffect(() => {
+        currentOuter = outer;
+        return () => {
+          currentOuter = null;
+        };
+      }, [outer]);
+
       return (
         <>
           <Text text={'Outer: ' + outer} />
           <Offscreen mode={show ? 'visible' : 'hidden'}>
-            <Child outer={outer} />
+            <Child />
           </Offscreen>
         </>
       );
@@ -525,17 +544,14 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       root.render(<App show={false} />);
     });
-    expect(Scheduler).toHaveYielded([
-      'Outer: 0',
-      'Inner: 0',
-      'Inner and outer are consistent',
-    ]);
+    expect(Scheduler).toHaveYielded(['Outer: 0', 'Inner: 0']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Outer: 0" />
         <span hidden={true} prop="Inner: 0" />
       </>,
     );
+    expect(areOuterAndInnerConsistent()).toBe(true);
 
     await act(async () => {
       // Update a value both inside and outside the hidden tree. These values
@@ -570,8 +586,6 @@ describe('ReactOffscreen', () => {
         // update were erroneously processed, then Inner would be inconsistent
         // with Outer.
         'Inner: 1',
-
-        'Inner and outer are consistent',
       ]);
       expect(root).toMatchRenderedOutput(
         <>
@@ -579,18 +593,16 @@ describe('ReactOffscreen', () => {
           <span prop="Inner: 1" />
         </>,
       );
+      expect(areOuterAndInnerConsistent()).toBe(true);
     });
-    expect(Scheduler).toHaveYielded([
-      'Outer: 2',
-      'Inner: 2',
-      'Inner and outer are consistent',
-    ]);
+    expect(Scheduler).toHaveYielded(['Outer: 2', 'Inner: 2']);
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="Outer: 2" />
         <span prop="Inner: 2" />
       </>,
     );
+    expect(areOuterAndInnerConsistent()).toBe(true);
   });
 
   // @gate enableOffscreen
@@ -640,4 +652,1020 @@ describe('ReactOffscreen', () => {
     });
     expect(root).toMatchRenderedOutput(null);
   });
+
+  // @gate enableOffscreen
+  it('class component setState callbacks do not fire until tree is visible', async () => {
+    const root = ReactNoop.createRoot();
+
+    let child;
+    class Child extends React.Component {
+      state = {text: 'A'};
+      render() {
+        child = this;
+        return <Text text={this.state.text} />;
+      }
+    }
+
+    // Initial render
+    await act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['A']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="A" />);
+
+    // Schedule an update to a hidden class component. The update will finish
+    // rendering in the background, but the callback shouldn't fire yet, because
+    // the component isn't visible.
+    await act(async () => {
+      child.setState({text: 'B'}, () => {
+        Scheduler.unstable_yieldValue('B update finished');
+      });
+    });
+    expect(Scheduler).toHaveYielded(['B']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="B" />);
+
+    // Now reveal the hidden component. Simultaneously, schedule another
+    // update with a callback to the same component. When the component is
+    // revealed, both the B callback and C callback should fire, in that order.
+    await act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <Child />
+        </Offscreen>,
+      );
+      child.setState({text: 'C'}, () => {
+        Scheduler.unstable_yieldValue('C update finished');
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      'C',
+      'B update finished',
+      'C update finished',
+    ]);
+    expect(root).toMatchRenderedOutput(<span prop="C" />);
+  });
+
+  // @gate enableOffscreen
+  it('does not call componentDidUpdate when reappearing a hidden class component', async () => {
+    class Child extends React.Component {
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('componentDidMount');
+      }
+      componentDidUpdate() {
+        Scheduler.unstable_yieldValue('componentDidUpdate');
+      }
+      componentWillUnmount() {
+        Scheduler.unstable_yieldValue('componentWillUnmount');
+      }
+      render() {
+        return 'Child';
+      }
+    }
+
+    // Initial mount
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['componentDidMount']);
+
+    // Hide the class component
+    await act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['componentWillUnmount']);
+
+    // Reappear the class component. componentDidMount should fire, not
+    // componentDidUpdate.
+    await act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['componentDidMount']);
+  });
+
+  // @gate enableOffscreen
+  it(
+    'when reusing old components (hidden -> visible), layout effects fire ' +
+      'with same timing as if it were brand new',
+    async () => {
+      function Child({label}) {
+        useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('Mount ' + label);
+          return () => {
+            Scheduler.unstable_yieldValue('Unmount ' + label);
+          };
+        }, [label]);
+        return label;
+      }
+
+      // Initial mount
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(
+          <Offscreen mode="visible">
+            <Child key="B" label="B" />
+          </Offscreen>,
+        );
+      });
+      expect(Scheduler).toHaveYielded(['Mount B']);
+
+      // Hide the component
+      await act(async () => {
+        root.render(
+          <Offscreen mode="hidden">
+            <Child key="B" label="B" />
+          </Offscreen>,
+        );
+      });
+      expect(Scheduler).toHaveYielded(['Unmount B']);
+
+      // Reappear the component and also add some new siblings.
+      await act(async () => {
+        root.render(
+          <Offscreen mode="visible">
+            <Child key="A" label="A" />
+            <Child key="B" label="B" />
+            <Child key="C" label="C" />
+          </Offscreen>,
+        );
+      });
+      // B's effect should fire in between A and C even though it's been reused
+      // from a previous render. In other words, it's the same order as if all
+      // three siblings were brand new.
+      expect(Scheduler).toHaveYielded(['Mount A', 'Mount B', 'Mount C']);
+    },
+  );
+
+  // @gate enableOffscreen
+  it(
+    'when reusing old components (hidden -> visible), layout effects fire ' +
+      'with same timing as if it were brand new (includes setState callback)',
+    async () => {
+      class Child extends React.Component {
+        componentDidMount() {
+          Scheduler.unstable_yieldValue('Mount ' + this.props.label);
+        }
+        componentWillUnmount() {
+          Scheduler.unstable_yieldValue('Unmount ' + this.props.label);
+        }
+        render() {
+          return this.props.label;
+        }
+      }
+
+      // Initial mount
+      const bRef = React.createRef();
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(
+          <Offscreen mode="visible">
+            <Child key="B" ref={bRef} label="B" />
+          </Offscreen>,
+        );
+      });
+      expect(Scheduler).toHaveYielded(['Mount B']);
+
+      // We're going to schedule an update on a hidden component, so stash a
+      // reference to its setState before the ref gets detached
+      const setStateB = bRef.current.setState.bind(bRef.current);
+
+      // Hide the component
+      await act(async () => {
+        root.render(
+          <Offscreen mode="hidden">
+            <Child key="B" ref={bRef} label="B" />
+          </Offscreen>,
+        );
+      });
+      expect(Scheduler).toHaveYielded(['Unmount B']);
+
+      // Reappear the component and also add some new siblings.
+      await act(async () => {
+        setStateB(null, () => {
+          Scheduler.unstable_yieldValue('setState callback B');
+        });
+        root.render(
+          <Offscreen mode="visible">
+            <Child key="A" label="A" />
+            <Child key="B" ref={bRef} label="B" />
+            <Child key="C" label="C" />
+          </Offscreen>,
+        );
+      });
+      // B's effect should fire in between A and C even though it's been reused
+      // from a previous render. In other words, it's the same order as if all
+      // three siblings were brand new.
+      expect(Scheduler).toHaveYielded([
+        'Mount A',
+        'Mount B',
+        'setState callback B',
+        'Mount C',
+      ]);
+    },
+  );
+
+  // @gate enableOffscreen
+  it('defer passive effects when prerendering a new Offscreen tree', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showMore}) {
+      return (
+        <>
+          <Child label="Shell" />
+          <Offscreen mode={showMore ? 'visible' : 'hidden'}>
+            <Child label="More" />
+          </Offscreen>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Mount the app without showing the extra content
+    await act(async () => {
+      root.render(<App showMore={false} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      // First mount the outer visible shell
+      'Shell',
+      'Mount Shell',
+
+      // Then prerender the hidden extra context. The passive effects in the
+      // hidden tree should not fire
+      'More',
+      // Does not fire
+      // 'Mount More',
+    ]);
+    // The hidden content has been prerendered
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Shell" />
+        <span hidden={true} prop="More" />
+      </>,
+    );
+
+    // Reveal the prerendered tree
+    await act(async () => {
+      root.render(<App showMore={true} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Shell',
+      'More',
+
+      // Mount the passive effects in the newly revealed tree, the ones that
+      // were skipped during pre-rendering.
+      'Mount More',
+    ]);
+  });
+
+  // @gate enableLegacyHidden
+  it('do not defer passive effects when prerendering a new LegacyHidden tree', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showMore}) {
+      return (
+        <>
+          <Child label="Shell" />
+          <LegacyHidden
+            mode={showMore ? 'visible' : 'unstable-defer-without-hiding'}>
+            <Child label="More" />
+          </LegacyHidden>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Mount the app without showing the extra content
+    await act(async () => {
+      root.render(<App showMore={false} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      // First mount the outer visible shell
+      'Shell',
+      'Mount Shell',
+
+      // Then prerender the hidden extra context. Unlike Offscreen, the passive
+      // effects in the hidden tree *should* fire
+      'More',
+      'Mount More',
+    ]);
+
+    // The hidden content has been prerendered
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Shell" />
+        <span prop="More" />
+      </>,
+    );
+
+    // Reveal the prerendered tree
+    await act(async () => {
+      root.render(<App showMore={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Shell', 'More']);
+  });
+
+  // @gate enableOffscreen
+  it('passive effects are connected and disconnected when the visibility changes', async () => {
+    function Child({step}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue(`Commit mount [${step}]`);
+        return () => {
+          Scheduler.unstable_yieldValue(`Commit unmount [${step}]`);
+        };
+      }, [step]);
+      return <Text text={step} />;
+    }
+
+    function App({show, step}) {
+      return (
+        <Offscreen mode={show ? 'visible' : 'hidden'}>
+          {useMemo(
+            () => (
+              <Child step={step} />
+            ),
+            [step],
+          )}
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App show={true} step={1} />);
+    });
+    expect(Scheduler).toHaveYielded([1, 'Commit mount [1]']);
+    expect(root).toMatchRenderedOutput(<span prop={1} />);
+
+    // Hide the tree. This will unmount the effect.
+    await act(async () => {
+      root.render(<App show={false} step={1} />);
+    });
+    expect(Scheduler).toHaveYielded(['Commit unmount [1]']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop={1} />);
+
+    // Update.
+    await act(async () => {
+      root.render(<App show={false} step={2} />);
+    });
+    // The update is prerendered but no effects are fired
+    expect(Scheduler).toHaveYielded([2]);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop={2} />);
+
+    // Reveal the tree.
+    await act(async () => {
+      root.render(<App show={true} step={2} />);
+    });
+    // The update doesn't render because it was already prerendered, but we do
+    // fire the effect.
+    expect(Scheduler).toHaveYielded(['Commit mount [2]']);
+    expect(root).toMatchRenderedOutput(<span prop={2} />);
+  });
+
+  // @gate enableOffscreen
+  it('passive effects are unmounted on hide in the same order as during a deletion: parent before child', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount Child');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount Child');
+        };
+      }, []);
+      return <div>Hi</div>;
+    }
+    function Parent() {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount Parent');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount Parent');
+        };
+      }, []);
+      return <Child />;
+    }
+
+    function App({show}) {
+      return (
+        <Offscreen mode={show ? 'visible' : 'hidden'}>
+          <Parent />
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App show={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Mount Child', 'Mount Parent']);
+
+    // First demonstrate what happens during a normal deletion
+    await act(async () => {
+      root.render(null);
+    });
+    expect(Scheduler).toHaveYielded(['Unmount Parent', 'Unmount Child']);
+
+    // Now redo the same thing but hide instead of deleting
+    await act(async () => {
+      root.render(<App show={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Mount Child', 'Mount Parent']);
+    await act(async () => {
+      root.render(<App show={false} />);
+    });
+    // The order is the same as during a deletion: parent before child
+    expect(Scheduler).toHaveYielded(['Unmount Parent', 'Unmount Child']);
+  });
+
+  // TODO: As of now, there's no way to hide a tree without also unmounting its
+  // effects. (Except for Suspense, which has its own tests associated with it.)
+  // Re-enable this test once we add this ability. For example, we'll likely add
+  // either an option or a heuristic to mount passive effects inside a hidden
+  // tree after a delay.
+  // @gate enableOffscreen
+  it.skip("don't defer passive effects when prerendering in a tree whose effects are already connected", async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showMore, step}) {
+      return (
+        <>
+          <Child label={'Shell ' + step} />
+          <Offscreen mode={showMore ? 'visible' : 'hidden'}>
+            <Child label={'More ' + step} />
+          </Offscreen>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Mount the app, including the extra content
+    await act(async () => {
+      root.render(<App showMore={true} step={1} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Shell 1',
+      'More 1',
+      'Mount Shell 1',
+      'Mount More 1',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="Shell 1" />
+        <span prop="More 1" />
+      </>,
+    );
+
+    // Hide the extra content. while also updating one of its props
+    await act(async () => {
+      root.render(<App showMore={false} step={2} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      // First update the outer visible shell
+      'Shell 2',
+      'Unmount Shell 1',
+      'Mount Shell 2',
+
+      // Then prerender the update to the hidden content. Since the effects
+      // are already connected inside the hidden tree, we don't defer updates
+      // to them.
+      'More 2',
+      'Unmount More 1',
+      'Mount More 2',
+    ]);
+  });
+
+  // @gate enableOffscreen
+  it('does not mount effects when prerendering a nested Offscreen boundary', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showOuter, showInner}) {
+      return (
+        <Offscreen mode={showOuter ? 'visible' : 'hidden'}>
+          {useMemo(
+            () => (
+              <div>
+                <Child label="Outer" />
+                {showInner ? (
+                  <Offscreen mode="visible">
+                    <div>
+                      <Child label="Inner" />
+                    </div>
+                  </Offscreen>
+                ) : null}
+              </div>
+            ),
+            [showInner],
+          )}
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Prerender the outer contents. No effects should mount.
+    await act(async () => {
+      root.render(<App showOuter={false} showInner={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['Outer']);
+    expect(root).toMatchRenderedOutput(
+      <div hidden={true}>
+        <span prop="Outer" />
+      </div>,
+    );
+
+    // Prerender the inner contents. No effects should mount.
+    await act(async () => {
+      root.render(<App showOuter={false} showInner={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Outer', 'Inner']);
+    expect(root).toMatchRenderedOutput(
+      <div hidden={true}>
+        <span prop="Outer" />
+        <div>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
+
+    // Reveal the prerendered tree
+    await act(async () => {
+      root.render(<App showOuter={true} showInner={true} />);
+    });
+    // The effects fire, but the tree is not re-rendered because it already
+    // prerendered.
+    expect(Scheduler).toHaveYielded(['Mount Outer', 'Mount Inner']);
+    expect(root).toMatchRenderedOutput(
+      <div>
+        <span prop="Outer" />
+        <div>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
+  });
+
+  // @gate enableOffscreen
+  it('reveal an outer Offscreen boundary without revealing an inner one', async () => {
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return <Text text={label} />;
+    }
+
+    function App({showOuter, showInner}) {
+      return (
+        <Offscreen mode={showOuter ? 'visible' : 'hidden'}>
+          {useMemo(
+            () => (
+              <div>
+                <Child label="Outer" />
+                <Offscreen mode={showInner ? 'visible' : 'hidden'}>
+                  <div>
+                    <Child label="Inner" />
+                  </div>
+                </Offscreen>
+              </div>
+            ),
+            [showInner],
+          )}
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Prerender the whole tree.
+    await act(async () => {
+      root.render(<App showOuter={false} showInner={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['Outer', 'Inner']);
+    // Both the inner and the outer tree should be hidden. Hiding the inner tree
+    // is arguably redundant, but the advantage of hiding both is that later you
+    // can reveal the outer tree without having to examine the inner one.
+    expect(root).toMatchRenderedOutput(
+      <div hidden={true}>
+        <span prop="Outer" />
+        <div hidden={true}>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
+
+    // Reveal the outer contents. The inner tree remains hidden.
+    await act(async () => {
+      root.render(<App showOuter={true} showInner={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['Mount Outer']);
+    expect(root).toMatchRenderedOutput(
+      <div>
+        <span prop="Outer" />
+        <div hidden={true}>
+          <span prop="Inner" />
+        </div>
+      </div>,
+    );
+  });
+
+  describe('manual interactivity', () => {
+    // @gate enableOffscreen
+    it('should attach ref only for mode null', async () => {
+      let offscreenRef;
+
+      function App({mode}) {
+        offscreenRef = useRef(null);
+        return (
+          <Offscreen
+            mode={mode}
+            ref={ref => {
+              offscreenRef.current = ref;
+            }}>
+            <div />
+          </Offscreen>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<App mode={'manual'} />);
+      });
+
+      expect(offscreenRef.current).not.toBeNull();
+
+      await act(async () => {
+        root.render(<App mode={'visible'} />);
+      });
+
+      expect(offscreenRef.current).toBeNull();
+
+      await act(async () => {
+        root.render(<App mode={'hidden'} />);
+      });
+
+      expect(offscreenRef.current).toBeNull();
+
+      await act(async () => {
+        root.render(<App mode={'manual'} />);
+      });
+
+      expect(offscreenRef.current).not.toBeNull();
+    });
+
+    // @gate enableOffscreen
+    it('should lower update priority for detached Offscreen', async () => {
+      let updateChildState;
+      let updateHighPriorityComponentState;
+      let offscreenRef;
+
+      function Child() {
+        const [state, _stateUpdate] = useState(0);
+        updateChildState = _stateUpdate;
+        const text = 'Child ' + state;
+        return <Text text={text} />;
+      }
+
+      function HighPriorityComponent(props) {
+        const [state, _stateUpdate] = useState(0);
+        updateHighPriorityComponentState = _stateUpdate;
+        const text = 'HighPriorityComponent ' + state;
+        return (
+          <>
+            <Text text={text} />
+            {props.children}
+          </>
+        );
+      }
+
+      function App() {
+        offscreenRef = useRef(null);
+        return (
+          <>
+            <HighPriorityComponent>
+              <Offscreen mode={'manual'} ref={offscreenRef}>
+                <Child />
+              </Offscreen>
+            </HighPriorityComponent>
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<App />);
+      });
+
+      expect(Scheduler).toHaveYielded(['HighPriorityComponent 0', 'Child 0']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="HighPriorityComponent 0" />
+          <span prop="Child 0" />
+        </>,
+      );
+
+      expect(offscreenRef.current).not.toBeNull();
+      expect(offscreenRef.current.detach).not.toBeNull();
+
+      // Offscreen is attached by default. State updates from offscreen are **not defered**.
+      await act(async () => {
+        updateChildState(1);
+        updateHighPriorityComponentState(1);
+        expect(Scheduler).toFlushUntilNextPaint([
+          'HighPriorityComponent 1',
+          'Child 1',
+        ]);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span prop="HighPriorityComponent 1" />
+            <span prop="Child 1" />
+          </>,
+        );
+      });
+
+      // detaching offscreen.
+      offscreenRef.current.detach();
+
+      // Offscreen is detached. State updates from offscreen are **defered**.
+      await act(async () => {
+        updateChildState(2);
+        updateHighPriorityComponentState(2);
+        expect(Scheduler).toFlushUntilNextPaint(['HighPriorityComponent 2']);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span prop="HighPriorityComponent 2" />
+            <span prop="Child 1" />
+          </>,
+        );
+      });
+
+      expect(Scheduler).toHaveYielded(['Child 2']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="HighPriorityComponent 2" />
+          <span prop="Child 2" />
+        </>,
+      );
+    });
+
+    // @gate enableOffscreen
+    it('defers detachment if called during commit', async () => {
+      let updateChildState;
+      let updateHighPriorityComponentState;
+      let offscreenRef;
+      let nextRenderTriggerDetach = false;
+
+      function Child() {
+        const [state, _stateUpdate] = useState(0);
+        updateChildState = _stateUpdate;
+        const text = 'Child ' + state;
+        return <Text text={text} />;
+      }
+
+      function HighPriorityComponent(props) {
+        const [state, _stateUpdate] = useState(0);
+        updateHighPriorityComponentState = _stateUpdate;
+        const text = 'HighPriorityComponent ' + state;
+        useLayoutEffect(() => {
+          if (nextRenderTriggerDetach) {
+            offscreenRef.current.detach();
+            _stateUpdate(state + 1);
+            updateChildState(state + 1);
+            nextRenderTriggerDetach = false;
+          }
+        });
+        return (
+          <>
+            <Text text={text} />
+            {props.children}
+          </>
+        );
+      }
+
+      function App() {
+        offscreenRef = useRef(null);
+        return (
+          <>
+            <HighPriorityComponent>
+              <Offscreen mode={'manual'} ref={offscreenRef}>
+                <Child />
+              </Offscreen>
+            </HighPriorityComponent>
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<App />);
+      });
+
+      expect(Scheduler).toHaveYielded(['HighPriorityComponent 0', 'Child 0']);
+
+      nextRenderTriggerDetach = true;
+
+      // Offscreen is attached. State updates from offscreen are **not defered**.
+      // Offscreen is detached inside useLayoutEffect;
+      await act(async () => {
+        updateChildState(1);
+        updateHighPriorityComponentState(1);
+        expect(Scheduler).toFlushUntilNextPaint([
+          'HighPriorityComponent 1',
+          'Child 1',
+          'HighPriorityComponent 2',
+          'Child 2',
+        ]);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span prop="HighPriorityComponent 2" />
+            <span prop="Child 2" />
+          </>,
+        );
+      });
+
+      // Offscreen is detached. State updates from offscreen are **defered**.
+      await act(async () => {
+        updateChildState(3);
+        updateHighPriorityComponentState(3);
+        expect(Scheduler).toFlushUntilNextPaint(['HighPriorityComponent 3']);
+        expect(root).toMatchRenderedOutput(
+          <>
+            <span prop="HighPriorityComponent 3" />
+            <span prop="Child 2" />
+          </>,
+        );
+      });
+
+      expect(Scheduler).toHaveYielded(['Child 3']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="HighPriorityComponent 3" />
+          <span prop="Child 3" />
+        </>,
+      );
+    });
+  });
+
+  // @gate enableOffscreen
+  it('should detach ref if Offscreen is unmounted', async () => {
+    let offscreenRef;
+
+    function App({showOffscreen}) {
+      offscreenRef = useRef(null);
+      return showOffscreen ? (
+        <Offscreen
+          mode={'manual'}
+          ref={ref => {
+            offscreenRef.current = ref;
+          }}>
+          <div />
+        </Offscreen>
+      ) : null;
+    }
+
+    const root = ReactNoop.createRoot();
+
+    await act(async () => {
+      root.render(<App showOffscreen={true} />);
+    });
+
+    expect(offscreenRef.current).not.toBeNull();
+
+    await act(async () => {
+      root.render(<App showOffscreen={false} />);
+    });
+
+    expect(offscreenRef.current).toBeNull();
+
+    await act(async () => {
+      root.render(<App showOffscreen={true} />);
+    });
+
+    expect(offscreenRef.current).not.toBeNull();
+  });
+
+  // @gate enableOffscreen
+  it('should detach ref when parent Offscreen is hidden', async () => {
+    let offscreenRef;
+
+    function App({mode}) {
+      offscreenRef = useRef(null);
+      return (
+        <Offscreen mode={mode}>
+          <Offscreen mode={'manual'} ref={offscreenRef}>
+            <div />
+          </Offscreen>
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    await act(async () => {
+      root.render(<App mode={'hidden'} />);
+    });
+
+    expect(offscreenRef.current).toBeNull();
+
+    await act(async () => {
+      root.render(<App mode={'visible'} />);
+    });
+
+    expect(offscreenRef.current).not.toBeNull();
+    await act(async () => {
+      root.render(<App mode={'hidden'} />);
+    });
+
+    expect(offscreenRef.current).toBeNull();
+  });
+
+  // @gate enableOffscreen
+  it('should change _current', async () => {
+    let offscreenRef;
+    const root = ReactNoop.createRoot();
+
+    function App({children}) {
+      offscreenRef = useRef(null);
+      return (
+        <Offscreen mode={'manual'} ref={offscreenRef}>
+          {children}
+        </Offscreen>
+      );
+    }
+
+    await act(async () => {
+      root.render(
+        <App>
+          <div />
+        </App>,
+      );
+    });
+
+    expect(offscreenRef.current).not.toBeNull();
+    const firstFiber = offscreenRef.current._current;
+
+    await act(async () => {
+      root.render(
+        <App>
+          <span />
+        </App>,
+      );
+    });
+
+    expect(offscreenRef.current._current === firstFiber).toBeFalsy();
+  });
+
+  // TODO: When attach/detach methods are implemented. Add tests for nested Offscreen case.
 });

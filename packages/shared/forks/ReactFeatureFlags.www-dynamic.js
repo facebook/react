@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,7 +19,7 @@ export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const skipUnmountedBoundaries = __VARIANT__;
 export const enableUseRefAccessWarning = __VARIANT__;
-export const deletedTreeCleanUpLevel = __VARIANT__ ? 3 : 1;
+export const deletedTreeCleanUpLevel: number = __VARIANT__ ? 3 : 1;
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;
@@ -28,7 +28,6 @@ export const consoleManagedByDevToolsDuringStrictMode = __VARIANT__;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = __VARIANT__;
 export const enableClientRenderFallbackOnTextMismatch = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
-export const enableSymbolFallbackForWWW = __VARIANT__;
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
 //
@@ -58,7 +57,6 @@ export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const disableNativeComponentFrames = false;
 export const createRootStrictEffectsByDefault = false;
-export const enableStrictEffects = false;
 export const allowConcurrentByDefault = true;
 // You probably *don't* want to add more hardcoded ones.
 // Instead, try to add them above with the __VARIANT__ value.

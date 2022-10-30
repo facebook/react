@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,12 +9,15 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
+import type {
+  SuspenseState,
+  SuspenseProps,
+} from './ReactFiberSuspenseComponent.new';
 
 import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
 import {createCursor, push, pop} from './ReactFiberStack.new';
 import {isCurrentTreeHidden} from './ReactFiberHiddenContext.new';
-import {SuspenseComponent} from './ReactWorkTags';
+import {SuspenseComponent, OffscreenComponent} from './ReactWorkTags';
 
 // The Suspense handler is the boundary that should capture if something
 // suspends, i.e. it's the nearest `catch` block on the stack.
@@ -55,6 +58,33 @@ function shouldAvoidedBoundaryCapture(
   return false;
 }
 
+export function isBadSuspenseFallback(
+  current: Fiber | null,
+  nextProps: SuspenseProps,
+): boolean {
+  // Check if this is a "bad" fallback state or a good one. A bad fallback state
+  // is one that we only show as a last resort; if this is a transition, we'll
+  // block it from displaying, and wait for more data to arrive.
+  if (current !== null) {
+    const prevState: SuspenseState = current.memoizedState;
+    const isShowingFallback = prevState !== null;
+    if (!isShowingFallback && !isCurrentTreeHidden()) {
+      // It's bad to switch to a fallback if content is already visible
+      return true;
+    }
+  }
+
+  if (
+    enableSuspenseAvoidThisFallback &&
+    nextProps.unstable_avoidThisFallback === true
+  ) {
+    // Experimental: Some fallbacks are always bad
+    return true;
+  }
+
+  return false;
+}
+
 export function pushPrimaryTreeSuspenseHandler(handler: Fiber): void {
   const props = handler.pendingProps;
   const handlerOnStack = suspenseHandlerStackCursor.current;
@@ -77,6 +107,19 @@ export function pushFallbackTreeSuspenseHandler(fiber: Fiber): void {
   // We're about to render the fallback. If something in the fallback suspends,
   // it's akin to throwing inside of a `catch` block. This boundary should not
   // capture. Reuse the existing handler on the stack.
+  reuseSuspenseHandlerOnStack(fiber);
+}
+
+export function pushOffscreenSuspenseHandler(fiber: Fiber): void {
+  if (fiber.tag === OffscreenComponent) {
+    push(suspenseHandlerStackCursor, fiber, fiber);
+  } else {
+    // This is a LegacyHidden component.
+    reuseSuspenseHandlerOnStack(fiber);
+  }
+}
+
+export function reuseSuspenseHandlerOnStack(fiber: Fiber) {
   push(suspenseHandlerStackCursor, getSuspenseHandler(), fiber);
 }
 

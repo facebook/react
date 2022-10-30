@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -52,13 +52,13 @@ function renderToReadableStream(
   const stream = new ReadableStream(
     {
       type: 'bytes',
-      start(controller) {
+      start: (controller): ?Promise<void> => {
         startWork(request);
       },
-      pull(controller) {
+      pull: (controller): ?Promise<void> => {
         startFlowing(request, controller);
       },
-      cancel(reason) {},
+      cancel: (reason): ?Promise<void> => {},
     },
     // $FlowFixMe size() methods are not allowed on byte streams.
     {highWaterMark: 0},

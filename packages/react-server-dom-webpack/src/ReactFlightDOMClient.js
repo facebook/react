@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,12 +7,15 @@
  * @flow
  */
 
+import type {Thenable} from 'shared/ReactTypes.js';
+
 import type {Response as FlightResponse} from 'react-client/src/ReactFlightClientStream';
 
 import type {BundlerConfig} from './ReactFlightClientWebpackBundlerConfig';
 
 import {
   createResponse,
+  getRoot,
   reportGlobalError,
   processStringChunk,
   processBinaryChunk,
@@ -35,29 +38,35 @@ function startReadingFromStream(
     }
     const buffer: Uint8Array = (value: any);
     processBinaryChunk(response, buffer);
-    return reader.read().then(progress, error);
+    return reader
+      .read()
+      .then(progress)
+      .catch(error);
   }
   function error(e) {
     reportGlobalError(response, e);
   }
-  reader.read().then(progress, error);
+  reader
+    .read()
+    .then(progress)
+    .catch(error);
 }
 
-function createFromReadableStream(
+function createFromReadableStream<T>(
   stream: ReadableStream,
   options?: Options,
-): FlightResponse {
+): Thenable<T> {
   const response: FlightResponse = createResponse(
     options && options.moduleMap ? options.moduleMap : null,
   );
   startReadingFromStream(response, stream);
-  return response;
+  return getRoot(response);
 }
 
-function createFromFetch(
+function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
   options?: Options,
-): FlightResponse {
+): Thenable<T> {
   const response: FlightResponse = createResponse(
     options && options.moduleMap ? options.moduleMap : null,
   );
@@ -69,13 +78,13 @@ function createFromFetch(
       reportGlobalError(response, e);
     },
   );
-  return response;
+  return getRoot(response);
 }
 
-function createFromXHR(
+function createFromXHR<T>(
   request: XMLHttpRequest,
   options?: Options,
-): FlightResponse {
+): Thenable<T> {
   const response: FlightResponse = createResponse(
     options && options.moduleMap ? options.moduleMap : null,
   );
@@ -97,7 +106,7 @@ function createFromXHR(
   request.addEventListener('error', error);
   request.addEventListener('abort', error);
   request.addEventListener('timeout', error);
-  return response;
+  return getRoot(response);
 }
 
 export {createFromXHR, createFromFetch, createFromReadableStream};

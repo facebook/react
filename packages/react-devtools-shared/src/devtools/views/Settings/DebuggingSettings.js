@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,7 +13,7 @@ import {SettingsContext} from './SettingsContext';
 
 import styles from './SettingsShared.css';
 
-export default function DebuggingSettings(_: {||}) {
+export default function DebuggingSettings(_: {}): React.Node {
   const {
     appendComponentStack,
     breakOnConsoleErrors,
@@ -22,7 +22,7 @@ export default function DebuggingSettings(_: {||}) {
     setBreakOnConsoleErrors,
     setShowInlineWarningsAndErrors,
     showInlineWarningsAndErrors,
-    sethideConsoleLogsInStrictMode,
+    setHideConsoleLogsInStrictMode,
   } = useContext(SettingsContext);
 
   return (
@@ -72,7 +72,7 @@ export default function DebuggingSettings(_: {||}) {
             type="checkbox"
             checked={hideConsoleLogsInStrictMode}
             onChange={({currentTarget}) =>
-              sethideConsoleLogsInStrictMode(currentTarget.checked)
+              setHideConsoleLogsInStrictMode(currentTarget.checked)
             }
           />{' '}
           Hide logs during second render in Strict Mode

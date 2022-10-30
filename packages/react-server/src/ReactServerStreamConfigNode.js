@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,16 +9,16 @@
 
 import type {Writable} from 'stream';
 import {TextEncoder} from 'util';
+import {AsyncLocalStorage} from 'async_hooks';
 
-type MightBeFlushable = {
-  flush?: () => void,
-  ...
-};
+interface MightBeFlushable {
+  flush?: () => void;
+}
 
 export type Destination = Writable & MightBeFlushable;
 
 export type PrecomputedChunk = Uint8Array;
-export type Chunk = string;
+export opaque type Chunk = string;
 
 export function scheduleWork(callback: () => void) {
   setImmediate(callback);
@@ -33,6 +33,11 @@ export function flushBuffered(destination: Destination) {
     destination.flush();
   }
 }
+
+export const supportsRequestStorage = true;
+export const requestStorage: AsyncLocalStorage<
+  Map<Function, mixed>,
+> = new AsyncLocalStorage();
 
 const VIEW_SIZE = 2048;
 let currentView = null;
@@ -73,6 +78,7 @@ function writeStringChunk(destination: Destination, stringChunk: string) {
   if (read < stringChunk.length) {
     writeToDestination(destination, (currentView: any));
     currentView = new Uint8Array(VIEW_SIZE);
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     writtenBytes = textEncoder.encodeInto(stringChunk.slice(read), currentView)
       .written;
   }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -44,14 +44,15 @@ let performanceTarget: Performance | null = null;
 // If performance exists and supports the subset of the User Timing API that we require.
 let supportsUserTiming =
   typeof performance !== 'undefined' &&
+  // $FlowFixMe[method-unbinding]
   typeof performance.mark === 'function' &&
+  // $FlowFixMe[method-unbinding]
   typeof performance.clearMarks === 'function';
 
 let supportsUserTimingV3 = false;
 if (supportsUserTiming) {
   const CHECK_V3_MARK = '__v3';
   const markOptions = {};
-  // $FlowFixMe: Ignore Flow complaining about needing a value
   Object.defineProperty(markOptions, 'startTime', {
     get: function() {
       supportsUserTimingV3 = true;
@@ -76,6 +77,7 @@ if (supportsUserTimingV3) {
 
 // Some environments (e.g. React Native / Hermes) don't support the performance API yet.
 const getCurrentTime =
+  // $FlowFixMe[method-unbinding]
   typeof performance === 'object' && typeof performance.now === 'function'
     ? () => performance.now()
     : () => Date.now();
@@ -93,11 +95,11 @@ export function setPerformanceMock_ONLY_FOR_TESTING(
 export type GetTimelineData = () => TimelineData | null;
 export type ToggleProfilingStatus = (value: boolean) => void;
 
-type Response = {|
+type Response = {
   getTimelineData: GetTimelineData,
   profilingHooks: DevToolsProfilingHooks,
   toggleProfilingStatus: ToggleProfilingStatus,
-|};
+};
 
 export function createProfilingHooks({
   getDisplayNameForFiber,
@@ -106,14 +108,14 @@ export function createProfilingHooks({
   workTagMap,
   currentDispatcherRef,
   reactVersion,
-}: {|
+}: {
   getDisplayNameForFiber: (fiber: Fiber) => string | null,
   getIsProfiling: () => boolean,
   getLaneLabelMap?: () => Map<Lane, string> | null,
   currentDispatcherRef?: CurrentDispatcherRef,
   workTagMap: WorkTagMap,
   reactVersion: string,
-|}): Response {
+}): Response {
   let currentBatchUID: BatchUID = 0;
   let currentReactComponentMeasure: ReactComponentMeasure | null = null;
   let currentReactMeasuresStack: Array<ReactMeasure> = [];
@@ -350,7 +352,9 @@ export function createProfilingHooks({
           );
         }
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentReactComponentMeasure.duration =
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           getRelativeTime() - currentReactComponentMeasure.timestamp;
         currentReactComponentMeasure = null;
       }
@@ -393,7 +397,9 @@ export function createProfilingHooks({
           );
         }
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentReactComponentMeasure.duration =
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           getRelativeTime() - currentReactComponentMeasure.timestamp;
         currentReactComponentMeasure = null;
       }
@@ -438,7 +444,9 @@ export function createProfilingHooks({
           );
         }
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentReactComponentMeasure.duration =
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           getRelativeTime() - currentReactComponentMeasure.timestamp;
         currentReactComponentMeasure = null;
       }
@@ -481,7 +489,9 @@ export function createProfilingHooks({
           );
         }
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentReactComponentMeasure.duration =
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           getRelativeTime() - currentReactComponentMeasure.timestamp;
         currentReactComponentMeasure = null;
       }
@@ -526,7 +536,9 @@ export function createProfilingHooks({
           );
         }
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentReactComponentMeasure.duration =
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           getRelativeTime() - currentReactComponentMeasure.timestamp;
         currentReactComponentMeasure = null;
       }
@@ -786,7 +798,7 @@ export function createProfilingHooks({
 
   function getParentFibers(fiber: Fiber): Array<Fiber> {
     const parents = [];
-    let parent = fiber;
+    let parent: null | Fiber = fiber;
     while (parent !== null) {
       parents.push(parent);
       parent = parent.return;
@@ -811,6 +823,7 @@ export function createProfilingHooks({
             warning: null,
           };
           currentFiberStacks.set(event, getParentFibers(fiber));
+          // $FlowFixMe[incompatible-use] found when upgrading Flow
           currentTimelineData.schedulingEvents.push(event);
         }
       }

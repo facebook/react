@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,11 +10,20 @@
 /* eslint-disable react-internal/prod-error-codes */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {Fiber} from './ReactInternalTypes';
-import type {FiberRoot} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import type {
+  Family,
+  FindHostInstancesForRefresh,
+  RefreshHandler,
+  RefreshUpdate,
+  ScheduleRefresh,
+  ScheduleRoot,
+} from './ReactFiberHotReloading';
+
+import {enableHostSingletons, enableFloat} from 'shared/ReactFeatureFlags';
 import {
   flushSync,
   scheduleUpdateOnFiber,
@@ -29,6 +38,8 @@ import {
   FunctionComponent,
   ForwardRef,
   HostComponent,
+  HostResource,
+  HostSingleton,
   HostPortal,
   HostRoot,
   MemoComponent,
@@ -39,30 +50,9 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-
-export type Family = {|
-  current: any,
-|};
-
-export type RefreshUpdate = {|
-  staleFamilies: Set<Family>,
-  updatedFamilies: Set<Family>,
-|};
-
-// Resolves type to a family.
-type RefreshHandler = any => Family | void;
-
-// Used by React Refresh runtime through DevTools Global Hook.
-export type SetRefreshHandler = (handler: RefreshHandler | null) => void;
-export type ScheduleRefresh = (root: FiberRoot, update: RefreshUpdate) => void;
-export type ScheduleRoot = (root: FiberRoot, element: ReactNodeList) => void;
-export type FindHostInstancesForRefresh = (
-  root: FiberRoot,
-  families: Array<Family>,
-) => Set<Instance>;
+import {supportsSingletons} from './ReactFiberHostConfig';
 
 let resolveFamily: RefreshHandler | null = null;
-// $FlowFixMe Flow gets confused by a WeakSet feature check below.
 let failedBoundaries: WeakSet<Fiber> | null = null;
 
 export const setRefreshHandler = (handler: RefreshHandler | null): void => {
@@ -202,6 +192,7 @@ export function isCompatibleFamilyForHotReloading(
       // then we would risk falsely saying two separate memo(Foo)
       // calls are equivalent because they wrap the same Foo function.
       const prevFamily = resolveFamily(prevType);
+      // $FlowFixMe[not-a-function] found when upgrading Flow
       if (prevFamily !== undefined && prevFamily === resolveFamily(nextType)) {
         return true;
       }
@@ -312,6 +303,7 @@ function scheduleFibersWithFamiliesRecursively(
     if (failedBoundaries !== null) {
       if (
         failedBoundaries.has(fiber) ||
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         (alternate !== null && failedBoundaries.has(alternate))
       ) {
         needsRemount = true;
@@ -435,6 +427,7 @@ function findHostInstancesForFiberShallowly(
     let node = fiber;
     while (true) {
       switch (node.tag) {
+        case HostSingleton:
         case HostComponent:
           hostInstances.add(node.stateNode);
           return;
@@ -461,7 +454,13 @@ function findChildHostInstancesForFiberShallowly(
     let node: Fiber = fiber;
     let foundHostInstances = false;
     while (true) {
-      if (node.tag === HostComponent) {
+      if (
+        node.tag === HostComponent ||
+        (enableFloat ? node.tag === HostResource : false) ||
+        (enableHostSingletons && supportsSingletons
+          ? node.tag === HostSingleton
+          : false)
+      ) {
         // We got a match.
         foundHostInstances = true;
         hostInstances.add(node.stateNode);

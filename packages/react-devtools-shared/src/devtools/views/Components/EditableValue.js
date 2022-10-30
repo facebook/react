@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,19 +14,19 @@ import {useEditableValue} from '../hooks';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
-type EditableValueProps = {|
+type EditableValueProps = {
   className?: string,
   overrideValue: OverrideValueFn,
   path: Array<string | number>,
   value: any,
-|};
+};
 
 export default function EditableValue({
   className = '',
   overrideValue,
   path,
   value,
-}: EditableValueProps) {
+}: EditableValueProps): React.Node {
   const [state, dispatch] = useEditableValue(value);
   const {editableValue, hasPendingChanges, isValid, parsedValue} = state;
 

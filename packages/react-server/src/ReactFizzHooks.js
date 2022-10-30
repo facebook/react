@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
+import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
 import type {
   MutableSource,
@@ -15,37 +15,51 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
+  Thenable,
+  Usable,
 } from 'shared/ReactTypes';
 
 import type {ResponseState} from './ReactServerFormatConfig';
 import type {Task} from './ReactFizzServer';
+import type {ThenableState} from './ReactFizzThenable';
 
 import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
+import {createThenableState, trackUsedThenable} from './ReactFizzThenable';
 
 import {makeId} from './ReactServerFormatConfig';
 
-import {enableCache} from 'shared/ReactFeatureFlags';
+import {
+  enableCache,
+  enableUseHook,
+  enableUseEventHook,
+  enableUseMemoCacheHook,
+} from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
+import {
+  REACT_SERVER_CONTEXT_TYPE,
+  REACT_CONTEXT_TYPE,
+  REACT_MEMO_CACHE_SENTINEL,
+} from 'shared/ReactSymbols';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
-type Update<A> = {|
+type Update<A> = {
   action: A,
   next: Update<A> | null,
-|};
+};
 
-type UpdateQueue<A> = {|
+type UpdateQueue<A> = {
   last: Update<A> | null,
   dispatch: any,
-|};
+};
 
-type Hook = {|
+type Hook = {
   memoizedState: any,
   queue: UpdateQueue<any> | null,
   next: Hook | null,
-|};
+};
 
 let currentlyRenderingComponent: Object | null = null;
 let currentlyRenderingTask: Task | null = null;
@@ -57,6 +71,9 @@ let isReRender: boolean = false;
 let didScheduleRenderPhaseUpdate: boolean = false;
 // Counts the number of useId hooks in this component
 let localIdCounter: number = 0;
+// Counts the number of use(thenable) calls in this component
+let thenableIndexCounter: number = 0;
+let thenableState: ThenableState | null = null;
 // Lazily created map of render-phase updates
 let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 // Counter to prevent infinite loops.
@@ -124,7 +141,9 @@ function areHookInputsEqual(
       );
     }
   }
+  // $FlowFixMe[incompatible-use] found when upgrading Flow
   for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     if (is(nextDeps[i], prevDeps[i])) {
       continue;
     }
@@ -169,7 +188,11 @@ function createWorkInProgressHook(): Hook {
   return workInProgressHook;
 }
 
-export function prepareToUseHooks(task: Task, componentIdentity: Object): void {
+export function prepareToUseHooks(
+  task: Task,
+  componentIdentity: Object,
+  prevThenableState: ThenableState | null,
+): void {
   currentlyRenderingComponent = componentIdentity;
   currentlyRenderingTask = task;
   if (__DEV__) {
@@ -178,13 +201,14 @@ export function prepareToUseHooks(task: Task, componentIdentity: Object): void {
 
   // The following should have already been reset
   // didScheduleRenderPhaseUpdate = false;
-  // localIdCounter = 0;
   // firstWorkInProgressHook = null;
   // numberOfReRenders = 0;
   // renderPhaseUpdates = null;
   // workInProgressHook = null;
 
   localIdCounter = 0;
+  thenableIndexCounter = 0;
+  thenableState = prevThenableState;
 }
 
 export function finishHooks(
@@ -203,6 +227,7 @@ export function finishHooks(
     // restarting until no more updates are scheduled.
     didScheduleRenderPhaseUpdate = false;
     localIdCounter = 0;
+    thenableIndexCounter = 0;
     numberOfReRenders += 1;
 
     // Start over from the beginning of the list
@@ -214,7 +239,13 @@ export function finishHooks(
   return children;
 }
 
-export function checkDidRenderIdHook() {
+export function getThenableStateAfterSuspending(): null | ThenableState {
+  const state = thenableState;
+  thenableState = null;
+  return state;
+}
+
+export function checkDidRenderIdHook(): boolean {
   // This should be called immediately after every finishHooks call.
   // Conceptually, it's part of the return value of finishHooks; it's only a
   // separate function to avoid using an array tuple.
@@ -235,12 +266,6 @@ export function resetHooksState(): void {
   numberOfReRenders = 0;
   renderPhaseUpdates = null;
   workInProgressHook = null;
-}
-
-function getCacheForType<T>(resourceType: () => T): T {
-  // TODO: This should silently mark this as client rendered since it's not necessarily
-  // considered an error. It needs to work for things like Flight though.
-  throw new Error('Not implemented.');
 }
 
 function readContext<T>(context: ReactContext<T>): T {
@@ -304,9 +329,11 @@ export function useReducer<S, I, A>(
       // Render phase updates are stored in a map of queue -> linked list
       const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
       if (firstRenderPhaseUpdate !== undefined) {
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         renderPhaseUpdates.delete(queue);
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         let newState = workInProgressHook.memoizedState;
-        let update = firstRenderPhaseUpdate;
+        let update: Update<any> = firstRenderPhaseUpdate;
         do {
           // Process this render phase update. We don't have to check the
           // priority because it will always be the same as the current
@@ -319,14 +346,17 @@ export function useReducer<S, I, A>(
           if (__DEV__) {
             isInHookUserCodeInDev = false;
           }
+          // $FlowFixMe[incompatible-type] we bail out when we get a null
           update = update.next;
         } while (update !== null);
 
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
         workInProgressHook.memoizedState = newState;
 
         return [newState, dispatch];
       }
     }
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     return [workInProgressHook.memoizedState, dispatch];
   } else {
     if (__DEV__) {
@@ -346,7 +376,9 @@ export function useReducer<S, I, A>(
     if (__DEV__) {
       isInHookUserCodeInDev = false;
     }
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     workInProgressHook.memoizedState = initialState;
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     const queue: UpdateQueue<A> = (workInProgressHook.queue = {
       last: null,
       dispatch: null,
@@ -356,6 +388,7 @@ export function useReducer<S, I, A>(
       currentlyRenderingComponent,
       queue,
     ): any));
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     return [workInProgressHook.memoizedState, dispatch];
   }
 }
@@ -385,11 +418,12 @@ function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
   if (__DEV__) {
     isInHookUserCodeInDev = false;
   }
+  // $FlowFixMe[incompatible-use] found when upgrading Flow
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
 
-function useRef<T>(initialValue: T): {|current: T|} {
+function useRef<T>(initialValue: T): {current: T} {
   currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
   workInProgressHook = createWorkInProgressHook();
   const previousRef = workInProgressHook.memoizedState;
@@ -398,6 +432,7 @@ function useRef<T>(initialValue: T): {|current: T|} {
     if (__DEV__) {
       Object.seal(ref);
     }
+    // $FlowFixMe[incompatible-use] found when upgrading Flow
     workInProgressHook.memoizedState = ref;
     return ref;
   } else {
@@ -448,6 +483,7 @@ function dispatchAction<A>(
     }
     const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
     if (firstRenderPhaseUpdate === undefined) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       renderPhaseUpdates.set(queue, update);
     } else {
       // Append the update to the end of the list.
@@ -469,6 +505,19 @@ export function useCallback<T>(
   deps: Array<mixed> | void | null,
 ): T {
   return useMemo(() => callback, deps);
+}
+
+function throwOnUseEventCall() {
+  throw new Error(
+    "A function wrapped in useEvent can't be called during rendering.",
+  );
+}
+
+export function useEvent<Args, Return, F: (...Array<Args>) => Return>(
+  callback: F,
+): F {
+  // $FlowIgnore[incompatible-return]
+  return throwOnUseEventCall;
 }
 
 // TODO Decide on how to implement this hook for server rendering.
@@ -529,6 +578,34 @@ function useId(): string {
   return makeId(responseState, treeId, localId);
 }
 
+function use<T>(usable: Usable<T>): T {
+  if (usable !== null && typeof usable === 'object') {
+    // $FlowFixMe[method-unbinding]
+    if (typeof usable.then === 'function') {
+      // This is a thenable.
+      const thenable: Thenable<T> = (usable: any);
+
+      // Track the position of the thenable within this fiber.
+      const index = thenableIndexCounter;
+      thenableIndexCounter += 1;
+
+      if (thenableState === null) {
+        thenableState = createThenableState();
+      }
+      return trackUsedThenable(thenableState, thenable, index);
+    } else if (
+      usable.$$typeof === REACT_CONTEXT_TYPE ||
+      usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
+    ) {
+      const context: ReactContext<T> = (usable: any);
+      return readContext(context);
+    }
+  }
+
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  throw new Error('An unsupported type was passed to use(): ' + String(usable));
+}
+
 function unsupportedRefresh() {
   throw new Error('Cache cannot be refreshed during server rendering.');
 }
@@ -537,9 +614,17 @@ function useCacheRefresh(): <T>(?() => T, ?T) => void {
   return unsupportedRefresh;
 }
 
+function useMemoCache(size: number): Array<any> {
+  const data = new Array(size);
+  for (let i = 0; i < size; i++) {
+    data[i] = REACT_MEMO_CACHE_SENTINEL;
+  }
+  return data;
+}
+
 function noop(): void {}
 
-export const Dispatcher: DispatcherType = {
+export const HooksDispatcher: Dispatcher = {
   readContext,
   useContext,
   useMemo,
@@ -564,8 +649,16 @@ export const Dispatcher: DispatcherType = {
 };
 
 if (enableCache) {
-  Dispatcher.getCacheForType = getCacheForType;
-  Dispatcher.useCacheRefresh = useCacheRefresh;
+  HooksDispatcher.useCacheRefresh = useCacheRefresh;
+}
+if (enableUseEventHook) {
+  HooksDispatcher.useEvent = useEvent;
+}
+if (enableUseMemoCacheHook) {
+  HooksDispatcher.useMemoCache = useMemoCache;
+}
+if (enableUseHook) {
+  HooksDispatcher.use = use;
 }
 
 export let currentResponseState: null | ResponseState = (null: any);

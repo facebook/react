@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -38,7 +38,7 @@ import {enableProfilerComponentTree} from 'react-devtools-feature-flags';
 
 import styles from './Profiler.css';
 
-function Profiler(_: {||}) {
+function Profiler(_: {}) {
   const {
     didRecordCommits,
     isProcessingData,
@@ -196,4 +196,4 @@ const tabsWithTimeline = [
   },
 ];
 
-export default portaledContent(Profiler);
+export default (portaledContent(Profiler): React.ComponentType<{}>);

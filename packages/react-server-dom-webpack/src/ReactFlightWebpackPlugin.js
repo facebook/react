@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -25,11 +25,11 @@ import {
 import isArray from 'shared/isArray';
 
 class ClientReferenceDependency extends ModuleDependency {
-  constructor(request) {
+  constructor(request: mixed) {
     super(request);
   }
 
-  get type() {
+  get type(): string {
     return 'client-reference';
   }
 }
@@ -39,8 +39,8 @@ class ClientReferenceDependency extends ModuleDependency {
 // We use the Flight client implementation because you can't get to these
 // without the client runtime so it's the first time in the loading sequence
 // you might want them.
-const clientImportName = 'react-server-dom-webpack';
-const clientFileName = require.resolve('../');
+const clientImportName = 'react-server-dom-webpack/client';
+const clientFileName = require.resolve('../client');
 
 type ClientReferenceSearchPath = {
   directory: string,
@@ -88,6 +88,7 @@ export default class ReactFlightWebpackPlugin {
     ) {
       this.clientReferences = [(options.clientReferences: $FlowFixMe)];
     } else {
+      // $FlowFixMe[incompatible-type] found when upgrading Flow
       this.clientReferences = options.clientReferences;
     }
     if (typeof options.chunkName === 'string') {
@@ -159,7 +160,9 @@ export default class ReactFlightWebpackPlugin {
             clientFileNameFound = true;
 
             if (resolvedClientReferences) {
+              // $FlowFixMe[incompatible-use] found when upgrading Flow
               for (let i = 0; i < resolvedClientReferences.length; i++) {
+                // $FlowFixMe[incompatible-use] found when upgrading Flow
                 const dep = resolvedClientReferences[i];
 
                 const chunkName = _this.chunkName
@@ -327,7 +330,7 @@ export default class ReactFlightWebpackPlugin {
             contextModuleFactory.resolveDependencies(
               fs,
               options,
-              (err2: null | Error, deps: Array<ModuleDependency>) => {
+              (err2: null | Error, deps: Array<any /*ModuleDependency*/>) => {
                 if (err2) return cb(err2);
                 const clientRefDeps = deps.map(dep => {
                   // use userRequest instead of request. request always end with undefined which is wrong
@@ -349,6 +352,7 @@ export default class ReactFlightWebpackPlugin {
         if (err) return callback(err);
         const flat = [];
         for (let i = 0; i < result.length; i++) {
+          // $FlowFixMe[method-unbinding]
           flat.push.apply(flat, result[i]);
         }
         callback(null, flat);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -35,6 +35,8 @@ export const writeChunk = $$$hostConfig.writeChunk;
 export const writeChunkAndReturn = $$$hostConfig.writeChunkAndReturn;
 export const completeWriting = $$$hostConfig.completeWriting;
 export const flushBuffered = $$$hostConfig.flushBuffered;
+export const supportsRequestStorage = $$$hostConfig.supportsRequestStorage;
+export const requestStorage = $$$hostConfig.requestStorage;
 export const close = $$$hostConfig.close;
 export const closeWithError = $$$hostConfig.closeWithError;
 export const stringToChunk = $$$hostConfig.stringToChunk;

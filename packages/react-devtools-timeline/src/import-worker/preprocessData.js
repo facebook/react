@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -38,15 +38,15 @@ import InvalidProfileError from './InvalidProfileError';
 import {getBatchRange} from '../utils/getBatchRange';
 import ErrorStackParser from 'error-stack-parser';
 
-type MeasureStackElement = {|
+type MeasureStackElement = {
   type: ReactMeasureType,
   depth: number,
   measure: ReactMeasure,
   startTime: Milliseconds,
   stopTime?: Milliseconds,
-|};
+};
 
-type ProcessorState = {|
+type ProcessorState = {
   asyncProcessingPromises: Promise<any>[],
   batchUID: BatchUID,
   currentReactComponentMeasure: ReactComponentMeasure | null,
@@ -64,7 +64,7 @@ type ProcessorState = {|
   requestIdToNetworkMeasureMap: Map<string, NetworkMeasure>,
   uidCounter: BatchUID,
   unresolvedSuspenseEvents: Map<string, SuspenseEvent>,
-|};
+};
 
 const NATIVE_EVENT_DURATION_THRESHOLD = 20;
 const NESTED_UPDATE_DURATION_THRESHOLD = 20;
@@ -968,8 +968,11 @@ function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
   const profile = parsedData.profiles[0]; // TODO: Choose the main CPU thread only
 
   const speedscopeFlamechart = new SpeedscopeFlamechart({
+    // $FlowFixMe[method-unbinding]
     getTotalWeight: profile.getTotalWeight.bind(profile),
+    // $FlowFixMe[method-unbinding]
     forEachCall: profile.forEachCall.bind(profile),
+    // $FlowFixMe[method-unbinding]
     formatValue: profile.formatValue.bind(profile),
     getColorBucketForFrame: () => 0,
   });

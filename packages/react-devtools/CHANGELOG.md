@@ -4,6 +4,35 @@
 
 ---
 
+### 4.26.1
+October 13, 2022
+
+* [standalone] Stop highlighting events when a component is selected ([tyao1](https://github.com/tyao1) in [#25448](https://github.com/facebook/react/pull/25448))
+
+---
+
+### 4.26.0
+September 16, 2022
+
+* Show DevTools icons in Edge browser panel ([itskolli](https://github.com/itskolli) in [#25257](https://github.com/facebook/react/pull/25257))
+* [Bugfix] Don't hide fragment if it has a key ([lunaruan](https://github.com/lunaruan) in [#25197](https://github.com/facebook/react/pull/25197))
+* Handle info, group, and groupCollapsed in Strict Mode logging ([timneutkens](https://github.com/timneutkens) in [#25172](https://github.com/facebook/react/pull/25172))
+* Highlight RN elements on hover ([tyao1](https://github.com/tyao1) in [#25106](https://github.com/facebook/react/pull/25106))
+* Remove ForwardRef/Memo from display name if `displayName` is set ([eps1lon](https://github.com/eps1lon) in [#21952](https://github.com/facebook/react/pull/21952))
+
+---
+
+### 4.25.0
+July 13, 2022
+
+* Timeline Profiler Sidebar with component tree ([lunaruan](https://github.com/lunaruan) and [blakef](https://github.com/blakef) in [#24816](https://github.com/facebook/react/pull/24816), [#24815](https://github.com/facebook/react/pull/24815), [#24814](https://github.com/facebook/react/pull/24814), [#24805](https://github.com/facebook/react/pull/24805), [#24776](https://github.com/facebook/react/pull/24776))
+* [DevTools][Bugfix] Fix DevTools Perf Issue When Unmounting Large React Subtrees ([lunaruan](https://github.com/lunaruan) in [#24863](https://github.com/facebook/react/pull/24863))
+* Enable "reload & profile" button for timeline view ([mondaychen](https://github.com/mondaychen) in [#24702](https://github.com/facebook/react/pull/24702))
+* Find best renderer when inspecting app with mutilple react roots ([mondaychen](https://github.com/mondaychen) in [#24665](https://github.com/facebook/react/pull/24665))
+* Only polyfill requestAnimationFrame when necessary ([mondaychen](https://github.com/mondaychen) in [#24651](https://github.com/facebook/react/pull/24651))
+
+---
+
 ### 4.24.7
 May 31, 2022
 
@@ -218,7 +247,7 @@ October 8, 2021
 October 1, 2021
 
 #### Bugfix
-* Fixed potential cache miss when insepcting elements ([bvaughn](https://github.com/bvaughn) in [#22472](https://github.com/facebook/react/pull/22472))
+* Fixed potential cache miss when inspecting elements ([bvaughn](https://github.com/bvaughn) in [#22472](https://github.com/facebook/react/pull/22472))
 
 ---
 
@@ -229,7 +258,7 @@ September 29, 2021
 * Scheduling Profiler: Show Suspense resource .displayName ([bvaughn](https://github.com/bvaughn) in [#22451](https://github.com/facebook/react/pull/22451))
 * Scheduling Profiler marks should include thrown Errors ([bvaughn](https://github.com/bvaughn) in [#22419](https://github.com/facebook/react/pull/22419))
 * Don't patch console during first render in strict mode ([lunaruan](https://github.com/lunaruan) in [#22308](https://github.com/facebook/react/pull/22308))
-* Show which hook indicies changed when profiling for all builds ([bvaughn](https://github.com/bvaughn) in [#22365](https://github.com/facebook/react/pull/22365))
+* Show which hook indices changed when profiling for all builds ([bvaughn](https://github.com/bvaughn) in [#22365](https://github.com/facebook/react/pull/22365))
 * Display actual ReactDOM API name in root type ([eps1lon](https://github.com/eps1lon) in [#22363](https://github.com/facebook/react/pull/22363))
 * Add named hooks support to standalone and inline DevTools ([jstejada](https://github.com/jstejada) in [#22320](https://github.com/facebook/react/pull/22320) and [bvaughn](https://github.com/bvaughn) in [#22263](https://github.com/facebook/react/pull/22263))
 #### Bugfix

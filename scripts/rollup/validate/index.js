@@ -23,7 +23,7 @@ function getFormat(filepath) {
     if (filepath.includes('shims')) {
       // We don't currently lint these shims. We rely on the downstream Facebook
       // repo to transform them.
-      // TODO: Should we we lint them?
+      // TODO: Should we lint them?
       return null;
     }
     return 'rn';

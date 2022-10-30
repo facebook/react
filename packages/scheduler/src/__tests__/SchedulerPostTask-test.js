@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -22,6 +22,7 @@ let NormalPriority;
 let UserBlockingPriority;
 let LowPriority;
 let IdlePriority;
+let shouldYield;
 
 // The Scheduler postTask implementation uses a new postTask browser API to
 // schedule work on the main thread. This test suite mocks all browser methods
@@ -44,6 +45,7 @@ describe('SchedulerPostTask', () => {
     NormalPriority = Scheduler.unstable_NormalPriority;
     LowPriority = Scheduler.unstable_LowPriority;
     IdlePriority = Scheduler.unstable_IdlePriority;
+    shouldYield = Scheduler.unstable_shouldYield;
   });
 
   afterEach(() => {
@@ -295,5 +297,37 @@ describe('SchedulerPostTask', () => {
       'Task 4 Fired',
       'E',
     ]);
+  });
+
+  it('yielding continues in a new task regardless of how much time is remaining', () => {
+    scheduleCallback(NormalPriority, () => {
+      runtime.log('Original Task');
+      runtime.log('shouldYield: ' + shouldYield());
+      runtime.log('Return a continuation');
+      return () => {
+        runtime.log('Continuation Task');
+      };
+    });
+    runtime.assertLog(['Post Task 0 [user-visible]']);
+
+    runtime.flushTasks();
+    runtime.assertLog([
+      'Task 0 Fired',
+      'Original Task',
+      // Immediately before returning a continuation, `shouldYield` returns
+      // false, which means there must be time remaining in the frame.
+      'shouldYield: false',
+      'Return a continuation',
+
+      // The continuation should be scheduled in a separate macrotask even
+      // though there's time remaining.
+      'Post Task 1 [user-visible]',
+    ]);
+
+    // No time has elapsed
+    expect(performance.now()).toBe(0);
+
+    runtime.flushTasks();
+    runtime.assertLog(['Task 1 Fired', 'Continuation Task']);
   });
 });

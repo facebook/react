@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -724,6 +724,56 @@ describe('Scheduler', () => {
 
       scheduleCallback(ImmediatePriority, 42);
       expect(Scheduler).toFlushWithoutYielding();
+    });
+
+    it('toFlushUntilNextPaint stops if a continuation is returned', () => {
+      scheduleCallback(NormalPriority, () => {
+        Scheduler.unstable_yieldValue('Original Task');
+        Scheduler.unstable_yieldValue('shouldYield: ' + shouldYield());
+        Scheduler.unstable_yieldValue('Return a continuation');
+        return () => {
+          Scheduler.unstable_yieldValue('Continuation Task');
+        };
+      });
+
+      expect(Scheduler).toFlushUntilNextPaint([
+        'Original Task',
+        // Immediately before returning a continuation, `shouldYield` returns
+        // false, which means there must be time remaining in the frame.
+        'shouldYield: false',
+        'Return a continuation',
+
+        // The continuation should not flush yet.
+      ]);
+
+      // No time has elapsed
+      expect(Scheduler.unstable_now()).toBe(0);
+
+      // Continue the task
+      expect(Scheduler).toFlushAndYield(['Continuation Task']);
+    });
+
+    it("toFlushAndYield keeps flushing even if there's a continuation", () => {
+      scheduleCallback(NormalPriority, () => {
+        Scheduler.unstable_yieldValue('Original Task');
+        Scheduler.unstable_yieldValue('shouldYield: ' + shouldYield());
+        Scheduler.unstable_yieldValue('Return a continuation');
+        return () => {
+          Scheduler.unstable_yieldValue('Continuation Task');
+        };
+      });
+
+      expect(Scheduler).toFlushAndYield([
+        'Original Task',
+        // Immediately before returning a continuation, `shouldYield` returns
+        // false, which means there must be time remaining in the frame.
+        'shouldYield: false',
+        'Return a continuation',
+
+        // The continuation should flush immediately, even though the task
+        // yielded a continuation.
+        'Continuation Task',
+      ]);
     });
   });
 });

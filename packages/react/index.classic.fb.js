@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -27,10 +27,12 @@ export {
   createMutableSource as unstable_createMutableSource,
   createRef,
   createServerContext,
+  use,
   forwardRef,
   isValidElement,
   lazy,
   memo,
+  cache,
   startTransition,
   startTransition as unstable_startTransition, // TODO: Remove once call sights updated to startTransition
   unstable_Cache,
@@ -42,6 +44,7 @@ export {
   unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
+  unstable_useMemoCache,
   useId,
   useCallback,
   useContext,
@@ -49,6 +52,7 @@ export {
   useDeferredValue,
   useDeferredValue as unstable_useDeferredValue, // TODO: Remove once call sights updated to useDeferredValue
   useEffect,
+  experimental_useEvent,
   useImperativeHandle,
   useLayoutEffect,
   useInsertionEffect,

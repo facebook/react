@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -36,6 +36,11 @@ function requiredContext<Value>(c: Value | NoContextT): Value {
   }
 
   return (c: any);
+}
+
+function getCurrentRootHostContainer(): null | Container {
+  const container = rootInstanceStackCursor.current;
+  return container === NO_CONTEXT ? null : ((container: any): Container);
 }
 
 function getRootHostContainer(): Container {
@@ -75,11 +80,8 @@ function getHostContext(): HostContext {
 }
 
 function pushHostContext(fiber: Fiber): void {
-  const rootInstance: Container = requiredContext(
-    rootInstanceStackCursor.current,
-  );
   const context: HostContext = requiredContext(contextStackCursor.current);
-  const nextContext = getChildHostContext(context, fiber.type, rootInstance);
+  const nextContext = getChildHostContext(context, fiber.type);
 
   // Don't push this Fiber's context unless it's unique.
   if (context === nextContext) {
@@ -105,6 +107,7 @@ function popHostContext(fiber: Fiber): void {
 
 export {
   getHostContext,
+  getCurrentRootHostContainer,
   getRootHostContainer,
   popHostContainer,
   popHostContext,

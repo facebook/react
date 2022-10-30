@@ -99,26 +99,44 @@ async function getCommitLog(sha) {
   let shortLog = '';
   let formattedLog = '';
 
+  const hasGh = await hasGithubCLI();
   const rawLog = await execRead(`
     git log --topo-order --pretty=format:'%s' ${sha}...HEAD -- packages/react-devtools*
   `);
-  rawLog.split('\n').forEach(line => {
-    line = line.replace('[DevTools] ', '');
-
+  const lines = rawLog.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].replace(/^\[devtools\] */i, '');
     const match = line.match(/(.+) \(#([0-9]+)\)/);
     if (match !== null) {
       const title = match[1];
       const pr = match[2];
-
-      formattedLog += `\n* ${title} ([USERNAME](https://github.com/USERNAME) in [#${pr}](${PULL_REQUEST_BASE_URL}${pr}))`;
+      let username;
+      if (hasGh) {
+        const response = await execRead(
+          `gh api /repos/facebook/react/pulls/${pr}`
+        );
+        const {user} = JSON.parse(response);
+        username = `[${user.login}](${user.html_url})`;
+      } else {
+        username = '[USERNAME](https://github.com/USERNAME)';
+      }
+      formattedLog += `\n* ${title} (${username} in [#${pr}](${PULL_REQUEST_BASE_URL}${pr}))`;
       shortLog += `\n* ${title}`;
     } else {
       formattedLog += `\n* ${line}`;
       shortLog += `\n* ${line}`;
     }
-  });
+  }
 
   return [shortLog, formattedLog];
+}
+
+async function hasGithubCLI() {
+  try {
+    await exec('which gh');
+    return true;
+  } catch (_) {}
+  return false;
 }
 
 async function getPreviousCommitSha() {

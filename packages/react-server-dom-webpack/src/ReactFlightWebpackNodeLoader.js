@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
  * @flow
  */
 
-import acorn from 'acorn';
+import * as acorn from 'acorn';
 
 type ResolveContext = {
   conditions: Array<string>,
@@ -94,7 +94,7 @@ export async function getSource(
   url: string,
   context: GetSourceContext,
   defaultGetSource: GetSourceFunction,
-) {
+): Promise<{source: Source}> {
   // We stash this in case we end up needing to resolve export * statements later.
   stashedGetSource = defaultGetSource;
   return defaultGetSource(url, context, defaultGetSource);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -23,9 +23,6 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 // Flags that can be probably deleted or landed, but might require extra effort
 // like migrating internal callers or performance testing.
 // -----------------------------------------------------------------------------
-
-// This is blocked on adding a symbol polyfill to www.
-export const enableSymbolFallbackForWWW = false;
 
 // This rolled out to 10% public in www, so we should be able to land, but some
 // internal tests need to be updated. The open source behavior is correct.
@@ -85,8 +82,10 @@ export const enableLegacyFBSupport = false;
 // likely to include in an upcoming release.
 // -----------------------------------------------------------------------------
 
-export const enableCache = __EXPERIMENTAL__;
+export const enableCache = true;
+export const enableLegacyCache = __EXPERIMENTAL__;
 export const enableCacheElement = __EXPERIMENTAL__;
+export const enableFetchInstrumentation = true;
 
 export const enableTransitionTracing = false;
 
@@ -103,6 +102,10 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
+export const enableHostSingletons = true;
+
+export const enableFloat = true;
+
 // When a node is unmounted, recurse into the Fiber subtree and clean out
 // references. Each level cleans up more fiber fields than the previous level.
 // As far as we know, React itself doesn't leak, but because the Fiber contains
@@ -116,11 +119,22 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 // aggressiveness.
 export const deletedTreeCleanUpLevel = 3;
 
+export const enableUseHook = true;
+
+// Enables unstable_useMemoCache hook, intended as a compilation target for
+// auto-memoization.
+export const enableUseMemoCacheHook = __EXPERIMENTAL__;
+
+export const enableUseEventHook = __EXPERIMENTAL__;
+
+// Test in www before enabling in open source.
+export const enableFizzExternalRuntime = false;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
 // Planned feature deprecations and breaking changes. Sorted roughly in order of
-// when we we plan to enable them.
+// when we plan to enable them.
 // -----------------------------------------------------------------------------
 
 // This flag enables Strict Effects by default. We're not turning this on until
@@ -217,10 +231,6 @@ export const enableSchedulingProfiler = __PROFILE__;
 // reducers by double invoking them in StrictLegacyMode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
-// Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
-// this feature flag only impacts StrictEffectsMode.
-export const enableStrictEffects = __DEV__;
-
 // To preserve the "Pause on caught exceptions" behavior of the debugger, we
 // replay the begin phase of a failed component inside invokeGuardedCallback.
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
@@ -244,7 +254,7 @@ export const enableUpdaterTracking = __PROFILE__;
 
 // Only enabled in RN, related to enableComponentStackLocations
 export const disableNativeComponentFrames = false;
-export const enableServerContext = __EXPERIMENTAL__;
+export const enableServerContext = true;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
@@ -254,3 +264,8 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableProfilerNestedUpdateScheduledHook = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
+
+// Modern <StrictMode /> behaviour aligns more with what components
+// components will encounter in production, especially when used With <Offscreen />.
+// TODO: clean up legacy <StrictMode /> once tests pass WWW.
+export const useModernStrictMode = false;

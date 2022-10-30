@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -31,17 +31,26 @@ describe('ReactFlightDOMRelay', () => {
   });
 
   function readThrough(data) {
-    const response = ReactDOMFlightRelayClient.createResponse(null);
+    const response = ReactDOMFlightRelayClient.createResponse();
     for (let i = 0; i < data.length; i++) {
       const chunk = data[i];
       ReactDOMFlightRelayClient.resolveRow(response, chunk);
     }
     ReactDOMFlightRelayClient.close(response);
-    const model = response.readRoot();
+    const promise = ReactDOMFlightRelayClient.getRoot(response);
+    let model;
+    let error;
+    promise.then(
+      m => (model = m),
+      e => (error = e),
+    );
+    if (error) {
+      throw error;
+    }
     return model;
   }
 
-  it('can render a server component', () => {
+  it('can render a Server Component', () => {
     function Bar({text}) {
       return text.toUpperCase();
     }
@@ -76,7 +85,7 @@ describe('ReactFlightDOMRelay', () => {
     });
   });
 
-  it('can render a client component using a module reference and render there', () => {
+  it('can render a Client Component using a module reference and render there', () => {
     function UserClient(props) {
       return (
         <span>
@@ -224,7 +233,7 @@ describe('ReactFlightDOMRelay', () => {
       ReactDOMFlightRelayServer.render(<input value={new Foo()} />, transport);
       readThrough(transport);
     }).toErrorDev(
-      'Only plain objects can be passed to client components from server components. ',
+      'Only plain objects can be passed to Client Components from Server Components. ',
       {withoutStack: true},
     );
   });

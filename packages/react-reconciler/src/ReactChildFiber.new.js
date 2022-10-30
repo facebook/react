@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,7 +13,12 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import {Placement, ChildDeletion, Forked} from './ReactFiberFlags';
+import {
+  Placement,
+  ChildDeletion,
+  Forked,
+  PlacementDEV,
+} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -75,6 +80,7 @@ if (__DEV__) {
       );
     }
 
+    // $FlowFixMe unable to narrow type from mixed to writable object
     child._store.validated = true;
 
     const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
@@ -222,6 +228,7 @@ function coerceRef(
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+  // $FlowFixMe[method-unbinding]
   const childString = Object.prototype.toString.call(newChild);
 
   throw new Error(
@@ -258,11 +265,18 @@ function resolveLazy(lazyType) {
   return init(payload);
 }
 
+type ChildReconciler = (
+  returnFiber: Fiber,
+  currentFirstChild: Fiber | null,
+  newChild: any,
+  lanes: Lanes,
+) => Fiber | null;
+
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
-function ChildReconciler(shouldTrackSideEffects) {
+function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
   function deleteChild(returnFiber: Fiber, childToDelete: Fiber): void {
     if (!shouldTrackSideEffects) {
       // Noop.
@@ -305,7 +319,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     // instead.
     const existingChildren: Map<string | number, Fiber> = new Map();
 
-    let existingChild = currentFirstChild;
+    let existingChild: null | Fiber = currentFirstChild;
     while (existingChild !== null) {
       if (existingChild.key !== null) {
         existingChildren.set(existingChild.key, existingChild);
@@ -343,7 +357,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       const oldIndex = current.index;
       if (oldIndex < lastPlacedIndex) {
         // This is a move.
-        newFiber.flags |= Placement;
+        newFiber.flags |= Placement | PlacementDEV;
         return lastPlacedIndex;
       } else {
         // This item can stay in place.
@@ -351,7 +365,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       }
     } else {
       // This is an insertion.
-      newFiber.flags |= Placement;
+      newFiber.flags |= Placement | PlacementDEV;
       return lastPlacedIndex;
     }
   }
@@ -360,7 +374,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     // This is simpler for the single child case. We only need to do a
     // placement for inserting new children.
     if (shouldTrackSideEffects && newFiber.alternate === null) {
-      newFiber.flags |= Placement;
+      newFiber.flags |= Placement | PlacementDEV;
     }
     return newFiber;
   }
@@ -461,7 +475,7 @@ function ChildReconciler(shouldTrackSideEffects) {
   function updateFragment(
     returnFiber: Fiber,
     current: Fiber | null,
-    fragment: Iterable<*>,
+    fragment: Iterable<React$Node>,
     lanes: Lanes,
     key: null | string,
   ): Fiber {
@@ -736,7 +750,7 @@ function ChildReconciler(shouldTrackSideEffects) {
   function reconcileChildrenArray(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
-    newChildren: Array<*>,
+    newChildren: Array<any>,
     lanes: Lanes,
   ): Fiber | null {
     // This algorithm can't optimize by searching from both ends since we
@@ -903,7 +917,7 @@ function ChildReconciler(shouldTrackSideEffects) {
   function reconcileChildrenIterator(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
-    newChildrenIterable: Iterable<*>,
+    newChildrenIterable: Iterable<mixed>,
     lanes: Lanes,
   ): Fiber | null {
     // This is the same implementation as reconcileChildrenArray(),
@@ -1346,8 +1360,10 @@ function ChildReconciler(shouldTrackSideEffects) {
   return reconcileChildFibers;
 }
 
-export const reconcileChildFibers = ChildReconciler(true);
-export const mountChildFibers = ChildReconciler(false);
+export const reconcileChildFibers: ChildReconciler = createChildReconciler(
+  true,
+);
+export const mountChildFibers: ChildReconciler = createChildReconciler(false);
 
 export function cloneChildFibers(
   current: Fiber | null,

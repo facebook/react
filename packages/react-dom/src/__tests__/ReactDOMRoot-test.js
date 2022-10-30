@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -364,15 +364,21 @@ describe('ReactDOMRoot', () => {
     Scheduler.unstable_flushAll();
     container.innerHTML = '';
 
-    expect(() => {
+    if (gate(flags => flags.enableFloat || flags.enableHostSingletons)) {
+      // When either of these flags are on this validation is turned off so we
+      // expect there to be no warnings
       root.render(<div>Hi</div>);
-    }).toErrorDev(
-      'render(...): It looks like the React-rendered content of the ' +
-        'root container was removed without using React. This is not ' +
-        'supported and will cause errors. Instead, call ' +
-        "root.unmount() to empty a root's container.",
-      {withoutStack: true},
-    );
+    } else {
+      expect(() => {
+        root.render(<div>Hi</div>);
+      }).toErrorDev(
+        'render(...): It looks like the React-rendered content of the ' +
+          'root container was removed without using React. This is not ' +
+          'supported and will cause errors. Instead, call ' +
+          "root.unmount() to empty a root's container.",
+        {withoutStack: true},
+      );
+    }
   });
 
   it('opts-in to concurrent default updates', async () => {

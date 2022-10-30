@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,6 +19,8 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
+  HostResource,
+  HostSingleton,
   HostPortal,
   ContextProvider,
   SuspenseComponent,
@@ -37,7 +39,11 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.old';
-import {popSuspenseContext} from './ReactFiberSuspenseContext.old';
+import {
+  popSuspenseListContext,
+  popSuspenseHandler,
+} from './ReactFiberSuspenseContext.old';
+import {popHiddenContext} from './ReactFiberHiddenContext.old';
 import {resetHydrationState} from './ReactFiberHydrationContext.old';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -45,7 +51,6 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext.old';
 import {popProvider} from './ReactFiberNewContext.old';
-import {popRenderLanes} from './ReactFiberWorkLoop.old';
 import {popCacheProvider} from './ReactFiberCacheComponent.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 import {popTreeContext} from './ReactFiberTreeContext.old';
@@ -59,7 +64,7 @@ function unwindWork(
   current: Fiber | null,
   workInProgress: Fiber,
   renderLanes: Lanes,
-) {
+): Fiber | null {
   // Note: This intentionally doesn't check if we're hydrating because comparing
   // to the current tree provider fiber is just as fast and less error-prone.
   // Ideally we would have a special version of the work loop only
@@ -112,13 +117,15 @@ function unwindWork(
       // We unwound to the root without completing it. Exit.
       return null;
     }
+    case HostResource:
+    case HostSingleton:
     case HostComponent: {
       // TODO: popHydrationState
       popHostContext(workInProgress);
       return null;
     }
     case SuspenseComponent: {
-      popSuspenseContext(workInProgress);
+      popSuspenseHandler(workInProgress);
       const suspenseState: null | SuspenseState = workInProgress.memoizedState;
       if (suspenseState !== null && suspenseState.dehydrated !== null) {
         if (workInProgress.alternate === null) {
@@ -146,7 +153,7 @@ function unwindWork(
       return null;
     }
     case SuspenseListComponent: {
-      popSuspenseContext(workInProgress);
+      popSuspenseListContext(workInProgress);
       // SuspenseList doesn't actually catch anything. It should've been
       // caught by a nested boundary. If not, it should bubble through.
       return null;
@@ -159,10 +166,24 @@ function unwindWork(
       popProvider(context, workInProgress);
       return null;
     case OffscreenComponent:
-    case LegacyHiddenComponent:
-      popRenderLanes(workInProgress);
+    case LegacyHiddenComponent: {
+      popSuspenseHandler(workInProgress);
+      popHiddenContext(workInProgress);
       popTransition(workInProgress, current);
+      const flags = workInProgress.flags;
+      if (flags & ShouldCapture) {
+        workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
+        // Captured a suspense effect. Re-render the boundary.
+        if (
+          enableProfilerTimer &&
+          (workInProgress.mode & ProfileMode) !== NoMode
+        ) {
+          transferActualDuration(workInProgress);
+        }
+        return workInProgress;
+      }
       return null;
+    }
     case CacheComponent:
       if (enableCache) {
         const cache: Cache = workInProgress.memoizedState.cache;
@@ -216,6 +237,8 @@ function unwindInterruptedWork(
       resetMutableSourceWorkInProgressVersions();
       break;
     }
+    case HostResource:
+    case HostSingleton:
     case HostComponent: {
       popHostContext(interruptedWork);
       break;
@@ -224,10 +247,10 @@ function unwindInterruptedWork(
       popHostContainer(interruptedWork);
       break;
     case SuspenseComponent:
-      popSuspenseContext(interruptedWork);
+      popSuspenseHandler(interruptedWork);
       break;
     case SuspenseListComponent:
-      popSuspenseContext(interruptedWork);
+      popSuspenseListContext(interruptedWork);
       break;
     case ContextProvider:
       const context: ReactContext<any> = interruptedWork.type._context;
@@ -235,7 +258,8 @@ function unwindInterruptedWork(
       break;
     case OffscreenComponent:
     case LegacyHiddenComponent:
-      popRenderLanes(interruptedWork);
+      popSuspenseHandler(interruptedWork);
+      popHiddenContext(interruptedWork);
       popTransition(interruptedWork, current);
       break;
     case CacheComponent:

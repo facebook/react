@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -58,7 +58,7 @@ export function getCurrentUpdatePriority(): EventPriority {
     : (getCurrentUpdatePriority_old(): any);
 }
 
-export function setCurrentUpdatePriority(priority: EventPriority) {
+export function setCurrentUpdatePriority(priority: EventPriority): void {
   return enableNewReconciler
     ? setCurrentUpdatePriority_new((priority: any))
     : setCurrentUpdatePriority_old((priority: any));

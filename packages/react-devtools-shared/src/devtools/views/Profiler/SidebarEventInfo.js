@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,11 +24,11 @@ import {copy} from 'clipboard-js';
 
 import styles from './SidebarEventInfo.css';
 
-export type Props = {||};
+export type Props = {};
 
-type SchedulingEventProps = {|
+type SchedulingEventProps = {
   eventInfo: SchedulingEvent,
-|};
+};
 
 function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
   const {viewUrlSourceFunction} = useContext(ViewSourceContext);
@@ -90,7 +90,7 @@ function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
   );
 }
 
-export default function SidebarEventInfo(_: Props) {
+export default function SidebarEventInfo(_: Props): React.Node {
   const {selectedEvent} = useContext(TimelineContext);
   // (TODO) Refactor in next PR so this supports multiple types of events
   if (selectedEvent && selectedEvent.schedulingEvent) {

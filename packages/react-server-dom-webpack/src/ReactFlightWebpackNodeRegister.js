@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,11 +9,12 @@
 
 const url = require('url');
 
-// $FlowFixMe
 const Module = require('module');
 
 module.exports = function register() {
   const MODULE_REFERENCE = Symbol.for('react.module.reference');
+  const PROMISE_PROTOTYPE = Promise.prototype;
+
   const proxyHandlers = {
     get: function(target, name, receiver) {
       switch (name) {
@@ -26,6 +27,8 @@ module.exports = function register() {
           return target.filepath;
         case 'name':
           return target.name;
+        case 'async':
+          return target.async;
         // We need to special case this because createElement reads it if we pass this
         // reference.
         case 'defaultProps':
@@ -39,8 +42,34 @@ module.exports = function register() {
             // This a placeholder value that tells the client to conditionally use the
             // whole object or just the default export.
             name: '',
+            async: target.async,
           };
           return true;
+        case 'then':
+          if (!target.async) {
+            // If this module is expected to return a Promise (such as an AsyncModule) then
+            // we should resolve that with a client reference that unwraps the Promise on
+            // the client.
+            const then = function then(resolve, reject) {
+              const moduleReference: {[string]: any, ...} = {
+                $$typeof: MODULE_REFERENCE,
+                filepath: target.filepath,
+                name: '*', // Represents the whole object instead of a particular import.
+                async: true,
+              };
+              return Promise.resolve(
+                // $FlowFixMe[incompatible-call] found when upgrading Flow
+                resolve(new Proxy(moduleReference, proxyHandlers)),
+              );
+            };
+            // If this is not used as a Promise but is treated as a reference to a `.then`
+            // export then we should treat it as a reference to that name.
+            then.$$typeof = MODULE_REFERENCE;
+            then.filepath = target.filepath;
+            // then.name is conveniently already "then" which is the export name we need.
+            // This will break if it's minified though.
+            return then;
+          }
       }
       let cachedReference = target[name];
       if (!cachedReference) {
@@ -48,27 +77,37 @@ module.exports = function register() {
           $$typeof: MODULE_REFERENCE,
           filepath: target.filepath,
           name: name,
+          async: target.async,
         };
       }
       return cachedReference;
+    },
+    getPrototypeOf(target) {
+      // Pretend to be a Promise in case anyone asks.
+      return PROMISE_PROTOTYPE;
     },
     set: function() {
       throw new Error('Cannot assign to a client module from a server module.');
     },
   };
 
-  (require: any).extensions['.client.js'] = function(module, path) {
+  // $FlowFixMe[prop-missing] found when upgrading Flow
+  Module._extensions['.client.js'] = function(module, path) {
     const moduleId = url.pathToFileURL(path).href;
-    const moduleReference: {[string]: any} = {
+    const moduleReference: {[string]: any, ...} = {
       $$typeof: MODULE_REFERENCE,
       filepath: moduleId,
       name: '*', // Represents the whole object instead of a particular import.
+      async: false,
     };
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     module.exports = new Proxy(moduleReference, proxyHandlers);
   };
 
+  // $FlowFixMe[prop-missing] found when upgrading Flow
   const originalResolveFilename = Module._resolveFilename;
 
+  // $FlowFixMe[prop-missing] found when upgrading Flow
   Module._resolveFilename = function(request, parent, isMain, options) {
     const resolved = originalResolveFilename.apply(this, arguments);
     if (resolved.endsWith('.server.js')) {

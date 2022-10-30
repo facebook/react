@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -1382,7 +1382,7 @@ describe('ResponderEventPlugin', () => {
     const getLowestCommonAncestor = require('react-native-renderer/src/legacy-events/ResponderEventPlugin')
       .getLowestCommonAncestor;
     // This works by accident and will likely break in the future.
-    const ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
+    const ReactDOMComponentTree = require('react-dom-bindings/src/client/ReactDOMComponentTree');
 
     class ChildComponent extends React.Component {
       render() {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -122,6 +122,7 @@ function stopProfilerTimerIfRunningAndRecordDelta(
 
   if (profilerStartTime >= 0) {
     const elapsedTime = now() - profilerStartTime;
+    // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
     fiber.actualDuration += elapsedTime;
     if (overrideBaseTime) {
       fiber.selfBaseDuration = elapsedTime;
@@ -215,6 +216,7 @@ function transferActualDuration(fiber: Fiber): void {
   // where we should count the work of multiple passes.
   let child = fiber.child;
   while (child) {
+    // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
     fiber.actualDuration += child.actualDuration;
     child = child.sibling;
   }

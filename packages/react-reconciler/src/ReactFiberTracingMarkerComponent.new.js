@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {TransitionTracingCallbacks, Fiber} from './ReactInternalTypes';
+import type {
+  TransitionTracingCallbacks,
+  Fiber,
+  FiberRoot,
+} from './ReactInternalTypes';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 import type {StackCursor} from './ReactFiberStack.new';
 
@@ -17,16 +21,19 @@ import {getWorkInProgressTransitions} from './ReactFiberWorkLoop.new';
 
 export type SuspenseInfo = {name: string | null};
 
-export type TransitionObject = {
-  transitionName: string,
-  startTime: number,
-};
-
-export type MarkerTransitionObject = TransitionObject & {markerName: string};
 export type PendingTransitionCallbacks = {
-  transitionStart: Array<TransitionObject> | null,
-  transitionComplete: Array<TransitionObject> | null,
-  markerComplete: Array<MarkerTransitionObject> | null,
+  transitionStart: Array<Transition> | null,
+  transitionProgress: Map<Transition, PendingBoundaries> | null,
+  transitionComplete: Array<Transition> | null,
+  markerProgress: Map<
+    string,
+    {pendingBoundaries: PendingBoundaries, transitions: Set<Transition>},
+  > | null,
+  markerIncomplete: Map<
+    string,
+    {aborts: Array<TransitionAbort>, transitions: Set<Transition>},
+  > | null,
+  markerComplete: Map<string, Set<Transition>> | null,
 };
 
 export type Transition = {
@@ -40,12 +47,25 @@ export type BatchConfigTransition = {
   _updatedFibers?: Set<Fiber>,
 };
 
-export type TracingMarkerInstance = {|
-  pendingSuspenseBoundaries: PendingSuspenseBoundaries | null,
+// TODO: Is there a way to not include the tag or name here?
+export type TracingMarkerInstance = {
+  tag?: TracingMarkerTag,
   transitions: Set<Transition> | null,
-|} | null;
+  pendingBoundaries: PendingBoundaries | null,
+  aborts: Array<TransitionAbort> | null,
+  name: string | null,
+};
 
-export type PendingSuspenseBoundaries = Map<OffscreenInstance, SuspenseInfo>;
+export type TransitionAbort = {
+  reason: 'error' | 'unknown' | 'marker' | 'suspense',
+  name?: string | null,
+};
+
+export const TransitionRoot = 0;
+export const TransitionTracingMarker = 1;
+export type TracingMarkerTag = 0 | 1;
+
+export type PendingBoundaries = Map<OffscreenInstance, SuspenseInfo>;
 
 export function processTransitionCallbacks(
   pendingTransitions: PendingTransitionCallbacks,
@@ -55,42 +75,112 @@ export function processTransitionCallbacks(
   if (enableTransitionTracing) {
     if (pendingTransitions !== null) {
       const transitionStart = pendingTransitions.transitionStart;
-      if (transitionStart !== null) {
-        transitionStart.forEach(transition => {
-          if (callbacks.onTransitionStart != null) {
-            callbacks.onTransitionStart(
-              transition.transitionName,
-              transition.startTime,
-            );
+      const onTransitionStart = callbacks.onTransitionStart;
+      if (transitionStart !== null && onTransitionStart != null) {
+        transitionStart.forEach(transition =>
+          onTransitionStart(transition.name, transition.startTime),
+        );
+      }
+
+      const markerProgress = pendingTransitions.markerProgress;
+      const onMarkerProgress = callbacks.onMarkerProgress;
+      if (onMarkerProgress != null && markerProgress !== null) {
+        markerProgress.forEach((markerInstance, markerName) => {
+          if (markerInstance.transitions !== null) {
+            // TODO: Clone the suspense object so users can't modify it
+            const pending =
+              markerInstance.pendingBoundaries !== null
+                ? Array.from(markerInstance.pendingBoundaries.values())
+                : [];
+            markerInstance.transitions.forEach(transition => {
+              onMarkerProgress(
+                transition.name,
+                markerName,
+                transition.startTime,
+                endTime,
+                pending,
+              );
+            });
           }
         });
       }
 
       const markerComplete = pendingTransitions.markerComplete;
-      if (markerComplete !== null) {
-        markerComplete.forEach(transition => {
-          if (callbacks.onMarkerComplete != null) {
-            callbacks.onMarkerComplete(
-              transition.transitionName,
-              transition.markerName,
+      const onMarkerComplete = callbacks.onMarkerComplete;
+      if (markerComplete !== null && onMarkerComplete != null) {
+        markerComplete.forEach((transitions, markerName) => {
+          transitions.forEach(transition => {
+            onMarkerComplete(
+              transition.name,
+              markerName,
               transition.startTime,
               endTime,
             );
-          }
+          });
+        });
+      }
+
+      const markerIncomplete = pendingTransitions.markerIncomplete;
+      const onMarkerIncomplete = callbacks.onMarkerIncomplete;
+      if (onMarkerIncomplete != null && markerIncomplete !== null) {
+        markerIncomplete.forEach(({transitions, aborts}, markerName) => {
+          transitions.forEach(transition => {
+            const filteredAborts = [];
+            aborts.forEach(abort => {
+              switch (abort.reason) {
+                case 'marker': {
+                  filteredAborts.push({
+                    type: 'marker',
+                    name: abort.name,
+                    endTime,
+                  });
+                  break;
+                }
+                case 'suspense': {
+                  filteredAborts.push({
+                    type: 'suspense',
+                    name: abort.name,
+                    endTime,
+                  });
+                  break;
+                }
+                default: {
+                  break;
+                }
+              }
+            });
+
+            if (filteredAborts.length > 0) {
+              onMarkerIncomplete(
+                transition.name,
+                markerName,
+                transition.startTime,
+                filteredAborts,
+              );
+            }
+          });
+        });
+      }
+
+      const transitionProgress = pendingTransitions.transitionProgress;
+      const onTransitionProgress = callbacks.onTransitionProgress;
+      if (onTransitionProgress != null && transitionProgress !== null) {
+        transitionProgress.forEach((pending, transition) => {
+          onTransitionProgress(
+            transition.name,
+            transition.startTime,
+            endTime,
+            Array.from(pending.values()),
+          );
         });
       }
 
       const transitionComplete = pendingTransitions.transitionComplete;
-      if (transitionComplete !== null) {
-        transitionComplete.forEach(transition => {
-          if (callbacks.onTransitionComplete != null) {
-            callbacks.onTransitionComplete(
-              transition.transitionName,
-              transition.startTime,
-              endTime,
-            );
-          }
-        });
+      const onTransitionComplete = callbacks.onTransitionComplete;
+      if (transitionComplete !== null && onTransitionComplete != null) {
+        transitionComplete.forEach(transition =>
+          onTransitionComplete(transition.name, transition.startTime, endTime),
+        );
       }
     }
   }
@@ -116,15 +206,19 @@ export function pushRootMarkerInstance(workInProgress: Fiber): void {
     // transitions map. Each entry in this map functions like a tracing
     // marker does, so we can push it onto the marker instance stack
     const transitions = getWorkInProgressTransitions();
-    const root = workInProgress.stateNode;
+    const root: FiberRoot = workInProgress.stateNode;
 
     if (transitions !== null) {
       transitions.forEach(transition => {
         if (!root.incompleteTransitions.has(transition)) {
-          root.incompleteTransitions.set(transition, {
+          const markerInstance: TracingMarkerInstance = {
+            tag: TransitionRoot,
             transitions: new Set([transition]),
-            pendingSuspenseBoundaries: null,
-          });
+            pendingBoundaries: null,
+            aborts: null,
+            name: null,
+          };
+          root.incompleteTransitions.set(transition, markerInstance);
         }
       });
     }

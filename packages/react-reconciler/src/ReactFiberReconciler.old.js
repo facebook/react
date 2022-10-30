@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,18 +9,18 @@
 
 import type {
   Fiber,
+  FiberRoot,
   SuspenseHydrationCallbacks,
   TransitionTracingCallbacks,
 } from './ReactInternalTypes';
-import type {FiberRoot} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {
   Instance,
   TextInstance,
   Container,
   PublicInstance,
+  RendererInspectionConfig,
 } from './ReactFiberHostConfig';
-import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
@@ -32,6 +32,7 @@ import {
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import {
   HostComponent,
+  HostSingleton,
   ClassComponent,
   HostRoot,
   SuspenseComponent,
@@ -120,7 +121,7 @@ type OpaqueRoot = FiberRoot;
 // Might add PROFILE later.
 type BundleType = 0 | 1;
 
-type DevToolsConfig = {|
+type DevToolsConfig = {
   bundleType: BundleType,
   version: string,
   rendererPackageName: string,
@@ -128,7 +129,7 @@ type DevToolsConfig = {|
   // Used by "inspect clicked DOM element" in React DevTools.
   findFiberByHostInstance?: (instance: Instance | TextInstance) => Fiber | null,
   rendererConfig?: RendererInspectionConfig,
-|};
+};
 
 let didWarnAboutNestedUpdates;
 let didWarnAboutFindNodeInStrictMode;
@@ -405,6 +406,7 @@ export function getPublicRootInstance(
     return null;
   }
   switch (containerFiber.child.tag) {
+    case HostSingleton:
     case HostComponent:
       return getPublicInstance(containerFiber.child.stateNode);
     default:
@@ -525,7 +527,7 @@ export function findHostInstanceWithNoPortals(
   return hostFiber.stateNode;
 }
 
-let shouldErrorImpl = fiber => null;
+let shouldErrorImpl: Fiber => ?boolean = fiber => null;
 
 export function shouldError(fiber: Fiber): ?boolean {
   return shouldErrorImpl(fiber);

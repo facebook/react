@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -30,7 +30,7 @@ export const PROFILING_FLAG_TIMELINE_SUPPORT = 0b10;
 
 export const LOCAL_STORAGE_DEFAULT_TAB_KEY = 'React::DevTools::defaultTab';
 
-export const LOCAL_STORAGE_FILTER_PREFERENCES_KEY =
+export const LOCAL_STORAGE_COMPONENT_FILTER_PREFERENCES_KEY =
   'React::DevTools::componentFilters';
 
 export const SESSION_STORAGE_LAST_SELECTION_KEY =
@@ -51,7 +51,9 @@ export const SESSION_STORAGE_RELOAD_AND_PROFILE_KEY =
 export const LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS =
   'React::DevTools::breakOnConsoleErrors';
 
-export const LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY =
+export const LOCAL_STORAGE_BROWSER_THEME = 'React::DevTools::theme';
+
+export const LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY =
   'React::DevTools::appendComponentStack';
 
 export const LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY =
@@ -79,7 +81,7 @@ import type {
   DisplayDensity,
 } from './devtools/views/Settings/SettingsContext';
 
-export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
+export const THEME_STYLES: {[style: Theme | DisplayDensity]: any, ...} = {
   light: {
     '--color-attribute-name': '#ef6632',
     '--color-attribute-name-not-editable': '#23272f',
@@ -393,11 +395,11 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
 //
 // Sometimes the inline target is rendered before root styles are applied,
 // which would result in e.g. NaN itemSize being passed to react-window list.
-const COMFORTABLE_LINE_HEIGHT = parseInt(
+const COMFORTABLE_LINE_HEIGHT: number = parseInt(
   THEME_STYLES.comfortable['--line-height-data'],
   10,
 );
-const COMPACT_LINE_HEIGHT = parseInt(
+const COMPACT_LINE_HEIGHT: number = parseInt(
   THEME_STYLES.compact['--line-height-data'],
   10,
 );

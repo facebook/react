@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,10 +16,10 @@ import {View} from './View';
 import {zeroPoint} from './geometry';
 import {DPR} from '../content-views/constants';
 
-export type ViewRefs = {|
+export type ViewRefs = {
   activeView: View | null,
   hoveredView: View | null,
-|};
+};
 
 // hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
 function configureRetinaCanvas(canvas, height, width) {

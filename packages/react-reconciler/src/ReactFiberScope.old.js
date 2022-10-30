@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -86,7 +86,7 @@ function collectScopedNodesFromChildren(
   fn: ReactScopeQuery,
   scopedNodes: Array<any>,
 ): void {
-  let child = startingChild;
+  let child: null | Fiber = startingChild;
   while (child !== null) {
     collectScopedNodes(child, fn, scopedNodes);
     child = child.sibling;
@@ -97,7 +97,7 @@ function collectFirstScopedNodeFromChildren(
   startingChild: Fiber,
   fn: ReactScopeQuery,
 ): Object | null {
-  let child = startingChild;
+  let child: null | Fiber = startingChild;
   while (child !== null) {
     const scopedNode = collectFirstScopedNode(child, fn);
     if (scopedNode !== null) {

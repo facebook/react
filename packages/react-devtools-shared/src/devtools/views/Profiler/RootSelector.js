@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,7 +13,7 @@ import {ProfilerContext} from './ProfilerContext';
 
 import styles from './RootSelector.css';
 
-export default function RootSelector(_: {||}) {
+export default function RootSelector(_: {}): React.Node {
   const {profilingData, rootID, setRootID} = useContext(ProfilerContext);
 
   const options = [];

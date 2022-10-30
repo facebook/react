@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -102,7 +102,12 @@ import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
 } from './ReactFiberNewContext.new';
-import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
+import {
+  Callback,
+  Visibility,
+  ShouldCapture,
+  DidCapture,
+} from './ReactFiberFlags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
@@ -120,7 +125,7 @@ import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.new';
 
 import assign from 'shared/assign';
 
-export type Update<State> = {|
+export type Update<State> = {
   // TODO: Temporary field. Will remove this by storing a map of
   // transition -> event time on the root.
   eventTime: number,
@@ -131,20 +136,21 @@ export type Update<State> = {|
   callback: (() => mixed) | null,
 
   next: Update<State> | null,
-|};
+};
 
-export type SharedQueue<State> = {|
+export type SharedQueue<State> = {
   pending: Update<State> | null,
   lanes: Lanes,
-|};
+  hiddenCallbacks: Array<() => mixed> | null,
+};
 
-export type UpdateQueue<State> = {|
+export type UpdateQueue<State> = {
   baseState: State,
   firstBaseUpdate: Update<State> | null,
   lastBaseUpdate: Update<State> | null,
   shared: SharedQueue<State>,
-  effects: Array<Update<State>> | null,
-|};
+  callbacks: Array<() => mixed> | null,
+};
 
 export const UpdateState = 0;
 export const ReplaceState = 1;
@@ -158,7 +164,7 @@ let hasForceUpdate = false;
 
 let didWarnUpdateInsideUpdate;
 let currentlyProcessingQueue;
-export let resetCurrentlyProcessingQueue;
+export let resetCurrentlyProcessingQueue: () => void;
 if (__DEV__) {
   didWarnUpdateInsideUpdate = false;
   currentlyProcessingQueue = null;
@@ -175,8 +181,9 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     shared: {
       pending: null,
       lanes: NoLanes,
+      hiddenCallbacks: null,
     },
-    effects: null,
+    callbacks: null,
   };
   fiber.updateQueue = queue;
 }
@@ -194,14 +201,14 @@ export function cloneUpdateQueue<State>(
       firstBaseUpdate: currentQueue.firstBaseUpdate,
       lastBaseUpdate: currentQueue.lastBaseUpdate,
       shared: currentQueue.shared,
-      effects: currentQueue.effects,
+      callbacks: null,
     };
     workInProgress.updateQueue = clone;
   }
 }
 
-export function createUpdate(eventTime: number, lane: Lane): Update<*> {
-  const update: Update<*> = {
+export function createUpdate(eventTime: number, lane: Lane): Update<mixed> {
+  const update: Update<mixed> = {
     eventTime,
     lane,
 
@@ -318,7 +325,7 @@ export function enqueueCapturedUpdate<State>(
       const firstBaseUpdate = queue.firstBaseUpdate;
       if (firstBaseUpdate !== null) {
         // Loop through the updates and clone them.
-        let update = firstBaseUpdate;
+        let update: Update<State> = firstBaseUpdate;
         do {
           const clone: Update<State> = {
             eventTime: update.eventTime,
@@ -326,7 +333,9 @@ export function enqueueCapturedUpdate<State>(
 
             tag: update.tag,
             payload: update.payload,
-            callback: update.callback,
+            // When this update is rebased, we should not fire its
+            // callback again.
+            callback: null,
 
             next: null,
           };
@@ -336,6 +345,7 @@ export function enqueueCapturedUpdate<State>(
             newLast.next = clone;
             newLast = clone;
           }
+          // $FlowFixMe[incompatible-type] we bail out when we get a null
           update = update.next;
         } while (update !== null);
 
@@ -355,7 +365,7 @@ export function enqueueCapturedUpdate<State>(
         firstBaseUpdate: newFirst,
         lastBaseUpdate: newLast,
         shared: currentQueue.shared,
-        effects: currentQueue.effects,
+        callbacks: currentQueue.callbacks,
       };
       workInProgress.updateQueue = queue;
       return;
@@ -467,6 +477,7 @@ export function processUpdateQueue<State>(
   hasForceUpdate = false;
 
   if (__DEV__) {
+    // $FlowFixMe[escaped-generic] discovered when updating Flow
     currentlyProcessingQueue = queue.shared;
   }
 
@@ -524,7 +535,7 @@ export function processUpdateQueue<State>(
     let newFirstBaseUpdate = null;
     let newLastBaseUpdate = null;
 
-    let update = firstBaseUpdate;
+    let update: Update<State> = firstBaseUpdate;
     do {
       // TODO: Don't need this field anymore
       const updateEventTime = update.eventTime;
@@ -577,7 +588,10 @@ export function processUpdateQueue<State>(
 
             tag: update.tag,
             payload: update.payload,
-            callback: update.callback,
+
+            // When this update is rebased, we should not fire its
+            // callback again.
+            callback: null,
 
             next: null,
           };
@@ -594,21 +608,20 @@ export function processUpdateQueue<State>(
           instance,
         );
         const callback = update.callback;
-        if (
-          callback !== null &&
-          // If the update was already committed, we should not queue its
-          // callback again.
-          update.lane !== NoLane
-        ) {
+        if (callback !== null) {
           workInProgress.flags |= Callback;
-          const effects = queue.effects;
-          if (effects === null) {
-            queue.effects = [update];
+          if (isHiddenUpdate) {
+            workInProgress.flags |= Visibility;
+          }
+          const callbacks = queue.callbacks;
+          if (callbacks === null) {
+            queue.callbacks = [callback];
           } else {
-            effects.push(update);
+            callbacks.push(callback);
           }
         }
       }
+      // $FlowFixMe[incompatible-type] we bail out when we get a null
       update = update.next;
       if (update === null) {
         pendingQueue = queue.shared.pending;
@@ -679,22 +692,51 @@ export function checkHasForceUpdateAfterProcessing(): boolean {
   return hasForceUpdate;
 }
 
-export function commitUpdateQueue<State>(
-  finishedWork: Fiber,
-  finishedQueue: UpdateQueue<State>,
-  instance: any,
+export function deferHiddenCallbacks<State>(
+  updateQueue: UpdateQueue<State>,
 ): void {
-  // Commit the effects
-  const effects = finishedQueue.effects;
-  finishedQueue.effects = null;
-  if (effects !== null) {
-    for (let i = 0; i < effects.length; i++) {
-      const effect = effects[i];
-      const callback = effect.callback;
-      if (callback !== null) {
-        effect.callback = null;
-        callCallback(callback, instance);
-      }
+  // When an update finishes on a hidden component, its callback should not
+  // be fired until/unless the component is made visible again. Stash the
+  // callback on the shared queue object so it can be fired later.
+  const newHiddenCallbacks = updateQueue.callbacks;
+  if (newHiddenCallbacks !== null) {
+    const existingHiddenCallbacks = updateQueue.shared.hiddenCallbacks;
+    if (existingHiddenCallbacks === null) {
+      updateQueue.shared.hiddenCallbacks = newHiddenCallbacks;
+    } else {
+      updateQueue.shared.hiddenCallbacks = existingHiddenCallbacks.concat(
+        newHiddenCallbacks,
+      );
+    }
+  }
+}
+
+export function commitHiddenCallbacks<State>(
+  updateQueue: UpdateQueue<State>,
+  context: any,
+): void {
+  // This component is switching from hidden -> visible. Commit any callbacks
+  // that were previously deferred.
+  const hiddenCallbacks = updateQueue.shared.hiddenCallbacks;
+  if (hiddenCallbacks !== null) {
+    updateQueue.shared.hiddenCallbacks = null;
+    for (let i = 0; i < hiddenCallbacks.length; i++) {
+      const callback = hiddenCallbacks[i];
+      callCallback(callback, context);
+    }
+  }
+}
+
+export function commitCallbacks<State>(
+  updateQueue: UpdateQueue<State>,
+  context: any,
+): void {
+  const callbacks = updateQueue.callbacks;
+  if (callbacks !== null) {
+    updateQueue.callbacks = null;
+    for (let i = 0; i < callbacks.length; i++) {
+      const callback = callbacks[i];
+      callCallback(callback, context);
     }
   }
 }

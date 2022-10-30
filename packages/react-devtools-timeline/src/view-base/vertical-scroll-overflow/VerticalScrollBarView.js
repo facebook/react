@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,10 +7,10 @@
  * @flow
  */
 
-import type {Interaction} from '../useCanvasInteraction';
 import type {Rect} from '../geometry';
 import type {Surface, ViewRefs} from '../Surface';
 import type {
+  Interaction,
   ClickInteraction,
   MouseDownInteraction,
   MouseMoveInteraction,
@@ -52,7 +52,7 @@ export class VerticalScrollBarView extends View {
     this._verticalScrollOverflowView = verticalScrollOverflowView;
   }
 
-  desiredSize() {
+  desiredSize(): {+height: number, +width: number} {
     return {
       width: SCROLL_BAR_SIZE,
       height: 0, // No desired height

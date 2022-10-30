@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -483,5 +483,22 @@ describe('ReactDOMFizzServerBrowser', () => {
     controller.abort(new Error('uh oh'));
 
     expect(errors).toEqual(['uh oh', 'uh oh']);
+  });
+
+  // https://github.com/facebook/react/pull/25534/files - fix transposed escape functions
+  it('should encode title properly', async () => {
+    const stream = await ReactDOMFizzServer.renderToReadableStream(
+      <html>
+        <head>
+          <title>foo</title>
+        </head>
+        <body>bar</body>
+      </html>,
+    );
+
+    const result = await readResult(stream);
+    expect(result).toEqual(
+      '<!DOCTYPE html><html><head><title>foo</title></head><body>bar</body></html>',
+    );
   });
 });

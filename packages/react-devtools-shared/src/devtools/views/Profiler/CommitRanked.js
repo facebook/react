@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -27,7 +27,7 @@ import type {TooltipFiberData} from './HoveredFiberInfo';
 import type {ChartData} from './RankedChartBuilder';
 import type {CommitTree} from './types';
 
-export type ItemData = {|
+export type ItemData = {
   chartData: ChartData,
   onElementMouseEnter: (fiberData: TooltipFiberData) => void,
   onElementMouseLeave: () => void,
@@ -36,9 +36,9 @@ export type ItemData = {|
   selectedFiberIndex: number,
   selectFiber: (id: number | null, name: string | null) => void,
   width: number,
-|};
+};
 
-export default function CommitRankedAutoSizer(_: {||}) {
+export default function CommitRankedAutoSizer(_: {}): React.Node {
   const {profilerStore} = useContext(StoreContext);
   const {rootID, selectedCommitIndex, selectFiber} = useContext(
     ProfilerContext,
@@ -88,12 +88,12 @@ export default function CommitRankedAutoSizer(_: {||}) {
   }
 }
 
-type Props = {|
+type Props = {
   chartData: ChartData,
   commitTree: CommitTree,
   height: number,
   width: number,
-|};
+};
 
 function CommitRanked({chartData, commitTree, height, width}: Props) {
   const [

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,7 +24,6 @@ describe('StrictEffectsMode defaults', () => {
     act = require('jest-react').act;
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableStrictEffects = __DEV__;
     ReactFeatureFlags.createRootStrictEffectsByDefault = __DEV__;
   });
 
@@ -153,10 +152,8 @@ describe('StrictEffectsMode defaults', () => {
           </>,
         );
 
-        expect(Scheduler).toFlushAndYieldThrough([
-          'useLayoutEffect mount "one"',
-        ]);
         expect(Scheduler).toFlushAndYield([
+          'useLayoutEffect mount "one"',
           'useEffect mount "one"',
           'useLayoutEffect unmount "one"',
           'useEffect unmount "one"',
@@ -379,6 +376,30 @@ describe('StrictEffectsMode defaults', () => {
       });
 
       expect(Scheduler).toHaveYielded([]);
+    });
+
+    //@gate useModernStrictMode
+    it('disconnects refs during double invoking', () => {
+      const onRefMock = jest.fn();
+      function App({text}) {
+        return (
+          <span
+            ref={ref => {
+              onRefMock(ref);
+            }}>
+            text
+          </span>
+        );
+      }
+
+      act(() => {
+        ReactNoop.render(<App text={'mount'} />);
+      });
+
+      expect(onRefMock.mock.calls.length).toBe(3);
+      expect(onRefMock.mock.calls[0][0]).not.toBeNull();
+      expect(onRefMock.mock.calls[1][0]).toBe(null);
+      expect(onRefMock.mock.calls[2][0]).not.toBeNull();
     });
 
     it('passes the right context to class component lifecycles', () => {

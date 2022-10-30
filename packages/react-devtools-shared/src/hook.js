@@ -12,7 +12,7 @@ import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevToo
 import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 
 import {
-  patch as patchConsole,
+  patchConsoleUsingWindowValues,
   registerRenderer as registerRendererWithConsole,
 } from './backend/console';
 
@@ -61,6 +61,7 @@ export function installHook(target: any): DevToolsHook | null {
         // it happens *outside* of the renderer injection. See `checkDCE` below.
       }
 
+      // $FlowFixMe[method-unbinding]
       const toString = Function.prototype.toString;
       if (renderer.Mount && renderer.Mount._renderNewRootComponent) {
         // React DOM Stack
@@ -147,6 +148,7 @@ export function installHook(target: any): DevToolsHook | null {
     // This runs for production versions of React.
     // Needs to be super safe.
     try {
+      // $FlowFixMe[method-unbinding]
       const toString = Function.prototype.toString;
       const code = toString.call(fn);
 
@@ -228,7 +230,15 @@ export function installHook(target: any): DevToolsHook | null {
     hideConsoleLogsInStrictMode: boolean,
     browserTheme: BrowserTheme,
   }) {
-    const overrideConsoleMethods = ['error', 'trace', 'warn', 'log'];
+    const overrideConsoleMethods = [
+      'error',
+      'group',
+      'groupCollapsed',
+      'info',
+      'log',
+      'trace',
+      'warn',
+    ];
 
     if (unpatchFn !== null) {
       // Don't patch twice.
@@ -240,7 +250,6 @@ export function installHook(target: any): DevToolsHook | null {
     unpatchFn = () => {
       for (const method in originalConsoleMethods) {
         try {
-          // $FlowFixMe property error|warn is not writable.
           targetConsole[method] = originalConsoleMethods[method];
         } catch (error) {}
       }
@@ -292,7 +301,6 @@ export function installHook(target: any): DevToolsHook | null {
         overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ = originalMethod;
         originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ = overrideMethod;
 
-        // $FlowFixMe property error|warn is not writable.
         targetConsole[method] = overrideMethod;
       } catch (error) {}
     });
@@ -335,16 +343,6 @@ export function installHook(target: any): DevToolsHook | null {
     // (See comments in the try/catch below for more context on inlining.)
     if (!__TEST__ && !__EXTENSION__) {
       try {
-        const appendComponentStack =
-          window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
-        const breakOnConsoleErrors =
-          window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
-        const showInlineWarningsAndErrors =
-          window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
-        const hideConsoleLogsInStrictMode =
-          window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
-        const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
-
         // The installHook() function is injected by being stringified in the browser,
         // so imports outside of this function do not get included.
         //
@@ -353,13 +351,7 @@ export function installHook(target: any): DevToolsHook | null {
         // and the object itself will be undefined as well for the reasons mentioned above,
         // so we use try/catch instead.
         registerRendererWithConsole(renderer);
-        patchConsole({
-          appendComponentStack,
-          breakOnConsoleErrors,
-          showInlineWarningsAndErrors,
-          hideConsoleLogsInStrictMode,
-          browserTheme,
-        });
+        patchConsoleUsingWindowValues();
       } catch (error) {}
     }
 

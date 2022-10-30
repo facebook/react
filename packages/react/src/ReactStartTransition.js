@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -25,7 +25,9 @@ export function startTransition(
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       ReactCurrentBatchConfig.transition.name = options.name;
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       ReactCurrentBatchConfig.transition.startTime = -1;
     }
   }

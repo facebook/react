@@ -35,8 +35,10 @@
     "static.js",
     "static.browser.js",
     "static.node.js",
+    "server-rendering-stub.js",
     "test-utils.js",
     "unstable_testing.js",
+    "unstable_server-external-runtime.js",
     "cjs/",
     "umd/"
   ],
@@ -59,6 +61,7 @@
     },
     "./static.browser": "./static.browser.js",
     "./static.node": "./static.node.js",
+    "./server-rendering-stub": "./server-rendering-stub.js",
     "./profiling": "./profiling.js",
     "./test-utils": "./test-utils.js",
     "./unstable_testing": "./unstable_testing.js",

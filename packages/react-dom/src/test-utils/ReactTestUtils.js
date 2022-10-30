@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,14 +13,17 @@ import {
   ClassComponent,
   FunctionComponent,
   HostComponent,
+  HostResource,
+  HostSingleton,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
-import {SyntheticEvent} from '../events/SyntheticEvent';
-import {ELEMENT_NODE} from '../shared/HTMLNodeType';
+import {SyntheticEvent} from 'react-dom-bindings/src/events/SyntheticEvent';
+import {ELEMENT_NODE} from 'react-dom-bindings/src/shared/HTMLNodeType';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
+import {enableFloat, enableHostSingletons} from 'shared/ReactFeatureFlags';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 
@@ -59,7 +62,9 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       node.tag === HostComponent ||
       node.tag === HostText ||
       node.tag === ClassComponent ||
-      node.tag === FunctionComponent
+      node.tag === FunctionComponent ||
+      (enableFloat ? node.tag === HostResource : false) ||
+      (enableHostSingletons ? node.tag === HostSingleton : false)
     ) {
       const publicInst = node.stateNode;
       if (test(publicInst)) {
@@ -412,7 +417,11 @@ function getParent(inst) {
     // events to their parent. We could also go through parentNode on the
     // host node but that wouldn't work for React Native and doesn't let us
     // do the portal feature.
-  } while (inst && inst.tag !== HostComponent);
+  } while (
+    inst &&
+    inst.tag !== HostComponent &&
+    (!enableHostSingletons ? true : inst.tag !== HostSingleton)
+  );
   if (inst) {
     return inst;
   }

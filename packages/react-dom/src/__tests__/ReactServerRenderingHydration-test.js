@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -603,7 +603,6 @@ describe('ReactDOMServerHydration', () => {
     expect(customElement.obj).toBe(undefined);
   });
 
-  // @gate experimental || !www || !__DEV__
   it('refers users to apis that support Suspense when something suspends', () => {
     const theInfinitePromise = new Promise(() => {});
     function InfiniteSuspend() {
@@ -649,7 +648,6 @@ describe('ReactDOMServerHydration', () => {
     }
   });
 
-  // @gate experimental || !www || !__DEV__
   it('refers users to apis that support Suspense when something suspends (browser)', () => {
     const theInfinitePromise = new Promise(() => {});
     function InfiniteSuspend() {
