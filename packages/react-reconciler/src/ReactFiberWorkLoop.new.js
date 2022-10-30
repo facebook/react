@@ -205,7 +205,6 @@ import {resetContextDependencies} from './ReactFiberNewContext.new';
 import {
   resetHooksAfterThrow,
   ContextOnlyDispatcher,
-  getIsUpdatingOpaqueValueInRenderPhaseInDEV,
 } from './ReactFiberHooks.new';
 import {DefaultCacheDispatcher} from './ReactFiberCache.new';
 import {
@@ -3638,10 +3637,7 @@ if (__DEV__) {
 
 function warnAboutRenderPhaseUpdatesInDEV(fiber) {
   if (__DEV__) {
-    if (
-      ReactCurrentDebugFiberIsRenderingInDEV &&
-      !getIsUpdatingOpaqueValueInRenderPhaseInDEV()
-    ) {
+    if (ReactCurrentDebugFiberIsRenderingInDEV) {
       switch (fiber.tag) {
         case FunctionComponent:
         case ForwardRef:

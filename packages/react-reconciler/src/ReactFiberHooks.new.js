@@ -767,8 +767,6 @@ export function resetHooksAfterThrow(): void {
     hookTypesUpdateIndexDev = -1;
 
     currentHookNameInDev = null;
-
-    isUpdatingOpaqueValueInRenderPhase = false;
   }
 
   didScheduleRenderPhaseUpdateDuringThisPass = false;
@@ -2378,13 +2376,6 @@ function rerenderTransition(): [
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
   return [isPending, start];
-}
-
-let isUpdatingOpaqueValueInRenderPhase = false;
-export function getIsUpdatingOpaqueValueInRenderPhaseInDEV(): boolean | void {
-  if (__DEV__) {
-    return isUpdatingOpaqueValueInRenderPhase;
-  }
 }
 
 function mountId(): string {
