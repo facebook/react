@@ -46,7 +46,7 @@ const tests = {
         App.View = () => {
           useHook();
         }
-      `
+      `,
     },
     {
       code: normalizeIndent`
