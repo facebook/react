@@ -270,6 +270,9 @@ describe('ReactOffscreen', () => {
 
   // @gate enableOffscreen
   it('nested offscreen does not call componentWillUnmount when hidden', async () => {
+    // This is a bug that appeared during production test of <unstable_Offscreen />.
+    // It is a very specific scenario with nested Offscreens. The inner offscreen
+    // goes from visible to hidden in synchronous update.
     class ClassComponent extends React.Component {
       render () {
         return <Text text="Child" />;
