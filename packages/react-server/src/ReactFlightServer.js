@@ -287,7 +287,7 @@ function attemptResolveElement(
   }
   if (__DEV__) {
     jsxPropsParents.set(props, type);
-    if (typeof props.children === 'object') {
+    if (typeof props.children === 'object' && props.children !== null) {
       jsxChildrenParents.set(props.children, type);
     }
   }
