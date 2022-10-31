@@ -31,7 +31,24 @@ describe('ReactOffscreen', () => {
 
   function Text(props) {
     Scheduler.unstable_yieldValue(props.text);
-    return <span prop={props.text} />;
+    return <span prop={props.text}>{props.children}</span>;
+  }
+
+  function LoggedText({ text, children }) {
+    useEffect(() => {
+      Scheduler.unstable_yieldValue(`Mount ${text}`);
+      return () => {
+        Scheduler.unstable_yieldValue(`Unmount ${text}`);
+      };
+    });
+
+    useLayoutEffect(() => {
+      Scheduler.unstable_yieldValue(`Mount Layout ${text}`);
+      return () => {
+        Scheduler.unstable_yieldValue(`Unmount Layout ${text}`);
+      };
+    });
+    return <Text text={text}>{children}</Text>;
   }
 
   // @gate enableLegacyHidden
@@ -1825,7 +1842,6 @@ describe('ReactOffscreen', () => {
           Scheduler.unstable_yieldValue('Unmount Child');
         };
       });
-
       useLayoutEffect(() => {
         Scheduler.unstable_yieldValue('Mount Layout Child');
         return () => {
@@ -1864,5 +1880,33 @@ describe('ReactOffscreen', () => {
     expect(spanRef.current).not.toBeNull();
     expect(Scheduler).toHaveYielded(['Mount Layout Child', 'Mount Child']);
   });
-  // TODO: When attach/detach methods are implemented. Add tests for nested Offscreen case.
+
+  // @gate enableOffscreen
+  fit('something something', async () => {
+    let outerOffscreen;
+    let innerOffscreen;
+
+    function App() {
+      return (
+        <LoggedText text={"outer"}>
+          <Offscreen mode={'manual'} ref={el => (outerOffscreen = el)}>
+            <LoggedText text={"middle"}>
+              <Offscreen mode={'manual'} ref={el => (innerOffscreen = el)}>
+                <LoggedText text={"inner"} />
+              </Offscreen>
+            </LoggedText>
+          </Offscreen>
+        </LoggedText>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    expect(Scheduler).toHaveYielded(['outer', 'Mount Layout outer', 'Mount outer']);
+
+  });
 });
