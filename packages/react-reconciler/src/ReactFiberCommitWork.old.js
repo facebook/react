@@ -2880,7 +2880,7 @@ function commitMutationEffectsOnFiber(
         }
 
         if (isHidden) {
-          if (!wasHidden) {
+          if (current !== null && current.memoizedState === null) {
             if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
               // Disappear the layout effects of all the children
               recursivelyTraverseDisappearLayoutEffects(offscreenBoundary);
