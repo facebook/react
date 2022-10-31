@@ -86,7 +86,7 @@ export const enableTransitionTracing = false;
 export const enableFloat = true;
 export const enableHostSingletons = true;
 
-export const useModernStrictMode = false;
+export const useModernStrictMode = true;
 export const enableFizzExternalRuntime = false;
 
 // Flow magic to verify the exports of this file match the original version.
