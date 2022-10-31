@@ -8,6 +8,7 @@
  */
 
 'use strict';
+import {replaceScriptsAndMove, mergeOptions} from '../test-utils/FizzTestUtils';
 
 let JSDOM;
 let Stream;
@@ -30,6 +31,8 @@ let container;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
+const renderOptions = {};
+const rollupCache: Map<string, string | null> = new Map();
 
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
@@ -134,17 +137,7 @@ describe('ReactDOMFizzServer', () => {
       container.nodeName === '#document' ? container.body : container;
     while (fakeBody.firstChild) {
       const node = fakeBody.firstChild;
-      if (
-        node.nodeName === 'SCRIPT' &&
-        (CSPnonce === null || node.getAttribute('nonce') === CSPnonce)
-      ) {
-        const script = document.createElement('script');
-        script.textContent = node.textContent;
-        fakeBody.removeChild(node);
-        parent.appendChild(script);
-      } else {
-        parent.appendChild(node);
-      }
+      await replaceScriptsAndMove(window, rollupCache, CSPnonce, node, parent);
     }
   }
 
@@ -170,6 +163,12 @@ describe('ReactDOMFizzServer', () => {
     document = jsdom.window.document;
     container = document;
     buffer = '';
+    await replaceScriptsAndMove(
+      window,
+      rollupCache,
+      CSPnonce,
+      document.documentElement,
+    );
   }
 
   function getVisibleChildren(element) {
@@ -179,6 +178,7 @@ describe('ReactDOMFizzServer', () => {
       if (node.nodeType === 1) {
         if (
           node.tagName !== 'SCRIPT' &&
+          node.tagName !== 'script' &&
           node.tagName !== 'TEMPLATE' &&
           node.tagName !== 'template' &&
           !node.hasAttribute('hidden') &&
@@ -288,13 +288,12 @@ describe('ReactDOMFizzServer', () => {
     const As = as;
     return <As>{readText(text)}</As>;
   }
-
   function renderToPipeableStream(jsx, options) {
-    if (options) {
-      return ReactDOMFizzServer.renderToPipeableStream(jsx, options);
-    } else {
-      return ReactDOMFizzServer.renderToPipeableStream(jsx);
-    }
+    // Merge options with renderOptions, which may contain featureFlag specific behavior
+    return ReactDOMFizzServer.renderToPipeableStream(
+      jsx,
+      mergeOptions(options, renderOptions),
+    );
   }
 
   it('should asynchronously load a lazy component', async () => {
@@ -572,7 +571,7 @@ describe('ReactDOMFizzServer', () => {
     // Because there is no content inside the Suspense boundary that could've
     // been written, we expect to not see any additional partial data flushed
     // yet.
-    expect(container.firstChild.nextSibling).toBe(null);
+    expect(container.childNodes.length).toBe(1);
     await act(async () => {
       resolveElement({default: <Text text="Hello" />});
     });
@@ -4811,6 +4810,7 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
 
+      // strip inserted external runtime
       expect(container.innerHTML).toEqual(
         '<div><!--$-->hello<!-- -->world<!-- --><!--/$--><!--$-->world<!-- --><!--/$--><!--$-->hello<!-- -->world<!-- --><br><!--/$--><!--$-->world<!-- --><br><!--/$--></div>',
       );
