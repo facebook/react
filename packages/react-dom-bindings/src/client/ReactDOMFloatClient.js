@@ -34,6 +34,8 @@ import {
   getHostContext,
 } from 'react-reconciler/src/ReactFiberHostContext';
 import {getResourceFormOnly} from './validateDOMNesting';
+import {getNamespace} from './ReactDOMHostConfig';
+import {SVG_NAMESPACE} from '../shared/DOMNamespaces';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
@@ -1397,9 +1399,13 @@ function insertResourceInstanceBefore(
 
 export function isHostResourceType(type: string, props: Props): boolean {
   let resourceFormOnly: boolean;
+  const hostContext = getHostContext();
+  const namespace = getNamespace(hostContext);
   if (__DEV__) {
-    const hostContext = getHostContext();
     resourceFormOnly = getResourceFormOnly(hostContext);
+  }
+  if (namespace === SVG_NAMESPACE) {
+    return false;
   }
   switch (type) {
     case 'base':

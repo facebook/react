@@ -219,6 +219,16 @@ export function getPublicInstance(instance: Instance): Instance {
   return instance;
 }
 
+export function getNamespace(hostContext: HostContext): string {
+  if (__DEV__) {
+    const hostContextDev: HostContextDev = (hostContext: any);
+    return hostContextDev.namespace;
+  } else {
+    const hostContextProd: HostContextProd = (hostContext: any);
+    return hostContextProd;
+  }
+}
+
 export function prepareForCommit(containerInfo: Container): Object | null {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();

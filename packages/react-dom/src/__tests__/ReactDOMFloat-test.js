@@ -5385,7 +5385,98 @@ describe('ReactDOMFloat', () => {
     });
   });
 
-  describe('noscript', () => {
+  describe('resource free contexts', () => {
+    // @gate enableFloat
+    it('should not turn descendants of svg into resources', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <body>
+              <svg>
+                <title>foo</title>
+                <path>
+                  <title>bar</title>
+                </path>
+              </svg>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+
+      let root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+
+      root.unmount();
+      root = ReactDOMClient.createRoot(document);
+      root.render(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+    });
+
     // @gate enableFloat
     it('should not turn children of noscript into resources', async () => {
       function SomeResources() {
