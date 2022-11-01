@@ -8,7 +8,12 @@
  */
 
 'use strict';
-import {replaceScriptsAndMove, mergeOptions} from '../test-utils/FizzTestUtils';
+import {
+  replaceScriptsAndMove,
+  mergeOptions,
+  stripExternalRuntimeInString,
+  stripExternalRuntimeInNodes,
+} from '../test-utils/FizzTestUtils';
 
 let JSDOM;
 let Stream;
@@ -31,7 +36,7 @@ let container;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
-const renderOptions = {};
+let renderOptions;
 
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
@@ -89,6 +94,12 @@ describe('ReactDOMFizzServer', () => {
       hasErrored = true;
       fatalError = error;
     });
+
+    renderOptions = {};
+    if (gate(flags => flags.enableFizzExternalRuntime)) {
+      renderOptions.unstable_externalRuntimeSrc =
+        'react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js';
+    }
   });
 
   function expectErrors(errorsArr, toBeDevArr, toBeProdArr) {
@@ -595,7 +606,12 @@ describe('ReactDOMFizzServer', () => {
     // Because there is no content inside the Suspense boundary that could've
     // been written, we expect to not see any additional partial data flushed
     // yet.
-    expect(container.childNodes.length).toBe(1);
+    expect(
+      stripExternalRuntimeInNodes(
+        container.childNodes,
+        renderOptions.unstable_externalRuntimeSrc,
+      ).length,
+    ).toBe(1);
     await act(async () => {
       resolveElement({default: <Text text="Hello" />});
     });
@@ -3490,7 +3506,10 @@ describe('ReactDOMFizzServer', () => {
       </html>,
     );
     expect(
-      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
+      stripExternalRuntimeInNodes(
+        document.getElementsByTagName('script'),
+        renderOptions.unstable_externalRuntimeSrc,
+      ).map(n => n.outerHTML),
     ).toEqual([
       '<script src="foo" async=""></script>',
       '<script src="bar" async=""></script>',
@@ -3587,6 +3606,31 @@ describe('ReactDOMFizzServer', () => {
     expect(
       Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
     ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
+  });
+
+  // @gate enableFizzExternalRuntime
+  it('supports generating instructions as data attributes', async () => {
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <div>
+              <AsyncText text="Hello" />
+            </div>
+          </Suspense>
+        </div>
+      );
+    }
+    await actIntoEmptyDocument(() => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    await act(async () => {
+      resolveText('Hello');
+    });
+
+    // The only script elements sent should be from unstable_externalRuntimeSrc
+    expect(document.getElementsByTagName('script').length).toEqual(1);
   });
 
   it('#24384: Suspending should halt hydration warnings and not emit any if hydration completes successfully after unsuspending', async () => {
@@ -4482,10 +4526,12 @@ describe('ReactDOMFizzServer', () => {
         const {pipe} = renderToPipeableStream(<App name="Foo" />);
         pipe(writable);
       });
-
-      expect(container.innerHTML).toEqual(
-        '<div>hello<b>world, <!-- -->Foo</b>!</div>',
-      );
+      expect(
+        stripExternalRuntimeInString(
+          container.innerHTML,
+          renderOptions.unstable_externalRuntimeSrc,
+        ),
+      ).toEqual('<div>hello<b>world, <!-- -->Foo</b>!</div>');
       const errors = [];
       ReactDOMClient.hydrateRoot(container, <App name="Foo" />, {
         onRecoverableError(error) {
@@ -4531,7 +4577,13 @@ describe('ReactDOMFizzServer', () => {
         '<div id="app-div">hello<b>world, Foo</b>!</div>',
       );
       // there are extra script nodes at the end of container
-      expect(container.childNodes.length).toBe(5);
+      expect(
+        stripExternalRuntimeInNodes(
+          container.childNodes,
+          renderOptions.unstable_externalRuntimeSrc,
+        ).length,
+      ).toBe(5);
+
       const div = container.childNodes[1];
       expect(div.childNodes.length).toBe(3);
       const b = div.childNodes[1];
@@ -4834,8 +4886,12 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
 
-      // strip inserted external runtime
-      expect(container.innerHTML).toEqual(
+      expect(
+        stripExternalRuntimeInString(
+          container.innerHTML,
+          renderOptions.unstable_externalRuntimeSrc,
+        ),
+      ).toEqual(
         '<div><!--$-->hello<!-- -->world<!-- --><!--/$--><!--$-->world<!-- --><!--/$--><!--$-->hello<!-- -->world<!-- --><br><!--/$--><!--$-->world<!-- --><br><!--/$--></div>',
       );
 

@@ -8,7 +8,11 @@
  */
 
 'use strict';
-import {replaceScriptsAndMove, mergeOptions} from '../test-utils/FizzTestUtils';
+import {
+  replaceScriptsAndMove,
+  mergeOptions,
+  stripExternalRuntimeInString,
+} from '../test-utils/FizzTestUtils';
 
 let JSDOM;
 let Stream;
@@ -26,7 +30,7 @@ let container;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
-const renderOptions = {};
+let renderOptions;
 
 describe('ReactDOMFloat', () => {
   beforeEach(() => {
@@ -64,6 +68,12 @@ describe('ReactDOMFloat', () => {
       hasErrored = true;
       fatalError = error;
     });
+
+    renderOptions = {};
+    if (gate(flags => flags.enableFizzExternalRuntime)) {
+      renderOptions.unstable_externalRuntimeSrc =
+        'react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js';
+    }
   });
 
   function normalizeCodeLocInfo(str) {
@@ -583,6 +593,12 @@ describe('ReactDOMFloat', () => {
       );
       pipe(writable);
     });
+    if (gate(flags => flags.enableFizzExternalRuntime)) {
+      chunks[0] = stripExternalRuntimeInString(
+        chunks[0],
+        renderOptions.unstable_externalRuntimeSrc,
+      );
+    }
     expect(chunks).toEqual([
       '<!DOCTYPE html><html><script async="" src="foo"></script><title>foo</title><body>bar',
       '</body></html>',

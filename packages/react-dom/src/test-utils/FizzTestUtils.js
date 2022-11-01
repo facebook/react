@@ -11,7 +11,9 @@
 import * as tmp from 'tmp';
 import * as fs from 'fs';
 import replace from 'rollup-plugin-replace';
+import resolve from 'rollup-plugin-node-resolve';
 import {rollup} from 'rollup';
+import path from 'path';
 
 const rollupCache: Map<string, string | null> = new Map();
 
@@ -27,7 +29,12 @@ async function getRollupResult(scriptSrc: string): Promise<string | null> {
     const rollupConfig = {
       input: require.resolve(scriptSrc),
       onwarn: console.warn,
-      plugins: [replace({__DEV__: 'true'})],
+      plugins: [
+        replace({__DEV__: 'true'}),
+        resolve({
+          rootDir: path.join(__dirname, '..', '..', '..'),
+        }),
+      ],
       output: {
         externalLiveBindings: false,
         freeze: false,
@@ -120,4 +127,40 @@ function mergeOptions(options: Object, defaultOptions: Object): Object {
   };
 }
 
-export {replaceScriptsAndMove, mergeOptions};
+function stripExternalRuntimeInString(
+  source: string,
+  externalRuntimeSrc: string | null,
+): string {
+  if (externalRuntimeSrc == null) {
+    return source;
+  }
+  const matchExternalRuntimeTag = new RegExp(
+    '<script src="' + externalRuntimeSrc + '"[\\s\\S]*/script>',
+    'm',
+  );
+  return source.replace(matchExternalRuntimeTag, '');
+}
+
+function stripExternalRuntimeInNodes(
+  nodes: HTMLElement[] | HTMLCollection<HTMLElement>,
+  externalRuntimeSrc: string | null,
+): HTMLElement[] {
+  if (!Array.isArray(nodes)) {
+    nodes = Array.from(nodes);
+  }
+  if (externalRuntimeSrc == null) {
+    return nodes;
+  }
+  return nodes.filter(
+    n =>
+      (n.tagName !== 'SCRIPT' && n.tagName !== 'script') ||
+      n.getAttribute('src') !== externalRuntimeSrc,
+  );
+}
+
+export {
+  replaceScriptsAndMove,
+  mergeOptions,
+  stripExternalRuntimeInString,
+  stripExternalRuntimeInNodes,
+};

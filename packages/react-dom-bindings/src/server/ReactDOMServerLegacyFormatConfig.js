@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {FormatContext} from './ReactDOMServerFormatConfig';
+import type {
+  BootstrapScriptDescriptor,
+  FormatContext,
+} from './ReactDOMServerFormatConfig';
 
 import {
   createResponseState as createResponseStateImpl,
@@ -31,12 +34,14 @@ export const isPrimaryRenderer = false;
 export type ResponseState = {
   // Keep this in sync with ReactDOMServerFormatConfig
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
-  startInlineScript: PrecomputedChunk,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
   idPrefix: string,
   nextSuspenseID: number,
+  streamingFormat: 'SCRIPT' | 'DATA',
+  // state for script streaming format, unused if using external runtime / data
+  startInlineScript: PrecomputedChunk,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
@@ -48,17 +53,26 @@ export type ResponseState = {
 export function createResponseState(
   generateStaticMarkup: boolean,
   identifierPrefix: string | void,
+  externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
 ): ResponseState {
-  const responseState = createResponseStateImpl(identifierPrefix, undefined);
+  const responseState = createResponseStateImpl(
+    identifierPrefix,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    externalRuntimeConfig,
+  );
   return {
     // Keep this in sync with ReactDOMServerFormatConfig
     bootstrapChunks: responseState.bootstrapChunks,
-    startInlineScript: responseState.startInlineScript,
     placeholderPrefix: responseState.placeholderPrefix,
     segmentPrefix: responseState.segmentPrefix,
     boundaryPrefix: responseState.boundaryPrefix,
     idPrefix: responseState.idPrefix,
     nextSuspenseID: responseState.nextSuspenseID,
+    streamingFormat: responseState.streamingFormat,
+    startInlineScript: responseState.startInlineScript,
     sentCompleteSegmentFunction: responseState.sentCompleteSegmentFunction,
     sentCompleteBoundaryFunction: responseState.sentCompleteBoundaryFunction,
     sentClientRenderFunction: responseState.sentClientRenderFunction,
