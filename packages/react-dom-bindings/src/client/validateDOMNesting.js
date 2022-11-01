@@ -3,11 +3,35 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
-let validateDOMNesting = () => {};
-let updatedAncestorInfo = () => {};
-let getResourceFormOnly = () => false;
+type ValidateDOMNesting = (?string, ?string, AncestorInfoDevType) => void;
+let validateDOMNesting: ValidateDOMNesting = (() => {}: any);
+
+type UpdatedAncestorInfoDev = (
+  ?AncestorInfoDevType,
+  string,
+) => AncestorInfoDevType;
+let updatedAncestorInfoDev: UpdatedAncestorInfoDev = (() => {}: any);
+
+type Info = {tag: string};
+export type AncestorInfoDevType = {
+  current: ?Info,
+
+  formTag: ?Info,
+  aTagInScope: ?Info,
+  buttonTagInScope: ?Info,
+  nobrTagInScope: ?Info,
+  pTagInButtonScope: ?Info,
+
+  listItemTagAutoclosing: ?Info,
+  dlItemTagAutoclosing: ?Info,
+
+  // <head> or <body>
+  containerTagInScope: ?Info,
+};
 
 if (__DEV__) {
   // This validation code was written based on the HTML5 parsing spec:
@@ -143,7 +167,7 @@ if (__DEV__) {
     'rt',
   ];
 
-  const emptyAncestorInfo = {
+  const emptyAncestorInfoDev: AncestorInfoDevType = {
     current: null,
 
     formTag: null,
@@ -155,20 +179,23 @@ if (__DEV__) {
     listItemTagAutoclosing: null,
     dlItemTagAutoclosing: null,
 
-    resourceFormOnly: true,
+    containerTagInScope: null,
   };
 
-  updatedAncestorInfo = function(oldInfo, tag) {
-    const ancestorInfo = {...(oldInfo || emptyAncestorInfo)};
+  updatedAncestorInfoDev = function(
+    oldInfo: ?AncestorInfoDevType,
+    tag: string,
+  ) {
+    const AncestorInfoDev = {...(oldInfo || emptyAncestorInfoDev)};
     const info = {tag};
 
     if (inScopeTags.indexOf(tag) !== -1) {
-      ancestorInfo.aTagInScope = null;
-      ancestorInfo.buttonTagInScope = null;
-      ancestorInfo.nobrTagInScope = null;
+      AncestorInfoDev.aTagInScope = null;
+      AncestorInfoDev.buttonTagInScope = null;
+      AncestorInfoDev.nobrTagInScope = null;
     }
     if (buttonScopeTags.indexOf(tag) !== -1) {
-      ancestorInfo.pTagInButtonScope = null;
+      AncestorInfoDev.pTagInButtonScope = null;
     }
 
     // See rules for 'li', 'dd', 'dt' start tags in
@@ -179,45 +206,47 @@ if (__DEV__) {
       tag !== 'div' &&
       tag !== 'p'
     ) {
-      ancestorInfo.listItemTagAutoclosing = null;
-      ancestorInfo.dlItemTagAutoclosing = null;
+      AncestorInfoDev.listItemTagAutoclosing = null;
+      AncestorInfoDev.dlItemTagAutoclosing = null;
     }
 
-    if (tag !== '#document' && tag !== 'html') {
-      ancestorInfo.resourceFormOnly = false;
-    }
-
-    ancestorInfo.current = info;
+    AncestorInfoDev.current = info;
 
     if (tag === 'form') {
-      ancestorInfo.formTag = info;
+      AncestorInfoDev.formTag = info;
     }
     if (tag === 'a') {
-      ancestorInfo.aTagInScope = info;
+      AncestorInfoDev.aTagInScope = info;
     }
     if (tag === 'button') {
-      ancestorInfo.buttonTagInScope = info;
+      AncestorInfoDev.buttonTagInScope = info;
     }
     if (tag === 'nobr') {
-      ancestorInfo.nobrTagInScope = info;
+      AncestorInfoDev.nobrTagInScope = info;
     }
     if (tag === 'p') {
-      ancestorInfo.pTagInButtonScope = info;
+      AncestorInfoDev.pTagInButtonScope = info;
     }
     if (tag === 'li') {
-      ancestorInfo.listItemTagAutoclosing = info;
+      AncestorInfoDev.listItemTagAutoclosing = info;
     }
     if (tag === 'dd' || tag === 'dt') {
-      ancestorInfo.dlItemTagAutoclosing = info;
+      AncestorInfoDev.dlItemTagAutoclosing = info;
+    }
+    if (tag !== '#document' && tag !== 'html') {
+      AncestorInfoDev.containerTagInScope = info;
     }
 
-    return ancestorInfo;
+    return AncestorInfoDev;
   };
 
   /**
    * Returns whether
    */
-  const isTagValidWithParent = function(tag, parentTag) {
+  const isTagValidWithParent = function(
+    tag: string,
+    parentTag: ?string,
+  ): boolean {
     // First, let's check if we're in an unusual parsing mode...
     switch (parentTag) {
       // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
@@ -342,7 +371,10 @@ if (__DEV__) {
   /**
    * Returns whether
    */
-  const findInvalidAncestorForTag = function(tag, ancestorInfo) {
+  const findInvalidAncestorForTag = function(
+    tag: string,
+    AncestorInfoDev: AncestorInfoDevType,
+  ): ?Info {
     switch (tag) {
       case 'address':
       case 'article':
@@ -379,28 +411,28 @@ if (__DEV__) {
       case 'h4':
       case 'h5':
       case 'h6':
-        return ancestorInfo.pTagInButtonScope;
+        return AncestorInfoDev.pTagInButtonScope;
 
       case 'form':
-        return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+        return AncestorInfoDev.formTag || AncestorInfoDev.pTagInButtonScope;
 
       case 'li':
-        return ancestorInfo.listItemTagAutoclosing;
+        return AncestorInfoDev.listItemTagAutoclosing;
 
       case 'dd':
       case 'dt':
-        return ancestorInfo.dlItemTagAutoclosing;
+        return AncestorInfoDev.dlItemTagAutoclosing;
 
       case 'button':
-        return ancestorInfo.buttonTagInScope;
+        return AncestorInfoDev.buttonTagInScope;
 
       case 'a':
         // Spec says something about storing a list of markers, but it sounds
         // equivalent to this check.
-        return ancestorInfo.aTagInScope;
+        return AncestorInfoDev.aTagInScope;
 
       case 'nobr':
-        return ancestorInfo.nobrTagInScope;
+        return AncestorInfoDev.nobrTagInScope;
     }
 
     return null;
@@ -408,11 +440,17 @@ if (__DEV__) {
 
   const didWarn = {};
 
-  validateDOMNesting = function(childTag, childText, ancestorInfo) {
-    ancestorInfo = ancestorInfo || emptyAncestorInfo;
-    const parentInfo = ancestorInfo.current;
+  validateDOMNesting = function(
+    childTag: ?string,
+    childText: ?string,
+    AncestorInfoDev: AncestorInfoDevType,
+  ) {
+    AncestorInfoDev = AncestorInfoDev || emptyAncestorInfoDev;
+    const parentInfo = AncestorInfoDev.current;
     const parentTag = parentInfo && parentInfo.tag;
 
+    let tag = '';
+    let text = '';
     if (childText != null) {
       if (childTag != null) {
         console.error(
@@ -420,14 +458,22 @@ if (__DEV__) {
         );
       }
       childTag = '#text';
+      text = childText;
+    } else if (childTag != null) {
+      tag = childTag;
+    } else {
+      console.error(
+        'validateDOMNesting: when childText or childTag must be provided',
+      );
+      return;
     }
 
-    const invalidParent = isTagValidWithParent(childTag, parentTag)
+    const invalidParent = isTagValidWithParent(tag, parentTag)
       ? null
       : parentInfo;
     const invalidAncestor = invalidParent
       ? null
-      : findInvalidAncestorForTag(childTag, ancestorInfo);
+      : findInvalidAncestorForTag(tag, AncestorInfoDev);
     const invalidParentOrAncestor = invalidParent || invalidAncestor;
     if (!invalidParentOrAncestor) {
       return;
@@ -435,16 +481,17 @@ if (__DEV__) {
 
     const ancestorTag = invalidParentOrAncestor.tag;
 
-    const warnKey = !!invalidParent + '|' + childTag + '|' + ancestorTag;
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    const warnKey = String(!!invalidParent) + '|' + tag + '|' + ancestorTag;
     if (didWarn[warnKey]) {
       return;
     }
     didWarn[warnKey] = true;
 
-    let tagDisplayName = childTag;
+    let tagDisplayName = tag;
     let whitespaceInfo = '';
     if (childTag === '#text') {
-      if (/\S/.test(childText)) {
+      if (/\S/.test(text)) {
         tagDisplayName = 'Text nodes';
       } else {
         tagDisplayName = 'Whitespace text nodes';
@@ -453,12 +500,12 @@ if (__DEV__) {
           'each line of your source code.';
       }
     } else {
-      tagDisplayName = '<' + childTag + '>';
+      tagDisplayName = '<' + tag + '>';
     }
 
     if (invalidParent) {
       let info = '';
-      if (ancestorTag === 'table' && childTag === 'tr') {
+      if (ancestorTag === 'table' && tag === 'tr') {
         info +=
           ' Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by ' +
           'the browser.';
@@ -479,10 +526,6 @@ if (__DEV__) {
       );
     }
   };
-
-  getResourceFormOnly = hostContextDev => {
-    return hostContextDev.ancestorInfo.resourceFormOnly;
-  };
 }
 
-export {updatedAncestorInfo, validateDOMNesting, getResourceFormOnly};
+export {updatedAncestorInfoDev, validateDOMNesting};
