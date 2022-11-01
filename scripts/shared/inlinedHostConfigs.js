@@ -14,7 +14,6 @@ module.exports = [
       'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerNode.js',
       'react-dom/static.node',
-      'react-dom/src/server/ReactDOMFizzServerBun.js',
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
       'react-server-dom-webpack/server.node',
@@ -30,8 +29,6 @@ module.exports = [
       'react-dom/static.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
-      'react-dom/server.bun',
-      'react-dom/src/server/ReactDOMFizzServerBun.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/client',
       'react-server-dom-webpack/server',

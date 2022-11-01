@@ -10,7 +10,6 @@
 import type {Writable} from 'stream';
 import {TextEncoder} from 'util';
 import {AsyncLocalStorage} from 'async_hooks';
-
 interface MightBeFlushable {
   flush?: () => void;
 }

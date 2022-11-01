@@ -557,6 +557,7 @@ async function createBundle(bundle, bundleType) {
       pureExternalModules,
     },
     external(id) {
+      console.log(`Path: `, id);
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
       if (!shouldBundleDependencies && isProvidedByDependency) {

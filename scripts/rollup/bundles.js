@@ -278,7 +278,7 @@ const bundles = [
     name: 'react-dom-server.bun',
     // outputPath: 'react-dom-server.bun',
     global: 'ReactDOMServer',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'react-dom'],
   },
