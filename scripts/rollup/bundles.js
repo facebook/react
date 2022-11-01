@@ -975,8 +975,7 @@ function getOriginalFilename(bundle, bundleType) {
     case BUN_DEV:
       return `${name}.development.js`;
     case BUN_PROD:
-      return `${name}.production.min.js`;
-
+      return `${name}.production.js`;
     case UMD_DEV:
       return `${name}.development.js`;
     case UMD_PROD:
