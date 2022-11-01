@@ -32,7 +32,6 @@ let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
 const renderOptions = {};
-const rollupCache: Map<string, string | null> = new Map();
 
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
@@ -137,7 +136,7 @@ describe('ReactDOMFizzServer', () => {
       container.nodeName === '#document' ? container.body : container;
     while (fakeBody.firstChild) {
       const node = fakeBody.firstChild;
-      await replaceScriptsAndMove(window, rollupCache, CSPnonce, node, parent);
+      await replaceScriptsAndMove(window, CSPnonce, node, parent);
     }
   }
 
@@ -163,12 +162,7 @@ describe('ReactDOMFizzServer', () => {
     document = jsdom.window.document;
     container = document;
     buffer = '';
-    await replaceScriptsAndMove(
-      window,
-      rollupCache,
-      CSPnonce,
-      document.documentElement,
-    );
+    await replaceScriptsAndMove(window, CSPnonce, document.documentElement);
   }
 
   function getVisibleChildren(element) {

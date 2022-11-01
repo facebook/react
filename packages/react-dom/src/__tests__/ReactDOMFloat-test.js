@@ -27,7 +27,6 @@ let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
 const renderOptions = {};
-const rollupCache: Map<string, string | null> = new Map();
 
 describe('ReactDOMFloat', () => {
   beforeEach(() => {
@@ -103,13 +102,7 @@ describe('ReactDOMFloat', () => {
       container.nodeName === '#document' ? container.body : container;
     while (fakeBody.firstChild) {
       const node = fakeBody.firstChild;
-      await replaceScriptsAndMove(
-        document.defaultView,
-        rollupCache,
-        CSPnonce,
-        node,
-        parent,
-      );
+      await replaceScriptsAndMove(document.defaultView, CSPnonce, node, parent);
     }
   }
 
@@ -134,12 +127,7 @@ describe('ReactDOMFloat', () => {
     document = jsdom.window.document;
     container = document;
     buffer = '';
-    await replaceScriptsAndMove(
-      jsdom.window,
-      rollupCache,
-      null,
-      document.documentElement,
-    );
+    await replaceScriptsAndMove(jsdom.window, null, document.documentElement);
   }
 
   function getMeaningfulChildren(element) {

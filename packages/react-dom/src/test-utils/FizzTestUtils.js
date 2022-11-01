@@ -13,11 +13,10 @@ import * as fs from 'fs';
 import replace from 'rollup-plugin-replace';
 import {rollup} from 'rollup';
 
+const rollupCache: Map<string, string | null> = new Map();
+
 // Utility function to read and bundle a standalone browser script
-async function getRollupResult(
-  scriptSrc: string,
-  rollupCache: Map<string, string | null>,
-): Promise<string | null> {
+async function getRollupResult(scriptSrc: string): Promise<string | null> {
   const cachedResult = rollupCache.get(scriptSrc);
   if (cachedResult !== undefined) {
     return cachedResult;
@@ -71,7 +70,6 @@ async function getRollupResult(
 //  2. Resolving scripts with sources
 async function replaceScriptsAndMove(
   window: any,
-  rollupCache: Map<string, string | null>,
   CSPnonce: string | null,
   node: Node,
   parent: Node | null,
@@ -85,7 +83,7 @@ async function replaceScriptsAndMove(
     const script = window.document.createElement('SCRIPT');
     const scriptSrc = element.getAttribute('src');
     if (scriptSrc) {
-      const rollupOutput = await getRollupResult(scriptSrc, rollupCache);
+      const rollupOutput = await getRollupResult(scriptSrc);
       if (rollupOutput) {
         // Manually call eval(...) here, since changing the HTML text content
         //  may interfere with hydration
@@ -107,7 +105,7 @@ async function replaceScriptsAndMove(
   } else {
     for (let i = 0; i < node.childNodes.length; i++) {
       const inner = node.childNodes[i];
-      await replaceScriptsAndMove(window, rollupCache, CSPnonce, inner, null);
+      await replaceScriptsAndMove(window, CSPnonce, inner, null);
     }
     if (parent != null) {
       parent.appendChild(node);
