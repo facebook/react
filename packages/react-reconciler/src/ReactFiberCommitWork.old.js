@@ -2880,7 +2880,8 @@ function commitMutationEffectsOnFiber(
         }
 
         if (isHidden) {
-          if (!wasHidden) {
+          // Check if this is an update, and the tree was previously visible.
+          if (current !== null && !wasHidden) {
             if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
               // Disappear the layout effects of all the children
               recursivelyTraverseDisappearLayoutEffects(offscreenBoundary);
