@@ -269,6 +269,44 @@ describe('ReactOffscreen', () => {
   });
 
   // @gate enableOffscreen
+  it('nested offscreen does not call componentWillUnmount when hidden', async () => {
+    // This is a bug that appeared during production test of <unstable_Offscreen />.
+    // It is a very specific scenario with nested Offscreens. The inner offscreen
+    // goes from visible to hidden in synchronous update.
+    class ClassComponent extends React.Component {
+      render() {
+        return <Text text="Child" />;
+      }
+
+      componentWillUnmount() {
+        Scheduler.unstable_yieldValue('componentWillUnmount');
+      }
+    }
+
+    function App() {
+      const [isVisible, setIsVisible] = React.useState(true);
+
+      if (isVisible === true) {
+        setIsVisible(false);
+      }
+
+      return (
+        <Offscreen mode="hidden">
+          <Offscreen mode={isVisible ? 'visible' : 'hidden'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['Child']);
+  });
+
+  // @gate enableOffscreen
   it('mounts/unmounts layout effects when visibility changes (starting hidden)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
