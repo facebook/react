@@ -27,7 +27,6 @@ import {
   detachDeletedInstance,
   isMarkedResource,
 } from './ReactDOMComponentTree';
-import {detachDeletedInstance} from './ReactDOMComponentTree';
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
 import {

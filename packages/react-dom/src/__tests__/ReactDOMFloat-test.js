@@ -8,6 +8,7 @@
  */
 
 'use strict';
+import {replaceScriptsAndMove, mergeOptions} from '../test-utils/FizzTestUtils';
 
 let JSDOM;
 let Stream;
@@ -25,6 +26,7 @@ let container;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
+const renderOptions = {};
 
 describe('ReactDOMFloat', () => {
   beforeEach(() => {
@@ -100,17 +102,7 @@ describe('ReactDOMFloat', () => {
       container.nodeName === '#document' ? container.body : container;
     while (fakeBody.firstChild) {
       const node = fakeBody.firstChild;
-      if (
-        node.nodeName === 'SCRIPT' &&
-        (CSPnonce === null || node.getAttribute('nonce') === CSPnonce)
-      ) {
-        const script = document.createElement('script');
-        script.textContent = node.textContent;
-        fakeBody.removeChild(node);
-        parent.appendChild(script);
-      } else {
-        parent.appendChild(node);
-      }
+      await replaceScriptsAndMove(document.defaultView, CSPnonce, node, parent);
     }
   }
 
@@ -135,6 +127,7 @@ describe('ReactDOMFloat', () => {
     document = jsdom.window.document;
     container = document;
     buffer = '';
+    await replaceScriptsAndMove(jsdom.window, null, document.documentElement);
   }
 
   function getMeaningfulChildren(element) {
@@ -148,6 +141,8 @@ describe('ReactDOMFloat', () => {
           node.hasAttribute('data-meaningful') ||
           (node.tagName === 'SCRIPT' &&
             node.hasAttribute('src') &&
+            node.getAttribute('src') !==
+              renderOptions.unstable_externalRuntimeSrc &&
             node.hasAttribute('async')) ||
           (node.tagName !== 'SCRIPT' &&
             node.tagName !== 'TEMPLATE' &&
@@ -233,6 +228,14 @@ describe('ReactDOMFloat', () => {
 
   function AsyncText({text}) {
     return readText(text);
+  }
+
+  function renderToPipeableStream(jsx, options) {
+    // Merge options with renderOptions, which may contain featureFlag specific behavior
+    return ReactDOMFizzServer.renderToPipeableStream(
+      jsx,
+      mergeOptions(options, renderOptions),
+    );
   }
 
   // @gate enableFloat
@@ -569,7 +572,7 @@ describe('ReactDOMFloat', () => {
     });
 
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <>
           <title>foo</title>
           <html>
@@ -635,7 +638,7 @@ describe('ReactDOMFloat', () => {
         return 'foo';
       }
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -786,7 +789,7 @@ describe('ReactDOMFloat', () => {
       }
 
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<ServerApp />);
+        const {pipe} = renderToPipeableStream(<ServerApp />);
         pipe(writable);
       });
       expect(getMeaningfulChildren(document)).toEqual(
@@ -846,7 +849,7 @@ describe('ReactDOMFloat', () => {
         return 'foo';
       }
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -877,7 +880,7 @@ describe('ReactDOMFloat', () => {
         return 'foo';
       }
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -996,7 +999,7 @@ describe('ReactDOMFloat', () => {
         );
       }
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <App srcs={['server', 'shared']} />,
         );
         pipe(writable);
@@ -1148,7 +1151,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('supports preconnects, prefetc-dns, and arbitrary other link types', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -1259,7 +1262,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('can render <base> as a Resource', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -1317,7 +1320,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('can render icons and apple-touch-icons as Resources', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <>
             <html>
               <head />
@@ -1371,7 +1374,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('can hydrate the right instances for deeply nested structured metas', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <>
             <html>
               <head />
@@ -1463,7 +1466,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('can insert meta tags in the expected location', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <>
             <html>
               <head />
@@ -1615,7 +1618,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('can render meta tags with og properties with structured data', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <>
             <html>
               <head />
@@ -1778,7 +1781,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('can render meta tags as resources', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <>
             <html>
               <head />
@@ -1843,7 +1846,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('can rendering title tags anywhere in the tree', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <>
             <title>before</title>
             <>
@@ -1918,7 +1921,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('prepends new titles on the client so newer ones override older ones, including orphaned server rendered titles', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head>
               <title>server</title>
@@ -2032,7 +2035,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('can render a title before a singleton even if that singleton clears its contents', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <>
             <title>foo</title>
             <html>
@@ -2098,7 +2101,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('treats link rel stylesheet elements as a style resource when it includes a precedence when server rendering', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -2151,7 +2154,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('treats link rel stylesheet elements as a style resource when it includes a precedence when hydrating', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -2189,7 +2192,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('preloads stylesheets without a precedence prop when server rendering', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -2217,7 +2220,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('hoists style resources to the correct precedence', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -2312,7 +2315,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat && enableHostSingletons
     it('retains styles even when a new html, head, and/body mount', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -2364,7 +2367,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat && !enableHostSingletons
     it('retains styles even when a new html, head, and/body mount - without HostSingleton', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -2469,7 +2472,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('treats async scripts without onLoad or onError as Resources', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -2554,7 +2557,7 @@ describe('ReactDOMFloat', () => {
       );
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
 
@@ -2637,7 +2640,7 @@ describe('ReactDOMFloat', () => {
   // @gate enableFloat
   it('treats stylesheet links with a precedence as a resource', async () => {
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -2690,7 +2693,7 @@ describe('ReactDOMFloat', () => {
     }
 
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -2746,7 +2749,7 @@ describe('ReactDOMFloat', () => {
       ReactDOM.preinit('preset', {as: 'style', precedence: 'preset'});
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -3110,7 +3113,7 @@ describe('ReactDOMFloat', () => {
   // @gate enableFloat
   it('normalizes style resource precedence for all boundaries inlined as part of the shell flush', async () => {
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -3200,7 +3203,7 @@ describe('ReactDOMFloat', () => {
   // @gate enableFloat
   it('style resources are inserted according to precedence order on the client', async () => {
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -3329,7 +3332,7 @@ describe('ReactDOMFloat', () => {
       return null;
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -3407,7 +3410,7 @@ describe('ReactDOMFloat', () => {
       return children;
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -3530,7 +3533,7 @@ describe('ReactDOMFloat', () => {
       return children;
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -3762,7 +3765,7 @@ describe('ReactDOMFloat', () => {
     }
     try {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
       expect(getMeaningfulChildren(document)).toEqual(
@@ -3870,7 +3873,7 @@ describe('ReactDOMFloat', () => {
       return children;
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -3999,7 +4002,7 @@ describe('ReactDOMFloat', () => {
     };
     try {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -4083,7 +4086,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <Component scenarios={scenarios} />
@@ -4720,7 +4723,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <link
@@ -4833,7 +4836,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <link
@@ -4946,7 +4949,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <link
@@ -5057,7 +5060,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <script src="foo" async={true} data-foo="a current value" />
@@ -5107,7 +5110,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <link
@@ -5202,7 +5205,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <link
@@ -5263,7 +5266,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('escapes hrefs when selecting matching elements in the document when rendering Resources', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -5325,7 +5328,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('escapes hrefs when selecting matching elements in the document when using preload and preinit', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
