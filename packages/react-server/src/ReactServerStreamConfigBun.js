@@ -7,10 +7,15 @@
  * @flow
  */
 
-export type Destination = ReadableStreamController;
+type BunReadableStreamController = ReadableStreamController & {
+  end(): mixed,
+  write(data: Chunk): void,
+  error(error: Error): void,
+};
+export type Destination = BunReadableStreamController;
 
-export type PrecomputedChunk = Uint8Array;
-export opaque type Chunk = Uint8Array;
+export type PrecomputedChunk = string;
+export opaque type Chunk = string;
 
 export function scheduleWork(callback: () => void) {
   callback();
@@ -28,9 +33,7 @@ export const requestStorage: AsyncLocalStorage<
   Map<Function, mixed>,
 > = supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
 
-
-export function beginWriting(destination: Destination) {
-}
+export function beginWriting(destination: Destination) {}
 
 export function writeChunk(
   destination: Destination,
@@ -50,8 +53,7 @@ export function writeChunkAndReturn(
   return !!destination.write(chunk);
 }
 
-export function completeWriting(destination: Destination) {
-}
+export function completeWriting(destination: Destination) {}
 
 export function close(destination: Destination) {
   destination.end();

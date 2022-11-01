@@ -59,6 +59,7 @@ function renderToReadableStream(
         {
           type: 'direct',
           pull: (controller): ?Promise<void> => {
+            // $FlowIgnore
             startFlowing(request, controller);
           },
           cancel: (reason): ?Promise<void> => {

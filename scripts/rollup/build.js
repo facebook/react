@@ -91,8 +91,7 @@ const requestedBundleTypes = argv.type
   ? parseRequestedNames([argv.type], 'uppercase')
   : [];
 const requestedBundleNames = parseRequestedNames(argv._, 'lowercase');
-console.log('argv._', argv._);
-console.log('requestedBundleNames', requestedBundleNames);
+
 const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
@@ -515,9 +514,6 @@ async function createBundle(bundle, bundleType) {
     return;
   }
 
-  console.log(`not skipping`);
-  console.log(bundle);
-
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
@@ -534,13 +530,10 @@ async function createBundle(bundle, bundleType) {
     bundleType === RN_FB_PROD ||
     bundleType === RN_FB_PROFILING;
 
-  console.log(`entry`);
-  console.log(bundle.entry);
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle
   );
-  console.log(resolvedEntry);
 
   const shouldBundleDependencies =
     bundleType === UMD_DEV ||
@@ -608,7 +601,7 @@ async function createBundle(bundle, bundleType) {
     filename,
     packageName
   );
-  console.log(`mainOutputPath`, mainOutputPath);
+
   const rollupOutputOptions = getRollupOutputOptions(
     mainOutputPath,
     format,
@@ -638,20 +631,9 @@ async function createBundle(bundle, bundleType) {
   } else {
     console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
     try {
-      // console.log(rollupConfig);
-      // console.log(rollupOutputOptions);
       const result = await rollup.rollup(rollupConfig);
-      // console.log(`rollup result`, result);
-      console.log('rollupOutputOptions', rollupOutputOptions);
-      // rollupOutputOptions.dir = rollupOutputOptions.file;
-      // delete rollupOutputOptions.file;
-      // console.log(rollupOutputOptions.output[0].exports);
-      // console.log(rollupOutputOptions.output[0].imports);
-      // console.log(rollupOutputOptions.output[0].name);
-      // console.log(rollupOutputOptions.output[0].modules);
       await result.write(rollupOutputOptions);
     } catch (error) {
-      console.log(error);
       console.log(`${chalk.bgRed.black(' OH NOES! ')} ${logKey}\n`);
       handleRollupError(error);
       throw error;

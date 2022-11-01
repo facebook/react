@@ -1008,8 +1008,6 @@ function getOriginalFilename(bundle, bundleType) {
 
 function getFilename(bundle, bundleType) {
   const originalFilename = getOriginalFilename(bundle, bundleType);
-  console.log('bundle', bundle);
-  console.log('originalFilename', originalFilename);
   // Ensure .server.js or .client.js is the final suffix.
   // This is important for the Server tooling convention.
   if (originalFilename.indexOf('.server.') !== -1) {
