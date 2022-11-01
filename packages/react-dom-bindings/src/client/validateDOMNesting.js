@@ -478,8 +478,8 @@ if (__DEV__) {
 
     const ancestorTag = invalidParentOrAncestor.tag;
 
-    // eslint-disable-next-line react-internal/safe-string-coercion
     const warnKey =
+      // eslint-disable-next-line react-internal/safe-string-coercion
       String(!!invalidParent) + '|' + childTag + '|' + ancestorTag;
     if (didWarn[warnKey]) {
       return;
