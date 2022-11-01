@@ -1371,6 +1371,7 @@ function pushTitle(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
+  insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
 ): ReactNodeList {
   if (__DEV__) {
@@ -1415,6 +1416,8 @@ function pushTitle(
 
   if (
     enableFloat &&
+    // title is valid in SVG so we avoid resour
+    insertionMode !== SVG_MODE &&
     !noscriptTagInScope &&
     resourcesFromElement('title', props)
   ) {
@@ -1926,6 +1929,7 @@ export function pushStartInstance(
             target,
             props,
             responseState,
+            formatContext.insertionMode,
             formatContext.noscriptTagInScope,
           )
         : pushStartTitle(target, props, responseState);

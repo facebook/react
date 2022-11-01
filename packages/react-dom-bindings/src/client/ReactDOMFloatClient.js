@@ -34,6 +34,8 @@ import {
   getHostContext,
 } from 'react-reconciler/src/ReactFiberHostContext';
 import {getResourceFormOnly} from './validateDOMNesting';
+import {getNamespace} from './ReactDOMHostConfig';
+import {SVG_NAMESPACE} from '../shared/DOMNamespaces';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
@@ -199,6 +201,28 @@ function getCurrentResourceRoot(): null | FloatRoot {
   const currentContainer = getCurrentRootHostContainer();
   // $FlowFixMe flow should know currentContainer is a Node and has getRootNode
   return currentContainer ? currentContainer.getRootNode() : null;
+}
+
+// This resource type constraint can be loosened. It really is everything except PreloadResource
+// because that is the only one that does not have an optional instance type. Expand as needed.
+function resetInstance(resource: ScriptResource | HeadResource) {
+  resource.instance = undefined;
+}
+
+export function clearRootResources(rootContainer: Container): void {
+  const rootNode: FloatRoot = (rootContainer.getRootNode(): any);
+  const resources = getResourcesFromRoot(rootNode);
+
+  // We can't actually delete the resource cache because this function is called
+  // during commit after we have rendered. Instead we detatch any instances from
+  // the Resource object if they are going to be cleared
+
+  // Styles stay put
+  // Scripts get reset
+  resources.scripts.forEach(resetInstance);
+  // Head Resources get reset
+  resources.head.forEach(resetInstance);
+  // lastStructuredMeta stays put
 }
 
 // Preloads are somewhat special. Even if we don't have the Document
@@ -1077,7 +1101,14 @@ function acquireHeadResource(resource: HeadResource): Instance {
           props,
           root,
         );
-        insertResourceInstanceBefore(root, instance, titles.item(0));
+        const firstTitle = titles[0];
+        insertResourceInstanceBefore(
+          root,
+          instance,
+          firstTitle && firstTitle.namespaceURI !== SVG_NAMESPACE
+            ? firstTitle
+            : null,
+        );
         break;
       }
       case 'meta': {
@@ -1397,15 +1428,20 @@ function insertResourceInstanceBefore(
 
 export function isHostResourceType(type: string, props: Props): boolean {
   let resourceFormOnly: boolean;
+  let namespace: string;
   if (__DEV__) {
     const hostContext = getHostContext();
     resourceFormOnly = getResourceFormOnly(hostContext);
+    namespace = getNamespace(hostContext);
   }
   switch (type) {
     case 'base':
-    case 'meta':
-    case 'title': {
+    case 'meta': {
       return true;
+    }
+    case 'title': {
+      const hostContext = getHostContext();
+      return getNamespace(hostContext) !== SVG_NAMESPACE;
     }
     case 'link': {
       const {onLoad, onError} = props;
@@ -1417,6 +1453,11 @@ export function isHostResourceType(type: string, props: Props): boolean {
                 ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
                 ' somewhere in the <body>.',
             );
+          } else if (namespace === SVG_NAMESPACE) {
+            console.error(
+              'Cannot render a <link> with onLoad or onError listeners as a descendent of <svg>.' +
+                ' Try removing onLoad={...} and onError={...} or moving it above the <svg> ancestor.',
+            );
           }
         }
         return false;
@@ -1426,11 +1467,18 @@ export function isHostResourceType(type: string, props: Props): boolean {
           const {href, precedence, disabled} = props;
           if (__DEV__) {
             validateLinkPropsForStyleResource(props);
-            if (typeof precedence !== 'string' && resourceFormOnly) {
-              console.error(
-                'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence.' +
-                  ' Consider adding precedence="default" or moving it into the root <head> tag.',
-              );
+            if (typeof precedence !== 'string') {
+              if (resourceFormOnly) {
+                console.error(
+                  'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence.' +
+                    ' Consider adding precedence="default" or moving it into the root <head> tag.',
+                );
+              } else if (namespace === SVG_NAMESPACE) {
+                console.error(
+                  'Cannot render a <link rel="stylesheet" /> as a descendent of an <svg> element without knowing its precedence.' +
+                    ' Consider adding precedence="default" or moving it above the <svg> ancestor.',
+                );
+              }
             }
           }
           return (
@@ -1450,17 +1498,31 @@ export function isHostResourceType(type: string, props: Props): boolean {
       // precedence with these for style resources
       const {src, async, onLoad, onError} = props;
       if (__DEV__) {
-        if (async !== true && resourceFormOnly) {
-          console.error(
-            'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
-              ' Try adding async="" or moving it into the root <head> tag.',
-          );
-        } else if ((onLoad || onError) && resourceFormOnly) {
-          console.error(
-            'Cannot render a <script> with onLoad or onError listeners outside the main document.' +
-              ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
-              ' somewhere in the <body>.',
-          );
+        if (async !== true) {
+          if (resourceFormOnly) {
+            console.error(
+              'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
+                ' Try adding async="" or moving it into the root <head> tag.',
+            );
+          } else if (namespace === SVG_NAMESPACE) {
+            console.error(
+              'Cannot render a sync or defer <script> as a descendent of an <svg> element.' +
+                ' Try adding async="" or moving it above the ancestor <svg> element.',
+            );
+          }
+        } else if (onLoad || onError) {
+          if (resourceFormOnly) {
+            console.error(
+              'Cannot render a <script> with onLoad or onError listeners outside the main document.' +
+                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
+                ' somewhere in the <body>.',
+            );
+          } else if (namespace === SVG_NAMESPACE) {
+            console.error(
+              'Cannot render a <script> with onLoad or onError listeners as a descendent of an <svg> element.' +
+                ' Try removing onLoad={...} and onError={...} or moving it above the ancestor <svg> element.',
+            );
+          }
         }
       }
       return (async: any) && typeof src === 'string' && !onLoad && !onError;

@@ -5388,7 +5388,338 @@ describe('ReactDOMFloat', () => {
     });
   });
 
-  describe('noscript', () => {
+  describe('resource free contexts', () => {
+    // @gate enableFloat
+    it('allows resources inside foreignobject within an svg context', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <body>
+              <svg>
+                <foreignObject>
+                  <title>foo</title>
+                </foreignObject>
+              </svg>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>foo</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+
+      let root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <svg>
+              <foreignObject>
+                <title>foo</title>
+              </foreignObject>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      // @TODO the preload should not get inserted on hydration
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>foo</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+
+      root.unmount();
+      root = ReactDOMClient.createRoot(document);
+      root.render(
+        <html>
+          <body>
+            <svg>
+              <foreignObject>
+                <title>foo</title>
+              </foreignObject>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>foo</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('warns if you render something that is almost a resource inside an svg tree', async () => {
+      const root = ReactDOMClient.createRoot(container);
+      root.render(
+        <svg>
+          <path>
+            <link rel="stylesheet" href="foo" />
+            <script src="foo" />
+            <script async={true} src="bar" onLoad={() => {}} />
+            <link rel="foo" href="bar" onLoad={() => {}} />
+          </path>
+        </svg>,
+      );
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toErrorDev([
+        'Warning: Cannot render a <link rel="stylesheet" /> as a descendent of an <svg> element without knowing its precedence. Consider adding precedence="default" or moving it above the <svg> ancestor.',
+        'Warning: Cannot render a sync or defer <script> as a descendent of an <svg> element. Try adding async="" or moving it above the ancestor <svg> element.',
+        'Warning: Cannot render a <script> with onLoad or onError listeners as a descendent of an <svg> element. Try removing onLoad={...} and onError={...} or moving it above the ancestor <svg> element.',
+        'Warning: Cannot render a <link> with onLoad or onError listeners as a descendent of <svg>. Try removing onLoad={...} and onError={...} or moving it above the <svg> ancestor.',
+      ]);
+    });
+
+    // @gate enableFloat
+    it('should support non-title resources in svg context', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <body>
+              <svg>
+                <title>foo</title>
+                <link rel="foo" href="bar" />
+                <link rel="stylesheet" href="bar" precedence="default" />
+                <link rel="preload" href="bar" as="style" />
+                <path>
+                  <title>bar</title>
+                  <script src="baz" async={true} />
+                  <meta name="foo" content="bar" />
+                  <base href="foo" />
+                </path>
+              </svg>
+              <title>qux</title>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <base href="foo" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <script src="baz" async="" />
+            <link rel="foo" href="bar" />
+            <meta name="foo" content="bar" />
+            <title>qux</title>
+          </head>
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+
+      let root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <svg>
+              <title>foo</title>
+              <link rel="foo" href="bar" />
+              <link rel="stylesheet" href="bar" precedence="default" />
+              <link rel="preload" href="bar" as="style" />
+              <path>
+                <title>bar</title>
+                <script src="baz" async={true} />
+                <meta name="foo" content="bar" />
+                <base href="foo" />
+              </path>
+            </svg>
+            <title>qux</title>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      // @TODO the preload should not get inserted on hydration
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <base href="foo" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <script src="baz" async="" />
+            <link rel="foo" href="bar" />
+            <meta name="foo" content="bar" />
+            <title>qux</title>
+            <link rel="preload" href="bar" as="style" />
+          </head>
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+
+      root.unmount();
+      root = ReactDOMClient.createRoot(document);
+      root.render(
+        <html>
+          <body>
+            <svg>
+              <title>foo</title>
+              <link rel="foo" href="bar" />
+              <link rel="stylesheet" href="bar" precedence="default" />
+              <link rel="preload" href="bar" as="style" />
+              <path>
+                <title>bar</title>
+                <script src="baz" async={true} />
+                <meta name="foo" content="bar" />
+                <base href="foo" />
+              </path>
+            </svg>
+            <title>qux</title>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="foo" href="bar" />
+            <script src="baz" async="" />
+            <meta name="foo" content="bar" />
+            <base href="foo" />
+            <title>qux</title>
+          </head>
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('should not treat title descendants of svg into resources', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <body>
+              <svg>
+                <title>foo</title>
+                <path>
+                  <title>bar</title>
+                </path>
+              </svg>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+
+      let root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+
+      root.unmount();
+      root = ReactDOMClient.createRoot(document);
+      root.render(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+    });
+
     // @gate enableFloat
     it('should not turn children of noscript into resources', async () => {
       function SomeResources() {
