@@ -53,10 +53,6 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
       return `build/node_modules/${packageName}/esm/${filename}`;
     case BUN_DEV:
     case BUN_PROD:
-      console.log(
-        `outputPath`,
-        `build/node_modules/${packageName}/${filename}`
-      );
       return `build/node_modules/${packageName}/esm/${filename}`;
     case NODE_DEV:
     case NODE_PROD:
@@ -207,7 +203,6 @@ function filterOutEntrypoints(name) {
       // Let's remove it.
       files.splice(i, 1);
       i--;
-      console.log(`unlinking ${`build/node_modules/${name}/${filename}`}`);
       unlinkSync(`build/node_modules/${name}/${filename}`);
       changed = true;
       // Remove it from the exports field too if it exists.
@@ -239,7 +234,6 @@ function filterOutEntrypoints(name) {
 }
 
 async function prepareNpmPackage(name) {
-  console.log(`preparing npm package ${name}`);
   await Promise.all([
     asyncCopyTo('LICENSE', `build/node_modules/${name}/LICENSE`),
     asyncCopyTo(
@@ -269,7 +263,6 @@ async function prepareNpmPackages() {
   const builtPackageFolders = readdirSync('build/node_modules').filter(
     dir => dir.charAt(0) !== '.'
   );
-  console.log('builtPackageFolders', builtPackageFolders);
   await Promise.all(builtPackageFolders.map(prepareNpmPackage));
 }
 
