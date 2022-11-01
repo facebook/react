@@ -1197,12 +1197,10 @@ function pushBase(
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
-  insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
 ): ReactNodeList {
   if (
     enableFloat &&
-    insertionMode !== SVG_MODE &&
     !noscriptTagInScope &&
     resourcesFromElement('base', props)
   ) {
@@ -1224,12 +1222,10 @@ function pushMeta(
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
-  insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
 ): ReactNodeList {
   if (
     enableFloat &&
-    insertionMode !== SVG_MODE &&
     !noscriptTagInScope &&
     resourcesFromElement('meta', props)
   ) {
@@ -1251,15 +1247,9 @@ function pushLink(
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
-  insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
 ): ReactNodeList {
-  if (
-    enableFloat &&
-    insertionMode !== SVG_MODE &&
-    !noscriptTagInScope &&
-    resourcesFromLink(props)
-  ) {
+  if (enableFloat && !noscriptTagInScope && resourcesFromLink(props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
       // to be safe and assume text will follow by inserting a textSeparator
@@ -1426,6 +1416,7 @@ function pushTitle(
 
   if (
     enableFloat &&
+    // title is valid in SVG so we avoid resour
     insertionMode !== SVG_MODE &&
     !noscriptTagInScope &&
     resourcesFromElement('title', props)
@@ -1590,15 +1581,9 @@ function pushScript(
   props: Object,
   responseState: ResponseState,
   textEmbedded: boolean,
-  insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
 ): null {
-  if (
-    enableFloat &&
-    insertionMode !== SVG_MODE &&
-    !noscriptTagInScope &&
-    resourcesFromScript(props)
-  ) {
+  if (enableFloat && !noscriptTagInScope && resourcesFromScript(props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
       // to be safe and assume text will follow by inserting a textSeparator
@@ -1954,7 +1939,6 @@ export function pushStartInstance(
         props,
         responseState,
         textEmbedded,
-        formatContext.insertionMode,
         formatContext.noscriptTagInScope,
       );
     case 'script':
@@ -1964,7 +1948,6 @@ export function pushStartInstance(
             props,
             responseState,
             textEmbedded,
-            formatContext.insertionMode,
             formatContext.noscriptTagInScope,
           )
         : pushStartGenericElement(target, props, type, responseState);
@@ -1974,7 +1957,6 @@ export function pushStartInstance(
         props,
         responseState,
         textEmbedded,
-        formatContext.insertionMode,
         formatContext.noscriptTagInScope,
       );
     case 'base':
@@ -1983,7 +1965,6 @@ export function pushStartInstance(
         props,
         responseState,
         textEmbedded,
-        formatContext.insertionMode,
         formatContext.noscriptTagInScope,
       );
     // Newline eating tags
