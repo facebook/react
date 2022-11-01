@@ -5387,6 +5387,90 @@ describe('ReactDOMFloat', () => {
 
   describe('resource free contexts', () => {
     // @gate enableFloat
+    it('allows resources inside foreignobject within an svg context', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <body>
+              <svg>
+                <foreignObject>
+                  <title>foo</title>
+                </foreignObject>
+              </svg>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>foo</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+
+      let root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <svg>
+              <foreignObject>
+                <title>foo</title>
+              </foreignObject>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      // @TODO the preload should not get inserted on hydration
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>foo</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+
+      root.unmount();
+      root = ReactDOMClient.createRoot(document);
+      root.render(
+        <html>
+          <body>
+            <svg>
+              <foreignObject>
+                <title>foo</title>
+              </foreignObject>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>foo</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
     it('warns if you render something that is almost a resource inside an svg tree', async () => {
       const root = ReactDOMClient.createRoot(container);
       root.render(
