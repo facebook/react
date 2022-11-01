@@ -34,18 +34,18 @@ describe('ReactOffscreen', () => {
     return <span prop={props.text}>{props.children}</span>;
   }
 
-  function LoggedText({ text, children }) {
+  function LoggedText({text, children}) {
     useEffect(() => {
-      Scheduler.unstable_yieldValue(`Mount ${text}`);
+      Scheduler.unstable_yieldValue(`mount ${text}`);
       return () => {
-        Scheduler.unstable_yieldValue(`Unmount ${text}`);
+        Scheduler.unstable_yieldValue(`unmount ${text}`);
       };
     });
 
     useLayoutEffect(() => {
-      Scheduler.unstable_yieldValue(`Mount Layout ${text}`);
+      Scheduler.unstable_yieldValue(`mount layout ${text}`);
       return () => {
-        Scheduler.unstable_yieldValue(`Unmount Layout ${text}`);
+        Scheduler.unstable_yieldValue(`unmount layout ${text}`);
       };
     });
     return <Text text={text}>{children}</Text>;
@@ -1875,24 +1875,34 @@ describe('ReactOffscreen', () => {
     expect(spanRef.current).toBeNull();
     expect(Scheduler).toHaveYielded(['Unmount Layout Child', 'Unmount Child']);
 
+    // Calling attach on already attached Offscreen.
+    offscreenRef.detach();
+
+    expect(Scheduler).toHaveYielded([]);
+
     offscreenRef.attach();
 
     expect(spanRef.current).not.toBeNull();
     expect(Scheduler).toHaveYielded(['Mount Layout Child', 'Mount Child']);
+
+    // Calling attach on already attached Offscreen
+    offscreenRef.attach();
+
+    expect(Scheduler).toHaveYielded([]);
   });
 
   // @gate enableOffscreen
-  fit('something something', async () => {
+  it('handles nested manual offscreens', async () => {
     let outerOffscreen;
     let innerOffscreen;
 
     function App() {
       return (
-        <LoggedText text={"outer"}>
+        <LoggedText text={'outer'}>
           <Offscreen mode={'manual'} ref={el => (outerOffscreen = el)}>
-            <LoggedText text={"middle"}>
+            <LoggedText text={'middle'}>
               <Offscreen mode={'manual'} ref={el => (innerOffscreen = el)}>
-                <LoggedText text={"inner"} />
+                <LoggedText text={'inner'} />
               </Offscreen>
             </LoggedText>
           </Offscreen>
@@ -1906,7 +1916,56 @@ describe('ReactOffscreen', () => {
       root.render(<App />);
     });
 
-    expect(Scheduler).toHaveYielded(['outer', 'Mount Layout outer', 'Mount outer']);
+    expect(Scheduler).toHaveYielded([
+      'outer',
+      'middle',
+      'inner',
+      'mount layout inner',
+      'mount layout middle',
+      'mount layout outer',
+      'mount inner',
+      'mount middle',
+      'mount outer',
+    ]);
 
+    expect(outerOffscreen).not.toBeNull();
+    expect(innerOffscreen).not.toBeNull();
+
+    outerOffscreen.detach();
+    expect(innerOffscreen).toBeNull();
+
+    expect(Scheduler).toHaveYielded([
+      'unmount layout middle',
+      'unmount layout inner',
+      'unmount middle',
+      'unmount inner',
+    ]);
+
+    outerOffscreen.attach();
+
+    expect(Scheduler).toHaveYielded([
+      'mount layout inner',
+      'mount layout middle',
+      'mount inner',
+      'mount middle',
+    ]);
+
+    innerOffscreen.detach();
+
+    expect(Scheduler).toHaveYielded(['unmount layout inner', 'unmount inner']);
+
+    // Calling detach on already detached Offscreen.
+    innerOffscreen.detach();
+
+    expect(Scheduler).toHaveYielded([]);
+
+    innerOffscreen.attach();
+
+    expect(Scheduler).toHaveYielded(['mount layout inner', 'mount inner']);
+
+    innerOffscreen.detach();
+    outerOffscreen.attach();
+
+    expect(Scheduler).toHaveYielded(['unmount layout inner', 'unmount inner']);
   });
 });

@@ -2444,6 +2444,11 @@ export function attachOffscreenInstance(instance: OffscreenInstance): void {
     );
   }
 
+  if ((instance._visibility & OffscreenDetached) === NoFlags) {
+    // The instance is already attached, this is a noop.
+    return;
+  }
+
   instance._visibility &= ~OffscreenDetached;
 
   const executionContext = getExecutionContext();
