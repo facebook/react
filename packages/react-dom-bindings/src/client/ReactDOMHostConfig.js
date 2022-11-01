@@ -88,6 +88,7 @@ import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   prepareToRenderResources,
   cleanupAfterRenderResources,
+  clearRootResources,
   isHostResourceType,
 } from './ReactDOMFloatClient';
 
@@ -217,6 +218,16 @@ export function getChildHostContext(
 
 export function getPublicInstance(instance: Instance): Instance {
   return instance;
+}
+
+export function getNamespace(hostContext: HostContext): string {
+  if (__DEV__) {
+    const hostContextDev: HostContextDev = (hostContext: any);
+    return hostContextDev.namespace;
+  } else {
+    const hostContextProd: HostContextProd = (hostContext: any);
+    return hostContextProd;
+  }
 }
 
 export function prepareForCommit(containerInfo: Container): Object | null {
@@ -715,11 +726,18 @@ export function clearContainer(container: Container): void {
   if (enableHostSingletons) {
     const nodeType = container.nodeType;
     if (nodeType === DOCUMENT_NODE) {
+      clearRootResources(container);
       clearContainerSparingly(container);
     } else if (nodeType === ELEMENT_NODE) {
       switch (container.nodeName) {
+        case 'HEAD': {
+          // If we are clearing document.head as a container we are essentially clearing everything
+          // that was hoisted to the head and should forget the instances that will no longer be in the DOM
+          clearRootResources(container);
+          // fall through to clear child contents
+        }
+        // eslint-disable-next-line-no-fallthrough
         case 'HTML':
-        case 'HEAD':
         case 'BODY':
           clearContainerSparingly(container);
           return;
@@ -910,6 +928,19 @@ function getNextHydratable(node) {
       if (nodeType === ELEMENT_NODE) {
         const element: Element = (node: any);
         switch (element.tagName) {
+          // This is subtle. in SVG scope the title tag is case sensitive. we don't want to skip
+          // titles in svg but we do want to skip them outside of svg. there is an edge case where
+          // you could do `React.createElement('TITLE', ...)` inside an svg scope but the SSR serializer
+          // will still emit lowercase. Practically speaking the only time the DOM will have a non-uppercased
+          // title tagName is if it is inside an svg.
+          // Other Resource types like META, BASE, LINK, and SCRIPT should be treated as resources even inside
+          // svg scope because they are invalid otherwise. We still don't need to handle the lowercase variant
+          // because if they are present in the DOM already they would have been hoisted outside the SVG scope
+          // as Resources. So while it would be correct to skip a <link> inside <svg> and this algorithm won't
+          // skip that link because the tagName will not be uppercased it functionally is irrelevant. If one
+          // tries to render incompatible types such as a non-resource stylesheet inside an svg the server will
+          // emit that invalid html and hydration will fail. In Dev this will present warnings guiding the
+          // developer on how to fix.
           case 'TITLE':
           case 'META':
           case 'BASE':
