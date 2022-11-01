@@ -54,9 +54,9 @@ function escapeUserProvidedKey(text: string): string {
 }
 
 /**
- * Generate a key string that identifies a element within a set.
+ * Generate a key string that identifies an element within a set.
  *
- * @param {*} element A element that could contain a manual key.
+ * @param {*} element An element that could contain a manual key.
  * @param {number} index Index that is used if a manual key is not provided.
  * @return {string}
  */
