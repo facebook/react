@@ -235,9 +235,8 @@ if (__DEV__) {
     }
     if (tag === '#document' || tag === 'html') {
       AncestorInfoDev.containerTagInScope = null;
-    } else {
-      AncestorInfoDev.containerTagInScope =
-        AncestorInfoDev.containerTagInScope || info;
+    } else if (!AncestorInfoDev.containerTagInScope) {
+      AncestorInfoDev.containerTagInScope = info;
     }
 
     return AncestorInfoDev;
