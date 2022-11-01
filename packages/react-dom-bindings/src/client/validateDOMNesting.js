@@ -233,8 +233,11 @@ if (__DEV__) {
     if (tag === 'dd' || tag === 'dt') {
       AncestorInfoDev.dlItemTagAutoclosing = info;
     }
-    if (tag !== '#document' && tag !== 'html') {
-      AncestorInfoDev.containerTagInScope = info;
+    if (tag === '#document' || tag === 'html') {
+      AncestorInfoDev.containerTagInScope = null;
+    } else {
+      AncestorInfoDev.containerTagInScope =
+        AncestorInfoDev.containerTagInScope || info;
     }
 
     return AncestorInfoDev;
