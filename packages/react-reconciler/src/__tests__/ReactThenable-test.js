@@ -644,6 +644,37 @@ describe('ReactThenable', () => {
   });
 
   // @gate enableUseHook
+  test('while suspended, hooks cannot be called (i.e. current dispatcher is unset correctly)', async () => {
+    function App() {
+      return <Text text={use(getAsyncText('Will never resolve'))} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<Suspense fallback={<Text text="Loading..." />} />);
+    });
+
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <App />
+          </Suspense>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [Will never resolve]',
+    ]);
+
+    // Calling a hook should error because we're oustide of a component.
+    expect(useState).toThrow(
+      'Invalid hook call. Hooks can only be called inside of the body of a ' +
+        'function component.',
+    );
+  });
+
+  // @gate enableUseHook
   test('unwraps thenable that fulfills synchronously without suspending', async () => {
     function App() {
       const thenable = {

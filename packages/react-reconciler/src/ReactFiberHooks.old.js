@@ -732,10 +732,19 @@ export function bailoutHooks(
 }
 
 export function resetHooksAfterThrow(): void {
+  // This is called immediaetly after a throw. It shouldn't reset the entire
+  // module state, because the work loop might decide to replay the component
+  // again without rewinding.
+  //
+  // It should only reset things like the current dispatcher, to prevent hooks
+  // from being called outside of a component.
+
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
+}
 
+export function resetHooksOnUnwind(): void {
   if (didScheduleRenderPhaseUpdate) {
     // There were render phase updates. These are only valid for this render
     // phase, which we are now aborting. Remove the updates from the queues so
