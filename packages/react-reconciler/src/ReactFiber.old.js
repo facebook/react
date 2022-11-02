@@ -108,6 +108,7 @@ import {
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent.old';
 import {detachOffscreenInstance} from './ReactFiberCommitWork.old';
+import {getHostContext} from './ReactFiberHostContext.old';
 
 export type {Fiber};
 
@@ -503,13 +504,15 @@ export function createFiberFromTypeAndProps(
       enableHostSingletons &&
       supportsSingletons
     ) {
-      fiberTag = isHostResourceType(type, pendingProps)
+      const hostContext = getHostContext();
+      fiberTag = isHostResourceType(type, pendingProps, hostContext)
         ? HostResource
         : isHostSingletonType(type)
         ? HostSingleton
         : HostComponent;
     } else if (enableFloat && supportsResources) {
-      fiberTag = isHostResourceType(type, pendingProps)
+      const hostContext = getHostContext();
+      fiberTag = isHostResourceType(type, pendingProps, hostContext)
         ? HostResource
         : HostComponent;
     } else if (enableHostSingletons && supportsSingletons) {
