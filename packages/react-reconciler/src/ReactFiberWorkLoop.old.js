@@ -2202,24 +2202,29 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             break;
           }
           case SuspendedOnData: {
-            const didResolve =
-              workInProgressSuspendedThenableState !== null &&
-              isThenableStateResolved(workInProgressSuspendedThenableState);
-            if (didResolve) {
-              workInProgressSuspendedReason = NotSuspended;
-              workInProgressThrownValue = null;
-              replaySuspendedUnitOfWork(unitOfWork, thrownValue);
-            } else {
-              // The work loop is suspended on data. We should wait for it to
-              // resolve before continuing to render.
-              const thenable: Thenable<mixed> = (workInProgressThrownValue: any);
-              const onResolution = () => {
-                ensureRootIsScheduled(root, now());
-              };
-              thenable.then(onResolution, onResolution);
-              break outer;
+            if (workInProgressSuspendedThenableState !== null) {
+              const thenableState = workInProgressSuspendedThenableState;
+              if (isThenableStateResolved(thenableState)) {
+                // The data resolved. Try rendering the component again.
+                workInProgressSuspendedReason = NotSuspended;
+                workInProgressThrownValue = null;
+                replaySuspendedUnitOfWork(
+                  unitOfWork,
+                  thrownValue,
+                  thenableState,
+                );
+                break;
+              }
             }
-            break;
+
+            // The work loop is suspended on data. We should wait for it to
+            // resolve before continuing to render.
+            const thenable: Thenable<mixed> = (workInProgressThrownValue: any);
+            const onResolution = () => {
+              ensureRootIsScheduled(root, now());
+            };
+            thenable.then(onResolution, onResolution);
+            break outer;
           }
           case SuspendedOnImmediate: {
             // If this fiber just suspended, it's possible the data is already
@@ -2237,17 +2242,25 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             break outer;
           }
           default: {
+            if (workInProgressSuspendedThenableState !== null) {
+              const thenableState = workInProgressSuspendedThenableState;
+              if (isThenableStateResolved(thenableState)) {
+                // The data resolved. Try rendering the component again.
+                workInProgressSuspendedReason = NotSuspended;
+                workInProgressThrownValue = null;
+                replaySuspendedUnitOfWork(
+                  unitOfWork,
+                  thrownValue,
+                  thenableState,
+                );
+                break;
+              }
+            }
+
+            // Otherwise, unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            const didResolve =
-              workInProgressSuspendedThenableState !== null &&
-              isThenableStateResolved(workInProgressSuspendedThenableState);
-            if (didResolve) {
-              replaySuspendedUnitOfWork(unitOfWork, thrownValue);
-            } else {
-              unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
-            }
-            // Continue with the normal work loop.
+            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
             break;
           }
         }
@@ -2335,6 +2348,7 @@ function performUnitOfWork(unitOfWork: Fiber): void {
 function replaySuspendedUnitOfWork(
   unitOfWork: Fiber,
   thrownValue: mixed,
+  thenableState: ThenableState,
 ): void {
   // This is a fork of performUnitOfWork specifcally for replaying a fiber that
   // just suspended.
