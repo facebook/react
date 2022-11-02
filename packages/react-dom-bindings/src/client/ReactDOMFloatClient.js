@@ -28,14 +28,8 @@ import {
   getResourcesFromRoot,
   markNodeAsResource,
 } from './ReactDOMComponentTree';
-import {HTML_NAMESPACE} from '../shared/DOMNamespaces';
-import {
-  getCurrentRootHostContainer,
-  getHostContext,
-} from 'react-reconciler/src/ReactFiberHostContext';
-import {getResourceFormOnly} from './validateDOMNesting';
-import {getNamespace} from './ReactDOMHostConfig';
-import {SVG_NAMESPACE} from '../shared/DOMNamespaces';
+import {HTML_NAMESPACE, SVG_NAMESPACE} from '../shared/DOMNamespaces';
+import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
@@ -1424,124 +1418,6 @@ function insertResourceInstanceBefore(
         ' a head element but it was not found.',
     );
   }
-}
-
-export function isHostResourceType(type: string, props: Props): boolean {
-  let resourceFormOnly: boolean;
-  let namespace: string;
-  if (__DEV__) {
-    const hostContext = getHostContext();
-    resourceFormOnly = getResourceFormOnly(hostContext);
-    namespace = getNamespace(hostContext);
-  }
-  switch (type) {
-    case 'base':
-    case 'meta': {
-      return true;
-    }
-    case 'title': {
-      const hostContext = getHostContext();
-      return getNamespace(hostContext) !== SVG_NAMESPACE;
-    }
-    case 'link': {
-      const {onLoad, onError} = props;
-      if (onLoad || onError) {
-        if (__DEV__) {
-          if (resourceFormOnly) {
-            console.error(
-              'Cannot render a <link> with onLoad or onError listeners outside the main document.' +
-                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
-                ' somewhere in the <body>.',
-            );
-          } else if (namespace === SVG_NAMESPACE) {
-            console.error(
-              'Cannot render a <link> with onLoad or onError listeners as a descendent of <svg>.' +
-                ' Try removing onLoad={...} and onError={...} or moving it above the <svg> ancestor.',
-            );
-          }
-        }
-        return false;
-      }
-      switch (props.rel) {
-        case 'stylesheet': {
-          const {href, precedence, disabled} = props;
-          if (__DEV__) {
-            validateLinkPropsForStyleResource(props);
-            if (typeof precedence !== 'string') {
-              if (resourceFormOnly) {
-                console.error(
-                  'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence.' +
-                    ' Consider adding precedence="default" or moving it into the root <head> tag.',
-                );
-              } else if (namespace === SVG_NAMESPACE) {
-                console.error(
-                  'Cannot render a <link rel="stylesheet" /> as a descendent of an <svg> element without knowing its precedence.' +
-                    ' Consider adding precedence="default" or moving it above the <svg> ancestor.',
-                );
-              }
-            }
-          }
-          return (
-            typeof href === 'string' &&
-            typeof precedence === 'string' &&
-            disabled == null
-          );
-        }
-        default: {
-          const {rel, href} = props;
-          return typeof href === 'string' && typeof rel === 'string';
-        }
-      }
-    }
-    case 'script': {
-      // We don't validate because it is valid to use async with onLoad/onError unlike combining
-      // precedence with these for style resources
-      const {src, async, onLoad, onError} = props;
-      if (__DEV__) {
-        if (async !== true) {
-          if (resourceFormOnly) {
-            console.error(
-              'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
-                ' Try adding async="" or moving it into the root <head> tag.',
-            );
-          } else if (namespace === SVG_NAMESPACE) {
-            console.error(
-              'Cannot render a sync or defer <script> as a descendent of an <svg> element.' +
-                ' Try adding async="" or moving it above the ancestor <svg> element.',
-            );
-          }
-        } else if (onLoad || onError) {
-          if (resourceFormOnly) {
-            console.error(
-              'Cannot render a <script> with onLoad or onError listeners outside the main document.' +
-                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
-                ' somewhere in the <body>.',
-            );
-          } else if (namespace === SVG_NAMESPACE) {
-            console.error(
-              'Cannot render a <script> with onLoad or onError listeners as a descendent of an <svg> element.' +
-                ' Try removing onLoad={...} and onError={...} or moving it above the ancestor <svg> element.',
-            );
-          }
-        }
-      }
-      return (async: any) && typeof src === 'string' && !onLoad && !onError;
-    }
-    case 'noscript':
-    case 'template':
-    case 'style': {
-      if (__DEV__) {
-        if (resourceFormOnly) {
-          console.error(
-            'Cannot render <%s> outside the main document. Try moving it into the root <head> tag.',
-            type,
-          );
-        }
-      }
-      return false;
-    }
-  }
-  return false;
 }
 
 // When passing user input into querySelector(All) the embedded string must not alter
