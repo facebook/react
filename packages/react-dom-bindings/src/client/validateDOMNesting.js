@@ -180,16 +180,16 @@ if (__DEV__) {
   };
 
   updatedAncestorInfoDev = function(oldInfo: ?AncestorInfoDev, tag: string) {
-    const ancestorInfoDev = {...(oldInfo || emptyAncestorInfoDev)};
+    const ancestorInfo = {...(oldInfo || emptyAncestorInfoDev)};
     const info = {tag};
 
     if (inScopeTags.indexOf(tag) !== -1) {
-      ancestorInfoDev.aTagInScope = null;
-      ancestorInfoDev.buttonTagInScope = null;
-      ancestorInfoDev.nobrTagInScope = null;
+      ancestorInfo.aTagInScope = null;
+      ancestorInfo.buttonTagInScope = null;
+      ancestorInfo.nobrTagInScope = null;
     }
     if (buttonScopeTags.indexOf(tag) !== -1) {
-      ancestorInfoDev.pTagInButtonScope = null;
+      ancestorInfo.pTagInButtonScope = null;
     }
 
     // See rules for 'li', 'dd', 'dt' start tags in
@@ -200,40 +200,40 @@ if (__DEV__) {
       tag !== 'div' &&
       tag !== 'p'
     ) {
-      ancestorInfoDev.listItemTagAutoclosing = null;
-      ancestorInfoDev.dlItemTagAutoclosing = null;
+      ancestorInfo.listItemTagAutoclosing = null;
+      ancestorInfo.dlItemTagAutoclosing = null;
     }
 
-    ancestorInfoDev.current = info;
+    ancestorInfo.current = info;
 
     if (tag === 'form') {
-      ancestorInfoDev.formTag = info;
+      ancestorInfo.formTag = info;
     }
     if (tag === 'a') {
-      ancestorInfoDev.aTagInScope = info;
+      ancestorInfo.aTagInScope = info;
     }
     if (tag === 'button') {
-      ancestorInfoDev.buttonTagInScope = info;
+      ancestorInfo.buttonTagInScope = info;
     }
     if (tag === 'nobr') {
-      ancestorInfoDev.nobrTagInScope = info;
+      ancestorInfo.nobrTagInScope = info;
     }
     if (tag === 'p') {
-      ancestorInfoDev.pTagInButtonScope = info;
+      ancestorInfo.pTagInButtonScope = info;
     }
     if (tag === 'li') {
-      ancestorInfoDev.listItemTagAutoclosing = info;
+      ancestorInfo.listItemTagAutoclosing = info;
     }
     if (tag === 'dd' || tag === 'dt') {
-      ancestorInfoDev.dlItemTagAutoclosing = info;
+      ancestorInfo.dlItemTagAutoclosing = info;
     }
     if (tag === '#document' || tag === 'html') {
-      ancestorInfoDev.containerTagInScope = null;
-    } else if (!ancestorInfoDev.containerTagInScope) {
-      ancestorInfoDev.containerTagInScope = info;
+      ancestorInfo.containerTagInScope = null;
+    } else if (!ancestorInfo.containerTagInScope) {
+      ancestorInfo.containerTagInScope = info;
     }
 
-    return ancestorInfoDev;
+    return ancestorInfo;
   };
 
   /**
@@ -369,7 +369,7 @@ if (__DEV__) {
    */
   const findInvalidAncestorForTag = function(
     tag: string,
-    ancestorInfoDev: AncestorInfoDev,
+    ancestorInfo: AncestorInfoDev,
   ): ?Info {
     switch (tag) {
       case 'address':
@@ -407,28 +407,28 @@ if (__DEV__) {
       case 'h4':
       case 'h5':
       case 'h6':
-        return ancestorInfoDev.pTagInButtonScope;
+        return ancestorInfo.pTagInButtonScope;
 
       case 'form':
-        return ancestorInfoDev.formTag || ancestorInfoDev.pTagInButtonScope;
+        return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
 
       case 'li':
-        return ancestorInfoDev.listItemTagAutoclosing;
+        return ancestorInfo.listItemTagAutoclosing;
 
       case 'dd':
       case 'dt':
-        return ancestorInfoDev.dlItemTagAutoclosing;
+        return ancestorInfo.dlItemTagAutoclosing;
 
       case 'button':
-        return ancestorInfoDev.buttonTagInScope;
+        return ancestorInfo.buttonTagInScope;
 
       case 'a':
         // Spec says something about storing a list of markers, but it sounds
         // equivalent to this check.
-        return ancestorInfoDev.aTagInScope;
+        return ancestorInfo.aTagInScope;
 
       case 'nobr':
-        return ancestorInfoDev.nobrTagInScope;
+        return ancestorInfo.nobrTagInScope;
     }
 
     return null;
@@ -439,10 +439,10 @@ if (__DEV__) {
   validateDOMNesting = function(
     childTag: ?string,
     childText: ?string,
-    ancestorInfoDev: AncestorInfoDev,
+    ancestorInfo: AncestorInfoDev,
   ) {
-    ancestorInfoDev = ancestorInfoDev || emptyAncestorInfoDev;
-    const parentInfo = ancestorInfoDev.current;
+    ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
+    const parentInfo = ancestorInfo.current;
     const parentTag = parentInfo && parentInfo.tag;
 
     if (childText != null) {
@@ -464,7 +464,7 @@ if (__DEV__) {
       : parentInfo;
     const invalidAncestor = invalidParent
       ? null
-      : findInvalidAncestorForTag(childTag, ancestorInfoDev);
+      : findInvalidAncestorForTag(childTag, ancestorInfo);
     const invalidParentOrAncestor = invalidParent || invalidAncestor;
     if (!invalidParentOrAncestor) {
       return;
