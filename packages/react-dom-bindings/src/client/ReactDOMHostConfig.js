@@ -16,6 +16,7 @@ import type {
   ObserveVisibleRectsCallback,
 } from 'react-reconciler/src/ReactTestSelectors';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
+import type {AncestorInfoDev} from './validateDOMNesting';
 
 import {
   precacheFiberNode,
@@ -47,13 +48,13 @@ import {
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
-import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
+import {validateDOMNesting, updatedAncestorInfoDev} from './validateDOMNesting';
 import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
   getEventPriority,
 } from '../events/ReactDOMEventListener';
-import {getChildNamespace} from '../shared/DOMNamespaces';
+import {getChildNamespace, SVG_NAMESPACE} from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -88,8 +89,9 @@ import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   prepareToRenderResources,
   cleanupAfterRenderResources,
-  isHostResourceType,
+  clearRootResources,
 } from './ReactDOMFloatClient';
+import {validateLinkPropsForStyleResource} from '../shared/ReactDOMResourceValidation';
 
 export type Type = string;
 export type Props = {
@@ -105,6 +107,9 @@ export type Props = {
   right?: null | number,
   top?: null | number,
   ...
+};
+type RawProps = {
+  [string]: mixed,
 };
 export type EventTargetChildElement = {
   type: string,
@@ -135,8 +140,7 @@ export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
-  ancestorInfo: mixed,
-  ...
+  ancestorInfo: AncestorInfoDev,
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
@@ -192,7 +196,7 @@ export function getRootHostContext(
   }
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
-    const ancestorInfo = updatedAncestorInfo(null, validatedTag);
+    const ancestorInfo = updatedAncestorInfoDev(null, validatedTag);
     return {namespace, ancestorInfo};
   }
   return namespace;
@@ -205,7 +209,7 @@ export function getChildHostContext(
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
     const namespace = getChildNamespace(parentHostContextDev.namespace, type);
-    const ancestorInfo = updatedAncestorInfo(
+    const ancestorInfo = updatedAncestorInfoDev(
       parentHostContextDev.ancestorInfo,
       type,
     );
@@ -276,7 +280,7 @@ export function createInstance(
       typeof props.children === 'number'
     ) {
       const string = '' + props.children;
-      const ownAncestorInfo = updatedAncestorInfo(
+      const ownAncestorInfo = updatedAncestorInfoDev(
         hostContextDev.ancestorInfo,
         type,
       );
@@ -339,7 +343,7 @@ export function prepareUpdate(
         typeof newProps.children === 'number')
     ) {
       const string = '' + newProps.children;
-      const ownAncestorInfo = updatedAncestorInfo(
+      const ownAncestorInfo = updatedAncestorInfoDev(
         hostContextDev.ancestorInfo,
         type,
       );
@@ -715,11 +719,18 @@ export function clearContainer(container: Container): void {
   if (enableHostSingletons) {
     const nodeType = container.nodeType;
     if (nodeType === DOCUMENT_NODE) {
+      clearRootResources(container);
       clearContainerSparingly(container);
     } else if (nodeType === ELEMENT_NODE) {
       switch (container.nodeName) {
+        case 'HEAD': {
+          // If we are clearing document.head as a container we are essentially clearing everything
+          // that was hoisted to the head and should forget the instances that will no longer be in the DOM
+          clearRootResources(container);
+          // fall through to clear child contents
+        }
+        // eslint-disable-next-line-no-fallthrough
         case 'HTML':
-        case 'HEAD':
         case 'BODY':
           clearContainerSparingly(container);
           return;
@@ -910,6 +921,19 @@ function getNextHydratable(node) {
       if (nodeType === ELEMENT_NODE) {
         const element: Element = (node: any);
         switch (element.tagName) {
+          // This is subtle. in SVG scope the title tag is case sensitive. we don't want to skip
+          // titles in svg but we do want to skip them outside of svg. there is an edge case where
+          // you could do `React.createElement('TITLE', ...)` inside an svg scope but the SSR serializer
+          // will still emit lowercase. Practically speaking the only time the DOM will have a non-uppercased
+          // title tagName is if it is inside an svg.
+          // Other Resource types like META, BASE, LINK, and SCRIPT should be treated as resources even inside
+          // svg scope because they are invalid otherwise. We still don't need to handle the lowercase variant
+          // because if they are present in the DOM already they would have been hoisted outside the SVG scope
+          // as Resources. So while it would be correct to skip a <link> inside <svg> and this algorithm won't
+          // skip that link because the tagName will not be uppercased it functionally is irrelevant. If one
+          // tries to render incompatible types such as a non-resource stylesheet inside an svg the server will
+          // emit that invalid html and hydration will fail. In Dev this will present warnings guiding the
+          // developer on how to fix.
           case 'TITLE':
           case 'META':
           case 'BASE':
@@ -1542,7 +1566,131 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
 
 export const supportsResources = true;
 
-export {isHostResourceType};
+export function isHostResourceType(
+  type: string,
+  props: RawProps,
+  hostContext: HostContext,
+): boolean {
+  let outsideHostContainerContext: boolean;
+  let namespace: string;
+  if (__DEV__) {
+    const hostContextDev: HostContextDev = (hostContext: any);
+    // We can only render resources when we are not within the host container context
+    outsideHostContainerContext = !hostContextDev.ancestorInfo
+      .containerTagInScope;
+    namespace = hostContextDev.namespace;
+  } else {
+    const hostContextProd: HostContextProd = (hostContext: any);
+    namespace = hostContextProd;
+  }
+  switch (type) {
+    case 'base':
+    case 'meta': {
+      return true;
+    }
+    case 'title': {
+      return namespace !== SVG_NAMESPACE;
+    }
+    case 'link': {
+      const {onLoad, onError} = props;
+      if (onLoad || onError) {
+        if (__DEV__) {
+          if (outsideHostContainerContext) {
+            console.error(
+              'Cannot render a <link> with onLoad or onError listeners outside the main document.' +
+                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
+                ' somewhere in the <body>.',
+            );
+          } else if (namespace === SVG_NAMESPACE) {
+            console.error(
+              'Cannot render a <link> with onLoad or onError listeners as a descendent of <svg>.' +
+                ' Try removing onLoad={...} and onError={...} or moving it above the <svg> ancestor.',
+            );
+          }
+        }
+        return false;
+      }
+      switch (props.rel) {
+        case 'stylesheet': {
+          const {href, precedence, disabled} = props;
+          if (__DEV__) {
+            validateLinkPropsForStyleResource(props);
+            if (typeof precedence !== 'string') {
+              if (outsideHostContainerContext) {
+                console.error(
+                  'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence.' +
+                    ' Consider adding precedence="default" or moving it into the root <head> tag.',
+                );
+              } else if (namespace === SVG_NAMESPACE) {
+                console.error(
+                  'Cannot render a <link rel="stylesheet" /> as a descendent of an <svg> element without knowing its precedence.' +
+                    ' Consider adding precedence="default" or moving it above the <svg> ancestor.',
+                );
+              }
+            }
+          }
+          return (
+            typeof href === 'string' &&
+            typeof precedence === 'string' &&
+            disabled == null
+          );
+        }
+        default: {
+          const {rel, href} = props;
+          return typeof href === 'string' && typeof rel === 'string';
+        }
+      }
+    }
+    case 'script': {
+      // We don't validate because it is valid to use async with onLoad/onError unlike combining
+      // precedence with these for style resources
+      const {src, async, onLoad, onError} = props;
+      if (__DEV__) {
+        if (async !== true) {
+          if (outsideHostContainerContext) {
+            console.error(
+              'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
+                ' Try adding async="" or moving it into the root <head> tag.',
+            );
+          } else if (namespace === SVG_NAMESPACE) {
+            console.error(
+              'Cannot render a sync or defer <script> as a descendent of an <svg> element.' +
+                ' Try adding async="" or moving it above the ancestor <svg> element.',
+            );
+          }
+        } else if (onLoad || onError) {
+          if (outsideHostContainerContext) {
+            console.error(
+              'Cannot render a <script> with onLoad or onError listeners outside the main document.' +
+                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
+                ' somewhere in the <body>.',
+            );
+          } else if (namespace === SVG_NAMESPACE) {
+            console.error(
+              'Cannot render a <script> with onLoad or onError listeners as a descendent of an <svg> element.' +
+                ' Try removing onLoad={...} and onError={...} or moving it above the ancestor <svg> element.',
+            );
+          }
+        }
+      }
+      return (async: any) && typeof src === 'string' && !onLoad && !onError;
+    }
+    case 'noscript':
+    case 'template':
+    case 'style': {
+      if (__DEV__) {
+        if (outsideHostContainerContext) {
+          console.error(
+            'Cannot render <%s> outside the main document. Try moving it into the root <head> tag.',
+            type,
+          );
+        }
+      }
+      return false;
+    }
+  }
+  return false;
+}
 
 export function prepareRendererToRender(rootContainer: Container) {
   if (enableFloat) {

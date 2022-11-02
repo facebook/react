@@ -7,6 +7,7 @@ let act;
 let use;
 let Suspense;
 let startTransition;
+let pendingTextRequests;
 
 describe('ReactThenable', () => {
   beforeEach(() => {
@@ -19,11 +20,37 @@ describe('ReactThenable', () => {
     use = React.use;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
+
+    pendingTextRequests = new Map();
   });
 
-  function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
-    return props.text;
+  function resolveTextRequests(text) {
+    const requests = pendingTextRequests.get(text);
+    if (requests !== undefined) {
+      pendingTextRequests.delete(text);
+      requests.forEach(resolve => resolve(text));
+    }
+  }
+
+  function getAsyncText(text) {
+    // getAsyncText is completely uncached — it performs a new async operation
+    // every time it's called. During a transition, React should be able to
+    // unwrap it anyway.
+    Scheduler.unstable_yieldValue(`Async text requested [${text}]`);
+    return new Promise(resolve => {
+      const requests = pendingTextRequests.get(text);
+      if (requests !== undefined) {
+        requests.push(resolve);
+        pendingTextRequests.set(text, requests);
+      } else {
+        pendingTextRequests.set(text, [resolve]);
+      }
+    });
+  }
+
+  function Text({text}) {
+    Scheduler.unstable_yieldValue(text);
+    return text;
   }
 
   // This behavior was intentionally disabled to derisk the rollout of `use`.
@@ -32,15 +59,15 @@ describe('ReactThenable', () => {
   // to `use`, so the extra code probably isn't worth it.
   // @gate TODO
   test('if suspended fiber is pinged in a microtask, retry immediately without unwinding the stack', async () => {
-    let resolved = false;
+    let fulfilled = false;
     function Async() {
-      if (resolved) {
+      if (fulfilled) {
         return <Text text="Async" />;
       }
       Scheduler.unstable_yieldValue('Suspend!');
       throw Promise.resolve().then(() => {
         Scheduler.unstable_yieldValue('Resolve in microtask');
-        resolved = true;
+        fulfilled = true;
       });
     }
 
@@ -71,15 +98,15 @@ describe('ReactThenable', () => {
   });
 
   test('if suspended fiber is pinged in a microtask, it does not block a transition from completing', async () => {
-    let resolved = false;
+    let fulfilled = false;
     function Async() {
-      if (resolved) {
+      if (fulfilled) {
         return <Text text="Async" />;
       }
       Scheduler.unstable_yieldValue('Suspend!');
       throw Promise.resolve().then(() => {
         Scheduler.unstable_yieldValue('Resolve in microtask');
-        resolved = true;
+        fulfilled = true;
       });
     }
 
@@ -101,13 +128,13 @@ describe('ReactThenable', () => {
     expect(root).toMatchRenderedOutput('Async');
   });
 
-  test('does not infinite loop if already resolved thenable is thrown', async () => {
-    // An already resolved promise should never be thrown. Since it already
-    // resolved, we shouldn't bother trying to render again — doing so would
+  test('does not infinite loop if already fulfilled thenable is thrown', async () => {
+    // An already fulfilled promise should never be thrown. Since it already
+    // fulfilled, we shouldn't bother trying to render again — doing so would
     // likely lead to an infinite loop. This scenario should only happen if a
     // userspace Suspense library makes an implementation mistake.
 
-    // Create an already resolved thenable
+    // Create an already fulfilled thenable
     const thenable = {
       then(ping) {},
       status: 'fulfilled',
@@ -120,7 +147,7 @@ describe('ReactThenable', () => {
         throw new Error('Infinite loop detected');
       }
       Scheduler.unstable_yieldValue('Suspend!');
-      // This thenable should never be thrown because it already resolved.
+      // This thenable should never be thrown because it already fulfilled.
       // But if it is thrown, React should handle it gracefully.
       throw thenable;
     }
@@ -365,7 +392,7 @@ describe('ReactThenable', () => {
     expect(Scheduler).toHaveYielded([
       // First attempt. The uncached promise suspends.
       'Suspend! [Async]',
-      // Because the promise already resolved, we're able to unwrap the value
+      // Because the promise already fulfilled, we're able to unwrap the value
       // immediately in a microtask.
       //
       // Then we proceed to the rest of the component, which throws an error.
@@ -496,5 +523,121 @@ describe('ReactThenable', () => {
           'triggered by `use`, wrap your component in a error boundary.',
       );
     }
+  });
+
+  // @gate enableUseHook
+  test('during a transition, can unwrap async operations even if nothing is cached', async () => {
+    function App() {
+      return <Text text={use(getAsyncText('Async'))} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Text text="(empty)" />
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['(empty)']);
+    expect(root).toMatchRenderedOutput('(empty)');
+
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <App />
+          </Suspense>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [Async]']);
+    expect(root).toMatchRenderedOutput('(empty)');
+
+    await act(async () => {
+      resolveTextRequests('Async');
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [Async]', 'Async']);
+    expect(root).toMatchRenderedOutput('Async');
+  });
+
+  // @gate enableUseHook
+  test("does not prevent a Suspense fallback from showing if it's a new boundary, even during a transition", async () => {
+    function App() {
+      return <Text text={use(getAsyncText('Async'))} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <App />
+          </Suspense>,
+        );
+      });
+    });
+    // Even though the initial render was a transition, it shows a fallback.
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [Async]',
+      'Loading...',
+    ]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Resolve the original data
+    await act(async () => {
+      resolveTextRequests('Async');
+    });
+    // During the retry, a fresh request is initiated. Now we must wait for this
+    // one to finish.
+    // TODO: This is awkward. Intuitively, you might expect for `act` to wait
+    // until the new request has finished loading. But if it's mock IO, as in
+    // this test, how would the developer be able to imperatively flush it if it
+    // wasn't initiated until the current `act` call? Can't think of a better
+    // strategy at the moment.
+    expect(Scheduler).toHaveYielded(['Async text requested [Async]']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Flush the second request.
+    await act(async () => {
+      resolveTextRequests('Async');
+    });
+    // This time it finishes because it was during a retry.
+    expect(Scheduler).toHaveYielded(['Async text requested [Async]', 'Async']);
+    expect(root).toMatchRenderedOutput('Async');
+  });
+
+  // @gate enableUseHook
+  test('when waiting for data to resolve, a fresh update will trigger a restart', async () => {
+    function App() {
+      return <Text text={use(getAsyncText('Will never resolve'))} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<Suspense fallback={<Text text="Loading..." />} />);
+    });
+
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <App />
+          </Suspense>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [Will never resolve]',
+    ]);
+
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Text text="Something different" />
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Something different']);
   });
 });
