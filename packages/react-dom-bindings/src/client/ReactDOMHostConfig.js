@@ -16,7 +16,7 @@ import type {
   ObserveVisibleRectsCallback,
 } from 'react-reconciler/src/ReactTestSelectors';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
-import type {AncestorInfoDevType} from './validateDOMNesting';
+import type {AncestorInfoDev} from './validateDOMNesting';
 
 import {
   precacheFiberNode,
@@ -140,7 +140,7 @@ export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
-  ancestorInfo: AncestorInfoDevType,
+  ancestorInfo: AncestorInfoDev,
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;

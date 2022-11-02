@@ -7,17 +7,14 @@
  * @flow
  */
 
-type ValidateDOMNesting = (?string, ?string, AncestorInfoDevType) => void;
+type ValidateDOMNesting = (?string, ?string, AncestorInfoDev) => void;
 let validateDOMNesting: ValidateDOMNesting = (() => {}: any);
 
-type UpdatedAncestorInfoDev = (
-  ?AncestorInfoDevType,
-  string,
-) => AncestorInfoDevType;
+type UpdatedAncestorInfoDev = (?AncestorInfoDev, string) => AncestorInfoDev;
 let updatedAncestorInfoDev: UpdatedAncestorInfoDev = (() => {}: any);
 
 type Info = {tag: string};
-export type AncestorInfoDevType = {
+export type AncestorInfoDev = {
   current: ?Info,
 
   formTag: ?Info,
@@ -167,7 +164,7 @@ if (__DEV__) {
     'rt',
   ];
 
-  const emptyAncestorInfoDev: AncestorInfoDevType = {
+  const emptyAncestorInfoDev: AncestorInfoDev = {
     current: null,
 
     formTag: null,
@@ -182,20 +179,17 @@ if (__DEV__) {
     containerTagInScope: null,
   };
 
-  updatedAncestorInfoDev = function(
-    oldInfo: ?AncestorInfoDevType,
-    tag: string,
-  ) {
-    const AncestorInfoDev = {...(oldInfo || emptyAncestorInfoDev)};
+  updatedAncestorInfoDev = function(oldInfo: ?AncestorInfoDev, tag: string) {
+    const ancestorInfoDev = {...(oldInfo || emptyAncestorInfoDev)};
     const info = {tag};
 
     if (inScopeTags.indexOf(tag) !== -1) {
-      AncestorInfoDev.aTagInScope = null;
-      AncestorInfoDev.buttonTagInScope = null;
-      AncestorInfoDev.nobrTagInScope = null;
+      ancestorInfoDev.aTagInScope = null;
+      ancestorInfoDev.buttonTagInScope = null;
+      ancestorInfoDev.nobrTagInScope = null;
     }
     if (buttonScopeTags.indexOf(tag) !== -1) {
-      AncestorInfoDev.pTagInButtonScope = null;
+      ancestorInfoDev.pTagInButtonScope = null;
     }
 
     // See rules for 'li', 'dd', 'dt' start tags in
@@ -206,40 +200,40 @@ if (__DEV__) {
       tag !== 'div' &&
       tag !== 'p'
     ) {
-      AncestorInfoDev.listItemTagAutoclosing = null;
-      AncestorInfoDev.dlItemTagAutoclosing = null;
+      ancestorInfoDev.listItemTagAutoclosing = null;
+      ancestorInfoDev.dlItemTagAutoclosing = null;
     }
 
-    AncestorInfoDev.current = info;
+    ancestorInfoDev.current = info;
 
     if (tag === 'form') {
-      AncestorInfoDev.formTag = info;
+      ancestorInfoDev.formTag = info;
     }
     if (tag === 'a') {
-      AncestorInfoDev.aTagInScope = info;
+      ancestorInfoDev.aTagInScope = info;
     }
     if (tag === 'button') {
-      AncestorInfoDev.buttonTagInScope = info;
+      ancestorInfoDev.buttonTagInScope = info;
     }
     if (tag === 'nobr') {
-      AncestorInfoDev.nobrTagInScope = info;
+      ancestorInfoDev.nobrTagInScope = info;
     }
     if (tag === 'p') {
-      AncestorInfoDev.pTagInButtonScope = info;
+      ancestorInfoDev.pTagInButtonScope = info;
     }
     if (tag === 'li') {
-      AncestorInfoDev.listItemTagAutoclosing = info;
+      ancestorInfoDev.listItemTagAutoclosing = info;
     }
     if (tag === 'dd' || tag === 'dt') {
-      AncestorInfoDev.dlItemTagAutoclosing = info;
+      ancestorInfoDev.dlItemTagAutoclosing = info;
     }
     if (tag === '#document' || tag === 'html') {
-      AncestorInfoDev.containerTagInScope = null;
-    } else if (!AncestorInfoDev.containerTagInScope) {
-      AncestorInfoDev.containerTagInScope = info;
+      ancestorInfoDev.containerTagInScope = null;
+    } else if (!ancestorInfoDev.containerTagInScope) {
+      ancestorInfoDev.containerTagInScope = info;
     }
 
-    return AncestorInfoDev;
+    return ancestorInfoDev;
   };
 
   /**
@@ -375,7 +369,7 @@ if (__DEV__) {
    */
   const findInvalidAncestorForTag = function(
     tag: string,
-    AncestorInfoDev: AncestorInfoDevType,
+    ancestorInfoDev: AncestorInfoDev,
   ): ?Info {
     switch (tag) {
       case 'address':
@@ -413,28 +407,28 @@ if (__DEV__) {
       case 'h4':
       case 'h5':
       case 'h6':
-        return AncestorInfoDev.pTagInButtonScope;
+        return ancestorInfoDev.pTagInButtonScope;
 
       case 'form':
-        return AncestorInfoDev.formTag || AncestorInfoDev.pTagInButtonScope;
+        return ancestorInfoDev.formTag || ancestorInfoDev.pTagInButtonScope;
 
       case 'li':
-        return AncestorInfoDev.listItemTagAutoclosing;
+        return ancestorInfoDev.listItemTagAutoclosing;
 
       case 'dd':
       case 'dt':
-        return AncestorInfoDev.dlItemTagAutoclosing;
+        return ancestorInfoDev.dlItemTagAutoclosing;
 
       case 'button':
-        return AncestorInfoDev.buttonTagInScope;
+        return ancestorInfoDev.buttonTagInScope;
 
       case 'a':
         // Spec says something about storing a list of markers, but it sounds
         // equivalent to this check.
-        return AncestorInfoDev.aTagInScope;
+        return ancestorInfoDev.aTagInScope;
 
       case 'nobr':
-        return AncestorInfoDev.nobrTagInScope;
+        return ancestorInfoDev.nobrTagInScope;
     }
 
     return null;
@@ -445,10 +439,10 @@ if (__DEV__) {
   validateDOMNesting = function(
     childTag: ?string,
     childText: ?string,
-    AncestorInfoDev: AncestorInfoDevType,
+    ancestorInfoDev: AncestorInfoDev,
   ) {
-    AncestorInfoDev = AncestorInfoDev || emptyAncestorInfoDev;
-    const parentInfo = AncestorInfoDev.current;
+    ancestorInfoDev = ancestorInfoDev || emptyAncestorInfoDev;
+    const parentInfo = ancestorInfoDev.current;
     const parentTag = parentInfo && parentInfo.tag;
 
     if (childText != null) {
@@ -470,7 +464,7 @@ if (__DEV__) {
       : parentInfo;
     const invalidAncestor = invalidParent
       ? null
-      : findInvalidAncestorForTag(childTag, AncestorInfoDev);
+      : findInvalidAncestorForTag(childTag, ancestorInfoDev);
     const invalidParentOrAncestor = invalidParent || invalidAncestor;
     if (!invalidParentOrAncestor) {
       return;
