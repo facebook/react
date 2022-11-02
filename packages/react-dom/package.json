@@ -65,6 +65,7 @@
     "./profiling": "./profiling.js",
     "./test-utils": "./test-utils.js",
     "./unstable_testing": "./unstable_testing.js",
+    "./unstable_server-external-runtime": "./unstable_server-external-runtime.js",
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
