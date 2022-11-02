@@ -9,6 +9,7 @@
 
 import {copy} from 'clipboard-js';
 import * as React from 'react';
+import {ElementTypeHostComponent} from 'react-devtools-shared/src/types';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
@@ -33,7 +34,11 @@ export default function InspectedElementStateTree({
   inspectedElement,
   store,
 }: Props): React.Node {
-  const {state} = inspectedElement;
+  const {state, type} = inspectedElement;
+  // HostSingleton and HostResource may have state that we don't want to expose to users
+  if (type === ElementTypeHostComponent) {
+    return null;
+  }
 
   const entries = state != null ? Object.entries(state) : null;
   if (entries !== null) {

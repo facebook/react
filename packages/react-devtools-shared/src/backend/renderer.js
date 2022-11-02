@@ -224,6 +224,8 @@ export function getInternalReactConstants(
   // Currently the version in Git is 17.0.2 (but that version has not been/may not end up being released).
   if (gt(version, '17.0.1')) {
     ReactTypeOfWork = {
+      HostSingleton: 27, // In reality, 18.2+. But doesn't hurt to include it here
+      HostResource: 26, // Same as above
       CacheComponent: 24, // Experimental
       ClassComponent: 1,
       ContextConsumer: 9,
@@ -256,6 +258,8 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '17.0.0-alpha')) {
     ReactTypeOfWork = {
+      HostSingleton: -1, // Doesn't exist yet
+      HostResource: -1, // Doesn't exist yet
       CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
@@ -287,6 +291,8 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
+      HostSingleton: -1, // Doesn't exist yet
+      HostResource: -1, // Doesn't exist yet
       CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
@@ -318,6 +324,8 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
+      HostSingleton: -1, // Doesn't exist yet
+      HostResource: -1, // Doesn't exist yet
       CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 11,
@@ -349,6 +357,8 @@ export function getInternalReactConstants(
     };
   } else {
     ReactTypeOfWork = {
+      HostSingleton: -1, // Doesn't exist yet
+      HostResource: -1, // Doesn't exist yet
       CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 12,
@@ -415,6 +425,8 @@ export function getInternalReactConstants(
     SuspenseComponent,
     SuspenseListComponent,
     TracingMarkerComponent,
+    HostResource,
+    HostSingleton,
   } = ReactTypeOfWork;
 
   function resolveFiberType(type: any) {
@@ -466,6 +478,8 @@ export function getInternalReactConstants(
         }
         return null;
       case HostComponent:
+      case HostSingleton:
+      case HostResource:
         return type;
       case HostPortal:
       case HostText:
@@ -612,6 +626,8 @@ export function attach(
     SuspenseComponent,
     SuspenseListComponent,
     TracingMarkerComponent,
+    HostSingleton,
+    HostResource,
   } = ReactTypeOfWork;
   const {
     ImmediatePriority,
@@ -1044,6 +1060,8 @@ export function attach(
       case HostRoot:
         return ElementTypeRoot;
       case HostComponent:
+      case HostResource:
+      case HostSingleton:
         return ElementTypeHostComponent;
       case HostPortal:
       case HostText:

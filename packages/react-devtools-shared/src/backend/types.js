@@ -55,6 +55,8 @@ export type WorkTagMap = {
   SuspenseListComponent: WorkTag,
   TracingMarkerComponent: WorkTag,
   YieldComponent: WorkTag,
+  HostResource: WorkTag,
+  HostSingleton: WorkTag,
 };
 
 // TODO: If it's useful for the frontend to know which types of data an Element has
