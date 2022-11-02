@@ -119,8 +119,8 @@ function Profiler(_: {}) {
       <div className={styles.Profiler}>
         <div className={styles.LeftColumn}>
           <div className={styles.Toolbar}>
-            <RecordToggle disabled={!supportsProfiling} />
-            <ReloadAndProfileButton disabled={!supportsProfiling} />
+            <RecordToggle />
+            <ReloadAndProfileButton />
             <ClearProfilingDataButton />
             <ProfilingImportExportButtons />
             <div className={styles.VRule} />

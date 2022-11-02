@@ -18,6 +18,7 @@ import {
   initializeUsingCachedSettings,
   cacheConsolePatchSettings,
   type DevToolsSettingsManager,
+  cacheProfilingSettings,
 } from './cachedSettings';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
@@ -160,12 +161,29 @@ export function connectToDevTools(options: ?ConnectOptions) {
     );
 
     if (devToolsSettingsManager != null && bridge != null) {
-      bridge.addListener('updateConsolePatchSettings', consolePatchSettings =>
-        cacheConsolePatchSettings(
-          devToolsSettingsManager,
-          consolePatchSettings,
-        ),
+      const nonNullBridge = bridge;
+      nonNullBridge.addListener(
+        'updateConsolePatchSettings',
+        consolePatchSettings =>
+          cacheConsolePatchSettings(
+            devToolsSettingsManager,
+            consolePatchSettings,
+          ),
       );
+
+      const {reload} = devToolsSettingsManager;
+      if (reload) {
+        // Inform the DevTools front-end that this version of React Native supports
+        // reload and profile.
+        nonNullBridge.send('reloadAndProfileOverride');
+        nonNullBridge.addListener('reloadAndProfile', () => {
+          cacheProfilingSettings(devToolsSettingsManager, {
+            isReloadingAndProfiling: true,
+          });
+          reload();
+          nonNullBridge.send('profilingStatus', true);
+        });
+      }
     }
 
     // The renderer interface doesn't read saved component filters directly,

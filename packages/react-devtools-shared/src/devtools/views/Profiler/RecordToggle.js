@@ -12,20 +12,21 @@ import {useContext} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {ProfilerContext} from './ProfilerContext';
+import {StoreContext} from '../context';
 
 import styles from './RecordToggle.css';
 
-export type Props = {
-  disabled?: boolean,
-};
+type Props = {};
 
-export default function RecordToggle({disabled}: Props): React.Node {
+export default function RecordToggle(_: Props): React.Node {
   const {isProfiling, startProfiling, stopProfiling} = useContext(
     ProfilerContext,
   );
 
+  const {supportsProfiling} = useContext(StoreContext);
+
   let className = styles.InactiveRecordToggle;
-  if (disabled) {
+  if (!supportsProfiling) {
     className = styles.DisabledRecordToggle;
   } else if (isProfiling) {
     className = styles.ActiveRecordToggle;
@@ -34,7 +35,7 @@ export default function RecordToggle({disabled}: Props): React.Node {
   return (
     <Button
       className={className}
-      disabled={disabled}
+      disabled={!supportsProfiling}
       onClick={isProfiling ? stopProfiling : startProfiling}
       testName="ProfilerToggleButton"
       title={isProfiling ? 'Stop profiling' : 'Start profiling'}>
