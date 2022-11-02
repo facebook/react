@@ -2548,7 +2548,7 @@ export function writeCompletedBoundaryInstruction(
     writeStyleResourceDependencies(
       destination,
       boundaryResources,
-      scriptFormat,
+      scriptFormat ? JavascriptEmbedding : HTMLAttributeEmbedding,
     );
     if (!scriptFormat) {
       writeChunk(destination, completeBoundaryData3aEnd);
@@ -2982,24 +2982,32 @@ const arraySubsequentOpenBracket = stringToPrecomputedChunk(',[');
 const arrayInterstitial = stringToPrecomputedChunk(',');
 const arrayCloseBracket = stringToPrecomputedChunk(']');
 
+type EmbeddingContext = 0 | 1;
+const HTMLAttributeEmbedding: EmbeddingContext = 0;
+const JavascriptEmbedding: EmbeddingContext = 1;
+
 function writeStyleResourceObject(
   destination: Destination,
   str: string,
-  isScriptWriter: boolean,
+  context: EmbeddingContext,
 ) {
-  if (isScriptWriter) {
+  if (context === JavascriptEmbedding) {
     // write "script_escaped_string", since this is writing to a script tag
     // and will be evaluated as a string literal inside an array literal
     writeChunk(
       destination,
       stringToChunk(escapeJSObjectForInstructionScripts(str)),
     );
-  } else {
+  } else if (context === HTMLAttributeEmbedding) {
     // write &quot;JSON_escaped_string&quot; here, since this is writing
     // to an attribute string and will be parsed manually via JSON.parse
     writeChunk(
       destination,
       stringToChunk(escapeTextForBrowser(JSON.stringify(str))),
+    );
+  } else {
+    throw new Error(
+      'Unknown embedding context type when writing style resources. This is a bug in React.',
     );
   }
 }
@@ -3007,7 +3015,7 @@ function writeStyleResourceObject(
 function writeStyleResourceDependencies(
   destination: Destination,
   boundaryResources: BoundaryResources,
-  isScriptWriter: boolean,
+  context: EmbeddingContext,
 ): void {
   writeChunk(destination, arrayFirstOpenBracket);
 
@@ -3018,11 +3026,7 @@ function writeStyleResourceDependencies(
       // should be ready before content is shown on the client
     } else if (resource.flushed) {
       writeChunk(destination, nextArrayOpenBrackChunk);
-      writeStyleResourceDependencyHrefOnly(
-        destination,
-        resource.href,
-        isScriptWriter,
-      );
+      writeStyleResourceDependencyHrefOnly(destination, resource.href, context);
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
     } else {
@@ -3032,7 +3036,7 @@ function writeStyleResourceDependencies(
         resource.href,
         resource.precedence,
         resource.props,
-        isScriptWriter,
+        context,
       );
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
@@ -3047,7 +3051,7 @@ function writeStyleResourceDependencies(
 function writeStyleResourceDependencyHrefOnly(
   destination: Destination,
   href: string,
-  isScriptWriter: boolean,
+  context: EmbeddingContext,
 ) {
   // We should actually enforce this earlier when the resource is created but for
   // now we make sure we are actually dealing with a string here.
@@ -3055,7 +3059,7 @@ function writeStyleResourceDependencyHrefOnly(
     checkAttributeStringCoercion(href, 'href');
   }
   const coercedHref = '' + (href: any);
-  writeStyleResourceObject(destination, coercedHref, isScriptWriter);
+  writeStyleResourceObject(destination, coercedHref, context);
 }
 
 function writeStyleResourceDependency(
@@ -3063,14 +3067,14 @@ function writeStyleResourceDependency(
   href: string,
   precedence: string,
   props: Object,
-  isScriptWriter: boolean,
+  context: EmbeddingContext,
 ) {
   if (__DEV__) {
     checkAttributeStringCoercion(href, 'href');
   }
   const coercedHref = '' + (href: any);
   sanitizeURL(coercedHref);
-  writeStyleResourceObject(destination, coercedHref, isScriptWriter);
+  writeStyleResourceObject(destination, coercedHref, context);
 
   if (__DEV__) {
     checkAttributeStringCoercion(precedence, 'precedence');
@@ -3078,7 +3082,7 @@ function writeStyleResourceDependency(
   const coercedPrecedence = '' + (precedence: any);
   writeChunk(destination, arrayInterstitial);
 
-  writeStyleResourceObject(destination, coercedPrecedence, isScriptWriter);
+  writeStyleResourceObject(destination, coercedPrecedence, context);
 
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
@@ -3101,12 +3105,7 @@ function writeStyleResourceDependency(
           );
         // eslint-disable-next-line-no-fallthrough
         default:
-          writeStyleResourceAttribute(
-            destination,
-            propKey,
-            propValue,
-            isScriptWriter,
-          );
+          writeStyleResourceAttribute(destination, propKey, propValue, context);
           break;
       }
     }
@@ -3118,7 +3117,7 @@ function writeStyleResourceAttribute(
   destination: Destination,
   name: string,
   value: string | boolean | number | Function | Object, // not null or undefined
-  isScriptWriter: boolean,
+  context: EmbeddingContext,
 ): void {
   let attributeName = name.toLowerCase();
   let attributeValue;
@@ -3183,7 +3182,7 @@ function writeStyleResourceAttribute(
   }
   attributeValue = '' + (value: any);
   writeChunk(destination, arrayInterstitial);
-  writeStyleResourceObject(destination, attributeName, isScriptWriter);
+  writeStyleResourceObject(destination, attributeName, context);
   writeChunk(destination, arrayInterstitial);
-  writeStyleResourceObject(destination, attributeValue, isScriptWriter);
+  writeStyleResourceObject(destination, attributeValue, context);
 }
