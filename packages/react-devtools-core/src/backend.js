@@ -174,6 +174,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
       },
     );
 
+    console.log({devToolsSettingsManager, asdf: 'yaya2'});
     if (devToolsSettingsManager != null && bridge != null) {
       bridge.addListener('updateConsolePatchSettings', consolePatchSettings =>
         cacheConsolePatchSettings(

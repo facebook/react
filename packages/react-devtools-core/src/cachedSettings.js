@@ -18,13 +18,17 @@ import {castBool, castBrowserTheme} from 'react-devtools-shared/src/utils';
 // provided by React Native may not include all of this type's fields.
 export type DevToolsSettingsManager = {
   getConsolePatchSettings: ?() => string,
-  setConsolePatchSettings: ?(key: string) => void,
+  setConsolePatchSettings: ?(settings: string) => void,
+
+  getProfilingSettings: ?() => string,
+  setProfilingSettings: ?(settings: string) => void,
 };
 
 export function initializeUsingCachedSettings(
   devToolsSettingsManager: DevToolsSettingsManager,
 ) {
   initializeConsolePatchSettings(devToolsSettingsManager);
+  initializeProfilingSettings(devToolsSettingsManager);
 }
 
 function initializeConsolePatchSettings(
@@ -74,4 +78,30 @@ export function cacheConsolePatchSettings(
     return;
   }
   devToolsSettingsManager.setConsolePatchSettings(JSON.stringify(value));
+}
+
+function initializeProfilingSettings(
+  devToolsSettingsManager: DevToolsSettingsManager,
+): void {
+  if (devToolsSettingsManager.getProfilingSettings == null) {
+    return;
+  }
+  const profilingDataString = devToolsSettingsManager.getProfilingSettings();
+  const profilingData = parseProfilingData(profilingDataString);
+  if (profilingData.isProfiling) {
+    console.log('congrats you profiling');
+  } else {
+    console.log('no profile');
+  }
+}
+
+type ProfilingData = {
+  isProfiling: boolean,
+};
+
+function parseProfilingData(profilingDataString: string): ProfilingData {
+  const parsedValue = JSON.parse(profilingDataString);
+  return {
+    isProfiling: castBool(parsedValue.isProfiling) ?? false,
+  };
 }
