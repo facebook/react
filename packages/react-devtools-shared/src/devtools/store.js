@@ -170,12 +170,14 @@ export default class Store extends EventEmitter<{
   // Renderer ID is needed to support inspection fiber props, state, and hooks.
   _rootIDToRendererID: Map<number, number> = new Map();
 
-  // These options may be initially set by a confiugraiton option when constructing the Store.
+  // These options may be initially set by a configuration option when constructing the Store.
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
+
+  _supportsReloadAndProfileOverride: boolean = false; // React Native sets this option if it supports reload and profile
 
   // These options default to false but may be updated as roots are added and removed.
   _rootSupportsBasicProfiling: boolean = false;
@@ -255,6 +257,9 @@ export default class Store extends EventEmitter<{
       'unsupportedRendererVersion',
       this.onBridgeUnsupportedRendererVersion,
     );
+    bridge.addListener('reloadAndProfileOverride', () => {
+      this._supportsReloadAndProfileOverride = true;
+    });
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
 
@@ -448,7 +453,7 @@ export default class Store extends EventEmitter<{
   // This build of DevTools supports the legacy profiler.
   // This is a static flag, controled by the Store config.
   get supportsProfiling(): boolean {
-    return this._supportsProfiling;
+    return this._supportsProfiling || this._supportsReloadAndProfileOverride;
   }
 
   get supportsReloadAndProfile(): boolean {
@@ -456,9 +461,10 @@ export default class Store extends EventEmitter<{
     // And if so, can the backend use the localStorage API and sync XHR?
     // All of these are currently required for the reload-and-profile feature to work.
     return (
-      this._supportsReloadAndProfile &&
-      this._isBackendStorageAPISupported &&
-      this._isSynchronousXHRSupported
+      (this._supportsReloadAndProfile &&
+        this._isBackendStorageAPISupported &&
+        this._isSynchronousXHRSupported) ||
+      this._supportsReloadAndProfileOverride
     );
   }
 

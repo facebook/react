@@ -12,19 +12,30 @@ import {
   writeConsolePatchSettingsToWindow,
 } from 'react-devtools-shared/src/backend/console';
 import {castBool, castBrowserTheme} from 'react-devtools-shared/src/utils';
+import {sessionStorageSetItem} from 'react-devtools-shared/src/storage';
+import {
+  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
+  SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+} from 'react-devtools-shared/src/constants';
+import {initialProfileRef} from 'react-devtools-shared/src/backend/agent';
 
 // Note: all keys should be optional in this type, because users can use newer
 // versions of React DevTools with older versions of React Native, and the object
 // provided by React Native may not include all of this type's fields.
 export type DevToolsSettingsManager = {
   getConsolePatchSettings: ?() => string,
-  setConsolePatchSettings: ?(key: string) => void,
+  setConsolePatchSettings: ?(settings: string) => void,
+
+  getProfilingSettings: ?() => string,
+  setProfilingSettings: ?(settings: string) => void,
+  reload: ?() => void,
 };
 
 export function initializeUsingCachedSettings(
   devToolsSettingsManager: DevToolsSettingsManager,
 ) {
   initializeConsolePatchSettings(devToolsSettingsManager);
+  initializeProfilingSettings(devToolsSettingsManager);
 }
 
 function initializeConsolePatchSettings(
@@ -74,4 +85,50 @@ export function cacheConsolePatchSettings(
     return;
   }
   devToolsSettingsManager.setConsolePatchSettings(JSON.stringify(value));
+}
+
+type ProfilingSettings = {
+  isReloadingAndProfiling: boolean,
+};
+
+function initializeProfilingSettings(
+  devToolsSettingsManager: DevToolsSettingsManager,
+): void {
+  if (devToolsSettingsManager.getProfilingSettings == null) {
+    return;
+  }
+
+  const profilingDataString = devToolsSettingsManager.getProfilingSettings();
+  const profilingData = parseProfilingSettings(profilingDataString);
+
+  if (profilingData.isReloadingAndProfiling) {
+    // For whatever reason, sessionStorage changes are not synchronously picked up in Agent
+    initialProfileRef.shouldInitiallyProfile = true;
+    sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, true);
+    sessionStorageSetItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY, true);
+
+    cacheProfilingSettings(devToolsSettingsManager, {
+      isReloadingAndProfiling: false,
+    });
+  }
+}
+
+function parseProfilingSettings(
+  profilingDataString: string,
+): ProfilingSettings {
+  const parsedValue = JSON.parse(profilingDataString ?? '{}');
+  return {
+    isReloadingAndProfiling:
+      castBool(parsedValue.isReloadingAndProfiling) ?? false,
+  };
+}
+
+export function cacheProfilingSettings(
+  devToolsSettingsManager: DevToolsSettingsManager,
+  value: ProfilingSettings,
+): void {
+  if (devToolsSettingsManager.setProfilingSettings == null) {
+    return;
+  }
+  devToolsSettingsManager.setProfilingSettings(JSON.stringify(value));
 }

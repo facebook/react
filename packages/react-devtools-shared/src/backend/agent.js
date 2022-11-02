@@ -141,6 +141,10 @@ type PersistedSelection = {
   path: Array<PathFrame>,
 };
 
+export const initialProfileRef = {
+  shouldInitiallyProfile: false,
+};
+
 export default class Agent extends EventEmitter<{
   hideNativeHighlight: [],
   showNativeHighlight: [NativeType],
@@ -161,7 +165,10 @@ export default class Agent extends EventEmitter<{
     super();
 
     if (
-      sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+      sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) ===
+        'true' ||
+      // sessionStorage is not synchronous in React Native, so we must rely on initialProfileRef
+      initialProfileRef.shouldInitiallyProfile
     ) {
       this._recordChangeDescriptions =
         sessionStorageGetItem(
