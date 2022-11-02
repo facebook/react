@@ -203,6 +203,8 @@ function getFormat(bundleType) {
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
+    case BUN_DEV:
+    case BUN_PROD:
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
@@ -214,8 +216,6 @@ function getFormat(bundleType) {
     case RN_FB_PROFILING:
       return `cjs`;
     case NODE_ESM:
-    case BUN_DEV:
-    case BUN_PROD:
       return `es`;
     case BROWSER_SCRIPT:
       return `iife`;
@@ -235,9 +235,9 @@ function isProductionBundleType(bundleType) {
       return false;
     case UMD_PROD:
     case NODE_PROD:
+    case BUN_PROD:
     case UMD_PROFILING:
     case NODE_PROFILING:
-    case BUN_PROD:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
     case RN_OSS_PROD:
@@ -324,9 +324,7 @@ function getPlugins(
     bundleType === RN_FB_DEV ||
     bundleType === RN_FB_PROD ||
     bundleType === RN_FB_PROFILING;
-  const isBunBundle = bundleType === BUN_DEV || bundleType === BUN_PROD;
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
-  const skipClosureTranspilation = isBunBundle;
   return [
     // Shim any modules that need forking in this environment.
     useForks(forks),
@@ -374,7 +372,7 @@ function getPlugins(
     isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
     isProduction &&
-      !skipClosureTranspilation &&
+      // !skipClosureTranspilation &&
       closure({
         compilation_level: 'SIMPLE',
         language_in: 'ECMASCRIPT_2015',
@@ -557,7 +555,6 @@ async function createBundle(bundle, bundleType) {
       pureExternalModules,
     },
     external(id) {
-      console.log(`Path: `, id);
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
       if (!shouldBundleDependencies && isProvidedByDependency) {

@@ -53,7 +53,7 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
       return `build/node_modules/${packageName}/esm/${filename}`;
     case BUN_DEV:
     case BUN_PROD:
-      return `build/node_modules/${packageName}/esm/${filename}`;
+      return `build/node_modules/${packageName}/cjs/${filename}`;
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:

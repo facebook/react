@@ -275,8 +275,8 @@ const bundles = [
     bundleTypes: [BUN_DEV, BUN_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/src/server/ReactDOMFizzServerBun.js',
-    name: 'react-dom-server.bun',
-    // outputPath: 'react-dom-server.bun',
+    name: 'react-dom-server.bun', // 'node_modules/react/*.js',
+
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -975,7 +975,7 @@ function getOriginalFilename(bundle, bundleType) {
     case BUN_DEV:
       return `${name}.development.js`;
     case BUN_PROD:
-      return `${name}.production.js`;
+      return `${name}.production.min.js`;
     case UMD_DEV:
       return `${name}.development.js`;
     case UMD_PROD:

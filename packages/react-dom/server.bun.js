@@ -11,8 +11,22 @@
 import ReactVersion from 'shared/ReactVersion';
 export {ReactVersion as version};
 
+export function renderToString() {
+  return require('./src/server/ReactDOMLegacyServerBrowser').renderToString.apply(
+    this,
+    arguments,
+  );
+}
+
+export function renderToStaticMarkup() {
+  return require('./src/server/ReactDOMLegacyServerBrowser').renderToStaticMarkup.apply(
+    this,
+    arguments,
+  );
+}
+
 export function renderToReadableStream() {
-  return require('./src/server/ReactDOMFizzServerBrowser').renderToReadableStream.apply(
+  return require('./src/server/ReactDOMFizzServerBun').renderToReadableStream.apply(
     this,
     arguments,
   );
