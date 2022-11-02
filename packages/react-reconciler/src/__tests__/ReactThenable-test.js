@@ -640,4 +640,32 @@ describe('ReactThenable', () => {
     });
     expect(Scheduler).toHaveYielded(['Something different']);
   });
+
+  // @gate enableUseHook
+  test('unwraps thenable that fulfills synchronously without suspending', async () => {
+    function App() {
+      const thenable = {
+        then(resolve) {
+          // This thenable immediately resolves, synchronously, without waiting
+          // a microtask.
+          resolve('Hi');
+        },
+      };
+      try {
+        return <Text text={use(thenable)} />;
+      } catch {
+        throw new Error(
+          '`use` should not suspend because the thenable resolved synchronously.',
+        );
+      }
+    }
+    // Because the thenable resolves synchronously, we should be able to finish
+    // rendering synchronously, with no fallback.
+    const root = ReactNoop.createRoot();
+    ReactNoop.flushSync(() => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
+  });
 });
