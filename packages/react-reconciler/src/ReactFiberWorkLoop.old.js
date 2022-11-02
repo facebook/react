@@ -210,6 +210,7 @@ import {enqueueUpdate} from './ReactFiberClassUpdateQueue.old';
 import {resetContextDependencies} from './ReactFiberNewContext.old';
 import {
   resetHooksAfterThrow,
+  resetHooksOnUnwind,
   ContextOnlyDispatcher,
 } from './ReactFiberHooks.old';
 import {DefaultCacheDispatcher} from './ReactFiberCache.old';
@@ -1719,10 +1720,17 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   }
 
   if (workInProgress !== null) {
-    let interruptedWork =
-      workInProgressSuspendedReason === NotSuspended
-        ? workInProgress.return
-        : workInProgress;
+    let interruptedWork;
+    if (workInProgressSuspendedReason === NotSuspended) {
+      // Normal case. Work-in-progress hasn't started yet. Unwind all
+      // its parents.
+      interruptedWork = workInProgress.return;
+    } else {
+      // Work-in-progress is in suspended state. Reset the work loop and unwind
+      // both the suspended fiber and all its parents.
+      resetSuspendedWorkLoopOnUnwind();
+      interruptedWork = workInProgress;
+    }
     while (interruptedWork !== null) {
       const current = interruptedWork.alternate;
       unwindInterruptedWork(
@@ -1759,13 +1767,30 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   return rootWorkInProgress;
 }
 
-function handleThrow(root, thrownValue): void {
+function resetSuspendedWorkLoopOnUnwind() {
   // Reset module-level state that was set during the render phase.
   resetContextDependencies();
+  resetHooksOnUnwind();
+}
+
+function handleThrow(root, thrownValue): void {
+  // A component threw an exception. Usually this is because it suspended, but
+  // it also includes regular program errors.
+  //
+  // We're either going to unwind the stack to show a Suspense or error
+  // boundary, or we're going to replay the component again. Like after a
+  // promise resolves.
+  //
+  // Until we decide whether we're going to unwind or replay, we should preserve
+  // the current state of the work loop without resetting anything.
+  //
+  // If we do decide to unwind the stack, module-level variables will be reset
+  // in resetSuspendedWorkLoopOnUnwind.
+
+  // These should be reset immediately because they're only supposed to be set
+  // when React is executing user code.
   resetHooksAfterThrow();
   resetCurrentDebugFiberInDEV();
-  // TODO: I found and added this missing line while investigating a
-  // separate issue. Write a regression test using string refs.
   ReactCurrentOwner.current = null;
 
   if (thrownValue === SuspenseException) {
@@ -2317,6 +2342,7 @@ function replaySuspendedUnitOfWork(
   // Instead of unwinding the stack and potentially showing a fallback, unwind
   // only the last stack frame, reset the fiber, and try rendering it again.
   const current = unitOfWork.alternate;
+  resetSuspendedWorkLoopOnUnwind();
   unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
   unitOfWork = workInProgress = resetWorkInProgress(unitOfWork, renderLanes);
 
@@ -2355,6 +2381,7 @@ function unwindSuspendedUnitOfWork(unitOfWork: Fiber, thrownValue: mixed) {
   // Return to the normal work loop. This will unwind the stack, and potentially
   // result in showing a fallback.
   workInProgressSuspendedThenableState = null;
+  resetSuspendedWorkLoopOnUnwind();
 
   const returnFiber = unitOfWork.return;
   if (returnFiber === null || workInProgressRoot === null) {
@@ -3707,14 +3734,11 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         throw originalError;
       }
 
-      // Keep this code in sync with handleThrow; any changes here must have
-      // corresponding changes there.
-      resetContextDependencies();
-      resetHooksAfterThrow();
       // Don't reset current debug fiber, since we're about to work on the
       // same fiber again.
 
       // Unwind the failed stack frame
+      resetSuspendedWorkLoopOnUnwind();
       unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
 
       // Restore the original properties of the fiber.
