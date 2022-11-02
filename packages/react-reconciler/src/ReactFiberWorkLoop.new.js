@@ -2016,37 +2016,21 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
         workInProgressSuspendedReason !== NotSuspended &&
         workInProgress !== null
       ) {
-        // The work loop is suspended. We need to either unwind the stack or
-        // replay the suspended component.
+        // The work loop is suspended. During a synchronous render, we don't
+        // yield to the main thread. Immediately unwind the stack. This will
+        // trigger either a fallback or an error boundary.
+        // TODO: For discrete and "default" updates (anything that's not
+        // flushSync), we want to wait for the microtasks the flush before
+        // unwinding. Will probably implement this using renderRootConcurrent,
+        // or merge renderRootSync and renderRootConcurrent into the same
+        // function and fork the behavior some other way.
         const unitOfWork = workInProgress;
         const thrownValue = workInProgressThrownValue;
         workInProgressSuspendedReason = NotSuspended;
         workInProgressThrownValue = null;
+        unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
 
-        // TODO: This check is only here to account for thenables that
-        // synchronously resolve. Otherwise we would always unwind when
-        // rendering with renderRootSync. (In the future, discrete updates will
-        // use renderRootConcurrent instead.) We should account for
-        // synchronously resolved thenables before hitting this path.
-        switch (workInProgressSuspendedReason) {
-          case SuspendedOnError: {
-            // Unwind then continue with the normal work loop.
-            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
-            break;
-          }
-          default: {
-            const wasPinged =
-              workInProgressSuspendedThenableState !== null &&
-              isThenableStateResolved(workInProgressSuspendedThenableState);
-            if (wasPinged) {
-              replaySuspendedUnitOfWork(unitOfWork, thrownValue);
-            } else {
-              unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
-            }
-            // Continue with the normal work loop.
-            break;
-          }
-        }
+        // Continue with the normal work loop.
       }
       workLoopSync();
       break;
