@@ -1849,12 +1849,24 @@ function handleThrow(root, thrownValue): void {
 
 function shouldAttemptToSuspendUntilDataResolves() {
   // TODO: We should be able to move the
-  // renderDidSuspend/renderDidSuspendWithDelay logic into this function,
+  // renderDidSuspend/renderDidSuspendDelayIfPossible logic into this function,
   // instead of repeating it in the complete phase. Or something to that effect.
 
   if (includesOnlyRetries(workInProgressRootRenderLanes)) {
     // We can always wait during a retry.
     return true;
+  }
+
+  // Check if there are other pending updates that might possibly unblock this
+  // component from suspending. This mirrors the check in
+  // renderDidSuspendDelayIfPossible. We should attempt to unify them somehow.
+  if (
+    includesNonIdleWork(workInProgressRootSkippedLanes) ||
+    includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)
+  ) {
+    // Suspend normally. renderDidSuspendDelayIfPossible will handle
+    // interrupting the work loop.
+    return false;
   }
 
   // TODO: We should be able to remove the equivalent check in
