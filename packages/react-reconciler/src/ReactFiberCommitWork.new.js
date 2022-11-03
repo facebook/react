@@ -2869,7 +2869,6 @@ function commitMutationEffectsOnFiber(
 
       if (flags & Visibility) {
         const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
-        const offscreenBoundary: Fiber = finishedWork;
 
         // Track the current state on the Offscreen instance so we can
         // read it during an event
@@ -2882,14 +2881,15 @@ function commitMutationEffectsOnFiber(
         if (isHidden) {
           // Check if this is an update, and the tree was previously visible.
           if (current !== null && !wasHidden) {
-            if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
+            if ((finishedWork.mode & ConcurrentMode) !== NoMode) {
               // Disappear the layout effects of all the children
-              recursivelyTraverseDisappearLayoutEffects(offscreenBoundary);
+              recursivelyTraverseDisappearLayoutEffects(finishedWork);
             }
           }
         } else {
           if (wasHidden) {
             // TODO: Move re-appear call here for symmetry?
+            recursivelyTraverseReappearLayoutEffects(root, finishedWork);
           }
         }
 
@@ -2897,7 +2897,7 @@ function commitMutationEffectsOnFiber(
         if (supportsMutation && !isOffscreenManual(finishedWork)) {
           // TODO: This needs to run whenever there's an insertion or update
           // inside a hidden Offscreen tree.
-          hideOrUnhideAllChildren(offscreenBoundary, isHidden);
+          hideOrUnhideAllChildren(finishedWork, isHidden);
         }
       }
 

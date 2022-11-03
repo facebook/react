@@ -281,13 +281,21 @@ describe('ReactOffscreen', () => {
       componentWillUnmount() {
         Scheduler.unstable_yieldValue('componentWillUnmount');
       }
+
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('componentDidMount');
+      }
     }
+
+    let _setIsVisible;
+    let onlyFirst = false;
 
     function App() {
       const [isVisible, setIsVisible] = React.useState(true);
-
-      if (isVisible === true) {
+      _setIsVisible = setIsVisible;
+      if (isVisible === true && onlyFirst === false) {
         setIsVisible(false);
+        onlyFirst = true;
       }
 
       return (
@@ -304,6 +312,18 @@ describe('ReactOffscreen', () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['Child']);
+
+    await act(async () => {
+      _setIsVisible(true);
+    });
+
+    expect(Scheduler).toHaveYielded(['Child', 'componentDidMount']);
+
+    await act(async () => {
+      _setIsVisible(false);
+    });
+
+    expect(Scheduler).toHaveYielded(['Child', 'componentWillUnmount']);
   });
 
   // @gate enableOffscreen
