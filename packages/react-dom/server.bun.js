@@ -31,3 +31,17 @@ export function renderToReadableStream() {
     arguments,
   );
 }
+
+export function renderToNodeStream() {
+  throw new Error(
+    'ReactDOMServer.renderToNodeStream(): The Node Stream API is not available ' +
+      'in Bun. Use ReactDOMServer.renderToReadableStream() instead.',
+  );
+}
+
+export function renderToStaticNodeStream() {
+  throw new Error(
+    'ReactDOMServer.renderToStaticNodeStream(): The Node Stream API is not available ' +
+      'in Bun. Use ReactDOMServer.renderToReadableStream() instead.',
+  );
+}
