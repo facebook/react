@@ -2883,7 +2883,7 @@ function commitMutationEffectsOnFiber(
           const isAncestorOffscreenHidden = offscreenSubtreeIsHidden;
           // Only trigger disapper layout effects if:
           //   - This is an update, not first mount.
-          //   - This Offscreen was hidden before.
+          //   - This Offscreen was not hidden before.
           //   - No ancestor Offscreen is hidden.
           if (isUpdate && !wasHidden && !isAncestorOffscreenHidden) {
             if ((finishedWork.mode & ConcurrentMode) !== NoMode) {
