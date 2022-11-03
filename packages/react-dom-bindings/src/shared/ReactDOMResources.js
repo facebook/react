@@ -16,40 +16,30 @@ import {
   REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
 
-export function concatTextChildrenProd(children: ReactNodeList): string {
+export function concatTitleTextChildren(children: ReactNodeList): string {
+  const combined = concatTextChildren(children);
   if (__DEV__) {
-    throw new Error(
-      'concatTextChildrenProd should never be called when running in development mode. This is a bug in React.',
-    );
-  }
-  const combined = concatTextChildrenImpl(children);
-  invalidChild = null;
-  return combined;
-}
-
-export function concatTextChildrenDev(
-  children: ReactNodeList,
-  onInvalidChild: ReactNodeList => void,
-): string {
-  if (!__DEV__) {
-    throw new Error(
-      'concatTextChildrenDev should never be called when running in production mode. This is a bug in React.',
-    );
-  }
-  const combined = concatTextChildrenImpl(children);
-  if (invalidChild) {
-    onInvalidChild(invalidChild);
+    if (invalidChild) {
+      console.error(
+        'A title element was rendered with invalid children.' +
+          ' In browsers title Elements can only have Text Nodes as children. React expects that the children' +
+          ' passed to a title element will be a single string or number (<title>hello world</title> or <title>{1}</title>)' +
+          ' or an Array or Fragment of strings and numbers and their combinations (<title><>hello {1}</>goodbye {2}</title>).' +
+          ' Instead children contained %s.',
+        describeInvalidChild(invalidChild),
+      );
+    }
   }
   invalidChild = null;
   return combined;
 }
 
 let invalidChild: ReactNodeList = null;
-function concatTextChildrenImpl(children: ReactNodeList): string {
+function concatTextChildren(children: ReactNodeList): string {
   let combined = '';
   if (isArray(children)) {
     for (let i = 0; i < children.length; i++) {
-      combined += concatTextChildrenImpl(children[i]);
+      combined += concatTextChildren(children[i]);
       if (invalidChild) {
         return '';
       }
@@ -60,7 +50,7 @@ function concatTextChildrenImpl(children: ReactNodeList): string {
     switch (typeof type) {
       case 'symbol': {
         if (type === REACT_FRAGMENT_TYPE) {
-          return concatTextChildrenImpl(props.children);
+          return concatTextChildren(props.children);
         }
         // We intionally fall through if we are not a fragment because this child is not valid
       }
@@ -79,7 +69,7 @@ function concatTextChildrenImpl(children: ReactNodeList): string {
   return '';
 }
 
-export function describeInvalidChild(child: ReactNodeList): string {
+function describeInvalidChild(child: ReactNodeList): string {
   if (typeof child === 'object') {
     switch ((child: any).$$typeof) {
       case REACT_ELEMENT_TYPE: {

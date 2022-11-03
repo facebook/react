@@ -62,11 +62,7 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
-import {
-  describeInvalidChild,
-  concatTextChildrenProd,
-  concatTextChildrenDev,
-} from '../shared/ReactDOMResources';
+import {concatTitleTextChildren} from '../shared/ReactDOMResources';
 
 import {
   prepareToRenderResources,
@@ -1395,21 +1391,7 @@ function pushTitle(
     !noscriptTagInScope
   ) {
     const {children} = props;
-    let child;
-    if (__DEV__) {
-      child = concatTextChildrenDev(children, invalidTextChild => {
-        console.error(
-          'A title element was rendered with invalid children.' +
-            ' In browsers title Elements can only have Text Nodes as children. React expects that the children' +
-            ' passed to a title element will be a single string or number (<title>hello world</title> or <title>{1}</title>)' +
-            ' or an Array or Fragment of strings and numbers and their combinations (<title><>hello {1}</>goodbye {2}</title>).' +
-            ' Instead children contained %s.',
-          describeInvalidChild(invalidTextChild),
-        );
-      });
-    } else {
-      child = concatTextChildrenProd(children);
-    }
+    const child = concatTitleTextChildren(children);
     resourcesFromTitle(props, child);
     return null;
   } else {
