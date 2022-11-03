@@ -291,7 +291,7 @@ const bundles = [
   {
     bundleTypes: [BROWSER_SCRIPT],
     moduleType: RENDERER,
-    entry: 'react-dom/src/server/ReactDOMServerExternalRuntime.js',
+    entry: 'react-dom/unstable_server-external-runtime',
     outputPath: 'unstable_server-external-runtime.js',
     global: 'ReactDOMServerExternalRuntime',
     minifyWithProdErrorCodes: false,
