@@ -91,7 +91,6 @@ const requestedBundleTypes = argv.type
   ? parseRequestedNames([argv.type], 'uppercase')
   : [];
 const requestedBundleNames = parseRequestedNames(argv._, 'lowercase');
-
 const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
@@ -372,7 +371,6 @@ function getPlugins(
     isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
     isProduction &&
-      // !skipClosureTranspilation &&
       closure({
         compilation_level: 'SIMPLE',
         language_in: 'ECMASCRIPT_2015',
