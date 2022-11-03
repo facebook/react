@@ -105,7 +105,6 @@ import {
   requestEventTime,
   markSkippedUpdateLanes,
   isInvalidExecutionContextForEventFunction,
-  getSuspendedThenableState,
 } from './ReactFiberWorkLoop.old';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -141,9 +140,9 @@ import {
 import {getTreeId} from './ReactFiberTreeContext.old';
 import {now} from './Scheduler';
 import {
-  prepareThenableState,
   trackUsedThenable,
   checkIfUseWrappedInTryCatch,
+  createThenableState,
 } from './ReactFiberThenable.old';
 import type {ThenableState} from './ReactFiberThenable.old';
 
@@ -247,6 +246,7 @@ let shouldDoubleInvokeUserFnsInHooksDEV: boolean = false;
 let localIdCounter: number = 0;
 // Counts number of `use`-d thenables
 let thenableIndexCounter: number = 0;
+let thenableState: ThenableState | null = null;
 
 // Used for ids that are generated completely client-side (i.e. not during
 // hydration). This counter is global, so client ids are not stable across
@@ -449,6 +449,7 @@ export function renderWithHooks<Props, SecondArg>(
   // didScheduleRenderPhaseUpdate = false;
   // localIdCounter = 0;
   // thenableIndexCounter = 0;
+  // thenableState = null;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
   // Currently we will identify the update render as a mount because memoizedState === null.
@@ -476,10 +477,6 @@ export function renderWithHooks<Props, SecondArg>(
         ? HooksDispatcherOnMount
         : HooksDispatcherOnUpdate;
   }
-
-  // If this is a replay, restore the thenable state from the previous attempt.
-  const prevThenableState = getSuspendedThenableState();
-  prepareThenableState(prevThenableState);
 
   // In Strict Mode, during development, user functions are double invoked to
   // help detect side effects. The logic for how this is implemented for in
@@ -525,7 +522,6 @@ export function renderWithHooks<Props, SecondArg>(
       Component,
       props,
       secondArg,
-      prevThenableState,
     );
   }
 
@@ -538,7 +534,6 @@ export function renderWithHooks<Props, SecondArg>(
         Component,
         props,
         secondArg,
-        prevThenableState,
       );
     } finally {
       setIsStrictModeForDevtools(false);
@@ -600,7 +595,9 @@ function finishRenderingHooks(current: Fiber | null, workInProgress: Fiber) {
   didScheduleRenderPhaseUpdate = false;
   // This is reset by checkDidRenderIdHook
   // localIdCounter = 0;
+
   thenableIndexCounter = 0;
+  thenableState = null;
 
   if (didRenderTooFewHooks) {
     throw new Error(
@@ -652,7 +649,6 @@ export function replaySuspendedComponentWithHooks<Props, SecondArg>(
   Component: (p: Props, arg: SecondArg) => any,
   props: Props,
   secondArg: SecondArg,
-  prevThenableState: ThenableState | null,
 ): any {
   // This function is used to replay a component that previously suspended,
   // after its data resolves.
@@ -676,7 +672,6 @@ export function replaySuspendedComponentWithHooks<Props, SecondArg>(
     Component,
     props,
     secondArg,
-    prevThenableState,
   );
   finishRenderingHooks(current, workInProgress);
   return children;
@@ -687,7 +682,6 @@ function renderWithHooksAgain<Props, SecondArg>(
   Component: (p: Props, arg: SecondArg) => any,
   props: Props,
   secondArg: SecondArg,
-  prevThenableState: ThenableState | null,
 ) {
   // This is used to perform another render pass. It's used when setState is
   // called during render, and for double invoking components in Strict Mode
@@ -735,7 +729,6 @@ function renderWithHooksAgain<Props, SecondArg>(
       ? HooksDispatcherOnRerenderInDEV
       : HooksDispatcherOnRerender;
 
-    prepareThenableState(prevThenableState);
     children = Component(props, secondArg);
   } while (didScheduleRenderPhaseUpdateDuringThisPass);
   return children;
@@ -821,6 +814,7 @@ export function resetHooksOnUnwind(): void {
   didScheduleRenderPhaseUpdateDuringThisPass = false;
   localIdCounter = 0;
   thenableIndexCounter = 0;
+  thenableState = null;
 }
 
 function mountWorkInProgressHook(): Hook {
@@ -954,7 +948,11 @@ function use<T>(usable: Usable<T>): T {
       // Track the position of the thenable within this fiber.
       const index = thenableIndexCounter;
       thenableIndexCounter += 1;
-      return trackUsedThenable(thenable, index);
+
+      if (thenableState === null) {
+        thenableState = createThenableState();
+      }
+      return trackUsedThenable(thenableState, thenable, index);
     } else if (
       usable.$$typeof === REACT_CONTEXT_TYPE ||
       usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
