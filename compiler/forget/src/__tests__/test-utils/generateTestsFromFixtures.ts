@@ -67,10 +67,27 @@ export default function generateTestsFromFixtures(
     });
 
     describe("fixtures", () => {
-      test.each(Array.from(fixtures.values()))(
-        "$basename",
-        ({ basename, input: inputFile, output: outputFile }) => {
-          let receivedOutput;
+      for (const {
+        basename,
+        input: inputFile,
+        output: outputFile,
+      } of Array.from(fixtures.values())) {
+        let receivedOutput;
+        let testCommand;
+
+        switch (basename.split(".")[0]) {
+          case "only":
+            testCommand = test.only;
+            break;
+          case "skip":
+            testCommand = test.skip;
+            break;
+          default:
+            testCommand = test;
+            break;
+        }
+
+        testCommand(basename, () => {
           if (inputFile != null) {
             const input = fs.readFileSync(inputFile, "utf8");
             receivedOutput = transform(input, basename);
@@ -85,23 +102,25 @@ export default function generateTestsFromFixtures(
           // Determine whether the snapshot is in update mode or only creating snapshots for new inputs
           // to update the .expect file in parallel with updating the snapshot itself.
           const snapshotUpdateMode = determineSnapshotMode();
-          const outputExists = fs.existsSync(outputFile);
-          if (
-            snapshotUpdateMode === "all" ||
-            (snapshotUpdateMode === "new" && !outputExists)
-          ) {
-            if (inputFile != null) {
-              fs.writeFileSync(outputFile, receivedOutput, "utf8");
+          if (outputFile != null) {
+            const outputExists = fs.existsSync(outputFile);
+            if (
+              snapshotUpdateMode === "all" ||
+              (snapshotUpdateMode === "new" && !outputExists)
+            ) {
+              if (inputFile != null) {
+                fs.writeFileSync(outputFile, receivedOutput, "utf8");
+              } else {
+                fs.unlinkSync(outputFile);
+              }
             } else {
-              fs.unlinkSync(outputFile);
+              // As a sanity check, make sure that the current output matches the .expect file
+              const actualOutput = fs.readFileSync(outputFile, "utf8");
+              expect(receivedOutput).toEqual(actualOutput);
             }
-          } else if (outputFile != null) {
-            // As a sanity check, make sure that the current output matches the .expect file
-            const actualOutput = fs.readFileSync(outputFile, "utf8");
-            expect(receivedOutput).toEqual(actualOutput);
           }
-        }
-      );
+        });
+      }
     });
   });
 }
@@ -132,7 +151,10 @@ function determineSnapshotMode() {
 }
 
 function matchInputOutputFixtures(files: string[], fixturesPath: string) {
-  const fixtures = new Map();
+  const fixtures: Map<
+    string,
+    { basename: string; input: string | null; output: string | null }
+  > = new Map();
   for (const file of files) {
     const isOutput = file.endsWith(EXPECT_SUFFIX);
     const basename = path.basename(
