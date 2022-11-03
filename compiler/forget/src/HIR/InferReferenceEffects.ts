@@ -210,9 +210,8 @@ class Environment {
     const values = this.#variables.get(value.identifier.id);
     invariant(
       values != null,
-      `Expected value to be populated at '${String(value.path)}' in '${String(
-        value.path.parentPath
-      )}'`
+      "Expected value for identifier `%s` to be initialized.",
+      value.identifier.id
     );
     this.#variables.set(place.identifier.id, new Set(values));
   }

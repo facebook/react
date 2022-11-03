@@ -811,8 +811,55 @@ function lowerExpression(
           );
         }
         case "??": {
-          // test should be roughly the equivalent of `<left> != null`
-          todo("Handle logical ??");
+          // generate the equivalent of
+          //   const tmp = <left>;
+          //   tmp != null ? tmp : <right>
+          const left = lowerExpressionToPlace(builder, leftPath);
+
+          const nullPlace: Place = {
+            kind: "Identifier",
+            identifier: builder.makeTemporary(),
+            memberPath: null,
+            effect: Effect.Unknown,
+            path: null as any,
+          };
+          builder.push({
+            value: {
+              kind: "Primitive",
+              value: null,
+              path: null as any,
+            },
+            path: exprPath,
+            lvalue: { place: { ...nullPlace }, kind: InstructionKind.Const },
+          });
+
+          const condPlace: Place = {
+            kind: "Identifier",
+            identifier: builder.makeTemporary(),
+            memberPath: null,
+            effect: Effect.Unknown,
+            path: null as any,
+          };
+          builder.push({
+            lvalue: {
+              place: { ...condPlace },
+              kind: InstructionKind.Const,
+            },
+            value: {
+              kind: "BinaryExpression",
+              operator: "!=",
+              left,
+              right: nullPlace,
+              path: null as any,
+            },
+            path: null as any,
+          });
+          return lowerConditional(
+            builder,
+            condPlace,
+            () => left,
+            () => lowerExpression(builder, expr.get("right"))
+          );
         }
         default: {
           assertExhaustive(
