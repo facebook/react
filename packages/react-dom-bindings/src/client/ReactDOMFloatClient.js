@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Instance, Container} from './ReactDOMHostConfig';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
@@ -30,6 +31,11 @@ import {
 } from './ReactDOMComponentTree';
 import {HTML_NAMESPACE, SVG_NAMESPACE} from '../shared/DOMNamespaces';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
+import {
+  describeInvalidChild,
+  concatTextChildrenDev,
+  concatTextChildrenProd,
+} from '../shared/ReactDOMResources';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
@@ -587,29 +593,38 @@ export function getResource(
       return null;
     }
     case 'title': {
-      let child = pendingProps.children;
-      if (Array.isArray(child) && child.length === 1) {
-        child = child[0];
+      const children: ReactNodeList = (pendingProps: any).children;
+      let child;
+      if (__DEV__) {
+        child = concatTextChildrenDev(children, invalidTextChild => {
+          console.error(
+            'A title element was rendered with invalid children.' +
+              ' In browsers title Elements can only have Text Nodes as children. React expects that the children' +
+              ' passed to a title element will be a single string or number (<title>hello world</title> or <title>{1}</title>)' +
+              ' or an Array or Fragment of strings and numbers and their combinations (<title><>hello {1}</>goodbye {2}</title>).' +
+              ' Instead children contained %s.',
+            describeInvalidChild(invalidTextChild),
+          );
+        });
+      } else {
+        child = concatTextChildrenProd(children);
       }
-      if (typeof child === 'string' || typeof child === 'number') {
-        const headRoot: Document = getDocumentFromRoot(resourceRoot);
-        const headResources = getResourcesFromRoot(headRoot).head;
-        const key = getTitleKey(child);
-        let resource = headResources.get(key);
-        if (!resource) {
-          const titleProps = titlePropsFromRawProps(child, pendingProps);
-          resource = {
-            type: 'title',
-            props: titleProps,
-            count: 0,
-            instance: null,
-            root: headRoot,
-          };
-          headResources.set(key, resource);
-        }
-        return resource;
+      const headRoot: Document = getDocumentFromRoot(resourceRoot);
+      const headResources = getResourcesFromRoot(headRoot).head;
+      const key = getTitleKey(child);
+      let resource = headResources.get(key);
+      if (!resource) {
+        const titleProps = titlePropsFromRawProps(child, pendingProps);
+        resource = {
+          type: 'title',
+          props: titleProps,
+          count: 0,
+          instance: null,
+          root: headRoot,
+        };
+        headResources.set(key, resource);
       }
-      return null;
+      return resource;
     }
     case 'link': {
       const {rel} = pendingProps;

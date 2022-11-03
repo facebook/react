@@ -643,103 +643,105 @@ function titlePropsFromRawProps(
   return props;
 }
 
-export function resourcesFromElement(type: string, props: Props): boolean {
+export function resourcesFromTitle(props: Props, child: string): boolean {
   if (!currentResources) {
     throw new Error(
       '"currentResources" was expected to exist. This is a bug in React.',
     );
   }
   const resources = currentResources;
-  switch (type) {
-    case 'title': {
-      let child = props.children;
-      if (Array.isArray(child) && child.length === 1) {
-        child = child[0];
+  const key = 'title::' + child;
+  let resource = resources.headsMap.get(key);
+  if (!resource) {
+    resource = {
+      type: 'title',
+      props: titlePropsFromRawProps(child, props),
+      flushed: false,
+    };
+    resources.headsMap.set(key, resource);
+    resources.headResources.add(resource);
+  }
+  return true;
+}
+
+export function resourcesFromMeta(props: Props): boolean {
+  if (!currentResources) {
+    throw new Error(
+      '"currentResources" was expected to exist. This is a bug in React.',
+    );
+  }
+  const resources = currentResources;
+  let key, propertyPath;
+  if (typeof props.charSet === 'string') {
+    key = 'charSet';
+  } else if (typeof props.content === 'string') {
+    const contentKey = '::' + props.content;
+    if (typeof props.httpEquiv === 'string') {
+      key = 'httpEquiv::' + props.httpEquiv + contentKey;
+    } else if (typeof props.name === 'string') {
+      key = 'name::' + props.name + contentKey;
+    } else if (typeof props.itemProp === 'string') {
+      key = 'itemProp::' + props.itemProp + contentKey;
+    } else if (typeof props.property === 'string') {
+      const {property} = props;
+      key = 'property::' + property + contentKey;
+      propertyPath = property;
+      const parentPath = property
+        .split(':')
+        .slice(0, -1)
+        .join(':');
+      const parentResource = resources.structuredMetaKeys.get(parentPath);
+      if (parentResource) {
+        key = parentResource.key + '::child::' + key;
       }
-      if (typeof child === 'string' || typeof child === 'number') {
-        const key = 'title::' + child;
-        let resource = resources.headsMap.get(key);
-        if (!resource) {
-          resource = {
-            type: 'title',
-            props: titlePropsFromRawProps(child, props),
-            flushed: false,
-          };
-          resources.headsMap.set(key, resource);
-          resources.headResources.add(resource);
-        }
-      }
-      return true;
-    }
-    case 'meta': {
-      let key, propertyPath;
-      if (typeof props.charSet === 'string') {
-        key = 'charSet';
-      } else if (typeof props.content === 'string') {
-        const contentKey = '::' + props.content;
-        if (typeof props.httpEquiv === 'string') {
-          key = 'httpEquiv::' + props.httpEquiv + contentKey;
-        } else if (typeof props.name === 'string') {
-          key = 'name::' + props.name + contentKey;
-        } else if (typeof props.itemProp === 'string') {
-          key = 'itemProp::' + props.itemProp + contentKey;
-        } else if (typeof props.property === 'string') {
-          const {property} = props;
-          key = 'property::' + property + contentKey;
-          propertyPath = property;
-          const parentPath = property
-            .split(':')
-            .slice(0, -1)
-            .join(':');
-          const parentResource = resources.structuredMetaKeys.get(parentPath);
-          if (parentResource) {
-            key = parentResource.key + '::child::' + key;
-          }
-        }
-      }
-      if (key) {
-        if (!resources.headsMap.has(key)) {
-          const resource = {
-            type: 'meta',
-            key,
-            props: Object.assign({}, props),
-            flushed: false,
-          };
-          resources.headsMap.set(key, resource);
-          if (key === 'charSet') {
-            resources.charset = resource;
-          } else {
-            if (propertyPath) {
-              resources.structuredMetaKeys.set(propertyPath, resource);
-            }
-            resources.headResources.add(resource);
-          }
-        }
-      }
-      return true;
-    }
-    case 'base': {
-      const {target, href} = props;
-      // We mirror the key construction on the client since we will likely unify
-      // this code in the future to better guarantee key semantics are identical
-      // in both environments
-      let key = 'base';
-      key += typeof href === 'string' ? `[href="${href}"]` : ':not([href])';
-      key +=
-        typeof target === 'string' ? `[target="${target}"]` : ':not([target])';
-      if (!resources.headsMap.has(key)) {
-        const resource = {
-          type: 'base',
-          props: Object.assign({}, props),
-          flushed: false,
-        };
-        resources.headsMap.set(key, resource);
-        resources.bases.add(resource);
-      }
-      return true;
     }
   }
-  return false;
+  if (key) {
+    if (!resources.headsMap.has(key)) {
+      const resource = {
+        type: 'meta',
+        key,
+        props: Object.assign({}, props),
+        flushed: false,
+      };
+      resources.headsMap.set(key, resource);
+      if (key === 'charSet') {
+        resources.charset = resource;
+      } else {
+        if (propertyPath) {
+          resources.structuredMetaKeys.set(propertyPath, resource);
+        }
+        resources.headResources.add(resource);
+      }
+    }
+  }
+  return true;
+}
+
+export function resourcesFromBase(props: Props): boolean {
+  if (!currentResources) {
+    throw new Error(
+      '"currentResources" was expected to exist. This is a bug in React.',
+    );
+  }
+  const resources = currentResources;
+  const {target, href} = props;
+  // We mirror the key construction on the client since we will likely unify
+  // this code in the future to better guarantee key semantics are identical
+  // in both environments
+  let key = 'base';
+  key += typeof href === 'string' ? `[href="${href}"]` : ':not([href])';
+  key += typeof target === 'string' ? `[target="${target}"]` : ':not([target])';
+  if (!resources.headsMap.has(key)) {
+    const resource = {
+      type: 'base',
+      props: Object.assign({}, props),
+      flushed: false,
+    };
+    resources.headsMap.set(key, resource);
+    resources.bases.add(resource);
+  }
+  return true;
 }
 
 // Construct a resource from link props.

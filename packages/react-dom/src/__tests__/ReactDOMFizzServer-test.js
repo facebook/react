@@ -4973,6 +4973,240 @@ describe('ReactDOMFizzServer', () => {
       container = document.getElementsByTagName('head')[0];
     }
 
+    // @gate enableFloat
+    it('allows arbitrary combinations of simple children when title is a Resource', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <body>
+              <svg>
+                <foreignObject>
+                  <title>
+                    <>1</>
+                    {[2, '3']}4
+                  </title>
+                </foreignObject>
+              </svg>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>1234</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+
+      let root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <svg>
+              <foreignObject>
+                <title>
+                  <>1</>
+                  {[2, '3']}4
+                </title>
+              </foreignObject>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      // @TODO the preload should not get inserted on hydration
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>1234</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+
+      root.unmount();
+      root = ReactDOMClient.createRoot(document);
+      root.render(
+        <html>
+          <body>
+            <svg>
+              <foreignObject>
+                <title>
+                  <>1</>
+                  {[2, '3']}4
+                </title>
+              </foreignObject>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getVisibleChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>1234</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('warns when passed a complex child when title is a Resource', async () => {
+      const originalConsoleError = console.error;
+      const mockError = jest.fn();
+      console.error = (...args) => {
+        if (args.length > 1) {
+          if (typeof args[1] === 'object') {
+            mockError(args[0].split('\n')[0]);
+            return;
+          }
+        }
+        mockError(...args.map(normalizeCodeLocInfo));
+      };
+      function Foo() {}
+      function Bar() {}
+      const ForwardBar = React.forwardRef(Bar);
+
+      try {
+        await actIntoEmptyDocument(() => {
+          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+            <html>
+              <body>
+                <title>
+                  <>1</>
+                  {[2, '3']}
+                  <Foo />
+                </title>
+              </body>
+            </html>,
+          );
+          pipe(writable);
+        });
+        expect(getVisibleChildren(document)).toEqual(
+          <html>
+            <head>
+              <title />
+            </head>
+            <body />
+          </html>,
+        );
+        if (__DEV__) {
+          expect(mockError).toHaveBeenCalledWith(
+            'Warning: A title element was rendered with invalid children. In browsers title Elements can only have Text Nodes as children. React expects that the children passed to a title element will be a single string or number (<title>hello world</title> or <title>{1}</title>) or an Array or Fragment of strings and numbers and their combinations (<title><>hello {1}</>goodbye {2}</title>). Instead children contained %s.%s',
+            '<Foo ... />',
+            componentStack(['title', 'body', 'html']),
+          );
+        } else {
+          expect(mockError).not.toHaveBeenCalled();
+        }
+
+        let root = ReactDOMClient.hydrateRoot(
+          document,
+          <html>
+            <body>
+              <title>
+                <>1</>
+                {[2, '3']}4<div>foo</div>
+              </title>
+            </body>
+          </html>,
+        );
+        expect(Scheduler).toFlushWithoutYielding();
+        // @TODO the preload should not get inserted on hydration
+        expect(getVisibleChildren(document)).toEqual(
+          <html>
+            <head>
+              <title />
+            </head>
+            <body />
+          </html>,
+        );
+        if (__DEV__) {
+          expect(mockError).toHaveBeenCalledWith(
+            'Warning: A title element was rendered with invalid children. In browsers title Elements can only have Text Nodes as children. React expects that the children passed to a title element will be a single string or number (<title>hello world</title> or <title>{1}</title>) or an Array or Fragment of strings and numbers and their combinations (<title><>hello {1}</>goodbye {2}</title>). Instead children contained %s.%s',
+            '<div>...</div>',
+            componentStack(['title', 'body', 'html']),
+          );
+        } else {
+          expect(mockError).not.toHaveBeenCalled();
+        }
+
+        root.unmount();
+        root = ReactDOMClient.createRoot(document);
+        root.render(
+          <html>
+            <body>
+              <title>
+                <>1</>
+                {[2, '3']}4
+                <ForwardBar />
+                <Foo />
+                <Bar />
+              </title>
+            </body>
+          </html>,
+        );
+        expect(Scheduler).toFlushWithoutYielding();
+        expect(getVisibleChildren(document)).toEqual(
+          <html>
+            <head>
+              <title />
+            </head>
+            <body />
+          </html>,
+        );
+        if (__DEV__) {
+          expect(mockError).toHaveBeenCalledWith(
+            'Warning: A title element was rendered with invalid children. In browsers title Elements can only have Text Nodes as children. React expects that the children passed to a title element will be a single string or number (<title>hello world</title> or <title>{1}</title>) or an Array or Fragment of strings and numbers and their combinations (<title><>hello {1}</>goodbye {2}</title>). Instead children contained %s.%s',
+            '<Bar ... />',
+            componentStack(['title', 'body', 'html']),
+          );
+        } else {
+          expect(mockError).not.toHaveBeenCalled();
+        }
+        mockError.mockClear();
+
+        root.render(
+          <html>
+            <body>
+              <title>
+                <>1</>
+                {[2, '3']}4
+              </title>
+            </body>
+          </html>,
+        );
+        expect(Scheduler).toFlushWithoutYielding();
+        expect(getVisibleChildren(document)).toEqual(
+          <html>
+            <head>
+              <title>1234</title>
+            </head>
+            <body />
+          </html>,
+        );
+        expect(mockError).not.toHaveBeenCalled();
+      } finally {
+        console.error = originalConsoleError;
+      }
+    });
+
     it('should accept a single string child', async () => {
       // a Single string child
       function App() {
@@ -5021,6 +5255,7 @@ describe('ReactDOMFizzServer', () => {
       expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
     });
 
+    // @gate !enableFloat
     it('should warn in dev when given an array of length 2 or more', async () => {
       const originalConsoleError = console.error;
       const mockError = jest.fn();
@@ -5034,6 +5269,9 @@ describe('ReactDOMFizzServer', () => {
         mockError(...args.map(normalizeCodeLocInfo));
       };
 
+      // The behavior of title children has been updated when float is on because it can be a bit smarter about
+      // concatenating all children as long as they are strings, numbers, or combinations of the two with arrays and fragments
+      // this test can be removed if float is fully adopted without a flag
       // a Single string child
       function App() {
         return <title>{['hello1', 'hello2']}</title>;
@@ -5098,6 +5336,10 @@ describe('ReactDOMFizzServer', () => {
       }
     });
 
+    // The behavior of title children has been updated when float is on because it can be a bit smarter about
+    // concatenating all children as long as they are strings, numbers, or combinations of the two with arrays and fragments
+    // this test can be removed if float is fully adopted without a flag
+    // @gate !enableFloat
     it('should warn in dev if you pass a React Component as a child to <title>', async () => {
       const originalConsoleError = console.error;
       const mockError = jest.fn();

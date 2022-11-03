@@ -63,10 +63,18 @@ import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
 import {
-  preinitImpl,
+  describeInvalidChild,
+  concatTextChildrenProd,
+  concatTextChildrenDev,
+} from '../shared/ReactDOMResources';
+
+import {
   prepareToRenderResources,
+  preinitImpl,
   finishRenderingResources,
-  resourcesFromElement,
+  resourcesFromBase,
+  resourcesFromMeta,
+  resourcesFromTitle,
   resourcesFromLink,
   resourcesFromScript,
   ReactDOMServerDispatcher,
@@ -1213,11 +1221,7 @@ function pushBase(
   textEmbedded: boolean,
   noscriptTagInScope: boolean,
 ): ReactNodeList {
-  if (
-    enableFloat &&
-    !noscriptTagInScope &&
-    resourcesFromElement('base', props)
-  ) {
+  if (enableFloat && !noscriptTagInScope && resourcesFromBase(props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
       // to be safe and assume text will follow by inserting a textSeparator
@@ -1238,11 +1242,7 @@ function pushMeta(
   textEmbedded: boolean,
   noscriptTagInScope: boolean,
 ): ReactNodeList {
-  if (
-    enableFloat &&
-    !noscriptTagInScope &&
-    resourcesFromElement('meta', props)
-  ) {
+  if (enableFloat && !noscriptTagInScope && resourcesFromMeta(props)) {
     if (textEmbedded) {
       // This link follows text but we aren't writing a tag. while not as efficient as possible we need
       // to be safe and assume text will follow by inserting a textSeparator
@@ -1388,58 +1388,72 @@ function pushTitle(
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
 ): ReactNodeList {
-  if (__DEV__) {
-    const children = props.children;
-    const childForValidation =
-      Array.isArray(children) && children.length < 2
-        ? children[0] || null
-        : children;
-    if (Array.isArray(children) && children.length > 1) {
-      console.error(
-        'A title element received an array with more than 1 element as children. ' +
-          'In browsers title Elements can only have Text Nodes as children. If ' +
-          'the children being rendered output more than a single text node in aggregate the browser ' +
-          'will display markup and comments as text in the title and hydration will likely fail and ' +
-          'fall back to client rendering',
-      );
-    } else if (
-      childForValidation != null &&
-      childForValidation.$$typeof != null
-    ) {
-      console.error(
-        'A title element received a React element for children. ' +
-          'In the browser title Elements can only have Text Nodes as children. If ' +
-          'the children being rendered output more than a single text node in aggregate the browser ' +
-          'will display markup and comments as text in the title and hydration will likely fail and ' +
-          'fall back to client rendering',
-      );
-    } else if (
-      childForValidation != null &&
-      typeof childForValidation !== 'string' &&
-      typeof childForValidation !== 'number'
-    ) {
-      console.error(
-        'A title element received a value that was not a string or number for children. ' +
-          'In the browser title Elements can only have Text Nodes as children. If ' +
-          'the children being rendered output more than a single text node in aggregate the browser ' +
-          'will display markup and comments as text in the title and hydration will likely fail and ' +
-          'fall back to client rendering',
-      );
-    }
-  }
-
   if (
     enableFloat &&
-    // title is valid in SVG so we avoid resour
+    // title is valid in SVG so we avoid attempting to Resource it in this mode
     insertionMode !== SVG_MODE &&
-    !noscriptTagInScope &&
-    resourcesFromElement('title', props)
+    !noscriptTagInScope
   ) {
-    // We have converted this link exclusively to a resource and no longer
-    // need to emit it
+    const {children} = props;
+    let child;
+    if (__DEV__) {
+      child = concatTextChildrenDev(children, invalidTextChild => {
+        console.error(
+          'A title element was rendered with invalid children.' +
+            ' In browsers title Elements can only have Text Nodes as children. React expects that the children' +
+            ' passed to a title element will be a single string or number (<title>hello world</title> or <title>{1}</title>)' +
+            ' or an Array or Fragment of strings and numbers and their combinations (<title><>hello {1}</>goodbye {2}</title>).' +
+            ' Instead children contained %s.',
+          describeInvalidChild(invalidTextChild),
+        );
+      });
+    } else {
+      child = concatTextChildrenProd(children);
+    }
+    resourcesFromTitle(props, child);
     return null;
+  } else {
+    if (__DEV__) {
+      const children = props.children;
+      const childForValidation =
+        Array.isArray(children) && children.length < 2
+          ? children[0] || null
+          : children;
+      if (Array.isArray(children) && children.length > 1) {
+        console.error(
+          'A title element received an array with more than 1 element as children. ' +
+            'In browsers title Elements can only have Text Nodes as children. If ' +
+            'the children being rendered output more than a single text node in aggregate the browser ' +
+            'will display markup and comments as text in the title and hydration will likely fail and ' +
+            'fall back to client rendering',
+        );
+      } else if (
+        childForValidation != null &&
+        childForValidation.$$typeof != null
+      ) {
+        console.error(
+          'A title element received a React element for children. ' +
+            'In the browser title Elements can only have Text Nodes as children. If ' +
+            'the children being rendered output more than a single text node in aggregate the browser ' +
+            'will display markup and comments as text in the title and hydration will likely fail and ' +
+            'fall back to client rendering',
+        );
+      } else if (
+        childForValidation != null &&
+        typeof childForValidation !== 'string' &&
+        typeof childForValidation !== 'number'
+      ) {
+        console.error(
+          'A title element received a value that was not a string or number for children. ' +
+            'In the browser title Elements can only have Text Nodes as children. If ' +
+            'the children being rendered output more than a single text node in aggregate the browser ' +
+            'will display markup and comments as text in the title and hydration will likely fail and ' +
+            'fall back to client rendering',
+        );
+      }
+    }
+    return pushTitleImpl(target, props, responseState);
   }
-  return pushTitleImpl(target, props, responseState);
 }
 
 function pushTitleImpl(
