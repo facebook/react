@@ -181,6 +181,7 @@ import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {
   SelectiveHydrationException,
   beginWork as originalBeginWork,
+  replayFunctionComponent,
 } from './ReactFiberBeginWork.old';
 import {completeWork} from './ReactFiberCompleteWork.old';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork.old';
@@ -282,6 +283,7 @@ import {
   getSuspenseHandler,
   isBadSuspenseFallback,
 } from './ReactFiberSuspenseContext.old';
+import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 
 const ceil = Math.ceil;
 
@@ -2353,22 +2355,79 @@ function replaySuspendedUnitOfWork(
   // This is a fork of performUnitOfWork specifcally for replaying a fiber that
   // just suspended.
   //
-  // Instead of unwinding the stack and potentially showing a fallback, unwind
-  // only the last stack frame, reset the fiber, and try rendering it again.
   const current = unitOfWork.alternate;
-  resetSuspendedWorkLoopOnUnwind();
-  unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
-  unitOfWork = workInProgress = resetWorkInProgress(unitOfWork, renderLanes);
-
   setCurrentDebugFiberInDEV(unitOfWork);
 
   let next;
-  if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
+  setCurrentDebugFiberInDEV(unitOfWork);
+  const isProfilingMode =
+    enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode;
+  if (isProfilingMode) {
     startProfilerTimer(unitOfWork);
-    next = beginWork(current, unitOfWork, renderLanes);
+  }
+  switch (unitOfWork.tag) {
+    case IndeterminateComponent: {
+      // Because it suspended with `use`, we can assume it's a
+      // function component.
+      unitOfWork.tag = FunctionComponent;
+      // Fallthrough to the next branch.
+    }
+    // eslint-disable-next-line no-fallthrough
+    case FunctionComponent:
+    case ForwardRef: {
+      // Resolve `defaultProps`. This logic is copied from `beginWork`.
+      // TODO: Consider moving this switch statement into that module. Also,
+      // could maybe use this as an opportunity to say `use` doesn't work with
+      // `defaultProps` :)
+      const Component = unitOfWork.type;
+      const unresolvedProps = unitOfWork.pendingProps;
+      const resolvedProps =
+        unitOfWork.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
+      next = replayFunctionComponent(
+        current,
+        unitOfWork,
+        resolvedProps,
+        Component,
+        thenableState,
+        workInProgressRootRenderLanes,
+      );
+      break;
+    }
+    case SimpleMemoComponent: {
+      const Component = unitOfWork.type;
+      const nextProps = unitOfWork.pendingProps;
+      next = replayFunctionComponent(
+        current,
+        unitOfWork,
+        nextProps,
+        Component,
+        thenableState,
+        workInProgressRootRenderLanes,
+      );
+      break;
+    }
+    default: {
+      if (__DEV__) {
+        console.error(
+          'Unexpected type of work: %s, Currently only function ' +
+            'components are replayed after suspending. This is a bug in React.',
+          unitOfWork.tag,
+        );
+      }
+      resetSuspendedWorkLoopOnUnwind();
+      unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
+      unitOfWork = workInProgress = resetWorkInProgress(
+        unitOfWork,
+        renderLanes,
+      );
+      next = beginWork(current, unitOfWork, renderLanes);
+      break;
+    }
+  }
+  if (isProfilingMode) {
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
-  } else {
-    next = beginWork(current, unitOfWork, renderLanes);
   }
 
   // The begin phase finished successfully without suspending. Reset the state

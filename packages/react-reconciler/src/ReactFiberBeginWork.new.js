@@ -38,6 +38,8 @@ import type {
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
 import type {RootState} from './ReactFiberRoot.new';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
+import type {ThenableState} from './ReactFiberThenable.new';
+
 import checkPropTypes from 'shared/checkPropTypes';
 import {
   markComponentRenderStarted,
@@ -203,6 +205,7 @@ import {
   renderWithHooks,
   checkDidRenderIdHook,
   bailoutHooks,
+  replaySuspendedComponentWithHooks,
 } from './ReactFiberHooks.new';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer.new';
 import {
@@ -1140,6 +1143,56 @@ function updateFunctionComponent(
     );
     hasId = checkDidRenderIdHook();
   }
+  if (enableSchedulingProfiler) {
+    markComponentRenderStopped();
+  }
+
+  if (current !== null && !didReceiveUpdate) {
+    bailoutHooks(current, workInProgress, renderLanes);
+    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
+  }
+
+  if (getIsHydrating() && hasId) {
+    pushMaterializedTreeId(workInProgress);
+  }
+
+  // React DevTools reads this flag.
+  workInProgress.flags |= PerformedWork;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
+
+export function replayFunctionComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  nextProps: any,
+  Component: any,
+  prevThenableState: ThenableState,
+  renderLanes: Lanes,
+): Fiber | null {
+  // This function is used to replay a component that previously suspended,
+  // after its data resolves. It's a simplified version of
+  // updateFunctionComponent that reuses the hooks from the previous attempt.
+
+  let context;
+  if (!disableLegacyContext) {
+    const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
+    context = getMaskedContext(workInProgress, unmaskedContext);
+  }
+
+  prepareToReadContext(workInProgress, renderLanes);
+  if (enableSchedulingProfiler) {
+    markComponentRenderStarted(workInProgress);
+  }
+  const nextChildren = replaySuspendedComponentWithHooks(
+    current,
+    workInProgress,
+    Component,
+    nextProps,
+    context,
+    prevThenableState,
+  );
+  const hasId = checkDidRenderIdHook();
   if (enableSchedulingProfiler) {
     markComponentRenderStopped();
   }
