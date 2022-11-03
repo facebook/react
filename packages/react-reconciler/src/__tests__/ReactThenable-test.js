@@ -5,6 +5,7 @@ let ReactNoop;
 let Scheduler;
 let act;
 let use;
+let useState;
 let Suspense;
 let startTransition;
 let pendingTextRequests;
@@ -18,6 +19,7 @@ describe('ReactThenable', () => {
     Scheduler = require('scheduler');
     act = require('jest-react').act;
     use = React.use;
+    useState = React.useState;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
 
@@ -667,5 +669,93 @@ describe('ReactThenable', () => {
     });
     expect(Scheduler).toHaveYielded(['Hi']);
     expect(root).toMatchRenderedOutput('Hi');
+  });
+
+  // @gate enableUseHook
+  test('does not suspend indefinitely if an interleaved update was skipped', async () => {
+    function Child({childShouldSuspend}) {
+      return (
+        <Text
+          text={
+            childShouldSuspend
+              ? use(getAsyncText('Will never resolve'))
+              : 'Child'
+          }
+        />
+      );
+    }
+
+    let setChildShouldSuspend;
+    let setShowChild;
+    function Parent() {
+      const [showChild, _setShowChild] = useState(true);
+      setShowChild = _setShowChild;
+
+      const [childShouldSuspend, _setChildShouldSuspend] = useState(false);
+      setChildShouldSuspend = _setChildShouldSuspend;
+
+      Scheduler.unstable_yieldValue(
+        `childShouldSuspend: ${childShouldSuspend}, showChild: ${showChild}`,
+      );
+      return showChild ? (
+        <Child childShouldSuspend={childShouldSuspend} />
+      ) : (
+        <Text text="(empty)" />
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<Parent />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'childShouldSuspend: false, showChild: true',
+      'Child',
+    ]);
+    expect(root).toMatchRenderedOutput('Child');
+
+    await act(() => {
+      // Perform an update that causes the app to suspend
+      startTransition(() => {
+        setChildShouldSuspend(true);
+      });
+      expect(Scheduler).toFlushAndYieldThrough([
+        'childShouldSuspend: true, showChild: true',
+      ]);
+      // While the update is in progress, schedule another update.
+      startTransition(() => {
+        setShowChild(false);
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      // Because the interleaved update is not higher priority than what we were
+      // already working on, it won't interrupt. The first update will continue,
+      // and will suspend.
+      'Async text requested [Will never resolve]',
+
+      // Instead of waiting for the promise to resolve, React notices there's
+      // another pending update that it hasn't tried yet. It will switch to
+      // rendering that instead.
+      //
+      // This time, the update hides the component that previous was suspending,
+      // so it finishes successfully.
+      'childShouldSuspend: false, showChild: false',
+      '(empty)',
+
+      // Finally, React attempts to render the first update again. It also
+      // finishes successfully, because it was rebased on top of the update that
+      // hid the suspended component.
+      // NOTE: These this render happened to not be entangled with the previous
+      // one. If they had been, this update would have been included in the
+      // previous render, and there wouldn't be an extra one here. This could
+      // change if we change our entanglement heurstics. Semantically, it
+      // shouldn't matter, though in general we try to work on transitions in
+      // parallel whenever possible. So even though in this particular case, the
+      // extra render is unnecessary, it's a nice property that it wasn't
+      // entangled with the other transition.
+      'childShouldSuspend: true, showChild: false',
+      '(empty)',
+    ]);
+    expect(root).toMatchRenderedOutput('(empty)');
   });
 });
