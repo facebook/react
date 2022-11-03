@@ -6,6 +6,7 @@ let Scheduler;
 let act;
 let use;
 let useState;
+let useMemo;
 let Suspense;
 let startTransition;
 let pendingTextRequests;
@@ -20,6 +21,7 @@ describe('ReactThenable', () => {
     act = require('jest-react').act;
     use = React.use;
     useState = React.useState;
+    useMemo = React.useMemo;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
 
@@ -789,4 +791,89 @@ describe('ReactThenable', () => {
     ]);
     expect(root).toMatchRenderedOutput('(empty)');
   });
+
+  test('when replaying a suspended component, reuses the hooks computed during the previous attempt', async () => {
+    function ExcitingText({text}) {
+      // This computes the uppercased version of some text. Pretend it's an
+      // expensive operation that we want to reuse.
+      const uppercaseText = useMemo(() => {
+        Scheduler.unstable_yieldValue('Compute uppercase: ' + text);
+        return text.toUpperCase();
+      }, [text]);
+
+      // This adds an exclamation point to the text. Pretend it's an async
+      // operation that is sent to a service for processing.
+      const exclamatoryText = use(getAsyncText(uppercaseText + '!'));
+
+      // This surrounds the text with sparkle emojis. The purpose in this test
+      // is to show that you can suspend in the middle of a sequence of hooks
+      // without breaking anything.
+      const sparklingText = useMemo(() => {
+        Scheduler.unstable_yieldValue('Add sparkles: ' + exclamatoryText);
+        return `✨ ${exclamatoryText} ✨`;
+      }, [exclamatoryText]);
+
+      return <Text text={sparklingText} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<ExcitingText text="Hello" />);
+      });
+    });
+    // Suspends while we wait for the async service to respond.
+    expect(Scheduler).toHaveYielded([
+      'Compute uppercase: Hello',
+      'Async text requested [HELLO!]',
+    ]);
+    expect(root).toMatchRenderedOutput(null);
+
+    // The data is received.
+    await act(async () => {
+      resolveTextRequests('HELLO!');
+    });
+    expect(Scheduler).toHaveYielded([
+      // We shouldn't run the uppercase computation again, because we can reuse
+      // the computation from the previous attempt.
+      // 'Compute uppercase: Hello',
+
+      'Async text requested [HELLO!]',
+      'Add sparkles: HELLO!',
+      '✨ HELLO! ✨',
+    ]);
+  });
+
+  // @gate enableUseHook
+  test(
+    'wrap an async function with useMemo to skip running the function ' +
+      'twice when loading new data',
+    async () => {
+      function App({text}) {
+        const promiseForText = useMemo(async () => getAsyncText(text), [text]);
+        const asyncText = use(promiseForText);
+        return <Text text={asyncText} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        startTransition(() => {
+          root.render(<App text="Hello" />);
+        });
+      });
+      expect(Scheduler).toHaveYielded(['Async text requested [Hello]']);
+      expect(root).toMatchRenderedOutput(null);
+
+      await act(async () => {
+        resolveTextRequests('Hello');
+      });
+      expect(Scheduler).toHaveYielded([
+        // We shouldn't request async text again, because the async function
+        // was memoized
+        // 'Async text requested [Hello]'
+
+        'Hello',
+      ]);
+    },
+  );
 });

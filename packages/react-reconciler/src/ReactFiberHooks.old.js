@@ -545,6 +545,12 @@ export function renderWithHooks<Props, SecondArg>(
     }
   }
 
+  finishRenderingHooks(current, workInProgress);
+
+  return children;
+}
+
+function finishRenderingHooks(current: Fiber | null, workInProgress: Fiber) {
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
@@ -638,7 +644,41 @@ export function renderWithHooks<Props, SecondArg>(
       }
     }
   }
+}
 
+export function replaySuspendedComponentWithHooks<Props, SecondArg>(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: (p: Props, arg: SecondArg) => any,
+  props: Props,
+  secondArg: SecondArg,
+  prevThenableState: ThenableState | null,
+): any {
+  // This function is used to replay a component that previously suspended,
+  // after its data resolves.
+  //
+  // It's a simplified version of renderWithHooks, but it doesn't need to do
+  // most of the set up work because they weren't reset when we suspended; they
+  // only get reset when the component either completes (finishRenderingHooks)
+  // or unwinds (resetHooksOnUnwind).
+  if (__DEV__) {
+    hookTypesDev =
+      current !== null
+        ? ((current._debugHookTypes: any): Array<HookType>)
+        : null;
+    hookTypesUpdateIndexDev = -1;
+    // Used for hot reloading:
+    ignorePreviousDependencies =
+      current !== null && current.type !== workInProgress.type;
+  }
+  const children = renderWithHooksAgain(
+    workInProgress,
+    Component,
+    props,
+    secondArg,
+    prevThenableState,
+  );
+  finishRenderingHooks(current, workInProgress);
   return children;
 }
 
