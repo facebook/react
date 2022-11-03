@@ -38,12 +38,13 @@ if (!window.$REACT_FIZZ_OBSERVER) {
   }
 }
 
-function handleNode(node /*: Node */) {
-  if (node.nodeType !== 1) {
+function handleNode(node_ /*: Node */) {
+  if (node_.nodeType !== 1) {
     return;
   }
   // $FlowFixMe[incompatible-cast]
-  const dataset = (node /*: HTMLElement*/).dataset;
+  const node = (node_ /*: HTMLElement*/);
+  const dataset = node.dataset;
   const instr = dataset ? dataset[':fi'] : null;
   switch (instr) {
     case '$RX':
@@ -53,6 +54,7 @@ function handleNode(node /*: Node */) {
         dataset[':a2'],
         dataset[':a3'],
       );
+      node.remove();
       break;
     case '$RR':
       // Convert arg2 here, since its type is Array<Array<string>>
@@ -61,12 +63,15 @@ function handleNode(node /*: Node */) {
         dataset[':a1'],
         JSON.parse(dataset[':a2']),
       );
+      node.remove();
       break;
     case '$RC':
       completeBoundary(dataset[':a0'], dataset[':a1'], dataset[':a2']);
+      node.remove();
       break;
     case '$RS':
       completeSegment(dataset[':a0'], dataset[':a1']);
+      node.remove();
       break;
   }
 }

@@ -4576,13 +4576,15 @@ describe('ReactDOMFizzServer', () => {
       expect(container.firstElementChild.outerHTML).toEqual(
         '<div id="app-div">hello<b>world, Foo</b>!</div>',
       );
-      // there are extra script nodes at the end of container
+      // there may be either:
+      //  - an external runtime script and deleted nodes with data attributes
+      //  - extra script nodes containing fizz instructions at the end of container
       expect(
         stripExternalRuntimeInNodes(
           container.childNodes,
           renderOptions.unstable_externalRuntimeSrc,
-        ).length,
-      ).toBe(5);
+        ).filter(e => e.tagName !== 'SCRIPT').length,
+      ).toBe(3);
 
       const div = container.childNodes[1];
       expect(div.childNodes.length).toBe(3);
