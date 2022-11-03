@@ -1,5 +1,5 @@
-import invariant from "invariant";
 import { assertExhaustive } from "../Common/utils";
+import { invariant } from "../CompilerError";
 import {
   BasicBlock,
   BlockId,
