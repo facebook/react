@@ -276,7 +276,7 @@ import {
   SuspenseException,
   getSuspendedThenable,
   getThenableStateAfterSuspending,
-  isThenableStateResolved,
+  isThenableResolved,
 } from './ReactFiberThenable.old';
 import {schedulePostPaintCallback} from './ReactPostPaintCallback';
 import {
@@ -2204,24 +2204,20 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             break;
           }
           case SuspendedOnData: {
+            const thenable: Thenable<mixed> = (thrownValue: any);
             if (workInProgressSuspendedThenableState !== null) {
               const thenableState = workInProgressSuspendedThenableState;
-              if (isThenableStateResolved(thenableState)) {
+              if (isThenableResolved(thenable)) {
                 // The data resolved. Try rendering the component again.
                 workInProgressSuspendedReason = NotSuspended;
                 workInProgressThrownValue = null;
-                replaySuspendedUnitOfWork(
-                  unitOfWork,
-                  thrownValue,
-                  thenableState,
-                );
+                replaySuspendedUnitOfWork(unitOfWork, thenable, thenableState);
                 break;
               }
             }
 
             // The work loop is suspended on data. We should wait for it to
             // resolve before continuing to render.
-            const thenable: Thenable<mixed> = (workInProgressThrownValue: any);
             const onResolution = () => {
               ensureRootIsScheduled(root, now());
             };
@@ -2246,7 +2242,8 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
           default: {
             if (workInProgressSuspendedThenableState !== null) {
               const thenableState = workInProgressSuspendedThenableState;
-              if (isThenableStateResolved(thenableState)) {
+              const thenable: Thenable<mixed> = (thrownValue: any);
+              if (isThenableResolved(thenable)) {
                 // The data resolved. Try rendering the component again.
                 workInProgressSuspendedReason = NotSuspended;
                 workInProgressThrownValue = null;
