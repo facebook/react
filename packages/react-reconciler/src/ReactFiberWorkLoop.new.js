@@ -1926,13 +1926,7 @@ export function renderDidSuspend(): void {
 }
 
 export function renderDidSuspendDelayIfPossible(): void {
-  if (
-    workInProgressRootExitStatus === RootInProgress ||
-    workInProgressRootExitStatus === RootSuspended ||
-    workInProgressRootExitStatus === RootErrored
-  ) {
-    workInProgressRootExitStatus = RootSuspendedWithDelay;
-  }
+  workInProgressRootExitStatus = RootSuspendedWithDelay;
 
   // Check if there are updates that we skipped tree that might have unblocked
   // this render.
