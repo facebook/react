@@ -54,13 +54,9 @@ export function getThenableStateAfterSuspending(): ThenableState | null {
   return state;
 }
 
-export function isThenableStateResolved(thenables: ThenableState): boolean {
-  const lastThenable = thenables[thenables.length - 1];
-  if (lastThenable !== undefined) {
-    const status = lastThenable.status;
-    return status === 'fulfilled' || status === 'rejected';
-  }
-  return true;
+export function isThenableResolved(thenable: Thenable<mixed>): boolean {
+  const status = thenable.status;
+  return status === 'fulfilled' || status === 'rejected';
 }
 
 function noop(): void {}
