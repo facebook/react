@@ -2880,8 +2880,13 @@ function commitMutationEffectsOnFiber(
         }
 
         if (isHidden) {
-          // Check if this is an update, and the tree was previously visible.
-          if (current !== null && !wasHidden) {
+          const isUpdate = current !== null;
+          const isAncestorOffscreenHidden = offscreenSubtreeIsHidden;
+          // Only trigger disapper layout effects if:
+          //   - This is an update, not first mount.
+          //   - This Offscreen was hidden before.
+          //   - No ancestor Offscreen is hidden.
+          if (isUpdate && !wasHidden && !isAncestorOffscreenHidden) {
             if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
               // Disappear the layout effects of all the children
               recursivelyTraverseDisappearLayoutEffects(offscreenBoundary);
