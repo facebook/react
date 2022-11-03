@@ -430,26 +430,6 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.textContent).toEqual('hi');
     });
 
-    itThrowsWhenRendering(
-      'with a warning for useRef inside useReducer',
-      async render => {
-        function App() {
-          const [value, dispatch] = useReducer((state, action) => {
-            useRef(0);
-            return state + 1;
-          }, 0);
-          if (value === 0) {
-            dispatch();
-          }
-          return value;
-        }
-
-        const domNode = await render(<App />, 1);
-        expect(domNode.textContent).toEqual('1');
-      },
-      'Rendered more hooks than during the previous render',
-    );
-
     itRenders('with a warning for useRef inside useState', async render => {
       function App() {
         const [value] = useState(() => {
@@ -684,6 +664,32 @@ describe('ReactDOMServerHooks', () => {
         '3. You might have more than one copy of React in the same app\n' +
         'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
+  });
+
+  describe('invalid hooks', () => {
+    it('warns when calling useRef inside useReducer', async () => {
+      function App() {
+        const [value, dispatch] = useReducer((state, action) => {
+          useRef(0);
+          return state + 1;
+        }, 0);
+        if (value === 0) {
+          dispatch();
+        }
+        return value;
+      }
+
+      let error;
+      try {
+        await serverRender(<App />);
+      } catch (x) {
+        error = x;
+      }
+      expect(error).not.toBe(undefined);
+      expect(error.message).toContain(
+        'Rendered more hooks than during the previous render',
+      );
+    });
   });
 
   itRenders(
