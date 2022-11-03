@@ -288,14 +288,14 @@ describe('ReactOffscreen', () => {
     }
 
     let _setIsVisible;
-    let onlyFirst = false;
+    let isFirstRender = true
 
     function App() {
       const [isVisible, setIsVisible] = React.useState(true);
       _setIsVisible = setIsVisible;
-      if (onlyFirst === false) {
+      if (isFirstRender === true) {
         setIsVisible(false);
-        onlyFirst = true;
+        isFirstRender = false;
       }
 
       return (
