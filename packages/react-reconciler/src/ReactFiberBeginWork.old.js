@@ -38,7 +38,6 @@ import type {
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {RootState} from './ReactFiberRoot.old';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old';
-import type {ThenableState} from './ReactFiberThenable.old';
 
 import checkPropTypes from 'shared/checkPropTypes';
 import {
@@ -1167,7 +1166,6 @@ export function replayFunctionComponent(
   workInProgress: Fiber,
   nextProps: any,
   Component: any,
-  prevThenableState: ThenableState,
   renderLanes: Lanes,
 ): Fiber | null {
   // This function is used to replay a component that previously suspended,
@@ -1190,7 +1188,6 @@ export function replayFunctionComponent(
     Component,
     nextProps,
     context,
-    prevThenableState,
   );
   const hasId = checkDidRenderIdHook();
   if (enableSchedulingProfiler) {
