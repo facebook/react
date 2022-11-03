@@ -297,7 +297,7 @@ describe('ReactDOMFloat', () => {
   // @gate enableFloat
   it('can hydrate non Resources in head when Resources are also inserted there', async () => {
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head>
             <meta property="foo" content="bar" />
@@ -5408,7 +5408,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('allows resources inside foreignobject within an svg context', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <body>
               <svg>
@@ -5515,7 +5515,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('should support non-title resources in svg context', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <body>
               <svg>
@@ -5648,7 +5648,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('should not treat title descendants of svg into resources', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <body>
               <svg>
@@ -5774,7 +5774,7 @@ describe('ReactDOMFloat', () => {
         );
       }
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
 
@@ -5871,7 +5871,7 @@ describe('ReactDOMFloat', () => {
       }
 
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
       expect(getMeaningfulChildren(container)).toEqual(

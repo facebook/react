@@ -5518,7 +5518,7 @@ describe('ReactDOMFizzServer', () => {
 
   it('can render scripts with simple children', async () => {
     await actIntoEmptyDocument(async () => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <body>
             <script>{'try { foo() } catch (e) {} ;'}</script>
@@ -5528,7 +5528,12 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
 
-    expect(document.documentElement.outerHTML).toEqual(
+    expect(
+      stripExternalRuntimeInString(
+        document.documentElement.outerHTML,
+        renderOptions.unstable_externalRuntimeSrc,
+      ),
+    ).toEqual(
       '<html><head></head><body><script>try { foo() } catch (e) {} ;</script></body></html>',
     );
   });
@@ -5546,7 +5551,7 @@ describe('ReactDOMFizzServer', () => {
 
     try {
       await actIntoEmptyDocument(async () => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <body>
               <script>{2}</script>
