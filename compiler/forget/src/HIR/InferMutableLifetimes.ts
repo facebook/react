@@ -5,7 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { HIRFunction } from "./HIR";
+import { assertExhaustive } from "../Common/utils";
+import { Effect, HIRFunction, Instruction, Place } from "./HIR";
+import { printInstruction, printPlace } from "./PrintHIR";
 
 /**
  * For each usage of a value in the given function, determines if the usage
@@ -24,6 +26,7 @@ import { HIRFunction } from "./HIR";
  *
  * == Algorithm
  *
+ * TODO:
  * 1. Forward data-flow analysis to determine aliasing. Unlike InferReferenceCapability
  *    which only tracks aliasing of top-level variables (`y = x`), this analysis needs
  *    to know if a value is aliased anywhere (`y.x = x`). The forward data flow tracks
@@ -38,10 +41,9 @@ import { HIRFunction } from "./HIR";
  * mutate(y);    // can infer that y mutates v0 and v1
  * ```
  *
- * 2. Backward data-flow analysis to compute mutability liveness. Walk backwards over
- *    the CFG and track which values are mutated in a successor. Then when visiting
- *    preceding statements, mark any reference to a value that is known mutated as
- *    mutable.
+ * DONE:
+ * 2. Forward data-flow analysis to compute mutability liveness. Walk forwards over
+ *    the CFG and track which values are mutated in a successor.
  *
  * ```
  * mutate(y);    // mutable y => v0, v1 mutated
@@ -49,4 +51,119 @@ import { HIRFunction } from "./HIR";
  * ...
  * ```
  */
-function inferMutableLifetimes(fn: HIRFunction) {}
+
+function inferPlace(place: Place, instr: Instruction) {
+  switch (place.effect) {
+    case Effect.Unknown: {
+      throw new Error(
+        `Found an unkown place ${printPlace(place)} at ${printInstruction(
+          instr
+        )}!`
+      );
+    }
+    case Effect.Read:
+    case Effect.Freeze:
+      return;
+    case Effect.Mutate: {
+      place.identifier.mutableRange.end = instr.id;
+      return;
+    }
+    default:
+      assertExhaustive(place.effect, `Unexpected ${printPlace(place)} effect`);
+  }
+}
+
+export function inferMutableRanges(func: HIRFunction) {
+  for (const [_, block] of func.body.blocks) {
+    for (const phi of block.phis) {
+      phi.id.mutableRange = {
+        start: -1, // TODO(gsn): This is a hack, we should assign proper ids to phis.
+        end: -1,
+      };
+    }
+
+    for (const instr of block.instructions) {
+      for (const input of collectInputs(instr)) {
+        inferPlace(input, instr);
+      }
+
+      if (instr.lvalue !== null) {
+        if (instr.lvalue.place.memberPath === null) {
+          const lvalueId = instr.lvalue.place.identifier;
+
+          // lvalue start being mutable when they're initially assigned a
+          // value.
+          lvalueId.mutableRange.start = instr.id;
+
+          // Let's be optimistic and assume this lvalue is not mutable by
+          // default.
+          lvalueId.mutableRange.end = instr.id;
+        } else {
+          inferPlace(instr.lvalue.place, instr);
+        }
+      }
+    }
+  }
+}
+
+function* collectInputs(instr: Instruction) {
+  const instrValue = instr.value;
+  switch (instrValue.kind) {
+    case "NewExpression":
+    case "CallExpression": {
+      yield instrValue.callee;
+      for (const arg of instrValue.args) {
+        yield arg;
+      }
+      break;
+    }
+    case "BinaryExpression": {
+      yield instrValue.left;
+      yield instrValue.right;
+      break;
+    }
+    case "Identifier": {
+      yield instrValue;
+      break;
+    }
+    case "UnaryExpression": {
+      yield instrValue.value;
+      break;
+    }
+    case "JsxExpression": {
+      yield instrValue.tag;
+      for (const place of instrValue.props.values()) {
+        yield place;
+      }
+      if (instrValue.children) {
+        for (const c of instrValue.children) {
+          yield c;
+        }
+      }
+      break;
+    }
+    case "ObjectExpression": {
+      if (instrValue.properties !== null) {
+        const props = instrValue.properties;
+        for (const place of props.values()) {
+          yield place;
+        }
+      }
+      break;
+    }
+    case "ArrayExpression": {
+      for (const e of instrValue.elements) {
+        yield e;
+      }
+      break;
+    }
+    case "OtherStatement":
+    case "Primitive":
+    case "JSXText": {
+      break;
+    }
+    default: {
+      console.log(`unhandled instruction: ${printInstruction(instr)}`);
+    }
+  }
+}

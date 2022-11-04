@@ -18,6 +18,7 @@ import { lower } from "../HIR/BuildHIR";
 import codegen from "../HIR/Codegen";
 import { HIRFunction } from "../HIR/HIR";
 import { Environment } from "../HIR/HIRBuilder";
+import { inferMutableRanges } from "../HIR/InferMutableLifetimes";
 import inferReferenceEffects from "../HIR/InferReferenceEffects";
 import printHIR from "../HIR/PrintHIR";
 import buildSSA from "../HIR/SSAify";
@@ -64,6 +65,7 @@ describe("React Forget (HIR version)", () => {
             const ir: HIRFunction = lower(nodePath, env);
             buildSSA(ir, env);
             inferReferenceEffects(ir);
+            inferMutableRanges(ir);
             // const lifetimeGraph = buildDefUseGraph(ir);
             const textHIR = printHIR(ir.body);
             // const textLifetimeGraph = printGraph(lifetimeGraph);

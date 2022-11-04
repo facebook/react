@@ -32,7 +32,7 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Let mutate x$10 = Array []
+  [1] Let mutate x$10[1:6] = Array []
   [2] Let mutate y$11 = undefined
   [3] Const mutate $12 = false
   [4] Const mutate $13 = true

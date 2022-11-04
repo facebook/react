@@ -9,7 +9,7 @@ function Component(props) {
   const b = {};
   foo(a, b);
   let _ = <div a={a} />;
-  foo(b);
+  foo(a, b);
   return <div a={a} b={b} />;
 }
 
@@ -34,12 +34,12 @@ function foo$0() {
 
 ```
 bb0:
-  [1] Const mutate a$10 = Array []
-  [2] Const mutate b$11 = Object {  }
+  [1] Const mutate a$10[1:3] = Array []
+  [2] Const mutate b$11[2:6] = Object {  }
   [3] Call mutate foo$4(mutate a$10, mutate b$11)
   [4] Const mutate $12 = "div"
   [5] Let mutate _$13 = JSX <read $12 a={freeze a$10} ></read $12>
-  [6] Call mutate foo$4(mutate b$11)
+  [6] Call mutate foo$4(read a$10, mutate b$11)
   [7] Const mutate $14 = "div"
   [8] Const mutate $15 = JSX <read $14 a={read a$10} b={freeze b$11} ></read $14>
   Return read $15
@@ -54,7 +54,7 @@ function Component$0(props$9) {
   foo$4(a$10, b$11);
   let _$13 = <div a={a$10}></div>;
 
-  foo$4(b$11);
+  foo$4(a$10, b$11);
   return <div a={a$10} b={b$11}></div>;
 }
 

@@ -45,9 +45,9 @@ bb0:
 bb1:
   predecessor blocks: bb0 bb4 bb7
   items$33: phi(bb0: items$27, bb4: items$33, bb7: items$33)
-  item$35: phi(bb0: item$10, bb4: item$35, bb7: item$35)
-  seen$38: phi(bb0: seen$30, bb4: seen$38, bb7: seen$38)
-  renderedItems$46: phi(bb0: renderedItems$29, bb4: renderedItems$46, bb7: renderedItems$46)
+  item$35[-1:11]: phi(bb0: item$10, bb4: item$35, bb7: item$35)
+  seen$38[-1:11]: phi(bb0: seen$30, bb4: seen$38, bb7: seen$38)
+  renderedItems$46[-1:14]: phi(bb0: renderedItems$29, bb4: renderedItems$46, bb7: renderedItems$46)
   max$48: phi(bb0: max$32, bb4: max$48, bb7: max$48)
   If (read items$33) then:bb3 else:bb2
 bb3:

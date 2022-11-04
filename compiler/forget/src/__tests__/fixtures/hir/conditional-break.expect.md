@@ -78,7 +78,7 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate a_DEBUG$5 = Array []
+  [1] Const mutate a_DEBUG$5[1:4] = Array []
   [2] Call mutate a_DEBUG$5.push(read props$4.a)
   If (read props$4.b) then:bb2 else:bb1
 bb2:
@@ -110,7 +110,7 @@ function Component$0(props$4) {
 
 ```
 bb0:
-  [1] Const mutate a$4 = Array []
+  [1] Const mutate a$4[1:4] = Array []
   [2] Call mutate a$4.push(read props$3.a)
   If (read props$3.b) then:bb2 else:bb1
 bb2:
@@ -143,7 +143,7 @@ function Component$0(props$3) {
 
 ```
 bb0:
-  [1] Const mutate a$5 = Array []
+  [1] Const mutate a$5[1:5] = Array []
   [2] Call mutate a$5.push(read props$4.a)
   If (read props$4.b) then:bb2 else:bb1
 bb2:
@@ -177,7 +177,7 @@ function Component$0(props$4) {
 
 ```
 bb0:
-  [1] Const mutate a$4 = Array []
+  [1] Const mutate a$4[1:4] = Array []
   [2] Call mutate a$4.push(read props$3.a)
   If (read props$3.b) then:bb2 else:bb1
 bb2:
@@ -210,7 +210,7 @@ function Component$0(props$3) {
 
 ```
 bb0:
-  [1] Const mutate a$4 = Array []
+  [1] Const mutate a$4[1:4] = Array []
   [2] Call mutate a$4.push(read props$3.a)
   If (read props$3.b) then:bb1 else:bb2
 bb2:

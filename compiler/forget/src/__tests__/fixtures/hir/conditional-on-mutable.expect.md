@@ -67,8 +67,8 @@ function mayMutate() {}
 
 ```
 bb0:
-  [1] Const mutate a$7 = Array []
-  [2] Const mutate b$8 = Array []
+  [1] Const mutate a$7[1:3] = Array []
+  [2] Const mutate b$8[2:4] = Array []
   If (read b$8) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
@@ -111,8 +111,8 @@ function Component$0(props$6) {
 
 ```
 bb0:
-  [1] Const mutate a$9 = Array []
-  [2] Const mutate b$10 = Array []
+  [1] Const mutate a$9[1:4] = Array []
+  [2] Const mutate b$10[2:5] = Array []
   [3] Const mutate $11 = Call mutate mayMutate$4(mutate b$10)
   If (read $11) then:bb2 else:bb1
 bb2:

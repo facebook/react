@@ -76,8 +76,8 @@ function Foo$0() {
 
 ```
 bb0:
-  [1] Const mutate a$9 = Call mutate compute$3(read props$8.a)
-  [2] Const mutate b$10 = Call mutate compute$3(read props$8.b)
+  [1] Const mutate a$9[1:3] = Call mutate compute$3(read props$8.a)
+  [2] Const mutate b$10[2:3] = Call mutate compute$3(read props$8.b)
   If (read props$8.c) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0

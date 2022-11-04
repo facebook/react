@@ -34,8 +34,8 @@ function foo$0() {
 
 ```
 bb0:
-  [1] Const mutate a$10 = Array []
-  [2] Const mutate b$11 = Object {  }
+  [1] Const mutate a$10[1:3] = Array []
+  [2] Const mutate b$11[2:6] = Object {  }
   [3] Call mutate foo$4(mutate a$10, mutate b$11)
   [4] Const mutate $12 = "div"
   [5] Let mutate _$13 = JSX <read $12 a={freeze a$10} ></read $12>

@@ -23,7 +23,7 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Let mutate x$7 = Array []
+  [1] Let mutate x$7[1:2] = Array []
   [2] Call mutate x$7.push(read props$6.p0)
   [3] Let mutate y$8 = read x$7
   If (read props$6.p1) then:bb2 else:bb1

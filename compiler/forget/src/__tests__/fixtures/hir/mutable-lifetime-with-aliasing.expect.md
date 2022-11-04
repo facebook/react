@@ -57,9 +57,9 @@ bb0:
   [1] Const mutate a$11 = Object {  }
   [2] Const mutate b$12 = Array [read a$11]
   [3] Const mutate c$13 = Object {  }
-  [4] Const mutate d$14 = Object { c: read c$13 }
-  [5] Const mutate x$15 = Object {  }
-  [6] Reassign mutate x$15.b = read b$12
+  [4] Const mutate d$14[4:7] = Object { c: read c$13 }
+  [5] Const mutate x$15[5:9] = Object {  }
+  [6] Reassign mutate x$15.b[5:9] = read b$12
   [7] Const mutate y$16 = Call mutate mutate$8(mutate x$15, mutate d$14)
   If (read a$11) then:bb1 else:bb1
 bb1:

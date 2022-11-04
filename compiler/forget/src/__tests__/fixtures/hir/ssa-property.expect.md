@@ -16,8 +16,8 @@ function foo() {
 ```
 bb0:
   [1] Const mutate x$3 = Array []
-  [2] Const mutate y$4 = Object {  }
-  [3] Reassign mutate y$4.x = read x$3
+  [2] Const mutate y$4[2:3] = Object {  }
+  [3] Reassign mutate y$4.x[2:3] = read x$3
   Return freeze y$4
 ```
 
