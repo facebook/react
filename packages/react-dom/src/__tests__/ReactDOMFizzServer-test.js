@@ -5402,6 +5402,24 @@ describe('ReactDOMFizzServer', () => {
       });
       expect(getVisibleChildren(container)).toEqual('Hi');
     });
+
+    it('promise as node', async () => {
+      const promise = Promise.resolve('Hi');
+      await act(async () => {
+        const {pipe} = renderToPipeableStream(promise);
+        pipe(writable);
+      });
+
+      // TODO: The `act` implementation in this file doesn't unwrap microtasks
+      // automatically. We can't use the same `act` we use for Fiber tests
+      // because that relies on the mock Scheduler. Doesn't affect any public
+      // API but we might want to fix this for our own internal tests.
+      await act(async () => {
+        await promise;
+      });
+
+      expect(getVisibleChildren(container)).toEqual('Hi');
+    });
   });
 
   describe('useEffectEvent', () => {

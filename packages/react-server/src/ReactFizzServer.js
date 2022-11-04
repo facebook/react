@@ -18,6 +18,7 @@ import type {
   ReactProviderType,
   OffscreenMode,
   Wakeable,
+  Thenable,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -102,6 +103,7 @@ import {
   currentResponseState,
   setCurrentResponseState,
   getThenableStateAfterSuspending,
+  unwrapThenable,
 } from './ReactFizzHooks';
 import {DefaultCacheDispatcher} from './ReactFizzCache';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
@@ -123,6 +125,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_SERVER_CONTEXT_TYPE,
   REACT_SCOPE_TYPE,
   REACT_OFFSCREEN_TYPE,
 } from 'shared/ReactSymbols';
@@ -1438,6 +1441,33 @@ function renderNodeDestructiveImpl(
         }
         return;
       }
+    }
+
+    // Usables are a valid React node type. When React encounters a Usable in
+    // a child position, it unwraps it using the same algorithm as `use`. For
+    // example, for promises, React will throw an exception to unwind the
+    // stack, then replay the component once the promise resolves.
+    //
+    // A difference from `use` is that React will keep unwrapping the value
+    // until it reaches a non-Usable type.
+    //
+    // e.g. Usable<Usable<Usable<T>>> should resolve to T
+    const maybeUsable: Object = node;
+    if (typeof maybeUsable.then === 'function') {
+      const thenable: Thenable<ReactNodeList> = (maybeUsable: any);
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        null,
+        unwrapThenable(thenable),
+      );
+    }
+
+    if (
+      maybeUsable.$$typeof === REACT_CONTEXT_TYPE ||
+      maybeUsable.$$typeof === REACT_SERVER_CONTEXT_TYPE
+    ) {
+      // TODO: Implement Context as child type.
     }
 
     // $FlowFixMe[method-unbinding]

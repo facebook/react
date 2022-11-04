@@ -584,15 +584,7 @@ function use<T>(usable: Usable<T>): T {
     if (typeof usable.then === 'function') {
       // This is a thenable.
       const thenable: Thenable<T> = (usable: any);
-
-      // Track the position of the thenable within this fiber.
-      const index = thenableIndexCounter;
-      thenableIndexCounter += 1;
-
-      if (thenableState === null) {
-        thenableState = createThenableState();
-      }
-      return trackUsedThenable(thenableState, thenable, index);
+      return unwrapThenable(thenable);
     } else if (
       usable.$$typeof === REACT_CONTEXT_TYPE ||
       usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
@@ -604,6 +596,15 @@ function use<T>(usable: Usable<T>): T {
 
   // eslint-disable-next-line react-internal/safe-string-coercion
   throw new Error('An unsupported type was passed to use(): ' + String(usable));
+}
+
+export function unwrapThenable<T>(thenable: Thenable<T>): T {
+  const index = thenableIndexCounter;
+  thenableIndexCounter += 1;
+  if (thenableState === null) {
+    thenableState = createThenableState();
+  }
+  return trackUsedThenable(thenableState, thenable, index);
 }
 
 function unsupportedRefresh() {
