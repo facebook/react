@@ -845,7 +845,7 @@ export function scheduleInitialHydrationOnRoot(
   // match what was rendered on the server.
   const current = root.current;
   current.lanes = lane;
-  markRootUpdated(root, lane, eventTime, root.updatePriority);
+  markRootUpdated(root, lane, eventTime, root.tag === LegacyRoot ? DiscreteEventPriority : DefaultEventPriority);
   ensureRootIsScheduled(root, eventTime);
 }
 
@@ -2497,7 +2497,7 @@ function commitRootImpl(
     }
   }
 
-  const rootUpdatePriorityBeforeLayoutEffect = root.updatePriority;
+  const prevRootUpdatePriority = root.updatePriority;
   // Check if there are any effects in the whole tree.
   // TODO: This is left over from the effect list implementation, where we had
   // to check for the existence of `firstEffect` to satisfy Flow. I think the
@@ -2698,11 +2698,11 @@ function commitRootImpl(
   // TODO: We can optimize this by not scheduling the callback earlier. Since we
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
-  //// TODO: Should we flushPassiveEffects When `pendingPassiveEffectsLanes` is a retry lane?
+  //// TODO: Need to clear the updatePriority inorder to remove the sync lane check
   if (
     (enableUnifiedSyncLane
       ? includesSomeLane(pendingPassiveEffectsLanes, SyncLane) &&
-        rootUpdatePriorityBeforeLayoutEffect === DiscreteEventPriority
+      prevRootUpdatePriority === DiscreteEventPriority
       : includesSomeLane(pendingPassiveEffectsLanes, SyncLane)) &&
     root.tag !== LegacyRoot
   ) {

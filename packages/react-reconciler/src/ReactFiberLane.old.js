@@ -11,7 +11,6 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Transition} from './ReactFiberTracingMarkerComponent.old';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.old';
 import type {EventPriority} from './ReactEventPriorities.old';
-import {LegacyRoot} from './ReactRootTags';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -640,9 +639,6 @@ export function markRootUpdated(
 export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
-  if ((root.suspendedLanes & SyncLane) !== NoLane) {
-    root.updatePriority = DefaultEventPriority;
-  }
   // The suspended lanes are no longer CPU-bound. Clear their expiration times.
   const expirationTimes = root.expirationTimes;
   let lanes = suspendedLanes;
@@ -672,10 +668,8 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
 
   root.pendingLanes = remainingLanes;
-  if ((root.pendingLanes & SyncLane) !== NoLane) {
-    root.updatePriority =
-      root.tag === LegacyRoot ? DiscreteEventPriority : DefaultEventPriority;
-  }
+
+  // TODO: clearing the priority causes priority to be missing in retryTimedOutBoundary
 
   // Let's try everything again
   root.suspendedLanes = NoLanes;
