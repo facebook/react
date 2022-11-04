@@ -44,9 +44,20 @@ class SSABuilder {
     return this.#states.get(this.#current)!;
   }
 
+  makeId(oldId: Identifier): Identifier {
+    return {
+      id: this.nextIdentifierId,
+      name: oldId.name,
+      mutableRange: {
+        start: 0,
+        end: 0,
+      },
+    };
+  }
+
   definePlace(oldPlace: Place): Place {
     const oldId = oldPlace.identifier;
-    const newId = { ...oldId, id: this.nextIdentifierId };
+    const newId = this.makeId(oldId);
     this.state().defs.set(oldId, newId);
     return {
       ...oldPlace,
@@ -103,7 +114,7 @@ class SSABuilder {
     // Adding a phi may loop back to our block if there is a loop in the CFG.  We
     // update our defs before adding the phi to terminate the recursion rather than
     // looping infinitely.
-    const newId = { ...oldId, id: this.nextIdentifierId };
+    const newId = this.makeId(oldId);
     state.defs.set(oldId, newId);
 
     const predDefs: Map<BasicBlock, Identifier> = new Map();

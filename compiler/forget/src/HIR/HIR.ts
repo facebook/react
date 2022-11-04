@@ -240,12 +240,24 @@ export type Primitive = {
   loc: SourceLocation;
 };
 
+/*
+ * Range in which an identifier is mutable. Start and End refer to Instruction.id.
+ * TODO(gsn): Type Instruction.id better and use it here.
+ *
+ * Start is exclusive, End is inclusive (ie, the value is mutable at that instruction).
+ */
+export type MutableRange = {
+  start: number;
+  end: number;
+};
+
 /**
  * Represents a user-defined variable (has a name) or a temporary variable (no name).
  */
 export type Identifier = {
   id: IdentifierId; // unique value to distinguish different instances of the same name in different scopes
   name: string | null; // null for temporaries. name is primarily used for debugging.
+  mutableRange: MutableRange;
 };
 
 /**

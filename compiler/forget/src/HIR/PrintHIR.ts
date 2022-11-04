@@ -14,6 +14,7 @@ import {
   InstructionKind,
   InstructionValue,
   LValue,
+  MutableRange,
   Phi,
   Place,
   SourceLocation,
@@ -96,6 +97,7 @@ export function printInstruction(instr: Instruction): string {
 function printPhi(phi: Phi): string {
   const items = [];
   items.push(printIdentifier(phi.id));
+  items.push(printMutableRange(phi.id.mutableRange));
   items.push(": phi(");
   const phis = [];
   for (const [block, id] of phi.operands) {
@@ -239,8 +241,17 @@ function printInstructionValue(instrValue: InstructionValue): string {
   return value;
 }
 
+function isMutable(range: MutableRange): boolean {
+  return range.end > range.start;
+}
+
+function printMutableRange(range: MutableRange): string {
+  return isMutable(range) ? `[${range.start}:${range.end}]` : "";
+}
+
 export function printLValue(lval: LValue): string {
-  const place = printPlace(lval.place);
+  let place = printPlace(lval.place);
+  place += printMutableRange(lval.place.identifier.mutableRange);
   switch (lval.kind) {
     case InstructionKind.Let: {
       return `Let ${place}`;

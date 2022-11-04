@@ -116,6 +116,7 @@ export default class HIRBuilder {
     return {
       id,
       name: null,
+      mutableRange: { start: 0, end: 0 },
     };
   }
 
@@ -123,7 +124,7 @@ export default class HIRBuilder {
     let identifier = this.#bindings.get(node);
     if (identifier == null) {
       const id = this.nextIdentifierId;
-      identifier = { id, name: node.name };
+      identifier = { id, name: node.name, mutableRange: { start: 0, end: 0 } };
       this.#bindings.set(node, identifier);
     }
     return identifier;
