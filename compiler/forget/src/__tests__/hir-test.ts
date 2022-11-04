@@ -33,10 +33,25 @@ wasmFolder(
   path.join(__dirname, "..", "..", "node_modules", "@hpcc-js", "wasm", "dist")
 );
 
+const Pragma_RE = /\/\/\s*@enable\((\w+)\)$/gm;
+
 describe("React Forget (HIR version)", () => {
   generateTestsFromFixtures(
     path.join(__dirname, "fixtures", "hir"),
     (input, file) => {
+      const matches = input.matchAll(Pragma_RE);
+
+      for (const match of matches) {
+        const [, key, value] = match;
+        switch (key) {
+          case "Pass":
+            // do something with value;
+            break;
+          default:
+            throw new Error(`unknown pragma: ${key}`);
+        }
+      }
+
       const ast = parser.parse(input, {
         sourceFilename: file,
         plugins: ["typescript", "jsx"],
