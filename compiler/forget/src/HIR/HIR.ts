@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { NodePath } from "@babel/core";
 import * as t from "@babel/types";
 import { invariant } from "../CompilerError";
 
@@ -23,6 +22,16 @@ import { invariant } from "../CompilerError";
 // AST -> (lowering) -> HIR -> (dep analysis) -> Reactive Scopes -> (scheduling?) -> HIR -> (codegen) -> AST
 
 /**
+ * A location in a source file, intended to be used for providing diagnostic information and
+ * transforming code while preserving source information (ie to emit source maps).
+ *
+ * `GeneratedSource` indicates that there is no single source location from which the code derives.
+ *
+ */
+export const GeneratedSource = Symbol();
+export type SourceLocation = t.SourceLocation | typeof GeneratedSource;
+
+/**
  * A React function defines a computation that takes some set of reactive
  * inputs (eg props, hook arguments) and returns a result (JSX, hook return
  * value). It is composed of one or more Reactive Scopes, where each
@@ -37,7 +46,7 @@ import { invariant } from "../CompilerError";
  * may depend upon (transitively).
  */
 export type ReactFunction = {
-  path: NodePath<t.Function>;
+  loc: SourceLocation;
   id: Identifier | null;
   params: Array<Place>;
   returnScope: ScopeId;
@@ -59,10 +68,12 @@ export type ReactiveScope = {
  * A function declaration including its path
  */
 export type HIRFunction = {
-  path: NodePath<t.Function>;
+  loc: SourceLocation;
   id: Identifier | null;
   params: Array<Place>;
   body: HIR;
+  generator: boolean;
+  async: boolean;
 };
 
 /**
@@ -140,7 +151,7 @@ export type SwitchTerminal = {
 export type Instruction = {
   lvalue: LValue | null;
   value: InstructionValue;
-  path: NodePath;
+  loc: SourceLocation;
 };
 
 export type LValue = {
@@ -162,7 +173,9 @@ export enum InstructionKind {
  *
  * Values are therefore only a Place or a primitive value.
  */
-export type InstructionValue = (InstructionData & { path: NodePath }) | Place;
+export type InstructionValue =
+  | (InstructionData & { loc: SourceLocation })
+  | Place;
 
 export type Phi = {
   kind: "Phi";
@@ -199,7 +212,10 @@ export type InstructionData =
    * which are not directly represented, but included for completeness and to allow
    * passing through in codegen.
    */
-  | { kind: "OtherStatement" };
+  | {
+      kind: "OtherStatement";
+      node: t.Statement | t.JSXSpreadChild | t.JSXFragment;
+    };
 
 /**
  * A place where data may be read from / written to:
@@ -211,7 +227,7 @@ export type Place = {
   identifier: Identifier;
   memberPath: Array<string> | null;
   effect: Effect;
-  path: NodePath;
+  loc: SourceLocation;
 };
 
 /**
@@ -220,7 +236,7 @@ export type Place = {
 export type Primitive = {
   kind: "Primitive";
   value: number | boolean | string | null | undefined;
-  path: NodePath<t.Node | null | undefined>;
+  loc: SourceLocation;
 };
 
 /**

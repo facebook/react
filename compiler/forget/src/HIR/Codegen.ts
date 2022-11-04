@@ -45,18 +45,13 @@ export default function codegen(fn: HIRFunction): t.Function {
   const entry = fn.body.blocks.get(fn.body.entry)!;
   const cx: Context = { ir: fn.body, temp: new Map() };
   const body = codegenBlock(cx, entry);
-  const node = fn.path.node;
-  todoInvariant(
-    t.isFunctionDeclaration(node),
-    "todo: handle other than function declaration"
-  );
   const params = fn.params.map((param) => convertIdentifier(param.identifier));
   return t.functionDeclaration(
     fn.id !== null ? convertIdentifier(fn.id) : null,
     params,
     body,
-    node.generator,
-    node.async
+    fn.generator,
+    fn.async
   );
 }
 
@@ -158,7 +153,7 @@ function writeBlock(cx: Context, block: BasicBlock, body: Array<t.Statement>) {
 }
 
 function writeInstr(cx: Context, instr: Instruction, body: Array<t.Statement>) {
-  let value;
+  let value: t.Expression;
   const instrValue = instr.value;
   switch (instrValue.kind) {
     case "ArrayExpression": {
@@ -253,15 +248,13 @@ function writeInstr(cx: Context, instr: Instruction, body: Array<t.Statement>) {
       break;
     }
     case "OtherStatement": {
-      const node = instrValue.path.node;
-      if (node != null) {
-        invariant(
-          t.isStatement(node),
-          "Expected node to be a statement if present"
-        );
+      const node = instrValue.node;
+      if (t.isStatement(node)) {
         body.push(node);
+        return;
       }
-      return;
+      value = node as any; // TODO(josephsavona) complete handling of JSX fragment/spreadchild elements
+      break;
     }
     case "Identifier": {
       value = codegenPlace(cx, instrValue);

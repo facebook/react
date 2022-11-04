@@ -11,12 +11,14 @@ import { assertExhaustive } from "../Common/utils";
 import { invariant } from "../CompilerError";
 import {
   Effect,
+  GeneratedSource,
   HIRFunction,
   IfTerminal,
   InstructionKind,
   InstructionValue,
   Place,
   ReturnTerminal,
+  SourceLocation,
   Terminal,
   ThrowTerminal,
 } from "./HIR";
@@ -66,7 +68,7 @@ export function lower(
       identifier,
       memberPath: null,
       effect: Effect.Unknown,
-      path: null as any,
+      loc: param.loc ?? GeneratedSource,
     };
     params.push(place);
   });
@@ -81,10 +83,12 @@ export function lower(
   }
 
   return {
-    path: func,
     id,
     params,
     body: builder.build(),
+    generator: func.node.generator === true,
+    async: func.node.async === true,
+    loc: func.node.loc ?? GeneratedSource,
   };
 }
 
@@ -574,13 +578,13 @@ function lowerStatement(
           value = {
             kind: "Primitive",
             value: undefined,
-            path: init as any, // TODO
+            loc: id.loc,
           };
         }
         builder.push({
           lvalue: { place: id, kind },
           value,
-          path: stmt,
+          loc: declaration.node.loc ?? GeneratedSource,
         });
       }
       return;
@@ -596,7 +600,7 @@ function lowerStatement(
       builder.push({
         lvalue: null,
         value,
-        path: stmt,
+        loc: stmt.node.loc ?? GeneratedSource,
       });
       return;
     }
@@ -632,9 +636,13 @@ function lowerStatement(
     case "TSTypeAliasDeclaration":
     case "WithStatement": {
       builder.push({
-        path: stmtPath,
         lvalue: null,
-        value: { kind: "OtherStatement", path: stmtPath },
+        loc: stmtPath.node.loc ?? GeneratedSource,
+        value: {
+          kind: "OtherStatement",
+          loc: stmtPath.node.loc ?? GeneratedSource,
+          node: stmtPath.node,
+        },
       });
       return;
     }
@@ -654,6 +662,7 @@ function lowerExpression(
   exprPath: NodePath<t.Expression>
 ): InstructionValue {
   const exprNode = exprPath.node;
+  const exprLoc = exprNode.loc ?? GeneratedSource;
   switch (exprNode.type) {
     case "Identifier": {
       const expr = exprPath as NodePath<t.Identifier>;
@@ -663,7 +672,7 @@ function lowerExpression(
       return {
         kind: "Primitive",
         value: null,
-        path: exprPath,
+        loc: exprLoc,
       };
     }
     case "BooleanLiteral":
@@ -676,7 +685,7 @@ function lowerExpression(
       return {
         kind: "Primitive",
         value,
-        path: exprPath,
+        loc: exprLoc,
       };
     }
     case "ObjectExpression": {
@@ -701,7 +710,7 @@ function lowerExpression(
       return {
         kind: "ObjectExpression",
         properties,
-        path: exprPath,
+        loc: exprLoc,
       };
     }
     case "ArrayExpression": {
@@ -716,7 +725,7 @@ function lowerExpression(
       return {
         kind: "ArrayExpression",
         elements,
-        path: exprPath,
+        loc: exprLoc,
       };
     }
     case "NewExpression": {
@@ -739,7 +748,7 @@ function lowerExpression(
         kind: "NewExpression",
         callee,
         args,
-        path: exprPath,
+        loc: exprLoc,
       };
     }
     case "CallExpression": {
@@ -762,7 +771,7 @@ function lowerExpression(
         kind: "CallExpression",
         callee,
         args,
-        path: exprPath,
+        loc: exprLoc,
       };
     }
     case "BinaryExpression": {
@@ -780,7 +789,7 @@ function lowerExpression(
         operator,
         left,
         right,
-        path: exprPath,
+        loc: exprLoc,
       };
     }
     case "LogicalExpression": {
@@ -797,6 +806,7 @@ function lowerExpression(
           return lowerConditional(
             builder,
             left,
+            exprLoc,
             () => left,
             () => lowerExpression(builder, expr.get("right"))
           );
@@ -806,6 +816,7 @@ function lowerExpression(
           return lowerConditional(
             builder,
             left,
+            exprLoc,
             () => lowerExpression(builder, expr.get("right")),
             () => left
           );
@@ -821,15 +832,15 @@ function lowerExpression(
             identifier: builder.makeTemporary(),
             memberPath: null,
             effect: Effect.Unknown,
-            path: null as any,
+            loc: left.loc,
           };
           builder.push({
             value: {
               kind: "Primitive",
               value: null,
-              path: null as any,
+              loc: GeneratedSource,
             },
-            path: exprPath,
+            loc: left.loc,
             lvalue: { place: { ...nullPlace }, kind: InstructionKind.Const },
           });
 
@@ -838,7 +849,7 @@ function lowerExpression(
             identifier: builder.makeTemporary(),
             memberPath: null,
             effect: Effect.Unknown,
-            path: null as any,
+            loc: left.loc,
           };
           builder.push({
             lvalue: {
@@ -850,13 +861,14 @@ function lowerExpression(
               operator: "!=",
               left,
               right: nullPlace,
-              path: null as any,
+              loc: left.loc,
             },
-            path: null as any,
+            loc: left.loc,
           });
           return lowerConditional(
             builder,
             condPlace,
+            exprLoc,
             () => left,
             () => lowerExpression(builder, expr.get("right"))
           );
@@ -877,8 +889,8 @@ function lowerExpression(
       todoInvariant(operator === "=", "todo: support non-simple assignment");
       builder.push({
         lvalue: { place: left, kind: InstructionKind.Reassign },
-        path: exprPath,
         value: right,
+        loc: exprLoc,
       });
       return left;
     }
@@ -896,7 +908,7 @@ function lowerExpression(
         identifier: object.identifier,
         memberPath: [...(object.memberPath ?? []), property.node.name],
         effect: Effect.Unknown,
-        path: exprPath,
+        loc: exprLoc,
       };
       return place;
     }
@@ -933,10 +945,10 @@ function lowerExpression(
       });
       return {
         kind: "JsxExpression",
-        path: exprPath,
         tag,
         props,
         children,
+        loc: exprLoc,
       };
     }
     default: {
@@ -952,6 +964,7 @@ function lowerExpression(
 function lowerConditional(
   builder: HIRBuilder,
   test: Place,
+  loc: SourceLocation,
   consequent: () => InstructionValue,
   alternate: () => InstructionValue
 ): Place {
@@ -960,7 +973,7 @@ function lowerConditional(
     identifier: builder.makeTemporary(),
     memberPath: null,
     effect: Effect.Read,
-    path: null as any, // TODO
+    loc,
   };
   //  Block for code following the if
   const continuationBlock = builder.reserve();
@@ -970,7 +983,7 @@ function lowerConditional(
     builder.push({
       value,
       lvalue: { place: { ...place }, kind: InstructionKind.Const },
-      path: value.path,
+      loc: value.loc,
     });
     return {
       kind: "goto",
@@ -983,7 +996,7 @@ function lowerConditional(
     builder.push({
       value,
       lvalue: { place: { ...place }, kind: InstructionKind.Const },
-      path: value.path,
+      loc: value.loc,
     });
     return {
       kind: "goto",
@@ -1008,6 +1021,7 @@ function lowerJsxElementName(
   >
 ): Place {
   todoInvariant(exprPath.isJSXIdentifier(), "handle non-identifier tags");
+  const exprLoc = exprPath.node.loc ?? GeneratedSource;
   const tag: string = exprPath.node.name;
   if (tag.match(/^[A-Z]/)) {
     const binding =
@@ -1023,7 +1037,7 @@ function lowerJsxElementName(
       identifier: identifier,
       memberPath: null,
       effect: Effect.Unknown,
-      path: exprPath,
+      loc: exprLoc,
     };
     return place;
   } else {
@@ -1032,11 +1046,15 @@ function lowerJsxElementName(
       identifier: builder.makeTemporary(),
       memberPath: null,
       effect: Effect.Unknown,
-      path: exprPath,
+      loc: exprLoc,
     };
     builder.push({
-      value: { kind: "Primitive", value: tag, path: exprPath },
-      path: exprPath,
+      value: {
+        kind: "Primitive",
+        value: tag,
+        loc: exprLoc,
+      },
+      loc: exprLoc,
       lvalue: { place, kind: InstructionKind.Const },
     });
     return { ...place };
@@ -1053,6 +1071,8 @@ function lowerJsxElement(
     | t.JSXFragment
   >
 ): Place {
+  const exprNode = exprPath.node;
+  const exprLoc = exprNode.loc ?? GeneratedSource;
   if (exprPath.isJSXElement()) {
     return lowerExpressionToPlace(builder, exprPath);
   } else if (exprPath.isJSXExpressionContainer()) {
@@ -1065,25 +1085,37 @@ function lowerJsxElement(
       identifier: builder.makeTemporary(),
       memberPath: null,
       effect: Effect.Unknown,
-      path: exprPath,
+      loc: exprLoc,
     };
     builder.push({
-      value: { kind: "JSXText", value: exprPath.node.value, path: exprPath },
-      path: exprPath,
+      value: {
+        kind: "JSXText",
+        value: exprPath.node.value,
+        loc: exprLoc,
+      },
+      loc: exprLoc,
       lvalue: { place: { ...place }, kind: InstructionKind.Const },
     });
     return place;
   } else {
+    invariant(
+      t.isJSXFragment(exprNode) || t.isJSXSpreadChild(exprNode),
+      "Expected refinement to work"
+    );
     const place: Place = {
       kind: "Identifier",
       identifier: builder.makeTemporary(),
       memberPath: null,
       effect: Effect.Unknown,
-      path: exprPath,
+      loc: exprLoc,
     };
     builder.push({
-      value: { kind: "OtherStatement", path: exprPath },
-      path: exprPath,
+      value: {
+        kind: "OtherStatement",
+        node: exprNode,
+        loc: exprLoc,
+      },
+      loc: exprLoc,
       lvalue: { place: { ...place }, kind: InstructionKind.Const },
     });
     return place;
@@ -1098,16 +1130,17 @@ function lowerExpressionToPlace(
   if (instr.kind === "Identifier") {
     return instr;
   }
+  const exprLoc = exprPath.node.loc ?? GeneratedSource;
   const place: Place = {
     kind: "Identifier",
     identifier: builder.makeTemporary(),
     memberPath: null,
     effect: Effect.Unknown,
-    path: exprPath,
+    loc: exprLoc,
   };
   builder.push({
     value: instr,
-    path: exprPath,
+    loc: exprLoc,
     lvalue: { place: { ...place }, kind: InstructionKind.Const },
   });
   return place;
@@ -1115,6 +1148,7 @@ function lowerExpressionToPlace(
 
 function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
   const exprNode = exprPath.node;
+  const exprLoc = exprNode.loc ?? GeneratedSource;
   switch (exprNode.type) {
     case "Identifier": {
       //   const expr = exprPath as NodePath<t.Identifier>;
@@ -1133,7 +1167,7 @@ function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
         identifier: identifier,
         memberPath: null,
         effect: Effect.Unknown,
-        path: exprPath,
+        loc: exprLoc,
       };
       return place;
     }
@@ -1152,7 +1186,7 @@ function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
         identifier: object.identifier,
         memberPath: [...(object.memberPath ?? []), propertyPath.node.name],
         effect: Effect.Unknown,
-        path: exprPath,
+        loc: exprLoc,
       };
       return place;
     }

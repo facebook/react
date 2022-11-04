@@ -20,7 +20,7 @@ import {
   ValueKind,
 } from "./HIR";
 import { mapTerminalSuccessors } from "./HIRBuilder";
-import { printMixedHIR, printPlace } from "./PrintHIR";
+import { printMixedHIR, printPlace, printSourceLocation } from "./PrintHIR";
 
 /**
  * For every usage of a value in the given function, infers the effect or action
@@ -72,12 +72,12 @@ export default function inferReferenceEffects(fn: HIRFunction) {
     kind: "Identifier",
     memberPath: null,
     identifier: fn.id as any,
-    path: null as any, // TODO
+    loc: fn.loc,
     effect: Effect.Freeze,
   };
   const value: InstructionValue = {
     kind: "Primitive",
-    path: null as any, // TODO
+    loc: fn.loc,
     value: undefined,
   };
   initialEnvironment.initialize(value, ValueKind.Frozen);
@@ -86,7 +86,7 @@ export default function inferReferenceEffects(fn: HIRFunction) {
   for (const param of fn.params) {
     const value: InstructionValue = {
       kind: "Primitive",
-      path: null as any, // TODO
+      loc: param.loc,
       value: undefined,
     };
     initialEnvironment.initialize(value, ValueKind.Frozen);
@@ -189,7 +189,9 @@ class Environment {
     const values = this.#variables.get(place.identifier.id);
     invariant(
       values != null,
-      `Expected value kind to be initialized at '${String(place.path)}'`
+      `Expected value kind to be initialized at '${printSourceLocation(
+        place.loc
+      )}'`
     );
     let mergedKind: ValueKind | null = null;
     for (const value of values) {
@@ -226,9 +228,7 @@ class Environment {
     );
     invariant(
       this.#values.has(value),
-      `Expected value to be initialized at '${String(value.path)}' in '${String(
-        value.path?.parentPath
-      )}'`
+      `Expected value to be initialized at '${printSourceLocation(value.loc)}'`
     );
     this.#variables.set(place.identifier.id, new Set([value]));
   }

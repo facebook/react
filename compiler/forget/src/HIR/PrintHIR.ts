@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import generate from "@babel/generator";
 import { assertExhaustive } from "../Common/utils";
 import {
   HIR,
@@ -15,6 +16,7 @@ import {
   LValue,
   Phi,
   Place,
+  SourceLocation,
   Terminal,
 } from "./HIR";
 
@@ -217,9 +219,7 @@ function printInstructionValue(instrValue: InstructionValue): string {
       break;
     }
     case "OtherStatement": {
-      value = `Other(${instrValue.path?.node?.type}): \`${String(
-        instrValue.path
-      )}\``;
+      value = `OtherStatement(${generate(instrValue.node).code})`;
       break;
     }
     case "Identifier": {
@@ -269,4 +269,12 @@ export function printPlace(place: Place): string {
 
 export function printIdentifier(id: Identifier): string {
   return `${id.name ?? ""}\$${id.id}`;
+}
+
+export function printSourceLocation(loc: SourceLocation): string {
+  if (typeof loc === "symbol") {
+    return "generated";
+  } else {
+    return `${loc.start.line}:${loc.start.column}:${loc.end.line}:${loc.end.column}`;
+  }
 }

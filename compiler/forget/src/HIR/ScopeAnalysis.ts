@@ -65,7 +65,7 @@ export default function analyzeScopes(fn: HIRFunction): ReactFunction {
     instructions: fn.body,
   });
   return {
-    path: fn.path,
+    loc: fn.loc,
     id: fn.id,
     params: fn.params,
     returnScope: returnScopeId,
@@ -177,7 +177,7 @@ function analyze(fn: HIRFunction): ReactFunction {
   const scopes: Map<ScopeId, ReactiveScope> = new Map();
 
   return {
-    path: fn.path,
+    loc: fn.loc,
     id: fn.id,
     params: fn.params,
     returnScope: returnScopeId,
