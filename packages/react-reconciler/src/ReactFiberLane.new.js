@@ -252,10 +252,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       // Default priority updates should not interrupt transition updates. The
       // only difference between default updates and transition updates is that
       // default updates do not support refresh transitions.
-      ((enableUnifiedSyncLane
-        ? nextLane === SyncLane &&
-          root.callbackPriority === DefaultEventPriority
-        : nextLane === DefaultLane) &&
+      ((!enableUnifiedSyncLane && nextLane === DefaultLane) &&
         (wipLane & TransitionLanes) !== NoLanes)
     ) {
       // Keep working on the existing in-progress tree. Do not interrupt.
