@@ -11,6 +11,27 @@
 import ReactVersion from 'shared/ReactVersion';
 export {ReactVersion as version};
 
+export function renderToReadableStream() {
+  return require('./src/server/ReactDOMFizzServerBun').renderToReadableStream.apply(
+    this,
+    arguments,
+  );
+}
+
+export function renderToNodeStream() {
+  return require('./src/server/ReactDOMFizzServerBun').renderToNodeStream.apply(
+    this,
+    arguments,
+  );
+}
+
+export function renderToStaticNodeStream() {
+  return require('./src/server/ReactDOMFizzServerBun').renderToStaticNodeStream.apply(
+    this,
+    arguments,
+  );
+}
+
 export function renderToString() {
   return require('./src/server/ReactDOMLegacyServerBrowser').renderToString.apply(
     this,
@@ -22,26 +43,5 @@ export function renderToStaticMarkup() {
   return require('./src/server/ReactDOMLegacyServerBrowser').renderToStaticMarkup.apply(
     this,
     arguments,
-  );
-}
-
-export function renderToReadableStream() {
-  return require('./src/server/ReactDOMFizzServerBun').renderToReadableStream.apply(
-    this,
-    arguments,
-  );
-}
-
-export function renderToNodeStream() {
-  throw new Error(
-    'ReactDOMServer.renderToNodeStream(): The Node Stream API is not available ' +
-      'in Bun. Use ReactDOMServer.renderToReadableStream() instead.',
-  );
-}
-
-export function renderToStaticNodeStream() {
-  throw new Error(
-    'ReactDOMServer.renderToStaticNodeStream(): The Node Stream API is not available ' +
-      'in Bun. Use ReactDOMServer.renderToReadableStream() instead.',
   );
 }
