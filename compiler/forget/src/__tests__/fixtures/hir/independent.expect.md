@@ -28,9 +28,9 @@ function Foo() {}
 
 ```
 bb0:
-  Const mutate a$8 = Call mutate compute$3(read props$7.a)
-  Const mutate b$9 = Call mutate compute$3(read props$7.b)
-  Const mutate $10 = JSX <read Foo$5 a={freeze a$8} b={freeze b$9} ></read Foo$5>
+  [1] Const mutate a$8 = Call mutate compute$3(read props$7.a)
+  [2] Const mutate b$9 = Call mutate compute$3(read props$7.b)
+  [3] Const mutate $10 = JSX <read Foo$5 a={freeze a$8} b={freeze b$9} ></read Foo$5>
   Return read $10
 ```
 

@@ -35,12 +35,12 @@ function Component(props) {
 
 ```
 bb0:
-  Const mutate items$27 = read props$26.items
-  Const mutate maxItems$28 = read props$26.maxItems
-  Const mutate renderedItems$29 = Array []
-  Const mutate seen$30 = New mutate Set$6()
-  Const mutate $31 = 0
-  Const mutate max$32 = Call mutate Math$8.max(read $31, read maxItems$28)
+  [1] Const mutate items$27 = read props$26.items
+  [2] Const mutate maxItems$28 = read props$26.maxItems
+  [3] Const mutate renderedItems$29 = Array []
+  [4] Const mutate seen$30 = New mutate Set$6()
+  [5] Const mutate $31 = 0
+  [6] Const mutate max$32 = Call mutate Math$8.max(read $31, read maxItems$28)
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb4 bb7
@@ -52,16 +52,16 @@ bb1:
   If (read items$33) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  Const mutate $34 = null
-  Const mutate $36 = Binary read item$35 == read $34
+  [7] Const mutate $34 = null
+  [8] Const mutate $36 = Binary read item$35 == read $34
   If (read $36) then:bb8 else:bb9
 bb8:
   predecessor blocks: bb3
-  Const mutate $37 = read $36
+  [9] Const mutate $37 = read $36
   Goto bb7
 bb9:
   predecessor blocks: bb3
-  Const mutate $39 = Call mutate seen$38.has(mutate item$35)
+  [10] Const mutate $39 = Call mutate seen$38.has(mutate item$35)
   Goto bb7
 bb7:
   predecessor blocks: bb9 bb8
@@ -69,23 +69,23 @@ bb7:
   If (read $40) then:bb1 else:bb4
 bb4:
   predecessor blocks: bb7
-  Call mutate seen$38.add(mutate item$35)
-  Const mutate $43 = "div"
-  Const mutate $44 = JSX <read $43>{read item$35}</read $43>
-  Call mutate renderedItems$46.push(read $44)
-  Const mutate $49 = Binary read renderedItems$46.length >= read max$48
+  [11] Call mutate seen$38.add(mutate item$35)
+  [12] Const mutate $43 = "div"
+  [13] Const mutate $44 = JSX <read $43>{read item$35}</read $43>
+  [14] Call mutate renderedItems$46.push(read $44)
+  [15] Const mutate $49 = Binary read renderedItems$46.length >= read max$48
   If (read $49) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb1 bb4
-  Const mutate count$52 = read renderedItems$46.length
-  Const mutate $53 = "div"
-  Const mutate $54 = "\n      "
-  Const mutate $55 = "h1"
-  Const mutate $56 = " Items"
-  Const mutate $57 = JSX <read $55>{freeze count$52}{read $56}</read $55>
-  Const mutate $58 = "\n      "
-  Const mutate $59 = "\n    "
-  Const mutate $60 = JSX <read $53>{read $54}{read $57}{read $58}{freeze renderedItems$46}{read $59}</read $53>
+  [16] Const mutate count$52 = read renderedItems$46.length
+  [17] Const mutate $53 = "div"
+  [18] Const mutate $54 = "\n      "
+  [19] Const mutate $55 = "h1"
+  [20] Const mutate $56 = " Items"
+  [21] Const mutate $57 = JSX <read $55>{freeze count$52}{read $56}</read $55>
+  [22] Const mutate $58 = "\n      "
+  [23] Const mutate $59 = "\n    "
+  [24] Const mutate $60 = JSX <read $53>{read $54}{read $57}{read $58}{freeze renderedItems$46}{read $59}</read $53>
   Return read $60
 ```
 

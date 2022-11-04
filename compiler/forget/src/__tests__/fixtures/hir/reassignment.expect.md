@@ -21,13 +21,13 @@ function Component(props) {
 
 ```
 bb0:
-  Let mutate x$7 = Array []
-  Call mutate x$7.push(read props$6.p0)
-  Let mutate y$8 = read x$7
-  Reassign mutate x$9 = Array []
-  Let mutate _$10 = JSX <read Component$0 x={freeze x$9} ></read Component$0>
-  Call mutate y$8.push(read props$6.p1)
-  Const mutate $11 = JSX <read Component$0 x={read x$9} y={freeze y$8} ></read Component$0>
+  [1] Let mutate x$7 = Array []
+  [2] Call mutate x$7.push(read props$6.p0)
+  [3] Let mutate y$8 = read x$7
+  [4] Reassign mutate x$9 = Array []
+  [5] Let mutate _$10 = JSX <read Component$0 x={freeze x$9} ></read Component$0>
+  [6] Call mutate y$8.push(read props$6.p1)
+  [7] Const mutate $11 = JSX <read Component$0 x={read x$9} y={freeze y$8} ></read Component$0>
   Return read $11
 ```
 

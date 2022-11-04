@@ -32,9 +32,9 @@ function Foo$0() {
 
 ```
 bb0:
-  Const mutate a$7 = Array []
-  Const mutate b$8 = Object {  }
-  Let mutate c$9 = New mutate Foo$5(mutate a$7, mutate b$8)
+  [1] Const mutate a$7 = Array []
+  [2] Const mutate b$8 = Object {  }
+  [3] Let mutate c$9 = New mutate Foo$5(mutate a$7, mutate b$8)
   Return freeze c$9
 ```
 

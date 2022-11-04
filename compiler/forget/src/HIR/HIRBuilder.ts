@@ -18,6 +18,7 @@ import {
   makeBlockId,
   Terminal,
 } from "./HIR";
+import { printInstruction } from "./PrintHIR";
 
 // *******************************************************************************************
 // *******************************************************************************************
@@ -147,6 +148,7 @@ export default class HIRBuilder {
     });
     // then convert to reverse postorder
     const blocks = reversePostorderBlocks(reduced);
+    markInstructionIds(blocks);
     markPredecessors(blocks);
     return blocks;
   }
@@ -481,6 +483,16 @@ function reversePostorderBlocks(func: HIR): HIR {
     blocks,
     entry: func.entry,
   };
+}
+
+function markInstructionIds(func: HIR) {
+  let id = 0;
+  for (const [_, block] of func.blocks) {
+    for (const instr of block.instructions) {
+      invariant(instr.id === 0, `${printInstruction(instr)} already visited!`);
+      instr.id = ++id;
+    }
+  }
 }
 
 function markPredecessors(func: HIR) {

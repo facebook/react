@@ -17,13 +17,13 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$4 = 1
-  Const mutate $5 = 1
-  Const mutate $6 = Binary read x$4 === read $5
+  [1] Let mutate x$4 = 1
+  [2] Const mutate $5 = 1
+  [3] Const mutate $6 = Binary read x$4 === read $5
   If (read $6) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Reassign mutate x$7 = 2
+  [4] Reassign mutate x$7 = 2
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2

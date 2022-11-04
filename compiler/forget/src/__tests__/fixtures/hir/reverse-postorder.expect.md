@@ -36,13 +36,13 @@ function Component(props) {
 
 ```
 bb0:
-  Let mutate x$7 = undefined
+  [1] Let mutate x$7 = undefined
   If (read props$6.cond) then:bb2 else:bb10
 bb2:
   predecessor blocks: bb0
-  Const mutate $8 = 2
-  Const mutate $9 = 1
-  Const mutate $10 = 0
+  [2] Const mutate $8 = 2
+  [3] Const mutate $9 = 1
+  [4] Const mutate $10 = 0
   Switch (<unknown> props$6.test)
     Case read $10: bb8
     Case read $9: bb6
@@ -50,31 +50,31 @@ bb2:
     Default: bb4
 bb8:
   predecessor blocks: bb2
-  Reassign mutate x$11 = read props$6.v0
+  [5] Reassign mutate x$11 = read props$6.v0
   Goto bb1
 bb6:
   predecessor blocks: bb2
-  Reassign mutate x$12 = read props$6.v1
+  [6] Reassign mutate x$12 = read props$6.v1
   Goto bb1
 bb4:
   predecessor blocks: bb2
-  Reassign mutate x$13 = read props$6.v2
+  [7] Reassign mutate x$13 = read props$6.v2
   Goto bb1
 bb10:
   predecessor blocks: bb0
   If (read props$6.cond2) then:bb12 else:bb13
 bb12:
   predecessor blocks: bb10
-  Reassign mutate x$14 = read props$6.b
+  [8] Reassign mutate x$14 = read props$6.b
   Goto bb1
 bb13:
   predecessor blocks: bb10
-  Reassign mutate x$15 = read props$6.c
+  [9] Reassign mutate x$15 = read props$6.c
   Goto bb1
 bb1:
   predecessor blocks: bb13 bb12 bb8 bb6 bb4
   x$16: phi(bb13: x$15, bb12: x$14, bb8: x$11, bb6: x$12, bb4: x$13)
-  read x$16
+  [10] read x$16
   Return
 ```
 

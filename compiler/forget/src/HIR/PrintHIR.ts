@@ -82,13 +82,14 @@ export function printMixedHIR(
   }
 }
 
-function printInstruction(instr: Instruction): string {
+export function printInstruction(instr: Instruction): string {
+  const id = `[${instr.id}]`;
   const value = printInstructionValue(instr.value);
 
   if (instr.lvalue !== null) {
-    return `${printLValue(instr.lvalue)} = ${value}`;
+    return `${id} ${printLValue(instr.lvalue)} = ${value}`;
   } else {
-    return value;
+    return `${id} ${value}`;
   }
 }
 

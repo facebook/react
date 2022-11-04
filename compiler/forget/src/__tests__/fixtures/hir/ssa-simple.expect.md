@@ -13,8 +13,8 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$3 = 1
-  Let mutate y$4 = 2
+  [1] Let mutate x$3 = 1
+  [2] Let mutate y$4 = 2
   Return
 ```
 

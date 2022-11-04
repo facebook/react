@@ -16,18 +16,18 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$5 = 0
+  [1] Let mutate x$5 = 0
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb4
   x$7: phi(bb0: x$5, bb4: x$10)
-  Const mutate $6 = 10
-  Const mutate $8 = Binary read x$7 < read $6
+  [2] Const mutate $6 = 10
+  [3] Const mutate $8 = Binary read x$7 < read $6
   If (read $8) then:bb4 else:bb2
 bb4:
   predecessor blocks: bb1
-  Const mutate $9 = 1
-  Reassign mutate x$10 = Binary read x$7 + read $9
+  [4] Const mutate $9 = 1
+  [5] Reassign mutate x$10 = Binary read x$7 + read $9
   Goto bb1
 bb2:
   predecessor blocks: bb1

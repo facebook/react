@@ -97,17 +97,17 @@ function Foo$0() {
 
 ```
 bb0:
-  Const mutate a$9 = Call mutate compute$3(read props$8.a)
-  Const mutate b$10 = Call mutate compute$3(read props$8.b)
+  [1] Const mutate a$9 = Call mutate compute$3(read props$8.a)
+  [2] Const mutate b$10 = Call mutate compute$3(read props$8.b)
   If (read props$8.c) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Call mutate mutate$5(mutate a$9)
-  Call mutate mutate$5(mutate b$10)
+  [3] Call mutate mutate$5(mutate a$9)
+  [4] Call mutate mutate$5(mutate b$10)
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  Const mutate $14 = JSX <read Foo$6 a={freeze a$9} b={freeze b$10} ></read Foo$6>
+  [5] Const mutate $14 = JSX <read Foo$6 a={freeze a$9} b={freeze b$10} ></read Foo$6>
   Return read $14
 ```
 

@@ -34,14 +34,14 @@ function foo$0() {
 
 ```
 bb0:
-  Const mutate a$10 = Array []
-  Const mutate b$11 = Object {  }
-  Call mutate foo$4(mutate a$10, mutate b$11)
-  Const mutate $12 = "div"
-  Let mutate _$13 = JSX <read $12 a={freeze a$10} ></read $12>
-  Call mutate foo$4(mutate b$11)
-  Const mutate $14 = "div"
-  Const mutate $15 = JSX <read $14 a={read a$10} b={freeze b$11} ></read $14>
+  [1] Const mutate a$10 = Array []
+  [2] Const mutate b$11 = Object {  }
+  [3] Call mutate foo$4(mutate a$10, mutate b$11)
+  [4] Const mutate $12 = "div"
+  [5] Let mutate _$13 = JSX <read $12 a={freeze a$10} ></read $12>
+  [6] Call mutate foo$4(mutate b$11)
+  [7] Const mutate $14 = "div"
+  [8] Const mutate $15 = JSX <read $14 a={read a$10} b={freeze b$11} ></read $14>
   Return read $15
 ```
 

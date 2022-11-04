@@ -19,10 +19,10 @@ function call(x) {}
 
 ```
 bb0:
-  Const mutate a$4 = Array []
-  Call read useFreeze$2(freeze a$4)
-  Call read useFreeze$2(read a$4)
-  Call mutate call$3(read a$4)
+  [1] Const mutate a$4 = Array []
+  [2] Call read useFreeze$2(freeze a$4)
+  [3] Call read useFreeze$2(read a$4)
+  [4] Call mutate call$3(read a$4)
   Return read a$4
 ```
 

@@ -15,9 +15,9 @@ function Component(props) {
 
 ```
 bb0:
-  Const mutate a$6 = 1
-  Const mutate b$7 = 2
-  Const mutate x$8 = Object { a: read a$6, b: read b$7 }
+  [1] Const mutate a$6 = 1
+  [2] Const mutate b$7 = 2
+  [3] Const mutate x$8 = Object { a: read a$6, b: read b$7 }
   Return freeze x$8
 ```
 

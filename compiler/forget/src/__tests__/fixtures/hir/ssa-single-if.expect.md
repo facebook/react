@@ -17,12 +17,12 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$4 = 1
-  Let mutate y$5 = 2
+  [1] Let mutate x$4 = 1
+  [2] Let mutate y$5 = 2
   If (read y$5) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Let mutate z$6 = Binary read x$4 + read y$5
+  [3] Let mutate z$6 = Binary read x$4 + read y$5
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2

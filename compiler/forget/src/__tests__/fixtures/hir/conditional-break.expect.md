@@ -78,16 +78,16 @@ function Component(props) {
 
 ```
 bb0:
-  Const mutate a_DEBUG$5 = Array []
-  Call mutate a_DEBUG$5.push(read props$4.a)
+  [1] Const mutate a_DEBUG$5 = Array []
+  [2] Call mutate a_DEBUG$5.push(read props$4.a)
   If (read props$4.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Const mutate $6 = null
+  [3] Const mutate $6 = null
   Return read $6
 bb1:
   predecessor blocks: bb0
-  Call mutate a_DEBUG$5.push(read props$4.d)
+  [4] Call mutate a_DEBUG$5.push(read props$4.d)
   Return freeze a_DEBUG$5
 ```
 
@@ -110,16 +110,16 @@ function Component$0(props$4) {
 
 ```
 bb0:
-  Const mutate a$4 = Array []
-  Call mutate a$4.push(read props$3.a)
+  [1] Const mutate a$4 = Array []
+  [2] Call mutate a$4.push(read props$3.a)
   If (read props$3.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Call mutate a$4.push(read props$3.c)
+  [3] Call mutate a$4.push(read props$3.c)
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  Call mutate a$4.push(read props$3.d)
+  [4] Call mutate a$4.push(read props$3.d)
   Return freeze a$4
 ```
 
@@ -143,17 +143,17 @@ function Component$0(props$3) {
 
 ```
 bb0:
-  Const mutate a$5 = Array []
-  Call mutate a$5.push(read props$4.a)
+  [1] Const mutate a$5 = Array []
+  [2] Call mutate a$5.push(read props$4.a)
   If (read props$4.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Call mutate a$5.push(read props$4.c)
-  Const mutate $6 = null
+  [3] Call mutate a$5.push(read props$4.c)
+  [4] Const mutate $6 = null
   Return read $6
 bb1:
   predecessor blocks: bb0
-  Call mutate a$5.push(read props$4.d)
+  [5] Call mutate a$5.push(read props$4.d)
   Return freeze a$5
 ```
 
@@ -177,16 +177,16 @@ function Component$0(props$4) {
 
 ```
 bb0:
-  Const mutate a$4 = Array []
-  Call mutate a$4.push(read props$3.a)
+  [1] Const mutate a$4 = Array []
+  [2] Call mutate a$4.push(read props$3.a)
   If (read props$3.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Call mutate a$4.push(read props$3.c)
+  [3] Call mutate a$4.push(read props$3.c)
   Return freeze a$4
 bb1:
   predecessor blocks: bb0
-  Call mutate a$4.push(read props$3.d)
+  [4] Call mutate a$4.push(read props$3.d)
   Return freeze a$4
 ```
 
@@ -210,16 +210,16 @@ function Component$0(props$3) {
 
 ```
 bb0:
-  Const mutate a$4 = Array []
-  Call mutate a$4.push(read props$3.a)
+  [1] Const mutate a$4 = Array []
+  [2] Call mutate a$4.push(read props$3.a)
   If (read props$3.b) then:bb1 else:bb2
 bb2:
   predecessor blocks: bb0
-  Call mutate a$4.push(read props$3.c)
+  [3] Call mutate a$4.push(read props$3.c)
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  Call mutate a$4.push(read props$3.d)
+  [4] Call mutate a$4.push(read props$3.d)
   Return freeze a$4
 ```
 

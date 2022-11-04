@@ -17,12 +17,12 @@ function Component(props) {
 
 ```
 bb0:
-  Const mutate x$7 = Object {  }
-  Const mutate y$8 = Array []
-  Reassign mutate x$7.y = read y$8
-  Const mutate child$9 = JSX <read Component$0 data={freeze y$8} ></read Component$0>
-  Call mutate x$7.y.push(read props$6.p0)
-  Const mutate $10 = JSX <read Component$0 data={freeze x$7} >{read child$9}</read Component$0>
+  [1] Const mutate x$7 = Object {  }
+  [2] Const mutate y$8 = Array []
+  [3] Reassign mutate x$7.y = read y$8
+  [4] Const mutate child$9 = JSX <read Component$0 data={freeze y$8} ></read Component$0>
+  [5] Call mutate x$7.y.push(read props$6.p0)
+  [6] Const mutate $10 = JSX <read Component$0 data={freeze x$7} >{read child$9}</read Component$0>
   Return read $10
 ```
 

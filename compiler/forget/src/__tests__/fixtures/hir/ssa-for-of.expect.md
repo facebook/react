@@ -19,7 +19,7 @@ function foo(cond) {
 
 ```
 bb0:
-  Let mutate items$5 = Array []
+  [1] Let mutate items$5 = Array []
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb3 bb5
@@ -28,11 +28,11 @@ bb1:
   If (read items$6) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  Let mutate y$7 = 0
+  [2] Let mutate y$7 = 0
   If (read cond$8) then:bb5 else:bb1
 bb5:
   predecessor blocks: bb3
-  Reassign mutate y$9 = 1
+  [3] Reassign mutate y$9 = 1
   Goto bb1
 bb2:
   predecessor blocks: bb1

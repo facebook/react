@@ -26,24 +26,24 @@ function call(x) {}
 
 ```
 bb0:
-  Const mutate cond$8 = read props$7.cond
-  Const mutate x$9 = read props$7.x
-  Let mutate a$10 = undefined
+  [1] Const mutate cond$8 = read props$7.cond
+  [2] Const mutate x$9 = read props$7.x
+  [3] Let mutate a$10 = undefined
   If (read cond$8) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  Reassign mutate a$11 = read x$9
+  [4] Reassign mutate a$11 = read x$9
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Reassign mutate a$12 = Array []
+  [5] Reassign mutate a$12 = Array []
   Goto bb1
 bb1:
   predecessor blocks: bb3 bb2
   a$14: phi(bb3: a$12, bb2: a$11)
-  Call read useFreeze$5(freeze a$14)
-  Call read useFreeze$5(read a$14)
-  Call mutate call$6(read a$14)
+  [6] Call read useFreeze$5(freeze a$14)
+  [7] Call read useFreeze$5(read a$14)
+  [8] Call mutate call$6(read a$14)
   Return read a$14
 ```
 

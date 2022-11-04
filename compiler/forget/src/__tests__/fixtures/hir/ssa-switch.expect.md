@@ -28,34 +28,34 @@ function foo() {
 
 ```
 bb0:
-  Let mutate x$10 = 1
-  Const mutate $11 = 2
-  Const mutate $12 = Binary read x$10 === read $11
-  Const mutate $13 = 1
-  Const mutate $14 = Binary read x$10 === read $13
+  [1] Let mutate x$10 = 1
+  [2] Const mutate $11 = 2
+  [3] Const mutate $12 = Binary read x$10 === read $11
+  [4] Const mutate $13 = 1
+  [5] Const mutate $14 = Binary read x$10 === read $13
   Switch (<unknown> x$10)
     Case read $14: bb5
     Case read $12: bb3
     Default: bb2
 bb5:
   predecessor blocks: bb0
-  Const mutate $15 = 1
-  Reassign mutate x$16 = Binary read x$10 + read $15
+  [6] Const mutate $15 = 1
+  [7] Reassign mutate x$16 = Binary read x$10 + read $15
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Const mutate $17 = 2
-  Reassign mutate x$18 = Binary read x$10 + read $17
+  [8] Const mutate $17 = 2
+  [9] Reassign mutate x$18 = Binary read x$10 + read $17
   Goto bb1
 bb2:
   predecessor blocks: bb0
-  Const mutate $19 = 3
-  Reassign mutate x$20 = Binary read x$10 + read $19
+  [10] Const mutate $19 = 3
+  [11] Reassign mutate x$20 = Binary read x$10 + read $19
   Goto bb1
 bb1:
   predecessor blocks: bb5 bb3 bb2
   x$21: phi(bb5: x$16, bb3: x$18, bb2: x$20)
-  Let mutate y$22 = read x$21
+  [12] Let mutate y$22 = read x$21
   Return
 ```
 

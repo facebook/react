@@ -32,11 +32,11 @@ function Component(props) {
 
 ```
 bb0:
-  Let mutate x$10 = Array []
-  Let mutate y$11 = undefined
-  Const mutate $12 = false
-  Const mutate $13 = true
-  Const mutate $14 = 1
+  [1] Let mutate x$10 = Array []
+  [2] Let mutate y$11 = undefined
+  [3] Const mutate $12 = false
+  [4] Const mutate $13 = true
+  [5] Const mutate $14 = 1
   Switch (<unknown> props$9.p0)
     Case read $14: bb1
     Case read $13: bb6
@@ -44,19 +44,19 @@ bb0:
     Case read $12: bb2
 bb6:
   predecessor blocks: bb0
-  Call mutate x$10.push(read props$9.p2)
-  Reassign mutate y$15 = Array []
+  [6] Call mutate x$10.push(read props$9.p2)
+  [7] Reassign mutate y$15 = Array []
   Goto bb1
 bb2:
   predecessor blocks: bb0
-  Reassign mutate y$16 = read x$10
+  [8] Reassign mutate y$16 = read x$10
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb6 bb2
   y$20: phi(bb0: y$11, bb6: y$15, bb2: y$16)
-  Const mutate child$19 = JSX <read Component$0 data={freeze x$10} ></read Component$0>
-  Call read y$20.push(read props$9.p4)
-  Const mutate $22 = JSX <read Component$0 data={freeze y$20} >{read child$19}</read Component$0>
+  [9] Const mutate child$19 = JSX <read Component$0 data={freeze x$10} ></read Component$0>
+  [10] Call read y$20.push(read props$9.p4)
+  [11] Const mutate $22 = JSX <read Component$0 data={freeze y$20} >{read child$19}</read Component$0>
   Return read $22
 ```
 

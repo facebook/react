@@ -149,6 +149,7 @@ export type SwitchTerminal = {
  * or may occur only for side-effects (many expression statements).
  */
 export type Instruction = {
+  id: number;
   lvalue: LValue | null;
   value: InstructionValue;
   loc: SourceLocation;

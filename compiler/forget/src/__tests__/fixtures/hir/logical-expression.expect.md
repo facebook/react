@@ -23,15 +23,15 @@ function g() {}
 
 ```
 bb0:
-  Const mutate $5 = Call mutate f$1()
+  [1] Const mutate $5 = Call mutate f$1()
   If (read $5) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  Const mutate $6 = Call mutate g$4()
+  [2] Const mutate $6 = Call mutate g$4()
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Const mutate $7 = read $5
+  [3] Const mutate $7 = read $5
   Goto bb1
 bb1:
   predecessor blocks: bb3 bb2
@@ -56,15 +56,15 @@ function And$0() {
 
 ```
 bb0:
-  Const mutate $5 = Call mutate f$1()
+  [1] Const mutate $5 = Call mutate f$1()
   If (read $5) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  Const mutate $6 = read $5
+  [2] Const mutate $6 = read $5
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Const mutate $7 = Call mutate g$4()
+  [3] Const mutate $7 = Call mutate g$4()
   Goto bb1
 bb1:
   predecessor blocks: bb3 bb2
@@ -89,17 +89,17 @@ function Or$0() {
 
 ```
 bb0:
-  Const mutate $9 = Call mutate f$2()
-  Const mutate $10 = null
-  Const mutate $11 = Binary read $9 != read $10
+  [1] Const mutate $9 = Call mutate f$2()
+  [2] Const mutate $10 = null
+  [3] Const mutate $11 = Binary read $9 != read $10
   If (read $11) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  Const mutate $12 = read $9
+  [4] Const mutate $12 = read $9
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Const mutate $13 = Call mutate g$7()
+  [5] Const mutate $13 = Call mutate g$7()
   Goto bb1
 bb1:
   predecessor blocks: bb3 bb2

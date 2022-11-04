@@ -20,22 +20,22 @@ function foo() {
 
 ```
 bb0:
-  Let mutate y$5 = 2
-  Const mutate $6 = 1
-  Const mutate $7 = Binary read y$5 > read $6
+  [1] Let mutate y$5 = 2
+  [2] Const mutate $6 = 1
+  [3] Const mutate $7 = Binary read y$5 > read $6
   If (read $7) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  Reassign mutate y$8 = 1
+  [4] Reassign mutate y$8 = 1
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  Reassign mutate y$9 = 2
+  [5] Reassign mutate y$9 = 2
   Goto bb1
 bb1:
   predecessor blocks: bb3 bb2
   y$10: phi(bb3: y$9, bb2: y$8)
-  Let mutate x$11 = read y$10
+  [6] Let mutate x$11 = read y$10
   Return
 ```
 

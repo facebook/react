@@ -73,10 +73,10 @@ function cond$0(x$2) {
 
 ```
 bb0:
-  Let mutate a$13 = Object {  }
-  Let mutate b$14 = Object {  }
-  Let mutate c$15 = Object {  }
-  Let mutate d$16 = Object {  }
+  [1] Let mutate a$13 = Object {  }
+  [2] Let mutate b$14 = Object {  }
+  [3] Let mutate c$15 = Object {  }
+  [4] Let mutate d$16 = Object {  }
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb3
@@ -86,17 +86,17 @@ bb1:
   d$24: phi(bb0: d$16, bb3: d$26)
   mutate$27: phi(bb0: mutate$7, bb3: mutate$27)
   cond$28: phi(bb0: cond$8, bb3: cond$28)
-  Const mutate $17 = true
+  [5] Const mutate $17 = true
   If (read $17) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  Let mutate z$19 = read a$18
-  Reassign mutate a$21 = read b$20
-  Reassign mutate b$23 = read c$22
-  Reassign mutate c$25 = read d$24
-  Reassign mutate d$26 = read z$19
-  Call mutate mutate$27(mutate a$21, mutate b$23)
-  Const mutate $29 = Call mutate cond$28(mutate a$21)
+  [6] Let mutate z$19 = read a$18
+  [7] Reassign mutate a$21 = read b$20
+  [8] Reassign mutate b$23 = read c$22
+  [9] Reassign mutate c$25 = read d$24
+  [10] Reassign mutate d$26 = read z$19
+  [11] Call mutate mutate$27(mutate a$21, mutate b$23)
+  [12] Const mutate $29 = Call mutate cond$28(mutate a$21)
   If (read $29) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb1 bb3
@@ -116,8 +116,8 @@ bb11:
   If (read d$33) then:bb13 else:bb13
 bb13:
   predecessor blocks: bb11
-  Const mutate $34 = null
-  Call mutate mutate$27(mutate d$33, read $34)
+  [13] Const mutate $34 = null
+  [14] Call mutate mutate$27(mutate d$33, read $34)
   Return
 ```
 

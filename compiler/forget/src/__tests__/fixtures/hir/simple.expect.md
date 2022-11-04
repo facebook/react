@@ -18,14 +18,14 @@ bb0:
   If (read x$8) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  Const mutate $10 = false
-  Const mutate $11 = Call read foo$0(read $10, read y$9)
+  [1] Const mutate $10 = false
+  [2] Const mutate $11 = Call read foo$0(read $10, read y$9)
   Return freeze $11
 bb1:
   predecessor blocks: bb0
-  Const mutate $12 = 10
-  Const mutate $13 = Binary read y$9 * read $12
-  Const mutate $14 = Array [read $13]
+  [3] Const mutate $12 = 10
+  [4] Const mutate $13 = Binary read y$9 * read $12
+  [5] Const mutate $14 = Array [read $13]
   Return freeze $14
 ```
 

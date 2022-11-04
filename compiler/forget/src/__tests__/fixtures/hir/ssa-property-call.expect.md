@@ -15,10 +15,10 @@ function foo() {
 
 ```
 bb0:
-  Const mutate x$4 = Array []
-  Const mutate y$5 = Object { x: read x$4 }
-  Const mutate $6 = Array []
-  Call mutate y$5.x.push(mutate $6)
+  [1] Const mutate x$4 = Array []
+  [2] Const mutate y$5 = Object { x: read x$4 }
+  [3] Const mutate $6 = Array []
+  [4] Call mutate y$5.x.push(mutate $6)
   Return freeze y$5
 ```
 
