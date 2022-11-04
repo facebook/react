@@ -13,8 +13,10 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 let ReactTestUtils;
+let act;
 
 function initModules() {
   // Reset warning cache.
@@ -22,8 +24,10 @@ function initModules() {
 
   React = require('react');
   ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
+  act = require('jest-react').act;
 
   // Make them available to the helpers.
   return {
@@ -356,6 +360,30 @@ describe('ReactDOMServerIntegration', () => {
           </div>,
           <div>{''}</div>,
         ));
+
+      it('can explicitly ignore reconnecting new children', async () => {
+        const container = document.createElement('div');
+        container.innerHTML = ReactDOMServer.renderToString(
+          <div suppressHydrationWarning={true}>{null}</div>,
+        );
+
+        const recoverableErrors = [];
+        act(() => {
+          ReactDOMClient.hydrateRoot(
+            container,
+            <div suppressHydrationWarning={true}>
+              <p>Hello, Dave!</p>
+            </div>,
+            {
+              onRecoverableError: error => {
+                recoverableErrors.push(error);
+              },
+            },
+          );
+        });
+
+        expect(recoverableErrors).toEqual([]);
+      });
 
       it('can explicitly ignore reconnecting more children', () =>
         expectMarkupMatch(

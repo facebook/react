@@ -384,5 +384,7 @@ module.exports = function(initModules) {
     clientRenderOnServerString,
     renderIntoDom,
     streamRender,
+    ReactDOMServer,
+    ReactDOM,
   };
 };
