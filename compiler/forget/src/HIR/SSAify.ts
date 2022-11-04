@@ -344,6 +344,10 @@ function rewriteUses(instr: Instruction, builder: SSABuilder) {
       instrValue.elements = instrValue.elements.map((e) => builder.getPlace(e));
       break;
     }
+    case "JsxFragment": {
+      instrValue.children = instrValue.children.map((e) => builder.getPlace(e));
+      break;
+    }
     case "OtherStatement":
     case "Primitive":
     case "JSXText": {

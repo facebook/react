@@ -207,6 +207,7 @@ export type InstructionData =
       properties: Map<string, Place> | null; // null === empty object
     }
   | { kind: "ArrayExpression"; elements: Array<Place> }
+  | { kind: "JsxFragment"; children: Array<Place> }
 
   /**
    * Catch-all for statements such as type imports, nested class declarations, etc

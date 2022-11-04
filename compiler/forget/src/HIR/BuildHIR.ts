@@ -957,6 +957,17 @@ function lowerExpression(
         loc: exprLoc,
       };
     }
+    case "JSXFragment": {
+      const expr = exprPath as NodePath<t.JSXFragment>;
+      const children = expr
+        .get("children")
+        .map((child) => lowerJsxElement(builder, child));
+      return {
+        kind: "JsxFragment",
+        children,
+        loc: exprLoc,
+      };
+    }
     default: {
       todo(`lowerExpression(${exprNode.type})`);
       //   assertExhaustive(
@@ -1082,7 +1093,7 @@ function lowerJsxElement(
 ): Place {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
-  if (exprPath.isJSXElement()) {
+  if (exprPath.isJSXElement() || exprPath.isJSXFragment()) {
     return lowerExpressionToPlace(builder, exprPath);
   } else if (exprPath.isJSXExpressionContainer()) {
     const expression = exprPath.get("expression");

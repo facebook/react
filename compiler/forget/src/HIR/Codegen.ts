@@ -247,6 +247,14 @@ function writeInstr(cx: Context, instr: Instruction, body: Array<t.Statement>) {
       );
       break;
     }
+    case "JsxFragment": {
+      value = t.jsxFragment(
+        t.jsxOpeningFragment(),
+        t.jsxClosingFragment(),
+        instrValue.children.map((child) => codegenJsxElement(cx, child))
+      );
+      break;
+    }
     case "OtherStatement": {
       const node = instrValue.node;
       if (t.isStatement(node)) {

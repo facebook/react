@@ -215,6 +215,12 @@ function printInstructionValue(instrValue: InstructionValue): string {
       }
       break;
     }
+    case "JsxFragment": {
+      value = `JsxFragment [${instrValue.children
+        .map((child) => printPlace(child))
+        .join(", ")}]`;
+      break;
+    }
     case "NewExpression": {
       value = `New ${printPlace(instrValue.callee)}(${instrValue.args
         .map((arg) => printPlace(arg))

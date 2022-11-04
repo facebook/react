@@ -574,6 +574,13 @@ function inferBlock(env: Environment, block: BasicBlock) {
         }
         break;
       }
+      case "JsxFragment": {
+        valueKind = ValueKind.Frozen;
+        for (const child of instrValue.children) {
+          env.reference(child, Effect.Freeze);
+        }
+        break;
+      }
       case "JSXText":
       case "Primitive": {
         valueKind = ValueKind.Immutable;
