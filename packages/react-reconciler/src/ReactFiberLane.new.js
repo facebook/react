@@ -85,7 +85,6 @@ export const IdleLane: Lane = /*                        */ 0b0100000000000000000
 export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
 
 // Copied from ReactEventPriorities to avoid cyclic dependencies
-const DiscreteEventPriority = SyncLane;
 const DefaultEventPriority = SyncLane | (1 << 1);
 
 // This function is used for the experimental timeline (react-devtools-timeline)
@@ -251,7 +250,8 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       // Default priority updates should not interrupt transition updates. The
       // only difference between default updates and transition updates is that
       // default updates do not support refresh transitions.
-      ((!enableUnifiedSyncLane && nextLane === DefaultLane) &&
+      (!enableUnifiedSyncLane &&
+        nextLane === DefaultLane &&
         (wipLane & TransitionLanes) !== NoLanes)
     ) {
       // Keep working on the existing in-progress tree. Do not interrupt.
@@ -608,7 +608,8 @@ export function markRootUpdated(
   updatePriority: EventPriority,
 ) {
   root.pendingLanes |= updateLane;
-  if ((root.pendingLanes & SyncLane) !== NoLane) {
+  if ((updateLane & SyncLane) !== NoLane) {
+    // Only set priority for the sync lane
     root.updatePriority = updatePriority;
   }
 

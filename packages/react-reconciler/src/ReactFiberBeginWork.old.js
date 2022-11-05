@@ -275,7 +275,7 @@ import {
   pushRootMarkerInstance,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent.old';
-import { DefaultEventPriority } from './ReactEventPriorities';
+import {DefaultEventPriority} from './ReactEventPriorities';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 

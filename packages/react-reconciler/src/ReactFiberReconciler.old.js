@@ -102,7 +102,7 @@ import {
 } from './ReactFiberHotReloading.old';
 import ReactVersion from 'shared/ReactVersion';
 import {
-  ContinuousEventPriority,
+  DefaultEventPriority,
   DiscreteEventPriority,
 } from './ReactEventPriorities';
 export {registerMutableSourceForHydration} from './ReactMutableSource.old';
@@ -505,13 +505,7 @@ export function attemptContinuousHydration(fiber: Fiber): void {
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
     const eventTime = requestEventTime();
-    scheduleUpdateOnFiber(
-      root,
-      fiber,
-      lane,
-      eventTime,
-      ContinuousEventPriority,
-    );
+    scheduleUpdateOnFiber(root, fiber, lane, eventTime, DefaultEventPriority);
   }
   markRetryLaneIfNotHydrated(fiber, lane);
 }

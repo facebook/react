@@ -25,11 +25,7 @@ import {
   TotalLanes,
   createLaneMap,
 } from './ReactFiberLane.new';
-import {
-  DiscreteEventPriority,
-  NoEventPriority,
-  DefaultEventPriority,
-} from './ReactEventPriorities.new';
+import {NoEventPriority} from './ReactEventPriorities.new';
 import {
   enableSuspenseCallback,
   enableCache,
