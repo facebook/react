@@ -17,7 +17,7 @@ let waitForPaint;
 let assertLog;
 let waitForAll;
 
-describe('ReactThenable', () => {
+describe('ReactUse', () => {
   beforeEach(() => {
     jest.resetModules();
 
