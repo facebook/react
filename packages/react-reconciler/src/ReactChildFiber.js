@@ -8,7 +8,7 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {ReactPortal, Thenable} from 'shared/ReactTypes';
+import type {ReactPortal, Thenable, ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {ThenableState} from './ReactFiberThenable';
@@ -45,6 +45,7 @@ import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {getIsHydrating} from './ReactFiberHydrationContext';
 import {pushTreeFork} from './ReactFiberTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFiberThenable';
+import {readContextDuringReconcilation} from './ReactFiberNewContext';
 
 // This tracks the thenables that are unwrapped during reconcilation.
 let thenableState: ThenableState | null = null;
@@ -580,7 +581,12 @@ function createChildReconciler(
         newChild.$$typeof === REACT_CONTEXT_TYPE ||
         newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
       ) {
-        // TODO: Implement Context as child type.
+        const context: ReactContext<mixed> = (newChild: any);
+        return createChild(
+          returnFiber,
+          readContextDuringReconcilation(returnFiber, context, lanes),
+          lanes,
+        );
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -665,7 +671,13 @@ function createChildReconciler(
         newChild.$$typeof === REACT_CONTEXT_TYPE ||
         newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
       ) {
-        // TODO: Implement Context as child type.
+        const context: ReactContext<mixed> = (newChild: any);
+        return updateSlot(
+          returnFiber,
+          oldFiber,
+          readContextDuringReconcilation(returnFiber, context, lanes),
+          lanes,
+        );
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -748,7 +760,14 @@ function createChildReconciler(
         newChild.$$typeof === REACT_CONTEXT_TYPE ||
         newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
       ) {
-        // TODO: Implement Context as child type.
+        const context: ReactContext<mixed> = (newChild: any);
+        return updateFromMap(
+          existingChildren,
+          returnFiber,
+          newIdx,
+          readContextDuringReconcilation(returnFiber, context, lanes),
+          lanes,
+        );
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -1427,7 +1446,13 @@ function createChildReconciler(
         newChild.$$typeof === REACT_CONTEXT_TYPE ||
         newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
       ) {
-        // TODO: Implement Context as child type.
+        const context: ReactContext<mixed> = (newChild: any);
+        return reconcileChildFibersImpl(
+          returnFiber,
+          currentFirstChild,
+          readContextDuringReconcilation(returnFiber, context, lanes),
+          lanes,
+        );
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);

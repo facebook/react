@@ -688,7 +688,24 @@ export function readContext<T>(context: ReactContext<T>): T {
       );
     }
   }
+  return readContextForConsumer(currentlyRenderingFiber, context);
+}
 
+export function readContextDuringReconcilation<T>(
+  consumer: Fiber,
+  context: ReactContext<T>,
+  renderLanes: Lanes,
+): T {
+  if (currentlyRenderingFiber === null) {
+    prepareToReadContext(consumer, renderLanes);
+  }
+  return readContextForConsumer(consumer, context);
+}
+
+function readContextForConsumer<T>(
+  consumer: Fiber | null,
+  context: ReactContext<T>,
+): T {
   const value = isPrimaryRenderer
     ? context._currentValue
     : context._currentValue2;
@@ -703,7 +720,7 @@ export function readContext<T>(context: ReactContext<T>): T {
     };
 
     if (lastContextDependency === null) {
-      if (currentlyRenderingFiber === null) {
+      if (consumer === null) {
         throw new Error(
           'Context can only be read while React is rendering. ' +
             'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
@@ -714,12 +731,12 @@ export function readContext<T>(context: ReactContext<T>): T {
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
-      currentlyRenderingFiber.dependencies = {
+      consumer.dependencies = {
         lanes: NoLanes,
         firstContext: contextItem,
       };
       if (enableLazyContextPropagation) {
-        currentlyRenderingFiber.flags |= NeedsPropagation;
+        consumer.flags |= NeedsPropagation;
       }
     } else {
       // Append a new context item.
