@@ -11,7 +11,7 @@ import {
   completeBoundaryWithStyles,
   completeBoundary,
   completeSegment,
-} from '../../../react-dom-bindings/src/server/fizz-instruction-set/ReactDOMFizzInstructionSet';
+} from './fizz-instruction-set/ReactDOMFizzInstructionSet';
 
 // Intentionally does nothing. Implementation will be added in future PR.
 // eslint-disable-next-line no-unused-vars
