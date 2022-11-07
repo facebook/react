@@ -237,6 +237,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: 26, // In reality, 18.2+. But doesn't hurt to include it here
+      HostSingleton: 27, // Same as above
       HostText: 6,
       IncompleteClassComponent: 17,
       IndeterminateComponent: 2,
@@ -269,6 +271,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
       IndeterminateComponent: 2,
@@ -300,6 +304,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
       IndeterminateComponent: 2,
@@ -331,6 +337,8 @@ export function getInternalReactConstants(
       HostComponent: 7,
       HostPortal: 6,
       HostRoot: 5,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 8,
       IncompleteClassComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 4,
@@ -362,6 +370,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 0,
@@ -401,6 +411,8 @@ export function getInternalReactConstants(
     IndeterminateComponent,
     ForwardRef,
     HostRoot,
+    HostResource,
+    HostSingleton,
     HostComponent,
     HostPortal,
     HostText,
@@ -466,6 +478,8 @@ export function getInternalReactConstants(
         }
         return null;
       case HostComponent:
+      case HostSingleton:
+      case HostResource:
         return type;
       case HostPortal:
       case HostText:
@@ -600,6 +614,8 @@ export function attach(
     Fragment,
     FunctionComponent,
     HostRoot,
+    HostResource,
+    HostSingleton,
     HostPortal,
     HostComponent,
     HostText,
@@ -1044,6 +1060,8 @@ export function attach(
       case HostRoot:
         return ElementTypeRoot;
       case HostComponent:
+      case HostResource:
+      case HostSingleton:
         return ElementTypeHostComponent;
       case HostPortal:
       case HostText:
