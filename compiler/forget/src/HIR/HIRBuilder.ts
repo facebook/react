@@ -626,9 +626,7 @@ export function* eachInstructionOperand(instr: Instruction) {
     case "NewExpression":
     case "CallExpression": {
       yield instrValue.callee;
-      for (const arg of instrValue.args) {
-        yield arg;
-      }
+      yield* instrValue.args;
       break;
     }
     case "BinaryExpression": {
@@ -646,35 +644,24 @@ export function* eachInstructionOperand(instr: Instruction) {
     }
     case "JsxExpression": {
       yield instrValue.tag;
-      for (const place of instrValue.props.values()) {
-        yield place;
-      }
+      yield* instrValue.props.values();
       if (instrValue.children) {
-        for (const c of instrValue.children) {
-          yield c;
-        }
+        yield* instrValue.children;
       }
       break;
     }
     case "JsxFragment": {
-      for (const c of instrValue.children) {
-        yield c;
-      }
+      yield* instrValue.children;
       break;
     }
     case "ObjectExpression": {
       if (instrValue.properties !== null) {
-        const props = instrValue.properties;
-        for (const place of props.values()) {
-          yield place;
-        }
+        yield* instrValue.properties.values();
       }
       break;
     }
     case "ArrayExpression": {
-      for (const e of instrValue.elements) {
-        yield e;
-      }
+      yield* instrValue.elements;
       break;
     }
     case "OtherStatement":
