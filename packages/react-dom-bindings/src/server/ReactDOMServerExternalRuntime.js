@@ -3,6 +3,7 @@
  *  clients. Therefore, it should be fast and not have many external dependencies.
  * @flow
  */
+/* eslint-disable dot-notation */
 
 // Imports are resolved statically by the closure compiler in release bundles
 // and by rollup in jest unit tests
@@ -22,9 +23,12 @@ if (!window.$REACT_FIZZ_OBSERVER) {
   window.$RC = completeBoundary;
   window.$RM = new Map();
   window.$REACT_FIZZ_OBSERVER = new MutationObserver(mutations => {
-    mutations.forEach(mutation => {
-      mutation.addedNodes.forEach(handleNode);
-    });
+    for (let i = 0; i < mutations.length; i++) {
+      const addedNodes = mutations[i].addedNodes;
+      for (let j = 0; j < addedNodes.length; j++) {
+        handleNode(addedNodes.item(j));
+      }
+    }
   });
   // $FlowFixMe[incompatible-call] document.body should exist at this point
   window.$REACT_FIZZ_OBSERVER.observe(document.body, {
@@ -32,46 +36,41 @@ if (!window.$REACT_FIZZ_OBSERVER) {
     subtree: true,
   });
 
-  const existingNodes = document.getElementsByTagName('div');
+  const existingNodes = document.getElementsByTagName('template');
   for (let i = 0; i < existingNodes.length; i++) {
     handleNode(existingNodes[i]);
   }
 }
 
 function handleNode(node_ /*: Node */) {
-  if (node_.nodeType !== 1) {
+  // $FlowFixMe[incompatible-cast]
+  if (node_.nodeType !== 1 || !(node_ /*: HTMLElement*/).dataset) {
     return;
   }
   // $FlowFixMe[incompatible-cast]
   const node = (node_ /*: HTMLElement*/);
   const dataset = node.dataset;
-  const instr = dataset ? dataset[':fi'] : null;
-  switch (instr) {
-    case '$RX':
-      clientRenderBoundary(
-        dataset[':a0'],
-        dataset[':a1'],
-        dataset[':a2'],
-        dataset[':a3'],
-      );
-      node.remove();
-      break;
-    case '$RR':
-      // Convert arg2 here, since its type is Array<Array<string>>
-      completeBoundaryWithStyles(
-        dataset[':a0'],
-        dataset[':a1'],
-        JSON.parse(dataset[':a2']),
-      );
-      node.remove();
-      break;
-    case '$RC':
-      completeBoundary(dataset[':a0'], dataset[':a1'], dataset[':a2']);
-      node.remove();
-      break;
-    case '$RS':
-      completeSegment(dataset[':a0'], dataset[':a1']);
-      node.remove();
-      break;
+  if (dataset['rxi'] != null) {
+    clientRenderBoundary(
+      dataset['sid'],
+      dataset['dgst'],
+      dataset['msg'],
+      dataset['stck'],
+    );
+    node.remove();
+  } else if (dataset['rri'] != null) {
+    // Convert styles here, since its type is Array<Array<string>>
+    completeBoundaryWithStyles(
+      dataset['bid'],
+      dataset['sid'],
+      JSON.parse(dataset['sty']),
+    );
+    node.remove();
+  } else if (dataset['rci'] != null) {
+    completeBoundary(dataset['bid'], dataset['sid']);
+    node.remove();
+  } else if (dataset['rsi'] != null) {
+    completeSegment(dataset['sid'], dataset['pid']);
+    node.remove();
   }
 }

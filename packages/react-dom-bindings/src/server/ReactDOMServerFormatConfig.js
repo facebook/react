@@ -105,6 +105,10 @@ export function cleanupAfterRender(previousDispatcher: mixed) {
 // E.g. this can be used to distinguish legacy renderers from this modern one.
 export const isPrimaryRenderer = true;
 
+export type StreamingFormat = 0 | 1;
+const ScriptStreamingFormat: StreamingFormat = 0;
+const DataStreamingFormat: StreamingFormat = 1;
+
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
@@ -113,7 +117,7 @@ export type ResponseState = {
   boundaryPrefix: string,
   idPrefix: string,
   nextSuspenseID: number,
-  streamingFormat: 'SCRIPT' | 'DATA',
+  streamingFormat: StreamingFormat,
   // state for script streaming format, unused if using external runtime / data
   startInlineScript: PrecomputedChunk,
   sentCompleteSegmentFunction: boolean,
@@ -124,8 +128,8 @@ export type ResponseState = {
   ...
 };
 
-const dataElementQuotedEnd = stringToPrecomputedChunk('"></div>');
-const dataElementUnquotedEnd = stringToPrecomputedChunk('></div>');
+const dataElementQuotedEnd = stringToPrecomputedChunk('"></template>');
+const dataElementUnquotedEnd = stringToPrecomputedChunk('></template>');
 
 const startInlineScript = stringToPrecomputedChunk('<script>');
 const endInlineScript = stringToPrecomputedChunk('</script>');
@@ -178,7 +182,7 @@ export function createResponseState(
           '<script nonce="' + escapeTextForBrowser(nonce) + '">',
         );
   const bootstrapChunks = [];
-  let streamingFormat = 'SCRIPT';
+  let streamingFormat = ScriptStreamingFormat;
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(
       inlineScriptWithNonce,
@@ -188,7 +192,7 @@ export function createResponseState(
   }
   if (enableFizzExternalRuntime) {
     if (externalRuntimeConfig !== undefined) {
-      streamingFormat = 'DATA';
+      streamingFormat = DataStreamingFormat;
       const src =
         typeof externalRuntimeConfig === 'string'
           ? externalRuntimeConfig
@@ -2398,9 +2402,9 @@ const completeSegmentScript2 = stringToPrecomputedChunk('","');
 const completeSegmentScriptEnd = stringToPrecomputedChunk('")</script>');
 
 const completeSegmentData1 = stringToPrecomputedChunk(
-  '<div hidden data-:fi="$RS" data-:a0="',
+  '<template data-rsi="" data-sid="',
 );
-const completeSegmentData2 = stringToPrecomputedChunk('" data-:a1="');
+const completeSegmentData2 = stringToPrecomputedChunk('" data-pid="');
 const completeSegmentDataEnd = dataElementQuotedEnd;
 
 export function writeCompletedSegmentInstruction(
@@ -2409,7 +2413,8 @@ export function writeCompletedSegmentInstruction(
   contentSegmentID: number,
 ): boolean {
   const scriptFormat =
-    !enableFizzExternalRuntime || responseState.streamingFormat === 'SCRIPT';
+    !enableFizzExternalRuntime ||
+    responseState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
     writeChunk(destination, responseState.startInlineScript);
     if (!responseState.sentCompleteSegmentFunction) {
@@ -2463,13 +2468,13 @@ const completeBoundaryScript3b = stringToPrecomputedChunk('"');
 const completeBoundaryScriptEnd = stringToPrecomputedChunk(')</script>');
 
 const completeBoundaryData1 = stringToPrecomputedChunk(
-  '<div hidden data-:fi="$RC" data-:a0="',
+  '<template data-rci="" data-bid="',
 );
 const completeBoundaryWithStylesData1 = stringToPrecomputedChunk(
-  '<div hidden data-:fi="$RR" data-:a0="',
+  '<template data-rri="" data-bid="',
 );
-const completeBoundaryData2 = stringToPrecomputedChunk('" data-:a1="');
-const completeBoundaryData3aStart = stringToPrecomputedChunk('" data-:a2=\'');
+const completeBoundaryData2 = stringToPrecomputedChunk('" data-sid="');
+const completeBoundaryData3aStart = stringToPrecomputedChunk('" data-sty=\'');
 const completeBoundaryData3aEnd = stringToPrecomputedChunk("'");
 const completeBoundaryData3b = completeBoundaryScript3b;
 const completeBoundaryDataEnd = dataElementUnquotedEnd;
@@ -2486,7 +2491,8 @@ export function writeCompletedBoundaryInstruction(
     hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
   }
   const scriptFormat =
-    !enableFizzExternalRuntime || responseState.streamingFormat === 'SCRIPT';
+    !enableFizzExternalRuntime ||
+    responseState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
     writeChunk(destination, responseState.startInlineScript);
     if (enableFloat && hasStyleDependencies) {
@@ -2541,16 +2547,19 @@ export function writeCompletedBoundaryInstruction(
     //  - data writer emits a string literal ["1", "2"])
     if (scriptFormat) {
       writeChunk(destination, completeBoundaryScript3a);
+      // boundaryResources encodes an array literal
+      writeStyleResourceDependencies(
+        destination,
+        boundaryResources,
+        scriptFormat ? JavascriptEmbedding : HTMLAttributeEmbedding,
+      );
     } else {
       writeChunk(destination, completeBoundaryData3aStart);
-    }
-    // boundaryResources encodes an array literal
-    writeStyleResourceDependencies(
-      destination,
-      boundaryResources,
-      scriptFormat ? JavascriptEmbedding : HTMLAttributeEmbedding,
-    );
-    if (!scriptFormat) {
+      writeStyleResourceDependencies(
+        destination,
+        boundaryResources,
+        scriptFormat ? JavascriptEmbedding : HTMLAttributeEmbedding,
+      );
       writeChunk(destination, completeBoundaryData3aEnd);
     }
   } else {
@@ -2576,11 +2585,11 @@ const clientRenderErrorScriptArgInterstitial = stringToPrecomputedChunk(',');
 const clientRenderScriptEnd = stringToPrecomputedChunk(')</script>');
 
 const clientRenderData1 = stringToPrecomputedChunk(
-  '<div hidden data-:fi="$RX" data-:a0="',
+  '<template data-rxi="" data-sid="',
 );
-const clientRenderData2 = stringToPrecomputedChunk('" data-:a1="');
-const clientRenderData3 = stringToPrecomputedChunk('" data-:a2="');
-const clientRenderData4 = stringToPrecomputedChunk('" data-:a3="');
+const clientRenderData2 = stringToPrecomputedChunk('" data-dgst="');
+const clientRenderData3 = stringToPrecomputedChunk('" data-msg="');
+const clientRenderData4 = stringToPrecomputedChunk('" data-stck="');
 const clientRenderDataEnd = dataElementQuotedEnd;
 
 export function writeClientRenderBoundaryInstruction(
@@ -2592,7 +2601,8 @@ export function writeClientRenderBoundaryInstruction(
   errorComponentStack?: string,
 ): boolean {
   const scriptFormat =
-    !enableFizzExternalRuntime || responseState.streamingFormat === 'SCRIPT';
+    !enableFizzExternalRuntime ||
+    responseState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
     writeChunk(destination, responseState.startInlineScript);
     if (!responseState.sentClientRenderFunction) {
@@ -2604,7 +2614,7 @@ export function writeClientRenderBoundaryInstruction(
       writeChunk(destination, clientRenderScript1Partial);
     }
   } else {
-    // <div data-instr="$RX" data-arg0="
+    // <template data-rxi="" data-arg0="
     writeChunk(destination, clientRenderData1);
   }
 

@@ -10,6 +10,7 @@
 import type {
   BootstrapScriptDescriptor,
   FormatContext,
+  StreamingFormat,
 } from './ReactDOMServerFormatConfig';
 
 import {
@@ -39,7 +40,7 @@ export type ResponseState = {
   boundaryPrefix: string,
   idPrefix: string,
   nextSuspenseID: number,
-  streamingFormat: 'SCRIPT' | 'DATA',
+  streamingFormat: StreamingFormat,
   // state for script streaming format, unused if using external runtime / data
   startInlineScript: PrecomputedChunk,
   sentCompleteSegmentFunction: boolean,
