@@ -17,12 +17,12 @@ import prettier from "prettier";
 import { lower } from "../HIR/BuildHIR";
 import codegen from "../HIR/Codegen";
 import { eliminateRedundantPhi } from "../HIR/EliminateRedundantPhi";
+import enterSSA from "../HIR/EnterSSA";
 import { HIRFunction } from "../HIR/HIR";
 import { Environment } from "../HIR/HIRBuilder";
 import { inferMutableRanges } from "../HIR/InferMutableLifetimes";
 import inferReferenceEffects from "../HIR/InferReferenceEffects";
 import printHIR from "../HIR/PrintHIR";
-import buildSSA from "../HIR/SSAify";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
 function wrapWithTripleBackticks(s: string, ext?: string) {
@@ -64,7 +64,7 @@ describe("React Forget (HIR version)", () => {
           enter(nodePath) {
             const env: Environment = new Environment();
             const ir: HIRFunction = lower(nodePath, env);
-            buildSSA(ir, env);
+            enterSSA(ir, env);
             eliminateRedundantPhi(ir);
             inferReferenceEffects(ir);
             inferMutableRanges(ir);

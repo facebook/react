@@ -169,7 +169,7 @@ class SSABuilder {
   }
 }
 
-export default function buildSSA(func: HIRFunction, env: Environment) {
+export default function enterSSA(func: HIRFunction, env: Environment) {
   const visitedBlocks: Set<BasicBlock> = new Set();
   const builder = new SSABuilder(env);
   for (const [blockId, block] of func.body.blocks) {
