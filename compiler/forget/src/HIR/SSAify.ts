@@ -92,7 +92,7 @@ class SSABuilder {
     if (this.unsealedPreds.get(block)! > 0) {
       // We haven't visited all our predecessors, let's place an incomplete phi
       // for now.
-      const newId = { ...oldId, id: this.nextIdentifierId };
+      const newId = this.makeId(oldId);
       state.incompletePhis.push({ oldId, newId });
       state.defs.set(oldId, newId);
       return newId;
@@ -107,34 +107,19 @@ class SSABuilder {
     }
 
     // There are multiple predecessors, we may need a phi.
-    return this.maybeAddPhi(block, oldId, state);
-  }
-
-  maybeAddPhi(block: BasicBlock, oldId: Identifier, state: State): Identifier {
+    const newId = this.makeId(oldId);
     // Adding a phi may loop back to our block if there is a loop in the CFG.  We
     // update our defs before adding the phi to terminate the recursion rather than
     // looping infinitely.
-    const newId = this.makeId(oldId);
     state.defs.set(oldId, newId);
+    return this.addPhi(block, oldId, newId);
+  }
 
+  addPhi(block: BasicBlock, oldId: Identifier, newId: Identifier): Identifier {
     const predDefs: Map<BasicBlock, Identifier> = new Map();
-    const predIds: Set<Identifier> = new Set();
     for (const predBlock of block.preds) {
       const predId = this.getIdAt(oldId, predBlock);
       predDefs.set(predBlock, predId);
-      predIds.add(predId);
-    }
-
-    // if all predecessors have the same id, then there is no need for a phi node.
-    // note that in the case of a loop there are guaranteed to be multiple values,
-    // since we have already updated this block with a new identifier to terminate
-    // the recursion
-    if (predIds.size === 1) {
-      // there was only a single incoming id so we don't need a phi node,
-      // replace with that incoming id instead
-      const predId = [...predIds][0]!;
-      state.defs.set(oldId, predId);
-      return predId;
     }
 
     const phi: Phi = {
@@ -145,22 +130,6 @@ class SSABuilder {
 
     block.phis.add(phi);
     return newId;
-  }
-
-  addPhi(block: BasicBlock, oldId: Identifier, newId: Identifier) {
-    const predDefs: Map<BasicBlock, Identifier> = new Map();
-    for (const predBlock of block.preds) {
-      const predId = this.getIdAt(oldId, predBlock);
-      predDefs.set(predBlock, predId);
-    }
-
-    const phi: Phi = {
-      kind: "Phi",
-      id: newId,
-      operands: predDefs,
-    };
-
-    block.phis.add(phi);
   }
 
   fixIncompletePhis(block: BasicBlock) {
