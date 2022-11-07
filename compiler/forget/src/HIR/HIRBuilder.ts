@@ -619,3 +619,74 @@ export function mapTerminalSuccessors(
     }
   }
 }
+
+export function* eachInstructionOperand(instr: Instruction) {
+  const instrValue = instr.value;
+  switch (instrValue.kind) {
+    case "NewExpression":
+    case "CallExpression": {
+      yield instrValue.callee;
+      for (const arg of instrValue.args) {
+        yield arg;
+      }
+      break;
+    }
+    case "BinaryExpression": {
+      yield instrValue.left;
+      yield instrValue.right;
+      break;
+    }
+    case "Identifier": {
+      yield instrValue;
+      break;
+    }
+    case "UnaryExpression": {
+      yield instrValue.value;
+      break;
+    }
+    case "JsxExpression": {
+      yield instrValue.tag;
+      for (const place of instrValue.props.values()) {
+        yield place;
+      }
+      if (instrValue.children) {
+        for (const c of instrValue.children) {
+          yield c;
+        }
+      }
+      break;
+    }
+    case "JsxFragment": {
+      for (const c of instrValue.children) {
+        yield c;
+      }
+      break;
+    }
+    case "ObjectExpression": {
+      if (instrValue.properties !== null) {
+        const props = instrValue.properties;
+        for (const place of props.values()) {
+          yield place;
+        }
+      }
+      break;
+    }
+    case "ArrayExpression": {
+      for (const e of instrValue.elements) {
+        yield e;
+      }
+      break;
+    }
+    case "OtherStatement":
+    case "Primitive":
+    case "JSXText": {
+      break;
+    }
+    default: {
+      assertExhaustive(
+        instrValue,
+        `Unexpected instruction kind '${(instrValue as any).kind}'`
+      );
+    }
+  }
+}

@@ -8,7 +8,7 @@
 import invariant from "invariant";
 import { assertExhaustive } from "../Common/utils";
 import { BlockId, HIRFunction, Identifier, Place } from "./HIR";
-import { collectInputs } from "./InferMutableLifetimes";
+import { eachInstructionOperand } from "./HIRBuilder";
 
 /**
  * Pass to eliminate redundant phi nodes:
@@ -80,7 +80,7 @@ export function eliminateRedundantPhi(fn: HIRFunction) {
 
       // Rewrite all instruction lvalues and operands
       for (const instr of block.instructions) {
-        for (const place of collectInputs(instr)) {
+        for (const place of eachInstructionOperand(instr)) {
           rewritePlace(place, rewrites);
         }
         const { lvalue } = instr;
