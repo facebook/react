@@ -106,7 +106,7 @@ export function inferMutableRanges(func: HIRFunction) {
   }
 }
 
-function* collectInputs(instr: Instruction) {
+export function* collectInputs(instr: Instruction) {
   const instrValue = instr.value;
   switch (instrValue.kind) {
     case "NewExpression":
@@ -142,6 +142,12 @@ function* collectInputs(instr: Instruction) {
       }
       break;
     }
+    case "JsxFragment": {
+      for (const c of instrValue.children) {
+        yield c;
+      }
+      break;
+    }
     case "ObjectExpression": {
       if (instrValue.properties !== null) {
         const props = instrValue.properties;
@@ -163,7 +169,10 @@ function* collectInputs(instr: Instruction) {
       break;
     }
     default: {
-      console.log(`unhandled instruction: ${printInstruction(instr)}`);
+      assertExhaustive(
+        instrValue,
+        `Unexpected instruction kind '${(instrValue as any).kind}'`
+      );
     }
   }
 }

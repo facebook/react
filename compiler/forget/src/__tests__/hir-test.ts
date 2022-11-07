@@ -16,6 +16,7 @@ import path from "path";
 import prettier from "prettier";
 import { lower } from "../HIR/BuildHIR";
 import codegen from "../HIR/Codegen";
+import { eliminateRedundantPhi } from "../HIR/EliminateRedundantPhi";
 import { HIRFunction } from "../HIR/HIR";
 import { Environment } from "../HIR/HIRBuilder";
 import { inferMutableRanges } from "../HIR/InferMutableLifetimes";
@@ -64,6 +65,7 @@ describe("React Forget (HIR version)", () => {
             const env: Environment = new Environment();
             const ir: HIRFunction = lower(nodePath, env);
             buildSSA(ir, env);
+            eliminateRedundantPhi(ir);
             inferReferenceEffects(ir);
             inferMutableRanges(ir);
             // const lifetimeGraph = buildDefUseGraph(ir);

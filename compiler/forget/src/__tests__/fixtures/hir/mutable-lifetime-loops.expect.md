@@ -84,8 +84,6 @@ bb1:
   b$20: phi(bb0: b$14, bb3: b$23)
   c$22: phi(bb0: c$15, bb3: c$25)
   d$24: phi(bb0: d$16, bb3: d$26)
-  mutate$27[-1:14]: phi(bb0: mutate$7, bb3: mutate$27)
-  cond$28[-1:12]: phi(bb0: cond$8, bb3: cond$28)
   [5] Const mutate $17 = true
   If (read $17) then:bb3 else:bb2
 bb3:
@@ -95,8 +93,8 @@ bb3:
   [8] Reassign mutate b$23[8:11] = read c$22
   [9] Reassign mutate c$25 = read d$24
   [10] Reassign mutate d$26 = read z$19
-  [11] Call mutate mutate$27(mutate a$21, mutate b$23)
-  [12] Const mutate $29 = Call mutate cond$28(mutate a$21)
+  [11] Call mutate mutate$7(mutate a$21, mutate b$23)
+  [12] Const mutate $29 = Call mutate cond$8(mutate a$21)
   If (read $29) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb1 bb3
@@ -117,7 +115,7 @@ bb11:
 bb13:
   predecessor blocks: bb11
   [13] Const mutate $34 = null
-  [14] Call mutate mutate$27(mutate d$33, read $34)
+  [14] Call mutate mutate$7(mutate d$33, read $34)
   Return
 ```
 
