@@ -224,8 +224,6 @@ export function getInternalReactConstants(
   // Currently the version in Git is 17.0.2 (but that version has not been/may not end up being released).
   if (gt(version, '17.0.1')) {
     ReactTypeOfWork = {
-      HostSingleton: 27, // In reality, 18.2+. But doesn't hurt to include it here
-      HostResource: 26, // Same as above
       CacheComponent: 24, // Experimental
       ClassComponent: 1,
       ContextConsumer: 9,
@@ -239,6 +237,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: 26, // In reality, 18.2+. But doesn't hurt to include it here
+      HostSingleton: 27, // Same as above
       HostText: 6,
       IncompleteClassComponent: 17,
       IndeterminateComponent: 2,
@@ -258,8 +258,6 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '17.0.0-alpha')) {
     ReactTypeOfWork = {
-      HostSingleton: -1, // Doesn't exist yet
-      HostResource: -1, // Doesn't exist yet
       CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
@@ -273,6 +271,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
       IndeterminateComponent: 2,
@@ -291,8 +291,6 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
-      HostSingleton: -1, // Doesn't exist yet
-      HostResource: -1, // Doesn't exist yet
       CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
@@ -306,6 +304,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
       IndeterminateComponent: 2,
@@ -324,8 +324,6 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
-      HostSingleton: -1, // Doesn't exist yet
-      HostResource: -1, // Doesn't exist yet
       CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 11,
@@ -339,6 +337,8 @@ export function getInternalReactConstants(
       HostComponent: 7,
       HostPortal: 6,
       HostRoot: 5,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 8,
       IncompleteClassComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 4,
@@ -357,8 +357,6 @@ export function getInternalReactConstants(
     };
   } else {
     ReactTypeOfWork = {
-      HostSingleton: -1, // Doesn't exist yet
-      HostResource: -1, // Doesn't exist yet
       CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 12,
@@ -372,6 +370,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 0,
@@ -411,6 +411,8 @@ export function getInternalReactConstants(
     IndeterminateComponent,
     ForwardRef,
     HostRoot,
+    HostResource,
+    HostSingleton,
     HostComponent,
     HostPortal,
     HostText,
@@ -425,8 +427,6 @@ export function getInternalReactConstants(
     SuspenseComponent,
     SuspenseListComponent,
     TracingMarkerComponent,
-    HostResource,
-    HostSingleton,
   } = ReactTypeOfWork;
 
   function resolveFiberType(type: any) {
@@ -614,6 +614,8 @@ export function attach(
     Fragment,
     FunctionComponent,
     HostRoot,
+    HostResource,
+    HostSingleton,
     HostPortal,
     HostComponent,
     HostText,
@@ -626,8 +628,6 @@ export function attach(
     SuspenseComponent,
     SuspenseListComponent,
     TracingMarkerComponent,
-    HostSingleton,
-    HostResource,
   } = ReactTypeOfWork;
   const {
     ImmediatePriority,

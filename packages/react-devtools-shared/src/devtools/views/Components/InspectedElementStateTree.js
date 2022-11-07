@@ -35,55 +35,54 @@ export default function InspectedElementStateTree({
   store,
 }: Props): React.Node {
   const {state, type} = inspectedElement;
+
   // HostSingleton and HostResource may have state that we don't want to expose to users
-  if (type === ElementTypeHostComponent) {
+  const isHostComponent = type === ElementTypeHostComponent;
+
+  const entries = state != null ? Object.entries(state) : null;
+  const isEmpty = entries === null || entries.length === 0;
+
+  if (isEmpty || isHostComponent) {
     return null;
   }
 
-  const entries = state != null ? Object.entries(state) : null;
   if (entries !== null) {
     entries.sort(alphaSortEntries);
   }
 
-  const isEmpty = entries === null || entries.length === 0;
-
   const handleCopy = () => copy(serializeDataForCopy(((state: any): Object)));
 
-  if (isEmpty) {
-    return null;
-  } else {
-    return (
-      <div className={styles.InspectedElementTree}>
-        <div className={styles.HeaderRow}>
-          <div className={styles.Header}>state</div>
-          {!isEmpty && (
-            <Button onClick={handleCopy} title="Copy to clipboard">
-              <ButtonIcon type="copy" />
-            </Button>
-          )}
-        </div>
-        {isEmpty && <div className={styles.Empty}>None</div>}
-        {!isEmpty &&
-          (entries: any).map(([name, value]) => (
-            <KeyValue
-              key={name}
-              alphaSort={true}
-              bridge={bridge}
-              canDeletePaths={true}
-              canEditValues={true}
-              canRenamePaths={true}
-              depth={1}
-              element={element}
-              hidden={false}
-              inspectedElement={inspectedElement}
-              name={name}
-              path={[name]}
-              pathRoot="state"
-              store={store}
-              value={value}
-            />
-          ))}
+  return (
+    <div className={styles.InspectedElementTree}>
+      <div className={styles.HeaderRow}>
+        <div className={styles.Header}>state</div>
+        {!isEmpty && (
+          <Button onClick={handleCopy} title="Copy to clipboard">
+            <ButtonIcon type="copy" />
+          </Button>
+        )}
       </div>
-    );
-  }
+      {isEmpty && <div className={styles.Empty}>None</div>}
+      {!isEmpty &&
+        (entries: any).map(([name, value]) => (
+          <KeyValue
+            key={name}
+            alphaSort={true}
+            bridge={bridge}
+            canDeletePaths={true}
+            canEditValues={true}
+            canRenamePaths={true}
+            depth={1}
+            element={element}
+            hidden={false}
+            inspectedElement={inspectedElement}
+            name={name}
+            path={[name]}
+            pathRoot="state"
+            store={store}
+            value={value}
+          />
+        ))}
+    </div>
+  );
 }
