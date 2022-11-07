@@ -43,7 +43,7 @@ bb2:
   [2] Const mutate $8 = 2
   [3] Const mutate $9 = 1
   [4] Const mutate $10 = 0
-  Switch (<unknown> props$6.test)
+  Switch (read props$6.test)
     Case read $10: bb8
     Case read $9: bb6
     Case read $8: bb4

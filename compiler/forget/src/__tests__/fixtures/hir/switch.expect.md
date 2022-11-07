@@ -32,7 +32,7 @@ bb0:
   [2] Let mutate y$10 = undefined
   [3] Const mutate $11 = false
   [4] Const mutate $12 = true
-  Switch (<unknown> props$8.p0)
+  Switch (read props$8.p0)
     Case read $12: bb4
     Case read $11: bb2
     Default: bb1

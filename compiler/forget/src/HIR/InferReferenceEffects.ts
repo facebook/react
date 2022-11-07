@@ -641,6 +641,7 @@ function inferBlock(env: Environment, block: BasicBlock) {
       break;
     }
     case "switch": {
+      env.reference(block.terminal.test, Effect.Read);
       for (const case_ of block.terminal.cases) {
         if (case_.test !== null) {
           env.reference(case_.test, Effect.Read);

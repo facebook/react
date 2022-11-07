@@ -33,7 +33,7 @@ bb0:
   [3] Const mutate $12 = Binary read x$10 === read $11
   [4] Const mutate $13 = 1
   [5] Const mutate $14 = Binary read x$10 === read $13
-  Switch (<unknown> x$10)
+  Switch (read x$10)
     Case read $14: bb5
     Case read $12: bb3
     Default: bb2
