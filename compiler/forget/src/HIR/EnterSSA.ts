@@ -1,16 +1,12 @@
-import { assertExhaustive } from "../Common/utils";
 import { invariant } from "../CompilerError";
-import {
-  BasicBlock,
-  HIRFunction,
-  Identifier,
-  Instruction,
-  Phi,
-  Place,
-} from "./HIR";
+import { BasicBlock, HIRFunction, Identifier, Phi, Place } from "./HIR";
 import { Environment } from "./HIRBuilder";
 import { printIdentifier } from "./PrintHIR";
-import { eachTerminalSuccessor, mapTerminalOperands } from "./visitors";
+import {
+  eachTerminalSuccessor,
+  mapInstructionOperands,
+  mapTerminalOperands,
+} from "./visitors";
 
 type IncompletePhi = {
   oldId: Identifier;
@@ -186,7 +182,7 @@ export default function enterSSA(func: HIRFunction, env: Environment) {
     }
 
     for (const instr of block.instructions) {
-      rewriteInstructionUses(instr, builder);
+      mapInstructionOperands(instr, (place) => builder.getPlace(place));
 
       if (instr.lvalue != null) {
         const oldPlace = instr.lvalue.place;
@@ -214,69 +210,6 @@ export default function enterSSA(func: HIRFunction, env: Environment) {
       if (count === 0 && visitedBlocks.has(output)) {
         builder.fixIncompletePhis(output);
       }
-    }
-  }
-}
-
-function rewriteInstructionUses(instr: Instruction, builder: SSABuilder) {
-  const instrValue = instr.value;
-
-  switch (instrValue.kind) {
-    case "BinaryExpression": {
-      instrValue.left = builder.getPlace(instrValue.left);
-      instrValue.right = builder.getPlace(instrValue.right);
-      break;
-    }
-    case "Identifier": {
-      instr.value = builder.getPlace(instrValue);
-      break;
-    }
-    case "NewExpression":
-    case "CallExpression": {
-      instrValue.callee = builder.getPlace(instrValue.callee);
-      instrValue.args = instrValue.args.map((arg) => builder.getPlace(arg));
-      break;
-    }
-    case "UnaryExpression": {
-      instrValue.value = builder.getPlace(instrValue.value);
-      break;
-    }
-    case "JsxExpression": {
-      instrValue.tag = builder.getPlace(instrValue.tag);
-      for (const [prop, place] of instrValue.props) {
-        instrValue.props.set(prop, builder.getPlace(place));
-      }
-      if (instrValue.children) {
-        instrValue.children = instrValue.children.map((p) =>
-          builder.getPlace(p)
-        );
-      }
-      break;
-    }
-    case "ObjectExpression": {
-      if (instrValue.properties !== null) {
-        const props = instrValue.properties;
-        for (const [prop, place] of props) {
-          props.set(prop, builder.getPlace(place));
-        }
-      }
-      break;
-    }
-    case "ArrayExpression": {
-      instrValue.elements = instrValue.elements.map((e) => builder.getPlace(e));
-      break;
-    }
-    case "JsxFragment": {
-      instrValue.children = instrValue.children.map((e) => builder.getPlace(e));
-      break;
-    }
-    case "OtherStatement":
-    case "Primitive":
-    case "JSXText": {
-      break;
-    }
-    default: {
-      assertExhaustive(instrValue, "Unexpected instruction kind");
     }
   }
 }

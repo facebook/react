@@ -66,6 +66,69 @@ export function* eachInstructionOperand(instr: Instruction): Iterable<Place> {
   }
 }
 
+export function mapInstructionOperands(
+  instr: Instruction,
+  fn: (place: Place) => Place
+): void {
+  const instrValue = instr.value;
+  switch (instrValue.kind) {
+    case "BinaryExpression": {
+      instrValue.left = fn(instrValue.left);
+      instrValue.right = fn(instrValue.right);
+      break;
+    }
+    case "Identifier": {
+      instr.value = fn(instrValue);
+      break;
+    }
+    case "NewExpression":
+    case "CallExpression": {
+      instrValue.callee = fn(instrValue.callee);
+      instrValue.args = instrValue.args.map((arg) => fn(arg));
+      break;
+    }
+    case "UnaryExpression": {
+      instrValue.value = fn(instrValue.value);
+      break;
+    }
+    case "JsxExpression": {
+      instrValue.tag = fn(instrValue.tag);
+      for (const [prop, place] of instrValue.props) {
+        instrValue.props.set(prop, fn(place));
+      }
+      if (instrValue.children) {
+        instrValue.children = instrValue.children.map((p) => fn(p));
+      }
+      break;
+    }
+    case "ObjectExpression": {
+      if (instrValue.properties !== null) {
+        const props = instrValue.properties;
+        for (const [prop, place] of props) {
+          props.set(prop, fn(place));
+        }
+      }
+      break;
+    }
+    case "ArrayExpression": {
+      instrValue.elements = instrValue.elements.map((e) => fn(e));
+      break;
+    }
+    case "JsxFragment": {
+      instrValue.children = instrValue.children.map((e) => fn(e));
+      break;
+    }
+    case "OtherStatement":
+    case "Primitive":
+    case "JSXText": {
+      break;
+    }
+    default: {
+      assertExhaustive(instrValue, "Unexpected instruction kind");
+    }
+  }
+}
+
 /**
  * Maps a terminal node's block assignments using the provided function.
  */
