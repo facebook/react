@@ -40,6 +40,8 @@ export type WorkTagMap = {
   HostComponent: WorkTag,
   HostPortal: WorkTag,
   HostRoot: WorkTag,
+  HostResource: WorkTag,
+  HostSingleton: WorkTag,
   HostText: WorkTag,
   IncompleteClassComponent: WorkTag,
   IndeterminateComponent: WorkTag,
