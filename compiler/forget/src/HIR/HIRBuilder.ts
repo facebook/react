@@ -19,7 +19,7 @@ import {
   Terminal,
 } from "./HIR";
 import { printInstruction } from "./PrintHIR";
-import { mapTerminalSuccessors } from "./visitors";
+import { eachTerminalSuccessor, mapTerminalSuccessors } from "./visitors";
 
 // *******************************************************************************************
 // *******************************************************************************************
@@ -512,34 +512,8 @@ function markPredecessors(func: HIR) {
 
     const { terminal } = block;
 
-    switch (terminal.kind) {
-      case "return":
-      case "throw": {
-        break;
-      }
-      case "goto": {
-        visit(terminal.block, block);
-        break;
-      }
-      case "if": {
-        const { consequent, alternate } = terminal;
-        visit(alternate, block);
-        visit(consequent, block);
-        break;
-      }
-      case "switch": {
-        const { cases } = terminal;
-        for (const case_ of [...cases]) {
-          visit(case_.block, block);
-        }
-        break;
-      }
-      default: {
-        assertExhaustive(
-          terminal,
-          `Unexpected terminal kind '${(terminal as any).kind}'`
-        );
-      }
+    for (const successor of eachTerminalSuccessor(terminal)) {
+      visit(successor, block);
     }
   }
   visit(func.entry, null);

@@ -25,7 +25,7 @@ bb2:
   [3] Let mutate z$6 = Binary read x$4 + read y$5
   Goto bb1
 bb1:
-  predecessor blocks: bb0 bb2
+  predecessor blocks: bb2 bb0
   Return
 ```
 

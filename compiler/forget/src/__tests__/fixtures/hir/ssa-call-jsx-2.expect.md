@@ -48,7 +48,7 @@ bb2:
   [6] Let mutate _$15 = JSX <read $14 a={freeze a$11} ></read $14>
   Goto bb1
 bb1:
-  predecessor blocks: bb0 bb2
+  predecessor blocks: bb2 bb0
   [7] Call mutate foo$4(read a$11, mutate b$12)
   [8] Const mutate $19 = "div"
   [9] Const mutate $20 = JSX <read $19 a={freeze a$11} b={freeze b$12} ></read $19>

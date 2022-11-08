@@ -34,8 +34,8 @@ bb3:
   [3] Const mutate $7 = read $5
   Goto bb1
 bb1:
-  predecessor blocks: bb3 bb2
-  $8: phi(bb3: $7, bb2: $6)
+  predecessor blocks: bb2 bb3
+  $8: phi(bb2: $6, bb3: $7)
   Return freeze $8
 ```
 
@@ -67,8 +67,8 @@ bb3:
   [3] Const mutate $7 = Call mutate g$4()
   Goto bb1
 bb1:
-  predecessor blocks: bb3 bb2
-  $8: phi(bb3: $7, bb2: $6)
+  predecessor blocks: bb2 bb3
+  $8: phi(bb2: $6, bb3: $7)
   Return freeze $8
 ```
 
@@ -102,8 +102,8 @@ bb3:
   [5] Const mutate $13 = Call mutate g$7()
   Goto bb1
 bb1:
-  predecessor blocks: bb3 bb2
-  $14: phi(bb3: $13, bb2: $12)
+  predecessor blocks: bb2 bb3
+  $14: phi(bb2: $12, bb3: $13)
   Return freeze $14
 ```
 

@@ -83,7 +83,7 @@ bb3:
   [7] Const mutate $21 = Call mutate cond$7(mutate a$12)
   If (read $21) then:bb2 else:bb1
 bb2:
-  predecessor blocks: bb1 bb3
+  predecessor blocks: bb3 bb1
   If (read a$12) then:bb7 else:bb7
 bb7:
   predecessor blocks: bb2

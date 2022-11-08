@@ -22,7 +22,7 @@ bb0:
   [1] Let mutate items$5 = Array []
   Goto bb1
 bb1:
-  predecessor blocks: bb0 bb3 bb5
+  predecessor blocks: bb0 bb5 bb3
   If (read items$5) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1

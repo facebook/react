@@ -16,15 +16,14 @@ import {
   InstructionValue,
   Phi,
   Place,
-  Terminal,
   ValueKind,
 } from "./HIR";
+import { printMixedHIR, printPlace, printSourceLocation } from "./PrintHIR";
 import {
   eachInstructionOperand,
   eachTerminalOperand,
-  mapTerminalSuccessors,
+  eachTerminalSuccessor,
 } from "./visitors";
-import { printMixedHIR, printPlace, printSourceLocation } from "./PrintHIR";
 
 /**
  * For every usage of a value in the given function, infers the effect or action
@@ -137,17 +136,9 @@ export default function inferReferenceEffects(fn: HIRFunction) {
       const environment = incomingEnvironment.clone();
       inferBlock(environment, block);
 
-      // TODO: add a `forEachTerminalSuccessor` helper, we don't actually want the result
-      // here
-      const _ = mapTerminalSuccessors(
-        block.terminal,
-        (nextBlockId, isFallthrough) => {
-          if (!isFallthrough) {
-            queue(nextBlockId, environment);
-          }
-          return nextBlockId;
-        }
-      );
+      for (const nextBlockId of eachTerminalSuccessor(block.terminal)) {
+        queue(nextBlockId, environment);
+      }
     }
   }
 }

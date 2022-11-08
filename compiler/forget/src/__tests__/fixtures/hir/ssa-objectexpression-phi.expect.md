@@ -36,9 +36,9 @@ bb3:
   [6] Reassign mutate y$11 = 3
   Goto bb1
 bb1:
-  predecessor blocks: bb3 bb2
-  x$12: phi(bb3: x$6, bb2: x$10)
-  y$13: phi(bb3: y$11, bb2: y$7)
+  predecessor blocks: bb2 bb3
+  x$12: phi(bb2: x$10, bb3: x$6)
+  y$13: phi(bb2: y$7, bb3: y$11)
   [7] Let mutate t$14 = Object { x: read x$12, y: read y$13 }
   Return freeze t$14
 ```

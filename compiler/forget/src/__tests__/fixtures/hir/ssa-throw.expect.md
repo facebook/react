@@ -25,8 +25,8 @@ bb2:
   [4] Reassign mutate x$7 = 2
   Goto bb1
 bb1:
-  predecessor blocks: bb0 bb2
-  x$8: phi(bb0: x$4, bb2: x$7)
+  predecessor blocks: bb2 bb0
+  x$8: phi(bb2: x$7, bb0: x$4)
   Throw read x$8
 ```
 

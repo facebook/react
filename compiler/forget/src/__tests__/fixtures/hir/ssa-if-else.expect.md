@@ -31,7 +31,7 @@ bb3:
   [4] Let mutate z$8 = read x$5
   Goto bb1
 bb1:
-  predecessor blocks: bb3 bb2
+  predecessor blocks: bb2 bb3
   Return
 ```
 

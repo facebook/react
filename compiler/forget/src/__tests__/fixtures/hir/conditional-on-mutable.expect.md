@@ -75,14 +75,14 @@ bb2:
   [3] Call mutate a$7.push(read props$6.p0)
   Goto bb1
 bb1:
-  predecessor blocks: bb0 bb2
+  predecessor blocks: bb2 bb0
   If (read props$6.p1) then:bb4 else:bb3
 bb4:
   predecessor blocks: bb1
   [4] Call mutate b$8.push(read props$6.p2)
   Goto bb3
 bb3:
-  predecessor blocks: bb1 bb4
+  predecessor blocks: bb4 bb1
   [5] Const mutate $16 = JSX <read Foo$4 a={freeze a$7} b={freeze b$8} ></read Foo$4>
   Return read $16
 ```
@@ -120,14 +120,14 @@ bb2:
   [4] Call mutate a$9.push(read props$8.p0)
   Goto bb1
 bb1:
-  predecessor blocks: bb0 bb2
+  predecessor blocks: bb2 bb0
   If (read props$8.p1) then:bb4 else:bb3
 bb4:
   predecessor blocks: bb1
   [5] Call mutate b$10.push(read props$8.p2)
   Goto bb3
 bb3:
-  predecessor blocks: bb1 bb4
+  predecessor blocks: bb4 bb1
   [6] Const mutate $19 = JSX <read Foo$6 a={freeze a$9} b={freeze b$10} ></read Foo$6>
   Return read $19
 ```

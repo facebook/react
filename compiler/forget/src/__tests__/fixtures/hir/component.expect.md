@@ -43,7 +43,7 @@ bb0:
   [6] Const mutate max$32 = Call mutate Math$8.max(read $31, read maxItems$28)
   Goto bb1
 bb1:
-  predecessor blocks: bb0 bb4 bb7
+  predecessor blocks: bb0 bb7 bb4
   If (read items$27) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
@@ -59,8 +59,8 @@ bb9:
   [10] Const mutate $39 = Call mutate seen$30.has(mutate item$10)
   Goto bb7
 bb7:
-  predecessor blocks: bb9 bb8
-  $40: phi(bb9: $39, bb8: $37)
+  predecessor blocks: bb8 bb9
+  $40: phi(bb8: $37, bb9: $39)
   If (read $40) then:bb1 else:bb4
 bb4:
   predecessor blocks: bb7
@@ -71,7 +71,7 @@ bb4:
   [15] Const mutate $49 = Binary read renderedItems$29.length >= read max$32
   If (read $49) then:bb2 else:bb1
 bb2:
-  predecessor blocks: bb1 bb4
+  predecessor blocks: bb4 bb1
   [16] Const mutate count$52 = read renderedItems$29.length
   [17] Const mutate $53 = "div"
   [18] Const mutate $54 = "\n      "

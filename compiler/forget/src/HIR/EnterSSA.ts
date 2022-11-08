@@ -2,7 +2,6 @@ import { assertExhaustive } from "../Common/utils";
 import { invariant } from "../CompilerError";
 import {
   BasicBlock,
-  BlockId,
   HIRFunction,
   Identifier,
   Instruction,
@@ -11,6 +10,7 @@ import {
 } from "./HIR";
 import { Environment } from "./HIRBuilder";
 import { printIdentifier } from "./PrintHIR";
+import { eachTerminalSuccessor } from "./visitors";
 
 type IncompletePhi = {
   oldId: Identifier;
@@ -186,7 +186,7 @@ export default function enterSSA(func: HIRFunction, env: Environment) {
     }
 
     for (const instr of block.instructions) {
-      rewriteUses(instr, builder);
+      rewriteInstructionUses(instr, builder);
 
       if (instr.lvalue != null) {
         const oldPlace = instr.lvalue.place;
@@ -200,9 +200,9 @@ export default function enterSSA(func: HIRFunction, env: Environment) {
       }
     }
 
-    const outputs = rewriteUsesAndCollectOutputs(block, builder);
-    const outputBlocks = outputs.map((id) => func.body.blocks.get(id)!);
-    for (const output of outputBlocks) {
+    rewriteTerminalOperands(block, builder);
+    for (const outputId of eachTerminalSuccessor(block.terminal)) {
+      const output = func.body.blocks.get(outputId)!;
       let count;
       if (builder.unsealedPreds.has(output)) {
         count = builder.unsealedPreds.get(output)! - 1;
@@ -218,11 +218,7 @@ export default function enterSSA(func: HIRFunction, env: Environment) {
   }
 }
 
-function rewriteUsesAndCollectOutputs(
-  block: BasicBlock,
-  builder: SSABuilder
-): Array<BlockId> {
-  const outputs: Array<BlockId> = [];
+function rewriteTerminalOperands(block: BasicBlock, builder: SSABuilder): void {
   const { terminal } = block;
   switch (terminal.kind) {
     case "return":
@@ -233,14 +229,11 @@ function rewriteUsesAndCollectOutputs(
       break;
     }
     case "goto": {
-      outputs.push(terminal.block);
       break;
     }
     case "if": {
       const { consequent, alternate } = terminal;
       terminal.test = builder.getPlace(terminal.test);
-      outputs.push(alternate);
-      outputs.push(consequent);
       break;
     }
     case "switch": {
@@ -250,7 +243,6 @@ function rewriteUsesAndCollectOutputs(
         if (case_.test) {
           case_.test = builder.getPlace(case_.test);
         }
-        outputs.push(case_.block);
       }
       break;
     }
@@ -261,11 +253,9 @@ function rewriteUsesAndCollectOutputs(
       );
     }
   }
-
-  return outputs;
 }
 
-function rewriteUses(instr: Instruction, builder: SSABuilder) {
+function rewriteInstructionUses(instr: Instruction, builder: SSABuilder) {
   const instrValue = instr.value;
 
   switch (instrValue.kind) {

@@ -33,8 +33,8 @@ bb3:
   [5] Reassign mutate y$9 = 2
   Goto bb1
 bb1:
-  predecessor blocks: bb3 bb2
-  y$10: phi(bb3: y$9, bb2: y$8)
+  predecessor blocks: bb2 bb3
+  y$10: phi(bb2: y$8, bb3: y$9)
   [6] Let mutate x$11 = read y$10
   Return
 ```

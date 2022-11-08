@@ -39,8 +39,8 @@ bb3:
   [5] Reassign mutate a$12 = Array []
   Goto bb1
 bb1:
-  predecessor blocks: bb3 bb2
-  a$14: phi(bb3: a$12, bb2: a$11)
+  predecessor blocks: bb2 bb3
+  a$14: phi(bb2: a$11, bb3: a$12)
   [6] Call read useFreeze$5(freeze a$14)
   [7] Call read useFreeze$5(read a$14)
   [8] Call mutate call$6(read a$14)

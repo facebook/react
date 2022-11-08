@@ -32,8 +32,8 @@ bb2:
   [4] Reassign mutate x$9 = Array []
   Goto bb1
 bb1:
-  predecessor blocks: bb0 bb2
-  x$11: phi(bb0: x$7, bb2: x$9)
+  predecessor blocks: bb2 bb0
+  x$11: phi(bb2: x$9, bb0: x$7)
   [5] Let mutate _$12 = JSX <read Component$0 x={freeze x$11} ></read Component$0>
   [6] Call read y$8.push(read props$6.p2)
   [7] Const mutate $15 = JSX <read Component$0 x={read x$11} y={read y$8} ></read Component$0>

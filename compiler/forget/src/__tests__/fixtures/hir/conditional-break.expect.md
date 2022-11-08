@@ -118,7 +118,7 @@ bb2:
   [3] Call mutate a$4.push(read props$3.c)
   Goto bb1
 bb1:
-  predecessor blocks: bb0 bb2
+  predecessor blocks: bb2 bb0
   [4] Call mutate a$4.push(read props$3.d)
   Return freeze a$4
 ```
@@ -218,7 +218,7 @@ bb2:
   [3] Call mutate a$4.push(read props$3.c)
   Goto bb1
 bb1:
-  predecessor blocks: bb2 bb0
+  predecessor blocks: bb0 bb2
   [4] Call mutate a$4.push(read props$3.d)
   Return freeze a$4
 ```

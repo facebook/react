@@ -72,8 +72,8 @@ bb13:
   [9] Reassign mutate x$15 = read props$6.c
   Goto bb1
 bb1:
-  predecessor blocks: bb13 bb12 bb8 bb6 bb4
-  x$16: phi(bb13: x$15, bb12: x$14, bb8: x$11, bb6: x$12, bb4: x$13)
+  predecessor blocks: bb8 bb6 bb4 bb12 bb13
+  x$16: phi(bb8: x$11, bb6: x$12, bb4: x$13, bb12: x$14, bb13: x$15)
   [10] read x$16
   Return
 ```

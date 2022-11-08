@@ -129,6 +129,43 @@ export function mapTerminalSuccessors(
   }
 }
 
+/**
+ * Iterates over the successor block ids of the provided terminal. The function is called
+ * specifically for the successors that define the standard control flow, and not
+ * pseduo-successors such as fallthroughs.
+ */
+export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
+  switch (terminal.kind) {
+    case "goto": {
+      yield terminal.block;
+      break;
+    }
+    case "if": {
+      yield terminal.consequent;
+      yield terminal.alternate;
+      break;
+    }
+    case "switch": {
+      for (const case_ of terminal.cases) {
+        yield case_.block;
+      }
+      break;
+    }
+    case "return": {
+      break;
+    }
+    case "throw": {
+      break;
+    }
+    default: {
+      assertExhaustive(
+        terminal,
+        `Unexpected terminal kind '${(terminal as any as Terminal).kind}'`
+      );
+    }
+  }
+}
+
 export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
   switch (terminal.kind) {
     case "if": {

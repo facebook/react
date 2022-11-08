@@ -106,7 +106,7 @@ bb2:
   [4] Call mutate mutate$5(mutate b$10)
   Goto bb1
 bb1:
-  predecessor blocks: bb0 bb2
+  predecessor blocks: bb2 bb0
   [5] Const mutate $14 = JSX <read Foo$6 a={freeze a$9} b={freeze b$10} ></read Foo$6>
   Return read $14
 ```

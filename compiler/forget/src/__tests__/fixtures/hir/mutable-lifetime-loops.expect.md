@@ -97,11 +97,11 @@ bb3:
   [12] Const mutate $29 = Call mutate cond$8(mutate a$21)
   If (read $29) then:bb2 else:bb1
 bb2:
-  predecessor blocks: bb1 bb3
-  a$30: phi(bb1: a$18, bb3: a$21)
-  b$31: phi(bb1: b$20, bb3: b$23)
-  c$32: phi(bb1: c$22, bb3: c$25)
-  d$33[-1:14]: phi(bb1: d$24, bb3: d$26)
+  predecessor blocks: bb3 bb1
+  a$30: phi(bb3: a$21, bb1: a$18)
+  b$31: phi(bb3: b$23, bb1: b$20)
+  c$32: phi(bb3: c$25, bb1: c$22)
+  d$33[-1:14]: phi(bb3: d$26, bb1: d$24)
   If (read a$30) then:bb7 else:bb7
 bb7:
   predecessor blocks: bb2
