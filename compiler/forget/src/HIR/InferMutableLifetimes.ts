@@ -7,7 +7,7 @@
 
 import { assertExhaustive } from "../Common/utils";
 import { Effect, HIRFunction, Instruction, Place } from "./HIR";
-import { eachInstructionOperand } from "./HIRBuilder";
+import { eachInstructionOperand } from "./visitors";
 import { printInstruction, printPlace } from "./PrintHIR";
 
 /**

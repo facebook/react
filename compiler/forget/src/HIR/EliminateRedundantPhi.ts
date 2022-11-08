@@ -7,8 +7,8 @@
 
 import invariant from "invariant";
 import { assertExhaustive } from "../Common/utils";
-import { BlockId, HIRFunction, Identifier, Place } from "./HIR";
-import { eachInstructionOperand } from "./HIRBuilder";
+import { BlockId, HIRFunction, Identifier, Place, Terminal } from "./HIR";
+import { eachInstructionOperand, eachTerminalOperand } from "./visitors";
 
 /**
  * Pass to eliminate redundant phi nodes:
@@ -91,38 +91,8 @@ export function eliminateRedundantPhi(fn: HIRFunction) {
 
       // Rewrite all terminal operands
       const { terminal } = block;
-      switch (terminal.kind) {
-        case "if": {
-          rewritePlace(terminal.test, rewrites);
-          break;
-        }
-        case "switch": {
-          rewritePlace(terminal.test, rewrites);
-          for (const case_ of terminal.cases) {
-            if (case_.test === null) {
-              continue;
-            }
-            rewritePlace(case_.test, rewrites);
-          }
-          break;
-        }
-        case "return":
-        case "throw": {
-          if (terminal.value !== null) {
-            rewritePlace(terminal.value, rewrites);
-          }
-          break;
-        }
-        case "goto": {
-          // no-op
-          break;
-        }
-        default: {
-          assertExhaustive(
-            terminal,
-            `Unexpected terminal kind '${(terminal as any).kind}'`
-          );
-        }
+      for (const place of eachTerminalOperand(terminal)) {
+        rewritePlace(place, rewrites);
       }
     }
     // We only need to loop if there were newly eliminated phis in this iteration

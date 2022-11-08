@@ -19,7 +19,11 @@ import {
   Terminal,
   ValueKind,
 } from "./HIR";
-import { mapTerminalSuccessors } from "./HIRBuilder";
+import {
+  eachInstructionOperand,
+  eachTerminalOperand,
+  mapTerminalSuccessors,
+} from "./visitors";
 import { printMixedHIR, printPlace, printSourceLocation } from "./PrintHIR";
 
 /**
@@ -503,57 +507,44 @@ function inferBlock(env: Environment, block: BasicBlock) {
 
   for (const instr of block.instructions) {
     const instrValue = instr.value;
+    let effectKind: Effect | null = null;
     let valueKind: ValueKind;
     switch (instrValue.kind) {
       case "BinaryExpression": {
         valueKind = ValueKind.Immutable;
-        env.reference(instrValue.left, Effect.Read);
-        env.reference(instrValue.right, Effect.Read);
+        effectKind = Effect.Read;
         break;
       }
       case "ArrayExpression": {
         valueKind = ValueKind.Mutable;
-        for (const element of instrValue.elements) {
-          env.reference(element, Effect.Read);
-        }
+        effectKind = Effect.Read;
         break;
       }
       case "NewExpression": {
         valueKind = ValueKind.Mutable;
-        env.reference(instrValue.callee, Effect.Mutate);
-        for (const arg of instrValue.args) {
-          env.reference(arg, Effect.Mutate);
-        }
+        effectKind = Effect.Mutate;
         break;
       }
       case "CallExpression": {
-        let effectKind = Effect.Mutate;
         valueKind = ValueKind.Mutable;
+        effectKind = Effect.Mutate;
         const hook = parseHookCall(instrValue.callee);
         if (hook !== null) {
           effectKind = hook.effectKind;
           valueKind = hook.valueKind;
-        }
-        env.reference(instrValue.callee, effectKind);
-        for (const arg of instrValue.args) {
-          env.reference(arg, effectKind);
         }
         break;
       }
       case "ObjectExpression": {
         valueKind = ValueKind.Mutable;
         // Object construction captures but does not modify the key/property values
-        if (instrValue.properties !== null) {
-          for (const [_key, value] of instrValue.properties) {
-            env.reference(value, Effect.Read);
-          }
-        }
+        effectKind = Effect.Read;
         break;
       }
       case "UnaryExpression": {
         // TODO check that value must be a primitive, or make conditional based on the operator
         valueKind = ValueKind.Immutable;
-        env.reference(instrValue.value, Effect.Read);
+        effectKind = Effect.Read;
         break;
       }
       case "OtherStatement": {
@@ -563,22 +554,12 @@ function inferBlock(env: Environment, block: BasicBlock) {
       }
       case "JsxExpression": {
         valueKind = ValueKind.Frozen;
-        env.reference(instrValue.tag, Effect.Freeze);
-        for (const [_prop, value] of instrValue.props) {
-          env.reference(value, Effect.Freeze);
-        }
-        if (instrValue.children !== null) {
-          for (const child of instrValue.children) {
-            env.reference(child, Effect.Freeze);
-          }
-        }
+        effectKind = Effect.Freeze;
         break;
       }
       case "JsxFragment": {
         valueKind = ValueKind.Frozen;
-        for (const child of instrValue.children) {
-          env.reference(child, Effect.Freeze);
-        }
+        effectKind = Effect.Freeze;
         break;
       }
       case "JSXText":
@@ -615,6 +596,16 @@ function inferBlock(env: Environment, block: BasicBlock) {
         assertExhaustive(instrValue, "Unexpected instruction kind");
       }
     }
+
+    for (const operand of eachInstructionOperand(instr)) {
+      invariant(
+        effectKind != null,
+        "effectKind must be set for instruction value `%s`",
+        instrValue.kind
+      );
+      env.reference(operand, effectKind);
+    }
+
     env.initialize(instrValue, valueKind);
     if (instr.lvalue !== null) {
       if (instr.lvalue.place.memberPath === null) {
@@ -625,39 +616,13 @@ function inferBlock(env: Environment, block: BasicBlock) {
       instr.lvalue.place.effect = Effect.Mutate;
     }
   }
-  switch (block.terminal.kind) {
-    case "throw": {
-      env.reference(block.terminal.value, Effect.Freeze);
-      break;
-    }
-    case "return": {
-      if (block.terminal.value !== null) {
-        env.reference(block.terminal.value, Effect.Freeze);
-      }
-      break;
-    }
-    case "if": {
-      env.reference(block.terminal.test, Effect.Read);
-      break;
-    }
-    case "switch": {
-      env.reference(block.terminal.test, Effect.Read);
-      for (const case_ of block.terminal.cases) {
-        if (case_.test !== null) {
-          env.reference(case_.test, Effect.Read);
-        }
-      }
-      break;
-    }
-    case "goto": {
-      break;
-    }
-    default: {
-      assertExhaustive(
-        block.terminal,
-        `Unexpected terminal kind '${(block.terminal as any as Terminal).kind}'`
-      );
-    }
+
+  const effect =
+    block.terminal.kind === "return" || block.terminal.kind === "throw"
+      ? Effect.Freeze
+      : Effect.Read;
+  for (const operand of eachTerminalOperand(block.terminal)) {
+    env.reference(operand, effect);
   }
 }
 
