@@ -1685,13 +1685,14 @@ function mountSyncExternalStore<T>(
   return nextSnapshot;
 }
 
-function updateSyncExternalStore<T>(
+function updateSyncExternalStoreImpl<T>(
+  hook: Hook,
+  prevSnapshot: T,
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
   getServerSnapshot?: () => T,
 ): T {
   const fiber = currentlyRenderingFiber;
-  const hook = updateWorkInProgressHook();
   // Read the current snapshot from the store on every render. This breaks the
   // normal rules of React, and only works because store updates are
   // always synchronous.
@@ -1707,7 +1708,6 @@ function updateSyncExternalStore<T>(
       }
     }
   }
-  const prevSnapshot = (currentHook || hook).memoizedState;
   const snapshotChanged = !is(prevSnapshot, nextSnapshot);
   if (snapshotChanged) {
     hook.memoizedState = nextSnapshot;
@@ -1756,6 +1756,44 @@ function updateSyncExternalStore<T>(
   }
 
   return nextSnapshot;
+}
+
+function updateSyncExternalStore<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+  getServerSnapshot?: () => T,
+): T {
+  const hook = updateWorkInProgressHook();
+  const prevSnapshot = hook.memoizedState;
+  return updateSyncExternalStoreImpl(
+    hook,
+    prevSnapshot,
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
+}
+
+function rerenderSyncExternalStore<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+  getServerSnapshot?: () => T,
+): T {
+  const hook = updateWorkInProgressHook();
+  const prevSnapshot =
+    currentHook === null
+      ? // This is a rerender during a mount.
+        hook.memoizedState
+      : // This is a rerender during an update.
+        currentHook.memoizedState;
+
+  return updateSyncExternalStoreImpl(
+    hook,
+    prevSnapshot,
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
 }
 
 function pushStoreConsistencyCheck<T>(
@@ -2894,7 +2932,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
-  useSyncExternalStore: updateSyncExternalStore,
+  useSyncExternalStore: rerenderSyncExternalStore,
   useId: updateId,
 };
 if (enableCache) {
@@ -3538,7 +3576,11 @@ if (__DEV__) {
     ): T {
       currentHookNameInDev = 'useSyncExternalStore';
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+      return rerenderSyncExternalStore(
+        subscribe,
+        getSnapshot,
+        getServerSnapshot,
+      );
     },
     useId(): string {
       currentHookNameInDev = 'useId';
