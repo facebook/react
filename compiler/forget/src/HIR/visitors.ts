@@ -166,6 +166,45 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
   }
 }
 
+export function mapTerminalOperands(
+  terminal: Terminal,
+  fn: (place: Place) => Place
+): void {
+  switch (terminal.kind) {
+    case "if": {
+      terminal.test = fn(terminal.test);
+      break;
+    }
+    case "switch": {
+      terminal.test = fn(terminal.test);
+      for (const case_ of terminal.cases) {
+        if (case_.test === null) {
+          continue;
+        }
+        case_.test = fn(case_.test);
+      }
+      break;
+    }
+    case "return":
+    case "throw": {
+      if (terminal.value !== null) {
+        terminal.value = fn(terminal.value);
+      }
+      break;
+    }
+    case "goto": {
+      // no-op
+      break;
+    }
+    default: {
+      assertExhaustive(
+        terminal,
+        `Unexpected terminal kind '${(terminal as any).kind}'`
+      );
+    }
+  }
+}
+
 export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
   switch (terminal.kind) {
     case "if": {

@@ -10,7 +10,7 @@ import {
 } from "./HIR";
 import { Environment } from "./HIRBuilder";
 import { printIdentifier } from "./PrintHIR";
-import { eachTerminalSuccessor } from "./visitors";
+import { eachTerminalSuccessor, mapTerminalOperands } from "./visitors";
 
 type IncompletePhi = {
   oldId: Identifier;
@@ -200,7 +200,7 @@ export default function enterSSA(func: HIRFunction, env: Environment) {
       }
     }
 
-    rewriteTerminalOperands(block, builder);
+    mapTerminalOperands(block.terminal, (place) => builder.getPlace(place));
     for (const outputId of eachTerminalSuccessor(block.terminal)) {
       const output = func.body.blocks.get(outputId)!;
       let count;
@@ -214,43 +214,6 @@ export default function enterSSA(func: HIRFunction, env: Environment) {
       if (count === 0 && visitedBlocks.has(output)) {
         builder.fixIncompletePhis(output);
       }
-    }
-  }
-}
-
-function rewriteTerminalOperands(block: BasicBlock, builder: SSABuilder): void {
-  const { terminal } = block;
-  switch (terminal.kind) {
-    case "return":
-    case "throw": {
-      if (terminal.value) {
-        terminal.value = builder.getPlace(terminal.value);
-      }
-      break;
-    }
-    case "goto": {
-      break;
-    }
-    case "if": {
-      const { consequent, alternate } = terminal;
-      terminal.test = builder.getPlace(terminal.test);
-      break;
-    }
-    case "switch": {
-      const { cases } = terminal;
-      terminal.test = builder.getPlace(terminal.test);
-      for (const case_ of [...cases]) {
-        if (case_.test) {
-          case_.test = builder.getPlace(case_.test);
-        }
-      }
-      break;
-    }
-    default: {
-      assertExhaustive(
-        terminal,
-        `Unexpected terminal kind '${(terminal as any).kind}'`
-      );
     }
   }
 }
