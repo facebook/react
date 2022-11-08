@@ -156,8 +156,7 @@ function lowerStatement(
         test,
         consequent: consequentBlock,
         alternate: alternateBlock,
-        fallthrough:
-          alternateBlock !== continuationBlock.id ? continuationBlock.id : null,
+        fallthrough: continuationBlock.id,
       };
       builder.terminateWithContinuation(terminal, continuationBlock);
       return;
@@ -226,7 +225,7 @@ function lowerStatement(
         test,
         consequent: loopBlock,
         alternate: continuationBlock.id,
-        fallthrough: continuationBlock.id, // TODO: improve loop handling
+        fallthrough: continuationBlock.id,
       };
       builder.terminateWithContinuation(terminal, continuationBlock);
       return;
@@ -276,7 +275,7 @@ function lowerStatement(
         test,
         consequent: loopBlock,
         alternate: continuationBlock.id,
-        fallthrough: continuationBlock.id, // TODO: improve loop handling
+        fallthrough: continuationBlock.id,
       };
       builder.terminateWithContinuation(terminal, continuationBlock);
       return;
@@ -346,7 +345,7 @@ function lowerStatement(
           test: lowerExpressionToPlace(builder, test),
           consequent: loopBlock,
           alternate: continuationBlock.id,
-          fallthrough: continuationBlock.id, // TODO: improve loop handling
+          fallthrough: continuationBlock.id,
         };
       } else {
         /**
@@ -379,7 +378,7 @@ function lowerStatement(
             test,
             consequent: loopBlock,
             alternate: continuationBlock.id,
-            fallthrough: continuationBlock.id, // TODO: improve loop handling
+            fallthrough: continuationBlock.id,
           };
           return terminal;
         });
@@ -433,7 +432,7 @@ function lowerStatement(
         test,
         consequent: loopBlock,
         alternate: continuationBlock.id,
-        fallthrough: continuationBlock.id, // TODO: improve loop handling
+        fallthrough: continuationBlock.id,
       };
       //  Complete the conditional and continue with code after the loop
       builder.terminateWithContinuation(terminal, continuationBlock);

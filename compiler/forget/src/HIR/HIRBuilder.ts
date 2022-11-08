@@ -499,7 +499,7 @@ function markInstructionIds(func: HIR) {
 
 function markPredecessors(func: HIR) {
   const visited: Set<BlockId> = new Set();
-  function visit(blockId: BlockId, prevBlock?: BasicBlock) {
+  function visit(blockId: BlockId, prevBlock: BasicBlock | null) {
     const block = func.blocks.get(blockId)!;
     if (prevBlock) {
       block.preds.add(prevBlock);
@@ -542,7 +542,7 @@ function markPredecessors(func: HIR) {
       }
     }
   }
-  visit(func.entry);
+  visit(func.entry, null);
 }
 
 /**
