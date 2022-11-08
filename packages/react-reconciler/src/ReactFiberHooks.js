@@ -4122,7 +4122,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useSyncExternalStore';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+      return rerenderSyncExternalStore(
+        subscribe,
+        getSnapshot,
+        getServerSnapshot,
+      );
     },
     useId(): string {
       currentHookNameInDev = 'useId';
