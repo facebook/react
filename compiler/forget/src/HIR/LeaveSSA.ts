@@ -1,11 +1,14 @@
-import { invariant } from "../CompilerError";
-import { HIRFunction, Identifier, Place } from "./HIR";
-import { eachInstructionOperand, eachTerminalOperand } from "./visitors";
+import { BasicBlock, HIRFunction, Identifier, Phi, Place } from "./HIR";
+import { eachBlockOperand } from "./visitors";
 
+/**
+ * Leaves SSA form by building up a mapping of SSA'd {@link Identifier}s to their original
+ * {@link Identifier}, then rewriting all {@link Place}s within a {@link BasicBlock} to reference
+ * the original id. This allows us to skip adding instruction copies when removing {@link Phi}s,
+ * while still allowing shadowing to work.
+ */
 export default function leaveSSA(fn: HIRFunction) {
   const ir = fn.body;
-  const entryBlock = ir.blocks.get(ir.entry);
-  invariant(entryBlock, "expected to find the entry basic block");
   const originalIdMap = new Map<
     /* SSA'd id */ Identifier,
     /* original id*/ Identifier
@@ -25,26 +28,12 @@ export default function leaveSSA(fn: HIRFunction) {
     return;
   }
 
-  function tryRewrite(place: Place) {
-    const originalId = originalIdMap.get(place.identifier);
-    if (originalId != null) {
-      place.identifier = originalId;
-    }
-  }
-
   for (const [, block] of ir.blocks) {
-    for (const instr of block.instructions) {
-      // LValues also need to be rewritten as they might be declaring or reassigning an identifier
-      // that was previously SSA'd.
-      if (instr.lvalue != null) {
-        tryRewrite(instr.lvalue.place);
+    for (const place of eachBlockOperand(block)) {
+      const originalId = originalIdMap.get(place.identifier);
+      if (originalId != null) {
+        place.identifier = originalId;
       }
-      for (const place of eachInstructionOperand(instr)) {
-        tryRewrite(place);
-      }
-    }
-    for (const place of eachTerminalOperand(block.terminal)) {
-      tryRewrite(place);
     }
   }
 }

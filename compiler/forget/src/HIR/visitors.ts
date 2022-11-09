@@ -6,7 +6,7 @@
  */
 
 import { assertExhaustive } from "../Common/utils";
-import { BlockId, Instruction, Place, Terminal } from "./HIR";
+import { BasicBlock, BlockId, Instruction, Place, Terminal } from "./HIR";
 
 export function* eachInstructionOperand(instr: Instruction): Iterable<Place> {
   const instrValue = instr.value;
@@ -303,4 +303,17 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
       );
     }
   }
+}
+
+/**
+ * Iterates over all {@link Place}s within a {@link BasicBlock}.
+ */
+export function* eachBlockOperand(block: BasicBlock): Iterable<Place> {
+  for (const instr of block.instructions) {
+    yield* eachInstructionOperand(instr);
+    if (instr.lvalue != null) {
+      yield instr.lvalue.place;
+    }
+  }
+  yield* eachTerminalOperand(block.terminal);
 }
