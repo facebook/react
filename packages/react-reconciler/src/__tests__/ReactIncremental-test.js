@@ -1910,21 +1910,37 @@ describe('ReactIncremental', () => {
         <ShowBoth />
       </Intl>,
     );
-    expect(Scheduler).toFlushAndYield([
-      'ShowLocale {"locale":"sv"}',
-      'ShowBoth {"locale":"sv"}',
-      'Intl {}',
-      'ShowLocale {"locale":"en"}',
-      'Router {}',
-      'Indirection {}',
-      'ShowLocale {"locale":"en"}',
-      'ShowRoute {"route":"/about"}',
-      'ShowNeither {}',
-      'Intl {}',
-      'ShowBoth {"locale":"ru","route":"/about"}',
-      'ShowBoth {"locale":"en","route":"/about"}',
-      'ShowBoth {"locale":"en"}',
-    ]);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      expect(Scheduler).toFlushAndYield([
+        'Intl {}',
+        'ShowLocale {"locale":"en"}',
+        'Router {}',
+        'Indirection {}',
+        'ShowLocale {"locale":"en"}',
+        'ShowRoute {"route":"/about"}',
+        'ShowNeither {}',
+        'Intl {}',
+        'ShowBoth {"locale":"ru","route":"/about"}',
+        'ShowBoth {"locale":"en","route":"/about"}',
+        'ShowBoth {"locale":"en"}',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYield([
+        'ShowLocale {"locale":"sv"}',
+        'ShowBoth {"locale":"sv"}',
+        'Intl {}',
+        'ShowLocale {"locale":"en"}',
+        'Router {}',
+        'Indirection {}',
+        'ShowLocale {"locale":"en"}',
+        'ShowRoute {"route":"/about"}',
+        'ShowNeither {}',
+        'Intl {}',
+        'ShowBoth {"locale":"ru","route":"/about"}',
+        'ShowBoth {"locale":"en","route":"/about"}',
+        'ShowBoth {"locale":"en"}',
+      ]);
+    }
   });
 
   it('does not leak own context into context provider', () => {
@@ -2758,7 +2774,11 @@ describe('ReactIncremental', () => {
     // Interrupt at same priority
     ReactNoop.render(<Parent step={2} />);
 
-    expect(Scheduler).toFlushAndYield(['Child: 1', 'Parent: 2', 'Child: 2']);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      expect(Scheduler).toFlushAndYield(['Parent: 2', 'Child: 2']);
+    } else {
+      expect(Scheduler).toFlushAndYield(['Child: 1', 'Parent: 2', 'Child: 2']);
+    }
   });
 
   it('does not interrupt for update at lower priority', () => {
@@ -2785,7 +2805,11 @@ describe('ReactIncremental', () => {
     ReactNoop.expire(2000);
     ReactNoop.render(<Parent step={2} />);
 
-    expect(Scheduler).toFlushAndYield(['Child: 1', 'Parent: 2', 'Child: 2']);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      expect(Scheduler).toFlushAndYield(['Parent: 2', 'Child: 2']);
+    } else {
+      expect(Scheduler).toFlushAndYield(['Child: 1', 'Parent: 2', 'Child: 2']);
+    }
   });
 
   it('does interrupt for update at higher priority', () => {

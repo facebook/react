@@ -23,6 +23,7 @@ import {
   enableUpdaterTracking,
   allowConcurrentByDefault,
   enableTransitionTracing,
+  enableSyncDefaultUpdates,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
@@ -135,8 +136,28 @@ let nextRetryLane: Lane = RetryLane1;
 function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
   switch (getHighestPriorityLane(lanes)) {
     case SyncHydrationLane:
+      if (enableSyncDefaultUpdates) {
+        let ret = SyncHydrationLane;
+        if (lanes & DefaultHydrationLane) {
+          ret |= DefaultHydrationLane;
+        }
+        if (lanes & InputContinuousHydrationLane) {
+          ret |= InputContinuousHydrationLane;
+        }
+        return ret;
+      }
       return SyncHydrationLane;
     case SyncLane:
+      if (enableSyncDefaultUpdates) {
+        let ret = SyncLane;
+        if (lanes & DefaultLane) {
+          ret |= DefaultLane;
+        }
+        if (lanes & InputContinuousLane) {
+          ret |= InputContinuousLane;
+        }
+        return ret;
+      }
       return SyncLane;
     case InputContinuousHydrationLane:
       return InputContinuousHydrationLane;
@@ -251,7 +272,10 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       // Default priority updates should not interrupt transition updates. The
       // only difference between default updates and transition updates is that
       // default updates do not support refresh transitions.
-      (nextLane === DefaultLane && (wipLane & TransitionLanes) !== NoLanes)
+      // Interrupt transtion if default is batched with sync.
+      (!enableSyncDefaultUpdates &&
+        nextLane === DefaultLane &&
+        (wipLane & TransitionLanes) !== NoLanes)
     ) {
       // Keep working on the existing in-progress tree. Do not interrupt.
       return wipLanes;
