@@ -117,10 +117,9 @@ bb1:
 function Component$0(props$8) {
   const a$9 = compute$3(props$8.a);
   const b$10 = compute$3(props$8.b);
-  if (props$8.c) {
+  bb1: if (props$8.c) {
     mutate$5(a$9);
     mutate$5(b$10);
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   return <Foo$6 a={a$9} b={b$10}></Foo$6>;

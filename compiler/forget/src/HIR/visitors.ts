@@ -142,6 +142,7 @@ export function mapTerminalSuccessors(
       return {
         kind: "goto",
         block: target,
+        variant: terminal.variant,
       };
     }
     case "if": {

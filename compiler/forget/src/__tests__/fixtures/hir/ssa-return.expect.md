@@ -36,9 +36,8 @@ bb1:
 ```javascript
 function foo$0() {
   let x$4 = 1;
-  if (x$4 === 1) {
+  bb1: if (x$4 === 1) {
     x$7 = 2;
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   return x$8;

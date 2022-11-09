@@ -62,10 +62,8 @@ function Component$0(props$10) {
   const a$11 = [];
   const b$12 = {};
   foo$4(a$11, b$12);
-  if (foo$4()) {
+  bb1: if (foo$4()) {
     let _$15 = <div a={a$11}></div>;
-
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   foo$4(a$11, b$12);

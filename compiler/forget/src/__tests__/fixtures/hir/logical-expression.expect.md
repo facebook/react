@@ -43,10 +43,8 @@ bb1:
 
 ```javascript
 function And$0() {
-  if (f$1()) {
-    ("<<TODO: handle complex control flow in codegen>>");
+  bb1: if (f$1()) {
   } else {
-    ("<<TODO: handle complex control flow in codegen>>");
   }
   return t8;
 }
@@ -76,10 +74,8 @@ bb1:
 
 ```javascript
 function Or$0() {
-  if (f$1()) {
-    ("<<TODO: handle complex control flow in codegen>>");
+  bb1: if (f$1()) {
   } else {
-    ("<<TODO: handle complex control flow in codegen>>");
   }
   return t8;
 }
@@ -111,10 +107,8 @@ bb1:
 
 ```javascript
 function QuestionQuestion$0(props$8) {
-  if (f$2() != null) {
-    ("<<TODO: handle complex control flow in codegen>>");
+  bb1: if (f$2() != null) {
   } else {
-    ("<<TODO: handle complex control flow in codegen>>");
   }
   return t14;
 }

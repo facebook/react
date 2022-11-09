@@ -121,8 +121,20 @@ export type Terminal =
   | SwitchTerminal;
 
 export type ThrowTerminal = { kind: "throw"; value: Place };
+
 export type ReturnTerminal = { kind: "return"; value: Place | null };
-export type GotoTerminal = { kind: "goto"; block: BlockId };
+
+export type GotoTerminal = {
+  kind: "goto";
+  block: BlockId;
+  variant: GotoVariant;
+};
+
+export enum GotoVariant {
+  Break = "Break",
+  Continue = "Continue",
+}
+
 export type IfTerminal = {
   kind: "if";
   test: Place;

@@ -93,14 +93,12 @@ bb3:
 function Component$0(props$6) {
   const a$7 = [];
   const b$8 = [];
-  if (b$8) {
+  bb1: if (b$8) {
     a$7.push(props$6.p0);
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  if (props$6.p1) {
+  bb3: if (props$6.p1) {
     b$8.push(props$6.p2);
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   return <Foo$4 a={a$7} b={b$8}></Foo$4>;
@@ -138,14 +136,12 @@ bb3:
 function Component$0(props$8) {
   const a$9 = [];
   const b$10 = [];
-  if (mayMutate$4(b$10)) {
+  bb1: if (mayMutate$4(b$10)) {
     a$9.push(props$8.p0);
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  if (props$8.p1) {
+  bb3: if (props$8.p1) {
     b$10.push(props$8.p2);
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   return <Foo$6 a={a$9} b={b$10}></Foo$6>;

@@ -35,9 +35,8 @@ bb1:
 function foo$0() {
   let x$4 = 1;
   let y$5 = 2;
-  if (y$5) {
+  bb1: if (y$5) {
     let z$6 = x$4 + y$5;
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   return;

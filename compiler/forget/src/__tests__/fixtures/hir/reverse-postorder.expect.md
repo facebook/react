@@ -83,42 +83,31 @@ bb1:
 ```javascript
 function Component$0(props$6) {
   let x$7 = undefined;
-  if (props$6.cond) {
+  bb1: if (props$6.cond) {
     switch (props$6.test) {
       case 0: {
         x$11 = props$6.v0;
-        ("<<TODO: handle complex control flow in codegen>>");
+        break bb1;
       }
 
       case 1: {
         x$12 = props$6.v1;
-        ("<<TODO: handle complex control flow in codegen>>");
+        break bb1;
       }
 
       case 2: {
-        x$13 = props$6.v2;
-        ("<<TODO: handle complex control flow in codegen>>");
       }
 
       default: {
         x$13 = props$6.v2;
-        ("<<TODO: handle complex control flow in codegen>>");
       }
     }
-
-    x$16;
-    return;
   } else {
     if (props$6.cond2) {
       x$14 = props$6.b;
-      ("<<TODO: handle complex control flow in codegen>>");
     } else {
       x$15 = props$6.c;
-      ("<<TODO: handle complex control flow in codegen>>");
     }
-
-    x$16;
-    return;
   }
 
   x$16;

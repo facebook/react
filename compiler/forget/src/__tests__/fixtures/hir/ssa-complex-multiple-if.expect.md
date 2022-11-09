@@ -53,14 +53,12 @@ bb3:
 function foo$0() {
   let x$7 = 1;
   let y$8 = 2;
-  if (y$8 === 2) {
+  bb1: if (y$8 === 2) {
     x$11 = 3;
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
-  if (y$8 === 3) {
+  bb3: if (y$8 === 3) {
     x$15 = 5;
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   y$18 = x$16;

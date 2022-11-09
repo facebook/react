@@ -41,12 +41,10 @@ bb1:
 function foo$0() {
   let x$5 = 1;
   let y$6 = 2;
-  if (y$6) {
+  bb1: if (y$6) {
     let z$7 = x$5 + y$6;
-    ("<<TODO: handle complex control flow in codegen>>");
   } else {
     let z$8 = x$5;
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   return;

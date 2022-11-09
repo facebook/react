@@ -97,7 +97,7 @@ bb1:
 function Component$0(props$4) {
   const a_DEBUG$5 = [];
   a_DEBUG$5.push(props$4.a);
-  if (props$4.b) {
+  bb1: if (props$4.b) {
     return null;
   }
 
@@ -129,9 +129,8 @@ bb1:
 function Component$0(props$3) {
   const a$4 = [];
   a$4.push(props$3.a);
-  if (props$3.b) {
+  bb1: if (props$3.b) {
     a$4.push(props$3.c);
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   a$4.push(props$3.d);
@@ -163,7 +162,7 @@ bb1:
 function Component$0(props$4) {
   const a$5 = [];
   a$5.push(props$4.a);
-  if (props$4.b) {
+  bb1: if (props$4.b) {
     a$5.push(props$4.c);
     return null;
   }
@@ -196,7 +195,7 @@ bb1:
 function Component$0(props$3) {
   const a$4 = [];
   a$4.push(props$3.a);
-  if (props$3.b) {
+  bb1: if (props$3.b) {
     a$4.push(props$3.c);
     return a$4;
   }
@@ -229,13 +228,12 @@ bb1:
 function Component$0(props$3) {
   const a$4 = [];
   a$4.push(props$3.a);
-  if (props$3.b) {
+  bb2: if (props$3.b) {
     a$4.push(props$3.d);
     return a$4;
   }
 
   a$4.push(props$3.c);
-  ("<<TODO: handle complex control flow in codegen>>");
 }
 
 ```

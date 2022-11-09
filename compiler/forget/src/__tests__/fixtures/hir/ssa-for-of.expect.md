@@ -42,7 +42,6 @@ bb2:
 ```javascript
 function foo$0(cond$4) {
   let items$5 = [];
-  ("<<TODO: handle complex control flow in codegen>>");
 }
 
 ```

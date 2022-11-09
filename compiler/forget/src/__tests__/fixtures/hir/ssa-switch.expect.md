@@ -64,20 +64,19 @@ bb1:
 ```javascript
 function foo$0() {
   let x$10 = 1;
-  switch (x$10) {
+  bb1: switch (x$10) {
     case x$10 === 1: {
       x$16 = x$10 + 1;
-      ("<<TODO: handle complex control flow in codegen>>");
+      break bb1;
     }
 
     case x$10 === 2: {
       x$18 = x$10 + 2;
-      ("<<TODO: handle complex control flow in codegen>>");
+      break bb1;
     }
 
     default: {
       x$20 = x$10 + 3;
-      ("<<TODO: handle complex control flow in codegen>>");
     }
   }
 

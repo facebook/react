@@ -66,22 +66,23 @@ bb1:
 function Component$0(props$9) {
   let x$10 = [];
   let y$11 = undefined;
-  switch (props$9.p0) {
-    case 1:
-      break;
+  bb1: switch (props$9.p0) {
+    case 1: {
+      break bb1;
+    }
 
     case true: {
       x$10.push(props$9.p2);
       y$15 = [];
-      ("<<TODO: handle complex control flow in codegen>>");
+      break bb1;
     }
 
-    default:
-      break;
+    default: {
+      break bb1;
+    }
 
     case false: {
       y$16 = x$10;
-      ("<<TODO: handle complex control flow in codegen>>");
     }
   }
 

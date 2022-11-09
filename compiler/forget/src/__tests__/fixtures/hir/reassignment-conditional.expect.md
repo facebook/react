@@ -47,9 +47,8 @@ function Component$0(props$6) {
   let x$7 = [];
   x$7.push(props$6.p0);
   let y$8 = x$7;
-  if (props$6.p1) {
+  bb1: if (props$6.p1) {
     x$9 = [];
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   let _$12 = <Component$0 x={x$11}></Component$0>;

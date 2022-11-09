@@ -127,7 +127,6 @@ function Component$0(props$12) {
   let b$14 = {};
   let c$15 = {};
   let d$16 = {};
-  ("<<TODO: handle complex control flow in codegen>>");
 }
 
 ```

@@ -61,17 +61,15 @@ bb1:
 function Component$0(props$8) {
   let x$9 = [];
   let y$10 = undefined;
-  switch (props$8.p0) {
+  bb1: switch (props$8.p0) {
     case true: {
       x$9.push(props$8.p2);
       x$9.push(props$8.p3);
       y$13 = [];
-      ("<<TODO: handle complex control flow in codegen>>");
     }
 
     case false: {
       y$15 = x$9;
-      ("<<TODO: handle complex control flow in codegen>>");
     }
   }
 

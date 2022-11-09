@@ -46,7 +46,6 @@ bb2:
 ```javascript
 function foo$0(a$6, b$7, c$8) {
   let x$9 = 0;
-  ("<<TODO: handle complex control flow in codegen>>");
 }
 
 ```

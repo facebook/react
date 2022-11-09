@@ -44,12 +44,10 @@ bb1:
 ```javascript
 function foo$0() {
   let y$5 = 2;
-  if (y$5 > 1) {
+  bb1: if (y$5 > 1) {
     y$8 = 1;
-    ("<<TODO: handle complex control flow in codegen>>");
   } else {
     y$9 = 2;
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   let x$11 = y$10;

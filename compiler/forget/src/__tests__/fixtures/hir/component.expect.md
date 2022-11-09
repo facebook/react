@@ -93,7 +93,6 @@ function Component$0(props$26) {
   const renderedItems$29 = [];
   const seen$30 = new Set$6();
   const max$32 = Math$8.max(0, maxItems$28);
-  ("<<TODO: handle complex control flow in codegen>>");
 }
 
 ```

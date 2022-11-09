@@ -33,7 +33,7 @@ bb1:
 
 ```javascript
 function foo$0(x$8, y$9) {
-  if (x$8) {
+  bb1: if (x$8) {
     return foo$0(false, y$9);
   }
   return [y$9 * 10];

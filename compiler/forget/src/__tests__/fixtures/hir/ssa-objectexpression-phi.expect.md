@@ -49,12 +49,10 @@ bb1:
 function foo$0() {
   let x$6 = 1;
   let y$7 = 2;
-  if (x$6 > 1) {
+  bb1: if (x$6 > 1) {
     x$10 = 2;
-    ("<<TODO: handle complex control flow in codegen>>");
   } else {
     y$11 = 3;
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   let t$14 = {

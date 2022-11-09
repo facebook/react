@@ -40,9 +40,8 @@ bb1:
 function foo$0() {
   let x$5 = 1;
   let y$6 = 2;
-  if (y$6 === 2) {
+  bb1: if (y$6 === 2) {
     x$9 = 3;
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   y$11 = x$10;

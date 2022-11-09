@@ -54,12 +54,10 @@ function Component$0(props$7) {
   const cond$8 = props$7.cond;
   const x$9 = props$7.x;
   let a$10 = undefined;
-  if (cond$8) {
+  bb1: if (cond$8) {
     a$11 = x$9;
-    ("<<TODO: handle complex control flow in codegen>>");
   } else {
     a$12 = [];
-    ("<<TODO: handle complex control flow in codegen>>");
   }
 
   useFreeze$5(a$14);
