@@ -20,6 +20,7 @@ export enum PassName {
   SketchyCodeCheck,
   RefKindInfer,
   DumpIR,
+  DumpHIR,
   IRCheck,
   DepGraphAnalysis,
   // BackEnd
