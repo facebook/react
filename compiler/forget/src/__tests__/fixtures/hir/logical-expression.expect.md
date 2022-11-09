@@ -27,16 +27,15 @@ bb0:
   If (read $5) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [2] Const mutate $6 = Call mutate g$4()
+  [2] Const mutate $3 = Call mutate g$4()
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [3] Const mutate $7 = read $5
+  [3] Const mutate $3 = read $5
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  $8: phi(bb2: $6, bb3: $7)
-  Return freeze $8
+  Return freeze $3
 ```
 
 ## Code
@@ -46,7 +45,7 @@ function And$0() {
   bb1: if (f$1()) {
   } else {
   }
-  return t8;
+  return f$1();
 }
 
 ```
@@ -58,16 +57,15 @@ bb0:
   If (read $5) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [2] Const mutate $6 = read $5
+  [2] Const mutate $3 = read $5
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [3] Const mutate $7 = Call mutate g$4()
+  [3] Const mutate $3 = Call mutate g$4()
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  $8: phi(bb2: $6, bb3: $7)
-  Return freeze $8
+  Return freeze $3
 ```
 
 ## Code
@@ -77,7 +75,7 @@ function Or$0() {
   bb1: if (f$1()) {
   } else {
   }
-  return t8;
+  return g$4();
 }
 
 ```
@@ -91,16 +89,15 @@ bb0:
   If (read $11) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [4] Const mutate $12 = read $9
+  [4] Const mutate $6 = read $9
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Const mutate $13 = Call mutate g$7()
+  [5] Const mutate $6 = Call mutate g$7()
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  $14: phi(bb2: $12, bb3: $13)
-  Return freeze $14
+  Return freeze $6
 ```
 
 ## Code
@@ -110,7 +107,7 @@ function QuestionQuestion$0(props$8) {
   bb1: if (f$2() != null) {
   } else {
   }
-  return t14;
+  return g$7();
 }
 
 ```

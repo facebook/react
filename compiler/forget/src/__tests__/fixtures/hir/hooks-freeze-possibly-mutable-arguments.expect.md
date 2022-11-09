@@ -32,19 +32,18 @@ bb0:
   If (read cond$8) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [4] Reassign mutate a$11 = read x$9
+  [4] Reassign mutate a$4 = read x$9
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Reassign mutate a$12 = Array []
+  [5] Reassign mutate a$4 = Array []
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  a$14: phi(bb2: a$11, bb3: a$12)
-  [6] Call read useFreeze$5(freeze a$14)
-  [7] Call read useFreeze$5(read a$14)
-  [8] Call mutate call$6(read a$14)
-  Return read a$14
+  [6] Call read useFreeze$5(freeze a$4)
+  [7] Call read useFreeze$5(read a$4)
+  [8] Call mutate call$6(read a$4)
+  Return read a$4
 ```
 
 ## Code
@@ -55,15 +54,15 @@ function Component$0(props$7) {
   const x$9 = props$7.x;
   let a$10 = undefined;
   bb1: if (cond$8) {
-    a$11 = x$9;
+    a$4 = x$9;
   } else {
-    a$12 = [];
+    a$4 = [];
   }
 
-  useFreeze$5(a$14);
-  useFreeze$5(a$14);
-  call$6(a$14);
-  return a$14;
+  useFreeze$5(a$4);
+  useFreeze$5(a$4);
+  call$6(a$4);
+  return a$4;
 }
 
 ```

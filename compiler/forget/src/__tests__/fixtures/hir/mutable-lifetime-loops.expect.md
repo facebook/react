@@ -73,49 +73,41 @@ function cond$0(x$2) {
 
 ```
 bb0:
-  [1] Let mutate a$13 = Object {  }
-  [2] Let mutate b$14 = Object {  }
-  [3] Let mutate c$15 = Object {  }
-  [4] Let mutate d$16 = Object {  }
+  [1] Let mutate a$2 = Object {  }
+  [2] Let mutate b$3 = Object {  }
+  [3] Let mutate c$4 = Object {  }
+  [4] Let mutate d$5 = Object {  }
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb3
-  a$18: phi(bb0: a$13, bb3: a$21)
-  b$20: phi(bb0: b$14, bb3: b$23)
-  c$22: phi(bb0: c$15, bb3: c$25)
-  d$24: phi(bb0: d$16, bb3: d$26)
   [5] Const mutate $17 = true
   If (read $17) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  [6] Let mutate z$19 = read a$18
-  [7] Reassign mutate a$21[7:12] = read b$20
-  [8] Reassign mutate b$23[8:11] = read c$22
-  [9] Reassign mutate c$25 = read d$24
-  [10] Reassign mutate d$26 = read z$19
-  [11] Call mutate mutate$7(mutate a$21, mutate b$23)
-  [12] Const mutate $29 = Call mutate cond$8(mutate a$21)
+  [6] Let mutate z$19 = read a$2
+  [7] Reassign mutate a$2 = read b$3
+  [8] Reassign mutate b$3 = read c$4
+  [9] Reassign mutate c$4 = read d$5
+  [10] Reassign mutate d$5 = read z$19
+  [11] Call mutate mutate$7(mutate a$2, mutate b$3)
+  [12] Const mutate $29 = Call mutate cond$8(mutate a$2)
   If (read $29) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb3 bb1
-  a$30: phi(bb3: a$21, bb1: a$18)
-  b$31: phi(bb3: b$23, bb1: b$20)
-  c$32: phi(bb3: c$25, bb1: c$22)
-  d$33[-1:14]: phi(bb3: d$26, bb1: d$24)
-  If (read a$30) then:bb7 else:bb7
+  If (read a$2) then:bb7 else:bb7
 bb7:
   predecessor blocks: bb2
-  If (read b$31) then:bb9 else:bb9
+  If (read b$3) then:bb9 else:bb9
 bb9:
   predecessor blocks: bb7
-  If (read c$32) then:bb11 else:bb11
+  If (read c$4) then:bb11 else:bb11
 bb11:
   predecessor blocks: bb9
-  If (read d$33) then:bb13 else:bb13
+  If (read d$5) then:bb13 else:bb13
 bb13:
   predecessor blocks: bb11
   [13] Const mutate $34 = null
-  [14] Call mutate mutate$7(mutate d$33, read $34)
+  [14] Call mutate mutate$7(mutate d$5, read $34)
   Return
 ```
 
@@ -123,10 +115,10 @@ bb13:
 
 ```javascript
 function Component$0(props$12) {
-  let a$13 = {};
-  let b$14 = {};
-  let c$15 = {};
-  let d$16 = {};
+  let a$2 = {};
+  let b$3 = {};
+  let c$4 = {};
+  let d$5 = {};
 }
 
 ```

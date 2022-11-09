@@ -50,31 +50,30 @@ bb2:
     Default: bb4
 bb8:
   predecessor blocks: bb2
-  [5] Reassign mutate x$11 = read props$6.v0
+  [5] Reassign mutate x$2 = read props$6.v0
   Goto bb1
 bb6:
   predecessor blocks: bb2
-  [6] Reassign mutate x$12 = read props$6.v1
+  [6] Reassign mutate x$2 = read props$6.v1
   Goto bb1
 bb4:
   predecessor blocks: bb2
-  [7] Reassign mutate x$13 = read props$6.v2
+  [7] Reassign mutate x$2 = read props$6.v2
   Goto bb1
 bb10:
   predecessor blocks: bb0
   If (read props$6.cond2) then:bb12 else:bb13
 bb12:
   predecessor blocks: bb10
-  [8] Reassign mutate x$14 = read props$6.b
+  [8] Reassign mutate x$2 = read props$6.b
   Goto bb1
 bb13:
   predecessor blocks: bb10
-  [9] Reassign mutate x$15 = read props$6.c
+  [9] Reassign mutate x$2 = read props$6.c
   Goto bb1
 bb1:
   predecessor blocks: bb8 bb6 bb4 bb12 bb13
-  x$16: phi(bb8: x$11, bb6: x$12, bb4: x$13, bb12: x$14, bb13: x$15)
-  [10] read x$16
+  [10] read x$2
   Return
 ```
 
@@ -86,12 +85,12 @@ function Component$0(props$6) {
   bb1: if (props$6.cond) {
     switch (props$6.test) {
       case 0: {
-        x$11 = props$6.v0;
+        x$2 = props$6.v0;
         break bb1;
       }
 
       case 1: {
-        x$12 = props$6.v1;
+        x$2 = props$6.v1;
         break bb1;
       }
 
@@ -99,18 +98,18 @@ function Component$0(props$6) {
       }
 
       default: {
-        x$13 = props$6.v2;
+        x$2 = props$6.v2;
       }
     }
   } else {
     if (props$6.cond2) {
-      x$14 = props$6.b;
+      x$2 = props$6.b;
     } else {
-      x$15 = props$6.c;
+      x$2 = props$6.c;
     }
   }
 
-  x$16;
+  x$2;
   return;
 }
 

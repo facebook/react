@@ -26,16 +26,15 @@ bb0:
   If (read $7) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [4] Reassign mutate y$8 = 1
+  [4] Reassign mutate y$1 = 1
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Reassign mutate y$9 = 2
+  [5] Reassign mutate y$1 = 2
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  y$10: phi(bb2: y$8, bb3: y$9)
-  [6] Let mutate x$11 = read y$10
+  [6] Let mutate x$11 = read y$1
   Return
 ```
 
@@ -45,12 +44,12 @@ bb1:
 function foo$0() {
   let y$5 = 2;
   bb1: if (y$5 > 1) {
-    y$8 = 1;
+    y$1 = 1;
   } else {
-    y$9 = 2;
+    y$1 = 2;
   }
 
-  let x$11 = y$10;
+  let x$11 = y$1;
   return;
 }
 

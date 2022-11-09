@@ -29,7 +29,7 @@ function Component(props) {
 ```
 bb0:
   [1] Let mutate x$9[1:6] = Array []
-  [2] Let mutate y$10 = undefined
+  [2] Let mutate y$3 = undefined
   [3] Const mutate $11 = false
   [4] Const mutate $12 = true
   Switch (read props$8.p0)
@@ -44,14 +44,13 @@ bb4:
   Goto bb2
 bb2:
   predecessor blocks: bb4 bb0
-  [8] Reassign mutate y$15 = read x$9
+  [8] Reassign mutate y$3 = read x$9
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  y$20: phi(bb2: y$15, bb0: y$10)
   [9] Const mutate child$19 = JSX <read Component$0 data={freeze x$9} ></read Component$0>
-  [10] Call read y$20.push(read props$8.p4)
-  [11] Const mutate $23 = JSX <read Component$0 data={read y$20} >{read child$19}</read Component$0>
+  [10] Call read y$3.push(read props$8.p4)
+  [11] Const mutate $23 = JSX <read Component$0 data={read y$3} >{read child$19}</read Component$0>
   Return read $23
 ```
 
@@ -60,7 +59,7 @@ bb1:
 ```javascript
 function Component$0(props$8) {
   let x$9 = [];
-  let y$10 = undefined;
+  let y$3 = undefined;
   bb1: switch (props$8.p0) {
     case true: {
       x$9.push(props$8.p2);
@@ -69,13 +68,13 @@ function Component$0(props$8) {
     }
 
     case false: {
-      y$15 = x$9;
+      y$3 = x$9;
     }
   }
 
   const child$19 = <Component$0 data={x$9}></Component$0>;
-  y$20.push(props$8.p4);
-  return <Component$0 data={y$20}>{child$19}</Component$0>;
+  y$3.push(props$8.p4);
+  return <Component$0 data={y$3}>{child$19}</Component$0>;
 }
 
 ```

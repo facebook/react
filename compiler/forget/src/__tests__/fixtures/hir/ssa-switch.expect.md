@@ -40,22 +40,21 @@ bb0:
 bb5:
   predecessor blocks: bb0
   [6] Const mutate $15 = 1
-  [7] Reassign mutate x$16 = Binary read x$10 + read $15
+  [7] Reassign mutate x$1 = Binary read x$10 + read $15
   Goto bb1
 bb3:
   predecessor blocks: bb0
   [8] Const mutate $17 = 2
-  [9] Reassign mutate x$18 = Binary read x$10 + read $17
+  [9] Reassign mutate x$1 = Binary read x$10 + read $17
   Goto bb1
 bb2:
   predecessor blocks: bb0
   [10] Const mutate $19 = 3
-  [11] Reassign mutate x$20 = Binary read x$10 + read $19
+  [11] Reassign mutate x$1 = Binary read x$10 + read $19
   Goto bb1
 bb1:
   predecessor blocks: bb5 bb3 bb2
-  x$21: phi(bb5: x$16, bb3: x$18, bb2: x$20)
-  [12] Let mutate y$22 = read x$21
+  [12] Let mutate y$22 = read x$1
   Return
 ```
 
@@ -66,21 +65,21 @@ function foo$0() {
   let x$10 = 1;
   bb1: switch (x$10) {
     case x$10 === 1: {
-      x$16 = x$10 + 1;
+      x$1 = x$10 + 1;
       break bb1;
     }
 
     case x$10 === 2: {
-      x$18 = x$10 + 2;
+      x$1 = x$10 + 2;
       break bb1;
     }
 
     default: {
-      x$20 = x$10 + 3;
+      x$1 = x$10 + 3;
     }
   }
 
-  let y$22 = x$21;
+  let y$22 = x$1;
   return;
 }
 

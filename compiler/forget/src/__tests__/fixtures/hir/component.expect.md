@@ -52,16 +52,15 @@ bb3:
   If (read $36) then:bb8 else:bb9
 bb8:
   predecessor blocks: bb3
-  [9] Const mutate $37 = read $36
+  [9] Const mutate $13 = read $36
   Goto bb7
 bb9:
   predecessor blocks: bb3
-  [10] Const mutate $39 = Call mutate seen$30.has(mutate item$10)
+  [10] Const mutate $13 = Call mutate seen$30.has(mutate item$10)
   Goto bb7
 bb7:
   predecessor blocks: bb8 bb9
-  $40: phi(bb8: $37, bb9: $39)
-  If (read $40) then:bb1 else:bb4
+  If (read $13) then:bb1 else:bb4
 bb4:
   predecessor blocks: bb7
   [11] Call mutate seen$30.add(mutate item$10)

@@ -22,24 +22,22 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$6 = 1
-  [2] Let mutate y$7 = 2
+  [1] Let mutate x$1 = 1
+  [2] Let mutate y$2 = 2
   [3] Const mutate $8 = 1
-  [4] Const mutate $9 = Binary read x$6 > read $8
+  [4] Const mutate $9 = Binary read x$1 > read $8
   If (read $9) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [5] Reassign mutate x$10 = 2
+  [5] Reassign mutate x$1 = 2
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [6] Reassign mutate y$11 = 3
+  [6] Reassign mutate y$2 = 3
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  x$12: phi(bb2: x$10, bb3: x$6)
-  y$13: phi(bb2: y$7, bb3: y$11)
-  [7] Let mutate t$14 = Object { x: read x$12, y: read y$13 }
+  [7] Let mutate t$14 = Object { x: read x$1, y: read y$2 }
   Return freeze t$14
 ```
 
@@ -47,17 +45,17 @@ bb1:
 
 ```javascript
 function foo$0() {
-  let x$6 = 1;
-  let y$7 = 2;
-  bb1: if (x$6 > 1) {
-    x$10 = 2;
+  let x$1 = 1;
+  let y$2 = 2;
+  bb1: if (x$1 > 1) {
+    x$1 = 2;
   } else {
-    y$11 = 3;
+    y$2 = 3;
   }
 
   let t$14 = {
-    x: x$12,
-    y: y$13,
+    x: x$1,
+    y: y$2,
   };
   return t$14;
 }

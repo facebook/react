@@ -193,6 +193,7 @@ export type InstructionValue =
 export type Phi = {
   kind: "Phi";
   id: Identifier;
+  oldId: Identifier;
   operands: Map<BasicBlock, Identifier>;
 };
 

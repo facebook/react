@@ -121,6 +121,7 @@ class SSABuilder {
     const phi: Phi = {
       kind: "Phi",
       id: newId,
+      oldId,
       operands: predDefs,
     };
 
