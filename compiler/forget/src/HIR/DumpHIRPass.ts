@@ -12,12 +12,13 @@ import { OutputKind } from "../CompilerOutputs";
 import { PassKind, PassName } from "../Pass";
 
 import { lower } from "../HIR/BuildHIR";
-import enterSSA from "../HIR/EnterSSA";
 import { eliminateRedundantPhi } from "../HIR/EliminateRedundantPhi";
+import enterSSA from "../HIR/EnterSSA";
+import { inferMutableRanges } from "../HIR/InferMutableLifetimes";
 import inferReferenceEffects from "../HIR/InferReferenceEffects";
 import printHIR from "../HIR/PrintHIR";
-import { inferMutableRanges } from "../HIR/InferMutableLifetimes";
 import { Environment } from "./HIRBuilder";
+import leaveSSA from "./LeaveSSA";
 
 export default {
   name: PassName.DumpHIR,
@@ -43,6 +44,7 @@ export function run(program: NodePath<t.Program>, context: CompilerContext) {
         eliminateRedundantPhi(ir);
         inferReferenceEffects(ir);
         inferMutableRanges(ir);
+        leaveSSA(ir);
         const textHIR = printHIR(ir.body);
         results.push(textHIR);
       } catch (e) {
