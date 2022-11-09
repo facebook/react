@@ -1593,13 +1593,13 @@ function updateMutableSource<Source, Snapshot>(
   return useMutableSource(hook, source, getSnapshot, subscribe);
 }
 
-function mountSyncExternalStore<T>(
+function mountSyncExternalStoreImpl<T>(
+  hook: Hook,
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
   getServerSnapshot?: () => T,
 ): T {
   const fiber = currentlyRenderingFiber;
-  const hook = mountWorkInProgressHook();
 
   let nextSnapshot;
   const isHydrating = getIsHydrating();
@@ -1683,6 +1683,20 @@ function mountSyncExternalStore<T>(
   );
 
   return nextSnapshot;
+}
+
+function mountSyncExternalStore<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+  getServerSnapshot?: () => T,
+): T {
+  const hook = mountWorkInProgressHook();
+  return mountSyncExternalStoreImpl(
+    hook,
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
 }
 
 function updateSyncExternalStoreImpl<T>(
@@ -1780,20 +1794,25 @@ function rerenderSyncExternalStore<T>(
   getServerSnapshot?: () => T,
 ): T {
   const hook = updateWorkInProgressHook();
-  const prevSnapshot =
-    currentHook === null
-      ? // This is a rerender during a mount.
-        hook.memoizedState
-      : // This is a rerender during an update.
-        currentHook.memoizedState;
-
-  return updateSyncExternalStoreImpl(
-    hook,
-    prevSnapshot,
-    subscribe,
-    getSnapshot,
-    getServerSnapshot,
-  );
+  if (currentHook === null) {
+    // This is a rerender during a mount.
+    return mountSyncExternalStoreImpl(
+      hook,
+      subscribe,
+      getSnapshot,
+      getServerSnapshot,
+    );
+  } else {
+    // This is a rerender during an update.
+    const prevSnapshot: T = currentHook.memoizedState;
+    return updateSyncExternalStoreImpl(
+      hook,
+      prevSnapshot,
+      subscribe,
+      getSnapshot,
+      getServerSnapshot,
+    );
+  }
 }
 
 function pushStoreConsistencyCheck<T>(
