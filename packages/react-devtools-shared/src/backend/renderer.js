@@ -88,6 +88,14 @@ import {
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
 } from './ReactSymbols';
+import {
+  DidCapture,
+  NoFlags,
+  PerformedWork,
+  Placement,
+  Incomplete,
+  Hydrating,
+} from './ReactFiberFlags';
 import {format} from './utils';
 import {
   enableProfilerChangedHookIndices,
@@ -167,12 +175,12 @@ export function getInternalReactConstants(
   StrictModeBits: number,
 } {
   const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
-    DidCapture: 0b10000000,
-    NoFlags: 0b00,
-    PerformedWork: 0b01,
-    Placement: 0b10,
-    Incomplete: 0b10000000000000,
-    Hydrating: 0b1000000000000,
+    DidCapture,
+    NoFlags,
+    PerformedWork,
+    Placement,
+    Incomplete,
+    Hydrating,
   };
 
   // **********************************************************
