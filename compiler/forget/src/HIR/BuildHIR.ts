@@ -426,9 +426,10 @@ function lowerStatement(
        */
       builder.terminateWithContinuation(
         {
-          kind: "goto",
-          block: conditionalBlock.id,
-          variant: GotoVariant.Break,
+          kind: "while",
+          test: conditionalBlock.id,
+          loop: loopBlock,
+          fallthrough: continuationBlock.id,
         },
         conditionalBlock
       );

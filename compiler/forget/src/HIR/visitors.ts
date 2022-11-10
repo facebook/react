@@ -184,6 +184,17 @@ export function mapTerminalSuccessors(
     case "throw": {
       return terminal;
     }
+    case "while": {
+      const test = fn(terminal.test, false);
+      const loop = fn(terminal.loop, true);
+      const fallthrough = fn(terminal.fallthrough, true);
+      return {
+        kind: "while",
+        test,
+        loop,
+        fallthrough,
+      };
+    }
     default: {
       assertExhaustive(
         terminal,
@@ -221,6 +232,10 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
     case "throw": {
       break;
     }
+    case "while": {
+      yield terminal.test;
+      break;
+    }
     default: {
       assertExhaustive(
         terminal,
@@ -256,6 +271,7 @@ export function mapTerminalOperands(
       }
       break;
     }
+    case "while":
     case "goto": {
       // no-op
       break;
@@ -292,6 +308,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
       }
       break;
     }
+    case "while":
     case "goto": {
       // no-op
       break;

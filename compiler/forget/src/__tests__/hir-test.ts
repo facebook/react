@@ -70,22 +70,7 @@ describe("React Forget (HIR version)", () => {
             inferReferenceEffects(ir);
             inferMutableRanges(ir);
             leaveSSA(ir);
-            // const lifetimeGraph = buildDefUseGraph(ir);
             const textHIR = printHIR(ir.body);
-            // const textLifetimeGraph = printGraph(lifetimeGraph);
-            // const graphvizFile = path.join(
-            //   __dirname,
-            //   "fixtures",
-            //   "hir-svg",
-            //   file + ".svg"
-            // );
-            // if (input.indexOf("@Out DefUseGraph") !== -1) {
-            //   graphviz.layout(textLifetimeGraph, "svg", "dot").then((svg) => {
-            //     writeFileSync(graphvizFile, svg);
-            //   });
-            // } else if (existsSync(graphvizFile)) {
-            //   unlinkSync(graphvizFile);
-            // }
 
             const ast = codegen(ir);
             const text = prettier.format(

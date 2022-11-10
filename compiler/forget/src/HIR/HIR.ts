@@ -118,7 +118,8 @@ export type Terminal =
   | ReturnTerminal
   | GotoTerminal
   | IfTerminal
-  | SwitchTerminal;
+  | SwitchTerminal
+  | WhileTerminal;
 
 export type ThrowTerminal = { kind: "throw"; value: Place };
 
@@ -142,11 +143,19 @@ export type IfTerminal = {
   alternate: BlockId;
   fallthrough: BlockId | null;
 };
+
 export type SwitchTerminal = {
   kind: "switch";
   test: Place;
   cases: Array<{ test: Place | null; block: BlockId }>;
   fallthrough: BlockId | null;
+};
+
+export type WhileTerminal = {
+  kind: "while";
+  test: BlockId;
+  loop: BlockId;
+  fallthrough: BlockId;
 };
 
 /**

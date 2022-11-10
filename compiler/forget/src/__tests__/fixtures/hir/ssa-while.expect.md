@@ -18,7 +18,7 @@ function foo() {
 ```
 bb0:
   [1] Let mutate x$1 = 1
-  Goto bb1
+  While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
   [2] Const mutate $6 = 10
@@ -28,7 +28,7 @@ bb3:
   predecessor blocks: bb1
   [4] Const mutate $9 = 1
   [5] Reassign mutate x$1 = Binary read x$1 + read $9
-  Goto bb1
+  Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
   Return read x$1
@@ -39,6 +39,11 @@ bb2:
 ```javascript
 function foo$0() {
   let x$1 = 1;
+  bb2: while (x$1 < 10) {
+    x$1 = x$1 + 1;
+  }
+
+  return x$1;
 }
 
 ```

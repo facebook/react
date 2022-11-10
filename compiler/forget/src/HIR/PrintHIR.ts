@@ -8,6 +8,7 @@
 import generate from "@babel/generator";
 import { assertExhaustive } from "../Common/utils";
 import {
+  GotoVariant,
   HIR,
   Identifier,
   Instruction,
@@ -70,6 +71,7 @@ export function printMixedHIR(
     case "return":
     case "switch":
     case "throw":
+    case "while":
     case "goto": {
       const terminal = printTerminal(value);
       if (Array.isArray(terminal)) {
@@ -129,7 +131,9 @@ function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case "goto": {
-      value = `Goto bb${terminal.block}`;
+      value = `Goto${
+        terminal.variant === GotoVariant.Continue ? "(Continue)" : ""
+      } bb${terminal.block}`;
       break;
     }
     case "switch": {
@@ -143,6 +147,12 @@ function printTerminal(terminal: Terminal): Array<string> | string {
         }
       });
       value = output;
+      break;
+    }
+    case "while": {
+      value = `While test=bb${terminal.test} loop=${
+        terminal.loop !== null ? `bb${terminal.loop}` : ""
+      } fallthrough=${terminal.fallthrough ? `bb${terminal.fallthrough}` : ""}`;
       break;
     }
     default: {

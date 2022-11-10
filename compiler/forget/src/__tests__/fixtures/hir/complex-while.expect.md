@@ -1,0 +1,52 @@
+
+## Input
+
+```javascript
+function foo(a, b, c) {
+  label: if (a) {
+    while (b) {
+      if (c) {
+        break;
+      }
+    }
+  }
+}
+
+```
+
+## HIR
+
+```
+bb0:
+  If (read a$4) then:bb3 else:bb1
+bb3:
+  predecessor blocks: bb0
+  While test=bb4 loop=bb6 fallthrough=bb1
+bb4:
+  predecessor blocks: bb3 bb7
+  If (read b$5) then:bb6 else:bb1
+bb6:
+  predecessor blocks: bb4
+  If (read c$6) then:bb1 else:bb7
+bb7:
+  predecessor blocks: bb6
+  Goto(Continue) bb4
+bb1:
+  predecessor blocks: bb6 bb4 bb0
+  Return
+```
+
+## Code
+
+```javascript
+function foo$0(a$4, b$5, c$6) {
+  bb1: if (a$4) {
+    while (b$5) {
+      bb7: if (c$6) break;
+    }
+  }
+  return;
+}
+
+```
+      

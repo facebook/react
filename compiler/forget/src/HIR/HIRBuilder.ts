@@ -11,6 +11,7 @@ import { invariant } from "../CompilerError";
 import {
   BasicBlock,
   BlockId,
+  GotoVariant,
   HIR,
   Identifier,
   IdentifierId,
@@ -390,13 +391,23 @@ function shrink(func: HIR): HIR {
 
   // Cleanup any fallthrough blocks that weren't visited
   for (const block of blocks.values()) {
-    if (block.terminal.kind === "if" || block.terminal.kind === "switch") {
+    if (
+      block.terminal.kind === "if" ||
+      block.terminal.kind === "switch" ||
+      block.terminal.kind === "while"
+    ) {
       if (
         block.terminal.fallthrough !== null &&
         !blocks.has(block.terminal.fallthrough)
       ) {
         block.terminal.fallthrough = null;
       }
+    }
+    if (block.terminal.kind === "while") {
+      invariant(
+        resolveBlockTarget(block.terminal.loop) === block.terminal.loop,
+        `Expected while loop body to remain after shrinking`
+      );
     }
   }
   return { blocks, entry: func.entry };
@@ -465,6 +476,10 @@ function reversePostorderBlocks(func: HIR): HIR {
         }
         break;
       }
+      case "while": {
+        visit(terminal.test);
+        break;
+      }
       default: {
         assertExhaustive(
           terminal,
@@ -520,11 +535,13 @@ function markPredecessors(func: HIR) {
 }
 
 /**
- * If the given block is a simple indirection (empty terminated with a goto),
- * returns the block being pointed to. Otherwise returns null
+ * If the given block is a simple indirection — empty terminated with a goto(break) —
+ * returns the block being pointed to. Otherwise returns null.
  */
 function getTargetIfIndirection(block: BasicBlock): number | null {
-  return block.instructions.length === 0 && block.terminal.kind === "goto"
+  return block.instructions.length === 0 &&
+    block.terminal.kind === "goto" &&
+    block.terminal.variant === GotoVariant.Break
     ? block.terminal.block
     : null;
 }

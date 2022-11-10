@@ -78,11 +78,13 @@ class Context {
   #scheduled: Set<BlockId> = new Set();
 
   /**
-   * A stack of blocks that are in scope, used to decide whether/how to emit
-   * break and continue statements. All blocks in the stack must also be
-   * in 'scheduled'.
+   * Represents which control flow operations are currently in scope, with the innermost
+   * scope last. Roughly speaking, the last ControlFlowTarget on the stack indicates where
+   * control will implicitly transfer, such that gotos to that block can be elided. Gotos
+   * targeting items higher up the stack may need labeled break or continue; see
+   * getBreakTarget() and getContinueTarget() for more details.
    */
-  #breakTargets: Array<BreakTarget> = [];
+  #controlFlowStack: Array<ControlFlowTarget> = [];
 
   constructor(ir: HIR) {
     this.ir = ir;
@@ -96,7 +98,36 @@ class Context {
     const id = this.#nextScheduleId++;
     invariant(!this.#scheduled.has(block), "Block is already scheduled");
     this.#scheduled.add(block);
-    this.#breakTargets.push({ block, id, type });
+    this.#controlFlowStack.push({ block, id, type });
+    return id;
+  }
+
+  scheduleLoop(
+    fallthroughBlock: BlockId,
+    continueBlock: BlockId,
+    loopBlock: BlockId | null
+  ): number {
+    const id = this.#nextScheduleId++;
+    const ownsBlock = !this.#scheduled.has(fallthroughBlock);
+    this.#scheduled.add(fallthroughBlock);
+    invariant(
+      !this.#scheduled.has(continueBlock),
+      "Block is already scheduled"
+    );
+    this.#scheduled.add(continueBlock);
+    if (loopBlock !== null) {
+      invariant(!this.#scheduled.has(loopBlock), "Block is already scheduled");
+      this.#scheduled.add(loopBlock);
+    }
+
+    this.#controlFlowStack.push({
+      block: fallthroughBlock,
+      ownsBlock,
+      id,
+      type: "loop",
+      continueBlock,
+      loopBlock,
+    });
     return id;
   }
 
@@ -104,12 +135,20 @@ class Context {
    * Removes a block that was scheduled; must be called after that block is emitted.
    */
   unschedule(scheduleId: number): void {
-    const last = this.#breakTargets.pop();
+    const last = this.#controlFlowStack.pop();
     invariant(
       last !== undefined && last.id === scheduleId,
       "Can only unschedule the last target"
     );
-    this.#scheduled.delete(last.block);
+    if (last.type !== "loop" || last.ownsBlock !== null) {
+      this.#scheduled.delete(last.block);
+    }
+    if (last.type === "loop") {
+      this.#scheduled.delete(last.continueBlock);
+      if (last.loopBlock !== null) {
+        this.#scheduled.delete(last.loopBlock);
+      }
+    }
   }
 
   /**
@@ -130,32 +169,105 @@ class Context {
   }
 
   /**
-   * Lookup the break target for the given @param block. This will return non-null
-   * if and only if isScheduled() returns true for the given @param block. Returns
-   * the break target and whether this is the most recent target (which can be used
-   * to elide unnecessary break statemetns).
+   * Given the current control flow stack, determines how a `break` to the given @param block
+   * must be emitted. Returns as follows:
+   * - 'implicit' if control would implicitly transfer to that block
+   * - 'labeled' if a labeled break is required to transfer control to that block
+   * - 'unlabeled' if an unlabeled break would transfer to that block
+   * - null if there is no information for this block
+   *
+   * The returned 'block' value should be used as the label if necessary.
    */
   getBreakTarget(
     block: BlockId
-  ): { target: BreakTarget; last: boolean } | null {
-    for (let i = this.#breakTargets.length - 1; i >= 0; i--) {
-      const target = this.#breakTargets[i]!;
+  ): { block: BlockId; type: ControlFlowKind } | null {
+    let hasPrecedingLoop = false;
+    for (let i = this.#controlFlowStack.length - 1; i >= 0; i--) {
+      const target = this.#controlFlowStack[i]!;
       if (target.block === block) {
+        let type: ControlFlowKind;
+        if (target.type === "loop") {
+          // breaking out of a loop requires an explicit break,
+          // but only requires a label if breaking past the innermost loop.
+          type = hasPrecedingLoop ? "labeled" : "unlabeled";
+        } else if (i === this.#controlFlowStack.length - 1) {
+          // breaking to the last break point, which is where control will transfer
+          // implicitly
+          type = "implicit";
+        } else {
+          // breaking somewhere else requires an explicit break
+          type = "labeled";
+        }
         return {
-          target,
-          last: i === this.#breakTargets.length - 1,
+          block: target.block,
+          type,
         };
       }
+      hasPrecedingLoop ||= target.type === "loop";
     }
     return null;
   }
+
+  /**
+   * Given the current control flow stack, determines how a `continue` to the given @param block
+   * must be emitted. Returns as follows:
+   * - 'implicit' if control would implicitly continue to that block
+   * - 'labeled' if a labeled continue is required to continue to that block
+   * - 'unlabeled' if an unlabeled continue would transfer to that block
+   * - null if there is no information for this block
+   *
+   * The returned 'block' value should be used as the label if necessary.
+   */
+  getContinueTarget(
+    block: BlockId
+  ): { block: BlockId; type: ControlFlowKind } | null {
+    let hasPrecedingLoop = false;
+    for (let i = this.#controlFlowStack.length - 1; i >= 0; i--) {
+      const target = this.#controlFlowStack[i]!;
+      if (target.type == "loop" && target.continueBlock === block) {
+        let type: ControlFlowKind;
+        if (hasPrecedingLoop) {
+          // continuing to a loop that is not the innermost loop always requires
+          // a label
+          type = "labeled";
+        } else if (i === this.#controlFlowStack.length - 1) {
+          // continuing to the last break point, which is where control will
+          // transfer to naturally
+          type = "implicit";
+        } else {
+          // the continue is inside some conditional logic, requires an explicit
+          // continue
+          type = "unlabeled";
+        }
+        return {
+          block: target.block,
+          type,
+        };
+      }
+      hasPrecedingLoop ||= target.type === "loop";
+    }
+    return null;
+  }
+
+  debugBreakTargets(): Array<ControlFlowTarget> {
+    return this.#controlFlowStack.map((target) => ({ ...target }));
+  }
 }
 
-type BreakTarget = {
-  block: BlockId;
-  id: number;
-  type: "if" | "switch" | "case";
-};
+type ControlFlowKind = "implicit" | "labeled" | "unlabeled";
+
+type ControlFlowTarget =
+  | { type: "if"; block: BlockId; id: number }
+  | { type: "switch"; block: BlockId; id: number }
+  | { type: "case"; block: BlockId; id: number }
+  | {
+      type: "loop";
+      block: BlockId;
+      ownsBlock: boolean;
+      continueBlock: BlockId;
+      loopBlock: BlockId | null;
+      id: number;
+    };
 
 function codegenBlock(cx: Context, block: BasicBlock): t.BlockStatement {
   invariant(
@@ -216,6 +328,7 @@ function writeBlock(cx: Context, block: BasicBlock, body: Array<t.Statement>) {
         }
       }
 
+      cx.unscheduleAll(scheduleIds);
       if (fallthroughId !== null) {
         if (consequent === null && alternate === null) {
           body.push(t.expressionStatement(test));
@@ -286,6 +399,7 @@ function writeBlock(cx: Context, block: BasicBlock, body: Array<t.Statement>) {
       });
       cases.reverse();
 
+      cx.unscheduleAll(scheduleIds);
       if (fallthroughId !== null) {
         body.push(
           t.labeledStatement(
@@ -299,6 +413,61 @@ function writeBlock(cx: Context, block: BasicBlock, body: Array<t.Statement>) {
       }
       break;
     }
+    case "while": {
+      const testBlock = cx.ir.blocks.get(terminal.test)!;
+      const testTerminal = testBlock.terminal;
+      invariant(
+        testTerminal.kind === "if",
+        "Expected while loop test block to end in an if"
+      );
+      const bodyLength = body.length;
+      for (const instr of testBlock.instructions) {
+        writeInstr(cx, instr, body);
+      }
+      invariant(
+        body.length === bodyLength,
+        "Expected test to produce only temporaries"
+      );
+      const testValue =
+        cx.temp.get(testTerminal.test.identifier.id) ??
+        codegenPlace(cx, testTerminal.test);
+      invariant(
+        testValue != null,
+        "Expected test to produce a temporary value"
+      );
+
+      const fallthroughId =
+        terminal.fallthrough !== null && !cx.isScheduled(terminal.fallthrough)
+          ? terminal.fallthrough
+          : null;
+      const scheduleId = cx.scheduleLoop(
+        terminal.fallthrough,
+        terminal.test,
+        terminal.loop
+      );
+      scheduleIds.push(scheduleId);
+
+      let loopBody: t.Statement;
+      if (terminal.loop !== null) {
+        loopBody = codegenBlock(cx, cx.ir.blocks.get(terminal.loop)!);
+      } else {
+        loopBody = t.blockStatement([]);
+      }
+
+      cx.unscheduleAll(scheduleIds);
+      if (fallthroughId !== null) {
+        body.push(
+          t.labeledStatement(
+            t.identifier(`bb${fallthroughId}`),
+            t.whileStatement(testValue, loopBody)
+          )
+        );
+        writeBlock(cx, cx.ir.blocks.get(fallthroughId)!, body);
+      } else {
+        body.push(t.whileStatement(testValue, loopBody));
+      }
+      break;
+    }
     case "goto": {
       switch (terminal.variant) {
         case GotoVariant.Break: {
@@ -309,11 +478,10 @@ function writeBlock(cx: Context, block: BasicBlock, body: Array<t.Statement>) {
           break;
         }
         case GotoVariant.Continue: {
-          invariant(
-            cx.isScheduled(terminal.block),
-            "Expected continue target to be scheduled"
-          );
-          body.push(t.continueStatement(t.identifier(`bb${terminal.block}`)));
+          const continue_ = codegenContinue(cx, terminal.block);
+          if (continue_ !== null) {
+            body.push(continue_);
+          }
           break;
         }
         default: {
@@ -329,27 +497,49 @@ function writeBlock(cx: Context, block: BasicBlock, body: Array<t.Statement>) {
       assertExhaustive(terminal, "Unexpected terminal");
     }
   }
-  cx.unscheduleAll(scheduleIds);
 }
 
 function codegenBreak(cx: Context, block: BlockId): t.Statement | null {
-  const breakTarget = cx.getBreakTarget(block);
-  if (breakTarget === null) {
+  const target = cx.getBreakTarget(block);
+  if (target === null) {
     // TODO: we should always have a target
     return null;
   }
-  const { target, last } = breakTarget;
-  if (target.type === "case") {
-    // This break is transitioning to the next case statement. JS doesn't allow
-    // labeling cases, the only option is to emit a plain break.
-    return null;
-  } else if (last) {
-    // This break is to the most recent break target. Control flow will naturally
-    // transition to this target, so a break is not required.
-    return null;
-  } else {
-    // We're trying to break somewhere else, emit a label
-    return t.breakStatement(t.identifier(`bb${block}`));
+  switch (target.type) {
+    case "implicit": {
+      return null;
+    }
+    case "unlabeled": {
+      return t.breakStatement();
+    }
+    case "labeled": {
+      return t.breakStatement(t.identifier(`bb${target.block}`));
+    }
+  }
+}
+
+function codegenContinue(cx: Context, block: BlockId): t.Statement | null {
+  const target = cx.getContinueTarget(block);
+  invariant(
+    target !== null,
+    `Expected continue target to be scheduled for bb${block}`
+  );
+  switch (target.type) {
+    case "labeled": {
+      return t.continueStatement(t.identifier(`bb${target.block}`));
+    }
+    case "unlabeled": {
+      return t.continueStatement();
+    }
+    case "implicit": {
+      return null;
+    }
+    default: {
+      assertExhaustive(
+        target.type,
+        `Unexpected continue target kind '${(target as any).type}'`
+      );
+    }
   }
 }
 

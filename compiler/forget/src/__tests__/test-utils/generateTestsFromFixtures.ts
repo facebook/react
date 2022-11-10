@@ -72,7 +72,6 @@ export default function generateTestsFromFixtures(
         input: inputFile,
         output: outputFile,
       } of Array.from(fixtures.values())) {
-        let receivedOutput;
         let testCommand;
 
         switch (basename.split(".")[0]) {
@@ -87,9 +86,18 @@ export default function generateTestsFromFixtures(
             break;
         }
 
+        let input: string | null = null;
+        if (inputFile != null) {
+          input = fs.readFileSync(inputFile, "utf8");
+          const lines = input.split("\n");
+          if (lines[0]!.indexOf("@only") !== -1) {
+            testCommand = test.only;
+          }
+        }
+
         testCommand(basename, () => {
-          if (inputFile != null) {
-            const input = fs.readFileSync(inputFile, "utf8");
+          let receivedOutput;
+          if (input !== null) {
             receivedOutput = transform(input, basename);
           } else {
             receivedOutput = "<<input deleted>>";

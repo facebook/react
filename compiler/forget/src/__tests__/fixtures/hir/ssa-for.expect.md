@@ -27,7 +27,7 @@ bb4:
   predecessor blocks: bb1
   [4] Const mutate $9 = 1
   [5] Reassign mutate x$1 = Binary read x$1 + read $9
-  Goto bb1
+  Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
   Return read x$1

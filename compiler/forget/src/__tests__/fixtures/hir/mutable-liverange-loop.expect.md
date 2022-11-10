@@ -72,16 +72,19 @@ bb0:
   [2] Let mutate b$13[2:6] = Object {  }
   [3] Let mutate c$14 = Object {  }
   [4] Let mutate d$15[4:9] = Object {  }
-  Goto bb1
+  While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
-  predecessor blocks: bb0 bb3
+  predecessor blocks: bb0 bb4
   [5] Const mutate $16 = true
   If (read $16) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
   [6] Call mutate mutate$6(mutate a$12, mutate b$13)
   [7] Const mutate $21 = Call mutate cond$7(mutate a$12)
-  If (read $21) then:bb2 else:bb1
+  If (read $21) then:bb2 else:bb4
+bb4:
+  predecessor blocks: bb3
+  Goto(Continue) bb1
 bb2:
   predecessor blocks: bb3 bb1
   If (read a$12) then:bb7 else:bb7
@@ -109,6 +112,18 @@ function Component$0(props$11) {
   let b$13 = {};
   let c$14 = {};
   let d$15 = {};
+  bb2: while (true) {
+    mutate$6(a$12, b$13);
+
+    bb4: if (cond$7(a$12)) break;
+  }
+
+  a$12;
+  b$13;
+  c$14;
+  d$15;
+  mutate$6(d$15, null);
+  return;
 }
 
 ```
