@@ -34,6 +34,25 @@ bb0:
   Return read $10
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Const mutate a$8 = Call mutate compute$3(read props$7.a)
+      [2] Const mutate b$9 = Call mutate compute$3(read props$7.b)
+      [3] Const mutate $10 = JSX <read Foo$5 a={freeze a$8} b={freeze b$9} ></read Foo$5>  
+    "]    
+    bb0_instrs --> bb0_terminal(["Return read $10"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript
@@ -51,6 +70,20 @@ bb0:
   Return
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript
@@ -66,6 +99,20 @@ bb0:
   Return
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript
@@ -79,6 +126,20 @@ function foo$0() {
 ```
 bb0:
   Return
+```
+
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
 ```
 
 ## Code

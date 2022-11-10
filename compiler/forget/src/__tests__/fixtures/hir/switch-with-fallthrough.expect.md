@@ -80,6 +80,95 @@ bb1:
   Return
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Let mutate y$10 = undefined
+      [2] Const mutate $11 = 5
+      [3] Const mutate $12 = 4
+      [4] Const mutate $13 = 3
+      [5] Const mutate $14 = 2
+      [6] Const mutate $15 = 1
+      [7] Const mutate $16 = 0  
+    "]    
+    bb0_instrs --> bb0_terminal(["Switch (read x$9)"])  
+  end
+  
+  subgraph bb10
+    bb10_instrs["
+      [8] Reassign mutate y$17 = 0  
+    "]    
+    bb10_instrs --> bb10_terminal(["Goto"])  
+  end
+  
+  subgraph bb9
+    bb9_instrs["
+      [9] Reassign mutate y$18 = 1  
+    "]    
+    bb9_instrs --> bb9_terminal(["Goto"])  
+  end
+  
+  subgraph bb5
+    bb5_instrs["
+      [10] Reassign mutate y$19 = 3  
+    "]    
+    bb5_instrs --> bb5_terminal(["Goto"])  
+  end
+  
+  subgraph bb4
+    bb4_instrs["
+      [11] Reassign mutate y$20 = 4  
+    "]    
+    bb4_instrs --> bb4_terminal(["Goto"])  
+  end
+  
+  subgraph bb3
+    bb3_instrs["
+      [12] Reassign mutate y$21 = 5  
+    "]    
+    bb3_instrs --> bb3_terminal(["Goto"])  
+  end
+  
+  subgraph bb2
+    bb2_instrs["
+      [13] Reassign mutate y$22 = 0  
+    "]    
+    bb2_instrs --> bb2_terminal(["Goto"])  
+  end
+  
+  subgraph bb1
+    bb1_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  bb0_terminal -- read $16 --> bb10
+  bb0_terminal -- read $15 --> bb9
+  bb0_terminal -- read $14 --> bb1
+  bb0_terminal -- read $13 --> bb5
+  bb0_terminal -- read $12 --> bb4
+  bb0_terminal -- read $11 --> bb3
+  bb0_terminal -- default --> bb2
+  bb0_terminal -- fallthrough --> bb1
+  
+  bb10_terminal --> bb9
+  
+  bb9_terminal --> bb1
+  
+  bb5_terminal --> bb1
+  
+  bb4_terminal --> bb3
+  
+  bb3_terminal --> bb2
+  
+  bb2_terminal --> bb1
+  
+```
+
 ## Code
 
 ```javascript

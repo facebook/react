@@ -42,6 +42,20 @@ bb0:
   Return
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript
@@ -79,6 +93,67 @@ bb9:
   [8] Const mutate $17 = null
   [9] Call mutate mutate$8(mutate x$15, read $17)
   Return
+```
+
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Const mutate a$11 = Object {  }
+      [2] Const mutate b$12 = Array [read a$11]
+      [3] Const mutate c$13 = Object {  }
+      [4] Const mutate d$14[4:7] = Object { c: read c$13 }
+      [5] Const mutate x$15[5:9] = Object {  }
+      [6] Reassign mutate x$15.b[5:9] = read b$12
+      [7] Const mutate y$16 = Call mutate mutate$8(mutate x$15, mutate d$14)  
+    "]    
+    bb0_instrs --> bb0_terminal(["If (read a$11)"])  
+  end
+  
+  subgraph bb1
+    bb1_terminal(["If (read b$12)"])  
+  end
+  
+  subgraph bb3
+    bb3_terminal(["If (read c$13)"])  
+  end
+  
+  subgraph bb5
+    bb5_terminal(["If (read d$14)"])  
+  end
+  
+  subgraph bb7
+    bb7_terminal(["If (read y$16)"])  
+  end
+  
+  subgraph bb9
+    bb9_instrs["
+      [8] Const mutate $17 = null
+      [9] Call mutate mutate$8(mutate x$15, read $17)  
+    "]    
+    bb9_instrs --> bb9_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  bb0_terminal -- then --> bb1
+  bb0_terminal -- else --> bb1
+  
+  bb1_terminal -- then --> bb3
+  bb1_terminal -- else --> bb3
+  
+  bb3_terminal -- then --> bb5
+  bb3_terminal -- else --> bb5
+  
+  bb5_terminal -- then --> bb7
+  bb5_terminal -- else --> bb7
+  
+  bb7_terminal -- then --> bb9
+  bb7_terminal -- else --> bb9
+  
 ```
 
 ## Code

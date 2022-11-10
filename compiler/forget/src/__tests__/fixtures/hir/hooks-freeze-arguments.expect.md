@@ -26,6 +26,26 @@ bb0:
   Return read a$4
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Const mutate a$4 = Array []
+      [2] Call read useFreeze$2(freeze a$4)
+      [3] Call read useFreeze$2(read a$4)
+      [4] Call mutate call$3(read a$4)  
+    "]    
+    bb0_instrs --> bb0_terminal(["Return read a$4"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript
@@ -45,6 +65,20 @@ bb0:
   Return
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript
@@ -58,6 +92,20 @@ function useFreeze$0(x$2) {
 ```
 bb0:
   Return
+```
+
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
 ```
 
 ## Code

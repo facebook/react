@@ -46,6 +46,20 @@ bb0:
   Return
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript
@@ -59,6 +73,20 @@ function mutate$0(x$3, y$4) {
 ```
 bb0:
   Return
+```
+
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
 ```
 
 ## Code
@@ -112,6 +140,97 @@ bb13:
   [13] Const mutate $34 = null
   [14] Call mutate mutate$7(mutate d$5, read $34)
   Return
+```
+
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Let mutate a$2 = Object {  }
+      [2] Let mutate b$3 = Object {  }
+      [3] Let mutate c$4 = Object {  }
+      [4] Let mutate d$5 = Object {  }  
+    "]    
+    bb0_instrs --> bb0_terminal(["While"])  
+  end
+  
+  subgraph bb1
+    bb1_instrs["
+      [5] Const mutate $17 = true  
+    "]    
+    bb1_instrs --> bb1_terminal(["If (read $17)"])  
+  end
+  
+  subgraph bb3
+    bb3_instrs["
+      [6] Let mutate z$19 = read a$2
+      [7] Reassign mutate a$2 = read b$3
+      [8] Reassign mutate b$3 = read c$4
+      [9] Reassign mutate c$4 = read d$5
+      [10] Reassign mutate d$5 = read z$19
+      [11] Call mutate mutate$7(mutate a$2, mutate b$3)
+      [12] Const mutate $29 = Call mutate cond$8(mutate a$2)  
+    "]    
+    bb3_instrs --> bb3_terminal(["If (read $29)"])  
+  end
+  
+  subgraph bb4
+    bb4_terminal(["Goto"])  
+  end
+  
+  subgraph bb2
+    bb2_terminal(["If (read a$2)"])  
+  end
+  
+  subgraph bb7
+    bb7_terminal(["If (read b$3)"])  
+  end
+  
+  subgraph bb9
+    bb9_terminal(["If (read c$4)"])  
+  end
+  
+  subgraph bb11
+    bb11_terminal(["If (read d$5)"])  
+  end
+  
+  subgraph bb13
+    bb13_instrs["
+      [13] Const mutate $34 = null
+      [14] Call mutate mutate$7(mutate d$5, read $34)  
+    "]    
+    bb13_instrs --> bb13_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  bb0_terminal -- test --> bb1
+  bb0_terminal -- loop --> bb3
+  bb0_terminal -- fallthrough --> bb2
+  
+  bb1_terminal -- then --> bb3
+  bb1_terminal -- else --> bb2
+  
+  bb3_terminal -- then --> bb2
+  bb3_terminal -- else --> bb4
+  
+  bb4_terminal --> bb1
+  
+  bb2_terminal -- then --> bb7
+  bb2_terminal -- else --> bb7
+  
+  bb7_terminal -- then --> bb9
+  bb7_terminal -- else --> bb9
+  
+  bb9_terminal -- then --> bb11
+  bb9_terminal -- else --> bb11
+  
+  bb11_terminal -- then --> bb13
+  bb11_terminal -- else --> bb13
+  
 ```
 
 ## Code

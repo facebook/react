@@ -36,6 +36,54 @@ bb1:
   Return
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["If (read a$4)"])  
+  end
+  
+  subgraph bb3
+    bb3_terminal(["While"])  
+  end
+  
+  subgraph bb4
+    bb4_terminal(["If (read b$5)"])  
+  end
+  
+  subgraph bb6
+    bb6_terminal(["If (read c$6)"])  
+  end
+  
+  subgraph bb7
+    bb7_terminal(["Goto"])  
+  end
+  
+  subgraph bb1
+    bb1_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  bb0_terminal -- then --> bb3
+  bb0_terminal -- else --> bb1
+  
+  bb3_terminal -- test --> bb4
+  bb3_terminal -- loop --> bb6
+  bb3_terminal -- fallthrough --> bb1
+  
+  bb4_terminal -- then --> bb6
+  bb4_terminal -- else --> bb1
+  
+  bb6_terminal -- then --> bb1
+  bb6_terminal -- else --> bb7
+  
+  bb7_terminal --> bb4
+  
+```
+
 ## Code
 
 ```javascript

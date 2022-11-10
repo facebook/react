@@ -24,6 +24,7 @@ import { inferMutableRanges } from "../HIR/InferMutableLifetimes";
 import inferReferenceEffects from "../HIR/InferReferenceEffects";
 import leaveSSA from "../HIR/LeaveSSA";
 import printHIR from "../HIR/PrintHIR";
+import visualizeHIRMermaid from "../HIR/VisualizeHIRMermaid";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
 function wrapWithTripleBackticks(s: string, ext?: string) {
@@ -59,7 +60,7 @@ describe("React Forget (HIR version)", () => {
         sourceFilename: file,
         plugins: ["typescript", "jsx"],
       });
-      let items: Array<[string, string]> = [];
+      let items: Array<[string, string, string]> = [];
       traverse(ast, {
         FunctionDeclaration: {
           enter(nodePath) {
@@ -71,6 +72,7 @@ describe("React Forget (HIR version)", () => {
             inferMutableRanges(ir);
             leaveSSA(ir);
             const textHIR = printHIR(ir.body);
+            const visualization = visualizeHIRMermaid(ir);
 
             const ast = codegen(ir);
             const text = prettier.format(
@@ -80,7 +82,7 @@ describe("React Forget (HIR version)", () => {
                 parser: "babel-ts",
               }
             );
-            items.push([textHIR, text]);
+            items.push([textHIR, text, visualization]);
           },
         },
       });
@@ -88,11 +90,15 @@ describe("React Forget (HIR version)", () => {
         items.length > 0,
         "Visitor failed, check that the input has a function"
       );
-      const outputs = items.map(([hir, text]) => {
+      const outputs = items.map(([hir, text, visualization]) => {
         return `
 ## HIR
 
 ${wrapWithTripleBackticks(hir)}
+
+### CFG
+
+${wrapWithTripleBackticks(visualization, "mermaid")}
 
 ## Code
 

@@ -54,6 +54,89 @@ bb2:
   Return read x$9
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Let mutate x$9 = 0  
+    "]    
+    bb0_instrs --> bb0_terminal(["While"])  
+  end
+  
+  subgraph bb1
+    bb1_terminal(["If (read a$6)"])  
+  end
+  
+  subgraph bb3
+    bb3_terminal(["While"])  
+  end
+  
+  subgraph bb4
+    bb4_terminal(["If (read b$7)"])  
+  end
+  
+  subgraph bb6
+    bb6_terminal(["While"])  
+  end
+  
+  subgraph bb7
+    bb7_terminal(["If (read c$8)"])  
+  end
+  
+  subgraph bb9
+    bb9_instrs["
+      [2] Const mutate $13 = 1
+      [3] Binary read x$9 + read $13  
+    "]    
+    bb9_instrs --> bb9_terminal(["Goto"])  
+  end
+  
+  subgraph bb8
+    bb8_terminal(["Goto"])  
+  end
+  
+  subgraph bb5
+    bb5_terminal(["Goto"])  
+  end
+  
+  subgraph bb2
+    bb2_terminal(["Return read x$9"])  
+  end
+  
+
+  %% Jumps
+  bb0_terminal -- test --> bb1
+  bb0_terminal -- loop --> bb3
+  bb0_terminal -- fallthrough --> bb2
+  
+  bb1_terminal -- then --> bb3
+  bb1_terminal -- else --> bb2
+  
+  bb3_terminal -- test --> bb4
+  bb3_terminal -- loop --> bb6
+  bb3_terminal -- fallthrough --> bb5
+  
+  bb4_terminal -- then --> bb6
+  bb4_terminal -- else --> bb5
+  
+  bb6_terminal -- test --> bb7
+  bb6_terminal -- loop --> bb9
+  bb6_terminal -- fallthrough --> bb8
+  
+  bb7_terminal -- then --> bb9
+  bb7_terminal -- else --> bb8
+  
+  bb9_terminal --> bb7
+  
+  bb8_terminal --> bb4
+  
+  bb5_terminal --> bb1
+  
+```
+
 ## Code
 
 ```javascript

@@ -21,6 +21,25 @@ bb0:
   Return freeze x$8
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Const mutate a$6 = 1
+      [2] Const mutate b$7 = 2
+      [3] Const mutate x$8 = Array [read a$6, read b$7]  
+    "]    
+    bb0_instrs --> bb0_terminal(["Return freeze x$8"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript

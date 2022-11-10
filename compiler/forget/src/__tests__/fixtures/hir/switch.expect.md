@@ -54,6 +54,59 @@ bb1:
   Return read $23
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Let mutate x$9[1:6] = Array []
+      [2] Let mutate y$3 = undefined
+      [3] Const mutate $11 = false
+      [4] Const mutate $12 = true  
+    "]    
+    bb0_instrs --> bb0_terminal(["Switch (read props$8.p0)"])  
+  end
+  
+  subgraph bb4
+    bb4_instrs["
+      [5] Call mutate x$9.push(read props$8.p2)
+      [6] Call mutate x$9.push(read props$8.p3)
+      [7] Reassign mutate y$13 = Array []  
+    "]    
+    bb4_instrs --> bb4_terminal(["Goto"])  
+  end
+  
+  subgraph bb2
+    bb2_instrs["
+      [8] Reassign mutate y$3 = read x$9  
+    "]    
+    bb2_instrs --> bb2_terminal(["Goto"])  
+  end
+  
+  subgraph bb1
+    bb1_instrs["
+      [9] Const mutate child$19 = JSX <read Component$0 data={freeze x$9} ></read Component$0>
+      [10] Call read y$3.push(read props$8.p4)
+      [11] Const mutate $23 = JSX <read Component$0 data={read y$3} >{read child$19}</read Component$0>  
+    "]    
+    bb1_instrs --> bb1_terminal(["Return read $23"])  
+  end
+  
+
+  %% Jumps
+  bb0_terminal -- read $12 --> bb4
+  bb0_terminal -- read $11 --> bb2
+  bb0_terminal -- default --> bb1
+  bb0_terminal -- fallthrough --> bb1
+  
+  bb4_terminal --> bb2
+  
+  bb2_terminal --> bb1
+  
+```
+
 ## Code
 
 ```javascript

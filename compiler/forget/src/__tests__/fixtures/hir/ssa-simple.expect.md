@@ -18,6 +18,24 @@ bb0:
   Return
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Let mutate x$3 = 1
+      [2] Let mutate y$4 = 2  
+    "]    
+    bb0_instrs --> bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript

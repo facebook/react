@@ -33,6 +33,44 @@ bb1:
   Return
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Let mutate x$1 = 1
+      [2] Let mutate y$6 = 2
+      [3] Const mutate $7 = 2
+      [4] Const mutate $8 = Binary read y$6 === read $7  
+    "]    
+    bb0_instrs --> bb0_terminal(["If (read $8)"])  
+  end
+  
+  subgraph bb2
+    bb2_instrs["
+      [5] Reassign mutate x$1 = 3  
+    "]    
+    bb2_instrs --> bb2_terminal(["Goto"])  
+  end
+  
+  subgraph bb1
+    bb1_instrs["
+      [6] Reassign mutate y$11 = read x$1  
+    "]    
+    bb1_instrs --> bb1_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  bb0_terminal -- then --> bb2
+  bb0_terminal -- else --> bb1
+  
+  bb2_terminal --> bb1
+  
+```
+
 ## Code
 
 ```javascript

@@ -31,6 +31,29 @@ bb0:
   Return read $11
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Let mutate x$7[1:2] = Array []
+      [2] Call mutate x$7.push(read props$6.p0)
+      [3] Let mutate y$8[3:6] = read x$7
+      [4] Reassign mutate x$9 = Array []
+      [5] Let mutate _$10 = JSX <read Component$0 x={freeze x$9} ></read Component$0>
+      [6] Call mutate y$8.push(read props$6.p1)
+      [7] Const mutate $11 = JSX <read Component$0 x={read x$9} y={freeze y$8} ></read Component$0>  
+    "]    
+    bb0_instrs --> bb0_terminal(["Return read $11"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript

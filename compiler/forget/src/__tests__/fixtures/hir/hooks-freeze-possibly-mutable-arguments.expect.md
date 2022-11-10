@@ -46,6 +46,55 @@ bb1:
   Return read a$4
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Const mutate cond$8 = read props$7.cond
+      [2] Const mutate x$9 = read props$7.x
+      [3] Let mutate a$10 = undefined  
+    "]    
+    bb0_instrs --> bb0_terminal(["If (read cond$8)"])  
+  end
+  
+  subgraph bb2
+    bb2_instrs["
+      [4] Reassign mutate a$4 = read x$9  
+    "]    
+    bb2_instrs --> bb2_terminal(["Goto"])  
+  end
+  
+  subgraph bb3
+    bb3_instrs["
+      [5] Reassign mutate a$4 = Array []  
+    "]    
+    bb3_instrs --> bb3_terminal(["Goto"])  
+  end
+  
+  subgraph bb1
+    bb1_instrs["
+      [6] Call read useFreeze$5(freeze a$4)
+      [7] Call read useFreeze$5(read a$4)
+      [8] Call mutate call$6(read a$4)  
+    "]    
+    bb1_instrs --> bb1_terminal(["Return read a$4"])  
+  end
+  
+
+  %% Jumps
+  bb0_terminal -- then --> bb2
+  bb0_terminal -- else --> bb3
+  bb0_terminal -- fallthrough --> bb1
+  
+  bb2_terminal --> bb1
+  
+  bb3_terminal --> bb1
+  
+```
+
 ## Code
 
 ```javascript
@@ -73,6 +122,20 @@ bb0:
   Return
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript
@@ -86,6 +149,20 @@ function useFreeze$0(x$2) {
 ```
 bb0:
   Return
+```
+
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
 ```
 
 ## Code

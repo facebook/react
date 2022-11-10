@@ -22,6 +22,20 @@ bb0:
   Return
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_terminal(["Return"])  
+  end
+  
+
+  %% Jumps
+  %% empty
+```
+
 ## Code
 
 ```javascript
@@ -43,6 +57,30 @@ bb0:
   [7] Const mutate $14 = "div"
   [8] Const mutate $15 = JSX <read $14 a={read a$10} b={freeze b$11} ></read $14>
   Return read $15
+```
+
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Const mutate a$10[1:3] = Array []
+      [2] Const mutate b$11[2:6] = Object {  }
+      [3] New mutate Foo$4(mutate a$10, mutate b$11)
+      [4] Const mutate $12 = 'div'
+      [5] Let mutate _$13 = JSX <read $12 a={freeze a$10} ></read $12>
+      [6] New mutate Foo$4(mutate b$11)
+      [7] Const mutate $14 = 'div'
+      [8] Const mutate $15 = JSX <read $14 a={read a$10} b={freeze b$11} ></read $14>  
+    "]    
+    bb0_instrs --> bb0_terminal(["Return read $15"])  
+  end
+  
+
+  %% Jumps
+  %% empty
 ```
 
 ## Code

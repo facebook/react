@@ -40,6 +40,60 @@ bb2:
   Return freeze items$5
 ```
 
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Let mutate items$5 = Array []  
+    "]    
+    bb0_instrs --> bb0_terminal(["Goto"])  
+  end
+  
+  subgraph bb1
+    bb1_terminal(["If (read items$5)"])  
+  end
+  
+  subgraph bb3
+    bb3_instrs["
+      [2] Let mutate y$7 = 0  
+    "]    
+    bb3_instrs --> bb3_terminal(["If (read cond$4)"])  
+  end
+  
+  subgraph bb5
+    bb5_instrs["
+      [3] Reassign mutate y$9 = 1  
+    "]    
+    bb5_instrs --> bb5_terminal(["Goto"])  
+  end
+  
+  subgraph bb4
+    bb4_terminal(["Goto"])  
+  end
+  
+  subgraph bb2
+    bb2_terminal(["Return freeze items$5"])  
+  end
+  
+
+  %% Jumps
+  bb0_terminal --> bb1
+  
+  bb1_terminal -- then --> bb3
+  bb1_terminal -- else --> bb2
+  
+  bb3_terminal -- then --> bb5
+  bb3_terminal -- else --> bb4
+  
+  bb5_terminal --> bb4
+  
+  bb4_terminal --> bb1
+  
+```
+
 ## Code
 
 ```javascript
