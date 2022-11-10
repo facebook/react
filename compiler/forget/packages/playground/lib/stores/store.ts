@@ -9,37 +9,6 @@ import { codec } from "../utils";
 import { ForgetCompilerFlags } from "../compilerDriver";
 import { parseCompilerFlags } from "babel-plugin-react-forget";
 
-type VisualizedGraph =
-  | `Visualized${OutputKind.ValGraph}`
-  | `Visualized${OutputKind.SCCGraph}`
-  | `Visualized${OutputKind.RedGraph}`;
-
-export type OutputTabKind = OutputKind | VisualizedGraph | "Preview";
-
-export function isGraph(
-  tabKind: OutputTabKind
-): tabKind is
-  | OutputKind.ValGraph
-  | OutputKind.SCCGraph
-  | OutputKind.RedGraph
-  | VisualizedGraph {
-  return tabKind.endsWith("Graph");
-}
-
-export function isVisualizedGraph(
-  tabKind: OutputTabKind
-): tabKind is VisualizedGraph {
-  return tabKind.startsWith("Visualized");
-}
-
-export function getVisualizedGraphKind(graphKind: VisualizedGraph) {
-  const kind = graphKind.slice("Visualized".length);
-  return kind as
-    | OutputKind.ValGraph
-    | OutputKind.SCCGraph
-    | OutputKind.RedGraph;
-}
-
 export enum FileExt {
   js = "javascript",
   jsx = "javascript",
