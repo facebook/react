@@ -21,4 +21,49 @@ export * from "./Diagnostic";
 export * from "./Logger";
 export { NoUseBeforeDefineRule } from "./Validation";
 
+import { lower } from "./HIR/BuildHIR";
+import { eliminateRedundantPhi } from "./HIR/EliminateRedundantPhi";
+import enterSSA from "./HIR/EnterSSA";
+import { inferMutableRanges } from "./HIR/InferMutableLifetimes";
+import inferReferenceEffects from "./HIR/InferReferenceEffects";
+import printHIR from "./HIR/PrintHIR";
+import { Environment } from "./HIR/HIRBuilder";
+import leaveSSA from "./HIR/LeaveSSA";
+import traverse, { NodePath } from "@babel/traverse";
+import * as t from "@babel/types";
+import { parse } from "@babel/parser";
+
+function parseFunctions(
+  source: string
+): Array<NodePath<t.FunctionDeclaration>> {
+  try {
+    const ast = parse(source, {
+      plugins: ["typescript", "jsx"],
+    });
+    const items: Array<NodePath<t.FunctionDeclaration>> = [];
+    traverse(ast, {
+      FunctionDeclaration: {
+        enter(nodePath) {
+          items.push(nodePath);
+        },
+      },
+    });
+    return items;
+  } catch (e) {
+    return [];
+  }
+}
+
+export const HIR = {
+  parseFunctions,
+  lower,
+  eliminateRedundantPhi,
+  enterSSA,
+  inferMutableRanges,
+  inferReferenceEffects,
+  printHIR,
+  Environment,
+  leaveSSA,
+};
+
 export default BabelPlugin;

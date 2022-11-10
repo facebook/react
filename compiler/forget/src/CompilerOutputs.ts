@@ -16,7 +16,6 @@ import { SCCGraphSnapshot, ValGraphSnapshot } from "./DepGraph";
  */
 export enum OutputKind {
   IR = "DumpIR",
-  HIR = "DumpHIR",
   CFG = "DumpCFG",
   ValGraph = "DumpValGraph",
   SCCGraph = "DumpSCCGraph",
@@ -34,7 +33,6 @@ export function isSyntacticallyValidJS(kind: OutputKind) {
 
 export interface CompilerOutputs {
   [OutputKind.IR]: string;
-  [OutputKind.HIR]: string;
   [OutputKind.CFG]: string;
   [OutputKind.ValGraph]: ValGraphSnapshot[];
   [OutputKind.SCCGraph]: SCCGraphSnapshot[];
@@ -46,7 +44,6 @@ export interface CompilerOutputs {
 export function createCompilerOutputs(): CompilerOutputs {
   return {
     [OutputKind.IR]: "",
-    [OutputKind.HIR]: "",
     [OutputKind.CFG]: "",
     [OutputKind.ValGraph]: [],
     [OutputKind.SCCGraph]: [],
@@ -67,7 +64,6 @@ export function stringifyCompilerOutputs(
 ): PrettyCompilerOutputs {
   const outputs: PrettyCompilerOutputs = {
     [OutputKind.IR]: undefined,
-    [OutputKind.HIR]: undefined,
     [OutputKind.CFG]: undefined,
     [OutputKind.ValGraph]: undefined,
     [OutputKind.SCCGraph]: undefined,
@@ -95,10 +91,7 @@ export function stringifyCompilerOutputs(
             console.warn("Error formatting output:", e);
           }
         }
-      } else if (
-        outputKind === OutputKind.CFG ||
-        outputKind === OutputKind.HIR
-      ) {
+      } else if (outputKind === OutputKind.CFG) {
         outputs[outputKind] = output;
       } else {
         invariant(Array.isArray(output), "Graph outputs are arrays.");

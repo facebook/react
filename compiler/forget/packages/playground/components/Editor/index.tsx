@@ -1,5 +1,8 @@
-/*
- * Copyright (c) Facebook, Inc. and its affiliates.
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 
 import { useDrag } from "@use-gesture/react";
@@ -89,7 +92,6 @@ export default function Editor() {
           })}
         >
           <Output store={deferredStore} updateDiagnostics={updateDiagnostics} />
-          <CompilerFlagsEditor />
         </div>
       </div>
       <button

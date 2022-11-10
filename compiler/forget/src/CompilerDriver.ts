@@ -10,7 +10,6 @@ import * as t from "@babel/types";
 import * as BE from "./BackEnd";
 import { CompilerContext } from "./CompilerContext";
 import { CompilerOptions } from "./CompilerOptions";
-import DumpHIRPass from "./HIR/DumpHIRPass";
 import * as ME from "./MiddleEnd";
 import { PassManager } from "./PassManager";
 import * as Validation from "./Validation";
@@ -37,10 +36,6 @@ export function createCompilerDriver(
     program,
     compile() {
       const passManager = new PassManager(program, context);
-
-      // New architecture pass to print HIR, unrelated to the
-      // other passes here and just here for the playground.
-      passManager.addPass(DumpHIRPass);
 
       // Syntax Analysis and IR Generation.
       passManager.addPass(ME.ReactFuncsInfer);

@@ -19,6 +19,7 @@ import { getSelectedFile, type Store } from "../../lib/stores";
 import GraphView from "../GraphView";
 import Preview from "../Preview";
 import { monacoOptions } from "./monacoOptions";
+import HIRTabContent from "./HIRTabContent";
 
 const MemoizedOutput = memo(Output);
 
@@ -43,7 +44,7 @@ function Output({ store, updateDiagnostics }: Props) {
       tabs={{
         Preview: <Preview store={store} />,
         IR: <TextTabContent outputs={outputs} kind={OutputKind.IR} />,
-        HIR: <TextTabContent outputs={outputs} kind={OutputKind.HIR} />,
+        HIR: <HIRTabContent source={getSelectedFile(store).content} />,
         CFG: <TextTabContent outputs={outputs} kind={OutputKind.CFG} />,
         ValGraph: (
           <GraphTabContent outputs={outputs} kind={OutputKind.ValGraph} />
