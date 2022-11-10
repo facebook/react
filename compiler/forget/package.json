@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc && scripts/hash-dist.sh",
     "bundle:meta": "scripts/bundle-meta.sh",
-    "dev": "concurrently \"yarn:build --watch\" \"yarn:playground\"",
+    "dev": "concurrently --kill-others \"tsc --watch\" \"yarn:playground\"",
     "playground": "cd packages/playground && yarn && yarn dev",
     "test": "yarn build && jest",
     "ts:analyze-trace": "scripts/ts-analyze-trace.sh"
