@@ -275,7 +275,7 @@ describe('ReactOffscreen', () => {
     // goes from visible to hidden in synchronous update.
     class ClassComponent extends React.Component {
       render() {
-        return <Text text="Child" />;
+        return <Text text="child" />;
       }
 
       componentWillUnmount() {
@@ -287,47 +287,89 @@ describe('ReactOffscreen', () => {
       }
     }
 
-    let _setIsVisible;
-    let isFirstRender = true;
-
-    function App() {
-      const [isVisible, setIsVisible] = React.useState(true);
-      _setIsVisible = setIsVisible;
-      if (isFirstRender === true) {
-        setIsVisible(false);
-        isFirstRender = false;
-      }
-
-      return (
-        <Offscreen mode="hidden">
-          <Offscreen mode={isVisible ? 'visible' : 'hidden'}>
-            <ClassComponent />
-          </Offscreen>
-        </Offscreen>
-      );
-    }
-
     const root = ReactNoop.createRoot();
     await act(async () => {
-      root.render(<App />);
+      // Outer and inner offscreen are hidden.
+      root.render(
+        <Offscreen mode={'hidden'}>
+          <Offscreen mode={'hidden'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
     });
 
-    expect(Scheduler).toHaveYielded(['Child']);
-    expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
+    expect(Scheduler).toHaveYielded(['child']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
 
     await act(async () => {
-      _setIsVisible(true);
+      // Inner offscreen is visible.
+      root.render(
+        <Offscreen mode={'hidden'}>
+          <Offscreen mode={'visible'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
     });
 
-    expect(Scheduler).toHaveYielded(['Child']);
-    expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
+    expect(Scheduler).toHaveYielded(['child']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
 
     await act(async () => {
-      _setIsVisible(false);
+      // Inner offscreen is hidden.
+      root.render(
+        <Offscreen mode={'hidden'}>
+          <Offscreen mode={'hidden'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
     });
 
-    expect(Scheduler).toHaveYielded(['Child']);
-    expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
+    expect(Scheduler).toHaveYielded(['child']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
+
+    await act(async () => {
+      // Inner offscreen is visible.
+      root.render(
+        <Offscreen mode={'hidden'}>
+          <Offscreen mode={'visible'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
+    });
+
+    Scheduler.unstable_clearYields();
+
+    await act(async () => {
+      // Outer offscreen is visible.
+      // Inner offscreen is hidden.
+      root.render(
+        <Offscreen mode={'visible'}>
+          <Offscreen mode={'hidden'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded(['child']);
+
+    await act(async () => {
+      // Outer offscreen is hidden.
+      // Inner offscreen is visible.
+      root.render(
+        <Offscreen mode={'hidden'}>
+          <Offscreen mode={'visible'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded(['child']);
   });
 
   // @gate enableOffscreen
