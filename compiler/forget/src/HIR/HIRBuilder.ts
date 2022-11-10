@@ -403,12 +403,6 @@ function shrink(func: HIR): HIR {
         block.terminal.fallthrough = null;
       }
     }
-    if (block.terminal.kind === "while") {
-      invariant(
-        resolveBlockTarget(block.terminal.loop) === block.terminal.loop,
-        `Expected while loop body to remain after shrinking`
-      );
-    }
   }
   return { blocks, entry: func.entry };
 }

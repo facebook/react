@@ -96,7 +96,10 @@ class Context {
    */
   schedule(block: BlockId, type: "if" | "switch" | "case"): number {
     const id = this.#nextScheduleId++;
-    invariant(!this.#scheduled.has(block), "Block is already scheduled");
+    invariant(
+      !this.#scheduled.has(block),
+      `Break block is already scheduled: bb${block}`
+    );
     this.#scheduled.add(block);
     this.#controlFlowStack.push({ block, id, type });
     return id;
@@ -112,11 +115,12 @@ class Context {
     this.#scheduled.add(fallthroughBlock);
     invariant(
       !this.#scheduled.has(continueBlock),
-      "Block is already scheduled"
+      `Continue block is already scheduled: bb${continueBlock}`
     );
     this.#scheduled.add(continueBlock);
+    let ownsLoop = false;
     if (loopBlock !== null) {
-      invariant(!this.#scheduled.has(loopBlock), "Block is already scheduled");
+      ownsLoop = !this.#scheduled.has(loopBlock);
       this.#scheduled.add(loopBlock);
     }
 
@@ -127,6 +131,7 @@ class Context {
       type: "loop",
       continueBlock,
       loopBlock,
+      ownsLoop,
     });
     return id;
   }
@@ -145,7 +150,7 @@ class Context {
     }
     if (last.type === "loop") {
       this.#scheduled.delete(last.continueBlock);
-      if (last.loopBlock !== null) {
+      if (last.ownsLoop && last.loopBlock !== null) {
         this.#scheduled.delete(last.loopBlock);
       }
     }
@@ -266,21 +271,22 @@ type ControlFlowTarget =
       ownsBlock: boolean;
       continueBlock: BlockId;
       loopBlock: BlockId | null;
+      ownsLoop: boolean;
       id: number;
     };
 
 function codegenBlock(cx: Context, block: BasicBlock): t.BlockStatement {
-  invariant(
-    !cx.emitted.has(block.id),
-    `Cannot emit the same block twice: bb${block.id}`
-  );
-  cx.emitted.add(block.id);
   const body: Array<t.Statement> = [];
   writeBlock(cx, block, body);
   return t.blockStatement(body);
 }
 
 function writeBlock(cx: Context, block: BasicBlock, body: Array<t.Statement>) {
+  invariant(
+    !cx.emitted.has(block.id),
+    `Cannot emit the same block twice: bb${block.id}`
+  );
+  cx.emitted.add(block.id);
   for (const instr of block.instructions) {
     writeInstr(cx, instr, body);
   }
@@ -440,6 +446,10 @@ function writeBlock(cx: Context, block: BasicBlock, body: Array<t.Statement>) {
         terminal.fallthrough !== null && !cx.isScheduled(terminal.fallthrough)
           ? terminal.fallthrough
           : null;
+      const loopId =
+        !cx.isScheduled(terminal.loop) && terminal.loop !== terminal.fallthrough
+          ? terminal.loop
+          : null;
       const scheduleId = cx.scheduleLoop(
         terminal.fallthrough,
         terminal.test,
@@ -448,10 +458,15 @@ function writeBlock(cx: Context, block: BasicBlock, body: Array<t.Statement>) {
       scheduleIds.push(scheduleId);
 
       let loopBody: t.Statement;
-      if (terminal.loop !== null) {
-        loopBody = codegenBlock(cx, cx.ir.blocks.get(terminal.loop)!);
+      if (loopId) {
+        loopBody = codegenBlock(cx, cx.ir.blocks.get(loopId)!);
       } else {
-        loopBody = t.blockStatement([]);
+        const break_ = codegenBreak(cx, terminal.loop);
+        invariant(
+          break_ !== null,
+          "If loop body is already scheduled it must be a break"
+        );
+        loopBody = t.blockStatement([break_]);
       }
 
       cx.unscheduleAll(scheduleIds);
