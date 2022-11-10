@@ -2885,7 +2885,7 @@ function commitMutationEffectsOnFiber(
           // Only trigger disapper layout effects if:
           //   - This is an update, not first mount.
           //   - This Offscreen was not hidden before.
-          //   - Ancestor Offscreen was not hidden for previous pass.
+          //   - Ancestor Offscreen was not hidden in previous commit.
           if (isUpdate && !wasHidden && !wasHiddenByAncestorOffscreen) {
             if ((finishedWork.mode & ConcurrentMode) !== NoMode) {
               // Disappear the layout effects of all the children
