@@ -2443,7 +2443,10 @@ export function writeCompletedBoundaryInstruction(
     if (!responseState.sentCompleteBoundaryFunction) {
       responseState.sentCompleteBoundaryFunction = true;
       responseState.sentStyleInsertionFunction = true;
-      writeChunk(destination, completeBoundaryWithStylesScript1FullBoth);
+      writeChunk(
+        destination,
+        completeBoundaryWithStylesScript1FullBoth.slice(),
+      );
     } else if (!responseState.sentStyleInsertionFunction) {
       responseState.sentStyleInsertionFunction = true;
       writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
