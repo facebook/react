@@ -35,7 +35,6 @@
     "clsx": "^1.1.1",
     "eslint": "^8.25.0",
     "eslint-config-next": "12.1.6",
-    "next-transpile-modules": "^9.0.0",
     "postcss": "^8.4.14",
     "tailwindcss": "^3.0.24",
     "typescript": "4.7.3"
