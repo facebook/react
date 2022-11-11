@@ -42,7 +42,7 @@ function Output({ store, updateDiagnostics }: Props) {
       defaultTab="HIR"
       tabs={{
         IR: <TextTabContent outputs={outputs} kind={OutputKind.IR} />,
-        HIR: <HIRTabContent source={getSelectedFile(store).content} />,
+        HIR: <HIRTabContent source={store.source} />,
         CFG: <TextTabContent outputs={outputs} kind={OutputKind.CFG} />,
         ValGraph: (
           <GraphTabContent outputs={outputs} kind={OutputKind.ValGraph} />
