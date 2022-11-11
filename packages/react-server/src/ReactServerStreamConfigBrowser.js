@@ -136,6 +136,12 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   return precomputedChunk;
 }
 
+export function clonePrecomputedChunk(
+  precomputedChunk: PrecomputedChunk,
+): PrecomputedChunk {
+  return precomputedChunk.slice();
+}
+
 export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[method-unbinding]
   if (typeof destination.error === 'function') {

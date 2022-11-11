@@ -189,6 +189,12 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   return textEncoder.encode(content);
 }
 
+export function clonePrecomputedChunk(
+  chunk: PrecomputedChunk,
+): PrecomputedChunk {
+  return chunk.slice();
+}
+
 export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe: This is an Error object or the destination accepts other types.
   destination.destroy(error);

@@ -37,6 +37,7 @@ import {
   writeChunkAndReturn,
   stringToChunk,
   stringToPrecomputedChunk,
+  clonePrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
 import {
@@ -2445,7 +2446,7 @@ export function writeCompletedBoundaryInstruction(
       responseState.sentStyleInsertionFunction = true;
       writeChunk(
         destination,
-        completeBoundaryWithStylesScript1FullBoth.slice(),
+        clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth),
       );
     } else if (!responseState.sentStyleInsertionFunction) {
       responseState.sentStyleInsertionFunction = true;
