@@ -93,7 +93,6 @@ import {
   NoFlags,
   PerformedWork,
   Placement,
-  Incomplete,
   Hydrating,
 } from './ReactFiberFlags';
 import {format} from './utils';
@@ -143,15 +142,6 @@ type ReactPriorityLevelsType = {
   NoPriority: number,
 };
 
-type ReactTypeOfSideEffectType = {
-  DidCapture: number,
-  NoFlags: number,
-  PerformedWork: number,
-  Placement: number,
-  Incomplete: number,
-  Hydrating: number,
-};
-
 function getFiberFlags(fiber: Fiber): number {
   // The name of this field changed from "effectTag" to "flags"
   return fiber.flags !== undefined ? fiber.flags : (fiber: any).effectTag;
@@ -170,19 +160,9 @@ export function getInternalReactConstants(
   getDisplayNameForFiber: getDisplayNameForFiberType,
   getTypeSymbol: getTypeSymbolType,
   ReactPriorityLevels: ReactPriorityLevelsType,
-  ReactTypeOfSideEffect: ReactTypeOfSideEffectType,
   ReactTypeOfWork: WorkTagMap,
   StrictModeBits: number,
 } {
-  const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
-    DidCapture,
-    NoFlags,
-    PerformedWork,
-    Placement,
-    Incomplete,
-    Hydrating,
-  };
-
   // **********************************************************
   // The section below is copied from files in React repo.
   // Keep it in sync, and add version guards if it changes.
@@ -570,7 +550,6 @@ export function getInternalReactConstants(
     getTypeSymbol,
     ReactPriorityLevels,
     ReactTypeOfWork,
-    ReactTypeOfSideEffect,
     StrictModeBits,
   };
 }
@@ -603,16 +582,8 @@ export function attach(
     getTypeSymbol,
     ReactPriorityLevels,
     ReactTypeOfWork,
-    ReactTypeOfSideEffect,
     StrictModeBits,
   } = getInternalReactConstants(version);
-  const {
-    DidCapture,
-    Hydrating,
-    NoFlags,
-    PerformedWork,
-    Placement,
-  } = ReactTypeOfSideEffect;
   const {
     CacheComponent,
     ClassComponent,
