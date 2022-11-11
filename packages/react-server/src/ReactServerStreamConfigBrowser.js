@@ -47,7 +47,7 @@ export function writeChunk(
 
   if (chunk.length > VIEW_SIZE) {
     if (__DEV__) {
-      if (precomputedChunkSet.has(chunk)) {
+      if (precomputedChunkSet?.has(chunk)) {
         console.error(
           'A precomputed chunk was passed to writeChunk without being copied, please use .slice() to copy it first.',
         );
@@ -130,7 +130,7 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   const precomputedChunk = textEncoder.encode(content);
 
   if (__DEV__) {
-    precomputedChunkSet.add(precomputedChunk);
+    precomputedChunkSet?.add(precomputedChunk);
   }
 
   return precomputedChunk;
