@@ -15,9 +15,8 @@ import {
 } from "babel-plugin-react-forget";
 import { memo, useEffect, useMemo } from "react";
 import compile from "../../lib/compilerDriver";
-import { getSelectedFile, type Store } from "../../lib/stores";
+import type { Store } from "../../lib/stores";
 import GraphView from "../GraphView";
-import Preview from "../Preview";
 import { monacoOptions } from "./monacoOptions";
 import HIRTabContent from "./HIRTabContent";
 
@@ -32,7 +31,7 @@ type Props = {
 
 function Output({ store, updateDiagnostics }: Props) {
   const { outputs, diagnostics } = useMemo(
-    () => compile(getSelectedFile(store), store.compilerFlags),
+    () => compile(store.source, store.compilerFlags),
     [store]
   );
   useEffect(() => {
@@ -42,7 +41,6 @@ function Output({ store, updateDiagnostics }: Props) {
     <TabbedWindow
       defaultTab="HIR"
       tabs={{
-        Preview: <Preview store={store} />,
         IR: <TextTabContent outputs={outputs} kind={OutputKind.IR} />,
         HIR: <HIRTabContent source={getSelectedFile(store).content} />,
         CFG: <TextTabContent outputs={outputs} kind={OutputKind.CFG} />,

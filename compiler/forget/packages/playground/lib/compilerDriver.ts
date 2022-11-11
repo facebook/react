@@ -18,7 +18,6 @@ import {
 import { PassName } from "../../../dist/Pass";
 // @ts-ignore
 import ESLint from "eslint-browser";
-import type { InputFile } from "./stores";
 import { getBabelPlugins } from "./utils";
 
 declare global {
@@ -54,18 +53,10 @@ function validateNoUseBeforeDefine(source: string) {
 }
 
 export default function compile(
-  file: InputFile,
+  source: string,
   compilerFlags: ForgetCompilerFlags
 ): CompileResult {
   const outputs = createCompilerOutputs();
-
-  // Bail out if file is CSS.
-  if (file.language === "css") {
-    return {
-      outputs,
-      diagnostics: [],
-    };
-  }
 
   const forgetLogs: string[] = [];
   const forgetPlaygroundOptions: Partial<CompilerOptions> = {
@@ -78,18 +69,18 @@ export default function compile(
   }
 
   const babelPlugins = getBabelPlugins(
-    file.language,
+    "javascript",
     true,
     forgetPlaygroundOptions
   );
   const babelOptions: TransformOptions = {
     compact: true,
     plugins: babelPlugins,
-    filename: file.id,
+    filename: "index.js",
   };
 
   try {
-    const result = transform(file.content, babelOptions);
+    const result = transform(source, babelOptions);
 
     // Don't throw if resulting code is any string. This includes the
     // empty string, which is when `source` is an empty string.

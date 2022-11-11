@@ -2,104 +2,20 @@
  * Copyright (c) Facebook, Inc. and its affiliates.
  */
 
-import { createCompilerFlags, OutputKind } from "babel-plugin-react-forget";
+import { createCompilerFlags } from "babel-plugin-react-forget";
 import invariant from "invariant";
 import { defaultStore } from "../defaultStore";
 import { codec } from "../utils";
 import { ForgetCompilerFlags } from "../compilerDriver";
 import { parseCompilerFlags } from "babel-plugin-react-forget";
 
-export enum FileExt {
-  js = "javascript",
-  jsx = "javascript",
-  ts = "typescript",
-  tsx = "typescript",
-  css = "css",
-}
-
-export interface InputFile {
-  id: string;
-  language: string;
-  content: string;
-}
-
-/**
- * Match @param fileId with valid FileExt's.
- */
-export function matchFileId(fileId: string) {
-  return fileId.match(new RegExp(`.+\\.(${Object.keys(FileExt).join("|")})$`));
-}
-
-/**
- * Refine @param ext string to a key in FileExt.
- */
-function isValidFileExt(ext: string): ext is keyof typeof FileExt {
-  return Object.keys(FileExt).includes(ext);
-}
-
-/**
- * Checks if @param id is a valid file ID.
- * @returns an input file that may or may not be a valid input tab to add to Store.
- */
-export function createInputFile(id: string, content: string): InputFile {
-  const match = matchFileId(id);
-  if (!match || !isValidFileExt(match[1])) {
-    throw new Error(
-      `Invalid tab name or extension. The tab must have a name and a supported extension (${Object.keys(
-        FileExt
-      ).join(", ")}).`
-    );
-  }
-
-  return {
-    id,
-    language: FileExt[match[1]],
-    content,
-  };
-}
-
-export function checkInputFile(
-  inputFile: InputFile,
-  fromFile: InputFile | undefined,
-  store: Store
-) {
-  const isDuplicateFileId =
-    store.files.find((file) => file.id === inputFile.id) !== undefined;
-  if (isDuplicateFileId) {
-    throw new Error(`A tab with ID "${inputFile.id}" already exists.`);
-  }
-
-  const isIndexLikeId = (id: string) => /^index\..*$/.test(id);
-  const fromIndex = fromFile && isIndexLikeId(fromFile.id);
-  if (fromIndex && !isIndexLikeId(inputFile.id)) {
-    throw new Error(`Only the file extension of the index tab can be changed.`);
-  }
-  if (!fromIndex && isIndexLikeId(inputFile.id)) {
-    throw new Error(`Only the index tab can be named as "index".`);
-  }
-}
-
 /**
  * Global Store for Playground
  */
 export interface Store {
-  /**
-   * Input tabs. The key is FileId joined by a dot.
-   *
-   * @example "index.js" => { id: "index.js", language: "javascript", content: "// index.js", isIdEditable: false }
-   */
-  files: InputFile[];
+  source: string;
 
-  selectedFileId: string;
-
-  /* Compiler settings */
   compilerFlags: ForgetCompilerFlags;
-}
-
-export function getSelectedFile(store: Store): InputFile {
-  const selectedFile = store.files.find((f) => f.id === store.selectedFileId);
-  invariant(selectedFile, "Selected file must exists.");
-  return selectedFile;
 }
 
 /**
@@ -113,20 +29,13 @@ export function saveStore(store: Store) {
 
 /**
  * Check if @param raw is a valid Store by if
- * - it has a `files` property and is an Array
- * - it has a `selectedFileId` property and is a string
- * - its `selectedFileId` has a corresponding file in `files`
+ * - it has a `source` property and is a string
  */
 function getValidStore(raw: any): Store | null {
   if ("compilerFlags" in raw && !(raw["compilerFlags"] instanceof Object)) {
     return null;
   }
-  const isValidStore =
-    "files" in raw &&
-    raw["files"] instanceof Array &&
-    "selectedFileId" in raw &&
-    typeof raw["selectedFileId"] === "string" &&
-    raw["files"].find((f) => f.id === raw["selectedFileId"]);
+  const isValidStore = "source" in raw && typeof raw["source"] === "string";
   if (isValidStore) {
     if ("compilerFlags" in raw) {
       // Merge flags from decoded store into flags valid for this compiler version

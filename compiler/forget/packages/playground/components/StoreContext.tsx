@@ -6,7 +6,7 @@ import type { Dispatch, ReactNode } from "react";
 import { useReducer } from "react";
 import createContext from "../lib/createContext";
 import { emptyStore } from "../lib/defaultStore";
-import type { InputFile, Store } from "../lib/stores";
+import type { Store } from "../lib/stores";
 import { saveStore } from "../lib/stores";
 import { ForgetCompilerFlags } from "../lib/compilerDriver";
 
@@ -47,25 +47,10 @@ type ReducerAction =
       };
     }
   | {
-      type: "addFile";
-      payload: {
-        file: InputFile;
-      };
-    }
-  | {
       type: "updateFile";
       payload: {
-        file: InputFile;
-        oldFileId?: string;
+        source: string;
       };
-    }
-  | {
-      type: "deleteFile";
-      payload: { fileId: string };
-    }
-  | {
-      type: "switchInputTab";
-      payload: { selectedFileId: string };
     }
   | {
       type: "setCompilerFlag";
@@ -80,57 +65,12 @@ function storeReducer(store: Store, action: ReducerAction): Store {
       saveStore(newStore);
       return newStore;
     }
-    case "addFile": {
-      const { file } = action.payload;
-
-      const newStore = {
-        ...store,
-        files: [...store.files, file],
-        selectedFileId: file.id,
-      };
-
-      saveStore(newStore);
-      return newStore;
-    }
     case "updateFile": {
-      const { file, oldFileId } = action.payload;
+      const { source } = action.payload;
 
       const newStore = {
         ...store,
-        files: store.files.map((f) =>
-          f.id === file.id || f.id === oldFileId ? file : f
-        ),
-        selectedFileId: file.id,
-      };
-
-      saveStore(newStore);
-      return newStore;
-    }
-    case "deleteFile": {
-      const { fileId } = action.payload;
-
-      // If the current selected file is deleted, fall back to selecting
-      // the index file (at index 1 of the files array).
-      const fallbackFileId =
-        store.selectedFileId === fileId
-          ? store.files[1].id
-          : store.selectedFileId;
-
-      const newStore = {
-        ...store,
-        files: store.files.filter((f) => f.id !== fileId),
-        selectedFileId: fallbackFileId,
-      };
-
-      saveStore(newStore);
-      return newStore;
-    }
-    case "switchInputTab": {
-      const { selectedFileId } = action.payload;
-
-      const newStore = {
-        ...store,
-        selectedFileId: selectedFileId,
+        source,
       };
 
       saveStore(newStore);

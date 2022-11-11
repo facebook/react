@@ -11,26 +11,19 @@
   },
   "dependencies": {
     "@babel/standalone": "^7.18.4",
-    "@emotion/react": "^11.9.3",
-    "@emotion/styled": "^11.9.3",
     "@heroicons/react": "^1.0.6",
     "@hpcc-js/wasm": "^1.15.0",
     "@monaco-editor/react": "^4.4.5",
-    "@mui/material": "^5.9.1",
     "@use-gesture/react": "^10.2.20",
-    "fflate": "^0.7.3",
     "hermes-eslint": "^0.9.0",
     "invariant": "^2.2.4",
     "monaco-editor": "^0.33.0",
     "next": "12.1.6",
     "notistack": "^3.0.0-alpha.7",
     "prettier": "^2.6.2",
-    "pretty-bytes": "^6.0.0",
     "pretty-format": "^28.1.3",
     "react": "18.1.0",
-    "react-dom": "18.1.0",
-    "rollup": "^2.75.7",
-    "terser": "^5.14.2"
+    "react-dom": "18.1.0"
   },
   "devDependencies": {
     "@types/babel__standalone": "^7.1.4",

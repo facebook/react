@@ -4,7 +4,6 @@
 
 export enum MessageSource {
   Babel,
-  Rollup,
   Forget,
   Playground,
 }

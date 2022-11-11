@@ -8,9 +8,7 @@ import invariant from "invariant";
 import type { editor } from "monaco-editor";
 import { useEffect, useState } from "react";
 import { renderForgetMarkers } from "../../lib/forgetMonacoDiagnostics";
-import { createInputFile, getSelectedFile } from "../../lib/stores";
 import { useStore, useStoreDispatch } from "../StoreContext";
-import InputTabSelector from "./InputTabSelector";
 import { monacoOptions } from "./monacoOptions";
 // TODO: Make TS recognize .d.ts files, in addition to loading them with webpack.
 // @ts-ignore
@@ -20,37 +18,25 @@ export default function Input({ diagnostics }: { diagnostics: Diagnostic[] }) {
   const [monaco, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
   const dispatchStore = useStoreDispatch();
-  const selectedFile = getSelectedFile(store);
 
   useEffect(() => {
     if (!monaco) return;
-    const uri = monaco.Uri.parse(`file:///${selectedFile.id}`);
+    const uri = monaco.Uri.parse(`file:///index.js`);
     const model = monaco.editor.getModel(uri);
     invariant(model, "Model must exist for the selected input file.");
     renderForgetMarkers({ monaco, model, diagnostics });
-  }, [diagnostics, monaco, selectedFile.id]);
+  }, [diagnostics, monaco]);
 
   // Set tab width to 2 spaces for the selected input file.
   useEffect(() => {
     if (!monaco) return;
-    const uri = monaco.Uri.parse(`file:///${selectedFile.id}`);
+    const uri = monaco.Uri.parse(`file:///index.js`);
     const model = monaco.editor.getModel(uri);
     invariant(model, "Model must exist for the selected input file.");
     // N.B. that `tabSize` is a model property, not an editor property.
     // So, the tab size has to be set per model.
     model.updateOptions({ tabSize: 2 });
-  }, [monaco, selectedFile.id]);
-
-  useEffect(() => {
-    if (!monaco) return;
-    // Let Monaco Editor know of the input files so that its language
-    // service can correctly resolve import statements.
-    store.files.forEach((file) => {
-      const lib = [file.content, `file:///${file.id}`] as const;
-      monaco.languages.typescript.javascriptDefaults.addExtraLib(...lib);
-      monaco.languages.typescript.typescriptDefaults.addExtraLib(...lib);
-    });
-  }, [monaco, store.files]);
+  }, [monaco]);
 
   const handleChange = (value: string | undefined) => {
     if (!value) return;
@@ -58,7 +44,7 @@ export default function Input({ diagnostics }: { diagnostics: Diagnostic[] }) {
     dispatchStore({
       type: "updateFile",
       payload: {
-        file: createInputFile(store.selectedFileId, value),
+        source: value,
       },
     });
   };
@@ -113,21 +99,16 @@ export default function Input({ diagnostics }: { diagnostics: Diagnostic[] }) {
 
   return (
     <div className="relative flex flex-col flex-none border-r border-gray-200">
-      <InputTabSelector />
       {/* Restrict MonacoEditor's height, since the config autoLayout:true
           will grow the editor to fit within parent element */}
       <div className="w-full h-monaco_small sm:h-monaco">
         <MonacoEditor
-          path={selectedFile.id}
+          path={"index.js"}
           // .js and .jsx files are specified to be TS so that Monaco can actually
           // check their syntax using its TS language service. They are still JS files
           // due to their extensions, so TS language features don't work.
-          language={
-            selectedFile.language === "javascript"
-              ? "typescript"
-              : selectedFile.language
-          }
-          value={selectedFile.content}
+          language={"javascript"}
+          value={store.source}
           onMount={handleMount}
           onChange={handleChange}
           options={monacoOptions}
