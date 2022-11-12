@@ -382,7 +382,7 @@ export function createTextInstance(
 
 export function getCurrentEventPriority(): EventPriority {
   const currentEvent = window.event;
-  if (currentEvent === undefined) {
+  if (currentEvent === undefined || currentEvent === null) {
     return DefaultEventPriority;
   }
   return getEventPriority(currentEvent.type);
