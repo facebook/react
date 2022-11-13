@@ -50,11 +50,10 @@ flowchart TB
       [8] Const mutate $21 = '\n      '
       [9] Const mutate $22 = JSX <read $17>{read $18}{read $20}{read $21}</read $17>
       [10] Const mutate $23 = '\n    '
-      [11] Const mutate $24 = JsxFragment [read $14, read props$13.greeting, read $15, read $16, read $22, read $23]  
-    "]    
-    bb0_instrs --> bb0_terminal(["Return read $24"])  
+      [11] Const mutate $24 = JsxFragment [read $14, read props$13.greeting, read $15, read $16, read $22, read $23]
+    "]
+    bb0_instrs --> bb0_terminal(["Return read $24"])
   end
-  
 
   %% Jumps
   %% empty

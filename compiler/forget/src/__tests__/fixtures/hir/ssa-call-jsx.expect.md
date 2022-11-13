@@ -28,9 +28,8 @@ bb0:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["Return"])  
+    bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty
@@ -73,11 +72,10 @@ flowchart TB
       [5] Let mutate _$13 = JSX <read $12 a={freeze a$10} ></read $12>
       [6] Call mutate foo$4(read a$10, mutate b$11)
       [7] Const mutate $14 = 'div'
-      [8] Const mutate $15 = JSX <read $14 a={read a$10} b={freeze b$11} ></read $14>  
-    "]    
-    bb0_instrs --> bb0_terminal(["Return read $15"])  
+      [8] Const mutate $15 = JSX <read $14 a={read a$10} b={freeze b$11} ></read $14>
+    "]
+    bb0_instrs --> bb0_terminal(["Return read $15"])
   end
-  
 
   %% Jumps
   %% empty

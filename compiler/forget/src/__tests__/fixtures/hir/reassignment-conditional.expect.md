@@ -48,34 +48,30 @@ flowchart TB
     bb0_instrs["
       [1] Let mutate x$2 = Array []
       [2] Call mutate x$2.push(read props$6.p0)
-      [3] Let mutate y$8 = read x$2  
-    "]    
-    bb0_instrs --> bb0_terminal(["If (read props$6.p1)"])  
+      [3] Let mutate y$8 = read x$2
+    "]
+    bb0_instrs --> bb0_terminal(["If (read props$6.p1)"])
   end
-  
   subgraph bb2
     bb2_instrs["
-      [4] Reassign mutate x$2 = Array []  
-    "]    
-    bb2_instrs --> bb2_terminal(["Goto"])  
+      [4] Reassign mutate x$2 = Array []
+    "]
+    bb2_instrs --> bb2_terminal(["Goto"])
   end
-  
   subgraph bb1
     bb1_instrs["
       [5] Let mutate _$12 = JSX <read Component$0 x={freeze x$2} ></read Component$0>
       [6] Call read y$8.push(read props$6.p2)
-      [7] Const mutate $15 = JSX <read Component$0 x={read x$2} y={read y$8} ></read Component$0>  
-    "]    
-    bb1_instrs --> bb1_terminal(["Return read $15"])  
+      [7] Const mutate $15 = JSX <read Component$0 x={read x$2} y={read y$8} ></read Component$0>
+    "]
+    bb1_instrs --> bb1_terminal(["Return read $15"])
   end
-  
 
   %% Jumps
   bb0_terminal -- then --> bb2
   bb0_terminal -- else --> bb1
-  
   bb2_terminal --> bb1
-  
+
 ```
 
 ## Code

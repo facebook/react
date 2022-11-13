@@ -35,11 +35,10 @@ flowchart TB
       [1] Const mutate a$5 = Array []
       [2] Const mutate b$6 = read a$5
       [3] Call read useFreeze$3(freeze a$5)
-      [4] Call mutate foo$4(read b$6)  
-    "]    
-    bb0_instrs --> bb0_terminal(["Return"])  
+      [4] Call mutate foo$4(read b$6)
+    "]
+    bb0_instrs --> bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty
@@ -70,9 +69,8 @@ bb0:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["Return"])  
+    bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty
@@ -99,9 +97,8 @@ bb0:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["Return"])  
+    bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty

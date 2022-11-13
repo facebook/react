@@ -47,9 +47,8 @@ bb0:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["Return"])  
+    bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty
@@ -76,9 +75,8 @@ bb0:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["Return"])  
+    bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty
@@ -142,80 +140,64 @@ flowchart TB
       [1] Let mutate a$12[1:7] = Object {  }
       [2] Let mutate b$13[2:6] = Object {  }
       [3] Let mutate c$14 = Object {  }
-      [4] Let mutate d$15[4:9] = Object {  }  
-    "]    
-    bb0_instrs --> bb0_terminal(["While"])  
+      [4] Let mutate d$15[4:9] = Object {  }
+    "]
+    bb0_instrs --> bb0_terminal(["While"])
   end
-  
   subgraph bb1
     bb1_instrs["
-      [5] Const mutate $16 = true  
-    "]    
-    bb1_instrs --> bb1_terminal(["If (read $16)"])  
+      [5] Const mutate $16 = true
+    "]
+    bb1_instrs --> bb1_terminal(["If (read $16)"])
   end
-  
   subgraph bb3
     bb3_instrs["
       [6] Call mutate mutate$6(mutate a$12, mutate b$13)
-      [7] Const mutate $21 = Call mutate cond$7(mutate a$12)  
-    "]    
-    bb3_instrs --> bb3_terminal(["If (read $21)"])  
+      [7] Const mutate $21 = Call mutate cond$7(mutate a$12)
+    "]
+    bb3_instrs --> bb3_terminal(["If (read $21)"])
   end
-  
   subgraph bb4
-    bb4_terminal(["Goto"])  
+    bb4_terminal(["Goto"])
   end
-  
   subgraph bb2
-    bb2_terminal(["If (read a$12)"])  
+    bb2_terminal(["If (read a$12)"])
   end
-  
   subgraph bb7
-    bb7_terminal(["If (read b$13)"])  
+    bb7_terminal(["If (read b$13)"])
   end
-  
   subgraph bb9
-    bb9_terminal(["If (read c$14)"])  
+    bb9_terminal(["If (read c$14)"])
   end
-  
   subgraph bb11
-    bb11_terminal(["If (read d$15)"])  
+    bb11_terminal(["If (read d$15)"])
   end
-  
   subgraph bb13
     bb13_instrs["
       [8] Const mutate $28 = null
-      [9] Call mutate mutate$6(mutate d$15, read $28)  
-    "]    
-    bb13_instrs --> bb13_terminal(["Return"])  
+      [9] Call mutate mutate$6(mutate d$15, read $28)
+    "]
+    bb13_instrs --> bb13_terminal(["Return"])
   end
-  
 
   %% Jumps
   bb0_terminal -- test --> bb1
   bb0_terminal -- loop --> bb3
   bb0_terminal -- fallthrough --> bb2
-  
   bb1_terminal -- then --> bb3
   bb1_terminal -- else --> bb2
-  
   bb3_terminal -- then --> bb2
   bb3_terminal -- else --> bb4
-  
   bb4_terminal --> bb1
-  
   bb2_terminal -- then --> bb7
   bb2_terminal -- else --> bb7
-  
   bb7_terminal -- then --> bb9
   bb7_terminal -- else --> bb9
-  
   bb9_terminal -- then --> bb11
   bb9_terminal -- else --> bb11
-  
   bb11_terminal -- then --> bb13
   bb11_terminal -- else --> bb13
-  
+
 ```
 
 ## Code

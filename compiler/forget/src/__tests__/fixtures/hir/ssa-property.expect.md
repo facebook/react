@@ -30,11 +30,10 @@ flowchart TB
     bb0_instrs["
       [1] Const mutate x$3 = Array []
       [2] Const mutate y$4[2:3] = Object {  }
-      [3] Reassign mutate y$4.x[2:3] = read x$3  
-    "]    
-    bb0_instrs --> bb0_terminal(["Return freeze y$4"])  
+      [3] Reassign mutate y$4.x[2:3] = read x$3
+    "]
+    bb0_instrs --> bb0_terminal(["Return freeze y$4"])
   end
-  
 
   %% Jumps
   %% empty

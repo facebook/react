@@ -32,9 +32,8 @@ bb0:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["Return"])  
+    bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty
@@ -61,9 +60,8 @@ bb0:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["Return"])  
+    bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty
@@ -104,11 +102,10 @@ flowchart TB
       [4] Const mutate $13 = '\n      '
       [5] Const mutate $14 = '\n      '
       [6] Const mutate $15 = '\n    '
-      [7] Const mutate $16 = JSX <read Component$0>{read $13}{read x$11}{read $14}{read y$12}{read $15}</read Component$0>  
-    "]    
-    bb0_instrs --> bb0_terminal(["Return read $16"])  
+      [7] Const mutate $16 = JSX <read Component$0>{read $13}{read x$11}{read $14}{read y$12}{read $15}</read Component$0>
+    "]
+    bb0_instrs --> bb0_terminal(["Return read $16"])
   end
-  
 
   %% Jumps
   %% empty

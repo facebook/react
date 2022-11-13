@@ -38,11 +38,10 @@ flowchart TB
       [3] Reassign mutate x$7.y[1:5] = read y$8
       [4] Const mutate child$9 = JSX <read Component$0 data={freeze y$8} ></read Component$0>
       [5] Call mutate x$7.y.push(read props$6.p0)
-      [6] Const mutate $10 = JSX <read Component$0 data={freeze x$7} >{read child$9}</read Component$0>  
-    "]    
-    bb0_instrs --> bb0_terminal(["Return read $10"])  
+      [6] Const mutate $10 = JSX <read Component$0 data={freeze x$7} >{read child$9}</read Component$0>
+    "]
+    bb0_instrs --> bb0_terminal(["Return read $10"])
   end
-  
 
   %% Jumps
   %% empty

@@ -40,40 +40,34 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1 = 0  
-    "]    
-    bb0_instrs --> bb0_terminal(["Goto"])  
+      [1] Let mutate x$1 = 0
+    "]
+    bb0_instrs --> bb0_terminal(["Goto"])
   end
-  
   subgraph bb1
     bb1_instrs["
       [2] Const mutate $6 = 10
-      [3] Const mutate $8 = Binary read x$1 < read $6  
-    "]    
-    bb1_instrs --> bb1_terminal(["If (read $8)"])  
+      [3] Const mutate $8 = Binary read x$1 < read $6
+    "]
+    bb1_instrs --> bb1_terminal(["If (read $8)"])
   end
-  
   subgraph bb4
     bb4_instrs["
       [4] Const mutate $9 = 1
-      [5] Reassign mutate x$1 = Binary read x$1 + read $9  
-    "]    
-    bb4_instrs --> bb4_terminal(["Goto"])  
+      [5] Reassign mutate x$1 = Binary read x$1 + read $9
+    "]
+    bb4_instrs --> bb4_terminal(["Goto"])
   end
-  
   subgraph bb2
-    bb2_terminal(["Return read x$1"])  
+    bb2_terminal(["Return read x$1"])
   end
-  
 
   %% Jumps
   bb0_terminal --> bb1
-  
   bb1_terminal -- then --> bb4
   bb1_terminal -- else --> bb2
-  
   bb4_terminal --> bb1
-  
+
 ```
 
 ## Code

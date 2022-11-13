@@ -26,9 +26,8 @@ bb0:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["Return"])  
+    bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty
@@ -61,11 +60,10 @@ flowchart TB
     bb0_instrs["
       [1] Const mutate a$7[1:3] = Array []
       [2] Const mutate b$8[2:3] = Object {  }
-      [3] Let mutate c$9 = New mutate Foo$5(mutate a$7, mutate b$8)  
-    "]    
-    bb0_instrs --> bb0_terminal(["Return freeze c$9"])  
+      [3] Let mutate c$9 = New mutate Foo$5(mutate a$7, mutate b$8)
+    "]
+    bb0_instrs --> bb0_terminal(["Return freeze c$9"])
   end
-  
 
   %% Jumps
   %% empty

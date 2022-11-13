@@ -70,35 +70,31 @@ flowchart TB
       [2] Let mutate y$3 = undefined
       [3] Const mutate $12 = false
       [4] Const mutate $13 = true
-      [5] Const mutate $14 = 1  
-    "]    
-    bb0_instrs --> bb0_terminal(["Switch (read props$9.p0)"])  
+      [5] Const mutate $14 = 1
+    "]
+    bb0_instrs --> bb0_terminal(["Switch (read props$9.p0)"])
   end
-  
   subgraph bb6
     bb6_instrs["
       [6] Call mutate x$10.push(read props$9.p2)
-      [7] Reassign mutate y$3 = Array []  
-    "]    
-    bb6_instrs --> bb6_terminal(["Goto"])  
+      [7] Reassign mutate y$3 = Array []
+    "]
+    bb6_instrs --> bb6_terminal(["Goto"])
   end
-  
   subgraph bb2
     bb2_instrs["
-      [8] Reassign mutate y$3 = read x$10  
-    "]    
-    bb2_instrs --> bb2_terminal(["Goto"])  
+      [8] Reassign mutate y$3 = read x$10
+    "]
+    bb2_instrs --> bb2_terminal(["Goto"])
   end
-  
   subgraph bb1
     bb1_instrs["
       [9] Const mutate child$19 = JSX <read Component$0 data={freeze x$10} ></read Component$0>
       [10] Call read y$3.push(read props$9.p4)
-      [11] Const mutate $22 = JSX <read Component$0 data={freeze y$3} >{read child$19}</read Component$0>  
-    "]    
-    bb1_instrs --> bb1_terminal(["Return read $22"])  
+      [11] Const mutate $22 = JSX <read Component$0 data={freeze y$3} >{read child$19}</read Component$0>
+    "]
+    bb1_instrs --> bb1_terminal(["Return read $22"])
   end
-  
 
   %% Jumps
   bb0_terminal -- read $14 --> bb1
@@ -106,11 +102,9 @@ flowchart TB
   bb0_terminal -- default --> bb1
   bb0_terminal -- read $12 --> bb2
   bb0_terminal -- fallthrough --> bb1
-  
   bb6_terminal --> bb1
-  
   bb2_terminal --> bb1
-  
+
 ```
 
 ## Code

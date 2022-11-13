@@ -95,48 +95,40 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate a$7[1:3] = Array []
-      [2] Const mutate b$8[2:4] = Array []  
-    "]    
-    bb0_instrs --> bb0_terminal(["If (read b$8)"])  
+      [2] Const mutate b$8[2:4] = Array []
+    "]
+    bb0_instrs --> bb0_terminal(["If (read b$8)"])
   end
-  
   subgraph bb2
     bb2_instrs["
-      [3] Call mutate a$7.push(read props$6.p0)  
-    "]    
-    bb2_instrs --> bb2_terminal(["Goto"])  
+      [3] Call mutate a$7.push(read props$6.p0)
+    "]
+    bb2_instrs --> bb2_terminal(["Goto"])
   end
-  
   subgraph bb1
-    bb1_terminal(["If (read props$6.p1)"])  
+    bb1_terminal(["If (read props$6.p1)"])
   end
-  
   subgraph bb4
     bb4_instrs["
-      [4] Call mutate b$8.push(read props$6.p2)  
-    "]    
-    bb4_instrs --> bb4_terminal(["Goto"])  
+      [4] Call mutate b$8.push(read props$6.p2)
+    "]
+    bb4_instrs --> bb4_terminal(["Goto"])
   end
-  
   subgraph bb3
     bb3_instrs["
-      [5] Const mutate $16 = JSX <read Foo$4 a={freeze a$7} b={freeze b$8} ></read Foo$4>  
-    "]    
-    bb3_instrs --> bb3_terminal(["Return read $16"])  
+      [5] Const mutate $16 = JSX <read Foo$4 a={freeze a$7} b={freeze b$8} ></read Foo$4>
+    "]
+    bb3_instrs --> bb3_terminal(["Return read $16"])
   end
-  
 
   %% Jumps
   bb0_terminal -- then --> bb2
   bb0_terminal -- else --> bb1
-  
   bb2_terminal --> bb1
-  
   bb1_terminal -- then --> bb4
   bb1_terminal -- else --> bb3
-  
   bb4_terminal --> bb3
-  
+
 ```
 
 ## Code
@@ -191,48 +183,40 @@ flowchart TB
     bb0_instrs["
       [1] Const mutate a$9[1:4] = Array []
       [2] Const mutate b$10[2:5] = Array []
-      [3] Const mutate $11 = Call mutate mayMutate$4(mutate b$10)  
-    "]    
-    bb0_instrs --> bb0_terminal(["If (read $11)"])  
+      [3] Const mutate $11 = Call mutate mayMutate$4(mutate b$10)
+    "]
+    bb0_instrs --> bb0_terminal(["If (read $11)"])
   end
-  
   subgraph bb2
     bb2_instrs["
-      [4] Call mutate a$9.push(read props$8.p0)  
-    "]    
-    bb2_instrs --> bb2_terminal(["Goto"])  
+      [4] Call mutate a$9.push(read props$8.p0)
+    "]
+    bb2_instrs --> bb2_terminal(["Goto"])
   end
-  
   subgraph bb1
-    bb1_terminal(["If (read props$8.p1)"])  
+    bb1_terminal(["If (read props$8.p1)"])
   end
-  
   subgraph bb4
     bb4_instrs["
-      [5] Call mutate b$10.push(read props$8.p2)  
-    "]    
-    bb4_instrs --> bb4_terminal(["Goto"])  
+      [5] Call mutate b$10.push(read props$8.p2)
+    "]
+    bb4_instrs --> bb4_terminal(["Goto"])
   end
-  
   subgraph bb3
     bb3_instrs["
-      [6] Const mutate $19 = JSX <read Foo$6 a={freeze a$9} b={freeze b$10} ></read Foo$6>  
-    "]    
-    bb3_instrs --> bb3_terminal(["Return read $19"])  
+      [6] Const mutate $19 = JSX <read Foo$6 a={freeze a$9} b={freeze b$10} ></read Foo$6>
+    "]
+    bb3_instrs --> bb3_terminal(["Return read $19"])
   end
-  
 
   %% Jumps
   bb0_terminal -- then --> bb2
   bb0_terminal -- else --> bb1
-  
   bb2_terminal --> bb1
-  
   bb1_terminal -- then --> bb4
   bb1_terminal -- else --> bb3
-  
   bb4_terminal --> bb3
-  
+
 ```
 
 ## Code
@@ -266,9 +250,8 @@ bb0:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["Return"])  
+    bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty
@@ -295,9 +278,8 @@ bb0:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["Return"])  
+    bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty

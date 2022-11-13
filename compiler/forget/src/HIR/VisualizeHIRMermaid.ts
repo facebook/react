@@ -2,6 +2,9 @@ import { assertExhaustive } from "../Common/utils";
 import { BasicBlock, BlockId, HIRFunction, Terminal } from "./HIR";
 import { printInstruction, printPlace } from "./PrintHIR";
 
+const INSTRUCTIONS_NODE_NAME = "instrs";
+const TERMINAL_NODE_NAME = "terminal";
+
 enum MermaidFlowchartDirection {
   TopBottom = "TB", // top to bottom
   TopDown = "TD", // top-down/ same as top to bottom
@@ -10,117 +13,138 @@ enum MermaidFlowchartDirection {
   LeftRight = "LR", // left to right
 }
 
-function indent(str: string, level: number = 1) {
-  const leadingSpaces = " ".repeat(level * 2);
-  return str
-    .split("\n")
-    .map((line) => `${leadingSpaces}${line}`)
-    .join("\n");
-}
-
 function printBlockId(id: BlockId): string {
   return `bb${id}`;
 }
 
-function printJump(from: BlockId, to: BlockId, label: string | null): string {
+/**
+ * Prints a mermaid arrow with optional label connecting BasicBlocks for use in the "Jumps" section.
+ */
+function printJumpArrow(
+  from: BlockId,
+  to: BlockId,
+  label: string | null
+): string {
   const fromId = printBlockId(from);
   const toId = printBlockId(to);
   if (label != null) {
-    return `${fromId}_terminal -- ${label} --> ${toId}\n`;
+    return `${fromId}_${TERMINAL_NODE_NAME} -- ${label} --> ${toId}\n`;
   }
-  return `${fromId}_terminal --> ${toId}\n`;
+  return `${fromId}_${TERMINAL_NODE_NAME} --> ${toId}\n`;
 }
 
-function visualizeInstructions({ id, instructions }: BasicBlock): string {
-  return (
-    `${printBlockId(id)}_instrs["\n` +
-    indent(
-      instructions
-        .map((instr) => printInstruction(instr).replaceAll('"', "'"))
-        .join("\n"),
-      2
-    ) +
-    indent('\n"]')
-  );
+/**
+ * Prints a mermaid arrow connecting a BasicBlock's instructions to its Terminal for use in the
+ * "Basic Blocks" section.
+ */
+function printTerminalArrow(blockId: BlockId, block: BasicBlock) {
+  const bbId = printBlockId(blockId);
+  if (block.instructions.length > 0) {
+    return `${bbId}_${INSTRUCTIONS_NODE_NAME} --> ${bbId}_${TERMINAL_NODE_NAME}(["${printTerminalLabel(
+      block.terminal
+    )}"])`;
+  }
+  return `${bbId}_${TERMINAL_NODE_NAME}(["${printTerminalLabel(
+    block.terminal
+  )}"])`;
 }
 
-function visualizeTerminal(terminal: Terminal) {
-  let buffer = "";
+/**
+ * Prints a BasicBlock as a mermaid `subgraph`, with instructions as a single multiline mermaid node
+ * and the terminal as an arrow connecting the instruction node with the terminal.
+ */
+function printBlockSubgraphs(blockId: BlockId, block: BasicBlock) {
+  const buffer = [];
+  const bbId = printBlockId(blockId);
+  const instructions = block.instructions
+    .map((instr) => `      ${printInstruction(instr).replaceAll('"', "'")}\n`)
+    .join("");
+  buffer.push(`  subgraph ${bbId}\n`);
+  if (block.instructions.length > 0) {
+    buffer.push(`    ${bbId}_${INSTRUCTIONS_NODE_NAME}["\n`);
+    buffer.push(instructions);
+    buffer.push('    "]\n');
+  }
+  buffer.push(`    ${printTerminalArrow(blockId, block)}`);
+  buffer.push("\n  end\n");
+  return buffer.join("");
+}
+
+function printTerminalLabel(terminal: Terminal): string {
+  const buffer = [];
   switch (terminal.kind) {
     case "if": {
-      buffer = buffer.concat(`If (${printPlace(terminal.test)})`);
+      buffer.push(`If (${printPlace(terminal.test)})`);
       break;
     }
     case "goto": {
-      buffer = buffer.concat("Goto");
+      buffer.push("Goto");
       break;
     }
     case "return": {
       if (terminal.value != null) {
-        buffer = buffer.concat(`Return ${printPlace(terminal.value)}`);
+        buffer.push(`Return ${printPlace(terminal.value)}`);
       } else {
-        buffer = buffer.concat("Return");
+        buffer.push("Return");
       }
       break;
     }
     case "switch":
-      buffer = buffer.concat(`Switch (${printPlace(terminal.test)})`);
+      buffer.push(`Switch (${printPlace(terminal.test)})`);
       break;
     case "throw":
-      buffer = buffer.concat(`Throw ${printPlace(terminal.value)}`);
+      buffer.push(`Throw ${printPlace(terminal.value)}`);
       break;
     case "while":
-      buffer = buffer.concat("While");
+      buffer.push("While");
       break;
     default:
       assertExhaustive(terminal, `unhandled terminal ${terminal}`);
   }
-  return buffer;
+  return buffer.join("");
 }
 
-function visualizeJump(blockId: BlockId, terminal: Terminal): string {
-  let buffer = "";
+function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
+  const buffer = [];
   switch (terminal.kind) {
     case "if": {
-      buffer = buffer.concat(printJump(blockId, terminal.consequent, "then"));
-      buffer = buffer.concat(printJump(blockId, terminal.alternate, "else"));
+      buffer.push(printJumpArrow(blockId, terminal.consequent, "then"));
+      buffer.push(printJumpArrow(blockId, terminal.alternate, "else"));
       if (
         terminal.fallthrough != null &&
         terminal.alternate !== terminal.fallthrough
       ) {
-        buffer = buffer.concat(
-          printJump(blockId, terminal.fallthrough, "fallthrough")
+        buffer.push(
+          printJumpArrow(blockId, terminal.fallthrough, "fallthrough")
         );
       }
       break;
     }
     case "goto": {
-      buffer = buffer.concat(printJump(blockId, terminal.block, null));
+      buffer.push(printJumpArrow(blockId, terminal.block, null));
       break;
     }
     case "switch": {
       terminal.cases.forEach((case_) => {
         if (case_.test != null) {
-          buffer = buffer.concat(
-            printJump(blockId, case_.block, printPlace(case_.test))
+          buffer.push(
+            printJumpArrow(blockId, case_.block, printPlace(case_.test))
           );
         } else {
-          buffer = buffer.concat(printJump(blockId, case_.block, "default"));
+          buffer.push(printJumpArrow(blockId, case_.block, "default"));
         }
       });
       if (terminal.fallthrough != null) {
-        buffer = buffer.concat(
-          printJump(blockId, terminal.fallthrough, "fallthrough")
+        buffer.push(
+          printJumpArrow(blockId, terminal.fallthrough, "fallthrough")
         );
       }
       break;
     }
     case "while": {
-      buffer = buffer.concat(printJump(blockId, terminal.test, "test"));
-      buffer = buffer.concat(printJump(blockId, terminal.loop, "loop"));
-      buffer = buffer.concat(
-        printJump(blockId, terminal.fallthrough, "fallthrough")
-      );
+      buffer.push(printJumpArrow(blockId, terminal.test, "test"));
+      buffer.push(printJumpArrow(blockId, terminal.loop, "loop"));
+      buffer.push(printJumpArrow(blockId, terminal.fallthrough, "fallthrough"));
       break;
     }
     case "throw":
@@ -130,7 +154,7 @@ function visualizeJump(blockId: BlockId, terminal: Terminal): string {
     default:
       assertExhaustive(terminal, `unhandled terminal ${terminal}`);
   }
-  return buffer;
+  return buffer.map((line) => `  ${line}`).join("");
 }
 
 /**
@@ -142,39 +166,21 @@ export default function visualizeHIRMermaid(fn: HIRFunction): string {
   const jumps = [];
 
   for (const [blockId, block] of ir.blocks) {
-    let buffer;
-    const bbId = printBlockId(blockId);
-    buffer = indent(`subgraph ${bbId}\n`);
-    if (block.instructions.length > 0) {
-      buffer = buffer.concat(indent(visualizeInstructions(block)));
-      buffer = buffer.concat(
-        indent(
-          `\n${bbId}_instrs --> ${bbId}_terminal(["${visualizeTerminal(
-            block.terminal
-          )}"])`,
-          2
-        )
-      );
-    } else {
-      buffer = buffer.concat(
-        indent(`${bbId}_terminal(["${visualizeTerminal(block.terminal)}"])`)
-      );
-    }
-    buffer = buffer.concat(indent("\nend\n"));
-    subgraphs.push(buffer);
-  }
+    const subgraph = printBlockSubgraphs(blockId, block);
+    const jump = printTerminalArrows(blockId, block.terminal);
 
-  for (const [blockId, block] of ir.blocks) {
-    const jump = visualizeJump(blockId, block.terminal);
+    if (subgraph.length > 0) {
+      subgraphs.push(subgraph);
+    }
+
     if (jump.length > 0) {
-      jumps.push(indent(jump));
+      jumps.push(jump);
     }
   }
 
   return `flowchart ${MermaidFlowchartDirection.TopBottom}
   %% Basic Blocks
-${subgraphs.length ? subgraphs.join("\n") : "  %% empty"}
-
+${subgraphs.length ? subgraphs.join("") : "  %% empty"}
   %% Jumps
-${jumps.length ? jumps.join("\n") : "  %% empty"}`;
+${jumps.length ? jumps.join("") : "  %% empty"}`;
 }

@@ -30,9 +30,8 @@ bb0:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["Return"])  
+    bb0_terminal(["Return"])
   end
-  
 
   %% Jumps
   %% empty
@@ -74,43 +73,37 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate str$2 = ''  
-    "]    
-    bb0_instrs --> bb0_terminal(["If (read cond$5)"])  
+      [1] Let mutate str$2 = ''
+    "]
+    bb0_instrs --> bb0_terminal(["If (read cond$5)"])
   end
-  
   subgraph bb2
     bb2_instrs["
       [2] Let mutate str$7 = 'other test'
-      [3] Call mutate log$4(read str$7)  
-    "]    
-    bb2_instrs --> bb2_terminal(["Goto"])  
+      [3] Call mutate log$4(read str$7)
+    "]
+    bb2_instrs --> bb2_terminal(["Goto"])
   end
-  
   subgraph bb3
     bb3_instrs["
-      [4] Reassign mutate str$2 = 'fallthrough test'  
-    "]    
-    bb3_instrs --> bb3_terminal(["Goto"])  
+      [4] Reassign mutate str$2 = 'fallthrough test'
+    "]
+    bb3_instrs --> bb3_terminal(["Goto"])
   end
-  
   subgraph bb1
     bb1_instrs["
-      [5] Call mutate log$4(read str$2)  
-    "]    
-    bb1_instrs --> bb1_terminal(["Return"])  
+      [5] Call mutate log$4(read str$2)
+    "]
+    bb1_instrs --> bb1_terminal(["Return"])
   end
-  
 
   %% Jumps
   bb0_terminal -- then --> bb2
   bb0_terminal -- else --> bb3
   bb0_terminal -- fallthrough --> bb1
-  
   bb2_terminal --> bb1
-  
   bb3_terminal --> bb1
-  
+
 ```
 
 ## Code

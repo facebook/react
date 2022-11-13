@@ -99,30 +99,27 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate a_DEBUG$5[1:4] = Array []
-      [2] Call mutate a_DEBUG$5.push(read props$4.a)  
-    "]    
-    bb0_instrs --> bb0_terminal(["If (read props$4.b)"])  
+      [2] Call mutate a_DEBUG$5.push(read props$4.a)
+    "]
+    bb0_instrs --> bb0_terminal(["If (read props$4.b)"])
   end
-  
   subgraph bb2
     bb2_instrs["
-      [3] Const mutate $6 = null  
-    "]    
-    bb2_instrs --> bb2_terminal(["Return read $6"])  
+      [3] Const mutate $6 = null
+    "]
+    bb2_instrs --> bb2_terminal(["Return read $6"])
   end
-  
   subgraph bb1
     bb1_instrs["
-      [4] Call mutate a_DEBUG$5.push(read props$4.d)  
-    "]    
-    bb1_instrs --> bb1_terminal(["Return freeze a_DEBUG$5"])  
+      [4] Call mutate a_DEBUG$5.push(read props$4.d)
+    "]
+    bb1_instrs --> bb1_terminal(["Return freeze a_DEBUG$5"])
   end
-  
 
   %% Jumps
   bb0_terminal -- then --> bb2
   bb0_terminal -- else --> bb1
-  
+
 ```
 
 ## Code
@@ -165,32 +162,28 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate a$4[1:4] = Array []
-      [2] Call mutate a$4.push(read props$3.a)  
-    "]    
-    bb0_instrs --> bb0_terminal(["If (read props$3.b)"])  
+      [2] Call mutate a$4.push(read props$3.a)
+    "]
+    bb0_instrs --> bb0_terminal(["If (read props$3.b)"])
   end
-  
   subgraph bb2
     bb2_instrs["
-      [3] Call mutate a$4.push(read props$3.c)  
-    "]    
-    bb2_instrs --> bb2_terminal(["Goto"])  
+      [3] Call mutate a$4.push(read props$3.c)
+    "]
+    bb2_instrs --> bb2_terminal(["Goto"])
   end
-  
   subgraph bb1
     bb1_instrs["
-      [4] Call mutate a$4.push(read props$3.d)  
-    "]    
-    bb1_instrs --> bb1_terminal(["Return freeze a$4"])  
+      [4] Call mutate a$4.push(read props$3.d)
+    "]
+    bb1_instrs --> bb1_terminal(["Return freeze a$4"])
   end
-  
 
   %% Jumps
   bb0_terminal -- then --> bb2
   bb0_terminal -- else --> bb1
-  
   bb2_terminal --> bb1
-  
+
 ```
 
 ## Code
@@ -234,31 +227,28 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate a$5[1:5] = Array []
-      [2] Call mutate a$5.push(read props$4.a)  
-    "]    
-    bb0_instrs --> bb0_terminal(["If (read props$4.b)"])  
+      [2] Call mutate a$5.push(read props$4.a)
+    "]
+    bb0_instrs --> bb0_terminal(["If (read props$4.b)"])
   end
-  
   subgraph bb2
     bb2_instrs["
       [3] Call mutate a$5.push(read props$4.c)
-      [4] Const mutate $6 = null  
-    "]    
-    bb2_instrs --> bb2_terminal(["Return read $6"])  
+      [4] Const mutate $6 = null
+    "]
+    bb2_instrs --> bb2_terminal(["Return read $6"])
   end
-  
   subgraph bb1
     bb1_instrs["
-      [5] Call mutate a$5.push(read props$4.d)  
-    "]    
-    bb1_instrs --> bb1_terminal(["Return freeze a$5"])  
+      [5] Call mutate a$5.push(read props$4.d)
+    "]
+    bb1_instrs --> bb1_terminal(["Return freeze a$5"])
   end
-  
 
   %% Jumps
   bb0_terminal -- then --> bb2
   bb0_terminal -- else --> bb1
-  
+
 ```
 
 ## Code
@@ -302,30 +292,27 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate a$4[1:4] = Array []
-      [2] Call mutate a$4.push(read props$3.a)  
-    "]    
-    bb0_instrs --> bb0_terminal(["If (read props$3.b)"])  
+      [2] Call mutate a$4.push(read props$3.a)
+    "]
+    bb0_instrs --> bb0_terminal(["If (read props$3.b)"])
   end
-  
   subgraph bb2
     bb2_instrs["
-      [3] Call mutate a$4.push(read props$3.c)  
-    "]    
-    bb2_instrs --> bb2_terminal(["Return freeze a$4"])  
+      [3] Call mutate a$4.push(read props$3.c)
+    "]
+    bb2_instrs --> bb2_terminal(["Return freeze a$4"])
   end
-  
   subgraph bb1
     bb1_instrs["
-      [4] Call mutate a$4.push(read props$3.d)  
-    "]    
-    bb1_instrs --> bb1_terminal(["Return freeze a$4"])  
+      [4] Call mutate a$4.push(read props$3.d)
+    "]
+    bb1_instrs --> bb1_terminal(["Return freeze a$4"])
   end
-  
 
   %% Jumps
   bb0_terminal -- then --> bb2
   bb0_terminal -- else --> bb1
-  
+
 ```
 
 ## Code
@@ -369,32 +356,28 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate a$4[1:4] = Array []
-      [2] Call mutate a$4.push(read props$3.a)  
-    "]    
-    bb0_instrs --> bb0_terminal(["If (read props$3.b)"])  
+      [2] Call mutate a$4.push(read props$3.a)
+    "]
+    bb0_instrs --> bb0_terminal(["If (read props$3.b)"])
   end
-  
   subgraph bb2
     bb2_instrs["
-      [3] Call mutate a$4.push(read props$3.c)  
-    "]    
-    bb2_instrs --> bb2_terminal(["Goto"])  
+      [3] Call mutate a$4.push(read props$3.c)
+    "]
+    bb2_instrs --> bb2_terminal(["Goto"])
   end
-  
   subgraph bb1
     bb1_instrs["
-      [4] Call mutate a$4.push(read props$3.d)  
-    "]    
-    bb1_instrs --> bb1_terminal(["Return freeze a$4"])  
+      [4] Call mutate a$4.push(read props$3.d)
+    "]
+    bb1_instrs --> bb1_terminal(["Return freeze a$4"])
   end
-  
 
   %% Jumps
   bb0_terminal -- then --> bb1
   bb0_terminal -- else --> bb2
-  
   bb2_terminal --> bb1
-  
+
 ```
 
 ## Code
