@@ -9,6 +9,9 @@ import clsx from "clsx";
 
 import { HIR } from "babel-plugin-react-forget";
 import { useState } from "react";
+import generate from "@babel/generator";
+import prettier from "prettier";
+import prettierParserBabel from "prettier/parser-babel";
 
 const {
   parseFunctions,
@@ -20,12 +23,14 @@ const {
   leaveSSA,
   lower,
   printHIR,
+  codegen,
 } = HIR;
 
 export default function HIRTabContent({ source }: { source: string }) {
   const astFunctions = parseFunctions(source);
 
   const [flags, setFlags] = useState({
+    codegen: true,
     eliminateRedundantPhi: true,
     inferReferenceEffects: true,
     inferMutableRanges: true,
@@ -53,8 +58,17 @@ export default function HIRTabContent({ source }: { source: string }) {
             if (flags.leaveSSA) {
               leaveSSA(ir);
             }
-            const textHIR = printHIR(ir.body);
-            body = <pre>{textHIR}</pre>;
+            const output = flags.codegen
+              ? prettier.format(
+                  generate(codegen(ir)).code.replace("\n\n", "\n"),
+                  {
+                    semi: true,
+                    parser: "babel",
+                    plugins: [prettierParserBabel],
+                  }
+                )
+              : printHIR(ir.body);
+            body = <pre>{output}</pre>;
           } catch (e: any) {
             body = <div>error: ${e.toString()}</div>;
           }
@@ -77,6 +91,7 @@ type Flags = {
   inferReferenceEffects: boolean;
   inferMutableRanges: boolean;
   leaveSSA: boolean;
+  codegen: boolean;
 };
 
 function CompilerFlagsEditor({
@@ -116,6 +131,13 @@ function CompilerFlagsEditor({
           value={flags.leaveSSA}
           onChange={(leaveSSA) => {
             setFlags({ ...flags, leaveSSA });
+          }}
+        />
+        <LabeledCheckbox
+          label="Codegen"
+          value={flags.codegen}
+          onChange={(codegen) => {
+            setFlags({ ...flags, codegen });
           }}
         />
       </div>

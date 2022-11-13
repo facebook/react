@@ -32,6 +32,7 @@ import leaveSSA from "./HIR/LeaveSSA";
 import traverse, { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import { parse } from "@babel/parser";
+import codegen from "./HIR/Codegen";
 
 function parseFunctions(
   source: string
@@ -64,6 +65,7 @@ export const HIR = {
   printHIR,
   Environment,
   leaveSSA,
+  codegen,
 };
 
 export default BabelPlugin;
