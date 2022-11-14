@@ -901,13 +901,50 @@ function lowerExpression(
     case "AssignmentExpression": {
       const expr = exprPath as NodePath<t.AssignmentExpression>;
       const left = lowerLVal(builder, expr.get("left"));
-      const right = lowerExpression(builder, expr.get("right"));
       const operator = expr.node.operator;
-      todoInvariant(operator === "=", "todo: support non-simple assignment");
+
+      if (operator === "=") {
+        const right = lowerExpression(builder, expr.get("right"));
+        builder.push({
+          id: 0,
+          lvalue: { place: left, kind: InstructionKind.Reassign },
+          value: right,
+          loc: exprLoc,
+        });
+        return left;
+      }
+
+      const operators: { [key: string]: t.BinaryExpression["operator"] } = {
+        "+=": "+",
+        "-=": "-",
+        "/=": "/",
+        "%=": "%",
+        "*=": "*",
+        "**=": "**",
+        "&=": "&",
+        "|=": "|",
+        ">>=": ">>",
+        ">>>=": ">>>",
+        "<<=": "<<",
+        "^=": "^",
+      };
+      const binaryOperator = operators[operator];
+      invariant(
+        binaryOperator != null,
+        `Unhandled assignment operator '${operator}'`
+      );
+
+      const right = lowerExpressionToPlace(builder, expr.get("right"));
       builder.push({
         id: 0,
         lvalue: { place: left, kind: InstructionKind.Reassign },
-        value: right,
+        value: {
+          kind: "BinaryExpression",
+          operator: binaryOperator,
+          left,
+          right,
+          loc: exprLoc,
+        },
         loc: exprLoc,
       });
       return left;
