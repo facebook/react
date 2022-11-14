@@ -51,7 +51,7 @@ function isSameOriginFrame(iframe) {
     // https://html.spec.whatwg.org/multipage/browsers.html#integration-with-idl
 
     return typeof iframe.contentWindow.location.href === 'string';
-  } catch (err) {
+  } catch {
     return false;
   }
 }
