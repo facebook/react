@@ -1968,4 +1968,84 @@ describe('ReactOffscreen', () => {
 
     expect(Scheduler).toHaveYielded(['unmount layout inner', 'unmount inner']);
   });
+
+  // @gate enableOffscreen
+  it('batches multiple attach and detach calls scheduled from an event handler', async () => {
+    function Child() {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Attach child');
+        return () => {
+          Scheduler.unstable_yieldValue('Detach child');
+        };
+      }, []);
+      return 'Child';
+    }
+
+    const offscreen = React.createRef(null);
+    function App() {
+      return (
+        <Offscreen ref={offscreen} mode="manual">
+          <Child />
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['Attach child']);
+
+    await act(async () => {
+      const instance = offscreen.current;
+
+      // Attach then immediately re-attach the instance. This should be a
+      // no-op because the operations are batched.
+      instance.detach();
+      instance.attach();
+    });
+    // No effects should have attached or detached
+    expect(Scheduler).toHaveYielded([]);
+  });
+
+  // @gate enableOffscreen
+  it('batches multiple attach and detach calls scheduled from an effect', async () => {
+    function Child() {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Attach child');
+        return () => {
+          Scheduler.unstable_yieldValue('Detach child');
+        };
+      }, []);
+      return 'Child';
+    }
+
+    function App() {
+      const offscreen = useRef(null);
+      useLayoutEffect(() => {
+        const instance = offscreen.current;
+
+        // Attach then immediately re-attach the instance. This should be a
+        // no-op because the operations are batched.
+        instance.detach();
+        instance.attach();
+      }, []);
+      return (
+        <Offscreen ref={offscreen} mode="manual">
+          <Child />
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Parent effect',
+      'Attach child',
+
+      // The child effects should not be toggled
+    ]);
+  });
 });
