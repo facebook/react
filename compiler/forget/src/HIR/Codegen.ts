@@ -745,7 +745,15 @@ function codegenJsxElement(
 }
 
 function codegenLVal(lval: LValue): t.LVal {
-  return convertIdentifier(lval.place.identifier);
+  const expr = convertIdentifier(lval.place.identifier);
+  const memberPath = lval.place.memberPath;
+  return memberPath == null
+    ? expr
+    : memberPath.reduceRight(
+        (path: t.Identifier | t.MemberExpression, member) =>
+          t.memberExpression(path, t.identifier(member)),
+        expr
+      );
 }
 
 function codegenValue(

@@ -45,7 +45,7 @@ flowchart TB
 function foo$0() {
   const x$3 = [];
   const y$4 = {};
-  y$4 = x$3;
+  y$4.x = x$3;
   return y$4;
 }
 

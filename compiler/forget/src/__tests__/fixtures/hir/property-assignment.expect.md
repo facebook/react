@@ -53,7 +53,7 @@ flowchart TB
 function Component$0(props$6) {
   const x$7 = {};
   const y$8 = [];
-  x$7 = y$8;
+  x$7.y = y$8;
   const child$9 = <Component$0 data={y$8}></Component$0>;
   x$7.y.push(props$6.p0);
   return <Component$0 data={x$7}>{child$9}</Component$0>;

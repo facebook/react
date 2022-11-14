@@ -98,8 +98,8 @@ flowchart TB
 
 ```javascript
 function g$0(a$4) {
-  a$4 = a$4.b.c + 1;
-  a$4 = a$4.b.c * 2;
+  a$4.c.b = a$4.b.c + 1;
+  a$4.c.b = a$4.b.c * 2;
   return;
 }
 

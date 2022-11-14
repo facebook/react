@@ -156,7 +156,7 @@ function Component$0(props$10) {
     c: c$13,
   };
   const x$15 = {};
-  x$15 = b$12;
+  x$15.b = b$12;
   const y$16 = mutate$8(x$15, d$14);
   a$11;
   b$12;
