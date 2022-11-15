@@ -138,11 +138,12 @@ import {
 import {
   NoLanes,
   NoLane,
+  SyncHydrationLane,
   SyncLane,
   NoTimestamp,
   claimNextTransitionLane,
   claimNextRetryLane,
-  includesSomeLane,
+  includesSyncLane,
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
@@ -917,7 +918,8 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       // TODO: Temporary until we confirm this warning is not fired.
       if (
         existingCallbackNode == null &&
-        existingCallbackPriority !== SyncLane
+        existingCallbackPriority !== SyncLane &&
+        existingCallbackPriority !== SyncHydrationLane
       ) {
         console.error(
           'Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue.',
@@ -935,7 +937,10 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Schedule a new callback.
   let newCallbackNode;
-  if (newCallbackPriority === SyncLane) {
+  if (
+    newCallbackPriority === SyncLane ||
+    newCallbackPriority === SyncHydrationLane
+  ) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     if (root.tag === LegacyRoot) {
@@ -1479,7 +1484,7 @@ function performSyncWorkOnRoot(root) {
   flushPassiveEffects();
 
   let lanes = getNextLanes(root, NoLanes);
-  if (!includesSomeLane(lanes, SyncLane)) {
+  if (!includesSyncLane(lanes)) {
     // There's no remaining sync work left.
     ensureRootIsScheduled(root, now());
     return null;
@@ -2839,16 +2844,13 @@ function commitRootImpl(
   // TODO: We can optimize this by not scheduling the callback earlier. Since we
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
-  if (
-    includesSomeLane(pendingPassiveEffectsLanes, SyncLane) &&
-    root.tag !== LegacyRoot
-  ) {
+  if (includesSyncLane(pendingPassiveEffectsLanes) && root.tag !== LegacyRoot) {
     flushPassiveEffects();
   }
 
   // Read this again, since a passive effect might have updated it
   remainingLanes = root.pendingLanes;
-  if (includesSomeLane(remainingLanes, (SyncLane: Lane))) {
+  if (includesSyncLane(remainingLanes)) {
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
       markNestedUpdateScheduled();
     }
