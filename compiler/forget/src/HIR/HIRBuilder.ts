@@ -17,6 +17,7 @@ import {
   IdentifierId,
   Instruction,
   makeBlockId,
+  makeIdentifierId,
   Terminal,
 } from "./HIR";
 import { printInstruction } from "./PrintHIR";
@@ -61,16 +62,8 @@ function newBlock(id: BlockId): WipBlock {
 export class Environment {
   #nextIdentifer: number = 0;
 
-  #makeIdentifierId(id: number): IdentifierId {
-    invariant(
-      id >= 0 && Number.isInteger(id),
-      "Expected identifier id to be a non-negative integer"
-    );
-    return id as IdentifierId;
-  }
-
   get nextIdentifierId(): IdentifierId {
-    return this.#makeIdentifierId(this.#nextIdentifer++);
+    return makeIdentifierId(this.#nextIdentifer++);
   }
 }
 
@@ -116,6 +109,7 @@ export default class HIRBuilder {
   makeTemporary(): Identifier {
     const id = this.nextIdentifierId;
     return {
+      preSsaId: null,
       id,
       name: null,
       mutableRange: { start: 0, end: 0 },
@@ -126,7 +120,12 @@ export default class HIRBuilder {
     let identifier = this.#bindings.get(node);
     if (identifier == null) {
       const id = this.nextIdentifierId;
-      identifier = { id, name: node.name, mutableRange: { start: 0, end: 0 } };
+      identifier = {
+        preSsaId: null,
+        id,
+        name: node.name,
+        mutableRange: { start: 0, end: 0 },
+      };
       this.#bindings.set(node, identifier);
     }
     return identifier;

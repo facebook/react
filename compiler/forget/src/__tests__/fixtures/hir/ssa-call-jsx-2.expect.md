@@ -50,22 +50,22 @@ function foo$0() {
 
 ```
 bb0:
-  [1] Const mutate a$11[1:3] = Array []
-  [2] Const mutate b$12[2:7] = Object {  }
-  [3] Call mutate foo$4(mutate a$11, mutate b$12)
-  [4] Const mutate $13 = Call mutate foo$4()
-  If (read $13) then:bb2 else:bb1
+  [1] Const mutate a$2[1:3] = Array []
+  [2] Const mutate b$3[2:7] = Object {  }
+  [3] Call mutate foo$4(mutate a$2, mutate b$3)
+  [4] Const mutate $7 = Call mutate foo$4()
+  If (read $7) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [5] Const mutate $14 = "div"
-  [6] Let mutate _$15 = JSX <read $14 a={freeze a$11} ></read $14>
+  [5] Const mutate $6 = "div"
+  [6] Let mutate _$5 = JSX <read $6 a={freeze a$2} ></read $6>
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [7] Call mutate foo$4(read a$11, mutate b$12)
-  [8] Const mutate $19 = "div"
-  [9] Const mutate $20 = JSX <read $19 a={freeze a$11} b={freeze b$12} ></read $19>
-  Return read $20
+  [7] Call mutate foo$4(read a$2, mutate b$3)
+  [8] Const mutate $8 = "div"
+  [9] Const mutate $9 = JSX <read $8 a={freeze a$2} b={freeze b$3} ></read $8>
+  Return read $9
 ```
 
 ### CFG
@@ -75,27 +75,27 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$11[1:3] = Array []
-      [2] Const mutate b$12[2:7] = Object {  }
-      [3] Call mutate foo$4(mutate a$11, mutate b$12)
-      [4] Const mutate $13 = Call mutate foo$4()
+      [1] Const mutate a$2[1:3] = Array []
+      [2] Const mutate b$3[2:7] = Object {  }
+      [3] Call mutate foo$4(mutate a$2, mutate b$3)
+      [4] Const mutate $7 = Call mutate foo$4()
     "]
-    bb0_instrs --> bb0_terminal(["If (read $13)"])
+    bb0_instrs --> bb0_terminal(["If (read $7)"])
   end
   subgraph bb2
     bb2_instrs["
-      [5] Const mutate $14 = 'div'
-      [6] Let mutate _$15 = JSX <read $14 a={freeze a$11} ></read $14>
+      [5] Const mutate $6 = 'div'
+      [6] Let mutate _$5 = JSX <read $6 a={freeze a$2} ></read $6>
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [7] Call mutate foo$4(read a$11, mutate b$12)
-      [8] Const mutate $19 = 'div'
-      [9] Const mutate $20 = JSX <read $19 a={freeze a$11} b={freeze b$12} ></read $19>
+      [7] Call mutate foo$4(read a$2, mutate b$3)
+      [8] Const mutate $8 = 'div'
+      [9] Const mutate $9 = JSX <read $8 a={freeze a$2} b={freeze b$3} ></read $8>
     "]
-    bb1_instrs --> bb1_terminal(["Return read $20"])
+    bb1_instrs --> bb1_terminal(["Return read $9"])
   end
 
   %% Jumps
@@ -108,16 +108,16 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$10) {
-  const a$11 = [];
-  const b$12 = {};
-  foo$4(a$11, b$12);
+function Component$0(props$1) {
+  const a$2 = [];
+  const b$3 = {};
+  foo$4(a$2, b$3);
   bb1: if (foo$4()) {
-    let _$15 = <div a={a$11}></div>;
+    let _$5 = <div a={a$2}></div>;
   }
 
-  foo$4(a$11, b$12);
-  return <div a={a$11} b={b$12}></div>;
+  foo$4(a$2, b$3);
+  return <div a={a$2} b={b$3}></div>;
 }
 
 ```

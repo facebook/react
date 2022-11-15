@@ -24,9 +24,9 @@ function foo() {
 bb0:
   [1] Let mutate x$1 = 1
   [2] Let mutate y$2 = 2
-  [3] Const mutate $8 = 1
-  [4] Const mutate $9 = Binary read x$1 > read $8
-  If (read $9) then:bb2 else:bb3
+  [3] Const mutate $3 = 1
+  [4] Const mutate $4 = Binary read x$1 > read $3
+  If (read $4) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
   [5] Reassign mutate x$1 = 2
@@ -37,8 +37,8 @@ bb3:
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [7] Let mutate t$14 = Object { x: read x$1, y: read y$2 }
-  Return freeze t$14
+  [7] Let mutate t$5 = Object { x: read x$1, y: read y$2 }
+  Return freeze t$5
 ```
 
 ### CFG
@@ -50,10 +50,10 @@ flowchart TB
     bb0_instrs["
       [1] Let mutate x$1 = 1
       [2] Let mutate y$2 = 2
-      [3] Const mutate $8 = 1
-      [4] Const mutate $9 = Binary read x$1 > read $8
+      [3] Const mutate $3 = 1
+      [4] Const mutate $4 = Binary read x$1 > read $3
     "]
-    bb0_instrs --> bb0_terminal(["If (read $9)"])
+    bb0_instrs --> bb0_terminal(["If (read $4)"])
   end
   subgraph bb2
     bb2_instrs["
@@ -69,9 +69,9 @@ flowchart TB
   end
   subgraph bb1
     bb1_instrs["
-      [7] Let mutate t$14 = Object { x: read x$1, y: read y$2 }
+      [7] Let mutate t$5 = Object { x: read x$1, y: read y$2 }
     "]
-    bb1_instrs --> bb1_terminal(["Return freeze t$14"])
+    bb1_instrs --> bb1_terminal(["Return freeze t$5"])
   end
 
   %% Jumps
@@ -95,11 +95,11 @@ function foo$0() {
     y$2 = 3;
   }
 
-  let t$14 = {
+  let t$5 = {
     x: x$1,
     y: y$2,
   };
-  return t$14;
+  return t$5;
 }
 
 ```

@@ -202,7 +202,6 @@ export type InstructionValue =
 export type Phi = {
   kind: "Phi";
   id: Identifier;
-  oldId: Identifier;
   operands: Map<BasicBlock, Identifier>;
 };
 
@@ -278,7 +277,8 @@ export type MutableRange = {
  * Represents a user-defined variable (has a name) or a temporary variable (no name).
  */
 export type Identifier = {
-  id: IdentifierId; // unique value to distinguish different instances of the same name in different scopes
+  preSsaId: IdentifierId | null; // the original `id` value prior to entering SSA form
+  id: IdentifierId; // unique value to distinguish a variable, since name is not guaranteed to exist or be unique
   name: string | null; // null for temporaries. name is primarily used for debugging.
   mutableRange: MutableRange;
 };
@@ -344,3 +344,11 @@ export function makeScopeId(id: number): ScopeId {
  */
 const opaqueIdentifierId = Symbol();
 export type IdentifierId = number & { [opaqueIdentifierId]: "IdentifierId" };
+
+export function makeIdentifierId(id: number): IdentifierId {
+  invariant(
+    id >= 0 && Number.isInteger(id),
+    "Expected identifier id to be a non-negative integer"
+  );
+  return id as IdentifierId;
+}

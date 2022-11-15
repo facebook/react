@@ -6,8 +6,7 @@
  */
 
 import invariant from "invariant";
-import { assertExhaustive } from "../Common/utils";
-import { BlockId, HIRFunction, Identifier, Place, Terminal } from "./HIR";
+import { BlockId, HIRFunction, Identifier, Place } from "./HIR";
 import { eachInstructionOperand, eachTerminalOperand } from "./visitors";
 
 /**

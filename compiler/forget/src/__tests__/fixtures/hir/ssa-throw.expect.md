@@ -17,9 +17,9 @@ function foo() {
 ```
 bb0:
   [1] Let mutate x$1 = 1
-  [2] Const mutate $5 = 1
-  [3] Const mutate $6 = Binary read x$1 === read $5
-  If (read $6) then:bb2 else:bb1
+  [2] Const mutate $2 = 1
+  [3] Const mutate $3 = Binary read x$1 === read $2
+  If (read $3) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
   [4] Reassign mutate x$1 = 2
@@ -37,10 +37,10 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Let mutate x$1 = 1
-      [2] Const mutate $5 = 1
-      [3] Const mutate $6 = Binary read x$1 === read $5
+      [2] Const mutate $2 = 1
+      [3] Const mutate $3 = Binary read x$1 === read $2
     "]
-    bb0_instrs --> bb0_terminal(["If (read $6)"])
+    bb0_instrs --> bb0_terminal(["If (read $3)"])
   end
   subgraph bb2
     bb2_instrs["

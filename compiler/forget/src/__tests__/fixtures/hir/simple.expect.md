@@ -15,18 +15,18 @@ function foo(x, y) {
 
 ```
 bb0:
-  If (read x$8) then:bb2 else:bb1
+  If (read x$1) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [1] Const mutate $10 = false
-  [2] Const mutate $11 = Call read foo$0(read $10, read y$9)
-  Return freeze $11
+  [1] Const mutate $3 = false
+  [2] Const mutate $4 = Call read foo$0(read $3, read y$2)
+  Return freeze $4
 bb1:
   predecessor blocks: bb0
-  [3] Const mutate $12 = 10
-  [4] Const mutate $13 = Binary read y$9 * read $12
-  [5] Const mutate $14 = Array [read $13]
-  Return freeze $14
+  [3] Const mutate $5 = 10
+  [4] Const mutate $6 = Binary read y$2 * read $5
+  [5] Const mutate $7 = Array [read $6]
+  Return freeze $7
 ```
 
 ### CFG
@@ -35,22 +35,22 @@ bb1:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["If (read x$8)"])
+    bb0_terminal(["If (read x$1)"])
   end
   subgraph bb2
     bb2_instrs["
-      [1] Const mutate $10 = false
-      [2] Const mutate $11 = Call read foo$0(read $10, read y$9)
+      [1] Const mutate $3 = false
+      [2] Const mutate $4 = Call read foo$0(read $3, read y$2)
     "]
-    bb2_instrs --> bb2_terminal(["Return freeze $11"])
+    bb2_instrs --> bb2_terminal(["Return freeze $4"])
   end
   subgraph bb1
     bb1_instrs["
-      [3] Const mutate $12 = 10
-      [4] Const mutate $13 = Binary read y$9 * read $12
-      [5] Const mutate $14 = Array [read $13]
+      [3] Const mutate $5 = 10
+      [4] Const mutate $6 = Binary read y$2 * read $5
+      [5] Const mutate $7 = Array [read $6]
     "]
-    bb1_instrs --> bb1_terminal(["Return freeze $14"])
+    bb1_instrs --> bb1_terminal(["Return freeze $7"])
   end
 
   %% Jumps
@@ -62,11 +62,11 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(x$8, y$9) {
-  bb1: if (x$8) {
-    return foo$0(false, y$9);
+function foo$0(x$1, y$2) {
+  bb1: if (x$1) {
+    return foo$0(false, y$2);
   }
-  return [y$9 * 10];
+  return [y$2 * 10];
 }
 
 ```

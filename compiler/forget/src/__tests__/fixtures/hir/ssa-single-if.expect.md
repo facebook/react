@@ -17,12 +17,12 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$4 = 1
-  [2] Let mutate y$5 = 2
-  If (read y$5) then:bb2 else:bb1
+  [1] Let mutate x$1 = 1
+  [2] Let mutate y$2 = 2
+  If (read y$2) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [3] Let mutate z$6 = Binary read x$4 + read y$5
+  [3] Let mutate z$3 = Binary read x$1 + read y$2
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
@@ -36,14 +36,14 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$4 = 1
-      [2] Let mutate y$5 = 2
+      [1] Let mutate x$1 = 1
+      [2] Let mutate y$2 = 2
     "]
-    bb0_instrs --> bb0_terminal(["If (read y$5)"])
+    bb0_instrs --> bb0_terminal(["If (read y$2)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Let mutate z$6 = Binary read x$4 + read y$5
+      [3] Let mutate z$3 = Binary read x$1 + read y$2
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
@@ -62,10 +62,10 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  let x$4 = 1;
-  let y$5 = 2;
-  bb1: if (y$5) {
-    let z$6 = x$4 + y$5;
+  let x$1 = 1;
+  let y$2 = 2;
+  bb1: if (y$2) {
+    let z$3 = x$1 + y$2;
   }
 
   return;

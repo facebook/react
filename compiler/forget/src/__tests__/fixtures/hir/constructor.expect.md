@@ -47,15 +47,15 @@ function Foo$0() {
 
 ```
 bb0:
-  [1] Const mutate a$10[1:3] = Array []
-  [2] Const mutate b$11[2:6] = Object {  }
-  [3] New mutate Foo$4(mutate a$10, mutate b$11)
-  [4] Const mutate $12 = "div"
-  [5] Let mutate _$13 = JSX <read $12 a={freeze a$10} ></read $12>
-  [6] New mutate Foo$4(mutate b$11)
-  [7] Const mutate $14 = "div"
-  [8] Const mutate $15 = JSX <read $14 a={read a$10} b={freeze b$11} ></read $14>
-  Return read $15
+  [1] Const mutate a$2[1:3] = Array []
+  [2] Const mutate b$3[2:6] = Object {  }
+  [3] New mutate Foo$4(mutate a$2, mutate b$3)
+  [4] Const mutate $6 = "div"
+  [5] Let mutate _$5 = JSX <read $6 a={freeze a$2} ></read $6>
+  [6] New mutate Foo$4(mutate b$3)
+  [7] Const mutate $7 = "div"
+  [8] Const mutate $8 = JSX <read $7 a={read a$2} b={freeze b$3} ></read $7>
+  Return read $8
 ```
 
 ### CFG
@@ -65,16 +65,16 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$10[1:3] = Array []
-      [2] Const mutate b$11[2:6] = Object {  }
-      [3] New mutate Foo$4(mutate a$10, mutate b$11)
-      [4] Const mutate $12 = 'div'
-      [5] Let mutate _$13 = JSX <read $12 a={freeze a$10} ></read $12>
-      [6] New mutate Foo$4(mutate b$11)
-      [7] Const mutate $14 = 'div'
-      [8] Const mutate $15 = JSX <read $14 a={read a$10} b={freeze b$11} ></read $14>
+      [1] Const mutate a$2[1:3] = Array []
+      [2] Const mutate b$3[2:6] = Object {  }
+      [3] New mutate Foo$4(mutate a$2, mutate b$3)
+      [4] Const mutate $6 = 'div'
+      [5] Let mutate _$5 = JSX <read $6 a={freeze a$2} ></read $6>
+      [6] New mutate Foo$4(mutate b$3)
+      [7] Const mutate $7 = 'div'
+      [8] Const mutate $8 = JSX <read $7 a={read a$2} b={freeze b$3} ></read $7>
     "]
-    bb0_instrs --> bb0_terminal(["Return read $15"])
+    bb0_instrs --> bb0_terminal(["Return read $8"])
   end
 
   %% Jumps
@@ -84,14 +84,14 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$9) {
-  const a$10 = [];
-  const b$11 = {};
-  new Foo$4(a$10, b$11);
-  let _$13 = <div a={a$10}></div>;
+function Component$0(props$1) {
+  const a$2 = [];
+  const b$3 = {};
+  new Foo$4(a$2, b$3);
+  let _$5 = <div a={a$2}></div>;
 
-  new Foo$4(b$11);
-  return <div a={a$10} b={b$11}></div>;
+  new Foo$4(b$3);
+  return <div a={a$2} b={b$3}></div>;
 }
 
 ```

@@ -1,5 +1,12 @@
 import { invariant } from "../CompilerError";
-import { BasicBlock, HIRFunction, Identifier, Phi, Place } from "./HIR";
+import {
+  BasicBlock,
+  HIRFunction,
+  Identifier,
+  IdentifierId,
+  Phi,
+  Place,
+} from "./HIR";
 import { Environment } from "./HIRBuilder";
 import { printIdentifier } from "./PrintHIR";
 import {
@@ -28,7 +35,7 @@ class SSABuilder {
     this.#env = env;
   }
 
-  get nextIdentifierId() {
+  get nextSsaId(): IdentifierId {
     return this.#env.nextIdentifierId;
   }
 
@@ -42,7 +49,8 @@ class SSABuilder {
 
   makeId(oldId: Identifier): Identifier {
     return {
-      id: this.nextIdentifierId,
+      id: this.nextSsaId,
+      preSsaId: oldId.id,
       name: oldId.name,
       mutableRange: {
         start: 0,
@@ -121,7 +129,6 @@ class SSABuilder {
     const phi: Phi = {
       kind: "Phi",
       id: newId,
-      oldId,
       operands: predDefs,
     };
 

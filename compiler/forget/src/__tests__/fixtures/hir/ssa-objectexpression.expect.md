@@ -15,10 +15,10 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate a$6 = 1
-  [2] Const mutate b$7 = 2
-  [3] Const mutate x$8 = Object { a: read a$6, b: read b$7 }
-  Return freeze x$8
+  [1] Const mutate a$2 = 1
+  [2] Const mutate b$3 = 2
+  [3] Const mutate x$4 = Object { a: read a$2, b: read b$3 }
+  Return freeze x$4
 ```
 
 ### CFG
@@ -28,11 +28,11 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$6 = 1
-      [2] Const mutate b$7 = 2
-      [3] Const mutate x$8 = Object { a: read a$6, b: read b$7 }
+      [1] Const mutate a$2 = 1
+      [2] Const mutate b$3 = 2
+      [3] Const mutate x$4 = Object { a: read a$2, b: read b$3 }
     "]
-    bb0_instrs --> bb0_terminal(["Return freeze x$8"])
+    bb0_instrs --> bb0_terminal(["Return freeze x$4"])
   end
 
   %% Jumps
@@ -42,14 +42,14 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$5) {
-  const a$6 = 1;
-  const b$7 = 2;
-  const x$8 = {
-    a: a$6,
-    b: b$7,
+function Component$0(props$1) {
+  const a$2 = 1;
+  const b$3 = 2;
+  const x$4 = {
+    a: a$2,
+    b: b$3,
   };
-  return x$8;
+  return x$4;
 }
 
 ```

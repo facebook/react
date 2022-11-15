@@ -20,13 +20,13 @@ function g(a) {
 
 ```
 bb0:
-  [1] Let mutate x$5 = 1
-  [2] Const mutate $6 = 1
-  [3] Reassign mutate x$7 = Binary read x$5 + read $6
-  [4] Const mutate $8 = 1
-  [5] Reassign mutate x$9 = Binary read x$7 + read $8
-  [6] Const mutate $10 = 1
-  [7] Reassign mutate x$11 = Binary read x$9 >>> read $10
+  [1] Let mutate x$1 = 1
+  [2] Const mutate $2 = 1
+  [3] Reassign mutate x$1 = Binary read x$1 + read $2
+  [4] Const mutate $3 = 1
+  [5] Reassign mutate x$1 = Binary read x$1 + read $3
+  [6] Const mutate $4 = 1
+  [7] Reassign mutate x$1 = Binary read x$1 >>> read $4
   Return
 ```
 
@@ -37,13 +37,13 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$5 = 1
-      [2] Const mutate $6 = 1
-      [3] Reassign mutate x$7 = Binary read x$5 + read $6
-      [4] Const mutate $8 = 1
-      [5] Reassign mutate x$9 = Binary read x$7 + read $8
-      [6] Const mutate $10 = 1
-      [7] Reassign mutate x$11 = Binary read x$9 >>> read $10
+      [1] Let mutate x$1 = 1
+      [2] Const mutate $2 = 1
+      [3] Reassign mutate x$1 = Binary read x$1 + read $2
+      [4] Const mutate $3 = 1
+      [5] Reassign mutate x$1 = Binary read x$1 + read $3
+      [6] Const mutate $4 = 1
+      [7] Reassign mutate x$1 = Binary read x$1 >>> read $4
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end
@@ -56,10 +56,10 @@ flowchart TB
 
 ```javascript
 function f$0() {
-  let x$5 = 1;
-  x$7 = x$5 + 1;
-  x$9 = x$7 + 1;
-  x$11 = x$9 >>> 1;
+  let x$1 = 1;
+  x$1 = x$1 + 1;
+  x$1 = x$1 + 1;
+  x$1 = x$1 >>> 1;
   return;
 }
 
@@ -68,10 +68,10 @@ function f$0() {
 
 ```
 bb0:
-  [1] Const mutate $5 = 1
-  [2] Reassign mutate a$4.b.c[0:4] = Binary read a$4.b.c + read $5
-  [3] Const mutate $6 = 2
-  [4] Reassign mutate a$4.b.c[0:4] = Binary read a$4.b.c * read $6
+  [1] Const mutate $2 = 1
+  [2] Reassign mutate a$1.b.c[0:4] = Binary read a$1.b.c + read $2
+  [3] Const mutate $3 = 2
+  [4] Reassign mutate a$1.b.c[0:4] = Binary read a$1.b.c * read $3
   Return
 ```
 
@@ -82,10 +82,10 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $5 = 1
-      [2] Reassign mutate a$4.b.c[0:4] = Binary read a$4.b.c + read $5
-      [3] Const mutate $6 = 2
-      [4] Reassign mutate a$4.b.c[0:4] = Binary read a$4.b.c * read $6
+      [1] Const mutate $2 = 1
+      [2] Reassign mutate a$1.b.c[0:4] = Binary read a$1.b.c + read $2
+      [3] Const mutate $3 = 2
+      [4] Reassign mutate a$1.b.c[0:4] = Binary read a$1.b.c * read $3
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end
@@ -97,9 +97,9 @@ flowchart TB
 ## Code
 
 ```javascript
-function g$0(a$4) {
-  a$4.c.b = a$4.b.c + 1;
-  a$4.c.b = a$4.b.c * 2;
+function g$0(a$1) {
+  a$1.c.b = a$1.b.c + 1;
+  a$1.c.b = a$1.b.c * 2;
   return;
 }
 

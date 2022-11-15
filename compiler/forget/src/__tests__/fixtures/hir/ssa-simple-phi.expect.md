@@ -20,10 +20,10 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate y$5 = 2
-  [2] Const mutate $6 = 1
-  [3] Const mutate $7 = Binary read y$5 > read $6
-  If (read $7) then:bb2 else:bb3
+  [1] Let mutate y$1 = 2
+  [2] Const mutate $2 = 1
+  [3] Const mutate $3 = Binary read y$1 > read $2
+  If (read $3) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
   [4] Reassign mutate y$1 = 1
@@ -34,7 +34,7 @@ bb3:
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [6] Let mutate x$11 = read y$1
+  [6] Let mutate x$4 = read y$1
   Return
 ```
 
@@ -45,11 +45,11 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate y$5 = 2
-      [2] Const mutate $6 = 1
-      [3] Const mutate $7 = Binary read y$5 > read $6
+      [1] Let mutate y$1 = 2
+      [2] Const mutate $2 = 1
+      [3] Const mutate $3 = Binary read y$1 > read $2
     "]
-    bb0_instrs --> bb0_terminal(["If (read $7)"])
+    bb0_instrs --> bb0_terminal(["If (read $3)"])
   end
   subgraph bb2
     bb2_instrs["
@@ -65,7 +65,7 @@ flowchart TB
   end
   subgraph bb1
     bb1_instrs["
-      [6] Let mutate x$11 = read y$1
+      [6] Let mutate x$4 = read y$1
     "]
     bb1_instrs --> bb1_terminal(["Return"])
   end
@@ -83,14 +83,14 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  let y$5 = 2;
-  bb1: if (y$5 > 1) {
+  let y$1 = 2;
+  bb1: if (y$1 > 1) {
     y$1 = 1;
   } else {
     y$1 = 2;
   }
 
-  let x$11 = y$1;
+  let x$4 = y$1;
   return;
 }
 

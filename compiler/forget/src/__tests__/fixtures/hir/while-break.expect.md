@@ -18,10 +18,10 @@ bb0:
   While test=bb1 loop=bb2 fallthrough=bb2
 bb1:
   predecessor blocks: bb0
-  If (read a$3) then:bb2 else:bb2
+  If (read a$1) then:bb2 else:bb2
 bb2:
   predecessor blocks: bb1
-  Return read b$4
+  Return read b$2
 ```
 
 ### CFG
@@ -33,10 +33,10 @@ flowchart TB
     bb0_terminal(["While"])
   end
   subgraph bb1
-    bb1_terminal(["If (read a$3)"])
+    bb1_terminal(["If (read a$1)"])
   end
   subgraph bb2
-    bb2_terminal(["Return read b$4"])
+    bb2_terminal(["Return read b$2"])
   end
 
   %% Jumps
@@ -51,11 +51,11 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(a$3, b$4) {
-  bb2: while (a$3) {
+function foo$0(a$1, b$2) {
+  bb2: while (a$1) {
     break;
   }
-  return b$4;
+  return b$2;
 }
 
 ```

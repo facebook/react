@@ -26,13 +26,13 @@ function call(x) {}
 
 ```
 bb0:
-  [1] Const mutate cond$8 = read props$7.cond
-  [2] Const mutate x$9 = read props$7.x
-  [3] Let mutate a$10 = undefined
-  If (read cond$8) then:bb2 else:bb3
+  [1] Const mutate cond$2 = read props$1.cond
+  [2] Const mutate x$3 = read props$1.x
+  [3] Let mutate a$4 = undefined
+  If (read cond$2) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [4] Reassign mutate a$4 = read x$9
+  [4] Reassign mutate a$4 = read x$3
   Goto bb1
 bb3:
   predecessor blocks: bb0
@@ -53,15 +53,15 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate cond$8 = read props$7.cond
-      [2] Const mutate x$9 = read props$7.x
-      [3] Let mutate a$10 = undefined
+      [1] Const mutate cond$2 = read props$1.cond
+      [2] Const mutate x$3 = read props$1.x
+      [3] Let mutate a$4 = undefined
     "]
-    bb0_instrs --> bb0_terminal(["If (read cond$8)"])
+    bb0_instrs --> bb0_terminal(["If (read cond$2)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Reassign mutate a$4 = read x$9
+      [4] Reassign mutate a$4 = read x$3
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
@@ -92,12 +92,12 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$7) {
-  const cond$8 = props$7.cond;
-  const x$9 = props$7.x;
-  let a$10 = undefined;
-  bb1: if (cond$8) {
-    a$4 = x$9;
+function Component$0(props$1) {
+  const cond$2 = props$1.cond;
+  const x$3 = props$1.x;
+  let a$4 = undefined;
+  bb1: if (cond$2) {
+    a$4 = x$3;
   } else {
     a$4 = [];
   }
@@ -132,7 +132,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function useFreeze$0(x$2) {
+function useFreeze$0(x$1) {
   return;
 }
 
@@ -160,7 +160,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function call$0(x$2) {
+function call$0(x$1) {
   return;
 }
 

@@ -62,7 +62,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function mutate$0(x$3, y$4) {
+function mutate$0(x$1, y$2) {
   return;
 }
 
@@ -90,7 +90,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function cond$0(x$2) {
+function cond$0(x$1) {
   return;
 }
 
@@ -106,18 +106,18 @@ bb0:
   While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb4
-  [5] Const mutate $17 = true
-  If (read $17) then:bb3 else:bb2
+  [5] Const mutate $10 = true
+  If (read $10) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  [6] Let mutate z$19 = read a$2
-  [7] Reassign mutate a$2 = read b$3
-  [8] Reassign mutate b$3 = read c$4
+  [6] Let mutate z$6 = read a$2
+  [7] Reassign mutate a$2[7:12] = read b$3
+  [8] Reassign mutate b$3[8:11] = read c$4
   [9] Reassign mutate c$4 = read d$5
-  [10] Reassign mutate d$5 = read z$19
+  [10] Reassign mutate d$5 = read z$6
   [11] Call mutate mutate$7(mutate a$2, mutate b$3)
-  [12] Const mutate $29 = Call mutate cond$8(mutate a$2)
-  If (read $29) then:bb2 else:bb4
+  [12] Const mutate $9 = Call mutate cond$8(mutate a$2)
+  If (read $9) then:bb2 else:bb4
 bb4:
   predecessor blocks: bb3
   Goto(Continue) bb1
@@ -135,8 +135,8 @@ bb11:
   If (read d$5) then:bb13 else:bb13
 bb13:
   predecessor blocks: bb11
-  [13] Const mutate $34 = null
-  [14] Call mutate mutate$7(mutate d$5, read $34)
+  [13] Const mutate $11 = null
+  [14] Call mutate mutate$7(mutate d$5, read $11)
   Return
 ```
 
@@ -156,21 +156,21 @@ flowchart TB
   end
   subgraph bb1
     bb1_instrs["
-      [5] Const mutate $17 = true
+      [5] Const mutate $10 = true
     "]
-    bb1_instrs --> bb1_terminal(["If (read $17)"])
+    bb1_instrs --> bb1_terminal(["If (read $10)"])
   end
   subgraph bb3
     bb3_instrs["
-      [6] Let mutate z$19 = read a$2
-      [7] Reassign mutate a$2 = read b$3
-      [8] Reassign mutate b$3 = read c$4
+      [6] Let mutate z$6 = read a$2
+      [7] Reassign mutate a$2[7:12] = read b$3
+      [8] Reassign mutate b$3[8:11] = read c$4
       [9] Reassign mutate c$4 = read d$5
-      [10] Reassign mutate d$5 = read z$19
+      [10] Reassign mutate d$5 = read z$6
       [11] Call mutate mutate$7(mutate a$2, mutate b$3)
-      [12] Const mutate $29 = Call mutate cond$8(mutate a$2)
+      [12] Const mutate $9 = Call mutate cond$8(mutate a$2)
     "]
-    bb3_instrs --> bb3_terminal(["If (read $29)"])
+    bb3_instrs --> bb3_terminal(["If (read $9)"])
   end
   subgraph bb4
     bb4_terminal(["Goto"])
@@ -189,8 +189,8 @@ flowchart TB
   end
   subgraph bb13
     bb13_instrs["
-      [13] Const mutate $34 = null
-      [14] Call mutate mutate$7(mutate d$5, read $34)
+      [13] Const mutate $11 = null
+      [14] Call mutate mutate$7(mutate d$5, read $11)
     "]
     bb13_instrs --> bb13_terminal(["Return"])
   end
@@ -218,17 +218,17 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$12) {
+function Component$0(props$1) {
   let a$2 = {};
   let b$3 = {};
   let c$4 = {};
   let d$5 = {};
   bb2: while (true) {
-    let z$19 = a$2;
+    let z$6 = a$2;
     a$2 = b$3;
     b$3 = c$4;
     c$4 = d$5;
-    d$5 = z$19;
+    d$5 = z$6;
     mutate$7(a$2, b$3);
 
     bb4: if (cond$8(a$2)) break;

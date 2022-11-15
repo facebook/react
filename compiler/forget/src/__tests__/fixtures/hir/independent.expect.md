@@ -28,10 +28,10 @@ function Foo() {}
 
 ```
 bb0:
-  [1] Const mutate a$8 = Call mutate compute$3(read props$7.a)
-  [2] Const mutate b$9 = Call mutate compute$3(read props$7.b)
-  [3] Const mutate $10 = JSX <read Foo$5 a={freeze a$8} b={freeze b$9} ></read Foo$5>
-  Return read $10
+  [1] Const mutate a$2 = Call mutate compute$3(read props$1.a)
+  [2] Const mutate b$4 = Call mutate compute$3(read props$1.b)
+  [3] Const mutate $6 = JSX <read Foo$5 a={freeze a$2} b={freeze b$4} ></read Foo$5>
+  Return read $6
 ```
 
 ### CFG
@@ -41,11 +41,11 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$8 = Call mutate compute$3(read props$7.a)
-      [2] Const mutate b$9 = Call mutate compute$3(read props$7.b)
-      [3] Const mutate $10 = JSX <read Foo$5 a={freeze a$8} b={freeze b$9} ></read Foo$5>
+      [1] Const mutate a$2 = Call mutate compute$3(read props$1.a)
+      [2] Const mutate b$4 = Call mutate compute$3(read props$1.b)
+      [3] Const mutate $6 = JSX <read Foo$5 a={freeze a$2} b={freeze b$4} ></read Foo$5>
     "]
-    bb0_instrs --> bb0_terminal(["Return read $10"])
+    bb0_instrs --> bb0_terminal(["Return read $6"])
   end
 
   %% Jumps
@@ -55,10 +55,10 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$7) {
-  const a$8 = compute$3(props$7.a);
-  const b$9 = compute$3(props$7.b);
-  return <Foo$5 a={a$8} b={b$9}></Foo$5>;
+function Component$0(props$1) {
+  const a$2 = compute$3(props$1.a);
+  const b$4 = compute$3(props$1.b);
+  return <Foo$5 a={a$2} b={b$4}></Foo$5>;
 }
 
 ```

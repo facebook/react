@@ -18,10 +18,10 @@ function foo(x) {}
 
 ```
 bb0:
-  [1] Const mutate a$5 = Array []
-  [2] Const mutate b$6 = read a$5
-  [3] Call read useFreeze$3(freeze a$5)
-  [4] Call mutate foo$4(read b$6)
+  [1] Const mutate a$1 = Array []
+  [2] Const mutate b$2 = read a$1
+  [3] Call read useFreeze$3(freeze a$1)
+  [4] Call mutate foo$4(read b$2)
   Return
 ```
 
@@ -32,10 +32,10 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$5 = Array []
-      [2] Const mutate b$6 = read a$5
-      [3] Call read useFreeze$3(freeze a$5)
-      [4] Call mutate foo$4(read b$6)
+      [1] Const mutate a$1 = Array []
+      [2] Const mutate b$2 = read a$1
+      [3] Call read useFreeze$3(freeze a$1)
+      [4] Call mutate foo$4(read b$2)
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end
@@ -48,10 +48,10 @@ flowchart TB
 
 ```javascript
 function Component$0() {
-  const a$5 = [];
-  const b$6 = a$5;
-  useFreeze$3(a$5);
-  foo$4(b$6);
+  const a$1 = [];
+  const b$2 = a$1;
+  useFreeze$3(a$1);
+  foo$4(b$2);
   return;
 }
 
@@ -107,7 +107,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(x$2) {
+function foo$0(x$1) {
   return;
 }
 

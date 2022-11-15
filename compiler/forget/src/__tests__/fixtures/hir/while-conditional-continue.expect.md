@@ -22,20 +22,20 @@ bb0:
   While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb5 bb4
-  If (read a$5) then:bb3 else:bb2
+  If (read a$1) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  If (read b$6) then:bb5 else:bb4
+  If (read b$2) then:bb5 else:bb4
 bb5:
   predecessor blocks: bb3
   Goto(Continue) bb1
 bb4:
   predecessor blocks: bb3
-  [1] Call read c$7()
+  [1] Call read c$3()
   Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  [2] Call read d$8()
+  [2] Call read d$4()
   Return
 ```
 
@@ -48,23 +48,23 @@ flowchart TB
     bb0_terminal(["While"])
   end
   subgraph bb1
-    bb1_terminal(["If (read a$5)"])
+    bb1_terminal(["If (read a$1)"])
   end
   subgraph bb3
-    bb3_terminal(["If (read b$6)"])
+    bb3_terminal(["If (read b$2)"])
   end
   subgraph bb5
     bb5_terminal(["Goto"])
   end
   subgraph bb4
     bb4_instrs["
-      [1] Call read c$7()
+      [1] Call read c$3()
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [2] Call read d$8()
+      [2] Call read d$4()
     "]
     bb2_instrs --> bb2_terminal(["Return"])
   end
@@ -85,15 +85,15 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(a$5, b$6, c$7, d$8) {
-  bb2: while (a$5) {
-    bb4: if (b$6) {
+function foo$0(a$1, b$2, c$3, d$4) {
+  bb2: while (a$1) {
+    bb4: if (b$2) {
       continue;
     }
-    c$7();
+    c$3();
   }
 
-  d$8();
+  d$4();
   return;
 }
 

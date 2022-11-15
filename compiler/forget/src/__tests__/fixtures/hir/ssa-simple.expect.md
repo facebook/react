@@ -13,8 +13,8 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$3 = 1
-  [2] Let mutate y$4 = 2
+  [1] Let mutate x$1 = 1
+  [2] Let mutate y$2 = 2
   Return
 ```
 
@@ -25,8 +25,8 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$3 = 1
-      [2] Let mutate y$4 = 2
+      [1] Let mutate x$1 = 1
+      [2] Let mutate y$2 = 2
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end
@@ -39,8 +39,8 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  let x$3 = 1;
-  let y$4 = 2;
+  let x$1 = 1;
+  let y$2 = 2;
   return;
 }
 

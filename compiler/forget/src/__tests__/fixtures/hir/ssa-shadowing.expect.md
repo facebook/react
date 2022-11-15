@@ -50,11 +50,11 @@ function log$0() {
 ```
 bb0:
   [1] Let mutate str$2 = ""
-  If (read cond$5) then:bb2 else:bb3
+  If (read cond$1) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [2] Let mutate str$7 = "other test"
-  [3] Call mutate log$4(read str$7)
+  [2] Let mutate str$3 = "other test"
+  [3] Call mutate log$4(read str$3)
   Goto bb1
 bb3:
   predecessor blocks: bb0
@@ -75,12 +75,12 @@ flowchart TB
     bb0_instrs["
       [1] Let mutate str$2 = ''
     "]
-    bb0_instrs --> bb0_terminal(["If (read cond$5)"])
+    bb0_instrs --> bb0_terminal(["If (read cond$1)"])
   end
   subgraph bb2
     bb2_instrs["
-      [2] Let mutate str$7 = 'other test'
-      [3] Call mutate log$4(read str$7)
+      [2] Let mutate str$3 = 'other test'
+      [3] Call mutate log$4(read str$3)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
@@ -109,11 +109,11 @@ flowchart TB
 ## Code
 
 ```javascript
-function Foo$0(cond$5) {
+function Foo$0(cond$1) {
   let str$2 = "";
-  bb1: if (cond$5) {
-    let str$7 = "other test";
-    log$4(str$7);
+  bb1: if (cond$1) {
+    let str$3 = "other test";
+    log$4(str$3);
   } else {
     str$2 = "fallthrough test";
   }
