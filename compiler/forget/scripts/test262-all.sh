@@ -7,5 +7,5 @@ set -eo pipefail
 
 for dir in test262/test/*;
 do
-  yarn test262 $dir/**/*.js;
+  yarn run --silent test262 $dir/**/*.js;
 done

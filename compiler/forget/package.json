@@ -14,7 +14,7 @@
     "playground": "cd packages/playground && yarn && yarn dev",
     "test": "yarn build && jest",
     "ts:analyze-trace": "scripts/ts-analyze-trace.sh",
-    "test262": "yarn test262-harness --preprocessor=scripts/test262-preprocessor.js",
+    "test262": "yarn run --silent test262-harness --preprocessor=scripts/test262-preprocessor.js",
     "test262:all": "scripts/test262-all.sh"
   },
   "repository": {
