@@ -2,3 +2,4 @@
 **/dist
 **/__tests__/fixtures/**/*.expect.md
 **/.next
+/test262
