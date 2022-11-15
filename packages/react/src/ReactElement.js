@@ -360,8 +360,6 @@ export function jsxDEV(type, config, maybeKey, source, self) {
  * See https://reactjs.org/docs/react-api.html#createelement
  */
 export function createElement(type, config, children) {
-  let propName;
-
   // Reserved names are extracted
   const props = {};
 
@@ -388,7 +386,7 @@ export function createElement(type, config, children) {
     self = config.__self === undefined ? null : config.__self;
     source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
-    for (propName in config) {
+    for (let propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
         !RESERVED_PROPS.hasOwnProperty(propName)
@@ -419,7 +417,7 @@ export function createElement(type, config, children) {
   // Resolve default props
   if (type && type.defaultProps) {
     const defaultProps = type.defaultProps;
-    for (propName in defaultProps) {
+    for (let propName in defaultProps) {
       if (props[propName] === undefined) {
         props[propName] = defaultProps[propName];
       }
