@@ -38,6 +38,18 @@ const GLOBALS: Map<string, t.Identifier> = new Map([
   ["Math", t.identifier("Math")],
 ]);
 
+// TODO: This will work as a stopgap but it isn't really correct. We need proper handling of globals
+// and module-scoped variables, which means understanding module constants and imports.
+function getOrAddGlobal(identifierName: string): t.Identifier {
+  const ident = GLOBALS.get(identifierName);
+  if (ident != null) {
+    return ident;
+  }
+  const newIdent = t.identifier(identifierName);
+  GLOBALS.set(identifierName, newIdent);
+  return newIdent;
+}
+
 /**
  * Lower a function declaration into a control flow graph that models aspects of
  * control flow that are necessary for memoization. Notably, only control flow
@@ -1095,7 +1107,7 @@ function lowerJsxElementName(
   const tag: string = exprPath.node.name;
   if (tag.match(/^[A-Z]/)) {
     const binding =
-      exprPath.scope.getBindingIdentifier(tag) ?? GLOBALS.get(tag);
+      exprPath.scope.getBindingIdentifier(tag) ?? getOrAddGlobal(tag);
     invariant(
       binding != null,
       `Expected to find a binding for variable '%s'`,
@@ -1229,7 +1241,7 @@ function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
       //   const name: string = expr.get("name");
       const binding =
         exprPath.scope.getBindingIdentifier(exprNode.name) ??
-        GLOBALS.get(exprNode.name);
+        getOrAddGlobal(exprNode.name);
       invariant(
         binding != null,
         `Expected to find a binding for variable '%s'`,
