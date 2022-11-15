@@ -79,14 +79,14 @@ function foo$0() {
 
 ```
 bb0:
-  [1] Const mutate x$2 = Array []
-  [2] Const mutate y$3 = Call read useFreeze$4(freeze x$2)
-  [3] Call mutate foo$5(read y$3, read x$2)
-  [4] Const mutate $6 = "\n      "
-  [5] Const mutate $7 = "\n      "
-  [6] Const mutate $8 = "\n    "
-  [7] Const mutate $9 = JSX <read Component$0>{read $6}{read x$2}{read $7}{read y$3}{read $8}</read Component$0>
-  Return read $9
+  [1] Const mutate x$2_@0 = Array []
+  [2] Const mutate y$3_@1 = Call read useFreeze$4(freeze x$2_@0)
+  [3] Call mutate foo$5_@2(read y$3_@1, read x$2_@0)
+  [4] Const mutate $6_@3 = "\n      "
+  [5] Const mutate $7_@4 = "\n      "
+  [6] Const mutate $8_@5 = "\n    "
+  [7] Const mutate $9_@6 = JSX <read Component$0>{read $6_@3}{read x$2_@0}{read $7_@4}{read y$3_@1}{read $8_@5}</read Component$0>
+  Return read $9_@6
 ```
 
 ### CFG
@@ -96,15 +96,15 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$2 = Array []
-      [2] Const mutate y$3 = Call read useFreeze$4(freeze x$2)
-      [3] Call mutate foo$5(read y$3, read x$2)
-      [4] Const mutate $6 = '\n      '
-      [5] Const mutate $7 = '\n      '
-      [6] Const mutate $8 = '\n    '
-      [7] Const mutate $9 = JSX <read Component$0>{read $6}{read x$2}{read $7}{read y$3}{read $8}</read Component$0>
+      [1] Const mutate x$2_@0 = Array []
+      [2] Const mutate y$3_@1 = Call read useFreeze$4(freeze x$2_@0)
+      [3] Call mutate foo$5_@2(read y$3_@1, read x$2_@0)
+      [4] Const mutate $6_@3 = '\n      '
+      [5] Const mutate $7_@4 = '\n      '
+      [6] Const mutate $8_@5 = '\n    '
+      [7] Const mutate $9_@6 = JSX <read Component$0>{read $6_@3}{read x$2_@0}{read $7_@4}{read y$3_@1}{read $8_@5}</read Component$0>
     "]
-    bb0_instrs --> bb0_terminal(["Return read $9"])
+    bb0_instrs --> bb0_terminal(["Return read $9_@6"])
   end
 
   %% Jumps

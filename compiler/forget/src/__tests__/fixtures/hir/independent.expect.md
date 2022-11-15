@@ -28,10 +28,10 @@ function Foo() {}
 
 ```
 bb0:
-  [1] Const mutate a$2 = Call mutate compute$3(read props$1.a)
-  [2] Const mutate b$4 = Call mutate compute$3(read props$1.b)
-  [3] Const mutate $6 = JSX <read Foo$5 a={freeze a$2} b={freeze b$4} ></read Foo$5>
-  Return read $6
+  [1] Const mutate a$2_@0 = Call mutate compute$3_@0(read props$1.a)
+  [2] Const mutate b$4_@0 = Call mutate compute$3_@0(read props$1.b)
+  [3] Const mutate $6_@1 = JSX <read Foo$5 a={freeze a$2_@0} b={freeze b$4_@0} ></read Foo$5>
+  Return read $6_@1
 ```
 
 ### CFG
@@ -41,11 +41,11 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2 = Call mutate compute$3(read props$1.a)
-      [2] Const mutate b$4 = Call mutate compute$3(read props$1.b)
-      [3] Const mutate $6 = JSX <read Foo$5 a={freeze a$2} b={freeze b$4} ></read Foo$5>
+      [1] Const mutate a$2_@0 = Call mutate compute$3_@0(read props$1.a)
+      [2] Const mutate b$4_@0 = Call mutate compute$3_@0(read props$1.b)
+      [3] Const mutate $6_@1 = JSX <read Foo$5 a={freeze a$2_@0} b={freeze b$4_@0} ></read Foo$5>
     "]
-    bb0_instrs --> bb0_terminal(["Return read $6"])
+    bb0_instrs --> bb0_terminal(["Return read $6_@1"])
   end
 
   %% Jumps

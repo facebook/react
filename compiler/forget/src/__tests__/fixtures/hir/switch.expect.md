@@ -28,30 +28,30 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Let mutate x$2[1:6] = Array []
-  [2] Let mutate y$3 = undefined
-  [3] Const mutate $4 = false
-  [4] Const mutate $5 = true
+  [1] Let mutate x$2_@0[1:6] = Array []
+  [2] Let mutate y$3_@1 = undefined
+  [3] Const mutate $4_@2 = false
+  [4] Const mutate $5_@3 = true
   Switch (read props$1.p0)
-    Case read $5: bb4
-    Case read $4: bb2
+    Case read $5_@3: bb4
+    Case read $4_@2: bb2
     Default: bb1
 bb4:
   predecessor blocks: bb0
-  [5] Call mutate x$2.push(read props$1.p2)
-  [6] Call mutate x$2.push(read props$1.p3)
-  [7] Reassign mutate y$3 = Array []
+  [5] Call mutate x$2_@0.push(read props$1.p2)
+  [6] Call mutate x$2_@0.push(read props$1.p3)
+  [7] Reassign mutate y$3_@4 = Array []
   Goto bb2
 bb2:
   predecessor blocks: bb4 bb0
-  [8] Reassign mutate y$3 = read x$2
+  [8] Reassign mutate y$3_@5 = read x$2_@0
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [9] Const mutate child$6 = JSX <read Component$0 data={freeze x$2} ></read Component$0>
+  [9] Const mutate child$6_@6 = JSX <read Component$0 data={freeze x$2_@0} ></read Component$0>
   [10] Call read y$3.push(read props$1.p4)
-  [11] Const mutate $7 = JSX <read Component$0 data={read y$3} >{read child$6}</read Component$0>
-  Return read $7
+  [11] Const mutate $7_@7 = JSX <read Component$0 data={read y$3} >{read child$6_@6}</read Component$0>
+  Return read $7_@7
 ```
 
 ### CFG
@@ -61,39 +61,39 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$2[1:6] = Array []
-      [2] Let mutate y$3 = undefined
-      [3] Const mutate $4 = false
-      [4] Const mutate $5 = true
+      [1] Let mutate x$2_@0[1:6] = Array []
+      [2] Let mutate y$3_@1 = undefined
+      [3] Const mutate $4_@2 = false
+      [4] Const mutate $5_@3 = true
     "]
     bb0_instrs --> bb0_terminal(["Switch (read props$1.p0)"])
   end
   subgraph bb4
     bb4_instrs["
-      [5] Call mutate x$2.push(read props$1.p2)
-      [6] Call mutate x$2.push(read props$1.p3)
-      [7] Reassign mutate y$3 = Array []
+      [5] Call mutate x$2_@0.push(read props$1.p2)
+      [6] Call mutate x$2_@0.push(read props$1.p3)
+      [7] Reassign mutate y$3_@4 = Array []
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [8] Reassign mutate y$3 = read x$2
+      [8] Reassign mutate y$3_@5 = read x$2_@0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [9] Const mutate child$6 = JSX <read Component$0 data={freeze x$2} ></read Component$0>
+      [9] Const mutate child$6_@6 = JSX <read Component$0 data={freeze x$2_@0} ></read Component$0>
       [10] Call read y$3.push(read props$1.p4)
-      [11] Const mutate $7 = JSX <read Component$0 data={read y$3} >{read child$6}</read Component$0>
+      [11] Const mutate $7_@7 = JSX <read Component$0 data={read y$3} >{read child$6_@6}</read Component$0>
     "]
-    bb1_instrs --> bb1_terminal(["Return read $7"])
+    bb1_instrs --> bb1_terminal(["Return read $7_@7"])
   end
 
   %% Jumps
-  bb0_terminal -- read $5 --> bb4
-  bb0_terminal -- read $4 --> bb2
+  bb0_terminal -- read $5_@3 --> bb4
+  bb0_terminal -- read $4_@2 --> bb2
   bb0_terminal -- default --> bb1
   bb0_terminal -- fallthrough --> bb1
   bb4_terminal --> bb2

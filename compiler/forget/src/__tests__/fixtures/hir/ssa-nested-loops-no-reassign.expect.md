@@ -21,7 +21,7 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Let mutate x$4 = 0
+  [1] Let mutate x$4_@0 = 0
   While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb5
@@ -40,8 +40,8 @@ bb7:
   If (read c$3) then:bb9 else:bb8
 bb9:
   predecessor blocks: bb7
-  [2] Const mutate $5 = 1
-  [3] Binary read x$4 + read $5
+  [2] Const mutate $5_@1 = 1
+  [3] Binary read x$4_@0 + read $5_@1
   Goto(Continue) bb7
 bb8:
   predecessor blocks: bb7
@@ -51,7 +51,7 @@ bb5:
   Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  Return read x$4
+  Return read x$4_@0
 ```
 
 ### CFG
@@ -61,7 +61,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$4 = 0
+      [1] Let mutate x$4_@0 = 0
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
@@ -82,8 +82,8 @@ flowchart TB
   end
   subgraph bb9
     bb9_instrs["
-      [2] Const mutate $5 = 1
-      [3] Binary read x$4 + read $5
+      [2] Const mutate $5_@1 = 1
+      [3] Binary read x$4_@0 + read $5_@1
     "]
     bb9_instrs --> bb9_terminal(["Goto"])
   end
@@ -94,7 +94,7 @@ flowchart TB
     bb5_terminal(["Goto"])
   end
   subgraph bb2
-    bb2_terminal(["Return read x$4"])
+    bb2_terminal(["Return read x$4_@0"])
   end
 
   %% Jumps

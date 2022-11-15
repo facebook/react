@@ -56,6 +56,7 @@ class SSABuilder {
         start: 0,
         end: 0,
       },
+      scope: null, // reset along w the mutable range
     };
   }
 

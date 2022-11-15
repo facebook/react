@@ -17,21 +17,21 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1 = 1
+  [1] Let mutate x$1_@0 = 1
   While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
-  [2] Const mutate $3 = 10
-  [3] Const mutate $4 = Binary read x$1 < read $3
-  If (read $4) then:bb3 else:bb2
+  [2] Const mutate $3_@1 = 10
+  [3] Const mutate $4_@2 = Binary read x$1_@0 < read $3_@1
+  If (read $4_@2) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  [4] Const mutate $2 = 1
-  [5] Binary read x$1 + read $2
+  [4] Const mutate $2_@3 = 1
+  [5] Binary read x$1_@0 + read $2_@3
   Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  Return read x$1
+  Return read x$1_@0
 ```
 
 ### CFG
@@ -41,26 +41,26 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1 = 1
+      [1] Let mutate x$1_@0 = 1
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
   subgraph bb1
     bb1_instrs["
-      [2] Const mutate $3 = 10
-      [3] Const mutate $4 = Binary read x$1 < read $3
+      [2] Const mutate $3_@1 = 10
+      [3] Const mutate $4_@2 = Binary read x$1_@0 < read $3_@1
     "]
-    bb1_instrs --> bb1_terminal(["If (read $4)"])
+    bb1_instrs --> bb1_terminal(["If (read $4_@2)"])
   end
   subgraph bb3
     bb3_instrs["
-      [4] Const mutate $2 = 1
-      [5] Binary read x$1 + read $2
+      [4] Const mutate $2_@3 = 1
+      [5] Binary read x$1_@0 + read $2_@3
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb2
-    bb2_terminal(["Return read x$1"])
+    bb2_terminal(["Return read x$1_@0"])
   end
 
   %% Jumps

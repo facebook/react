@@ -18,15 +18,15 @@ bb0:
   If (read x$1) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [1] Const mutate $3 = false
-  [2] Const mutate $4 = Call read foo$0(read $3, read y$2)
-  Return freeze $4
+  [1] Const mutate $3_@0 = false
+  [2] Const mutate $4_@1 = Call read foo$0(read $3_@0, read y$2)
+  Return freeze $4_@1
 bb1:
   predecessor blocks: bb0
-  [3] Const mutate $5 = 10
-  [4] Const mutate $6 = Binary read y$2 * read $5
-  [5] Const mutate $7 = Array [read $6]
-  Return freeze $7
+  [3] Const mutate $5_@2 = 10
+  [4] Const mutate $6_@3 = Binary read y$2 * read $5_@2
+  [5] Const mutate $7_@4 = Array [read $6_@3]
+  Return freeze $7_@4
 ```
 
 ### CFG
@@ -39,18 +39,18 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [1] Const mutate $3 = false
-      [2] Const mutate $4 = Call read foo$0(read $3, read y$2)
+      [1] Const mutate $3_@0 = false
+      [2] Const mutate $4_@1 = Call read foo$0(read $3_@0, read y$2)
     "]
-    bb2_instrs --> bb2_terminal(["Return freeze $4"])
+    bb2_instrs --> bb2_terminal(["Return freeze $4_@1"])
   end
   subgraph bb1
     bb1_instrs["
-      [3] Const mutate $5 = 10
-      [4] Const mutate $6 = Binary read y$2 * read $5
-      [5] Const mutate $7 = Array [read $6]
+      [3] Const mutate $5_@2 = 10
+      [4] Const mutate $6_@3 = Binary read y$2 * read $5_@2
+      [5] Const mutate $7_@4 = Array [read $6_@3]
     "]
-    bb1_instrs --> bb1_terminal(["Return freeze $7"])
+    bb1_instrs --> bb1_terminal(["Return freeze $7_@4"])
   end
 
   %% Jumps

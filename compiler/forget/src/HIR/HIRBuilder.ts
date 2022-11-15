@@ -113,6 +113,7 @@ export default class HIRBuilder {
       id,
       name: null,
       mutableRange: { start: 0, end: 0 },
+      scope: null,
     };
   }
 
@@ -125,6 +126,7 @@ export default class HIRBuilder {
         id,
         name: node.name,
         mutableRange: { start: 0, end: 0 },
+        scope: null,
       };
       this.#bindings.set(node, identifier);
     }

@@ -78,17 +78,17 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate a_DEBUG$2[1:4] = Array []
-  [2] Call mutate a_DEBUG$2.push(read props$1.a)
+  [1] Const mutate a_DEBUG$2_@0[1:4] = Array []
+  [2] Call mutate a_DEBUG$2_@0.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [3] Const mutate $3 = null
-  Return read $3
+  [3] Const mutate $3_@1 = null
+  Return read $3_@1
 bb1:
   predecessor blocks: bb0
-  [4] Call mutate a_DEBUG$2.push(read props$1.d)
-  Return freeze a_DEBUG$2
+  [4] Call mutate a_DEBUG$2_@0.push(read props$1.d)
+  Return freeze a_DEBUG$2_@0
 ```
 
 ### CFG
@@ -98,22 +98,22 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a_DEBUG$2[1:4] = Array []
-      [2] Call mutate a_DEBUG$2.push(read props$1.a)
+      [1] Const mutate a_DEBUG$2_@0[1:4] = Array []
+      [2] Call mutate a_DEBUG$2_@0.push(read props$1.a)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.b)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Const mutate $3 = null
+      [3] Const mutate $3_@1 = null
     "]
-    bb2_instrs --> bb2_terminal(["Return read $3"])
+    bb2_instrs --> bb2_terminal(["Return read $3_@1"])
   end
   subgraph bb1
     bb1_instrs["
-      [4] Call mutate a_DEBUG$2.push(read props$1.d)
+      [4] Call mutate a_DEBUG$2_@0.push(read props$1.d)
     "]
-    bb1_instrs --> bb1_terminal(["Return freeze a_DEBUG$2"])
+    bb1_instrs --> bb1_terminal(["Return freeze a_DEBUG$2_@0"])
   end
 
   %% Jumps
@@ -141,17 +141,17 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  [1] Const mutate a$2[1:4] = Array []
-  [2] Call mutate a$2.push(read props$1.a)
+  [1] Const mutate a$2_@0[1:4] = Array []
+  [2] Call mutate a$2_@0.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [3] Call mutate a$2.push(read props$1.c)
+  [3] Call mutate a$2_@0.push(read props$1.c)
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [4] Call mutate a$2.push(read props$1.d)
-  Return freeze a$2
+  [4] Call mutate a$2_@0.push(read props$1.d)
+  Return freeze a$2_@0
 ```
 
 ### CFG
@@ -161,22 +161,22 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2[1:4] = Array []
-      [2] Call mutate a$2.push(read props$1.a)
+      [1] Const mutate a$2_@0[1:4] = Array []
+      [2] Call mutate a$2_@0.push(read props$1.a)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.b)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Call mutate a$2.push(read props$1.c)
+      [3] Call mutate a$2_@0.push(read props$1.c)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [4] Call mutate a$2.push(read props$1.d)
+      [4] Call mutate a$2_@0.push(read props$1.d)
     "]
-    bb1_instrs --> bb1_terminal(["Return freeze a$2"])
+    bb1_instrs --> bb1_terminal(["Return freeze a$2_@0"])
   end
 
   %% Jumps
@@ -205,18 +205,18 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  [1] Const mutate a$2[1:5] = Array []
-  [2] Call mutate a$2.push(read props$1.a)
+  [1] Const mutate a$2_@0[1:5] = Array []
+  [2] Call mutate a$2_@0.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [3] Call mutate a$2.push(read props$1.c)
-  [4] Const mutate $3 = null
-  Return read $3
+  [3] Call mutate a$2_@0.push(read props$1.c)
+  [4] Const mutate $3_@1 = null
+  Return read $3_@1
 bb1:
   predecessor blocks: bb0
-  [5] Call mutate a$2.push(read props$1.d)
-  Return freeze a$2
+  [5] Call mutate a$2_@0.push(read props$1.d)
+  Return freeze a$2_@0
 ```
 
 ### CFG
@@ -226,23 +226,23 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2[1:5] = Array []
-      [2] Call mutate a$2.push(read props$1.a)
+      [1] Const mutate a$2_@0[1:5] = Array []
+      [2] Call mutate a$2_@0.push(read props$1.a)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.b)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Call mutate a$2.push(read props$1.c)
-      [4] Const mutate $3 = null
+      [3] Call mutate a$2_@0.push(read props$1.c)
+      [4] Const mutate $3_@1 = null
     "]
-    bb2_instrs --> bb2_terminal(["Return read $3"])
+    bb2_instrs --> bb2_terminal(["Return read $3_@1"])
   end
   subgraph bb1
     bb1_instrs["
-      [5] Call mutate a$2.push(read props$1.d)
+      [5] Call mutate a$2_@0.push(read props$1.d)
     "]
-    bb1_instrs --> bb1_terminal(["Return freeze a$2"])
+    bb1_instrs --> bb1_terminal(["Return freeze a$2_@0"])
   end
 
   %% Jumps
@@ -271,17 +271,17 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  [1] Const mutate a$2[1:4] = Array []
-  [2] Call mutate a$2.push(read props$1.a)
+  [1] Const mutate a$2_@0[1:4] = Array []
+  [2] Call mutate a$2_@0.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [3] Call mutate a$2.push(read props$1.c)
-  Return freeze a$2
+  [3] Call mutate a$2_@0.push(read props$1.c)
+  Return freeze a$2_@0
 bb1:
   predecessor blocks: bb0
-  [4] Call mutate a$2.push(read props$1.d)
-  Return freeze a$2
+  [4] Call mutate a$2_@0.push(read props$1.d)
+  Return freeze a$2_@0
 ```
 
 ### CFG
@@ -291,22 +291,22 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2[1:4] = Array []
-      [2] Call mutate a$2.push(read props$1.a)
+      [1] Const mutate a$2_@0[1:4] = Array []
+      [2] Call mutate a$2_@0.push(read props$1.a)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.b)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Call mutate a$2.push(read props$1.c)
+      [3] Call mutate a$2_@0.push(read props$1.c)
     "]
-    bb2_instrs --> bb2_terminal(["Return freeze a$2"])
+    bb2_instrs --> bb2_terminal(["Return freeze a$2_@0"])
   end
   subgraph bb1
     bb1_instrs["
-      [4] Call mutate a$2.push(read props$1.d)
+      [4] Call mutate a$2_@0.push(read props$1.d)
     "]
-    bb1_instrs --> bb1_terminal(["Return freeze a$2"])
+    bb1_instrs --> bb1_terminal(["Return freeze a$2_@0"])
   end
 
   %% Jumps
@@ -335,17 +335,17 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  [1] Const mutate a$2[1:4] = Array []
-  [2] Call mutate a$2.push(read props$1.a)
+  [1] Const mutate a$2_@0[1:4] = Array []
+  [2] Call mutate a$2_@0.push(read props$1.a)
   If (read props$1.b) then:bb1 else:bb2
 bb2:
   predecessor blocks: bb0
-  [3] Call mutate a$2.push(read props$1.c)
+  [3] Call mutate a$2_@0.push(read props$1.c)
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb2
-  [4] Call mutate a$2.push(read props$1.d)
-  Return freeze a$2
+  [4] Call mutate a$2_@0.push(read props$1.d)
+  Return freeze a$2_@0
 ```
 
 ### CFG
@@ -355,22 +355,22 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2[1:4] = Array []
-      [2] Call mutate a$2.push(read props$1.a)
+      [1] Const mutate a$2_@0[1:4] = Array []
+      [2] Call mutate a$2_@0.push(read props$1.a)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.b)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Call mutate a$2.push(read props$1.c)
+      [3] Call mutate a$2_@0.push(read props$1.c)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [4] Call mutate a$2.push(read props$1.d)
+      [4] Call mutate a$2_@0.push(read props$1.d)
     "]
-    bb1_instrs --> bb1_terminal(["Return freeze a$2"])
+    bb1_instrs --> bb1_terminal(["Return freeze a$2_@0"])
   end
 
   %% Jumps

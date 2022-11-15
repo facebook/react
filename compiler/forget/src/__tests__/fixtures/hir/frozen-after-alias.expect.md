@@ -18,10 +18,10 @@ function foo(x) {}
 
 ```
 bb0:
-  [1] Const mutate a$1 = Array []
-  [2] Const mutate b$2 = read a$1
-  [3] Call read useFreeze$3(freeze a$1)
-  [4] Call mutate foo$4(read b$2)
+  [1] Const mutate a$1_@0 = Array []
+  [2] Const mutate b$2_@1 = read a$1_@0
+  [3] Call read useFreeze$3(freeze a$1_@0)
+  [4] Call mutate foo$4_@2(read b$2_@1)
   Return
 ```
 
@@ -32,10 +32,10 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$1 = Array []
-      [2] Const mutate b$2 = read a$1
-      [3] Call read useFreeze$3(freeze a$1)
-      [4] Call mutate foo$4(read b$2)
+      [1] Const mutate a$1_@0 = Array []
+      [2] Const mutate b$2_@1 = read a$1_@0
+      [3] Call read useFreeze$3(freeze a$1_@0)
+      [4] Call mutate foo$4_@2(read b$2_@1)
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end

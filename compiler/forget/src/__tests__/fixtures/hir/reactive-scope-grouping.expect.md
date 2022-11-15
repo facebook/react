@@ -1,0 +1,62 @@
+
+## Input
+
+```javascript
+function foo() {
+  let x = {};
+  let y = [];
+  let z = {};
+  y.push(z);
+  x.y = y;
+
+  return x;
+}
+
+```
+
+## HIR
+
+```
+bb0:
+  [1] Let mutate x$1_@0[1:5] = Object {  }
+  [2] Let mutate y$2_@1[2:4] = Array []
+  [3] Let mutate z$3_@1[3:4] = Object {  }
+  [4] Call mutate y$2_@1.push(mutate z$3_@1)
+  [5] Reassign mutate x$1_@0.y[1:5] = read y$2_@1
+  Return freeze x$1_@0
+```
+
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Let mutate x$1_@0[1:5] = Object {  }
+      [2] Let mutate y$2_@1[2:4] = Array []
+      [3] Let mutate z$3_@1[3:4] = Object {  }
+      [4] Call mutate y$2_@1.push(mutate z$3_@1)
+      [5] Reassign mutate x$1_@0.y[1:5] = read y$2_@1
+    "]
+    bb0_instrs --> bb0_terminal(["Return freeze x$1_@0"])
+  end
+
+  %% Jumps
+  %% empty
+```
+
+## Code
+
+```javascript
+function foo$0() {
+  let x$1 = {};
+  let y$2 = [];
+  let z$3 = {};
+  y$2.push(z$3);
+  x$1.y = y$2;
+  return x$1;
+}
+
+```
+      

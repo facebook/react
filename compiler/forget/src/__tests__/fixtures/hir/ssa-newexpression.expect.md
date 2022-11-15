@@ -45,10 +45,10 @@ function Foo$0() {
 
 ```
 bb0:
-  [1] Const mutate a$2[1:3] = Array []
-  [2] Const mutate b$3[2:3] = Object {  }
-  [3] Let mutate c$4 = New mutate Foo$5(mutate a$2, mutate b$3)
-  Return freeze c$4
+  [1] Const mutate a$2_@0[1:3] = Array []
+  [2] Const mutate b$3_@0[2:3] = Object {  }
+  [3] Let mutate c$4_@0 = New mutate Foo$5_@0(mutate a$2_@0, mutate b$3_@0)
+  Return freeze c$4_@0
 ```
 
 ### CFG
@@ -58,11 +58,11 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2[1:3] = Array []
-      [2] Const mutate b$3[2:3] = Object {  }
-      [3] Let mutate c$4 = New mutate Foo$5(mutate a$2, mutate b$3)
+      [1] Const mutate a$2_@0[1:3] = Array []
+      [2] Const mutate b$3_@0[2:3] = Object {  }
+      [3] Let mutate c$4_@0 = New mutate Foo$5_@0(mutate a$2_@0, mutate b$3_@0)
     "]
-    bb0_instrs --> bb0_terminal(["Return freeze c$4"])
+    bb0_instrs --> bb0_terminal(["Return freeze c$4_@0"])
   end
 
   %% Jumps

@@ -296,7 +296,9 @@ export function printPlace(place: Place): string {
 }
 
 export function printIdentifier(id: Identifier): string {
-  return `${id.name ?? ""}\$${id.id}`;
+  return `${id.name ?? ""}\$${id.id}${
+    id.scope !== null ? `_@${id.scope}` : ""
+  }`;
 }
 
 export function printSourceLocation(loc: SourceLocation): string {

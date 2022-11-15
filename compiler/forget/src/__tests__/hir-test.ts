@@ -21,6 +21,7 @@ import enterSSA from "../HIR/EnterSSA";
 import { HIRFunction } from "../HIR/HIR";
 import { Environment } from "../HIR/HIRBuilder";
 import { inferMutableRanges } from "../HIR/InferMutableLifetimes";
+import { inferReactiveScopeVariables } from "../HIR/InferReactiveScopeVariables";
 import inferReferenceEffects from "../HIR/InferReferenceEffects";
 import leaveSSA from "../HIR/LeaveSSA";
 import printHIR from "../HIR/PrintHIR";
@@ -70,6 +71,7 @@ describe("React Forget (HIR version)", () => {
             eliminateRedundantPhi(ir);
             inferReferenceEffects(ir);
             inferMutableRanges(ir);
+            inferReactiveScopeVariables(ir);
             leaveSSA(ir);
             const textHIR = printHIR(ir.body);
             const visualization = visualizeHIRMermaid(ir);

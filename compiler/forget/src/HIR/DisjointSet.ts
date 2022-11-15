@@ -22,7 +22,7 @@ export default class DisjointSet<T> {
     const first = items.shift();
     invariant(first != null, "Expected set to be non-empty");
     // determine an arbitrary "root" for this set: if the first
-    // item already has a root use that, otherwise the first item
+    // item already has a root then use that, otherwise the first item
     // will be the new root.
     let root = this.#entries.get(first);
     if (root == null) {
@@ -31,19 +31,19 @@ export default class DisjointSet<T> {
     }
     // update remaining items (which may already be part of other sets)
     for (const item of items) {
-      let parent = this.#entries.get(item);
-      if (parent == null) {
+      let itemParent = this.#entries.get(item);
+      if (itemParent == null) {
         // new item, no existing set to update
         this.#entries.set(item, root);
         continue;
-      } else if (parent === root) {
+      } else if (itemParent === root) {
         continue;
       } else {
         let current = item;
-        while (parent !== root && parent !== current) {
+        while (itemParent !== root) {
           this.#entries.set(current, root);
-          current = parent;
-          parent = this.#entries.get(current)!;
+          current = itemParent;
+          itemParent = this.#entries.get(current)!;
         }
       }
     }

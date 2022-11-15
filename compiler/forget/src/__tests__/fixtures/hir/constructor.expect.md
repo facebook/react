@@ -47,15 +47,15 @@ function Foo$0() {
 
 ```
 bb0:
-  [1] Const mutate a$2[1:3] = Array []
-  [2] Const mutate b$3[2:6] = Object {  }
-  [3] New mutate Foo$4(mutate a$2, mutate b$3)
-  [4] Const mutate $6 = "div"
-  [5] Let mutate _$5 = JSX <read $6 a={freeze a$2} ></read $6>
-  [6] New mutate Foo$4(mutate b$3)
-  [7] Const mutate $7 = "div"
-  [8] Const mutate $8 = JSX <read $7 a={read a$2} b={freeze b$3} ></read $7>
-  Return read $8
+  [1] Const mutate a$2_@0[1:3] = Array []
+  [2] Const mutate b$3_@0[2:6] = Object {  }
+  [3] New mutate Foo$4_@0(mutate a$2_@0, mutate b$3_@0)
+  [4] Const mutate $6_@1 = "div"
+  [5] Let mutate _$5_@2 = JSX <read $6_@1 a={freeze a$2_@0} ></read $6_@1>
+  [6] New mutate Foo$4_@0(mutate b$3_@0)
+  [7] Const mutate $7_@3 = "div"
+  [8] Const mutate $8_@4 = JSX <read $7_@3 a={read a$2_@0} b={freeze b$3_@0} ></read $7_@3>
+  Return read $8_@4
 ```
 
 ### CFG
@@ -65,16 +65,16 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2[1:3] = Array []
-      [2] Const mutate b$3[2:6] = Object {  }
-      [3] New mutate Foo$4(mutate a$2, mutate b$3)
-      [4] Const mutate $6 = 'div'
-      [5] Let mutate _$5 = JSX <read $6 a={freeze a$2} ></read $6>
-      [6] New mutate Foo$4(mutate b$3)
-      [7] Const mutate $7 = 'div'
-      [8] Const mutate $8 = JSX <read $7 a={read a$2} b={freeze b$3} ></read $7>
+      [1] Const mutate a$2_@0[1:3] = Array []
+      [2] Const mutate b$3_@0[2:6] = Object {  }
+      [3] New mutate Foo$4_@0(mutate a$2_@0, mutate b$3_@0)
+      [4] Const mutate $6_@1 = 'div'
+      [5] Let mutate _$5_@2 = JSX <read $6_@1 a={freeze a$2_@0} ></read $6_@1>
+      [6] New mutate Foo$4_@0(mutate b$3_@0)
+      [7] Const mutate $7_@3 = 'div'
+      [8] Const mutate $8_@4 = JSX <read $7_@3 a={read a$2_@0} b={freeze b$3_@0} ></read $7_@3>
     "]
-    bb0_instrs --> bb0_terminal(["Return read $8"])
+    bb0_instrs --> bb0_terminal(["Return read $8_@4"])
   end
 
   %% Jumps

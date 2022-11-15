@@ -277,10 +277,17 @@ export type MutableRange = {
  * Represents a user-defined variable (has a name) or a temporary variable (no name).
  */
 export type Identifier = {
-  preSsaId: IdentifierId | null; // the original `id` value prior to entering SSA form
-  id: IdentifierId; // unique value to distinguish a variable, since name is not guaranteed to exist or be unique
-  name: string | null; // null for temporaries. name is primarily used for debugging.
+  // the original `id` value prior to entering SSA form
+  preSsaId: IdentifierId | null;
+  // unique value to distinguish a variable, since name is not guaranteed to exist or be unique
+  id: IdentifierId;
+  // null for temporaries. name is primarily used for debugging.
+  name: string | null;
+  // The range for which this variable is mutable
   mutableRange: MutableRange;
+  // The ID of the reactive scope which will compute this value. Multiple variables may have
+  // the same scope id.
+  scope: ScopeId | null;
 };
 
 /**

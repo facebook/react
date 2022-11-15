@@ -19,18 +19,18 @@ function Foo(props) {
 
 ```
 bb0:
-  [1] Const mutate $2 = "\n      Hello "
-  [2] Const mutate $3 = " "
-  [3] Const mutate $4 = "\n      "
-  [4] Const mutate $5 = "div"
-  [5] Const mutate $6 = "\n        "
-  [6] Const mutate $7 = "Text"
-  [7] Const mutate $8 = JsxFragment [read $7]
-  [8] Const mutate $9 = "\n      "
-  [9] Const mutate $10 = JSX <read $5>{read $6}{read $8}{read $9}</read $5>
-  [10] Const mutate $11 = "\n    "
-  [11] Const mutate $12 = JsxFragment [read $2, read props$1.greeting, read $3, read $4, read $10, read $11]
-  Return read $12
+  [1] Const mutate $2_@0 = "\n      Hello "
+  [2] Const mutate $3_@1 = " "
+  [3] Const mutate $4_@2 = "\n      "
+  [4] Const mutate $5_@3 = "div"
+  [5] Const mutate $6_@4 = "\n        "
+  [6] Const mutate $7_@5 = "Text"
+  [7] Const mutate $8_@6 = JsxFragment [read $7_@5]
+  [8] Const mutate $9_@7 = "\n      "
+  [9] Const mutate $10_@8 = JSX <read $5_@3>{read $6_@4}{read $8_@6}{read $9_@7}</read $5_@3>
+  [10] Const mutate $11_@9 = "\n    "
+  [11] Const mutate $12_@10 = JsxFragment [read $2_@0, read props$1.greeting, read $3_@1, read $4_@2, read $10_@8, read $11_@9]
+  Return read $12_@10
 ```
 
 ### CFG
@@ -40,19 +40,19 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $2 = '\n      Hello '
-      [2] Const mutate $3 = ' '
-      [3] Const mutate $4 = '\n      '
-      [4] Const mutate $5 = 'div'
-      [5] Const mutate $6 = '\n        '
-      [6] Const mutate $7 = 'Text'
-      [7] Const mutate $8 = JsxFragment [read $7]
-      [8] Const mutate $9 = '\n      '
-      [9] Const mutate $10 = JSX <read $5>{read $6}{read $8}{read $9}</read $5>
-      [10] Const mutate $11 = '\n    '
-      [11] Const mutate $12 = JsxFragment [read $2, read props$1.greeting, read $3, read $4, read $10, read $11]
+      [1] Const mutate $2_@0 = '\n      Hello '
+      [2] Const mutate $3_@1 = ' '
+      [3] Const mutate $4_@2 = '\n      '
+      [4] Const mutate $5_@3 = 'div'
+      [5] Const mutate $6_@4 = '\n        '
+      [6] Const mutate $7_@5 = 'Text'
+      [7] Const mutate $8_@6 = JsxFragment [read $7_@5]
+      [8] Const mutate $9_@7 = '\n      '
+      [9] Const mutate $10_@8 = JSX <read $5_@3>{read $6_@4}{read $8_@6}{read $9_@7}</read $5_@3>
+      [10] Const mutate $11_@9 = '\n    '
+      [11] Const mutate $12_@10 = JsxFragment [read $2_@0, read props$1.greeting, read $3_@1, read $4_@2, read $10_@8, read $11_@9]
     "]
-    bb0_instrs --> bb0_terminal(["Return read $12"])
+    bb0_instrs --> bb0_terminal(["Return read $12_@10"])
   end
 
   %% Jumps

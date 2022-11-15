@@ -23,20 +23,20 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Let mutate x$2[1:2] = Array []
-  [2] Call mutate x$2.push(read props$1.p0)
-  [3] Let mutate y$3 = read x$2
+  [1] Let mutate x$2_@0[1:2] = Array []
+  [2] Call mutate x$2_@0.push(read props$1.p0)
+  [3] Let mutate y$3_@1 = read x$2_@0
   If (read props$1.p1) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [4] Reassign mutate x$2 = Array []
+  [4] Reassign mutate x$2_@2 = Array []
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [5] Let mutate _$4 = JSX <read Component$0 x={freeze x$2} ></read Component$0>
-  [6] Call read y$3.push(read props$1.p2)
-  [7] Const mutate $5 = JSX <read Component$0 x={read x$2} y={read y$3} ></read Component$0>
-  Return read $5
+  [5] Let mutate _$4_@3 = JSX <read Component$0 x={freeze x$2} ></read Component$0>
+  [6] Call read y$3_@1.push(read props$1.p2)
+  [7] Const mutate $5_@4 = JSX <read Component$0 x={read x$2} y={read y$3_@1} ></read Component$0>
+  Return read $5_@4
 ```
 
 ### CFG
@@ -46,25 +46,25 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$2[1:2] = Array []
-      [2] Call mutate x$2.push(read props$1.p0)
-      [3] Let mutate y$3 = read x$2
+      [1] Let mutate x$2_@0[1:2] = Array []
+      [2] Call mutate x$2_@0.push(read props$1.p0)
+      [3] Let mutate y$3_@1 = read x$2_@0
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.p1)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Reassign mutate x$2 = Array []
+      [4] Reassign mutate x$2_@2 = Array []
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [5] Let mutate _$4 = JSX <read Component$0 x={freeze x$2} ></read Component$0>
-      [6] Call read y$3.push(read props$1.p2)
-      [7] Const mutate $5 = JSX <read Component$0 x={read x$2} y={read y$3} ></read Component$0>
+      [5] Let mutate _$4_@3 = JSX <read Component$0 x={freeze x$2} ></read Component$0>
+      [6] Call read y$3_@1.push(read props$1.p2)
+      [7] Const mutate $5_@4 = JSX <read Component$0 x={read x$2} y={read y$3_@1} ></read Component$0>
     "]
-    bb1_instrs --> bb1_terminal(["Return read $5"])
+    bb1_instrs --> bb1_terminal(["Return read $5_@4"])
   end
 
   %% Jumps

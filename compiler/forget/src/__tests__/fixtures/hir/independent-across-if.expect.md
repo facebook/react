@@ -149,18 +149,18 @@ function Foo$0() {
 
 ```
 bb0:
-  [1] Const mutate a$2[1:3] = Call mutate compute$3(read props$1.a)
-  [2] Const mutate b$4[2:4] = Call mutate compute$3(read props$1.b)
+  [1] Const mutate a$2_@0[1:3] = Call mutate compute$3_@0(read props$1.a)
+  [2] Const mutate b$4_@0[2:4] = Call mutate compute$3_@0(read props$1.b)
   If (read props$1.c) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [3] Call mutate mutate$5(mutate a$2)
-  [4] Call mutate mutate$5(mutate b$4)
+  [3] Call mutate mutate$5_@0(mutate a$2_@0)
+  [4] Call mutate mutate$5_@0(mutate b$4_@0)
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [5] Const mutate $7 = JSX <read Foo$6 a={freeze a$2} b={freeze b$4} ></read Foo$6>
-  Return read $7
+  [5] Const mutate $7_@1 = JSX <read Foo$6 a={freeze a$2_@0} b={freeze b$4_@0} ></read Foo$6>
+  Return read $7_@1
 ```
 
 ### CFG
@@ -170,23 +170,23 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2[1:3] = Call mutate compute$3(read props$1.a)
-      [2] Const mutate b$4[2:4] = Call mutate compute$3(read props$1.b)
+      [1] Const mutate a$2_@0[1:3] = Call mutate compute$3_@0(read props$1.a)
+      [2] Const mutate b$4_@0[2:4] = Call mutate compute$3_@0(read props$1.b)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.c)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Call mutate mutate$5(mutate a$2)
-      [4] Call mutate mutate$5(mutate b$4)
+      [3] Call mutate mutate$5_@0(mutate a$2_@0)
+      [4] Call mutate mutate$5_@0(mutate b$4_@0)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [5] Const mutate $7 = JSX <read Foo$6 a={freeze a$2} b={freeze b$4} ></read Foo$6>
+      [5] Const mutate $7_@1 = JSX <read Foo$6 a={freeze a$2_@0} b={freeze b$4_@0} ></read Foo$6>
     "]
-    bb1_instrs --> bb1_terminal(["Return read $7"])
+    bb1_instrs --> bb1_terminal(["Return read $7_@1"])
   end
 
   %% Jumps
