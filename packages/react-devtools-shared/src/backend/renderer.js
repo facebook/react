@@ -88,6 +88,13 @@ import {
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
 } from './ReactSymbols';
+import {
+  DidCapture,
+  NoFlags,
+  PerformedWork,
+  Placement,
+  Hydrating,
+} from './ReactFiberFlags';
 import {format} from './utils';
 import {
   enableProfilerChangedHookIndices,
@@ -135,15 +142,6 @@ type ReactPriorityLevelsType = {
   NoPriority: number,
 };
 
-type ReactTypeOfSideEffectType = {
-  DidCapture: number,
-  NoFlags: number,
-  PerformedWork: number,
-  Placement: number,
-  Incomplete: number,
-  Hydrating: number,
-};
-
 function getFiberFlags(fiber: Fiber): number {
   // The name of this field changed from "effectTag" to "flags"
   return fiber.flags !== undefined ? fiber.flags : (fiber: any).effectTag;
@@ -162,19 +160,9 @@ export function getInternalReactConstants(
   getDisplayNameForFiber: getDisplayNameForFiberType,
   getTypeSymbol: getTypeSymbolType,
   ReactPriorityLevels: ReactPriorityLevelsType,
-  ReactTypeOfSideEffect: ReactTypeOfSideEffectType,
   ReactTypeOfWork: WorkTagMap,
   StrictModeBits: number,
 } {
-  const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
-    DidCapture: 0b10000000,
-    NoFlags: 0b00,
-    PerformedWork: 0b01,
-    Placement: 0b10,
-    Incomplete: 0b10000000000000,
-    Hydrating: 0b1000000000000,
-  };
-
   // **********************************************************
   // The section below is copied from files in React repo.
   // Keep it in sync, and add version guards if it changes.
@@ -562,7 +550,6 @@ export function getInternalReactConstants(
     getTypeSymbol,
     ReactPriorityLevels,
     ReactTypeOfWork,
-    ReactTypeOfSideEffect,
     StrictModeBits,
   };
 }
@@ -595,16 +582,8 @@ export function attach(
     getTypeSymbol,
     ReactPriorityLevels,
     ReactTypeOfWork,
-    ReactTypeOfSideEffect,
     StrictModeBits,
   } = getInternalReactConstants(version);
-  const {
-    DidCapture,
-    Hydrating,
-    NoFlags,
-    PerformedWork,
-    Placement,
-  } = ReactTypeOfSideEffect;
   const {
     CacheComponent,
     ClassComponent,
