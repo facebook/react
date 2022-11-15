@@ -116,7 +116,7 @@ describe('ReactDOM HostSingleton', () => {
       : children;
   }
 
-  // @gate enableHostSingletons
+  // @gate enableHostSingletons && enableFloat
   it('warns if you render the same singleton twice at the same time', async () => {
     const root = ReactDOMClient.createRoot(document);
     root.render(
@@ -201,7 +201,7 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableHostSingletons
+  // @gate enableHostSingletons && enableFloat
   it('renders into html, head, and body persistently so the node identities never change and extraneous styles are retained', async () => {
     gate(flags => {
       if (flags.enableHostSingletons !== true) {

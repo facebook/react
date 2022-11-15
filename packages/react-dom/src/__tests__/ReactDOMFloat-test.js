@@ -4136,6 +4136,11 @@ describe('ReactDOMFloat', () => {
         'warns when an invalid href argument is provided to ReactDOM.preload on the ' +
           environment,
         async () => {
+          if (gate(flags => !flags.enableFloat)) {
+            // When `enableFloat` is off, no warnings are triggered which passes
+            // the test, but fails @gate expecting a failure.
+            throw new Error();
+          }
           const expectedMessage =
             'Warning: ReactDOM.preload() expected the first argument to be a string representing an href but found %s instead.%s';
           const expectedStack = componentStack(['Preloads', 'head', 'html']);
@@ -4217,6 +4222,11 @@ describe('ReactDOMFloat', () => {
         'warns when an invalid href argument is provided to ReactDOM.preinit on the ' +
           environment,
         async () => {
+          if (gate(flags => !flags.enableFloat)) {
+            // When `enableFloat` is off, no warnings are triggered which passes
+            // the test, but fails @gate expecting a failure.
+            throw new Error();
+          }
           const expectedMessage =
             'Warning: ReactDOM.preinit() expected the first argument to be a string representing an href but found %s instead.%s';
           const expectedStack = componentStack(['Preinits', 'head', 'html']);
@@ -4298,6 +4308,11 @@ describe('ReactDOMFloat', () => {
         'warns when an invalid options argument is provided to ReactDOM.preload on the ' +
           environment,
         async () => {
+          if (gate(flags => !flags.enableFloat)) {
+            // When `enableFloat` is off, no warnings are triggered which passes
+            // the test, but fails @gate expecting a failure.
+            throw new Error();
+          }
           const expectedMessage =
             'Warning: ReactDOM.preload() expected the second argument to be an options argument containing at least an "as" property' +
             ' specifying the Resource type. It found %s instead. The href for the preload call where this warning originated is "%s".%s';
@@ -4367,6 +4382,11 @@ describe('ReactDOMFloat', () => {
         'warns when an invalid options argument is provided to ReactDOM.preinit on the ' +
           environment,
         async () => {
+          if (gate(flags => !flags.enableFloat)) {
+            // When `enableFloat` is off, no warnings are triggered which passes
+            // the test, but fails @gate expecting a failure.
+            throw new Error();
+          }
           const expectedMessage =
             'Warning: ReactDOM.preinit() expected the second argument to be an options argument containing at least an "as" property' +
             ' specifying the Resource type. It found %s instead. The href for the preload call where this warning originated is "%s".%s';
@@ -4436,6 +4456,11 @@ describe('ReactDOMFloat', () => {
         'warns when an invalid "as" option is provided to ReactDOM.preload on the ' +
           environment,
         async () => {
+          if (gate(flags => !flags.enableFloat)) {
+            // When `enableFloat` is off, no warnings are triggered which passes
+            // the test, but fails @gate expecting a failure.
+            throw new Error();
+          }
           const expectedMessage =
             'Warning: ReactDOM.preload() expected a valid "as" type in the options (second) argument but found %s instead.' +
             ' Please use one of the following valid values instead: %s. The href for the preload call where this' +
@@ -4531,6 +4556,11 @@ describe('ReactDOMFloat', () => {
         'warns when an invalid "as" option is provided to ReactDOM.preinit on the ' +
           environment,
         async () => {
+          if (gate(flags => !flags.enableFloat)) {
+            // When `enableFloat` is off, no warnings are triggered which passes
+            // the test, but fails @gate expecting a failure.
+            throw new Error();
+          }
           const expectedMessage =
             'Warning: ReactDOM.preinit() expected the second argument to be an options argument containing at least an "as" property' +
             ' specifying the Resource type. It found %s instead. Currently, valid resource types for for preinit are "style"' +
@@ -5629,7 +5659,6 @@ describe('ReactDOMFloat', () => {
       );
     });
 
-    // @gate enableFloat
     it('should not treat title descendants of svg into resources', async () => {
       await actIntoEmptyDocument(() => {
         const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
