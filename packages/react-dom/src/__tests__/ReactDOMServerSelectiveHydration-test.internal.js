@@ -21,6 +21,7 @@ let Suspense;
 let act;
 
 let IdleEventPriority;
+let ContinuousEventPriority;
 
 function dispatchMouseHoverEvent(to, from) {
   if (!to) {
@@ -110,6 +111,18 @@ function TODO_scheduleIdleDOMSchedulerTask(fn) {
   });
 }
 
+function TODO_scheduleContinuousSchedulerTask(fn) {
+  ReactDOM.unstable_runWithPriority(ContinuousEventPriority, () => {
+    const prevEvent = window.event;
+    window.event = {type: 'message'};
+    try {
+      fn();
+    } finally {
+      window.event = prevEvent;
+    }
+  });
+}
+
 describe('ReactDOMServerSelectiveHydration', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -125,6 +138,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
     Suspense = React.Suspense;
 
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
+    ContinuousEventPriority = require('react-reconciler/constants')
+      .ContinuousEventPriority;
   });
 
   it('hydrates the target boundary synchronously during a click', async () => {
@@ -1769,5 +1784,72 @@ describe('ReactDOMServerSelectiveHydration', () => {
     }
 
     document.body.removeChild(container);
+  });
+
+  describe('it can force hydration in response to', () => {
+    let spanRef;
+    let initialSpan;
+    let root;
+    let App;
+    beforeEach(() => {
+      function Child({text}) {
+        Scheduler.unstable_yieldValue(`Child ${text}`);
+        return <span ref={ref => (spanRef = ref)}>{text}</span>;
+      }
+      App = function({text}) {
+        Scheduler.unstable_yieldValue(`App ${text}`);
+        return (
+          <div>
+            <Suspense fallback={null}>
+              <Child text={text} />
+            </Suspense>
+          </div>
+        );
+      };
+
+      const finalHTML = ReactDOMServer.renderToString(<App text="A" />);
+      expect(Scheduler).toHaveYielded(['App A', 'Child A']);
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      container.innerHTML = finalHTML;
+      initialSpan = container.getElementsByTagName('span')[0];
+      root = ReactDOMClient.hydrateRoot(container, <App text="A" />);
+      expect(Scheduler).toFlushUntilNextPaint(['App A']);
+    });
+
+    it('sync update', () => {
+      ReactDOM.flushSync(() => {
+        root.render(<App text="B" />);
+      });
+      expect(Scheduler).toHaveYielded(['App B', 'Child A', 'App B', 'Child B']);
+      expect(initialSpan).toBe(spanRef);
+    });
+
+    // @gate experimental 
+    it('continuous update', () => {
+      TODO_scheduleContinuousSchedulerTask(() => {
+        root.render(<App text="B" />);
+      });
+      expect(Scheduler).toFlushAndYield([
+        'App B',
+        'Child A',
+        'App B',
+        'Child B',
+      ]);
+      expect(initialSpan).toBe(spanRef);
+    });
+
+    it('default update', () => {
+      ReactDOM.unstable_batchedUpdates(() => {
+        root.render(<App text="B" />);
+      });
+      expect(Scheduler).toFlushAndYield([
+        'App B',
+        'Child A',
+        'App B',
+        'Child B',
+      ]);
+      expect(initialSpan).toBe(spanRef);
+    });
   });
 });
