@@ -1825,7 +1825,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       expect(initialSpan).toBe(spanRef);
     });
 
-    // @gate experimental 
+    // @gate experimental || www 
     it('continuous update', () => {
       TODO_scheduleContinuousSchedulerTask(() => {
         root.render(<App text="B" />);
