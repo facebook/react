@@ -39,7 +39,6 @@ import {
   createFiberFromText,
   createFiberFromPortal,
 } from './ReactFiber.old';
-import {emptyRefsObject} from './ReactFiberClassComponent.old';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.old';
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {getIsHydrating} from './ReactFiberHydrationContext.old';
@@ -192,11 +191,7 @@ function coerceRef(
         return current.ref;
       }
       const ref = function(value) {
-        let refs = resolvedInst.refs;
-        if (refs === emptyRefsObject) {
-          // This is a lazy pooled frozen object, so we need to initialize.
-          refs = resolvedInst.refs = {};
-        }
+        const refs = resolvedInst.refs;
         if (value === null) {
           delete refs[stringRef];
         } else {
