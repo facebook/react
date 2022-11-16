@@ -581,31 +581,20 @@ describe('refs return clean up function', () => {
       return cleanUp;
     }
 
+    ReactDOM.render(<div ref={_onRefChange} />, container);
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
     ReactDOM.render(
-      <div
-        ref={_onRefChange}
-      />,
+      <div className="niceClassName" ref={_onRefChange} />,
       container,
     );
 
     expect(setup).toHaveBeenCalledTimes(1);
     expect(cleanUp).toHaveBeenCalledTimes(0);
 
-    ReactDOM.render(
-      <div
-        className="niceClassName"
-        ref={_onRefChange}
-      />,
-      container,
-    );
-
-    expect(setup).toHaveBeenCalledTimes(1);
-    expect(cleanUp).toHaveBeenCalledTimes(0);
-
-    ReactDOM.render(
-      <div />,
-      container,
-    );
+    ReactDOM.render(<div />, container);
 
     expect(setup).toHaveBeenCalledTimes(1);
     expect(cleanUp).toHaveBeenCalledTimes(1);
