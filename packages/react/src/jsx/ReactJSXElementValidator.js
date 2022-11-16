@@ -393,21 +393,21 @@ export function jsxWithValidation(
     if (warnAboutSpreadingKeyToJSX) {
       if (hasOwnProperty.call(props, 'key')) {
         const componentName = getComponentNameFromType(type);
-        const keys = Object.keys(props);
-        const beforeExample = '{' + keys.join(': ..., ') + ': ...}';
+        const keys = Object.keys(props).filter(k => k !== 'key');
+        const beforeExample =
+          keys.length > 0
+            ? '{key: someKey, ' + keys.join(': ..., ') + ': ...}'
+            : '{key: someKey}';
         if (!didWarnAboutKeySpread[componentName + beforeExample]) {
-          const keysWithoutKey = keys.filter(k => k !== 'key');
           const afterExample =
-            keysWithoutKey.length > 0
-              ? '{' + keysWithoutKey.join(': ..., ') + ': ...}'
-              : '{}';
+            keys.length > 0 ? '{' + keys.join(': ..., ') + ': ...}' : '{}';
           console.error(
-            'An props object containing a "key" prop is being spread into JSX:\n' +
+            'A props object containing a "key" prop is being spread into JSX:\n' +
               '  let props = %s;\n' +
               '  <%s {...props} />\n' +
               'React keys must be passed directly to JSX without using spread:\n' +
               '  let props = %s;\n' +
-              '  <%s key={...} {...props} />',
+              '  <%s key={someKey} {...props} />',
             beforeExample,
             componentName,
             afterExample,

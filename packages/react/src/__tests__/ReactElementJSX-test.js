@@ -275,19 +275,19 @@ describe('ReactElement.jsx', () => {
       class Parent extends React.Component {
         render() {
           return JSXRuntime.jsx('div', {
-            children: [JSXRuntime.jsx(Child, {key: '0'})],
+            children: [JSXRuntime.jsx(Child, {key: '0', prop: 'hi'})],
           });
         }
       }
       expect(() =>
         ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
       ).toErrorDev(
-        'Warning: An props object containing a "key" prop is being spread into JSX:\n' +
-          '  let props = {key: ...};\n' +
+        'Warning: A props object containing a "key" prop is being spread into JSX:\n' +
+          '  let props = {key: someKey, prop: ...};\n' +
           '  <Child {...props} />\n' +
           'React keys must be passed directly to JSX without using spread:\n' +
-          '  let props = {};\n' +
-          '  <Child key={...} {...props} />',
+          '  let props = {prop: ...};\n' +
+          '  <Child key={someKey} {...props} />',
       );
     });
   }
