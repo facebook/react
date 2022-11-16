@@ -1629,27 +1629,6 @@ function commitAttachRef(finishedWork: Fiber) {
   }
 }
 
-function commitDetachRef(current: Fiber) {
-  const currentRef = current.ref;
-  if (currentRef !== null) {
-    if (typeof currentRef === 'function') {
-      if (shouldProfile(current)) {
-        try {
-          startLayoutEffectTimer();
-          currentRef(null);
-        } finally {
-          recordLayoutEffectDuration(current);
-        }
-      } else {
-        currentRef(null);
-      }
-    } else {
-      // $FlowFixMe unable to narrow type to the non-function case
-      currentRef.current = null;
-    }
-  }
-}
-
 function detachFiberMutation(fiber: Fiber) {
   // Cut off the return pointer to disconnect it from the tree.
   // This enables us to detect and warn against state updates on an unmounted component.
@@ -4470,7 +4449,6 @@ function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
 export {
   commitPlacement,
   commitAttachRef,
-  commitDetachRef,
   invokeLayoutEffectMountInDEV,
   invokeLayoutEffectUnmountInDEV,
   invokePassiveEffectMountInDEV,
