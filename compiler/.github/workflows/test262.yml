@@ -1,0 +1,24 @@
+name: test262
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  forget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: forget/yarn.lock
+      - run: yarn install --immutable --immutable-cache
+        working-directory: forget
+      - run: yarn build
+        working-directory: forget
+      - run: yarn test262:all
+        working-directory: forget
