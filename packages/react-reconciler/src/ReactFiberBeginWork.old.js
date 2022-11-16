@@ -496,6 +496,20 @@ function updateMemoComponent(
           getComponentNameFromType(type),
         );
       }
+      if (
+        warnAboutDefaultPropsOnFunctionComponents &&
+        Component.defaultProps !== undefined
+      ) {
+        const componentName = getComponentNameFromType(type) || 'Unknown';
+        if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+          console.error(
+            '%s: Support for defaultProps will be removed from memo components ' +
+              'in a future major release. Use JavaScript default parameters instead.',
+            componentName,
+          );
+          didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+        }
+      }
     }
     const child = createFiberFromTypeAndProps(
       Component.type,

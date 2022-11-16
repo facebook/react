@@ -51,6 +51,27 @@ describe('ReactDeprecationWarnings', () => {
     );
   });
 
+  it('should warn when given defaultProps on a memoized function', () => {
+    const MemoComponent = React.memo(function FunctionalComponent(props) {
+      return null;
+    });
+
+    MemoComponent.defaultProps = {
+      testProp: true,
+    };
+
+    ReactNoop.render(
+      <div>
+        <MemoComponent />
+      </div>,
+    );
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+      'Warning: FunctionalComponent: Support for defaultProps ' +
+        'will be removed from memo components in a future major ' +
+        'release. Use JavaScript default parameters instead.',
+    );
+  });
+
   it('should warn when given string refs', () => {
     class RefComponent extends React.Component {
       render() {
