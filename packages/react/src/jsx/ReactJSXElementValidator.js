@@ -294,6 +294,8 @@ function validateFragmentProps(fragment) {
   }
 }
 
+const didWarnAboutKeySpread = {};
+
 export function jsxWithValidation(
   type,
   props,
@@ -390,12 +392,29 @@ export function jsxWithValidation(
 
     if (warnAboutSpreadingKeyToJSX) {
       if (hasOwnProperty.call(props, 'key')) {
-        console.error(
-          'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
-            'Explicitly pass a key after spreading props in your JSX call. ' +
-            'E.g. <%s {...props} key={key} />',
-          getComponentNameFromType(type) || 'ComponentName',
-        );
+        const componentName = getComponentNameFromType(type);
+        const keys = Object.keys(props).filter(k => k !== 'key');
+        const beforeExample =
+          keys.length > 0
+            ? '{key: someKey, ' + keys.join(': ..., ') + ': ...}'
+            : '{key: someKey}';
+        if (!didWarnAboutKeySpread[componentName + beforeExample]) {
+          const afterExample =
+            keys.length > 0 ? '{' + keys.join(': ..., ') + ': ...}' : '{}';
+          console.error(
+            'A props object containing a "key" prop is being spread into JSX:\n' +
+              '  let props = %s;\n' +
+              '  <%s {...props} />\n' +
+              'React keys must be passed directly to JSX without using spread:\n' +
+              '  let props = %s;\n' +
+              '  <%s key={someKey} {...props} />',
+            beforeExample,
+            componentName,
+            afterExample,
+            componentName,
+          );
+          didWarnAboutKeySpread[componentName + beforeExample] = true;
+        }
       }
     }
 
