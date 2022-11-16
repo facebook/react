@@ -282,9 +282,12 @@ describe('ReactElement.jsx', () => {
       expect(() =>
         ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
       ).toErrorDev(
-        'Warning: React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
-          'Explicitly pass a key after spreading props in your JSX call. ' +
-          'E.g. <Child {...props} key={key} />',
+        'Warning: An props object containing a "key" prop is being spread into JSX:\n' +
+          '  let props = {key: ...};\n' +
+          '  <Child {...props} />\n' +
+          'React keys must be passed directly to JSX without using spread:\n' +
+          '  let props = {};\n' +
+          '  <Child key={...} {...props} />',
       );
     });
   }
