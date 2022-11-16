@@ -15,7 +15,8 @@
     "test": "yarn build && jest",
     "ts:analyze-trace": "scripts/ts-analyze-trace.sh",
     "test262": "yarn run --silent test262-harness --preprocessor=scripts/test262-preprocessor.js",
-    "test262:all": "yarn run --silent test262 'test262/test/**/*.js'"
+    "test262:all": "yarn run --silent test262 'test262/test/**/*.js'",
+    "test262:ci": "scripts/test262.sh"
   },
   "repository": {
     "type": "git",

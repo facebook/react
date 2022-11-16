@@ -50,6 +50,7 @@ module.exports = (test) => {
       throw new Error("Codegen returned an empty string");
     }
   } catch (error) {
+    error.message = error.message.replace(/ \(\d+:\d+\)/, "");
     test.result = {
       stderr: `${error.name}: ${error.message}\n`,
       stdout: "",
