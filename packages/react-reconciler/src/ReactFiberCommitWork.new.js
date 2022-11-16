@@ -288,12 +288,6 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
   const ref = current.ref;
   const refCleanup = current.refCleanup;
 
-  current.refCleanup = null;
-  const finishedWork = current.alternate;
-  if (finishedWork != null) {
-    finishedWork.refCleanup = null;
-  }
-
   if (refCleanup !== null) {
     if (typeof ref === 'function') {
       try {
@@ -309,6 +303,13 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
         }
       } catch (error) {
         captureCommitPhaseError(current, nearestMountedAncestor, error);
+      } finally {
+        // `refCleanup` has been called. Nullify all references to it to prevent double invocation.
+        current.refCleanup = null;
+        const finishedWork = current.alternate;
+        if (finishedWork != null) {
+          finishedWork.refCleanup = null;
+        }
       }
     }
   } else if (ref !== null) {
