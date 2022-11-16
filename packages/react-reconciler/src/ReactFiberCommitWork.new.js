@@ -286,7 +286,32 @@ function safelyAttachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
 
 function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
   const ref = current.ref;
-  if (ref !== null) {
+  const refCleanup = current.refCleanup;
+
+  current.refCleanup = null;
+  const finishedWork = current.alternate;
+  if (finishedWork != null) {
+    finishedWork.refCleanup = null;
+  }
+
+  if (refCleanup !== null) {
+    if (typeof ref === 'function') {
+      try {
+        if (shouldProfile(current)) {
+          try {
+            startLayoutEffectTimer();
+            refCleanup();
+          } finally {
+            recordLayoutEffectDuration(current);
+          }
+        } else {
+          refCleanup();
+        }
+      } catch (error) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error);
+      }
+    }
+  } else if (ref !== null) {
     if (typeof ref === 'function') {
       let retVal;
       try {
@@ -1583,14 +1608,9 @@ function commitAttachRef(finishedWork: Fiber) {
       } else {
         retVal = ref(instanceToUse);
       }
-      if (__DEV__) {
-        if (typeof retVal === 'function') {
-          console.error(
-            'Unexpected return value from a callback ref in %s. ' +
-              'A callback ref should not return a function.',
-            getComponentNameFromFiber(finishedWork),
-          );
-        }
+
+      if (typeof retVal === 'function') {
+        finishedWork.refCleanup = retVal;
       }
     } else {
       if (__DEV__) {

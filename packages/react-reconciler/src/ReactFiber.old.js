@@ -148,6 +148,7 @@ function FiberNode(
   this.index = 0;
 
   this.ref = null;
+  this.refCleanup = null;
 
   this.pendingProps = pendingProps;
   this.memoizedProps = null;
@@ -336,6 +337,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   workInProgress.sibling = current.sibling;
   workInProgress.index = current.index;
   workInProgress.ref = current.ref;
+  workInProgress.refCleanup = current.refCleanup;
 
   if (enableProfilerTimer) {
     workInProgress.selfBaseDuration = current.selfBaseDuration;
@@ -880,6 +882,7 @@ export function assignFiberPropertiesInDEV(
   target.sibling = source.sibling;
   target.index = source.index;
   target.ref = source.ref;
+  target.refCleanup = source.refCleanup;
   target.pendingProps = source.pendingProps;
   target.memoizedProps = source.memoizedProps;
   target.updateQueue = source.updateQueue;
