@@ -2717,9 +2717,6 @@ function updateDehydratedSuspenseComponent(
         current,
         workInProgress,
         renderLanes,
-        // TODO: When we delete legacy mode, we should make this error argument
-        // required — every concurrent mode path that causes hydration to
-        // de-opt to client rendering should have an error message.
         null,
       );
     }
@@ -2809,25 +2806,20 @@ function updateDehydratedSuspenseComponent(
         }
       }
 
-      // If we have scheduled higher pri work above, this will probably just abort the render
-      // since we now have higher priority work, but in case it doesn't, we need to prepare to
-      // render something, if we time out. Even if that requires us to delete everything and
-      // skip hydration.
-      // Delay having to do this as long as the suspense timeout allows us.
+      // If we have scheduled higher pri work above, this will just abort the render
+      // since we now have higher priority work. We'll try to infinitely suspend until
+      // we yield. TODO: We could probably just force yielding earlier instead.
       renderDidSuspendDelayIfPossible();
-      const capturedValue = createCapturedValue(
-        new Error(
-          'This Suspense boundary received an update before it finished ' +
-            'hydrating. This caused the boundary to switch to client rendering. ' +
-            'The usual way to fix this is to wrap the original update ' +
-            'in startTransition.',
-        ),
-      );
+      // If we rendered synchronously, we won't yield so have to render something.
+      // This will cause us to delete any existing content.
+      // TODO: We should ideally have a sync hydration lane that we can apply to do
+      // a pass where we hydrate this subtree in place using the previous Context and then
+      // reapply the update afterwards.
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
         renderLanes,
-        capturedValue,
+        null,
       );
     } else if (isSuspenseInstancePending(suspenseInstance)) {
       // This component is still pending more data from the server, so we can't hydrate its
