@@ -453,12 +453,6 @@ describe('ReactDOMServerPartialHydration', () => {
 
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
-    expect(Scheduler).toHaveYielded([
-      'This Suspense boundary received an update before it finished ' +
-        'hydrating. This caused the boundary to switch to client rendering. ' +
-        'The usual way to fix this is to wrap the original update ' +
-        'in startTransition.',
-    ]);
 
     expect(hydrated.length).toBe(1);
     expect(deleted.length).toBe(1);
@@ -1102,12 +1096,6 @@ describe('ReactDOMServerPartialHydration', () => {
     root.render(<App text="Hi" className="hi" />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
-    expect(Scheduler).toHaveYielded([
-      'This Suspense boundary received an update before it finished ' +
-        'hydrating. This caused the boundary to switch to client ' +
-        'rendering. The usual way to fix this is to wrap the original ' +
-        'update in startTransition.',
-    ]);
 
     // Flushing now should delete the existing content and show the fallback.
 
@@ -1191,12 +1179,6 @@ describe('ReactDOMServerPartialHydration', () => {
     // Flushing now should delete the existing content and show the fallback.
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
-    expect(Scheduler).toHaveYielded([
-      'This Suspense boundary received an update before it finished ' +
-        'hydrating. This caused the boundary to switch to client rendering. ' +
-        'The usual way to fix this is to wrap the original update ' +
-        'in startTransition.',
-    ]);
 
     expect(container.getElementsByTagName('span').length).toBe(1);
     expect(ref.current).toBe(span);
@@ -1284,12 +1266,6 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     resolve();
     await promise;
-    expect(Scheduler).toHaveYielded([
-      'This Suspense boundary received an update before it finished ' +
-        'hydrating. This caused the boundary to switch to client rendering. ' +
-        'The usual way to fix this is to wrap the original update ' +
-        'in startTransition.',
-    ]);
 
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1602,12 +1578,6 @@ describe('ReactDOMServerPartialHydration', () => {
     // Flushing now should delete the existing content and show the fallback.
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
-    expect(Scheduler).toHaveYielded([
-      'This Suspense boundary received an update before it finished ' +
-        'hydrating. This caused the boundary to switch to client rendering. ' +
-        'The usual way to fix this is to wrap the original update ' +
-        'in startTransition.',
-    ]);
 
     expect(container.getElementsByTagName('span').length).toBe(0);
     expect(ref.current).toBe(null);
@@ -2360,12 +2330,6 @@ describe('ReactDOMServerPartialHydration', () => {
     // This will force all expiration times to flush.
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
-    expect(Scheduler).toHaveYielded([
-      'This Suspense boundary received an update before it finished ' +
-        'hydrating. This caused the boundary to switch to client rendering. ' +
-        'The usual way to fix this is to wrap the original update ' +
-        'in startTransition.',
-    ]);
 
     // This will now be a new span because we weren't able to hydrate before
     const newSpan = container.getElementsByTagName('span')[0];
