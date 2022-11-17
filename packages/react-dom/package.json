@@ -41,8 +41,7 @@
     "unstable_testing.js",
     "unstable_server-external-runtime.js",
     "cjs/",
-    "umd/",
-    "esm/"
+    "umd/"
   ],
   "exports": {
     ".": "./index.js",
