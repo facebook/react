@@ -11,7 +11,7 @@
 import {
   replaceScriptsAndMove,
   mergeOptions,
-  stripExternalRuntimeInString,
+  withLoadingReadyState,
 } from '../test-utils/FizzTestUtils';
 
 let JSDOM;
@@ -110,10 +110,17 @@ describe('ReactDOMFloat', () => {
     fakeBody.innerHTML = bufferedContent;
     const parent =
       container.nodeName === '#document' ? container.body : container;
-    while (fakeBody.firstChild) {
-      const node = fakeBody.firstChild;
-      await replaceScriptsAndMove(document.defaultView, CSPnonce, node, parent);
-    }
+    await withLoadingReadyState(async () => {
+      while (fakeBody.firstChild) {
+        const node = fakeBody.firstChild;
+        await replaceScriptsAndMove(
+          document.defaultView,
+          CSPnonce,
+          node,
+          parent,
+        );
+      }
+    }, document);
   }
 
   async function actIntoEmptyDocument(callback) {
@@ -137,7 +144,9 @@ describe('ReactDOMFloat', () => {
     document = jsdom.window.document;
     container = document;
     buffer = '';
-    await replaceScriptsAndMove(jsdom.window, null, document.documentElement);
+    await withLoadingReadyState(async () => {
+      await replaceScriptsAndMove(jsdom.window, null, document.documentElement);
+    }, document);
   }
 
   function getMeaningfulChildren(element) {
@@ -593,16 +602,43 @@ describe('ReactDOMFloat', () => {
       );
       pipe(writable);
     });
-    if (gate(flags => flags.enableFizzExternalRuntime)) {
-      chunks[0] = stripExternalRuntimeInString(
-        chunks[0],
-        renderOptions.unstable_externalRuntimeSrc,
-      );
-    }
     expect(chunks).toEqual([
       '<!DOCTYPE html><html><script async="" src="foo"></script><title>foo</title><body>bar',
       '</body></html>',
     ]);
+  });
+
+  it('dedupes if the external runtime is explicitly loaded using preinit', async () => {
+    const unstable_externalRuntimeSrc = 'src-of-external-runtime';
+    function App() {
+      ReactDOM.preinit(unstable_externalRuntimeSrc, {as: 'script'});
+      return (
+        <div>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <AsyncText text="Hello" />
+          </Suspense>
+        </div>
+      );
+    }
+
+    await actIntoEmptyDocument(() => {
+      const {pipe} = renderToPipeableStream(
+        <html>
+          <head />
+          <body>
+            <App />
+          </body>
+        </html>,
+        {
+          unstable_externalRuntimeSrc,
+        },
+      );
+      pipe(writable);
+    });
+
+    expect(
+      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
+    ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
   });
 
   describe('HostResource', () => {

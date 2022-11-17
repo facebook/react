@@ -63,6 +63,7 @@ import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
 import {
+  preinitImpl,
   prepareToRenderResources,
   finishRenderingResources,
   resourcesFromElement,
@@ -124,6 +125,8 @@ export type ResponseState = {
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
   sentStyleInsertionFunction: boolean,
+  // state for data streaming format
+  externalRuntimeConfig: BootstrapScriptDescriptor | null,
   // We allow the legacy renderer to extend this object.
   ...
 };
@@ -182,6 +185,7 @@ export function createResponseState(
           '<script nonce="' + escapeTextForBrowser(nonce) + '">',
         );
   const bootstrapChunks = [];
+  let externalRuntimeDesc = null;
   let streamingFormat = ScriptStreamingFormat;
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(
@@ -191,27 +195,21 @@ export function createResponseState(
     );
   }
   if (enableFizzExternalRuntime) {
+    if (!enableFloat) {
+      throw new Error(
+        'enableFizzExternalRuntime without enableFloat is not supported. This should never appear in production, since it means you are using a misconfigured React bundle.',
+      );
+    }
     if (externalRuntimeConfig !== undefined) {
       streamingFormat = DataStreamingFormat;
-      const src =
-        typeof externalRuntimeConfig === 'string'
-          ? externalRuntimeConfig
-          : externalRuntimeConfig.src;
-      const integrity =
-        typeof externalRuntimeConfig === 'string'
-          ? undefined
-          : externalRuntimeConfig.integrity;
-      bootstrapChunks.push(
-        startScriptSrc,
-        stringToChunk(escapeTextForBrowser(src)),
-      );
-      if (integrity) {
-        bootstrapChunks.push(
-          scriptIntegirty,
-          stringToChunk(escapeTextForBrowser(integrity)),
-        );
+      if (typeof externalRuntimeConfig === 'string') {
+        externalRuntimeDesc = {
+          src: externalRuntimeConfig,
+          integrity: undefined,
+        };
+      } else {
+        externalRuntimeDesc = externalRuntimeConfig;
       }
-      bootstrapChunks.push(endAsyncScript);
     }
   }
   if (bootstrapScripts !== undefined) {
@@ -267,6 +265,7 @@ export function createResponseState(
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
     sentStyleInsertionFunction: false,
+    externalRuntimeConfig: externalRuntimeDesc,
   };
 }
 
@@ -2751,7 +2750,16 @@ export function writeInitialResources(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
+  willFlushAllSegments: boolean,
 ): boolean {
+  if (
+    enableFizzExternalRuntime &&
+    !willFlushAllSegments &&
+    responseState.externalRuntimeConfig
+  ) {
+    const {src, integrity} = responseState.externalRuntimeConfig;
+    preinitImpl(src, {as: 'script', integrity}, resources);
+  }
   function flushLinkResource(resource) {
     if (!resource.flushed) {
       pushLinkImpl(target, resource.props, responseState);

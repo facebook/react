@@ -14,32 +14,37 @@ import {
   completeSegment,
 } from './fizz-instruction-set/ReactDOMFizzInstructionSet';
 
-// This runtime may be sent to the client multiple times (if FizzServer.render
-//  is called more than once). Here, we check whether the mutation observer
-//  was already created / installed
-if (!window.$REACT_FIZZ_OBSERVER) {
-  // TODO: Eventually remove, we currently need to set these globals for
-  // compatibility with ReactDOMFizzInstructionSet
-  window.$RC = completeBoundary;
-  window.$RM = new Map();
-  window.$REACT_FIZZ_OBSERVER = new MutationObserver(mutations => {
+if (document.readyState === 'loading') {
+  if (!window.$RC) {
+    // TODO: Eventually remove, we currently need to set these globals for
+    // compatibility with ReactDOMFizzInstructionSet
+    window.$RC = completeBoundary;
+    window.$RM = new Map();
+  }
+  const mutationObserver = new MutationObserver(mutations => {
     for (let i = 0; i < mutations.length; i++) {
       const addedNodes = mutations[i].addedNodes;
       for (let j = 0; j < addedNodes.length; j++) {
-        handleNode(addedNodes.item(j));
+        if (addedNodes.item(j).parentNode) {
+          handleNode(addedNodes.item(j));
+        }
       }
     }
   });
+
   // $FlowFixMe[incompatible-call] document.body should exist at this point
-  window.$REACT_FIZZ_OBSERVER.observe(document.body, {
+  mutationObserver.observe(document.body, {
     childList: true,
     subtree: true,
   });
+  window.addEventListener('DOMContentLoaded', () => {
+    mutationObserver.disconnect();
+  });
+}
 
-  const existingNodes = document.getElementsByTagName('template');
-  for (let i = 0; i < existingNodes.length; i++) {
-    handleNode(existingNodes[i]);
-  }
+const existingNodes = document.getElementsByTagName('template');
+for (let i = 0; i < existingNodes.length; i++) {
+  handleNode(existingNodes[i]);
 }
 
 function handleNode(node_ /*: Node */) {

@@ -41,12 +41,12 @@ export type ResponseState = {
   idPrefix: string,
   nextSuspenseID: number,
   streamingFormat: StreamingFormat,
-  // state for script streaming format, unused if using external runtime / data
   startInlineScript: PrecomputedChunk,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
   sentStyleInsertionFunction: boolean,
+  externalRuntimeConfig: BootstrapScriptDescriptor | null,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
 };
@@ -78,6 +78,7 @@ export function createResponseState(
     sentCompleteBoundaryFunction: responseState.sentCompleteBoundaryFunction,
     sentClientRenderFunction: responseState.sentClientRenderFunction,
     sentStyleInsertionFunction: responseState.sentStyleInsertionFunction,
+    externalRuntimeConfig: responseState.externalRuntimeConfig,
     // This is an extra field for the legacy renderer
     generateStaticMarkup,
   };
