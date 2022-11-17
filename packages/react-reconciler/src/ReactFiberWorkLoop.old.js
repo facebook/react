@@ -138,7 +138,6 @@ import {
 import {
   NoLanes,
   NoLane,
-  SyncHydrationLane,
   SyncLane,
   NoTimestamp,
   claimNextTransitionLane,
@@ -918,8 +917,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       // TODO: Temporary until we confirm this warning is not fired.
       if (
         existingCallbackNode == null &&
-        existingCallbackPriority !== SyncLane &&
-        existingCallbackPriority !== SyncHydrationLane
+        !includesSyncLane(existingCallbackPriority)
       ) {
         console.error(
           'Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue.',
@@ -937,10 +935,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Schedule a new callback.
   let newCallbackNode;
-  if (
-    newCallbackPriority === SyncLane ||
-    newCallbackPriority === SyncHydrationLane
-  ) {
+  if (includesSyncLane(newCallbackPriority)) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     if (root.tag === LegacyRoot) {
