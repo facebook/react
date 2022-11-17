@@ -55,7 +55,7 @@ describe('ReactFlushSync', () => {
       // They should commit in two separate batches. First the sync one.
       expect(() => {
         expect(Scheduler).toFlushUntilNextPaint(
-          gate(flags => flags.enableSyncDefaultUpdates) ? ['1, 1'] : ['1', '0'],
+          gate(flags => flags.enableSyncDefaultUpdates) ? ['1, 1'] : ['1, 0'],
         );
       }).toErrorDev('flushSync was called from inside a lifecycle method');
 
@@ -67,7 +67,7 @@ describe('ReactFlushSync', () => {
         expect(Scheduler).toFlushUntilNextPaint([]);
       } else {
         // Now flush it.
-        expect(Scheduler).toFlushUntilNextPaint(['1 / 1']);
+        expect(Scheduler).toFlushUntilNextPaint(['1, 1']);
       }
     });
     expect(root).toMatchRenderedOutput('1, 1');
