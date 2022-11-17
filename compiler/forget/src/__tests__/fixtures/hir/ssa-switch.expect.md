@@ -45,16 +45,16 @@ bb5:
 bb3:
   predecessor blocks: bb0
   [8] Const mutate $3_@7 = 2
-  [9] Reassign mutate x$1_@8 = Binary read x$1_@0 + read $3_@7
+  [9] Reassign mutate x$1_@6 = Binary read x$1_@0 + read $3_@7
   Goto bb1
 bb2:
   predecessor blocks: bb0
-  [10] Const mutate $2_@9 = 3
-  [11] Reassign mutate x$1_@10 = Binary read x$1_@0 + read $2_@9
+  [10] Const mutate $2_@8 = 3
+  [11] Reassign mutate x$1_@6 = Binary read x$1_@0 + read $2_@8
   Goto bb1
 bb1:
   predecessor blocks: bb5 bb3 bb2
-  [12] Let mutate y$9_@11 = read x$1
+  [12] Let mutate y$9_@9 = read x$1_@6
   Return
 ```
 
@@ -83,20 +83,20 @@ flowchart TB
   subgraph bb3
     bb3_instrs["
       [8] Const mutate $3_@7 = 2
-      [9] Reassign mutate x$1_@8 = Binary read x$1_@0 + read $3_@7
+      [9] Reassign mutate x$1_@6 = Binary read x$1_@0 + read $3_@7
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [10] Const mutate $2_@9 = 3
-      [11] Reassign mutate x$1_@10 = Binary read x$1_@0 + read $2_@9
+      [10] Const mutate $2_@8 = 3
+      [11] Reassign mutate x$1_@6 = Binary read x$1_@0 + read $2_@8
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [12] Let mutate y$9_@11 = read x$1
+      [12] Let mutate y$9_@9 = read x$1_@6
     "]
     bb1_instrs --> bb1_terminal(["Return"])
   end

@@ -36,14 +36,14 @@ bb2:
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Reassign mutate a$4_@4 = Array []
+  [5] Reassign mutate a$4_@3 = Array []
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [6] Call read useFreeze$5(freeze a$4)
-  [7] Call read useFreeze$5(read a$4)
-  [8] Call mutate call$6_@5(read a$4)
-  Return read a$4
+  [6] Call read useFreeze$5(freeze a$4_@3)
+  [7] Call read useFreeze$5(read a$4_@3)
+  [8] Call mutate call$6_@4(read a$4_@3)
+  Return read a$4_@3
 ```
 
 ### CFG
@@ -67,17 +67,17 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [5] Reassign mutate a$4_@4 = Array []
+      [5] Reassign mutate a$4_@3 = Array []
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [6] Call read useFreeze$5(freeze a$4)
-      [7] Call read useFreeze$5(read a$4)
-      [8] Call mutate call$6_@5(read a$4)
+      [6] Call read useFreeze$5(freeze a$4_@3)
+      [7] Call read useFreeze$5(read a$4_@3)
+      [8] Call mutate call$6_@4(read a$4_@3)
     "]
-    bb1_instrs --> bb1_terminal(["Return read a$4"])
+    bb1_instrs --> bb1_terminal(["Return read a$4_@3"])
   end
 
   %% Jumps

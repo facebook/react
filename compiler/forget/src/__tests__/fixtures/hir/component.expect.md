@@ -52,7 +52,7 @@ bb3:
   If (read $12_@3) then:bb8 else:bb9
 bb8:
   predecessor blocks: bb3
-  [9] Const mutate $13_@7 = read $12_@3
+  [9] Const mutate $13_@3 = read $12_@3
   Goto bb7
 bb9:
   predecessor blocks: bb3
@@ -60,33 +60,33 @@ bb9:
   Goto bb7
 bb7:
   predecessor blocks: bb8 bb9
-  If (read $13) then:bb5 else:bb4
+  If (read $13_@3) then:bb5 else:bb4
 bb5:
   predecessor blocks: bb7
   Goto(Continue) bb1
 bb4:
   predecessor blocks: bb7
   [11] Call mutate seen$5_@3.add(mutate item$10_@3)
-  [12] Const mutate $14_@8 = "div"
-  [13] Const mutate $15_@9 = JSX <read $14_@8>{read item$10_@3}</read $14_@8>
-  [14] Call mutate renderedItems$4_@2.push(read $15_@9)
-  [15] Const mutate $16_@10 = Binary read renderedItems$4_@2.length >= read max$7_@5
-  If (read $16_@10) then:bb2 else:bb10
+  [12] Const mutate $14_@7 = "div"
+  [13] Const mutate $15_@8 = JSX <read $14_@7>{read item$10_@3}</read $14_@7>
+  [14] Call mutate renderedItems$4_@2.push(read $15_@8)
+  [15] Const mutate $16_@9 = Binary read renderedItems$4_@2.length >= read max$7_@5
+  If (read $16_@9) then:bb2 else:bb10
 bb10:
   predecessor blocks: bb4
   Goto(Continue) bb1
 bb2:
   predecessor blocks: bb4 bb1
-  [16] Const mutate count$17_@11 = read renderedItems$4_@2.length
-  [17] Const mutate $18_@12 = "div"
-  [18] Const mutate $19_@13 = "\n      "
-  [19] Const mutate $20_@14 = "h1"
-  [20] Const mutate $21_@15 = " Items"
-  [21] Const mutate $22_@16 = JSX <read $20_@14>{freeze count$17_@11}{read $21_@15}</read $20_@14>
-  [22] Const mutate $23_@17 = "\n      "
-  [23] Const mutate $24_@18 = "\n    "
-  [24] Const mutate $25_@19 = JSX <read $18_@12>{read $19_@13}{read $22_@16}{read $23_@17}{freeze renderedItems$4_@2}{read $24_@18}</read $18_@12>
-  Return read $25_@19
+  [16] Const mutate count$17_@10 = read renderedItems$4_@2.length
+  [17] Const mutate $18_@11 = "div"
+  [18] Const mutate $19_@12 = "\n      "
+  [19] Const mutate $20_@13 = "h1"
+  [20] Const mutate $21_@14 = " Items"
+  [21] Const mutate $22_@15 = JSX <read $20_@13>{freeze count$17_@10}{read $21_@14}</read $20_@13>
+  [22] Const mutate $23_@16 = "\n      "
+  [23] Const mutate $24_@17 = "\n    "
+  [24] Const mutate $25_@18 = JSX <read $18_@11>{read $19_@12}{read $22_@15}{read $23_@16}{freeze renderedItems$4_@2}{read $24_@17}</read $18_@11>
+  Return read $25_@18
 ```
 
 ### CFG
@@ -117,7 +117,7 @@ flowchart TB
   end
   subgraph bb8
     bb8_instrs["
-      [9] Const mutate $13_@7 = read $12_@3
+      [9] Const mutate $13_@3 = read $12_@3
     "]
     bb8_instrs --> bb8_terminal(["Goto"])
   end
@@ -128,7 +128,7 @@ flowchart TB
     bb9_instrs --> bb9_terminal(["Goto"])
   end
   subgraph bb7
-    bb7_terminal(["If (read $13)"])
+    bb7_terminal(["If (read $13_@3)"])
   end
   subgraph bb5
     bb5_terminal(["Goto"])
@@ -136,29 +136,29 @@ flowchart TB
   subgraph bb4
     bb4_instrs["
       [11] Call mutate seen$5_@3.add(mutate item$10_@3)
-      [12] Const mutate $14_@8 = 'div'
-      [13] Const mutate $15_@9 = JSX <read $14_@8>{read item$10_@3}</read $14_@8>
-      [14] Call mutate renderedItems$4_@2.push(read $15_@9)
-      [15] Const mutate $16_@10 = Binary read renderedItems$4_@2.length >= read max$7_@5
+      [12] Const mutate $14_@7 = 'div'
+      [13] Const mutate $15_@8 = JSX <read $14_@7>{read item$10_@3}</read $14_@7>
+      [14] Call mutate renderedItems$4_@2.push(read $15_@8)
+      [15] Const mutate $16_@9 = Binary read renderedItems$4_@2.length >= read max$7_@5
     "]
-    bb4_instrs --> bb4_terminal(["If (read $16_@10)"])
+    bb4_instrs --> bb4_terminal(["If (read $16_@9)"])
   end
   subgraph bb10
     bb10_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [16] Const mutate count$17_@11 = read renderedItems$4_@2.length
-      [17] Const mutate $18_@12 = 'div'
-      [18] Const mutate $19_@13 = '\n      '
-      [19] Const mutate $20_@14 = 'h1'
-      [20] Const mutate $21_@15 = ' Items'
-      [21] Const mutate $22_@16 = JSX <read $20_@14>{freeze count$17_@11}{read $21_@15}</read $20_@14>
-      [22] Const mutate $23_@17 = '\n      '
-      [23] Const mutate $24_@18 = '\n    '
-      [24] Const mutate $25_@19 = JSX <read $18_@12>{read $19_@13}{read $22_@16}{read $23_@17}{freeze renderedItems$4_@2}{read $24_@18}</read $18_@12>
+      [16] Const mutate count$17_@10 = read renderedItems$4_@2.length
+      [17] Const mutate $18_@11 = 'div'
+      [18] Const mutate $19_@12 = '\n      '
+      [19] Const mutate $20_@13 = 'h1'
+      [20] Const mutate $21_@14 = ' Items'
+      [21] Const mutate $22_@15 = JSX <read $20_@13>{freeze count$17_@10}{read $21_@14}</read $20_@13>
+      [22] Const mutate $23_@16 = '\n      '
+      [23] Const mutate $24_@17 = '\n    '
+      [24] Const mutate $25_@18 = JSX <read $18_@11>{read $19_@12}{read $22_@15}{read $23_@16}{freeze renderedItems$4_@2}{read $24_@17}</read $18_@11>
     "]
-    bb2_instrs --> bb2_terminal(["Return read $25_@19"])
+    bb2_instrs --> bb2_terminal(["Return read $25_@18"])
   end
 
   %% Jumps

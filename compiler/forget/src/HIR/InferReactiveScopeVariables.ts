@@ -52,7 +52,7 @@ import { eachInstructionOperand } from "./visitors";
  *
  * ## Other Issues Uncovered
  *
- * 1. Mutable lifetimes need to account for aliasing.
+ * Mutable lifetimes need to account for aliasing (known todo, already described in InferMutableLifetimes.ts)
  *
  * ```javascript
  * let x = {};
@@ -60,24 +60,17 @@ import { eachInstructionOperand } from "./visitors";
  * x.y = y; // RHS is not considered mutable here bc not further mutation
  * mutate(x); // bc y is aliased here, it should still be considered mutable above
  * ```
- *
- * 2. Mutable lifetimes need to account for SSA reassignment.
- *
- * ```javascript
- * // y is never considered mutable bc SSA treats subsequent assignments as distinct identifiers
- * let y;
- * if (cond) {
- *   y = ...;
- * } else {
- *   y = ...;
- * }
- * ```
  */
 export function inferReactiveScopeVariables(fn: HIRFunction) {
   // Represents the set of reactive scopes as disjoint sets of identifiers
   // that mutate together.
   const scopes = new DisjointSet<Identifier>();
   for (const [_, block] of fn.body.blocks) {
+    for (const phi of block.phis) {
+      const operands: Array<Identifier> = [phi.id, ...phi.operands.values()];
+      scopes.union(operands);
+    }
+
     for (const instr of block.instructions) {
       const operands: Array<Identifier> = [];
       if (instr.lvalue !== null) {

@@ -44,14 +44,14 @@ bb4:
   Goto bb2
 bb2:
   predecessor blocks: bb4 bb0
-  [8] Reassign mutate y$3_@5 = read x$2_@0
+  [8] Reassign mutate y$3_@1 = read x$2_@0
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [9] Const mutate child$6_@6 = JSX <read Component$0 data={freeze x$2_@0} ></read Component$0>
-  [10] Call read y$3.push(read props$1.p4)
-  [11] Const mutate $7_@7 = JSX <read Component$0 data={read y$3} >{read child$6_@6}</read Component$0>
-  Return read $7_@7
+  [9] Const mutate child$6_@5 = JSX <read Component$0 data={freeze x$2_@0} ></read Component$0>
+  [10] Call read y$3_@1.push(read props$1.p4)
+  [11] Const mutate $7_@6 = JSX <read Component$0 data={read y$3_@1} >{read child$6_@5}</read Component$0>
+  Return read $7_@6
 ```
 
 ### CFG
@@ -78,17 +78,17 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [8] Reassign mutate y$3_@5 = read x$2_@0
+      [8] Reassign mutate y$3_@1 = read x$2_@0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [9] Const mutate child$6_@6 = JSX <read Component$0 data={freeze x$2_@0} ></read Component$0>
-      [10] Call read y$3.push(read props$1.p4)
-      [11] Const mutate $7_@7 = JSX <read Component$0 data={read y$3} >{read child$6_@6}</read Component$0>
+      [9] Const mutate child$6_@5 = JSX <read Component$0 data={freeze x$2_@0} ></read Component$0>
+      [10] Call read y$3_@1.push(read props$1.p4)
+      [11] Const mutate $7_@6 = JSX <read Component$0 data={read y$3_@1} >{read child$6_@5}</read Component$0>
     "]
-    bb1_instrs --> bb1_terminal(["Return read $7_@7"])
+    bb1_instrs --> bb1_terminal(["Return read $7_@6"])
   end
 
   %% Jumps

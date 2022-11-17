@@ -54,26 +54,26 @@ bb8:
   Goto bb1
 bb6:
   predecessor blocks: bb2
-  [6] Reassign mutate x$2_@5 = read props$1.v1
+  [6] Reassign mutate x$2_@4 = read props$1.v1
   Goto bb1
 bb4:
   predecessor blocks: bb2
-  [7] Reassign mutate x$2_@6 = read props$1.v2
+  [7] Reassign mutate x$2_@4 = read props$1.v2
   Goto bb1
 bb10:
   predecessor blocks: bb0
   If (read props$1.cond2) then:bb12 else:bb13
 bb12:
   predecessor blocks: bb10
-  [8] Reassign mutate x$2_@7 = read props$1.b
+  [8] Reassign mutate x$2_@4 = read props$1.b
   Goto bb1
 bb13:
   predecessor blocks: bb10
-  [9] Reassign mutate x$2_@8 = read props$1.c
+  [9] Reassign mutate x$2_@4 = read props$1.c
   Goto bb1
 bb1:
   predecessor blocks: bb8 bb6 bb4 bb12 bb13
-  [10] read x$2
+  [10] read x$2_@4
   Return
 ```
 
@@ -104,13 +104,13 @@ flowchart TB
   end
   subgraph bb6
     bb6_instrs["
-      [6] Reassign mutate x$2_@5 = read props$1.v1
+      [6] Reassign mutate x$2_@4 = read props$1.v1
     "]
     bb6_instrs --> bb6_terminal(["Goto"])
   end
   subgraph bb4
     bb4_instrs["
-      [7] Reassign mutate x$2_@6 = read props$1.v2
+      [7] Reassign mutate x$2_@4 = read props$1.v2
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
@@ -119,19 +119,19 @@ flowchart TB
   end
   subgraph bb12
     bb12_instrs["
-      [8] Reassign mutate x$2_@7 = read props$1.b
+      [8] Reassign mutate x$2_@4 = read props$1.b
     "]
     bb12_instrs --> bb12_terminal(["Goto"])
   end
   subgraph bb13
     bb13_instrs["
-      [9] Reassign mutate x$2_@8 = read props$1.c
+      [9] Reassign mutate x$2_@4 = read props$1.c
     "]
     bb13_instrs --> bb13_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [10] read x$2
+      [10] read x$2_@4
     "]
     bb1_instrs --> bb1_terminal(["Return"])
   end

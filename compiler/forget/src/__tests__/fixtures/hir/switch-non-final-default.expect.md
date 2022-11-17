@@ -45,18 +45,18 @@ bb0:
 bb6:
   predecessor blocks: bb0
   [6] Call mutate x$2_@0.push(read props$1.p2)
-  [7] Reassign mutate y$3_@5 = Array []
+  [7] Reassign mutate y$3_@1 = Array []
   Goto bb1
 bb2:
   predecessor blocks: bb0
-  [8] Reassign mutate y$3_@6 = read x$2_@0
+  [8] Reassign mutate y$3_@1 = read x$2_@0
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb6 bb2
-  [9] Const mutate child$7_@7 = JSX <read Component$0 data={freeze x$2_@0} ></read Component$0>
-  [10] Call read y$3.push(read props$1.p4)
-  [11] Const mutate $8_@8 = JSX <read Component$0 data={freeze y$3} >{read child$7_@7}</read Component$0>
-  Return read $8_@8
+  [9] Const mutate child$7_@5 = JSX <read Component$0 data={freeze x$2_@0} ></read Component$0>
+  [10] Call read y$3_@1.push(read props$1.p4)
+  [11] Const mutate $8_@6 = JSX <read Component$0 data={freeze y$3_@1} >{read child$7_@5}</read Component$0>
+  Return read $8_@6
 ```
 
 ### CFG
@@ -77,23 +77,23 @@ flowchart TB
   subgraph bb6
     bb6_instrs["
       [6] Call mutate x$2_@0.push(read props$1.p2)
-      [7] Reassign mutate y$3_@5 = Array []
+      [7] Reassign mutate y$3_@1 = Array []
     "]
     bb6_instrs --> bb6_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [8] Reassign mutate y$3_@6 = read x$2_@0
+      [8] Reassign mutate y$3_@1 = read x$2_@0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [9] Const mutate child$7_@7 = JSX <read Component$0 data={freeze x$2_@0} ></read Component$0>
-      [10] Call read y$3.push(read props$1.p4)
-      [11] Const mutate $8_@8 = JSX <read Component$0 data={freeze y$3} >{read child$7_@7}</read Component$0>
+      [9] Const mutate child$7_@5 = JSX <read Component$0 data={freeze x$2_@0} ></read Component$0>
+      [10] Call read y$3_@1.push(read props$1.p4)
+      [11] Const mutate $8_@6 = JSX <read Component$0 data={freeze y$3_@1} >{read child$7_@5}</read Component$0>
     "]
-    bb1_instrs --> bb1_terminal(["Return read $8_@8"])
+    bb1_instrs --> bb1_terminal(["Return read $8_@6"])
   end
 
   %% Jumps

@@ -31,11 +31,11 @@ bb2:
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [3] Const mutate $3_@2 = read $2_@0
+  [3] Const mutate $3_@1 = read $2_@0
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  Return freeze $3
+  Return freeze $3_@1
 ```
 
 ### CFG
@@ -57,12 +57,12 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [3] Const mutate $3_@2 = read $2_@0
+      [3] Const mutate $3_@1 = read $2_@0
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
-    bb1_terminal(["Return freeze $3"])
+    bb1_terminal(["Return freeze $3_@1"])
   end
 
   %% Jumps
@@ -97,11 +97,11 @@ bb2:
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [3] Const mutate $3_@2 = Call mutate g$4_@2()
+  [3] Const mutate $3_@1 = Call mutate g$4_@1()
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  Return freeze $3
+  Return freeze $3_@1
 ```
 
 ### CFG
@@ -123,12 +123,12 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [3] Const mutate $3_@2 = Call mutate g$4_@2()
+      [3] Const mutate $3_@1 = Call mutate g$4_@1()
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
-    bb1_terminal(["Return freeze $3"])
+    bb1_terminal(["Return freeze $3_@1"])
   end
 
   %% Jumps
@@ -165,11 +165,11 @@ bb2:
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Const mutate $6_@4 = Call mutate g$7_@4()
+  [5] Const mutate $6_@3 = Call mutate g$7_@3()
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  Return freeze $6
+  Return freeze $6_@3
 ```
 
 ### CFG
@@ -193,12 +193,12 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [5] Const mutate $6_@4 = Call mutate g$7_@4()
+      [5] Const mutate $6_@3 = Call mutate g$7_@3()
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
-    bb1_terminal(["Return freeze $6"])
+    bb1_terminal(["Return freeze $6_@3"])
   end
 
   %% Jumps

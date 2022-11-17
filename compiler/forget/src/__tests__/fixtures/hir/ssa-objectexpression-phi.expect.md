@@ -29,16 +29,16 @@ bb0:
   If (read $4_@3) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [5] Reassign mutate x$1_@4 = 2
+  [5] Reassign mutate x$1_@0 = 2
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [6] Reassign mutate y$2_@5 = 3
+  [6] Reassign mutate y$2_@1 = 3
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [7] Let mutate t$5_@6 = Object { x: read x$1, y: read y$2 }
-  Return freeze t$5_@6
+  [7] Let mutate t$5_@4 = Object { x: read x$1_@0, y: read y$2_@1 }
+  Return freeze t$5_@4
 ```
 
 ### CFG
@@ -57,21 +57,21 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [5] Reassign mutate x$1_@4 = 2
+      [5] Reassign mutate x$1_@0 = 2
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [6] Reassign mutate y$2_@5 = 3
+      [6] Reassign mutate y$2_@1 = 3
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [7] Let mutate t$5_@6 = Object { x: read x$1, y: read y$2 }
+      [7] Let mutate t$5_@4 = Object { x: read x$1_@0, y: read y$2_@1 }
     "]
-    bb1_instrs --> bb1_terminal(["Return freeze t$5_@6"])
+    bb1_instrs --> bb1_terminal(["Return freeze t$5_@4"])
   end
 
   %% Jumps

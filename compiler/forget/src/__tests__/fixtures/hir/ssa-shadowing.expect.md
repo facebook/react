@@ -58,11 +58,11 @@ bb2:
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [4] Reassign mutate str$2_@3 = "fallthrough test"
+  [4] Reassign mutate str$2_@0 = "fallthrough test"
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [5] Call mutate log$4_@2(read str$2)
+  [5] Call mutate log$4_@2(read str$2_@0)
   Return
 ```
 
@@ -86,13 +86,13 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [4] Reassign mutate str$2_@3 = 'fallthrough test'
+      [4] Reassign mutate str$2_@0 = 'fallthrough test'
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [5] Call mutate log$4_@2(read str$2)
+      [5] Call mutate log$4_@2(read str$2_@0)
     "]
     bb1_instrs --> bb1_terminal(["Return"])
   end
