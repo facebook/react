@@ -193,12 +193,13 @@ describe('ReactDOMEventListener', () => {
     const onMouseOut = event => mouseOut(event.target);
 
     class Wrapper extends React.Component {
+      innerRef = React.createRef();
       getInner = () => {
-        return this.refs.inner;
+        return this.innerRef.current;
       };
 
       render() {
-        const inner = <div ref="inner">Inner</div>;
+        const inner = <div ref={this.innerRef}>Inner</div>;
         return (
           <div>
             <div onMouseOut={onMouseOut} id="outer">

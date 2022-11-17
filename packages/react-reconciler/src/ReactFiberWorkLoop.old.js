@@ -25,7 +25,6 @@ import type {
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent.old';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
-import type {ThenableState} from './ReactFiberThenable.old';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -142,7 +141,7 @@ import {
   NoTimestamp,
   claimNextTransitionLane,
   claimNextRetryLane,
-  includesSomeLane,
+  includesSyncLane,
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
@@ -178,7 +177,11 @@ import {
   lanesToEventPriority,
 } from './ReactEventPriorities.old';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
-import {beginWork as originalBeginWork} from './ReactFiberBeginWork.old';
+import {
+  SelectiveHydrationException,
+  beginWork as originalBeginWork,
+  replayFunctionComponent,
+} from './ReactFiberBeginWork.old';
 import {completeWork} from './ReactFiberCompleteWork.old';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork.old';
 import {
@@ -207,6 +210,7 @@ import {enqueueUpdate} from './ReactFiberClassUpdateQueue.old';
 import {resetContextDependencies} from './ReactFiberNewContext.old';
 import {
   resetHooksAfterThrow,
+  resetHooksOnUnwind,
   ContextOnlyDispatcher,
 } from './ReactFiberHooks.old';
 import {DefaultCacheDispatcher} from './ReactFiberCache.old';
@@ -270,14 +274,14 @@ import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent.old
 import {
   SuspenseException,
   getSuspendedThenable,
-  getThenableStateAfterSuspending,
-  isThenableStateResolved,
+  isThenableResolved,
 } from './ReactFiberThenable.old';
 import {schedulePostPaintCallback} from './ReactPostPaintCallback';
 import {
   getSuspenseHandler,
   isBadSuspenseFallback,
 } from './ReactFiberSuspenseContext.old';
+import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 
 const ceil = Math.ceil;
 
@@ -316,12 +320,14 @@ let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
-opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4;
+opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const NotSuspended: SuspendedReason = 0;
 const SuspendedOnError: SuspendedReason = 1;
 const SuspendedOnData: SuspendedReason = 2;
 const SuspendedOnImmediate: SuspendedReason = 3;
-const SuspendedAndReadyToUnwind: SuspendedReason = 4;
+const SuspendedOnDeprecatedThrowPromise: SuspendedReason = 4;
+const SuspendedAndReadyToUnwind: SuspendedReason = 5;
+const SuspendedOnHydration: SuspendedReason = 6;
 
 // When this is true, the work-in-progress fiber just suspended (or errored) and
 // we've yet to unwind the stack. In some cases, we may yield to the main thread
@@ -329,7 +335,6 @@ const SuspendedAndReadyToUnwind: SuspendedReason = 4;
 // immediately instead of unwinding the stack.
 let workInProgressSuspendedReason: SuspendedReason = NotSuspended;
 let workInProgressThrownValue: mixed = null;
-let workInProgressSuspendedThenableState: ThenableState | null = null;
 
 // Whether a ping listener was attached during this render. This is slightly
 // different that whether something suspended, because we don't add multiple
@@ -913,7 +918,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       // TODO: Temporary until we confirm this warning is not fired.
       if (
         existingCallbackNode == null &&
-        existingCallbackPriority !== SyncLane
+        !includesSyncLane(existingCallbackPriority)
       ) {
         console.error(
           'Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue.',
@@ -931,7 +936,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Schedule a new callback.
   let newCallbackNode;
-  if (newCallbackPriority === SyncLane) {
+  if (includesSyncLane(newCallbackPriority)) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     if (root.tag === LegacyRoot) {
@@ -1475,7 +1480,7 @@ function performSyncWorkOnRoot(root) {
   flushPassiveEffects();
 
   let lanes = getNextLanes(root, NoLanes);
-  if (!includesSomeLane(lanes, SyncLane)) {
+  if (!includesSyncLane(lanes)) {
     // There's no remaining sync work left.
     ensureRootIsScheduled(root, now());
     return null;
@@ -1715,10 +1720,17 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   }
 
   if (workInProgress !== null) {
-    let interruptedWork =
-      workInProgressSuspendedReason === NotSuspended
-        ? workInProgress.return
-        : workInProgress;
+    let interruptedWork;
+    if (workInProgressSuspendedReason === NotSuspended) {
+      // Normal case. Work-in-progress hasn't started yet. Unwind all
+      // its parents.
+      interruptedWork = workInProgress.return;
+    } else {
+      // Work-in-progress is in suspended state. Reset the work loop and unwind
+      // both the suspended fiber and all its parents.
+      resetSuspendedWorkLoopOnUnwind();
+      interruptedWork = workInProgress;
+    }
     while (interruptedWork !== null) {
       const current = interruptedWork.alternate;
       unwindInterruptedWork(
@@ -1735,7 +1747,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressRootRenderLanes = renderLanes = lanes;
   workInProgressSuspendedReason = NotSuspended;
   workInProgressThrownValue = null;
-  workInProgressSuspendedThenableState = null;
   workInProgressRootDidAttachPingListener = false;
   workInProgressRootExitStatus = RootInProgress;
   workInProgressRootFatalError = null;
@@ -1755,13 +1766,30 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   return rootWorkInProgress;
 }
 
-function handleThrow(root, thrownValue): void {
+function resetSuspendedWorkLoopOnUnwind() {
   // Reset module-level state that was set during the render phase.
   resetContextDependencies();
+  resetHooksOnUnwind();
+}
+
+function handleThrow(root, thrownValue): void {
+  // A component threw an exception. Usually this is because it suspended, but
+  // it also includes regular program errors.
+  //
+  // We're either going to unwind the stack to show a Suspense or error
+  // boundary, or we're going to replay the component again. Like after a
+  // promise resolves.
+  //
+  // Until we decide whether we're going to unwind or replay, we should preserve
+  // the current state of the work loop without resetting anything.
+  //
+  // If we do decide to unwind the stack, module-level variables will be reset
+  // in resetSuspendedWorkLoopOnUnwind.
+
+  // These should be reset immediately because they're only supposed to be set
+  // when React is executing user code.
   resetHooksAfterThrow();
   resetCurrentDebugFiberInDEV();
-  // TODO: I found and added this missing line while investigating a
-  // separate issue. Write a regression test using string refs.
   ReactCurrentOwner.current = null;
 
   if (thrownValue === SuspenseException) {
@@ -1771,15 +1799,22 @@ function handleThrow(root, thrownValue): void {
     // API for suspending. This implementation detail can change later, once we
     // deprecate the old API in favor of `use`.
     thrownValue = getSuspendedThenable();
-    workInProgressSuspendedThenableState = getThenableStateAfterSuspending();
     workInProgressSuspendedReason = shouldAttemptToSuspendUntilDataResolves()
       ? SuspendedOnData
       : SuspendedOnImmediate;
+  } else if (thrownValue === SelectiveHydrationException) {
+    // An update flowed into a dehydrated boundary. Before we can apply the
+    // update, we need to finish hydrating. Interrupt the work-in-progress
+    // render so we can restart at the hydration lane.
+    //
+    // The ideal implementation would be able to switch contexts without
+    // unwinding the current stack.
+    //
+    // We could name this something more general but as of now it's the only
+    // case where we think this should happen.
+    workInProgressSuspendedReason = SuspendedOnHydration;
   } else {
-    // This is a regular error. If something earlier in the component already
-    // suspended, we must clear the thenable state to unblock the work loop.
-    workInProgressSuspendedThenableState = null;
-
+    // This is a regular error.
     const isWakeable =
       thrownValue !== null &&
       typeof thrownValue === 'object' &&
@@ -1789,7 +1824,7 @@ function handleThrow(root, thrownValue): void {
     workInProgressSuspendedReason = isWakeable
       ? // A wakeable object was thrown by a legacy Suspense implementation.
         // This has slightly different behavior than suspending with `use`.
-        SuspendedAndReadyToUnwind
+        SuspendedOnDeprecatedThrowPromise
       : // This is a regular error. If something earlier in the component already
         // suspended, we must clear the thenable state to unblock the work loop.
         SuspendedOnError;
@@ -1833,12 +1868,24 @@ function handleThrow(root, thrownValue): void {
 
 function shouldAttemptToSuspendUntilDataResolves() {
   // TODO: We should be able to move the
-  // renderDidSuspend/renderDidSuspendWithDelay logic into this function,
+  // renderDidSuspend/renderDidSuspendDelayIfPossible logic into this function,
   // instead of repeating it in the complete phase. Or something to that effect.
 
   if (includesOnlyRetries(workInProgressRootRenderLanes)) {
     // We can always wait during a retry.
     return true;
+  }
+
+  // Check if there are other pending updates that might possibly unblock this
+  // component from suspending. This mirrors the check in
+  // renderDidSuspendDelayIfPossible. We should attempt to unify them somehow.
+  if (
+    includesNonIdleWork(workInProgressRootSkippedLanes) ||
+    includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)
+  ) {
+    // Suspend normally. renderDidSuspendDelayIfPossible will handle
+    // interrupting the work loop.
+    return false;
   }
 
   // TODO: We should be able to remove the equivalent check in
@@ -1965,6 +2012,9 @@ export function renderHasNotSuspendedYet(): boolean {
   return workInProgressRootExitStatus === RootInProgress;
 }
 
+// TODO: Over time, this function and renderRootConcurrent have become more
+// and more similar. Not sure it makes sense to maintain forked paths. Consider
+// unifying them again.
 function renderRootSync(root: FiberRoot, lanes: Lanes) {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
@@ -2004,7 +2054,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     markRenderStarted(lanes);
   }
 
-  do {
+  outer: do {
     try {
       if (
         workInProgressSuspendedReason !== NotSuspended &&
@@ -2020,11 +2070,23 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
         // function and fork the behavior some other way.
         const unitOfWork = workInProgress;
         const thrownValue = workInProgressThrownValue;
-        workInProgressSuspendedReason = NotSuspended;
-        workInProgressThrownValue = null;
-        unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
-
-        // Continue with the normal work loop.
+        switch (workInProgressSuspendedReason) {
+          case SuspendedOnHydration: {
+            // Selective hydration. An update flowed into a dehydrated tree.
+            // Interrupt the current render so the work loop can switch to the
+            // hydration lane.
+            workInProgress = null;
+            workInProgressRootExitStatus = RootDidNotComplete;
+            break outer;
+          }
+          default: {
+            // Continue with the normal work loop.
+            workInProgressSuspendedReason = NotSuspended;
+            workInProgressThrownValue = null;
+            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            break;
+          }
+        }
       }
       workLoopSync();
       break;
@@ -2134,24 +2196,21 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             break;
           }
           case SuspendedOnData: {
-            const didResolve =
-              workInProgressSuspendedThenableState !== null &&
-              isThenableStateResolved(workInProgressSuspendedThenableState);
-            if (didResolve) {
+            const thenable: Thenable<mixed> = (thrownValue: any);
+            if (isThenableResolved(thenable)) {
+              // The data resolved. Try rendering the component again.
               workInProgressSuspendedReason = NotSuspended;
               workInProgressThrownValue = null;
-              replaySuspendedUnitOfWork(unitOfWork, thrownValue);
-            } else {
-              // The work loop is suspended on data. We should wait for it to
-              // resolve before continuing to render.
-              const thenable: Thenable<mixed> = (workInProgressThrownValue: any);
-              const onResolution = () => {
-                ensureRootIsScheduled(root, now());
-              };
-              thenable.then(onResolution, onResolution);
-              break outer;
+              replaySuspendedUnitOfWork(unitOfWork);
+              break;
             }
-            break;
+            // The work loop is suspended on data. We should wait for it to
+            // resolve before continuing to render.
+            const onResolution = () => {
+              ensureRootIsScheduled(root, now());
+            };
+            thenable.then(onResolution, onResolution);
+            break outer;
           }
           case SuspendedOnImmediate: {
             // If this fiber just suspended, it's possible the data is already
@@ -2160,19 +2219,43 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             workInProgressSuspendedReason = SuspendedAndReadyToUnwind;
             break outer;
           }
-          default: {
-            workInProgressSuspendedReason = NotSuspended;
-            workInProgressThrownValue = null;
-            const didResolve =
-              workInProgressSuspendedThenableState !== null &&
-              isThenableStateResolved(workInProgressSuspendedThenableState);
-            if (didResolve) {
-              replaySuspendedUnitOfWork(unitOfWork, thrownValue);
+          case SuspendedAndReadyToUnwind: {
+            const thenable: Thenable<mixed> = (thrownValue: any);
+            if (isThenableResolved(thenable)) {
+              // The data resolved. Try rendering the component again.
+              workInProgressSuspendedReason = NotSuspended;
+              workInProgressThrownValue = null;
+              replaySuspendedUnitOfWork(unitOfWork);
             } else {
+              // Otherwise, unwind then continue with the normal work loop.
+              workInProgressSuspendedReason = NotSuspended;
+              workInProgressThrownValue = null;
               unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
             }
-            // Continue with the normal work loop.
             break;
+          }
+          case SuspendedOnDeprecatedThrowPromise: {
+            // Suspended by an old implementation that uses the `throw promise`
+            // pattern. The newer replaying behavior can cause subtle issues
+            // like infinite ping loops. So we maintain the old behavior and
+            // always unwind.
+            workInProgressSuspendedReason = NotSuspended;
+            workInProgressThrownValue = null;
+            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+            break;
+          }
+          case SuspendedOnHydration: {
+            // Selective hydration. An update flowed into a dehydrated tree.
+            // Interrupt the current render so the work loop can switch to the
+            // hydration lane.
+            workInProgress = null;
+            workInProgressRootExitStatus = RootDidNotComplete;
+            break outer;
+          }
+          default: {
+            throw new Error(
+              'Unexpected SuspendedReason. This is a bug in React.',
+            );
           }
         }
       }
@@ -2256,34 +2339,85 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   ReactCurrentOwner.current = null;
 }
 
-function replaySuspendedUnitOfWork(
-  unitOfWork: Fiber,
-  thrownValue: mixed,
-): void {
+function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   // This is a fork of performUnitOfWork specifcally for replaying a fiber that
   // just suspended.
   //
-  // Instead of unwinding the stack and potentially showing a fallback, unwind
-  // only the last stack frame, reset the fiber, and try rendering it again.
   const current = unitOfWork.alternate;
-  unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
-  unitOfWork = workInProgress = resetWorkInProgress(unitOfWork, renderLanes);
-
   setCurrentDebugFiberInDEV(unitOfWork);
 
   let next;
-  if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
+  setCurrentDebugFiberInDEV(unitOfWork);
+  const isProfilingMode =
+    enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode;
+  if (isProfilingMode) {
     startProfilerTimer(unitOfWork);
-    next = beginWork(current, unitOfWork, renderLanes);
+  }
+  switch (unitOfWork.tag) {
+    case IndeterminateComponent: {
+      // Because it suspended with `use`, we can assume it's a
+      // function component.
+      unitOfWork.tag = FunctionComponent;
+      // Fallthrough to the next branch.
+    }
+    // eslint-disable-next-line no-fallthrough
+    case FunctionComponent:
+    case ForwardRef: {
+      // Resolve `defaultProps`. This logic is copied from `beginWork`.
+      // TODO: Consider moving this switch statement into that module. Also,
+      // could maybe use this as an opportunity to say `use` doesn't work with
+      // `defaultProps` :)
+      const Component = unitOfWork.type;
+      const unresolvedProps = unitOfWork.pendingProps;
+      const resolvedProps =
+        unitOfWork.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
+      next = replayFunctionComponent(
+        current,
+        unitOfWork,
+        resolvedProps,
+        Component,
+        workInProgressRootRenderLanes,
+      );
+      break;
+    }
+    case SimpleMemoComponent: {
+      const Component = unitOfWork.type;
+      const nextProps = unitOfWork.pendingProps;
+      next = replayFunctionComponent(
+        current,
+        unitOfWork,
+        nextProps,
+        Component,
+        workInProgressRootRenderLanes,
+      );
+      break;
+    }
+    default: {
+      if (__DEV__) {
+        console.error(
+          'Unexpected type of work: %s, Currently only function ' +
+            'components are replayed after suspending. This is a bug in React.',
+          unitOfWork.tag,
+        );
+      }
+      resetSuspendedWorkLoopOnUnwind();
+      unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
+      unitOfWork = workInProgress = resetWorkInProgress(
+        unitOfWork,
+        renderLanes,
+      );
+      next = beginWork(current, unitOfWork, renderLanes);
+      break;
+    }
+  }
+  if (isProfilingMode) {
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
-  } else {
-    next = beginWork(current, unitOfWork, renderLanes);
   }
 
-  // The begin phase finished successfully without suspending. Reset the state
-  // used to track the fiber while it was suspended. Then return to the normal
-  // work loop.
-  workInProgressSuspendedThenableState = null;
+  // The begin phase finished successfully without suspending. Return to the
+  // normal work loop.
 
   resetCurrentDebugFiberInDEV();
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
@@ -2303,7 +2437,7 @@ function unwindSuspendedUnitOfWork(unitOfWork: Fiber, thrownValue: mixed) {
   //
   // Return to the normal work loop. This will unwind the stack, and potentially
   // result in showing a fallback.
-  workInProgressSuspendedThenableState = null;
+  resetSuspendedWorkLoopOnUnwind();
 
   const returnFiber = unitOfWork.return;
   if (returnFiber === null || workInProgressRoot === null) {
@@ -2344,10 +2478,6 @@ function unwindSuspendedUnitOfWork(unitOfWork: Fiber, thrownValue: mixed) {
 
   // Return to the normal work loop.
   completeUnitOfWork(unitOfWork);
-}
-
-export function getSuspendedThenableState(): ThenableState | null {
-  return workInProgressSuspendedThenableState;
 }
 
 function completeUnitOfWork(unitOfWork: Fiber): void {
@@ -2800,16 +2930,13 @@ function commitRootImpl(
   // TODO: We can optimize this by not scheduling the callback earlier. Since we
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
-  if (
-    includesSomeLane(pendingPassiveEffectsLanes, SyncLane) &&
-    root.tag !== LegacyRoot
-  ) {
+  if (includesSyncLane(pendingPassiveEffectsLanes) && root.tag !== LegacyRoot) {
     flushPassiveEffects();
   }
 
   // Read this again, since a passive effect might have updated it
   remainingLanes = root.pendingLanes;
-  if (includesSomeLane(remainingLanes, (SyncLane: Lane))) {
+  if (includesSyncLane(remainingLanes)) {
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
       markNestedUpdateScheduled();
     }
@@ -3656,14 +3783,11 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         throw originalError;
       }
 
-      // Keep this code in sync with handleThrow; any changes here must have
-      // corresponding changes there.
-      resetContextDependencies();
-      resetHooksAfterThrow();
       // Don't reset current debug fiber, since we're about to work on the
       // same fiber again.
 
       // Unwind the failed stack frame
+      resetSuspendedWorkLoopOnUnwind();
       unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
 
       // Restore the original properties of the fiber.

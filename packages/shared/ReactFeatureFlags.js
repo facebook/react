@@ -213,13 +213,13 @@ export const disableTextareaChildren = false;
 // Part of the simplification of React.createElement so we can eventually move
 // from React.createElement to React.jsx
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
-export const warnAboutDefaultPropsOnFunctionComponents = false; // deprecate later, not 18.0
+export const warnAboutDefaultPropsOnFunctionComponents = true; // deprecate later, not 18.0
 
 // Enables a warning when trying to spread a 'key' to an element;
 // a deprecated pattern we want to get rid of in the future
-export const warnAboutSpreadingKeyToJSX = false;
+export const warnAboutSpreadingKeyToJSX = true;
 
-export const warnAboutStringRefs = false;
+export const warnAboutStringRefs = true;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools
