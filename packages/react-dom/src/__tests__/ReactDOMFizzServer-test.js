@@ -264,6 +264,7 @@ describe('ReactDOMFizzServer', () => {
   }
 
   // @gate experimental
+  // @gate !warnAboutDefaultPropsOnFunctionComponents || !__DEV__
   it('should asynchronously load a lazy component', async () => {
     let resolveA;
     const LazyA = React.lazy(() => {
