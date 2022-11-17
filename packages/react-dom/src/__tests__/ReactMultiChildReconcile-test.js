@@ -60,6 +60,8 @@ class StatusDisplay extends React.Component {
  * Displays friends statuses.
  */
 class FriendsStatusDisplay extends React.Component {
+  displays = {};
+
   /**
    * Gets the order directly from each rendered child's `index` field.
    * Refs are not maintained in the rendered order, and neither is
@@ -84,7 +86,7 @@ class FriendsStatusDisplay extends React.Component {
     const originalKeys = this.getOriginalKeys();
     for (let i = 0; i < originalKeys.length; i++) {
       const key = originalKeys[i];
-      res[key] = this.refs[key];
+      res[key] = this.displays[key];
     }
     return res;
   }
@@ -104,7 +106,7 @@ class FriendsStatusDisplay extends React.Component {
         // We are only interested in children up to the current key.
         return;
       }
-      expect(this.refs[key]).toBeTruthy();
+      expect(this.displays[key]).toBeTruthy();
     }
   }
 
@@ -116,7 +118,9 @@ class FriendsStatusDisplay extends React.Component {
         !status ? null : (
           <StatusDisplay
             key={key}
-            ref={key}
+            ref={current => {
+              this.displays[key] = current;
+            }}
             contentKey={key}
             onFlush={this.verifyPreviousRefsResolved.bind(this, key)}
             status={status}

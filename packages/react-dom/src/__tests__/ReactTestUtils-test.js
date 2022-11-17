@@ -222,13 +222,17 @@ describe('ReactTestUtils', () => {
     // Full-page components (html, head, body) can't be rendered into a div
     // directly...
     class Root extends React.Component {
+      htmlRef = React.createRef();
+      headRef = React.createRef();
+      bodyRef = React.createRef();
+
       render() {
         return (
-          <html ref="html">
-            <head ref="head">
+          <html ref={this.htmlRef}>
+            <head ref={this.headRef}>
               <title>hello</title>
             </head>
-            <body ref="body">hello, world</body>
+            <body ref={this.bodyRef}>hello, world</body>
           </html>
         );
       }
@@ -238,12 +242,12 @@ describe('ReactTestUtils', () => {
     const testDocument = getTestDocument(markup);
     const component = ReactDOM.hydrate(<Root />, testDocument);
 
-    expect(component.refs.html.tagName).toBe('HTML');
-    expect(component.refs.head.tagName).toBe('HEAD');
-    expect(component.refs.body.tagName).toBe('BODY');
-    expect(ReactTestUtils.isDOMComponent(component.refs.html)).toBe(true);
-    expect(ReactTestUtils.isDOMComponent(component.refs.head)).toBe(true);
-    expect(ReactTestUtils.isDOMComponent(component.refs.body)).toBe(true);
+    expect(component.htmlRef.current.tagName).toBe('HTML');
+    expect(component.headRef.current.tagName).toBe('HEAD');
+    expect(component.bodyRef.current.tagName).toBe('BODY');
+    expect(ReactTestUtils.isDOMComponent(component.htmlRef.current)).toBe(true);
+    expect(ReactTestUtils.isDOMComponent(component.headRef.current)).toBe(true);
+    expect(ReactTestUtils.isDOMComponent(component.bodyRef.current)).toBe(true);
   });
 
   it('can scry with stateless components involved', () => {
@@ -349,12 +353,13 @@ describe('ReactTestUtils', () => {
 
     it('should change the value of an input field in a component', () => {
       class SomeComponent extends React.Component {
+        inputRef = React.createRef();
         render() {
           return (
             <div>
               <input
                 type="text"
-                ref="input"
+                ref={this.inputRef}
                 onChange={this.props.handleChange}
               />
             </div>
@@ -374,7 +379,7 @@ describe('ReactTestUtils', () => {
         container,
       );
 
-      const node = instance.refs.input;
+      const node = instance.inputRef.current;
       node.value = 'zebra';
       ReactTestUtils.Simulate.change(node);
 

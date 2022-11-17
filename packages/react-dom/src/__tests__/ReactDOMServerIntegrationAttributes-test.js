@@ -337,7 +337,7 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('no ref attribute', async render => {
         class RefComponent extends React.Component {
           render() {
-            return <div ref="foo" />;
+            return <div ref={React.createRef()} />;
           }
         }
         const e = await render(<RefComponent />);

@@ -1071,22 +1071,31 @@ describe('ReactDOMInput', () => {
 
   it('should control radio buttons', () => {
     class RadioGroup extends React.Component {
+      aRef = React.createRef();
+      bRef = React.createRef();
+      cRef = React.createRef();
+
       render() {
         return (
           <div>
             <input
-              ref="a"
+              ref={this.aRef}
               type="radio"
               name="fruit"
               checked={true}
               onChange={emptyFunction}
             />
             A
-            <input ref="b" type="radio" name="fruit" onChange={emptyFunction} />
+            <input
+              ref={this.bRef}
+              type="radio"
+              name="fruit"
+              onChange={emptyFunction}
+            />
             B
             <form>
               <input
-                ref="c"
+                ref={this.cRef}
                 type="radio"
                 name="fruit"
                 defaultChecked={true}
@@ -1099,9 +1108,9 @@ describe('ReactDOMInput', () => {
     }
 
     const stub = ReactDOM.render(<RadioGroup />, container);
-    const aNode = stub.refs.a;
-    const bNode = stub.refs.b;
-    const cNode = stub.refs.c;
+    const aNode = stub.aRef.current;
+    const bNode = stub.bRef.current;
+    const cNode = stub.cRef.current;
 
     expect(aNode.checked).toBe(true);
     expect(bNode.checked).toBe(false);

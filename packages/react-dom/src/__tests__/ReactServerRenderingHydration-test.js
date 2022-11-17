@@ -32,6 +32,8 @@ describe('ReactDOMServerHydration', () => {
     let numClicks = 0;
 
     class TestComponent extends React.Component {
+      spanRef = React.createRef();
+
       componentDidMount() {
         mountCount++;
       }
@@ -42,7 +44,7 @@ describe('ReactDOMServerHydration', () => {
 
       render() {
         return (
-          <span ref="span" onClick={this.click}>
+          <span ref={this.spanRef} onClick={this.click}>
             Name: {this.props.name}
           </span>
         );
@@ -85,7 +87,7 @@ describe('ReactDOMServerHydration', () => {
 
       // Ensure the events system works after mount into server markup
       expect(numClicks).toEqual(0);
-      instance.refs.span.click();
+      instance.spanRef.current.click();
       expect(numClicks).toEqual(1);
 
       ReactDOM.unmountComponentAtNode(element);
@@ -103,7 +105,7 @@ describe('ReactDOMServerHydration', () => {
 
       // Ensure the events system works after markup mismatch.
       expect(numClicks).toEqual(1);
-      instance.refs.span.click();
+      instance.spanRef.current.click();
       expect(numClicks).toEqual(2);
     } finally {
       document.body.removeChild(element);
