@@ -288,30 +288,30 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
   const ref = current.ref;
   const refCleanup = current.refCleanup;
 
-  if (typeof refCleanup === 'function') {
-    try {
-      if (shouldProfile(current)) {
-        try {
-          startLayoutEffectTimer();
+  if (ref !== null) {
+    if (typeof refCleanup === 'function') {
+      try {
+        if (shouldProfile(current)) {
+          try {
+            startLayoutEffectTimer();
+            refCleanup();
+          } finally {
+            recordLayoutEffectDuration(current);
+          }
+        } else {
           refCleanup();
-        } finally {
-          recordLayoutEffectDuration(current);
         }
-      } else {
-        refCleanup();
+      } catch (error) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error);
+      } finally {
+        // `refCleanup` has been called. Nullify all references to it to prevent double invocation.
+        current.refCleanup = null;
+        const finishedWork = current.alternate;
+        if (finishedWork != null) {
+          finishedWork.refCleanup = null;
+        }
       }
-    } catch (error) {
-      captureCommitPhaseError(current, nearestMountedAncestor, error);
-    } finally {
-      // `refCleanup` has been called. Nullify all references to it to prevent double invocation.
-      current.refCleanup = null;
-      const finishedWork = current.alternate;
-      if (finishedWork != null) {
-        finishedWork.refCleanup = null;
-      }
-    }
-  } else if (ref !== null) {
-    if (typeof ref === 'function') {
+    } else if (typeof ref === 'function') {
       let retVal;
       try {
         if (shouldProfile(current)) {
