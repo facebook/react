@@ -2547,18 +2547,10 @@ export function writeCompletedBoundaryInstruction(
     if (scriptFormat) {
       writeChunk(destination, completeBoundaryScript3a);
       // boundaryResources encodes an array literal
-      writeStyleResourceDependencies(
-        destination,
-        boundaryResources,
-        scriptFormat ? JavascriptEmbedding : HTMLAttributeEmbedding,
-      );
+      writeStyleResourceDependenciesInJS(destination, boundaryResources);
     } else {
       writeChunk(destination, completeBoundaryData3aStart);
-      writeStyleResourceDependencies(
-        destination,
-        boundaryResources,
-        scriptFormat ? JavascriptEmbedding : HTMLAttributeEmbedding,
-      );
+      writeStyleResourceDependenciesInAttr(destination, boundaryResources);
       writeChunk(destination, completeBoundaryData3aEnd);
     }
   } else {
@@ -3000,40 +2992,12 @@ const arraySubsequentOpenBracket = stringToPrecomputedChunk(',[');
 const arrayInterstitial = stringToPrecomputedChunk(',');
 const arrayCloseBracket = stringToPrecomputedChunk(']');
 
-type EmbeddingContext = 0 | 1;
-const HTMLAttributeEmbedding: EmbeddingContext = 0;
-const JavascriptEmbedding: EmbeddingContext = 1;
-
-function writeStyleResourceObject(
-  destination: Destination,
-  str: string,
-  context: EmbeddingContext,
-) {
-  if (context === JavascriptEmbedding) {
-    // write "script_escaped_string", since this is writing to a script tag
-    // and will be evaluated as a string literal inside an array literal
-    writeChunk(
-      destination,
-      stringToChunk(escapeJSObjectForInstructionScripts(str)),
-    );
-  } else if (context === HTMLAttributeEmbedding) {
-    // write &quot;JSON_escaped_string&quot; here, since this is writing
-    // to an attribute string and will be parsed manually via JSON.parse
-    writeChunk(
-      destination,
-      stringToChunk(escapeTextForBrowser(JSON.stringify(str))),
-    );
-  } else {
-    throw new Error(
-      'Unknown embedding context type when writing style resources. This is a bug in React.',
-    );
-  }
-}
-
-function writeStyleResourceDependencies(
+// This function writes a 2D array of strings to be embedded in javascript.
+// E.g.
+//  [["JS_escaped_string1", "JS_escaped_string2"]]
+function writeStyleResourceDependenciesInJS(
   destination: Destination,
   boundaryResources: BoundaryResources,
-  context: EmbeddingContext,
 ): void {
   writeChunk(destination, arrayFirstOpenBracket);
 
@@ -3044,17 +3008,16 @@ function writeStyleResourceDependencies(
       // should be ready before content is shown on the client
     } else if (resource.flushed) {
       writeChunk(destination, nextArrayOpenBrackChunk);
-      writeStyleResourceDependencyHrefOnly(destination, resource.href, context);
+      writeStyleResourceDependencyHrefOnlyInJS(destination, resource.href);
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
     } else {
       writeChunk(destination, nextArrayOpenBrackChunk);
-      writeStyleResourceDependency(
+      writeStyleResourceDependencyInJS(
         destination,
         resource.href,
         resource.precedence,
         resource.props,
-        context,
       );
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
@@ -3066,10 +3029,10 @@ function writeStyleResourceDependencies(
   writeChunk(destination, arrayCloseBracket);
 }
 
-function writeStyleResourceDependencyHrefOnly(
+/* Helper functions */
+function writeStyleResourceDependencyHrefOnlyInJS(
   destination: Destination,
   href: string,
-  context: EmbeddingContext,
 ) {
   // We should actually enforce this earlier when the resource is created but for
   // now we make sure we are actually dealing with a string here.
@@ -3077,30 +3040,37 @@ function writeStyleResourceDependencyHrefOnly(
     checkAttributeStringCoercion(href, 'href');
   }
   const coercedHref = '' + (href: any);
-  writeStyleResourceObject(destination, coercedHref, context);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(coercedHref)),
+  );
 }
 
-function writeStyleResourceDependency(
+function writeStyleResourceDependencyInJS(
   destination: Destination,
   href: string,
   precedence: string,
   props: Object,
-  context: EmbeddingContext,
 ) {
   if (__DEV__) {
     checkAttributeStringCoercion(href, 'href');
   }
   const coercedHref = '' + (href: any);
   sanitizeURL(coercedHref);
-  writeStyleResourceObject(destination, coercedHref, context);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(coercedHref)),
+  );
 
   if (__DEV__) {
     checkAttributeStringCoercion(precedence, 'precedence');
   }
   const coercedPrecedence = '' + (precedence: any);
   writeChunk(destination, arrayInterstitial);
-
-  writeStyleResourceObject(destination, coercedPrecedence, context);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(coercedPrecedence)),
+  );
 
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
@@ -3123,7 +3093,7 @@ function writeStyleResourceDependency(
           );
         // eslint-disable-next-line-no-fallthrough
         default:
-          writeStyleResourceAttribute(destination, propKey, propValue, context);
+          writeStyleResourceAttributeInJS(destination, propKey, propValue);
           break;
       }
     }
@@ -3131,11 +3101,10 @@ function writeStyleResourceDependency(
   return null;
 }
 
-function writeStyleResourceAttribute(
+function writeStyleResourceAttributeInJS(
   destination: Destination,
   name: string,
   value: string | boolean | number | Function | Object, // not null or undefined
-  context: EmbeddingContext,
 ): void {
   let attributeName = name.toLowerCase();
   let attributeValue;
@@ -3200,7 +3169,202 @@ function writeStyleResourceAttribute(
   }
   attributeValue = '' + (value: any);
   writeChunk(destination, arrayInterstitial);
-  writeStyleResourceObject(destination, attributeName, context);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(attributeName)),
+  );
   writeChunk(destination, arrayInterstitial);
-  writeStyleResourceObject(destination, attributeValue, context);
+  writeChunk(
+    destination,
+    stringToChunk(escapeJSObjectForInstructionScripts(attributeValue)),
+  );
+}
+
+// This function writes a 2D array of strings to be embedded in an attribute
+// value and read with JSON.parse in ReactDOMServerExternalRuntime.js
+// E.g.
+//  [[&quot;JSON_escaped_string1&quot;, &quot;JSON_escaped_string2&quot;]]
+function writeStyleResourceDependenciesInAttr(
+  destination: Destination,
+  boundaryResources: BoundaryResources,
+): void {
+  writeChunk(destination, arrayFirstOpenBracket);
+
+  let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
+  boundaryResources.forEach(resource => {
+    if (resource.inShell) {
+      // We can elide this dependency because it was flushed in the shell and
+      // should be ready before content is shown on the client
+    } else if (resource.flushed) {
+      writeChunk(destination, nextArrayOpenBrackChunk);
+      writeStyleResourceDependencyHrefOnlyInAttr(destination, resource.href);
+      writeChunk(destination, arrayCloseBracket);
+      nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
+    } else {
+      writeChunk(destination, nextArrayOpenBrackChunk);
+      writeStyleResourceDependencyInAttr(
+        destination,
+        resource.href,
+        resource.precedence,
+        resource.props,
+      );
+      writeChunk(destination, arrayCloseBracket);
+      nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
+
+      resource.flushed = true;
+      resource.hint.flushed = true;
+    }
+  });
+  writeChunk(destination, arrayCloseBracket);
+}
+
+/* Helper functions */
+function writeStyleResourceDependencyHrefOnlyInAttr(
+  destination: Destination,
+  href: string,
+) {
+  // We should actually enforce this earlier when the resource is created but for
+  // now we make sure we are actually dealing with a string here.
+  if (__DEV__) {
+    checkAttributeStringCoercion(href, 'href');
+  }
+  const coercedHref = '' + (href: any);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(coercedHref))),
+  );
+}
+
+function writeStyleResourceDependencyInAttr(
+  destination: Destination,
+  href: string,
+  precedence: string,
+  props: Object,
+) {
+  if (__DEV__) {
+    checkAttributeStringCoercion(href, 'href');
+  }
+  const coercedHref = '' + (href: any);
+  sanitizeURL(coercedHref);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(coercedHref))),
+  );
+
+  if (__DEV__) {
+    checkAttributeStringCoercion(precedence, 'precedence');
+  }
+  const coercedPrecedence = '' + (precedence: any);
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(coercedPrecedence))),
+  );
+
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'href':
+        case 'rel':
+        case 'precedence':
+        case 'data-precedence': {
+          break;
+        }
+        case 'children':
+        case 'dangerouslySetInnerHTML':
+          throw new Error(
+            `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
+              'use `dangerouslySetInnerHTML`.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          writeStyleResourceAttributeInAttr(destination, propKey, propValue);
+          break;
+      }
+    }
+  }
+  return null;
+}
+
+function writeStyleResourceAttributeInAttr(
+  destination: Destination,
+  name: string,
+  value: string | boolean | number | Function | Object, // not null or undefined
+): void {
+  let attributeName = name.toLowerCase();
+  let attributeValue;
+  switch (typeof value) {
+    case 'function':
+    case 'symbol':
+      return;
+  }
+
+  switch (name) {
+    // Reserved names
+    case 'innerHTML':
+    case 'dangerouslySetInnerHTML':
+    case 'suppressContentEditableWarning':
+    case 'suppressHydrationWarning':
+    case 'style':
+      // Ignored
+      return;
+
+    // Attribute renames
+    case 'className':
+      attributeName = 'class';
+      break;
+
+    // Booleans
+    case 'hidden':
+      if (value === false) {
+        return;
+      }
+      attributeValue = '';
+      break;
+
+    // Santized URLs
+    case 'src':
+    case 'href': {
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+      attributeValue = '' + (value: any);
+      sanitizeURL(attributeValue);
+      break;
+    }
+    default: {
+      if (!isAttributeNameSafe(name)) {
+        return;
+      }
+    }
+  }
+
+  if (
+    // shouldIgnoreAttribute
+    // We have already filtered out null/undefined and reserved words.
+    name.length > 2 &&
+    (name[0] === 'o' || name[0] === 'O') &&
+    (name[1] === 'n' || name[1] === 'N')
+  ) {
+    return;
+  }
+
+  if (__DEV__) {
+    checkAttributeStringCoercion(value, attributeName);
+  }
+  attributeValue = '' + (value: any);
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(attributeName))),
+  );
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(attributeValue))),
+  );
 }
