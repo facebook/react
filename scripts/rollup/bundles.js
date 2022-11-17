@@ -16,6 +16,8 @@ const bundleTypes = {
   NODE_DEV: 'NODE_DEV',
   NODE_PROD: 'NODE_PROD',
   NODE_PROFILING: 'NODE_PROFILING',
+  BUN_DEV: 'BUN_DEV',
+  BUN_PROD: 'BUN_PROD',
   FB_WWW_DEV: 'FB_WWW_DEV',
   FB_WWW_PROD: 'FB_WWW_PROD',
   FB_WWW_PROFILING: 'FB_WWW_PROFILING',
@@ -37,6 +39,8 @@ const {
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
+  BUN_DEV,
+  BUN_PROD,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -261,6 +265,19 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-server-dom-relay/src/ReactDOMServerFB.js',
     global: 'ReactDOMServerStreaming',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom'],
+  },
+
+  /******* React DOM Fizz Server Bun *******/
+  {
+    bundleTypes: [BUN_DEV, BUN_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/src/server/ReactDOMFizzServerBun.js',
+    name: 'react-dom-server.bun', // 'node_modules/react/*.js',
+
+    global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'react-dom'],
@@ -955,6 +972,10 @@ function getOriginalFilename(bundle, bundleType) {
       return `${name}.js`;
     case NODE_ESM:
       return `${name}.js`;
+    case BUN_DEV:
+      return `${name}.development.js`;
+    case BUN_PROD:
+      return `${name}.production.min.js`;
     case UMD_DEV:
       return `${name}.development.js`;
     case UMD_PROD:

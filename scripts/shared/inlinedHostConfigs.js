@@ -46,6 +46,25 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'bun',
+    entryPoints: ['react-dom', 'react-dom/src/server/ReactDOMFizzServerBun.js'],
+    paths: [
+      'react-dom',
+      'react-dom/server',
+      'react-dom/server.bun',
+      'react-dom/src/server/ReactDOMFizzServerBun.js',
+      'react-dom-bindings',
+      'react-dom/server.node',
+      'react-server-dom-webpack',
+      'react-server-dom-webpack/client',
+      'react-server-dom-webpack/server',
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-browser',
     entryPoints: [
       'react-dom',
