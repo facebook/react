@@ -221,7 +221,7 @@ describe('ReactElement.jsx', () => {
     class Parent extends React.Component {
       render() {
         return JSXRuntime.jsx('div', {
-          children: JSXRuntime.jsx(Child, {ref: 'childElement'}),
+          children: JSXRuntime.jsx(Child, {ref: React.createRef()}),
         });
       }
     }
