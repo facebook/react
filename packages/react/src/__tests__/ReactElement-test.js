@@ -93,7 +93,7 @@ describe('ReactElement', () => {
       render() {
         return (
           <div>
-            <Child ref="childElement" />
+            <Child ref={React.createRef()} />
           </div>
         );
       }
