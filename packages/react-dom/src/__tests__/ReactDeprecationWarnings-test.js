@@ -10,7 +10,6 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 let JSXDEVRuntime;
@@ -19,19 +18,11 @@ describe('ReactDeprecationWarnings', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     if (__DEV__) {
       JSXDEVRuntime = require('react/jsx-dev-runtime');
     }
-    ReactFeatureFlags.warnAboutDefaultPropsOnFunctionComponents = true;
-    ReactFeatureFlags.warnAboutStringRefs = true;
-  });
-
-  afterEach(() => {
-    ReactFeatureFlags.warnAboutDefaultPropsOnFunctionComponents = false;
-    ReactFeatureFlags.warnAboutStringRefs = false;
   });
 
   it('should warn when given defaultProps', () => {
@@ -95,9 +86,7 @@ describe('ReactDeprecationWarnings', () => {
     );
   });
 
-  it('should not warn when owner and self are the same for string refs', () => {
-    ReactFeatureFlags.warnAboutStringRefs = false;
-
+  it('should warn when owner and self are the same for string refs', () => {
     class RefComponent extends React.Component {
       render() {
         return null;
@@ -108,7 +97,11 @@ describe('ReactDeprecationWarnings', () => {
         return <RefComponent ref="refComponent" __self={this} />;
       }
     }
-    ReactNoop.renderLegacySyncRoot(<Component />);
+    expect(() => {
+      ReactNoop.renderLegacySyncRoot(<Component />);
+    }).toErrorDev([
+      'Component "Component" contains the string ref "refComponent". Support for string refs will be removed in a future major release.',
+    ]);
     expect(Scheduler).toFlushWithoutYielding();
   });
 
