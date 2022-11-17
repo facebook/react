@@ -119,6 +119,21 @@ describe('ReactDOMRoot', () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
+  it('double invokes useLayoutEffect in __DEV__', () => {
+    const callback = jest.fn();
+    const root = ReactDOMClient.createRoot(container, {
+      unstable_strictMode: true,
+    });
+    function Component() {
+      useLayoutEffect(callback);
+      return null;
+    }
+    act(() => {
+      root.render(<Component />);
+    });
+    expect(callback).toHaveBeenCalledTimes(__DEV__ ? 2 : 1);
+  });
+
   it('unmounts children', () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
