@@ -75,6 +75,7 @@ describe('memo', () => {
     }
     ReactNoop.render(<Outer />);
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
+      'App: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
       'Warning: Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
     ]);
@@ -441,7 +442,11 @@ describe('memo', () => {
         );
         expect(Scheduler).toFlushAndYield(['Loading...']);
         await Promise.resolve();
-        expect(Scheduler).toFlushAndYield([15]);
+        expect(() => {
+          expect(Scheduler).toFlushAndYield([15]);
+        }).toErrorDev([
+          'Counter: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+        ]);
         expect(ReactNoop.getChildren()).toEqual([span(15)]);
 
         // Should bail out because props have not changed
@@ -552,7 +557,11 @@ describe('memo', () => {
             <Outer />
           </div>,
         );
-        expect(Scheduler).toFlushWithoutYielding();
+        expect(() => {
+          expect(Scheduler).toFlushWithoutYielding();
+        }).toErrorDev([
+          'Inner: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+        ]);
 
         // Mount
         expect(() => {
