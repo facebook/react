@@ -75,6 +75,7 @@ async function getRollupResult(scriptSrc: string): Promise<string | null> {
 //  1. Matching nonce attributes and moving node into an existing
 //      parent container (if passed)
 //  2. Resolving scripts with sources
+//  3. Moving data attribute nodes to the body
 async function replaceScriptsAndMove(
   window: any,
   CSPnonce: string | null,
@@ -109,6 +110,18 @@ async function replaceScriptsAndMove(
     } else {
       element.parentNode?.replaceChild(script, element);
     }
+  } else if (
+    node.nodeType === 1 &&
+    // $FlowFixMe[prop-missing]
+    node.dataset != null &&
+    (node.dataset.rxi != null ||
+      node.dataset.rri != null ||
+      node.dataset.rci != null ||
+      node.dataset.rsi != null)
+  ) {
+    // External runtime assumes that instruction data nodes are eventually
+    // appended to the body
+    window.document.body.appendChild(node);
   } else {
     for (let i = 0; i < node.childNodes.length; i++) {
       const inner = node.childNodes[i];

@@ -32,10 +32,12 @@ if (document.readyState === 'loading') {
     }
   });
 
-  // $FlowFixMe[incompatible-call] document.body should exist at this point
-  mutationObserver.observe(document.body, {
+  // We assume that instruction data nodes are eventually appended to the
+  // body, even if Fizz is streaming to a shell / subtree.
+
+  // $FlowFixMe[incompatible-cast] document.body should exist at this point
+  mutationObserver.observe((document.body /*: Node */), {
     childList: true,
-    subtree: true,
   });
   window.addEventListener('DOMContentLoaded', () => {
     mutationObserver.disconnect();
