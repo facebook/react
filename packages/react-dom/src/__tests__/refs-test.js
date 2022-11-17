@@ -599,4 +599,42 @@ describe('refs return clean up function', () => {
     expect(setup).toHaveBeenCalledTimes(1);
     expect(cleanUp).toHaveBeenCalledTimes(1);
   });
+
+  it('warns if clean up function is returned when called with null', () => {
+    const container = document.createElement('div');
+    const cleanUp = jest.fn();
+    const setup = jest.fn();
+    let returnCleanUp = false;
+
+    ReactDOM.render(
+      <div
+        ref={_ref => {
+          setup(_ref);
+          if (returnCleanUp) {
+            return cleanUp;
+          }
+        }}
+      />,
+      container,
+    );
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
+    returnCleanUp = true;
+
+    expect(() => {
+      ReactDOM.render(
+        <div
+          ref={_ref => {
+            setup(_ref);
+            if (returnCleanUp) {
+              return cleanUp;
+            }
+          }}
+        />,
+        container,
+      );
+    }).toErrorDev('Unexpected return value from a callback ref in div');
+  });
 });
