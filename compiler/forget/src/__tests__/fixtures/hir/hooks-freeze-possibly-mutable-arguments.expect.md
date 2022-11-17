@@ -32,11 +32,11 @@ bb0:
   If (read cond$2_@0) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [4] Reassign mutate a$4_@3 = read x$3_@1
+  [4] Reassign mutate a$4_@3[4:5] = read x$3_@1
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Reassign mutate a$4_@3 = Array []
+  [5] Reassign mutate a$4_@3[4:5] = Array []
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
@@ -61,13 +61,13 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [4] Reassign mutate a$4_@3 = read x$3_@1
+      [4] Reassign mutate a$4_@3[4:5] = read x$3_@1
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [5] Reassign mutate a$4_@3 = Array []
+      [5] Reassign mutate a$4_@3[4:5] = Array []
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end

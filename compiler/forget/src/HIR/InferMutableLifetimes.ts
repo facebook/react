@@ -5,10 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import invariant from "invariant";
 import { assertExhaustive } from "../Common/utils";
 import { Effect, HIRFunction, Instruction, Place } from "./HIR";
-import { eachInstructionOperand } from "./visitors";
 import { printInstruction, printPlace } from "./PrintHIR";
+import { eachInstructionOperand } from "./visitors";
 
 /**
  * For each usage of a value in the given function, determines if the usage
@@ -77,9 +78,19 @@ function inferPlace(place: Place, instr: Instruction) {
 export function inferMutableRanges(func: HIRFunction) {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
+      let start = Number.MAX_SAFE_INTEGER;
+      let end = Number.MIN_SAFE_INTEGER;
+      for (const [_, operand] of phi.operands) {
+        start = Math.min(start, operand.mutableRange.start);
+        end = Math.max(end, operand.mutableRange.end);
+      }
+      invariant(
+        start !== Number.MAX_SAFE_INTEGER && end !== Number.MIN_SAFE_INTEGER,
+        "Expected phi to have set start/end range values"
+      );
       phi.id.mutableRange = {
-        start: -1, // TODO(gsn): This is a hack, we should assign proper ids to phis.
-        end: -1,
+        start,
+        end,
       };
     }
 

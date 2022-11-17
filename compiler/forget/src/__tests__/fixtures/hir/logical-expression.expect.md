@@ -23,15 +23,15 @@ function g() {}
 
 ```
 bb0:
-  [1] Const mutate $2_@0 = Call mutate f$1_@0()
+  [1] Const mutate $2_@0[0:1] = Call mutate f$1_@0()
   If (read $2_@0) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [2] Const mutate $3_@1 = Call mutate g$4_@1()
+  [2] Const mutate $3_@1[0:3] = Call mutate g$4_@1()
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [3] Const mutate $3_@1 = read $2_@0
+  [3] Const mutate $3_@1[0:3] = read $2_@0
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
@@ -45,19 +45,19 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $2_@0 = Call mutate f$1_@0()
+      [1] Const mutate $2_@0[0:1] = Call mutate f$1_@0()
     "]
     bb0_instrs --> bb0_terminal(["If (read $2_@0)"])
   end
   subgraph bb2
     bb2_instrs["
-      [2] Const mutate $3_@1 = Call mutate g$4_@1()
+      [2] Const mutate $3_@1[0:3] = Call mutate g$4_@1()
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [3] Const mutate $3_@1 = read $2_@0
+      [3] Const mutate $3_@1[0:3] = read $2_@0
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
@@ -89,15 +89,15 @@ function And$0() {
 
 ```
 bb0:
-  [1] Const mutate $2_@0 = Call mutate f$1_@0()
+  [1] Const mutate $2_@0[0:1] = Call mutate f$1_@0()
   If (read $2_@0) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [2] Const mutate $3_@1 = read $2_@0
+  [2] Const mutate $3_@1[0:3] = read $2_@0
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [3] Const mutate $3_@1 = Call mutate g$4_@1()
+  [3] Const mutate $3_@1[0:3] = Call mutate g$4_@1()
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
@@ -111,19 +111,19 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $2_@0 = Call mutate f$1_@0()
+      [1] Const mutate $2_@0[0:1] = Call mutate f$1_@0()
     "]
     bb0_instrs --> bb0_terminal(["If (read $2_@0)"])
   end
   subgraph bb2
     bb2_instrs["
-      [2] Const mutate $3_@1 = read $2_@0
+      [2] Const mutate $3_@1[0:3] = read $2_@0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [3] Const mutate $3_@1 = Call mutate g$4_@1()
+      [3] Const mutate $3_@1[0:3] = Call mutate g$4_@1()
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
@@ -155,17 +155,17 @@ function Or$0() {
 
 ```
 bb0:
-  [1] Const mutate $3_@0 = Call mutate f$2_@0()
+  [1] Const mutate $3_@0[0:1] = Call mutate f$2_@0()
   [2] Const mutate $4_@1 = null
   [3] Const mutate $5_@2 = Binary read $3_@0 != read $4_@1
   If (read $5_@2) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [4] Const mutate $6_@3 = read $3_@0
+  [4] Const mutate $6_@3[0:5] = read $3_@0
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Const mutate $6_@3 = Call mutate g$7_@3()
+  [5] Const mutate $6_@3[0:5] = Call mutate g$7_@3()
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
@@ -179,7 +179,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $3_@0 = Call mutate f$2_@0()
+      [1] Const mutate $3_@0[0:1] = Call mutate f$2_@0()
       [2] Const mutate $4_@1 = null
       [3] Const mutate $5_@2 = Binary read $3_@0 != read $4_@1
     "]
@@ -187,13 +187,13 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [4] Const mutate $6_@3 = read $3_@0
+      [4] Const mutate $6_@3[0:5] = read $3_@0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [5] Const mutate $6_@3 = Call mutate g$7_@3()
+      [5] Const mutate $6_@3[0:5] = Call mutate g$7_@3()
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end

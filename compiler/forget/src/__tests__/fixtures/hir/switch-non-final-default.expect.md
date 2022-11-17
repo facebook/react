@@ -33,7 +33,7 @@ function Component(props) {
 ```
 bb0:
   [1] Let mutate x$2_@0[1:6] = Array []
-  [2] Let mutate y$3_@1 = undefined
+  [2] Let mutate y$3_@1[2:8] = undefined
   [3] Const mutate $4_@2 = false
   [4] Const mutate $5_@3 = true
   [5] Const mutate $6_@4 = 1
@@ -45,11 +45,11 @@ bb0:
 bb6:
   predecessor blocks: bb0
   [6] Call mutate x$2_@0.push(read props$1.p2)
-  [7] Reassign mutate y$3_@1 = Array []
+  [7] Reassign mutate y$3_@1[2:8] = Array []
   Goto bb1
 bb2:
   predecessor blocks: bb0
-  [8] Reassign mutate y$3_@1 = read x$2_@0
+  [8] Reassign mutate y$3_@1[2:8] = read x$2_@0
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb6 bb2
@@ -67,7 +67,7 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Let mutate x$2_@0[1:6] = Array []
-      [2] Let mutate y$3_@1 = undefined
+      [2] Let mutate y$3_@1[2:8] = undefined
       [3] Const mutate $4_@2 = false
       [4] Const mutate $5_@3 = true
       [5] Const mutate $6_@4 = 1
@@ -77,13 +77,13 @@ flowchart TB
   subgraph bb6
     bb6_instrs["
       [6] Call mutate x$2_@0.push(read props$1.p2)
-      [7] Reassign mutate y$3_@1 = Array []
+      [7] Reassign mutate y$3_@1[2:8] = Array []
     "]
     bb6_instrs --> bb6_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [8] Reassign mutate y$3_@1 = read x$2_@0
+      [8] Reassign mutate y$3_@1[2:8] = read x$2_@0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end

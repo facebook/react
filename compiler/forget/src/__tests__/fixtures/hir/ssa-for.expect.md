@@ -16,7 +16,7 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0 = 0
+  [1] Let mutate x$1_@0[0:5] = 0
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb4
@@ -26,7 +26,7 @@ bb1:
 bb4:
   predecessor blocks: bb1
   [4] Const mutate $2_@3 = 1
-  [5] Reassign mutate x$1_@0 = Binary read x$1_@0 + read $2_@3
+  [5] Reassign mutate x$1_@0[0:5] = Binary read x$1_@0 + read $2_@3
   Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
@@ -40,7 +40,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0 = 0
+      [1] Let mutate x$1_@0[0:5] = 0
     "]
     bb0_instrs --> bb0_terminal(["Goto"])
   end
@@ -54,7 +54,7 @@ flowchart TB
   subgraph bb4
     bb4_instrs["
       [4] Const mutate $2_@3 = 1
-      [5] Reassign mutate x$1_@0 = Binary read x$1_@0 + read $2_@3
+      [5] Reassign mutate x$1_@0[0:5] = Binary read x$1_@0 + read $2_@3
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end

@@ -11,6 +11,7 @@ import {
   Identifier,
   Instruction,
   makeScopeId,
+  MutableRange,
   Place,
   ScopeId,
 } from "./HIR";
@@ -94,10 +95,20 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
 
   // Maps each scope (by its identifying member) to a ScopeId value
   const scopeIds: Map<Identifier, ScopeId> = new Map();
+  // Store the mutable range and set of identifiers for each scope
+  const scopeVariables: Map<
+    ScopeId,
+    { range: MutableRange; variables: Set<Identifier> }
+  > = new Map();
 
-  // Iterate over all the identifiers in all scopes, and assign each
-  // identifier to its group's scope id. The first identifier in each
-  // group assigns the scope id for that group.
+  /**
+   * Iterate over all the identifiers and assign a unique ScopeId
+   * for each scope (based on the set identifier).
+   *
+   * At the same time, group the identifiers in each scope and
+   * build a MutableRange that describes the span of mutations
+   * across all identifiers in each scope.
+   */
   scopes.forEach((identifier, groupIdentifier) => {
     let scopeId = scopeIds.get(groupIdentifier);
     if (scopeId == null) {
@@ -105,7 +116,31 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
       scopeIds.set(groupIdentifier, scopeId);
     }
     identifier.scope = scopeId;
+
+    let scope = scopeVariables.get(scopeId);
+    if (scope === undefined) {
+      scope = {
+        range: { ...identifier.mutableRange },
+        variables: new Set(),
+      };
+      scopeVariables.set(scopeId, scope);
+    } else {
+      scope.range.start = Math.min(
+        scope.range.start,
+        identifier.mutableRange.start
+      );
+      scope.range.end = Math.max(scope.range.end, identifier.mutableRange.end);
+    }
+    scope.variables.add(identifier);
   });
+
+  // Update all the identifiers for each scope now that we know
+  // the scope's full range.
+  for (const [_, scope] of scopeVariables) {
+    for (const identifier of scope.variables) {
+      identifier.mutableRange = scope.range;
+    }
+  }
 }
 
 // Is the operand mutable at this given instruction

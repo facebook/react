@@ -28,8 +28,8 @@ function Foo() {}
 
 ```
 bb0:
-  [1] Const mutate a$2_@0[1:3] = Call mutate compute$3_@0(read props$1.a)
-  [2] Const mutate b$4_@0[2:3] = Call mutate compute$3_@0(read props$1.b)
+  [1] Const mutate a$2_@0[0:3] = Call mutate compute$3_@0(read props$1.a)
+  [2] Const mutate b$4_@0[0:3] = Call mutate compute$3_@0(read props$1.b)
   [3] Call mutate foo$5_@0(mutate a$2_@0, mutate b$4_@0)
   [4] Const mutate $7_@1 = JSX <read Foo$6 a={freeze a$2_@0} b={freeze b$4_@0} ></read Foo$6>
   Return read $7_@1
@@ -42,8 +42,8 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2_@0[1:3] = Call mutate compute$3_@0(read props$1.a)
-      [2] Const mutate b$4_@0[2:3] = Call mutate compute$3_@0(read props$1.b)
+      [1] Const mutate a$2_@0[0:3] = Call mutate compute$3_@0(read props$1.a)
+      [2] Const mutate b$4_@0[0:3] = Call mutate compute$3_@0(read props$1.b)
       [3] Call mutate foo$5_@0(mutate a$2_@0, mutate b$4_@0)
       [4] Const mutate $7_@1 = JSX <read Foo$6 a={freeze a$2_@0} b={freeze b$4_@0} ></read Foo$6>
     "]

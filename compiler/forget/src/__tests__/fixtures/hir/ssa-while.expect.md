@@ -17,7 +17,7 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0 = 1
+  [1] Let mutate x$1_@0[0:5] = 1
   While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
@@ -27,7 +27,7 @@ bb1:
 bb3:
   predecessor blocks: bb1
   [4] Const mutate $2_@3 = 1
-  [5] Reassign mutate x$1_@0 = Binary read x$1_@0 + read $2_@3
+  [5] Reassign mutate x$1_@0[0:5] = Binary read x$1_@0 + read $2_@3
   Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
@@ -41,7 +41,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0 = 1
+      [1] Let mutate x$1_@0[0:5] = 1
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
@@ -55,7 +55,7 @@ flowchart TB
   subgraph bb3
     bb3_instrs["
       [4] Const mutate $2_@3 = 1
-      [5] Reassign mutate x$1_@0 = Binary read x$1_@0 + read $2_@3
+      [5] Reassign mutate x$1_@0[0:5] = Binary read x$1_@0 + read $2_@3
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
