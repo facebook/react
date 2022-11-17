@@ -16,7 +16,10 @@
     "ts:analyze-trace": "scripts/ts-analyze-trace.sh",
     "test262": "yarn run --silent test262-harness --preprocessor=scripts/test262-preprocessor.js",
     "test262:all": "yarn run --silent test262 'test262/test/**/*.js'",
-    "test262:ci": "scripts/test262.sh"
+    "test262:ci": "scripts/test262.sh",
+    "prettier": "node ./scripts/prettier.js write-changed",
+    "prettier:all": "node ./scripts/prettier.js write",
+    "prettier:ci": "prettier --check ."
   },
   "repository": {
     "type": "git",
@@ -47,8 +50,10 @@
     "@types/jest": "^29.0.3",
     "@types/node": "^18.7.18",
     "babel-jest": "^29.0.3",
+    "chalk": "^3.0.0",
     "concurrently": "^7.4.0",
     "eslint": "^8.25.0",
+    "glob": "^7.1.6",
     "hermes-eslint": "^0.9.0",
     "jest": "^29.0.3",
     "jest-environment-jsdom": "^29.0.3",

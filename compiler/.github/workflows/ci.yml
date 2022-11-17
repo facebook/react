@@ -17,7 +17,7 @@ jobs:
           cache-dependency-path: forget/yarn.lock
       - run: yarn install --immutable --immutable-cache
         working-directory: forget
-      - run: yarn prettier --check .
+      - run: yarn prettier:ci
         working-directory: forget
       - run: yarn build
         working-directory: forget

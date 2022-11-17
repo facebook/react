@@ -2,4 +2,8 @@
 **/dist
 **/__tests__/fixtures/**/*.expect.md
 **/.next
-/test262
+test262/
+*.md
+*.json
+*.css
+*.webmanifest

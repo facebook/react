@@ -1,3 +1,4 @@
 {
-  "requirePragma": false
+  "requirePragma": false,
+  "parser": "babel-ts"
 }
