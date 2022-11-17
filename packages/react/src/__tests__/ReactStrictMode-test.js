@@ -926,12 +926,18 @@ describe('string refs', () => {
     expect(() => {
       ReactDOM.render(<OuterComponent />, container);
     }).toErrorDev(
-      'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
-        'String refs are a source of potential bugs and should be avoided. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: ' +
-        'https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in OuterComponent (at **)',
+      ReactFeatureFlags.warnAboutStringRefs
+        ? 'Warning: Component "StrictMode" contains the string ref "somestring". ' +
+            'Support for string refs will be removed in a future major release. ' +
+            'We recommend using useRef() or createRef() instead. ' +
+            'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+            '    in OuterComponent (at **)'
+        : 'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
+            'String refs are a source of potential bugs and should be avoided. ' +
+            'We recommend using useRef() or createRef() instead. ' +
+            'Learn more about using refs safely here: ' +
+            'https://reactjs.org/link/strict-mode-string-ref\n' +
+            '    in OuterComponent (at **)',
     );
 
     // Dedup
@@ -967,13 +973,20 @@ describe('string refs', () => {
     expect(() => {
       ReactDOM.render(<OuterComponent />, container);
     }).toErrorDev(
-      'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
-        'String refs are a source of potential bugs and should be avoided. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: ' +
-        'https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in InnerComponent (at **)\n' +
-        '    in OuterComponent (at **)',
+      ReactFeatureFlags.warnAboutStringRefs
+        ? 'Warning: Component "InnerComponent" contains the string ref "somestring". ' +
+            'Support for string refs will be removed in a future major release. ' +
+            'We recommend using useRef() or createRef() instead. ' +
+            'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+            '    in InnerComponent (at **)\n' +
+            '    in OuterComponent (at **)'
+        : 'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
+            'String refs are a source of potential bugs and should be avoided. ' +
+            'We recommend using useRef() or createRef() instead. ' +
+            'Learn more about using refs safely here: ' +
+            'https://reactjs.org/link/strict-mode-string-ref\n' +
+            '    in InnerComponent (at **)\n' +
+            '    in OuterComponent (at **)',
     );
 
     // Dedup
