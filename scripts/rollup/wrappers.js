@@ -13,6 +13,8 @@ const {
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
+  BUN_DEV,
+  BUN_PROD,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -68,6 +70,30 @@ ${source}`;
 
   /***************** NODE_ESM *****************/
   [NODE_ESM](source, globalName, filename, moduleType) {
+    return `/**
+* @license React
+ * ${filename}
+ *
+${license}
+ */
+
+${source}`;
+  },
+
+  /***************** BUN_DEV *****************/
+  [BUN_DEV](source, globalName, filename, moduleType) {
+    return `/**
+* @license React
+ * ${filename}
+ *
+${license}
+ */
+
+${source}`;
+  },
+
+  /***************** BUN_PROD *****************/
+  [BUN_PROD](source, globalName, filename, moduleType) {
     return `/**
 * @license React
  * ${filename}
