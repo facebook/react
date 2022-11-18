@@ -2077,8 +2077,6 @@ describe('ReactOffscreen', () => {
     await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded([
-      'attach child'
-    ]);
+    expect(Scheduler).toHaveYielded(['attach child']);
   });
 });
