@@ -21,7 +21,6 @@ import {NoTimestamp, SyncLane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
-import {NoLanes} from './ReactFiberLane';
 import type {Wakeable} from 'shared/ReactTypes';
 import {isOffscreenManual} from './ReactFiberOffscreenComponent';
 import type {
@@ -171,7 +170,6 @@ import {
   setIsRunningInsertionEffect,
   getExecutionContext,
   CommitContext,
-  RenderContext,
   NoContext,
 } from './ReactFiberWorkLoop';
 import {
@@ -2411,29 +2409,32 @@ function getRetryCache(finishedWork) {
 }
 
 export function detachOffscreenInstance(instance: OffscreenInstance): void {
-  const currentOffscreenFiber = instance._current;
-  if (currentOffscreenFiber === null) {
+  const fiber = instance._current;
+  if (fiber === null) {
     throw new Error(
       'Calling Offscreen.detach before instance handle has been set.',
     );
   }
 
-  const _detachOffscreen = () => {
-    instance._visibility |= OffscreenDetached;
-    let node = currentOffscreenFiber.child;
-    while (node != null) {
-      disappearLayoutEffects(node);
-      disconnectPassiveEffect(node);
-      node = node.sibling;
-    }
-  };
-
-  const executionContext = getExecutionContext();
-  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    scheduleMicrotask(_detachOffscreen);
-  } else {
-    _detachOffscreen();
+  if ((instance._visibility & OffscreenDetached) !== NoFlags) {
+    // The instance is already detached, this is a noop.
+    return;
   }
+
+  instance._pendingVisibility |= OffscreenDetached;
+
+  scheduleMicrotask(() => {
+    if ((instance._pendingVisibility & OffscreenDetached) === NoFlags) {
+      instance._pendingVisibility = 0;
+      return;
+    }
+
+    instance._visibility |= OffscreenDetached;
+    const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+    if (root !== null) {
+      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+    }
+  });
 }
 
 export function attachOffscreenInstance(instance: OffscreenInstance): void {
@@ -2444,22 +2445,17 @@ export function attachOffscreenInstance(instance: OffscreenInstance): void {
     );
   }
 
+  instance._pendingVisibility &= ~OffscreenDetached;
+
   if ((instance._visibility & OffscreenDetached) === NoFlags) {
     // The instance is already attached, this is a noop.
     return;
   }
 
-  instance._visibility &= ~OffscreenDetached;
-
-  const executionContext = getExecutionContext();
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
   if (root !== null) {
-    if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
-    } else {
-      reappearLayoutEffects(root, fiber.alternate, fiber, false);
-      reconnectPassiveEffects(root, fiber, NoLanes, null, false);
-    }
+    instance._visibility &= ~OffscreenDetached;
+    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
   }
 }
 

@@ -1554,7 +1554,9 @@ describe('ReactOffscreen', () => {
         );
       });
 
-      offscreenRef.current.detach();
+      await act(async () => {
+        offscreenRef.current.detach();
+      });
 
       // Offscreen is detached. State updates from offscreen are **defered**.
       await act(async () => {
@@ -1577,7 +1579,9 @@ describe('ReactOffscreen', () => {
         </>,
       );
 
-      offscreenRef.current.attach();
+      await act(async () => {
+        offscreenRef.current.attach();
+      });
 
       // Offscreen is attached. State updates from offscreen are **not defered**.
       await act(async () => {
@@ -1617,9 +1621,9 @@ describe('ReactOffscreen', () => {
         const text = 'HighPriorityComponent ' + state;
         useLayoutEffect(() => {
           if (nextRenderTriggerDetach) {
-            offscreenRef.current.detach();
             _stateUpdate(state + 1);
             updateChildState(state + 1);
+            offscreenRef.current.detach();
             nextRenderTriggerDetach = false;
           }
 
@@ -1870,17 +1874,23 @@ describe('ReactOffscreen', () => {
     expect(spanRef.current).not.toBeNull();
     expect(Scheduler).toHaveYielded(['Mount Layout Child', 'Mount Child']);
 
-    offscreenRef.detach();
+    await act(async () => {
+      offscreenRef.detach();
+    });
 
     expect(spanRef.current).toBeNull();
     expect(Scheduler).toHaveYielded(['Unmount Layout Child', 'Unmount Child']);
 
     // Calling attach on already attached Offscreen.
-    offscreenRef.detach();
+    await act(async () => {
+      offscreenRef.detach();
+    });
 
     expect(Scheduler).toHaveYielded([]);
 
-    offscreenRef.attach();
+    await act(async () => {
+      offscreenRef.attach();
+    });
 
     expect(spanRef.current).not.toBeNull();
     expect(Scheduler).toHaveYielded(['Mount Layout Child', 'Mount Child']);
@@ -1931,7 +1941,10 @@ describe('ReactOffscreen', () => {
     expect(outerOffscreen).not.toBeNull();
     expect(innerOffscreen).not.toBeNull();
 
-    outerOffscreen.detach();
+    await act(async () => {
+      outerOffscreen.detach();
+    });
+
     expect(innerOffscreen).toBeNull();
 
     expect(Scheduler).toHaveYielded([
@@ -1941,7 +1954,9 @@ describe('ReactOffscreen', () => {
       'unmount inner',
     ]);
 
-    outerOffscreen.attach();
+    await act(async () => {
+      outerOffscreen.attach();
+    });
 
     expect(Scheduler).toHaveYielded([
       'mount layout inner',
@@ -1950,21 +1965,29 @@ describe('ReactOffscreen', () => {
       'mount middle',
     ]);
 
-    innerOffscreen.detach();
+    await act(async () => {
+      innerOffscreen.detach();
+    });
 
     expect(Scheduler).toHaveYielded(['unmount layout inner', 'unmount inner']);
 
     // Calling detach on already detached Offscreen.
-    innerOffscreen.detach();
+    await act(async () => {
+      innerOffscreen.detach();
+    });
 
     expect(Scheduler).toHaveYielded([]);
 
-    innerOffscreen.attach();
+    await act(async () => {
+      innerOffscreen.attach();
+    });
 
     expect(Scheduler).toHaveYielded(['mount layout inner', 'mount inner']);
 
-    innerOffscreen.detach();
-    outerOffscreen.attach();
+    await act(async () => {
+      innerOffscreen.detach();
+      outerOffscreen.attach();
+    });
 
     expect(Scheduler).toHaveYielded(['unmount layout inner', 'unmount inner']);
   });
@@ -1994,6 +2017,7 @@ describe('ReactOffscreen', () => {
     await act(() => {
       root.render(<App />);
     });
+
     expect(Scheduler).toHaveYielded(['Attach child']);
 
     await act(async () => {
@@ -2042,10 +2066,7 @@ describe('ReactOffscreen', () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded([
-      'Parent effect',
       'Attach child',
-
-      // The child effects should not be toggled
     ]);
   });
 });
