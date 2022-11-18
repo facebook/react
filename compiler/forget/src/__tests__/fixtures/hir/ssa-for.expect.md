@@ -64,8 +64,8 @@ flowchart TB
 
   %% Jumps
   bb0_terminal --> bb1
-  bb1_terminal -- then --> bb4
-  bb1_terminal -- else --> bb2
+  bb1_terminal -- "then" --> bb4
+  bb1_terminal -- "else" --> bb2
   bb4_terminal --> bb1
 
 ```

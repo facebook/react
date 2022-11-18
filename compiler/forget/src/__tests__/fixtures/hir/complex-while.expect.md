@@ -61,15 +61,15 @@ flowchart TB
   end
 
   %% Jumps
-  bb0_terminal -- then --> bb3
-  bb0_terminal -- else --> bb1
-  bb3_terminal -- test --> bb4
-  bb3_terminal -- loop --> bb6
-  bb3_terminal -- fallthrough --> bb1
-  bb4_terminal -- then --> bb6
-  bb4_terminal -- else --> bb1
-  bb6_terminal -- then --> bb1
-  bb6_terminal -- else --> bb7
+  bb0_terminal -- "then" --> bb3
+  bb0_terminal -- "else" --> bb1
+  bb3_terminal -- "test" --> bb4
+  bb3_terminal -- "loop" --> bb6
+  bb3_terminal -- "fallthrough" --> bb1
+  bb4_terminal -- "then" --> bb6
+  bb4_terminal -- "else" --> bb1
+  bb6_terminal -- "then" --> bb1
+  bb6_terminal -- "else" --> bb7
   bb7_terminal --> bb4
 
 ```

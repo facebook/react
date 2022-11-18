@@ -181,22 +181,22 @@ flowchart TB
   end
 
   %% Jumps
-  bb0_terminal -- test --> bb1
-  bb0_terminal -- loop --> bb3
-  bb0_terminal -- fallthrough --> bb2
-  bb1_terminal -- then --> bb3
-  bb1_terminal -- else --> bb2
-  bb3_terminal -- then --> bb2
-  bb3_terminal -- else --> bb4
+  bb0_terminal -- "test" --> bb1
+  bb0_terminal -- "loop" --> bb3
+  bb0_terminal -- "fallthrough" --> bb2
+  bb1_terminal -- "then" --> bb3
+  bb1_terminal -- "else" --> bb2
+  bb3_terminal -- "then" --> bb2
+  bb3_terminal -- "else" --> bb4
   bb4_terminal --> bb1
-  bb2_terminal -- then --> bb7
-  bb2_terminal -- else --> bb7
-  bb7_terminal -- then --> bb9
-  bb7_terminal -- else --> bb9
-  bb9_terminal -- then --> bb11
-  bb9_terminal -- else --> bb11
-  bb11_terminal -- then --> bb13
-  bb11_terminal -- else --> bb13
+  bb2_terminal -- "then" --> bb7
+  bb2_terminal -- "else" --> bb7
+  bb7_terminal -- "then" --> bb9
+  bb7_terminal -- "else" --> bb9
+  bb9_terminal -- "then" --> bb11
+  bb9_terminal -- "else" --> bb11
+  bb11_terminal -- "then" --> bb13
+  bb11_terminal -- "else" --> bb13
 
 ```
 

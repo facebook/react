@@ -40,11 +40,11 @@ flowchart TB
   end
 
   %% Jumps
-  bb0_terminal -- test --> bb1
-  bb0_terminal -- loop --> bb2
-  bb0_terminal -- fallthrough --> bb2
-  bb1_terminal -- then --> bb2
-  bb1_terminal -- else --> bb2
+  bb0_terminal -- "test" --> bb1
+  bb0_terminal -- "loop" --> bb2
+  bb0_terminal -- "fallthrough" --> bb2
+  bb1_terminal -- "then" --> bb2
+  bb1_terminal -- "else" --> bb2
 
 ```
 

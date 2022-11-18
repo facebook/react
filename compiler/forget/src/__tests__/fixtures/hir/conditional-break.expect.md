@@ -117,8 +117,8 @@ flowchart TB
   end
 
   %% Jumps
-  bb0_terminal -- then --> bb2
-  bb0_terminal -- else --> bb1
+  bb0_terminal -- "then" --> bb2
+  bb0_terminal -- "else" --> bb1
 
 ```
 
@@ -180,8 +180,8 @@ flowchart TB
   end
 
   %% Jumps
-  bb0_terminal -- then --> bb2
-  bb0_terminal -- else --> bb1
+  bb0_terminal -- "then" --> bb2
+  bb0_terminal -- "else" --> bb1
   bb2_terminal --> bb1
 
 ```
@@ -246,8 +246,8 @@ flowchart TB
   end
 
   %% Jumps
-  bb0_terminal -- then --> bb2
-  bb0_terminal -- else --> bb1
+  bb0_terminal -- "then" --> bb2
+  bb0_terminal -- "else" --> bb1
 
 ```
 
@@ -310,8 +310,8 @@ flowchart TB
   end
 
   %% Jumps
-  bb0_terminal -- then --> bb2
-  bb0_terminal -- else --> bb1
+  bb0_terminal -- "then" --> bb2
+  bb0_terminal -- "else" --> bb1
 
 ```
 
@@ -374,8 +374,8 @@ flowchart TB
   end
 
   %% Jumps
-  bb0_terminal -- then --> bb1
-  bb0_terminal -- else --> bb2
+  bb0_terminal -- "then" --> bb1
+  bb0_terminal -- "else" --> bb2
   bb2_terminal --> bb1
 
 ```

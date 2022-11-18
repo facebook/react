@@ -137,20 +137,20 @@ flowchart TB
   end
 
   %% Jumps
-  bb0_terminal -- then --> bb2
-  bb0_terminal -- else --> bb10
-  bb0_terminal -- fallthrough --> bb1
-  bb2_terminal -- read $5_@3 --> bb8
-  bb2_terminal -- read $4_@2 --> bb6
-  bb2_terminal -- read $3_@1 --> bb4
-  bb2_terminal -- default --> bb4
-  bb2_terminal -- fallthrough --> bb1
+  bb0_terminal -- "then" --> bb2
+  bb0_terminal -- "else" --> bb10
+  bb0_terminal -- "fallthrough" --> bb1
+  bb2_terminal -- "read $5_@3" --> bb8
+  bb2_terminal -- "read $4_@2" --> bb6
+  bb2_terminal -- "read $3_@1" --> bb4
+  bb2_terminal -- "default" --> bb4
+  bb2_terminal -- "fallthrough" --> bb1
   bb8_terminal --> bb1
   bb6_terminal --> bb1
   bb4_terminal --> bb1
-  bb10_terminal -- then --> bb12
-  bb10_terminal -- else --> bb13
-  bb10_terminal -- fallthrough --> bb1
+  bb10_terminal -- "then" --> bb12
+  bb10_terminal -- "else" --> bb13
+  bb10_terminal -- "fallthrough" --> bb1
   bb12_terminal --> bb1
   bb13_terminal --> bb1
 

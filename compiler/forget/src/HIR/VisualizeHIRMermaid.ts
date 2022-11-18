@@ -28,7 +28,7 @@ function printJumpArrow(
   const fromId = printBlockId(from);
   const toId = printBlockId(to);
   if (label != null) {
-    return `${fromId}_${TERMINAL_NODE_NAME} -- ${label} --> ${toId}\n`;
+    return `${fromId}_${TERMINAL_NODE_NAME} -- "${label}" --> ${toId}\n`;
   }
   return `${fromId}_${TERMINAL_NODE_NAME} --> ${toId}\n`;
 }
