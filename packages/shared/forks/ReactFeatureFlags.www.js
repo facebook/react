@@ -15,7 +15,6 @@ import typeof * as DynamicFeatureFlags from './ReactFeatureFlags.www-dynamic';
 const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
-  disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX,
@@ -111,6 +110,8 @@ export const enableServerContext = true;
 export const enableUseMutableSource = true;
 
 export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
+
+export const disableInputAttributeSyncing = false;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
