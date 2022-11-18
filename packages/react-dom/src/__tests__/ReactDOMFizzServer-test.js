@@ -4559,6 +4559,7 @@ describe('ReactDOMFizzServer', () => {
         const {pipe} = renderToPipeableStream(<App name="Foo" />);
         pipe(writable);
       });
+
       expect(container.innerHTML).toEqual(
         '<div>hello<b>world, <!-- -->Foo</b>!</div>',
       );
@@ -4614,10 +4615,8 @@ describe('ReactDOMFizzServer', () => {
       //  - an external runtime script and deleted nodes with data attributes
       //  - extra script nodes containing fizz instructions at the end of container
       expect(
-        stripExternalRuntimeInNodes(
-          container.childNodes,
-          renderOptions.unstable_externalRuntimeSrc,
-        ).filter(e => e.tagName !== 'SCRIPT').length,
+        Array.from(container.childNodes).filter(e => e.tagName !== 'SCRIPT')
+          .length,
       ).toBe(3);
 
       expect(div.childNodes.length).toBe(3);
