@@ -21,7 +21,6 @@ let Suspense;
 let act;
 
 let IdleEventPriority;
-let ContinuousEventPriority;
 
 function dispatchMouseHoverEvent(to, from) {
   if (!to) {
@@ -111,18 +110,6 @@ function TODO_scheduleIdleDOMSchedulerTask(fn) {
   });
 }
 
-function TODO_scheduleContinuousSchedulerTask(fn) {
-  ReactDOM.unstable_runWithPriority(ContinuousEventPriority, () => {
-    const prevEvent = window.event;
-    window.event = {type: 'message'};
-    try {
-      fn();
-    } finally {
-      window.event = prevEvent;
-    }
-  });
-}
-
 describe('ReactDOMServerSelectiveHydration', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -138,8 +125,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     Suspense = React.Suspense;
 
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
-    ContinuousEventPriority = require('react-reconciler/constants')
-      .ContinuousEventPriority;
   });
 
   it('hydrates the target boundary synchronously during a click', async () => {
@@ -1784,105 +1769,5 @@ describe('ReactDOMServerSelectiveHydration', () => {
     }
 
     document.body.removeChild(container);
-  });
-
-  it('can force hydration in response to sync update', () => {
-    function Child({text}) {
-      Scheduler.unstable_yieldValue(`Child ${text}`);
-      return <span ref={ref => (spanRef = ref)}>{text}</span>;
-    }
-    function App({text}) {
-      Scheduler.unstable_yieldValue(`App ${text}`);
-      return (
-        <div>
-          <Suspense fallback={null}>
-            <Child text={text} />
-          </Suspense>
-        </div>
-      );
-    }
-
-    let spanRef;
-    const finalHTML = ReactDOMServer.renderToString(<App text="A" />);
-    expect(Scheduler).toHaveYielded(['App A', 'Child A']);
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    container.innerHTML = finalHTML;
-    const initialSpan = container.getElementsByTagName('span')[0];
-    const root = ReactDOMClient.hydrateRoot(container, <App text="A" />);
-    expect(Scheduler).toFlushUntilNextPaint(['App A']);
-
-    ReactDOM.flushSync(() => {
-      root.render(<App text="B" />);
-    });
-    expect(Scheduler).toHaveYielded(['App B', 'Child A', 'App B', 'Child B']);
-    expect(initialSpan).toBe(spanRef);
-  });
-
-  // @gate experimental || www
-  it('can force hydration in response to continuous update', () => {
-    function Child({text}) {
-      Scheduler.unstable_yieldValue(`Child ${text}`);
-      return <span ref={ref => (spanRef = ref)}>{text}</span>;
-    }
-    function App({text}) {
-      Scheduler.unstable_yieldValue(`App ${text}`);
-      return (
-        <div>
-          <Suspense fallback={null}>
-            <Child text={text} />
-          </Suspense>
-        </div>
-      );
-    }
-
-    let spanRef;
-    const finalHTML = ReactDOMServer.renderToString(<App text="A" />);
-    expect(Scheduler).toHaveYielded(['App A', 'Child A']);
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    container.innerHTML = finalHTML;
-    const initialSpan = container.getElementsByTagName('span')[0];
-    const root = ReactDOMClient.hydrateRoot(container, <App text="A" />);
-    expect(Scheduler).toFlushUntilNextPaint(['App A']);
-
-    TODO_scheduleContinuousSchedulerTask(() => {
-      root.render(<App text="B" />);
-    });
-    expect(Scheduler).toFlushAndYield(['App B', 'Child A', 'App B', 'Child B']);
-    expect(initialSpan).toBe(spanRef);
-  });
-
-  it('can force hydration in response to default update', () => {
-    function Child({text}) {
-      Scheduler.unstable_yieldValue(`Child ${text}`);
-      return <span ref={ref => (spanRef = ref)}>{text}</span>;
-    }
-    function App({text}) {
-      Scheduler.unstable_yieldValue(`App ${text}`);
-      return (
-        <div>
-          <Suspense fallback={null}>
-            <Child text={text} />
-          </Suspense>
-        </div>
-      );
-    }
-
-    let spanRef;
-    const finalHTML = ReactDOMServer.renderToString(<App text="A" />);
-    expect(Scheduler).toHaveYielded(['App A', 'Child A']);
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    container.innerHTML = finalHTML;
-    const initialSpan = container.getElementsByTagName('span')[0];
-    const root = ReactDOMClient.hydrateRoot(container, <App text="A" />);
-    expect(Scheduler).toFlushUntilNextPaint(['App A']);
-
-    ReactDOM.unstable_batchedUpdates(() => {
-      root.render(<App text="B" />);
-    });
-    expect(Scheduler).toFlushAndYield(['App B', 'Child A', 'App B', 'Child B']);
-    expect(initialSpan).toBe(spanRef);
   });
 });
