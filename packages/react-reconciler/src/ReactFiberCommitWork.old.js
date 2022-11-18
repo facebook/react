@@ -2423,9 +2423,10 @@ export function detachOffscreenInstance(instance: OffscreenInstance): void {
 
   instance._pendingVisibility |= OffscreenDetached;
 
+  // Detaching needs to be postoned in case attach is called before next update.
   scheduleMicrotask(() => {
     if ((instance._pendingVisibility & OffscreenDetached) === NoFlags) {
-      instance._pendingVisibility = 0;
+      // Attach was called. Offscreen does not need to be detached.
       return;
     }
 

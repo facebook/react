@@ -1996,12 +1996,12 @@ describe('ReactOffscreen', () => {
   it('batches multiple attach and detach calls scheduled from an event handler', async () => {
     function Child() {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Attach child');
+        Scheduler.unstable_yieldValue('attach child');
         return () => {
-          Scheduler.unstable_yieldValue('Detach child');
+          Scheduler.unstable_yieldValue('detach child');
         };
       }, []);
-      return 'Child';
+      return 'child';
     }
 
     const offscreen = React.createRef(null);
@@ -2018,39 +2018,51 @@ describe('ReactOffscreen', () => {
       root.render(<App />);
     });
 
-    expect(Scheduler).toHaveYielded(['Attach child']);
+    expect(Scheduler).toHaveYielded(['attach child']);
 
     await act(async () => {
       const instance = offscreen.current;
-
-      // Attach then immediately re-attach the instance. This should be a
-      // no-op because the operations are batched.
+      // Detach then immediately attach the instance.
       instance.detach();
       instance.attach();
     });
-    // No effects should have attached or detached
+
     expect(Scheduler).toHaveYielded([]);
+
+    await act(async () => {
+      const instance = offscreen.current;
+      instance.detach();
+    });
+
+    expect(Scheduler).toHaveYielded(['detach child']);
+
+    await act(async () => {
+      const instance = offscreen.current;
+      // Attach then immediately detach.
+      instance.attach();
+      instance.detach();
+    });
+
+    expect(Scheduler).toHaveYielded(['attach child', 'detach child']);
   });
 
   // @gate enableOffscreen
   it('batches multiple attach and detach calls scheduled from an effect', async () => {
     function Child() {
       useEffect(() => {
-        Scheduler.unstable_yieldValue('Attach child');
+        Scheduler.unstable_yieldValue('attach child');
         return () => {
-          Scheduler.unstable_yieldValue('Detach child');
+          Scheduler.unstable_yieldValue('detach child');
         };
       }, []);
-      return 'Child';
+      return 'child';
     }
 
     function App() {
       const offscreen = useRef(null);
       useLayoutEffect(() => {
         const instance = offscreen.current;
-
-        // Attach then immediately re-attach the instance. This should be a
-        // no-op because the operations are batched.
+        // Detach then immediately attach the instance.
         instance.detach();
         instance.attach();
       }, []);
@@ -2066,7 +2078,7 @@ describe('ReactOffscreen', () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded([
-      'Attach child',
+      'attach child'
     ]);
   });
 });
