@@ -1,0 +1,120 @@
+name: Commit Artifacts for Facebook WWW
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  download_artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - run: npm init -y
+      - run: npm install node-fetch@2
+      - name: Download and unzip artifacts
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const cp = require('child_process');
+            const fetch = require('node-fetch');
+
+            function sleep(ms) {
+              return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            function execHelper(command, options, streamStdout = false) {
+              return new Promise((resolve, reject) => {
+                const proc = cp.exec(
+                  command,
+                  options,
+                  (error, stdout) => (error ? reject(error) : resolve(stdout.trim())),
+                );
+                if (streamStdout) {
+                  proc.stdout.pipe(process.stdout);
+                }
+              });
+            }
+
+            let artifactsUrl = null;
+            // This is a temporary, dirty hack to avoid needing a GitHub auth token in the circleci
+            // workflow to notify this GitHub action. Sorry.
+            let iter = 0;
+            spinloop: while (iter < 15) {
+              const res = await github.rest.repos.listCommitStatusesForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.sha
+              });
+              for (const status of res.data) {
+                if (
+                  status.context === 'ci/circleci: process_artifacts_combined' &&
+                  status.state === 'success'
+                ) {
+                  // The status does not include a build ID, but we can extract it
+                  // from the URL. I couldn't find a better way to do this.
+                  const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
+                    status.target_url,
+                  )[1];
+                  console.log(`CircleCI build id found: ${ciBuildId}`);
+                  if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
+                    artifactsUrl =
+                      `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
+                    break spinloop;
+                  }
+                }
+              }
+              iter++;
+              console.log("Sleeping for 60s...");
+              await sleep(60_000);
+            }
+            const res = await fetch(artifactsUrl);
+            const data = await res.json();
+            for (const artifact of data) {
+              if (artifact.path === 'build.tgz') {
+                console.log(`Downloading and unzipping ${artifact.url}...`);
+                await execHelper(
+                  `curl -L ${artifact.url} | tar -xvz`
+                );
+              }
+            }
+      - name: Move relevant files into facebook-www
+        run: |
+          mkdir -p ./facebook-www
+          mkdir -p ./facebook-www/babel-plugin-react-refresh
+
+          mv build/facebook-www \
+            ./facebook-www
+          mv build/WARNINGS \
+            ./facebook-www/WARNINGS
+          mv build/COMMIT_SHA \
+            ./facebook-www/COMMIT_SHA
+          mv build/oss-stable/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
+            ./facebook-www/eslint-plugin-react-hooks.js
+          mv build/oss-stable/react-refresh/cjs/react-refresh-babel.development.js \
+            ./facebook-www/babel-plugin-react-refresh/index.js
+          ls -R ./facebook-www
+      - uses: actions/upload-artifact@v3
+        with:
+          name: facebook-www
+          path: facebook-www/
+
+  commit_artifacts:
+    needs: download_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: facebook-www
+          path: facebook-www/
+      - run: git status -u
+      - name: Commit changes to branch
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Build for ${{ github.sha }}
+          branch: builds/facebook-www
+          commit_user_name: ${{ github.actor }}
+          commit_user_email: ${{ github.actor }}@users.noreply.github.com
+          create_branch: true
