@@ -1474,7 +1474,7 @@ function updateHostRoot(
   const nextChildren = nextState.element;
   if (supportsHydration && prevState.isDehydrated) {
     // This is a hydration root whose shell has not yet hydrated. We should
-    // attempt to hydrate.
+    // attempt to hydrate
 
     // Flip isDehydrated to false to indicate that when this render
     // finishes, the root will no longer be dehydrated.

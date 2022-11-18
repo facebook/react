@@ -42,3 +42,10 @@ export function renderToPipeableStream() {
     arguments,
   );
 }
+
+export function renderIntoContainerAsPipeableStream() {
+  return require('./src/server/ReactDOMFizzServerNode').renderIntoContainerAsPipeableStream.apply(
+    this,
+    arguments,
+  );
+}

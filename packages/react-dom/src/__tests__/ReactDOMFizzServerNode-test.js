@@ -628,4 +628,23 @@ describe('ReactDOMFizzServerNode', () => {
     expect(rendered).toBe(false);
     expect(isComplete).toBe(true);
   });
+
+  describe('renderIntoContainerAsPipeableStream', () => {
+    it('can render into a container', async () => {
+      const {writable, output} = getTestWritable();
+      const {pipe} = ReactDOMFizzServer.renderIntoContainerAsPipeableStream(
+        <div>foo</div>,
+        'container',
+      );
+      pipe(writable);
+      jest.runAllTimers();
+
+      // This is a weak tests but we really are just asserting that the flushing semantics follow Root Boundary style
+      // when using renderIntoContainerAsPipeableStream. The actual assertions for how Root Boundaries behave
+      // is tested elsewhere
+      expect(
+        output.result.startsWith('<div hidden id="S:0"><div>foo</div></div>'),
+      ).toBe(true);
+    });
+  });
 });

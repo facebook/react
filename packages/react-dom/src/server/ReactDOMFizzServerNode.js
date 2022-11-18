@@ -36,7 +36,14 @@ function createAbortHandler(request: Request, reason: string) {
   return () => abort(request, new Error(reason));
 }
 
-type Options = {
+type PipeableStream = {
+  // Cancel any pending I/O and put anything remaining into
+  // client rendered mode.
+  abort(reason: mixed): void,
+  pipe<T: Writable>(destination: T): T,
+};
+
+type ToPipeableOptions = {
   identifierPrefix?: string,
   namespaceURI?: string,
   nonce?: string,
@@ -51,15 +58,11 @@ type Options = {
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
 };
 
-type PipeableStream = {
-  // Cancel any pending I/O and put anything remaining into
-  // client rendered mode.
-  abort(reason: mixed): void,
-  pipe<T: Writable>(destination: T): T,
-};
-
-function createRequestImpl(children: ReactNodeList, options: void | Options) {
-  return createRequest(
+function renderToPipeableStream(
+  children: ReactNodeList,
+  options?: ToPipeableOptions,
+): PipeableStream {
+  const request = createRequest(
     children,
     createResponseState(
       options ? options.identifierPrefix : undefined,
@@ -67,7 +70,11 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
       options ? options.bootstrapScriptContent : undefined,
       options ? options.bootstrapScripts : undefined,
       options ? options.bootstrapModules : undefined,
+      undefined, // fallbackBootstrapScriptContent
+      undefined, // fallbackBootstrapScripts
+      undefined, // fallbackBootstrapModules
       options ? options.unstable_externalRuntimeSrc : undefined,
+      undefined, // containerID
     ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
@@ -75,15 +82,8 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
     options ? options.onAllReady : undefined,
     options ? options.onShellReady : undefined,
     options ? options.onShellError : undefined,
-    undefined,
+    undefined, // onFatalError
   );
-}
-
-function renderToPipeableStream(
-  children: ReactNodeList,
-  options?: Options,
-): PipeableStream {
-  const request = createRequestImpl(children, options);
   let hasStartedFlowing = false;
   startWork(request);
   return {
@@ -115,4 +115,82 @@ function renderToPipeableStream(
   };
 }
 
-export {renderToPipeableStream, ReactVersion as version};
+type IntoContainerOptions = {
+  identifierPrefix?: string,
+  namespaceURI?: string,
+  nonce?: string,
+  bootstrapScriptContent?: string,
+  bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
+  bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
+  fallbackBootstrapScriptContent?: string,
+  fallbackBootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
+  fallbackBootstrapModules?: Array<string | BootstrapScriptDescriptor>,
+  progressiveChunkSize?: number,
+  onAllReady?: () => void,
+  onError?: (error: mixed) => ?string,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+};
+
+function renderIntoContainerAsPipeableStream(
+  children: ReactNodeList,
+  containerID: string,
+  options?: IntoContainerOptions,
+): PipeableStream {
+  const request = createRequest(
+    children,
+    createResponseState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.nonce : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+      options ? options.fallbackBootstrapScriptContent : undefined,
+      options ? options.fallbackBootstrapScripts : undefined,
+      options ? options.fallbackBootstrapModules : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
+      containerID,
+    ),
+    createRootFormatContext(options ? options.namespaceURI : undefined),
+    options ? options.progressiveChunkSize : undefined,
+    options ? options.onError : undefined,
+    options ? options.onAllReady : undefined,
+    undefined, // onShellReady
+    undefined, // onShellError
+    undefined, // onFatalError
+  );
+  let hasStartedFlowing = false;
+  startWork(request);
+  return {
+    pipe<T: Writable>(destination: T): T {
+      if (hasStartedFlowing) {
+        throw new Error(
+          'React currently only supports piping to one writable stream.',
+        );
+      }
+      hasStartedFlowing = true;
+      startFlowing(request, destination);
+      destination.on('drain', createDrainHandler(destination, request));
+      destination.on(
+        'error',
+        createAbortHandler(
+          request,
+          'The destination stream errored while writing data.',
+        ),
+      );
+      destination.on(
+        'close',
+        createAbortHandler(request, 'The destination stream closed early.'),
+      );
+      return destination;
+    },
+    abort(reason: mixed) {
+      abort(request, reason);
+    },
+  };
+}
+
+export {
+  renderToPipeableStream,
+  renderIntoContainerAsPipeableStream,
+  ReactVersion as version,
+};

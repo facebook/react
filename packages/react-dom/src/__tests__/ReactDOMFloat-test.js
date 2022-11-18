@@ -2645,7 +2645,7 @@ describe('ReactDOMFloat', () => {
 
     expect(suspenseInstance.data).toEqual('$!');
     expect(boundaryTemplateInstance.dataset.dgst).toBe(
-      'Resource failed to load',
+      'Stylesheet failed to load',
     );
 
     expect(getMeaningfulChildren(document)).toEqual(
@@ -2685,7 +2685,7 @@ describe('ReactDOMFloat', () => {
     );
     expect(errors).toEqual([
       'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
-      'Resource failed to load',
+      'Stylesheet failed to load',
     ]);
   });
 

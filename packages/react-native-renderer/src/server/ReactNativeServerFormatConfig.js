@@ -319,7 +319,7 @@ export function writeInitialResources(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
-  willFlushAllSegments: boolean,
+  willEmitInstructions: boolean,
 ): boolean {
   return true;
 }
@@ -328,6 +328,7 @@ export function writeImmediateResources(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
+  willEmitInstructions: boolean,
 ): boolean {
   return true;
 }
@@ -350,3 +351,9 @@ export function setCurrentlyRenderingBoundaryResourcesTarget(
   resources: Resources,
   boundaryResources: ?BoundaryResources,
 ) {}
+
+export function getRootBoundaryID(
+  responseState: ResponseState,
+): SuspenseBoundaryID {
+  return UNINITIALIZED_SUSPENSE_BOUNDARY_ID;
+}

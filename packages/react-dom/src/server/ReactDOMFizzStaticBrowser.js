@@ -72,6 +72,9 @@ function prerender(
         options ? options.bootstrapScriptContent : undefined,
         options ? options.bootstrapScripts : undefined,
         options ? options.bootstrapModules : undefined,
+        undefined, // fallbackBootstrapScriptContent
+        undefined, // fallbackBootstrapScripts
+        undefined, // fallbackBootstrapModules
         options ? options.unstable_externalRuntimeSrc : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),

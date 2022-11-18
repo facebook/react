@@ -11,15 +11,9 @@ import {
   clientRenderBoundary,
   completeBoundaryWithStyles,
   completeBoundary,
+  completeContainer,
   completeSegment,
 } from './fizz-instruction-set/ReactDOMFizzInstructionSetExternalRuntime';
-
-if (!window.$RC) {
-  // TODO: Eventually remove, we currently need to set these globals for
-  // compatibility with ReactDOMFizzInstructionSet
-  window.$RC = completeBoundary;
-  window.$RM = new Map();
-}
 
 if (document.readyState === 'loading') {
   if (document.body != null) {
@@ -81,6 +75,7 @@ function handleNode(node_ /*: Node */) {
   // $FlowFixMe[incompatible-cast]
   const node = (node_ /*: HTMLElement*/);
   const dataset = node.dataset;
+  let register = '';
   if (dataset['rxi'] != null) {
     clientRenderBoundary(
       dataset['bid'],
@@ -89,16 +84,21 @@ function handleNode(node_ /*: Node */) {
       dataset['stck'],
     );
     node.remove();
-  } else if (dataset['rri'] != null) {
+  } else if ((register = dataset['rri']) != null) {
     // Convert styles here, since its type is Array<Array<string>>
     completeBoundaryWithStyles(
+      register === 'c' ? completeContainer : completeBoundary,
       dataset['bid'],
       dataset['sid'],
       JSON.parse(dataset['sty']),
     );
     node.remove();
-  } else if (dataset['rci'] != null) {
-    completeBoundary(dataset['bid'], dataset['sid']);
+  } else if ((register = dataset['rci']) != null) {
+    if (register === 'c') {
+      completeContainer(dataset['bid'], dataset['sid']);
+    } else {
+      completeBoundary(dataset['bid'], dataset['sid']);
+    }
     node.remove();
   } else if (dataset['rsi'] != null) {
     completeSegment(dataset['sid'], dataset['pid']);

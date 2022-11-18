@@ -122,6 +122,12 @@ async function replaceScriptsAndMove(
     // External runtime assumes that instruction data nodes are eventually
     // appended to the body
     window.document.body.appendChild(node);
+  } else if (node.nodeType === 1 && node.nodeName === 'TEMPLATE') {
+    // templates can now container scripts that a browser would not execute upon parsing
+    // we opt out of the recursive search for deeper scripts
+    if (parent != null) {
+      parent.appendChild(node);
+    }
   } else {
     for (let i = 0; i < node.childNodes.length; i++) {
       const inner = node.childNodes[i];
@@ -130,6 +136,86 @@ async function replaceScriptsAndMove(
     if (parent != null) {
       parent.appendChild(node);
     }
+  }
+}
+
+export function installScriptObserver(window: any, document: Document) {
+  let observer = window.__scriptObserver;
+  if (!observer) {
+    window.__observedScripts = new Set();
+    window.__loadScripts = loadScripts;
+    window.eval(scriptObserverFunctionString);
+    observer = window.__scriptObserver;
+  }
+  observer.observe(document, {childList: true});
+  if (document.documentElement) {
+    observer.observe(document.documentElement, {childList: true});
+  }
+  if (document.head) {
+    observer.observe(document.head, {childList: true});
+  }
+  if (document.body) {
+    observer.observe(document.body, {childList: true});
+  }
+}
+
+export function removeScriptObserver(window: any) {
+  if (window.__scriptObserver) {
+    window.__scriptObserver.disconnect();
+  }
+}
+
+const scriptObserverFunctionString = `
+  const scriptObserver = new MutationObserver(mutations => {
+    let promises = [];
+    for (var i = 0; i < mutations.length; i++) {
+      const addedNodes = mutations[i].addedNodes;
+      if (addedNodes.length) {
+        var pendingWork = window.__loadScripts(window);
+        window.__pendingWork = (window.__pendingWork || Promise.resolve()).then(() => pendingWork);
+        // We can stop here because loadScripts loads scripts globally so there
+        // is not additional benefit to calling it for each mutation that added nodes
+      }
+    }
+  });
+
+  window.__scriptObserver = scriptObserver;
+`;
+
+async function loadScripts(window: any) {
+  const scripts = window.document.querySelectorAll(':not(template) script');
+  for (let i = 0; i < scripts.length; i++) {
+    const script = scripts.item(i);
+    if (window.__observedScripts.has(script)) {
+      // noop
+    } else {
+      const scriptSrc = script.getAttribute('src');
+      if (scriptSrc) {
+        window.__observedScripts.add(script);
+        const rollupOutput = await getRollupResult(scriptSrc);
+        if (rollupOutput) {
+          // Manually call eval(...) here, since changing the HTML text content
+          //  may interfere with hydration
+          window.eval(rollupOutput);
+        }
+      } else {
+        const newScript = window.document.createElement('script');
+        window.__observedScripts.add(newScript);
+
+        newScript.textContent = script.textContent;
+        script.parentNode?.insertBefore(newScript, script);
+        script.parentNode?.removeChild(script);
+      }
+    }
+  }
+}
+
+export async function pendingWork(window: any): Promise<void> {
+  const originalPendingWork = window.__pendingWork;
+  await window.__pendingWork;
+  if (window.__pendingWork !== originalPendingWork) {
+    // Something new was added to the queue, await that too
+    return pendingWork(window);
   }
 }
 

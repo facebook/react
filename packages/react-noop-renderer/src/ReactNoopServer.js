@@ -97,6 +97,10 @@ const ReactNoopServer = ReactFizzServer({
     return {state: 'pending', children: []};
   },
 
+  getRootBoundaryID(): null {
+    return null;
+  },
+
   getChildFormatContext(): null {
     return null;
   },

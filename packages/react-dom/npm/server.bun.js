@@ -1,18 +1,18 @@
 'use strict';
 
-var b;
-var l;
+var l, s;
 if (process.env.NODE_ENV === 'production') {
-  b = require('./cjs/react-dom-server.bun.production.min.js');
   l = require('./cjs/react-dom-server-legacy.browser.production.min.js');
+  s = require('./cjs/react-dom-server.bun.production.min.js');
 } else {
-  b = require('./cjs/react-dom-server.bun.development.js');
   l = require('./cjs/react-dom-server-legacy.browser.development.js');
+  s = require('./cjs/react-dom-server.bun.development.js');
 }
 
-exports.version = b.version;
-exports.renderToReadableStream = b.renderToReadableStream;
-exports.renderToNodeStream = b.renderToNodeStream;
-exports.renderToStaticNodeStream = b.renderToStaticNodeStream;
+exports.version = l.version;
 exports.renderToString = l.renderToString;
 exports.renderToStaticMarkup = l.renderToStaticMarkup;
+exports.renderToStaticNodeStream = s.renderToStaticNodeStream;
+exports.renderToNodeStream = s.renderToNodeStream;
+exports.renderToReadableStream = s.renderToReadableStream;
+exports.renderIntoContainer = s.renderIntoContainer;

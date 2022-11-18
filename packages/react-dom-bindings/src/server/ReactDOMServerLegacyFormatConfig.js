@@ -11,6 +11,7 @@ import type {
   BootstrapScriptDescriptor,
   FormatContext,
   StreamingFormat,
+  SuspenseBoundaryID,
 } from './ReactDOMServerFormatConfig';
 
 import {
@@ -35,15 +36,18 @@ export const isPrimaryRenderer = false;
 export type ResponseState = {
   // Keep this in sync with ReactDOMServerFormatConfig
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
+  fallbackBootstrapChunks: void | Array<Chunk | PrecomputedChunk>,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
   idPrefix: string,
+  containerBoundaryID: SuspenseBoundaryID,
   nextSuspenseID: number,
   streamingFormat: StreamingFormat,
   startInlineScript: PrecomputedChunk,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
+  sentCompleteContainerFunction: boolean,
   sentClientRenderFunction: boolean,
   sentStyleInsertionFunction: boolean,
   externalRuntimeConfig: BootstrapScriptDescriptor | null,
@@ -62,20 +66,26 @@ export function createResponseState(
     undefined,
     undefined,
     undefined,
+    undefined,
+    undefined,
+    undefined,
     externalRuntimeConfig,
   );
   return {
     // Keep this in sync with ReactDOMServerFormatConfig
     bootstrapChunks: responseState.bootstrapChunks,
+    fallbackBootstrapChunks: responseState.fallbackBootstrapChunks,
     placeholderPrefix: responseState.placeholderPrefix,
     segmentPrefix: responseState.segmentPrefix,
     boundaryPrefix: responseState.boundaryPrefix,
     idPrefix: responseState.idPrefix,
+    containerBoundaryID: null,
     nextSuspenseID: responseState.nextSuspenseID,
     streamingFormat: responseState.streamingFormat,
     startInlineScript: responseState.startInlineScript,
     sentCompleteSegmentFunction: responseState.sentCompleteSegmentFunction,
     sentCompleteBoundaryFunction: responseState.sentCompleteBoundaryFunction,
+    sentCompleteContainerFunction: responseState.sentCompleteContainerFunction,
     sentClientRenderFunction: responseState.sentClientRenderFunction,
     sentStyleInsertionFunction: responseState.sentStyleInsertionFunction,
     externalRuntimeConfig: responseState.externalRuntimeConfig,
@@ -126,6 +136,7 @@ export {
   setCurrentlyRenderingBoundaryResourcesTarget,
   prepareToRender,
   cleanupAfterRender,
+  getRootBoundaryID,
 } from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';

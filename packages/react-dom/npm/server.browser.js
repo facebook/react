@@ -15,3 +15,4 @@ exports.renderToStaticMarkup = l.renderToStaticMarkup;
 exports.renderToNodeStream = l.renderToNodeStream;
 exports.renderToStaticNodeStream = l.renderToStaticNodeStream;
 exports.renderToReadableStream = s.renderToReadableStream;
+exports.renderIntoContainer = s.renderIntoContainer;

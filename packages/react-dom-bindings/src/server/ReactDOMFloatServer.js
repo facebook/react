@@ -108,6 +108,7 @@ type BaseResource = {
   flushed: boolean,
 };
 
+export type LinkTagResource = PreloadResource | StyleResource | LinkResource;
 export type Resource = PreloadResource | StyleResource | ScriptResource;
 export type HeadResource =
   | TitleResource

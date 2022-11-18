@@ -29,6 +29,10 @@ const config = [
     entry: 'ReactDOMFizzInlineCompleteSegment.js',
     exportName: 'completeSegment',
   },
+  {
+    entry: 'ReactDOMFizzInlineCompleteContainer.js',
+    exportName: 'completeContainer',
+  },
 ];
 
 const prettierConfig = require('../../.prettierrc.js');

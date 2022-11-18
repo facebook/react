@@ -42,3 +42,10 @@ export function renderToReadableStream() {
     arguments,
   );
 }
+
+export function renderIntoContainer() {
+  return require('./src/server/ReactDOMFizzServerBrowser').renderIntoContainer.apply(
+    this,
+    arguments,
+  );
+}

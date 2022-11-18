@@ -9,20 +9,41 @@
 
 'use strict';
 
+import {replaceScriptsAndMove} from '../test-utils/FizzTestUtils';
+
 // Polyfills for test environment
 global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 
+let JSDOM;
+let window;
+let document;
 let React;
 let ReactDOMFizzServer;
 let Suspense;
+let buffer;
+let lastBodyChild;
 
 describe('ReactDOMFizzServerBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
+    JSDOM = require('jsdom').JSDOM;
     React = require('react');
     ReactDOMFizzServer = require('react-dom/server.browser');
     Suspense = React.Suspense;
+
+    // Test Environment
+    const jsdom = new JSDOM(
+      '<!DOCTYPE html><html><head></head><body><div id="container">',
+      {
+        runScripts: 'dangerously',
+      },
+    );
+    window = jsdom.window;
+    document = jsdom.window.document;
+
+    buffer = '';
+    lastBodyChild = null;
   });
 
   const theError = new Error('This is an error');
@@ -44,6 +65,105 @@ describe('ReactDOMFizzServerBrowser', () => {
       }
       result += Buffer.from(value).toString('utf8');
     }
+  }
+
+  async function readIntoBuffer(stream) {
+    const reader = stream.getReader();
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        return;
+      }
+      buffer += Buffer.from(value).toString('utf8');
+    }
+  }
+
+  function getMeaningfulChildren(element) {
+    const children = [];
+    let node = element.firstChild;
+    while (node) {
+      if (node.nodeType === 1) {
+        if (
+          // some tags are ambiguous and might be hidden because they look like non-meaningful children
+          // so we have a global override where if this data attribute is included we also include the node
+          node.hasAttribute('data-meaningful') ||
+          (node.tagName === 'SCRIPT' &&
+            node.hasAttribute('src') &&
+            node.hasAttribute('async')) ||
+          (node.tagName !== 'SCRIPT' &&
+            node.tagName !== 'TEMPLATE' &&
+            node.tagName !== 'template' &&
+            !node.hasAttribute('hidden') &&
+            !node.hasAttribute('aria-hidden'))
+        ) {
+          const props = {};
+          const attributes = node.attributes;
+          for (let i = 0; i < attributes.length; i++) {
+            if (
+              attributes[i].name === 'id' &&
+              attributes[i].value.includes(':')
+            ) {
+              // We assume this is a React added ID that's a non-visual implementation detail.
+              continue;
+            }
+            props[attributes[i].name] = attributes[i].value;
+          }
+          props.children = getMeaningfulChildren(node);
+          children.push(React.createElement(node.tagName.toLowerCase(), props));
+        }
+      } else if (node.nodeType === 3) {
+        children.push(node.data);
+      }
+      node = node.nextSibling;
+    }
+    return children.length === 0
+      ? undefined
+      : children.length === 1
+      ? children[0]
+      : children;
+  }
+
+  async function act(callback) {
+    await callback();
+    // Await one turn around the event loop.
+    // This assumes that we'll flush everything we have so far.
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+
+    // if new nodes were added to the document during the callback for instance via
+    // runtime instrunctions resolving (insertStyles). the newly added nodes may need to be
+    // re-added so scripts can run
+    if (lastBodyChild) {
+      let next = null;
+      const toMove = [];
+      while ((next = lastBodyChild.nextSibling)) {
+        toMove.push(next);
+        next.parentNode.removeChild(next);
+      }
+      toMove.forEach(node =>
+        replaceScriptsAndMove(window, null, node, document.body),
+      );
+    }
+
+    // JSDOM doesn't support stream HTML parser so we need to give it a proper fragment.
+    // We also want to execute any scripts that are embedded.
+    // We assume that we have now received a proper fragment of HTML.
+    const bufferedContent = buffer;
+    buffer = '';
+    const fakeBody = document.createElement('body');
+    fakeBody.innerHTML = bufferedContent;
+    const parent = document.body;
+    while (fakeBody.firstChild) {
+      const node = fakeBody.firstChild;
+      await replaceScriptsAndMove(window, null /* CSPNonce */, node, parent);
+
+      if (node.nextSibling) {
+        console.log('node.nextSibling', node.nextSibling);
+      }
+    }
+
+    lastBodyChild = document.body.lastChild;
   }
 
   it('should call renderToReadableStream', async () => {
@@ -500,5 +620,28 @@ describe('ReactDOMFizzServerBrowser', () => {
     expect(result).toEqual(
       '<!DOCTYPE html><html><head><title>foo</title></head><body>bar</body></html>',
     );
+  });
+
+  describe('renderIntoContainer', () => {
+    it('can render into a container with a stream that is synchronously available', async () => {
+      await act(() => {
+        const stream = ReactDOMFizzServer.renderIntoContainer(
+          <div>foo</div>,
+          'container',
+        );
+        readIntoBuffer(stream);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div id="container">
+              <div>foo</div>
+            </div>
+          </body>
+        </html>,
+      );
+    });
   });
 });

@@ -8,7 +8,11 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Resources, BoundaryResources} from './ReactDOMFloatServer';
+import type {
+  Resources,
+  BoundaryResources,
+  LinkTagResource,
+} from './ReactDOMFloatServer';
 export type {Resources, BoundaryResources};
 
 import {
@@ -80,10 +84,11 @@ export {
 } from './ReactDOMFloatServer';
 
 import {
-  clientRenderBoundary as clientRenderFunction,
-  completeBoundary as completeBoundaryFunction,
-  completeBoundaryWithStyles as styleInsertionFunction,
-  completeSegment as completeSegmentFunction,
+  clientRenderBoundary as clientRenderFunctionString,
+  completeBoundary as completeBoundaryFunctionString,
+  completeContainer as completeContainerFunctionString,
+  completeBoundaryWithStyles as styleInsertionFunctionString,
+  completeSegment as completeSegmentFunctionString,
 } from './fizz-instruction-set/ReactDOMFizzInstructionSetInlineCodeStrings';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
@@ -117,9 +122,11 @@ const DataStreamingFormat: StreamingFormat = 1;
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
+  fallbackBootstrapChunks: void | Array<Chunk | PrecomputedChunk>,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
+  containerBoundaryID: SuspenseBoundaryID,
   idPrefix: string,
   nextSuspenseID: number,
   streamingFormat: StreamingFormat,
@@ -127,6 +134,7 @@ export type ResponseState = {
   startInlineScript: PrecomputedChunk,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
+  sentCompleteContainerFunction: boolean,
   sentClientRenderFunction: boolean,
   sentStyleInsertionFunction: boolean,
   // state for data streaming format
@@ -182,7 +190,15 @@ export function createResponseState(
   bootstrapScriptContent: string | void,
   bootstrapScripts: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
   bootstrapModules: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
+  fallbackBootstrapScriptContent: string | void,
+  fallbackBootstrapScripts: $ReadOnlyArray<
+    string | BootstrapScriptDescriptor,
+  > | void,
+  fallbackBootstrapModules: $ReadOnlyArray<
+    string | BootstrapScriptDescriptor,
+  > | void,
   externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
+  containerID: string | void,
 ): ResponseState {
   const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
   const inlineScriptWithNonce =
@@ -259,17 +275,79 @@ export function createResponseState(
       bootstrapChunks.push(endAsyncScript);
     }
   }
+
+  const fallbackBootstrapChunks = [];
+  if (fallbackBootstrapScriptContent !== undefined) {
+    fallbackBootstrapChunks.push(
+      inlineScriptWithNonce,
+      stringToChunk(
+        escapeBootstrapScriptContent(fallbackBootstrapScriptContent),
+      ),
+      endInlineScript,
+    );
+  }
+  // We intentionally omit the rizz runtime for fallback bootstrap even if configured.
+  // Even if it is configured the fallback bootstrap only executes if React errors at some Root
+  // Boundary and in these cases there will be no instructions for the runtime to execute
+  if (fallbackBootstrapScripts !== undefined) {
+    for (let i = 0; i < fallbackBootstrapScripts.length; i++) {
+      const scriptConfig = fallbackBootstrapScripts[i];
+      const src =
+        typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
+      const integrity =
+        typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
+      fallbackBootstrapChunks.push(
+        startScriptSrc,
+        stringToChunk(escapeTextForBrowser(src)),
+      );
+      if (integrity) {
+        fallbackBootstrapChunks.push(
+          scriptIntegirty,
+          stringToChunk(escapeTextForBrowser(integrity)),
+        );
+      }
+      fallbackBootstrapChunks.push(endAsyncScript);
+    }
+  }
+  if (fallbackBootstrapModules !== undefined) {
+    for (let i = 0; i < fallbackBootstrapModules.length; i++) {
+      const scriptConfig = fallbackBootstrapModules[i];
+      const src =
+        typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
+      const integrity =
+        typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
+      fallbackBootstrapChunks.push(
+        startModuleSrc,
+        stringToChunk(escapeTextForBrowser(src)),
+      );
+      if (integrity) {
+        fallbackBootstrapChunks.push(
+          scriptIntegirty,
+          stringToChunk(escapeTextForBrowser(integrity)),
+        );
+      }
+      fallbackBootstrapChunks.push(endAsyncScript);
+    }
+  }
+
   return {
     bootstrapChunks: bootstrapChunks,
+    fallbackBootstrapChunks: fallbackBootstrapChunks.length
+      ? fallbackBootstrapChunks
+      : undefined,
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: idPrefix + 'B:',
     idPrefix: idPrefix,
+    containerBoundaryID: containerID
+      ? stringToPrecomputedChunk(containerID)
+      : null,
     nextSuspenseID: 0,
     streamingFormat,
     startInlineScript: inlineScriptWithNonce,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
+    sentCompleteContainerFunction: false,
     sentClientRenderFunction: false,
     sentStyleInsertionFunction: false,
     externalRuntimeConfig: externalRuntimeDesc,
@@ -413,6 +491,12 @@ export function assignSuspenseBoundaryID(
   return stringToPrecomputedChunk(
     responseState.boundaryPrefix + generatedID.toString(16),
   );
+}
+
+export function getRootBoundaryID(
+  responseState: ResponseState,
+): SuspenseBoundaryID {
+  return responseState.containerBoundaryID;
 }
 
 export function makeId(
@@ -2408,7 +2492,7 @@ export function writeEndSegment(
 }
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
-  completeSegmentFunction + ';$RS("',
+  completeSegmentFunctionString + '$RS("',
 );
 const completeSegmentScript1Partial = stringToPrecomputedChunk('$RS("');
 const completeSegmentScript2 = stringToPrecomputedChunk('","');
@@ -2461,34 +2545,57 @@ export function writeCompletedSegmentInstruction(
   }
 }
 
-const completeBoundaryScript1Full = stringToPrecomputedChunk(
-  completeBoundaryFunction + ';$RC("',
+const completeBoundaryFunction = stringToPrecomputedChunk(
+  completeBoundaryFunctionString,
 );
-const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
+const completeContainerFunction = stringToPrecomputedChunk(
+  completeContainerFunctionString,
+);
+const styleInsertionFunction = stringToPrecomputedChunk(
+  styleInsertionFunctionString,
+);
 
-const completeBoundaryWithStylesScript1FullBoth = stringToPrecomputedChunk(
-  completeBoundaryFunction + ';' + styleInsertionFunction + ';$RR("',
+const completeBoundaryScript1 = stringToPrecomputedChunk('$RC("');
+const completeBoundaryWithStylesScript1 = stringToPrecomputedChunk(
+  '$RR(false,"',
 );
-const completeBoundaryWithStylesScript1FullPartial = stringToPrecomputedChunk(
-  styleInsertionFunction + ';$RR("',
-);
-const completeBoundaryWithStylesScript1Partial = stringToPrecomputedChunk(
-  '$RR("',
-);
-const completeBoundaryScript2 = stringToPrecomputedChunk('","');
-const completeBoundaryScript3a = stringToPrecomputedChunk('",');
-const completeBoundaryScript3b = stringToPrecomputedChunk('"');
-const completeBoundaryScriptEnd = stringToPrecomputedChunk(')</script>');
 
+const completeContainerScript1 = stringToPrecomputedChunk('$RK("');
+const completeContainerWithStylesScript1 = stringToPrecomputedChunk(
+  '$RR(true,"',
+);
+const completeBoundaryOrContainerScript2 = stringToPrecomputedChunk('","');
+const completeBoundaryOrContainerScript2a = stringToPrecomputedChunk('",');
+const completeBoundaryOrContainerScript3 = stringToPrecomputedChunk('"');
+const completeBoundaryOrContainerScriptEnd = stringToPrecomputedChunk(
+  ')</script>',
+);
+
+const bootstrapContainerOpenStart = stringToPrecomputedChunk(
+  '<template id="bs:',
+);
+const bootstrapContainerOpenEnd = stringToPrecomputedChunk('">');
+const bootstrapContainerClose = stringToPrecomputedChunk('</template>');
+
+const completeContainerData1 = stringToPrecomputedChunk(
+  '<template data-rci="c" data-bid="',
+);
+const completeContainerWithStylesData1 = stringToPrecomputedChunk(
+  '<template data-rri="c" data-bid="',
+);
 const completeBoundaryData1 = stringToPrecomputedChunk(
   '<template data-rci="" data-bid="',
 );
 const completeBoundaryWithStylesData1 = stringToPrecomputedChunk(
   '<template data-rri="" data-bid="',
 );
-const completeBoundaryData2 = stringToPrecomputedChunk('" data-sid="');
-const completeBoundaryData3a = stringToPrecomputedChunk('" data-sty="');
-const completeBoundaryDataEnd = dataElementQuotedEnd;
+const completeBoundaryOrContainerData2 = stringToPrecomputedChunk(
+  '" data-sid="',
+);
+const completeBoundaryOrContainerData3 = stringToPrecomputedChunk(
+  '" data-sty="',
+);
+const completeBoundaryOrContainerDataEmptyEnd = dataElementQuotedEnd;
 
 export function writeCompletedBoundaryInstruction(
   destination: Destination,
@@ -2497,89 +2604,226 @@ export function writeCompletedBoundaryInstruction(
   contentSegmentID: number,
   boundaryResources: BoundaryResources,
 ): boolean {
-  let hasStyleDependencies;
-  if (enableFloat) {
-    hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
-  }
-  const scriptFormat =
-    !enableFizzExternalRuntime ||
-    responseState.streamingFormat === ScriptStreamingFormat;
-  if (scriptFormat) {
-    writeChunk(destination, responseState.startInlineScript);
-    if (enableFloat && hasStyleDependencies) {
-      if (!responseState.sentCompleteBoundaryFunction) {
-        responseState.sentCompleteBoundaryFunction = true;
-        responseState.sentStyleInsertionFunction = true;
-        writeChunk(
-          destination,
-          clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth),
-        );
-      } else if (!responseState.sentStyleInsertionFunction) {
-        responseState.sentStyleInsertionFunction = true;
-        writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
-      } else {
-        writeChunk(destination, completeBoundaryWithStylesScript1Partial);
-      }
-    } else {
-      if (!responseState.sentCompleteBoundaryFunction) {
-        responseState.sentCompleteBoundaryFunction = true;
-        writeChunk(destination, completeBoundaryScript1Full);
-      } else {
-        writeChunk(destination, completeBoundaryScript1Partial);
-      }
-    }
-  } else {
-    if (enableFloat && hasStyleDependencies) {
-      writeChunk(destination, completeBoundaryWithStylesData1);
-    } else {
-      writeChunk(destination, completeBoundaryData1);
-    }
-  }
-
   if (boundaryID === null) {
     throw new Error(
       'An ID must have been assigned before we can complete the boundary.',
     );
   }
-
-  // Write function arguments, which are string and array literals
+  let hasStyleDependencies;
+  if (enableFloat) {
+    hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
+  }
   const formattedContentID = stringToChunk(contentSegmentID.toString(16));
-  writeChunk(destination, boundaryID);
+  const scriptFormat =
+    !enableFizzExternalRuntime ||
+    responseState.streamingFormat === ScriptStreamingFormat;
+  let r = true;
   if (scriptFormat) {
-    writeChunk(destination, completeBoundaryScript2);
-  } else {
-    writeChunk(destination, completeBoundaryData2);
-  }
-  writeChunk(destination, responseState.segmentPrefix);
-  writeChunk(destination, formattedContentID);
-  if (enableFloat && hasStyleDependencies) {
-    // Script and data writers must format this differently:
-    //  - script writer emits an array literal, whose string elements are
-    //    escaped for javascript  e.g. ["A", "B"]
-    //  - data writer emits a string literal, which is escaped as html
-    //    e.g. [&#34;A&#34;, &#34;B&#34;]
-    if (scriptFormat) {
-      writeChunk(destination, completeBoundaryScript3a);
-      // boundaryResources encodes an array literal
-      writeStyleResourceDependenciesInJS(destination, boundaryResources);
+    if (enableFloat && hasStyleDependencies) {
+      if (boundaryID === responseState.containerBoundaryID) {
+        // We emit the bootstrap chunks into a template container with an id
+        // formed from the root segment ID. The insertion script will inject
+        // the bootstrap scripts into the DOM after revealing the content.
+        // We don't do this for cases where there are no style dependencies because
+        // the content swap is synchronous and will therefore always complete before
+        // the bootstrap scripts run
+        const bootstrapChunks = responseState.bootstrapChunks;
+        if (bootstrapChunks.length) {
+          writeChunk(destination, bootstrapContainerOpenStart);
+          writeChunk(destination, responseState.segmentPrefix);
+          writeChunk(destination, formattedContentID);
+          writeChunk(destination, bootstrapContainerOpenEnd);
+          for (let i = 0; i < bootstrapChunks.length; i++) {
+            writeChunk(destination, bootstrapChunks[i]);
+          }
+          writeChunk(destination, bootstrapContainerClose);
+        }
+
+        writeChunk(destination, responseState.startInlineScript);
+        if (!responseState.sentStyleInsertionFunction) {
+          responseState.sentStyleInsertionFunction = true;
+          writeChunk(
+            destination,
+            clonePrecomputedChunk(styleInsertionFunction),
+          );
+        }
+        if (!responseState.sentCompleteContainerFunction) {
+          responseState.sentCompleteContainerFunction = true;
+          writeChunk(destination, completeContainerFunction);
+        }
+        writeChunk(destination, completeContainerWithStylesScript1);
+        writeChunk(destination, boundaryID);
+        writeChunk(destination, completeBoundaryOrContainerScript2);
+        writeChunk(destination, responseState.segmentPrefix);
+        writeChunk(destination, formattedContentID);
+        writeChunk(destination, completeBoundaryOrContainerScript2a);
+        writeStyleResourceDependenciesInJS(destination, boundaryResources);
+        return writeChunkAndReturn(
+          destination,
+          completeBoundaryOrContainerScriptEnd,
+        );
+      } else {
+        writeChunk(destination, responseState.startInlineScript);
+        if (!responseState.sentStyleInsertionFunction) {
+          responseState.sentStyleInsertionFunction = true;
+          writeChunk(
+            destination,
+            clonePrecomputedChunk(styleInsertionFunction),
+          );
+        }
+        if (!responseState.sentCompleteBoundaryFunction) {
+          responseState.sentCompleteBoundaryFunction = true;
+          writeChunk(destination, completeBoundaryFunction);
+        }
+        writeChunk(destination, completeBoundaryWithStylesScript1);
+        writeChunk(destination, boundaryID);
+        writeChunk(destination, completeBoundaryOrContainerScript2);
+        writeChunk(destination, responseState.segmentPrefix);
+        writeChunk(destination, formattedContentID);
+        writeChunk(destination, completeBoundaryOrContainerScript2a);
+        writeStyleResourceDependenciesInJS(destination, boundaryResources);
+        return writeChunkAndReturn(
+          destination,
+          completeBoundaryOrContainerScriptEnd,
+        );
+      }
     } else {
-      writeChunk(destination, completeBoundaryData3a);
-      writeStyleResourceDependenciesInAttr(destination, boundaryResources);
+      if (boundaryID === responseState.containerBoundaryID) {
+        writeChunk(destination, responseState.startInlineScript);
+        if (!responseState.sentCompleteContainerFunction) {
+          responseState.sentCompleteContainerFunction = true;
+          writeChunk(destination, completeContainerFunction);
+        }
+        writeChunk(destination, completeContainerScript1);
+        writeChunk(destination, boundaryID);
+        writeChunk(destination, completeBoundaryOrContainerScript2);
+        writeChunk(destination, responseState.segmentPrefix);
+        writeChunk(destination, formattedContentID);
+        writeChunk(destination, completeBoundaryOrContainerScript3);
+        r = writeChunkAndReturn(
+          destination,
+          completeBoundaryOrContainerScriptEnd,
+        );
+
+        // We emit bootstrap scripts after the completeContainer instruction
+        // because we want to ensure the reveal ocurrs before the bootstrap
+        // scripts execute. Notice that unlike with the styles case the scripts
+        // are not embedded in a template
+        const bootstrapChunks = responseState.bootstrapChunks;
+        let i = 0;
+        for (; i < bootstrapChunks.length - 1; i++) {
+          writeChunk(destination, bootstrapChunks[i]);
+        }
+        if (i < bootstrapChunks.length) {
+          r = writeChunkAndReturn(destination, bootstrapChunks[i]);
+        }
+        return r;
+      } else {
+        writeChunk(destination, responseState.startInlineScript);
+        if (!responseState.sentCompleteBoundaryFunction) {
+          responseState.sentCompleteBoundaryFunction = true;
+          writeChunk(destination, completeBoundaryFunction);
+        }
+        writeChunk(destination, completeBoundaryScript1);
+        writeChunk(destination, boundaryID);
+        writeChunk(destination, completeBoundaryOrContainerScript2);
+        writeChunk(destination, responseState.segmentPrefix);
+        writeChunk(destination, formattedContentID);
+        writeChunk(destination, completeBoundaryOrContainerScript3);
+        return writeChunkAndReturn(
+          destination,
+          completeBoundaryOrContainerScriptEnd,
+        );
+      }
     }
   } else {
-    if (scriptFormat) {
-      writeChunk(destination, completeBoundaryScript3b);
+    if (enableFloat && hasStyleDependencies) {
+      if (boundaryID === responseState.containerBoundaryID) {
+        // We emit the bootstrap chunks into a template container with an id
+        // formed from the root segment ID. The insertion script will inject
+        // the bootstrap scripts into the DOM after revealing the content.
+        // We don't do this for cases where there are no style dependencies because
+        // the content swap is synchronous and will therefore always complete before
+        // the bootstrap scripts run
+        const bootstrapChunks = responseState.bootstrapChunks;
+        if (bootstrapChunks.length) {
+          writeChunk(destination, bootstrapContainerOpenStart);
+          writeChunk(destination, responseState.segmentPrefix);
+          writeChunk(destination, formattedContentID);
+          writeChunk(destination, bootstrapContainerOpenEnd);
+          for (let i = 0; i < bootstrapChunks.length; i++) {
+            writeChunk(destination, bootstrapChunks[i]);
+          }
+          writeChunk(destination, bootstrapContainerClose);
+        }
+
+        writeChunk(destination, completeContainerWithStylesData1);
+        writeChunk(destination, boundaryID);
+        writeChunk(destination, completeBoundaryOrContainerData2);
+        writeChunk(destination, responseState.segmentPrefix);
+        writeChunk(destination, formattedContentID);
+        writeChunk(destination, completeBoundaryOrContainerData3);
+        writeStyleResourceDependenciesInAttr(destination, boundaryResources);
+        return writeChunkAndReturn(
+          destination,
+          completeBoundaryOrContainerDataEmptyEnd,
+        );
+      } else {
+        writeChunk(destination, completeBoundaryWithStylesData1);
+        writeChunk(destination, boundaryID);
+        writeChunk(destination, completeBoundaryOrContainerData2);
+        writeChunk(destination, responseState.segmentPrefix);
+        writeChunk(destination, formattedContentID);
+        writeChunk(destination, completeBoundaryOrContainerData3);
+        writeStyleResourceDependenciesInAttr(destination, boundaryResources);
+        return writeChunkAndReturn(
+          destination,
+          completeBoundaryOrContainerDataEmptyEnd,
+        );
+      }
+    } else {
+      if (boundaryID === responseState.containerBoundaryID) {
+        // We emit the bootstrap chunks into a template container with an id
+        // formed from the root segment ID. The insertion script will inject
+        // the bootstrap scripts into the DOM after revealing the content.
+        const bootstrapChunks = responseState.bootstrapChunks;
+        if (bootstrapChunks.length) {
+          writeChunk(destination, bootstrapContainerOpenStart);
+          writeChunk(destination, responseState.segmentPrefix);
+          writeChunk(destination, formattedContentID);
+          writeChunk(destination, bootstrapContainerOpenEnd);
+          for (let i = 0; i < bootstrapChunks.length; i++) {
+            writeChunk(destination, bootstrapChunks[i]);
+          }
+          writeChunk(destination, bootstrapContainerClose);
+        }
+
+        writeChunk(destination, completeContainerData1);
+        writeChunk(destination, boundaryID);
+        writeChunk(destination, completeBoundaryOrContainerData2);
+        writeChunk(destination, responseState.segmentPrefix);
+        writeChunk(destination, formattedContentID);
+        return writeChunkAndReturn(
+          destination,
+          completeBoundaryOrContainerDataEmptyEnd,
+        );
+      } else {
+        writeChunk(destination, completeBoundaryData1);
+        writeChunk(destination, boundaryID);
+        writeChunk(destination, completeBoundaryOrContainerData2);
+        writeChunk(destination, responseState.segmentPrefix);
+        writeChunk(destination, formattedContentID);
+        return writeChunkAndReturn(
+          destination,
+          completeBoundaryOrContainerDataEmptyEnd,
+        );
+      }
     }
-  }
-  if (scriptFormat) {
-    return writeChunkAndReturn(destination, completeBoundaryScriptEnd);
-  } else {
-    return writeChunkAndReturn(destination, completeBoundaryDataEnd);
   }
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
-  clientRenderFunction + ';$RX("',
+  clientRenderFunctionString + '$RX("',
 );
 const clientRenderScript1Partial = stringToPrecomputedChunk('$RX("');
 const clientRenderScript1A = stringToPrecomputedChunk('"');
@@ -2605,7 +2849,20 @@ export function writeClientRenderBoundaryInstruction(
   const scriptFormat =
     !enableFizzExternalRuntime ||
     responseState.streamingFormat === ScriptStreamingFormat;
-  if (scriptFormat) {
+  if (boundaryID === responseState.containerBoundaryID) {
+    // If fallback bootstrap scripts were provided and we errored at the Root Boundary
+    // then use those. Use the normal bootstrapChunks if no fallbacks were provided
+    const bootstrapChunks =
+      responseState.fallbackBootstrapChunks || responseState.bootstrapChunks;
+    let i = 0;
+    for (; i < bootstrapChunks.length - 1; i++) {
+      writeChunk(destination, bootstrapChunks[i]);
+    }
+    if (i < bootstrapChunks.length) {
+      return writeChunkAndReturn(destination, bootstrapChunks[i]);
+    }
+    return true;
+  } else if (scriptFormat) {
     writeChunk(destination, responseState.startInlineScript);
     if (!responseState.sentClientRenderFunction) {
       // The first time we write this, we'll need to include the full implementation.
@@ -2753,13 +3010,13 @@ export function writeInitialResources(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
-  willFlushAllSegments: boolean,
+  willEmitInstructions: boolean,
 ): boolean {
   // Write initially discovered resources after the shell completes
   if (
     enableFizzExternalRuntime &&
-    !willFlushAllSegments &&
-    responseState.externalRuntimeConfig
+    responseState.externalRuntimeConfig &&
+    willEmitInstructions
   ) {
     // If the root segment is incomplete due to suspended tasks
     // (e.g. willFlushAllSegments = false) and we are using data
@@ -2769,8 +3026,7 @@ export function writeInitialResources(
     const {src, integrity} = responseState.externalRuntimeConfig;
     preinitImpl(resources, src, {as: 'script', integrity});
   }
-  // $FlowFixMe[missing-local-annot]
-  function flushLinkResource(resource) {
+  function flushLinkResource(resource: LinkTagResource) {
     if (!resource.flushed) {
       pushLinkImpl(target, resource.props, responseState);
       resource.flushed = true;
@@ -2893,9 +3149,19 @@ export function writeImmediateResources(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
+  willEmitInstructions: boolean,
 ): boolean {
-  // $FlowFixMe[missing-local-annot]
-  function flushLinkResource(resource) {
+  // Write initially discovered resources after the shell completes
+  if (
+    enableFizzExternalRuntime &&
+    responseState.externalRuntimeConfig &&
+    willEmitInstructions
+  ) {
+    const {src, integrity} = responseState.externalRuntimeConfig;
+    preinitImpl(resources, src, {as: 'script', integrity});
+  }
+
+  function flushLinkResource(resource: LinkTagResource) {
     if (!resource.flushed) {
       pushLinkImpl(target, resource.props, responseState);
       resource.flushed = true;
@@ -2941,8 +3207,7 @@ export function writeImmediateResources(
 
   scripts.forEach(r => {
     // should never be flushed already
-    pushStartGenericElement(target, r.props, 'script', responseState);
-    pushEndInstance(target, target, 'script', r.props);
+    pushScriptImpl(target, r.props, responseState);
     r.flushed = true;
     r.hint.flushed = true;
   });
