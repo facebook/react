@@ -613,7 +613,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >= 18.0
       it('should process a sample legacy render sequence', async () => {
         utils.legacyRender(<div />, document.createElement('div'));
 
@@ -800,7 +799,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >= 18.0
       it('should process a sample createRoot render sequence', async () => {
         function App() {
           const [didMount, setDidMount] = React.useState(false);
@@ -1947,7 +1945,6 @@ describe('Timeline profiler', () => {
       global.IS_REACT_ACT_ENVIRONMENT = true;
     });
 
-    // @reactVersion >= 18.0
     it('should process a sample legacy render sequence', async () => {
       utils.legacyRender(<div />, document.createElement('div'));
       utils.act(() => store.profilerStore.stopProfiling());
@@ -2117,7 +2114,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >= 18.0
     it('should process a sample createRoot render sequence', async () => {
       function App() {
         const [didMount, setDidMount] = React.useState(false);

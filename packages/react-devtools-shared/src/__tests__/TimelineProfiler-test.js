@@ -126,7 +126,6 @@ describe('Timeline profiler', () => {
       setPerformanceMock(null);
     });
 
-    // @reactVersion >=18.0
     it('should mark sync render without suspends or state updates', () => {
       renderHelper(<div />);
 
@@ -148,7 +147,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark concurrent render without suspends or state updates', () => {
       renderRootHelper(<div />);
 
@@ -179,7 +177,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark render yields', async () => {
       function Bar() {
         Scheduler.unstable_yieldValue('Bar');
@@ -209,7 +206,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark sync render with suspense that resolves', async () => {
       const fakeSuspensePromise = Promise.resolve(true);
       function Example() {
@@ -252,7 +248,6 @@ describe('Timeline profiler', () => {
           `);
     });
 
-    // @reactVersion >=18.0
     it('should mark sync render with suspense that rejects', async () => {
       const fakeSuspensePromise = Promise.reject(new Error('error'));
       function Example() {
@@ -291,7 +286,6 @@ describe('Timeline profiler', () => {
       expect(clearedMarks).toContain(`--suspense-rejected-0-Example`);
     });
 
-    // @reactVersion >=18.0
     it('should mark concurrent render with suspense that resolves', async () => {
       const fakeSuspensePromise = Promise.resolve(true);
       function Example() {
@@ -343,7 +337,6 @@ describe('Timeline profiler', () => {
         `);
     });
 
-    // @reactVersion >=18.0
     it('should mark concurrent render with suspense that rejects', async () => {
       const fakeSuspensePromise = Promise.reject(new Error('error'));
       function Example() {
@@ -395,7 +388,6 @@ describe('Timeline profiler', () => {
           `);
     });
 
-    // @reactVersion >=18.0
     it('should mark cascading class component state updates', () => {
       class Example extends React.Component {
         state = {didMount: false};
@@ -450,7 +442,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark cascading class component force updates', () => {
       class Example extends React.Component {
         componentDidMount() {
@@ -504,7 +495,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark render phase state updates for class component', () => {
       class Example extends React.Component {
         state = {didRender: false};
@@ -558,7 +548,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark render phase force updates for class component', () => {
       let forced = false;
       class Example extends React.Component {
@@ -613,7 +602,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark cascading layout updates', () => {
       function Example() {
         const [didMount, setDidMount] = React.useState(false);
@@ -668,7 +656,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark cascading passive updates', () => {
       function Example() {
         const [didMount, setDidMount] = React.useState(false);
@@ -718,7 +705,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark render phase updates', () => {
       function Example() {
         const [didRender, setDidRender] = React.useState(false);
@@ -753,7 +739,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark sync render that throws', async () => {
       spyOn(console, 'error');
 
@@ -816,7 +801,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark concurrent render that throws', async () => {
       spyOn(console, 'error');
 
@@ -897,7 +881,6 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    // @reactVersion >=18.0
     it('should mark passive and layout effects', async () => {
       function ComponentWithEffects() {
         React.useLayoutEffect(() => {
@@ -1034,7 +1017,6 @@ describe('Timeline profiler', () => {
     });
 
     describe('lane labels', () => {
-      // @reactVersion >=18.0
       it('regression test SyncLane', () => {
         renderHelper(<div />);
 
@@ -1056,7 +1038,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('regression test DefaultLane', () => {
         renderRootHelper(<div />);
         expect(clearedMarks).toMatchInlineSnapshot(`
@@ -1066,7 +1047,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('regression test InputDiscreteLane', async () => {
         const targetRef = React.createRef(null);
 
@@ -1108,7 +1088,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('regression test InputContinuousLane', async () => {
         const targetRef = React.createRef(null);
 
@@ -1205,7 +1184,6 @@ describe('Timeline profiler', () => {
         utils.act(() => store.profilerStore.startProfiling());
       });
 
-      // @reactVersion >=18.0
       it('should mark sync render without suspends or state updates', () => {
         renderHelper(<div />);
 
@@ -1222,7 +1200,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('should mark concurrent render without suspends or state updates', () => {
         utils.act(() => renderRootHelper(<div />));
 
@@ -1239,7 +1216,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('should mark concurrent render without suspends or state updates', () => {
         let updaterFn;
 
@@ -1586,7 +1562,6 @@ describe('Timeline profiler', () => {
         expect(timelineData.componentMeasures).toHaveLength(2);
       });
 
-      // @reactVersion >=18.0
       it('should mark cascading class component state updates', () => {
         class Example extends React.Component {
           state = {didMount: false};
@@ -1647,7 +1622,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('should mark cascading class component force updates', () => {
         let forced = false;
         class Example extends React.Component {
@@ -1705,7 +1679,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('should mark render phase state updates for class component', () => {
         class Example extends React.Component {
           state = {didRender: false};
@@ -1776,7 +1749,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('should mark render phase force updates for class component', () => {
         let forced = false;
         class Example extends React.Component {
@@ -1844,7 +1816,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('should mark cascading layout updates', () => {
         function Example() {
           const [didMount, setDidMount] = React.useState(false);
@@ -1909,7 +1880,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('should mark cascading passive updates', () => {
         function Example() {
           const [didMount, setDidMount] = React.useState(false);
@@ -1973,7 +1943,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('should mark render phase updates', () => {
         function Example() {
           const [didRender, setDidRender] = React.useState(false);
@@ -2023,7 +1992,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('should mark sync render that throws', async () => {
         spyOn(console, 'error');
 
@@ -2119,7 +2087,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('should mark concurrent render that throws', async () => {
         spyOn(console, 'error');
 
@@ -2240,7 +2207,6 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      // @reactVersion >=18.0
       it('should mark passive and layout effects', async () => {
         function ComponentWithEffects() {
           React.useLayoutEffect(() => {
