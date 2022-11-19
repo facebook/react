@@ -158,11 +158,21 @@ function Component$0(props$1) {
   const x$6 = {};
   x$6.b = b$3;
   const y$7 = mutate$8(x$6, d$5);
-  a$2;
-  b$3;
-  c$4;
-  d$5;
-  y$7;
+  bb1: if (a$2) {
+  }
+
+  bb3: if (b$3) {
+  }
+
+  bb5: if (c$4) {
+  }
+
+  bb7: if (d$5) {
+  }
+
+  bb9: if (y$7) {
+  }
+
   mutate$8(x$6, null);
   return;
 }

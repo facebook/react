@@ -72,6 +72,7 @@ describe("React Forget (HIR version)", () => {
             );
 
             const textHIR = printHIR(ir.body);
+            // const textHIR = visitTree(ir, new PrintVisitor());
             const visualization = visualizeHIRMermaid(ir);
             const text = prettier.format(
               generate(ast).code.replace("\n\n", "\n"),

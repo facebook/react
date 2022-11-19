@@ -234,10 +234,18 @@ function Component$0(props$1) {
     bb4: if (cond$8(a$2)) break;
   }
 
-  a$2;
-  b$3;
-  c$4;
-  d$5;
+  bb7: if (a$2) {
+  }
+
+  bb9: if (b$3) {
+  }
+
+  bb11: if (c$4) {
+  }
+
+  bb13: if (d$5) {
+  }
+
   mutate$7(d$5, null);
   return;
 }
