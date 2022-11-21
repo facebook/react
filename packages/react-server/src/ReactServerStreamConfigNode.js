@@ -96,7 +96,7 @@ function writeViewChunk(destination: Destination, chunk: PrecomputedChunk) {
   }
   if (chunk.byteLength > VIEW_SIZE) {
     if (__DEV__) {
-      if (precomputedChunkSet?.has(chunk)) {
+      if (precomputedChunkSet && precomputedChunkSet.has(chunk)) {
         console.error(
           'A large precomputed chunk was passed to writeChunk without being copied.' +
             ' Large chunks get enqueued directly and are not copied. This is incompatible with precomputed chunks because you cannot enqueue the same precomputed chunk twice.' +
@@ -200,7 +200,9 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   const precomputedChunk = textEncoder.encode(content);
 
   if (__DEV__) {
-    precomputedChunkSet?.add(precomputedChunk);
+    if (precomputedChunkSet) {
+      precomputedChunkSet.add(precomputedChunk);
+    }
   }
 
   return precomputedChunk;
