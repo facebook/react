@@ -79,22 +79,28 @@ jobs:
                 );
               }
             }
-      - name: Move relevant files into facebook-www
+      - name: Move relevant files into compiled
         run: |
-          mkdir -p ./facebook-www
-          mkdir -p ./facebook-www/babel-plugin-react-refresh
+          rm -rf ./compiled
+
+          mkdir -p ./compiled
+          mkdir -p ./compiled/facebook-www
+          mkdir -p ./compiled/babel-plugin-react-refresh
 
           mv build/facebook-www \
-            ./facebook-www
+            ./compiled/facebook-www
           mv build/WARNINGS \
-            ./facebook-www/WARNINGS
+            ./compiled/facebook-www/WARNINGS
           mv build/COMMIT_SHA \
-            ./facebook-www/COMMIT_SHA
+            ./compiled/facebook-www/COMMIT_SHA
           mv build/oss-stable/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
-            ./facebook-www/eslint-plugin-react-hooks.js
+            ./compiled/facebook-www/eslint-plugin-react-hooks.js
+          mv build/oss-stable/react-dom/unstable_server-external-runtime.js \
+            ./compiled/facebook-www/unstable_server-external-runtime.js
           mv build/oss-stable/react-refresh/cjs/react-refresh-babel.development.js \
-            ./facebook-www/babel-plugin-react-refresh/index.js
-          ls -R ./facebook-www
+            ./compiled/babel-plugin-react-refresh/index.js
+
+          ls -R ./compiled
       - uses: actions/upload-artifact@v3
         with:
           name: facebook-www
