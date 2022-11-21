@@ -99,7 +99,7 @@ function writeViewChunk(destination: Destination, chunk: PrecomputedChunk) {
       if (precomputedChunkSet?.has(chunk)) {
         console.error(
           'A large precomputed chunk was passed to writeChunk without being copied.' +
-            ' Large chunks get enqueued directly and are not copied however this is incompatible with precomputed chunks because you cannot enqueue the same precomputed chunk twice.' +
+            ' Large chunks get enqueued directly and are not copied. This is incompatible with precomputed chunks because you cannot enqueue the same precomputed chunk twice.' +
             ' Use "cloneChunk" to make a copy of this large precomputed chunk before writing it. This is a bug in React.',
         );
       }
