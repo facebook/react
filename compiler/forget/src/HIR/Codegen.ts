@@ -9,6 +9,7 @@ import * as t from "@babel/types";
 import { assertExhaustive } from "../Common/utils";
 import { invariant } from "../CompilerError";
 import {
+  GeneratedSource,
   HIRFunction,
   Identifier,
   IdentifierId,
@@ -17,9 +18,27 @@ import {
   InstructionValue,
   LValue,
   Place,
+  SourceLocation,
 } from "./HIR";
 import { BlockTerminal, Visitor, visitTree } from "./HIRTreeVisitor";
 import { todoInvariant } from "./todo";
+
+function withLoc<TNode extends t.Node, T extends (...args: any[]) => TNode>(
+  fn: T
+): (loc: SourceLocation, ...args: Parameters<T>) => ReturnType<T> {
+  return (loc: SourceLocation, ...args: Parameters<T>): ReturnType<T> => {
+    const node = fn(...args);
+    if (loc != GeneratedSource) {
+      node.loc = loc;
+    }
+    // @ts-ignore
+    return node;
+  };
+}
+
+const createFunctionDeclaration = withLoc(t.functionDeclaration);
+const createVariableDeclaration = withLoc(t.variableDeclaration);
+const createAssignmentExpression = withLoc(t.assignmentExpression);
 
 /**
  * Converts HIR into Babel nodes, which can then be printed into source text.
@@ -46,7 +65,8 @@ export default function codegen(fn: HIRFunction): t.Function {
   const body = visitTree(fn, visitor);
   invariant(t.isBlockStatement(body), "Expected a block statement");
   const params = fn.params.map((param) => convertIdentifier(param.identifier));
-  return t.functionDeclaration(
+  return createFunctionDeclaration(
+    fn.loc,
     fn.id !== null ? convertIdentifier(fn.id) : null,
     params,
     body,
@@ -101,13 +121,18 @@ class CodegenVisitor
           ]);
         }
         case InstructionKind.Let: {
-          return t.variableDeclaration("let", [
+          return createVariableDeclaration(instr.loc, "let", [
             t.variableDeclarator(codegenLVal(instr.lvalue), value),
           ]);
         }
         case InstructionKind.Reassign: {
           return t.expressionStatement(
-            t.assignmentExpression("=", codegenLVal(instr.lvalue), value)
+            createAssignmentExpression(
+              instr.loc,
+              "=",
+              codegenLVal(instr.lvalue),
+              value
+            )
           );
         }
         default: {

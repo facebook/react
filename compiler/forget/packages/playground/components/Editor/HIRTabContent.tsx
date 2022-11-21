@@ -38,7 +38,7 @@ export default function HIRTabContent({ source }: { source: string }) {
   });
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col h-full">
       <div className="flex-1">
         {astFunctions.map((func, index): React.ReactNode => {
           let body;
@@ -61,8 +61,6 @@ export default function HIRTabContent({ source }: { source: string }) {
 
             if (flags.codegen) {
               const ast = codegen(ir);
-              // TODO: codegen should set this correctly directly
-              ast.loc = func.node.loc;
               const generated = generate(
                 ast,
                 {
@@ -100,8 +98,8 @@ export default function HIRTabContent({ source }: { source: string }) {
           }
           const name = func.node.id?.name ?? "anonymous";
           return (
-            <div key={index} className="border-b py-4 px-2">
-              <h3 className="font-medium mb-2">Function: {name}</h3>
+            <div key={index} className="px-2 py-4 border-b">
+              <h3 className="mb-2 font-medium">Function: {name}</h3>
               {body}
             </div>
           );
