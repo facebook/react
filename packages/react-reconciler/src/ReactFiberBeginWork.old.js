@@ -16,13 +16,13 @@ import type {
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {Lanes, Lane} from './ReactFiberLane';
+import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {
   SuspenseState,
   SuspenseListRenderState,
   SuspenseListTailMode,
-} from './ReactFiberSuspenseComponent';
-import type {SuspenseContext} from './ReactFiberSuspenseContext';
+} from './ReactFiberSuspenseComponent.old';
+import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
 import type {
   OffscreenProps,
   OffscreenState,
@@ -34,17 +34,17 @@ import type {
   Cache,
   CacheComponentState,
   SpawnedCachePool,
-} from './ReactFiberCacheComponent';
-import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
-import type {RootState} from './ReactFiberRoot';
-import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
+} from './ReactFiberCacheComponent.old';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
+import type {RootState} from './ReactFiberRoot.old';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old';
 
 import checkPropTypes from 'shared/checkPropTypes';
 import {
   markComponentRenderStarted,
   markComponentRenderStopped,
   setIsStrictModeForDevtools,
-} from './ReactFiberDevToolsHook';
+} from './ReactFiberDevToolsHook.old';
 import {
   IndeterminateComponent,
   FunctionComponent,
@@ -113,7 +113,7 @@ import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import ReactStrictModeWarnings from './ReactStrictModeWarnings';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
@@ -123,19 +123,19 @@ import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
   resolveClassForHotReloading,
-} from './ReactFiberHotReloading';
+} from './ReactFiberHotReloading.old';
 
 import {
   mountChildFibers,
   reconcileChildFibers,
   cloneChildFibers,
-} from './ReactChildFiber';
+} from './ReactChildFiber.old';
 import {
   processUpdateQueue,
   cloneUpdateQueue,
   initializeUpdateQueue,
   enqueueCapturedUpdate,
-} from './ReactFiberClassUpdateQueue';
+} from './ReactFiberClassUpdateQueue.old';
 import {
   NoLane,
   NoLanes,
@@ -150,7 +150,7 @@ import {
   mergeLanes,
   getBumpedLaneForHydration,
   pickArbitraryLane,
-} from './ReactFiberLane';
+} from './ReactFiberLane.old';
 import {
   ConcurrentMode,
   NoMode,
@@ -171,7 +171,7 @@ import {
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
-import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
+import {pushHostContext, pushHostContainer} from './ReactFiberHostContext.old';
 import {
   suspenseStackCursor,
   pushSuspenseListContext,
@@ -184,12 +184,12 @@ import {
   pushOffscreenSuspenseHandler,
   reuseSuspenseHandlerOnStack,
   popSuspenseHandler,
-} from './ReactFiberSuspenseContext';
+} from './ReactFiberSuspenseContext.old';
 import {
   pushHiddenContext,
   reuseHiddenContextOnStack,
-} from './ReactFiberHiddenContext';
-import {findFirstSuspended} from './ReactFiberSuspenseComponent';
+} from './ReactFiberHiddenContext.old';
+import {findFirstSuspended} from './ReactFiberSuspenseComponent.old';
 import {
   pushProvider,
   propagateContextChange,
@@ -199,14 +199,14 @@ import {
   readContext,
   prepareToReadContext,
   scheduleContextWorkOnParentPath,
-} from './ReactFiberNewContext';
+} from './ReactFiberNewContext.old';
 import {
   renderWithHooks,
   checkDidRenderIdHook,
   bailoutHooks,
   replaySuspendedComponentWithHooks,
-} from './ReactFiberHooks';
-import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
+} from './ReactFiberHooks.old';
+import {stopProfilerTimerIfRunning} from './ReactProfilerTimer.old';
 import {
   getMaskedContext,
   getUnmaskedContext,
@@ -215,7 +215,7 @@ import {
   isContextProvider as isLegacyContextProvider,
   pushTopLevelContextObject,
   invalidateContextProvider,
-} from './ReactFiberContext';
+} from './ReactFiberContext.old';
 import {
   getIsHydrating,
   enterHydrationState,
@@ -225,15 +225,15 @@ import {
   tryToClaimNextHydratableInstance,
   warnIfHydrating,
   queueHydrationError,
-} from './ReactFiberHydrationContext';
+} from './ReactFiberHydrationContext.old';
 import {
   adoptClassInstance,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
   updateClassInstance,
-} from './ReactFiberClassComponent';
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
+} from './ReactFiberClassComponent.old';
+import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 import {
   resolveLazyComponentTag,
   createFiberFromTypeAndProps,
@@ -241,30 +241,30 @@ import {
   createFiberFromOffscreen,
   createWorkInProgress,
   isSimpleFunctionComponent,
-} from './ReactFiber';
+} from './ReactFiber.old';
 import {
   retryDehydratedSuspenseBoundary,
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
-} from './ReactFiberWorkLoop';
-import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
-import {setWorkInProgressVersion} from './ReactMutableSource';
-import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent';
+} from './ReactFiberWorkLoop.old';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.old';
+import {setWorkInProgressVersion} from './ReactMutableSource.old';
+import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent.old';
 import {
   createCapturedValue,
   createCapturedValueAtFiber,
   type CapturedValue,
 } from './ReactCapturedValue';
-import {createClassErrorUpdate} from './ReactFiberThrow';
+import {createClassErrorUpdate} from './ReactFiberThrow.old';
 import is from 'shared/objectIs';
 import {
   getForksAtLevel,
   isForkedChild,
   pushTreeId,
   pushMaterializedTreeId,
-} from './ReactFiberTreeContext';
+} from './ReactFiberTreeContext.old';
 import {
   requestCacheFromPool,
   pushRootTransition,
@@ -272,15 +272,23 @@ import {
   pushTransition,
   getOffscreenDeferredCache,
   getPendingTransitions,
-} from './ReactFiberTransition';
+} from './ReactFiberTransition.old';
 import {
   getMarkerInstances,
   pushMarkerInstance,
   pushRootMarkerInstance,
   TransitionTracingMarker,
-} from './ReactFiberTracingMarkerComponent';
+} from './ReactFiberTracingMarkerComponent.old';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+
+// A special exception that's used to unwind the stack when an update flows
+// into a dehydrated boundary.
+export const SelectiveHydrationException: mixed = new Error(
+  "This is not a real error. It's an implementation detail of React's " +
+    "selective hydration feature. If this leaks into userspace, it's a bug in " +
+    'React. Please file an issue.',
+);
 
 let didReceiveUpdate: boolean = false;
 
@@ -2866,6 +2874,16 @@ function updateDehydratedSuspenseComponent(
             attemptHydrationAtLane,
             eventTime,
           );
+
+          // Throw a special object that signals to the work loop that it should
+          // interrupt the current render.
+          //
+          // Because we're inside a React-only execution stack, we don't
+          // strictly need to throw here — we could instead modify some internal
+          // work loop state. But using an exception means we don't need to
+          // check for this case on every iteration of the work loop. So doing
+          // it this way moves the check out of the fast path.
+          throw SelectiveHydrationException;
         } else {
           // We have already tried to ping at a higher priority than we're rendering with
           // so if we got here, we must have failed to hydrate at those levels. We must
@@ -2876,15 +2894,17 @@ function updateDehydratedSuspenseComponent(
         }
       }
 
-      // If we have scheduled higher pri work above, this will just abort the render
-      // since we now have higher priority work. We'll try to infinitely suspend until
-      // we yield. TODO: We could probably just force yielding earlier instead.
-      renderDidSuspendDelayIfPossible();
-      // If we rendered synchronously, we won't yield so have to render something.
-      // This will cause us to delete any existing content.
+      // If we did not selectively hydrate, we'll continue rendering without
+      // hydrating. Mark this tree as suspended to prevent it from committing
+      // outside a transition.
+      //
+      // This path should only happen if the hydration lane already suspended.
+      // Currently, it also happens during sync updates because there is no
+      // hydration lane for sync updates.
       // TODO: We should ideally have a sync hydration lane that we can apply to do
       // a pass where we hydrate this subtree in place using the previous Context and then
       // reapply the update afterwards.
+      renderDidSuspendDelayIfPossible();
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,

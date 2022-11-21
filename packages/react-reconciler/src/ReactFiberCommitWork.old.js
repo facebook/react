@@ -153,7 +153,6 @@ import {
   clearSingleton,
   acquireSingletonInstance,
   releaseSingletonInstance,
-  scheduleMicrotask,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -2416,26 +2415,16 @@ export function detachOffscreenInstance(instance: OffscreenInstance): void {
     );
   }
 
-  if ((instance._visibility & OffscreenDetached) !== NoFlags) {
+  if ((instance._pendingVisibility & OffscreenDetached) !== NoFlags) {
     // The instance is already detached, this is a noop.
     return;
   }
 
-  instance._pendingVisibility |= OffscreenDetached;
-
-  // Detaching needs to be postoned in case attach is called before next update.
-  scheduleMicrotask(() => {
-    if ((instance._pendingVisibility & OffscreenDetached) === NoFlags) {
-      // Attach was called. Offscreen does not need to be detached.
-      return;
-    }
-
-    instance._visibility |= OffscreenDetached;
-    const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
-    if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
-    }
-  });
+  const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+  if (root !== null) {
+    instance._pendingVisibility |= OffscreenDetached;
+    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+  }
 }
 
 export function attachOffscreenInstance(instance: OffscreenInstance): void {
@@ -2446,16 +2435,14 @@ export function attachOffscreenInstance(instance: OffscreenInstance): void {
     );
   }
 
-  instance._pendingVisibility &= ~OffscreenDetached;
-
-  if ((instance._visibility & OffscreenDetached) === NoFlags) {
+  if ((instance._pendingVisibility & OffscreenDetached) === NoFlags) {
     // The instance is already attached, this is a noop.
     return;
   }
 
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
   if (root !== null) {
-    instance._visibility &= ~OffscreenDetached;
+    instance._pendingVisibility &= ~OffscreenDetached;
     scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
   }
 }

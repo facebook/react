@@ -1663,8 +1663,8 @@ describe('ReactOffscreen', () => {
 
       nextRenderTriggerDetach = true;
 
-      // Offscreen is attached. State updates from offscreen are **not defered**.
-      // Offscreen is detached inside useLayoutEffect;
+      // Offscreen is attached and gets detached inside useLayoutEffect.
+      // State updates from offscreen are **defered**.
       await act(async () => {
         updateChildState(1);
         updateHighPriorityComponentState(1);
@@ -1672,34 +1672,20 @@ describe('ReactOffscreen', () => {
           'HighPriorityComponent 1',
           'Child 1',
           'HighPriorityComponent 2',
-          'Child 2',
         ]);
         expect(root).toMatchRenderedOutput(
           <>
             <span prop="HighPriorityComponent 2" />
-            <span prop="Child 2" />
+            <span prop="Child 1" />
           </>,
         );
       });
 
-      // Offscreen is detached. State updates from offscreen are **defered**.
-      await act(async () => {
-        updateChildState(3);
-        updateHighPriorityComponentState(3);
-        expect(Scheduler).toFlushUntilNextPaint(['HighPriorityComponent 3']);
-        expect(root).toMatchRenderedOutput(
-          <>
-            <span prop="HighPriorityComponent 3" />
-            <span prop="Child 2" />
-          </>,
-        );
-      });
-
-      expect(Scheduler).toHaveYielded(['Child 3']);
+      expect(Scheduler).toHaveYielded(['Child 2']);
       expect(root).toMatchRenderedOutput(
         <>
-          <span prop="HighPriorityComponent 3" />
-          <span prop="Child 3" />
+          <span prop="HighPriorityComponent 2" />
+          <span prop="Child 2" />
         </>,
       );
 
@@ -1708,16 +1694,16 @@ describe('ReactOffscreen', () => {
       // Offscreen is detached. State updates from offscreen are **defered**.
       // Offscreen is attached inside useLayoutEffect;
       await act(async () => {
-        updateChildState(4);
-        updateHighPriorityComponentState(4);
+        updateChildState(3);
+        updateHighPriorityComponentState(3);
         expect(Scheduler).toFlushUntilNextPaint([
-          'HighPriorityComponent 4',
-          'Child 4',
+          'HighPriorityComponent 3',
+          'Child 3',
         ]);
         expect(root).toMatchRenderedOutput(
           <>
-            <span prop="HighPriorityComponent 4" />
-            <span prop="Child 4" />
+            <span prop="HighPriorityComponent 3" />
+            <span prop="Child 3" />
           </>,
         );
       });
@@ -2043,7 +2029,7 @@ describe('ReactOffscreen', () => {
       instance.detach();
     });
 
-    expect(Scheduler).toHaveYielded(['attach child', 'detach child']);
+    expect(Scheduler).toHaveYielded([]);
   });
 
   // @gate enableOffscreen
