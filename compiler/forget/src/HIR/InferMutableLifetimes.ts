@@ -7,7 +7,8 @@
 
 import invariant from "invariant";
 import { assertExhaustive } from "../Common/utils";
-import { Effect, HIRFunction, Instruction, Place } from "./HIR";
+import DisjointSet from "./DisjointSet";
+import { Effect, HIRFunction, Identifier, Instruction, Place } from "./HIR";
 import { printInstruction, printPlace } from "./PrintHIR";
 import { eachInstructionOperand } from "./visitors";
 
@@ -76,6 +77,8 @@ function inferPlace(place: Place, instr: Instruction) {
 }
 
 export function inferMutableRanges(func: HIRFunction) {
+  const aliases = new DisjointSet<Identifier>();
+
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       let start = Number.MAX_SAFE_INTEGER;
@@ -100,6 +103,20 @@ export function inferMutableRanges(func: HIRFunction) {
       }
 
       if (instr.lvalue !== null) {
+        if (instr.value.kind === "Identifier") {
+          // TODO(gsn): Handle complex aliasing.
+          if (
+            instr.value.memberPath === null &&
+            instr.lvalue.place.memberPath === null
+          ) {
+            // direct aliasing: `a = b`;
+            aliases.union([
+              instr.lvalue.place.identifier,
+              instr.value.identifier,
+            ]);
+          }
+        }
+
         if (instr.lvalue.place.memberPath === null) {
           const lvalueId = instr.lvalue.place.identifier;
 
@@ -113,6 +130,47 @@ export function inferMutableRanges(func: HIRFunction) {
         } else {
           inferPlace(instr.lvalue.place, instr);
         }
+      }
+    }
+  }
+
+  const aliasIds: Map<Identifier, number> = new Map();
+  // Store the mutable range and set of identifiers for each scope
+  const aliasIndentifiers: Map<
+    number,
+    { end: number; identifiers: Set<Identifier> }
+  > = new Map();
+
+  aliases.forEach((identifier, groupIdentifier) => {
+    let aliasId = aliasIds.get(groupIdentifier);
+    if (aliasId == null) {
+      aliasId = aliasIds.size;
+      aliasIds.set(groupIdentifier, aliasId);
+    }
+
+    let alias = aliasIndentifiers.get(aliasId);
+    if (alias === undefined) {
+      alias = {
+        end: identifier.mutableRange.end,
+        identifiers: new Set(),
+      };
+      aliasIndentifiers.set(aliasId, alias);
+    } else {
+      alias.end = Math.max(alias.end, identifier.mutableRange.end);
+    }
+    alias.identifiers.add(identifier);
+  });
+
+  for (const [_, alias] of aliasIndentifiers) {
+    // Update mutableRange.end only if the identifiers have actually been
+    // mutated.
+    const haveIdentifiersBeenMutated = [...alias.identifiers].some(
+      (id) => id.mutableRange.end > id.mutableRange.start
+    );
+
+    if (haveIdentifiersBeenMutated) {
+      for (const identifier of alias.identifiers) {
+        identifier.mutableRange.end = alias.end;
       }
     }
   }

@@ -101,20 +101,20 @@ function cond$0(x$1) {
 bb0:
   [1] Let mutate a$2_@0[0:14] = Object {  }
   [2] Let mutate b$3_@0[0:14] = Object {  }
-  [3] Let mutate c$4_@1[0:9] = Object {  }
+  [3] Let mutate c$4_@0[0:14] = Object {  }
   [4] Let mutate d$5_@0[0:14] = Object {  }
   While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb4
-  [5] Const mutate $10_@2 = true
-  If (read $10_@2) then:bb3 else:bb2
+  [5] Const mutate $10_@1 = true
+  If (read $10_@1) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  [6] Let mutate z$6_@3 = read a$2_@0
+  [6] Let mutate z$6_@0[0:14] = read a$2_@0
   [7] Reassign mutate a$2_@0[0:14] = read b$3_@0
-  [8] Reassign mutate b$3_@0[0:14] = read c$4_@1
-  [9] Reassign mutate c$4_@1[0:9] = read d$5_@0
-  [10] Reassign mutate d$5_@0[0:14] = read z$6_@3
+  [8] Reassign mutate b$3_@0[0:14] = read c$4_@0
+  [9] Reassign mutate c$4_@0[0:14] = read d$5_@0
+  [10] Reassign mutate d$5_@0[0:14] = read z$6_@0
   [11] Call mutate mutate$7_@0(mutate a$2_@0, mutate b$3_@0)
   [12] Const mutate $9_@0[0:14] = Call mutate cond$8_@0(mutate a$2_@0)
   If (read $9_@0) then:bb2 else:bb4
@@ -129,14 +129,14 @@ bb7:
   If (read b$3_@0) then:bb9 else:bb9
 bb9:
   predecessor blocks: bb7
-  If (read c$4_@1) then:bb11 else:bb11
+  If (read c$4_@0) then:bb11 else:bb11
 bb11:
   predecessor blocks: bb9
   If (read d$5_@0) then:bb13 else:bb13
 bb13:
   predecessor blocks: bb11
-  [13] Const mutate $11_@4 = null
-  [14] Call mutate mutate$7_@0(mutate d$5_@0, read $11_@4)
+  [13] Const mutate $11_@2 = null
+  [14] Call mutate mutate$7_@0(mutate d$5_@0, read $11_@2)
   Return
 ```
 
@@ -149,24 +149,24 @@ flowchart TB
     bb0_instrs["
       [1] Let mutate a$2_@0[0:14] = Object {  }
       [2] Let mutate b$3_@0[0:14] = Object {  }
-      [3] Let mutate c$4_@1[0:9] = Object {  }
+      [3] Let mutate c$4_@0[0:14] = Object {  }
       [4] Let mutate d$5_@0[0:14] = Object {  }
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
   subgraph bb1
     bb1_instrs["
-      [5] Const mutate $10_@2 = true
+      [5] Const mutate $10_@1 = true
     "]
-    bb1_instrs --> bb1_terminal(["If (read $10_@2)"])
+    bb1_instrs --> bb1_terminal(["If (read $10_@1)"])
   end
   subgraph bb3
     bb3_instrs["
-      [6] Let mutate z$6_@3 = read a$2_@0
+      [6] Let mutate z$6_@0[0:14] = read a$2_@0
       [7] Reassign mutate a$2_@0[0:14] = read b$3_@0
-      [8] Reassign mutate b$3_@0[0:14] = read c$4_@1
-      [9] Reassign mutate c$4_@1[0:9] = read d$5_@0
-      [10] Reassign mutate d$5_@0[0:14] = read z$6_@3
+      [8] Reassign mutate b$3_@0[0:14] = read c$4_@0
+      [9] Reassign mutate c$4_@0[0:14] = read d$5_@0
+      [10] Reassign mutate d$5_@0[0:14] = read z$6_@0
       [11] Call mutate mutate$7_@0(mutate a$2_@0, mutate b$3_@0)
       [12] Const mutate $9_@0[0:14] = Call mutate cond$8_@0(mutate a$2_@0)
     "]
@@ -182,15 +182,15 @@ flowchart TB
     bb7_terminal(["If (read b$3_@0)"])
   end
   subgraph bb9
-    bb9_terminal(["If (read c$4_@1)"])
+    bb9_terminal(["If (read c$4_@0)"])
   end
   subgraph bb11
     bb11_terminal(["If (read d$5_@0)"])
   end
   subgraph bb13
     bb13_instrs["
-      [13] Const mutate $11_@4 = null
-      [14] Call mutate mutate$7_@0(mutate d$5_@0, read $11_@4)
+      [13] Const mutate $11_@2 = null
+      [14] Call mutate mutate$7_@0(mutate d$5_@0, read $11_@2)
     "]
     bb13_instrs --> bb13_terminal(["Return"])
   end
