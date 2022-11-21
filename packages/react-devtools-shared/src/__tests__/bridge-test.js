@@ -21,6 +21,8 @@ describe('Bridge', () => {
       send: jest.fn(),
     };
     const bridge = new Bridge(wall);
+    const shutdownCallback = jest.fn();
+    bridge.addListener('shutdown', shutdownCallback);
 
     // Check that we're wired up correctly.
     bridge.send('reloadAppForProfiling');
@@ -35,7 +37,7 @@ describe('Bridge', () => {
     jest.runAllTimers();
     expect(wall.send).toHaveBeenCalledWith('update', '1');
     expect(wall.send).toHaveBeenCalledWith('update', '2');
-    expect(wall.emit).toHaveBeenCalledWith('shutdown');
+    expect(shutdownCallback).toHaveBeenCalledTimes(1);
 
     // Verify that the Bridge doesn't send messages after shutdown.
     spyOn(console, 'warn');
