@@ -49,7 +49,9 @@ export function writeChunk(
     if (__DEV__) {
       if (precomputedChunkSet?.has(chunk)) {
         console.error(
-          'A precomputed chunk was passed to writeChunk without being copied, please use .slice() to copy it first.',
+          'A large precomputed chunk was passed to writeChunk without being copied.' +
+            ' Large chunks get enqueued directly and are not copied however this is incompatible with precomputed chunks because you cannot enqueue the same precomputed chunk twice.' +
+            ' Use "cloneChunk" to make a copy of this large precomputed chunk before writing it. This is a bug in React.',
         );
       }
     }
@@ -139,7 +141,9 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
 export function clonePrecomputedChunk(
   precomputedChunk: PrecomputedChunk,
 ): PrecomputedChunk {
-  return precomputedChunk.slice();
+  return precomputedChunk.length > VIEW_SIZE
+    ? precomputedChunk.slice()
+    : precomputedChunk;
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
