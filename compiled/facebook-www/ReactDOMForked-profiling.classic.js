@@ -16307,7 +16307,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1847 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-a33594bba-20221121",
+  version: "18.3.0-www-classic-799ee6534-20221121",
   rendererPackageName: "react-dom"
 };
 (function(internals) {
@@ -16351,7 +16351,7 @@ var devToolsConfig$jscomp$inline_1847 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-a33594bba-20221121"
+  reconcilerVersion: "18.3.0-next-799ee6534-20221121"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -16581,7 +16581,7 @@ exports.unstable_renderSubtreeIntoContainer = function(
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-a33594bba-20221121";
+exports.version = "18.3.0-next-799ee6534-20221121";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
