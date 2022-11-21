@@ -9,6 +9,7 @@
 
 import type {Writable} from 'stream';
 import {TextEncoder} from 'util';
+import {AsyncLocalStorage} from 'async_hooks';
 
 interface MightBeFlushable {
   flush?: () => void;
@@ -17,7 +18,7 @@ interface MightBeFlushable {
 export type Destination = Writable & MightBeFlushable;
 
 export type PrecomputedChunk = Uint8Array;
-export type Chunk = string;
+export opaque type Chunk = string;
 
 export function scheduleWork(callback: () => void) {
   setImmediate(callback);
@@ -32,6 +33,11 @@ export function flushBuffered(destination: Destination) {
     destination.flush();
   }
 }
+
+export const supportsRequestStorage = true;
+export const requestStorage: AsyncLocalStorage<
+  Map<Function, mixed>,
+> = new AsyncLocalStorage();
 
 const VIEW_SIZE = 2048;
 let currentView = null;

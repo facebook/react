@@ -15,11 +15,7 @@ import type {
   ChildSet,
   UpdatePayload,
 } from './ReactFiberHostConfig';
-import type {
-  Fiber,
-  FiberRoot,
-  EventFunctionWrapper,
-} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
@@ -689,13 +685,9 @@ function commitUseEventMount(finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const eventPayloads = updateQueue !== null ? updateQueue.events : null;
   if (eventPayloads !== null) {
-    // FunctionComponentUpdateQueue.events is a flat array of
-    // [EventFunctionWrapper, EventFunction, ...], so increment by 2 each iteration to find the next
-    // pair.
-    for (let ii = 0; ii < eventPayloads.length; ii += 2) {
-      const eventFn: EventFunctionWrapper<any, any, any> = eventPayloads[ii];
-      const nextImpl = eventPayloads[ii + 1];
-      eventFn._impl = nextImpl;
+    for (let ii = 0; ii < eventPayloads.length; ii++) {
+      const {ref, nextImpl} = eventPayloads[ii];
+      ref.impl = nextImpl;
     }
   }
 }
@@ -2065,7 +2057,9 @@ function commitDeletionEffectsOnFiber(
           nearestMountedAncestor,
           deletedFiber,
         );
-        releaseResource(deletedFiber.memoizedState);
+        if (deletedFiber.memoizedState) {
+          releaseResource(deletedFiber.memoizedState);
+        }
         return;
       }
     }
@@ -2875,7 +2869,6 @@ function commitMutationEffectsOnFiber(
 
       if (flags & Visibility) {
         const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
-        const offscreenBoundary: Fiber = finishedWork;
 
         // Track the current state on the Offscreen instance so we can
         // read it during an event
@@ -2886,10 +2879,17 @@ function commitMutationEffectsOnFiber(
         }
 
         if (isHidden) {
-          if (!wasHidden) {
-            if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
+          const isUpdate = current !== null;
+          const wasHiddenByAncestorOffscreen =
+            offscreenSubtreeIsHidden || offscreenSubtreeWasHidden;
+          // Only trigger disapper layout effects if:
+          //   - This is an update, not first mount.
+          //   - This Offscreen was not hidden before.
+          //   - Ancestor Offscreen was not hidden in previous commit.
+          if (isUpdate && !wasHidden && !wasHiddenByAncestorOffscreen) {
+            if ((finishedWork.mode & ConcurrentMode) !== NoMode) {
               // Disappear the layout effects of all the children
-              recursivelyTraverseDisappearLayoutEffects(offscreenBoundary);
+              recursivelyTraverseDisappearLayoutEffects(finishedWork);
             }
           }
         } else {
@@ -2902,7 +2902,7 @@ function commitMutationEffectsOnFiber(
         if (supportsMutation && !isOffscreenManual(finishedWork)) {
           // TODO: This needs to run whenever there's an insertion or update
           // inside a hidden Offscreen tree.
-          hideOrUnhideAllChildren(offscreenBoundary, isHidden);
+          hideOrUnhideAllChildren(finishedWork, isHidden);
         }
       }
 

@@ -22,7 +22,6 @@ import type {
   Dispatcher,
   HookType,
   MemoCache,
-  EventFunctionWrapper,
 } from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {HookFlags} from './ReactHookEffectTags';
@@ -41,6 +40,8 @@ import {
   enableUseHook,
   enableUseMemoCacheHook,
   enableUseEventHook,
+  enableLegacyCache,
+  debugRenderPhaseSideEffectsForStrictMode,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -53,6 +54,7 @@ import {
   ConcurrentMode,
   DebugTracingMode,
   StrictEffectsMode,
+  StrictLegacyMode,
 } from './ReactTypeOfMode';
 import {
   NoLane,
@@ -120,7 +122,10 @@ import {
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource.old';
 import {logStateUpdateScheduled} from './DebugTracing';
-import {markStateUpdateScheduled} from './ReactFiberDevToolsHook.old';
+import {
+  markStateUpdateScheduled,
+  setIsStrictModeForDevtools,
+} from './ReactFiberDevToolsHook.old';
 import {createCache} from './ReactFiberCacheComponent.old';
 import {
   createUpdate as createLegacyQueueUpdate,
@@ -136,8 +141,10 @@ import {getTreeId} from './ReactFiberTreeContext.old';
 import {now} from './Scheduler';
 import {
   trackUsedThenable,
-  getPreviouslyUsedThenableAtIndex,
-} from './ReactFiberWakeable.old';
+  checkIfUseWrappedInTryCatch,
+  createThenableState,
+} from './ReactFiberThenable.old';
+import type {ThenableState} from './ReactFiberThenable.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -159,8 +166,10 @@ export type UpdateQueue<S, A> = {
 
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnUncachedGetSnapshot;
+let didWarnAboutUseWrappedInTryCatch;
 if (__DEV__) {
   didWarnAboutMismatchedHooksForComponent = new Set();
+  didWarnAboutUseWrappedInTryCatch = new Set();
 }
 
 export type Hook = {
@@ -189,9 +198,17 @@ type StoreConsistencyCheck<T> = {
   getSnapshot: () => T,
 };
 
+type EventFunctionPayload<Args, Return, F: (...Array<Args>) => Return> = {
+  ref: {
+    eventFn: F,
+    impl: F,
+  },
+  nextImpl: F,
+};
+
 export type FunctionComponentUpdateQueue = {
   lastEffect: Effect | null,
-  events: Array<() => mixed> | null,
+  events: Array<EventFunctionPayload<any, any, any>> | null,
   stores: Array<StoreConsistencyCheck<any>> | null,
   // NOTE: optional, only set when enableUseMemoCacheHook is enabled
   memoCache?: MemoCache | null,
@@ -224,10 +241,12 @@ let didScheduleRenderPhaseUpdate: boolean = false;
 // TODO: Maybe there's some way to consolidate this with
 // `didScheduleRenderPhaseUpdate`. Or with `numberOfReRenders`.
 let didScheduleRenderPhaseUpdateDuringThisPass: boolean = false;
+let shouldDoubleInvokeUserFnsInHooksDEV: boolean = false;
 // Counts the number of useId hooks in this component.
 let localIdCounter: number = 0;
 // Counts number of `use`-d thenables
 let thenableIndexCounter: number = 0;
+let thenableState: ThenableState | null = null;
 
 // Used for ids that are generated completely client-side (i.e. not during
 // hydration). This counter is global, so client ids are not stable across
@@ -430,6 +449,7 @@ export function renderWithHooks<Props, SecondArg>(
   // didScheduleRenderPhaseUpdate = false;
   // localIdCounter = 0;
   // thenableIndexCounter = 0;
+  // thenableState = null;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
   // Currently we will identify the update render as a mount because memoizedState === null.
@@ -458,51 +478,74 @@ export function renderWithHooks<Props, SecondArg>(
         : HooksDispatcherOnUpdate;
   }
 
+  // In Strict Mode, during development, user functions are double invoked to
+  // help detect side effects. The logic for how this is implemented for in
+  // hook components is a bit complex so let's break it down.
+  //
+  // We will invoke the entire component function twice. However, during the
+  // second invocation of the component, the hook state from the first
+  // invocation will be reused. That means things like `useMemo` functions won't
+  // run again, because the deps will match and the memoized result will
+  // be reused.
+  //
+  // We want memoized functions to run twice, too, so account for this, user
+  // functions are double invoked during the *first* invocation of the component
+  // function, and are *not* double invoked during the second incovation:
+  //
+  // - First execution of component function: user functions are double invoked
+  // - Second execution of component function (in Strict Mode, during
+  //   development): user functions are not double invoked.
+  //
+  // This is intentional for a few reasons; most importantly, it's because of
+  // how `use` works when something suspends: it reuses the promise that was
+  // passed during the first attempt. This is itself a form of memoization.
+  // We need to be able to memoize the reactive inputs to the `use` call using
+  // a hook (i.e. `useMemo`), which means, the reactive inputs to `use` must
+  // come from the same component invocation as the output.
+  //
+  // There are plenty of tests to ensure this behavior is correct.
+  const shouldDoubleRenderDEV =
+    __DEV__ &&
+    debugRenderPhaseSideEffectsForStrictMode &&
+    (workInProgress.mode & StrictLegacyMode) !== NoMode;
+
+  shouldDoubleInvokeUserFnsInHooksDEV = shouldDoubleRenderDEV;
   let children = Component(props, secondArg);
+  shouldDoubleInvokeUserFnsInHooksDEV = false;
 
   // Check if there was a render phase update
   if (didScheduleRenderPhaseUpdateDuringThisPass) {
-    // Keep rendering in a loop for as long as render phase updates continue to
-    // be scheduled. Use a counter to prevent infinite loops.
-    let numberOfReRenders: number = 0;
-    do {
-      didScheduleRenderPhaseUpdateDuringThisPass = false;
-      localIdCounter = 0;
-      thenableIndexCounter = 0;
-
-      if (numberOfReRenders >= RE_RENDER_LIMIT) {
-        throw new Error(
-          'Too many re-renders. React limits the number of renders to prevent ' +
-            'an infinite loop.',
-        );
-      }
-
-      numberOfReRenders += 1;
-      if (__DEV__) {
-        // Even when hot reloading, allow dependencies to stabilize
-        // after first render to prevent infinite render phase updates.
-        ignorePreviousDependencies = false;
-      }
-
-      // Start over from the beginning of the list
-      currentHook = null;
-      workInProgressHook = null;
-
-      workInProgress.updateQueue = null;
-
-      if (__DEV__) {
-        // Also validate hook order for cascading updates.
-        hookTypesUpdateIndexDev = -1;
-      }
-
-      ReactCurrentDispatcher.current = __DEV__
-        ? HooksDispatcherOnRerenderInDEV
-        : HooksDispatcherOnRerender;
-
-      children = Component(props, secondArg);
-    } while (didScheduleRenderPhaseUpdateDuringThisPass);
+    // Keep rendering until the component stabilizes (there are no more render
+    // phase updates).
+    children = renderWithHooksAgain(
+      workInProgress,
+      Component,
+      props,
+      secondArg,
+    );
   }
 
+  if (shouldDoubleRenderDEV) {
+    // In development, components are invoked twice to help detect side effects.
+    setIsStrictModeForDevtools(true);
+    try {
+      children = renderWithHooksAgain(
+        workInProgress,
+        Component,
+        props,
+        secondArg,
+      );
+    } finally {
+      setIsStrictModeForDevtools(false);
+    }
+  }
+
+  finishRenderingHooks(current, workInProgress);
+
+  return children;
+}
+
+function finishRenderingHooks(current: Fiber | null, workInProgress: Fiber) {
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
@@ -552,7 +595,9 @@ export function renderWithHooks<Props, SecondArg>(
   didScheduleRenderPhaseUpdate = false;
   // This is reset by checkDidRenderIdHook
   // localIdCounter = 0;
+
   thenableIndexCounter = 0;
+  thenableState = null;
 
   if (didRenderTooFewHooks) {
     throw new Error(
@@ -581,6 +626,111 @@ export function renderWithHooks<Props, SecondArg>(
       }
     }
   }
+
+  if (__DEV__) {
+    if (checkIfUseWrappedInTryCatch()) {
+      const componentName =
+        getComponentNameFromFiber(workInProgress) || 'Unknown';
+      if (!didWarnAboutUseWrappedInTryCatch.has(componentName)) {
+        didWarnAboutUseWrappedInTryCatch.add(componentName);
+        console.error(
+          '`use` was called from inside a try/catch block. This is not allowed ' +
+            'and can lead to unexpected behavior. To handle errors triggered ' +
+            'by `use`, wrap your component in a error boundary.',
+        );
+      }
+    }
+  }
+}
+
+export function replaySuspendedComponentWithHooks<Props, SecondArg>(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: (p: Props, arg: SecondArg) => any,
+  props: Props,
+  secondArg: SecondArg,
+): any {
+  // This function is used to replay a component that previously suspended,
+  // after its data resolves.
+  //
+  // It's a simplified version of renderWithHooks, but it doesn't need to do
+  // most of the set up work because they weren't reset when we suspended; they
+  // only get reset when the component either completes (finishRenderingHooks)
+  // or unwinds (resetHooksOnUnwind).
+  if (__DEV__) {
+    hookTypesDev =
+      current !== null
+        ? ((current._debugHookTypes: any): Array<HookType>)
+        : null;
+    hookTypesUpdateIndexDev = -1;
+    // Used for hot reloading:
+    ignorePreviousDependencies =
+      current !== null && current.type !== workInProgress.type;
+  }
+  const children = renderWithHooksAgain(
+    workInProgress,
+    Component,
+    props,
+    secondArg,
+  );
+  finishRenderingHooks(current, workInProgress);
+  return children;
+}
+
+function renderWithHooksAgain<Props, SecondArg>(
+  workInProgress: Fiber,
+  Component: (p: Props, arg: SecondArg) => any,
+  props: Props,
+  secondArg: SecondArg,
+) {
+  // This is used to perform another render pass. It's used when setState is
+  // called during render, and for double invoking components in Strict Mode
+  // during development.
+  //
+  // The state from the previous pass is reused whenever possible. So, state
+  // updates that were already processed are not processed again, and memoized
+  // functions (`useMemo`) are not invoked again.
+  //
+  // Keep rendering in a loop for as long as render phase updates continue to
+  // be scheduled. Use a counter to prevent infinite loops.
+  let numberOfReRenders: number = 0;
+  let children;
+  do {
+    didScheduleRenderPhaseUpdateDuringThisPass = false;
+    localIdCounter = 0;
+    thenableIndexCounter = 0;
+
+    if (numberOfReRenders >= RE_RENDER_LIMIT) {
+      throw new Error(
+        'Too many re-renders. React limits the number of renders to prevent ' +
+          'an infinite loop.',
+      );
+    }
+
+    numberOfReRenders += 1;
+    if (__DEV__) {
+      // Even when hot reloading, allow dependencies to stabilize
+      // after first render to prevent infinite render phase updates.
+      ignorePreviousDependencies = false;
+    }
+
+    // Start over from the beginning of the list
+    currentHook = null;
+    workInProgressHook = null;
+
+    workInProgress.updateQueue = null;
+
+    if (__DEV__) {
+      // Also validate hook order for cascading updates.
+      hookTypesUpdateIndexDev = -1;
+    }
+
+    ReactCurrentDispatcher.current = __DEV__
+      ? HooksDispatcherOnRerenderInDEV
+      : HooksDispatcherOnRerender;
+
+    children = Component(props, secondArg);
+  } while (didScheduleRenderPhaseUpdateDuringThisPass);
   return children;
 }
 
@@ -615,10 +765,19 @@ export function bailoutHooks(
 }
 
 export function resetHooksAfterThrow(): void {
+  // This is called immediaetly after a throw. It shouldn't reset the entire
+  // module state, because the work loop might decide to replay the component
+  // again without rewinding.
+  //
+  // It should only reset things like the current dispatcher, to prevent hooks
+  // from being called outside of a component.
+
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
+}
 
+export function resetHooksOnUnwind(): void {
   if (didScheduleRenderPhaseUpdate) {
     // There were render phase updates. These are only valid for this render
     // phase, which we are now aborting. Remove the updates from the queues so
@@ -650,13 +809,12 @@ export function resetHooksAfterThrow(): void {
     hookTypesUpdateIndexDev = -1;
 
     currentHookNameInDev = null;
-
-    isUpdatingOpaqueValueInRenderPhase = false;
   }
 
   didScheduleRenderPhaseUpdateDuringThisPass = false;
   localIdCounter = 0;
   thenableIndexCounter = 0;
+  thenableState = null;
 }
 
 function mountWorkInProgressHook(): Hook {
@@ -715,7 +873,24 @@ function updateWorkInProgressHook(): Hook {
     // Clone from the current hook.
 
     if (nextCurrentHook === null) {
-      throw new Error('Rendered more hooks than during the previous render.');
+      const currentFiber = currentlyRenderingFiber.alternate;
+      if (currentFiber === null) {
+        // This is the initial render. This branch is reached when the component
+        // suspends, resumes, then renders an additional hook.
+        const newHook: Hook = {
+          memoizedState: null,
+
+          baseState: null,
+          baseQueue: null,
+          queue: null,
+
+          next: null,
+        };
+        nextCurrentHook = newHook;
+      } else {
+        // This is an update. We should always have a current hook.
+        throw new Error('Rendered more hooks than during the previous render.');
+      }
     }
 
     currentHook = nextCurrentHook;
@@ -774,52 +949,10 @@ function use<T>(usable: Usable<T>): T {
       const index = thenableIndexCounter;
       thenableIndexCounter += 1;
 
-      switch (thenable.status) {
-        case 'fulfilled': {
-          const fulfilledValue: T = thenable.value;
-          return fulfilledValue;
-        }
-        case 'rejected': {
-          const rejectedError = thenable.reason;
-          throw rejectedError;
-        }
-        default: {
-          const prevThenableAtIndex: Thenable<T> | null = getPreviouslyUsedThenableAtIndex(
-            index,
-          );
-          if (prevThenableAtIndex !== null) {
-            switch (prevThenableAtIndex.status) {
-              case 'fulfilled': {
-                const fulfilledValue: T = prevThenableAtIndex.value;
-                return fulfilledValue;
-              }
-              case 'rejected': {
-                const rejectedError: mixed = prevThenableAtIndex.reason;
-                throw rejectedError;
-              }
-              default: {
-                // The thenable still hasn't resolved. Suspend with the same
-                // thenable as last time to avoid redundant listeners.
-                throw prevThenableAtIndex;
-              }
-            }
-          } else {
-            // This is the first time something has been used at this index.
-            // Stash the thenable at the current index so we can reuse it during
-            // the next attempt.
-            trackUsedThenable(thenable, index);
-
-            // Suspend.
-            // TODO: Throwing here is an implementation detail that allows us to
-            // unwind the call stack. But we shouldn't allow it to leak into
-            // userspace. Throw an opaque placeholder value instead of the
-            // actual thenable. If it doesn't get captured by the work loop, log
-            // a warning, because that means something in userspace must have
-            // caught it.
-            throw thenable;
-          }
-        }
+      if (thenableState === null) {
+        thenableState = createThenableState();
       }
+      return trackUsedThenable(thenableState, thenable, index);
     } else if (
       usable.$$typeof === REACT_CONTEXT_TYPE ||
       usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
@@ -1037,12 +1170,15 @@ function updateReducer<S, I, A>(
         }
 
         // Process this update.
+        const action = update.action;
+        if (shouldDoubleInvokeUserFnsInHooksDEV) {
+          reducer(newState, action);
+        }
         if (update.hasEagerState) {
           // If this update is a state update (not a reducer) and was processed eagerly,
           // we can use the eagerly computed state
           newState = ((update.eagerState: any): S);
         } else {
-          const action = update.action;
           newState = reducer(newState, action);
         }
       }
@@ -1543,7 +1679,7 @@ function updateSyncExternalStore<T>(
       }
     }
   }
-  const prevSnapshot = hook.memoizedState;
+  const prevSnapshot = (currentHook || hook).memoizedState;
   const snapshotChanged = !is(prevSnapshot, nextSnapshot);
   if (snapshotChanged) {
     hook.memoizedState = nextSnapshot;
@@ -1909,52 +2045,56 @@ function updateEffect(
 }
 
 function useEventImpl<Args, Return, F: (...Array<Args>) => Return>(
-  event: EventFunctionWrapper<Args, Return, F>,
-  nextImpl: F,
+  payload: EventFunctionPayload<Args, Return, F>,
 ) {
   currentlyRenderingFiber.flags |= UpdateEffect;
   let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
     currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
-    componentUpdateQueue.events = [event, nextImpl];
+    componentUpdateQueue.events = [payload];
   } else {
     const events = componentUpdateQueue.events;
     if (events === null) {
-      componentUpdateQueue.events = [event, nextImpl];
+      componentUpdateQueue.events = [payload];
     } else {
-      events.push(event, nextImpl);
+      events.push(payload);
     }
   }
 }
 
 function mountEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
-): EventFunctionWrapper<Args, Return, F> {
+): F {
   const hook = mountWorkInProgressHook();
-  const eventFn: EventFunctionWrapper<Args, Return, F> = function eventFn() {
+  const ref = {impl: callback};
+  hook.memoizedState = ref;
+  // $FlowIgnore[incompatible-return]
+  return function eventFn() {
     if (isInvalidExecutionContextForEventFunction()) {
       throw new Error(
         "A function wrapped in useEvent can't be called during rendering.",
       );
     }
-    // $FlowFixMe[prop-missing] found when upgrading Flow
-    return eventFn._impl.apply(undefined, arguments);
+    return ref.impl.apply(undefined, arguments);
   };
-  eventFn._impl = callback;
-
-  useEventImpl(eventFn, callback);
-  hook.memoizedState = eventFn;
-  return eventFn;
 }
 
 function updateEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
-): EventFunctionWrapper<Args, Return, F> {
+): F {
   const hook = updateWorkInProgressHook();
-  const eventFn = hook.memoizedState;
-  useEventImpl(eventFn, callback);
-  return eventFn;
+  const ref = hook.memoizedState;
+  useEventImpl({ref, nextImpl: callback});
+  // $FlowIgnore[incompatible-return]
+  return function eventFn() {
+    if (isInvalidExecutionContextForEventFunction()) {
+      throw new Error(
+        "A function wrapped in useEvent can't be called during rendering.",
+      );
+    }
+    return ref.impl.apply(undefined, arguments);
+  };
 }
 
 function mountInsertionEffect(
@@ -2120,6 +2260,9 @@ function mountMemo<T>(
 ): T {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
+  if (shouldDoubleInvokeUserFnsInHooksDEV) {
+    nextCreate();
+  }
   const nextValue = nextCreate();
   hook.memoizedState = [nextValue, nextDeps];
   return nextValue;
@@ -2140,6 +2283,9 @@ function updateMemo<T>(
         return prevState[0];
       }
     }
+  }
+  if (shouldDoubleInvokeUserFnsInHooksDEV) {
+    nextCreate();
   }
   const nextValue = nextCreate();
   hook.memoizedState = [nextValue, nextDeps];
@@ -2296,13 +2442,6 @@ function rerenderTransition(): [
   return [isPending, start];
 }
 
-let isUpdatingOpaqueValueInRenderPhase = false;
-export function getIsUpdatingOpaqueValueInRenderPhaseInDEV(): boolean | void {
-  if (__DEV__) {
-    return isUpdatingOpaqueValueInRenderPhase;
-  }
-}
-
 function mountId(): string {
   const hook = mountWorkInProgressHook();
 
@@ -2387,9 +2526,17 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
         // unmount that boundary before the refresh completes.
         const seededCache = createCache();
         if (seedKey !== null && seedKey !== undefined && root !== null) {
-          // Seed the cache with the value passed by the caller. This could be
-          // from a server mutation, or it could be a streaming response.
-          seededCache.data.set(seedKey, seedValue);
+          if (enableLegacyCache) {
+            // Seed the cache with the value passed by the caller. This could be
+            // from a server mutation, or it could be a streaming response.
+            seededCache.data.set(seedKey, seedValue);
+          } else {
+            if (__DEV__) {
+              console.error(
+                'The seed argument is not enabled outside experimental channels.',
+              );
+            }
+          }
         }
 
         const payload = {
@@ -2916,7 +3063,7 @@ if (__DEV__) {
       Args,
       Return,
       F: (...Array<Args>) => Return,
-    >(callback: F): EventFunctionWrapper<Args, Return, F> {
+    >(callback: F): F {
       currentHookNameInDev = 'useEvent';
       mountHookTypesDev();
       return mountEvent(callback);
@@ -3073,7 +3220,7 @@ if (__DEV__) {
       Args,
       Return,
       F: (...Array<Args>) => Return,
-    >(callback: F): EventFunctionWrapper<Args, Return, F> {
+    >(callback: F): F {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       return mountEvent(callback);
@@ -3230,7 +3377,7 @@ if (__DEV__) {
       Args,
       Return,
       F: (...Array<Args>) => Return,
-    >(callback: F): EventFunctionWrapper<Args, Return, F> {
+    >(callback: F): F {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       return updateEvent(callback);
@@ -3388,7 +3535,7 @@ if (__DEV__) {
       Args,
       Return,
       F: (...Array<Args>) => Return,
-    >(callback: F): EventFunctionWrapper<Args, Return, F> {
+    >(callback: F): F {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       return updateEvent(callback);
@@ -3572,7 +3719,7 @@ if (__DEV__) {
       Args,
       Return,
       F: (...Array<Args>) => Return,
-    >(callback: F): EventFunctionWrapper<Args, Return, F> {
+    >(callback: F): F {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -3757,7 +3904,7 @@ if (__DEV__) {
       Args,
       Return,
       F: (...Array<Args>) => Return,
-    >(callback: F): EventFunctionWrapper<Args, Return, F> {
+    >(callback: F): F {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -3943,7 +4090,7 @@ if (__DEV__) {
       Args,
       Return,
       F: (...Array<Args>) => Return,
-    >(callback: F): EventFunctionWrapper<Args, Return, F> {
+    >(callback: F): F {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();

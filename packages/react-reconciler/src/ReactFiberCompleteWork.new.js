@@ -31,7 +31,6 @@ import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import {
-  enableSuspenseAvoidThisFallback,
   enableLegacyHidden,
   enableHostSingletons,
   enableSuspenseCallback,
@@ -127,11 +126,9 @@ import {
   setShallowSuspenseListContext,
   ForceSuspenseFallback,
   setDefaultShallowSuspenseListContext,
+  isBadSuspenseFallback,
 } from './ReactFiberSuspenseContext.new';
-import {
-  popHiddenContext,
-  isCurrentTreeHidden,
-} from './ReactFiberHiddenContext.new';
+import {popHiddenContext} from './ReactFiberHiddenContext.new';
 import {findFirstSuspended} from './ReactFiberSuspenseComponent.new';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -1272,20 +1269,7 @@ function completeWork(
             // If this render already had a ping or lower pri updates,
             // and this is the first time we know we're going to suspend we
             // should be able to immediately restart from within throwException.
-
-            // Check if this is a "bad" fallback state or a good one. A bad
-            // fallback state is one that we only show as a last resort; if this
-            // is a transition, we'll block it from displaying, and wait for
-            // more data to arrive.
-            const isBadFallback =
-              // It's bad to switch to a fallback if content is already visible
-              (current !== null && !prevDidTimeout && !isCurrentTreeHidden()) ||
-              // Experimental: Some fallbacks are always bad
-              (enableSuspenseAvoidThisFallback &&
-                workInProgress.memoizedProps.unstable_avoidThisFallback ===
-                  true);
-
-            if (isBadFallback) {
+            if (isBadSuspenseFallback(current, newProps)) {
               renderDidSuspendDelayIfPossible();
             } else {
               renderDidSuspend();

@@ -269,6 +269,110 @@ describe('ReactOffscreen', () => {
   });
 
   // @gate enableOffscreen
+  it('nested offscreen does not call componentWillUnmount when hidden', async () => {
+    // This is a bug that appeared during production test of <unstable_Offscreen />.
+    // It is a very specific scenario with nested Offscreens. The inner offscreen
+    // goes from visible to hidden in synchronous update.
+    class ClassComponent extends React.Component {
+      render() {
+        return <Text text="child" />;
+      }
+
+      componentWillUnmount() {
+        Scheduler.unstable_yieldValue('componentWillUnmount');
+      }
+
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('componentDidMount');
+      }
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      // Outer and inner offscreen are hidden.
+      root.render(
+        <Offscreen mode={'hidden'}>
+          <Offscreen mode={'hidden'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded(['child']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
+
+    await act(async () => {
+      // Inner offscreen is visible.
+      root.render(
+        <Offscreen mode={'hidden'}>
+          <Offscreen mode={'visible'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded(['child']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
+
+    await act(async () => {
+      // Inner offscreen is hidden.
+      root.render(
+        <Offscreen mode={'hidden'}>
+          <Offscreen mode={'hidden'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded(['child']);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="child" />);
+
+    await act(async () => {
+      // Inner offscreen is visible.
+      root.render(
+        <Offscreen mode={'hidden'}>
+          <Offscreen mode={'visible'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
+    });
+
+    Scheduler.unstable_clearYields();
+
+    await act(async () => {
+      // Outer offscreen is visible.
+      // Inner offscreen is hidden.
+      root.render(
+        <Offscreen mode={'visible'}>
+          <Offscreen mode={'hidden'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded(['child']);
+
+    await act(async () => {
+      // Outer offscreen is hidden.
+      // Inner offscreen is visible.
+      root.render(
+        <Offscreen mode={'hidden'}>
+          <Offscreen mode={'visible'}>
+            <ClassComponent />
+          </Offscreen>
+        </Offscreen>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded(['child']);
+  });
+
+  // @gate enableOffscreen
   it('mounts/unmounts layout effects when visibility changes (starting hidden)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {

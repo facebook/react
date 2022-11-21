@@ -292,7 +292,7 @@ describe('act warnings', () => {
   });
 
   // @gate __DEV__
-  // @gate enableCache
+  // @gate enableLegacyCache
   test('warns if Suspense retry is not wrapped', () => {
     function App() {
       return (
@@ -322,7 +322,7 @@ describe('act warnings', () => {
   });
 
   // @gate __DEV__
-  // @gate enableCache
+  // @gate enableLegacyCache
   test('warns if Suspense ping is not wrapped', () => {
     function App({showMore}) {
       return (

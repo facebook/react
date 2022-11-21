@@ -39,7 +39,6 @@ import {
   createFiberFromText,
   createFiberFromPortal,
 } from './ReactFiber.old';
-import {emptyRefsObject} from './ReactFiberClassComponent.old';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.old';
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {getIsHydrating} from './ReactFiberHydrationContext.old';
@@ -98,6 +97,10 @@ if (__DEV__) {
   };
 }
 
+function isReactClass(type) {
+  return type.prototype && type.prototype.isReactComponent;
+}
+
 function coerceRef(
   returnFiber: Fiber,
   current: Fiber | null,
@@ -121,7 +124,16 @@ function coerceRef(
           element._owner &&
           element._self &&
           element._owner.stateNode !== element._self
-        )
+        ) &&
+        // Will already throw with "Function components cannot have string refs"
+        !(
+          element._owner &&
+          ((element._owner: any): Fiber).tag !== ClassComponent
+        ) &&
+        // Will already warn with "Function components cannot be given refs"
+        !(typeof element.type === 'function' && !isReactClass(element.type)) &&
+        // Will already throw with "Element ref was specified as a string (someStringRef) but no owner was set"
+        element._owner
       ) {
         const componentName =
           getComponentNameFromFiber(returnFiber) || 'Component';
@@ -192,11 +204,7 @@ function coerceRef(
         return current.ref;
       }
       const ref = function(value) {
-        let refs = resolvedInst.refs;
-        if (refs === emptyRefsObject) {
-          // This is a lazy pooled frozen object, so we need to initialize.
-          refs = resolvedInst.refs = {};
-        }
+        const refs = resolvedInst.refs;
         if (value === null) {
           delete refs[stringRef];
         } else {

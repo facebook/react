@@ -83,7 +83,7 @@
       }
 
       function Shell({ data }) {
-        let model = React.experimental_use(data);
+        let model = React.use(data);
         return <div>
           <Suspense fallback="...">
             <h1>{model.title}</h1>
@@ -94,11 +94,12 @@
 
       function renderResult(data) {
         let container = document.getElementById('container');
-        ReactDOM.render(
+        ReactDOM.createRoot(
+          container
+        ).render(
           <Suspense fallback="Loading...">
             <Shell data={data} />
           </Suspense>,
-          container
         );
       }
     </script>

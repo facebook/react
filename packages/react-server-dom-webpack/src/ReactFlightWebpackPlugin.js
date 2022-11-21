@@ -40,7 +40,7 @@ class ClientReferenceDependency extends ModuleDependency {
 // without the client runtime so it's the first time in the loading sequence
 // you might want them.
 const clientImportName = 'react-server-dom-webpack/client';
-const clientFileName = require.resolve('../');
+const clientFileName = require.resolve('../client');
 
 type ClientReferenceSearchPath = {
   directory: string,

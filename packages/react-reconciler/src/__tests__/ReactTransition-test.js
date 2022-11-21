@@ -158,7 +158,7 @@ describe('ReactTransition', () => {
     }
   }
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   test('isPending works even if called from outside an input event', async () => {
     let start;
     function App() {
@@ -199,7 +199,7 @@ describe('ReactTransition', () => {
     expect(root).toMatchRenderedOutput('Async');
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   test(
     'when multiple transitions update the same queue, only the most recent ' +
       'one is allowed to finish (no intermediate states)',
@@ -318,7 +318,7 @@ describe('ReactTransition', () => {
   );
 
   // Same as previous test, but for class update queue.
-  // @gate enableCache
+  // @gate enableLegacyCache
   test(
     'when multiple transitions update the same queue, only the most recent ' +
       'one is allowed to finish (no intermediate states) (classes)',
@@ -442,7 +442,7 @@ describe('ReactTransition', () => {
     },
   );
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   test(
     'when multiple transitions update overlapping queues, all the transitions ' +
       'across all the queues are entangled',
@@ -547,7 +547,7 @@ describe('ReactTransition', () => {
     },
   );
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   test('interrupt a refresh transition if a new transition is scheduled', async () => {
     const root = ReactNoop.createRoot();
 
@@ -602,7 +602,7 @@ describe('ReactTransition', () => {
     expect(root).toMatchRenderedOutput('Updated');
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   test(
     "interrupt a refresh transition when something suspends and we've " +
       'already bailed out on another transition in a parent',
@@ -704,7 +704,7 @@ describe('ReactTransition', () => {
     },
   );
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   test(
     'interrupt a refresh transition when something suspends and a parent ' +
       'component received an interleaved update after its queue was processed',
@@ -824,7 +824,7 @@ describe('ReactTransition', () => {
     expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   it('should render normal pri updates before transition suspense retries', async () => {
     let updateTransitionPri;
     let updateNormalPri;

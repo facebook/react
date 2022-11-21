@@ -72,6 +72,11 @@ import type {Chunk} from './ReactServerStreamConfig';
 
 export type {Destination, Chunk} from './ReactServerStreamConfig';
 
+export {
+  supportsRequestStorage,
+  requestStorage,
+} from './ReactServerStreamConfig';
+
 const stringify = JSON.stringify;
 
 function serializeRowHeader(tag: string, id: number) {
