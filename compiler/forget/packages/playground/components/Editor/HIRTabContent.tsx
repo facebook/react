@@ -58,17 +58,43 @@ export default function HIRTabContent({ source }: { source: string }) {
             if (flags.leaveSSA) {
               leaveSSA(ir);
             }
-            const output = flags.codegen
-              ? prettier.format(
-                  generate(codegen(ir)).code.replace("\n\n", "\n"),
-                  {
-                    semi: true,
-                    parser: "babel",
-                    plugins: [prettierParserBabel],
-                  }
-                )
-              : printHIR(ir.body);
-            body = <pre>{output}</pre>;
+
+            if (flags.codegen) {
+              const ast = codegen(ir);
+              // TODO: codegen should set this correctly directly
+              ast.loc = func.node.loc;
+              const generated = generate(
+                ast,
+                {
+                  sourceMaps: true,
+                  sourceFileName: "input.js",
+                },
+                source
+              );
+              const formatted = prettier.format(generated.code, {
+                semi: true,
+                parser: "babel",
+                plugins: [prettierParserBabel],
+              });
+              const sourceMapUrl = getSourceMapUrl(
+                generated.code,
+                JSON.stringify(generated.map)
+              );
+              body = (
+                <>
+                  <pre>{formatted}</pre>
+                  {sourceMapUrl && (
+                    <iframe
+                      src={sourceMapUrl}
+                      className="w-full h-96"
+                      title="Generated Code"
+                    />
+                  )}
+                </>
+              );
+            } else {
+              body = <pre>{printHIR(ir.body)}</pre>;
+            }
           } catch (e: any) {
             body = <div>error: ${e.toString()}</div>;
           }
@@ -84,6 +110,18 @@ export default function HIRTabContent({ source }: { source: string }) {
       <CompilerFlagsEditor flags={flags} setFlags={setFlags} />
     </div>
   );
+}
+
+function utf16ToUTF8(s: string): string {
+  return unescape(encodeURIComponent(s));
+}
+
+function getSourceMapUrl(code: string, map: string): string | null {
+  code = utf16ToUTF8(code);
+  map = utf16ToUTF8(map);
+  return `https://evanw.github.io/source-map-visualization/#${btoa(
+    `${code.length}\0${code}${map.length}\0${map}`
+  )}`;
 }
 
 type Flags = {
