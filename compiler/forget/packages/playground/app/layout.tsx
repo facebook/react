@@ -1,17 +1,20 @@
-/*
- * Copyright (c) Facebook, Inc. and its affiliates.
+/**
+ * (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 
-import type { NextPage } from "next";
-import Head from "next/head";
-import { SnackbarProvider } from "notistack";
-import { Editor, Header, StoreProvider } from "../components";
-import MessageSnackbar from "../components/Message";
+import "../styles/globals.css";
 
-const Home: NextPage = () => {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col w-screen h-screen font-light">
-      <Head>
+    <html lang="en">
+      <head>
         <title>React Forget Playground</title>
         <meta
           name="viewport"
@@ -33,19 +36,8 @@ const Home: NextPage = () => {
           type="font/woff2"
           crossOrigin="anonymous"
         />
-      </Head>
-      <StoreProvider>
-        <SnackbarProvider
-          preventDuplicate
-          maxSnack={10}
-          Components={{ message: MessageSnackbar }}
-        >
-          <Header />
-          <Editor />
-        </SnackbarProvider>
-      </StoreProvider>
-    </div>
+      </head>
+      <body className="font-sans">{children}</body>
+    </html>
   );
-};
-
-export default Home;
+}
