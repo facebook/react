@@ -14,18 +14,9 @@ import { wasmFolder } from "@hpcc-js/wasm";
 import invariant from "invariant";
 import path from "path";
 import prettier from "prettier";
-import { lower } from "../HIR/BuildHIR";
-import codegen from "../HIR/Codegen";
-import { eliminateRedundantPhi } from "../HIR/EliminateRedundantPhi";
-import enterSSA from "../HIR/EnterSSA";
-import { HIRFunction } from "../HIR/HIR";
-import { Environment } from "../HIR/HIRBuilder";
-import { inferMutableRanges } from "../HIR/InferMutableLifetimes";
-import { inferReactiveScopeVariables } from "../HIR/InferReactiveScopeVariables";
-import inferReferenceEffects from "../HIR/InferReferenceEffects";
-import leaveSSA from "../HIR/LeaveSSA";
 import printHIR from "../HIR/PrintHIR";
 import visualizeHIRMermaid from "../HIR/VisualizeHIRMermaid";
+import run from "./../HIR/Pipeline";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
 function wrapWithTripleBackticks(s: string, ext?: string) {
@@ -65,18 +56,23 @@ describe("React Forget (HIR version)", () => {
       traverse(ast, {
         FunctionDeclaration: {
           enter(nodePath) {
-            const env: Environment = new Environment();
-            const ir: HIRFunction = lower(nodePath, env);
-            enterSSA(ir, env);
-            eliminateRedundantPhi(ir);
-            inferReferenceEffects(ir);
-            inferMutableRanges(ir);
-            inferReactiveScopeVariables(ir);
-            leaveSSA(ir);
+            const compilerFlags = {
+              eliminateRedundantPhi: true,
+              inferReferenceEffects: true,
+              inferMutableRanges: true,
+              leaveSSA: true,
+              inferReactiveScopeVariables: true,
+              codegen: true,
+            };
+
+            const { ast, ir } = run(nodePath, compilerFlags);
+            invariant(
+              ast !== null,
+              "ast is null when codegen option is enabled"
+            );
+
             const textHIR = printHIR(ir.body);
             const visualization = visualizeHIRMermaid(ir);
-
-            const ast = codegen(ir);
             const text = prettier.format(
               generate(ast).code.replace("\n\n", "\n"),
               {
