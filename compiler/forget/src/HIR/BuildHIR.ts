@@ -17,6 +17,7 @@ import {
   IfTerminal,
   InstructionKind,
   InstructionValue,
+  makeInstructionId,
   Place,
   ReturnTerminal,
   SourceLocation,
@@ -606,7 +607,7 @@ function lowerStatement(
           };
         }
         builder.push({
-          id: 0,
+          id: makeInstructionId(0),
           lvalue: { place: id, kind },
           value,
           loc: declaration.node.loc ?? GeneratedSource,
@@ -623,7 +624,7 @@ function lowerStatement(
         return;
       }
       builder.push({
-        id: 0,
+        id: makeInstructionId(0),
         lvalue: null,
         value,
         loc: stmt.node.loc ?? GeneratedSource,
@@ -662,7 +663,7 @@ function lowerStatement(
     case "TSTypeAliasDeclaration":
     case "WithStatement": {
       builder.push({
-        id: 0,
+        id: makeInstructionId(0),
         lvalue: null,
         loc: stmtPath.node.loc ?? GeneratedSource,
         value: {
@@ -862,7 +863,7 @@ function lowerExpression(
             loc: left.loc,
           };
           builder.push({
-            id: 0,
+            id: makeInstructionId(0),
             value: {
               kind: "Primitive",
               value: null,
@@ -880,7 +881,7 @@ function lowerExpression(
             loc: left.loc,
           };
           builder.push({
-            id: 0,
+            id: makeInstructionId(0),
             lvalue: {
               place: { ...condPlace },
               kind: InstructionKind.Const,
@@ -918,7 +919,7 @@ function lowerExpression(
       if (operator === "=") {
         const right = lowerExpression(builder, expr.get("right"));
         builder.push({
-          id: 0,
+          id: makeInstructionId(0),
           lvalue: { place: left, kind: InstructionKind.Reassign },
           value: right,
           loc: exprLoc,
@@ -948,7 +949,7 @@ function lowerExpression(
 
       const right = lowerExpressionToPlace(builder, expr.get("right"));
       builder.push({
-        id: 0,
+        id: makeInstructionId(0),
         lvalue: { place: left, kind: InstructionKind.Reassign },
         value: {
           kind: "BinaryExpression",
@@ -1059,7 +1060,7 @@ function lowerConditional(
   const consequentBlock = builder.enter((blockId) => {
     let value = consequent();
     builder.push({
-      id: 0,
+      id: makeInstructionId(0),
       value,
       lvalue: { place: { ...place }, kind: InstructionKind.Const },
       loc: value.loc,
@@ -1074,7 +1075,7 @@ function lowerConditional(
   const alternateBlock = builder.enter((blockId) => {
     let value = alternate();
     builder.push({
-      id: 0,
+      id: makeInstructionId(0),
       value,
       lvalue: { place: { ...place }, kind: InstructionKind.Const },
       loc: value.loc,
@@ -1131,7 +1132,7 @@ function lowerJsxElementName(
       loc: exprLoc,
     };
     builder.push({
-      id: 0,
+      id: makeInstructionId(0),
       value: {
         kind: "Primitive",
         value: tag,
@@ -1171,7 +1172,7 @@ function lowerJsxElement(
       loc: exprLoc,
     };
     builder.push({
-      id: 0,
+      id: makeInstructionId(0),
       value: {
         kind: "JSXText",
         value: exprPath.node.value,
@@ -1194,7 +1195,7 @@ function lowerJsxElement(
       loc: exprLoc,
     };
     builder.push({
-      id: 0,
+      id: makeInstructionId(0),
       value: {
         kind: "OtherStatement",
         node: exprNode,
@@ -1224,7 +1225,7 @@ function lowerExpressionToPlace(
     loc: exprLoc,
   };
   builder.push({
-    id: 0,
+    id: makeInstructionId(0),
     value: instr,
     loc: exprLoc,
     lvalue: { place: { ...place }, kind: InstructionKind.Const },

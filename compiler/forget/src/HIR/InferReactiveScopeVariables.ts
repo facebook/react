@@ -10,6 +10,7 @@ import {
   HIRFunction,
   Identifier,
   Instruction,
+  makeInstructionId,
   makeScopeId,
   MutableRange,
   Place,
@@ -125,11 +126,12 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
       };
       scopeVariables.set(scopeId, scope);
     } else {
-      scope.range.start = Math.min(
-        scope.range.start,
-        identifier.mutableRange.start
+      scope.range.start = makeInstructionId(
+        Math.min(scope.range.start, identifier.mutableRange.start)
       );
-      scope.range.end = Math.max(scope.range.end, identifier.mutableRange.end);
+      scope.range.end = makeInstructionId(
+        Math.max(scope.range.end, identifier.mutableRange.end)
+      );
     }
     scope.variables.add(identifier);
   });

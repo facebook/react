@@ -4,6 +4,7 @@ import {
   HIRFunction,
   Identifier,
   IdentifierId,
+  makeInstructionId,
   Phi,
   Place,
 } from "./HIR";
@@ -53,8 +54,8 @@ class SSABuilder {
       preSsaId: oldId.id,
       name: oldId.name,
       mutableRange: {
-        start: 0,
-        end: 0,
+        start: makeInstructionId(0),
+        end: makeInstructionId(0),
       },
       scope: null, // reset along w the mutable range
     };

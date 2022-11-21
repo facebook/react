@@ -170,7 +170,7 @@ export type WhileTerminal = {
  * or may occur only for side-effects (many expression statements).
  */
 export type Instruction = {
-  id: number;
+  id: InstructionId;
   lvalue: LValue | null;
   value: InstructionValue;
   loc: SourceLocation;
@@ -270,8 +270,8 @@ export type Primitive = {
  * the value is not mutable).
  */
 export type MutableRange = {
-  start: number;
-  end: number;
+  start: InstructionId;
+  end: InstructionId;
 };
 
 /**
@@ -359,4 +359,19 @@ export function makeIdentifierId(id: number): IdentifierId {
     "Expected identifier id to be a non-negative integer"
   );
   return id as IdentifierId;
+}
+
+/**
+ * Simulated opaque type for InstructionId to prevent using normal numbers as ids
+ * accidentally.
+ */
+const opaqueInstructionId = Symbol();
+export type InstructionId = number & { [opaqueInstructionId]: "IdentifierId" };
+
+export function makeInstructionId(id: number): InstructionId {
+  invariant(
+    id >= 0 && Number.isInteger(id),
+    "Expected instruction id to be a non-negative integer"
+  );
+  return id as InstructionId;
 }

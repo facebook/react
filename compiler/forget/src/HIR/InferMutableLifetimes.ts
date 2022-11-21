@@ -8,7 +8,15 @@
 import invariant from "invariant";
 import { assertExhaustive } from "../Common/utils";
 import DisjointSet from "./DisjointSet";
-import { Effect, HIRFunction, Identifier, Instruction, Place } from "./HIR";
+import {
+  Effect,
+  HIRFunction,
+  Identifier,
+  Instruction,
+  InstructionId,
+  makeInstructionId,
+  Place,
+} from "./HIR";
 import { printInstruction, printPlace } from "./PrintHIR";
 import { eachInstructionOperand } from "./visitors";
 
@@ -68,7 +76,7 @@ function inferPlace(place: Place, instr: Instruction) {
     case Effect.Freeze:
       return;
     case Effect.Mutate: {
-      place.identifier.mutableRange.end = instr.id + 1;
+      place.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
       return;
     }
     default:
@@ -92,8 +100,8 @@ export function inferMutableRanges(func: HIRFunction) {
         "Expected phi to have set start/end range values"
       );
       phi.id.mutableRange = {
-        start,
-        end,
+        start: makeInstructionId(start),
+        end: makeInstructionId(end),
       };
     }
 
@@ -126,7 +134,7 @@ export function inferMutableRanges(func: HIRFunction) {
 
           // Let's be optimistic and assume this lvalue is not mutable by
           // default.
-          lvalueId.mutableRange.end = instr.id + 1;
+          lvalueId.mutableRange.end = makeInstructionId(instr.id + 1);
         } else {
           inferPlace(instr.lvalue.place, instr);
         }
@@ -138,7 +146,7 @@ export function inferMutableRanges(func: HIRFunction) {
   // Store the mutable range and set of identifiers for each scope
   const aliasIndentifiers: Map<
     number,
-    { end: number; identifiers: Set<Identifier> }
+    { end: InstructionId; identifiers: Set<Identifier> }
   > = new Map();
 
   aliases.forEach((identifier, groupIdentifier) => {
@@ -156,7 +164,9 @@ export function inferMutableRanges(func: HIRFunction) {
       };
       aliasIndentifiers.set(aliasId, alias);
     } else {
-      alias.end = Math.max(alias.end, identifier.mutableRange.end);
+      alias.end = makeInstructionId(
+        Math.max(alias.end, identifier.mutableRange.end)
+      );
     }
     alias.identifiers.add(identifier);
   });

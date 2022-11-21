@@ -18,6 +18,7 @@ import {
   Instruction,
   makeBlockId,
   makeIdentifierId,
+  makeInstructionId,
   Terminal,
 } from "./HIR";
 import { printInstruction } from "./PrintHIR";
@@ -112,7 +113,7 @@ export default class HIRBuilder {
       preSsaId: null,
       id,
       name: null,
-      mutableRange: { start: 0, end: 0 },
+      mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) },
       scope: null,
     };
   }
@@ -125,7 +126,10 @@ export default class HIRBuilder {
         preSsaId: null,
         id,
         name: node.name,
-        mutableRange: { start: 0, end: 0 },
+        mutableRange: {
+          start: makeInstructionId(0),
+          end: makeInstructionId(0),
+        },
         scope: null,
       };
       this.#bindings.set(node, identifier);
@@ -502,7 +506,7 @@ function markInstructionIds(func: HIR) {
   for (const [_, block] of func.blocks) {
     for (const instr of block.instructions) {
       invariant(instr.id === 0, `${printInstruction(instr)} already visited!`);
-      instr.id = ++id;
+      instr.id = makeInstructionId(++id);
     }
   }
 }
