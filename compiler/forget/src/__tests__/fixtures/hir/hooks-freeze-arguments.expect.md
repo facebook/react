@@ -23,7 +23,7 @@ bb0:
   [2] Call read useFreeze$2(freeze a$1_@0)
   [3] Call read useFreeze$2(read a$1_@0)
   [4] Call mutate call$3_@1(read a$1_@0)
-  Return read a$1_@0
+  [5] Return read a$1_@0
 ```
 
 ### CFG
@@ -61,7 +61,7 @@ function Component$0() {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -89,7 +89,7 @@ function useFreeze$0(x$1) {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG

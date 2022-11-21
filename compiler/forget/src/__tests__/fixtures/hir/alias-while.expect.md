@@ -27,27 +27,27 @@ function mutate(x, y) {}
 
 ```
 bb0:
-  [1] Let mutate a$2_@0[0:9] = Object {  }
-  [2] Let mutate b$3_@0[0:9] = Object {  }
-  [3] Let mutate c$4_@0[0:9] = Object {  }
-  While test=bb1 loop=bb3 fallthrough=bb2
+  [1] Let mutate a$2_@0[0:11] = Object {  }
+  [2] Let mutate b$3_@0[0:11] = Object {  }
+  [3] Let mutate c$4_@0[0:11] = Object {  }
+  [4] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
-  If (read cond$1) then:bb3 else:bb2
+  [5] If (read cond$1) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  [4] Let mutate z$5_@0[0:9] = read a$2_@0
-  [5] Reassign mutate a$2_@0[0:9] = read b$3_@0
-  [6] Reassign mutate b$3_@0[0:9] = read c$4_@0
-  [7] Reassign mutate c$4_@0[0:9] = read z$5_@0
-  [8] Call mutate mutate$6_@0(mutate a$2_@0, mutate b$3_@0)
-  Goto(Continue) bb1
+  [6] Let mutate z$5_@0[0:11] = read a$2_@0
+  [7] Reassign mutate a$2_@0[0:11] = read b$3_@0
+  [8] Reassign mutate b$3_@0[0:11] = read c$4_@0
+  [9] Reassign mutate c$4_@0[0:11] = read z$5_@0
+  [10] Call mutate mutate$6_@0(mutate a$2_@0, mutate b$3_@0)
+  [11] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  [9] read a$2_@0
-  [10] read b$3_@0
-  [11] read c$4_@0
-  Return freeze a$2_@0
+  [12] read a$2_@0
+  [13] read b$3_@0
+  [14] read c$4_@0
+  [15] Return freeze a$2_@0
 ```
 
 ### CFG
@@ -57,9 +57,9 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate a$2_@0[0:9] = Object {  }
-      [2] Let mutate b$3_@0[0:9] = Object {  }
-      [3] Let mutate c$4_@0[0:9] = Object {  }
+      [1] Let mutate a$2_@0[0:11] = Object {  }
+      [2] Let mutate b$3_@0[0:11] = Object {  }
+      [3] Let mutate c$4_@0[0:11] = Object {  }
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
@@ -68,19 +68,19 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [4] Let mutate z$5_@0[0:9] = read a$2_@0
-      [5] Reassign mutate a$2_@0[0:9] = read b$3_@0
-      [6] Reassign mutate b$3_@0[0:9] = read c$4_@0
-      [7] Reassign mutate c$4_@0[0:9] = read z$5_@0
-      [8] Call mutate mutate$6_@0(mutate a$2_@0, mutate b$3_@0)
+      [6] Let mutate z$5_@0[0:11] = read a$2_@0
+      [7] Reassign mutate a$2_@0[0:11] = read b$3_@0
+      [8] Reassign mutate b$3_@0[0:11] = read c$4_@0
+      [9] Reassign mutate c$4_@0[0:11] = read z$5_@0
+      [10] Call mutate mutate$6_@0(mutate a$2_@0, mutate b$3_@0)
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [9] read a$2_@0
-      [10] read b$3_@0
-      [11] read c$4_@0
+      [12] read a$2_@0
+      [13] read b$3_@0
+      [14] read c$4_@0
     "]
     bb2_instrs --> bb2_terminal(["Return freeze a$2_@0"])
   end
@@ -121,7 +121,7 @@ function foo$0(cond$1) {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG

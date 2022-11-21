@@ -6,7 +6,14 @@
  */
 
 import { assertExhaustive } from "../Common/utils";
-import { BasicBlock, BlockId, Instruction, Place, Terminal } from "./HIR";
+import {
+  BasicBlock,
+  BlockId,
+  Instruction,
+  makeInstructionId,
+  Place,
+  Terminal,
+} from "./HIR";
 
 export function* eachInstructionOperand(instr: Instruction): Iterable<Place> {
   const instrValue = instr.value;
@@ -143,6 +150,7 @@ export function mapTerminalSuccessors(
         kind: "goto",
         block: target,
         variant: terminal.variant,
+        id: makeInstructionId(0),
       };
     }
     case "if": {
@@ -156,6 +164,7 @@ export function mapTerminalSuccessors(
         consequent,
         alternate,
         fallthrough,
+        id: makeInstructionId(0),
       };
     }
     case "switch": {
@@ -173,12 +182,14 @@ export function mapTerminalSuccessors(
         test: terminal.test,
         cases,
         fallthrough,
+        id: makeInstructionId(0),
       };
     }
     case "return": {
       return {
         kind: "return",
         value: terminal.value,
+        id: makeInstructionId(0),
       };
     }
     case "throw": {
@@ -193,6 +204,7 @@ export function mapTerminalSuccessors(
         test,
         loop,
         fallthrough,
+        id: makeInstructionId(0),
       };
     }
     default: {

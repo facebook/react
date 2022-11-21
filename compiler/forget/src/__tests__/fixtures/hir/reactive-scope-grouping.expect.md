@@ -23,7 +23,7 @@ bb0:
   [3] Let mutate z$3_@1[2:5] = Object {  }
   [4] Call mutate y$2_@1.push(mutate z$3_@1)
   [5] Reassign mutate x$1_@0.y[1:6] = read y$2_@1
-  Return freeze x$1_@0
+  [6] Return freeze x$1_@0
 ```
 
 ### CFG

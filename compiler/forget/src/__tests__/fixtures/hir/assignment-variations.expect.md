@@ -27,7 +27,7 @@ bb0:
   [5] Reassign mutate x$1_@4 = Binary read x$1_@2 + read $3_@3
   [6] Const mutate $4_@5 = 1
   [7] Reassign mutate x$1_@6 = Binary read x$1_@4 >>> read $4_@5
-  Return
+  [8] Return
 ```
 
 ### CFG
@@ -72,7 +72,7 @@ bb0:
   [2] Reassign mutate a$1_@1.b.c[0:5] = Binary read a$1_@1.b.c + read $2_@0
   [3] Const mutate $3_@2 = 2
   [4] Reassign mutate a$1_@1.b.c[0:5] = Binary read a$1_@1.b.c * read $3_@2
-  Return
+  [5] Return
 ```
 
 ### CFG

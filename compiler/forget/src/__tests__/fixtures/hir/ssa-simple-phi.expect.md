@@ -23,19 +23,19 @@ bb0:
   [1] Let mutate y$1_@0 = 2
   [2] Const mutate $2_@1 = 1
   [3] Const mutate $3_@2 = Binary read y$1_@0 > read $2_@1
-  If (read $3_@2) then:bb2 else:bb3
+  [4] If (read $3_@2) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [4] Reassign mutate y$1_@3[4:7] = 1
-  Goto bb1
+  [5] Reassign mutate y$1_@3[5:10] = 1
+  [6] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Reassign mutate y$1_@3[4:7] = 2
-  Goto bb1
+  [7] Reassign mutate y$1_@3[5:10] = 2
+  [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [6] Let mutate x$4_@3[4:7] = read y$1_@3
-  Return
+  [9] Let mutate x$4_@3[5:10] = read y$1_@3
+  [10] Return
 ```
 
 ### CFG
@@ -53,19 +53,19 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [4] Reassign mutate y$1_@3[4:7] = 1
+      [5] Reassign mutate y$1_@3[5:10] = 1
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [5] Reassign mutate y$1_@3[4:7] = 2
+      [7] Reassign mutate y$1_@3[5:10] = 2
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [6] Let mutate x$4_@3[4:7] = read y$1_@3
+      [9] Let mutate x$4_@3[5:10] = read y$1_@3
     "]
     bb1_instrs --> bb1_terminal(["Return"])
   end

@@ -23,20 +23,20 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Let mutate x$2_@0[1:5] = Array []
+  [1] Let mutate x$2_@0[1:6] = Array []
   [2] Call mutate x$2_@0.push(read props$1.p0)
-  [3] Let mutate y$3_@0[1:5] = read x$2_@0
-  If (read props$1.p1) then:bb2 else:bb1
+  [3] Let mutate y$3_@0[1:6] = read x$2_@0
+  [4] If (read props$1.p1) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [4] Reassign mutate x$2_@0[1:5] = Array []
-  Goto bb1
+  [5] Reassign mutate x$2_@0[1:6] = Array []
+  [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [5] Let mutate _$4_@1 = JSX <read Component$0 x={freeze x$2_@0} ></read Component$0>
-  [6] Call read y$3_@0.push(read props$1.p2)
-  [7] Const mutate $5_@2 = JSX <read Component$0 x={read x$2_@0} y={read y$3_@0} ></read Component$0>
-  Return read $5_@2
+  [7] Let mutate _$4_@1 = JSX <read Component$0 x={freeze x$2_@0} ></read Component$0>
+  [8] Call read y$3_@0.push(read props$1.p2)
+  [9] Const mutate $5_@2 = JSX <read Component$0 x={read x$2_@0} y={read y$3_@0} ></read Component$0>
+  [10] Return read $5_@2
 ```
 
 ### CFG
@@ -46,23 +46,23 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$2_@0[1:5] = Array []
+      [1] Let mutate x$2_@0[1:6] = Array []
       [2] Call mutate x$2_@0.push(read props$1.p0)
-      [3] Let mutate y$3_@0[1:5] = read x$2_@0
+      [3] Let mutate y$3_@0[1:6] = read x$2_@0
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.p1)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Reassign mutate x$2_@0[1:5] = Array []
+      [5] Reassign mutate x$2_@0[1:6] = Array []
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [5] Let mutate _$4_@1 = JSX <read Component$0 x={freeze x$2_@0} ></read Component$0>
-      [6] Call read y$3_@0.push(read props$1.p2)
-      [7] Const mutate $5_@2 = JSX <read Component$0 x={read x$2_@0} y={read y$3_@0} ></read Component$0>
+      [7] Let mutate _$4_@1 = JSX <read Component$0 x={freeze x$2_@0} ></read Component$0>
+      [8] Call read y$3_@0.push(read props$1.p2)
+      [9] Const mutate $5_@2 = JSX <read Component$0 x={read x$2_@0} y={read y$3_@0} ></read Component$0>
     "]
     bb1_instrs --> bb1_terminal(["Return read $5_@2"])
   end

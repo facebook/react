@@ -30,7 +30,7 @@ bb0:
   [9] Const mutate $10_@8 = JSX <read $5_@3>{read $6_@4}{read $8_@6}{read $9_@7}</read $5_@3>
   [10] Const mutate $11_@9 = "\n    "
   [11] Const mutate $12_@10 = JsxFragment [read $2_@0, read props$1.greeting, read $3_@1, read $4_@2, read $10_@8, read $11_@9]
-  Return read $12_@10
+  [12] Return read $12_@10
 ```
 
 ### CFG

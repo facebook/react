@@ -32,7 +32,7 @@ bb0:
   [2] Const mutate b$4_@0[0:4] = Call mutate compute$3_@0(read props$1.b)
   [3] Call mutate foo$5_@0(mutate a$2_@0, mutate b$4_@0)
   [4] Const mutate $7_@1 = JSX <read Foo$6 a={freeze a$2_@0} b={freeze b$4_@0} ></read Foo$6>
-  Return read $7_@1
+  [5] Return read $7_@1
 ```
 
 ### CFG
@@ -69,7 +69,7 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -97,7 +97,7 @@ function compute$0() {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -125,7 +125,7 @@ function foo$0() {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG

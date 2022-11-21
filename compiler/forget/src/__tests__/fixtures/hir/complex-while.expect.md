@@ -18,22 +18,22 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  If (read a$1) then:bb3 else:bb1
+  [1] If (read a$1) then:bb3 else:bb1
 bb3:
   predecessor blocks: bb0
-  While test=bb4 loop=bb6 fallthrough=bb1
+  [2] While test=bb4 loop=bb6 fallthrough=bb1
 bb4:
   predecessor blocks: bb3 bb7
-  If (read b$2) then:bb6 else:bb1
+  [3] If (read b$2) then:bb6 else:bb1
 bb6:
   predecessor blocks: bb4
-  If (read c$3) then:bb1 else:bb7
+  [4] If (read c$3) then:bb1 else:bb7
 bb7:
   predecessor blocks: bb6
-  Goto(Continue) bb4
+  [5] Goto(Continue) bb4
 bb1:
   predecessor blocks: bb6 bb4 bb0
-  Return
+  [6] Return
 ```
 
 ### CFG

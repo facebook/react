@@ -28,7 +28,7 @@ bb0:
   [5] Let mutate _$4_@2 = JSX <read Component$0 x={freeze x$2_@1} ></read Component$0>
   [6] Call mutate y$3_@0.push(read props$1.p1)
   [7] Const mutate $5_@3 = JSX <read Component$0 x={read x$2_@1} y={freeze y$3_@0} ></read Component$0>
-  Return read $5_@3
+  [8] Return read $5_@3
 ```
 
 ### CFG

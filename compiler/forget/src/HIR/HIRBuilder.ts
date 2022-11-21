@@ -145,7 +145,7 @@ export default class HIRBuilder {
     this.#completed.set(blockId, {
       id: blockId,
       instructions,
-      terminal: { kind: "return", value: null },
+      terminal: { kind: "return", value: null, id: makeInstructionId(0) },
       preds: new Set(),
       phis: new Set(),
     });
@@ -508,6 +508,7 @@ function markInstructionIds(func: HIR) {
       invariant(instr.id === 0, `${printInstruction(instr)} already visited!`);
       instr.id = makeInstructionId(++id);
     }
+    block.terminal.id = makeInstructionId(++id);
   }
 }
 

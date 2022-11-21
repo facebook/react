@@ -15,7 +15,7 @@ function foo() {
 bb0:
   [1] Let mutate x$1_@0 = 1
   [2] Let mutate y$2_@1 = 2
-  Return
+  [3] Return
 ```
 
 ### CFG

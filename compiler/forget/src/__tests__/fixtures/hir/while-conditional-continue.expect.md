@@ -19,24 +19,24 @@ function foo(a, b, c, d) {
 
 ```
 bb0:
-  While test=bb1 loop=bb3 fallthrough=bb2
+  [1] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb5 bb4
-  If (read a$1) then:bb3 else:bb2
+  [2] If (read a$1) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  If (read b$2) then:bb5 else:bb4
+  [3] If (read b$2) then:bb5 else:bb4
 bb5:
   predecessor blocks: bb3
-  Goto(Continue) bb1
+  [4] Goto(Continue) bb1
 bb4:
   predecessor blocks: bb3
-  [1] Call read c$3()
-  Goto(Continue) bb1
+  [5] Call read c$3()
+  [6] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  [2] Call read d$4()
-  Return
+  [7] Call read d$4()
+  [8] Return
 ```
 
 ### CFG
@@ -58,13 +58,13 @@ flowchart TB
   end
   subgraph bb4
     bb4_instrs["
-      [1] Call read c$3()
+      [5] Call read c$3()
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [2] Call read d$4()
+      [7] Call read d$4()
     "]
     bb2_instrs --> bb2_terminal(["Return"])
   end

@@ -33,29 +33,29 @@ bb0:
   [3] Const mutate $5_@2 = Binary read x$1_@0 === read $4_@1
   [4] Const mutate $7_@3 = 1
   [5] Const mutate $8_@4 = Binary read x$1_@0 === read $7_@3
-  Switch (read x$1_@0)
+  [6] Switch (read x$1_@0)
     Case read $8_@4: bb5
     Case read $5_@2: bb3
     Default: bb2
 bb5:
   predecessor blocks: bb0
-  [6] Const mutate $6_@5 = 1
-  [7] Reassign mutate x$1_@6[7:13] = Binary read x$1_@0 + read $6_@5
-  Goto bb1
+  [7] Const mutate $6_@5 = 1
+  [8] Reassign mutate x$1_@6[8:17] = Binary read x$1_@0 + read $6_@5
+  [9] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [8] Const mutate $3_@7 = 2
-  [9] Reassign mutate x$1_@6[7:13] = Binary read x$1_@0 + read $3_@7
-  Goto bb1
+  [10] Const mutate $3_@7 = 2
+  [11] Reassign mutate x$1_@6[8:17] = Binary read x$1_@0 + read $3_@7
+  [12] Goto bb1
 bb2:
   predecessor blocks: bb0
-  [10] Const mutate $2_@8 = 3
-  [11] Reassign mutate x$1_@6[7:13] = Binary read x$1_@0 + read $2_@8
-  Goto bb1
+  [13] Const mutate $2_@8 = 3
+  [14] Reassign mutate x$1_@6[8:17] = Binary read x$1_@0 + read $2_@8
+  [15] Goto bb1
 bb1:
   predecessor blocks: bb5 bb3 bb2
-  [12] Let mutate y$9_@6[7:13] = read x$1_@6
-  Return
+  [16] Let mutate y$9_@6[8:17] = read x$1_@6
+  [17] Return
 ```
 
 ### CFG
@@ -75,28 +75,28 @@ flowchart TB
   end
   subgraph bb5
     bb5_instrs["
-      [6] Const mutate $6_@5 = 1
-      [7] Reassign mutate x$1_@6[7:13] = Binary read x$1_@0 + read $6_@5
+      [7] Const mutate $6_@5 = 1
+      [8] Reassign mutate x$1_@6[8:17] = Binary read x$1_@0 + read $6_@5
     "]
     bb5_instrs --> bb5_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [8] Const mutate $3_@7 = 2
-      [9] Reassign mutate x$1_@6[7:13] = Binary read x$1_@0 + read $3_@7
+      [10] Const mutate $3_@7 = 2
+      [11] Reassign mutate x$1_@6[8:17] = Binary read x$1_@0 + read $3_@7
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [10] Const mutate $2_@8 = 3
-      [11] Reassign mutate x$1_@6[7:13] = Binary read x$1_@0 + read $2_@8
+      [13] Const mutate $2_@8 = 3
+      [14] Reassign mutate x$1_@6[8:17] = Binary read x$1_@0 + read $2_@8
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [12] Let mutate y$9_@6[7:13] = read x$1_@6
+      [16] Let mutate y$9_@6[8:17] = read x$1_@6
     "]
     bb1_instrs --> bb1_terminal(["Return"])
   end

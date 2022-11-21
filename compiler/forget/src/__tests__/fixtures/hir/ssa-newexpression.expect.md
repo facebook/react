@@ -17,7 +17,7 @@ function Component(props) {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -48,7 +48,7 @@ bb0:
   [1] Const mutate a$2_@0[0:4] = Array []
   [2] Const mutate b$3_@0[0:4] = Object {  }
   [3] Let mutate c$4_@0[0:4] = New mutate Foo$5_@0(mutate a$2_@0, mutate b$3_@0)
-  Return freeze c$4_@0
+  [4] Return freeze c$4_@0
 ```
 
 ### CFG

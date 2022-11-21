@@ -23,7 +23,7 @@ function Component(props) {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -51,7 +51,7 @@ function useFreeze$0() {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -86,7 +86,7 @@ bb0:
   [5] Const mutate $7_@4 = "\n      "
   [6] Const mutate $8_@5 = "\n    "
   [7] Const mutate $9_@6 = JSX <read Component$0>{read $6_@3}{read x$2_@0}{read $7_@4}{read y$3_@1}{read $8_@5}</read Component$0>
-  Return read $9_@6
+  [8] Return read $9_@6
 ```
 
 ### CFG

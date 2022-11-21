@@ -19,7 +19,7 @@ function Component(props) {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -55,7 +55,7 @@ bb0:
   [6] Call mutate foo$4_@0(read a$2_@0, mutate b$3_@0)
   [7] Const mutate $7_@3 = "div"
   [8] Const mutate $8_@4 = JSX <read $7_@3 a={read a$2_@0} b={freeze b$3_@0} ></read $7_@3>
-  Return read $8_@4
+  [9] Return read $8_@4
 ```
 
 ### CFG

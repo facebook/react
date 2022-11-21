@@ -18,7 +18,7 @@ bb0:
   [1] Const mutate a$2_@0 = 1
   [2] Const mutate b$3_@1 = 2
   [3] Const mutate x$4_@2 = Object { a: read a$2_@0, b: read b$3_@1 }
-  Return freeze x$4_@2
+  [4] Return freeze x$4_@2
 ```
 
 ### CFG

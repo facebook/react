@@ -23,19 +23,19 @@ function g() {}
 
 ```
 bb0:
-  [1] Const mutate $2_@0[0:4] = Call mutate f$1_@0()
-  If (read $2_@0) then:bb2 else:bb3
+  [1] Const mutate $2_@0[0:6] = Call mutate f$1_@0()
+  [2] If (read $2_@0) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [2] Const mutate $3_@0[0:4] = Call mutate g$4_@0()
-  Goto bb1
+  [3] Const mutate $3_@0[0:6] = Call mutate g$4_@0()
+  [4] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [3] Const mutate $3_@0[0:4] = read $2_@0
-  Goto bb1
+  [5] Const mutate $3_@0[0:6] = read $2_@0
+  [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  Return freeze $3_@0
+  [7] Return freeze $3_@0
 ```
 
 ### CFG
@@ -45,19 +45,19 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $2_@0[0:4] = Call mutate f$1_@0()
+      [1] Const mutate $2_@0[0:6] = Call mutate f$1_@0()
     "]
     bb0_instrs --> bb0_terminal(["If (read $2_@0)"])
   end
   subgraph bb2
     bb2_instrs["
-      [2] Const mutate $3_@0[0:4] = Call mutate g$4_@0()
+      [3] Const mutate $3_@0[0:6] = Call mutate g$4_@0()
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [3] Const mutate $3_@0[0:4] = read $2_@0
+      [5] Const mutate $3_@0[0:6] = read $2_@0
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
@@ -89,19 +89,19 @@ function And$0() {
 
 ```
 bb0:
-  [1] Const mutate $2_@0[0:4] = Call mutate f$1_@0()
-  If (read $2_@0) then:bb2 else:bb3
+  [1] Const mutate $2_@0[0:6] = Call mutate f$1_@0()
+  [2] If (read $2_@0) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [2] Const mutate $3_@0[0:4] = read $2_@0
-  Goto bb1
+  [3] Const mutate $3_@0[0:6] = read $2_@0
+  [4] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [3] Const mutate $3_@0[0:4] = Call mutate g$4_@0()
-  Goto bb1
+  [5] Const mutate $3_@0[0:6] = Call mutate g$4_@0()
+  [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  Return freeze $3_@0
+  [7] Return freeze $3_@0
 ```
 
 ### CFG
@@ -111,19 +111,19 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $2_@0[0:4] = Call mutate f$1_@0()
+      [1] Const mutate $2_@0[0:6] = Call mutate f$1_@0()
     "]
     bb0_instrs --> bb0_terminal(["If (read $2_@0)"])
   end
   subgraph bb2
     bb2_instrs["
-      [2] Const mutate $3_@0[0:4] = read $2_@0
+      [3] Const mutate $3_@0[0:6] = read $2_@0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [3] Const mutate $3_@0[0:4] = Call mutate g$4_@0()
+      [5] Const mutate $3_@0[0:6] = Call mutate g$4_@0()
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
@@ -155,21 +155,21 @@ function Or$0() {
 
 ```
 bb0:
-  [1] Const mutate $3_@0[0:6] = Call mutate f$2_@0()
+  [1] Const mutate $3_@0[0:8] = Call mutate f$2_@0()
   [2] Const mutate $4_@1 = null
-  [3] Const mutate $5_@0[0:6] = Binary read $3_@0 != read $4_@1
-  If (read $5_@0) then:bb2 else:bb3
+  [3] Const mutate $5_@0[0:8] = Binary read $3_@0 != read $4_@1
+  [4] If (read $5_@0) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [4] Const mutate $6_@0[0:6] = read $3_@0
-  Goto bb1
+  [5] Const mutate $6_@0[0:8] = read $3_@0
+  [6] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Const mutate $6_@0[0:6] = Call mutate g$7_@0()
-  Goto bb1
+  [7] Const mutate $6_@0[0:8] = Call mutate g$7_@0()
+  [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  Return freeze $6_@0
+  [9] Return freeze $6_@0
 ```
 
 ### CFG
@@ -179,21 +179,21 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $3_@0[0:6] = Call mutate f$2_@0()
+      [1] Const mutate $3_@0[0:8] = Call mutate f$2_@0()
       [2] Const mutate $4_@1 = null
-      [3] Const mutate $5_@0[0:6] = Binary read $3_@0 != read $4_@1
+      [3] Const mutate $5_@0[0:8] = Binary read $3_@0 != read $4_@1
     "]
     bb0_instrs --> bb0_terminal(["If (read $5_@0)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Const mutate $6_@0[0:6] = read $3_@0
+      [5] Const mutate $6_@0[0:8] = read $3_@0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [5] Const mutate $6_@0[0:6] = Call mutate g$7_@0()
+      [7] Const mutate $6_@0[0:8] = Call mutate g$7_@0()
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
@@ -225,7 +225,7 @@ function QuestionQuestion$0(props$1) {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -253,7 +253,7 @@ function f$0() {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG

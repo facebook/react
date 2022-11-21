@@ -22,36 +22,36 @@ function foo(a, b, c) {
 ```
 bb0:
   [1] Let mutate x$4_@0 = 0
-  While test=bb1 loop=bb3 fallthrough=bb2
+  [2] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb5
-  If (read a$1) then:bb3 else:bb2
+  [3] If (read a$1) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  While test=bb4 loop=bb6 fallthrough=bb5
+  [4] While test=bb4 loop=bb6 fallthrough=bb5
 bb4:
   predecessor blocks: bb3 bb8
-  If (read b$2) then:bb6 else:bb5
+  [5] If (read b$2) then:bb6 else:bb5
 bb6:
   predecessor blocks: bb4
-  While test=bb7 loop=bb9 fallthrough=bb8
+  [6] While test=bb7 loop=bb9 fallthrough=bb8
 bb7:
   predecessor blocks: bb6 bb9
-  If (read c$3) then:bb9 else:bb8
+  [7] If (read c$3) then:bb9 else:bb8
 bb9:
   predecessor blocks: bb7
-  [2] Const mutate $5_@1 = 1
-  [3] Binary read x$4_@0 + read $5_@1
-  Goto(Continue) bb7
+  [8] Const mutate $5_@1 = 1
+  [9] Binary read x$4_@0 + read $5_@1
+  [10] Goto(Continue) bb7
 bb8:
   predecessor blocks: bb7
-  Goto(Continue) bb4
+  [11] Goto(Continue) bb4
 bb5:
   predecessor blocks: bb4
-  Goto(Continue) bb1
+  [12] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  Return read x$4_@0
+  [13] Return read x$4_@0
 ```
 
 ### CFG
@@ -82,8 +82,8 @@ flowchart TB
   end
   subgraph bb9
     bb9_instrs["
-      [2] Const mutate $5_@1 = 1
-      [3] Binary read x$4_@0 + read $5_@1
+      [8] Const mutate $5_@1 = 1
+      [9] Binary read x$4_@0 + read $5_@1
     "]
     bb9_instrs --> bb9_terminal(["Goto"])
   end

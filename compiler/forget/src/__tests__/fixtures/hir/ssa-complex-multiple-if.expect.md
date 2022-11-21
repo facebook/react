@@ -21,28 +21,28 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0[1:10] = 1
+  [1] Let mutate x$1_@0[1:14] = 1
   [2] Let mutate y$2_@1 = 2
   [3] Const mutate $3_@2 = 2
   [4] Const mutate $4_@3 = Binary read y$2_@1 === read $3_@2
-  If (read $4_@3) then:bb2 else:bb1
+  [5] If (read $4_@3) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [5] Reassign mutate x$1_@0[1:10] = 3
-  Goto bb1
+  [6] Reassign mutate x$1_@0[1:14] = 3
+  [7] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [6] Const mutate $5_@4 = 3
-  [7] Const mutate $6_@5 = Binary read y$2_@1 === read $5_@4
-  If (read $6_@5) then:bb4 else:bb3
+  [8] Const mutate $5_@4 = 3
+  [9] Const mutate $6_@5 = Binary read y$2_@1 === read $5_@4
+  [10] If (read $6_@5) then:bb4 else:bb3
 bb4:
   predecessor blocks: bb1
-  [8] Reassign mutate x$1_@0[1:10] = 5
-  Goto bb3
+  [11] Reassign mutate x$1_@0[1:14] = 5
+  [12] Goto bb3
 bb3:
   predecessor blocks: bb4 bb1
-  [9] Reassign mutate y$2_@0[1:10] = read x$1_@0
-  Return
+  [13] Reassign mutate y$2_@0[1:14] = read x$1_@0
+  [14] Return
 ```
 
 ### CFG
@@ -52,7 +52,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0[1:10] = 1
+      [1] Let mutate x$1_@0[1:14] = 1
       [2] Let mutate y$2_@1 = 2
       [3] Const mutate $3_@2 = 2
       [4] Const mutate $4_@3 = Binary read y$2_@1 === read $3_@2
@@ -61,26 +61,26 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [5] Reassign mutate x$1_@0[1:10] = 3
+      [6] Reassign mutate x$1_@0[1:14] = 3
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [6] Const mutate $5_@4 = 3
-      [7] Const mutate $6_@5 = Binary read y$2_@1 === read $5_@4
+      [8] Const mutate $5_@4 = 3
+      [9] Const mutate $6_@5 = Binary read y$2_@1 === read $5_@4
     "]
     bb1_instrs --> bb1_terminal(["If (read $6_@5)"])
   end
   subgraph bb4
     bb4_instrs["
-      [8] Reassign mutate x$1_@0[1:10] = 5
+      [11] Reassign mutate x$1_@0[1:14] = 5
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [9] Reassign mutate y$2_@0[1:10] = read x$1_@0
+      [13] Reassign mutate y$2_@0[1:14] = read x$1_@0
     "]
     bb3_instrs --> bb3_terminal(["Return"])
   end

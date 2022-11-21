@@ -18,7 +18,7 @@ bb0:
   [1] Const mutate x$1_@0 = Array []
   [2] Const mutate y$2_@1[2:4] = Object {  }
   [3] Reassign mutate y$2_@1.x[2:4] = read x$1_@0
-  Return freeze y$2_@1
+  [4] Return freeze y$2_@1
 ```
 
 ### CFG

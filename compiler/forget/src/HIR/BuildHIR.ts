@@ -119,7 +119,11 @@ function lowerStatement(
     case "ThrowStatement": {
       const stmt = stmtPath as NodePath<t.ThrowStatement>;
       const value = lowerExpressionToPlace(builder, stmt.get("argument"));
-      const terminal: ThrowTerminal = { kind: "throw", value };
+      const terminal: ThrowTerminal = {
+        kind: "throw",
+        value,
+        id: makeInstructionId(0),
+      };
       builder.terminate(terminal);
       return;
     }
@@ -133,6 +137,7 @@ function lowerStatement(
       const terminal: ReturnTerminal = {
         kind: "return",
         value,
+        id: makeInstructionId(0),
       };
       builder.terminateWithContinuation(terminal, fallthrough);
       return;
@@ -148,6 +153,7 @@ function lowerStatement(
           kind: "goto",
           block: continuationBlock.id,
           variant: GotoVariant.Break,
+          id: makeInstructionId(0),
         };
       });
       //  Block for the alternate (if the test is not truthy)
@@ -160,6 +166,7 @@ function lowerStatement(
             kind: "goto",
             block: continuationBlock.id,
             variant: GotoVariant.Break,
+            id: makeInstructionId(0),
           };
         });
       } else {
@@ -173,6 +180,7 @@ function lowerStatement(
         consequent: consequentBlock,
         alternate: alternateBlock,
         fallthrough: continuationBlock.id,
+        id: makeInstructionId(0),
       };
       builder.terminateWithContinuation(terminal, continuationBlock);
       return;
@@ -189,6 +197,7 @@ function lowerStatement(
         kind: "goto",
         block,
         variant: GotoVariant.Break,
+        id: makeInstructionId(0),
       });
       return;
     }
@@ -199,6 +208,7 @@ function lowerStatement(
         kind: "goto",
         block,
         variant: GotoVariant.Continue,
+        id: makeInstructionId(0),
       });
       return;
     }
@@ -219,6 +229,7 @@ function lowerStatement(
               kind: "goto",
               block: conditionalBlock.id,
               variant: GotoVariant.Continue,
+              id: makeInstructionId(0),
             };
           }
         );
@@ -229,6 +240,7 @@ function lowerStatement(
           kind: "goto",
           block: conditionalBlock.id,
           variant: GotoVariant.Break,
+          id: makeInstructionId(0),
         },
         conditionalBlock
       );
@@ -244,6 +256,7 @@ function lowerStatement(
         consequent: loopBlock,
         alternate: continuationBlock.id,
         fallthrough: continuationBlock.id,
+        id: makeInstructionId(0),
       };
       builder.terminateWithContinuation(terminal, continuationBlock);
       return;
@@ -269,6 +282,7 @@ function lowerStatement(
               kind: "goto",
               block: conditionalBlock.id,
               variant: GotoVariant.Continue,
+              id: makeInstructionId(0),
             };
           }
         );
@@ -279,6 +293,7 @@ function lowerStatement(
           kind: "goto",
           block: conditionalBlock.id,
           variant: GotoVariant.Break,
+          id: makeInstructionId(0),
         },
         conditionalBlock
       );
@@ -294,6 +309,7 @@ function lowerStatement(
         consequent: loopBlock,
         alternate: continuationBlock.id,
         fallthrough: continuationBlock.id,
+        id: makeInstructionId(0),
       };
       builder.terminateWithContinuation(terminal, continuationBlock);
       return;
@@ -328,6 +344,7 @@ function lowerStatement(
         kind: "goto",
         block: conditionalBlock.id,
         variant: GotoVariant.Break,
+        id: makeInstructionId(0),
       });
       /**
        * Construct the loop itself: the loop body wraps around to the update block
@@ -340,6 +357,7 @@ function lowerStatement(
             kind: "goto",
             block: updateBlock.id,
             variant: GotoVariant.Continue,
+            id: makeInstructionId(0),
           };
         });
       });
@@ -349,6 +367,7 @@ function lowerStatement(
           kind: "goto",
           block: conditionalBlock.id,
           variant: GotoVariant.Break,
+          id: makeInstructionId(0),
         },
         conditionalBlock
       );
@@ -366,6 +385,7 @@ function lowerStatement(
           consequent: loopBlock,
           alternate: continuationBlock.id,
           fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
         };
       } else {
         /**
@@ -376,6 +396,7 @@ function lowerStatement(
           kind: "goto",
           block: loopBlock,
           variant: GotoVariant.Break,
+          id: makeInstructionId(0),
         };
       }
       builder.terminateWithContinuation(terminal, continuationBlock);
@@ -400,13 +421,19 @@ function lowerStatement(
             consequent: loopBlock,
             alternate: continuationBlock.id,
             fallthrough: continuationBlock.id,
+            id: makeInstructionId(0),
           };
           return terminal;
         });
       });
       //  do-while unconditionally enters the loop
       builder.terminateWithContinuation(
-        { kind: "goto", block: loopBlock, variant: GotoVariant.Break },
+        {
+          kind: "goto",
+          block: loopBlock,
+          variant: GotoVariant.Break,
+          id: makeInstructionId(0),
+        },
         continuationBlock
       );
       return;
@@ -429,6 +456,7 @@ function lowerStatement(
               kind: "goto",
               block: conditionalBlock.id,
               variant: GotoVariant.Continue,
+              id: makeInstructionId(0),
             };
           }
         );
@@ -443,6 +471,7 @@ function lowerStatement(
           test: conditionalBlock.id,
           loop: loopBlock,
           fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
         },
         conditionalBlock
       );
@@ -457,6 +486,7 @@ function lowerStatement(
         consequent: loopBlock,
         alternate: continuationBlock.id,
         fallthrough: continuationBlock.id,
+        id: makeInstructionId(0),
       };
       //  Complete the conditional and continue with code after the loop
       builder.terminateWithContinuation(terminal, continuationBlock);
@@ -489,6 +519,7 @@ function lowerStatement(
               kind: "goto",
               block: continuationBlock.id,
               variant: GotoVariant.Break,
+              id: makeInstructionId(0),
             },
             continuationBlock
           );
@@ -535,6 +566,7 @@ function lowerStatement(
               kind: "goto",
               block: fallthrough,
               variant: GotoVariant.Break,
+              id: makeInstructionId(0),
             };
           });
         });
@@ -559,7 +591,13 @@ function lowerStatement(
 
       const test = lowerExpressionToPlace(builder, stmt.get("discriminant"));
       builder.terminateWithContinuation(
-        { kind: "switch", test, cases, fallthrough: continuationBlock.id },
+        {
+          kind: "switch",
+          test,
+          cases,
+          fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
+        },
         continuationBlock
       );
       return;
@@ -1069,6 +1107,7 @@ function lowerConditional(
       kind: "goto",
       block: continuationBlock.id,
       variant: GotoVariant.Break,
+      id: makeInstructionId(0),
     };
   });
   //  Block for the alternate (if the test is not truthy)
@@ -1084,6 +1123,7 @@ function lowerConditional(
       kind: "goto",
       block: continuationBlock.id,
       variant: GotoVariant.Break,
+      id: makeInstructionId(0),
     };
   });
   const terminal: IfTerminal = {
@@ -1092,6 +1132,7 @@ function lowerConditional(
     consequent: consequentBlock,
     alternate: alternateBlock,
     fallthrough: continuationBlock.id,
+    id: makeInstructionId(0),
   };
   builder.terminateWithContinuation(terminal, continuationBlock);
   return place;

@@ -121,14 +121,19 @@ export type Terminal =
   | SwitchTerminal
   | WhileTerminal;
 
-export type ThrowTerminal = { kind: "throw"; value: Place };
+export type ThrowTerminal = { kind: "throw"; value: Place; id: InstructionId };
 
-export type ReturnTerminal = { kind: "return"; value: Place | null };
+export type ReturnTerminal = {
+  kind: "return";
+  value: Place | null;
+  id: InstructionId;
+};
 
 export type GotoTerminal = {
   kind: "goto";
   block: BlockId;
   variant: GotoVariant;
+  id: InstructionId;
 };
 
 export enum GotoVariant {
@@ -142,6 +147,7 @@ export type IfTerminal = {
   consequent: BlockId;
   alternate: BlockId;
   fallthrough: BlockId | null;
+  id: InstructionId;
 };
 
 export type SwitchTerminal = {
@@ -149,6 +155,7 @@ export type SwitchTerminal = {
   test: Place;
   cases: Array<{ test: Place | null; block: BlockId }>;
   fallthrough: BlockId | null;
+  id: InstructionId;
 };
 
 export type WhileTerminal = {
@@ -156,6 +163,7 @@ export type WhileTerminal = {
   test: BlockId;
   loop: BlockId;
   fallthrough: BlockId;
+  id: InstructionId;
 };
 
 /**

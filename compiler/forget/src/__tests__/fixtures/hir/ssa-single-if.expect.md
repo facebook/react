@@ -19,14 +19,14 @@ function foo() {
 bb0:
   [1] Let mutate x$1_@0 = 1
   [2] Let mutate y$2_@1 = 2
-  If (read y$2_@1) then:bb2 else:bb1
+  [3] If (read y$2_@1) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [3] Let mutate z$3_@2 = Binary read x$1_@0 + read y$2_@1
-  Goto bb1
+  [4] Let mutate z$3_@2 = Binary read x$1_@0 + read y$2_@1
+  [5] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  Return
+  [6] Return
 ```
 
 ### CFG
@@ -43,7 +43,7 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [3] Let mutate z$3_@2 = Binary read x$1_@0 + read y$2_@1
+      [4] Let mutate z$3_@2 = Binary read x$1_@0 + read y$2_@1
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end

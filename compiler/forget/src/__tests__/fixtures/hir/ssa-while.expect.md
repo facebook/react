@@ -17,21 +17,21 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0[0:6] = 1
-  While test=bb1 loop=bb3 fallthrough=bb2
+  [1] Let mutate x$1_@0[0:8] = 1
+  [2] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
-  [2] Const mutate $3_@1 = 10
-  [3] Const mutate $4_@2 = Binary read x$1_@0 < read $3_@1
-  If (read $4_@2) then:bb3 else:bb2
+  [3] Const mutate $3_@1 = 10
+  [4] Const mutate $4_@2 = Binary read x$1_@0 < read $3_@1
+  [5] If (read $4_@2) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  [4] Const mutate $2_@3 = 1
-  [5] Reassign mutate x$1_@0[0:6] = Binary read x$1_@0 + read $2_@3
-  Goto(Continue) bb1
+  [6] Const mutate $2_@3 = 1
+  [7] Reassign mutate x$1_@0[0:8] = Binary read x$1_@0 + read $2_@3
+  [8] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  Return read x$1_@0
+  [9] Return read x$1_@0
 ```
 
 ### CFG
@@ -41,21 +41,21 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0[0:6] = 1
+      [1] Let mutate x$1_@0[0:8] = 1
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
   subgraph bb1
     bb1_instrs["
-      [2] Const mutate $3_@1 = 10
-      [3] Const mutate $4_@2 = Binary read x$1_@0 < read $3_@1
+      [3] Const mutate $3_@1 = 10
+      [4] Const mutate $4_@2 = Binary read x$1_@0 < read $3_@1
     "]
     bb1_instrs --> bb1_terminal(["If (read $4_@2)"])
   end
   subgraph bb3
     bb3_instrs["
-      [4] Const mutate $2_@3 = 1
-      [5] Reassign mutate x$1_@0[0:6] = Binary read x$1_@0 + read $2_@3
+      [6] Const mutate $2_@3 = 1
+      [7] Reassign mutate x$1_@0[0:8] = Binary read x$1_@0 + read $2_@3
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end

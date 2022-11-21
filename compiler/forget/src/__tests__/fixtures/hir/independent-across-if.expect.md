@@ -37,7 +37,7 @@ function Component(props) {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -65,7 +65,7 @@ function compute$0() {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -93,7 +93,7 @@ function mutate$0() {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -121,7 +121,7 @@ function foo$0() {
 
 ```
 bb0:
-  Return
+  [1] Return
 ```
 
 ### CFG
@@ -149,18 +149,18 @@ function Foo$0() {
 
 ```
 bb0:
-  [1] Const mutate a$2_@0[0:5] = Call mutate compute$3_@0(read props$1.a)
-  [2] Const mutate b$4_@0[0:5] = Call mutate compute$3_@0(read props$1.b)
-  If (read props$1.c) then:bb2 else:bb1
+  [1] Const mutate a$2_@0[0:6] = Call mutate compute$3_@0(read props$1.a)
+  [2] Const mutate b$4_@0[0:6] = Call mutate compute$3_@0(read props$1.b)
+  [3] If (read props$1.c) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [3] Call mutate mutate$5_@0(mutate a$2_@0)
-  [4] Call mutate mutate$5_@0(mutate b$4_@0)
-  Goto bb1
+  [4] Call mutate mutate$5_@0(mutate a$2_@0)
+  [5] Call mutate mutate$5_@0(mutate b$4_@0)
+  [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [5] Const mutate $7_@1 = JSX <read Foo$6 a={freeze a$2_@0} b={freeze b$4_@0} ></read Foo$6>
-  Return read $7_@1
+  [7] Const mutate $7_@1 = JSX <read Foo$6 a={freeze a$2_@0} b={freeze b$4_@0} ></read Foo$6>
+  [8] Return read $7_@1
 ```
 
 ### CFG
@@ -170,21 +170,21 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2_@0[0:5] = Call mutate compute$3_@0(read props$1.a)
-      [2] Const mutate b$4_@0[0:5] = Call mutate compute$3_@0(read props$1.b)
+      [1] Const mutate a$2_@0[0:6] = Call mutate compute$3_@0(read props$1.a)
+      [2] Const mutate b$4_@0[0:6] = Call mutate compute$3_@0(read props$1.b)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.c)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Call mutate mutate$5_@0(mutate a$2_@0)
-      [4] Call mutate mutate$5_@0(mutate b$4_@0)
+      [4] Call mutate mutate$5_@0(mutate a$2_@0)
+      [5] Call mutate mutate$5_@0(mutate b$4_@0)
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [5] Const mutate $7_@1 = JSX <read Foo$6 a={freeze a$2_@0} b={freeze b$4_@0} ></read Foo$6>
+      [7] Const mutate $7_@1 = JSX <read Foo$6 a={freeze a$2_@0} b={freeze b$4_@0} ></read Foo$6>
     "]
     bb1_instrs --> bb1_terminal(["Return read $7_@1"])
   end

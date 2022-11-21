@@ -15,13 +15,13 @@ function foo(a, b) {
 
 ```
 bb0:
-  While test=bb1 loop=bb2 fallthrough=bb2
+  [1] While test=bb1 loop=bb2 fallthrough=bb2
 bb1:
   predecessor blocks: bb0
-  If (read a$1) then:bb2 else:bb2
+  [2] If (read a$1) then:bb2 else:bb2
 bb2:
   predecessor blocks: bb1
-  Return read b$2
+  [3] Return read b$2
 ```
 
 ### CFG

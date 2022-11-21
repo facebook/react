@@ -115,30 +115,30 @@ function printTerminal(terminal: Terminal): Array<string> | string {
   let value;
   switch (terminal.kind) {
     case "if": {
-      value = `If (${printPlace(terminal.test)}) then:bb${
+      value = `[${terminal.id}] If (${printPlace(terminal.test)}) then:bb${
         terminal.consequent
       } else:bb${terminal.alternate}`;
       break;
     }
     case "throw": {
-      value = `Throw ${printPlace(terminal.value)}`;
+      value = `[${terminal.id}] Throw ${printPlace(terminal.value)}`;
       break;
     }
     case "return": {
-      value = `Return${
+      value = `[${terminal.id}] Return${
         terminal.value != null ? " " + printPlace(terminal.value) : ""
       }`;
       break;
     }
     case "goto": {
-      value = `Goto${
+      value = `[${terminal.id}] Goto${
         terminal.variant === GotoVariant.Continue ? "(Continue)" : ""
       } bb${terminal.block}`;
       break;
     }
     case "switch": {
       const output = [];
-      output.push(`Switch (${printPlace(terminal.test)})`);
+      output.push(`[${terminal.id}] Switch (${printPlace(terminal.test)})`);
       terminal.cases.forEach((case_) => {
         if (case_.test !== null) {
           output.push(`  Case ${printPlace(case_.test)}: bb${case_.block}`);
@@ -150,7 +150,7 @@ function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case "while": {
-      value = `While test=bb${terminal.test} loop=${
+      value = `[${terminal.id}] While test=bb${terminal.test} loop=${
         terminal.loop !== null ? `bb${terminal.loop}` : ""
       } fallthrough=${terminal.fallthrough ? `bb${terminal.fallthrough}` : ""}`;
       break;

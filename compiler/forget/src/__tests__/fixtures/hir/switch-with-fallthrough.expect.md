@@ -43,7 +43,7 @@ bb0:
   [5] Const mutate $6_@4 = 2
   [6] Const mutate $7_@5 = 1
   [7] Const mutate $8_@6 = 0
-  Switch (read x$1)
+  [8] Switch (read x$1)
     Case read $8_@6: bb10
     Case read $7_@5: bb9
     Case read $6_@4: bb1
@@ -53,31 +53,31 @@ bb0:
     Default: bb2
 bb10:
   predecessor blocks: bb0
-  [8] Reassign mutate y$2_@7 = 0
-  Goto bb9
+  [9] Reassign mutate y$2_@7 = 0
+  [10] Goto bb9
 bb9:
   predecessor blocks: bb10 bb0
-  [9] Reassign mutate y$2_@8 = 1
-  Goto bb1
+  [11] Reassign mutate y$2_@8 = 1
+  [12] Goto bb1
 bb5:
   predecessor blocks: bb0
-  [10] Reassign mutate y$2_@9 = 3
-  Goto bb1
+  [13] Reassign mutate y$2_@9 = 3
+  [14] Goto bb1
 bb4:
   predecessor blocks: bb0
-  [11] Reassign mutate y$2_@10 = 4
-  Goto bb3
+  [15] Reassign mutate y$2_@10 = 4
+  [16] Goto bb3
 bb3:
   predecessor blocks: bb4 bb0
-  [12] Reassign mutate y$2_@11 = 5
-  Goto bb2
+  [17] Reassign mutate y$2_@11 = 5
+  [18] Goto bb2
 bb2:
   predecessor blocks: bb3 bb0
-  [13] Reassign mutate y$2_@12 = 0
-  Goto bb1
+  [19] Reassign mutate y$2_@12 = 0
+  [20] Goto bb1
 bb1:
   predecessor blocks: bb9 bb0 bb5 bb2
-  Return
+  [21] Return
 ```
 
 ### CFG
@@ -99,37 +99,37 @@ flowchart TB
   end
   subgraph bb10
     bb10_instrs["
-      [8] Reassign mutate y$2_@7 = 0
+      [9] Reassign mutate y$2_@7 = 0
     "]
     bb10_instrs --> bb10_terminal(["Goto"])
   end
   subgraph bb9
     bb9_instrs["
-      [9] Reassign mutate y$2_@8 = 1
+      [11] Reassign mutate y$2_@8 = 1
     "]
     bb9_instrs --> bb9_terminal(["Goto"])
   end
   subgraph bb5
     bb5_instrs["
-      [10] Reassign mutate y$2_@9 = 3
+      [13] Reassign mutate y$2_@9 = 3
     "]
     bb5_instrs --> bb5_terminal(["Goto"])
   end
   subgraph bb4
     bb4_instrs["
-      [11] Reassign mutate y$2_@10 = 4
+      [15] Reassign mutate y$2_@10 = 4
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [12] Reassign mutate y$2_@11 = 5
+      [17] Reassign mutate y$2_@11 = 5
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [13] Reassign mutate y$2_@12 = 0
+      [19] Reassign mutate y$2_@12 = 0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
