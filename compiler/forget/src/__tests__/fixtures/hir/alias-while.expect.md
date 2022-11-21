@@ -27,19 +27,19 @@ function mutate(x, y) {}
 
 ```
 bb0:
-  [1] Let mutate a$2_@0[0:8] = Object {  }
-  [2] Let mutate b$3_@0[0:8] = Object {  }
-  [3] Let mutate c$4_@0[0:8] = Object {  }
+  [1] Let mutate a$2_@0[0:9] = Object {  }
+  [2] Let mutate b$3_@0[0:9] = Object {  }
+  [3] Let mutate c$4_@0[0:9] = Object {  }
   While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
   If (read cond$1) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  [4] Let mutate z$5_@0[0:8] = read a$2_@0
-  [5] Reassign mutate a$2_@0[0:8] = read b$3_@0
-  [6] Reassign mutate b$3_@0[0:8] = read c$4_@0
-  [7] Reassign mutate c$4_@0[0:8] = read z$5_@0
+  [4] Let mutate z$5_@0[0:9] = read a$2_@0
+  [5] Reassign mutate a$2_@0[0:9] = read b$3_@0
+  [6] Reassign mutate b$3_@0[0:9] = read c$4_@0
+  [7] Reassign mutate c$4_@0[0:9] = read z$5_@0
   [8] Call mutate mutate$6_@0(mutate a$2_@0, mutate b$3_@0)
   Goto(Continue) bb1
 bb2:
@@ -57,9 +57,9 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate a$2_@0[0:8] = Object {  }
-      [2] Let mutate b$3_@0[0:8] = Object {  }
-      [3] Let mutate c$4_@0[0:8] = Object {  }
+      [1] Let mutate a$2_@0[0:9] = Object {  }
+      [2] Let mutate b$3_@0[0:9] = Object {  }
+      [3] Let mutate c$4_@0[0:9] = Object {  }
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
@@ -68,10 +68,10 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [4] Let mutate z$5_@0[0:8] = read a$2_@0
-      [5] Reassign mutate a$2_@0[0:8] = read b$3_@0
-      [6] Reassign mutate b$3_@0[0:8] = read c$4_@0
-      [7] Reassign mutate c$4_@0[0:8] = read z$5_@0
+      [4] Let mutate z$5_@0[0:9] = read a$2_@0
+      [5] Reassign mutate a$2_@0[0:9] = read b$3_@0
+      [6] Reassign mutate b$3_@0[0:9] = read c$4_@0
+      [7] Reassign mutate c$4_@0[0:9] = read z$5_@0
       [8] Call mutate mutate$6_@0(mutate a$2_@0, mutate b$3_@0)
     "]
     bb3_instrs --> bb3_terminal(["Goto"])

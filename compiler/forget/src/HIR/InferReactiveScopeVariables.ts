@@ -146,8 +146,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
 // Is the operand mutable at this given instruction
 function isMutable(instr: Instruction, place: Place): boolean {
   return (
-    // TODO: should start really be exclusive?
-    instr.id > place.identifier.mutableRange.start &&
-    instr.id <= place.identifier.mutableRange.end
+    instr.id >= place.identifier.mutableRange.start &&
+    instr.id < place.identifier.mutableRange.end
   );
 }

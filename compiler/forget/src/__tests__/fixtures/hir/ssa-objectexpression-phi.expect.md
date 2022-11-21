@@ -22,18 +22,18 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0[1:5] = 1
-  [2] Let mutate y$2_@1[2:6] = 2
+  [1] Let mutate x$1_@0[1:6] = 1
+  [2] Let mutate y$2_@1[2:7] = 2
   [3] Const mutate $3_@2 = 1
   [4] Const mutate $4_@3 = Binary read x$1_@0 > read $3_@2
   If (read $4_@3) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [5] Reassign mutate x$1_@0[1:5] = 2
+  [5] Reassign mutate x$1_@0[1:6] = 2
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [6] Reassign mutate y$2_@1[2:6] = 3
+  [6] Reassign mutate y$2_@1[2:7] = 3
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
@@ -48,8 +48,8 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0[1:5] = 1
-      [2] Let mutate y$2_@1[2:6] = 2
+      [1] Let mutate x$1_@0[1:6] = 1
+      [2] Let mutate y$2_@1[2:7] = 2
       [3] Const mutate $3_@2 = 1
       [4] Const mutate $4_@3 = Binary read x$1_@0 > read $3_@2
     "]
@@ -57,13 +57,13 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [5] Reassign mutate x$1_@0[1:5] = 2
+      [5] Reassign mutate x$1_@0[1:6] = 2
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [6] Reassign mutate y$2_@1[2:6] = 3
+      [6] Reassign mutate y$2_@1[2:7] = 3
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end

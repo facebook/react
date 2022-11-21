@@ -23,13 +23,13 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Let mutate x$2_@0[1:4] = Array []
+  [1] Let mutate x$2_@0[1:5] = Array []
   [2] Call mutate x$2_@0.push(read props$1.p0)
-  [3] Let mutate y$3_@0[1:4] = read x$2_@0
+  [3] Let mutate y$3_@0[1:5] = read x$2_@0
   If (read props$1.p1) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [4] Reassign mutate x$2_@0[1:4] = Array []
+  [4] Reassign mutate x$2_@0[1:5] = Array []
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
@@ -46,15 +46,15 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$2_@0[1:4] = Array []
+      [1] Let mutate x$2_@0[1:5] = Array []
       [2] Call mutate x$2_@0.push(read props$1.p0)
-      [3] Let mutate y$3_@0[1:4] = read x$2_@0
+      [3] Let mutate y$3_@0[1:5] = read x$2_@0
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.p1)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Reassign mutate x$2_@0[1:4] = Array []
+      [4] Reassign mutate x$2_@0[1:5] = Array []
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end

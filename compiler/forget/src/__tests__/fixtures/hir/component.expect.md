@@ -37,10 +37,10 @@ function Component(props) {
 bb0:
   [1] Const mutate items$2_@0 = read props$1.items
   [2] Const mutate maxItems$3_@1 = read props$1.maxItems
-  [3] Const mutate renderedItems$4_@2[3:14] = Array []
-  [4] Const mutate seen$5_@3[0:11] = New mutate Set$6_@3()
+  [3] Const mutate renderedItems$4_@2[3:15] = Array []
+  [4] Const mutate seen$5_@3[0:12] = New mutate Set$6_@3()
   [5] Const mutate $9_@4 = 0
-  [6] Const mutate max$7_@5[0:6] = Call mutate Math$8_@5.max(read $9_@4, read maxItems$3_@1)
+  [6] Const mutate max$7_@5[0:7] = Call mutate Math$8_@5.max(read $9_@4, read maxItems$3_@1)
   Goto bb1
 bb1:
   predecessor blocks: bb0 bb5 bb10
@@ -48,15 +48,15 @@ bb1:
 bb3:
   predecessor blocks: bb1
   [7] Const mutate $11_@6 = null
-  [8] Const mutate $12_@3[0:11] = Binary read item$10_@3 == read $11_@6
+  [8] Const mutate $12_@3[0:12] = Binary read item$10_@3 == read $11_@6
   If (read $12_@3) then:bb8 else:bb9
 bb8:
   predecessor blocks: bb3
-  [9] Const mutate $13_@3[0:11] = read $12_@3
+  [9] Const mutate $13_@3[0:12] = read $12_@3
   Goto bb7
 bb9:
   predecessor blocks: bb3
-  [10] Const mutate $13_@3[0:11] = Call mutate seen$5_@3.has(mutate item$10_@3)
+  [10] Const mutate $13_@3[0:12] = Call mutate seen$5_@3.has(mutate item$10_@3)
   Goto bb7
 bb7:
   predecessor blocks: bb8 bb9
@@ -98,10 +98,10 @@ flowchart TB
     bb0_instrs["
       [1] Const mutate items$2_@0 = read props$1.items
       [2] Const mutate maxItems$3_@1 = read props$1.maxItems
-      [3] Const mutate renderedItems$4_@2[3:14] = Array []
-      [4] Const mutate seen$5_@3[0:11] = New mutate Set$6_@3()
+      [3] Const mutate renderedItems$4_@2[3:15] = Array []
+      [4] Const mutate seen$5_@3[0:12] = New mutate Set$6_@3()
       [5] Const mutate $9_@4 = 0
-      [6] Const mutate max$7_@5[0:6] = Call mutate Math$8_@5.max(read $9_@4, read maxItems$3_@1)
+      [6] Const mutate max$7_@5[0:7] = Call mutate Math$8_@5.max(read $9_@4, read maxItems$3_@1)
     "]
     bb0_instrs --> bb0_terminal(["Goto"])
   end
@@ -111,19 +111,19 @@ flowchart TB
   subgraph bb3
     bb3_instrs["
       [7] Const mutate $11_@6 = null
-      [8] Const mutate $12_@3[0:11] = Binary read item$10_@3 == read $11_@6
+      [8] Const mutate $12_@3[0:12] = Binary read item$10_@3 == read $11_@6
     "]
     bb3_instrs --> bb3_terminal(["If (read $12_@3)"])
   end
   subgraph bb8
     bb8_instrs["
-      [9] Const mutate $13_@3[0:11] = read $12_@3
+      [9] Const mutate $13_@3[0:12] = read $12_@3
     "]
     bb8_instrs --> bb8_terminal(["Goto"])
   end
   subgraph bb9
     bb9_instrs["
-      [10] Const mutate $13_@3[0:11] = Call mutate seen$5_@3.has(mutate item$10_@3)
+      [10] Const mutate $13_@3[0:12] = Call mutate seen$5_@3.has(mutate item$10_@3)
     "]
     bb9_instrs --> bb9_terminal(["Goto"])
   end

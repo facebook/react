@@ -47,8 +47,8 @@ function foo$0() {
 
 ```
 bb0:
-  [1] Const mutate a$2_@0[0:6] = Array []
-  [2] Const mutate b$3_@0[0:6] = Object {  }
+  [1] Const mutate a$2_@0[0:7] = Array []
+  [2] Const mutate b$3_@0[0:7] = Object {  }
   [3] Call mutate foo$4_@0(mutate a$2_@0, mutate b$3_@0)
   [4] Const mutate $6_@1 = "div"
   [5] Let mutate _$5_@2 = JSX <read $6_@1 a={freeze a$2_@0} ></read $6_@1>
@@ -65,8 +65,8 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2_@0[0:6] = Array []
-      [2] Const mutate b$3_@0[0:6] = Object {  }
+      [1] Const mutate a$2_@0[0:7] = Array []
+      [2] Const mutate b$3_@0[0:7] = Object {  }
       [3] Call mutate foo$4_@0(mutate a$2_@0, mutate b$3_@0)
       [4] Const mutate $6_@1 = 'div'
       [5] Let mutate _$5_@2 = JSX <read $6_@1 a={freeze a$2_@0} ></read $6_@1>

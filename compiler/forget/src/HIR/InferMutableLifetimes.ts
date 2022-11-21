@@ -68,7 +68,7 @@ function inferPlace(place: Place, instr: Instruction) {
     case Effect.Freeze:
       return;
     case Effect.Mutate: {
-      place.identifier.mutableRange.end = instr.id;
+      place.identifier.mutableRange.end = instr.id + 1;
       return;
     }
     default:
@@ -126,7 +126,7 @@ export function inferMutableRanges(func: HIRFunction) {
 
           // Let's be optimistic and assume this lvalue is not mutable by
           // default.
-          lvalueId.mutableRange.end = instr.id;
+          lvalueId.mutableRange.end = instr.id + 1;
         } else {
           inferPlace(instr.lvalue.place, instr);
         }

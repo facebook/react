@@ -27,23 +27,23 @@ function call(x) {}
 ```
 bb0:
   [1] Const mutate cond$2_@0 = read props$1.cond
-  [2] Const mutate x$3_@1 = read props$1.x
+  [2] Const mutate x$3_@1[2:6] = read props$1.x
   [3] Let mutate a$4_@2 = undefined
   If (read cond$2_@0) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [4] Reassign mutate a$4_@3[4:5] = read x$3_@1
+  [4] Reassign mutate a$4_@1[2:6] = read x$3_@1
   Goto bb1
 bb3:
   predecessor blocks: bb0
-  [5] Reassign mutate a$4_@3[4:5] = Array []
+  [5] Reassign mutate a$4_@1[2:6] = Array []
   Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  [6] Call read useFreeze$5(freeze a$4_@3)
-  [7] Call read useFreeze$5(read a$4_@3)
-  [8] Call mutate call$6_@4(read a$4_@3)
-  Return read a$4_@3
+  [6] Call read useFreeze$5(freeze a$4_@1)
+  [7] Call read useFreeze$5(read a$4_@1)
+  [8] Call mutate call$6_@3(read a$4_@1)
+  Return read a$4_@1
 ```
 
 ### CFG
@@ -54,30 +54,30 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate cond$2_@0 = read props$1.cond
-      [2] Const mutate x$3_@1 = read props$1.x
+      [2] Const mutate x$3_@1[2:6] = read props$1.x
       [3] Let mutate a$4_@2 = undefined
     "]
     bb0_instrs --> bb0_terminal(["If (read cond$2_@0)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Reassign mutate a$4_@3[4:5] = read x$3_@1
+      [4] Reassign mutate a$4_@1[2:6] = read x$3_@1
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [5] Reassign mutate a$4_@3[4:5] = Array []
+      [5] Reassign mutate a$4_@1[2:6] = Array []
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [6] Call read useFreeze$5(freeze a$4_@3)
-      [7] Call read useFreeze$5(read a$4_@3)
-      [8] Call mutate call$6_@4(read a$4_@3)
+      [6] Call read useFreeze$5(freeze a$4_@1)
+      [7] Call read useFreeze$5(read a$4_@1)
+      [8] Call mutate call$6_@3(read a$4_@1)
     "]
-    bb1_instrs --> bb1_terminal(["Return read a$4_@3"])
+    bb1_instrs --> bb1_terminal(["Return read a$4_@1"])
   end
 
   %% Jumps

@@ -94,10 +94,10 @@ function cond$0() {
 
 ```
 bb0:
-  [1] Let mutate a$2_@0[0:9] = Object {  }
-  [2] Let mutate b$3_@0[0:9] = Object {  }
+  [1] Let mutate a$2_@0[0:10] = Object {  }
+  [2] Let mutate b$3_@0[0:10] = Object {  }
   [3] Let mutate c$4_@1 = Object {  }
-  [4] Let mutate d$5_@0[0:9] = Object {  }
+  [4] Let mutate d$5_@0[0:10] = Object {  }
   While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb4
@@ -106,7 +106,7 @@ bb1:
 bb3:
   predecessor blocks: bb1
   [6] Call mutate mutate$6_@0(mutate a$2_@0, mutate b$3_@0)
-  [7] Const mutate $8_@0[0:9] = Call mutate cond$7_@0(mutate a$2_@0)
+  [7] Const mutate $8_@0[0:10] = Call mutate cond$7_@0(mutate a$2_@0)
   If (read $8_@0) then:bb2 else:bb4
 bb4:
   predecessor blocks: bb3
@@ -137,10 +137,10 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate a$2_@0[0:9] = Object {  }
-      [2] Let mutate b$3_@0[0:9] = Object {  }
+      [1] Let mutate a$2_@0[0:10] = Object {  }
+      [2] Let mutate b$3_@0[0:10] = Object {  }
       [3] Let mutate c$4_@1 = Object {  }
-      [4] Let mutate d$5_@0[0:9] = Object {  }
+      [4] Let mutate d$5_@0[0:10] = Object {  }
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
@@ -153,7 +153,7 @@ flowchart TB
   subgraph bb3
     bb3_instrs["
       [6] Call mutate mutate$6_@0(mutate a$2_@0, mutate b$3_@0)
-      [7] Const mutate $8_@0[0:9] = Call mutate cond$7_@0(mutate a$2_@0)
+      [7] Const mutate $8_@0[0:10] = Call mutate cond$7_@0(mutate a$2_@0)
     "]
     bb3_instrs --> bb3_terminal(["If (read $8_@0)"])
   end

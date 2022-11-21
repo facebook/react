@@ -69,9 +69,9 @@ function f$0() {
 ```
 bb0:
   [1] Const mutate $2_@0 = 1
-  [2] Reassign mutate a$1_@1.b.c[0:4] = Binary read a$1_@1.b.c + read $2_@0
+  [2] Reassign mutate a$1_@1.b.c[0:5] = Binary read a$1_@1.b.c + read $2_@0
   [3] Const mutate $3_@2 = 2
-  [4] Reassign mutate a$1_@1.b.c[0:4] = Binary read a$1_@1.b.c * read $3_@2
+  [4] Reassign mutate a$1_@1.b.c[0:5] = Binary read a$1_@1.b.c * read $3_@2
   Return
 ```
 
@@ -83,9 +83,9 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate $2_@0 = 1
-      [2] Reassign mutate a$1_@1.b.c[0:4] = Binary read a$1_@1.b.c + read $2_@0
+      [2] Reassign mutate a$1_@1.b.c[0:5] = Binary read a$1_@1.b.c + read $2_@0
       [3] Const mutate $3_@2 = 2
-      [4] Reassign mutate a$1_@1.b.c[0:4] = Binary read a$1_@1.b.c * read $3_@2
+      [4] Reassign mutate a$1_@1.b.c[0:5] = Binary read a$1_@1.b.c * read $3_@2
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end

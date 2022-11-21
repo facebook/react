@@ -258,7 +258,7 @@ function printInstructionValue(instrValue: InstructionValue): string {
 }
 
 function isMutable(range: MutableRange): boolean {
-  return range.end > range.start;
+  return range.end > range.start + 1;
 }
 
 function printMutableRange(range: MutableRange): string {

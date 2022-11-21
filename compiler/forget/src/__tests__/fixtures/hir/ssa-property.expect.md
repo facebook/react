@@ -16,8 +16,8 @@ function foo() {
 ```
 bb0:
   [1] Const mutate x$1_@0 = Array []
-  [2] Const mutate y$2_@1[2:3] = Object {  }
-  [3] Reassign mutate y$2_@1.x[2:3] = read x$1_@0
+  [2] Const mutate y$2_@1[2:4] = Object {  }
+  [3] Reassign mutate y$2_@1.x[2:4] = read x$1_@0
   Return freeze y$2_@1
 ```
 
@@ -29,8 +29,8 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate x$1_@0 = Array []
-      [2] Const mutate y$2_@1[2:3] = Object {  }
-      [3] Reassign mutate y$2_@1.x[2:3] = read x$1_@0
+      [2] Const mutate y$2_@1[2:4] = Object {  }
+      [3] Reassign mutate y$2_@1.x[2:4] = read x$1_@0
     "]
     bb0_instrs --> bb0_terminal(["Return freeze y$2_@1"])
   end

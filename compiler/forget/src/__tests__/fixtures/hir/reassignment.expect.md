@@ -21,9 +21,9 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Let mutate x$2_@0[1:6] = Array []
+  [1] Let mutate x$2_@0[1:7] = Array []
   [2] Call mutate x$2_@0.push(read props$1.p0)
-  [3] Let mutate y$3_@0[1:6] = read x$2_@0
+  [3] Let mutate y$3_@0[1:7] = read x$2_@0
   [4] Reassign mutate x$2_@1 = Array []
   [5] Let mutate _$4_@2 = JSX <read Component$0 x={freeze x$2_@1} ></read Component$0>
   [6] Call mutate y$3_@0.push(read props$1.p1)
@@ -38,9 +38,9 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$2_@0[1:6] = Array []
+      [1] Let mutate x$2_@0[1:7] = Array []
       [2] Call mutate x$2_@0.push(read props$1.p0)
-      [3] Let mutate y$3_@0[1:6] = read x$2_@0
+      [3] Let mutate y$3_@0[1:7] = read x$2_@0
       [4] Reassign mutate x$2_@1 = Array []
       [5] Let mutate _$4_@2 = JSX <read Component$0 x={freeze x$2_@1} ></read Component$0>
       [6] Call mutate y$3_@0.push(read props$1.p1)

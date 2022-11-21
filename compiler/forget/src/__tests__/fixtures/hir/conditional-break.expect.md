@@ -78,7 +78,7 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate a_DEBUG$2_@0[1:4] = Array []
+  [1] Const mutate a_DEBUG$2_@0[1:5] = Array []
   [2] Call mutate a_DEBUG$2_@0.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
@@ -98,7 +98,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a_DEBUG$2_@0[1:4] = Array []
+      [1] Const mutate a_DEBUG$2_@0[1:5] = Array []
       [2] Call mutate a_DEBUG$2_@0.push(read props$1.a)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.b)"])
@@ -141,7 +141,7 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  [1] Const mutate a$2_@0[1:4] = Array []
+  [1] Const mutate a$2_@0[1:5] = Array []
   [2] Call mutate a$2_@0.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
@@ -161,7 +161,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2_@0[1:4] = Array []
+      [1] Const mutate a$2_@0[1:5] = Array []
       [2] Call mutate a$2_@0.push(read props$1.a)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.b)"])
@@ -205,7 +205,7 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  [1] Const mutate a$2_@0[1:5] = Array []
+  [1] Const mutate a$2_@0[1:6] = Array []
   [2] Call mutate a$2_@0.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
@@ -226,7 +226,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2_@0[1:5] = Array []
+      [1] Const mutate a$2_@0[1:6] = Array []
       [2] Call mutate a$2_@0.push(read props$1.a)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.b)"])
@@ -271,7 +271,7 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  [1] Const mutate a$2_@0[1:4] = Array []
+  [1] Const mutate a$2_@0[1:5] = Array []
   [2] Call mutate a$2_@0.push(read props$1.a)
   If (read props$1.b) then:bb2 else:bb1
 bb2:
@@ -291,7 +291,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2_@0[1:4] = Array []
+      [1] Const mutate a$2_@0[1:5] = Array []
       [2] Call mutate a$2_@0.push(read props$1.a)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.b)"])
@@ -335,7 +335,7 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  [1] Const mutate a$2_@0[1:4] = Array []
+  [1] Const mutate a$2_@0[1:5] = Array []
   [2] Call mutate a$2_@0.push(read props$1.a)
   If (read props$1.b) then:bb1 else:bb2
 bb2:
@@ -355,7 +355,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2_@0[1:4] = Array []
+      [1] Const mutate a$2_@0[1:5] = Array []
       [2] Call mutate a$2_@0.push(read props$1.a)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$1.b)"])

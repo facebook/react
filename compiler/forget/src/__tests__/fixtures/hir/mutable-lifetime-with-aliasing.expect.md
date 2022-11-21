@@ -70,10 +70,10 @@ bb0:
   [1] Const mutate a$2_@0 = Object {  }
   [2] Const mutate b$3_@1 = Array [read a$2_@0]
   [3] Const mutate c$4_@2 = Object {  }
-  [4] Const mutate d$5_@3[0:9] = Object { c: read c$4_@2 }
-  [5] Const mutate x$6_@3[0:9] = Object {  }
-  [6] Reassign mutate x$6_@3.b[0:9] = read b$3_@1
-  [7] Const mutate y$7_@3[0:9] = Call mutate mutate$8_@3(mutate x$6_@3, mutate d$5_@3)
+  [4] Const mutate d$5_@3[0:10] = Object { c: read c$4_@2 }
+  [5] Const mutate x$6_@3[0:10] = Object {  }
+  [6] Reassign mutate x$6_@3.b[0:10] = read b$3_@1
+  [7] Const mutate y$7_@3[0:10] = Call mutate mutate$8_@3(mutate x$6_@3, mutate d$5_@3)
   If (read a$2_@0) then:bb1 else:bb1
 bb1:
   predecessor blocks: bb0
@@ -104,10 +104,10 @@ flowchart TB
       [1] Const mutate a$2_@0 = Object {  }
       [2] Const mutate b$3_@1 = Array [read a$2_@0]
       [3] Const mutate c$4_@2 = Object {  }
-      [4] Const mutate d$5_@3[0:9] = Object { c: read c$4_@2 }
-      [5] Const mutate x$6_@3[0:9] = Object {  }
-      [6] Reassign mutate x$6_@3.b[0:9] = read b$3_@1
-      [7] Const mutate y$7_@3[0:9] = Call mutate mutate$8_@3(mutate x$6_@3, mutate d$5_@3)
+      [4] Const mutate d$5_@3[0:10] = Object { c: read c$4_@2 }
+      [5] Const mutate x$6_@3[0:10] = Object {  }
+      [6] Reassign mutate x$6_@3.b[0:10] = read b$3_@1
+      [7] Const mutate y$7_@3[0:10] = Call mutate mutate$8_@3(mutate x$6_@3, mutate d$5_@3)
     "]
     bb0_instrs --> bb0_terminal(["If (read a$2_@0)"])
   end
