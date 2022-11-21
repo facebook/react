@@ -16,6 +16,7 @@ import {
   Instruction,
   InstructionValue,
   Place,
+  SourceLocation,
 } from "./HIR";
 
 /**
@@ -270,6 +271,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
             blockValue,
             this.visitor.visitTerminal({
               kind: "while",
+              loc: terminal.loc,
               test: testValue,
               loop: loopBody,
             }),
@@ -281,6 +283,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
             blockValue,
             this.visitor.visitTerminal({
               kind: "while",
+              loc: terminal.loc,
               test: testValue,
               loop: loopBody,
             })
@@ -679,6 +682,6 @@ export type BlockTerminal<TBlock, TValue, TItem, TCase> =
       alternate: TItem | null;
     }
   | { kind: "switch"; test: TValue; cases: Array<TCase> }
-  | { kind: "while"; test: TValue; loop: TItem }
+  | { kind: "while"; loc: SourceLocation; test: TValue; loop: TItem }
   | { kind: "break"; label: string | null }
   | { kind: "continue"; label: string | null };

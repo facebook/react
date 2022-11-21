@@ -160,6 +160,7 @@ export type SwitchTerminal = {
 
 export type WhileTerminal = {
   kind: "while";
+  loc: SourceLocation;
   test: BlockId;
   loop: BlockId;
   fallthrough: BlockId;

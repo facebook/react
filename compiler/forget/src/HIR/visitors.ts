@@ -201,6 +201,7 @@ export function mapTerminalSuccessors(
       const fallthrough = fn(terminal.fallthrough, true);
       return {
         kind: "while",
+        loc: terminal.loc,
         test,
         loop,
         fallthrough,

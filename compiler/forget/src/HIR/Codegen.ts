@@ -25,10 +25,16 @@ import { todoInvariant } from "./todo";
 
 function withLoc<TNode extends t.Node, T extends (...args: any[]) => TNode>(
   fn: T
-): (loc: SourceLocation, ...args: Parameters<T>) => ReturnType<T> {
-  return (loc: SourceLocation, ...args: Parameters<T>): ReturnType<T> => {
+): (
+  loc: SourceLocation | null | undefined,
+  ...args: Parameters<T>
+) => ReturnType<T> {
+  return (
+    loc: SourceLocation | null | undefined,
+    ...args: Parameters<T>
+  ): ReturnType<T> => {
     const node = fn(...args);
-    if (loc != GeneratedSource) {
+    if (loc != null && loc != GeneratedSource) {
       node.loc = loc;
     }
     // @ts-ignore
@@ -36,9 +42,11 @@ function withLoc<TNode extends t.Node, T extends (...args: any[]) => TNode>(
   };
 }
 
+const createExpressionStatement = withLoc(t.expressionStatement);
 const createFunctionDeclaration = withLoc(t.functionDeclaration);
+const createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
-const createAssignmentExpression = withLoc(t.assignmentExpression);
+const createWhileStatement = withLoc(t.whileStatement);
 
 /**
  * Converts HIR into Babel nodes, which can then be printed into source text.
@@ -116,7 +124,7 @@ class CodegenVisitor
     } else {
       switch (instr.lvalue.kind) {
         case InstructionKind.Const: {
-          return t.variableDeclaration("const", [
+          return createVariableDeclaration(instr.loc, "const", [
             t.variableDeclarator(codegenLVal(instr.lvalue), value),
           ]);
         }
@@ -126,13 +134,9 @@ class CodegenVisitor
           ]);
         }
         case InstructionKind.Reassign: {
-          return t.expressionStatement(
-            createAssignmentExpression(
-              instr.loc,
-              "=",
-              codegenLVal(instr.lvalue),
-              value
-            )
+          return createExpressionStatement(
+            instr.loc,
+            t.assignmentExpression("=", codegenLVal(instr.lvalue), value)
           );
         }
         default: {
@@ -181,7 +185,7 @@ class CodegenVisitor
         return t.switchStatement(terminal.test, terminal.cases);
       }
       case "while": {
-        return t.whileStatement(terminal.test, terminal.loop);
+        return createWhileStatement(terminal.loc, terminal.test, terminal.loop);
       }
       case "return": {
         if (terminal.value !== null) {
@@ -213,7 +217,7 @@ class CodegenVisitor
       return;
     }
     if (label !== undefined) {
-      block.push(t.labeledStatement(t.identifier(label), item));
+      block.push(createLabelledStatement(item.loc, t.identifier(label), item));
     } else {
       block.push(item);
     }

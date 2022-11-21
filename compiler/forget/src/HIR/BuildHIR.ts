@@ -465,9 +465,12 @@ function lowerStatement(
        * The code leading up to the loop must jump to the conditional block,
        * to evaluate whether to enter the loop or bypass to the continuation.
        */
+      const loc = stmt.node.loc;
+      invariant(loc, "while statement must have a location");
       builder.terminateWithContinuation(
         {
           kind: "while",
+          loc,
           test: conditionalBlock.id,
           loop: loopBlock,
           fallthrough: continuationBlock.id,
