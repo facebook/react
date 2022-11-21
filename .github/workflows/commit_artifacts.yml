@@ -39,7 +39,7 @@ jobs:
 
             let artifactsUrl = null;
             // This is a temporary, dirty hack to avoid needing a GitHub auth token in the circleci
-            // workflow to notify this GitHub action. Sorry.
+            // workflow to notify this GitHub action. Sorry!
             let iter = 0;
             spinloop: while (iter < 15) {
               const res = await github.rest.repos.listCommitStatusesForRef({
@@ -73,7 +73,7 @@ jobs:
             const data = await res.json();
             for (const artifact of data) {
               if (artifact.path === 'build.tgz') {
-                console.log(`Downloading and unzipping ${artifact.url}...`);
+                console.log(`Downloading and unzipping ${artifact.url}`);
                 await execHelper(
                   `curl -L ${artifact.url} | tar -xvz`
                 );
@@ -81,22 +81,25 @@ jobs:
             }
       - name: Move relevant files into compiled
         run: |
-          rm -rf ./compiled
-
           mkdir -p ./compiled
           mkdir -p ./compiled/facebook-www
           mkdir -p ./compiled/babel-plugin-react-refresh
 
-          mv build/facebook-www \
-            ./compiled/facebook-www
-          mv build/WARNINGS \
-            ./compiled/facebook-www/WARNINGS
-          mv build/COMMIT_SHA \
-            ./compiled/facebook-www/COMMIT_SHA
+          # Copy the facebook-www folder into compiled
+          mv build/facebook-www ./compiled
+
+          # Copy WARNINGS to facebook-www
+          mv build/WARNINGS ./compiled/facebook-www/WARNINGS
+
+          # Copy eslint-plugin-react-hooks into facebook-www
           mv build/oss-stable/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
             ./compiled/facebook-www/eslint-plugin-react-hooks.js
+
+          # Copy unstable_server-external-runtime.js into facebook-www
           mv build/oss-stable/react-dom/unstable_server-external-runtime.js \
             ./compiled/facebook-www/unstable_server-external-runtime.js
+
+          # Copy react-refresh-babel.development.js into babel-plugin-react-refresh
           mv build/oss-stable/react-refresh/cjs/react-refresh-babel.development.js \
             ./compiled/babel-plugin-react-refresh/index.js
 
@@ -111,6 +114,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: builds/facebook-www
+      - name: Ensure clean directory
+        run: rm -rf compiled
       - uses: actions/download-artifact@v3
         with:
           name: compiled
