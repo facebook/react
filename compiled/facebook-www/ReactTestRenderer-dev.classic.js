@@ -23823,7 +23823,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-832f07679-20221121";
+var ReactVersion = "18.3.0-www-classic-a33594bba-20221121";
 
 var didWarnAboutNestedUpdates;
 
