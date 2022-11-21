@@ -1,16 +1,7 @@
-const { argv } = require("node:process");
 const generate = require("@babel/generator").default;
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
-const { Environment } = require("../dist/HIR/HIRBuilder");
-const { lower } = require("../dist/HIR/BuildHIR");
-const codegen = require("../dist/HIR/Codegen").default;
-const enterSSA = require("../dist/HIR/EnterSSA").default;
-const { eliminateRedundantPhi } = require("../dist/HIR/EliminateRedundantPhi");
-const inferReferenceEffects =
-  require("../dist/HIR/InferReferenceEffects").default;
-const { inferMutableRanges } = require("../dist/HIR/InferMutableLifetimes");
-const leaveSSA = require("../dist/HIR/LeaveSSA").default;
+const run = require("../dist/HIR/Pipeline").default;
 const prettier = require("prettier");
 
 // Preprocessor that runs Forget on the test262 test prior to execution. Compilation errors short
@@ -26,14 +17,14 @@ module.exports = (test) => {
     traverse(sourceAst, {
       FunctionDeclaration: {
         enter(nodePath) {
-          const env = new Environment();
-          const ir = lower(nodePath, env);
-          enterSSA(ir, env);
-          eliminateRedundantPhi(ir);
-          inferReferenceEffects(ir);
-          inferMutableRanges(ir);
-          leaveSSA(ir);
-          const ast = codegen(ir);
+          const { ast } = run(nodePath, {
+            eliminateRedundantPhi: true,
+            inferReferenceEffects: true,
+            inferMutableRanges: true,
+            leaveSSA: true,
+            inferReactiveScopeVariables: true,
+            codegen: true,
+          });
           codegenText = prettier.format(
             generate(ast).code.replace("\n\n", "\n"),
             {
