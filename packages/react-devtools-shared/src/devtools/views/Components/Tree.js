@@ -344,6 +344,22 @@ export default function Tree(props: Props): React.Node {
     clearErrorsAndWarningsAPI({bridge, store});
   };
 
+  const zeroElementsNotice = (
+    <div className={styles.ZeroElementsNotice}>
+      <p>Loading React Element Tree...</p>
+      <p>
+        If this seems stuck, please follow the{' '}
+        <a
+          className={styles.Link}
+          href="https://github.com/facebook/react/tree/main/packages/react-devtools#the-issue-with-chrome-v101-and-earlier-versions"
+          target="_blank">
+          troubleshooting instructions
+        </a>
+        .
+      </p>
+    </div>
+  );
+
   return (
     <TreeFocusedContext.Provider value={treeFocused}>
       <div className={styles.Tree} ref={treeRef}>
@@ -398,32 +414,36 @@ export default function Tree(props: Props): React.Node {
             </Fragment>
           )}
         </div>
-        <div
-          className={styles.AutoSizerWrapper}
-          onBlur={handleBlur}
-          onFocus={handleFocus}
-          onKeyPress={handleKeyPress}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          ref={focusTargetRef}
-          tabIndex={0}>
-          <AutoSizer>
-            {({height, width}) => (
-              <FixedSizeList
-                className={styles.List}
-                height={height}
-                innerElementType={InnerElementType}
-                itemCount={numElements}
-                itemData={itemData}
-                itemKey={itemKey}
-                itemSize={lineHeight}
-                ref={listCallbackRef}
-                width={width}>
-                {Element}
-              </FixedSizeList>
-            )}
-          </AutoSizer>
-        </div>
+        {numElements === 0 ? (
+          zeroElementsNotice
+        ) : (
+          <div
+            className={styles.AutoSizerWrapper}
+            onBlur={handleBlur}
+            onFocus={handleFocus}
+            onKeyPress={handleKeyPress}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            ref={focusTargetRef}
+            tabIndex={0}>
+            <AutoSizer>
+              {({height, width}) => (
+                <FixedSizeList
+                  className={styles.List}
+                  height={height}
+                  innerElementType={InnerElementType}
+                  itemCount={numElements}
+                  itemData={itemData}
+                  itemKey={itemKey}
+                  itemSize={lineHeight}
+                  ref={listCallbackRef}
+                  width={width}>
+                  {Element}
+                </FixedSizeList>
+              )}
+            </AutoSizer>
+          </div>
+        )}
       </div>
     </TreeFocusedContext.Provider>
   );

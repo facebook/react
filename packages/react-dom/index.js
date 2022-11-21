@@ -25,5 +25,7 @@ export {
   unstable_isNewReconciler,
   unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
+  preinit,
+  preload,
   version,
 } from './src/client/ReactDOM';

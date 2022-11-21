@@ -88,6 +88,13 @@ import {
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
 } from './ReactSymbols';
+import {
+  DidCapture,
+  NoFlags,
+  PerformedWork,
+  Placement,
+  Hydrating,
+} from './ReactFiberFlags';
 import {format} from './utils';
 import {
   enableProfilerChangedHookIndices,
@@ -135,15 +142,6 @@ type ReactPriorityLevelsType = {
   NoPriority: number,
 };
 
-type ReactTypeOfSideEffectType = {
-  DidCapture: number,
-  NoFlags: number,
-  PerformedWork: number,
-  Placement: number,
-  Incomplete: number,
-  Hydrating: number,
-};
-
 function getFiberFlags(fiber: Fiber): number {
   // The name of this field changed from "effectTag" to "flags"
   return fiber.flags !== undefined ? fiber.flags : (fiber: any).effectTag;
@@ -162,19 +160,9 @@ export function getInternalReactConstants(
   getDisplayNameForFiber: getDisplayNameForFiberType,
   getTypeSymbol: getTypeSymbolType,
   ReactPriorityLevels: ReactPriorityLevelsType,
-  ReactTypeOfSideEffect: ReactTypeOfSideEffectType,
   ReactTypeOfWork: WorkTagMap,
   StrictModeBits: number,
 } {
-  const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
-    DidCapture: 0b10000000,
-    NoFlags: 0b00,
-    PerformedWork: 0b01,
-    Placement: 0b10,
-    Incomplete: 0b10000000000000,
-    Hydrating: 0b1000000000000,
-  };
-
   // **********************************************************
   // The section below is copied from files in React repo.
   // Keep it in sync, and add version guards if it changes.
@@ -237,6 +225,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: 26, // In reality, 18.2+. But doesn't hurt to include it here
+      HostSingleton: 27, // Same as above
       HostText: 6,
       IncompleteClassComponent: 17,
       IndeterminateComponent: 2,
@@ -269,6 +259,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
       IndeterminateComponent: 2,
@@ -300,6 +292,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
       IndeterminateComponent: 2,
@@ -331,6 +325,8 @@ export function getInternalReactConstants(
       HostComponent: 7,
       HostPortal: 6,
       HostRoot: 5,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 8,
       IncompleteClassComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 4,
@@ -362,6 +358,8 @@ export function getInternalReactConstants(
       HostComponent: 5,
       HostPortal: 4,
       HostRoot: 3,
+      HostResource: -1, // Doesn't exist yet
+      HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 0,
@@ -401,6 +399,8 @@ export function getInternalReactConstants(
     IndeterminateComponent,
     ForwardRef,
     HostRoot,
+    HostResource,
+    HostSingleton,
     HostComponent,
     HostPortal,
     HostText,
@@ -466,6 +466,8 @@ export function getInternalReactConstants(
         }
         return null;
       case HostComponent:
+      case HostSingleton:
+      case HostResource:
         return type;
       case HostPortal:
       case HostText:
@@ -548,7 +550,6 @@ export function getInternalReactConstants(
     getTypeSymbol,
     ReactPriorityLevels,
     ReactTypeOfWork,
-    ReactTypeOfSideEffect,
     StrictModeBits,
   };
 }
@@ -581,16 +582,8 @@ export function attach(
     getTypeSymbol,
     ReactPriorityLevels,
     ReactTypeOfWork,
-    ReactTypeOfSideEffect,
     StrictModeBits,
   } = getInternalReactConstants(version);
-  const {
-    DidCapture,
-    Hydrating,
-    NoFlags,
-    PerformedWork,
-    Placement,
-  } = ReactTypeOfSideEffect;
   const {
     CacheComponent,
     ClassComponent,
@@ -600,6 +593,8 @@ export function attach(
     Fragment,
     FunctionComponent,
     HostRoot,
+    HostResource,
+    HostSingleton,
     HostPortal,
     HostComponent,
     HostText,
@@ -1044,6 +1039,8 @@ export function attach(
       case HostRoot:
         return ElementTypeRoot;
       case HostComponent:
+      case HostResource:
+      case HostSingleton:
         return ElementTypeHostComponent;
       case HostPortal:
       case HostText:

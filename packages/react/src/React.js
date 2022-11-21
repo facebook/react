@@ -71,9 +71,6 @@ import ReactSharedInternals from './ReactSharedInternals';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
 
-// Patch fetch
-import './ReactFetch';
-
 // TODO: Move this branching into the other module instead and just re-export.
 const createElement: any = __DEV__
   ? createElementWithValidation
@@ -104,7 +101,7 @@ export {
   forwardRef,
   lazy,
   memo,
-  cache as experimental_cache,
+  cache,
   useCallback,
   useContext,
   useEffect,
@@ -142,7 +139,7 @@ export {
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
   REACT_CACHE_TYPE as unstable_Cache,
-  use as experimental_use,
+  use,
   useMemoCache as unstable_useMemoCache,
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,

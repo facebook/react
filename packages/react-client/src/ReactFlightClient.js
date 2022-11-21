@@ -646,7 +646,7 @@ export function resolveErrorProd(
       ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
       ' may provide additional details about the nature of the error.',
   );
-  error.stack = '';
+  error.stack = 'Error: ' + error.message;
   (error: any).digest = digest;
   const errorWithDigest: ErrorWithDigest = (error: any);
   const chunks = response._chunks;

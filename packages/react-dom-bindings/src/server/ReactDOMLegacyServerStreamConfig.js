@@ -12,14 +12,17 @@ export interface Destination {
   destroy(error: Error): mixed;
 }
 
-export type PrecomputedChunk = string;
-export type Chunk = string;
+export opaque type PrecomputedChunk = string;
+export opaque type Chunk = string;
 
 export function scheduleWork(callback: () => void) {
   callback();
 }
 
 export function flushBuffered(destination: Destination) {}
+
+export const supportsRequestStorage = false;
+export const requestStorage: AsyncLocalStorage<any> = (null: any);
 
 export function beginWriting(destination: Destination) {}
 

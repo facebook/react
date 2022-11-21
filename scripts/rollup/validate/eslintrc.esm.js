@@ -15,6 +15,7 @@ module.exports = {
     WeakSet: 'readonly',
     Uint16Array: 'readonly',
     Reflect: 'readonly',
+    globalThis: 'readonly',
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
@@ -35,6 +36,9 @@ module.exports = {
     // Flight
     Uint8Array: 'readonly',
     Promise: 'readonly',
+
+    // Temp
+    AsyncLocalStorage: 'readonly',
 
     // Flight Webpack
     __webpack_chunk_load__: 'readonly',

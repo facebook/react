@@ -9,34 +9,46 @@
 
 import type {CacheDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
+import {
+  supportsRequestStorage,
+  requestStorage,
+} from './ReactFlightServerConfig';
+
 function createSignal(): AbortSignal {
   return new AbortController().signal;
 }
 
+function resolveCache(): Map<Function, mixed> {
+  if (currentCache) return currentCache;
+  if (supportsRequestStorage) {
+    const cache = requestStorage.getStore();
+    if (cache) return cache;
+  }
+  // Since we override the dispatcher all the time, we're effectively always
+  // active and so to support cache() and fetch() outside of render, we yield
+  // an empty Map.
+  return new Map();
+}
+
 export const DefaultCacheDispatcher: CacheDispatcher = {
   getCacheSignal(): AbortSignal {
-    if (!currentCache) {
-      throw new Error('Reading the cache is only supported while rendering.');
-    }
-    let entry: AbortSignal | void = (currentCache.get(createSignal): any);
+    const cache = resolveCache();
+    let entry: AbortSignal | void = (cache.get(createSignal): any);
     if (entry === undefined) {
       entry = createSignal();
       // $FlowFixMe[incompatible-use] found when upgrading Flow
-      currentCache.set(createSignal, entry);
+      cache.set(createSignal, entry);
     }
     return entry;
   },
   getCacheForType<T>(resourceType: () => T): T {
-    if (!currentCache) {
-      throw new Error('Reading the cache is only supported while rendering.');
-    }
-
-    let entry: T | void = (currentCache.get(resourceType): any);
+    const cache = resolveCache();
+    let entry: T | void = (cache.get(resourceType): any);
     if (entry === undefined) {
       entry = resourceType();
       // TODO: Warn if undefined?
       // $FlowFixMe[incompatible-use] found when upgrading Flow
-      currentCache.set(resourceType, entry);
+      cache.set(resourceType, entry);
     }
     return entry;
   },

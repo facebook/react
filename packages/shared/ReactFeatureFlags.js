@@ -82,9 +82,10 @@ export const enableLegacyFBSupport = false;
 // likely to include in an upcoming release.
 // -----------------------------------------------------------------------------
 
-export const enableCache = __EXPERIMENTAL__;
+export const enableCache = true;
+export const enableLegacyCache = __EXPERIMENTAL__;
 export const enableCacheElement = __EXPERIMENTAL__;
-export const enableFetchInstrumentation = __EXPERIMENTAL__;
+export const enableFetchInstrumentation = true;
 
 export const enableTransitionTracing = false;
 
@@ -101,9 +102,9 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-export const enableHostSingletons = __EXPERIMENTAL__;
+export const enableHostSingletons = true;
 
-export const enableFloat = __EXPERIMENTAL__;
+export const enableFloat = true;
 
 // When a node is unmounted, recurse into the Fiber subtree and clean out
 // references. Each level cleans up more fiber fields than the previous level.
@@ -118,7 +119,7 @@ export const enableFloat = __EXPERIMENTAL__;
 // aggressiveness.
 export const deletedTreeCleanUpLevel = 3;
 
-export const enableUseHook = __EXPERIMENTAL__;
+export const enableUseHook = true;
 
 // Enables unstable_useMemoCache hook, intended as a compilation target for
 // auto-memoization.
@@ -127,6 +128,8 @@ export const enableUseMemoCacheHook = __EXPERIMENTAL__;
 export const enableUseEventHook = __EXPERIMENTAL__;
 
 // Test in www before enabling in open source.
+// Enables DOM-server to stream its instruction set as data-attributes
+// (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = false;
 
 // -----------------------------------------------------------------------------
@@ -210,13 +213,13 @@ export const disableTextareaChildren = false;
 // Part of the simplification of React.createElement so we can eventually move
 // from React.createElement to React.jsx
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
-export const warnAboutDefaultPropsOnFunctionComponents = false; // deprecate later, not 18.0
+export const warnAboutDefaultPropsOnFunctionComponents = true; // deprecate later, not 18.0
 
 // Enables a warning when trying to spread a 'key' to an element;
 // a deprecated pattern we want to get rid of in the future
-export const warnAboutSpreadingKeyToJSX = false;
+export const warnAboutSpreadingKeyToJSX = true;
 
-export const warnAboutStringRefs = false;
+export const warnAboutStringRefs = true;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools
@@ -253,7 +256,7 @@ export const enableUpdaterTracking = __PROFILE__;
 
 // Only enabled in RN, related to enableComponentStackLocations
 export const disableNativeComponentFrames = false;
-export const enableServerContext = __EXPERIMENTAL__;
+export const enableServerContext = true;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;

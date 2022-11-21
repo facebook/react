@@ -10,7 +10,7 @@
 export type Destination = ReadableStreamController;
 
 export type PrecomputedChunk = Uint8Array;
-export type Chunk = Uint8Array;
+export opaque type Chunk = Uint8Array;
 
 export function scheduleWork(callback: () => void) {
   callback();
@@ -20,6 +20,13 @@ export function flushBuffered(destination: Destination) {
   // WHATWG Streams do not yet have a way to flush the underlying
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
+
+// For now we support AsyncLocalStorage as a global for the "browser" builds
+// TODO: Move this to some special WinterCG build.
+export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
+export const requestStorage: AsyncLocalStorage<
+  Map<Function, mixed>,
+> = supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
 
 const VIEW_SIZE = 512;
 let currentView = null;

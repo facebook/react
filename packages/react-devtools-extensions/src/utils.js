@@ -2,9 +2,9 @@
 
 import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
-const IS_EDGE = navigator.userAgent.indexOf('Edg') >= 0;
-const IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
-const IS_CHROME = IS_EDGE === false && IS_FIREFOX === false;
+export const IS_EDGE = navigator.userAgent.indexOf('Edg') >= 0;
+export const IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
+export const IS_CHROME = IS_EDGE === false && IS_FIREFOX === false;
 
 export type BrowserName = 'Chrome' | 'Firefox' | 'Edge';
 

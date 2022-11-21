@@ -3,10 +3,32 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
-let validateDOMNesting = () => {};
-let updatedAncestorInfo = () => {};
+type ValidateDOMNesting = (?string, ?string, AncestorInfoDev) => void;
+let validateDOMNesting: ValidateDOMNesting = (() => {}: any);
+
+type UpdatedAncestorInfoDev = (?AncestorInfoDev, string) => AncestorInfoDev;
+let updatedAncestorInfoDev: UpdatedAncestorInfoDev = (() => {}: any);
+
+type Info = {tag: string};
+export type AncestorInfoDev = {
+  current: ?Info,
+
+  formTag: ?Info,
+  aTagInScope: ?Info,
+  buttonTagInScope: ?Info,
+  nobrTagInScope: ?Info,
+  pTagInButtonScope: ?Info,
+
+  listItemTagAutoclosing: ?Info,
+  dlItemTagAutoclosing: ?Info,
+
+  // <head> or <body>
+  containerTagInScope: ?Info,
+};
 
 if (__DEV__) {
   // This validation code was written based on the HTML5 parsing spec:
@@ -142,7 +164,7 @@ if (__DEV__) {
     'rt',
   ];
 
-  const emptyAncestorInfo = {
+  const emptyAncestorInfoDev: AncestorInfoDev = {
     current: null,
 
     formTag: null,
@@ -153,10 +175,12 @@ if (__DEV__) {
 
     listItemTagAutoclosing: null,
     dlItemTagAutoclosing: null,
+
+    containerTagInScope: null,
   };
 
-  updatedAncestorInfo = function(oldInfo, tag) {
-    const ancestorInfo = {...(oldInfo || emptyAncestorInfo)};
+  updatedAncestorInfoDev = function(oldInfo: ?AncestorInfoDev, tag: string) {
+    const ancestorInfo = {...(oldInfo || emptyAncestorInfoDev)};
     const info = {tag};
 
     if (inScopeTags.indexOf(tag) !== -1) {
@@ -203,6 +227,11 @@ if (__DEV__) {
     if (tag === 'dd' || tag === 'dt') {
       ancestorInfo.dlItemTagAutoclosing = info;
     }
+    if (tag === '#document' || tag === 'html') {
+      ancestorInfo.containerTagInScope = null;
+    } else if (!ancestorInfo.containerTagInScope) {
+      ancestorInfo.containerTagInScope = info;
+    }
 
     return ancestorInfo;
   };
@@ -210,7 +239,10 @@ if (__DEV__) {
   /**
    * Returns whether
    */
-  const isTagValidWithParent = function(tag, parentTag) {
+  const isTagValidWithParent = function(
+    tag: string,
+    parentTag: ?string,
+  ): boolean {
     // First, let's check if we're in an unusual parsing mode...
     switch (parentTag) {
       // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
@@ -335,7 +367,10 @@ if (__DEV__) {
   /**
    * Returns whether
    */
-  const findInvalidAncestorForTag = function(tag, ancestorInfo) {
+  const findInvalidAncestorForTag = function(
+    tag: string,
+    ancestorInfo: AncestorInfoDev,
+  ): ?Info {
     switch (tag) {
       case 'address':
       case 'article':
@@ -401,8 +436,12 @@ if (__DEV__) {
 
   const didWarn = {};
 
-  validateDOMNesting = function(childTag, childText, ancestorInfo) {
-    ancestorInfo = ancestorInfo || emptyAncestorInfo;
+  validateDOMNesting = function(
+    childTag: ?string,
+    childText: ?string,
+    ancestorInfo: AncestorInfoDev,
+  ) {
+    ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
     const parentInfo = ancestorInfo.current;
     const parentTag = parentInfo && parentInfo.tag;
 
@@ -413,6 +452,11 @@ if (__DEV__) {
         );
       }
       childTag = '#text';
+    } else if (childTag == null) {
+      console.error(
+        'validateDOMNesting: when childText or childTag must be provided',
+      );
+      return;
     }
 
     const invalidParent = isTagValidWithParent(childTag, parentTag)
@@ -428,7 +472,9 @@ if (__DEV__) {
 
     const ancestorTag = invalidParentOrAncestor.tag;
 
-    const warnKey = !!invalidParent + '|' + childTag + '|' + ancestorTag;
+    const warnKey =
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      String(!!invalidParent) + '|' + childTag + '|' + ancestorTag;
     if (didWarn[warnKey]) {
       return;
     }
@@ -437,7 +483,7 @@ if (__DEV__) {
     let tagDisplayName = childTag;
     let whitespaceInfo = '';
     if (childTag === '#text') {
-      if (/\S/.test(childText)) {
+      if (childText != null && /\S/.test(childText)) {
         tagDisplayName = 'Text nodes';
       } else {
         tagDisplayName = 'Whitespace text nodes';
@@ -474,4 +520,4 @@ if (__DEV__) {
   };
 }
 
-export {updatedAncestorInfo, validateDOMNesting};
+export {updatedAncestorInfoDev, validateDOMNesting};

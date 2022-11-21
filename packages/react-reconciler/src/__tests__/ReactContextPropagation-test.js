@@ -344,7 +344,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('0');
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   test('context is propagated across retries', async () => {
     const root = ReactNoop.createRoot();
 
@@ -405,7 +405,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   test('multiple contexts are propagated across retries', async () => {
     // Same as previous test, but with multiple context providers
     const root = ReactNoop.createRoot();
@@ -485,7 +485,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BBB');
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   test('context is propagated across retries (legacy)', async () => {
     const root = ReactNoop.createLegacyRoot();
 
@@ -749,7 +749,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate enableCache
+  // @gate enableLegacyCache
   test('nested bailouts across retries', async () => {
     // Lazy context propagation will stop propagating when it hits the first
     // match. If we bail out again inside that tree, we must resume propagating.

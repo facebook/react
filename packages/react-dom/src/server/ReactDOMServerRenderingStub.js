@@ -7,6 +7,8 @@
  * @flow
  */
 
+export {preinit, preload} from 'react-dom-bindings/src/shared/ReactDOMFloat';
+
 export function createPortal() {
   throw new Error(
     'createPortal was called on the server. Portals are not currently' +

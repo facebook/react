@@ -16,6 +16,8 @@ global.TextDecoder = require('util').TextDecoder;
 global.Headers = require('node-fetch').Headers;
 global.Request = require('node-fetch').Request;
 global.Response = require('node-fetch').Response;
+// Patch for Browser environments to be able to polyfill AsyncLocalStorage
+global.AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 
 let fetchCount = 0;
 async function fetchMock(resource, options) {
@@ -34,6 +36,7 @@ let React;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let use;
+let cache;
 
 describe('ReactFetch', () => {
   beforeEach(() => {
@@ -41,10 +44,15 @@ describe('ReactFetch', () => {
     fetchCount = 0;
     global.fetch = fetchMock;
 
+    if (gate(flags => !flags.www)) {
+      jest.mock('react', () => require('react/react.shared-subset'));
+    }
+
     React = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
-    use = React.experimental_use;
+    use = React.use;
+    cache = React.cache;
   });
 
   async function render(Component) {
@@ -71,6 +79,45 @@ describe('ReactFetch', () => {
     }
     expect(await render(Component)).toMatchInlineSnapshot(`"GET world []"`);
     expect(fetchCount).toBe(1);
+  });
+
+  // @gate enableFetchInstrumentation && enableCache
+  it('can dedupe fetches in micro tasks', async () => {
+    async function getData() {
+      const r1 = await fetch('hello');
+      const t1 = await r1.text();
+      const r2 = await fetch('world');
+      const t2 = await r2.text();
+      return t1 + ' ' + t2;
+    }
+    function Component() {
+      return use(getData());
+    }
+    expect(await render(Component)).toMatchInlineSnapshot(
+      `"GET hello [] GET world []"`,
+    );
+    expect(fetchCount).toBe(2);
+  });
+
+  // @gate enableFetchInstrumentation && enableCache
+  it('can dedupe cache in micro tasks', async () => {
+    const cached = cache(async () => {
+      fetchCount++;
+      return 'world';
+    });
+    async function getData() {
+      const r1 = await fetch('hello');
+      const t1 = await r1.text();
+      const t2 = await cached();
+      return t1 + ' ' + t2;
+    }
+    function Component() {
+      return use(getData());
+    }
+    expect(await render(Component)).toMatchInlineSnapshot(
+      `"GET hello [] world"`,
+    );
+    expect(fetchCount).toBe(2);
   });
 
   // @gate enableFetchInstrumentation && enableCache

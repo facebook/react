@@ -8,6 +8,7 @@
  */
 
 'use strict';
+import {replaceScriptsAndMove, mergeOptions} from '../test-utils/FizzTestUtils';
 
 let JSDOM;
 let Stream;
@@ -25,6 +26,7 @@ let container;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
+const renderOptions = {};
 
 describe('ReactDOMFloat', () => {
   beforeEach(() => {
@@ -100,17 +102,7 @@ describe('ReactDOMFloat', () => {
       container.nodeName === '#document' ? container.body : container;
     while (fakeBody.firstChild) {
       const node = fakeBody.firstChild;
-      if (
-        node.nodeName === 'SCRIPT' &&
-        (CSPnonce === null || node.getAttribute('nonce') === CSPnonce)
-      ) {
-        const script = document.createElement('script');
-        script.textContent = node.textContent;
-        fakeBody.removeChild(node);
-        parent.appendChild(script);
-      } else {
-        parent.appendChild(node);
-      }
+      await replaceScriptsAndMove(document.defaultView, CSPnonce, node, parent);
     }
   }
 
@@ -135,6 +127,7 @@ describe('ReactDOMFloat', () => {
     document = jsdom.window.document;
     container = document;
     buffer = '';
+    await replaceScriptsAndMove(jsdom.window, null, document.documentElement);
   }
 
   function getMeaningfulChildren(element) {
@@ -148,6 +141,8 @@ describe('ReactDOMFloat', () => {
           node.hasAttribute('data-meaningful') ||
           (node.tagName === 'SCRIPT' &&
             node.hasAttribute('src') &&
+            node.getAttribute('src') !==
+              renderOptions.unstable_externalRuntimeSrc &&
             node.hasAttribute('async')) ||
           (node.tagName !== 'SCRIPT' &&
             node.tagName !== 'TEMPLATE' &&
@@ -235,6 +230,266 @@ describe('ReactDOMFloat', () => {
     return readText(text);
   }
 
+  function renderToPipeableStream(jsx, options) {
+    // Merge options with renderOptions, which may contain featureFlag specific behavior
+    return ReactDOMFizzServer.renderToPipeableStream(
+      jsx,
+      mergeOptions(options, renderOptions),
+    );
+  }
+
+  // @gate enableFloat
+  it('can render resources before singletons', async () => {
+    const root = ReactDOMClient.createRoot(document);
+    root.render(
+      <>
+        <title>foo</title>
+        <html>
+          <head>
+            <link rel="foo" href="foo" />
+          </head>
+          <body>hello world</body>
+        </html>
+      </>,
+    );
+    try {
+      expect(Scheduler).toFlushWithoutYielding();
+    } catch (e) {
+      // for DOMExceptions that happen when expecting this test to fail we need
+      // to clear the scheduler first otherwise the expected failure will fail
+      expect(Scheduler).toFlushWithoutYielding();
+      throw e;
+    }
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <title>foo</title>
+          <link rel="foo" href="foo" />
+        </head>
+        <body>hello world</body>
+      </html>,
+    );
+  });
+
+  function renderSafelyAndExpect(root, children) {
+    root.render(children);
+    return expect(() => {
+      try {
+        expect(Scheduler).toFlushWithoutYielding();
+      } catch (e) {
+        try {
+          expect(Scheduler).toFlushWithoutYielding();
+        } catch (f) {}
+      }
+    });
+  }
+
+  // @gate enableFloat
+  it('can hydrate non Resources in head when Resources are also inserted there', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        <html>
+          <head>
+            <meta property="foo" content="bar" />
+            <link rel="foo" href="bar" onLoad={() => {}} />
+            <title>foo</title>
+            <noscript>
+              <link rel="icon" href="icon" />
+            </noscript>
+            <base target="foo" href="bar" />
+            <script async={true} src="foo" onLoad={() => {}} />
+          </head>
+          <body>foo</body>
+        </html>,
+      );
+      pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <base target="foo" href="bar" />
+          <link rel="preload" href="foo" as="script" />
+          <meta property="foo" content="bar" />
+          <title>foo</title>
+          <noscript>&lt;link rel="icon" href="icon"/&gt;</noscript>
+        </head>
+        <body>foo</body>
+      </html>,
+    );
+
+    ReactDOMClient.hydrateRoot(
+      document,
+      <html>
+        <head>
+          <meta property="foo" content="bar" />
+          <link rel="foo" href="bar" onLoad={() => {}} />
+          <title>foo</title>
+          <noscript>
+            <link rel="icon" href="icon" />
+          </noscript>
+          <base target="foo" href="bar" />
+          <script async={true} src="foo" onLoad={() => {}} />
+        </head>
+        <body>foo</body>
+      </html>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <base target="foo" href="bar" />
+          <link rel="preload" href="foo" as="script" />
+          <meta property="foo" content="bar" />
+          <title>foo</title>
+          <link rel="foo" href="bar" />
+          <noscript>&lt;link rel="icon" href="icon"/&gt;</noscript>
+          <script async="" src="foo" />
+        </head>
+        <body>foo</body>
+      </html>,
+    );
+  });
+
+  // @gate enableFloat || !__DEV__
+  it('warns if you render resource-like elements above <head> or <body>', async () => {
+    const root = ReactDOMClient.createRoot(document);
+
+    renderSafelyAndExpect(
+      root,
+      <>
+        <noscript>foo</noscript>
+        <html>
+          <body>foo</body>
+        </html>
+      </>,
+    ).toErrorDev(
+      [
+        'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
+        'Warning: validateDOMNesting(...): <noscript> cannot appear as a child of <#document>.',
+      ],
+      {withoutStack: 1},
+    );
+
+    renderSafelyAndExpect(
+      root,
+      <html>
+        <template>foo</template>
+        <body>foo</body>
+      </html>,
+    ).toErrorDev([
+      'Cannot render <template> outside the main document. Try moving it into the root <head> tag.',
+      'Warning: validateDOMNesting(...): <template> cannot appear as a child of <html>.',
+    ]);
+
+    renderSafelyAndExpect(
+      root,
+      <html>
+        <body>foo</body>
+        <style>foo</style>
+      </html>,
+    ).toErrorDev([
+      'Cannot render <style> outside the main document. Try moving it into the root <head> tag.',
+      'Warning: validateDOMNesting(...): <style> cannot appear as a child of <html>.',
+    ]);
+
+    renderSafelyAndExpect(
+      root,
+      <>
+        <html>
+          <body>foo</body>
+        </html>
+        <link rel="stylesheet" href="foo" />
+      </>,
+    ).toErrorDev(
+      [
+        'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. Consider adding precedence="default" or moving it into the root <head> tag.',
+        'Warning: validateDOMNesting(...): <link> cannot appear as a child of <#document>.',
+      ],
+      {withoutStack: 1},
+    );
+
+    renderSafelyAndExpect(
+      root,
+      <>
+        <html>
+          <body>foo</body>
+          <script href="foo" />
+        </html>
+      </>,
+    ).toErrorDev([
+      'Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag.',
+      'Warning: validateDOMNesting(...): <script> cannot appear as a child of <html>.',
+    ]);
+
+    renderSafelyAndExpect(
+      root,
+      <>
+        <html>
+          <script async={true} onLoad={() => {}} href="bar" />
+          <body>foo</body>
+        </html>
+      </>,
+    ).toErrorDev([
+      'Cannot render a <script> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>.',
+    ]);
+
+    renderSafelyAndExpect(
+      root,
+      <>
+        <link rel="foo" onLoad={() => {}} href="bar" />
+        <html>
+          <body>foo</body>
+        </html>
+      </>,
+    ).toErrorDev(
+      [
+        'Cannot render a <link> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>.',
+      ],
+      {withoutStack: 1},
+    );
+  });
+
+  // @gate enableFloat
+  it('can acquire a resource after releasing it in the same commit', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    root.render(
+      <>
+        <title>foo</title>
+      </>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <title>foo</title>
+        </head>
+        <body>
+          <div id="container" />
+        </body>
+      </html>,
+    );
+
+    // title is keyed off children so this second resource should match the first one
+    root.render(
+      <>
+        {null}
+        <title data-new="new">foo</title>
+      </>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    // we don't see the attribute because the resource is the same and was not reconstructed
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <title>foo</title>
+        </head>
+        <body>
+          <div id="container" />
+        </body>
+      </html>,
+    );
+  });
+
   // @gate enableFloat
   it('errors if the document does not contain a head when inserting a resource', async () => {
     document.head.parentNode.removeChild(document.head);
@@ -308,6 +563,32 @@ describe('ReactDOMFloat', () => {
     );
   });
 
+  // @gate enableFloat
+  it('does not emit closing tags in out of order position when rendering a non-void resource type', async () => {
+    const chunks = [];
+
+    writable.on('data', chunk => {
+      chunks.push(chunk);
+    });
+
+    await actIntoEmptyDocument(() => {
+      const {pipe} = renderToPipeableStream(
+        <>
+          <title>foo</title>
+          <html>
+            <body>bar</body>
+          </html>
+          <script async={true} src="foo" />
+        </>,
+      );
+      pipe(writable);
+    });
+    expect(chunks).toEqual([
+      '<!DOCTYPE html><html><script async="" src="foo"></script><title>foo</title><body>bar',
+      '</body></html>',
+    ]);
+  });
+
   describe('HostResource', () => {
     // @gate enableFloat
     it('warns when you update props to an invalid type', async () => {
@@ -315,29 +596,29 @@ describe('ReactDOMFloat', () => {
       root.render(
         <div>
           <link rel="stylesheet" href="foo" precedence="foo" />
+          <link rel="stylesheet" href="bar" precedence="foo" />
         </div>,
       );
       expect(Scheduler).toFlushWithoutYielding();
       root.render(
         <div>
-          <link rel="author" href="bar" />
+          <link rel={() => {}} href="bar" />
+          <link rel="foo" href={() => {}} />
         </div>,
       );
       expect(() => {
         expect(Scheduler).toFlushWithoutYielding();
-      }).toErrorDev(
-        'Warning: A <link> previously rendered as a Resource with href "foo" but was updated with a rel type that is not' +
-          ' valid for a Resource type. Generally Resources are not expected to ever have updated' +
-          ' props however in some limited circumstances it can be valid when changing the href.' +
-          ' When React encounters props that invalidate the Resource it is the same as not rendering' +
-          ' a Resource at all. valid rel types for Resources are "stylesheet" and "preload". The previous' +
-          ' rel for this instance was "stylesheet". The updated rel is "author" and the updated href is "bar".',
-      );
+      }).toErrorDev([
+        'Warning: A <link> previously rendered as a Resource with href "foo" with rel ""stylesheet"" but was updated with an invalid rel: something with type "function". When a link does not have a valid rel prop it is not represented in the DOM. If this is intentional, instead do not render the <link> anymore.',
+        'Warning: A <link> previously rendered as a Resource with href "bar" but was updated with an invalid href prop: something with type "function". When a link does not have a valid href prop it is not represented in the DOM. If this is intentional, instead do not render the <link> anymore.',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
             <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <link rel="stylesheet" href="bar" data-precedence="foo" />
             <link rel="preload" as="style" href="foo" />
+            <link rel="preload" as="style" href="bar" />
           </head>
           <body>
             <div id="container">
@@ -357,7 +638,7 @@ describe('ReactDOMFloat', () => {
         return 'foo';
       }
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -508,7 +789,7 @@ describe('ReactDOMFloat', () => {
       }
 
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<ServerApp />);
+        const {pipe} = renderToPipeableStream(<ServerApp />);
         pipe(writable);
       });
       expect(getMeaningfulChildren(document)).toEqual(
@@ -568,7 +849,7 @@ describe('ReactDOMFloat', () => {
         return 'foo';
       }
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -599,7 +880,7 @@ describe('ReactDOMFloat', () => {
         return 'foo';
       }
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -718,7 +999,7 @@ describe('ReactDOMFloat', () => {
         );
       }
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <App srcs={['server', 'shared']} />,
         );
         pipe(writable);
@@ -866,11 +1147,960 @@ describe('ReactDOMFloat', () => {
     });
   });
 
+  describe('head resources', () => {
+    // @gate enableFloat
+    it('supports preconnects, prefetc-dns, and arbitrary other link types', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = renderToPipeableStream(
+          <html>
+            <head />
+            <body>
+              <div>hello world</div>
+            </body>
+            <link rel="foo" href="bar" />
+            <link rel="preload" href="bar" />
+            <link rel="preload" href="bar" as="style" />
+            <link rel="stylesheet" href="bar" precedence="default" />
+            <link rel="preconnect" href="bar" />
+            <link rel="dns-prefetch" href="bar" />
+            <link rel="icon" href="bar" />
+            <link rel="icon" href="bar" sizes="1x1" />
+            <link rel="icon" href="bar" media="foo" />
+            <link rel="shortcut icon" href="bar" />
+            <link rel="apple-touch-icon" href="bar" />
+          </html>,
+        );
+        pipe(writable);
+      });
+      // "preconnect" and "dns-prefetch" get hoisted to the front.
+      // All other generic links (not styles, or typed preloads)
+      // get emitted after styles and other higher priority Resources
+      // Sizes and Media are part of generic link keys
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preconnect" href="bar" />
+            <link rel="dns-prefetch" href="bar" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="foo" href="bar" />
+            <link rel="preload" href="bar" />
+            <link rel="icon" href="bar" />
+            <link rel="icon" href="bar" sizes="1x1" />
+            <link rel="icon" href="bar" media="foo" />
+            <link rel="shortcut icon" href="bar" />
+            <link rel="apple-touch-icon" href="bar" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+          <link rel="foo" href="bar" />
+          <link rel="preload" href="bar" />
+          <link rel="preload" href="bar" as="style" />
+          <link rel="stylesheet" href="bar" precedence="default" />
+          <link rel="preconnect" href="bar" />
+          <link rel="dns-prefetch" href="bar" />
+          <link rel="icon" href="bar" />
+          <link rel="icon" href="bar" sizes="1x1" />
+          <link rel="icon" href="bar" media="foo" />
+          <link rel="shortcut icon" href="bar" />
+          <link rel="apple-touch-icon" href="bar" />
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preconnect" href="bar" />
+            <link rel="dns-prefetch" href="bar" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="foo" href="bar" />
+            <link rel="preload" href="bar" />
+            <link rel="icon" href="bar" />
+            <link rel="icon" href="bar" sizes="1x1" />
+            <link rel="icon" href="bar" media="foo" />
+            <link rel="shortcut icon" href="bar" />
+            <link rel="apple-touch-icon" href="bar" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="preload" href="bar" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can render <base> as a Resource', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = renderToPipeableStream(
+          <html>
+            <head />
+            <body>
+              <base target="_blank" />
+              <base href="foo" />
+              <base target="_self" href="bar" />
+              <div>hello world</div>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <base target="_blank" />
+            <base href="foo" />
+            <base target="_self" href="bar" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head />
+          <body>
+            <base target="_blank" />
+            <base href="foo" />
+            <base target="_self" href="bar" />
+            <base target="_top" href="baz" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <base target="_top" href="baz" />
+            <base target="_blank" />
+            <base href="foo" />
+            <base target="_self" href="bar" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can render icons and apple-touch-icons as Resources', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = renderToPipeableStream(
+          <>
+            <html>
+              <head />
+              <body>
+                <link rel="icon" href="foo" />
+                <div>hello world</div>
+              </body>
+            </html>
+            <link rel="apple-touch-icon" href="foo" />
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="icon" href="foo" />
+            <link rel="apple-touch-icon" href="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <link rel="apple-touch-icon" href="foo" />
+          <head />
+          <body>
+            <link rel="icon" href="foo" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="icon" href="foo" />
+            <link rel="apple-touch-icon" href="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can hydrate the right instances for deeply nested structured metas', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = renderToPipeableStream(
+          <>
+            <html>
+              <head />
+              <body>
+                <div>hello world</div>
+              </body>
+            </html>
+            <meta property="og:foo" content="one" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+            <meta property="og:foo" content="two" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:foo" content="one" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+            <meta property="og:foo" content="two" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(
+        document,
+        <>
+          <html>
+            <head />
+            <body>
+              <div>hello world</div>
+            </body>
+          </html>
+          <meta property="og:foo" content="one" />
+          <meta property="og:foo:bar" content="bar" />
+          <meta property="og:foo:bar:baz" content="baz" />
+          <meta property="og:foo" content="two" />
+          <meta property="og:foo:bar" content="bar" />
+          <meta property="og:foo:bar:baz" content="baz" />
+        </>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:foo" content="one" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+            <meta property="og:foo" content="two" />
+            <meta property="og:foo:bar" content="bar" />
+            <meta property="og:foo:bar:baz" content="baz" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <>
+          <html>
+            <head />
+            <body>
+              <div>hello world</div>
+            </body>
+          </html>
+        </>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can insert meta tags in the expected location', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = renderToPipeableStream(
+          <>
+            <html>
+              <head />
+              <body>
+                <div>hello world</div>
+              </body>
+            </html>
+            <meta charSet="utf-8" />
+            <meta name="google-site-verification" content="somehash1" />
+            <meta name="google-site-verification" content="somehash2" />
+            <meta
+              name="description"
+              property="og:description"
+              content="my site"
+            />
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta httpEquiv="refresh" content="dont actually" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta itemProp="someprop" content="somevalue" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:description:foo" content="foo" />
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="google-site-verification" content="somehash1" />
+            <meta name="google-site-verification" content="somehash2" />
+            <meta
+              name="description"
+              property="og:description"
+              content="my site"
+            />
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta http-equiv="refresh" content="dont actually" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta itemprop="someprop" content="somevalue" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:description:foo" content="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head>
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="google-site-verification" content="somehash1" />
+            <meta name="google-site-verification" content="somehash2" />
+            <meta
+              name="description"
+              property="og:description"
+              content="my site"
+            />
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta http-equiv="refresh" content="dont actually" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta itemprop="someprop" content="somevalue" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:description:foo" content="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <html>
+          <head>
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:description" content="my site" />
+            <meta
+              itemProp="description bar"
+              property="og:description:bar"
+              content="bar"
+            />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="google-site-verification" content="somehash1" />
+            <meta name="google-site-verification" content="somehash2" />
+            <meta
+              name="description"
+              property="og:description"
+              content="my site"
+            />
+            <meta
+              itemprop="description bar"
+              property="og:description:bar"
+              content="bar"
+            />
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta http-equiv="refresh" content="dont actually" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta itemprop="someprop" content="somevalue" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:description:foo" content="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can render meta tags with og properties with structured data', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = renderToPipeableStream(
+          <>
+            <html>
+              <head />
+              <body>
+                <div>hello world</div>
+              </body>
+            </html>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head />
+          <body>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <html>
+          <head />
+          <body>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <html>
+          <head />
+          <body>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image:foo" content="foo" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:foo" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <html>
+          <head />
+          <body>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:width:bar" content="bar" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image:foo" content="foo" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta property="og:image" content="foo" />
+            <meta property="og:image:foo" content="foo" />
+            <meta property="og:image:height" content="100" />
+            <meta property="og:image:width" content="100" />
+            <meta property="og:image:width:bar" content="bar" />
+            <meta property="og:image" content="bar" />
+            <meta property="og:image:height" content="100" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can render meta tags as resources', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = renderToPipeableStream(
+          <>
+            <html>
+              <head />
+              <body>
+                <div>hello world</div>
+              </body>
+            </html>
+            <meta name="robots" content="noindex" />
+            <meta httpEquiv="content-security-policy" content="foo" />
+            <meta itemProp="description" content="desc" />
+            <meta property="description" content="desc2" />
+            <meta charSet="utf-8" />
+          </>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="robots" content="noindex" />
+            <meta http-equiv="content-security-policy" content="foo" />
+            <meta itemprop="description" content="desc" />
+            <meta property="description" content="desc2" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head>
+            <meta charSet="utf-8" />
+          </head>
+          <body>
+            <meta name="robots" content="noindex" />
+            <meta httpEquiv="content-security-policy" content="foo" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="robots" content="noindex" />
+            <meta http-equiv="content-security-policy" content="foo" />
+            <meta itemprop="description" content="desc" />
+            <meta property="description" content="desc2" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('can rendering title tags anywhere in the tree', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = renderToPipeableStream(
+          <>
+            <title>before</title>
+            <>
+              <html>
+                <head>
+                  <title>in head</title>
+                </head>
+                <body>
+                  <div>
+                    <title>during</title>
+                    hello world
+                  </div>
+                </body>
+              </html>
+            </>
+            <title>after</title>
+          </>,
+        );
+        pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>before</title>
+            <title>in head</title>
+            <title>during</title>
+            <title>after</title>
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <>
+          <title>before</title>
+          <>
+            <html>
+              <head>
+                <title>in head</title>
+              </head>
+              <body>
+                <div>
+                  <title>during</title>
+                  hello world
+                </div>
+              </body>
+            </html>
+          </>
+          <title>after</title>
+        </>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>before</title>
+            <title>in head</title>
+            <title>during</title>
+            <title>after</title>
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('prepends new titles on the client so newer ones override older ones, including orphaned server rendered titles', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = renderToPipeableStream(
+          <html>
+            <head>
+              <title>server</title>
+            </head>
+            <body>
+              <div>hello world</div>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>server</title>
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <title>html</title>
+          <head>
+            <title>head</title>
+          </head>
+          <body>
+            <title>body</title>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>body</title>
+            <title>head</title>
+            <title>html</title>
+            <title>server</title>
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('keys titles on text children and only removes them when no more instances refer to that title', async () => {
+      const root = ReactDOMClient.createRoot(container);
+      root.render(
+        <div>
+          <title>{[2]}</title>hello world<title>2</title>
+        </div>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>2</title>
+          </head>
+          <body>
+            <div id="container">
+              <div>hello world</div>
+            </div>
+          </body>
+        </html>,
+      );
+
+      root.render(
+        <div>
+          {null}hello world<title>2</title>
+        </div>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>2</title>
+          </head>
+          <body>
+            <div id="container">
+              <div>hello world</div>
+            </div>
+          </body>
+        </html>,
+      );
+      root.render(
+        <div>
+          {null}hello world{null}
+        </div>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div id="container">
+              <div>hello world</div>
+            </div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat && enableHostSingletons && (enableClientRenderFallbackOnTextMismatch || !__DEV__)
+    it('can render a title before a singleton even if that singleton clears its contents', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = renderToPipeableStream(
+          <>
+            <title>foo</title>
+            <html>
+              <head />
+              <body>
+                <div>server</div>
+              </body>
+            </html>
+          </>,
+        );
+        pipe(writable);
+      });
+
+      const errors = [];
+      ReactDOMClient.hydrateRoot(
+        document,
+        <>
+          <title>foo</title>
+          <html>
+            <head />
+            <body>
+              <div>client</div>
+            </body>
+          </html>
+        </>,
+        {
+          onRecoverableError(err) {
+            errors.push(err.message);
+          },
+        },
+      );
+      try {
+        expect(() => {
+          expect(Scheduler).toFlushWithoutYielding();
+        }).toErrorDev(
+          [
+            'Warning: Text content did not match. Server: "server" Client: "client"',
+            'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+          ],
+          {withoutStack: 1},
+        );
+      } catch (e) {
+        // When gates are false this test fails on a DOMException if you don't clear the scheduler after catching.
+        // When gates are true this branch should not be hit
+        expect(Scheduler).toFlushWithoutYielding();
+        throw e;
+      }
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>foo</title>
+          </head>
+          <body>
+            <div>client</div>
+          </body>
+        </html>,
+      );
+    });
+  });
+
   describe('style resources', () => {
     // @gate enableFloat
     it('treats link rel stylesheet elements as a style resource when it includes a precedence when server rendering', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -923,7 +2153,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('treats link rel stylesheet elements as a style resource when it includes a precedence when hydrating', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -961,7 +2191,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('preloads stylesheets without a precedence prop when server rendering', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -989,7 +2219,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('hoists style resources to the correct precedence', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -1081,10 +2311,10 @@ describe('ReactDOMFloat', () => {
       );
     });
 
-    // @gate enableFloat && enableHostSingletons
+    // @gate enableFloat && enableHostSingletons && enableClientRenderFallbackOnTextMismatch
     it('retains styles even when a new html, head, and/body mount', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -1136,7 +2366,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat && !enableHostSingletons
     it('retains styles even when a new html, head, and/body mount - without HostSingleton', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -1229,6 +2459,7 @@ describe('ReactDOMFloat', () => {
             <link rel="stylesheet" href="foo" data-precedence="foo" />
             <link rel="stylesheet" href="bar" data-precedence="bar" />
             <link rel="stylesheet" href="baz" data-precedence="baz" />
+            <link rel="preload" href="baz" as="style" />
           </head>
           <body>hello</body>
         </html>,
@@ -1240,7 +2471,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('treats async scripts without onLoad or onError as Resources', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -1325,7 +2556,7 @@ describe('ReactDOMFloat', () => {
       );
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
 
@@ -1408,7 +2639,7 @@ describe('ReactDOMFloat', () => {
   // @gate enableFloat
   it('treats stylesheet links with a precedence as a resource', async () => {
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -1461,7 +2692,7 @@ describe('ReactDOMFloat', () => {
     }
 
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -1517,7 +2748,7 @@ describe('ReactDOMFloat', () => {
       ReactDOM.preinit('preset', {as: 'style', precedence: 'preset'});
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -1881,7 +3112,7 @@ describe('ReactDOMFloat', () => {
   // @gate enableFloat
   it('normalizes style resource precedence for all boundaries inlined as part of the shell flush', async () => {
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -1971,7 +3202,7 @@ describe('ReactDOMFloat', () => {
   // @gate enableFloat
   it('style resources are inserted according to precedence order on the client', async () => {
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -2100,7 +3331,7 @@ describe('ReactDOMFloat', () => {
       return null;
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -2178,7 +3409,7 @@ describe('ReactDOMFloat', () => {
       return children;
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -2301,7 +3532,7 @@ describe('ReactDOMFloat', () => {
       return children;
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -2533,7 +3764,7 @@ describe('ReactDOMFloat', () => {
     }
     try {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
       expect(getMeaningfulChildren(document)).toEqual(
@@ -2641,7 +3872,7 @@ describe('ReactDOMFloat', () => {
       return children;
     }
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head />
           <body>
@@ -2770,7 +4001,7 @@ describe('ReactDOMFloat', () => {
     };
     try {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -2854,7 +4085,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <Component scenarios={scenarios} />
@@ -3491,7 +4722,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <link
@@ -3604,7 +4835,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <link
@@ -3717,7 +4948,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <link
@@ -3828,7 +5059,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <script src="foo" async={true} data-foo="a current value" />
@@ -3878,7 +5109,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <link
@@ -3973,7 +5204,7 @@ describe('ReactDOMFloat', () => {
       };
       try {
         await actIntoEmptyDocument(() => {
-          const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          const {pipe} = renderToPipeableStream(
             <html>
               <head>
                 <link
@@ -4034,7 +5265,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('escapes hrefs when selecting matching elements in the document when rendering Resources', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -4096,7 +5327,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('escapes hrefs when selecting matching elements in the document when using preload and preinit', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <head />
             <body>
@@ -4150,6 +5381,503 @@ describe('ReactDOMFloat', () => {
           <body>
             <div id="container">
               <div>foo</div>
+            </div>
+          </body>
+        </html>,
+      );
+    });
+  });
+
+  describe('resource free contexts', () => {
+    // @gate enableFloat
+    it('allows resources inside foreignobject within an svg context', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <body>
+              <svg>
+                <foreignObject>
+                  <title>foo</title>
+                </foreignObject>
+              </svg>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>foo</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+
+      let root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <svg>
+              <foreignObject>
+                <title>foo</title>
+              </foreignObject>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      // @TODO the preload should not get inserted on hydration
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>foo</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+
+      root.unmount();
+      root = ReactDOMClient.createRoot(document);
+      root.render(
+        <html>
+          <body>
+            <svg>
+              <foreignObject>
+                <title>foo</title>
+              </foreignObject>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <title>foo</title>
+          </head>
+          <body>
+            <svg>
+              <foreignobject />
+            </svg>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('warns if you render something that is almost a resource inside an svg tree', async () => {
+      const root = ReactDOMClient.createRoot(container);
+      root.render(
+        <svg>
+          <path>
+            <link rel="stylesheet" href="foo" />
+            <script src="foo" />
+            <script async={true} src="bar" onLoad={() => {}} />
+            <link rel="foo" href="bar" onLoad={() => {}} />
+          </path>
+        </svg>,
+      );
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toErrorDev([
+        'Warning: Cannot render a <link rel="stylesheet" /> as a descendent of an <svg> element without knowing its precedence. Consider adding precedence="default" or moving it above the <svg> ancestor.',
+        'Warning: Cannot render a sync or defer <script> as a descendent of an <svg> element. Try adding async="" or moving it above the ancestor <svg> element.',
+        'Warning: Cannot render a <script> with onLoad or onError listeners as a descendent of an <svg> element. Try removing onLoad={...} and onError={...} or moving it above the ancestor <svg> element.',
+        'Warning: Cannot render a <link> with onLoad or onError listeners as a descendent of <svg>. Try removing onLoad={...} and onError={...} or moving it above the <svg> ancestor.',
+      ]);
+    });
+
+    // @gate enableFloat
+    it('should support non-title resources in svg context', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <body>
+              <svg>
+                <title>foo</title>
+                <link rel="foo" href="bar" />
+                <link rel="stylesheet" href="bar" precedence="default" />
+                <link rel="preload" href="bar" as="style" />
+                <path>
+                  <title>bar</title>
+                  <script src="baz" async={true} />
+                  <meta name="foo" content="bar" />
+                  <base href="foo" />
+                </path>
+              </svg>
+              <title>qux</title>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <base href="foo" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <script src="baz" async="" />
+            <link rel="foo" href="bar" />
+            <meta name="foo" content="bar" />
+            <title>qux</title>
+          </head>
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+
+      let root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <svg>
+              <title>foo</title>
+              <link rel="foo" href="bar" />
+              <link rel="stylesheet" href="bar" precedence="default" />
+              <link rel="preload" href="bar" as="style" />
+              <path>
+                <title>bar</title>
+                <script src="baz" async={true} />
+                <meta name="foo" content="bar" />
+                <base href="foo" />
+              </path>
+            </svg>
+            <title>qux</title>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      // @TODO the preload should not get inserted on hydration
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <base href="foo" />
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <script src="baz" async="" />
+            <link rel="foo" href="bar" />
+            <meta name="foo" content="bar" />
+            <title>qux</title>
+            <link rel="preload" href="bar" as="style" />
+          </head>
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+
+      root.unmount();
+      root = ReactDOMClient.createRoot(document);
+      root.render(
+        <html>
+          <body>
+            <svg>
+              <title>foo</title>
+              <link rel="foo" href="bar" />
+              <link rel="stylesheet" href="bar" precedence="default" />
+              <link rel="preload" href="bar" as="style" />
+              <path>
+                <title>bar</title>
+                <script src="baz" async={true} />
+                <meta name="foo" content="bar" />
+                <base href="foo" />
+              </path>
+            </svg>
+            <title>qux</title>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="foo" href="bar" />
+            <script src="baz" async="" />
+            <meta name="foo" content="bar" />
+            <base href="foo" />
+            <title>qux</title>
+          </head>
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('should not treat title descendants of svg into resources', async () => {
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <html>
+            <body>
+              <svg>
+                <title>foo</title>
+                <path>
+                  <title>bar</title>
+                </path>
+              </svg>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+
+      let root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+
+      root.unmount();
+      root = ReactDOMClient.createRoot(document);
+      root.render(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <svg>
+              <title>foo</title>
+              <path>
+                <title>bar</title>
+              </path>
+            </svg>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('should not turn children of noscript into resources', async () => {
+      function SomeResources() {
+        return (
+          <>
+            <link rel="stylesheet" href="foo" precedence="foo" />
+            <title>foo</title>
+            <link rel="foobar" href="foobar" />
+            <meta charSet="utf-8" />
+            <meta property="og:image" content="foo" />
+            <script async={true} src="script" />
+          </>
+        );
+      }
+      function Indirection({level, children}) {
+        if (level > 0) {
+          return <Indirection level={level - 1}>{children}</Indirection>;
+        } else {
+          return children;
+        }
+      }
+      function App() {
+        return (
+          <html>
+            <head>
+              <SomeResources />
+              <noscript>
+                <SomeResources />
+                <Indirection level={3}>
+                  <SomeResources />
+                </Indirection>
+              </noscript>
+              <SomeResources />
+            </head>
+          </html>
+        );
+      }
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            {/* the actual resources */}
+            <meta charset="utf-8" />
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <script async="" src="script" />
+            <title>foo</title>
+            <link rel="foobar" href="foobar" />
+            <meta property="og:image" content="foo" />
+            {/* the noscript children are encoded as a textNode when scripting is enabled */}
+            <noscript>
+              &lt;link rel="stylesheet"
+              href="foo"/&gt;&lt;title&gt;foo&lt;/title&gt;&lt;link rel="foobar"
+              href="foobar"/&gt;&lt;meta charSet="utf-8"/&gt;&lt;meta
+              property="og:image" content="foo"/&gt;&lt;script async=""
+              src="script"&gt;&lt;/script&gt;&lt;link rel="stylesheet"
+              href="foo"/&gt;&lt;title&gt;foo&lt;/title&gt;&lt;link rel="foobar"
+              href="foobar"/&gt;&lt;meta charSet="utf-8"/&gt;&lt;meta
+              property="og:image" content="foo"/&gt;&lt;script async=""
+              src="script"&gt;&lt;/script&gt;
+            </noscript>
+          </head>
+          <body />
+        </html>,
+      );
+
+      const root = ReactDOMClient.hydrateRoot(document, <App />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            {/* the actual resources */}
+            <meta charset="utf-8" />
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <script async="" src="script" />
+            <title>foo</title>
+            <link rel="foobar" href="foobar" />
+            <meta property="og:image" content="foo" />
+            {/* the noscript children are encoded as a textNode when scripting is enabled */}
+            <noscript>
+              &lt;link rel="stylesheet"
+              href="foo"/&gt;&lt;title&gt;foo&lt;/title&gt;&lt;link rel="foobar"
+              href="foobar"/&gt;&lt;meta charSet="utf-8"/&gt;&lt;meta
+              property="og:image" content="foo"/&gt;&lt;script async=""
+              src="script"&gt;&lt;/script&gt;&lt;link rel="stylesheet"
+              href="foo"/&gt;&lt;title&gt;foo&lt;/title&gt;&lt;link rel="foobar"
+              href="foobar"/&gt;&lt;meta charSet="utf-8"/&gt;&lt;meta
+              property="og:image" content="foo"/&gt;&lt;script async=""
+              src="script"&gt;&lt;/script&gt;
+            </noscript>
+          </head>
+          <body />
+        </html>,
+      );
+
+      root.render(null);
+      expect(Scheduler).toFlushWithoutYielding();
+      // stylesheets and scripts currently don't unmount ever
+      // noscript is never hydrated so it also does not get cleared
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="foo" />
+            <script async="" src="script" />
+          </head>
+          <body />
+        </html>,
+      );
+    });
+
+    it('noscript runs on the server but does not emit resources and does not run on the client', async () => {
+      function App() {
+        return (
+          <html>
+            <body>
+              <div>
+                foo
+                <noscript>
+                  <Foo />
+                </noscript>
+              </div>
+            </body>
+          </html>
+        );
+      }
+      function Foo() {
+        Scheduler.unstable_yieldValue('Foo');
+
+        return <title>noscript title</title>;
+      }
+
+      await actIntoEmptyDocument(() => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(getMeaningfulChildren(container)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div>
+              foo<noscript>&lt;title&gt;noscript title&lt;/title&gt;</noscript>
+            </div>
+          </body>
+        </html>,
+      );
+      expect(Scheduler).toHaveYielded(['Foo']);
+
+      ReactDOMClient.hydrateRoot(document, <App />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div>
+              foo<noscript>&lt;title&gt;noscript title&lt;/title&gt;</noscript>
             </div>
           </body>
         </html>,

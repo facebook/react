@@ -51,6 +51,8 @@ const {
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
+  BUN_DEV,
+  BUN_PROD,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -200,6 +202,8 @@ function getFormat(bundleType) {
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
+    case BUN_DEV:
+    case BUN_PROD:
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
@@ -223,12 +227,14 @@ function isProductionBundleType(bundleType) {
     case NODE_ESM:
     case UMD_DEV:
     case NODE_DEV:
+    case BUN_DEV:
     case FB_WWW_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:
       return false;
     case UMD_PROD:
     case NODE_PROD:
+    case BUN_PROD:
     case UMD_PROFILING:
     case NODE_PROFILING:
     case FB_WWW_PROD:
@@ -252,6 +258,8 @@ function isProfilingBundleType(bundleType) {
     case FB_WWW_PROD:
     case NODE_DEV:
     case NODE_PROD:
+    case BUN_DEV:
+    case BUN_PROD:
     case RN_FB_DEV:
     case RN_FB_PROD:
     case RN_OSS_DEV:
@@ -589,6 +597,7 @@ async function createBundle(bundle, bundleType) {
     filename,
     packageName
   );
+
   const rollupOutputOptions = getRollupOutputOptions(
     mainOutputPath,
     format,
@@ -719,6 +728,8 @@ async function buildEverything() {
       [bundle, NODE_DEV],
       [bundle, NODE_PROD],
       [bundle, NODE_PROFILING],
+      [bundle, BUN_DEV],
+      [bundle, BUN_PROD],
       [bundle, FB_WWW_DEV],
       [bundle, FB_WWW_PROD],
       [bundle, FB_WWW_PROFILING],

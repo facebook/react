@@ -68,15 +68,64 @@ type ScriptResource = {
   hint: PreloadResource,
 };
 
+type TitleProps = {
+  [string]: mixed,
+};
+type TitleResource = {
+  type: 'title',
+  props: TitleProps,
+
+  flushed: boolean,
+};
+
+type MetaProps = {
+  [string]: mixed,
+};
+type MetaResource = {
+  type: 'meta',
+  key: string,
+  props: MetaProps,
+
+  flushed: boolean,
+};
+
+type LinkProps = {
+  href: string,
+  rel: string,
+  [string]: mixed,
+};
+type LinkResource = {
+  type: 'link',
+  props: LinkProps,
+
+  flushed: boolean,
+};
+
+type BaseResource = {
+  type: 'base',
+  props: Props,
+
+  flushed: boolean,
+};
+
 export type Resource = PreloadResource | StyleResource | ScriptResource;
+export type HeadResource =
+  | TitleResource
+  | MetaResource
+  | LinkResource
+  | BaseResource;
 
 export type Resources = {
   // Request local cache
   preloadsMap: Map<string, PreloadResource>,
   stylesMap: Map<string, StyleResource>,
   scriptsMap: Map<string, ScriptResource>,
+  headsMap: Map<string, HeadResource>,
 
   // Flushing queues for Resource dependencies
+  charset: null | MetaResource,
+  bases: Set<BaseResource>,
+  preconnects: Set<LinkResource>,
   fontPreloads: Set<PreloadResource>,
   // usedImagePreloads: Set<PreloadResource>,
   precedences: Map<string, Set<StyleResource>>,
@@ -86,6 +135,10 @@ export type Resources = {
   explicitStylePreloads: Set<PreloadResource>,
   // explicitImagePreloads: Set<PreloadResource>,
   explicitScriptPreloads: Set<PreloadResource>,
+  headResources: Set<HeadResource>,
+
+  // cache for tracking structured meta tags
+  structuredMetaKeys: Map<string, MetaResource>,
 
   // Module-global-like reference for current boundary resources
   boundaryResources: ?BoundaryResources,
@@ -99,8 +152,12 @@ export function createResources(): Resources {
     preloadsMap: new Map(),
     stylesMap: new Map(),
     scriptsMap: new Map(),
+    headsMap: new Map(),
 
     // cleared on flush
+    charset: null,
+    bases: new Set(),
+    preconnects: new Set(),
     fontPreloads: new Set(),
     // usedImagePreloads: new Set(),
     precedences: new Map(),
@@ -110,6 +167,10 @@ export function createResources(): Resources {
     explicitStylePreloads: new Set(),
     // explicitImagePreloads: new Set(),
     explicitScriptPreloads: new Set(),
+    headResources: new Set(),
+
+    // cache for tracking structured meta tags
+    structuredMetaKeys: new Map(),
 
     // like a module global for currently rendering boundary
     boundaryResources: null,
@@ -563,6 +624,114 @@ function adoptPreloadPropsForScriptProps(
     resourceProps.integrity = preloadProps.integrity;
 }
 
+function titlePropsFromRawProps(
+  child: string | number,
+  rawProps: Props,
+): TitleProps {
+  const props = Object.assign({}, rawProps);
+  props.children = child;
+  return props;
+}
+
+export function resourcesFromElement(type: string, props: Props): boolean {
+  if (!currentResources) {
+    throw new Error(
+      '"currentResources" was expected to exist. This is a bug in React.',
+    );
+  }
+  const resources = currentResources;
+  switch (type) {
+    case 'title': {
+      let child = props.children;
+      if (Array.isArray(child) && child.length === 1) {
+        child = child[0];
+      }
+      if (typeof child === 'string' || typeof child === 'number') {
+        const key = 'title::' + child;
+        let resource = resources.headsMap.get(key);
+        if (!resource) {
+          resource = {
+            type: 'title',
+            props: titlePropsFromRawProps(child, props),
+            flushed: false,
+          };
+          resources.headsMap.set(key, resource);
+          resources.headResources.add(resource);
+        }
+      }
+      return true;
+    }
+    case 'meta': {
+      let key, propertyPath;
+      if (typeof props.charSet === 'string') {
+        key = 'charSet';
+      } else if (typeof props.content === 'string') {
+        const contentKey = '::' + props.content;
+        if (typeof props.httpEquiv === 'string') {
+          key = 'httpEquiv::' + props.httpEquiv + contentKey;
+        } else if (typeof props.name === 'string') {
+          key = 'name::' + props.name + contentKey;
+        } else if (typeof props.itemProp === 'string') {
+          key = 'itemProp::' + props.itemProp + contentKey;
+        } else if (typeof props.property === 'string') {
+          const {property} = props;
+          key = 'property::' + property + contentKey;
+          propertyPath = property;
+          const parentPath = property
+            .split(':')
+            .slice(0, -1)
+            .join(':');
+          const parentResource = resources.structuredMetaKeys.get(parentPath);
+          if (parentResource) {
+            key = parentResource.key + '::child::' + key;
+          }
+        }
+      }
+      if (key) {
+        if (!resources.headsMap.has(key)) {
+          const resource = {
+            type: 'meta',
+            key,
+            props: Object.assign({}, props),
+            flushed: false,
+          };
+          resources.headsMap.set(key, resource);
+          if (key === 'charSet') {
+            resources.charset = resource;
+          } else {
+            if (propertyPath) {
+              resources.structuredMetaKeys.set(propertyPath, resource);
+            }
+            resources.headResources.add(resource);
+          }
+        }
+      }
+      return true;
+    }
+    case 'base': {
+      const {target, href} = props;
+      // We mirror the key construction on the client since we will likely unify
+      // this code in the future to better guarantee key semantics are identical
+      // in both environments
+      let key = 'base';
+      key += typeof href === 'string' ? `[href="${href}"]` : ':not([href])';
+      key +=
+        typeof target === 'string' ? `[target="${target}"]` : ':not([target])';
+      if (!resources.headsMap.has(key)) {
+        const resource = {
+          type: 'base',
+          props: Object.assign({}, props),
+          flushed: false,
+        };
+        resources.headsMap.set(key, resource);
+        resources.bases.add(resource);
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 // Construct a resource from link props.
 export function resourcesFromLink(props: Props): boolean {
   if (!currentResources) {
@@ -573,10 +742,11 @@ export function resourcesFromLink(props: Props): boolean {
   const resources = currentResources;
 
   const {rel, href} = props;
-  if (!href || typeof href !== 'string') {
+  if (!href || typeof href !== 'string' || !rel || typeof rel !== 'string') {
     return false;
   }
 
+  let key = '';
   switch (rel) {
     case 'stylesheet': {
       const {onLoad, onError, precedence, disabled} = props;
@@ -689,10 +859,41 @@ export function resourcesFromLink(props: Props): boolean {
           return true;
         }
       }
-      return false;
+      break;
     }
   }
-  return false;
+  if (props.onLoad || props.onError) {
+    // When a link has these props we can't treat it is a Resource but if we rendered it on the
+    // server it would look like a Resource in the rendered html (the onLoad/onError aren't emitted)
+    // Instead we expect the client to insert them rather than hydrate them which also guarantees
+    // that the onLoad and onError won't fire before the event handlers are attached
+    return true;
+  }
+
+  const sizes = typeof props.sizes === 'string' ? props.sizes : '';
+  const media = typeof props.media === 'string' ? props.media : '';
+  key =
+    'rel:' + rel + '::href:' + href + '::sizes:' + sizes + '::media:' + media;
+  let resource = resources.headsMap.get(key);
+  if (!resource) {
+    resource = {
+      type: 'link',
+      props: Object.assign({}, props),
+      flushed: false,
+    };
+    resources.headsMap.set(key, resource);
+    switch (rel) {
+      case 'preconnect':
+      case 'dns-prefetch': {
+        resources.preconnects.add(resource);
+        break;
+      }
+      default: {
+        resources.headResources.add(resource);
+      }
+    }
+  }
+  return true;
 }
 
 // Construct a resource from link props.

@@ -7,6 +7,9 @@
  * @flow
  */
 
+// Patch fetch
+import './ReactFetch';
+
 export {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   Children,
@@ -19,12 +22,12 @@ export {
   createElement,
   createRef,
   createServerContext,
-  experimental_use,
+  use,
   forwardRef,
   isValidElement,
   lazy,
   memo,
-  experimental_cache,
+  cache,
   startTransition,
   unstable_DebugTracingMode,
   unstable_getCacheSignal,

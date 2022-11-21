@@ -16,6 +16,7 @@ import type {
   ObserveVisibleRectsCallback,
 } from 'react-reconciler/src/ReactTestSelectors';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
+import type {AncestorInfoDev} from './validateDOMNesting';
 
 import {
   precacheFiberNode,
@@ -25,6 +26,7 @@ import {
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
   detachDeletedInstance,
+  isMarkedResource,
 } from './ReactDOMComponentTree';
 export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
@@ -46,18 +48,19 @@ import {
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
-import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
+import {validateDOMNesting, updatedAncestorInfoDev} from './validateDOMNesting';
 import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
   getEventPriority,
 } from '../events/ReactDOMEventListener';
-import {getChildNamespace} from '../shared/DOMNamespaces';
+import {getChildNamespace, SVG_NAMESPACE} from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
   COMMENT_NODE,
   DOCUMENT_NODE,
+  DOCUMENT_TYPE_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
@@ -86,8 +89,9 @@ import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   prepareToRenderResources,
   cleanupAfterRenderResources,
-  isHostResourceType,
+  clearRootResources,
 } from './ReactDOMFloatClient';
+import {validateLinkPropsForStyleResource} from '../shared/ReactDOMResourceValidation';
 
 export type Type = string;
 export type Props = {
@@ -103,6 +107,9 @@ export type Props = {
   right?: null | number,
   top?: null | number,
   ...
+};
+type RawProps = {
+  [string]: mixed,
 };
 export type EventTargetChildElement = {
   type: string,
@@ -133,8 +140,7 @@ export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
-  ancestorInfo: mixed,
-  ...
+  ancestorInfo: AncestorInfoDev,
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
@@ -190,7 +196,7 @@ export function getRootHostContext(
   }
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
-    const ancestorInfo = updatedAncestorInfo(null, validatedTag);
+    const ancestorInfo = updatedAncestorInfoDev(null, validatedTag);
     return {namespace, ancestorInfo};
   }
   return namespace;
@@ -203,7 +209,7 @@ export function getChildHostContext(
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
     const namespace = getChildNamespace(parentHostContextDev.namespace, type);
-    const ancestorInfo = updatedAncestorInfo(
+    const ancestorInfo = updatedAncestorInfoDev(
       parentHostContextDev.ancestorInfo,
       type,
     );
@@ -274,7 +280,7 @@ export function createInstance(
       typeof props.children === 'number'
     ) {
       const string = '' + props.children;
-      const ownAncestorInfo = updatedAncestorInfo(
+      const ownAncestorInfo = updatedAncestorInfoDev(
         hostContextDev.ancestorInfo,
         type,
       );
@@ -337,7 +343,7 @@ export function prepareUpdate(
         typeof newProps.children === 'number')
     ) {
       const string = '' + newProps.children;
-      const ownAncestorInfo = updatedAncestorInfo(
+      const ownAncestorInfo = updatedAncestorInfoDev(
         hostContextDev.ancestorInfo,
         type,
       );
@@ -711,50 +717,23 @@ export function unhideTextInstance(
 
 export function clearContainer(container: Container): void {
   if (enableHostSingletons) {
-    // We have refined the container to Element type
     const nodeType = container.nodeType;
-    if (nodeType === DOCUMENT_NODE || nodeType === ELEMENT_NODE) {
+    if (nodeType === DOCUMENT_NODE) {
+      clearRootResources(container);
+      clearContainerSparingly(container);
+    } else if (nodeType === ELEMENT_NODE) {
       switch (container.nodeName) {
-        case '#document':
-        case 'HTML':
-        case 'HEAD':
-        case 'BODY': {
-          let node = container.firstChild;
-          while (node) {
-            const nextNode = node.nextSibling;
-            const nodeName = node.nodeName;
-            switch (nodeName) {
-              case 'HTML':
-              case 'HEAD':
-              case 'BODY': {
-                clearContainer((node: any));
-                // If these singleton instances had previously been rendered with React they
-                // may still hold on to references to the previous fiber tree. We detatch them
-                // prospectiveyl to reset them to a baseline starting state since we cannot create
-                // new instances.
-                detachDeletedInstance((node: any));
-                break;
-              }
-              case 'STYLE': {
-                break;
-              }
-              case 'LINK': {
-                if (
-                  ((node: any): HTMLLinkElement).rel.toLowerCase() ===
-                  'stylesheet'
-                ) {
-                  break;
-                }
-              }
-              // eslint-disable-next-line no-fallthrough
-              default: {
-                container.removeChild(node);
-              }
-            }
-            node = nextNode;
-          }
-          return;
+        case 'HEAD': {
+          // If we are clearing document.head as a container we are essentially clearing everything
+          // that was hoisted to the head and should forget the instances that will no longer be in the DOM
+          clearRootResources(container);
+          // fall through to clear child contents
         }
+        // eslint-disable-next-line-no-fallthrough
+        case 'HTML':
+        case 'BODY':
+          clearContainerSparingly(container);
+          return;
         default: {
           container.textContent = '';
         }
@@ -773,6 +752,42 @@ export function clearContainer(container: Container): void {
       }
     }
   }
+}
+
+function clearContainerSparingly(container: Node) {
+  let node;
+  let nextNode: ?Node = container.firstChild;
+  if (nextNode && nextNode.nodeType === DOCUMENT_TYPE_NODE) {
+    nextNode = nextNode.nextSibling;
+  }
+  while (nextNode) {
+    node = nextNode;
+    nextNode = nextNode.nextSibling;
+    switch (node.nodeName) {
+      case 'HTML':
+      case 'HEAD':
+      case 'BODY': {
+        const element: Element = (node: any);
+        clearContainerSparingly(element);
+        // If these singleton instances had previously been rendered with React they
+        // may still hold on to references to the previous fiber tree. We detatch them
+        // prospectively to reset them to a baseline starting state since we cannot create
+        // new instances.
+        detachDeletedInstance(element);
+        continue;
+      }
+      case 'STYLE': {
+        continue;
+      }
+      case 'LINK': {
+        if (((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet') {
+          continue;
+        }
+      }
+    }
+    container.removeChild(node);
+  }
+  return;
 }
 
 // Making this so we can eventually move all of the instance caching to the commit phase.
@@ -798,7 +813,15 @@ export const supportsHydration = true;
 // inserted without breaking hydration
 export function isHydratable(type: string, props: Props): boolean {
   if (enableFloat) {
-    if (type === 'script') {
+    if (type === 'link') {
+      if (
+        (props: any).rel === 'stylesheet' &&
+        typeof (props: any).precedence !== 'string'
+      ) {
+        return true;
+      }
+      return false;
+    } else if (type === 'script') {
       const {async, onLoad, onError} = (props: any);
       return !(async && (onLoad || onError));
     }
@@ -898,16 +921,38 @@ function getNextHydratable(node) {
       if (nodeType === ELEMENT_NODE) {
         const element: Element = (node: any);
         switch (element.tagName) {
+          // This is subtle. in SVG scope the title tag is case sensitive. we don't want to skip
+          // titles in svg but we do want to skip them outside of svg. there is an edge case where
+          // you could do `React.createElement('TITLE', ...)` inside an svg scope but the SSR serializer
+          // will still emit lowercase. Practically speaking the only time the DOM will have a non-uppercased
+          // title tagName is if it is inside an svg.
+          // Other Resource types like META, BASE, LINK, and SCRIPT should be treated as resources even inside
+          // svg scope because they are invalid otherwise. We still don't need to handle the lowercase variant
+          // because if they are present in the DOM already they would have been hoisted outside the SVG scope
+          // as Resources. So while it would be correct to skip a <link> inside <svg> and this algorithm won't
+          // skip that link because the tagName will not be uppercased it functionally is irrelevant. If one
+          // tries to render incompatible types such as a non-resource stylesheet inside an svg the server will
+          // emit that invalid html and hydration will fail. In Dev this will present warnings guiding the
+          // developer on how to fix.
+          case 'TITLE':
+          case 'META':
+          case 'BASE':
+          case 'HTML':
+          case 'HEAD':
+          case 'BODY': {
+            continue;
+          }
           case 'LINK': {
             const linkEl: HTMLLinkElement = (element: any);
-            const rel = linkEl.rel;
+            // All links that are server rendered are resources except
+            // stylesheets that do not have a precedence
             if (
-              rel === 'preload' ||
-              (rel === 'stylesheet' && linkEl.hasAttribute('data-precedence'))
+              linkEl.rel === 'stylesheet' &&
+              !linkEl.hasAttribute('data-precedence')
             ) {
-              continue;
+              break;
             }
-            break;
+            continue;
           }
           case 'STYLE': {
             const styleEl: HTMLStyleElement = (element: any);
@@ -923,11 +968,6 @@ function getNextHydratable(node) {
             }
             break;
           }
-          case 'HTML':
-          case 'HEAD':
-          case 'BODY': {
-            continue;
-          }
         }
         break;
       } else if (nodeType === TEXT_NODE) {
@@ -937,16 +977,22 @@ function getNextHydratable(node) {
       if (nodeType === ELEMENT_NODE) {
         const element: Element = (node: any);
         switch (element.tagName) {
+          case 'TITLE':
+          case 'META':
+          case 'BASE': {
+            continue;
+          }
           case 'LINK': {
             const linkEl: HTMLLinkElement = (element: any);
-            const rel = linkEl.rel;
+            // All links that are server rendered are resources except
+            // stylesheets that do not have a precedence
             if (
-              rel === 'preload' ||
-              (rel === 'stylesheet' && linkEl.hasAttribute('data-precedence'))
+              linkEl.rel === 'stylesheet' &&
+              !linkEl.hasAttribute('data-precedence')
             ) {
-              continue;
+              break;
             }
-            break;
+            continue;
           }
           case 'STYLE': {
             const styleEl: HTMLStyleElement = (element: any);
@@ -1520,7 +1566,131 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
 
 export const supportsResources = true;
 
-export {isHostResourceType};
+export function isHostResourceType(
+  type: string,
+  props: RawProps,
+  hostContext: HostContext,
+): boolean {
+  let outsideHostContainerContext: boolean;
+  let namespace: string;
+  if (__DEV__) {
+    const hostContextDev: HostContextDev = (hostContext: any);
+    // We can only render resources when we are not within the host container context
+    outsideHostContainerContext = !hostContextDev.ancestorInfo
+      .containerTagInScope;
+    namespace = hostContextDev.namespace;
+  } else {
+    const hostContextProd: HostContextProd = (hostContext: any);
+    namespace = hostContextProd;
+  }
+  switch (type) {
+    case 'base':
+    case 'meta': {
+      return true;
+    }
+    case 'title': {
+      return namespace !== SVG_NAMESPACE;
+    }
+    case 'link': {
+      const {onLoad, onError} = props;
+      if (onLoad || onError) {
+        if (__DEV__) {
+          if (outsideHostContainerContext) {
+            console.error(
+              'Cannot render a <link> with onLoad or onError listeners outside the main document.' +
+                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
+                ' somewhere in the <body>.',
+            );
+          } else if (namespace === SVG_NAMESPACE) {
+            console.error(
+              'Cannot render a <link> with onLoad or onError listeners as a descendent of <svg>.' +
+                ' Try removing onLoad={...} and onError={...} or moving it above the <svg> ancestor.',
+            );
+          }
+        }
+        return false;
+      }
+      switch (props.rel) {
+        case 'stylesheet': {
+          const {href, precedence, disabled} = props;
+          if (__DEV__) {
+            validateLinkPropsForStyleResource(props);
+            if (typeof precedence !== 'string') {
+              if (outsideHostContainerContext) {
+                console.error(
+                  'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence.' +
+                    ' Consider adding precedence="default" or moving it into the root <head> tag.',
+                );
+              } else if (namespace === SVG_NAMESPACE) {
+                console.error(
+                  'Cannot render a <link rel="stylesheet" /> as a descendent of an <svg> element without knowing its precedence.' +
+                    ' Consider adding precedence="default" or moving it above the <svg> ancestor.',
+                );
+              }
+            }
+          }
+          return (
+            typeof href === 'string' &&
+            typeof precedence === 'string' &&
+            disabled == null
+          );
+        }
+        default: {
+          const {rel, href} = props;
+          return typeof href === 'string' && typeof rel === 'string';
+        }
+      }
+    }
+    case 'script': {
+      // We don't validate because it is valid to use async with onLoad/onError unlike combining
+      // precedence with these for style resources
+      const {src, async, onLoad, onError} = props;
+      if (__DEV__) {
+        if (async !== true) {
+          if (outsideHostContainerContext) {
+            console.error(
+              'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
+                ' Try adding async="" or moving it into the root <head> tag.',
+            );
+          } else if (namespace === SVG_NAMESPACE) {
+            console.error(
+              'Cannot render a sync or defer <script> as a descendent of an <svg> element.' +
+                ' Try adding async="" or moving it above the ancestor <svg> element.',
+            );
+          }
+        } else if (onLoad || onError) {
+          if (outsideHostContainerContext) {
+            console.error(
+              'Cannot render a <script> with onLoad or onError listeners outside the main document.' +
+                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
+                ' somewhere in the <body>.',
+            );
+          } else if (namespace === SVG_NAMESPACE) {
+            console.error(
+              'Cannot render a <script> with onLoad or onError listeners as a descendent of an <svg> element.' +
+                ' Try removing onLoad={...} and onError={...} or moving it above the ancestor <svg> element.',
+            );
+          }
+        }
+      }
+      return (async: any) && typeof src === 'string' && !onLoad && !onError;
+    }
+    case 'noscript':
+    case 'template':
+    case 'style': {
+      if (__DEV__) {
+        if (outsideHostContainerContext) {
+          console.error(
+            'Cannot render <%s> outside the main document. Try moving it into the root <head> tag.',
+            type,
+          );
+        }
+      }
+      return false;
+    }
+  }
+  return false;
+}
 
 export function prepareRendererToRender(rootContainer: Container) {
   if (enableFloat) {
@@ -1666,9 +1836,8 @@ export function clearSingleton(instance: Instance): void {
   while (node) {
     const nextNode = node.nextSibling;
     const nodeName = node.nodeName;
-    if (getInstanceFromNodeDOMTree(node)) {
-      // retain nodes owned by React
-    } else if (
+    if (
+      isMarkedResource(node) ||
       nodeName === 'HEAD' ||
       nodeName === 'BODY' ||
       nodeName === 'STYLE' ||

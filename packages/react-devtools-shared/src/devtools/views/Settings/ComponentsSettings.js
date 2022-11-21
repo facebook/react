@@ -373,7 +373,7 @@ export default function ComponentsSettings(_: {}): React.Node {
                     <option value={ElementTypeFunction}>function</option>
                     <option value={ElementTypeForwardRef}>forward ref</option>
                     <option value={ElementTypeHostComponent}>
-                      host (e.g. &lt;div&gt;)
+                      dom nodes (e.g. &lt;div&gt;)
                     </option>
                     <option value={ElementTypeMemo}>memo</option>
                     <option value={ElementTypeOtherOrUnknown}>other</option>
