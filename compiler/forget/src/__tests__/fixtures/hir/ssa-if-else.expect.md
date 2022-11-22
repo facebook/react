@@ -19,16 +19,16 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0[1:8] = 1
-  [2] Let mutate y$2_@1 = 2
-  [3] If (read y$2_@1) then:bb2 else:bb3
+  [1] Let mutate x$5_@0[1:8] = 1
+  [2] Let mutate y$6_@1 = 2
+  [3] If (read y$6_@1) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [4] Let mutate z$3_@0[1:7] = Binary read x$1_@0 + read y$2_@1
+  [4] Let mutate z$7_@0[1:7] = Binary read x$5_@0 + read y$6_@1
   [5] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [6] Let mutate z$4_@0[1:7] = read x$1_@0
+  [6] Let mutate z$8_@0[1:7] = read x$5_@0
   [7] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
@@ -42,20 +42,20 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0[1:8] = 1
-      [2] Let mutate y$2_@1 = 2
+      [1] Let mutate x$5_@0[1:8] = 1
+      [2] Let mutate y$6_@1 = 2
     "]
-    bb0_instrs --> bb0_terminal(["If (read y$2_@1)"])
+    bb0_instrs --> bb0_terminal(["If (read y$6_@1)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Let mutate z$3_@0[1:7] = Binary read x$1_@0 + read y$2_@1
+      [4] Let mutate z$7_@0[1:7] = Binary read x$5_@0 + read y$6_@1
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [6] Let mutate z$4_@0[1:7] = read x$1_@0
+      [6] Let mutate z$8_@0[1:7] = read x$5_@0
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end

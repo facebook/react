@@ -21,27 +21,27 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Let mutate x$4_@0 = 0
+  [1] Let mutate x$9_@0 = 0
   [2] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb5
-  [3] If (read a$1) then:bb3 else:bb2
+  [3] If (read a$6) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
   [4] While test=bb4 loop=bb6 fallthrough=bb5
 bb4:
   predecessor blocks: bb3 bb8
-  [5] If (read b$2) then:bb6 else:bb5
+  [5] If (read b$7) then:bb6 else:bb5
 bb6:
   predecessor blocks: bb4
   [6] While test=bb7 loop=bb9 fallthrough=bb8
 bb7:
   predecessor blocks: bb6 bb9
-  [7] If (read c$3) then:bb9 else:bb8
+  [7] If (read c$8) then:bb9 else:bb8
 bb9:
   predecessor blocks: bb7
-  [8] Const mutate $5_@1 = 1
-  [9] Binary read x$4_@0 + read $5_@1
+  [8] Const mutate $13_@1 = 1
+  [9] Binary read x$9_@0 + read $13_@1
   [10] Goto(Continue) bb7
 bb8:
   predecessor blocks: bb7
@@ -51,7 +51,7 @@ bb5:
   [12] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  [13] Return read x$4_@0
+  [13] Return read x$9_@0
 ```
 
 ### CFG
@@ -61,29 +61,29 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$4_@0 = 0
+      [1] Let mutate x$9_@0 = 0
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
   subgraph bb1
-    bb1_terminal(["If (read a$1)"])
+    bb1_terminal(["If (read a$6)"])
   end
   subgraph bb3
     bb3_terminal(["While"])
   end
   subgraph bb4
-    bb4_terminal(["If (read b$2)"])
+    bb4_terminal(["If (read b$7)"])
   end
   subgraph bb6
     bb6_terminal(["While"])
   end
   subgraph bb7
-    bb7_terminal(["If (read c$3)"])
+    bb7_terminal(["If (read c$8)"])
   end
   subgraph bb9
     bb9_instrs["
-      [8] Const mutate $5_@1 = 1
-      [9] Binary read x$4_@0 + read $5_@1
+      [8] Const mutate $13_@1 = 1
+      [9] Binary read x$9_@0 + read $13_@1
     "]
     bb9_instrs --> bb9_terminal(["Goto"])
   end
@@ -94,7 +94,7 @@ flowchart TB
     bb5_terminal(["Goto"])
   end
   subgraph bb2
-    bb2_terminal(["Return read x$4_@0"])
+    bb2_terminal(["Return read x$9_@0"])
   end
 
   %% Jumps

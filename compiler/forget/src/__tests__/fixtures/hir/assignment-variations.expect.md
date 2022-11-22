@@ -20,13 +20,13 @@ function g(a) {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0 = 1
-  [2] Const mutate $2_@1 = 1
-  [3] Reassign mutate x$1_@2 = Binary read x$1_@0 + read $2_@1
-  [4] Const mutate $3_@3 = 1
-  [5] Reassign mutate x$1_@4 = Binary read x$1_@2 + read $3_@3
-  [6] Const mutate $4_@5 = 1
-  [7] Reassign mutate x$1_@6 = Binary read x$1_@4 >>> read $4_@5
+  [1] Let mutate x$5_@0 = 1
+  [2] Const mutate $6_@1 = 1
+  [3] Reassign mutate x$7_@2 = Binary read x$5_@0 + read $6_@1
+  [4] Const mutate $8_@3 = 1
+  [5] Reassign mutate x$9_@4 = Binary read x$7_@2 + read $8_@3
+  [6] Const mutate $10_@5 = 1
+  [7] Reassign mutate x$11_@6 = Binary read x$9_@4 >>> read $10_@5
   [8] Return
 ```
 
@@ -37,13 +37,13 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0 = 1
-      [2] Const mutate $2_@1 = 1
-      [3] Reassign mutate x$1_@2 = Binary read x$1_@0 + read $2_@1
-      [4] Const mutate $3_@3 = 1
-      [5] Reassign mutate x$1_@4 = Binary read x$1_@2 + read $3_@3
-      [6] Const mutate $4_@5 = 1
-      [7] Reassign mutate x$1_@6 = Binary read x$1_@4 >>> read $4_@5
+      [1] Let mutate x$5_@0 = 1
+      [2] Const mutate $6_@1 = 1
+      [3] Reassign mutate x$7_@2 = Binary read x$5_@0 + read $6_@1
+      [4] Const mutate $8_@3 = 1
+      [5] Reassign mutate x$9_@4 = Binary read x$7_@2 + read $8_@3
+      [6] Const mutate $10_@5 = 1
+      [7] Reassign mutate x$11_@6 = Binary read x$9_@4 >>> read $10_@5
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end
@@ -67,10 +67,10 @@ function f$0() {
 
 ```
 bb0:
-  [1] Const mutate $2_@0 = 1
-  [2] Reassign mutate a$1_@1.b.c[0:5] = Binary read a$1_@1.b.c + read $2_@0
-  [3] Const mutate $3_@2 = 2
-  [4] Reassign mutate a$1_@1.b.c[0:5] = Binary read a$1_@1.b.c * read $3_@2
+  [1] Const mutate $5_@0 = 1
+  [2] Reassign mutate a$4_@1.b.c[0:5] = Binary read a$4_@1.b.c + read $5_@0
+  [3] Const mutate $6_@2 = 2
+  [4] Reassign mutate a$4_@1.b.c[0:5] = Binary read a$4_@1.b.c * read $6_@2
   [5] Return
 ```
 
@@ -81,10 +81,10 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $2_@0 = 1
-      [2] Reassign mutate a$1_@1.b.c[0:5] = Binary read a$1_@1.b.c + read $2_@0
-      [3] Const mutate $3_@2 = 2
-      [4] Reassign mutate a$1_@1.b.c[0:5] = Binary read a$1_@1.b.c * read $3_@2
+      [1] Const mutate $5_@0 = 1
+      [2] Reassign mutate a$4_@1.b.c[0:5] = Binary read a$4_@1.b.c + read $5_@0
+      [3] Const mutate $6_@2 = 2
+      [4] Reassign mutate a$4_@1.b.c[0:5] = Binary read a$4_@1.b.c * read $6_@2
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end

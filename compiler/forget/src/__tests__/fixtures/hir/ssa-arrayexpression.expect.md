@@ -15,10 +15,10 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate a$2_@0 = 1
-  [2] Const mutate b$3_@1 = 2
-  [3] Const mutate x$4_@2 = Array [read a$2_@0, read b$3_@1]
-  [4] Return freeze x$4_@2
+  [1] Const mutate a$6_@0 = 1
+  [2] Const mutate b$7_@1 = 2
+  [3] Const mutate x$8_@2 = Array [read a$6_@0, read b$7_@1]
+  [4] Return freeze x$8_@2
 ```
 
 ### CFG
@@ -28,11 +28,11 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2_@0 = 1
-      [2] Const mutate b$3_@1 = 2
-      [3] Const mutate x$4_@2 = Array [read a$2_@0, read b$3_@1]
+      [1] Const mutate a$6_@0 = 1
+      [2] Const mutate b$7_@1 = 2
+      [3] Const mutate x$8_@2 = Array [read a$6_@0, read b$7_@1]
     "]
-    bb0_instrs --> bb0_terminal(["Return freeze x$4_@2"])
+    bb0_instrs --> bb0_terminal(["Return freeze x$8_@2"])
   end
 
   %% Jumps

@@ -19,11 +19,11 @@ function call(x) {}
 
 ```
 bb0:
-  [1] Const mutate a$1_@0 = Array []
-  [2] Call read useFreeze$2(freeze a$1_@0)
-  [3] Call read useFreeze$2(read a$1_@0)
-  [4] Call mutate call$3_@1(read a$1_@0)
-  [5] Return read a$1_@0
+  [1] Const mutate a$4_@0 = Array []
+  [2] Call read useFreeze$2(freeze a$4_@0)
+  [3] Call read useFreeze$2(read a$4_@0)
+  [4] Call mutate call$3_@1(read a$4_@0)
+  [5] Return read a$4_@0
 ```
 
 ### CFG
@@ -33,12 +33,12 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$1_@0 = Array []
-      [2] Call read useFreeze$2(freeze a$1_@0)
-      [3] Call read useFreeze$2(read a$1_@0)
-      [4] Call mutate call$3_@1(read a$1_@0)
+      [1] Const mutate a$4_@0 = Array []
+      [2] Call read useFreeze$2(freeze a$4_@0)
+      [3] Call read useFreeze$2(read a$4_@0)
+      [4] Call mutate call$3_@1(read a$4_@0)
     "]
-    bb0_instrs --> bb0_terminal(["Return read a$1_@0"])
+    bb0_instrs --> bb0_terminal(["Return read a$4_@0"])
   end
 
   %% Jumps

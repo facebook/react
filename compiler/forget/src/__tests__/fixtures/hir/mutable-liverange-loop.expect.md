@@ -90,39 +90,39 @@ function cond$0() {}
 
 ```
 bb0:
-  [1] Let mutate a$2_@0[0:18] = Object {  }
-  [2] Let mutate b$3_@0[0:18] = Object {  }
-  [3] Let mutate c$4_@1 = Object {  }
-  [4] Let mutate d$5_@0[0:18] = Object {  }
+  [1] Let mutate a$12_@0[0:18] = Object {  }
+  [2] Let mutate b$13_@0[0:18] = Object {  }
+  [3] Let mutate c$14_@1 = Object {  }
+  [4] Let mutate d$15_@0[0:18] = Object {  }
   [5] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb4
-  [6] Const mutate $9_@2[6:12] = true
-  [7] If (read $9_@2) then:bb3 else:bb2
+  [6] Const mutate $16_@2[6:12] = true
+  [7] If (read $16_@2) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  [8] Call mutate mutate$6_@0(mutate a$2_@0, mutate b$3_@0)
-  [9] Const mutate $8_@0[0:18] = Call mutate cond$7_@0(mutate a$2_@0)
-  [10] If (read $8_@0) then:bb2 else:bb4
+  [8] Call mutate mutate$6_@0(mutate a$12_@0, mutate b$13_@0)
+  [9] Const mutate $21_@0[0:18] = Call mutate cond$7_@0(mutate a$12_@0)
+  [10] If (read $21_@0) then:bb2 else:bb4
 bb4:
   predecessor blocks: bb3
   [11] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb3 bb1
-  [12] If (read a$2_@0) then:bb7 else:bb7
+  [12] If (read a$12_@0) then:bb7 else:bb7
 bb7:
   predecessor blocks: bb2
-  [13] If (read b$3_@0) then:bb9 else:bb9
+  [13] If (read b$13_@0) then:bb9 else:bb9
 bb9:
   predecessor blocks: bb7
-  [14] If (read c$4_@1) then:bb11 else:bb11
+  [14] If (read c$14_@1) then:bb11 else:bb11
 bb11:
   predecessor blocks: bb9
-  [15] If (read d$5_@0) then:bb13 else:bb13
+  [15] If (read d$15_@0) then:bb13 else:bb13
 bb13:
   predecessor blocks: bb11
-  [16] Const mutate $10_@3 = null
-  [17] Call mutate mutate$6_@0(mutate d$5_@0, read $10_@3)
+  [16] Const mutate $28_@3 = null
+  [17] Call mutate mutate$6_@0(mutate d$15_@0, read $28_@3)
   [18] Return
 ```
 
@@ -133,45 +133,45 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate a$2_@0[0:18] = Object {  }
-      [2] Let mutate b$3_@0[0:18] = Object {  }
-      [3] Let mutate c$4_@1 = Object {  }
-      [4] Let mutate d$5_@0[0:18] = Object {  }
+      [1] Let mutate a$12_@0[0:18] = Object {  }
+      [2] Let mutate b$13_@0[0:18] = Object {  }
+      [3] Let mutate c$14_@1 = Object {  }
+      [4] Let mutate d$15_@0[0:18] = Object {  }
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
   subgraph bb1
     bb1_instrs["
-      [6] Const mutate $9_@2[6:12] = true
+      [6] Const mutate $16_@2[6:12] = true
     "]
-    bb1_instrs --> bb1_terminal(["If (read $9_@2)"])
+    bb1_instrs --> bb1_terminal(["If (read $16_@2)"])
   end
   subgraph bb3
     bb3_instrs["
-      [8] Call mutate mutate$6_@0(mutate a$2_@0, mutate b$3_@0)
-      [9] Const mutate $8_@0[0:18] = Call mutate cond$7_@0(mutate a$2_@0)
+      [8] Call mutate mutate$6_@0(mutate a$12_@0, mutate b$13_@0)
+      [9] Const mutate $21_@0[0:18] = Call mutate cond$7_@0(mutate a$12_@0)
     "]
-    bb3_instrs --> bb3_terminal(["If (read $8_@0)"])
+    bb3_instrs --> bb3_terminal(["If (read $21_@0)"])
   end
   subgraph bb4
     bb4_terminal(["Goto"])
   end
   subgraph bb2
-    bb2_terminal(["If (read a$2_@0)"])
+    bb2_terminal(["If (read a$12_@0)"])
   end
   subgraph bb7
-    bb7_terminal(["If (read b$3_@0)"])
+    bb7_terminal(["If (read b$13_@0)"])
   end
   subgraph bb9
-    bb9_terminal(["If (read c$4_@1)"])
+    bb9_terminal(["If (read c$14_@1)"])
   end
   subgraph bb11
-    bb11_terminal(["If (read d$5_@0)"])
+    bb11_terminal(["If (read d$15_@0)"])
   end
   subgraph bb13
     bb13_instrs["
-      [16] Const mutate $10_@3 = null
-      [17] Call mutate mutate$6_@0(mutate d$5_@0, read $10_@3)
+      [16] Const mutate $28_@3 = null
+      [17] Call mutate mutate$6_@0(mutate d$15_@0, read $28_@3)
     "]
     bb13_instrs --> bb13_terminal(["Return"])
   end

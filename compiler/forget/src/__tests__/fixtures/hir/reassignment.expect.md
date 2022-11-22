@@ -21,14 +21,14 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Let mutate x$2_@0[1:7] = Array []
-  [2] Call mutate x$2_@0.push(read props$1.p0)
-  [3] Let mutate y$3_@0[1:7] = read x$2_@0
-  [4] Reassign mutate x$2_@1 = Array []
-  [5] Let mutate _$4_@2 = JSX <read Component$0 x={freeze x$2_@1} ></read Component$0>
-  [6] Call mutate y$3_@0.push(read props$1.p1)
-  [7] Const mutate $5_@3 = JSX <read Component$0 x={read x$2_@1} y={freeze y$3_@0} ></read Component$0>
-  [8] Return read $5_@3
+  [1] Let mutate x$7_@0[1:7] = Array []
+  [2] Call mutate x$7_@0.push(read props$6.p0)
+  [3] Let mutate y$8_@0[1:7] = read x$7_@0
+  [4] Reassign mutate x$9_@1 = Array []
+  [5] Let mutate _$10_@2 = JSX <read Component$0 x={freeze x$9_@1} ></read Component$0>
+  [6] Call mutate y$8_@0.push(read props$6.p1)
+  [7] Const mutate $11_@3 = JSX <read Component$0 x={read x$9_@1} y={freeze y$8_@0} ></read Component$0>
+  [8] Return read $11_@3
 ```
 
 ### CFG
@@ -38,15 +38,15 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$2_@0[1:7] = Array []
-      [2] Call mutate x$2_@0.push(read props$1.p0)
-      [3] Let mutate y$3_@0[1:7] = read x$2_@0
-      [4] Reassign mutate x$2_@1 = Array []
-      [5] Let mutate _$4_@2 = JSX <read Component$0 x={freeze x$2_@1} ></read Component$0>
-      [6] Call mutate y$3_@0.push(read props$1.p1)
-      [7] Const mutate $5_@3 = JSX <read Component$0 x={read x$2_@1} y={freeze y$3_@0} ></read Component$0>
+      [1] Let mutate x$7_@0[1:7] = Array []
+      [2] Call mutate x$7_@0.push(read props$6.p0)
+      [3] Let mutate y$8_@0[1:7] = read x$7_@0
+      [4] Reassign mutate x$9_@1 = Array []
+      [5] Let mutate _$10_@2 = JSX <read Component$0 x={freeze x$9_@1} ></read Component$0>
+      [6] Call mutate y$8_@0.push(read props$6.p1)
+      [7] Const mutate $11_@3 = JSX <read Component$0 x={read x$9_@1} y={freeze y$8_@0} ></read Component$0>
     "]
-    bb0_instrs --> bb0_terminal(["Return read $5_@3"])
+    bb0_instrs --> bb0_terminal(["Return read $11_@3"])
   end
 
   %% Jumps

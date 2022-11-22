@@ -45,15 +45,15 @@ function foo$0() {}
 
 ```
 bb0:
-  [1] Const mutate a$2_@0[0:7] = Array []
-  [2] Const mutate b$3_@0[0:7] = Object {  }
-  [3] Call mutate foo$4_@0(mutate a$2_@0, mutate b$3_@0)
-  [4] Const mutate $6_@1 = "div"
-  [5] Let mutate _$5_@2 = JSX <read $6_@1 a={freeze a$2_@0} ></read $6_@1>
-  [6] Call mutate foo$4_@0(read a$2_@0, mutate b$3_@0)
-  [7] Const mutate $7_@3 = "div"
-  [8] Const mutate $8_@4 = JSX <read $7_@3 a={read a$2_@0} b={freeze b$3_@0} ></read $7_@3>
-  [9] Return read $8_@4
+  [1] Const mutate a$10_@0[0:7] = Array []
+  [2] Const mutate b$11_@0[0:7] = Object {  }
+  [3] Call mutate foo$4_@0(mutate a$10_@0, mutate b$11_@0)
+  [4] Const mutate $12_@1 = "div"
+  [5] Let mutate _$13_@2 = JSX <read $12_@1 a={freeze a$10_@0} ></read $12_@1>
+  [6] Call mutate foo$4_@0(read a$10_@0, mutate b$11_@0)
+  [7] Const mutate $14_@3 = "div"
+  [8] Const mutate $15_@4 = JSX <read $14_@3 a={read a$10_@0} b={freeze b$11_@0} ></read $14_@3>
+  [9] Return read $15_@4
 ```
 
 ### CFG
@@ -63,16 +63,16 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$2_@0[0:7] = Array []
-      [2] Const mutate b$3_@0[0:7] = Object {  }
-      [3] Call mutate foo$4_@0(mutate a$2_@0, mutate b$3_@0)
-      [4] Const mutate $6_@1 = 'div'
-      [5] Let mutate _$5_@2 = JSX <read $6_@1 a={freeze a$2_@0} ></read $6_@1>
-      [6] Call mutate foo$4_@0(read a$2_@0, mutate b$3_@0)
-      [7] Const mutate $7_@3 = 'div'
-      [8] Const mutate $8_@4 = JSX <read $7_@3 a={read a$2_@0} b={freeze b$3_@0} ></read $7_@3>
+      [1] Const mutate a$10_@0[0:7] = Array []
+      [2] Const mutate b$11_@0[0:7] = Object {  }
+      [3] Call mutate foo$4_@0(mutate a$10_@0, mutate b$11_@0)
+      [4] Const mutate $12_@1 = 'div'
+      [5] Let mutate _$13_@2 = JSX <read $12_@1 a={freeze a$10_@0} ></read $12_@1>
+      [6] Call mutate foo$4_@0(read a$10_@0, mutate b$11_@0)
+      [7] Const mutate $14_@3 = 'div'
+      [8] Const mutate $15_@4 = JSX <read $14_@3 a={read a$10_@0} b={freeze b$11_@0} ></read $14_@3>
     "]
-    bb0_instrs --> bb0_terminal(["Return read $8_@4"])
+    bb0_instrs --> bb0_terminal(["Return read $15_@4"])
   end
 
   %% Jumps

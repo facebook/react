@@ -18,16 +18,16 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] If (read a$1) then:bb3 else:bb1
+  [1] If (read a$4) then:bb3 else:bb1
 bb3:
   predecessor blocks: bb0
   [2] While test=bb4 loop=bb6 fallthrough=bb1
 bb4:
   predecessor blocks: bb3 bb7
-  [3] If (read b$2) then:bb6 else:bb1
+  [3] If (read b$5) then:bb6 else:bb1
 bb6:
   predecessor blocks: bb4
-  [4] If (read c$3) then:bb1 else:bb7
+  [4] If (read c$6) then:bb1 else:bb7
 bb7:
   predecessor blocks: bb6
   [5] Goto(Continue) bb4
@@ -42,16 +42,16 @@ bb1:
 flowchart TB
   %% Basic Blocks
   subgraph bb0
-    bb0_terminal(["If (read a$1)"])
+    bb0_terminal(["If (read a$4)"])
   end
   subgraph bb3
     bb3_terminal(["While"])
   end
   subgraph bb4
-    bb4_terminal(["If (read b$2)"])
+    bb4_terminal(["If (read b$5)"])
   end
   subgraph bb6
-    bb6_terminal(["If (read c$3)"])
+    bb6_terminal(["If (read c$6)"])
   end
   subgraph bb7
     bb7_terminal(["Goto"])

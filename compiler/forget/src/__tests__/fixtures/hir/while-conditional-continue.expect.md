@@ -22,20 +22,20 @@ bb0:
   [1] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb5 bb4
-  [2] If (read a$1) then:bb3 else:bb2
+  [2] If (read a$5) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  [3] If (read b$2) then:bb5 else:bb4
+  [3] If (read b$6) then:bb5 else:bb4
 bb5:
   predecessor blocks: bb3
   [4] Goto(Continue) bb1
 bb4:
   predecessor blocks: bb3
-  [5] Call read c$3()
+  [5] Call read c$7()
   [6] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
-  [7] Call read d$4()
+  [7] Call read d$8()
   [8] Return
 ```
 
@@ -48,23 +48,23 @@ flowchart TB
     bb0_terminal(["While"])
   end
   subgraph bb1
-    bb1_terminal(["If (read a$1)"])
+    bb1_terminal(["If (read a$5)"])
   end
   subgraph bb3
-    bb3_terminal(["If (read b$2)"])
+    bb3_terminal(["If (read b$6)"])
   end
   subgraph bb5
     bb5_terminal(["Goto"])
   end
   subgraph bb4
     bb4_instrs["
-      [5] Call read c$3()
+      [5] Call read c$7()
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [7] Call read d$4()
+      [7] Call read d$8()
     "]
     bb2_instrs --> bb2_terminal(["Return"])
   end

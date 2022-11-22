@@ -18,10 +18,10 @@ bb0:
   [1] While test=bb1 loop=bb2 fallthrough=bb2
 bb1:
   predecessor blocks: bb0
-  [2] If (read a$1) then:bb2 else:bb2
+  [2] If (read a$3) then:bb2 else:bb2
 bb2:
   predecessor blocks: bb1
-  [3] Return read b$2
+  [3] Return read b$4
 ```
 
 ### CFG
@@ -33,10 +33,10 @@ flowchart TB
     bb0_terminal(["While"])
   end
   subgraph bb1
-    bb1_terminal(["If (read a$1)"])
+    bb1_terminal(["If (read a$3)"])
   end
   subgraph bb2
-    bb2_terminal(["Return read b$2"])
+    bb2_terminal(["Return read b$4"])
   end
 
   %% Jumps

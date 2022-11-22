@@ -75,14 +75,14 @@ function foo$0() {}
 
 ```
 bb0:
-  [1] Const mutate x$2_@0 = Array []
-  [2] Const mutate y$3_@1 = Call read useFreeze$4(freeze x$2_@0)
-  [3] Call mutate foo$5_@2(read y$3_@1, read x$2_@0)
-  [4] Const mutate $6_@3 = "\n      "
-  [5] Const mutate $7_@4 = "\n      "
-  [6] Const mutate $8_@5 = "\n    "
-  [7] Const mutate $9_@6 = JSX <read Component$0>{read $6_@3}{read x$2_@0}{read $7_@4}{read y$3_@1}{read $8_@5}</read Component$0>
-  [8] Return read $9_@6
+  [1] Const mutate x$11_@0 = Array []
+  [2] Const mutate y$12_@1 = Call read useFreeze$4(freeze x$11_@0)
+  [3] Call mutate foo$5_@2(read y$12_@1, read x$11_@0)
+  [4] Const mutate $13_@3 = "\n      "
+  [5] Const mutate $14_@4 = "\n      "
+  [6] Const mutate $15_@5 = "\n    "
+  [7] Const mutate $16_@6 = JSX <read Component$0>{read $13_@3}{read x$11_@0}{read $14_@4}{read y$12_@1}{read $15_@5}</read Component$0>
+  [8] Return read $16_@6
 ```
 
 ### CFG
@@ -92,15 +92,15 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$2_@0 = Array []
-      [2] Const mutate y$3_@1 = Call read useFreeze$4(freeze x$2_@0)
-      [3] Call mutate foo$5_@2(read y$3_@1, read x$2_@0)
-      [4] Const mutate $6_@3 = '\n      '
-      [5] Const mutate $7_@4 = '\n      '
-      [6] Const mutate $8_@5 = '\n    '
-      [7] Const mutate $9_@6 = JSX <read Component$0>{read $6_@3}{read x$2_@0}{read $7_@4}{read y$3_@1}{read $8_@5}</read Component$0>
+      [1] Const mutate x$11_@0 = Array []
+      [2] Const mutate y$12_@1 = Call read useFreeze$4(freeze x$11_@0)
+      [3] Call mutate foo$5_@2(read y$12_@1, read x$11_@0)
+      [4] Const mutate $13_@3 = '\n      '
+      [5] Const mutate $14_@4 = '\n      '
+      [6] Const mutate $15_@5 = '\n    '
+      [7] Const mutate $16_@6 = JSX <read Component$0>{read $13_@3}{read x$11_@0}{read $14_@4}{read y$12_@1}{read $15_@5}</read Component$0>
     "]
-    bb0_instrs --> bb0_terminal(["Return read $9_@6"])
+    bb0_instrs --> bb0_terminal(["Return read $16_@6"])
   end
 
   %% Jumps

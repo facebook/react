@@ -15,11 +15,11 @@ function foo() {
 
 ```
 bb0:
-  [1] Const mutate x$1_@0 = Array []
-  [2] Const mutate y$2_@1[2:5] = Object { x: read x$1_@0 }
-  [3] Const mutate $3_@1[2:5] = Array []
-  [4] Call mutate y$2_@1.x.push(mutate $3_@1)
-  [5] Return freeze y$2_@1
+  [1] Const mutate x$4_@0 = Array []
+  [2] Const mutate y$5_@1[2:5] = Object { x: read x$4_@0 }
+  [3] Const mutate $6_@1[2:5] = Array []
+  [4] Call mutate y$5_@1.x.push(mutate $6_@1)
+  [5] Return freeze y$5_@1
 ```
 
 ### CFG
@@ -29,12 +29,12 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate x$1_@0 = Array []
-      [2] Const mutate y$2_@1[2:5] = Object { x: read x$1_@0 }
-      [3] Const mutate $3_@1[2:5] = Array []
-      [4] Call mutate y$2_@1.x.push(mutate $3_@1)
+      [1] Const mutate x$4_@0 = Array []
+      [2] Const mutate y$5_@1[2:5] = Object { x: read x$4_@0 }
+      [3] Const mutate $6_@1[2:5] = Array []
+      [4] Call mutate y$5_@1.x.push(mutate $6_@1)
     "]
-    bb0_instrs --> bb0_terminal(["Return freeze y$2_@1"])
+    bb0_instrs --> bb0_terminal(["Return freeze y$5_@1"])
   end
 
   %% Jumps

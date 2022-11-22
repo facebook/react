@@ -13,8 +13,8 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0 = 1
-  [2] Let mutate y$2_@1 = 2
+  [1] Let mutate x$3_@0 = 1
+  [2] Let mutate y$4_@1 = 2
   [3] Return
 ```
 
@@ -25,8 +25,8 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0 = 1
-      [2] Let mutate y$2_@1 = 2
+      [1] Let mutate x$3_@0 = 1
+      [2] Let mutate y$4_@1 = 2
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end

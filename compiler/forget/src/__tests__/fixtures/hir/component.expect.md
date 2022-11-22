@@ -35,58 +35,59 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Const mutate items$2_@0 = read props$1.items
-  [2] Const mutate maxItems$3_@1 = read props$1.maxItems
-  [3] Const mutate renderedItems$4_@2[3:22] = Array []
-  [4] Const mutate seen$5_@3[0:19] = New mutate Set$6_@3()
-  [5] Const mutate $9_@4 = 0
-  [6] Const mutate max$7_@5[0:7] = Call mutate Math$8_@5.max(read $9_@4, read maxItems$3_@1)
+  [1] Const mutate items$27_@0 = read props$26.items
+  [2] Const mutate maxItems$28_@1 = read props$26.maxItems
+  [3] Const mutate renderedItems$29_@2[3:22] = Array []
+  [4] Const mutate seen$30_@3[0:19] = New mutate Set$6_@3()
+  [5] Const mutate $31_@4 = 0
+  [6] Const mutate max$32_@5[0:7] = Call mutate Math$8_@5.max(read $31_@4, read maxItems$28_@1)
   [7] Goto bb1
 bb1:
   predecessor blocks: bb0 bb5 bb10
-  [8] If (read items$2_@0) then:bb3 else:bb2
+  [8] If (read items$27_@0) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  [9] Const mutate $11_@6 = null
-  [10] Const mutate $12_@3[0:19] = Binary read item$10_@3 == read $11_@6
-  [11] If (read $12_@3) then:bb8 else:bb9
+  [9] Const mutate $34_@6 = null
+  [10] Const mutate $36_@3[0:19] = Binary read item$10_@3 == read $34_@6
+  [11] If (read $36_@3) then:bb8 else:bb9
 bb8:
   predecessor blocks: bb3
-  [12] Const mutate $13_@3[0:19] = read $12_@3
+  [12] Const mutate $37_@3[0:19] = read $36_@3
   [13] Goto bb7
 bb9:
   predecessor blocks: bb3
-  [14] Const mutate $13_@3[0:19] = Call mutate seen$5_@3.has(mutate item$10_@3)
+  [14] Const mutate $39_@3[0:19] = Call mutate seen$30_@3.has(mutate item$10_@3)
   [15] Goto bb7
 bb7:
   predecessor blocks: bb8 bb9
-  [16] If (read $13_@3) then:bb5 else:bb4
+  $40_@3[0:19]: phi(bb8: $37_@3, bb9: $39_@3)
+  [16] If (read $40_@3) then:bb5 else:bb4
 bb5:
   predecessor blocks: bb7
   [17] Goto(Continue) bb1
 bb4:
   predecessor blocks: bb7
-  [18] Call mutate seen$5_@3.add(mutate item$10_@3)
-  [19] Const mutate $14_@7 = "div"
-  [20] Const mutate $15_@8 = JSX <read $14_@7>{read item$10_@3}</read $14_@7>
-  [21] Call mutate renderedItems$4_@2.push(read $15_@8)
-  [22] Const mutate $16_@9 = Binary read renderedItems$4_@2.length >= read max$7_@5
-  [23] If (read $16_@9) then:bb2 else:bb10
+  [18] Call mutate seen$30_@3.add(mutate item$10_@3)
+  [19] Const mutate $43_@7 = "div"
+  [20] Const mutate $44_@8 = JSX <read $43_@7>{read item$10_@3}</read $43_@7>
+  [21] Call mutate renderedItems$29_@2.push(read $44_@8)
+  [22] Const mutate $49_@9 = Binary read renderedItems$29_@2.length >= read max$32_@5
+  [23] If (read $49_@9) then:bb2 else:bb10
 bb10:
   predecessor blocks: bb4
   [24] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb4 bb1
-  [25] Const mutate count$17_@10 = read renderedItems$4_@2.length
-  [26] Const mutate $18_@11 = "div"
-  [27] Const mutate $19_@12 = "\n      "
-  [28] Const mutate $20_@13 = "h1"
-  [29] Const mutate $21_@14 = " Items"
-  [30] Const mutate $22_@15 = JSX <read $20_@13>{freeze count$17_@10}{read $21_@14}</read $20_@13>
-  [31] Const mutate $23_@16 = "\n      "
-  [32] Const mutate $24_@17 = "\n    "
-  [33] Const mutate $25_@18 = JSX <read $18_@11>{read $19_@12}{read $22_@15}{read $23_@16}{freeze renderedItems$4_@2}{read $24_@17}</read $18_@11>
-  [34] Return read $25_@18
+  [25] Const mutate count$52_@10 = read renderedItems$29_@2.length
+  [26] Const mutate $53_@11 = "div"
+  [27] Const mutate $54_@12 = "\n      "
+  [28] Const mutate $55_@13 = "h1"
+  [29] Const mutate $56_@14 = " Items"
+  [30] Const mutate $57_@15 = JSX <read $55_@13>{freeze count$52_@10}{read $56_@14}</read $55_@13>
+  [31] Const mutate $58_@16 = "\n      "
+  [32] Const mutate $59_@17 = "\n    "
+  [33] Const mutate $60_@18 = JSX <read $53_@11>{read $54_@12}{read $57_@15}{read $58_@16}{freeze renderedItems$29_@2}{read $59_@17}</read $53_@11>
+  [34] Return read $60_@18
 ```
 
 ### CFG
@@ -96,69 +97,69 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate items$2_@0 = read props$1.items
-      [2] Const mutate maxItems$3_@1 = read props$1.maxItems
-      [3] Const mutate renderedItems$4_@2[3:22] = Array []
-      [4] Const mutate seen$5_@3[0:19] = New mutate Set$6_@3()
-      [5] Const mutate $9_@4 = 0
-      [6] Const mutate max$7_@5[0:7] = Call mutate Math$8_@5.max(read $9_@4, read maxItems$3_@1)
+      [1] Const mutate items$27_@0 = read props$26.items
+      [2] Const mutate maxItems$28_@1 = read props$26.maxItems
+      [3] Const mutate renderedItems$29_@2[3:22] = Array []
+      [4] Const mutate seen$30_@3[0:19] = New mutate Set$6_@3()
+      [5] Const mutate $31_@4 = 0
+      [6] Const mutate max$32_@5[0:7] = Call mutate Math$8_@5.max(read $31_@4, read maxItems$28_@1)
     "]
     bb0_instrs --> bb0_terminal(["Goto"])
   end
   subgraph bb1
-    bb1_terminal(["If (read items$2_@0)"])
+    bb1_terminal(["If (read items$27_@0)"])
   end
   subgraph bb3
     bb3_instrs["
-      [9] Const mutate $11_@6 = null
-      [10] Const mutate $12_@3[0:19] = Binary read item$10_@3 == read $11_@6
+      [9] Const mutate $34_@6 = null
+      [10] Const mutate $36_@3[0:19] = Binary read item$10_@3 == read $34_@6
     "]
-    bb3_instrs --> bb3_terminal(["If (read $12_@3)"])
+    bb3_instrs --> bb3_terminal(["If (read $36_@3)"])
   end
   subgraph bb8
     bb8_instrs["
-      [12] Const mutate $13_@3[0:19] = read $12_@3
+      [12] Const mutate $37_@3[0:19] = read $36_@3
     "]
     bb8_instrs --> bb8_terminal(["Goto"])
   end
   subgraph bb9
     bb9_instrs["
-      [14] Const mutate $13_@3[0:19] = Call mutate seen$5_@3.has(mutate item$10_@3)
+      [14] Const mutate $39_@3[0:19] = Call mutate seen$30_@3.has(mutate item$10_@3)
     "]
     bb9_instrs --> bb9_terminal(["Goto"])
   end
   subgraph bb7
-    bb7_terminal(["If (read $13_@3)"])
+    bb7_terminal(["If (read $40_@3)"])
   end
   subgraph bb5
     bb5_terminal(["Goto"])
   end
   subgraph bb4
     bb4_instrs["
-      [18] Call mutate seen$5_@3.add(mutate item$10_@3)
-      [19] Const mutate $14_@7 = 'div'
-      [20] Const mutate $15_@8 = JSX <read $14_@7>{read item$10_@3}</read $14_@7>
-      [21] Call mutate renderedItems$4_@2.push(read $15_@8)
-      [22] Const mutate $16_@9 = Binary read renderedItems$4_@2.length >= read max$7_@5
+      [18] Call mutate seen$30_@3.add(mutate item$10_@3)
+      [19] Const mutate $43_@7 = 'div'
+      [20] Const mutate $44_@8 = JSX <read $43_@7>{read item$10_@3}</read $43_@7>
+      [21] Call mutate renderedItems$29_@2.push(read $44_@8)
+      [22] Const mutate $49_@9 = Binary read renderedItems$29_@2.length >= read max$32_@5
     "]
-    bb4_instrs --> bb4_terminal(["If (read $16_@9)"])
+    bb4_instrs --> bb4_terminal(["If (read $49_@9)"])
   end
   subgraph bb10
     bb10_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [25] Const mutate count$17_@10 = read renderedItems$4_@2.length
-      [26] Const mutate $18_@11 = 'div'
-      [27] Const mutate $19_@12 = '\n      '
-      [28] Const mutate $20_@13 = 'h1'
-      [29] Const mutate $21_@14 = ' Items'
-      [30] Const mutate $22_@15 = JSX <read $20_@13>{freeze count$17_@10}{read $21_@14}</read $20_@13>
-      [31] Const mutate $23_@16 = '\n      '
-      [32] Const mutate $24_@17 = '\n    '
-      [33] Const mutate $25_@18 = JSX <read $18_@11>{read $19_@12}{read $22_@15}{read $23_@16}{freeze renderedItems$4_@2}{read $24_@17}</read $18_@11>
+      [25] Const mutate count$52_@10 = read renderedItems$29_@2.length
+      [26] Const mutate $53_@11 = 'div'
+      [27] Const mutate $54_@12 = '\n      '
+      [28] Const mutate $55_@13 = 'h1'
+      [29] Const mutate $56_@14 = ' Items'
+      [30] Const mutate $57_@15 = JSX <read $55_@13>{freeze count$52_@10}{read $56_@14}</read $55_@13>
+      [31] Const mutate $58_@16 = '\n      '
+      [32] Const mutate $59_@17 = '\n    '
+      [33] Const mutate $60_@18 = JSX <read $53_@11>{read $54_@12}{read $57_@15}{read $58_@16}{freeze renderedItems$29_@2}{read $59_@17}</read $53_@11>
     "]
-    bb2_instrs --> bb2_terminal(["Return read $25_@18"])
+    bb2_instrs --> bb2_terminal(["Return read $60_@18"])
   end
 
   %% Jumps

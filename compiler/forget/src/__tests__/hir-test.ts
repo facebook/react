@@ -14,9 +14,9 @@ import { wasmFolder } from "@hpcc-js/wasm";
 import invariant from "invariant";
 import path from "path";
 import prettier from "prettier";
+import run from "../HIR/Pipeline";
 import printHIR from "../HIR/PrintHIR";
 import visualizeHIRMermaid from "../HIR/VisualizeHIRMermaid";
-import run from "./../HIR/Pipeline";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
 function wrapWithTripleBackticks(s: string, ext?: string) {
@@ -56,25 +56,34 @@ describe("React Forget (HIR version)", () => {
       traverse(ast, {
         FunctionDeclaration: {
           enter(nodePath) {
-            const compilerFlags = {
+            const { ir } = run(nodePath, {
               eliminateRedundantPhi: true,
               inferReferenceEffects: true,
               inferMutableRanges: true,
-              leaveSSA: true,
               inferReactiveScopeVariables: true,
               inferReactiveScopes: true,
-              codegen: true,
-            };
+              leaveSSA: false,
+              codegen: false,
+            });
 
-            const { ast, ir } = run(nodePath, compilerFlags);
+            // Print the HIR before leaving SSA.
+            const textHIR = printHIR(ir.body);
+            const visualization = visualizeHIRMermaid(ir);
+
+            const { ast } = run(nodePath, {
+              eliminateRedundantPhi: true,
+              inferReferenceEffects: true,
+              inferMutableRanges: true,
+              inferReactiveScopeVariables: true,
+              inferReactiveScopes: true,
+              leaveSSA: true,
+              codegen: true,
+            });
+
             invariant(
               ast !== null,
               "ast is null when codegen option is enabled"
             );
-
-            const textHIR = printHIR(ir.body);
-            // const textHIR = visitTree(ir, new PrintVisitor());
-            const visualization = visualizeHIRMermaid(ir);
             const text = prettier.format(
               generate(ast).code.replace("\n\n", "\n"),
               {
