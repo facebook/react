@@ -145,8 +145,13 @@ function mergeScopesWithIdenticalRanges(fn: HIRFunction) {
 
 class BlockScope {
   seen: Set<ScopeId> = new Set();
-  scopes: Array<PendingReactiveScope> = [];
+  scopes: Array<ShadowableReactiveScope> = [];
 }
+
+type ShadowableReactiveScope = {
+  scope: ReactiveScope;
+  shadowedBy: ReactiveScope | null;
+};
 
 // maybe we just merge cases of interleaving when at the same block scope - eh fine?
 // then we can look at scopes that start at the same block scope and overlap
@@ -167,7 +172,7 @@ class MergeOverlappingReactiveScopesVisitor
     if (!this.seenScopes.has(scope.id)) {
       this.seenScopes.add(scope.id);
       currentBlock.seen.add(scope.id);
-      currentBlock.scopes.push({ active: true, scope });
+      currentBlock.scopes.push({ shadowedBy: null, scope });
       return;
     }
     // Scope has already been seen, find it in the current block or a parent
@@ -183,8 +188,23 @@ class MergeOverlappingReactiveScopesVisitor
         // add an entry to this.seenScopes but which are then removed when their blocks exit.
         // this is also wrong for codegen, different versions of an identifier could be cached
         // differently and so a reassigned version of a variable needs a separate declaration.
+        // console.log(`scope ${scope.id} not found`);
+
+        // for (let i = this.scopes.length - 1; i > index; i--) {
+        //   const s = this.scopes[i];
+        //   console.log(
+        //     JSON.stringify(
+        //       {
+        //         seen: Array.from(s.seen),
+        //         scopes: s.scopes,
+        //       },
+        //       null,
+        //       2
+        //     )
+        //   );
+        // }
         currentBlock.seen.add(scope.id);
-        currentBlock.scopes.push({ active: true, scope });
+        currentBlock.scopes.push({ shadowedBy: null, scope });
         return;
       }
       nextBlock = this.scopes[index]!;
@@ -192,26 +212,21 @@ class MergeOverlappingReactiveScopesVisitor
 
     // Handle interleaving within a given block scope
     let found = false;
-    let active = null;
     for (let i = 0; i < nextBlock.scopes.length; i++) {
       const current = nextBlock.scopes[i]!;
-      if (current.active && !found) {
-        active = current;
-      }
       if (current.scope.id === scope.id) {
         found = true;
-        if (!current.active) {
-          invariant(active !== null, "Expected an active scope");
-          this.joinedScopes.union([active.scope, current.scope]);
+        if (current.shadowedBy !== null) {
+          this.joinedScopes.union([current.shadowedBy, current.scope]);
         }
-      } else if (found && current.active) {
+      } else if (found && current.shadowedBy === null) {
         // `scope` is shadowing `current`, but we don't know they are interleaved yet
-        current.active = false;
+        current.shadowedBy = scope;
       }
     }
     if (!currentBlock.seen.has(scope.id)) {
       currentBlock.seen.add(scope.id);
-      currentBlock.scopes.push({ active: true, scope });
+      currentBlock.scopes.push({ shadowedBy: null, scope });
     }
   }
 
@@ -219,6 +234,7 @@ class MergeOverlappingReactiveScopesVisitor
    * Prune any scopes that are out of range
    */
   visitId(id: InstructionId) {
+    // console.log(`visitId: ${id}`);
     const currentBlock = this.scopes[this.scopes.length - 1]!;
     retainWhere(currentBlock.scopes, (pending) => {
       if (pending.scope.range.end > id) {
@@ -241,16 +257,11 @@ class MergeOverlappingReactiveScopesVisitor
     }
     this.visitId(instruction.id);
   }
-  visitImplicitTerminal(id: InstructionId | null): void | null {
-    if (id !== null) {
-      this.visitId(id);
-    }
+  visitTerminalId(id: InstructionId): void {
+    this.visitId(id);
   }
-  visitTerminal(terminal: BlockTerminal<void, void, void, void>): void {
-    if (terminal.id !== null) {
-      this.visitId(terminal.id);
-    }
-  }
+  visitImplicitTerminal(): void | null {}
+  visitTerminal(terminal: BlockTerminal<void, void, void, void>): void {}
   visitCase(test: void | null, block: void): void {}
   appendBlock(block: void, item: void, label?: string | undefined): void {}
   leaveBlock(block: void): void {
@@ -340,17 +351,13 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
     this.visitId(instruction.id);
   }
 
-  visitTerminal(terminal: BlockTerminal<void, void, void, void>): void {
-    if (terminal.id !== null) {
-      this.visitId(terminal.id);
-    }
+  visitTerminalId(id: InstructionId): void {
+    this.visitId(id);
   }
 
-  visitImplicitTerminal(id: InstructionId | null): void | null {
-    if (id !== null) {
-      this.visitId(id);
-    }
-  }
+  visitTerminal(terminal: BlockTerminal<void, void, void, void>): void {}
+
+  visitImplicitTerminal(): void | null {}
 
   // no-ops
   visitValue(value: InstructionValue): void {}

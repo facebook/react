@@ -6,7 +6,12 @@
  */
 
 import { assertExhaustive } from "../Common/utils";
-import { HIRFunction, Instruction, InstructionValue } from "./HIR";
+import {
+  HIRFunction,
+  Instruction,
+  InstructionId,
+  InstructionValue,
+} from "./HIR";
 import { BlockTerminal, Visitor, visitTree } from "./HIRTreeVisitor";
 import { printLValue, printMixedHIR } from "./PrintHIR";
 
@@ -36,6 +41,7 @@ class PrintVisitor implements Visitor<Array<string>, string, string, string> {
       return `[${instr.id}] ${value}`;
     }
   }
+  visitTerminalId(id: InstructionId): void {}
   visitImplicitTerminal(): string | null {
     return null;
   }

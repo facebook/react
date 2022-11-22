@@ -14,6 +14,7 @@ import {
   Identifier,
   IdentifierId,
   Instruction,
+  InstructionId,
   InstructionKind,
   InstructionValue,
   LValue,
@@ -150,6 +151,7 @@ class CodegenVisitor
       }
     }
   }
+  visitTerminalId(id: InstructionId): void {}
   visitImplicitTerminal(): t.Statement | null {
     return null;
   }

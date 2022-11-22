@@ -67,24 +67,24 @@ class Driver<TBlock, TValue, TItem, TCase> {
       case "return": {
         const value =
           terminal.value != null ? this.visitPlace(terminal.value) : null;
+        this.visitor.visitTerminalId(terminal.id);
         this.visitor.appendBlock(
           blockValue,
           this.visitor.visitTerminal({
             kind: "return",
             value,
-            id: terminal.id,
           })
         );
         break;
       }
       case "throw": {
         const value = this.visitPlace(terminal.value);
+        this.visitor.visitTerminalId(terminal.id);
         this.visitor.appendBlock(
           blockValue,
           this.visitor.visitTerminal({
             kind: "throw",
             value,
-            id: terminal.id,
           })
         );
         break;
@@ -106,9 +106,10 @@ class Driver<TBlock, TValue, TItem, TCase> {
           scheduleIds.push(scheduleId);
         }
 
+        this.visitor.visitTerminalId(terminal.id);
         let consequent: TItem | null = null;
         if (this.cx.isScheduled(terminal.consequent)) {
-          consequent = this.visitBreak(terminal.consequent, null);
+          consequent = this.visitBreak(terminal.consequent);
         } else {
           consequent = this.traverseBlock(
             this.cx.ir.blocks.get(terminal.consequent)!
@@ -118,7 +119,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
         let alternate: TItem | null = null;
         if (alternateId !== null) {
           if (this.cx.isScheduled(alternateId)) {
-            alternate = this.visitBreak(alternateId, null);
+            alternate = this.visitBreak(alternateId);
           } else {
             alternate = this.traverseBlock(this.cx.ir.blocks.get(alternateId)!);
           }
@@ -133,7 +134,6 @@ class Driver<TBlock, TValue, TItem, TCase> {
               test,
               consequent: consequent ?? this.emptyBlock(),
               alternate: alternate,
-              id: terminal.id,
             }),
             `bb${fallthroughId}` //
           );
@@ -146,7 +146,6 @@ class Driver<TBlock, TValue, TItem, TCase> {
               test,
               consequent: consequent ?? this.emptyBlock(),
               alternate: alternate,
-              id: terminal.id,
             })
           );
         }
@@ -164,6 +163,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
           scheduleIds.push(scheduleId);
         }
 
+        this.visitor.visitTerminalId(terminal.id);
         const cases: Array<TCase> = [];
         [...terminal.cases].reverse().forEach((case_, index) => {
           const test = case_.test !== null ? this.visitPlace(case_.test) : null;
@@ -174,7 +174,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
             // that are already scheduled. emit as follows:
             // - if the block is for another case branch, don't emit a break and fall-through
             // - else, emit an explicit break.
-            const break_ = this.visitBreak(case_.block, null);
+            const break_ = this.visitBreak(case_.block);
             if (
               index === 0 &&
               break_ === null &&
@@ -210,7 +210,6 @@ class Driver<TBlock, TValue, TItem, TCase> {
               kind: "switch",
               test,
               cases,
-              id: terminal.id,
             }),
             `bb${fallthroughId}`
           );
@@ -222,7 +221,6 @@ class Driver<TBlock, TValue, TItem, TCase> {
               kind: "switch",
               test,
               cases,
-              id: terminal.id,
             })
           );
         }
@@ -261,11 +259,12 @@ class Driver<TBlock, TValue, TItem, TCase> {
         );
         scheduleIds.push(scheduleId);
 
+        this.visitor.visitTerminalId(terminal.id);
         let loopBody: TItem;
         if (loopId) {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
-          const break_ = this.visitBreak(terminal.loop, terminal.id);
+          const break_ = this.visitBreak(terminal.loop);
           invariant(
             break_ !== null,
             "If loop body is already scheduled it must be a break"
@@ -284,7 +283,6 @@ class Driver<TBlock, TValue, TItem, TCase> {
               loc: terminal.loc,
               test: testValue,
               loop: loopBody,
-              id: terminal.id,
             }),
             `bb${fallthroughId}`
           );
@@ -297,23 +295,23 @@ class Driver<TBlock, TValue, TItem, TCase> {
               loc: terminal.loc,
               test: testValue,
               loop: loopBody,
-              id: terminal.id,
             })
           );
         }
         break;
       }
       case "goto": {
+        this.visitor.visitTerminalId(terminal.id);
         switch (terminal.variant) {
           case GotoVariant.Break: {
-            const break_ = this.visitBreak(terminal.block, terminal.id);
+            const break_ = this.visitBreak(terminal.block);
             if (break_ !== null) {
               this.visitor.appendBlock(blockValue, break_);
             }
             break;
           }
           case GotoVariant.Continue: {
-            const continue_ = this.visitContinue(terminal.block, terminal.id);
+            const continue_ = this.visitContinue(terminal.block);
             if (continue_ !== null) {
               this.visitor.appendBlock(blockValue, continue_);
             }
@@ -339,7 +337,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
     return this.visitor.leaveBlock(block);
   }
 
-  visitBreak(block: BlockId, id: InstructionId | null): TItem | null {
+  visitBreak(block: BlockId): TItem | null {
     const target = this.cx.getBreakTarget(block);
     if (target === null) {
       // TODO: we should always have a target
@@ -347,22 +345,21 @@ class Driver<TBlock, TValue, TItem, TCase> {
     }
     switch (target.type) {
       case "implicit": {
-        return this.visitor.visitImplicitTerminal(id);
+        return this.visitor.visitImplicitTerminal();
       }
       case "unlabeled": {
-        return this.visitor.visitTerminal({ kind: "break", label: null, id });
+        return this.visitor.visitTerminal({ kind: "break", label: null });
       }
       case "labeled": {
         return this.visitor.visitTerminal({
           kind: "break",
           label: `bb${target.block}`,
-          id,
         });
       }
     }
   }
 
-  visitContinue(block: BlockId, id: InstructionId): TItem | null {
+  visitContinue(block: BlockId): TItem | null {
     const target = this.cx.getContinueTarget(block);
     invariant(
       target !== null,
@@ -373,18 +370,16 @@ class Driver<TBlock, TValue, TItem, TCase> {
         return this.visitor.visitTerminal({
           kind: "continue",
           label: `bb${target.block}`,
-          id,
         });
       }
       case "unlabeled": {
         return this.visitor.visitTerminal({
           kind: "continue",
           label: null,
-          id,
         });
       }
       case "implicit": {
-        return this.visitor.visitImplicitTerminal(id);
+        return this.visitor.visitImplicitTerminal();
       }
       default: {
         assertExhaustive(
@@ -656,11 +651,17 @@ export interface Visitor<TBlock, TValue, TItem, TCase> {
   visitInstruction(instruction: Instruction, value: TValue): TItem;
 
   /**
+   * Called when a terminal is reached, before processing any of its
+   * possible branches.
+   */
+  visitTerminalId(id: InstructionId): void;
+
+  /**
    * Converts a break/continue that is implicit — that does not strictly
    * have to be emitted — to the visitor's representation. The visitor
    * can choose to return null if this does not need to be represented.
    */
-  visitImplicitTerminal(id: InstructionId | null): TItem | null;
+  visitImplicitTerminal(): TItem | null;
 
   /**
    * Converts a terminal into the visitor's own representation of a block
@@ -691,22 +692,20 @@ export interface Visitor<TBlock, TValue, TItem, TCase> {
 }
 
 export type BlockTerminal<TBlock, TValue, TItem, TCase> =
-  | { kind: "return"; value: TValue | null; id: InstructionId }
-  | { kind: "throw"; value: TValue; id: InstructionId }
+  | { kind: "return"; value: TValue | null }
+  | { kind: "throw"; value: TValue }
   | {
       kind: "if";
       test: TValue;
       consequent: TItem;
       alternate: TItem | null;
-      id: InstructionId;
     }
-  | { kind: "switch"; test: TValue; cases: Array<TCase>; id: InstructionId }
+  | { kind: "switch"; test: TValue; cases: Array<TCase> }
   | {
       kind: "while";
       loc: SourceLocation;
       test: TValue;
       loop: TItem;
-      id: InstructionId;
     }
-  | { kind: "break"; label: string | null; id: InstructionId | null }
-  | { kind: "continue"; label: string | null; id: InstructionId };
+  | { kind: "break"; label: string | null }
+  | { kind: "continue"; label: string | null };
