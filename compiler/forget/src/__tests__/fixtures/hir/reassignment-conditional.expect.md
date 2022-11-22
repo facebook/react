@@ -23,7 +23,7 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Let mutate x$2_@0[1:6] = Array []
+  [1] Let mutate x$2_@0[1:7] = Array []
   [2] Call mutate x$2_@0.push(read props$1.p0)
   [3] Let mutate y$3_@0[1:6] = read x$2_@0
   [4] If (read props$1.p1) then:bb2 else:bb1
@@ -46,7 +46,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$2_@0[1:6] = Array []
+      [1] Let mutate x$2_@0[1:7] = Array []
       [2] Call mutate x$2_@0.push(read props$1.p0)
       [3] Let mutate y$3_@0[1:6] = read x$2_@0
     "]

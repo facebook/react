@@ -17,12 +17,12 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0 = 1
+  [1] Let mutate x$1_@0[1:3] = 1
   [2] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
   [3] Const mutate $3_@1 = 10
-  [4] Const mutate $4_@2 = Binary read x$1_@0 < read $3_@1
+  [4] Const mutate $4_@2[4:9] = Binary read x$1_@0 < read $3_@1
   [5] If (read $4_@2) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
@@ -41,14 +41,14 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0 = 1
+      [1] Let mutate x$1_@0[1:3] = 1
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
   subgraph bb1
     bb1_instrs["
       [3] Const mutate $3_@1 = 10
-      [4] Const mutate $4_@2 = Binary read x$1_@0 < read $3_@1
+      [4] Const mutate $4_@2[4:9] = Binary read x$1_@0 < read $3_@1
     "]
     bb1_instrs --> bb1_terminal(["If (read $4_@2)"])
   end

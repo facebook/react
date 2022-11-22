@@ -16,7 +16,7 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0[1:6] = 1
+  [1] Let mutate x$1_@0[1:7] = 1
   [2] Const mutate $2_@1 = 1
   [3] Const mutate $3_@2 = Binary read x$1_@0 === read $2_@1
   [4] If (read $3_@2) then:bb2 else:bb1
@@ -36,7 +36,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0[1:6] = 1
+      [1] Let mutate x$1_@0[1:7] = 1
       [2] Const mutate $2_@1 = 1
       [3] Const mutate $3_@2 = Binary read x$1_@0 === read $2_@1
     "]

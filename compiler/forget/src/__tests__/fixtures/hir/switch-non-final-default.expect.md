@@ -32,7 +32,7 @@ function Component(props) {
 
 ```
 bb0:
-  [1] Let mutate x$2_@0[1:11] = Array []
+  [1] Let mutate x$2_@0[1:12] = Array []
   [2] Let mutate y$3_@0[1:11] = undefined
   [3] Const mutate $4_@1 = false
   [4] Const mutate $5_@2 = true
@@ -66,7 +66,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$2_@0[1:11] = Array []
+      [1] Let mutate x$2_@0[1:12] = Array []
       [2] Let mutate y$3_@0[1:11] = undefined
       [3] Const mutate $4_@1 = false
       [4] Const mutate $5_@2 = true

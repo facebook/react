@@ -27,7 +27,7 @@ function call(x) {}
 ```
 bb0:
   [1] Const mutate cond$2_@0 = read props$1.cond
-  [2] Const mutate x$3_@1[2:8] = read props$1.x
+  [2] Const mutate x$3_@1[2:9] = read props$1.x
   [3] Let mutate a$4_@2 = undefined
   [4] If (read cond$2_@0) then:bb2 else:bb3
 bb2:
@@ -54,7 +54,7 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate cond$2_@0 = read props$1.cond
-      [2] Const mutate x$3_@1[2:8] = read props$1.x
+      [2] Const mutate x$3_@1[2:9] = read props$1.x
       [3] Let mutate a$4_@2 = undefined
     "]
     bb0_instrs --> bb0_terminal(["If (read cond$2_@0)"])

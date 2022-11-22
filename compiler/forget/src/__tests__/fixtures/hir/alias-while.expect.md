@@ -27,7 +27,7 @@ function mutate(x, y) {}
 
 ```
 bb0:
-  [1] Let mutate a$2_@0[0:11] = Object {  }
+  [1] Let mutate a$2_@0[0:12] = Object {  }
   [2] Let mutate b$3_@0[0:11] = Object {  }
   [3] Let mutate c$4_@0[0:11] = Object {  }
   [4] While test=bb1 loop=bb3 fallthrough=bb2
@@ -57,7 +57,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate a$2_@0[0:11] = Object {  }
+      [1] Let mutate a$2_@0[0:12] = Object {  }
       [2] Let mutate b$3_@0[0:11] = Object {  }
       [3] Let mutate c$4_@0[0:11] = Object {  }
     "]

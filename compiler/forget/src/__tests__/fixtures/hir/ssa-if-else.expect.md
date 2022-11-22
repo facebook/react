@@ -19,7 +19,7 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0[1:7] = 1
+  [1] Let mutate x$1_@0[1:8] = 1
   [2] Let mutate y$2_@1 = 2
   [3] If (read y$2_@1) then:bb2 else:bb3
 bb2:
@@ -42,7 +42,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0[1:7] = 1
+      [1] Let mutate x$1_@0[1:8] = 1
       [2] Let mutate y$2_@1 = 2
     "]
     bb0_instrs --> bb0_terminal(["If (read y$2_@1)"])

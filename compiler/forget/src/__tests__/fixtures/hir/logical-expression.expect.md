@@ -23,7 +23,7 @@ function g() {}
 
 ```
 bb0:
-  [1] Const mutate $2_@0[0:6] = Call mutate f$1_@0()
+  [1] Const mutate $2_@0[0:7] = Call mutate f$1_@0()
   [2] If (read $2_@0) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
@@ -45,7 +45,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $2_@0[0:6] = Call mutate f$1_@0()
+      [1] Const mutate $2_@0[0:7] = Call mutate f$1_@0()
     "]
     bb0_instrs --> bb0_terminal(["If (read $2_@0)"])
   end
@@ -89,7 +89,7 @@ function And$0() {
 
 ```
 bb0:
-  [1] Const mutate $2_@0[0:6] = Call mutate f$1_@0()
+  [1] Const mutate $2_@0[0:7] = Call mutate f$1_@0()
   [2] If (read $2_@0) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
@@ -111,7 +111,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $2_@0[0:6] = Call mutate f$1_@0()
+      [1] Const mutate $2_@0[0:7] = Call mutate f$1_@0()
     "]
     bb0_instrs --> bb0_terminal(["If (read $2_@0)"])
   end
@@ -155,7 +155,7 @@ function Or$0() {
 
 ```
 bb0:
-  [1] Const mutate $3_@0[0:8] = Call mutate f$2_@0()
+  [1] Const mutate $3_@0[0:9] = Call mutate f$2_@0()
   [2] Const mutate $4_@1 = null
   [3] Const mutate $5_@0[0:8] = Binary read $3_@0 != read $4_@1
   [4] If (read $5_@0) then:bb2 else:bb3
@@ -179,7 +179,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate $3_@0[0:8] = Call mutate f$2_@0()
+      [1] Const mutate $3_@0[0:9] = Call mutate f$2_@0()
       [2] Const mutate $4_@1 = null
       [3] Const mutate $5_@0[0:8] = Binary read $3_@0 != read $4_@1
     "]

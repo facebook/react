@@ -49,7 +49,7 @@ function log$0() {
 
 ```
 bb0:
-  [1] Let mutate str$2_@0[1:7] = ""
+  [1] Let mutate str$2_@0[1:8] = ""
   [2] If (read cond$1) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
@@ -73,7 +73,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate str$2_@0[1:7] = ''
+      [1] Let mutate str$2_@0[1:8] = ''
     "]
     bb0_instrs --> bb0_terminal(["If (read cond$1)"])
   end

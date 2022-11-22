@@ -22,8 +22,8 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$1_@0[1:7] = 1
-  [2] Let mutate y$2_@1[2:9] = 2
+  [1] Let mutate x$1_@0[1:10] = 1
+  [2] Let mutate y$2_@1[2:10] = 2
   [3] Const mutate $3_@2 = 1
   [4] Const mutate $4_@3 = Binary read x$1_@0 > read $3_@2
   [5] If (read $4_@3) then:bb2 else:bb3
@@ -48,8 +48,8 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$1_@0[1:7] = 1
-      [2] Let mutate y$2_@1[2:9] = 2
+      [1] Let mutate x$1_@0[1:10] = 1
+      [2] Let mutate y$2_@1[2:10] = 2
       [3] Const mutate $3_@2 = 1
       [4] Const mutate $4_@3 = Binary read x$1_@0 > read $3_@2
     "]

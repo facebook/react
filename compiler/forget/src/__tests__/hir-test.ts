@@ -62,6 +62,7 @@ describe("React Forget (HIR version)", () => {
               inferMutableRanges: true,
               leaveSSA: true,
               inferReactiveScopeVariables: true,
+              inferReactiveScopes: true,
               codegen: true,
             };
 

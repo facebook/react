@@ -5,7 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { HIRFunction } from "./HIR";
+import invariant from "invariant";
+import {
+  HIRFunction,
+  Instruction,
+  InstructionId,
+  InstructionValue,
+  ReactiveScope,
+  ScopeId,
+} from "./HIR";
+import { BlockTerminal, Visitor, visitTree } from "./HIRTreeVisitor";
+import { eachInstructionOperand } from "./visitors";
 
 /**
  * This is a second (final) stage of constructing reactive scopes. Prior to this pass,
@@ -19,7 +29,7 @@ import { HIRFunction } from "./HIR";
  *
  * This pass refines the reactive scopes as follows:
  *
- * ## Expanding each reactive scope to align with control-flow boundaries
+ * ## Expanding each reactive scope to align with control-flow boundaries (DONE)
  *
  * This corresponds with the shape of the AST: a scope that extends into an if consequent
  * would expand across the alternate branch, A scope that extends partway into an if
@@ -38,7 +48,7 @@ import { HIRFunction } from "./HIR";
  * }
  * ```
  *
- * ## Merging (some) overlapping reactive scopes
+ * ## Merging (some) overlapping reactive scopes (TODO)
  *
  * Two scopes overlap if there is one or more instruction that is inside the range
  * of both scopes. In general, overlapping scopes are merged togther. The only
@@ -96,4 +106,101 @@ import { HIRFunction } from "./HIR";
  * Then we would see that 'x' is active, but that it is shadowed. The two scopes would have
  * to be merged.
  */
-export function inferReactiveScopes(fn: HIRFunction) {}
+export function inferReactiveScopes(fn: HIRFunction) {
+  const visitor = new ScopeVisitor();
+  visitTree(fn, visitor);
+}
+
+type PendingReactiveScope = ReactiveScope & { active: boolean };
+
+class ScopeVisitor implements Visitor<void, void, void, void> {
+  // For each block scope (outer array) stores a list of ReactiveScopes that start
+  // in that block scope.
+  blockScopes: Array<Array<PendingReactiveScope>> = [];
+
+  // ReactiveScopes whose declaring block scope has ended but may still need to
+  // be "closed" (ie have their range.end be updated). A given scope can be in
+  // blockScopes OR this array but not both.
+  unclosedScopes: Array<PendingReactiveScope> = [];
+
+  // Set of all scope ids that have been seen so far, regardless of which of
+  // the above data structures they're in, to avoid tracking the same scope twice.
+  seenScopes: Set<ScopeId> = new Set();
+
+  visitId(id: InstructionId) {
+    const currentScopes = this.blockScopes[this.blockScopes.length - 1]!;
+    const scopes = [...currentScopes, ...this.unclosedScopes];
+    for (const scope of scopes) {
+      if (!scope.active) {
+        continue;
+      }
+      if (id >= scope.range.end) {
+        scope.active = false;
+        scope.range.end = id;
+      }
+    }
+  }
+
+  enterBlock(): void {
+    this.blockScopes.push([]);
+  }
+
+  leaveBlock(block: void): void {
+    const lastScope = this.blockScopes.pop();
+    invariant(
+      lastScope !== undefined,
+      "Expected enterBlock/leaveBlock to be called 1:1"
+    );
+    for (const scope of lastScope) {
+      if (scope.active) {
+        this.unclosedScopes.push(scope);
+      }
+    }
+  }
+
+  visitInstruction(instruction: Instruction, value: void): void {
+    const scope = getInstructionScope(instruction);
+    if (scope !== null) {
+      if (!this.seenScopes.has(scope.id)) {
+        const currentScopes = this.blockScopes[this.blockScopes.length - 1]!;
+        this.seenScopes.add(scope.id);
+        currentScopes.push({
+          id: scope.id,
+          active: true,
+          range: scope.range,
+        });
+      }
+    }
+
+    this.visitId(instruction.id);
+  }
+
+  visitTerminal(terminal: BlockTerminal<void, void, void, void>): void {
+    if (terminal.id !== null) {
+      this.visitId(terminal.id);
+    }
+  }
+
+  visitImplicitTerminal(id: InstructionId | null): void | null {
+    if (id !== null) {
+      this.visitId(id);
+    }
+  }
+
+  // no-ops
+  visitValue(value: InstructionValue): void {}
+  visitCase(test: void | null, block: void): void {}
+  appendBlock(block: void, item: void, label?: string | undefined): void {}
+}
+
+function getInstructionScope(instr: Instruction): ReactiveScope | null {
+  if (instr.lvalue !== null && instr.lvalue.place.identifier.scope !== null) {
+    return instr.lvalue.place.identifier.scope;
+  }
+  for (const operand of eachInstructionOperand(instr)) {
+    if (operand.identifier.scope !== null) {
+      return operand.identifier.scope;
+    }
+  }
+  return null;
+}

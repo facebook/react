@@ -106,7 +106,7 @@ bb0:
   [5] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb4
-  [6] Const mutate $10_@1 = true
+  [6] Const mutate $10_@1[6:17] = true
   [7] If (read $10_@1) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
@@ -156,7 +156,7 @@ flowchart TB
   end
   subgraph bb1
     bb1_instrs["
-      [6] Const mutate $10_@1 = true
+      [6] Const mutate $10_@1[6:17] = true
     "]
     bb1_instrs --> bb1_terminal(["If (read $10_@1)"])
   end

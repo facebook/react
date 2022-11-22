@@ -19,7 +19,7 @@ function f(a, b) {
 
 ```
 bb0:
-  [1] Let mutate x$3_@0[1:7] = Array []
+  [1] Let mutate x$3_@0[1:8] = Array []
   [2] Const mutate $4_@1 = 1
   [3] Const mutate $5_@2 = Binary read a$1.length === read $4_@1
   [4] If (read $5_@2) then:bb2 else:bb1
@@ -44,7 +44,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$3_@0[1:7] = Array []
+      [1] Let mutate x$3_@0[1:8] = Array []
       [2] Const mutate $4_@1 = 1
       [3] Const mutate $5_@2 = Binary read a$1.length === read $4_@1
     "]
