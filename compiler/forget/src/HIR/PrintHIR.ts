@@ -99,7 +99,7 @@ export function printInstruction(instr: Instruction): string {
 function printPhi(phi: Phi): string {
   const items = [];
   items.push(printIdentifier(phi.id));
-  items.push(printMutableRange(phi.id.mutableRange));
+  items.push(printMutableRange(phi.id));
   items.push(": phi(");
   const phis = [];
   for (const [block, id] of phi.operands) {
@@ -261,13 +261,17 @@ function isMutable(range: MutableRange): boolean {
   return range.end > range.start + 1;
 }
 
-function printMutableRange(range: MutableRange): string {
+function printMutableRange(identifier: Identifier): string {
+  const range =
+    identifier.scope !== null
+      ? identifier.scope.range
+      : identifier.mutableRange;
   return isMutable(range) ? `[${range.start}:${range.end}]` : "";
 }
 
 export function printLValue(lval: LValue): string {
   let place = printPlace(lval.place);
-  place += printMutableRange(lval.place.identifier.mutableRange);
+  place += printMutableRange(lval.place.identifier);
   switch (lval.kind) {
     case InstructionKind.Let: {
       return `Let ${place}`;

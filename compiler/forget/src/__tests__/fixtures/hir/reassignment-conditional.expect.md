@@ -25,15 +25,15 @@ function Component(props) {
 bb0:
   [1] Let mutate x$7_@0[1:7] = Array []
   [2] Call mutate x$7_@0.push(read props$6.p0)
-  [3] Let mutate y$8_@0[1:6] = read x$7_@0
+  [3] Let mutate y$8_@0[1:7] = read x$7_@0
   [4] If (read props$6.p1) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
-  [5] Reassign mutate x$9_@0[1:6] = Array []
+  [5] Reassign mutate x$9_@0[1:7] = Array []
   [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  x$11_@0[1:6]: phi(bb2: x$9_@0, bb0: x$7_@0)
+  x$11_@0[1:7]: phi(bb2: x$9_@0, bb0: x$7_@0)
   [7] Let mutate _$12_@1 = JSX <read Component$0 x={freeze x$11_@0} ></read Component$0>
   [8] Call read y$8_@0.push(read props$6.p2)
   [9] Const mutate $15_@2 = JSX <read Component$0 x={read x$11_@0} y={read y$8_@0} ></read Component$0>
@@ -49,13 +49,13 @@ flowchart TB
     bb0_instrs["
       [1] Let mutate x$7_@0[1:7] = Array []
       [2] Call mutate x$7_@0.push(read props$6.p0)
-      [3] Let mutate y$8_@0[1:6] = read x$7_@0
+      [3] Let mutate y$8_@0[1:7] = read x$7_@0
     "]
     bb0_instrs --> bb0_terminal(["If (read props$6.p1)"])
   end
   subgraph bb2
     bb2_instrs["
-      [5] Reassign mutate x$9_@0[1:6] = Array []
+      [5] Reassign mutate x$9_@0[1:7] = Array []
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end

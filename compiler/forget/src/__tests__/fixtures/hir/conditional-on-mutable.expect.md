@@ -67,9 +67,9 @@ function mayMutate() {}
 
 ```
 bb0:
-  [1] Const mutate a$7_@0[1:6] = Array []
-  [2] Const mutate b$8_@1[2:9] = Array []
-  [3] If (read b$8_@1) then:bb2 else:bb1
+  [1] Const mutate a$7_@0[1:9] = Array []
+  [2] Const mutate b$8_@0[1:9] = Array []
+  [3] If (read b$8_@0) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
   [4] Call mutate a$7_@0.push(read props$6.p0)
@@ -79,11 +79,11 @@ bb1:
   [6] If (read props$6.p1) then:bb4 else:bb3
 bb4:
   predecessor blocks: bb1
-  [7] Call mutate b$8_@1.push(read props$6.p2)
+  [7] Call mutate b$8_@0.push(read props$6.p2)
   [8] Goto bb3
 bb3:
   predecessor blocks: bb4 bb1
-  [9] Const mutate $16_@2 = JSX <read Foo$4 a={freeze a$7_@0} b={freeze b$8_@1} ></read Foo$4>
+  [9] Const mutate $16_@2 = JSX <read Foo$4 a={freeze a$7_@0} b={freeze b$8_@0} ></read Foo$4>
   [10] Return read $16_@2
 ```
 
@@ -94,10 +94,10 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$7_@0[1:6] = Array []
-      [2] Const mutate b$8_@1[2:9] = Array []
+      [1] Const mutate a$7_@0[1:9] = Array []
+      [2] Const mutate b$8_@0[1:9] = Array []
     "]
-    bb0_instrs --> bb0_terminal(["If (read b$8_@1)"])
+    bb0_instrs --> bb0_terminal(["If (read b$8_@0)"])
   end
   subgraph bb2
     bb2_instrs["
@@ -110,13 +110,13 @@ flowchart TB
   end
   subgraph bb4
     bb4_instrs["
-      [7] Call mutate b$8_@1.push(read props$6.p2)
+      [7] Call mutate b$8_@0.push(read props$6.p2)
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [9] Const mutate $16_@2 = JSX <read Foo$4 a={freeze a$7_@0} b={freeze b$8_@1} ></read Foo$4>
+      [9] Const mutate $16_@2 = JSX <read Foo$4 a={freeze a$7_@0} b={freeze b$8_@0} ></read Foo$4>
     "]
     bb3_instrs --> bb3_terminal(["Return read $16_@2"])
   end
@@ -153,10 +153,10 @@ function Component$0(props$1) {
 
 ```
 bb0:
-  [1] Const mutate a$9_@0[1:7] = Array []
-  [2] Const mutate b$10_@1[0:10] = Array []
-  [3] Const mutate $11_@1[0:9] = Call mutate mayMutate$4_@1(mutate b$10_@1)
-  [4] If (read $11_@1) then:bb2 else:bb1
+  [1] Const mutate a$9_@0[0:10] = Array []
+  [2] Const mutate b$10_@0[0:10] = Array []
+  [3] Const mutate $11_@0[0:10] = Call mutate mayMutate$4_@0(mutate b$10_@0)
+  [4] If (read $11_@0) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
   [5] Call mutate a$9_@0.push(read props$8.p0)
@@ -166,11 +166,11 @@ bb1:
   [7] If (read props$8.p1) then:bb4 else:bb3
 bb4:
   predecessor blocks: bb1
-  [8] Call mutate b$10_@1.push(read props$8.p2)
+  [8] Call mutate b$10_@0.push(read props$8.p2)
   [9] Goto bb3
 bb3:
   predecessor blocks: bb4 bb1
-  [10] Const mutate $19_@2 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@1} ></read Foo$6>
+  [10] Const mutate $19_@2 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
   [11] Return read $19_@2
 ```
 
@@ -181,11 +181,11 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Const mutate a$9_@0[1:7] = Array []
-      [2] Const mutate b$10_@1[0:10] = Array []
-      [3] Const mutate $11_@1[0:9] = Call mutate mayMutate$4_@1(mutate b$10_@1)
+      [1] Const mutate a$9_@0[0:10] = Array []
+      [2] Const mutate b$10_@0[0:10] = Array []
+      [3] Const mutate $11_@0[0:10] = Call mutate mayMutate$4_@0(mutate b$10_@0)
     "]
-    bb0_instrs --> bb0_terminal(["If (read $11_@1)"])
+    bb0_instrs --> bb0_terminal(["If (read $11_@0)"])
   end
   subgraph bb2
     bb2_instrs["
@@ -198,13 +198,13 @@ flowchart TB
   end
   subgraph bb4
     bb4_instrs["
-      [8] Call mutate b$10_@1.push(read props$8.p2)
+      [8] Call mutate b$10_@0.push(read props$8.p2)
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [10] Const mutate $19_@2 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@1} ></read Foo$6>
+      [10] Const mutate $19_@2 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
     "]
     bb3_instrs --> bb3_terminal(["Return read $19_@2"])
   end

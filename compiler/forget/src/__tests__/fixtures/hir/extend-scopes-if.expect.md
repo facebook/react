@@ -33,8 +33,8 @@ bb4:
   [4] If (read c$9) then:bb6 else:bb1
 bb6:
   predecessor blocks: bb4
-  [5] Const mutate $11_@1 = 0
-  [6] Call mutate x$10_@0.push(read $11_@1)
+  [5] Const mutate $11_@0[1:8] = 0
+  [6] Call mutate x$10_@0.push(read $11_@0)
   [7] Goto bb1
 bb1:
   predecessor blocks: bb6 bb4 bb2 bb0
@@ -67,8 +67,8 @@ flowchart TB
   end
   subgraph bb6
     bb6_instrs["
-      [5] Const mutate $11_@1 = 0
-      [6] Call mutate x$10_@0.push(read $11_@1)
+      [5] Const mutate $11_@0[1:8] = 0
+      [6] Call mutate x$10_@0.push(read $11_@0)
     "]
     bb6_instrs --> bb6_terminal(["Goto"])
   end

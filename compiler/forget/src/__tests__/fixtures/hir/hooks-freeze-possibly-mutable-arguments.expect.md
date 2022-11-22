@@ -32,15 +32,15 @@ bb0:
   [4] If (read cond$8_@0) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
-  [5] Reassign mutate a$11_@1[2:8] = read x$9_@1
+  [5] Reassign mutate a$11_@1[2:9] = read x$9_@1
   [6] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [7] Reassign mutate a$12_@1[2:8] = Array []
+  [7] Reassign mutate a$12_@1[2:9] = Array []
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  a$14_@1[2:8]: phi(bb2: a$11_@1, bb3: a$12_@1)
+  a$14_@1[2:9]: phi(bb2: a$11_@1, bb3: a$12_@1)
   [9] Call read useFreeze$5(freeze a$14_@1)
   [10] Call read useFreeze$5(read a$14_@1)
   [11] Call mutate call$6_@3(read a$14_@1)
@@ -62,13 +62,13 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [5] Reassign mutate a$11_@1[2:8] = read x$9_@1
+      [5] Reassign mutate a$11_@1[2:9] = read x$9_@1
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [7] Reassign mutate a$12_@1[2:8] = Array []
+      [7] Reassign mutate a$12_@1[2:9] = Array []
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end

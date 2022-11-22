@@ -142,7 +142,7 @@ function Foo$0() {}
 ```
 bb0:
   [1] Const mutate a$9_@0[0:7] = Call mutate compute$3_@0(read props$8.a)
-  [2] Const mutate b$10_@0[0:6] = Call mutate compute$3_@0(read props$8.b)
+  [2] Const mutate b$10_@0[0:7] = Call mutate compute$3_@0(read props$8.b)
   [3] If (read props$8.c) then:bb2 else:bb1
 bb2:
   predecessor blocks: bb0
@@ -163,7 +163,7 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate a$9_@0[0:7] = Call mutate compute$3_@0(read props$8.a)
-      [2] Const mutate b$10_@0[0:6] = Call mutate compute$3_@0(read props$8.b)
+      [2] Const mutate b$10_@0[0:7] = Call mutate compute$3_@0(read props$8.b)
     "]
     bb0_instrs --> bb0_terminal(["If (read props$8.c)"])
   end

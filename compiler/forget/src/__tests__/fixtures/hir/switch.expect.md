@@ -29,7 +29,7 @@ function Component(props) {
 ```
 bb0:
   [1] Let mutate x$9_@0[1:12] = Array []
-  [2] Let mutate y$10_@0[1:11] = undefined
+  [2] Let mutate y$10_@0[1:12] = undefined
   [3] Const mutate $11_@1 = false
   [4] Const mutate $12_@2 = true
   [5] Switch (read props$8.p0)
@@ -44,11 +44,11 @@ bb4:
   [9] Goto bb2
 bb2:
   predecessor blocks: bb4 bb0
-  [10] Reassign mutate y$15_@0[1:11] = read x$9_@0
+  [10] Reassign mutate y$15_@0[1:12] = read x$9_@0
   [11] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  y$20_@0[1:11]: phi(bb2: y$15_@0, bb0: y$10_@0)
+  y$20_@0[1:12]: phi(bb2: y$15_@0, bb0: y$10_@0)
   [12] Const mutate child$19_@4 = JSX <read Component$0 data={freeze x$9_@0} ></read Component$0>
   [13] Call read y$20_@0.push(read props$8.p4)
   [14] Const mutate $23_@5 = JSX <read Component$0 data={read y$20_@0} >{read child$19_@4}</read Component$0>
@@ -63,7 +63,7 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Let mutate x$9_@0[1:12] = Array []
-      [2] Let mutate y$10_@0[1:11] = undefined
+      [2] Let mutate y$10_@0[1:12] = undefined
       [3] Const mutate $11_@1 = false
       [4] Const mutate $12_@2 = true
     "]
@@ -79,7 +79,7 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [10] Reassign mutate y$15_@0[1:11] = read x$9_@0
+      [10] Reassign mutate y$15_@0[1:12] = read x$9_@0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
