@@ -54,6 +54,12 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   return content;
 }
 
+export function clonePrecomputedChunk(
+  chunk: PrecomputedChunk,
+): PrecomputedChunk {
+  return chunk;
+}
+
 export function closeWithError(destination: Destination, error: mixed): void {
   destination.done = true;
   destination.fatal = true;

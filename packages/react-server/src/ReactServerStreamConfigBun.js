@@ -64,6 +64,12 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   return content;
 }
 
+export function clonePrecomputedChunk(
+  chunk: PrecomputedChunk,
+): PrecomputedChunk {
+  return chunk;
+}
+
 export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[method-unbinding]
   if (typeof destination.error === 'function') {
