@@ -39,9 +39,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function mutate$0() {
-  return;
-}
+function mutate$0() {}
 
 ```
 ## HIR

@@ -52,7 +52,6 @@ function Component$0() {
   const b$2 = a$1;
   useFreeze$3(a$1);
   foo$4(b$2);
-  return;
 }
 
 ```
@@ -79,9 +78,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function useFreeze$0() {
-  return;
-}
+function useFreeze$0() {}
 
 ```
 ## HIR
@@ -107,9 +104,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(x$1) {
-  return;
-}
+function foo$0(x$1) {}
 
 ```
       

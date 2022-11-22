@@ -41,7 +41,6 @@ flowchart TB
 function foo$0() {
   let x$1 = 1;
   let y$2 = 2;
-  return;
 }
 
 ```

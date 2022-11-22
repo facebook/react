@@ -78,7 +78,6 @@ function foo$0() {
   }
 
   y$2 = x$1;
-  return;
 }
 
 ```

@@ -36,9 +36,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function Foo$0() {
-  return;
-}
+function Foo$0() {}
 
 ```
 ## HIR

@@ -191,8 +191,6 @@ function foo$0(x$1) {
       y$2 = 0;
     }
   }
-
-  return;
 }
 
 ```

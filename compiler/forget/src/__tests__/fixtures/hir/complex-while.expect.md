@@ -83,7 +83,6 @@ function foo$0(a$1, b$2, c$3) {
       bb7: if (c$3) break;
     }
   }
-  return;
 }
 
 ```

@@ -50,9 +50,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function compute$0() {
-  return;
-}
+function compute$0() {}
 
 ```
 ## HIR
@@ -78,9 +76,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0() {
-  return;
-}
+function foo$0() {}
 
 ```
 ## HIR
@@ -106,9 +102,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function Foo$0() {
-  return;
-}
+function Foo$0() {}
 
 ```
 ## HIR

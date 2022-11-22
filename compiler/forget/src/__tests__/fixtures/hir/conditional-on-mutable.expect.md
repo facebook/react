@@ -260,9 +260,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function Foo$0() {
-  return;
-}
+function Foo$0() {}
 
 ```
 ## HIR
@@ -288,9 +286,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function mayMutate$0() {
-  return;
-}
+function mayMutate$0() {}
 
 ```
       

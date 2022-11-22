@@ -91,7 +91,6 @@ function foo$0() {
   }
 
   let x$4 = y$1;
-  return;
 }
 
 ```

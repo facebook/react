@@ -94,9 +94,11 @@ class CodegenVisitor
       t.SwitchCase
     >
 {
+  depth: number = 0;
   temp: Map<IdentifierId, t.Expression> = new Map();
 
   enterBlock(): t.Statement[] {
+    this.depth++;
     return [];
   }
   visitValue(
@@ -190,6 +192,11 @@ class CodegenVisitor
       case "return": {
         if (terminal.value !== null) {
           return t.returnStatement(terminal.value);
+        } else if (this.depth === 1) {
+          // A return at the top-level of a function must be the last instruction,
+          // and functions implicitly return after the last instruction of the top-level.
+          // Elide the return.
+          return t.emptyStatement();
         } else {
           return t.returnStatement();
         }
@@ -223,6 +230,7 @@ class CodegenVisitor
     }
   }
   leaveBlock(block: t.Statement[]): t.Statement {
+    this.depth--;
     return t.blockStatement(block);
   }
 }

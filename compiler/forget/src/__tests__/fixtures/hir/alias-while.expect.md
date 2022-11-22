@@ -140,9 +140,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function mutate$0(x$1, y$2) {
-  return;
-}
+function mutate$0(x$1, y$2) {}
 
 ```
       

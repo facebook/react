@@ -60,7 +60,6 @@ function f$0() {
   x$1 = x$1 + 1;
   x$1 = x$1 + 1;
   x$1 = x$1 >>> 1;
-  return;
 }
 
 ```
@@ -100,7 +99,6 @@ flowchart TB
 function g$0(a$1) {
   a$1.c.b = a$1.b.c + 1;
   a$1.c.b = a$1.b.c * 2;
-  return;
 }
 
 ```

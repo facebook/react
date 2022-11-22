@@ -42,9 +42,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function useFreeze$0() {
-  return;
-}
+function useFreeze$0() {}
 
 ```
 ## HIR
@@ -70,9 +68,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0() {
-  return;
-}
+function foo$0() {}
 
 ```
 ## HIR

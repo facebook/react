@@ -244,9 +244,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function f$0() {
-  return;
-}
+function f$0() {}
 
 ```
 ## HIR
@@ -272,9 +270,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function g$0() {
-  return;
-}
+function g$0() {}
 
 ```
       

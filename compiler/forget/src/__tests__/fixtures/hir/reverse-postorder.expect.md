@@ -189,7 +189,6 @@ function Component$0(props$1) {
   }
 
   x$2;
-  return;
 }
 
 ```

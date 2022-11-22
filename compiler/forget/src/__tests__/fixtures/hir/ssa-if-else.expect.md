@@ -83,8 +83,6 @@ function foo$0() {
   } else {
     let z$4 = x$1;
   }
-
-  return;
 }
 
 ```

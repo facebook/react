@@ -75,8 +75,6 @@ function foo$0(a$1, b$2, c$3) {
       y$4.push(c$3);
     }
   }
-
-  return;
 }
 
 ```

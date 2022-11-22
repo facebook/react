@@ -67,8 +67,6 @@ function foo$0() {
   bb1: if (y$2) {
     let z$3 = x$1 + y$2;
   }
-
-  return;
 }
 
 ```

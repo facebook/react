@@ -58,9 +58,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function mutate$0(x$1, y$2) {
-  return;
-}
+function mutate$0(x$1, y$2) {}
 
 ```
 ## HIR
@@ -174,7 +172,6 @@ function Component$0(props$1) {
   }
 
   mutate$8(x$6, null);
-  return;
 }
 
 ```

@@ -40,9 +40,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function log$0() {
-  return;
-}
+function log$0() {}
 
 ```
 ## HIR
@@ -119,7 +117,6 @@ function Foo$0(cond$1) {
   }
 
   log$4(str$2);
-  return;
 }
 
 ```
