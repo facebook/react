@@ -54,17 +54,6 @@ export type ReactFunction = {
 };
 
 /**
- * Each scope has a set of inputs (which is loosely defined as stages of analysis
- * may refine the set of inputs), a set of outputs (values it will produce), and
- * a set of instructions to produce the outputs from the inputs.
- */
-export type ReactiveScope = {
-  inputs: Set<Place>;
-  outputs: Set<Place>;
-  instructions: HIR;
-};
-
-/**
  * A function declaration including its path
  */
 export type HIRFunction = {
@@ -297,7 +286,7 @@ export type Identifier = {
   mutableRange: MutableRange;
   // The ID of the reactive scope which will compute this value. Multiple variables may have
   // the same scope id.
-  scope: ScopeId | null;
+  scope: ReactiveScope | null;
 };
 
 /**
@@ -324,6 +313,11 @@ export enum Effect {
   // This reference may write to (mutate) the value
   Mutate = "mutate",
 }
+
+export type ReactiveScope = {
+  id: ScopeId;
+  range: MutableRange;
+};
 
 /**
  * Simulated opaque type for BlockIds to prevent using normal numbers as block ids

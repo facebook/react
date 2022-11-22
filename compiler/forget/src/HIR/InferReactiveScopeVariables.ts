@@ -12,8 +12,8 @@ import {
   Instruction,
   makeInstructionId,
   makeScopeId,
-  MutableRange,
   Place,
+  ReactiveScope,
   ScopeId,
 } from "./HIR";
 import { eachInstructionOperand } from "./visitors";
@@ -66,11 +66,11 @@ import { eachInstructionOperand } from "./visitors";
 export function inferReactiveScopeVariables(fn: HIRFunction) {
   // Represents the set of reactive scopes as disjoint sets of identifiers
   // that mutate together.
-  const scopes = new DisjointSet<Identifier>();
+  const scopeIdentifiers = new DisjointSet<Identifier>();
   for (const [_, block] of fn.body.blocks) {
     for (const phi of block.phis) {
       const operands: Array<Identifier> = [phi.id, ...phi.operands.values()];
-      scopes.union(operands);
+      scopeIdentifiers.union(operands);
     }
 
     for (const instr of block.instructions) {
@@ -89,18 +89,14 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
         }
       }
       if (operands.length !== 0) {
-        scopes.union(operands);
+        scopeIdentifiers.union(operands);
       }
     }
   }
 
   // Maps each scope (by its identifying member) to a ScopeId value
-  const scopeIds: Map<Identifier, ScopeId> = new Map();
-  // Store the mutable range and set of identifiers for each scope
-  const scopeVariables: Map<
-    ScopeId,
-    { range: MutableRange; variables: Set<Identifier> }
-  > = new Map();
+  const scopes: Map<Identifier, ReactiveScope> = new Map();
+  const scopeVariables: Map<ReactiveScope, Set<Identifier>> = new Map();
 
   /**
    * Iterate over all the identifiers and assign a unique ScopeId
@@ -110,21 +106,14 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
    * build a MutableRange that describes the span of mutations
    * across all identifiers in each scope.
    */
-  scopes.forEach((identifier, groupIdentifier) => {
-    let scopeId = scopeIds.get(groupIdentifier);
-    if (scopeId == null) {
-      scopeId = makeScopeId(scopeIds.size);
-      scopeIds.set(groupIdentifier, scopeId);
-    }
-    identifier.scope = scopeId;
-
-    let scope = scopeVariables.get(scopeId);
+  scopeIdentifiers.forEach((identifier, groupIdentifier) => {
+    let scope = scopes.get(groupIdentifier);
     if (scope === undefined) {
       scope = {
-        range: { ...identifier.mutableRange },
-        variables: new Set(),
+        id: makeScopeId(scopes.size),
+        range: identifier.mutableRange,
       };
-      scopeVariables.set(scopeId, scope);
+      scopes.set(groupIdentifier, scope);
     } else {
       scope.range.start = makeInstructionId(
         Math.min(scope.range.start, identifier.mutableRange.start)
@@ -133,14 +122,22 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
         Math.max(scope.range.end, identifier.mutableRange.end)
       );
     }
-    scope.variables.add(identifier);
+    identifier.scope = scope;
+
+    let vars = scopeVariables.get(scope);
+    if (vars === undefined) {
+      vars = new Set();
+      scopeVariables.set(scope, vars);
+    }
+    vars.add(identifier);
   });
 
-  // Update all the identifiers for each scope now that we know
-  // the scope's full range.
-  for (const [_, scope] of scopeVariables) {
-    for (const identifier of scope.variables) {
-      identifier.mutableRange = scope.range;
+  // Copy scope ranges to identifier ranges: not strictly required but this is useful
+  // for visualization
+  for (const [scope, vars] of scopeVariables) {
+    for (const identifier of vars) {
+      identifier.mutableRange.start = scope.range.start;
+      identifier.mutableRange.end = scope.range.end;
     }
   }
 }
