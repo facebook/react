@@ -10,13 +10,18 @@ import {
   BasicBlock,
   BlockId,
   Instruction,
+  InstructionValue,
   makeInstructionId,
   Place,
   Terminal,
 } from "./HIR";
 
 export function* eachInstructionOperand(instr: Instruction): Iterable<Place> {
-  const instrValue = instr.value;
+  yield* eachInstructionValueOperand(instr.value);
+}
+export function* eachInstructionValueOperand(
+  instrValue: InstructionValue
+): Iterable<Place> {
   switch (instrValue.kind) {
     case "NewExpression":
     case "CallExpression": {

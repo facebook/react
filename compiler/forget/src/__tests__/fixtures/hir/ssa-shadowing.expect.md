@@ -47,7 +47,7 @@ function log$0() {}
 
 ```
 bb0:
-  [1] Let mutate str$6_@2[0:9] = ""
+  [1] Let mutate str$6_@0[1:8] = ""
   [2] If (read cond$5) then:bb2 else:bb3
 bb2:
   predecessor blocks: bb0
@@ -56,12 +56,12 @@ bb2:
   [5] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [6] Reassign mutate str$8_@2[0:9] = "fallthrough test"
+  [6] Reassign mutate str$8_@0[1:8] = "fallthrough test"
   [7] Goto bb1
 bb1:
   predecessor blocks: bb2 bb3
-  str$10_@2[0:9]: phi(bb2: str$6_@2, bb3: str$8_@2)
-  [8] Call mutate log$4_@2(read str$10_@2)
+  str$10_@0[1:8]: phi(bb2: str$6_@0, bb3: str$8_@0)
+  [8] Call mutate log$4_@2(read str$10_@0)
   [9] Return
 ```
 
@@ -72,7 +72,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate str$6_@2[0:9] = ''
+      [1] Let mutate str$6_@0[1:8] = ''
     "]
     bb0_instrs --> bb0_terminal(["If (read cond$5)"])
   end
@@ -85,13 +85,13 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [6] Reassign mutate str$8_@2[0:9] = 'fallthrough test'
+      [6] Reassign mutate str$8_@0[1:8] = 'fallthrough test'
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [8] Call mutate log$4_@2(read str$10_@2)
+      [8] Call mutate log$4_@2(read str$10_@0)
     "]
     bb1_instrs --> bb1_terminal(["Return"])
   end

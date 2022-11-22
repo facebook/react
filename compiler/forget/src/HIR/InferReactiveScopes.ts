@@ -17,7 +17,10 @@ import {
   ScopeId,
 } from "./HIR";
 import { BlockTerminal, Visitor, visitTree } from "./HIRTreeVisitor";
-import { eachInstructionOperand } from "./visitors";
+import {
+  eachInstructionOperand,
+  eachInstructionValueOperand,
+} from "./visitors";
 
 /**
  * This is a second (final) stage of constructing reactive scopes. Prior to this pass,
@@ -249,13 +252,28 @@ class MergeOverlappingReactiveScopesVisitor
   enterBlock(): void {
     this.scopes.push(new BlockScope());
   }
-  visitValue(value: InstructionValue): void {}
-  visitInstruction(instruction: Instruction, value: void): void {
-    const scope = getInstructionScope(instruction);
-    if (scope !== null && instruction.id < scope.range.end) {
-      this.visitScope(scope);
+  visitValue(value: InstructionValue, id: InstructionId): void {
+    this.visitId(id);
+    for (const operand of eachInstructionValueOperand(value)) {
+      if (
+        operand.identifier.scope !== null &&
+        id >= operand.identifier.scope.range.start &&
+        id < operand.identifier.scope.range.end
+      ) {
+        this.visitScope(operand.identifier.scope);
+      }
     }
+  }
+  visitInstruction(instruction: Instruction, value: void): void {
     this.visitId(instruction.id);
+    if (
+      instruction.lvalue !== null &&
+      instruction.lvalue.place.identifier.scope !== null &&
+      instruction.id >= instruction.lvalue.place.identifier.scope.range.start &&
+      instruction.id < instruction.lvalue.place.identifier.scope.range.end
+    ) {
+      this.visitScope(instruction.lvalue.place.identifier.scope);
+    }
   }
   visitTerminalId(id: InstructionId): void {
     this.visitId(id);

@@ -27,8 +27,8 @@ bb1:
   [5] If (read $8_@2) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
-  [6] Const mutate $9_@0[0:9] = 1
-  [7] Reassign mutate x$10_@0[0:9] = Binary read x$7_@0 + read $9_@0
+  [6] Const mutate $9_@3 = 1
+  [7] Reassign mutate x$10_@0[0:9] = Binary read x$7_@0 + read $9_@3
   [8] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
@@ -55,8 +55,8 @@ flowchart TB
   end
   subgraph bb3
     bb3_instrs["
-      [6] Const mutate $9_@0[0:9] = 1
-      [7] Reassign mutate x$10_@0[0:9] = Binary read x$7_@0 + read $9_@0
+      [6] Const mutate $9_@3 = 1
+      [7] Reassign mutate x$10_@0[0:9] = Binary read x$7_@0 + read $9_@3
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end

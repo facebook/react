@@ -66,7 +66,9 @@ class Driver<TBlock, TValue, TItem, TCase> {
     switch (terminal.kind) {
       case "return": {
         const value =
-          terminal.value != null ? this.visitPlace(terminal.value) : null;
+          terminal.value != null
+            ? this.visitPlace(terminal.value, terminal.id)
+            : null;
         this.visitor.visitTerminalId(terminal.id);
         this.visitor.appendBlock(
           blockValue,
@@ -78,7 +80,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
         break;
       }
       case "throw": {
-        const value = this.visitPlace(terminal.value);
+        const value = this.visitPlace(terminal.value, terminal.id);
         this.visitor.visitTerminalId(terminal.id);
         this.visitor.appendBlock(
           blockValue,
@@ -90,7 +92,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
         break;
       }
       case "if": {
-        const test = this.visitPlace(terminal.test);
+        const test = this.visitPlace(terminal.test, terminal.id);
         const fallthroughId =
           terminal.fallthrough !== null &&
           !this.cx.isScheduled(terminal.fallthrough)
@@ -152,7 +154,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
         break;
       }
       case "switch": {
-        const test = this.visitPlace(terminal.test);
+        const test = this.visitPlace(terminal.test, terminal.id);
         const fallthroughId =
           terminal.fallthrough !== null &&
           !this.cx.isScheduled(terminal.fallthrough)
@@ -166,7 +168,10 @@ class Driver<TBlock, TValue, TItem, TCase> {
         this.visitor.visitTerminalId(terminal.id);
         const cases: Array<TCase> = [];
         [...terminal.cases].reverse().forEach((case_, index) => {
-          const test = case_.test !== null ? this.visitPlace(case_.test) : null;
+          const test =
+            case_.test !== null
+              ? this.visitPlace(case_.test, terminal.id)
+              : null;
 
           let consequent;
           if (this.cx.isScheduled(case_.block)) {
@@ -241,7 +246,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
         //   body.length === bodyLength,
         //   "Expected test to produce only temporaries"
         // );
-        const testValue = this.visitPlace(testTerminal.test);
+        const testValue = this.visitPlace(testTerminal.test, terminal.id);
         const fallthroughId =
           terminal.fallthrough !== null &&
           !this.cx.isScheduled(terminal.fallthrough)
@@ -391,13 +396,13 @@ class Driver<TBlock, TValue, TItem, TCase> {
   }
 
   visitInstr(instr: Instruction, blockValue: TBlock): void {
-    const value = this.visitor.visitValue(instr.value);
+    const value = this.visitor.visitValue(instr.value, instr.id);
     const item = this.visitor.visitInstruction(instr, value);
     this.visitor.appendBlock(blockValue, item);
   }
 
-  visitPlace(place: Place): TValue {
-    return this.visitor.visitValue(place);
+  visitPlace(place: Place, id: InstructionId): TValue {
+    return this.visitor.visitValue(place, id);
   }
 }
 
@@ -642,7 +647,7 @@ export interface Visitor<TBlock, TValue, TItem, TCase> {
    * Convert an InstructionValue into the visitor's own representation
    * of a value.
    */
-  visitValue(value: InstructionValue): TValue;
+  visitValue(value: InstructionValue, id: InstructionId): TValue;
 
   /**
    * Convert an Instruction into the visitor's own representation of
