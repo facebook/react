@@ -72,6 +72,7 @@
 "A component suspended inside an `act` scope, but the `act` call was not awaited. When testing React components that depend on asynchronous data, you must await the result:\n\nawait act(() => ...)"
 "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it."
 "A future version of React will block javascript: URLs as a security precaution. Use event handlers instead if you can. If you need to generate unsafe HTML try using dangerouslySetInnerHTML instead. React was passed %s."
+"A large precomputed chunk was passed to writeChunk without being copied. Large chunks get enqueued directly and are not copied. This is incompatible with precomputed chunks because you cannot enqueue the same precomputed chunk twice. Use \"cloneChunk\" to make a copy of this large precomputed chunk before writing it. This is a bug in React."
 "A link (rel=\"stylesheet\") element with href \"%s\" has the precedence prop but also included the %s. When using %s React will opt out of Resource behavior. If you meant for this element to be treated as a Resource remove the %s. Otherwise remove the precedence prop."
 "A nested %s was passed to row #%s in <SuspenseList />. Wrap it in an additional SuspenseList to configure its revealOrder: <SuspenseList revealOrder=...> ... <SuspenseList revealOrder=...>{%s}</SuspenseList> ... </SuspenseList>"
 "A pointerId must be passed to \"%s\""

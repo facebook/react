@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-0077544d2-20221121";
+var ReactVersion = "18.3.0-www-modern-2655c9354-20221121";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -100,6 +100,9 @@ function stringToChunk(content) {
 }
 function stringToPrecomputedChunk(content) {
   return content;
+}
+function clonePrecomputedChunk(chunk) {
+  return chunk;
 }
 function closeWithError(destination, error) {
   // $FlowFixMe: This is an Error object or the destination accepts other types.
@@ -5852,7 +5855,10 @@ function writeCompletedBoundaryInstruction(
     if (!responseState.sentCompleteBoundaryFunction) {
       responseState.sentCompleteBoundaryFunction = true;
       responseState.sentStyleInsertionFunction = true;
-      writeChunk(destination, completeBoundaryWithStylesScript1FullBoth);
+      writeChunk(
+        destination,
+        clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth)
+      );
     } else if (!responseState.sentStyleInsertionFunction) {
       responseState.sentStyleInsertionFunction = true;
       writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);

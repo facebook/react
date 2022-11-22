@@ -97,6 +97,9 @@ function stringToChunk(content) {
 function stringToPrecomputedChunk(content) {
   return content;
 }
+function clonePrecomputedChunk(chunk) {
+  return chunk;
+}
 function closeWithError(destination, error) {
   destination.done = true;
   destination.fatal = true;
@@ -5859,7 +5862,10 @@ function writeCompletedBoundaryInstruction(
     if (!responseState.sentCompleteBoundaryFunction) {
       responseState.sentCompleteBoundaryFunction = true;
       responseState.sentStyleInsertionFunction = true;
-      writeChunk(destination, completeBoundaryWithStylesScript1FullBoth);
+      writeChunk(
+        destination,
+        clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth)
+      );
     } else if (!responseState.sentStyleInsertionFunction) {
       responseState.sentStyleInsertionFunction = true;
       writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
