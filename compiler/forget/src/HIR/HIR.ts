@@ -180,9 +180,18 @@ export type LValue = {
 };
 
 export enum InstructionKind {
-  Const, // const declaration
-  Let, // let declaration
-  Reassign, // assing a new value to a let binding
+  /**
+   * const declaration
+   */
+  Const = "Const",
+  /**
+   * let declaration
+   */
+  Let = "Let",
+  /**
+   * assing a new value to a let binding
+   */
+  Reassign = "Reassign",
 }
 
 /**
