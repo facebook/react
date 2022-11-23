@@ -46,6 +46,8 @@ describe('ReactContextValidator', () => {
     };
 
     class ComponentInFooBarContext extends React.Component {
+      childRef = React.createRef();
+
       getChildContext() {
         return {
           foo: 'abc',
@@ -54,7 +56,7 @@ describe('ReactContextValidator', () => {
       }
 
       render() {
-        return <Component ref="child" />;
+        return <Component ref={this.childRef} />;
       }
     }
     ComponentInFooBarContext.childContextTypes = {
@@ -65,7 +67,7 @@ describe('ReactContextValidator', () => {
     const instance = ReactTestUtils.renderIntoDocument(
       <ComponentInFooBarContext />,
     );
-    expect(instance.refs.child.context).toEqual({foo: 'abc'});
+    expect(instance.childRef.current.context).toEqual({foo: 'abc'});
   });
 
   it('should pass next context to lifecycles', () => {

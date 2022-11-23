@@ -7,4 +7,5 @@
  * @flow
  */
 
-export * from 'react-dom-bindings/src/server/ReactDOMServerExternalRuntime';
+export * from '../ReactFlightServerConfigStream';
+export * from 'react-server-dom-webpack/src/ReactFlightServerWebpackBundlerConfig';

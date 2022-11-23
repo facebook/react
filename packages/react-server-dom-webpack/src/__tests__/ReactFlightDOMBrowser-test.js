@@ -778,4 +778,40 @@ describe('ReactFlightDOMBrowser', () => {
     });
     expect(container.innerHTML).toBe('Hi');
   });
+
+  // @gate enableUseHook
+  it('unwraps thenable that fulfills synchronously without suspending', async () => {
+    function Server() {
+      const thenable = {
+        then(resolve) {
+          // This thenable immediately resolves, synchronously, without waiting
+          // a microtask.
+          resolve('Hi');
+        },
+      };
+      try {
+        return use(thenable);
+      } catch {
+        throw new Error(
+          '`use` should not suspend because the thenable resolved synchronously.',
+        );
+      }
+    }
+
+    // Because the thenable resolves synchronously, we should be able to finish
+    // rendering synchronously, with no fallback.
+    const stream = ReactServerDOMWriter.renderToReadableStream(<Server />);
+    const response = ReactServerDOMReader.createFromReadableStream(stream);
+
+    function Client() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Client />);
+    });
+    expect(container.innerHTML).toBe('Hi');
+  });
 });

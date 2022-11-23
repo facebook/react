@@ -31,61 +31,40 @@ export const SuspenseException: mixed = new Error(
     "call the promise's `.catch` method and pass the result to `use`",
 );
 
-let thenableState: ThenableState | null = null;
-
 export function createThenableState(): ThenableState {
   // The ThenableState is created the first time a component suspends. If it
   // suspends again, we'll reuse the same state.
   return [];
 }
 
-export function prepareThenableState(prevThenableState: ThenableState | null) {
-  // This function is called before every function that might suspend
-  // with `use`. Right now, that's only Hooks, but in the future we'll use the
-  // same mechanism for unwrapping promises during reconciliation.
-  thenableState = prevThenableState;
-}
-
-export function getThenableStateAfterSuspending(): ThenableState | null {
-  // Called by the work loop so it can stash the thenable state. It will use
-  // the state to replay the component when the promise resolves.
-  const state = thenableState;
-  thenableState = null;
-  return state;
-}
-
-export function isThenableStateResolved(thenables: ThenableState): boolean {
-  const lastThenable = thenables[thenables.length - 1];
-  if (lastThenable !== undefined) {
-    const status = lastThenable.status;
-    return status === 'fulfilled' || status === 'rejected';
-  }
-  return true;
+export function isThenableResolved(thenable: Thenable<mixed>): boolean {
+  const status = thenable.status;
+  return status === 'fulfilled' || status === 'rejected';
 }
 
 function noop(): void {}
 
-export function trackUsedThenable<T>(thenable: Thenable<T>, index: number): T {
+export function trackUsedThenable<T>(
+  thenableState: ThenableState,
+  thenable: Thenable<T>,
+  index: number,
+): T {
   if (__DEV__ && ReactCurrentActQueue.current !== null) {
     ReactCurrentActQueue.didUsePromise = true;
   }
 
-  if (thenableState === null) {
-    thenableState = [thenable];
+  const previous = thenableState[index];
+  if (previous === undefined) {
+    thenableState.push(thenable);
   } else {
-    const previous = thenableState[index];
-    if (previous === undefined) {
-      thenableState.push(thenable);
-    } else {
-      if (previous !== thenable) {
-        // Reuse the previous thenable, and drop the new one. We can assume
-        // they represent the same value, because components are idempotent.
+    if (previous !== thenable) {
+      // Reuse the previous thenable, and drop the new one. We can assume
+      // they represent the same value, because components are idempotent.
 
-        // Avoid an unhandled rejection errors for the Promises that we'll
-        // intentionally ignore.
-        thenable.then(noop, noop);
-        thenable = previous;
-      }
+      // Avoid an unhandled rejection errors for the Promises that we'll
+      // intentionally ignore.
+      thenable.then(noop, noop);
+      thenable = previous;
     }
   }
 
@@ -110,24 +89,36 @@ export function trackUsedThenable<T>(thenable: Thenable<T>, index: number): T {
         // it's defined, but an unknown value, assume it's been instrumented by
         // some custom userspace implementation. We treat it as "pending".
       } else {
-        const pendingThenable: PendingThenable<mixed> = (thenable: any);
+        const pendingThenable: PendingThenable<T> = (thenable: any);
         pendingThenable.status = 'pending';
         pendingThenable.then(
           fulfilledValue => {
             if (thenable.status === 'pending') {
-              const fulfilledThenable: FulfilledThenable<mixed> = (thenable: any);
+              const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
               fulfilledThenable.status = 'fulfilled';
               fulfilledThenable.value = fulfilledValue;
             }
           },
           (error: mixed) => {
             if (thenable.status === 'pending') {
-              const rejectedThenable: RejectedThenable<mixed> = (thenable: any);
+              const rejectedThenable: RejectedThenable<T> = (thenable: any);
               rejectedThenable.status = 'rejected';
               rejectedThenable.reason = error;
             }
           },
         );
+
+        // Check one more time in case the thenable resolved synchronously
+        switch (thenable.status) {
+          case 'fulfilled': {
+            const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
+            return fulfilledThenable.value;
+          }
+          case 'rejected': {
+            const rejectedThenable: RejectedThenable<T> = (thenable: any);
+            throw rejectedThenable.reason;
+          }
+        }
       }
 
       // Suspend.

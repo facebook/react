@@ -105,7 +105,6 @@ import {
   requestEventTime,
   markSkippedUpdateLanes,
   isInvalidExecutionContextForEventFunction,
-  getSuspendedThenableState,
 } from './ReactFiberWorkLoop.old';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -141,9 +140,9 @@ import {
 import {getTreeId} from './ReactFiberTreeContext.old';
 import {now} from './Scheduler';
 import {
-  prepareThenableState,
   trackUsedThenable,
   checkIfUseWrappedInTryCatch,
+  createThenableState,
 } from './ReactFiberThenable.old';
 import type {ThenableState} from './ReactFiberThenable.old';
 
@@ -247,6 +246,7 @@ let shouldDoubleInvokeUserFnsInHooksDEV: boolean = false;
 let localIdCounter: number = 0;
 // Counts number of `use`-d thenables
 let thenableIndexCounter: number = 0;
+let thenableState: ThenableState | null = null;
 
 // Used for ids that are generated completely client-side (i.e. not during
 // hydration). This counter is global, so client ids are not stable across
@@ -449,6 +449,7 @@ export function renderWithHooks<Props, SecondArg>(
   // didScheduleRenderPhaseUpdate = false;
   // localIdCounter = 0;
   // thenableIndexCounter = 0;
+  // thenableState = null;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
   // Currently we will identify the update render as a mount because memoizedState === null.
@@ -476,10 +477,6 @@ export function renderWithHooks<Props, SecondArg>(
         ? HooksDispatcherOnMount
         : HooksDispatcherOnUpdate;
   }
-
-  // If this is a replay, restore the thenable state from the previous attempt.
-  const prevThenableState = getSuspendedThenableState();
-  prepareThenableState(prevThenableState);
 
   // In Strict Mode, during development, user functions are double invoked to
   // help detect side effects. The logic for how this is implemented for in
@@ -525,7 +522,6 @@ export function renderWithHooks<Props, SecondArg>(
       Component,
       props,
       secondArg,
-      prevThenableState,
     );
   }
 
@@ -538,13 +534,18 @@ export function renderWithHooks<Props, SecondArg>(
         Component,
         props,
         secondArg,
-        prevThenableState,
       );
     } finally {
       setIsStrictModeForDevtools(false);
     }
   }
 
+  finishRenderingHooks(current, workInProgress);
+
+  return children;
+}
+
+function finishRenderingHooks(current: Fiber | null, workInProgress: Fiber) {
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
@@ -594,7 +595,9 @@ export function renderWithHooks<Props, SecondArg>(
   didScheduleRenderPhaseUpdate = false;
   // This is reset by checkDidRenderIdHook
   // localIdCounter = 0;
+
   thenableIndexCounter = 0;
+  thenableState = null;
 
   if (didRenderTooFewHooks) {
     throw new Error(
@@ -638,7 +641,39 @@ export function renderWithHooks<Props, SecondArg>(
       }
     }
   }
+}
 
+export function replaySuspendedComponentWithHooks<Props, SecondArg>(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: (p: Props, arg: SecondArg) => any,
+  props: Props,
+  secondArg: SecondArg,
+): any {
+  // This function is used to replay a component that previously suspended,
+  // after its data resolves.
+  //
+  // It's a simplified version of renderWithHooks, but it doesn't need to do
+  // most of the set up work because they weren't reset when we suspended; they
+  // only get reset when the component either completes (finishRenderingHooks)
+  // or unwinds (resetHooksOnUnwind).
+  if (__DEV__) {
+    hookTypesDev =
+      current !== null
+        ? ((current._debugHookTypes: any): Array<HookType>)
+        : null;
+    hookTypesUpdateIndexDev = -1;
+    // Used for hot reloading:
+    ignorePreviousDependencies =
+      current !== null && current.type !== workInProgress.type;
+  }
+  const children = renderWithHooksAgain(
+    workInProgress,
+    Component,
+    props,
+    secondArg,
+  );
+  finishRenderingHooks(current, workInProgress);
   return children;
 }
 
@@ -647,7 +682,6 @@ function renderWithHooksAgain<Props, SecondArg>(
   Component: (p: Props, arg: SecondArg) => any,
   props: Props,
   secondArg: SecondArg,
-  prevThenableState: ThenableState | null,
 ) {
   // This is used to perform another render pass. It's used when setState is
   // called during render, and for double invoking components in Strict Mode
@@ -695,7 +729,6 @@ function renderWithHooksAgain<Props, SecondArg>(
       ? HooksDispatcherOnRerenderInDEV
       : HooksDispatcherOnRerender;
 
-    prepareThenableState(prevThenableState);
     children = Component(props, secondArg);
   } while (didScheduleRenderPhaseUpdateDuringThisPass);
   return children;
@@ -732,10 +765,19 @@ export function bailoutHooks(
 }
 
 export function resetHooksAfterThrow(): void {
+  // This is called immediaetly after a throw. It shouldn't reset the entire
+  // module state, because the work loop might decide to replay the component
+  // again without rewinding.
+  //
+  // It should only reset things like the current dispatcher, to prevent hooks
+  // from being called outside of a component.
+
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
+}
 
+export function resetHooksOnUnwind(): void {
   if (didScheduleRenderPhaseUpdate) {
     // There were render phase updates. These are only valid for this render
     // phase, which we are now aborting. Remove the updates from the queues so
@@ -772,6 +814,7 @@ export function resetHooksAfterThrow(): void {
   didScheduleRenderPhaseUpdateDuringThisPass = false;
   localIdCounter = 0;
   thenableIndexCounter = 0;
+  thenableState = null;
 }
 
 function mountWorkInProgressHook(): Hook {
@@ -830,7 +873,24 @@ function updateWorkInProgressHook(): Hook {
     // Clone from the current hook.
 
     if (nextCurrentHook === null) {
-      throw new Error('Rendered more hooks than during the previous render.');
+      const currentFiber = currentlyRenderingFiber.alternate;
+      if (currentFiber === null) {
+        // This is the initial render. This branch is reached when the component
+        // suspends, resumes, then renders an additional hook.
+        const newHook: Hook = {
+          memoizedState: null,
+
+          baseState: null,
+          baseQueue: null,
+          queue: null,
+
+          next: null,
+        };
+        nextCurrentHook = newHook;
+      } else {
+        // This is an update. We should always have a current hook.
+        throw new Error('Rendered more hooks than during the previous render.');
+      }
     }
 
     currentHook = nextCurrentHook;
@@ -888,7 +948,11 @@ function use<T>(usable: Usable<T>): T {
       // Track the position of the thenable within this fiber.
       const index = thenableIndexCounter;
       thenableIndexCounter += 1;
-      return trackUsedThenable(thenable, index);
+
+      if (thenableState === null) {
+        thenableState = createThenableState();
+      }
+      return trackUsedThenable(thenableState, thenable, index);
     } else if (
       usable.$$typeof === REACT_CONTEXT_TYPE ||
       usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
@@ -1615,7 +1679,7 @@ function updateSyncExternalStore<T>(
       }
     }
   }
-  const prevSnapshot = hook.memoizedState;
+  const prevSnapshot = (currentHook || hook).memoizedState;
   const snapshotChanged = !is(prevSnapshot, nextSnapshot);
   if (snapshotChanged) {
     hook.memoizedState = nextSnapshot;

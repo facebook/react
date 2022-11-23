@@ -167,9 +167,7 @@ let lastCurrentDocument: ?Document = null;
 
 let previousDispatcher = null;
 export function prepareToRenderResources(rootContainer: Container) {
-  // Flot thinks that getRootNode returns a Node but it actually returns a
-  // Document or ShadowRoot
-  const rootNode: FloatRoot = (rootContainer.getRootNode(): any);
+  const rootNode = getRootNode(rootContainer);
   lastCurrentDocument = getDocumentFromRoot(rootNode);
 
   previousDispatcher = Dispatcher.current;
@@ -191,10 +189,20 @@ export type FloatRoot = Document | ShadowRoot;
 // global maps of Resources
 const preloadResources: Map<string, PreloadResource> = new Map();
 
+// getRootNode is missing from IE and old jsdom versions
+function getRootNode(container: Container): FloatRoot {
+  // $FlowFixMe[method-unbinding]
+  return typeof container.getRootNode === 'function'
+    ? /* $FlowFixMe[incompatible-return] Flow types this as returning a `Node`,
+       * but it's either a `Document` or `ShadowRoot`. */
+      container.getRootNode()
+    : container.ownerDocument;
+}
+
 function getCurrentResourceRoot(): null | FloatRoot {
   const currentContainer = getCurrentRootHostContainer();
   // $FlowFixMe flow should know currentContainer is a Node and has getRootNode
-  return currentContainer ? currentContainer.getRootNode() : null;
+  return currentContainer ? getRootNode(currentContainer) : null;
 }
 
 // This resource type constraint can be loosened. It really is everything except PreloadResource
@@ -204,7 +212,7 @@ function resetInstance(resource: ScriptResource | HeadResource) {
 }
 
 export function clearRootResources(rootContainer: Container): void {
-  const rootNode: FloatRoot = (rootContainer.getRootNode(): any);
+  const rootNode = getRootNode(rootContainer);
   const resources = getResourcesFromRoot(rootNode);
 
   // We can't actually delete the resource cache because this function is called

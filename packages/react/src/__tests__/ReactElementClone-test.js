@@ -82,8 +82,10 @@ describe('ReactElementClone', () => {
 
   it('should keep the original ref if it is not overridden', () => {
     class Grandparent extends React.Component {
+      yoloRef = React.createRef();
+
       render() {
-        return <Parent child={<div ref="yolo" />} />;
+        return <Parent child={<div ref={this.yoloRef} />} />;
       }
     }
 
@@ -96,7 +98,7 @@ describe('ReactElementClone', () => {
     }
 
     const component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(component.refs.yolo.tagName).toBe('DIV');
+    expect(component.yoloRef.current.tagName).toBe('DIV');
   });
 
   it('should transfer the key property', () => {
@@ -174,21 +176,25 @@ describe('ReactElementClone', () => {
 
   it('should support keys and refs', () => {
     class Parent extends React.Component {
+      xyzRef = React.createRef();
+
       render() {
         const clone = React.cloneElement(this.props.children, {
           key: 'xyz',
-          ref: 'xyz',
+          ref: this.xyzRef,
         });
         expect(clone.key).toBe('xyz');
-        expect(clone.ref).toBe('xyz');
+        expect(clone.ref).toBe(this.xyzRef);
         return <div>{clone}</div>;
       }
     }
 
     class Grandparent extends React.Component {
+      parentRef = React.createRef();
+
       render() {
         return (
-          <Parent ref="parent">
+          <Parent ref={this.parentRef}>
             <span key="abc" />
           </Parent>
         );
@@ -196,30 +202,37 @@ describe('ReactElementClone', () => {
     }
 
     const component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(component.refs.parent.refs.xyz.tagName).toBe('SPAN');
+    expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
   });
 
   it('should steal the ref if a new ref is specified', () => {
     class Parent extends React.Component {
+      xyzRef = React.createRef();
+
       render() {
-        const clone = React.cloneElement(this.props.children, {ref: 'xyz'});
+        const clone = React.cloneElement(this.props.children, {
+          ref: this.xyzRef,
+        });
         return <div>{clone}</div>;
       }
     }
 
     class Grandparent extends React.Component {
+      parentRef = React.createRef();
+      childRef = React.createRef();
+
       render() {
         return (
-          <Parent ref="parent">
-            <span ref="child" />
+          <Parent ref={this.parentRef}>
+            <span ref={this.childRef} />
           </Parent>
         );
       }
     }
 
     const component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(component.refs.child).toBeUndefined();
-    expect(component.refs.parent.refs.xyz.tagName).toBe('SPAN');
+    expect(component.childRef).toEqual({current: null});
+    expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
   });
 
   it('should overwrite props', () => {
