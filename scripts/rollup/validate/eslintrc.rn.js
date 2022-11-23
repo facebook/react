@@ -14,6 +14,7 @@ module.exports = {
     WeakMap: 'readonly',
     WeakSet: 'readonly',
     Reflect: 'readonly',
+    globalThis: 'readonly',
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',

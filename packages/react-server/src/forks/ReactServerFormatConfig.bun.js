@@ -7,6 +7,4 @@
  * @flow
  */
 
-throw new Error(
-  'This entry point is not yet supported in the browser environment',
-);
+export * from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';

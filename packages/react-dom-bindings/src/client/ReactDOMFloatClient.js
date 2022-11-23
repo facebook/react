@@ -28,12 +28,8 @@ import {
   getResourcesFromRoot,
   markNodeAsResource,
 } from './ReactDOMComponentTree';
-import {HTML_NAMESPACE} from '../shared/DOMNamespaces';
-import {
-  getCurrentRootHostContainer,
-  getHostContext,
-} from 'react-reconciler/src/ReactFiberHostContext';
-import {getResourceFormOnly} from './validateDOMNesting';
+import {HTML_NAMESPACE, SVG_NAMESPACE} from '../shared/DOMNamespaces';
+import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
@@ -171,9 +167,7 @@ let lastCurrentDocument: ?Document = null;
 
 let previousDispatcher = null;
 export function prepareToRenderResources(rootContainer: Container) {
-  // Flot thinks that getRootNode returns a Node but it actually returns a
-  // Document or ShadowRoot
-  const rootNode: FloatRoot = (rootContainer.getRootNode(): any);
+  const rootNode = getRootNode(rootContainer);
   lastCurrentDocument = getDocumentFromRoot(rootNode);
 
   previousDispatcher = Dispatcher.current;
@@ -195,10 +189,42 @@ export type FloatRoot = Document | ShadowRoot;
 // global maps of Resources
 const preloadResources: Map<string, PreloadResource> = new Map();
 
+// getRootNode is missing from IE and old jsdom versions
+function getRootNode(container: Container): FloatRoot {
+  // $FlowFixMe[method-unbinding]
+  return typeof container.getRootNode === 'function'
+    ? /* $FlowFixMe[incompatible-return] Flow types this as returning a `Node`,
+       * but it's either a `Document` or `ShadowRoot`. */
+      container.getRootNode()
+    : container.ownerDocument;
+}
+
 function getCurrentResourceRoot(): null | FloatRoot {
   const currentContainer = getCurrentRootHostContainer();
   // $FlowFixMe flow should know currentContainer is a Node and has getRootNode
-  return currentContainer ? currentContainer.getRootNode() : null;
+  return currentContainer ? getRootNode(currentContainer) : null;
+}
+
+// This resource type constraint can be loosened. It really is everything except PreloadResource
+// because that is the only one that does not have an optional instance type. Expand as needed.
+function resetInstance(resource: ScriptResource | HeadResource) {
+  resource.instance = undefined;
+}
+
+export function clearRootResources(rootContainer: Container): void {
+  const rootNode = getRootNode(rootContainer);
+  const resources = getResourcesFromRoot(rootNode);
+
+  // We can't actually delete the resource cache because this function is called
+  // during commit after we have rendered. Instead we detatch any instances from
+  // the Resource object if they are going to be cleared
+
+  // Styles stay put
+  // Scripts get reset
+  resources.scripts.forEach(resetInstance);
+  // Head Resources get reset
+  resources.head.forEach(resetInstance);
+  // lastStructuredMeta stays put
 }
 
 // Preloads are somewhat special. Even if we don't have the Document
@@ -1077,7 +1103,14 @@ function acquireHeadResource(resource: HeadResource): Instance {
           props,
           root,
         );
-        insertResourceInstanceBefore(root, instance, titles.item(0));
+        const firstTitle = titles[0];
+        insertResourceInstanceBefore(
+          root,
+          instance,
+          firstTitle && firstTitle.namespaceURI !== SVG_NAMESPACE
+            ? firstTitle
+            : null,
+        );
         break;
       }
       case 'meta': {
@@ -1393,93 +1426,6 @@ function insertResourceInstanceBefore(
         ' a head element but it was not found.',
     );
   }
-}
-
-export function isHostResourceType(type: string, props: Props): boolean {
-  let resourceFormOnly: boolean;
-  if (__DEV__) {
-    const hostContext = getHostContext();
-    resourceFormOnly = getResourceFormOnly(hostContext);
-  }
-  switch (type) {
-    case 'base':
-    case 'meta':
-    case 'title': {
-      return true;
-    }
-    case 'link': {
-      const {onLoad, onError} = props;
-      if (onLoad || onError) {
-        if (__DEV__) {
-          if (resourceFormOnly) {
-            console.error(
-              'Cannot render a <link> with onLoad or onError listeners outside the main document.' +
-                ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
-                ' somewhere in the <body>.',
-            );
-          }
-        }
-        return false;
-      }
-      switch (props.rel) {
-        case 'stylesheet': {
-          const {href, precedence, disabled} = props;
-          if (__DEV__) {
-            validateLinkPropsForStyleResource(props);
-            if (typeof precedence !== 'string' && resourceFormOnly) {
-              console.error(
-                'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence.' +
-                  ' Consider adding precedence="default" or moving it into the root <head> tag.',
-              );
-            }
-          }
-          return (
-            typeof href === 'string' &&
-            typeof precedence === 'string' &&
-            disabled == null
-          );
-        }
-        default: {
-          const {rel, href} = props;
-          return typeof href === 'string' && typeof rel === 'string';
-        }
-      }
-    }
-    case 'script': {
-      // We don't validate because it is valid to use async with onLoad/onError unlike combining
-      // precedence with these for style resources
-      const {src, async, onLoad, onError} = props;
-      if (__DEV__) {
-        if (async !== true && resourceFormOnly) {
-          console.error(
-            'Cannot render a sync or defer <script> outside the main document without knowing its order.' +
-              ' Try adding async="" or moving it into the root <head> tag.',
-          );
-        } else if ((onLoad || onError) && resourceFormOnly) {
-          console.error(
-            'Cannot render a <script> with onLoad or onError listeners outside the main document.' +
-              ' Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or' +
-              ' somewhere in the <body>.',
-          );
-        }
-      }
-      return (async: any) && typeof src === 'string' && !onLoad && !onError;
-    }
-    case 'template':
-    case 'style':
-    case 'noscript': {
-      if (__DEV__) {
-        if (resourceFormOnly) {
-          console.error(
-            'Cannot render <%s> outside the main document. Try moving it into the root <head> tag.',
-            type,
-          );
-        }
-      }
-      return false;
-    }
-  }
-  return false;
 }
 
 // When passing user input into querySelector(All) the embedded string must not alter

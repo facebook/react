@@ -7,6 +7,5 @@
  * @flow
  */
 
-throw new Error(
-  'This entry point is not yet supported in the browser environment',
-);
+export * from '../ReactFlightServerConfigStream';
+export * from 'react-server-dom-webpack/src/ReactFlightServerWebpackBundlerConfig';

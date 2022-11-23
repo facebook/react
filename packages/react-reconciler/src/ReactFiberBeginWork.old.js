@@ -38,6 +38,7 @@ import type {
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {RootState} from './ReactFiberRoot.old';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old';
+
 import checkPropTypes from 'shared/checkPropTypes';
 import {
   markComponentRenderStarted,
@@ -203,6 +204,7 @@ import {
   renderWithHooks,
   checkDidRenderIdHook,
   bailoutHooks,
+  replaySuspendedComponentWithHooks,
 } from './ReactFiberHooks.old';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer.old';
 import {
@@ -279,6 +281,14 @@ import {
 } from './ReactFiberTracingMarkerComponent.old';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+
+// A special exception that's used to unwind the stack when an update flows
+// into a dehydrated boundary.
+export const SelectiveHydrationException: mixed = new Error(
+  "This is not a real error. It's an implementation detail of React's " +
+    "selective hydration feature. If this leaks into userspace, it's a bug in " +
+    'React. Please file an issue.',
+);
 
 let didReceiveUpdate: boolean = false;
 
@@ -418,25 +428,6 @@ function updateForwardRef(
       renderLanes,
     );
     hasId = checkDidRenderIdHook();
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictLegacyMode
-    ) {
-      setIsStrictModeForDevtools(true);
-      try {
-        nextChildren = renderWithHooks(
-          current,
-          workInProgress,
-          render,
-          nextProps,
-          ref,
-          renderLanes,
-        );
-        hasId = checkDidRenderIdHook();
-      } finally {
-        setIsStrictModeForDevtools(false);
-      }
-    }
     setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
@@ -514,6 +505,20 @@ function updateMemoComponent(
           'prop',
           getComponentNameFromType(type),
         );
+      }
+      if (
+        warnAboutDefaultPropsOnFunctionComponents &&
+        Component.defaultProps !== undefined
+      ) {
+        const componentName = getComponentNameFromType(type) || 'Unknown';
+        if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+          console.error(
+            '%s: Support for defaultProps will be removed from memo components ' +
+              'in a future major release. Use JavaScript default parameters instead.',
+            componentName,
+          );
+          didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+        }
       }
     }
     const child = createFiberFromTypeAndProps(
@@ -1125,25 +1130,6 @@ function updateFunctionComponent(
       renderLanes,
     );
     hasId = checkDidRenderIdHook();
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictLegacyMode
-    ) {
-      setIsStrictModeForDevtools(true);
-      try {
-        nextChildren = renderWithHooks(
-          current,
-          workInProgress,
-          Component,
-          nextProps,
-          context,
-          renderLanes,
-        );
-        hasId = checkDidRenderIdHook();
-      } finally {
-        setIsStrictModeForDevtools(false);
-      }
-    }
     setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
@@ -1156,6 +1142,54 @@ function updateFunctionComponent(
     );
     hasId = checkDidRenderIdHook();
   }
+  if (enableSchedulingProfiler) {
+    markComponentRenderStopped();
+  }
+
+  if (current !== null && !didReceiveUpdate) {
+    bailoutHooks(current, workInProgress, renderLanes);
+    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
+  }
+
+  if (getIsHydrating() && hasId) {
+    pushMaterializedTreeId(workInProgress);
+  }
+
+  // React DevTools reads this flag.
+  workInProgress.flags |= PerformedWork;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
+
+export function replayFunctionComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  nextProps: any,
+  Component: any,
+  renderLanes: Lanes,
+): Fiber | null {
+  // This function is used to replay a component that previously suspended,
+  // after its data resolves. It's a simplified version of
+  // updateFunctionComponent that reuses the hooks from the previous attempt.
+
+  let context;
+  if (!disableLegacyContext) {
+    const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
+    context = getMaskedContext(workInProgress, unmaskedContext);
+  }
+
+  prepareToReadContext(workInProgress, renderLanes);
+  if (enableSchedulingProfiler) {
+    markComponentRenderStarted(workInProgress);
+  }
+  const nextChildren = replaySuspendedComponentWithHooks(
+    current,
+    workInProgress,
+    Component,
+    nextProps,
+    context,
+  );
+  const hasId = checkDidRenderIdHook();
   if (enableSchedulingProfiler) {
     markComponentRenderStopped();
   }
@@ -1969,26 +2003,6 @@ function mountIndeterminateComponent(
           getComponentNameFromType(Component) || 'Unknown',
         );
       }
-
-      if (
-        debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictLegacyMode
-      ) {
-        setIsStrictModeForDevtools(true);
-        try {
-          value = renderWithHooks(
-            null,
-            workInProgress,
-            Component,
-            props,
-            context,
-            renderLanes,
-          );
-          hasId = checkDidRenderIdHook();
-        } finally {
-          setIsStrictModeForDevtools(false);
-        }
-      }
     }
 
     if (getIsHydrating() && hasId) {
@@ -2775,9 +2789,6 @@ function updateDehydratedSuspenseComponent(
         current,
         workInProgress,
         renderLanes,
-        // TODO: When we delete legacy mode, we should make this error argument
-        // required — every concurrent mode path that causes hydration to
-        // de-opt to client rendering should have an error message.
         null,
       );
     }
@@ -2857,6 +2868,16 @@ function updateDehydratedSuspenseComponent(
             attemptHydrationAtLane,
             eventTime,
           );
+
+          // Throw a special object that signals to the work loop that it should
+          // interrupt the current render.
+          //
+          // Because we're inside a React-only execution stack, we don't
+          // strictly need to throw here — we could instead modify some internal
+          // work loop state. But using an exception means we don't need to
+          // check for this case on every iteration of the work loop. So doing
+          // it this way moves the check out of the fast path.
+          throw SelectiveHydrationException;
         } else {
           // We have already tried to ping at a higher priority than we're rendering with
           // so if we got here, we must have failed to hydrate at those levels. We must
@@ -2867,25 +2888,22 @@ function updateDehydratedSuspenseComponent(
         }
       }
 
-      // If we have scheduled higher pri work above, this will probably just abort the render
-      // since we now have higher priority work, but in case it doesn't, we need to prepare to
-      // render something, if we time out. Even if that requires us to delete everything and
-      // skip hydration.
-      // Delay having to do this as long as the suspense timeout allows us.
+      // If we did not selectively hydrate, we'll continue rendering without
+      // hydrating. Mark this tree as suspended to prevent it from committing
+      // outside a transition.
+      //
+      // This path should only happen if the hydration lane already suspended.
+      // Currently, it also happens during sync updates because there is no
+      // hydration lane for sync updates.
+      // TODO: We should ideally have a sync hydration lane that we can apply to do
+      // a pass where we hydrate this subtree in place using the previous Context and then
+      // reapply the update afterwards.
       renderDidSuspendDelayIfPossible();
-      const capturedValue = createCapturedValue(
-        new Error(
-          'This Suspense boundary received an update before it finished ' +
-            'hydrating. This caused the boundary to switch to client rendering. ' +
-            'The usual way to fix this is to wrap the original update ' +
-            'in startTransition.',
-        ),
-      );
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
         renderLanes,
-        capturedValue,
+        null,
       );
     } else if (isSuspenseInstancePending(suspenseInstance)) {
       // This component is still pending more data from the server, so we can't hydrate its

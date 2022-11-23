@@ -367,7 +367,7 @@ jobs:
           command: |
             yarn extract-errors
             git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
-  
+
   check_generated_fizz_runtime:
     docker: *docker
     environment: *environment
@@ -498,7 +498,11 @@ workflows:
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
-      - setup
+      - setup:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
       - yarn_flow:
           requires:
             - setup
@@ -509,7 +513,7 @@ workflows:
             - setup
       - check_generated_fizz_runtime:
           requires:
-            - setup    
+            - setup
       - yarn_lint:
           requires:
             - setup

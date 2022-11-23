@@ -5,8 +5,11 @@ let ReactNoop;
 let Scheduler;
 let act;
 let use;
+let useState;
+let useMemo;
 let Suspense;
 let startTransition;
+let pendingTextRequests;
 
 describe('ReactThenable', () => {
   beforeEach(() => {
@@ -17,13 +20,41 @@ describe('ReactThenable', () => {
     Scheduler = require('scheduler');
     act = require('jest-react').act;
     use = React.use;
+    useState = React.useState;
+    useMemo = React.useMemo;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
+
+    pendingTextRequests = new Map();
   });
 
-  function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
-    return props.text;
+  function resolveTextRequests(text) {
+    const requests = pendingTextRequests.get(text);
+    if (requests !== undefined) {
+      pendingTextRequests.delete(text);
+      requests.forEach(resolve => resolve(text));
+    }
+  }
+
+  function getAsyncText(text) {
+    // getAsyncText is completely uncached — it performs a new async operation
+    // every time it's called. During a transition, React should be able to
+    // unwrap it anyway.
+    Scheduler.unstable_yieldValue(`Async text requested [${text}]`);
+    return new Promise(resolve => {
+      const requests = pendingTextRequests.get(text);
+      if (requests !== undefined) {
+        requests.push(resolve);
+        pendingTextRequests.set(text, requests);
+      } else {
+        pendingTextRequests.set(text, [resolve]);
+      }
+    });
+  }
+
+  function Text({text}) {
+    Scheduler.unstable_yieldValue(text);
+    return text;
   }
 
   // This behavior was intentionally disabled to derisk the rollout of `use`.
@@ -32,15 +63,15 @@ describe('ReactThenable', () => {
   // to `use`, so the extra code probably isn't worth it.
   // @gate TODO
   test('if suspended fiber is pinged in a microtask, retry immediately without unwinding the stack', async () => {
-    let resolved = false;
+    let fulfilled = false;
     function Async() {
-      if (resolved) {
+      if (fulfilled) {
         return <Text text="Async" />;
       }
       Scheduler.unstable_yieldValue('Suspend!');
       throw Promise.resolve().then(() => {
         Scheduler.unstable_yieldValue('Resolve in microtask');
-        resolved = true;
+        fulfilled = true;
       });
     }
 
@@ -71,15 +102,15 @@ describe('ReactThenable', () => {
   });
 
   test('if suspended fiber is pinged in a microtask, it does not block a transition from completing', async () => {
-    let resolved = false;
+    let fulfilled = false;
     function Async() {
-      if (resolved) {
+      if (fulfilled) {
         return <Text text="Async" />;
       }
       Scheduler.unstable_yieldValue('Suspend!');
       throw Promise.resolve().then(() => {
         Scheduler.unstable_yieldValue('Resolve in microtask');
-        resolved = true;
+        fulfilled = true;
       });
     }
 
@@ -101,13 +132,13 @@ describe('ReactThenable', () => {
     expect(root).toMatchRenderedOutput('Async');
   });
 
-  test('does not infinite loop if already resolved thenable is thrown', async () => {
-    // An already resolved promise should never be thrown. Since it already
-    // resolved, we shouldn't bother trying to render again — doing so would
+  test('does not infinite loop if already fulfilled thenable is thrown', async () => {
+    // An already fulfilled promise should never be thrown. Since it already
+    // fulfilled, we shouldn't bother trying to render again — doing so would
     // likely lead to an infinite loop. This scenario should only happen if a
     // userspace Suspense library makes an implementation mistake.
 
-    // Create an already resolved thenable
+    // Create an already fulfilled thenable
     const thenable = {
       then(ping) {},
       status: 'fulfilled',
@@ -120,7 +151,7 @@ describe('ReactThenable', () => {
         throw new Error('Infinite loop detected');
       }
       Scheduler.unstable_yieldValue('Suspend!');
-      // This thenable should never be thrown because it already resolved.
+      // This thenable should never be thrown because it already fulfilled.
       // But if it is thrown, React should handle it gracefully.
       throw thenable;
     }
@@ -365,7 +396,7 @@ describe('ReactThenable', () => {
     expect(Scheduler).toHaveYielded([
       // First attempt. The uncached promise suspends.
       'Suspend! [Async]',
-      // Because the promise already resolved, we're able to unwrap the value
+      // Because the promise already fulfilled, we're able to unwrap the value
       // immediately in a microtask.
       //
       // Then we proceed to the rest of the component, which throws an error.
@@ -461,4 +492,388 @@ describe('ReactThenable', () => {
 
     expect(root).toMatchRenderedOutput(<div>Hello world!</div>);
   });
+
+  // @gate enableUseHook || !__DEV__
+  test('warns if use(promise) is wrapped with try/catch block', async () => {
+    function Async() {
+      try {
+        return <Text text={use(Promise.resolve('Async'))} />;
+      } catch (e) {
+        return <Text text="Fallback" />;
+      }
+    }
+
+    spyOnDev(console, 'error');
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Async />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+    });
+
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: `use` was called from inside a try/catch block. This is not ' +
+          'allowed and can lead to unexpected behavior. To handle errors ' +
+          'triggered by `use`, wrap your component in a error boundary.',
+      );
+    }
+  });
+
+  // @gate enableUseHook
+  test('during a transition, can unwrap async operations even if nothing is cached', async () => {
+    function App() {
+      return <Text text={use(getAsyncText('Async'))} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Text text="(empty)" />
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['(empty)']);
+    expect(root).toMatchRenderedOutput('(empty)');
+
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <App />
+          </Suspense>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [Async]']);
+    expect(root).toMatchRenderedOutput('(empty)');
+
+    await act(async () => {
+      resolveTextRequests('Async');
+    });
+    expect(Scheduler).toHaveYielded(['Async text requested [Async]', 'Async']);
+    expect(root).toMatchRenderedOutput('Async');
+  });
+
+  // @gate enableUseHook
+  test("does not prevent a Suspense fallback from showing if it's a new boundary, even during a transition", async () => {
+    function App() {
+      return <Text text={use(getAsyncText('Async'))} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <App />
+          </Suspense>,
+        );
+      });
+    });
+    // Even though the initial render was a transition, it shows a fallback.
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [Async]',
+      'Loading...',
+    ]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Resolve the original data
+    await act(async () => {
+      resolveTextRequests('Async');
+    });
+    // During the retry, a fresh request is initiated. Now we must wait for this
+    // one to finish.
+    // TODO: This is awkward. Intuitively, you might expect for `act` to wait
+    // until the new request has finished loading. But if it's mock IO, as in
+    // this test, how would the developer be able to imperatively flush it if it
+    // wasn't initiated until the current `act` call? Can't think of a better
+    // strategy at the moment.
+    expect(Scheduler).toHaveYielded(['Async text requested [Async]']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    // Flush the second request.
+    await act(async () => {
+      resolveTextRequests('Async');
+    });
+    // This time it finishes because it was during a retry.
+    expect(Scheduler).toHaveYielded(['Async text requested [Async]', 'Async']);
+    expect(root).toMatchRenderedOutput('Async');
+  });
+
+  // @gate enableUseHook
+  test('when waiting for data to resolve, a fresh update will trigger a restart', async () => {
+    function App() {
+      return <Text text={use(getAsyncText('Will never resolve'))} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<Suspense fallback={<Text text="Loading..." />} />);
+    });
+
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <App />
+          </Suspense>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [Will never resolve]',
+    ]);
+
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Text text="Something different" />
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Something different']);
+  });
+
+  // @gate enableUseHook
+  test('while suspended, hooks cannot be called (i.e. current dispatcher is unset correctly)', async () => {
+    function App() {
+      return <Text text={use(getAsyncText('Will never resolve'))} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<Suspense fallback={<Text text="Loading..." />} />);
+    });
+
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <App />
+          </Suspense>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      'Async text requested [Will never resolve]',
+    ]);
+
+    // Calling a hook should error because we're oustide of a component.
+    expect(useState).toThrow(
+      'Invalid hook call. Hooks can only be called inside of the body of a ' +
+        'function component.',
+    );
+  });
+
+  // @gate enableUseHook
+  test('unwraps thenable that fulfills synchronously without suspending', async () => {
+    function App() {
+      const thenable = {
+        then(resolve) {
+          // This thenable immediately resolves, synchronously, without waiting
+          // a microtask.
+          resolve('Hi');
+        },
+      };
+      try {
+        return <Text text={use(thenable)} />;
+      } catch {
+        throw new Error(
+          '`use` should not suspend because the thenable resolved synchronously.',
+        );
+      }
+    }
+    // Because the thenable resolves synchronously, we should be able to finish
+    // rendering synchronously, with no fallback.
+    const root = ReactNoop.createRoot();
+    ReactNoop.flushSync(() => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
+  });
+
+  // @gate enableUseHook
+  test('does not suspend indefinitely if an interleaved update was skipped', async () => {
+    function Child({childShouldSuspend}) {
+      return (
+        <Text
+          text={
+            childShouldSuspend
+              ? use(getAsyncText('Will never resolve'))
+              : 'Child'
+          }
+        />
+      );
+    }
+
+    let setChildShouldSuspend;
+    let setShowChild;
+    function Parent() {
+      const [showChild, _setShowChild] = useState(true);
+      setShowChild = _setShowChild;
+
+      const [childShouldSuspend, _setChildShouldSuspend] = useState(false);
+      setChildShouldSuspend = _setChildShouldSuspend;
+
+      Scheduler.unstable_yieldValue(
+        `childShouldSuspend: ${childShouldSuspend}, showChild: ${showChild}`,
+      );
+      return showChild ? (
+        <Child childShouldSuspend={childShouldSuspend} />
+      ) : (
+        <Text text="(empty)" />
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<Parent />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'childShouldSuspend: false, showChild: true',
+      'Child',
+    ]);
+    expect(root).toMatchRenderedOutput('Child');
+
+    await act(() => {
+      // Perform an update that causes the app to suspend
+      startTransition(() => {
+        setChildShouldSuspend(true);
+      });
+      expect(Scheduler).toFlushAndYieldThrough([
+        'childShouldSuspend: true, showChild: true',
+      ]);
+      // While the update is in progress, schedule another update.
+      startTransition(() => {
+        setShowChild(false);
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      // Because the interleaved update is not higher priority than what we were
+      // already working on, it won't interrupt. The first update will continue,
+      // and will suspend.
+      'Async text requested [Will never resolve]',
+
+      // Instead of waiting for the promise to resolve, React notices there's
+      // another pending update that it hasn't tried yet. It will switch to
+      // rendering that instead.
+      //
+      // This time, the update hides the component that previous was suspending,
+      // so it finishes successfully.
+      'childShouldSuspend: false, showChild: false',
+      '(empty)',
+
+      // Finally, React attempts to render the first update again. It also
+      // finishes successfully, because it was rebased on top of the update that
+      // hid the suspended component.
+      // NOTE: These this render happened to not be entangled with the previous
+      // one. If they had been, this update would have been included in the
+      // previous render, and there wouldn't be an extra one here. This could
+      // change if we change our entanglement heurstics. Semantically, it
+      // shouldn't matter, though in general we try to work on transitions in
+      // parallel whenever possible. So even though in this particular case, the
+      // extra render is unnecessary, it's a nice property that it wasn't
+      // entangled with the other transition.
+      'childShouldSuspend: true, showChild: false',
+      '(empty)',
+    ]);
+    expect(root).toMatchRenderedOutput('(empty)');
+  });
+
+  test('when replaying a suspended component, reuses the hooks computed during the previous attempt', async () => {
+    function ExcitingText({text}) {
+      // This computes the uppercased version of some text. Pretend it's an
+      // expensive operation that we want to reuse.
+      const uppercaseText = useMemo(() => {
+        Scheduler.unstable_yieldValue('Compute uppercase: ' + text);
+        return text.toUpperCase();
+      }, [text]);
+
+      // This adds an exclamation point to the text. Pretend it's an async
+      // operation that is sent to a service for processing.
+      const exclamatoryText = use(getAsyncText(uppercaseText + '!'));
+
+      // This surrounds the text with sparkle emojis. The purpose in this test
+      // is to show that you can suspend in the middle of a sequence of hooks
+      // without breaking anything.
+      const sparklingText = useMemo(() => {
+        Scheduler.unstable_yieldValue('Add sparkles: ' + exclamatoryText);
+        return `✨ ${exclamatoryText} ✨`;
+      }, [exclamatoryText]);
+
+      return <Text text={sparklingText} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<ExcitingText text="Hello" />);
+      });
+    });
+    // Suspends while we wait for the async service to respond.
+    expect(Scheduler).toHaveYielded([
+      'Compute uppercase: Hello',
+      'Async text requested [HELLO!]',
+    ]);
+    expect(root).toMatchRenderedOutput(null);
+
+    // The data is received.
+    await act(async () => {
+      resolveTextRequests('HELLO!');
+    });
+    expect(Scheduler).toHaveYielded([
+      // We shouldn't run the uppercase computation again, because we can reuse
+      // the computation from the previous attempt.
+      // 'Compute uppercase: Hello',
+
+      'Async text requested [HELLO!]',
+      'Add sparkles: HELLO!',
+      '✨ HELLO! ✨',
+    ]);
+  });
+
+  // @gate enableUseHook
+  test(
+    'wrap an async function with useMemo to skip running the function ' +
+      'twice when loading new data',
+    async () => {
+      function App({text}) {
+        const promiseForText = useMemo(async () => getAsyncText(text), [text]);
+        const asyncText = use(promiseForText);
+        return <Text text={asyncText} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        startTransition(() => {
+          root.render(<App text="Hello" />);
+        });
+      });
+      expect(Scheduler).toHaveYielded(['Async text requested [Hello]']);
+      expect(root).toMatchRenderedOutput(null);
+
+      await act(async () => {
+        resolveTextRequests('Hello');
+      });
+      expect(Scheduler).toHaveYielded([
+        // We shouldn't request async text again, because the async function
+        // was memoized
+        // 'Async text requested [Hello]'
+
+        'Hello',
+      ]);
+    },
+  );
 });

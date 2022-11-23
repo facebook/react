@@ -65,8 +65,8 @@ export const enableSchedulingProfiler: boolean =
 // At least this will let us stop shipping <Profiler> implementation to all users.
 export const enableSchedulerDebugging = true;
 export const disableLegacyContext = __EXPERIMENTAL__;
-export const warnAboutStringRefs = false;
-export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const warnAboutStringRefs = true;
+export const warnAboutDefaultPropsOnFunctionComponents = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
 export const enableCache = true;

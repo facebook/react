@@ -127,6 +127,8 @@ export const enableUseMemoCacheHook = __EXPERIMENTAL__;
 export const enableUseEventHook = __EXPERIMENTAL__;
 
 // Test in www before enabling in open source.
+// Enables DOM-server to stream its instruction set as data-attributes
+// (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = false;
 
 // -----------------------------------------------------------------------------
@@ -210,13 +212,13 @@ export const disableTextareaChildren = false;
 // Part of the simplification of React.createElement so we can eventually move
 // from React.createElement to React.jsx
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
-export const warnAboutDefaultPropsOnFunctionComponents = false; // deprecate later, not 18.0
+export const warnAboutDefaultPropsOnFunctionComponents = true; // deprecate later, not 18.0
 
 // Enables a warning when trying to spread a 'key' to an element;
 // a deprecated pattern we want to get rid of in the future
-export const warnAboutSpreadingKeyToJSX = false;
+export const warnAboutSpreadingKeyToJSX = true;
 
-export const warnAboutStringRefs = false;
+export const warnAboutStringRefs = true;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools
