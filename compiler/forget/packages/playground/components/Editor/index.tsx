@@ -86,7 +86,7 @@ export default function Editor() {
         </div>
         <div
           style={{ width: isMobile ? "100%" : `${100 - inputWidthInPct}%` }}
-          className={clsx("flex sm:flex flex-col sm:min-w-[300px]", {
+          className={clsx("flex sm:flex sm:min-w-[300px]", {
             hidden: !showOutputOnMobile,
           })}
         >

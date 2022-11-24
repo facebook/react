@@ -205,7 +205,6 @@ function TextTabContent({
   return (
     <div className="w-full h-full">
       <MonacoEditor
-        path={kind}
         defaultLanguage="javascript"
         value={output}
         options={{

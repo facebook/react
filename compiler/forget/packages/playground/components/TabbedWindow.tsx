@@ -12,43 +12,47 @@ export default function TabbedWindow(props: {
   defaultTab: string | null;
   tabs: { [name: string]: React.ReactNode };
 }): React.ReactElement {
-  let [selected, setSelected] = useState<string | null>(props.defaultTab);
-  if (selected === null) {
-    selected = Object.keys(props.tabs)[0];
-  }
+  return (
+    <div className="flex flex-row h-full">
+      {Object.keys(props.tabs).map((name, index, all) => {
+        return <TabbedWindowItem name={name} key={index} tabs={props.tabs} />;
+      })}
+    </div>
+  );
+}
+
+function TabbedWindowItem({
+  name,
+  tabs,
+}: {
+  name: string;
+  tabs: { [name: string]: React.ReactNode };
+}): React.ReactElement {
+  const [isShow, setIsShow] = useState<boolean>(false);
 
   return (
-    <div className="flex flex-col w-full h-full">
-      <div className="flex flex-none overflow-x-auto border-b border-gray-200 h-9 no-scrollbar">
-        {Object.keys(props.tabs).map((name, index, all) => {
-          const isFirst = index === 0;
-          const isSelected = name === selected;
-          return (
-            <React.Fragment key={name}>
-              {isFirst ? null : (
-                <div className="w-[1px] h-[18px] self-center border-gray-200 border-l mx-1" />
-              )}
-              <div
-                className={clsx(
-                  "h-full border-b-2 border-white px-4 py-0.5 flex items-center",
-                  {
-                    "border-link": isSelected,
-                  }
-                )}
-              >
-                <button
-                  disabled={isSelected}
-                  onClick={() => setSelected(name)}
-                  className="transition-colors duration-150 ease-in"
-                >
-                  {name}
-                </button>
-              </div>
-            </React.Fragment>
-          );
-        })}
-      </div>
-      {props.tabs[selected]}
+    <div key={name} className="flex flex-row">
+      {isShow ? (
+        <div style={{ minWidth: 500 }}>
+          <h2
+            onClick={() => setIsShow(!isShow)}
+            className="p-4 border-b cursor-pointer border-grey-200"
+          >
+            - {name}
+          </h2>
+          {tabs[name]}
+        </div>
+      ) : (
+        <div className="relative items-center h-full px-4 py-8 align-middle border-r border-grey-200">
+          <button
+            style={{ transform: "rotate(90deg) translate(-50%)" }}
+            onClick={() => setIsShow(!isShow)}
+            className="flex-grow-0 w-5 transition-colors duration-150 ease-in"
+          >
+            {`+${name}`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
