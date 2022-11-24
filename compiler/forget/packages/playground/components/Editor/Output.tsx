@@ -7,7 +7,7 @@
 
 import generate from "@babel/generator";
 import MonacoEditor from "@monaco-editor/react";
-import { Diagnostic, HIR, OutputKind } from "babel-plugin-react-forget";
+import { Diagnostic, HIR } from "babel-plugin-react-forget";
 import prettier from "prettier";
 import prettierParserBabel from "prettier/parser-babel";
 import { memo, useMemo } from "react";
@@ -126,47 +126,32 @@ function Output({ store }: Props) {
       defaultTab="HIR"
       tabs={{
         HIR: (
-          <TextTabContent
-            output={compilerOutput.hirOutput}
-            kind={OutputKind.IR}
-          ></TextTabContent>
+          <TextTabContent output={compilerOutput.hirOutput}></TextTabContent>
         ),
         SSA: (
-          <TextTabContent
-            output={compilerOutput.ssaOutput}
-            kind={OutputKind.IR}
-          ></TextTabContent>
+          <TextTabContent output={compilerOutput.ssaOutput}></TextTabContent>
         ),
         EliminateRedundantPhi: (
           <TextTabContent
             output={compilerOutput.eliminateRedundantPhiOutput}
-            kind={OutputKind.IR}
           ></TextTabContent>
         ),
         InferReferenceEffects: (
           <TextTabContent
             output={compilerOutput.inferReferenceEffectsOutput}
-            kind={OutputKind.IR}
           ></TextTabContent>
         ),
         InferMutableRanges: (
           <TextTabContent
             output={compilerOutput.inferMutableRangesOutput}
-            kind={OutputKind.IR}
           ></TextTabContent>
         ),
         LeaveSSA: (
           <TextTabContent
             output={compilerOutput.leaveSSAOutput}
-            kind={OutputKind.IR}
           ></TextTabContent>
         ),
-        JS: (
-          <TextTabContent
-            output={compilerOutput.codegenOutput}
-            kind={OutputKind.JS}
-          />
-        ),
+        JS: <TextTabContent output={compilerOutput.codegenOutput} />,
         SourceMap: (
           <>
             {compilerOutput.sourceMapUrl && (
@@ -195,13 +180,7 @@ function getSourceMapUrl(code: string, map: string): string | null {
   )}`;
 }
 
-function TextTabContent({
-  output,
-  kind,
-}: {
-  output: string;
-  kind: OutputKind;
-}) {
+function TextTabContent({ output }: { output: string }) {
   return (
     <div className="w-full h-full">
       <MonacoEditor
