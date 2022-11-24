@@ -200,21 +200,15 @@ describe('measureLayout', () => {
 });
 
 describe('setNativeProps', () => {
-  test('setNativeProps(...) emits a warning', () => {
+  test('setNativeProps(...) invokes setNativeProps on Fabric UIManager', () => {
     const {
       UIManager,
     } = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
 
     const [[fooRef]] = mockRenderKeys([['foo']]);
+    fooRef.setNativeProps({});
 
-    expect(() => {
-      fooRef.setNativeProps({});
-    }).toErrorDev(
-      ['Warning: setNativeProps is not currently supported in Fabric'],
-      {
-        withoutStack: true,
-      },
-    );
     expect(UIManager.updateView).not.toBeCalled();
+    expect(nativeFabricUIManager.setNativeProps).toHaveBeenCalledTimes(1);
   });
 });

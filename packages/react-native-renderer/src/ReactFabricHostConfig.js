@@ -52,6 +52,7 @@ const {
   unstable_DefaultEventPriority: FabricDefaultPriority,
   unstable_DiscreteEventPriority: FabricDiscretePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
+  setNativeProps,
 } = nativeFabricUIManager;
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
@@ -207,13 +208,10 @@ class ReactFabricHostComponent {
   }
 
   setNativeProps(nativeProps: Object) {
-    if (__DEV__) {
-      console.error(
-        'Warning: setNativeProps is not currently supported in Fabric',
-      );
+    const {stateNode} = this._internalInstanceHandle;
+    if (stateNode != null) {
+      setNativeProps(stateNode.node, nativeProps);
     }
-
-    return;
   }
 
   // This API (addEventListener, removeEventListener) attempts to adhere to the
