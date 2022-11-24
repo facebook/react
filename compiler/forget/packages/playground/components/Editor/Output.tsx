@@ -10,7 +10,7 @@ import MonacoEditor from "@monaco-editor/react";
 import { Diagnostic, HIR, OutputKind } from "babel-plugin-react-forget";
 import prettier from "prettier";
 import prettierParserBabel from "prettier/parser-babel";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import type { Store } from "../../lib/stores";
 import TabbedWindow from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
@@ -36,14 +36,26 @@ type Props = {
   updateDiagnostics: (newDiags: Diagnostic[]) => void;
 };
 
-// TODO(gsn: Update diagnostics ƒrom HIR output
-function Output({ store }: Props) {
-  const astFunctions = parseFunctions(store.source);
-  if (astFunctions.length === 0) {
-    return <div></div>;
-  }
+type CompilerOutput = {
+  ssaOutput: string;
+  hirOutput: string;
+  eliminateRedundantPhiOutput: string;
+  inferReferenceEffectsOutput: string;
+  inferMutableRangesOutput: string;
+  leaveSSAOutput: string;
+  codegenOutput: string;
+  sourceMapUrl: string | null;
+};
 
+type CompilerError = string;
+
+function compile(source: string): CompilerOutput | CompilerError {
   try {
+    const astFunctions = parseFunctions(source);
+    if (astFunctions.length === 0) {
+      return "";
+    }
+
     // TODO: Handle multiple functions
     const func = astFunctions[0];
     const env = new Environment();
@@ -74,7 +86,7 @@ function Output({ store }: Props) {
         sourceMaps: true,
         sourceFileName: "input.js",
       },
-      store.source
+      source
     );
     const sourceMapUrl = getSourceMapUrl(
       generated.code,
@@ -85,65 +97,90 @@ function Output({ store }: Props) {
       parser: "babel",
       plugins: [prettierParserBabel],
     });
-    return (
-      <TabbedWindow
-        defaultTab="HIR"
-        tabs={{
-          HIR: (
-            <TextTabContent
-              output={hirOutput}
-              kind={OutputKind.IR}
-            ></TextTabContent>
-          ),
-          SSA: (
-            <TextTabContent
-              output={ssaOutput}
-              kind={OutputKind.IR}
-            ></TextTabContent>
-          ),
-          EliminateRedundantPhi: (
-            <TextTabContent
-              output={eliminateRedundantPhiOutput}
-              kind={OutputKind.IR}
-            ></TextTabContent>
-          ),
-          InferReferenceEffects: (
-            <TextTabContent
-              output={inferReferenceEffectsOutput}
-              kind={OutputKind.IR}
-            ></TextTabContent>
-          ),
-          InferMutableRanges: (
-            <TextTabContent
-              output={inferMutableRangesOutput}
-              kind={OutputKind.IR}
-            ></TextTabContent>
-          ),
-          LeaveSSA: (
-            <TextTabContent
-              output={leaveSSAOutput}
-              kind={OutputKind.IR}
-            ></TextTabContent>
-          ),
-          JS: <TextTabContent output={codegenOutput} kind={OutputKind.JS} />,
-          SourceMap: (
-            <>
-              {" "}
-              {sourceMapUrl && (
-                <iframe
-                  src={sourceMapUrl}
-                  className="w-full h-96"
-                  title="Generated Code"
-                />
-              )}
-            </>
-          ),
-        }}
-      />
-    );
+
+    return {
+      hirOutput,
+      ssaOutput,
+      eliminateRedundantPhiOutput,
+      inferReferenceEffectsOutput,
+      inferMutableRangesOutput,
+      leaveSSAOutput,
+      codegenOutput,
+      sourceMapUrl,
+    };
   } catch (e: any) {
-    return <div>error: ${e.toString()}</div>;
+    return e.toString();
   }
+}
+
+// TODO(gsn: Update diagnostics ƒrom HIR output
+function Output({ store }: Props) {
+  const compilerOutput = useMemo(() => compile(store.source), [store.source]);
+  if (typeof compilerOutput === "string") {
+    if (compilerOutput === "") return <div></div>;
+    return <div>error: ${compilerOutput}</div>;
+  }
+
+  return (
+    <TabbedWindow
+      defaultTab="HIR"
+      tabs={{
+        HIR: (
+          <TextTabContent
+            output={compilerOutput.hirOutput}
+            kind={OutputKind.IR}
+          ></TextTabContent>
+        ),
+        SSA: (
+          <TextTabContent
+            output={compilerOutput.ssaOutput}
+            kind={OutputKind.IR}
+          ></TextTabContent>
+        ),
+        EliminateRedundantPhi: (
+          <TextTabContent
+            output={compilerOutput.eliminateRedundantPhiOutput}
+            kind={OutputKind.IR}
+          ></TextTabContent>
+        ),
+        InferReferenceEffects: (
+          <TextTabContent
+            output={compilerOutput.inferReferenceEffectsOutput}
+            kind={OutputKind.IR}
+          ></TextTabContent>
+        ),
+        InferMutableRanges: (
+          <TextTabContent
+            output={compilerOutput.inferMutableRangesOutput}
+            kind={OutputKind.IR}
+          ></TextTabContent>
+        ),
+        LeaveSSA: (
+          <TextTabContent
+            output={compilerOutput.leaveSSAOutput}
+            kind={OutputKind.IR}
+          ></TextTabContent>
+        ),
+        JS: (
+          <TextTabContent
+            output={compilerOutput.codegenOutput}
+            kind={OutputKind.JS}
+          />
+        ),
+        SourceMap: (
+          <>
+            {compilerOutput.sourceMapUrl && (
+              <iframe
+                src={compilerOutput.sourceMapUrl}
+                className="w-full h-96"
+                title="Generated Code"
+              />
+            )}
+          </>
+        ),
+      }}
+    />
+  );
 }
 
 function utf16ToUTF8(s: string): string {
