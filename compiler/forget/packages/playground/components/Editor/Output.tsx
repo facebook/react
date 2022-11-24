@@ -5,21 +5,28 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import TabbedWindow from "../TabbedWindow";
+import generate from "@babel/generator";
 import MonacoEditor from "@monaco-editor/react";
-import {
-  CompilerOutputs,
-  OutputKind,
-  stringifyCompilerOutputs,
-  type Diagnostic,
-} from "babel-plugin-react-forget";
-import { memo, useEffect, useMemo } from "react";
-import compile from "../../lib/compilerDriver";
+import { Diagnostic, HIR, OutputKind } from "babel-plugin-react-forget";
+import prettier from "prettier";
+import prettierParserBabel from "prettier/parser-babel";
+import { memo } from "react";
 import type { Store } from "../../lib/stores";
-import GraphView from "../GraphView";
+import TabbedWindow from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
-import HIRTabContent from "./HIRTabContent";
 
+const {
+  parseFunctions,
+  Environment,
+  enterSSA,
+  eliminateRedundantPhi,
+  inferReferenceEffects,
+  inferMutableRanges,
+  leaveSSA,
+  lower,
+  printHIR,
+  codegen,
+} = HIR;
 const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
@@ -29,74 +36,146 @@ type Props = {
   updateDiagnostics: (newDiags: Diagnostic[]) => void;
 };
 
-function Output({ store, updateDiagnostics }: Props) {
-  const { outputs, diagnostics } = useMemo(
-    () => compile(store.source, store.compilerFlags),
-    [store]
-  );
-  useEffect(() => {
-    updateDiagnostics(diagnostics);
-  }, [diagnostics, updateDiagnostics]);
-  return (
-    <TabbedWindow
-      defaultTab="HIR"
-      tabs={{
-        IR: <TextTabContent outputs={outputs} kind={OutputKind.IR} />,
-        HIR: <HIRTabContent source={store.source} />,
-        CFG: <TextTabContent outputs={outputs} kind={OutputKind.CFG} />,
-        ValGraph: (
-          <GraphTabContent outputs={outputs} kind={OutputKind.ValGraph} />
-        ),
-        SCCGraph: (
-          <GraphTabContent outputs={outputs} kind={OutputKind.SCCGraph} />
-        ),
-        RedGraph: (
-          <GraphTabContent outputs={outputs} kind={OutputKind.RedGraph} />
-        ),
-        LIR: <TextTabContent outputs={outputs} kind={OutputKind.LIR} />,
-        JS: <TextTabContent outputs={outputs} kind={OutputKind.JS} />,
-      }}
-    />
-  );
+// TODO(gsn: Update diagnostics ƒrom HIR output
+function Output({ store }: Props) {
+  const astFunctions = parseFunctions(store.source);
+  if (astFunctions.length === 0) {
+    return <div></div>;
+  }
+
+  try {
+    // TODO: Handle multiple functions
+    const func = astFunctions[0];
+    const env = new Environment();
+    const ir = lower(func, env);
+
+    const hirOutput = printHIR(ir.body);
+
+    enterSSA(ir, env);
+    const ssaOutput = printHIR(ir.body);
+
+    eliminateRedundantPhi(ir);
+    const eliminateRedundantPhiOutput = printHIR(ir.body);
+
+    inferReferenceEffects(ir);
+    const inferReferenceEffectsOutput = printHIR(ir.body);
+
+    inferMutableRanges(ir);
+    const inferMutableRangesOutput = printHIR(ir.body);
+
+    leaveSSA(ir);
+    const leaveSSAOutput = printHIR(ir.body);
+
+    codegen(ir);
+    const ast = codegen(ir);
+    const generated = generate(
+      ast,
+      {
+        sourceMaps: true,
+        sourceFileName: "input.js",
+      },
+      store.source
+    );
+    const sourceMapUrl = getSourceMapUrl(
+      generated.code,
+      JSON.stringify(generated.map)
+    );
+    const codegenOutput = prettier.format(generated.code, {
+      semi: true,
+      parser: "babel",
+      plugins: [prettierParserBabel],
+    });
+    return (
+      <TabbedWindow
+        defaultTab="HIR"
+        tabs={{
+          HIR: (
+            <TextTabContent
+              output={hirOutput}
+              kind={OutputKind.IR}
+            ></TextTabContent>
+          ),
+          SSA: (
+            <TextTabContent
+              output={ssaOutput}
+              kind={OutputKind.IR}
+            ></TextTabContent>
+          ),
+          EliminateRedundantPhi: (
+            <TextTabContent
+              output={eliminateRedundantPhiOutput}
+              kind={OutputKind.IR}
+            ></TextTabContent>
+          ),
+          InferReferenceEffects: (
+            <TextTabContent
+              output={inferReferenceEffectsOutput}
+              kind={OutputKind.IR}
+            ></TextTabContent>
+          ),
+          InferMutableRanges: (
+            <TextTabContent
+              output={inferMutableRangesOutput}
+              kind={OutputKind.IR}
+            ></TextTabContent>
+          ),
+          LeaveSSA: (
+            <TextTabContent
+              output={leaveSSAOutput}
+              kind={OutputKind.IR}
+            ></TextTabContent>
+          ),
+          JS: <TextTabContent output={codegenOutput} kind={OutputKind.JS} />,
+          SourceMap: (
+            <>
+              {" "}
+              {sourceMapUrl && (
+                <iframe
+                  src={sourceMapUrl}
+                  className="w-full h-96"
+                  title="Generated Code"
+                />
+              )}
+            </>
+          ),
+        }}
+      />
+    );
+  } catch (e: any) {
+    return <div>error: ${e.toString()}</div>;
+  }
+}
+
+function utf16ToUTF8(s: string): string {
+  return unescape(encodeURIComponent(s));
+}
+
+function getSourceMapUrl(code: string, map: string): string | null {
+  code = utf16ToUTF8(code);
+  map = utf16ToUTF8(map);
+  return `https://evanw.github.io/source-map-visualization/#${btoa(
+    `${code.length}\0${code}${map.length}\0${map}`
+  )}`;
 }
 
 function TextTabContent({
-  outputs,
+  output,
   kind,
 }: {
-  outputs: CompilerOutputs;
+  output: string;
   kind: OutputKind;
 }) {
-  const prettyOutputs = useMemo(
-    () => stringifyCompilerOutputs(outputs),
-    [outputs]
-  );
-
   return (
     <div className="w-full h-full">
       <MonacoEditor
         path={kind}
         defaultLanguage="javascript"
-        value={prettyOutputs[kind] ?? "(Empty)"}
+        value={output}
         options={{
           ...monacoOptions,
           readOnly: true,
         }}
       />
-    </div>
-  );
-}
-
-function GraphTabContent({
-  outputs,
-  kind,
-}: {
-  outputs: CompilerOutputs;
-  kind: OutputKind.ValGraph | OutputKind.SCCGraph | OutputKind.RedGraph;
-}) {
-  return (
-    <div className="w-full h-full overflow-auto">
-      <GraphView graphs={outputs[kind]} />
     </div>
   );
 }

@@ -21,7 +21,6 @@ import {
   type Store,
 } from "../../lib/stores";
 import { useStore, useStoreDispatch } from "../StoreContext";
-import CompilerFlagsEditor from "./CompilerFlagsEditor";
 import Input from "./Input";
 import Output from "./Output";
 
