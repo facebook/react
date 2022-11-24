@@ -4,17 +4,21 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
 import generate from "@babel/generator";
 import MonacoEditor from "@monaco-editor/react";
-import { Diagnostic, HIR } from "babel-plugin-react-forget";
+import {
+  Diagnostic,
+  HIR,
+  OutputKind,
+  stringifyCompilerOutputs,
+} from "babel-plugin-react-forget";
 import prettier from "prettier";
 import prettierParserBabel from "prettier/parser-babel";
 import { memo, useMemo } from "react";
+import compileOldArchitecture from "../../lib/compilerDriver";
 import type { Store } from "../../lib/stores";
 import TabbedWindow from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
-
 const {
   parseFunctions,
   Environment,
@@ -116,6 +120,17 @@ function compile(source: string): CompilerOutput | CompilerError {
 // TODO(gsn: Update diagnostics ƒrom HIR output
 function Output({ store }: Props) {
   const compilerOutput = useMemo(() => compile(store.source), [store.source]);
+  const { outputs: oldCompilerOutputs } = useMemo(
+    () => compileOldArchitecture(store.source, store.compilerFlags),
+    [store]
+  );
+  const prettyOldCompilerOutput = useMemo(
+    () => stringifyCompilerOutputs(oldCompilerOutputs),
+    [oldCompilerOutputs]
+  );
+  const prettyOldCompilerOutputJS =
+    prettyOldCompilerOutput[OutputKind.JS] ?? "(Empty)";
+
   if (typeof compilerOutput === "string") {
     if (compilerOutput === "") return <div></div>;
     return <div>error: ${compilerOutput}</div>;
@@ -163,6 +178,7 @@ function Output({ store }: Props) {
             )}
           </>
         ),
+        OldArchitecture: <TextTabContent output={prettyOldCompilerOutputJS} />,
       }}
     />
   );
