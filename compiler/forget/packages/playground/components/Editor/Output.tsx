@@ -211,6 +211,7 @@ function TextTabContent({
         options={{
           ...monacoOptions,
           readOnly: true,
+          lineNumbers: "off",
         }}
       />
     </div>
