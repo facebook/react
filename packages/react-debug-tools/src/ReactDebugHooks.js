@@ -172,8 +172,11 @@ function useCacheRefresh(): () => void {
 }
 
 function useLayoutEffect(
-  create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
+  create: (() => {}) | (() => void) | void,
+  identity: Array<mixed> | void | null,
+  update: (({}) => void) | void,
+  updateDeps: Array<mixed> | void,
+  destroy: (({}) => void) | void,
 ): void {
   nextHook();
   hookLog.push({
@@ -196,8 +199,11 @@ function useInsertionEffect(
 }
 
 function useEffect(
-  create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
+  create: (() => {}) | (() => void) | void,
+  identity: Array<mixed> | void | null,
+  update: (({}) => void) | void,
+  updateDeps: Array<mixed> | void,
+  destroy: (({}) => void) | void,
 ): void {
   nextHook();
   hookLog.push({primitive: 'Effect', stackError: new Error(), value: create});

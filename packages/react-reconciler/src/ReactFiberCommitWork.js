@@ -21,6 +21,7 @@ import {NoTimestamp, SyncLane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
+import {isCRUDEffect} from './ReactFiberHooks';
 import type {Wakeable} from 'shared/ReactTypes';
 import {isOffscreenManual} from './ReactFiberOffscreenComponent';
 import type {
@@ -347,10 +348,11 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
 function safelyCallDestroy(
   current: Fiber,
   nearestMountedAncestor: Fiber | null,
-  destroy: () => void,
+  destroy: any => void,
+  resource: {} | void | null,
 ) {
   try {
-    destroy();
+    destroy(resource != null ? resource : undefined);
   } catch (error) {
     captureCommitPhaseError(current, nearestMountedAncestor, error);
   }
@@ -580,35 +582,49 @@ function commitHookEffectListUnmount(
     let effect = firstEffect;
     do {
       if ((effect.tag & flags) === flags) {
-        // Unmount
-        const destroy = effect.destroy;
-        effect.destroy = undefined;
-        if (destroy !== undefined) {
-          if (enableSchedulingProfiler) {
-            if ((flags & HookPassive) !== NoHookEffect) {
-              markComponentPassiveEffectUnmountStarted(finishedWork);
-            } else if ((flags & HookLayout) !== NoHookEffect) {
-              markComponentLayoutEffectUnmountStarted(finishedWork);
-            }
+        if (isCRUDEffect(effect)) {
+          const resource = effect.resource;
+          if (resource != null && effect.destroy) {
+            const destroy: ({}) => void = effect.destroy;
+            effect.resource = null;
+            safelyCallDestroy(
+              finishedWork,
+              nearestMountedAncestor,
+              destroy,
+              resource,
+            );
           }
+        } else {
+          // Unmount
+          const destroy = effect.destroy;
+          effect.destroy = undefined;
+          if (destroy != null) {
+            if (enableSchedulingProfiler) {
+              if ((flags & HookPassive) !== NoHookEffect) {
+                markComponentPassiveEffectUnmountStarted(finishedWork);
+              } else if ((flags & HookLayout) !== NoHookEffect) {
+                markComponentLayoutEffectUnmountStarted(finishedWork);
+              }
+            }
 
-          if (__DEV__) {
-            if ((flags & HookInsertion) !== NoHookEffect) {
-              setIsRunningInsertionEffect(true);
+            if (__DEV__) {
+              if ((flags & HookInsertion) !== NoHookEffect) {
+                setIsRunningInsertionEffect(true);
+              }
             }
-          }
-          safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
-          if (__DEV__) {
-            if ((flags & HookInsertion) !== NoHookEffect) {
-              setIsRunningInsertionEffect(false);
+            safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+            if (__DEV__) {
+              if ((flags & HookInsertion) !== NoHookEffect) {
+                setIsRunningInsertionEffect(false);
+              }
             }
-          }
 
-          if (enableSchedulingProfiler) {
-            if ((flags & HookPassive) !== NoHookEffect) {
-              markComponentPassiveEffectUnmountStopped();
-            } else if ((flags & HookLayout) !== NoHookEffect) {
-              markComponentLayoutEffectUnmountStopped();
+            if (enableSchedulingProfiler) {
+              if ((flags & HookPassive) !== NoHookEffect) {
+                markComponentPassiveEffectUnmountStopped();
+              } else if ((flags & HookLayout) !== NoHookEffect) {
+                markComponentLayoutEffectUnmountStopped();
+              }
             }
           }
         }
@@ -641,63 +657,80 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
             setIsRunningInsertionEffect(true);
           }
         }
-        effect.destroy = create();
-        if (__DEV__) {
-          if ((flags & HookInsertion) !== NoHookEffect) {
-            setIsRunningInsertionEffect(false);
-          }
-        }
 
-        if (enableSchedulingProfiler) {
-          if ((flags & HookPassive) !== NoHookEffect) {
-            markComponentPassiveEffectMountStopped();
-          } else if ((flags & HookLayout) !== NoHookEffect) {
-            markComponentLayoutEffectMountStopped();
+        if (isCRUDEffect(effect)) {
+          if (create !== undefined) {
+            effect.resource = create();
+            if (__DEV__) {
+              if (typeof effect.resource !== 'object') {
+                console.error('must return object');
+              }
+            }
+          } else {
+            const update: ({}) => void = (effect.update: any);
+            const resource: {} = (effect.resource: any);
+            update(resource);
           }
-        }
+        } else {
+          // $FlowFixMe
+          effect.destroy = create();
+          if (__DEV__) {
+            if ((flags & HookInsertion) !== NoHookEffect) {
+              setIsRunningInsertionEffect(false);
+            }
+          }
 
-        if (__DEV__) {
-          const destroy = effect.destroy;
-          if (destroy !== undefined && typeof destroy !== 'function') {
-            let hookName;
-            if ((effect.tag & HookLayout) !== NoFlags) {
-              hookName = 'useLayoutEffect';
-            } else if ((effect.tag & HookInsertion) !== NoFlags) {
-              hookName = 'useInsertionEffect';
-            } else {
-              hookName = 'useEffect';
+          if (enableSchedulingProfiler) {
+            if ((flags & HookPassive) !== NoHookEffect) {
+              markComponentPassiveEffectMountStopped();
+            } else if ((flags & HookLayout) !== NoHookEffect) {
+              markComponentLayoutEffectMountStopped();
             }
-            let addendum;
-            if (destroy === null) {
-              addendum =
-                ' You returned null. If your effect does not require clean ' +
-                'up, return undefined (or nothing).';
-            } else if (typeof destroy.then === 'function') {
-              addendum =
-                '\n\nIt looks like you wrote ' +
-                hookName +
-                '(async () => ...) or returned a Promise. ' +
-                'Instead, write the async function inside your effect ' +
-                'and call it immediately:\n\n' +
-                hookName +
-                '(() => {\n' +
-                '  async function fetchData() {\n' +
-                '    // You can await here\n' +
-                '    const response = await MyAPI.getData(someId);\n' +
-                '    // ...\n' +
-                '  }\n' +
-                '  fetchData();\n' +
-                `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-                'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching';
-            } else {
-              addendum = ' You returned: ' + destroy;
+          }
+
+          if (__DEV__) {
+            const destroy = effect.destroy;
+            if (destroy !== undefined && typeof destroy !== 'function') {
+              let hookName;
+              if ((effect.tag & HookLayout) !== NoFlags) {
+                hookName = 'useLayoutEffect';
+              } else if ((effect.tag & HookInsertion) !== NoFlags) {
+                hookName = 'useInsertionEffect';
+              } else {
+                hookName = 'useEffect';
+              }
+              let addendum;
+              if (destroy === null) {
+                addendum =
+                  ' You returned null. If your effect does not require clean ' +
+                  'up, return undefined (or nothing).';
+              } else if (typeof destroy.then === 'function') {
+                addendum =
+                  '\n\nIt looks like you wrote ' +
+                  hookName +
+                  '(async () => ...) or returned a Promise. ' +
+                  'Instead, write the async function inside your effect ' +
+                  'and call it immediately:\n\n' +
+                  hookName +
+                  '(() => {\n' +
+                  '  async function fetchData() {\n' +
+                  '    // You can await here\n' +
+                  '    const response = await MyAPI.getData(someId);\n' +
+                  '    // ...\n' +
+                  '  }\n' +
+                  '  fetchData();\n' +
+                  `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
+                  'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching';
+              } else {
+                addendum = ' You returned: ' + destroy;
+              }
+              console.error(
+                '%s must not return anything besides a function, ' +
+                  'which is used for clean-up.%s',
+                hookName,
+                addendum,
+              );
             }
-            console.error(
-              '%s must not return anything besides a function, ' +
-                'which is used for clean-up.%s',
-              hookName,
-              addendum,
-            );
           }
         }
       }
@@ -2203,13 +2236,14 @@ function commitDeletionEffectsOnFiber(
 
             let effect = firstEffect;
             do {
-              const {destroy, tag} = effect;
+              const {destroy, tag, resource} = effect;
               if (destroy !== undefined) {
                 if ((tag & HookInsertion) !== NoHookEffect) {
                   safelyCallDestroy(
                     deletedFiber,
                     nearestMountedAncestor,
                     destroy,
+                    resource,
                   );
                 } else if ((tag & HookLayout) !== NoHookEffect) {
                   if (enableSchedulingProfiler) {
@@ -2222,6 +2256,7 @@ function commitDeletionEffectsOnFiber(
                       deletedFiber,
                       nearestMountedAncestor,
                       destroy,
+                      resource,
                     );
                     recordLayoutEffectDuration(deletedFiber);
                   } else {
@@ -2229,6 +2264,7 @@ function commitDeletionEffectsOnFiber(
                       deletedFiber,
                       nearestMountedAncestor,
                       destroy,
+                      resource,
                     );
                   }
 

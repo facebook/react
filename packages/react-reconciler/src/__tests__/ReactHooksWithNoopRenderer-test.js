@@ -4472,4 +4472,250 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     expect(Scheduler).toHaveYielded(['Render: 0']);
   });
+
+  describe('useEffect and useLayoutEffect CRUD overload', () => {
+    let _setOptions;
+    let _destroy;
+    let _constructor;
+
+    beforeEach(() => {
+      _setOptions = jest.fn();
+      _destroy = jest.fn();
+      _constructor = jest.fn();
+    });
+
+    class Resource {
+      _options = {};
+      _id = null;
+      _isDestroyed = false;
+
+      constructor(id, options) {
+        this._options = options;
+        this._id = id;
+        _constructor(id, options);
+      }
+
+      setOptions(options) {
+        this._options = options;
+        _setOptions(options);
+      }
+
+      destroy() {
+        _destroy();
+      }
+    }
+
+    it('calls useEffect update and destroy methods', () => {
+      function Component({id, options}) {
+        useEffect(
+          () => {
+            return new Resource(id, options);
+          },
+          [id],
+          self => {
+            self.setOptions(options);
+          },
+          [options],
+          self => {
+            self.destroy();
+          },
+        );
+
+        return null;
+      }
+
+      act(() => {
+        ReactNoop.render(<Component id="id1" options={{name: 'John'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(1);
+      expect(_setOptions).toHaveBeenCalledTimes(0);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        ReactNoop.render(<Component id="id1" options={{name: 'Igor'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(1);
+      expect(_setOptions).toHaveBeenCalledTimes(1);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        ReactNoop.render(<Component id="id1" options={{name: 'Mickey'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(1);
+      expect(_setOptions).toHaveBeenCalledTimes(2);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        ReactNoop.render(<Component id="id2" options={{name: 'John'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(2);
+      expect(_setOptions).toHaveBeenCalledTimes(2);
+      expect(_destroy).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        ReactNoop.render(null);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(2);
+      expect(_setOptions).toHaveBeenCalledTimes(2);
+      expect(_destroy).toHaveBeenCalledTimes(2);
+    });
+
+    it('calls useEffect update method on every render', () => {
+      function Component({id, options}) {
+        useEffect(
+          () => {
+            return new Resource(id, options);
+          },
+          [id],
+          self => {
+            self.setOptions(options);
+          },
+        );
+
+        return null;
+      }
+
+      act(() => {
+        ReactNoop.render(<Component id="id1" options={{name: 'John'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(1);
+      expect(_setOptions).toHaveBeenCalledTimes(0);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        ReactNoop.render(<Component id="id1" options={{name: 'John'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(1);
+      expect(_setOptions).toHaveBeenCalledTimes(1);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        ReactNoop.render(<Component id="id2" options={{name: 'John'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(2);
+      expect(_setOptions).toHaveBeenCalledTimes(1);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        ReactNoop.render(<Component id="id2" options={{name: 'Sarah'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(2);
+      expect(_setOptions).toHaveBeenCalledTimes(2);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+    });
+
+    it('calls useEffect methods only on mount/unmount', () => {
+      function Component({id, options}) {
+        useEffect(
+          () => {
+            return new Resource(id, options);
+          },
+          [],
+          self => {
+            self.setOptions(options);
+          },
+          // TODO: does empty dependencies make sense?
+          [],
+          self => {
+            self.destroy();
+          },
+        );
+
+        return null;
+      }
+
+      act(() => {
+        ReactNoop.render(<Component id="id1" options={{name: 'John'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(1);
+      expect(_setOptions).toHaveBeenCalledTimes(0);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        ReactNoop.render(<Component id="id2" options={{name: 'Becky'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(1);
+      expect(_setOptions).toHaveBeenCalledTimes(0);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        ReactNoop.render(null);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(1);
+      expect(_setOptions).toHaveBeenCalledTimes(0);
+      expect(_destroy).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls useLayoutEffect update and destroy methods', () => {
+      function Component({id, options}) {
+        useLayoutEffect(
+          () => {
+            return new Resource(id, options);
+          },
+          [id],
+          self => {
+            self.setOptions(options);
+          },
+          [options],
+          self => {
+            self.destroy();
+          },
+        );
+
+        return null;
+      }
+
+      act(() => {
+        ReactNoop.render(<Component id="id1" options={{name: 'John'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(1);
+      expect(_setOptions).toHaveBeenCalledTimes(0);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        ReactNoop.render(<Component id="id1" options={{name: 'Igor'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(1);
+      expect(_setOptions).toHaveBeenCalledTimes(1);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        ReactNoop.render(<Component id="id1" options={{name: 'Mickey'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(1);
+      expect(_setOptions).toHaveBeenCalledTimes(2);
+      expect(_destroy).toHaveBeenCalledTimes(0);
+
+      act(() => {
+        ReactNoop.render(<Component id="id2" options={{name: 'John'}} />);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(2);
+      expect(_setOptions).toHaveBeenCalledTimes(2);
+      expect(_destroy).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        ReactNoop.render(null);
+      });
+
+      expect(_constructor).toHaveBeenCalledTimes(2);
+      expect(_setOptions).toHaveBeenCalledTimes(2);
+      expect(_destroy).toHaveBeenCalledTimes(2);
+    });
+  });
 });

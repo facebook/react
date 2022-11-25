@@ -181,12 +181,18 @@ export type Hook = {
 
 export type Effect = {
   tag: HookFlags,
-  create: () => (() => void) | void,
-  destroy: (() => void) | void,
-  deps: Array<mixed> | void | null,
+  create: (() => {}) | (() => void) | void,
+  destroy: (({}) => void) | (() => void) | void,
+  update: (({}) => void) | void,
+  identity: Array<mixed> | void | null,
+  updateDeps: Array<mixed> | void,
   next: Effect,
+  resource: {} | void | null,
 };
 
+export function isCRUDEffect(effect: Effect): boolean {
+  return effect.update != null;
+}
 type StoreInstance<T> = {
   value: T,
   getSnapshot: () => T,
@@ -1647,6 +1653,7 @@ function mountSyncExternalStore<T>(
   fiber.flags |= PassiveEffect;
   pushEffect(
     HookHasEffect | HookPassive,
+    // $FlowFixMe[incompatible-call]
     updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
     undefined,
     null,
@@ -1704,6 +1711,7 @@ function updateSyncExternalStore<T>(
     fiber.flags |= PassiveEffect;
     pushEffect(
       HookHasEffect | HookPassive,
+      // $FlowFixMe[incompatible-call]
       updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
       undefined,
       null,
@@ -1849,15 +1857,20 @@ function rerenderState<S>(
 
 function pushEffect(
   tag: HookFlags,
-  create: () => (() => void) | void,
-  destroy: (() => void) | void,
-  deps: Array<mixed> | void | null,
+  create: (() => {}) | (() => void) | void,
+  destroy: (() => void) | (({}) => void) | void,
+  identityDependencies: Array<mixed> | void | null,
+  update: (({}) => void) | void,
+  updateDeps: Array<mixed> | void,
 ): Effect {
   const effect: Effect = {
     tag,
     create,
     destroy,
-    deps,
+    update,
+    identity: identityDependencies,
+    updateDeps,
+    resource: undefined,
     // Circular
     next: (null: any),
   };
@@ -1974,8 +1987,11 @@ function updateRef<T>(initialValue: T): {current: T} {
 function mountEffectImpl(
   fiberFlags: Flags,
   hookFlags: HookFlags,
-  create: () => (() => void) | void,
+  create: (() => {}) | (() => void) | void,
   deps: Array<mixed> | void | null,
+  update: (({}) => void) | void,
+  updateDeps: Array<mixed> | void,
+  destroy: (void => void) | (({}) => void) | void,
 ): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
@@ -1983,46 +1999,106 @@ function mountEffectImpl(
   hook.memoizedState = pushEffect(
     HookHasEffect | hookFlags,
     create,
-    undefined,
+    destroy,
     nextDeps,
+    update,
+    updateDeps,
   );
 }
 
 function updateEffectImpl(
   fiberFlags: Flags,
   hookFlags: HookFlags,
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
+  create: (() => {}) | (() => void) | void,
+  identity: Array<mixed> | void | null,
+  update: (({}) => void) | void,
+  updateDeps: Array<mixed> | void,
+  destroy: (({}) => void) | void,
 ): void {
   const hook = updateWorkInProgressHook();
-  const nextDeps = deps === undefined ? null : deps;
-  let destroy = undefined;
+  if (update === undefined) {
+    const nextIdentity = identity === undefined ? null : identity;
+    let cleanup = undefined;
 
-  if (currentHook !== null) {
-    const prevEffect = currentHook.memoizedState;
-    destroy = prevEffect.destroy;
-    if (nextDeps !== null) {
-      const prevDeps = prevEffect.deps;
-      if (areHookInputsEqual(nextDeps, prevDeps)) {
-        hook.memoizedState = pushEffect(hookFlags, create, destroy, nextDeps);
-        return;
+    if (currentHook !== null) {
+      // TODO: missing type for prevEffect.
+      const prevEffect = currentHook.memoizedState;
+      cleanup = prevEffect.destroy;
+      if (nextIdentity !== null) {
+        const prevIdentity = prevEffect.identity;
+        if (areHookInputsEqual(nextIdentity, prevIdentity)) {
+          hook.memoizedState = pushEffect(
+            hookFlags,
+            create,
+            cleanup,
+            nextIdentity,
+            update,
+            updateDeps,
+          );
+          return;
+        }
       }
     }
+
+    currentlyRenderingFiber.flags |= fiberFlags;
+    hook.memoizedState = pushEffect(
+      HookHasEffect | hookFlags,
+      create,
+      cleanup,
+      nextIdentity,
+      update,
+      updateDeps,
+    );
+  } else {
+    const nextIdentityArray = identity != null ? identity : [];
+    const nextDeps = updateDeps !== undefined ? updateDeps : null;
+    let isIdentitySame: boolean;
+    if (currentHook !== null) {
+      const prevEffect: Effect = currentHook.memoizedState;
+      const prevIdentityArray =
+        prevEffect.identity != null ? prevEffect.identity : [];
+      isIdentitySame = areHookInputsEqual(nextIdentityArray, prevIdentityArray);
+
+      if (nextDeps !== null) {
+        const prevDeps = prevEffect.updateDeps != null ? prevEffect.updateDeps : null;
+        if (isIdentitySame && areHookInputsEqual(nextDeps, prevDeps)) {
+          hook.memoizedState = pushEffect(
+            hookFlags,
+            create,
+            destroy,
+            nextDeps,
+            update,
+            updateDeps,
+          );
+          hook.memoizedState.resource = prevEffect.resource;
+          return;
+        }
+      }
+    }
+
+    currentlyRenderingFiber.flags |= fiberFlags;
+
+    hook.memoizedState = pushEffect(
+      HookHasEffect | hookFlags,
+      isIdentitySame ? undefined : create,
+      isIdentitySame ? undefined : destroy,
+      nextIdentityArray,
+      update,
+      updateDeps,
+    );
+    if (currentHook != null) {
+      const currentHookState: Effect = currentHook.memoizedState;
+      hook.memoizedState.resource = currentHookState.resource;
+    }
   }
-
-  currentlyRenderingFiber.flags |= fiberFlags;
-
-  hook.memoizedState = pushEffect(
-    HookHasEffect | hookFlags,
-    create,
-    destroy,
-    nextDeps,
-  );
 }
 
 function mountEffect(
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
+  create: (() => {}) | (() => void) | void,
+  identity: Array<mixed> | void | null,
+  update: (({}) => void) | void,
+  updateDeps: Array<mixed> | void,
+  destroy: (({}) => void) | void,
 ): void {
   if (
     __DEV__ &&
@@ -2032,23 +2108,40 @@ function mountEffect(
       MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
       HookPassive,
       create,
-      deps,
+      identity,
+      update,
+      updateDeps,
+      destroy,
     );
   } else {
     mountEffectImpl(
       PassiveEffect | PassiveStaticEffect,
       HookPassive,
       create,
-      deps,
+      identity,
+      update,
+      updateDeps,
+      destroy,
     );
   }
 }
 
 function updateEffect(
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
+  create: (() => {}) | (() => void) | void,
+  identity: Array<mixed> | void | null,
+  update: (({}) => void) | void,
+  updateDeps: Array<mixed> | void,
+  destroy: (({}) => void) | void,
 ): void {
-  updateEffectImpl(PassiveEffect, HookPassive, create, deps);
+  updateEffectImpl(
+    PassiveEffect,
+    HookPassive,
+    create,
+    identity,
+    update,
+    updateDeps,
+    destroy,
+  );
 }
 
 function useEffectEventImpl<Args, Return, F: (...Array<Args>) => Return>(
@@ -2108,19 +2201,24 @@ function mountInsertionEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  // $FlowFixMe[incompatible-call]
   mountEffectImpl(UpdateEffect, HookInsertion, create, deps);
 }
 
 function updateInsertionEffect(
-  create: () => (() => void) | void,
+  create: () => ({} | (() => void)) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  // $FlowFixMe[incompatible-call]
   return updateEffectImpl(UpdateEffect, HookInsertion, create, deps);
 }
 
 function mountLayoutEffect(
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
+  create: (() => {}) | (() => void) | void,
+  identity: Array<mixed> | void | null,
+  update: (({}) => void) | void,
+  updateDeps: Array<mixed> | void,
+  destroy: (({}) => void) | void,
 ): void {
   let fiberFlags: Flags = UpdateEffect | LayoutStaticEffect;
   if (
@@ -2129,14 +2227,33 @@ function mountLayoutEffect(
   ) {
     fiberFlags |= MountLayoutDevEffect;
   }
-  return mountEffectImpl(fiberFlags, HookLayout, create, deps);
+  return mountEffectImpl(
+    fiberFlags,
+    HookLayout,
+    create,
+    identity,
+    update,
+    updateDeps,
+    destroy,
+  );
 }
 
 function updateLayoutEffect(
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
+  create: (() => {}) | (() => void) | void,
+  identity: Array<mixed> | void | null,
+  update: (({}) => void) | void,
+  updateDeps: Array<mixed> | void,
+  destroy: (({}) => void) | void,
 ): void {
-  return updateEffectImpl(UpdateEffect, HookLayout, create, deps);
+  return updateEffectImpl(
+    UpdateEffect,
+    HookLayout,
+    create,
+    identity,
+    update,
+    updateDeps,
+    destroy,
+  );
 }
 
 function imperativeHandleEffect<T>(
@@ -2195,9 +2312,11 @@ function mountImperativeHandle<T>(
   ) {
     fiberFlags |= MountLayoutDevEffect;
   }
+  // $FlowFixMe[incompatible-call]
   mountEffectImpl(
     fiberFlags,
     HookLayout,
+    // $FlowFixMe[incompatible-call]
     imperativeHandleEffect.bind(null, create, ref),
     effectDeps,
   );
@@ -2225,6 +2344,7 @@ function updateImperativeHandle<T>(
   updateEffectImpl(
     UpdateEffect,
     HookLayout,
+    // $FlowFixMe[incompatible-call]
     imperativeHandleEffect.bind(null, create, ref),
     effectDeps,
   );
@@ -2910,6 +3030,14 @@ if (__DEV__) {
     );
   };
 
+  // const myFunction: ((number) => boolean) & ((boolean) => number) = (value) => {
+  //   if (typeof value === 'boolean') {
+  //     return 1;
+  //   } else {
+  //     return true;
+  //   }
+  // };
+
   HooksDispatcherOnMountInDEV = {
     readContext<T>(context: ReactContext<T>): T {
       return readContext(context);
@@ -2926,13 +3054,17 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       mountHookTypesDev();
-      checkDepsAreArrayDev(deps);
-      return mountEffect(create, deps);
+      checkDepsAreArrayDev(identity);
+      checkDepsAreArrayDev(updateDeps);
+      mountEffect(create, identity, update, updateDeps, destroy);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -2954,13 +3086,17 @@ if (__DEV__) {
       return mountInsertionEffect(create, deps);
     },
     useLayoutEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       mountHookTypesDev();
-      checkDepsAreArrayDev(deps);
-      return mountLayoutEffect(create, deps);
+      checkDepsAreArrayDev(identity);
+      checkDepsAreArrayDev(updateDeps);
+      mountLayoutEffect(create, identity, update, updateDeps, destroy);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
@@ -3086,12 +3222,15 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
-      return mountEffect(create, deps);
+      return mountEffect(create, identity, update, updateDeps, destroy);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -3111,12 +3250,15 @@ if (__DEV__) {
       return mountInsertionEffect(create, deps);
     },
     useLayoutEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       updateHookTypesDev();
-      return mountLayoutEffect(create, deps);
+      mountLayoutEffect(create, identity, update, updateDeps, destroy);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
@@ -3241,12 +3383,15 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
-      return updateEffect(create, deps);
+      updateEffect(create, identity, update, updateDeps, destroy);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -3266,12 +3411,15 @@ if (__DEV__) {
       return updateInsertionEffect(create, deps);
     },
     useLayoutEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       updateHookTypesDev();
-      return updateLayoutEffect(create, deps);
+      updateLayoutEffect(create, identity, update, updateDeps, destroy);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
@@ -3397,12 +3545,15 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       updateHookTypesDev();
-      return updateEffect(create, deps);
+      return updateEffect(create, identity, update, updateDeps, destroy);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -3422,12 +3573,15 @@ if (__DEV__) {
       return updateInsertionEffect(create, deps);
     },
     useLayoutEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       updateHookTypesDev();
-      return updateLayoutEffect(create, deps);
+      updateLayoutEffect(create, identity, update, updateDeps, destroy);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
@@ -3555,13 +3709,16 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountEffect(create, deps);
+      return mountEffect(create, identity, update, updateDeps, destroy);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -3583,13 +3740,16 @@ if (__DEV__) {
       return mountInsertionEffect(create, deps);
     },
     useLayoutEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountLayoutEffect(create, deps);
+      mountLayoutEffect(create, identity, update, updateDeps, destroy);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
@@ -3738,13 +3898,16 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateEffect(create, deps);
+      return updateEffect(create, identity, update, updateDeps, destroy);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -3766,13 +3929,16 @@ if (__DEV__) {
       return updateInsertionEffect(create, deps);
     },
     useLayoutEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateLayoutEffect(create, deps);
+      return updateLayoutEffect(create, identity, update, updateDeps, destroy);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
@@ -3908,7 +4074,6 @@ if (__DEV__) {
       warnInvalidContextAccess();
       return readContext(context);
     },
-
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       warnInvalidHookAccess();
@@ -3922,13 +4087,16 @@ if (__DEV__) {
       return readContext(context);
     },
     useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateEffect(create, deps);
+      return updateEffect(create, identity, update, updateDeps, destroy);
     },
     useImperativeHandle<T>(
       ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
@@ -3950,13 +4118,16 @@ if (__DEV__) {
       return updateInsertionEffect(create, deps);
     },
     useLayoutEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+      create: (() => {}) | (() => void) | void,
+      identity: Array<mixed> | void | null,
+      update: (({}) => void) | void,
+      updateDeps: Array<mixed> | void,
+      destroy: (({}) => void) | void,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateLayoutEffect(create, deps);
+      return updateLayoutEffect(create, identity, update, updateDeps, destroy);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';

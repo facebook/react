@@ -123,7 +123,7 @@ export function useEffect(
   deps: Array<mixed> | void | null,
 ): void {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useEffect(create, deps);
+  return dispatcher.useEffect(...arguments);
 }
 
 export function useInsertionEffect(
@@ -139,7 +139,7 @@ export function useLayoutEffect(
   deps: Array<mixed> | void | null,
 ): void {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useLayoutEffect(create, deps);
+  return dispatcher.useLayoutEffect(...arguments);
 }
 
 export function useCallback<T>(
