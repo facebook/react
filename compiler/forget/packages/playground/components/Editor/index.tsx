@@ -21,6 +21,7 @@ import {
   type Store,
 } from "../../lib/stores";
 import { useStore, useStoreDispatch } from "../StoreContext";
+import { TabTypes } from "../TabbedWindow";
 import Input from "./Input";
 import Output from "./Output";
 
@@ -41,6 +42,7 @@ export default function Editor() {
     (newDiags: Diagnostic[]) => setDiagnostics(newDiags),
     [setDiagnostics]
   );
+  const [tabsOpen, setTabsOpen] = useState<Map<TabTypes, boolean>>(new Map());
 
   /**
    * Initialize store from encoded data or fallback to the default store.
@@ -90,7 +92,12 @@ export default function Editor() {
             hidden: !showOutputOnMobile,
           })}
         >
-          <Output store={deferredStore} updateDiagnostics={updateDiagnostics} />
+          <Output
+            tabsOpen={tabsOpen}
+            setTabsOpen={setTabsOpen}
+            store={deferredStore}
+            updateDiagnostics={updateDiagnostics}
+          />
         </div>
       </div>
       <button

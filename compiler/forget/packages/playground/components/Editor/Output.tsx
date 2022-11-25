@@ -17,7 +17,7 @@ import prettierParserBabel from "prettier/parser-babel";
 import { memo, useMemo } from "react";
 import compileOldArchitecture from "../../lib/compilerDriver";
 import type { Store } from "../../lib/stores";
-import TabbedWindow from "../TabbedWindow";
+import TabbedWindow, { TabTypes } from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
 const {
   parseFunctions,
@@ -38,6 +38,8 @@ export default MemoizedOutput;
 type Props = {
   store: Store;
   updateDiagnostics: (newDiags: Diagnostic[]) => void;
+  tabsOpen: Map<TabTypes, boolean>;
+  setTabsOpen: (newTab: Map<TabTypes, boolean>) => void;
 };
 
 type CompilerOutput = {
@@ -118,7 +120,7 @@ function compile(source: string): CompilerOutput | CompilerError {
 }
 
 // TODO(gsn: Update diagnostics ƒrom HIR output
-function Output({ store }: Props) {
+function Output({ store, setTabsOpen, tabsOpen }: Props) {
   const compilerOutput = useMemo(() => compile(store.source), [store.source]);
   const { outputs: oldCompilerOutputs } = useMemo(
     () => compileOldArchitecture(store.source, store.compilerFlags),
@@ -139,6 +141,8 @@ function Output({ store }: Props) {
   return (
     <TabbedWindow
       defaultTab="HIR"
+      setTabsOpen={setTabsOpen}
+      tabsOpen={tabsOpen}
       tabs={{
         HIR: (
           <TextTabContent output={compilerOutput.hirOutput}></TextTabContent>
