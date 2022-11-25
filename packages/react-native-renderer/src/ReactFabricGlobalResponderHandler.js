@@ -10,6 +10,8 @@
 // Module provided by RN:
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
+const {setIsJSResponder} = nativeFabricUIManager;
+
 const ReactFabricGlobalResponderHandler = {
   onChange: function(from: any, to: any, blockNativeResponder: boolean) {
     const fromOrTo = from || to;
@@ -21,7 +23,7 @@ const ReactFabricGlobalResponderHandler = {
     if (isFabric) {
       if (from) {
         // equivalent to clearJSResponder
-        nativeFabricUIManager.setIsJSResponder(
+        setIsJSResponder(
           from.stateNode.node,
           false,
           blockNativeResponder || false,
@@ -30,7 +32,7 @@ const ReactFabricGlobalResponderHandler = {
 
       if (to) {
         // equivalent to setJSResponder
-        nativeFabricUIManager.setIsJSResponder(
+        setIsJSResponder(
           to.stateNode.node,
           true,
           blockNativeResponder || false,

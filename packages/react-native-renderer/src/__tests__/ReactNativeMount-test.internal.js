@@ -30,6 +30,8 @@ describe('ReactNative', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    require('react-native/Libraries/ReactPrivate/InitializeNativeFabricUIManager');
+
     React = require('react');
     StrictMode = React.StrictMode;
     ReactNative = require('react-native-renderer');

@@ -44,6 +44,11 @@ import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 
+const {
+  dispatchCommand: fabricDispatchCommand,
+  sendAccessibilityEvent: fabricSendAccessibilityEvent,
+} = nativeFabricUIManager;
+
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 function findHostInstance_DEPRECATED<TElementType: ElementType>(
@@ -168,7 +173,7 @@ function dispatchCommand(handle: any, command: string, args: Array<any>) {
   if (handle._internalInstanceHandle != null) {
     const {stateNode} = handle._internalInstanceHandle;
     if (stateNode != null) {
-      nativeFabricUIManager.dispatchCommand(stateNode.node, command, args);
+      fabricDispatchCommand(stateNode.node, command, args);
     }
   } else {
     UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
@@ -189,7 +194,7 @@ function sendAccessibilityEvent(handle: any, eventType: string) {
   if (handle._internalInstanceHandle != null) {
     const {stateNode} = handle._internalInstanceHandle;
     if (stateNode != null) {
-      nativeFabricUIManager.sendAccessibilityEvent(stateNode.node, eventType);
+      fabricSendAccessibilityEvent(stateNode.node, eventType);
     }
   } else {
     legacySendAccessibilityEvent(handle._nativeTag, eventType);

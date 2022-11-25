@@ -26,6 +26,8 @@ if (__DEV__) {
   Object.freeze(emptyObject);
 }
 
+const {measure, findNodeAtPoint} = nativeFabricUIManager;
+
 let createHierarchy;
 let getHostNode;
 let getHostProps;
@@ -53,7 +55,7 @@ if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
               hostFiber.stateNode.node;
 
             if (shadowNode) {
-              nativeFabricUIManager.measure(shadowNode, callback);
+              measure(shadowNode, callback);
             } else {
               return UIManager.measure(
                 getHostNode(fiber, findNodeHandle),
@@ -195,7 +197,7 @@ if (__DEV__) {
 
     if (inspectedView._internalInstanceHandle != null) {
       // For Fabric we can look up the instance handle directly and measure it.
-      nativeFabricUIManager.findNodeAtPoint(
+      findNodeAtPoint(
         inspectedView._internalInstanceHandle.stateNode.node,
         locationX,
         locationY,
@@ -215,7 +217,7 @@ if (__DEV__) {
           const nativeViewTag =
             internalInstanceHandle.stateNode.canonical._nativeTag;
 
-          nativeFabricUIManager.measure(
+          measure(
             internalInstanceHandle.stateNode.node,
             (x, y, width, height, pageX, pageY) => {
               const inspectorData = getInspectorDataForInstance(
