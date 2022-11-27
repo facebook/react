@@ -13,6 +13,7 @@ module.exports = {
     ],
     ['@babel/plugin-transform-template-literals', {loose: true}],
     '@babel/plugin-transform-literals',
+    '@babel/plugin-transform-classes',
     '@babel/plugin-transform-arrow-functions',
     '@babel/plugin-transform-block-scoped-functions',
     '@babel/plugin-transform-object-super',
