@@ -11,6 +11,7 @@ import { invariant } from "../CompilerError";
 import {
   BasicBlock,
   BlockId,
+  GeneratedSource,
   GotoVariant,
   HIR,
   Identifier,
@@ -145,7 +146,12 @@ export default class HIRBuilder {
     this.#completed.set(blockId, {
       id: blockId,
       instructions,
-      terminal: { kind: "return", value: null, id: makeInstructionId(0) },
+      terminal: {
+        kind: "return",
+        loc: GeneratedSource,
+        value: null,
+        id: makeInstructionId(0),
+      },
       preds: new Set(),
       phis: new Set(),
     });

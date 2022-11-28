@@ -136,6 +136,7 @@ function lowerStatement(
       const fallthrough = builder.reserve();
       const terminal: ReturnTerminal = {
         kind: "return",
+        loc: stmt.node.loc ?? GeneratedSource,
         value,
         id: makeInstructionId(0),
       };

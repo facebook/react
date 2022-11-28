@@ -74,6 +74,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
           blockValue,
           this.visitor.visitTerminal({
             kind: "return",
+            loc: terminal.loc,
             value,
           })
         );
@@ -697,7 +698,7 @@ export interface Visitor<TBlock, TValue, TItem, TCase> {
 }
 
 export type BlockTerminal<TBlock, TValue, TItem, TCase> =
-  | { kind: "return"; value: TValue | null }
+  | { kind: "return"; loc: SourceLocation; value: TValue | null }
   | { kind: "throw"; value: TValue }
   | {
       kind: "if";

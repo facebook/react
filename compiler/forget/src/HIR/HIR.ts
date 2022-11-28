@@ -114,6 +114,7 @@ export type ThrowTerminal = { kind: "throw"; value: Place; id: InstructionId };
 
 export type ReturnTerminal = {
   kind: "return";
+  loc: SourceLocation;
   value: Place | null;
   id: InstructionId;
 };

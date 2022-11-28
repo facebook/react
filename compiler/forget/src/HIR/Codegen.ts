@@ -43,6 +43,8 @@ function withLoc<TNode extends t.Node, T extends (...args: any[]) => TNode>(
   };
 }
 
+const createBinaryExpression = withLoc(t.binaryExpression);
+const createCallExpression = withLoc(t.callExpression);
 const createExpressionStatement = withLoc(t.expressionStatement);
 const createFunctionDeclaration = withLoc(t.functionDeclaration);
 const createLabelledStatement = withLoc(t.labeledStatement);
@@ -192,15 +194,16 @@ class CodegenVisitor
         return createWhileStatement(terminal.loc, terminal.test, terminal.loop);
       }
       case "return": {
+        const createReturnStatement = withLoc(t.returnStatement);
         if (terminal.value !== null) {
-          return t.returnStatement(terminal.value);
+          return createReturnStatement(terminal.loc, terminal.value);
         } else if (this.depth === 1) {
           // A return at the top-level of a function must be the last instruction,
           // and functions implicitly return after the last instruction of the top-level.
           // Elide the return.
           return t.emptyStatement();
         } else {
-          return t.returnStatement();
+          return createReturnStatement(terminal.loc);
         }
       }
       case "throw": {
@@ -253,7 +256,12 @@ function codegenInstructionValue(
     case "BinaryExpression": {
       const left = codegenPlace(temp, instrValue.left);
       const right = codegenPlace(temp, instrValue.right);
-      value = t.binaryExpression(instrValue.operator, left, right);
+      value = createBinaryExpression(
+        instrValue.loc,
+        instrValue.operator,
+        left,
+        right
+      );
       break;
     }
     case "UnaryExpression": {
@@ -270,7 +278,7 @@ function codegenInstructionValue(
     case "CallExpression": {
       const callee = codegenPlace(temp, instrValue.callee);
       const args = instrValue.args.map((arg) => codegenPlace(temp, arg));
-      value = t.callExpression(callee, args);
+      value = createCallExpression(instrValue.loc, callee, args);
       break;
     }
     case "NewExpression": {

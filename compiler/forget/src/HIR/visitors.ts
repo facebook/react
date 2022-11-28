@@ -193,6 +193,7 @@ export function mapTerminalSuccessors(
     case "return": {
       return {
         kind: "return",
+        loc: terminal.loc,
         value: terminal.value,
         id: makeInstructionId(0),
       };
