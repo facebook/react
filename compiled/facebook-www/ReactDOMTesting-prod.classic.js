@@ -3758,7 +3758,7 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
   var numberOfReRenders = 0;
   do {
     didScheduleRenderPhaseUpdateDuringThisPass = !1;
-    thenableIndexCounter = localIdCounter = 0;
+    thenableIndexCounter = 0;
     if (25 <= numberOfReRenders) throw Error(formatProdErrorMessage(301));
     numberOfReRenders += 1;
     workInProgressHook = currentHook = null;
@@ -11356,7 +11356,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1511 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-8a23def32-20221128",
+  version: "18.3.0-www-classic-15557fa67-20221128",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2051 = {
@@ -11386,7 +11386,7 @@ var internals$jscomp$inline_2051 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-8a23def32-20221128"
+  reconcilerVersion: "18.3.0-next-15557fa67-20221128"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2052 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -14868,4 +14868,4 @@ exports.unstable_renderSubtreeIntoContainer = function(
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-8a23def32-20221128";
+exports.version = "18.3.0-next-15557fa67-20221128";

@@ -22461,7 +22461,6 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
 
   do {
     didScheduleRenderPhaseUpdateDuringThisPass = false;
-    localIdCounter = 0;
     thenableIndexCounter = 0;
 
     if (numberOfReRenders >= RE_RENDER_LIMIT) {
@@ -42305,7 +42304,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-8a23def32-20221128";
+var ReactVersion = "18.3.0-www-modern-15557fa67-20221128";
 
 function createPortal(
   children,
