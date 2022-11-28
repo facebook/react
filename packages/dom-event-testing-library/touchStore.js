@@ -51,7 +51,7 @@ export function removeTouch(touch) {
   const identifier = touch.identifier;
   const target = touch.target;
   if (activeTouches.get(target) === null) {
-    return
+    return;
   }
   if (activeTouches.get(target).has(identifier)) {
     activeTouches.get(target).delete(identifier);
@@ -65,8 +65,8 @@ export function removeTouch(touch) {
 
 export function getTouches() {
   return activeTouches.reduce((result, _, target) => {
-    return result.concat(getTargetTouches(target))
-  }, [])
+    return result.concat(getTargetTouches(target));
+  }, []);
 }
 
 export function getTargetTouches(target) {
