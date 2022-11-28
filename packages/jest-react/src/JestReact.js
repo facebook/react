@@ -98,26 +98,26 @@ function jsonChildToJSXChild(jsonChild) {
 }
 
 function jsonChildrenToJSXChildren(jsonChildren) {
-  if (jsonChildren !== null) {
-    if (jsonChildren.length === 1) {
-      return jsonChildToJSXChild(jsonChildren[0]);
-    } else if (jsonChildren.length > 1) {
-      const jsxChildren = [];
-      let allJSXChildrenAreStrings = true;
-      let jsxChildrenString = '';
-      for (let i = 0; i < jsonChildren.length; i++) {
-        const jsxChild = jsonChildToJSXChild(jsonChildren[i]);
-        jsxChildren.push(jsxChild);
-        if (allJSXChildrenAreStrings) {
-          if (typeof jsxChild === 'string') {
-            jsxChildrenString += jsxChild;
-          } else if (jsxChild !== null) {
-            allJSXChildrenAreStrings = false;
-          }
+  if (jsonChildren === null) {
+    return null;
+  }
+  if (jsonChildren.length === 1) {
+    return jsonChildToJSXChild(jsonChildren[0]);
+  } else if (jsonChildren.length > 1) {
+    const jsxChildren = [];
+    let allJSXChildrenAreStrings = true;
+    let jsxChildrenString = '';
+    for (let i = 0; i < jsonChildren.length; i++) {
+      const jsxChild = jsonChildToJSXChild(jsonChildren[i]);
+      jsxChildren.push(jsxChild);
+      if (allJSXChildrenAreStrings) {
+        if (typeof jsxChild === 'string') {
+          jsxChildrenString += jsxChild;
+        } else if (jsxChild !== null) {
+          allJSXChildrenAreStrings = false;
         }
       }
-      return allJSXChildrenAreStrings ? jsxChildrenString : jsxChildren;
     }
+    return allJSXChildrenAreStrings ? jsxChildrenString : jsxChildren;
   }
-  return null;
 }

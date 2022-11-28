@@ -9,6 +9,8 @@
 
 'use strict';
 
+import isArray from 'shared/isArray';
+
 export default {
   meta: {
     type: 'suggestion',
@@ -60,7 +62,7 @@ export default {
       if (enableDangerousAutofixThisMayCauseInfiniteLoops) {
         // Used to enable legacy behavior. Dangerous.
         // Keep this as an option until major IDEs upgrade (including VSCode FB ESLint extension).
-        if (Array.isArray(problem.suggest) && problem.suggest.length > 0) {
+        if (isArray(problem.suggest) && problem.suggest.length > 0) {
           problem.fix = problem.suggest[0].fix;
         }
       }
@@ -145,8 +147,6 @@ export default {
         }
         componentScope = currentScope;
       }
-
-      const isArray = Array.isArray;
 
       // Next we'll define a few helpers that helps us
       // tell if some values don't have to be declared as deps.
@@ -277,7 +277,7 @@ export default {
           if (
             id.type === 'ArrayPattern' &&
             id.elements.length === 2 &&
-            Array.isArray(resolved.identifiers)
+            isArray(resolved.identifiers)
           ) {
             // Is second tuple value the same reference we're checking?
             if (id.elements[1] === resolved.identifiers[0]) {
@@ -934,7 +934,7 @@ export default {
           return;
         }
         const refs = propDep.references;
-        if (!Array.isArray(refs)) {
+        if (!isArray(refs)) {
           return;
         }
         let isPropsOnlyUsedInMembers = true;
@@ -1655,17 +1655,18 @@ function getDependency(node) {
  * This particular node might still represent a required member, so check .optional field.
  */
 function markNode(node, optionalChains, result) {
-  if (optionalChains) {
-    if (node.optional) {
-      // We only want to consider it optional if *all* usages were optional.
-      if (!optionalChains.has(result)) {
-        // Mark as (maybe) optional. If there's a required usage, this will be overridden.
-        optionalChains.set(result, true);
-      }
-    } else {
-      // Mark as required.
-      optionalChains.set(result, false);
+  if (!optionalChains) {
+    return;
+  }
+  if (node.optional) {
+    // We only want to consider it optional if *all* usages were optional.
+    if (!optionalChains.has(result)) {
+      // Mark as (maybe) optional. If there's a required usage, this will be overridden.
+      optionalChains.set(result, true);
     }
+  } else {
+    // Mark as required.
+    optionalChains.set(result, false);
   }
 }
 
@@ -1799,7 +1800,7 @@ function fastFindReferenceWithParent(start, target) {
       if (isNodeLike(value)) {
         value.parent = item;
         queue.push(value);
-      } else if (Array.isArray(value)) {
+      } else if (isArray(value)) {
         value.forEach(val => {
           if (isNodeLike(val)) {
             val.parent = item;
@@ -1832,7 +1833,7 @@ function isNodeLike(val) {
   return (
     typeof val === 'object' &&
     val !== null &&
-    !Array.isArray(val) &&
+    !isArray(val) &&
     typeof val.type === 'string'
   );
 }
