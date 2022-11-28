@@ -146,11 +146,11 @@ export function mapInstructionOperands(
  */
 export function mapTerminalSuccessors(
   terminal: Terminal,
-  fn: (block: BlockId, isFallthrough: boolean) => BlockId
+  fn: (block: BlockId) => BlockId
 ): Terminal {
   switch (terminal.kind) {
     case "goto": {
-      const target = fn(terminal.block, false);
+      const target = fn(terminal.block);
       return {
         kind: "goto",
         block: target,
@@ -159,10 +159,10 @@ export function mapTerminalSuccessors(
       };
     }
     case "if": {
-      const consequent = fn(terminal.consequent, false);
-      const alternate = fn(terminal.alternate, false);
+      const consequent = fn(terminal.consequent);
+      const alternate = fn(terminal.alternate);
       const fallthrough =
-        terminal.fallthrough !== null ? fn(terminal.fallthrough, true) : null;
+        terminal.fallthrough !== null ? fn(terminal.fallthrough) : null;
       return {
         kind: "if",
         test: terminal.test,
@@ -174,14 +174,14 @@ export function mapTerminalSuccessors(
     }
     case "switch": {
       const cases = terminal.cases.map((case_) => {
-        const target = fn(case_.block, false);
+        const target = fn(case_.block);
         return {
           test: case_.test,
           block: target,
         };
       });
       const fallthrough =
-        terminal.fallthrough !== null ? fn(terminal.fallthrough, true) : null;
+        terminal.fallthrough !== null ? fn(terminal.fallthrough) : null;
       return {
         kind: "switch",
         test: terminal.test,
@@ -202,9 +202,9 @@ export function mapTerminalSuccessors(
       return terminal;
     }
     case "while": {
-      const test = fn(terminal.test, false);
-      const loop = fn(terminal.loop, true);
-      const fallthrough = fn(terminal.fallthrough, true);
+      const test = fn(terminal.test);
+      const loop = fn(terminal.loop);
+      const fallthrough = fn(terminal.fallthrough);
       return {
         kind: "while",
         loc: terminal.loc,
