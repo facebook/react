@@ -697,7 +697,6 @@ function renderWithHooksAgain<Props, SecondArg>(
   let children;
   do {
     didScheduleRenderPhaseUpdateDuringThisPass = false;
-    localIdCounter = 0;
     thenableIndexCounter = 0;
 
     if (numberOfReRenders >= RE_RENDER_LIMIT) {

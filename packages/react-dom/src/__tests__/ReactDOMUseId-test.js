@@ -633,4 +633,68 @@ describe('useId', () => {
       </div>
     `);
   });
+
+  // https://github.com/vercel/next.js/issues/43033
+  // re-rendering in strict mode caused the localIdCounter to be reset but it the rerender hook does not
+  // increment it again. This only shows up as a problem for subsequent useId's because it affects child
+  // and sibling counters not the initial one
+  it('does not forget it mounted an id when re-rendering in dev', async () => {
+    function Parent() {
+      const id = useId();
+      return (
+        <div>
+          {id} <Child />
+        </div>
+      );
+    }
+    function Child() {
+      const id = useId();
+      return <div>{id}</div>;
+    }
+
+    function App({showMore}) {
+      return (
+        <React.StrictMode>
+          <Parent />
+        </React.StrictMode>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div>
+          :R0:
+          <!-- -->
+           
+          <div>
+            :R7:
+          </div>
+        </div>
+      </div>
+    `);
+
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div>
+          :R0:
+          <!-- -->
+           
+          <div>
+            :R7:
+          </div>
+        </div>
+      </div>
+    `);
+  });
 });
