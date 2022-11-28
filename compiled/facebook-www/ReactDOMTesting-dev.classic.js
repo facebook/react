@@ -7646,91 +7646,91 @@ var NoLanes =
 var NoLane =
   /*                          */
   0;
+var SyncHydrationLane =
+  /*               */
+  1;
 var SyncLane =
   /*                        */
-  1;
+  2;
 var InputContinuousHydrationLane =
   /*    */
-  2;
+  4;
 var InputContinuousLane =
   /*             */
-  4;
+  8;
 var DefaultHydrationLane =
   /*            */
-  8;
+  16;
 var DefaultLane =
   /*                     */
-  16;
+  32;
 var TransitionHydrationLane =
   /*                */
-  32;
+  64;
 var TransitionLanes =
   /*                       */
-  4194240;
+  8388480;
 var TransitionLane1 =
   /*                        */
-  64;
+  128;
 var TransitionLane2 =
   /*                        */
-  128;
+  256;
 var TransitionLane3 =
   /*                        */
-  256;
+  512;
 var TransitionLane4 =
   /*                        */
-  512;
+  1024;
 var TransitionLane5 =
   /*                        */
-  1024;
+  2048;
 var TransitionLane6 =
   /*                        */
-  2048;
+  4096;
 var TransitionLane7 =
   /*                        */
-  4096;
+  8192;
 var TransitionLane8 =
   /*                        */
-  8192;
+  16384;
 var TransitionLane9 =
   /*                        */
-  16384;
+  32768;
 var TransitionLane10 =
   /*                       */
-  32768;
+  65536;
 var TransitionLane11 =
   /*                       */
-  65536;
+  131072;
 var TransitionLane12 =
   /*                       */
-  131072;
+  262144;
 var TransitionLane13 =
   /*                       */
-  262144;
+  524288;
 var TransitionLane14 =
   /*                       */
-  524288;
+  1048576;
 var TransitionLane15 =
   /*                       */
-  1048576;
+  2097152;
 var TransitionLane16 =
   /*                       */
-  2097152;
+  4194304;
 var RetryLanes =
   /*                            */
-  130023424;
+  125829120;
 var RetryLane1 =
   /*                             */
-  4194304;
+  8388608;
 var RetryLane2 =
   /*                             */
-  8388608;
+  16777216;
 var RetryLane3 =
   /*                             */
-  16777216;
-var RetryLane4 =
-  /*                             */
   33554432;
-var RetryLane5 =
+var RetryLane4 =
   /*                             */
   67108864;
 var SomeRetryLane = RetryLane1;
@@ -7755,6 +7755,9 @@ var nextRetryLane = RetryLane1;
 
 function getHighestPriorityLanes(lanes) {
   switch (getHighestPriorityLane(lanes)) {
+    case SyncHydrationLane:
+      return SyncHydrationLane;
+
     case SyncLane:
       return SyncLane;
 
@@ -7795,7 +7798,6 @@ function getHighestPriorityLanes(lanes) {
     case RetryLane2:
     case RetryLane3:
     case RetryLane4:
-    case RetryLane5:
       return lanes & RetryLanes;
 
     case SelectiveHydrationLane:
@@ -7956,6 +7958,7 @@ function getMostRecentEventTime(root, lanes) {
 
 function computeExpirationTime(lane, currentTime) {
   switch (lane) {
+    case SyncHydrationLane:
     case SyncLane:
     case InputContinuousHydrationLane:
     case InputContinuousLane:
@@ -7995,7 +7998,6 @@ function computeExpirationTime(lane, currentTime) {
     case RetryLane2:
     case RetryLane3:
     case RetryLane4:
-    case RetryLane5:
       // TODO: Retries should be allowed to expire if they are CPU bound for
       // too long, but when I made this change it caused a spike in browser
       // crashes. There must be some other underlying bug; not super urgent but
@@ -8083,6 +8085,9 @@ function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
 
   return NoLanes;
 }
+function includesSyncLane(lanes) {
+  return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
+}
 function includesNonIdleWork(lanes) {
   return (lanes & NonIdleLanes) !== NoLanes;
 }
@@ -8090,6 +8095,8 @@ function includesOnlyRetries(lanes) {
   return (lanes & RetryLanes) === lanes;
 }
 function includesOnlyNonUrgentLanes(lanes) {
+  // TODO: Should hydration lanes be included here? This function is only
+  // used in `updateDeferredValueImpl`.
   var UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
   return (lanes & UrgentLanes) === NoLanes;
 }
@@ -8331,6 +8338,10 @@ function getBumpedLaneForHydration(root, renderLanes) {
   var lane;
 
   switch (renderLane) {
+    case SyncLane:
+      lane = SyncHydrationLane;
+      break;
+
     case InputContinuousLane:
       lane = InputContinuousHydrationLane;
       break;
@@ -8359,7 +8370,6 @@ function getBumpedLaneForHydration(root, renderLanes) {
     case RetryLane2:
     case RetryLane3:
     case RetryLane4:
-    case RetryLane5:
       lane = TransitionHydrationLane;
       break;
 
@@ -27484,7 +27494,7 @@ function ensureRootIsScheduled(root, currentTime) {
       // TODO: Temporary until we confirm this warning is not fired.
       if (
         existingCallbackNode == null &&
-        existingCallbackPriority !== SyncLane
+        !includesSyncLane(existingCallbackPriority)
       ) {
         error(
           "Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue."
@@ -27502,7 +27512,7 @@ function ensureRootIsScheduled(root, currentTime) {
 
   var newCallbackNode;
 
-  if (newCallbackPriority === SyncLane) {
+  if (includesSyncLane(newCallbackPriority)) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     if (root.tag === LegacyRoot) {
@@ -28052,7 +28062,7 @@ function performSyncWorkOnRoot(root) {
   flushPassiveEffects();
   var lanes = getNextLanes(root, NoLanes);
 
-  if (!includesSomeLane(lanes, SyncLane)) {
+  if (!includesSyncLane(lanes)) {
     // There's no remaining sync work left.
     ensureRootIsScheduled(root, now());
     return null;
@@ -29225,16 +29235,13 @@ function commitRootImpl(
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
 
-  if (
-    includesSomeLane(pendingPassiveEffectsLanes, SyncLane) &&
-    root.tag !== LegacyRoot
-  ) {
+  if (includesSyncLane(pendingPassiveEffectsLanes) && root.tag !== LegacyRoot) {
     flushPassiveEffects();
   } // Read this again, since a passive effect might have updated it
 
   remainingLanes = root.pendingLanes;
 
-  if (includesSomeLane(remainingLanes, SyncLane)) {
+  if (includesSyncLane(remainingLanes)) {
     // finishing. If there are too many, it indicates an infinite update loop.
 
     if (root === rootWithNestedUpdates) {
@@ -31120,7 +31127,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-2655c9354-20221121";
+var ReactVersion = "18.3.0-www-classic-8a23def32-20221128";
 
 function createPortal(
   children,
