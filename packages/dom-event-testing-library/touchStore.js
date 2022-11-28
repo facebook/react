@@ -50,24 +50,23 @@ export function updateTouch(touch) {
 export function removeTouch(touch) {
   const identifier = touch.identifier;
   const target = touch.target;
-  if (activeTouches.get(target) != null) {
-    if (activeTouches.get(target).has(identifier)) {
-      activeTouches.get(target).delete(identifier);
-    } else {
-      console.error(
-        'Touch with identifier %s does not exist. Cannot record touch end without a touch start.',
-        identifier,
-      );
-    }
+  if (activeTouches.get(target) === null) {
+    return
+  }
+  if (activeTouches.get(target).has(identifier)) {
+    activeTouches.get(target).delete(identifier);
+  } else {
+    console.error(
+      'Touch with identifier %s does not exist. Cannot record touch end without a touch start.',
+      identifier,
+    );
   }
 }
 
 export function getTouches() {
-  const touches = [];
-  activeTouches.forEach((_, target) => {
-    touches.push(...getTargetTouches(target));
-  });
-  return touches;
+  return activeTouches.reduce((result, _, target) => {
+    return result.concat(getTargetTouches(target))
+  }, [])
 }
 
 export function getTargetTouches(target) {
