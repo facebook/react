@@ -24,6 +24,7 @@ bb0:
   [3] Call read useFreeze$2(read a$4_@0)
   [4] Call mutate call$3_@1(read a$4_@0)
   [5] Return read a$4_@0
+
 ```
 
 ### CFG
@@ -62,6 +63,7 @@ function Component$0() {
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG
@@ -88,6 +90,7 @@ function useFreeze$0(x$1) {}
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG

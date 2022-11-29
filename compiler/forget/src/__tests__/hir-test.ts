@@ -15,7 +15,7 @@ import invariant from "invariant";
 import path from "path";
 import prettier from "prettier";
 import run from "../HIR/Pipeline";
-import printHIR from "../HIR/PrintHIR";
+import { printFunction } from "../HIR/PrintHIR";
 import visualizeHIRMermaid from "../HIR/VisualizeHIRMermaid";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
@@ -62,12 +62,13 @@ describe("React Forget (HIR version)", () => {
               inferMutableRanges: true,
               inferReactiveScopeVariables: true,
               inferReactiveScopes: true,
+              inferReactiveScopeDependencies: true,
               leaveSSA: false,
               codegen: false,
             });
 
             // Print the HIR before leaving SSA.
-            const textHIR = printHIR(ir.body);
+            const textHIR = printFunction(ir);
             const visualization = visualizeHIRMermaid(ir);
 
             const { ast } = run(nodePath, {
@@ -76,6 +77,7 @@ describe("React Forget (HIR version)", () => {
               inferMutableRanges: true,
               inferReactiveScopeVariables: true,
               inferReactiveScopes: true,
+              inferReactiveScopeDependencies: true,
               leaveSSA: true,
               codegen: true,
             });

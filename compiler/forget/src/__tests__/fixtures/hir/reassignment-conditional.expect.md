@@ -38,6 +38,16 @@ bb1:
   [8] Call read y$8_@0.push(read props$6.p2)
   [9] Const mutate $15_@2 = JSX <read Component$0 x={read x$11_@0} y={read y$8_@0} ></read Component$0>
   [10] Return read $15_@2
+scope0 [1:7]:
+ - read props$6.p0
+ - read props$6.p1
+scope1 [7:8]:
+ - read Component$0
+ - read y$8_@0.push
+ - read props$6.p2
+scope2 [9:10]:
+ - read Component$0
+ - read y$8_@0
 ```
 
 ### CFG

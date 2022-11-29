@@ -45,6 +45,11 @@ bb1:
   [10] Call read useFreeze$5(read a$14_@1)
   [11] Call mutate call$6_@3(read a$14_@1)
   [12] Return read a$14_@1
+scope0 [1:2]:
+ - read props$7.cond
+scope1 [2:9]:
+ - read props$7.x
+ - read cond$8_@0
 ```
 
 ### CFG
@@ -115,6 +120,7 @@ function Component$0(props$1) {
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG
@@ -141,6 +147,7 @@ function useFreeze$0(x$1) {}
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG

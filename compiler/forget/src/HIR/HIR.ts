@@ -63,6 +63,7 @@ export type HIRFunction = {
   body: HIR;
   generator: boolean;
   async: boolean;
+  extra?: string;
 };
 
 /**
@@ -327,6 +328,7 @@ export enum Effect {
 export type ReactiveScope = {
   id: ScopeId;
   range: MutableRange;
+  dependencies: Set<Place>;
 };
 
 /**

@@ -27,6 +27,15 @@ bb1:
   [6] Const mutate $13_@3 = Binary read y$9 * read $12_@2
   [7] Const mutate $14_@4 = Array [read $13_@3]
   [8] Return freeze $14_@4
+scope1 [3:4]:
+ - read foo$0
+ - read $10_@0
+ - read y$9
+scope3 [6:7]:
+ - read y$9
+ - read $12_@2
+scope4 [7:8]:
+ - read $13_@3
 ```
 
 ### CFG

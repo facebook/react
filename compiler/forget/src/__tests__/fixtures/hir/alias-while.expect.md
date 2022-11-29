@@ -51,6 +51,7 @@ bb2:
   [13] read b$14_@0
   [14] read c$16_@0
   [15] Return freeze a$12_@0
+
 ```
 
 ### CFG
@@ -125,6 +126,7 @@ function foo$0(cond$1) {
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG

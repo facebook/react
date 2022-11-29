@@ -20,6 +20,9 @@ bb0:
   [3] Call mutate x$7_@0.push(read a$5)
   [4] Call mutate y$8_@0.push(read b$6)
   [5] Return
+scope0 [1:5]:
+ - read a$5
+ - read b$6
 ```
 
 ### CFG

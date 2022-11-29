@@ -5,8 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import clsx from "clsx";
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 
 export type TabTypes =
   | "HIR"
@@ -14,6 +13,7 @@ export type TabTypes =
   | "EliminateRedundantPhi"
   | "InferReferenceEffects"
   | "InferMutableRanges"
+  | "InferReactiveScopeDependencies"
   | "LeaveSSA"
   | "JS"
   | "SourceMap"

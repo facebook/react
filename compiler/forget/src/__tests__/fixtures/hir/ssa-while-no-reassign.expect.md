@@ -32,6 +32,11 @@ bb3:
 bb2:
   predecessor blocks: bb1
   [9] Return read x$5_@0
+scope2 [4:9]:
+ - read x$5_@0
+ - read $6_@1
+scope3 [6:7]:
+ - read x$5_@0
 ```
 
 ### CFG

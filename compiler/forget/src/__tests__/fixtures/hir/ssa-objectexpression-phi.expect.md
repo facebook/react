@@ -41,6 +41,8 @@ bb1:
   y$13_@0[1:10]: phi(bb2: y$7_@0, bb3: y$11_@0)
   [10] Let mutate t$14_@4 = Object { x: read x$12_@0, y: read y$13_@0 }
   [11] Return freeze t$14_@4
+scope3 [4:5]:
+ - read $8_@2
 ```
 
 ### CFG

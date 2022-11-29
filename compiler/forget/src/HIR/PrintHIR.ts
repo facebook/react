@@ -10,6 +10,7 @@ import { assertExhaustive } from "../Common/utils";
 import {
   GotoVariant,
   HIR,
+  HIRFunction,
   Identifier,
   Instruction,
   InstructionKind,
@@ -25,6 +26,15 @@ import {
 export type Options = {
   indent: number;
 };
+
+export function printFunction(fn: HIRFunction): string {
+  const output = [];
+  output.push(printHIR(fn.body));
+  if (fn.extra !== undefined) {
+    output.push(fn.extra);
+  }
+  return output.join("\n");
+}
 
 export default function printHIR(
   ir: HIR,
@@ -111,7 +121,7 @@ function printPhi(phi: Phi): string {
   return items.join("");
 }
 
-function printTerminal(terminal: Terminal): Array<string> | string {
+export function printTerminal(terminal: Terminal): Array<string> | string {
   let value;
   switch (terminal.kind) {
     case "if": {

@@ -40,6 +40,14 @@ bb3:
 bb1:
   predecessor blocks: bb3 bb0
   [11] Return freeze x$11_@0
+scope0 [1:11]:
+ - read a$8
+scope1 [3:7]:
+ - read c$10
+ - read b$9
+scope3 [8:9]:
+ - read $13_@2
+ - freeze y$12_@1
 ```
 
 ### CFG

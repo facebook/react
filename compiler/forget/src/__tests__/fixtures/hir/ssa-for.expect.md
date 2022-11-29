@@ -32,6 +32,7 @@ bb4:
 bb2:
   predecessor blocks: bb1
   [9] Return read x$7_@0
+
 ```
 
 ### CFG

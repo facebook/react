@@ -35,6 +35,15 @@ bb1:
   [8] Const mutate $13_@3 = "div"
   [9] Const mutate $15_@4 = JSX <read $13_@3>{freeze x$10_@0}</read $13_@3>
   [10] Return read $15_@4
+scope0 [1:8]:
+ - read b$9
+ - read b$9
+scope2 [3:4]:
+ - read a$8.length
+ - read $11_@1
+scope4 [9:10]:
+ - read $13_@3
+ - freeze x$10_@0
 ```
 
 ### CFG

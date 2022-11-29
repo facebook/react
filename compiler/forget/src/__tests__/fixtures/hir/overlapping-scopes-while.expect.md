@@ -31,6 +31,10 @@ bb3:
 bb2:
   predecessor blocks: bb1
   [8] Return
+scope0 [1:8]:
+ - read b$7
+ - read a$6
+ - read c$8
 ```
 
 ### CFG

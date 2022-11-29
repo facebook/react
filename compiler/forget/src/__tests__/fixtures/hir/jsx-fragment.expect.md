@@ -31,6 +31,20 @@ bb0:
   [10] Const mutate $23_@9 = "\n    "
   [11] Const mutate $24_@10 = JsxFragment [read $14_@0, read props$13.greeting, read $15_@1, read $16_@2, read $22_@8, read $23_@9]
   [12] Return read $24_@10
+scope6 [7:8]:
+ - read $19_@5
+scope8 [9:10]:
+ - read $17_@3
+ - read $18_@4
+ - read $20_@6
+ - read $21_@7
+scope10 [11:12]:
+ - read $14_@0
+ - read props$13.greeting
+ - read $15_@1
+ - read $16_@2
+ - read $22_@8
+ - read $23_@9
 ```
 
 ### CFG

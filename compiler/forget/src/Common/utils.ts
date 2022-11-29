@@ -64,3 +64,20 @@ export function hasOwnProperty<T>(obj: T, key: PropertyKey): key is keyof T {
 export function assertExhaustive(_: never, errorMsg: string): never {
   throw new Error(errorMsg);
 }
+
+/**
+ * Modifies @param array in place, retaining only the items where the predicate returns true.
+ */
+export function retainWhere<T>(
+  array: Array<T>,
+  predicate: (item: T) => boolean
+) {
+  let writeIndex = 0;
+  for (let readIndex = 0; readIndex < array.length; readIndex++) {
+    const item = array[readIndex];
+    if (predicate(item) === true) {
+      array[writeIndex++] = item;
+    }
+  }
+  array.length = writeIndex;
+}

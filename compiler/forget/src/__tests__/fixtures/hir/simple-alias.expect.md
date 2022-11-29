@@ -21,6 +21,7 @@ function foo() {
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG
@@ -54,6 +55,7 @@ bb0:
   [6] Reassign mutate c$10_@1[0:8] = read a$8_@1
   [7] Call mutate mutate$4_@1(mutate a$8_@1, mutate b$9_@1)
   [8] Return freeze c$10_@1
+
 ```
 
 ### CFG

@@ -26,6 +26,7 @@ const {
   eliminateRedundantPhi,
   inferReferenceEffects,
   inferMutableRanges,
+  inferReactiveScopeDependencies,
   leaveSSA,
   lower,
   printHIR,
@@ -48,6 +49,7 @@ type CompilerOutput = {
   eliminateRedundantPhiOutput: string;
   inferReferenceEffectsOutput: string;
   inferMutableRangesOutput: string;
+  inferReactiveScopeDependenciesOutput: string;
   leaveSSAOutput: string;
   codegenOutput: string;
   sourceMapUrl: string | null;
@@ -81,6 +83,9 @@ function compile(source: string): CompilerOutput | CompilerError {
     inferMutableRanges(ir);
     const inferMutableRangesOutput = printHIR(ir.body);
 
+    inferReactiveScopeDependencies(ir);
+    const inferReactiveScopeDependenciesOutput = printHIR(ir.body);
+
     leaveSSA(ir);
     const leaveSSAOutput = printHIR(ir.body);
 
@@ -110,6 +115,7 @@ function compile(source: string): CompilerOutput | CompilerError {
       eliminateRedundantPhiOutput,
       inferReferenceEffectsOutput,
       inferMutableRangesOutput,
+      inferReactiveScopeDependenciesOutput,
       leaveSSAOutput,
       codegenOutput,
       sourceMapUrl,
@@ -163,6 +169,11 @@ function Output({ store, setTabsOpen, tabsOpen }: Props) {
         InferMutableRanges: (
           <TextTabContent
             output={compilerOutput.inferMutableRangesOutput}
+          ></TextTabContent>
+        ),
+        InferReactiveScopeDependencies: (
+          <TextTabContent
+            output={compilerOutput.inferReactiveScopeDependenciesOutput}
           ></TextTabContent>
         ),
         LeaveSSA: (

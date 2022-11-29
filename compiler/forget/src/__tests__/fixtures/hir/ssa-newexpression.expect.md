@@ -18,6 +18,7 @@ function Component(props) {
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG
@@ -47,6 +48,7 @@ bb0:
   [2] Const mutate b$8_@0[0:4] = Object {  }
   [3] Let mutate c$9_@0[0:4] = New mutate Foo$5_@0(mutate a$7_@0, mutate b$8_@0)
   [4] Return freeze c$9_@0
+
 ```
 
 ### CFG

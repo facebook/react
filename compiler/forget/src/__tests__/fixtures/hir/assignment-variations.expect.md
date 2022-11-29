@@ -28,6 +28,15 @@ bb0:
   [6] Const mutate $10_@5 = 1
   [7] Reassign mutate x$11_@6 = Binary read x$9_@4 >>> read $10_@5
   [8] Return
+scope2 [3:4]:
+ - read x$5_@0
+ - read $6_@1
+scope4 [5:6]:
+ - read x$7_@2
+ - read $8_@3
+scope6 [7:8]:
+ - read x$9_@4
+ - read $10_@5
 ```
 
 ### CFG
@@ -72,6 +81,8 @@ bb0:
   [3] Const mutate $6_@2 = 2
   [4] Reassign mutate a$4_@1.b.c[0:5] = Binary read a$4_@1.b.c * read $6_@2
   [5] Return
+scope2 [3:4]:
+ - mutate a$4_@1.b.c
 ```
 
 ### CFG

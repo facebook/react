@@ -37,6 +37,7 @@ bb1:
   predecessor blocks: bb2 bb3
   $8_@0[0:7]: phi(bb2: $6_@0, bb3: $7_@0)
   [7] Return freeze $8_@0
+
 ```
 
 ### CFG
@@ -104,6 +105,7 @@ bb1:
   predecessor blocks: bb2 bb3
   $8_@0[0:7]: phi(bb2: $6_@0, bb3: $7_@0)
   [7] Return freeze $8_@0
+
 ```
 
 ### CFG
@@ -173,6 +175,7 @@ bb1:
   predecessor blocks: bb2 bb3
   $14_@0[0:9]: phi(bb2: $12_@0, bb3: $13_@0)
   [9] Return freeze $14_@0
+
 ```
 
 ### CFG
@@ -229,6 +232,7 @@ function QuestionQuestion$0(props$1) {
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG
@@ -255,6 +259,7 @@ function f$0() {}
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG

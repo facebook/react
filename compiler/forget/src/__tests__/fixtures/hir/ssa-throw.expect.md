@@ -28,6 +28,8 @@ bb1:
   predecessor blocks: bb2 bb0
   x$8_@0[1:7]: phi(bb2: x$7_@0, bb0: x$4_@0)
   [7] Throw read x$8_@0
+scope2 [3:4]:
+ - read $5_@1
 ```
 
 ### CFG

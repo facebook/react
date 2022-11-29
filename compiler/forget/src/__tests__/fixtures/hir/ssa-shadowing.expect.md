@@ -22,6 +22,7 @@ function Foo(cond) {
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG
@@ -63,6 +64,7 @@ bb1:
   str$10_@0[1:8]: phi(bb2: str$6_@0, bb3: str$8_@0)
   [8] Call mutate log$4_@2(read str$10_@0)
   [9] Return
+
 ```
 
 ### CFG

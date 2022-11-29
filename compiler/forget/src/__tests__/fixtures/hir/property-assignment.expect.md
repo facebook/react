@@ -24,6 +24,16 @@ bb0:
   [5] Call mutate x$7_@0.y.push(read props$6.p0)
   [6] Const mutate $10_@3 = JSX <read Component$0 data={freeze x$7_@0} >{read child$9_@2}</read Component$0>
   [7] Return read $10_@3
+scope1 [2:3]:
+ - mutate x$7_@0.y
+scope2 [4:5]:
+ - read Component$0
+ - freeze y$8_@1
+ - read props$6.p0
+scope3 [6:7]:
+ - read Component$0
+ - freeze x$7_@0
+ - read child$9_@2
 ```
 
 ### CFG

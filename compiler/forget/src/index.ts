@@ -21,18 +21,19 @@ export * from "./Diagnostic";
 export * from "./Logger";
 export { NoUseBeforeDefineRule } from "./Validation";
 
-import { lower } from "./HIR/BuildHIR";
-import { eliminateRedundantPhi } from "./HIR/EliminateRedundantPhi";
-import enterSSA from "./HIR/EnterSSA";
-import { inferMutableRanges } from "./HIR/InferMutableLifetimes";
-import inferReferenceEffects from "./HIR/InferReferenceEffects";
-import printHIR from "./HIR/PrintHIR";
-import { Environment } from "./HIR/HIRBuilder";
-import leaveSSA from "./HIR/LeaveSSA";
+import { parse } from "@babel/parser";
 import traverse, { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import { parse } from "@babel/parser";
+import { lower } from "./HIR/BuildHIR";
 import codegen from "./HIR/Codegen";
+import { eliminateRedundantPhi } from "./HIR/EliminateRedundantPhi";
+import enterSSA from "./HIR/EnterSSA";
+import { Environment } from "./HIR/HIRBuilder";
+import { inferMutableRanges } from "./HIR/InferMutableLifetimes";
+import { inferReactiveScopeDependencies } from "./HIR/InferReactiveScopeDependencies";
+import inferReferenceEffects from "./HIR/InferReferenceEffects";
+import leaveSSA from "./HIR/LeaveSSA";
+import printHIR from "./HIR/PrintHIR";
 
 function parseFunctions(
   source: string
@@ -62,6 +63,7 @@ export const HIR = {
   enterSSA,
   inferMutableRanges,
   inferReferenceEffects,
+  inferReactiveScopeDependencies,
   printHIR,
   Environment,
   leaveSSA,

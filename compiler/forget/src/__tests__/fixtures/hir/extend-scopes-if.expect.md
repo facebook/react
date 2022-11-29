@@ -46,6 +46,10 @@ bb7:
   predecessor blocks: bb1
   [10] Const mutate $13_@2 = null
   [11] Return read $13_@2
+scope0 [1:8]:
+ - read c$9
+ - read b$8
+ - read a$7
 ```
 
 ### CFG

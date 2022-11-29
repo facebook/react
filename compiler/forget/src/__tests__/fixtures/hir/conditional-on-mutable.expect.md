@@ -53,6 +53,13 @@ bb3:
   predecessor blocks: bb4 bb1
   [9] Const mutate $16_@2 = JSX <read Foo$4 a={freeze a$7_@0} b={freeze b$8_@0} ></read Foo$4>
   [10] Return read $16_@2
+scope0 [1:9]:
+ - read props$6.p0
+ - read props$6.p2
+ - read props$6.p1
+scope2 [9:10]:
+ - freeze a$7_@0
+ - freeze b$8_@0
 ```
 
 ### CFG
@@ -140,6 +147,9 @@ bb3:
   predecessor blocks: bb4 bb1
   [10] Const mutate $19_@2 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
   [11] Return read $19_@2
+scope2 [10:11]:
+ - freeze a$9_@0
+ - freeze b$10_@0
 ```
 
 ### CFG
@@ -210,6 +220,7 @@ function Component$0(props$1) {
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG
@@ -236,6 +247,7 @@ function Foo$0() {}
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG

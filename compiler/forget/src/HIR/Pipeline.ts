@@ -15,6 +15,7 @@ import inferReferenceEffects from "../HIR/InferReferenceEffects";
 import leaveSSA from "../HIR/LeaveSSA";
 import codegen from "./Codegen";
 import { HIRFunction } from "./HIR";
+import { inferReactiveScopeDependencies } from "./InferReactiveScopeDependencies";
 import { inferReactiveScopes } from "./InferReactiveScopes";
 import { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 
@@ -24,6 +25,7 @@ export type CompilerFlags = {
   inferMutableRanges: boolean;
   inferReactiveScopeVariables: boolean;
   inferReactiveScopes: boolean;
+  inferReactiveScopeDependencies: boolean;
   leaveSSA: boolean;
   codegen: boolean;
 };
@@ -54,6 +56,9 @@ export default function (
   }
   if (flags.inferReactiveScopes) {
     inferReactiveScopes(ir);
+  }
+  if (flags.inferReactiveScopeDependencies) {
+    inferReactiveScopeDependencies(ir);
   }
   if (flags.leaveSSA) {
     leaveSSA(ir);

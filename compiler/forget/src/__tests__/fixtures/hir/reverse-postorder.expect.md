@@ -76,6 +76,13 @@ bb1:
   x$16_@4[7:17]: phi(bb8: x$11_@4, bb6: x$12_@4, bb4: x$13_@4, bb12: x$14_@4, bb13: x$15_@4)
   [18] read x$16_@4
   [19] Return
+scope4 [7:17]:
+ - read props$6.v2
+ - read props$6.v1
+ - read props$6.v0
+ - read props$6.test
+ - read props$6.b
+ - read props$6.c
 ```
 
 ### CFG

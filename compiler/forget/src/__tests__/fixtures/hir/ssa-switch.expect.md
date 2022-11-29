@@ -57,6 +57,19 @@ bb1:
   x$21_@6[8:17]: phi(bb5: x$16_@6, bb3: x$18_@6, bb2: x$20_@6)
   [16] Let mutate y$22_@6[8:17] = read x$21_@6
   [17] Return
+scope2 [3:4]:
+ - read x$10_@0
+ - read $11_@1
+scope4 [5:6]:
+ - read x$10_@0
+ - read $13_@3
+scope6 [8:17]:
+ - read x$10_@0
+ - read x$10_@0
+scope7 [10:11]:
+ - read x$10_@0
+scope5 [7:8]:
+ - read x$10_@0
 ```
 
 ### CFG

@@ -37,6 +37,11 @@ bb1:
   y$10_@3[5:10]: phi(bb2: y$8_@3, bb3: y$9_@3)
   [9] Let mutate x$11_@3[5:10] = read y$10_@3
   [10] Return
+scope2 [3:4]:
+ - read y$5_@0
+ - read $6_@1
+scope3 [5:10]:
+ - read $7_@2
 ```
 
 ### CFG

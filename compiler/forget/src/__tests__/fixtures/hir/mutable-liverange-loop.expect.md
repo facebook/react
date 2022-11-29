@@ -39,6 +39,7 @@ function Component(props) {
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG
@@ -65,6 +66,7 @@ function mutate$0() {}
 ```
 bb0:
   [1] Return
+
 ```
 
 ### CFG
@@ -124,6 +126,7 @@ bb13:
   [16] Const mutate $28_@3 = null
   [17] Call mutate mutate$6_@0(mutate d$15_@0, read $28_@3)
   [18] Return
+
 ```
 
 ### CFG

@@ -32,6 +32,9 @@ bb1:
   x$10_@0[1:9]: phi(bb2: x$9_@0, bb0: x$5_@0)
   [8] Reassign mutate y$11_@0[1:9] = read x$10_@0
   [9] Return
+scope3 [4:5]:
+ - read y$6_@1
+ - read $7_@2
 ```
 
 ### CFG

@@ -20,6 +20,8 @@ bb0:
   [3] Const mutate $6_@1[2:5] = Array []
   [4] Call mutate y$5_@1.x.push(mutate $6_@1)
   [5] Return freeze y$5_@1
+scope1 [2:5]:
+ - read x$4_@0
 ```
 
 ### CFG

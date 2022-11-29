@@ -6,6 +6,7 @@
  */
 
 import invariant from "invariant";
+import { retainWhere } from "../Common/utils";
 import DisjointSet from "./DisjointSet";
 import {
   HIRFunction,
@@ -394,18 +395,4 @@ function getInstructionScope(instr: Instruction): ReactiveScope | null {
     }
   }
   return null;
-}
-
-/**
- * Modifies @param array, retaining only the items where the predicate returns true.
- */
-function retainWhere<T>(array: Array<T>, predicate: (item: T) => boolean) {
-  let writeIndex = 0;
-  for (let readIndex = 0; readIndex < array.length; readIndex++) {
-    const item = array[readIndex];
-    if (predicate(item) === true) {
-      array[writeIndex++] = item;
-    }
-  }
-  array.length = writeIndex;
 }
