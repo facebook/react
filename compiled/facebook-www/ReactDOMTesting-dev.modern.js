@@ -30490,9 +30490,33 @@ function safelyAttachRef(current, nearestMountedAncestor) {
 
 function safelyDetachRef(current, nearestMountedAncestor) {
   var ref = current.ref;
+  var refCleanup = current.refCleanup;
 
   if (ref !== null) {
-    if (typeof ref === "function") {
+    if (typeof refCleanup === "function") {
+      try {
+        if (shouldProfile(current)) {
+          try {
+            startLayoutEffectTimer();
+            refCleanup();
+          } finally {
+            recordLayoutEffectDuration(current);
+          }
+        } else {
+          refCleanup();
+        }
+      } catch (error) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error);
+      } finally {
+        // `refCleanup` has been called. Nullify all references to it to prevent double invocation.
+        current.refCleanup = null;
+        var finishedWork = current.alternate;
+
+        if (finishedWork != null) {
+          finishedWork.refCleanup = null;
+        }
+      }
+    } else if (typeof ref === "function") {
       var retVal;
 
       try {
@@ -31328,20 +31352,8 @@ function commitAttachRef(finishedWork) {
     }
 
     if (typeof ref === "function") {
-      var retVal;
-
       {
-        retVal = ref(instanceToUse);
-      }
-
-      {
-        if (typeof retVal === "function") {
-          error(
-            "Unexpected return value from a callback ref in %s. " +
-              "A callback ref should not return a function.",
-            getComponentNameFromFiber(finishedWork)
-          );
-        }
+        finishedWork.refCleanup = ref(instanceToUse);
       }
     } else {
       {
@@ -37768,6 +37780,7 @@ function FiberNode(tag, pendingProps, key, mode) {
   this.sibling = null;
   this.index = 0;
   this.ref = null;
+  this.refCleanup = null;
   this.pendingProps = pendingProps;
   this.memoizedProps = null;
   this.updateQueue = null;
@@ -37904,6 +37917,7 @@ function createWorkInProgress(current, pendingProps) {
   workInProgress.sibling = current.sibling;
   workInProgress.index = current.index;
   workInProgress.ref = current.ref;
+  workInProgress.refCleanup = current.refCleanup;
 
   {
     workInProgress._debugNeedsRemount = current._debugNeedsRemount;
@@ -38407,7 +38421,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-edbfc6399-20221128";
+var ReactVersion = "18.3.0-www-modern-e98225485-20221129";
 
 function createPortal(
   children,
