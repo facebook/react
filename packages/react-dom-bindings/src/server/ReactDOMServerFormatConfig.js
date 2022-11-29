@@ -2539,8 +2539,10 @@ export function writeCompletedBoundaryInstruction(
   writeChunk(destination, formattedContentID);
   if (enableFloat && hasStyleDependencies) {
     // Script and data writers must format this differently:
-    //  - script writer emits an array literal ["1", "2"]
-    //  - data writer emits a string literal ["1", "2"])
+    //  - script writer emits an array literal, whose string elements are
+    //    escaped for javascript  e.g. ["A", "B"]
+    //  - data writer emits a string literal, which is escaped as html
+    //    e.g. [&#34;A&#34;, &#34;B&#34;]
     if (scriptFormat) {
       writeChunk(destination, completeBoundaryScript3a);
       // boundaryResources encodes an array literal
@@ -2599,7 +2601,7 @@ export function writeClientRenderBoundaryInstruction(
       writeChunk(destination, clientRenderScript1Partial);
     }
   } else {
-    // <template data-rxi="" data-arg0="
+    // <template data-rxi="" data-bid="
     writeChunk(destination, clientRenderData1);
   }
 
@@ -2625,7 +2627,7 @@ export function writeClientRenderBoundaryInstruction(
         stringToChunk(escapeJSStringsForInstructionScripts(errorDigest || '')),
       );
     } else {
-      // " arg1="EscapedString
+      // " data-dgst="HTMLString
       writeChunk(destination, clientRenderData2);
       writeChunk(
         destination,
@@ -2642,7 +2644,7 @@ export function writeClientRenderBoundaryInstruction(
         stringToChunk(escapeJSStringsForInstructionScripts(errorMessage || '')),
       );
     } else {
-      // " arg2="EscapedString
+      // " data-msg="HTMLString
       writeChunk(destination, clientRenderData3);
       writeChunk(
         destination,
@@ -2661,7 +2663,7 @@ export function writeClientRenderBoundaryInstruction(
         ),
       );
     } else {
-      // " arg3="EscapedString
+      // " data-stck="HTMLString
       writeChunk(destination, clientRenderData4);
       writeChunk(
         destination,
@@ -2674,7 +2676,7 @@ export function writeClientRenderBoundaryInstruction(
     // ></script>
     return writeChunkAndReturn(destination, clientRenderScriptEnd);
   } else {
-    // "></div>
+    // "></template>
     return writeChunkAndReturn(destination, clientRenderDataEnd);
   }
 }
