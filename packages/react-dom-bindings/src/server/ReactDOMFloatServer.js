@@ -385,7 +385,7 @@ function preloadAsStylePropsFromProps(
   return {
     rel: 'preload',
     as: 'style',
-    href: href,
+    href,
     crossOrigin: props.crossOrigin,
     integrity: props.integrity,
     media: props.media,

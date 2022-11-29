@@ -375,10 +375,10 @@ function createElement(type, key, props): React$Element<any> {
     $$typeof: REACT_ELEMENT_TYPE,
 
     // Built-in properties that belong on the element
-    type: type,
-    key: key,
+    type,
+    key,
     ref: null,
-    props: props,
+    props,
 
     // Record the component responsible for creating this element.
     _owner: null,
