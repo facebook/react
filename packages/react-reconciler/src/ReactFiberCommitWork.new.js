@@ -286,8 +286,32 @@ function safelyAttachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
 
 function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
   const ref = current.ref;
+  const refCleanup = current.refCleanup;
+
   if (ref !== null) {
-    if (typeof ref === 'function') {
+    if (typeof refCleanup === 'function') {
+      try {
+        if (shouldProfile(current)) {
+          try {
+            startLayoutEffectTimer();
+            refCleanup();
+          } finally {
+            recordLayoutEffectDuration(current);
+          }
+        } else {
+          refCleanup();
+        }
+      } catch (error) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error);
+      } finally {
+        // `refCleanup` has been called. Nullify all references to it to prevent double invocation.
+        current.refCleanup = null;
+        const finishedWork = current.alternate;
+        if (finishedWork != null) {
+          finishedWork.refCleanup = null;
+        }
+      }
+    } else if (typeof ref === 'function') {
       let retVal;
       try {
         if (shouldProfile(current)) {
@@ -1572,25 +1596,15 @@ function commitAttachRef(finishedWork: Fiber) {
       instanceToUse = instance;
     }
     if (typeof ref === 'function') {
-      let retVal;
       if (shouldProfile(finishedWork)) {
         try {
           startLayoutEffectTimer();
-          retVal = ref(instanceToUse);
+          finishedWork.refCleanup = ref(instanceToUse);
         } finally {
           recordLayoutEffectDuration(finishedWork);
         }
       } else {
-        retVal = ref(instanceToUse);
-      }
-      if (__DEV__) {
-        if (typeof retVal === 'function') {
-          console.error(
-            'Unexpected return value from a callback ref in %s. ' +
-              'A callback ref should not return a function.',
-            getComponentNameFromFiber(finishedWork),
-          );
-        }
+        finishedWork.refCleanup = ref(instanceToUse);
       }
     } else {
       if (__DEV__) {
@@ -1605,27 +1619,6 @@ function commitAttachRef(finishedWork: Fiber) {
 
       // $FlowFixMe unable to narrow type to the non-function case
       ref.current = instanceToUse;
-    }
-  }
-}
-
-function commitDetachRef(current: Fiber) {
-  const currentRef = current.ref;
-  if (currentRef !== null) {
-    if (typeof currentRef === 'function') {
-      if (shouldProfile(current)) {
-        try {
-          startLayoutEffectTimer();
-          currentRef(null);
-        } finally {
-          recordLayoutEffectDuration(current);
-        }
-      } else {
-        currentRef(null);
-      }
-    } else {
-      // $FlowFixMe unable to narrow type to the non-function case
-      currentRef.current = null;
     }
   }
 }
@@ -4450,7 +4443,6 @@ function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
 export {
   commitPlacement,
   commitAttachRef,
-  commitDetachRef,
   invokeLayoutEffectMountInDEV,
   invokeLayoutEffectUnmountInDEV,
   invokePassiveEffectMountInDEV,

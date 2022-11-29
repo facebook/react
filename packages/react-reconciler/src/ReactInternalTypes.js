@@ -131,6 +131,8 @@ export type Fiber = {
     | (((handle: mixed) => void) & {_stringRef: ?string, ...})
     | RefObject,
 
+  refCleanup: null | (() => void),
+
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
   memoizedProps: any, // The props used to create the output.
