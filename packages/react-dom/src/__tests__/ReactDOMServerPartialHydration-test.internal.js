@@ -1108,7 +1108,7 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
 
-    Scheduler.unstable_flushAll();
+    Scheduler.unstable_flushAll();    
     jest.runAllTimers();
 
     const span = container.getElementsByTagName('span')[0];
