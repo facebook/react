@@ -14,14 +14,43 @@ import {
   completeSegment,
 } from './fizz-instruction-set/ReactDOMFizzInstructionSet';
 
+if (!window.$RC) {
+  // TODO: Eventually remove, we currently need to set these globals for
+  // compatibility with ReactDOMFizzInstructionSet
+  window.$RC = completeBoundary;
+  window.$RM = new Map();
+}
+
 if (document.readyState === 'loading') {
-  if (!window.$RC) {
-    // TODO: Eventually remove, we currently need to set these globals for
-    // compatibility with ReactDOMFizzInstructionSet
-    window.$RC = completeBoundary;
-    window.$RM = new Map();
+  if (document.body != null) {
+    installFizzInstrObserver(document.body);
+  } else {
+    // body may not exist yet if the fizz runtime is sent in <head>
+    // (e.g. as a preinit resource)
+    const domBodyObserver = new MutationObserver(() => {
+      // We expect the body node to be stable once parsed / created
+      if (document.body) {
+        if (document.readyState === 'loading') {
+          installFizzInstrObserver(document.body);
+        }
+        handleExistingNodes();
+        domBodyObserver.disconnect();
+      }
+    });
   }
-  const mutationObserver = new MutationObserver(mutations => {
+}
+
+handleExistingNodes();
+
+function handleExistingNodes() {
+  const existingNodes = document.getElementsByTagName('template');
+  for (let i = 0; i < existingNodes.length; i++) {
+    handleNode(existingNodes[i]);
+  }
+}
+
+function installFizzInstrObserver(target /*: Node */) {
+  const fizzInstrObserver = new MutationObserver(mutations => {
     for (let i = 0; i < mutations.length; i++) {
       const addedNodes = mutations[i].addedNodes;
       for (let j = 0; j < addedNodes.length; j++) {
@@ -31,22 +60,14 @@ if (document.readyState === 'loading') {
       }
     }
   });
-
   // We assume that instruction data nodes are eventually appended to the
   // body, even if Fizz is streaming to a shell / subtree.
-
-  // $FlowFixMe[incompatible-cast] document.body should exist at this point
-  mutationObserver.observe((document.body /*: Node */), {
+  fizzInstrObserver.observe(target, {
     childList: true,
   });
   window.addEventListener('DOMContentLoaded', () => {
-    mutationObserver.disconnect();
+    fizzInstrObserver.disconnect();
   });
-}
-
-const existingNodes = document.getElementsByTagName('template');
-for (let i = 0; i < existingNodes.length; i++) {
-  handleNode(existingNodes[i]);
 }
 
 function handleNode(node_ /*: Node */) {
@@ -59,7 +80,7 @@ function handleNode(node_ /*: Node */) {
   const dataset = node.dataset;
   if (dataset['rxi'] != null) {
     clientRenderBoundary(
-      dataset['sid'],
+      dataset['bid'],
       dataset['dgst'],
       dataset['msg'],
       dataset['stck'],

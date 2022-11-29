@@ -132,7 +132,6 @@ export type ResponseState = {
 };
 
 const dataElementQuotedEnd = stringToPrecomputedChunk('"></template>');
-const dataElementUnquotedEnd = stringToPrecomputedChunk('></template>');
 
 const startInlineScript = stringToPrecomputedChunk('<script>');
 const endInlineScript = stringToPrecomputedChunk('</script>');
@@ -2473,10 +2472,8 @@ const completeBoundaryWithStylesData1 = stringToPrecomputedChunk(
   '<template data-rri="" data-bid="',
 );
 const completeBoundaryData2 = stringToPrecomputedChunk('" data-sid="');
-const completeBoundaryData3aStart = stringToPrecomputedChunk('" data-sty=\'');
-const completeBoundaryData3aEnd = stringToPrecomputedChunk("'");
-const completeBoundaryData3b = completeBoundaryScript3b;
-const completeBoundaryDataEnd = dataElementUnquotedEnd;
+const completeBoundaryData3a = stringToPrecomputedChunk('" data-sty="');
+const completeBoundaryDataEnd = dataElementQuotedEnd;
 
 export function writeCompletedBoundaryInstruction(
   destination: Destination,
@@ -2549,15 +2546,12 @@ export function writeCompletedBoundaryInstruction(
       // boundaryResources encodes an array literal
       writeStyleResourceDependenciesInJS(destination, boundaryResources);
     } else {
-      writeChunk(destination, completeBoundaryData3aStart);
+      writeChunk(destination, completeBoundaryData3a);
       writeStyleResourceDependenciesInAttr(destination, boundaryResources);
-      writeChunk(destination, completeBoundaryData3aEnd);
     }
   } else {
     if (scriptFormat) {
       writeChunk(destination, completeBoundaryScript3b);
-    } else {
-      writeChunk(destination, completeBoundaryData3b);
     }
   }
   if (scriptFormat) {
@@ -2576,7 +2570,7 @@ const clientRenderErrorScriptArgInterstitial = stringToPrecomputedChunk(',');
 const clientRenderScriptEnd = stringToPrecomputedChunk(')</script>');
 
 const clientRenderData1 = stringToPrecomputedChunk(
-  '<template data-rxi="" data-sid="',
+  '<template data-rxi="" data-bid="',
 );
 const clientRenderData2 = stringToPrecomputedChunk('" data-dgst="');
 const clientRenderData3 = stringToPrecomputedChunk('" data-msg="');
@@ -2744,13 +2738,19 @@ export function writeInitialResources(
   responseState: ResponseState,
   willFlushAllSegments: boolean,
 ): boolean {
+  // Write initially discovered resources after the shell completes
   if (
     enableFizzExternalRuntime &&
     !willFlushAllSegments &&
     responseState.externalRuntimeConfig
   ) {
+    // If the root segment is incomplete due to suspended tasks
+    // (e.g. willFlushAllSegments = false) and we are using data
+    // streaming format, ensure the external runtime is sent.
+    // (User code could choose to send this even earlier by calling
+    //  preinit(...), if they know they will suspend).
     const {src, integrity} = responseState.externalRuntimeConfig;
-    preinitImpl(src, {as: 'script', integrity}, resources);
+    preinitImpl(resources, src, {as: 'script', integrity});
   }
   function flushLinkResource(resource) {
     if (!resource.flushed) {

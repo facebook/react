@@ -285,16 +285,16 @@ function preinit(href: string, options: PreinitOptions): void {
     // simply return and do not warn.
     return;
   }
-  preinitImpl(href, options, currentResources);
+  preinitImpl(currentResources, href, options);
 }
 
 // On the server, preinit may be called outside of render when sending an
 // external SSR runtime as part of the initial resources payload. Since this
 // is an internal React call, we do not need to use the resources stack.
 export function preinitImpl(
+  resources: Resources,
   href: string,
   options: PreinitOptions,
-  resources: Resources,
 ): void {
   if (__DEV__) {
     validatePreinitArguments(href, options);
