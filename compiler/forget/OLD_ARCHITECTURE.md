@@ -1,5 +1,7 @@
 # Architecture Overview
 
+Note: This refers to the non-HIR based architecture.
+
 ## Diagnostics
 
 Diagnostics are a way to indicate to the user that the compiler has encountered an unexpected issue, and are created in a structured format that is reused in the Playground to imperatively draw model markers ("squigglies") at their respective node locations.
