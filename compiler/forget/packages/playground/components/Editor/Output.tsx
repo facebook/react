@@ -202,7 +202,9 @@ function getSourceMapUrl(code: string, map: string): string | null {
 
 function TextTabContent({ output }: { output: string }) {
   return (
-    <div className="w-full h-full">
+    // Restrict MonacoEditor's height, since the config autoLayout:true
+    // will grow the editor to fit within parent element
+    <div className="w-full h-monaco_small sm:h-monaco">
       <MonacoEditor
         defaultLanguage="javascript"
         value={output}
