@@ -454,7 +454,7 @@ describe('useSubscription', () => {
       observableA.next('a-2');
 
       // Update again
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
         React.startTransition(() => {
           renderer.update(<Parent observed={observableA} />);
         });

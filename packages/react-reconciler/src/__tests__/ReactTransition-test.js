@@ -934,7 +934,7 @@ describe('ReactTransition', () => {
       updateNormalPri();
     });
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
       expect(Scheduler).toHaveYielded([
         // Interrupt transition.
         'Transition pri: 0',

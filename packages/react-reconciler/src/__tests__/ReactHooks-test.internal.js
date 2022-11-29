@@ -568,7 +568,7 @@ describe('ReactHooks', () => {
       });
     };
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
       // Update at transition priority
       React.startTransition(() => update(n => n * 100));
     } else {

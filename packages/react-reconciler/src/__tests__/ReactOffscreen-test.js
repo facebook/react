@@ -690,7 +690,7 @@ describe('ReactOffscreen', () => {
       );
 
       // Before the inner update can finish, we receive another pair of updates.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
         React.startTransition(() => {
           setOuter(2);
           setInner(2);

@@ -158,7 +158,7 @@ describe('ReactBlockingMode', () => {
     );
 
     // Now flush the first update
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
       expect(Scheduler).toHaveYielded(['A1', 'B1']);
       expect(root).toMatchRenderedOutput('A1B1');
     } else {

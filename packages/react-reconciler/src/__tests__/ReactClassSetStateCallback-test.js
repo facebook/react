@@ -35,7 +35,7 @@ describe('ReactClassSetStateCallback', () => {
     expect(Scheduler).toHaveYielded([0]);
 
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
         React.startTransition(() => {
           app.setState({step: 1}, () =>
             Scheduler.unstable_yieldValue('Callback 1'),

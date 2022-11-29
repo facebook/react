@@ -1910,7 +1910,7 @@ describe('ReactIncremental', () => {
         <ShowBoth />
       </Intl>,
     );
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
       expect(Scheduler).toFlushAndYield([
         'Intl {}',
         'ShowLocale {"locale":"en"}',
@@ -2774,7 +2774,7 @@ describe('ReactIncremental', () => {
     // Interrupt at same priority
     ReactNoop.render(<Parent step={2} />);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
       expect(Scheduler).toFlushAndYield(['Parent: 2', 'Child: 2']);
     } else {
       expect(Scheduler).toFlushAndYield(['Child: 1', 'Parent: 2', 'Child: 2']);
@@ -2805,7 +2805,7 @@ describe('ReactIncremental', () => {
     ReactNoop.expire(2000);
     ReactNoop.render(<Parent step={2} />);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+    if (gate(flags => flags.enableUnifiedSyncLane)) {
       expect(Scheduler).toFlushAndYield(['Parent: 2', 'Child: 2']);
     } else {
       expect(Scheduler).toFlushAndYield(['Child: 1', 'Parent: 2', 'Child: 2']);
