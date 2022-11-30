@@ -11,6 +11,7 @@ import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {
   FiberRoot,
   TransitionTracingCallbacks,
+  TracingHooks,
 } from 'react-reconciler/src/ReactInternalTypes';
 
 import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
@@ -31,6 +32,7 @@ export type CreateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
+  unstable_tracingHooks?: TracingHooks,
   identifierPrefix?: string,
   onUncaughtError?: (
     error: mixed,
@@ -57,6 +59,7 @@ export type HydrateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
+  unstable_tracingHooks?: TracingHooks,
   identifierPrefix?: string,
   onUncaughtError?: (
     error: mixed,
@@ -180,6 +183,7 @@ export function createRoot(
   let onCaughtError = defaultOnCaughtError;
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
+  let tracingHooks = null;
 
   if (options !== null && options !== undefined) {
     if (__DEV__) {
@@ -227,6 +231,9 @@ export function createRoot(
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
+    if (options.unstable_tracingHooks !== undefined) {
+      tracingHooks = options.unstable_tracingHooks;
+    }
   }
 
   const root = createContainer(
@@ -240,6 +247,7 @@ export function createRoot(
     onCaughtError,
     onRecoverableError,
     transitionCallbacks,
+    tracingHooks,
   );
   markContainerAsRoot(root.current, container);
 
@@ -297,6 +305,7 @@ export function hydrateRoot(
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
   let formState = null;
+  let tracingHooks = null;
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -327,6 +336,9 @@ export function hydrateRoot(
         formState = options.formState;
       }
     }
+    if (options.unstable_tracingHooks !== undefined) {
+      tracingHooks = options.unstable_tracingHooks;
+    }
   }
 
   const root = createHydrationContainer(
@@ -343,6 +355,7 @@ export function hydrateRoot(
     onRecoverableError,
     transitionCallbacks,
     formState,
+    tracingHooks,
   );
   markContainerAsRoot(root.current, container);
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.

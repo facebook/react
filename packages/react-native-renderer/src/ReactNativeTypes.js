@@ -192,6 +192,7 @@ export type RenderRootOptions = {
     error: mixed,
     errorInfo: {+componentStack?: ?string},
   ) => void,
+  tracingHooks?: ?TracingHooks,
 };
 
 /**
@@ -235,6 +236,33 @@ export opaque type Node = mixed;
 export opaque type InternalInstanceHandle = mixed;
 type PublicInstance = mixed;
 type PublicTextInstance = mixed;
+
+export type TracingHooks = {
+  onCommitStarted?: () => void,
+  onCommitStopped?: () => void,
+  onComponentRenderStarted?: (componentName: ?string) => void,
+  onComponentRenderStopped?: () => void,
+  onComponentPassiveEffectMountStarted?: (componentName: ?string) => void,
+  onComponentPassiveEffectMountStopped?: () => void,
+  onComponentPassiveEffectUnmountStarted?: (componentName: ?string) => void,
+  onComponentPassiveEffectUnmountStopped?: () => void,
+  onComponentLayoutEffectMountStarted?: (componentName: ?string) => void,
+  onComponentLayoutEffectMountStopped?: () => void,
+  onComponentLayoutEffectUnmountStarted?: (componentName: ?string) => void,
+  onComponentLayoutEffectUnmountStopped?: () => void,
+  onComponentErrored?: (thrownValue: mixed) => void,
+  onComponentSuspended?: () => void,
+  onLayoutEffectsStarted?: () => void,
+  onLayoutEffectsStopped?: () => void,
+  onPassiveEffectsStarted?: () => void,
+  onPassiveEffectsStopped?: () => void,
+  onRenderStarted?: () => void,
+  onRenderYielded?: () => void,
+  onRenderStopped?: () => void,
+  onRenderScheduled?: () => void,
+  onForceUpdateScheduled?: (componentName: ?string) => void,
+  onStateUpdateScheduled?: (componentName: ?string) => void,
+};
 
 export type ReactFabricType = {
   findHostInstance_DEPRECATED<TElementType: ElementType>(

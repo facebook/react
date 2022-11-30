@@ -17,6 +17,8 @@
 // flag here but it won't be set to `true` in any of our test runs. Need to
 // add a test configuration for React Native.
 
+export const enableTracingHooks = __VARIANT__;
+
 export const alwaysThrottleRetries = __VARIANT__;
 export const consoleManagedByDevToolsDuringStrictMode = __VARIANT__;
 export const disableDefaultPropsExceptForClasses = __VARIANT__;

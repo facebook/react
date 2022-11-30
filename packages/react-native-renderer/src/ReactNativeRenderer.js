@@ -164,6 +164,7 @@ function render(
       onCaughtError,
       onRecoverableError,
       null,
+      null,
     );
     roots.set(containerTag, root);
   }

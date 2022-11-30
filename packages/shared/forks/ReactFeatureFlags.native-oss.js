@@ -71,6 +71,7 @@ export const enableCPUSuspense = false;
 export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = __PROFILE__;
+export const enableTracingHooks = false;
 export const enableLegacyCache = false;
 export const enablePostpone = false;
 export const disableCommentsAsDOMContainers = true;
