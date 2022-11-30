@@ -2023,8 +2023,14 @@ function flushInitialResources(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
+  willFlushAllSegments: boolean,
 ): void {
-  writeInitialResources(destination, resources, responseState);
+  writeInitialResources(
+    destination,
+    resources,
+    responseState,
+    willFlushAllSegments,
+  );
 }
 
 function flushImmediateResources(
@@ -2185,6 +2191,7 @@ function flushCompletedQueues(
             destination,
             request.resources,
             request.responseState,
+            request.allPendingTasks === 0,
           );
         }
 

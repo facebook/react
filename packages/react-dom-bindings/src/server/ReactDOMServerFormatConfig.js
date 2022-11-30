@@ -63,6 +63,7 @@ import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
 import {
+  preinitImpl,
   prepareToRenderResources,
   finishRenderingResources,
   resourcesFromElement,
@@ -105,21 +106,32 @@ export function cleanupAfterRender(previousDispatcher: mixed) {
 // E.g. this can be used to distinguish legacy renderers from this modern one.
 export const isPrimaryRenderer = true;
 
+export type StreamingFormat = 0 | 1;
+const ScriptStreamingFormat: StreamingFormat = 0;
+const DataStreamingFormat: StreamingFormat = 1;
+
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
-  startInlineScript: PrecomputedChunk,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
   idPrefix: string,
   nextSuspenseID: number,
+  streamingFormat: StreamingFormat,
+  // state for script streaming format, unused if using external runtime / data
+  startInlineScript: PrecomputedChunk,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
-  sentStyleInsertionFunction: boolean, // We allow the legacy renderer to extend this object.
+  sentStyleInsertionFunction: boolean,
+  // state for data streaming format
+  externalRuntimeConfig: BootstrapScriptDescriptor | null,
+  // We allow the legacy renderer to extend this object.
   ...
 };
+
+const dataElementQuotedEnd = stringToPrecomputedChunk('"></template>');
 
 const startInlineScript = stringToPrecomputedChunk('<script>');
 const endInlineScript = stringToPrecomputedChunk('</script>');
@@ -154,6 +166,8 @@ export type BootstrapScriptDescriptor = {
   integrity?: string,
 };
 // Allows us to keep track of what we've already written so we can refer back to it.
+// if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
+// is set, the server will send instructions via data attributes (instead of inline scripts)
 export function createResponseState(
   identifierPrefix: string | void,
   nonce: string | void,
@@ -170,6 +184,8 @@ export function createResponseState(
           '<script nonce="' + escapeTextForBrowser(nonce) + '">',
         );
   const bootstrapChunks = [];
+  let externalRuntimeDesc = null;
+  let streamingFormat = ScriptStreamingFormat;
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(
       inlineScriptWithNonce,
@@ -178,26 +194,21 @@ export function createResponseState(
     );
   }
   if (enableFizzExternalRuntime) {
-    if (externalRuntimeConfig !== undefined) {
-      const src =
-        typeof externalRuntimeConfig === 'string'
-          ? externalRuntimeConfig
-          : externalRuntimeConfig.src;
-      const integrity =
-        typeof externalRuntimeConfig === 'string'
-          ? undefined
-          : externalRuntimeConfig.integrity;
-      bootstrapChunks.push(
-        startScriptSrc,
-        stringToChunk(escapeTextForBrowser(src)),
+    if (!enableFloat) {
+      throw new Error(
+        'enableFizzExternalRuntime without enableFloat is not supported. This should never appear in production, since it means you are using a misconfigured React bundle.',
       );
-      if (integrity) {
-        bootstrapChunks.push(
-          scriptIntegirty,
-          stringToChunk(escapeTextForBrowser(integrity)),
-        );
+    }
+    if (externalRuntimeConfig !== undefined) {
+      streamingFormat = DataStreamingFormat;
+      if (typeof externalRuntimeConfig === 'string') {
+        externalRuntimeDesc = {
+          src: externalRuntimeConfig,
+          integrity: undefined,
+        };
+      } else {
+        externalRuntimeDesc = externalRuntimeConfig;
       }
-      bootstrapChunks.push(endAsyncScript);
     }
   }
   if (bootstrapScripts !== undefined) {
@@ -242,16 +253,18 @@ export function createResponseState(
   }
   return {
     bootstrapChunks: bootstrapChunks,
-    startInlineScript: inlineScriptWithNonce,
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: idPrefix + 'B:',
     idPrefix: idPrefix,
     nextSuspenseID: 0,
+    streamingFormat,
+    startInlineScript: inlineScriptWithNonce,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
     sentStyleInsertionFunction: false,
+    externalRuntimeConfig: externalRuntimeDesc,
   };
 }
 
@@ -2384,29 +2397,53 @@ const completeSegmentScript1Full = stringToPrecomputedChunk(
 );
 const completeSegmentScript1Partial = stringToPrecomputedChunk('$RS("');
 const completeSegmentScript2 = stringToPrecomputedChunk('","');
-const completeSegmentScript3 = stringToPrecomputedChunk('")</script>');
+const completeSegmentScriptEnd = stringToPrecomputedChunk('")</script>');
+
+const completeSegmentData1 = stringToPrecomputedChunk(
+  '<template data-rsi="" data-sid="',
+);
+const completeSegmentData2 = stringToPrecomputedChunk('" data-pid="');
+const completeSegmentDataEnd = dataElementQuotedEnd;
 
 export function writeCompletedSegmentInstruction(
   destination: Destination,
   responseState: ResponseState,
   contentSegmentID: number,
 ): boolean {
-  writeChunk(destination, responseState.startInlineScript);
-  if (!responseState.sentCompleteSegmentFunction) {
-    // The first time we write this, we'll need to include the full implementation.
-    responseState.sentCompleteSegmentFunction = true;
-    writeChunk(destination, completeSegmentScript1Full);
+  const scriptFormat =
+    !enableFizzExternalRuntime ||
+    responseState.streamingFormat === ScriptStreamingFormat;
+  if (scriptFormat) {
+    writeChunk(destination, responseState.startInlineScript);
+    if (!responseState.sentCompleteSegmentFunction) {
+      // The first time we write this, we'll need to include the full implementation.
+      responseState.sentCompleteSegmentFunction = true;
+      writeChunk(destination, completeSegmentScript1Full);
+    } else {
+      // Future calls can just reuse the same function.
+      writeChunk(destination, completeSegmentScript1Partial);
+    }
   } else {
-    // Future calls can just reuse the same function.
-    writeChunk(destination, completeSegmentScript1Partial);
+    writeChunk(destination, completeSegmentData1);
   }
+
+  // Write function arguments, which are string literals
   writeChunk(destination, responseState.segmentPrefix);
   const formattedID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, formattedID);
-  writeChunk(destination, completeSegmentScript2);
+  if (scriptFormat) {
+    writeChunk(destination, completeSegmentScript2);
+  } else {
+    writeChunk(destination, completeSegmentData2);
+  }
   writeChunk(destination, responseState.placeholderPrefix);
   writeChunk(destination, formattedID);
-  return writeChunkAndReturn(destination, completeSegmentScript3);
+
+  if (scriptFormat) {
+    return writeChunkAndReturn(destination, completeSegmentScriptEnd);
+  } else {
+    return writeChunkAndReturn(destination, completeSegmentDataEnd);
+  }
 }
 
 const completeBoundaryScript1Full = stringToPrecomputedChunk(
@@ -2424,9 +2461,19 @@ const completeBoundaryWithStylesScript1Partial = stringToPrecomputedChunk(
   '$RR("',
 );
 const completeBoundaryScript2 = stringToPrecomputedChunk('","');
-const completeBoundaryScript2a = stringToPrecomputedChunk('",');
-const completeBoundaryScript3 = stringToPrecomputedChunk('"');
-const completeBoundaryScript4 = stringToPrecomputedChunk(')</script>');
+const completeBoundaryScript3a = stringToPrecomputedChunk('",');
+const completeBoundaryScript3b = stringToPrecomputedChunk('"');
+const completeBoundaryScriptEnd = stringToPrecomputedChunk(')</script>');
+
+const completeBoundaryData1 = stringToPrecomputedChunk(
+  '<template data-rci="" data-bid="',
+);
+const completeBoundaryWithStylesData1 = stringToPrecomputedChunk(
+  '<template data-rri="" data-bid="',
+);
+const completeBoundaryData2 = stringToPrecomputedChunk('" data-sid="');
+const completeBoundaryData3a = stringToPrecomputedChunk('" data-sty="');
+const completeBoundaryDataEnd = dataElementQuotedEnd;
 
 export function writeCompletedBoundaryInstruction(
   destination: Destination,
@@ -2439,27 +2486,38 @@ export function writeCompletedBoundaryInstruction(
   if (enableFloat) {
     hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
   }
-  writeChunk(destination, responseState.startInlineScript);
-  if (enableFloat && hasStyleDependencies) {
-    if (!responseState.sentCompleteBoundaryFunction) {
-      responseState.sentCompleteBoundaryFunction = true;
-      responseState.sentStyleInsertionFunction = true;
-      writeChunk(
-        destination,
-        clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth),
-      );
-    } else if (!responseState.sentStyleInsertionFunction) {
-      responseState.sentStyleInsertionFunction = true;
-      writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
+  const scriptFormat =
+    !enableFizzExternalRuntime ||
+    responseState.streamingFormat === ScriptStreamingFormat;
+  if (scriptFormat) {
+    writeChunk(destination, responseState.startInlineScript);
+    if (enableFloat && hasStyleDependencies) {
+      if (!responseState.sentCompleteBoundaryFunction) {
+        responseState.sentCompleteBoundaryFunction = true;
+        responseState.sentStyleInsertionFunction = true;
+        writeChunk(
+          destination,
+          clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth),
+        );
+      } else if (!responseState.sentStyleInsertionFunction) {
+        responseState.sentStyleInsertionFunction = true;
+        writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
+      } else {
+        writeChunk(destination, completeBoundaryWithStylesScript1Partial);
+      }
     } else {
-      writeChunk(destination, completeBoundaryWithStylesScript1Partial);
+      if (!responseState.sentCompleteBoundaryFunction) {
+        responseState.sentCompleteBoundaryFunction = true;
+        writeChunk(destination, completeBoundaryScript1Full);
+      } else {
+        writeChunk(destination, completeBoundaryScript1Partial);
+      }
     }
   } else {
-    if (!responseState.sentCompleteBoundaryFunction) {
-      responseState.sentCompleteBoundaryFunction = true;
-      writeChunk(destination, completeBoundaryScript1Full);
+    if (enableFloat && hasStyleDependencies) {
+      writeChunk(destination, completeBoundaryWithStylesData1);
     } else {
-      writeChunk(destination, completeBoundaryScript1Partial);
+      writeChunk(destination, completeBoundaryData1);
     }
   }
 
@@ -2469,18 +2527,40 @@ export function writeCompletedBoundaryInstruction(
     );
   }
 
+  // Write function arguments, which are string and array literals
   const formattedContentID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, boundaryID);
-  writeChunk(destination, completeBoundaryScript2);
+  if (scriptFormat) {
+    writeChunk(destination, completeBoundaryScript2);
+  } else {
+    writeChunk(destination, completeBoundaryData2);
+  }
   writeChunk(destination, responseState.segmentPrefix);
   writeChunk(destination, formattedContentID);
   if (enableFloat && hasStyleDependencies) {
-    writeChunk(destination, completeBoundaryScript2a);
-    writeStyleResourceDependencies(destination, boundaryResources);
+    // Script and data writers must format this differently:
+    //  - script writer emits an array literal, whose string elements are
+    //    escaped for javascript  e.g. ["A", "B"]
+    //  - data writer emits a string literal, which is escaped as html
+    //    e.g. [&#34;A&#34;, &#34;B&#34;]
+    if (scriptFormat) {
+      writeChunk(destination, completeBoundaryScript3a);
+      // boundaryResources encodes an array literal
+      writeStyleResourceDependenciesInJS(destination, boundaryResources);
+    } else {
+      writeChunk(destination, completeBoundaryData3a);
+      writeStyleResourceDependenciesInAttr(destination, boundaryResources);
+    }
   } else {
-    writeChunk(destination, completeBoundaryScript3);
+    if (scriptFormat) {
+      writeChunk(destination, completeBoundaryScript3b);
+    }
   }
-  return writeChunkAndReturn(destination, completeBoundaryScript4);
+  if (scriptFormat) {
+    return writeChunkAndReturn(destination, completeBoundaryScriptEnd);
+  } else {
+    return writeChunkAndReturn(destination, completeBoundaryDataEnd);
+  }
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
@@ -2488,8 +2568,16 @@ const clientRenderScript1Full = stringToPrecomputedChunk(
 );
 const clientRenderScript1Partial = stringToPrecomputedChunk('$RX("');
 const clientRenderScript1A = stringToPrecomputedChunk('"');
-const clientRenderScript2 = stringToPrecomputedChunk(')</script>');
 const clientRenderErrorScriptArgInterstitial = stringToPrecomputedChunk(',');
+const clientRenderScriptEnd = stringToPrecomputedChunk(')</script>');
+
+const clientRenderData1 = stringToPrecomputedChunk(
+  '<template data-rxi="" data-bid="',
+);
+const clientRenderData2 = stringToPrecomputedChunk('" data-dgst="');
+const clientRenderData3 = stringToPrecomputedChunk('" data-msg="');
+const clientRenderData4 = stringToPrecomputedChunk('" data-stck="');
+const clientRenderDataEnd = dataElementQuotedEnd;
 
 export function writeClientRenderBoundaryInstruction(
   destination: Destination,
@@ -2499,14 +2587,22 @@ export function writeClientRenderBoundaryInstruction(
   errorMessage?: string,
   errorComponentStack?: string,
 ): boolean {
-  writeChunk(destination, responseState.startInlineScript);
-  if (!responseState.sentClientRenderFunction) {
-    // The first time we write this, we'll need to include the full implementation.
-    responseState.sentClientRenderFunction = true;
-    writeChunk(destination, clientRenderScript1Full);
+  const scriptFormat =
+    !enableFizzExternalRuntime ||
+    responseState.streamingFormat === ScriptStreamingFormat;
+  if (scriptFormat) {
+    writeChunk(destination, responseState.startInlineScript);
+    if (!responseState.sentClientRenderFunction) {
+      // The first time we write this, we'll need to include the full implementation.
+      responseState.sentClientRenderFunction = true;
+      writeChunk(destination, clientRenderScript1Full);
+    } else {
+      // Future calls can just reuse the same function.
+      writeChunk(destination, clientRenderScript1Partial);
+    }
   } else {
-    // Future calls can just reuse the same function.
-    writeChunk(destination, clientRenderScript1Partial);
+    // <template data-rxi="" data-bid="
+    writeChunk(destination, clientRenderData1);
   }
 
   if (boundaryID === null) {
@@ -2516,29 +2612,73 @@ export function writeClientRenderBoundaryInstruction(
   }
 
   writeChunk(destination, boundaryID);
-  writeChunk(destination, clientRenderScript1A);
+  if (scriptFormat) {
+    // " needs to be inserted for scripts, since ArgInterstitual does not contain
+    // leading or trailing quotes
+    writeChunk(destination, clientRenderScript1A);
+  }
+
   if (errorDigest || errorMessage || errorComponentStack) {
-    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-    writeChunk(
-      destination,
-      stringToChunk(escapeJSStringsForInstructionScripts(errorDigest || '')),
-    );
+    if (scriptFormat) {
+      // ,"JSONString"
+      writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+      writeChunk(
+        destination,
+        stringToChunk(escapeJSStringsForInstructionScripts(errorDigest || '')),
+      );
+    } else {
+      // " data-dgst="HTMLString
+      writeChunk(destination, clientRenderData2);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorDigest || '')),
+      );
+    }
   }
   if (errorMessage || errorComponentStack) {
-    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-    writeChunk(
-      destination,
-      stringToChunk(escapeJSStringsForInstructionScripts(errorMessage || '')),
-    );
+    if (scriptFormat) {
+      // ,"JSONString"
+      writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+      writeChunk(
+        destination,
+        stringToChunk(escapeJSStringsForInstructionScripts(errorMessage || '')),
+      );
+    } else {
+      // " data-msg="HTMLString
+      writeChunk(destination, clientRenderData3);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorMessage || '')),
+      );
+    }
   }
   if (errorComponentStack) {
-    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-    writeChunk(
-      destination,
-      stringToChunk(escapeJSStringsForInstructionScripts(errorComponentStack)),
-    );
+    // ,"JSONString"
+    if (scriptFormat) {
+      writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+      writeChunk(
+        destination,
+        stringToChunk(
+          escapeJSStringsForInstructionScripts(errorComponentStack),
+        ),
+      );
+    } else {
+      // " data-stck="HTMLString
+      writeChunk(destination, clientRenderData4);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorComponentStack)),
+      );
+    }
   }
-  return writeChunkAndReturn(destination, clientRenderScript2);
+
+  if (scriptFormat) {
+    // ></script>
+    return writeChunkAndReturn(destination, clientRenderScriptEnd);
+  } else {
+    // "></template>
+    return writeChunkAndReturn(destination, clientRenderDataEnd);
+  }
 }
 
 const regexForJSStringsInInstructionScripts = /[<\u2028\u2029]/g;
@@ -2598,7 +2738,22 @@ export function writeInitialResources(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
+  willFlushAllSegments: boolean,
 ): boolean {
+  // Write initially discovered resources after the shell completes
+  if (
+    enableFizzExternalRuntime &&
+    !willFlushAllSegments &&
+    responseState.externalRuntimeConfig
+  ) {
+    // If the root segment is incomplete due to suspended tasks
+    // (e.g. willFlushAllSegments = false) and we are using data
+    // streaming format, ensure the external runtime is sent.
+    // (User code could choose to send this even earlier by calling
+    //  preinit(...), if they know they will suspend).
+    const {src, integrity} = responseState.externalRuntimeConfig;
+    preinitImpl(resources, src, {as: 'script', integrity});
+  }
   function flushLinkResource(resource) {
     if (!resource.flushed) {
       pushLinkImpl(target, resource.props, responseState);
@@ -2839,7 +2994,10 @@ const arraySubsequentOpenBracket = stringToPrecomputedChunk(',[');
 const arrayInterstitial = stringToPrecomputedChunk(',');
 const arrayCloseBracket = stringToPrecomputedChunk(']');
 
-function writeStyleResourceDependencies(
+// This function writes a 2D array of strings to be embedded in javascript.
+// E.g.
+//  [["JS_escaped_string1", "JS_escaped_string2"]]
+function writeStyleResourceDependenciesInJS(
   destination: Destination,
   boundaryResources: BoundaryResources,
 ): void {
@@ -2852,12 +3010,12 @@ function writeStyleResourceDependencies(
       // should be ready before content is shown on the client
     } else if (resource.flushed) {
       writeChunk(destination, nextArrayOpenBrackChunk);
-      writeStyleResourceDependencyHrefOnly(destination, resource.href);
+      writeStyleResourceDependencyHrefOnlyInJS(destination, resource.href);
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
     } else {
       writeChunk(destination, nextArrayOpenBrackChunk);
-      writeStyleResourceDependency(
+      writeStyleResourceDependencyInJS(
         destination,
         resource.href,
         resource.precedence,
@@ -2873,7 +3031,8 @@ function writeStyleResourceDependencies(
   writeChunk(destination, arrayCloseBracket);
 }
 
-function writeStyleResourceDependencyHrefOnly(
+/* Helper functions */
+function writeStyleResourceDependencyHrefOnlyInJS(
   destination: Destination,
   href: string,
 ) {
@@ -2889,7 +3048,7 @@ function writeStyleResourceDependencyHrefOnly(
   );
 }
 
-function writeStyleResourceDependency(
+function writeStyleResourceDependencyInJS(
   destination: Destination,
   href: string,
   precedence: string,
@@ -2936,7 +3095,7 @@ function writeStyleResourceDependency(
           );
         // eslint-disable-next-line-no-fallthrough
         default:
-          writeStyleResourceAttribute(destination, propKey, propValue);
+          writeStyleResourceAttributeInJS(destination, propKey, propValue);
           break;
       }
     }
@@ -2944,7 +3103,7 @@ function writeStyleResourceDependency(
   return null;
 }
 
-function writeStyleResourceAttribute(
+function writeStyleResourceAttributeInJS(
   destination: Destination,
   name: string,
   value: string | boolean | number | Function | Object, // not null or undefined
@@ -3020,5 +3179,194 @@ function writeStyleResourceAttribute(
   writeChunk(
     destination,
     stringToChunk(escapeJSObjectForInstructionScripts(attributeValue)),
+  );
+}
+
+// This function writes a 2D array of strings to be embedded in an attribute
+// value and read with JSON.parse in ReactDOMServerExternalRuntime.js
+// E.g.
+//  [[&quot;JSON_escaped_string1&quot;, &quot;JSON_escaped_string2&quot;]]
+function writeStyleResourceDependenciesInAttr(
+  destination: Destination,
+  boundaryResources: BoundaryResources,
+): void {
+  writeChunk(destination, arrayFirstOpenBracket);
+
+  let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
+  boundaryResources.forEach(resource => {
+    if (resource.inShell) {
+      // We can elide this dependency because it was flushed in the shell and
+      // should be ready before content is shown on the client
+    } else if (resource.flushed) {
+      writeChunk(destination, nextArrayOpenBrackChunk);
+      writeStyleResourceDependencyHrefOnlyInAttr(destination, resource.href);
+      writeChunk(destination, arrayCloseBracket);
+      nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
+    } else {
+      writeChunk(destination, nextArrayOpenBrackChunk);
+      writeStyleResourceDependencyInAttr(
+        destination,
+        resource.href,
+        resource.precedence,
+        resource.props,
+      );
+      writeChunk(destination, arrayCloseBracket);
+      nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
+
+      resource.flushed = true;
+      resource.hint.flushed = true;
+    }
+  });
+  writeChunk(destination, arrayCloseBracket);
+}
+
+/* Helper functions */
+function writeStyleResourceDependencyHrefOnlyInAttr(
+  destination: Destination,
+  href: string,
+) {
+  // We should actually enforce this earlier when the resource is created but for
+  // now we make sure we are actually dealing with a string here.
+  if (__DEV__) {
+    checkAttributeStringCoercion(href, 'href');
+  }
+  const coercedHref = '' + (href: any);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(coercedHref))),
+  );
+}
+
+function writeStyleResourceDependencyInAttr(
+  destination: Destination,
+  href: string,
+  precedence: string,
+  props: Object,
+) {
+  if (__DEV__) {
+    checkAttributeStringCoercion(href, 'href');
+  }
+  const coercedHref = '' + (href: any);
+  sanitizeURL(coercedHref);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(coercedHref))),
+  );
+
+  if (__DEV__) {
+    checkAttributeStringCoercion(precedence, 'precedence');
+  }
+  const coercedPrecedence = '' + (precedence: any);
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(coercedPrecedence))),
+  );
+
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'href':
+        case 'rel':
+        case 'precedence':
+        case 'data-precedence': {
+          break;
+        }
+        case 'children':
+        case 'dangerouslySetInnerHTML':
+          throw new Error(
+            `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
+              'use `dangerouslySetInnerHTML`.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          writeStyleResourceAttributeInAttr(destination, propKey, propValue);
+          break;
+      }
+    }
+  }
+  return null;
+}
+
+function writeStyleResourceAttributeInAttr(
+  destination: Destination,
+  name: string,
+  value: string | boolean | number | Function | Object, // not null or undefined
+): void {
+  let attributeName = name.toLowerCase();
+  let attributeValue;
+  switch (typeof value) {
+    case 'function':
+    case 'symbol':
+      return;
+  }
+
+  switch (name) {
+    // Reserved names
+    case 'innerHTML':
+    case 'dangerouslySetInnerHTML':
+    case 'suppressContentEditableWarning':
+    case 'suppressHydrationWarning':
+    case 'style':
+      // Ignored
+      return;
+
+    // Attribute renames
+    case 'className':
+      attributeName = 'class';
+      break;
+
+    // Booleans
+    case 'hidden':
+      if (value === false) {
+        return;
+      }
+      attributeValue = '';
+      break;
+
+    // Santized URLs
+    case 'src':
+    case 'href': {
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+      attributeValue = '' + (value: any);
+      sanitizeURL(attributeValue);
+      break;
+    }
+    default: {
+      if (!isAttributeNameSafe(name)) {
+        return;
+      }
+    }
+  }
+
+  if (
+    // shouldIgnoreAttribute
+    // We have already filtered out null/undefined and reserved words.
+    name.length > 2 &&
+    (name[0] === 'o' || name[0] === 'O') &&
+    (name[1] === 'n' || name[1] === 'N')
+  ) {
+    return;
+  }
+
+  if (__DEV__) {
+    checkAttributeStringCoercion(value, attributeName);
+  }
+  attributeValue = '' + (value: any);
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(attributeName))),
+  );
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(attributeValue))),
   );
 }
