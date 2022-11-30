@@ -269,7 +269,7 @@ let hookTypesUpdateIndexDev: number = -1;
 // When true, such Hooks will always be "remounted". Only used during hot reload.
 let ignorePreviousDependencies: boolean = false;
 
-function mountHookTypesDev() {
+function mountHookTypesDev(): void {
   if (__DEV__) {
     const hookName = ((currentHookNameInDev: any): HookType);
 
@@ -281,7 +281,7 @@ function mountHookTypesDev() {
   }
 }
 
-function updateHookTypesDev() {
+function updateHookTypesDev(): void {
   if (__DEV__) {
     const hookName = ((currentHookNameInDev: any): HookType);
 
@@ -294,7 +294,7 @@ function updateHookTypesDev() {
   }
 }
 
-function checkDepsAreArrayDev(deps: mixed) {
+function checkDepsAreArrayDev(deps: mixed): void {
   if (__DEV__) {
     if (deps !== undefined && deps !== null && !isArray(deps)) {
       // Verify deps, but only on mount to avoid extra checks.
@@ -309,7 +309,7 @@ function checkDepsAreArrayDev(deps: mixed) {
   }
 }
 
-function warnOnHookMismatchInDev(currentHookName: HookType) {
+function warnOnHookMismatchInDev(currentHookName: HookType): void {
   if (__DEV__) {
     const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
     if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
@@ -370,7 +370,7 @@ function throwInvalidHookError() {
 function areHookInputsEqual(
   nextDeps: Array<mixed>,
   prevDeps: Array<mixed> | null,
-) {
+): boolean {
   if (__DEV__) {
     if (ignorePreviousDependencies) {
       // Only true when this component is being hot reloaded.
@@ -682,7 +682,7 @@ function renderWithHooksAgain<Props, SecondArg>(
   Component: (p: Props, arg: SecondArg) => any,
   props: Props,
   secondArg: SecondArg,
-) {
+): any {
   // This is used to perform another render pass. It's used when setState is
   // called during render, and for double invoking components in Strict Mode
   // during development.
@@ -746,7 +746,7 @@ export function bailoutHooks(
   current: Fiber,
   workInProgress: Fiber,
   lanes: Lanes,
-) {
+): void {
   workInProgress.updateQueue = current.updateQueue;
   // TODO: Don't need to reset the flags here, because they're reset in the
   // complete phase (bubbleProperties).
@@ -1733,7 +1733,7 @@ function pushStoreConsistencyCheck<T>(
   fiber: Fiber,
   getSnapshot: () => T,
   renderedSnapshot: T,
-) {
+): void {
   fiber.flags |= StoreConsistency;
   const check: StoreConsistencyCheck<T> = {
     getSnapshot,
@@ -1759,7 +1759,7 @@ function updateStoreInstance<T>(
   inst: StoreInstance<T>,
   nextSnapshot: T,
   getSnapshot: () => T,
-) {
+): void {
   // These are updated in the passive phase
   inst.value = nextSnapshot;
   inst.getSnapshot = getSnapshot;
@@ -1774,7 +1774,11 @@ function updateStoreInstance<T>(
   }
 }
 
-function subscribeToStore<T>(fiber, inst: StoreInstance<T>, subscribe) {
+function subscribeToStore<T>(
+  fiber: Fiber,
+  inst: StoreInstance<T>,
+  subscribe: (() => void) => () => void,
+): any {
   const handleStoreChange = () => {
     // The store changed. Check if the snapshot changed since the last time we
     // read from the store.
@@ -1844,7 +1848,12 @@ function rerenderState<S>(
   return rerenderReducer(basicStateReducer, (initialState: any));
 }
 
-function pushEffect(tag, create, destroy, deps: Array<mixed> | void | null) {
+function pushEffect(
+  tag: HookFlags,
+  create: () => (() => void) | void,
+  destroy: (() => void) | void,
+  deps: Array<mixed> | void | null,
+): Effect {
   const effect: Effect = {
     tag,
     create,
@@ -1964,9 +1973,9 @@ function updateRef<T>(initialValue: T): {current: T} {
 }
 
 function mountEffectImpl(
-  fiberFlags,
-  hookFlags,
-  create,
+  fiberFlags: Flags,
+  hookFlags: HookFlags,
+  create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
   const hook = mountWorkInProgressHook();
@@ -1981,9 +1990,9 @@ function mountEffectImpl(
 }
 
 function updateEffectImpl(
-  fiberFlags,
-  hookFlags,
-  create,
+  fiberFlags: Flags,
+  hookFlags: HookFlags,
+  create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
   const hook = updateWorkInProgressHook();
@@ -2020,14 +2029,14 @@ function mountEffect(
     __DEV__ &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
-    return mountEffectImpl(
+    mountEffectImpl(
       MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
       HookPassive,
       create,
       deps,
     );
   } else {
-    return mountEffectImpl(
+    mountEffectImpl(
       PassiveEffect | PassiveStaticEffect,
       HookPassive,
       create,
@@ -2040,7 +2049,7 @@ function updateEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
+  updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
 function useEventImpl<Args, Return, F: (...Array<Args>) => Return>(
@@ -2100,7 +2109,7 @@ function mountInsertionEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  return mountEffectImpl(UpdateEffect, HookInsertion, create, deps);
+  mountEffectImpl(UpdateEffect, HookInsertion, create, deps);
 }
 
 function updateInsertionEffect(
@@ -2134,7 +2143,7 @@ function updateLayoutEffect(
 function imperativeHandleEffect<T>(
   create: () => T,
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
-) {
+): void | (() => void) {
   if (typeof ref === 'function') {
     const refCallback = ref;
     const inst = create();
@@ -2187,7 +2196,7 @@ function mountImperativeHandle<T>(
   ) {
     fiberFlags |= MountLayoutDevEffect;
   }
-  return mountEffectImpl(
+  mountEffectImpl(
     fiberFlags,
     HookLayout,
     imperativeHandleEffect.bind(null, create, ref),
@@ -2214,7 +2223,7 @@ function updateImperativeHandle<T>(
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
-  return updateEffectImpl(
+  updateEffectImpl(
     UpdateEffect,
     HookLayout,
     imperativeHandleEffect.bind(null, create, ref),
@@ -2362,7 +2371,11 @@ function updateDeferredValueImpl<T>(hook: Hook, prevValue: T, value: T): T {
   }
 }
 
-function startTransition(setPending, callback, options) {
+function startTransition(
+  setPending: boolean => void,
+  callback: () => void,
+  options?: StartTransitionOptions,
+): void {
   const previousPriority = getCurrentUpdatePriority();
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority),
@@ -2484,7 +2497,7 @@ function updateId(): string {
   return id;
 }
 
-function mountRefresh() {
+function mountRefresh(): any {
   const hook = mountWorkInProgressHook();
   const refresh = (hook.memoizedState = refreshCache.bind(
     null,
@@ -2493,12 +2506,12 @@ function mountRefresh() {
   return refresh;
 }
 
-function updateRefresh() {
+function updateRefresh(): any {
   const hook = updateWorkInProgressHook();
   return hook.memoizedState;
 }
 
-function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
+function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T): void {
   if (!enableCache) {
     return;
   }
@@ -2554,7 +2567,7 @@ function dispatchReducerAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
   action: A,
-) {
+): void {
   if (__DEV__) {
     if (typeof arguments[3] === 'function') {
       console.error(
@@ -2593,7 +2606,7 @@ function dispatchSetState<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
   action: A,
-) {
+): void {
   if (__DEV__) {
     if (typeof arguments[3] === 'function') {
       console.error(
@@ -2671,7 +2684,7 @@ function dispatchSetState<S, A>(
   markUpdateInDevTools(fiber, lane, action);
 }
 
-function isRenderPhaseUpdate(fiber: Fiber) {
+function isRenderPhaseUpdate(fiber: Fiber): boolean {
   const alternate = fiber.alternate;
   return (
     fiber === currentlyRenderingFiber ||
@@ -2682,7 +2695,7 @@ function isRenderPhaseUpdate(fiber: Fiber) {
 function enqueueRenderPhaseUpdate<S, A>(
   queue: UpdateQueue<S, A>,
   update: Update<S, A>,
-) {
+): void {
   // This is a render phase update. Stash it in a lazily-created map of
   // queue -> linked list of updates. After this render pass, we'll restart
   // and apply the stashed updates on top of the work-in-progress hook.
@@ -2703,7 +2716,7 @@ function entangleTransitionUpdate<S, A>(
   root: FiberRoot,
   queue: UpdateQueue<S, A>,
   lane: Lane,
-) {
+): void {
   if (isTransitionLane(lane)) {
     let queueLanes = queue.lanes;
 
@@ -2724,7 +2737,7 @@ function entangleTransitionUpdate<S, A>(
   }
 }
 
-function markUpdateInDevTools<A>(fiber, lane, action: A) {
+function markUpdateInDevTools<A>(fiber, lane, action: A): void {
   if (__DEV__) {
     if (enableDebugTracing) {
       if (fiber.mode & DebugTracingMode) {
