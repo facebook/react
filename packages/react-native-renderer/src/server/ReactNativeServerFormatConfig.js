@@ -319,6 +319,7 @@ export function writeInitialResources(
   destination: Destination,
   resources: Resources,
   responseState: ResponseState,
+  willFlushAllSegments: boolean,
 ): boolean {
   return true;
 }
