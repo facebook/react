@@ -10,6 +10,7 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   FiberRoot,
+  TracingHooks,
   SuspenseHydrationCallbacks,
   TransitionTracingCallbacks,
 } from './ReactInternalTypes';
@@ -33,6 +34,7 @@ import {
   enableProfilerTimer,
   enableUpdaterTracking,
   enableTransitionTracing,
+  enableTracingHooks,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
@@ -143,6 +145,7 @@ export function createFiberRoot(
   identifierPrefix: string,
   onRecoverableError: null | ((error: mixed) => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
+  tracingHooks: null | TracingHooks,
 ): FiberRoot {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   const root: FiberRoot = (new FiberRootNode(
@@ -158,6 +161,10 @@ export function createFiberRoot(
 
   if (enableTransitionTracing) {
     root.transitionCallbacks = transitionCallbacks;
+  }
+
+  if (enableTracingHooks) {
+    root.tracingHooks = tracingHooks;
   }
 
   // Cyclic construction. This cheats the type system right now because

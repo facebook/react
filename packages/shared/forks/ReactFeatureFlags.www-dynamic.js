@@ -35,6 +35,7 @@ export const enableTransitionTracing = __VARIANT__;
 export const enableDebugTracing = __EXPERIMENTAL__;
 
 export const enableSchedulingProfiler = __VARIANT__;
+export const enableTracingHooks = false;
 
 // This only has an effect in the new reconciler. But also, the new reconciler
 // is only enabled when __VARIANT__ is true. So this is set to the opposite of

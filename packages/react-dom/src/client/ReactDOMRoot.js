@@ -11,6 +11,7 @@ import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
 import type {
   FiberRoot,
   TransitionTracingCallbacks,
+  TracingHooks,
 } from 'react-reconciler/src/ReactInternalTypes';
 
 import ReactDOMSharedInternals from '../ReactDOMSharedInternals';
@@ -36,6 +37,7 @@ export type CreateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
+  unstable_tracingHooks?: TracingHooks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
   ...
@@ -50,6 +52,7 @@ export type HydrateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
+  unstable_tracingHooks?: TracingHooks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
   ...
@@ -190,6 +193,7 @@ export function createRoot(
   let identifierPrefix = '';
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
+  let tracingHooks = null;
 
   if (options !== null && options !== undefined) {
     if (__DEV__) {
@@ -231,6 +235,9 @@ export function createRoot(
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
+    if (options.unstable_tracingHooks !== undefined) {
+      tracingHooks = options.unstable_tracingHooks;
+    }
   }
 
   const root = createContainer(
@@ -242,6 +249,7 @@ export function createRoot(
     identifierPrefix,
     onRecoverableError,
     transitionCallbacks,
+    tracingHooks,
   );
   markContainerAsRoot(root.current, container);
 
@@ -301,6 +309,7 @@ export function hydrateRoot(
   let identifierPrefix = '';
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
+  let tracingHooks = null;
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -320,6 +329,9 @@ export function hydrateRoot(
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
+    if (options.unstable_tracingHooks !== undefined) {
+      tracingHooks = options.unstable_tracingHooks;
+    }
   }
 
   const root = createHydrationContainer(
@@ -333,6 +345,7 @@ export function hydrateRoot(
     identifierPrefix,
     onRecoverableError,
     transitionCallbacks,
+    tracingHooks,
   );
   markContainerAsRoot(root.current, container);
   if (enableFloat) {

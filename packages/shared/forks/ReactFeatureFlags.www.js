@@ -60,6 +60,8 @@ export const enableHostSingletons = true;
 export const enableSchedulingProfiler: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableSchedulingProfiler;
 
+export const enableTracingHooks = false;
+
 // Note: we'll want to remove this when we to userland implementation.
 // For now, we'll turn it on for everyone because it's *already* on for everyone in practice.
 // At least this will let us stop shipping <Profiler> implementation to all users.

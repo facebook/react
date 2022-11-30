@@ -10,6 +10,7 @@
 import type {HostComponent} from './ReactNativeTypes';
 import type {ReactPortal, ReactNodeList} from 'shared/ReactTypes';
 import type {ElementRef, Element, ElementType} from 'react';
+import type {TracingHooks} from 'react-reconciler/src/ReactInternalTypes';
 
 import './ReactFabricInjection';
 
@@ -212,6 +213,7 @@ function render(
   containerTag: number,
   callback: ?() => void,
   concurrentRoot: ?boolean,
+  tracingHooks: ?TracingHooks,
 ): ?ElementRef<ElementType> {
   let root = roots.get(containerTag);
 
@@ -227,6 +229,7 @@ function render(
       '',
       onRecoverableError,
       null,
+      tracingHooks != null ? tracingHooks : null,
     );
     roots.set(containerTag, root);
   }
