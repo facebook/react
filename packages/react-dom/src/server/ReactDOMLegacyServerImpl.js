@@ -10,6 +10,7 @@
 import ReactVersion from 'shared/ReactVersion';
 
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
 import {
   createRequest,
@@ -36,6 +37,7 @@ function renderToStringImpl(
   options: void | ServerOptions,
   generateStaticMarkup: boolean,
   abortReason: string,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
 ): string {
   let didFatal = false;
   let fatalError = null;
@@ -62,6 +64,7 @@ function renderToStringImpl(
     createResponseState(
       generateStaticMarkup,
       options ? options.identifierPrefix : undefined,
+      unstable_externalRuntimeSrc,
     ),
     createRootFormatContext(),
     Infinity,
