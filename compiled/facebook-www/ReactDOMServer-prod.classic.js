@@ -339,40 +339,40 @@ function preload(href, options) {
   }
 }
 function preinit(href, options) {
-  if (currentResources) {
-    var resources = currentResources;
-    if (
-      "string" === typeof href &&
-      href &&
-      "object" === typeof options &&
-      null !== options
-    )
-      switch (options.as) {
-        case "style":
-          var resource = resources.stylesMap.get(href);
+  currentResources && preinitImpl(currentResources, href, options);
+}
+function preinitImpl(resources, href, options) {
+  if (
+    "string" === typeof href &&
+    href &&
+    "object" === typeof options &&
+    null !== options
+  )
+    switch (options.as) {
+      case "style":
+        var resource = resources.stylesMap.get(href);
+        resource ||
+          ((resource = options.precedence || "default"),
+          (resource = createStyleResource(resources, href, resource, {
+            rel: "stylesheet",
+            href: href,
+            "data-precedence": resource,
+            crossOrigin: options.crossOrigin
+          })));
+        resource.set.add(resource);
+        resources.explicitStylePreloads.add(resource.hint);
+        break;
+      case "script":
+        (resource = resources.scriptsMap.get(href)),
           resource ||
-            ((resource = options.precedence || "default"),
-            (resource = createStyleResource(resources, href, resource, {
-              rel: "stylesheet",
-              href: href,
-              "data-precedence": resource,
-              crossOrigin: options.crossOrigin
-            })));
-          resource.set.add(resource);
-          resources.explicitStylePreloads.add(resource.hint);
-          break;
-        case "script":
-          (resource = resources.scriptsMap.get(href)),
-            resource ||
-              ((resource = createScriptResource(resources, href, {
-                src: href,
-                async: !0,
-                crossOrigin: options.crossOrigin,
-                integrity: options.integrity
-              })),
-              resources.scripts.add(resource));
-      }
-  }
+            ((resource = createScriptResource(resources, href, {
+              src: href,
+              async: !0,
+              crossOrigin: options.crossOrigin,
+              integrity: options.integrity
+            })),
+            resources.scripts.add(resource));
+    }
 }
 function preloadAsStylePropsFromProps(href, props) {
   return {
@@ -1449,15 +1449,27 @@ function escapeJSObjectForInstructionScripts(input) {
     }
   });
 }
-function writeInitialResources(destination, resources, responseState) {
+function writeInitialResources(
+  destination,
+  resources,
+  responseState,
+  willFlushAllSegments
+) {
   function flushLinkResource(resource) {
     resource.flushed ||
       (pushLinkImpl(target, resource.props, responseState),
       (resource.flushed = !0));
   }
-  var target = [],
-    charset = resources.charset,
-    bases = resources.bases,
+  !willFlushAllSegments &&
+    responseState.externalRuntimeConfig &&
+    ((willFlushAllSegments = responseState.externalRuntimeConfig),
+    preinitImpl(resources, willFlushAllSegments.src, {
+      as: "script",
+      integrity: willFlushAllSegments.integrity
+    }));
+  var target = [];
+  willFlushAllSegments = resources.charset;
+  var bases = resources.bases,
     preconnects = resources.preconnects,
     fontPreloads = resources.fontPreloads,
     precedences = resources.precedences,
@@ -1467,9 +1479,9 @@ function writeInitialResources(destination, resources, responseState) {
     explicitStylePreloads = resources.explicitStylePreloads,
     explicitScriptPreloads = resources.explicitScriptPreloads,
     headResources = resources.headResources;
-  charset &&
-    (pushSelfClosing(target, charset.props, "meta", responseState),
-    (charset.flushed = !0),
+  willFlushAllSegments &&
+    (pushSelfClosing(target, willFlushAllSegments.props, "meta", responseState),
+    (willFlushAllSegments.flushed = !0),
     (resources.charset = null));
   bases.forEach(function(r) {
     pushSelfClosing(target, r.props, "base", responseState);
@@ -1529,11 +1541,12 @@ function writeInitialResources(destination, resources, responseState) {
     r.flushed = !0;
   });
   headResources.clear();
-  charset = !0;
+  willFlushAllSegments = !0;
   for (resources = 0; resources < target.length - 1; resources++)
     destination.push(target[resources]);
-  resources < target.length && (charset = destination.push(target[resources]));
-  return charset;
+  resources < target.length &&
+    (willFlushAllSegments = destination.push(target[resources]));
+  return willFlushAllSegments;
 }
 function writeImmediateResources(destination, resources, responseState) {
   function flushLinkResource(resource) {
@@ -1600,7 +1613,7 @@ function writeImmediateResources(destination, resources, responseState) {
   resources < target.length && (charset = destination.push(target[resources]));
   return charset;
 }
-function writeStyleResourceDependencies(destination, boundaryResources) {
+function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
   destination.push("[");
   var nextArrayOpenBrackChunk = "[";
   boundaryResources.forEach(function(resource) {
@@ -1693,20 +1706,127 @@ function writeStyleResourceDependencies(destination, boundaryResources) {
   });
   destination.push("]");
 }
-function createResponseState$1(generateStaticMarkup, identifierPrefix) {
+function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
+  destination.push("[");
+  var nextArrayOpenBrackChunk = "[";
+  boundaryResources.forEach(function(resource) {
+    if (!resource.inShell)
+      if (resource.flushed)
+        destination.push(nextArrayOpenBrackChunk),
+          (resource = escapeTextForBrowser(JSON.stringify("" + resource.href))),
+          destination.push(resource),
+          destination.push("]"),
+          (nextArrayOpenBrackChunk = ",[");
+      else {
+        destination.push(nextArrayOpenBrackChunk);
+        var precedence = resource.precedence,
+          props = resource.props,
+          coercedHref = "" + resource.href;
+        sanitizeURL(coercedHref);
+        coercedHref = escapeTextForBrowser(JSON.stringify(coercedHref));
+        destination.push(coercedHref);
+        precedence = "" + precedence;
+        destination.push(",");
+        precedence = escapeTextForBrowser(JSON.stringify(precedence));
+        destination.push(precedence);
+        for (var propKey in props)
+          if (hasOwnProperty.call(props, propKey)) {
+            var propValue = props[propKey];
+            if (null != propValue)
+              switch (propKey) {
+                case "href":
+                case "rel":
+                case "precedence":
+                case "data-precedence":
+                  break;
+                case "children":
+                case "dangerouslySetInnerHTML":
+                  throw Error(formatProdErrorMessage(399, "link"));
+                default:
+                  a: {
+                    precedence = destination;
+                    var name = propKey;
+                    coercedHref = name.toLowerCase();
+                    switch (typeof propValue) {
+                      case "function":
+                      case "symbol":
+                        break a;
+                    }
+                    switch (name) {
+                      case "innerHTML":
+                      case "dangerouslySetInnerHTML":
+                      case "suppressContentEditableWarning":
+                      case "suppressHydrationWarning":
+                      case "style":
+                        break a;
+                      case "className":
+                        coercedHref = "class";
+                        break;
+                      case "hidden":
+                        if (!1 === propValue) break a;
+                        break;
+                      case "src":
+                      case "href":
+                        sanitizeURL("" + propValue);
+                        break;
+                      default:
+                        if (!isAttributeNameSafe(name)) break a;
+                    }
+                    if (
+                      !(2 < name.length) ||
+                      ("o" !== name[0] && "O" !== name[0]) ||
+                      ("n" !== name[1] && "N" !== name[1])
+                    )
+                      (propValue = "" + propValue),
+                        precedence.push(","),
+                        (coercedHref = escapeTextForBrowser(
+                          JSON.stringify(coercedHref)
+                        )),
+                        precedence.push(coercedHref),
+                        precedence.push(","),
+                        (coercedHref = escapeTextForBrowser(
+                          JSON.stringify(propValue)
+                        )),
+                        precedence.push(coercedHref);
+                  }
+              }
+          }
+        destination.push("]");
+        nextArrayOpenBrackChunk = ",[";
+        resource.flushed = !0;
+        resource.hint.flushed = !0;
+      }
+  });
+  destination.push("]");
+}
+function createResponseState$1(
+  generateStaticMarkup,
+  identifierPrefix,
+  externalRuntimeConfig
+) {
   identifierPrefix = void 0 === identifierPrefix ? "" : identifierPrefix;
+  var externalRuntimeDesc = null,
+    streamingFormat = 0;
+  void 0 !== externalRuntimeConfig &&
+    ((streamingFormat = 1),
+    (externalRuntimeDesc =
+      "string" === typeof externalRuntimeConfig
+        ? { src: externalRuntimeConfig, integrity: void 0 }
+        : externalRuntimeConfig));
   return {
     bootstrapChunks: [],
-    startInlineScript: "<script>",
     placeholderPrefix: identifierPrefix + "P:",
     segmentPrefix: identifierPrefix + "S:",
     boundaryPrefix: identifierPrefix + "B:",
     idPrefix: identifierPrefix,
     nextSuspenseID: 0,
+    streamingFormat: streamingFormat,
+    startInlineScript: "<script>",
     sentCompleteSegmentFunction: !1,
     sentCompleteBoundaryFunction: !1,
     sentClientRenderFunction: !1,
     sentStyleInsertionFunction: !1,
+    externalRuntimeConfig: externalRuntimeDesc,
     generateStaticMarkup: generateStaticMarkup
   };
 }
@@ -2809,7 +2929,7 @@ function renderNode(request, task, node) {
         null !== node &&
         "function" === typeof node.then)
     ) {
-      var thenableState$19 = getThenableStateAfterSuspending(),
+      var thenableState$17 = getThenableStateAfterSuspending(),
         segment = task.blockedSegment,
         newSegment = createPendingSegment(
           request,
@@ -2823,7 +2943,7 @@ function renderNode(request, task, node) {
       segment.lastPushedText = !1;
       request = createTask(
         request,
-        thenableState$19,
+        thenableState$17,
         task.node,
         task.blockedBoundary,
         newSegment,
@@ -3147,48 +3267,58 @@ function flushCompletedBoundary(request, destination, boundary) {
   i = boundary.rootSegmentID;
   boundary = boundary.resources;
   var hasStyleDependencies;
-  a: {
+  b: {
     for (hasStyleDependencies = boundary.values(); ; ) {
       var resource = hasStyleDependencies.next().value;
       if (!resource) break;
       if (!resource.inShell) {
         hasStyleDependencies = !0;
-        break a;
+        break b;
       }
     }
     hasStyleDependencies = !1;
   }
-  destination.push(request.startInlineScript);
-  hasStyleDependencies
-    ? request.sentCompleteBoundaryFunction
-      ? request.sentStyleInsertionFunction
-        ? destination.push('$RR("')
-        : ((request.sentStyleInsertionFunction = !0),
+  (resource = 0 === request.streamingFormat)
+    ? (destination.push(request.startInlineScript),
+      hasStyleDependencies
+        ? request.sentCompleteBoundaryFunction
+          ? request.sentStyleInsertionFunction
+            ? destination.push('$RR("')
+            : ((request.sentStyleInsertionFunction = !0),
+              destination.push(
+                '$RM=new Map;\n$RR=function(p,q,v){function r(l){this.s=l}for(var t=$RC,u=$RM,m=new Map,n=document,g,e,f=n.querySelectorAll("link[data-precedence],style[data-precedence]"),d=0;e=f[d++];)m.set(e.dataset.precedence,g=e);e=0;f=[];for(var c,h,b,a;c=v[e++];){var k=0;h=c[k++];if(b=u.get(h))"l"!==b.s&&f.push(b);else{a=n.createElement("link");a.href=h;a.rel="stylesheet";for(a.dataset.precedence=d=c[k++];b=c[k++];)a.setAttribute(b,c[k++]);b=a._p=new Promise(function(l,w){a.onload=l;a.onerror=w});b.then(r.bind(b,\n"l"),r.bind(b,"e"));u.set(h,b);f.push(b);c=m.get(d)||g;c===g&&(g=a);m.set(d,a);c?c.parentNode.insertBefore(a,c.nextSibling):(d=n.head,d.insertBefore(a,d.firstChild))}}Promise.all(f).then(t.bind(null,p,q,""),t.bind(null,p,q,"Resource failed to load"))};;$RR("'
+              ))
+          : ((request.sentCompleteBoundaryFunction = !0),
+            (request.sentStyleInsertionFunction = !0),
+            destination.push(
+              '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};;$RM=new Map;\n$RR=function(p,q,v){function r(l){this.s=l}for(var t=$RC,u=$RM,m=new Map,n=document,g,e,f=n.querySelectorAll("link[data-precedence],style[data-precedence]"),d=0;e=f[d++];)m.set(e.dataset.precedence,g=e);e=0;f=[];for(var c,h,b,a;c=v[e++];){var k=0;h=c[k++];if(b=u.get(h))"l"!==b.s&&f.push(b);else{a=n.createElement("link");a.href=h;a.rel="stylesheet";for(a.dataset.precedence=d=c[k++];b=c[k++];)a.setAttribute(b,c[k++]);b=a._p=new Promise(function(l,w){a.onload=l;a.onerror=w});b.then(r.bind(b,\n"l"),r.bind(b,"e"));u.set(h,b);f.push(b);c=m.get(d)||g;c===g&&(g=a);m.set(d,a);c?c.parentNode.insertBefore(a,c.nextSibling):(d=n.head,d.insertBefore(a,d.firstChild))}}Promise.all(f).then(t.bind(null,p,q,""),t.bind(null,p,q,"Resource failed to load"))};;$RR("'
+            ))
+        : request.sentCompleteBoundaryFunction
+        ? destination.push('$RC("')
+        : ((request.sentCompleteBoundaryFunction = !0),
           destination.push(
-            '$RM=new Map;\n$RR=function(p,q,v){function r(l){this.s=l}for(var t=$RC,u=$RM,m=new Map,n=document,g,e,f=n.querySelectorAll("link[data-precedence],style[data-precedence]"),d=0;e=f[d++];)m.set(e.dataset.precedence,g=e);e=0;f=[];for(var c,h,b,a;c=v[e++];){var k=0;h=c[k++];if(b=u.get(h))"l"!==b.s&&f.push(b);else{a=n.createElement("link");a.href=h;a.rel="stylesheet";for(a.dataset.precedence=d=c[k++];b=c[k++];)a.setAttribute(b,c[k++]);b=a._p=new Promise(function(l,w){a.onload=l;a.onerror=w});b.then(r.bind(b,\n"l"),r.bind(b,"e"));u.set(h,b);f.push(b);c=m.get(d)||g;c===g&&(g=a);m.set(d,a);c?c.parentNode.insertBefore(a,c.nextSibling):(d=n.head,d.insertBefore(a,d.firstChild))}}Promise.all(f).then(t.bind(null,p,q,""),t.bind(null,p,q,"Resource failed to load"))};;$RR("'
-          ))
-      : ((request.sentCompleteBoundaryFunction = !0),
-        (request.sentStyleInsertionFunction = !0),
-        destination.push(
-          '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};;$RM=new Map;\n$RR=function(p,q,v){function r(l){this.s=l}for(var t=$RC,u=$RM,m=new Map,n=document,g,e,f=n.querySelectorAll("link[data-precedence],style[data-precedence]"),d=0;e=f[d++];)m.set(e.dataset.precedence,g=e);e=0;f=[];for(var c,h,b,a;c=v[e++];){var k=0;h=c[k++];if(b=u.get(h))"l"!==b.s&&f.push(b);else{a=n.createElement("link");a.href=h;a.rel="stylesheet";for(a.dataset.precedence=d=c[k++];b=c[k++];)a.setAttribute(b,c[k++]);b=a._p=new Promise(function(l,w){a.onload=l;a.onerror=w});b.then(r.bind(b,\n"l"),r.bind(b,"e"));u.set(h,b);f.push(b);c=m.get(d)||g;c===g&&(g=a);m.set(d,a);c?c.parentNode.insertBefore(a,c.nextSibling):(d=n.head,d.insertBefore(a,d.firstChild))}}Promise.all(f).then(t.bind(null,p,q,""),t.bind(null,p,q,"Resource failed to load"))};;$RR("'
-        ))
-    : request.sentCompleteBoundaryFunction
-    ? destination.push('$RC("')
-    : ((request.sentCompleteBoundaryFunction = !0),
-      destination.push(
-        '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};;$RC("'
-      ));
+            '$RC=function(b,c,e){c=document.getElementById(c);c.parentNode.removeChild(c);var a=document.getElementById(b);if(a){b=a.previousSibling;if(e)b.data="$!",a.setAttribute("data-dgst",e);else{e=b.parentNode;a=b.nextSibling;var f=0;do{if(a&&8===a.nodeType){var d=a.data;if("/$"===d)if(0===f)break;else f--;else"$"!==d&&"$?"!==d&&"$!"!==d||f++}d=a.nextSibling;e.removeChild(a);a=d}while(a);for(;c.firstChild;)e.insertBefore(c.firstChild,a);b.data="$"}b._reactRetry&&b._reactRetry()}};;$RC("'
+          )))
+    : hasStyleDependencies
+    ? destination.push('<template data-rri="" data-bid="')
+    : destination.push('<template data-rci="" data-bid="');
   if (null === completedSegments) throw Error(formatProdErrorMessage(395));
   i = i.toString(16);
   destination.push(completedSegments);
-  destination.push('","');
+  resource ? destination.push('","') : destination.push('" data-sid="');
   destination.push(request.segmentPrefix);
   destination.push(i);
   hasStyleDependencies
-    ? (destination.push('",'),
-      writeStyleResourceDependencies(destination, boundary))
-    : destination.push('"');
-  return destination.push(")\x3c/script>");
+    ? resource
+      ? (destination.push('",'),
+        writeStyleResourceDependenciesInJS(destination, boundary))
+      : (destination.push('" data-sty="'),
+        writeStyleResourceDependenciesInAttr(destination, boundary))
+    : resource && destination.push('"');
+  destination = resource
+    ? destination.push(")\x3c/script>")
+    : destination.push('"></template>');
+  return destination;
 }
 function flushPartiallyCompletedSegment(
   request,
@@ -3205,20 +3335,25 @@ function flushPartiallyCompletedSegment(
   }
   flushSegmentContainer(request, destination, segment);
   request = request.responseState;
-  destination.push(request.startInlineScript);
-  request.sentCompleteSegmentFunction
-    ? destination.push('$RS("')
-    : ((request.sentCompleteSegmentFunction = !0),
-      destination.push(
-        '$RS=function(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)};;$RS("'
-      ));
+  (boundary = 0 === request.streamingFormat)
+    ? (destination.push(request.startInlineScript),
+      request.sentCompleteSegmentFunction
+        ? destination.push('$RS("')
+        : ((request.sentCompleteSegmentFunction = !0),
+          destination.push(
+            '$RS=function(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)};;$RS("'
+          )))
+    : destination.push('<template data-rsi="" data-sid="');
   destination.push(request.segmentPrefix);
   segmentID = segmentID.toString(16);
   destination.push(segmentID);
-  destination.push('","');
+  boundary ? destination.push('","') : destination.push('" data-pid="');
   destination.push(request.placeholderPrefix);
   destination.push(segmentID);
-  return destination.push('")\x3c/script>');
+  destination = boundary
+    ? destination.push('")\x3c/script>')
+    : destination.push('"></template>');
+  return destination;
 }
 function flushCompletedQueues(request, destination) {
   try {
@@ -3231,7 +3366,8 @@ function flushCompletedQueues(request, destination) {
         writeInitialResources(
           destination,
           request.resources,
-          request.responseState
+          request.responseState,
+          0 === request.allPendingTasks
         );
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
@@ -3259,37 +3395,59 @@ function flushCompletedQueues(request, destination) {
         boundaryID = boundary.id,
         errorDigest = boundary.errorDigest,
         errorMessage = boundary.errorMessage,
-        errorComponentStack = boundary.errorComponentStack;
-      bootstrapChunks.push(responseState.startInlineScript);
-      responseState.sentClientRenderFunction
-        ? bootstrapChunks.push('$RX("')
-        : ((responseState.sentClientRenderFunction = !0),
-          bootstrapChunks.push(
-            '$RX=function(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),b._reactRetry&&b._reactRetry())};;$RX("'
-          ));
+        errorComponentStack = boundary.errorComponentStack,
+        scriptFormat = 0 === responseState.streamingFormat;
+      scriptFormat
+        ? (bootstrapChunks.push(responseState.startInlineScript),
+          responseState.sentClientRenderFunction
+            ? bootstrapChunks.push('$RX("')
+            : ((responseState.sentClientRenderFunction = !0),
+              bootstrapChunks.push(
+                '$RX=function(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),b._reactRetry&&b._reactRetry())};;$RX("'
+              )))
+        : bootstrapChunks.push('<template data-rxi="" data-bid="');
       if (null === boundaryID) throw Error(formatProdErrorMessage(395));
       bootstrapChunks.push(boundaryID);
-      bootstrapChunks.push('"');
-      if (errorDigest || errorMessage || errorComponentStack) {
-        bootstrapChunks.push(",");
-        var chunk = escapeJSStringsForInstructionScripts(errorDigest || "");
-        bootstrapChunks.push(chunk);
-      }
-      if (errorMessage || errorComponentStack) {
-        bootstrapChunks.push(",");
-        var chunk$jscomp$0 = escapeJSStringsForInstructionScripts(
-          errorMessage || ""
-        );
-        bootstrapChunks.push(chunk$jscomp$0);
-      }
-      if (errorComponentStack) {
-        bootstrapChunks.push(",");
-        var chunk$jscomp$1 = escapeJSStringsForInstructionScripts(
-          errorComponentStack
-        );
-        bootstrapChunks.push(chunk$jscomp$1);
-      }
-      if (!bootstrapChunks.push(")\x3c/script>")) {
+      scriptFormat && bootstrapChunks.push('"');
+      if (errorDigest || errorMessage || errorComponentStack)
+        if (scriptFormat) {
+          bootstrapChunks.push(",");
+          var chunk = escapeJSStringsForInstructionScripts(errorDigest || "");
+          bootstrapChunks.push(chunk);
+        } else {
+          bootstrapChunks.push('" data-dgst="');
+          var chunk$jscomp$0 = escapeTextForBrowser(errorDigest || "");
+          bootstrapChunks.push(chunk$jscomp$0);
+        }
+      if (errorMessage || errorComponentStack)
+        if (scriptFormat) {
+          bootstrapChunks.push(",");
+          var chunk$jscomp$1 = escapeJSStringsForInstructionScripts(
+            errorMessage || ""
+          );
+          bootstrapChunks.push(chunk$jscomp$1);
+        } else {
+          bootstrapChunks.push('" data-msg="');
+          var chunk$jscomp$2 = escapeTextForBrowser(errorMessage || "");
+          bootstrapChunks.push(chunk$jscomp$2);
+        }
+      if (errorComponentStack)
+        if (scriptFormat) {
+          bootstrapChunks.push(",");
+          var chunk$jscomp$3 = escapeJSStringsForInstructionScripts(
+            errorComponentStack
+          );
+          bootstrapChunks.push(chunk$jscomp$3);
+        } else {
+          bootstrapChunks.push('" data-stck="');
+          var chunk$jscomp$4 = escapeTextForBrowser(errorComponentStack);
+          bootstrapChunks.push(chunk$jscomp$4);
+        }
+      if (
+        scriptFormat
+          ? !bootstrapChunks.push(")\x3c/script>")
+          : !bootstrapChunks.push('"></template>')
+      ) {
         request.destination = null;
         i++;
         clientRenderedBoundaries.splice(0, i);
@@ -3310,13 +3468,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$21 = partialBoundaries[i];
+      var boundary$19 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.resources.boundaryResources =
-          boundary$21.resources;
-        var completedSegments = boundary$21.completedSegments;
+          boundary$19.resources;
+        var completedSegments = boundary$19.completedSegments;
         for (
           responseState = 0;
           responseState < completedSegments.length;
@@ -3326,7 +3484,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$21,
+              boundary$19,
               completedSegments[responseState]
             )
           ) {
@@ -3381,8 +3539,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$24) {
-    logRecoverableError(request, error$24), fatalError(request, error$24);
+  } catch (error$22) {
+    logRecoverableError(request, error$22), fatalError(request, error$22);
   }
 }
 function onError() {}
@@ -3390,7 +3548,8 @@ function renderToStringImpl(
   children,
   options,
   generateStaticMarkup,
-  abortReason
+  abortReason,
+  unstable_externalRuntimeSrc
 ) {
   var didFatal = !1,
     fatalError$jscomp$0 = null,
@@ -3410,7 +3569,8 @@ function renderToStringImpl(
     children,
     createResponseState$1(
       generateStaticMarkup,
-      options ? options.identifierPrefix : void 0
+      options ? options.identifierPrefix : void 0,
+      unstable_externalRuntimeSrc
     ),
     { insertionMode: 1, selectedValue: null, noscriptTagInScope: !1 },
     Infinity,
@@ -3461,4 +3621,4 @@ exports.renderToString = function(children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-e98225485-20221129";
+exports.version = "18.3.0-www-classic-fa11bd6ec-20221130";

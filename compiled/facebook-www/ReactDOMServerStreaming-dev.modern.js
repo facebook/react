@@ -2878,8 +2878,12 @@ function preinit(href, options) {
     return;
   }
 
-  var resources = currentResources;
+  preinitImpl(currentResources, href, options);
+} // On the server, preinit may be called outside of render when sending an
+// external SSR runtime as part of the initial resources payload. Since this
+// is an internal React call, we do not need to use the resources stack.
 
+function preinitImpl(resources, href, options) {
   {
     validatePreinitArguments(href, options);
   }
@@ -3611,7 +3615,10 @@ function cleanupAfterRender(previousDispatcher) {
   finishRenderingResources();
   ReactDOMCurrentDispatcher.current = previousDispatcher;
 } // Used to distinguish these contexts from ones used in other renderers.
+var ScriptStreamingFormat = 0;
+var DataStreamingFormat = 1; // Per response, global state that is not contextual to the rendering subtree.
 
+var dataElementQuotedEnd = stringToPrecomputedChunk('"></template>');
 var startInlineScript = stringToPrecomputedChunk("<script>");
 var endInlineScript = stringToPrecomputedChunk("</script>");
 var startScriptSrc = stringToPrecomputedChunk('<script src="');
@@ -3644,6 +3651,8 @@ var scriptReplacer = function(match, prefix, s, suffix) {
 };
 
 // Allows us to keep track of what we've already written so we can refer back to it.
+// if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
+// is set, the server will send instructions via data attributes (instead of inline scripts)
 function createResponseState(
   identifierPrefix,
   nonce,
@@ -3660,6 +3669,8 @@ function createResponseState(
           '<script nonce="' + escapeTextForBrowser(nonce) + '">'
         );
   var bootstrapChunks = [];
+  var externalRuntimeDesc = null;
+  var streamingFormat = ScriptStreamingFormat;
 
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(
@@ -3671,14 +3682,26 @@ function createResponseState(
 
   {
     if (externalRuntimeConfig !== undefined) {
+      streamingFormat = DataStreamingFormat;
+
+      if (typeof externalRuntimeConfig === "string") {
+        externalRuntimeDesc = {
+          src: externalRuntimeConfig,
+          integrity: undefined
+        };
+      } else {
+        externalRuntimeDesc = externalRuntimeConfig;
+      }
+    }
+  }
+
+  if (bootstrapScripts !== undefined) {
+    for (var i = 0; i < bootstrapScripts.length; i++) {
+      var scriptConfig = bootstrapScripts[i];
       var src =
-        typeof externalRuntimeConfig === "string"
-          ? externalRuntimeConfig
-          : externalRuntimeConfig.src;
+        typeof scriptConfig === "string" ? scriptConfig : scriptConfig.src;
       var integrity =
-        typeof externalRuntimeConfig === "string"
-          ? undefined
-          : externalRuntimeConfig.integrity;
+        typeof scriptConfig === "string" ? undefined : scriptConfig.integrity;
       bootstrapChunks.push(
         startScriptSrc,
         stringToChunk(escapeTextForBrowser(src))
@@ -3695,18 +3718,18 @@ function createResponseState(
     }
   }
 
-  if (bootstrapScripts !== undefined) {
-    for (var i = 0; i < bootstrapScripts.length; i++) {
-      var scriptConfig = bootstrapScripts[i];
+  if (bootstrapModules !== undefined) {
+    for (var _i = 0; _i < bootstrapModules.length; _i++) {
+      var _scriptConfig = bootstrapModules[_i];
 
       var _src =
-        typeof scriptConfig === "string" ? scriptConfig : scriptConfig.src;
+        typeof _scriptConfig === "string" ? _scriptConfig : _scriptConfig.src;
 
       var _integrity =
-        typeof scriptConfig === "string" ? undefined : scriptConfig.integrity;
+        typeof _scriptConfig === "string" ? undefined : _scriptConfig.integrity;
 
       bootstrapChunks.push(
-        startScriptSrc,
+        startModuleSrc,
         stringToChunk(escapeTextForBrowser(_src))
       );
 
@@ -3721,44 +3744,20 @@ function createResponseState(
     }
   }
 
-  if (bootstrapModules !== undefined) {
-    for (var _i = 0; _i < bootstrapModules.length; _i++) {
-      var _scriptConfig = bootstrapModules[_i];
-
-      var _src2 =
-        typeof _scriptConfig === "string" ? _scriptConfig : _scriptConfig.src;
-
-      var _integrity2 =
-        typeof _scriptConfig === "string" ? undefined : _scriptConfig.integrity;
-
-      bootstrapChunks.push(
-        startModuleSrc,
-        stringToChunk(escapeTextForBrowser(_src2))
-      );
-
-      if (_integrity2) {
-        bootstrapChunks.push(
-          scriptIntegirty,
-          stringToChunk(escapeTextForBrowser(_integrity2))
-        );
-      }
-
-      bootstrapChunks.push(endAsyncScript);
-    }
-  }
-
   return {
     bootstrapChunks: bootstrapChunks,
-    startInlineScript: inlineScriptWithNonce,
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + "P:"),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + "S:"),
     boundaryPrefix: idPrefix + "B:",
     idPrefix: idPrefix,
     nextSuspenseID: 0,
+    streamingFormat: streamingFormat,
+    startInlineScript: inlineScriptWithNonce,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
-    sentStyleInsertionFunction: false
+    sentStyleInsertionFunction: false,
+    externalRuntimeConfig: externalRuntimeDesc
   };
 } // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
@@ -5801,30 +5800,52 @@ var completeSegmentScript1Full = stringToPrecomputedChunk(
 );
 var completeSegmentScript1Partial = stringToPrecomputedChunk('$RS("');
 var completeSegmentScript2 = stringToPrecomputedChunk('","');
-var completeSegmentScript3 = stringToPrecomputedChunk('")</script>');
+var completeSegmentScriptEnd = stringToPrecomputedChunk('")</script>');
+var completeSegmentData1 = stringToPrecomputedChunk(
+  '<template data-rsi="" data-sid="'
+);
+var completeSegmentData2 = stringToPrecomputedChunk('" data-pid="');
+var completeSegmentDataEnd = dataElementQuotedEnd;
 function writeCompletedSegmentInstruction(
   destination,
   responseState,
   contentSegmentID
 ) {
-  writeChunk(destination, responseState.startInlineScript);
+  var scriptFormat = responseState.streamingFormat === ScriptStreamingFormat;
 
-  if (!responseState.sentCompleteSegmentFunction) {
-    // The first time we write this, we'll need to include the full implementation.
-    responseState.sentCompleteSegmentFunction = true;
-    writeChunk(destination, completeSegmentScript1Full);
+  if (scriptFormat) {
+    writeChunk(destination, responseState.startInlineScript);
+
+    if (!responseState.sentCompleteSegmentFunction) {
+      // The first time we write this, we'll need to include the full implementation.
+      responseState.sentCompleteSegmentFunction = true;
+      writeChunk(destination, completeSegmentScript1Full);
+    } else {
+      // Future calls can just reuse the same function.
+      writeChunk(destination, completeSegmentScript1Partial);
+    }
   } else {
-    // Future calls can just reuse the same function.
-    writeChunk(destination, completeSegmentScript1Partial);
-  }
+    writeChunk(destination, completeSegmentData1);
+  } // Write function arguments, which are string literals
 
   writeChunk(destination, responseState.segmentPrefix);
   var formattedID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, formattedID);
-  writeChunk(destination, completeSegmentScript2);
+
+  if (scriptFormat) {
+    writeChunk(destination, completeSegmentScript2);
+  } else {
+    writeChunk(destination, completeSegmentData2);
+  }
+
   writeChunk(destination, responseState.placeholderPrefix);
   writeChunk(destination, formattedID);
-  return writeChunkAndReturn(destination, completeSegmentScript3);
+
+  if (scriptFormat) {
+    return writeChunkAndReturn(destination, completeSegmentScriptEnd);
+  } else {
+    return writeChunkAndReturn(destination, completeSegmentDataEnd);
+  }
 }
 var completeBoundaryScript1Full = stringToPrecomputedChunk(
   completeBoundary + ';$RC("'
@@ -5840,9 +5861,18 @@ var completeBoundaryWithStylesScript1Partial = stringToPrecomputedChunk(
   '$RR("'
 );
 var completeBoundaryScript2 = stringToPrecomputedChunk('","');
-var completeBoundaryScript2a = stringToPrecomputedChunk('",');
-var completeBoundaryScript3 = stringToPrecomputedChunk('"');
-var completeBoundaryScript4 = stringToPrecomputedChunk(")</script>");
+var completeBoundaryScript3a = stringToPrecomputedChunk('",');
+var completeBoundaryScript3b = stringToPrecomputedChunk('"');
+var completeBoundaryScriptEnd = stringToPrecomputedChunk(")</script>");
+var completeBoundaryData1 = stringToPrecomputedChunk(
+  '<template data-rci="" data-bid="'
+);
+var completeBoundaryWithStylesData1 = stringToPrecomputedChunk(
+  '<template data-rri="" data-bid="'
+);
+var completeBoundaryData2 = stringToPrecomputedChunk('" data-sid="');
+var completeBoundaryData3a = stringToPrecomputedChunk('" data-sty="');
+var completeBoundaryDataEnd = dataElementQuotedEnd;
 function writeCompletedBoundaryInstruction(
   destination,
   responseState,
@@ -5856,28 +5886,38 @@ function writeCompletedBoundaryInstruction(
     hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
   }
 
-  writeChunk(destination, responseState.startInlineScript);
+  var scriptFormat = responseState.streamingFormat === ScriptStreamingFormat;
 
-  if (hasStyleDependencies) {
-    if (!responseState.sentCompleteBoundaryFunction) {
-      responseState.sentCompleteBoundaryFunction = true;
-      responseState.sentStyleInsertionFunction = true;
-      writeChunk(
-        destination,
-        clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth)
-      );
-    } else if (!responseState.sentStyleInsertionFunction) {
-      responseState.sentStyleInsertionFunction = true;
-      writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
+  if (scriptFormat) {
+    writeChunk(destination, responseState.startInlineScript);
+
+    if (hasStyleDependencies) {
+      if (!responseState.sentCompleteBoundaryFunction) {
+        responseState.sentCompleteBoundaryFunction = true;
+        responseState.sentStyleInsertionFunction = true;
+        writeChunk(
+          destination,
+          clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth)
+        );
+      } else if (!responseState.sentStyleInsertionFunction) {
+        responseState.sentStyleInsertionFunction = true;
+        writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
+      } else {
+        writeChunk(destination, completeBoundaryWithStylesScript1Partial);
+      }
     } else {
-      writeChunk(destination, completeBoundaryWithStylesScript1Partial);
+      if (!responseState.sentCompleteBoundaryFunction) {
+        responseState.sentCompleteBoundaryFunction = true;
+        writeChunk(destination, completeBoundaryScript1Full);
+      } else {
+        writeChunk(destination, completeBoundaryScript1Partial);
+      }
     }
   } else {
-    if (!responseState.sentCompleteBoundaryFunction) {
-      responseState.sentCompleteBoundaryFunction = true;
-      writeChunk(destination, completeBoundaryScript1Full);
+    if (hasStyleDependencies) {
+      writeChunk(destination, completeBoundaryWithStylesData1);
     } else {
-      writeChunk(destination, completeBoundaryScript1Partial);
+      writeChunk(destination, completeBoundaryData1);
     }
   }
 
@@ -5885,30 +5925,60 @@ function writeCompletedBoundaryInstruction(
     throw new Error(
       "An ID must have been assigned before we can complete the boundary."
     );
-  }
+  } // Write function arguments, which are string and array literals
 
   var formattedContentID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, boundaryID);
-  writeChunk(destination, completeBoundaryScript2);
+
+  if (scriptFormat) {
+    writeChunk(destination, completeBoundaryScript2);
+  } else {
+    writeChunk(destination, completeBoundaryData2);
+  }
+
   writeChunk(destination, responseState.segmentPrefix);
   writeChunk(destination, formattedContentID);
 
   if (hasStyleDependencies) {
-    writeChunk(destination, completeBoundaryScript2a);
-    writeStyleResourceDependencies(destination, boundaryResources);
+    // Script and data writers must format this differently:
+    //  - script writer emits an array literal, whose string elements are
+    //    escaped for javascript  e.g. ["A", "B"]
+    //  - data writer emits a string literal, which is escaped as html
+    //    e.g. [&#34;A&#34;, &#34;B&#34;]
+    if (scriptFormat) {
+      writeChunk(destination, completeBoundaryScript3a); // boundaryResources encodes an array literal
+
+      writeStyleResourceDependenciesInJS(destination, boundaryResources);
+    } else {
+      writeChunk(destination, completeBoundaryData3a);
+      writeStyleResourceDependenciesInAttr(destination, boundaryResources);
+    }
   } else {
-    writeChunk(destination, completeBoundaryScript3);
+    if (scriptFormat) {
+      writeChunk(destination, completeBoundaryScript3b);
+    }
   }
 
-  return writeChunkAndReturn(destination, completeBoundaryScript4);
+  if (scriptFormat) {
+    return writeChunkAndReturn(destination, completeBoundaryScriptEnd);
+  } else {
+    return writeChunkAndReturn(destination, completeBoundaryDataEnd);
+  }
 }
 var clientRenderScript1Full = stringToPrecomputedChunk(
   clientRenderBoundary + ';$RX("'
 );
 var clientRenderScript1Partial = stringToPrecomputedChunk('$RX("');
 var clientRenderScript1A = stringToPrecomputedChunk('"');
-var clientRenderScript2 = stringToPrecomputedChunk(")</script>");
 var clientRenderErrorScriptArgInterstitial = stringToPrecomputedChunk(",");
+var clientRenderScriptEnd = stringToPrecomputedChunk(")</script>");
+var clientRenderData1 = stringToPrecomputedChunk(
+  '<template data-rxi="" data-bid="'
+);
+var clientRenderData2 = stringToPrecomputedChunk('" data-dgst="');
+var clientRenderData3 = stringToPrecomputedChunk('" data-msg="');
+var clientRenderData4 = stringToPrecomputedChunk('" data-stck="');
+var clientRenderDataEnd = dataElementQuotedEnd;
 function writeClientRenderBoundaryInstruction(
   destination,
   responseState,
@@ -5917,15 +5987,22 @@ function writeClientRenderBoundaryInstruction(
   errorMessage,
   errorComponentStack
 ) {
-  writeChunk(destination, responseState.startInlineScript);
+  var scriptFormat = responseState.streamingFormat === ScriptStreamingFormat;
 
-  if (!responseState.sentClientRenderFunction) {
-    // The first time we write this, we'll need to include the full implementation.
-    responseState.sentClientRenderFunction = true;
-    writeChunk(destination, clientRenderScript1Full);
+  if (scriptFormat) {
+    writeChunk(destination, responseState.startInlineScript);
+
+    if (!responseState.sentClientRenderFunction) {
+      // The first time we write this, we'll need to include the full implementation.
+      responseState.sentClientRenderFunction = true;
+      writeChunk(destination, clientRenderScript1Full);
+    } else {
+      // Future calls can just reuse the same function.
+      writeChunk(destination, clientRenderScript1Partial);
+    }
   } else {
-    // Future calls can just reuse the same function.
-    writeChunk(destination, clientRenderScript1Partial);
+    // <template data-rxi="" data-bid="
+    writeChunk(destination, clientRenderData1);
   }
 
   if (boundaryID === null) {
@@ -5935,33 +6012,74 @@ function writeClientRenderBoundaryInstruction(
   }
 
   writeChunk(destination, boundaryID);
-  writeChunk(destination, clientRenderScript1A);
+
+  if (scriptFormat) {
+    // " needs to be inserted for scripts, since ArgInterstitual does not contain
+    // leading or trailing quotes
+    writeChunk(destination, clientRenderScript1A);
+  }
 
   if (errorDigest || errorMessage || errorComponentStack) {
-    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-    writeChunk(
-      destination,
-      stringToChunk(escapeJSStringsForInstructionScripts(errorDigest || ""))
-    );
+    if (scriptFormat) {
+      // ,"JSONString"
+      writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+      writeChunk(
+        destination,
+        stringToChunk(escapeJSStringsForInstructionScripts(errorDigest || ""))
+      );
+    } else {
+      // " data-dgst="HTMLString
+      writeChunk(destination, clientRenderData2);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorDigest || ""))
+      );
+    }
   }
 
   if (errorMessage || errorComponentStack) {
-    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-    writeChunk(
-      destination,
-      stringToChunk(escapeJSStringsForInstructionScripts(errorMessage || ""))
-    );
+    if (scriptFormat) {
+      // ,"JSONString"
+      writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+      writeChunk(
+        destination,
+        stringToChunk(escapeJSStringsForInstructionScripts(errorMessage || ""))
+      );
+    } else {
+      // " data-msg="HTMLString
+      writeChunk(destination, clientRenderData3);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorMessage || ""))
+      );
+    }
   }
 
   if (errorComponentStack) {
-    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-    writeChunk(
-      destination,
-      stringToChunk(escapeJSStringsForInstructionScripts(errorComponentStack))
-    );
+    // ,"JSONString"
+    if (scriptFormat) {
+      writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+      writeChunk(
+        destination,
+        stringToChunk(escapeJSStringsForInstructionScripts(errorComponentStack))
+      );
+    } else {
+      // " data-stck="HTMLString
+      writeChunk(destination, clientRenderData4);
+      writeChunk(
+        destination,
+        stringToChunk(escapeTextForBrowser(errorComponentStack))
+      );
+    }
   }
 
-  return writeChunkAndReturn(destination, clientRenderScript2);
+  if (scriptFormat) {
+    // ></script>
+    return writeChunkAndReturn(destination, clientRenderScriptEnd);
+  } else {
+    // "></template>
+    return writeChunkAndReturn(destination, clientRenderDataEnd);
+  }
 }
 var regexForJSStringsInInstructionScripts = /[<\u2028\u2029]/g;
 
@@ -6027,7 +6145,28 @@ var precedencePlaceholderStart = stringToPrecomputedChunk(
   '<style data-precedence="'
 );
 var precedencePlaceholderEnd = stringToPrecomputedChunk('"></style>');
-function writeInitialResources(destination, resources, responseState) {
+function writeInitialResources(
+  destination,
+  resources,
+  responseState,
+  willFlushAllSegments
+) {
+  // Write initially discovered resources after the shell completes
+  if (!willFlushAllSegments && responseState.externalRuntimeConfig) {
+    // If the root segment is incomplete due to suspended tasks
+    // (e.g. willFlushAllSegments = false) and we are using data
+    // streaming format, ensure the external runtime is sent.
+    // (User code could choose to send this even earlier by calling
+    //  preinit(...), if they know they will suspend).
+    var _responseState$extern = responseState.externalRuntimeConfig,
+      src = _responseState$extern.src,
+      integrity = _responseState$extern.integrity;
+    preinitImpl(resources, src, {
+      as: "script",
+      integrity: integrity
+    });
+  }
+
   function flushLinkResource(resource) {
     if (!resource.flushed) {
       pushLinkImpl(target, resource.props, responseState);
@@ -6249,21 +6388,23 @@ function hasStyleResourceDependencies(boundaryResources) {
 var arrayFirstOpenBracket = stringToPrecomputedChunk("[");
 var arraySubsequentOpenBracket = stringToPrecomputedChunk(",[");
 var arrayInterstitial = stringToPrecomputedChunk(",");
-var arrayCloseBracket = stringToPrecomputedChunk("]");
+var arrayCloseBracket = stringToPrecomputedChunk("]"); // This function writes a 2D array of strings to be embedded in javascript.
+// E.g.
+//  [["JS_escaped_string1", "JS_escaped_string2"]]
 
-function writeStyleResourceDependencies(destination, boundaryResources) {
+function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
   writeChunk(destination, arrayFirstOpenBracket);
   var nextArrayOpenBrackChunk = arrayFirstOpenBracket;
   boundaryResources.forEach(function(resource) {
     if (resource.inShell);
     else if (resource.flushed) {
       writeChunk(destination, nextArrayOpenBrackChunk);
-      writeStyleResourceDependencyHrefOnly(destination, resource.href);
+      writeStyleResourceDependencyHrefOnlyInJS(destination, resource.href);
       writeChunk(destination, arrayCloseBracket);
       nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
     } else {
       writeChunk(destination, nextArrayOpenBrackChunk);
-      writeStyleResourceDependency(
+      writeStyleResourceDependencyInJS(
         destination,
         resource.href,
         resource.precedence,
@@ -6277,8 +6418,9 @@ function writeStyleResourceDependencies(destination, boundaryResources) {
   });
   writeChunk(destination, arrayCloseBracket);
 }
+/* Helper functions */
 
-function writeStyleResourceDependencyHrefOnly(destination, href) {
+function writeStyleResourceDependencyHrefOnlyInJS(destination, href) {
   // We should actually enforce this earlier when the resource is created but for
   // now we make sure we are actually dealing with a string here.
   {
@@ -6292,7 +6434,12 @@ function writeStyleResourceDependencyHrefOnly(destination, href) {
   );
 }
 
-function writeStyleResourceDependency(destination, href, precedence, props) {
+function writeStyleResourceDependencyInJS(
+  destination,
+  href,
+  precedence,
+  props
+) {
   {
     checkAttributeStringCoercion(href, "href");
   }
@@ -6341,7 +6488,7 @@ function writeStyleResourceDependency(destination, href, precedence, props) {
         // eslint-disable-next-line-no-fallthrough
 
         default:
-          writeStyleResourceAttribute(destination, propKey, propValue);
+          writeStyleResourceAttributeInJS(destination, propKey, propValue);
           break;
       }
     }
@@ -6350,7 +6497,7 @@ function writeStyleResourceDependency(destination, href, precedence, props) {
   return null;
 }
 
-function writeStyleResourceAttribute(destination, name, value) {
+function writeStyleResourceAttributeInJS(destination, name, value) {
   var attributeName = name.toLowerCase();
   var attributeValue;
 
@@ -6427,6 +6574,194 @@ function writeStyleResourceAttribute(destination, name, value) {
   writeChunk(
     destination,
     stringToChunk(escapeJSObjectForInstructionScripts(attributeValue))
+  );
+} // This function writes a 2D array of strings to be embedded in an attribute
+// value and read with JSON.parse in ReactDOMServerExternalRuntime.js
+// E.g.
+//  [[&quot;JSON_escaped_string1&quot;, &quot;JSON_escaped_string2&quot;]]
+
+function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
+  writeChunk(destination, arrayFirstOpenBracket);
+  var nextArrayOpenBrackChunk = arrayFirstOpenBracket;
+  boundaryResources.forEach(function(resource) {
+    if (resource.inShell);
+    else if (resource.flushed) {
+      writeChunk(destination, nextArrayOpenBrackChunk);
+      writeStyleResourceDependencyHrefOnlyInAttr(destination, resource.href);
+      writeChunk(destination, arrayCloseBracket);
+      nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
+    } else {
+      writeChunk(destination, nextArrayOpenBrackChunk);
+      writeStyleResourceDependencyInAttr(
+        destination,
+        resource.href,
+        resource.precedence,
+        resource.props
+      );
+      writeChunk(destination, arrayCloseBracket);
+      nextArrayOpenBrackChunk = arraySubsequentOpenBracket;
+      resource.flushed = true;
+      resource.hint.flushed = true;
+    }
+  });
+  writeChunk(destination, arrayCloseBracket);
+}
+/* Helper functions */
+
+function writeStyleResourceDependencyHrefOnlyInAttr(destination, href) {
+  // We should actually enforce this earlier when the resource is created but for
+  // now we make sure we are actually dealing with a string here.
+  {
+    checkAttributeStringCoercion(href, "href");
+  }
+
+  var coercedHref = "" + href;
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(coercedHref)))
+  );
+}
+
+function writeStyleResourceDependencyInAttr(
+  destination,
+  href,
+  precedence,
+  props
+) {
+  {
+    checkAttributeStringCoercion(href, "href");
+  }
+
+  var coercedHref = "" + href;
+  sanitizeURL(coercedHref);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(coercedHref)))
+  );
+
+  {
+    checkAttributeStringCoercion(precedence, "precedence");
+  }
+
+  var coercedPrecedence = "" + precedence;
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(coercedPrecedence)))
+  );
+
+  for (var propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      var propValue = props[propKey];
+
+      if (propValue == null) {
+        continue;
+      }
+
+      switch (propKey) {
+        case "href":
+        case "rel":
+        case "precedence":
+        case "data-precedence": {
+          break;
+        }
+
+        case "children":
+        case "dangerouslySetInnerHTML":
+          throw new Error(
+            "link" +
+              " is a self-closing tag and must neither have `children` nor " +
+              "use `dangerouslySetInnerHTML`."
+          );
+        // eslint-disable-next-line-no-fallthrough
+
+        default:
+          writeStyleResourceAttributeInAttr(destination, propKey, propValue);
+          break;
+      }
+    }
+  }
+
+  return null;
+}
+
+function writeStyleResourceAttributeInAttr(destination, name, value) {
+  var attributeName = name.toLowerCase();
+  var attributeValue;
+
+  switch (typeof value) {
+    case "function":
+    case "symbol":
+      return;
+  }
+
+  switch (name) {
+    // Reserved names
+    case "innerHTML":
+    case "dangerouslySetInnerHTML":
+    case "suppressContentEditableWarning":
+    case "suppressHydrationWarning":
+    case "style":
+      // Ignored
+      return;
+    // Attribute renames
+
+    case "className":
+      attributeName = "class";
+      break;
+    // Booleans
+
+    case "hidden":
+      if (value === false) {
+        return;
+      }
+
+      attributeValue = "";
+      break;
+    // Santized URLs
+
+    case "src":
+    case "href": {
+      {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+
+      attributeValue = "" + value;
+      sanitizeURL(attributeValue);
+      break;
+    }
+
+    default: {
+      if (!isAttributeNameSafe(name)) {
+        return;
+      }
+    }
+  }
+
+  if (
+    // shouldIgnoreAttribute
+    // We have already filtered out null/undefined and reserved words.
+    name.length > 2 &&
+    (name[0] === "o" || name[0] === "O") &&
+    (name[1] === "n" || name[1] === "N")
+  ) {
+    return;
+  }
+
+  {
+    checkAttributeStringCoercion(value, attributeName);
+  }
+
+  attributeValue = "" + value;
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(attributeName)))
+  );
+  writeChunk(destination, arrayInterstitial);
+  writeChunk(
+    destination,
+    stringToChunk(escapeTextForBrowser(JSON.stringify(attributeValue)))
   );
 }
 
@@ -10492,8 +10827,18 @@ function flushSegment(request, destination, segment) {
   }
 }
 
-function flushInitialResources(destination, resources, responseState) {
-  writeInitialResources(destination, resources, responseState);
+function flushInitialResources(
+  destination,
+  resources,
+  responseState,
+  willFlushAllSegments
+) {
+  writeInitialResources(
+    destination,
+    resources,
+    responseState,
+    willFlushAllSegments
+  );
 }
 
 function flushImmediateResources(destination, request) {
@@ -10638,7 +10983,8 @@ function flushCompletedQueues(request, destination) {
           flushInitialResources(
             destination,
             request.resources,
-            request.responseState
+            request.responseState,
+            request.allPendingTasks === 0
           );
         }
 
@@ -10817,7 +11163,8 @@ function renderToStream(children, options) {
       undefined,
       options ? options.bootstrapScriptContent : undefined,
       options ? options.bootstrapScripts : undefined,
-      options ? options.bootstrapModules : undefined
+      options ? options.bootstrapModules : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined
     ),
     createRootFormatContext(undefined),
     options ? options.progressiveChunkSize : undefined,
