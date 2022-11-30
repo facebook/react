@@ -8,8 +8,7 @@
 November 28, 2022
 
 #### Features
-* Add SyncHydrationLane ([tyao1](https://github.com/tyao1) in [#25698](https://github.com/facebook/react/pull/25698)) [#25711](https://github.com/facebook/react/pull/25711))
-* add support for HostSingleton & HostResource ([mondaychen](https://github.com/mondaychen) in [#25616](https://github.com/facebook/react/pull/25616))
+* add support for new host type fibers for server components use cases ([mondaychen](https://github.com/mondaychen) in [#25616](https://github.com/facebook/react/pull/25616))
 * [react devtools] Device storage support ([rbalicki2](https://github.com/rbalicki2) in [#25452](https://github.com/facebook/react/pull/25452))
 * upgrade to Manifest V3 ([mondaychen](https://github.com/mondaychen) in [#25145](https://github.com/facebook/react/pull/25145))
 
