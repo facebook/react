@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -367,11 +367,12 @@ describe('ReactFunctionComponent', () => {
     Child.defaultProps = {test: 2};
     Child.propTypes = {test: PropTypes.string};
 
-    expect(() => ReactTestUtils.renderIntoDocument(<Child />)).toErrorDev(
+    expect(() => ReactTestUtils.renderIntoDocument(<Child />)).toErrorDev([
+      'Warning: Child: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
       'Warning: Failed prop type: Invalid prop `test` of type `number` ' +
         'supplied to `Child`, expected `string`.\n' +
         '    in Child (at **)',
-    );
+    ]);
   });
 
   it('should receive context', () => {

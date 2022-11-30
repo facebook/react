@@ -36,13 +36,6 @@ const __EXPERIMENTAL__ =
 // algorithm because 1) require.resolve doesn't work with ESM modules, and 2)
 // the behavior is easier to predict.
 const forks = Object.freeze({
-  // NOTE: This is hard-coded to the main entry point of the (third-party)
-  // react-shallow-renderer package.
-  './node_modules/react-shallow-renderer/index.js': () => {
-    // Use ESM build of `react-shallow-renderer`.
-    return './node_modules/react-shallow-renderer/esm/index.js';
-  },
-
   // Without this fork, importing `shared/ReactSharedInternals` inside
   // the `react` package itself would not work due to a cyclical dependency.
   './packages/shared/ReactSharedInternals.js': (
@@ -61,6 +54,33 @@ const forks = Object.freeze({
           'from "' +
           entry +
           '" because it does not declare "react" in the package ' +
+          'dependencies or peerDependencies.'
+      );
+    }
+    return null;
+  },
+
+  // Without this fork, importing `shared/ReactDOMSharedInternals` inside
+  // the `react-dom` package itself would not work due to a cyclical dependency.
+  './packages/shared/ReactDOMSharedInternals.js': (
+    bundleType,
+    entry,
+    dependencies
+  ) => {
+    if (entry === 'react-dom' || entry === 'react-dom/server-rendering-stub') {
+      return './packages/react-dom/src/ReactDOMSharedInternals.js';
+    }
+    if (
+      !entry.startsWith('react-dom/') &&
+      dependencies.indexOf('react-dom') === -1
+    ) {
+      // React DOM internals are unavailable if we can't reference the package.
+      // We return an error because we only want to throw if this module gets used.
+      return new Error(
+        'Cannot use a module that depends on ReactDOMSharedInternals ' +
+          'from "' +
+          entry +
+          '" because it does not declare "react-dom" in the package ' +
           'dependencies or peerDependencies.'
       );
     }
@@ -176,32 +196,6 @@ const forks = Object.freeze({
     switch (bundleType) {
       case FB_WWW_DEV:
         return './packages/shared/forks/consoleWithStackDev.www.js';
-      default:
-        return null;
-    }
-  },
-
-  // In FB bundles, we preserve an inline require to ReactCurrentOwner.
-  // See the explanation in FB version of ReactCurrentOwner in www:
-  './packages/react/src/ReactCurrentOwner.js': (bundleType, entry) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return './packages/react/src/forks/ReactCurrentOwner.www.js';
-      default:
-        return null;
-    }
-  },
-
-  // Similarly, we preserve an inline require to ReactCurrentDispatcher.
-  // See the explanation in FB version of ReactCurrentDispatcher in www:
-  './packages/react/src/ReactCurrentDispatcher.js': (bundleType, entry) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return './packages/react/src/forks/ReactCurrentDispatcher.www.js';
       default:
         return null;
     }
@@ -458,7 +452,10 @@ const forks = Object.freeze({
   },
 
   // We wrap top-level listeners into guards on www.
-  './packages/react-dom/src/events/EventListener.js': (bundleType, entry) => {
+  './packages/react-dom-bindings/src/events/EventListener.js': (
+    bundleType,
+    entry
+  ) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
@@ -468,7 +465,7 @@ const forks = Object.freeze({
           return null;
         } else {
           // Use the www fork which is integrated with TimeSlice profiling.
-          return './packages/react-dom/src/events/forks/EventListener-www.js';
+          return './packages/react-dom-bindings/src/events/forks/EventListener-www.js';
         }
       default:
         return null;

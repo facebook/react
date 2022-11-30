@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -61,7 +61,7 @@ describe('profiling charts', () => {
   describe('flamegraph chart', () => {
     // @reactVersion >= 16.9
     it('should contain valid data', () => {
-      const Parent = (_: {||}) => {
+      const Parent = (_: {}) => {
         Scheduler.unstable_advanceTime(10);
         return (
           <React.Fragment>
@@ -211,7 +211,7 @@ describe('profiling charts', () => {
   describe('ranked chart', () => {
     // @reactVersion >= 16.9
     it('should contain valid data', () => {
-      const Parent = (_: {||}) => {
+      const Parent = (_: {}) => {
         Scheduler.unstable_advanceTime(10);
         return (
           <React.Fragment>

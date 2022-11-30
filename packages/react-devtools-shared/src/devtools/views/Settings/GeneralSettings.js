@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -28,7 +28,7 @@ function getChangeLogUrl(version: ?string): string | null {
   return `${CHANGE_LOG_URL}#${versionAnchor}`;
 }
 
-export default function GeneralSettings(_: {||}) {
+export default function GeneralSettings(_: {}): React.Node {
   const {
     displayDensity,
     setDisplayDensity,
@@ -113,7 +113,7 @@ export default function GeneralSettings(_: {||}) {
   );
 }
 
-function Version({label, version}: {|label: string, version: ?string|}) {
+function Version({label, version}: {label: string, version: ?string}) {
   const changelogLink = useMemo(() => {
     return getChangeLogUrl(version);
   }, [version]);

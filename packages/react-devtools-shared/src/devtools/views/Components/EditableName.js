@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,7 +18,7 @@ type OverrideNameFn = (
   newName: Array<string | number>,
 ) => void;
 
-type EditableNameProps = {|
+type EditableNameProps = {
   allowEmpty?: boolean,
   allowWhiteSpace?: boolean,
   autoFocus?: boolean,
@@ -27,7 +27,7 @@ type EditableNameProps = {|
   overrideName: OverrideNameFn,
   path: Array<string | number>,
   type: Type,
-|};
+};
 
 export default function EditableName({
   allowEmpty = false,
@@ -38,7 +38,7 @@ export default function EditableName({
   overrideName,
   path,
   type,
-}: EditableNameProps) {
+}: EditableNameProps): React.Node {
   const [editableName, setEditableName] = useState(initialValue);
   const [isValid, setIsValid] = useState(false);
 

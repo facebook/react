@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,7 +15,7 @@ import Icon from './Icon';
 
 import styles from './SearchInput.css';
 
-type Props = {|
+type Props = {
   goToNextResult: () => void,
   goToPreviousResult: () => void,
   placeholder: string,
@@ -24,7 +24,7 @@ type Props = {|
   searchResultsCount: number,
   searchText: string,
   testName?: ?string,
-|};
+};
 
 export default function SearchInput({
   goToNextResult,
@@ -35,7 +35,7 @@ export default function SearchInput({
   searchResultsCount,
   searchText,
   testName,
-}: Props) {
+}: Props): React.Node {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const resetSearch = () => search('');

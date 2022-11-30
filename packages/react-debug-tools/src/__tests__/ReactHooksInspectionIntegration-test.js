@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -898,7 +898,11 @@ describe('ReactHooksInspectionIntegration', () => {
 
     await LazyFoo;
 
-    Scheduler.unstable_flushAll();
+    expect(() => {
+      Scheduler.unstable_flushAll();
+    }).toErrorDev([
+      'Foo: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+    ]);
 
     const childFiber = renderer.root._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);

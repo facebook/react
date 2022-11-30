@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,22 +18,22 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import ReactFizzServer from 'react-server';
 
-type Instance = {|
+type Instance = {
   type: string,
   children: Array<Instance | TextInstance | SuspenseInstance>,
   prop: any,
   hidden: boolean,
-|};
+};
 
-type TextInstance = {|
+type TextInstance = {
   text: string,
   hidden: boolean,
-|};
+};
 
-type SuspenseInstance = {|
+type SuspenseInstance = {
   state: 'pending' | 'complete' | 'client-render',
   children: Array<Instance | TextInstance | SuspenseInstance>,
-|};
+};
 
 type Placeholder = {
   parent: Instance | SuspenseInstance,
@@ -50,6 +50,9 @@ type Destination = {
   segments: Map<number, Segment>,
   stack: Array<Segment | Instance | SuspenseInstance>,
 };
+
+type Resources = null;
+type BoundaryResources = null;
 
 const POP = Buffer.from('/', 'utf8');
 
@@ -263,6 +266,22 @@ const ReactNoopServer = ReactFizzServer({
   ): boolean {
     boundary.status = 'client-render';
   },
+
+  writeInitialResources() {},
+  writeImmediateResources() {},
+
+  createResources(): Resources {
+    return null;
+  },
+
+  createBoundaryResources(): BoundaryResources {
+    return null;
+  },
+
+  setCurrentlyRenderingBoundaryResourcesTarget(resources: BoundaryResources) {},
+
+  prepareToRender() {},
+  cleanupAfterRender() {},
 });
 
 type Options = {

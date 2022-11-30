@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -33,7 +33,7 @@ import type {HookNames, LRUCache} from 'react-devtools-shared/src/types';
 
 type AST = mixed;
 
-type HookParsedMetadata = {|
+type HookParsedMetadata = {
   // API for consuming metadfata present in extended source map.
   metadataConsumer: SourceMapMetadataConsumer | null,
 
@@ -55,24 +55,24 @@ type HookParsedMetadata = {|
 
   // Alternate APIs from source-map for parsing source maps (if detected).
   sourceMapConsumer: SourceMapConsumerType | null,
-|};
+};
 
 type LocationKeyToHookParsedMetadata = Map<string, HookParsedMetadata>;
 
-type CachedRuntimeCodeMetadata = {|
+type CachedRuntimeCodeMetadata = {
   metadataConsumer: SourceMapMetadataConsumer | null,
   sourceMapConsumer: SourceMapConsumerType | null,
-|};
+};
 
 const runtimeURLToMetadataCache: LRUCache<
   string,
   CachedRuntimeCodeMetadata,
 > = new LRU({max: 50});
 
-type CachedSourceCodeMetadata = {|
+type CachedSourceCodeMetadata = {
   originalSourceAST: AST,
   originalSourceCode: string,
-|};
+};
 
 const originalURLToMetadataCache: LRUCache<
   string,

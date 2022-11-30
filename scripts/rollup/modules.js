@@ -19,7 +19,6 @@ const importSideEffects = Object.freeze({
   react: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom/server': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react/jsx-dev-runtime': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'react-fetch/node': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   url: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   ReactNativeInternalFeatureFlags: HAS_NO_SIDE_EFFECTS_ON_IMPORT,

@@ -1,11 +1,13 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
+
+import type {ReactContext, RefObject} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import {
@@ -25,9 +27,8 @@ import type {
   ViewState,
   ReactEventInfo,
 } from './types';
-import type {RefObject} from 'shared/ReactTypes';
 
-export type Context = {|
+export type Context = {
   file: File | null,
   inMemoryTimelineData: Array<TimelineData> | null,
   isTimelineSupported: boolean,
@@ -36,16 +37,18 @@ export type Context = {|
   viewState: ViewState,
   selectEvent: ReactEventInfo => void,
   selectedEvent: ReactEventInfo,
-|};
+};
 
-const TimelineContext = createContext<Context>(((null: any): Context));
+const TimelineContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 TimelineContext.displayName = 'TimelineContext';
 
-type Props = {|
+type Props = {
   children: React$Node,
-|};
+};
 
-function TimelineContextController({children}: Props) {
+function TimelineContextController({children}: Props): React.Node {
   const searchInputContainerRef = useRef(null);
   const [file, setFile] = useState<string | null>(null);
 

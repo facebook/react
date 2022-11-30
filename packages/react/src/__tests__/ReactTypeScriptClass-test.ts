@@ -5,7 +5,7 @@
 /// <reference path="./testDefinitions/ReactInternalAct.d.ts" />
 
 /*!
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,6 +17,7 @@ import ReactDOMClient = require('react-dom/client');
 import ReactDOMTestUtils = require('react-dom/test-utils');
 import PropTypes = require('prop-types');
 import internalAct = require('jest-react');
+import ReactFeatureFlags = require('shared/ReactFeatureFlags')
 
 // Before Each
 
@@ -686,9 +687,21 @@ describe('ReactTypeScriptClass', function() {
     test(React.createElement(ProvideContext), 'DIV', 'bar-through-context');
   });
 
-  it('supports classic refs', function() {
+  it('supports string refs', function() {
     const ref = React.createRef();
-    test(React.createElement(ClassicRefs, {ref: ref}), 'DIV', 'foo');
+    expect(() => {
+      test(React.createElement(ClassicRefs, {ref: ref}), 'DIV', 'foo');
+    }).toErrorDev(
+      ReactFeatureFlags.warnAboutStringRefs
+        ? [
+            'Warning: Component "ClassicRefs" contains the string ref "inner". ' +
+              'Support for string refs will be removed in a future major release. ' +
+              'We recommend using useRef() or createRef() instead. ' +
+              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+              '    in ClassicRefs (at **)',
+          ]
+        : [],
+    );
     expect(ref.current.refs.inner.getName()).toBe('foo');
   });
 

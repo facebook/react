@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,19 +15,19 @@ import invariant from 'invariant';
 
 // Event configs
 const customBubblingEventTypes: {
-  [eventName: string]: $ReadOnly<{|
-    phasedRegistrationNames: $ReadOnly<{|
+  [eventName: string]: $ReadOnly<{
+    phasedRegistrationNames: $ReadOnly<{
       captured: string,
       bubbled: string,
       skipBubbling?: ?boolean,
-    |}>,
-  |}>,
+    }>,
+  }>,
   ...,
 } = {};
 const customDirectEventTypes: {
-  [eventName: string]: $ReadOnly<{|
+  [eventName: string]: $ReadOnly<{
     registrationName: string,
-  |}>,
+  }>,
   ...,
 } = {};
 

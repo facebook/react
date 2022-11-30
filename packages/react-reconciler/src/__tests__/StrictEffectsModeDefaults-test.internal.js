@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,7 +24,6 @@ describe('StrictEffectsMode defaults', () => {
     act = require('jest-react').act;
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableStrictEffects = __DEV__;
     ReactFeatureFlags.createRootStrictEffectsByDefault = __DEV__;
   });
 
@@ -379,6 +378,7 @@ describe('StrictEffectsMode defaults', () => {
       expect(Scheduler).toHaveYielded([]);
     });
 
+    //@gate useModernStrictMode
     it('disconnects refs during double invoking', () => {
       const onRefMock = jest.fn();
       function App({text}) {

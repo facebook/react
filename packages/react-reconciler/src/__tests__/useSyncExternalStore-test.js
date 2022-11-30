@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,6 +18,7 @@ let useLayoutEffect;
 let forwardRef;
 let useImperativeHandle;
 let useRef;
+let useState;
 let startTransition;
 
 // This tests the native useSyncExternalStore implementation, not the shim.
@@ -36,6 +37,7 @@ describe('useSyncExternalStore', () => {
     useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
     useRef = React.useRef;
+    useState = React.useState;
     useSyncExternalStore = React.useSyncExternalStore;
     startTransition = React.startTransition;
 
@@ -173,4 +175,33 @@ describe('useSyncExternalStore', () => {
       });
     },
   );
+
+  test('next value is correctly cached when state is dispatched in render phase', async () => {
+    const store = createExternalStore('value:initial');
+
+    function App() {
+      const value = useSyncExternalStore(store.subscribe, store.getState);
+      const [sameValue, setSameValue] = useState(value);
+      if (value !== sameValue) setSameValue(value);
+      return <Text text={value} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    act(() => {
+      // Start a render that reads from the store and yields value
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['value:initial']);
+
+    await act(() => {
+      store.set('value:changed');
+    });
+    expect(Scheduler).toHaveYielded(['value:changed']);
+
+    // If cached value was updated, we expect a re-render
+    await act(() => {
+      store.set('value:initial');
+    });
+    expect(Scheduler).toHaveYielded(['value:initial']);
+  });
 });

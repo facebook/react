@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,6 +19,8 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
+  HostResource,
+  HostSingleton,
   HostPortal,
   ContextProvider,
   SuspenseComponent,
@@ -62,7 +64,7 @@ function unwindWork(
   current: Fiber | null,
   workInProgress: Fiber,
   renderLanes: Lanes,
-) {
+): Fiber | null {
   // Note: This intentionally doesn't check if we're hydrating because comparing
   // to the current tree provider fiber is just as fast and less error-prone.
   // Ideally we would have a special version of the work loop only
@@ -115,6 +117,8 @@ function unwindWork(
       // We unwound to the root without completing it. Exit.
       return null;
     }
+    case HostResource:
+    case HostSingleton:
     case HostComponent: {
       // TODO: popHydrationState
       popHostContext(workInProgress);
@@ -233,6 +237,8 @@ function unwindInterruptedWork(
       resetMutableSourceWorkInProgressVersions();
       break;
     }
+    case HostResource:
+    case HostSingleton:
     case HostComponent: {
       popHostContext(interruptedWork);
       break;

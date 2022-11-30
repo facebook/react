@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -337,7 +337,7 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('no ref attribute', async render => {
         class RefComponent extends React.Component {
           render() {
-            return <div ref="foo" />;
+            return <div ref={React.createRef()} />;
           }
         }
         const e = await render(<RefComponent />);
@@ -497,9 +497,9 @@ describe('ReactDOMServerIntegration', () => {
       itRenders(
         'badly cased aliased HTML attribute with a warning',
         async render => {
-          const e = await render(<meta httpequiv="refresh" />, 1);
-          expect(e.hasAttribute('http-equiv')).toBe(false);
-          expect(e.getAttribute('httpequiv')).toBe('refresh');
+          const e = await render(<form acceptcharset="utf-8" />, 1);
+          expect(e.hasAttribute('accept-charset')).toBe(false);
+          expect(e.getAttribute('acceptcharset')).toBe('utf-8');
         },
       );
 

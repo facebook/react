@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -59,6 +59,8 @@
 // because every log2(base) bits corresponds to a single character, i.e. every
 // log2(32) = 5 bits. That means we can lop bits off the end 5 at a time without
 // affecting the final result.
+
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import {getIsHydrating} from './ReactFiberHydrationContext.new';
 import {clz32} from './clz32';

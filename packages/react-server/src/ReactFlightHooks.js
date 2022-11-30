@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,13 +7,21 @@
  * @flow
  */
 
-import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
+import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {Request} from './ReactFlightServer';
-import type {ReactServerContext} from 'shared/ReactTypes';
-import {REACT_SERVER_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import type {ReactServerContext, Thenable, Usable} from 'shared/ReactTypes';
+import type {ThenableState} from './ReactFlightThenable';
+import {
+  REACT_SERVER_CONTEXT_TYPE,
+  REACT_MEMO_CACHE_SENTINEL,
+} from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
+import {enableUseHook} from 'shared/ReactFeatureFlags';
+import {createThenableState, trackUsedThenable} from './ReactFlightThenable';
 
 let currentRequest = null;
+let thenableIndexCounter = 0;
+let thenableState = null;
 
 export function prepareToUseHooksForRequest(request: Request) {
   currentRequest = request;
@@ -23,12 +31,27 @@ export function resetHooksForRequest() {
   currentRequest = null;
 }
 
+export function prepareToUseHooksForComponent(
+  prevThenableState: ThenableState | null,
+) {
+  thenableIndexCounter = 0;
+  thenableState = prevThenableState;
+}
+
+export function getThenableStateAfterSuspending(): null | ThenableState {
+  const state = thenableState;
+  thenableState = null;
+  return state;
+}
+
 function readContext<T>(context: ReactServerContext<T>): T {
   if (__DEV__) {
     if (context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
-      console.error('Only ServerContext is supported in Flight');
+      console.error(
+        'Only createServerContext is supported in Server Components.',
+      );
     }
-    if (currentCache === null) {
+    if (currentRequest === null) {
       console.error(
         'Context can only be read while React is rendering. ' +
           'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
@@ -40,7 +63,7 @@ function readContext<T>(context: ReactServerContext<T>): T {
   return readContextImpl(context);
 }
 
-export const Dispatcher: DispatcherType = {
+export const HooksDispatcher: Dispatcher = {
   useMemo<T>(nextCreate: () => T): T {
     return nextCreate();
   },
@@ -50,19 +73,6 @@ export const Dispatcher: DispatcherType = {
   useDebugValue(): void {},
   useDeferredValue: (unsupportedHook: any),
   useTransition: (unsupportedHook: any),
-  getCacheForType<T>(resourceType: () => T): T {
-    if (!currentCache) {
-      throw new Error('Reading the cache is only supported while rendering.');
-    }
-
-    let entry: T | void = (currentCache.get(resourceType): any);
-    if (entry === undefined) {
-      entry = resourceType();
-      // TODO: Warn if undefined?
-      currentCache.set(resourceType, entry);
-    }
-    return entry;
-  },
   readContext,
   useContext: readContext,
   useReducer: (unsupportedHook: any),
@@ -79,8 +89,13 @@ export const Dispatcher: DispatcherType = {
     return unsupportedRefresh;
   },
   useMemoCache(size: number): Array<any> {
-    return new Array(size);
+    const data = new Array(size);
+    for (let i = 0; i < size; i++) {
+      data[i] = REACT_MEMO_CACHE_SENTINEL;
+    }
+    return data;
   },
+  use: enableUseHook ? use : (unsupportedHook: any),
 };
 
 function unsupportedHook(): void {
@@ -88,22 +103,9 @@ function unsupportedHook(): void {
 }
 
 function unsupportedRefresh(): void {
-  if (!currentCache) {
-    throw new Error(
-      'Refreshing the cache is not supported in Server Components.',
-    );
-  }
-}
-
-let currentCache: Map<Function, mixed> | null = null;
-
-export function setCurrentCache(cache: Map<Function, mixed> | null) {
-  currentCache = cache;
-  return currentCache;
-}
-
-export function getCurrentCache() {
-  return currentCache;
+  throw new Error(
+    'Refreshing the cache is not supported in Server Components.',
+  );
 }
 
 function useId(): string {
@@ -113,4 +115,29 @@ function useId(): string {
   const id = currentRequest.identifierCount++;
   // use 'S' for Flight components to distinguish from 'R' and 'r' in Fizz/Client
   return ':' + currentRequest.identifierPrefix + 'S' + id.toString(32) + ':';
+}
+
+function use<T>(usable: Usable<T>): T {
+  if (usable !== null && typeof usable === 'object') {
+    // $FlowFixMe[method-unbinding]
+    if (typeof usable.then === 'function') {
+      // This is a thenable.
+      const thenable: Thenable<T> = (usable: any);
+
+      // Track the position of the thenable within this fiber.
+      const index = thenableIndexCounter;
+      thenableIndexCounter += 1;
+
+      if (thenableState === null) {
+        thenableState = createThenableState();
+      }
+      return trackUsedThenable(thenableState, thenable, index);
+    } else if (usable.$$typeof === REACT_SERVER_CONTEXT_TYPE) {
+      const context: ReactServerContext<T> = (usable: any);
+      return readContext(context);
+    }
+  }
+
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  throw new Error('An unsupported type was passed to use(): ' + String(usable));
 }

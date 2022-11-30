@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,18 +20,18 @@ type FiberArray = Array<Fiber>;
 type FiberToFiberComponentsMap = Map<Fiber, FiberArray>;
 
 const ReactStrictModeWarnings = {
-  recordUnsafeLifecycleWarnings(fiber: Fiber, instance: any): void {},
-  flushPendingUnsafeLifecycleWarnings(): void {},
-  recordLegacyContextWarning(fiber: Fiber, instance: any): void {},
-  flushLegacyContextWarning(): void {},
-  discardPendingWarnings(): void {},
+  recordUnsafeLifecycleWarnings: (fiber: Fiber, instance: any): void => {},
+  flushPendingUnsafeLifecycleWarnings: (): void => {},
+  recordLegacyContextWarning: (fiber: Fiber, instance: any): void => {},
+  flushLegacyContextWarning: (): void => {},
+  discardPendingWarnings: (): void => {},
 };
 
 if (__DEV__) {
   const findStrictRoot = (fiber: Fiber): Fiber | null => {
     let maybeStrictRoot = null;
 
-    let node = fiber;
+    let node: null | Fiber = fiber;
     while (node !== null) {
       if (node.mode & StrictLegacyMode) {
         maybeStrictRoot = node;

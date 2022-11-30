@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,8 +12,12 @@ import type {Lanes} from './ReactFiberLane.old';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
 import type {Flags} from './ReactFiberFlags';
 
-import * as React from 'react';
-import {LayoutStatic, Update, Snapshot} from './ReactFiberFlags';
+import {
+  LayoutStatic,
+  Update,
+  Snapshot,
+  MountLayoutDev,
+} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -33,7 +37,12 @@ import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
-import {DebugTracingMode, StrictLegacyMode} from './ReactTypeOfMode';
+import {
+  DebugTracingMode,
+  NoMode,
+  StrictLegacyMode,
+  StrictEffectsMode,
+} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -69,10 +78,6 @@ import {
 } from './ReactFiberDevToolsHook.old';
 
 const fakeInternalInstance = {};
-
-// React.Component uses a shared frozen object by default.
-// We'll use it to determine whether we need to initialize legacy refs.
-export const emptyRefsObject = new React.Component().refs;
 
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUninitializedState;
@@ -824,7 +829,7 @@ function mountClassInstance(
   const instance = workInProgress.stateNode;
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
-  instance.refs = emptyRefsObject;
+  instance.refs = {};
 
   initializeUpdateQueue(workInProgress);
 
@@ -896,7 +901,10 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
-    const fiberFlags: Flags = Update | LayoutStatic;
+    let fiberFlags: Flags = Update | LayoutStatic;
+    if (__DEV__ && (workInProgress.mode & StrictEffectsMode) !== NoMode) {
+      fiberFlags |= MountLayoutDev;
+    }
     workInProgress.flags |= fiberFlags;
   }
 }
@@ -967,7 +975,10 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      const fiberFlags: Flags = Update | LayoutStatic;
+      let fiberFlags: Flags = Update | LayoutStatic;
+      if (__DEV__ && (workInProgress.mode & StrictEffectsMode) !== NoMode) {
+        fiberFlags |= MountLayoutDev;
+      }
       workInProgress.flags |= fiberFlags;
     }
     return false;
@@ -1011,14 +1022,20 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
-      const fiberFlags: Flags = Update | LayoutStatic;
+      let fiberFlags: Flags = Update | LayoutStatic;
+      if (__DEV__ && (workInProgress.mode & StrictEffectsMode) !== NoMode) {
+        fiberFlags |= MountLayoutDev;
+      }
       workInProgress.flags |= fiberFlags;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      const fiberFlags: Flags = Update | LayoutStatic;
+      let fiberFlags: Flags = Update | LayoutStatic;
+      if (__DEV__ && (workInProgress.mode & StrictEffectsMode) !== NoMode) {
+        fiberFlags |= MountLayoutDev;
+      }
       workInProgress.flags |= fiberFlags;
     }
 

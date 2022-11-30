@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,6 +8,7 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 import type {Writable} from 'stream';
 import type {ServerContextJSONValue} from 'shared/ReactTypes';
@@ -19,7 +20,7 @@ import {
   abort,
 } from 'react-server/src/ReactFlightServer';
 
-function createDrainHandler(destination, request) {
+function createDrainHandler(destination: Destination, request) {
   return () => startFlowing(request, destination);
 }
 
@@ -29,10 +30,10 @@ type Options = {
   identifierPrefix?: string,
 };
 
-type PipeableStream = {|
+type PipeableStream = {
   abort(reason: mixed): void,
   pipe<T: Writable>(destination: T): T,
-|};
+};
 
 function renderToPipeableStream(
   model: ReactModel,

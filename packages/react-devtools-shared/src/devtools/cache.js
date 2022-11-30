@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -26,22 +26,24 @@ import {createContext} from 'react';
 
 export type {Thenable};
 
-type Suspender = {then(resolve: () => mixed, reject: () => mixed): mixed, ...};
+interface Suspender {
+  then(resolve: () => mixed, reject: () => mixed): mixed;
+}
 
-type PendingResult = {|
+type PendingResult = {
   status: 0,
   value: Suspender,
-|};
+};
 
-type ResolvedResult<Value> = {|
+type ResolvedResult<Value> = {
   status: 1,
   value: Value,
-|};
+};
 
-type RejectedResult = {|
+type RejectedResult = {
   status: 2,
   value: mixed,
-|};
+};
 
 type Result<Value> = PendingResult | ResolvedResult<Value> | RejectedResult;
 
@@ -86,7 +88,9 @@ const resourceConfigs: Map<Resource<any, any, any>, Config> = new Map();
 function getEntriesForResource(
   resource: any,
 ): Map<any, any> | WeakMap<any, any> {
-  let entriesForResource = ((entries.get(resource): any): Map<any, any>);
+  let entriesForResource: Map<any, any> | WeakMap<any, any> = ((entries.get(
+    resource,
+  ): any): Map<any, any>);
   if (entriesForResource === undefined) {
     const config = resourceConfigs.get(resource);
     entriesForResource =

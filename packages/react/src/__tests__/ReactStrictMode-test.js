@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,6 +15,10 @@ let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
 let PropTypes;
+let act;
+let useMemo;
+let useState;
+let useReducer;
 
 const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
@@ -25,6 +29,10 @@ describe('ReactStrictMode', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
+    act = require('jest-react').act;
+    useMemo = React.useMemo;
+    useState = React.useState;
+    useReducer = React.useReducer;
   });
 
   it('should appear in the client component stack', () => {
@@ -67,7 +75,7 @@ describe('ReactStrictMode', () => {
     );
   });
 
-  // @gate __DEV__ && !enableStrictEffects
+  // @gate __DEV__
   it('should invoke precommit lifecycle methods twice', () => {
     let log = [];
     let shouldComponentUpdate = false;
@@ -330,6 +338,183 @@ describe('ReactStrictMode', () => {
     expect(setStateCount).toBe(__DEV__ ? 2 : 1);
     // But each time `state` should be the previous value
     expect(instance.state.count).toBe(2);
+  });
+
+  // @gate debugRenderPhaseSideEffectsForStrictMode
+  it('double invokes useMemo functions', async () => {
+    let log = [];
+
+    function Uppercased({text}) {
+      return useMemo(() => {
+        const uppercased = text.toUpperCase();
+        log.push('Compute toUpperCase: ' + uppercased);
+        return uppercased;
+      }, [text]);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    // Mount
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <Uppercased text="hello" />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('HELLO');
+    expect(log).toEqual([
+      'Compute toUpperCase: HELLO',
+      'Compute toUpperCase: HELLO',
+    ]);
+
+    log = [];
+
+    // Update
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <Uppercased text="goodbye" />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('GOODBYE');
+    expect(log).toEqual([
+      'Compute toUpperCase: GOODBYE',
+      'Compute toUpperCase: GOODBYE',
+    ]);
+  });
+
+  // @gate debugRenderPhaseSideEffectsForStrictMode
+  it('double invokes useMemo functions', async () => {
+    let log = [];
+    function Uppercased({text}) {
+      const memoizedResult = useMemo(() => {
+        const uppercased = text.toUpperCase();
+        log.push('Compute toUpperCase: ' + uppercased);
+        return {uppercased};
+      }, [text]);
+
+      // Push this to the log so we can check whether the same memoized result
+      // it returned during both invocations.
+      log.push(memoizedResult);
+
+      return memoizedResult.uppercased;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    // Mount
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <Uppercased text="hello" />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('HELLO');
+    expect(log).toEqual([
+      'Compute toUpperCase: HELLO',
+      'Compute toUpperCase: HELLO',
+      {uppercased: 'HELLO'},
+      {uppercased: 'HELLO'},
+    ]);
+
+    // Even though the memoized function is invoked twice, the same object
+    // is returned both times.
+    expect(log[2]).toBe(log[3]);
+
+    log = [];
+
+    // Update
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <Uppercased text="goodbye" />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('GOODBYE');
+    expect(log).toEqual([
+      'Compute toUpperCase: GOODBYE',
+      'Compute toUpperCase: GOODBYE',
+      {uppercased: 'GOODBYE'},
+      {uppercased: 'GOODBYE'},
+    ]);
+
+    // Even though the memoized function is invoked twice, the same object
+    // is returned both times.
+    expect(log[2]).toBe(log[3]);
+  });
+
+  // @gate debugRenderPhaseSideEffectsForStrictMode
+  it('double invokes setState updater functions', async () => {
+    const log = [];
+
+    let setCount;
+    function App() {
+      const [count, _setCount] = useState(0);
+      setCount = _setCount;
+      return count;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('0');
+
+    await act(() => {
+      setCount(() => {
+        log.push('Compute count: 1');
+        return 1;
+      });
+    });
+    expect(container.textContent).toBe('1');
+    expect(log).toEqual(['Compute count: 1', 'Compute count: 1']);
+  });
+
+  // @gate debugRenderPhaseSideEffectsForStrictMode
+  it('double invokes reducer functions', async () => {
+    const log = [];
+
+    function reducer(prevState, action) {
+      log.push('Compute new state: ' + action);
+      return action;
+    }
+
+    let dispatch;
+    function App() {
+      const [count, _dispatch] = useReducer(reducer, 0);
+      dispatch = _dispatch;
+      return count;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('0');
+
+    await act(() => {
+      dispatch(1);
+    });
+    expect(container.textContent).toBe('1');
+    expect(log).toEqual(['Compute new state: 1', 'Compute new state: 1']);
   });
 });
 
@@ -741,12 +926,18 @@ describe('string refs', () => {
     expect(() => {
       ReactDOM.render(<OuterComponent />, container);
     }).toErrorDev(
-      'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
-        'String refs are a source of potential bugs and should be avoided. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: ' +
-        'https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in OuterComponent (at **)',
+      ReactFeatureFlags.warnAboutStringRefs
+        ? 'Warning: Component "StrictMode" contains the string ref "somestring". ' +
+            'Support for string refs will be removed in a future major release. ' +
+            'We recommend using useRef() or createRef() instead. ' +
+            'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+            '    in OuterComponent (at **)'
+        : 'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
+            'String refs are a source of potential bugs and should be avoided. ' +
+            'We recommend using useRef() or createRef() instead. ' +
+            'Learn more about using refs safely here: ' +
+            'https://reactjs.org/link/strict-mode-string-ref\n' +
+            '    in OuterComponent (at **)',
     );
 
     // Dedup
@@ -782,13 +973,20 @@ describe('string refs', () => {
     expect(() => {
       ReactDOM.render(<OuterComponent />, container);
     }).toErrorDev(
-      'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
-        'String refs are a source of potential bugs and should be avoided. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: ' +
-        'https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in InnerComponent (at **)\n' +
-        '    in OuterComponent (at **)',
+      ReactFeatureFlags.warnAboutStringRefs
+        ? 'Warning: Component "InnerComponent" contains the string ref "somestring". ' +
+            'Support for string refs will be removed in a future major release. ' +
+            'We recommend using useRef() or createRef() instead. ' +
+            'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+            '    in InnerComponent (at **)\n' +
+            '    in OuterComponent (at **)'
+        : 'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
+            'String refs are a source of potential bugs and should be avoided. ' +
+            'We recommend using useRef() or createRef() instead. ' +
+            'Learn more about using refs safely here: ' +
+            'https://reactjs.org/link/strict-mode-string-ref\n' +
+            '    in InnerComponent (at **)\n' +
+            '    in OuterComponent (at **)',
     );
 
     // Dedup

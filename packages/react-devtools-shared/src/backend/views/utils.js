@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,15 +7,14 @@
  * @flow
  */
 
-export type Rect = {
-  bottom: number,
-  height: number,
-  left: number,
-  right: number,
-  top: number,
-  width: number,
-  ...
-};
+export interface Rect {
+  bottom: number;
+  height: number;
+  left: number;
+  right: number;
+  top: number;
+  width: number;
+}
 
 // Get the window object for the document that a node belongs to,
 // or return null if it cannot be found (node not attached to DOM,
@@ -39,7 +38,7 @@ export function getOwnerIframe(node: HTMLElement): HTMLElement | null {
 
 // Get a bounding client rect for a node, with an
 // offset added to compensate for its border.
-export function getBoundingClientRectWithBorderOffset(node: HTMLElement) {
+export function getBoundingClientRectWithBorderOffset(node: HTMLElement): Rect {
   const dimensions = getElementDimensions(node);
   return mergeRectOffsets([
     node.getBoundingClientRect(),
@@ -85,7 +84,7 @@ export function getNestedBoundingClientRect(
   const ownerIframe = getOwnerIframe(node);
   if (ownerIframe && ownerIframe !== boundaryWindow) {
     const rects = [node.getBoundingClientRect()];
-    let currentIframe = ownerIframe;
+    let currentIframe: null | HTMLElement = ownerIframe;
     let onlyOneMore = false;
     while (currentIframe) {
       const rect = getBoundingClientRectWithBorderOffset(currentIframe);
@@ -109,7 +108,22 @@ export function getNestedBoundingClientRect(
   }
 }
 
-export function getElementDimensions(domElement: Element) {
+export function getElementDimensions(
+  domElement: Element,
+): {
+  borderBottom: number,
+  borderLeft: number,
+  borderRight: number,
+  borderTop: number,
+  marginBottom: number,
+  marginLeft: number,
+  marginRight: number,
+  marginTop: number,
+  paddingBottom: number,
+  paddingLeft: number,
+  paddingRight: number,
+  paddingTop: number,
+} {
   const calculatedStyle = window.getComputedStyle(domElement);
   return {
     borderLeft: parseInt(calculatedStyle.borderLeftWidth, 10),

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,10 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.old';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import type {
+  SuspenseState,
+  SuspenseProps,
+} from './ReactFiberSuspenseComponent.old';
 
 import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
 import {createCursor, push, pop} from './ReactFiberStack.old';
@@ -52,6 +55,33 @@ function shouldAvoidedBoundaryCapture(
 
   // If none of those cases apply, then we should avoid this fallback and show
   // the outer one instead.
+  return false;
+}
+
+export function isBadSuspenseFallback(
+  current: Fiber | null,
+  nextProps: SuspenseProps,
+): boolean {
+  // Check if this is a "bad" fallback state or a good one. A bad fallback state
+  // is one that we only show as a last resort; if this is a transition, we'll
+  // block it from displaying, and wait for more data to arrive.
+  if (current !== null) {
+    const prevState: SuspenseState = current.memoizedState;
+    const isShowingFallback = prevState !== null;
+    if (!isShowingFallback && !isCurrentTreeHidden()) {
+      // It's bad to switch to a fallback if content is already visible
+      return true;
+    }
+  }
+
+  if (
+    enableSuspenseAvoidThisFallback &&
+    nextProps.unstable_avoidThisFallback === true
+  ) {
+    // Experimental: Some fallbacks are always bad
+    return true;
+  }
+
   return false;
 }
 

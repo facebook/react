@@ -50,6 +50,14 @@ jest.mock('react', () => {
   return jest.requireActual(resolvedEntryPoint);
 });
 
+jest.mock('react/react.shared-subset', () => {
+  const resolvedEntryPoint = resolveEntryFork(
+    require.resolve('react/src/ReactSharedSubset'),
+    global.__WWW__
+  );
+  return jest.requireActual(resolvedEntryPoint);
+});
+
 jest.mock('react-reconciler/src/ReactFiberReconciler', () => {
   return jest.requireActual(
     __VARIANT__
@@ -146,6 +154,12 @@ inlinedHostConfigs.forEach(rendererInfo => {
 // the React package itself.
 jest.mock('shared/ReactSharedInternals', () =>
   jest.requireActual('react/src/ReactSharedInternals')
+);
+
+// Make it possible to import this module inside
+// the ReactDOM package itself.
+jest.mock('shared/ReactDOMSharedInternals', () =>
+  jest.requireActual('react-dom/src/ReactDOMSharedInternals')
 );
 
 jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));

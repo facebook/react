@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -153,7 +153,7 @@ function resolveMostRecentTextCache(text) {
 
 const resolveText = resolveMostRecentTextCache;
 
-// @gate enableCache
+// @gate enableLegacyCache
 // @gate enableSuspenseList
 test('regression (#20932): return pointer is correct before entering deleted tree', async () => {
   // Based on a production bug. Designed to trigger a very specific

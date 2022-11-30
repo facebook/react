@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -125,7 +125,7 @@ import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.new';
 
 import assign from 'shared/assign';
 
-export type Update<State> = {|
+export type Update<State> = {
   // TODO: Temporary field. Will remove this by storing a map of
   // transition -> event time on the root.
   eventTime: number,
@@ -136,21 +136,21 @@ export type Update<State> = {|
   callback: (() => mixed) | null,
 
   next: Update<State> | null,
-|};
+};
 
-export type SharedQueue<State> = {|
+export type SharedQueue<State> = {
   pending: Update<State> | null,
   lanes: Lanes,
   hiddenCallbacks: Array<() => mixed> | null,
-|};
+};
 
-export type UpdateQueue<State> = {|
+export type UpdateQueue<State> = {
   baseState: State,
   firstBaseUpdate: Update<State> | null,
   lastBaseUpdate: Update<State> | null,
   shared: SharedQueue<State>,
   callbacks: Array<() => mixed> | null,
-|};
+};
 
 export const UpdateState = 0;
 export const ReplaceState = 1;
@@ -164,7 +164,7 @@ let hasForceUpdate = false;
 
 let didWarnUpdateInsideUpdate;
 let currentlyProcessingQueue;
-export let resetCurrentlyProcessingQueue;
+export let resetCurrentlyProcessingQueue: () => void;
 if (__DEV__) {
   didWarnUpdateInsideUpdate = false;
   currentlyProcessingQueue = null;
@@ -207,8 +207,8 @@ export function cloneUpdateQueue<State>(
   }
 }
 
-export function createUpdate(eventTime: number, lane: Lane): Update<*> {
-  const update: Update<*> = {
+export function createUpdate(eventTime: number, lane: Lane): Update<mixed> {
+  const update: Update<mixed> = {
     eventTime,
     lane,
 
@@ -325,7 +325,7 @@ export function enqueueCapturedUpdate<State>(
       const firstBaseUpdate = queue.firstBaseUpdate;
       if (firstBaseUpdate !== null) {
         // Loop through the updates and clone them.
-        let update = firstBaseUpdate;
+        let update: Update<State> = firstBaseUpdate;
         do {
           const clone: Update<State> = {
             eventTime: update.eventTime,
@@ -345,6 +345,7 @@ export function enqueueCapturedUpdate<State>(
             newLast.next = clone;
             newLast = clone;
           }
+          // $FlowFixMe[incompatible-type] we bail out when we get a null
           update = update.next;
         } while (update !== null);
 
@@ -476,6 +477,7 @@ export function processUpdateQueue<State>(
   hasForceUpdate = false;
 
   if (__DEV__) {
+    // $FlowFixMe[escaped-generic] discovered when updating Flow
     currentlyProcessingQueue = queue.shared;
   }
 
@@ -533,7 +535,7 @@ export function processUpdateQueue<State>(
     let newFirstBaseUpdate = null;
     let newLastBaseUpdate = null;
 
-    let update = firstBaseUpdate;
+    let update: Update<State> = firstBaseUpdate;
     do {
       // TODO: Don't need this field anymore
       const updateEventTime = update.eventTime;
@@ -619,6 +621,7 @@ export function processUpdateQueue<State>(
           }
         }
       }
+      // $FlowFixMe[incompatible-type] we bail out when we get a null
       update = update.next;
       if (update === null) {
         pendingQueue = queue.shared.pending;

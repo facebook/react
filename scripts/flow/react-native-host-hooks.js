@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,25 +9,30 @@
 
 /* eslint-disable */
 
-import type {
-  MeasureOnSuccessCallback,
-  MeasureInWindowOnSuccessCallback,
-  MeasureLayoutOnSuccessCallback,
-  ReactNativeBaseComponentViewConfig,
-  ViewConfigGetter,
-} from 'react-native-renderer/src/ReactNativeTypes';
-import type {RNTopLevelEventType} from 'react-native-renderer/src/legacy-events/TopLevelEventTypes';
-import type {CapturedError} from 'react-reconciler/src/ReactCapturedValue';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+// libdefs cannot actually import. These are supposed to be the types imported
+// from 'react-native-renderer/src/ReactNativeTypes'
+type __MeasureOnSuccessCallback = any;
+type __MeasureInWindowOnSuccessCallback = any;
+type __MeasureLayoutOnSuccessCallback = any;
+type __ReactNativeBaseComponentViewConfig = any;
+type __ViewConfigGetter = any;
 
-type DeepDifferOptions = {|+unsafelyIgnoreFunctions?: boolean|};
-type RawEventEmitterEvent = $ReadOnly<{|
+// libdefs cannot actually import. This is supposed to be the type imported
+// from 'react-native-renderer/src/legacy-events/TopLevelEventTypes';
+type __RNTopLevelEventType = any;
+
+// libdefs cannot actually import. This is supposed to be the type imported
+// from 'react-reconciler/src/ReactCapturedValue'
+type __CapturedError = any;
+
+type DeepDifferOptions = {+unsafelyIgnoreFunctions?: boolean};
+type RawEventEmitterEvent = $ReadOnly<{
   eventName: string,
   // We expect, but do not/cannot require, that nativeEvent is an object
   // with the properties: key, elementType (string), type (string), tag (numeric),
   // and a stateNode of the native element/Fiber the event was emitted to.
-  nativeEvent: {[string]: mixed},
-|}>;
+  nativeEvent: {[string]: mixed, ...},
+}>;
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface' {
   declare export function deepDiffer(
@@ -53,7 +58,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     ...
   };
   declare export var ReactFiberErrorDialog: {
-    showErrorDialog: (error: CapturedError) => boolean,
+    showErrorDialog: (error: __CapturedError) => boolean,
     ...
   };
   declare export var Platform: {OS: string, ...};
@@ -130,15 +135,26 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     customDirectEventTypes: Object,
     eventTypes: Object,
 
-    register: (name: string, callback: ViewConfigGetter) => string,
-    get: (name: string) => ReactNativeBaseComponentViewConfig,
+    register: (name: string, callback: __ViewConfigGetter) => string,
+    get: (name: string) => __ReactNativeBaseComponentViewConfig,
     ...
   };
   declare export var RawEventEmitter: {
     emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
-  declare export var CustomEvent: CustomEvent;
+  declare export class CustomEvent {
+    isTrusted: boolean;
+
+    constructor(
+      name: string,
+      {
+        detail: any,
+      },
+    ): void;
+
+    setSyntheticEvent(event: any): void;
+  }
 }
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {
@@ -166,7 +182,7 @@ declare var nativeFabricUIManager: {
   registerEventHandler: (
     callback: (
       eventTarget: null | Object,
-      type: RNTopLevelEventType,
+      type: __RNTopLevelEventType,
       payload: Object,
     ) => void,
   ) => void,
@@ -174,22 +190,22 @@ declare var nativeFabricUIManager: {
   dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
   sendAccessibilityEvent: (node: Object, eventTypeName: string) => void,
 
-  measure: (node: Node, callback: MeasureOnSuccessCallback) => void,
+  measure: (node: Node, callback: __MeasureOnSuccessCallback) => void,
   measureInWindow: (
     node: Node,
-    callback: MeasureInWindowOnSuccessCallback,
+    callback: __MeasureInWindowOnSuccessCallback,
   ) => void,
   measureLayout: (
     node: Node,
     relativeNode: Node,
     onFail: () => void,
-    onSuccess: MeasureLayoutOnSuccessCallback,
+    onSuccess: __MeasureLayoutOnSuccessCallback,
   ) => void,
   findNodeAtPoint: (
     node: Node,
     locationX: number,
     locationY: number,
-    callback: (Fiber) => void,
+    callback: (Object) => void,
   ) => void,
   setIsJSResponder: (
     node: Node,

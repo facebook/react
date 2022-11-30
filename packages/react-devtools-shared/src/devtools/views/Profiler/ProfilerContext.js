@@ -1,11 +1,13 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
+
+import type {ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import {createContext, useCallback, useContext, useMemo, useState} from 'react';
@@ -22,7 +24,7 @@ import type {ProfilingDataFrontend} from './types';
 
 export type TabID = 'flame-chart' | 'ranked-chart' | 'timeline';
 
-export type Context = {|
+export type Context = {
   // Which tab is selected in the Profiler UI?
   selectedTabID: TabID,
   selectTab(id: TabID): void,
@@ -65,24 +67,26 @@ export type Context = {|
   selectedFiberID: number | null,
   selectedFiberName: string | null,
   selectFiber: (id: number | null, name: string | null) => void,
-|};
+};
 
-const ProfilerContext = createContext<Context>(((null: any): Context));
+const ProfilerContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 ProfilerContext.displayName = 'ProfilerContext';
 
-type StoreProfilingState = {|
+type StoreProfilingState = {
   didRecordCommits: boolean,
   isProcessingData: boolean,
   isProfiling: boolean,
   profilingData: ProfilingDataFrontend | null,
   supportsProfiling: boolean,
-|};
+};
 
-type Props = {|
+type Props = {
   children: React$Node,
-|};
+};
 
-function ProfilerContextController({children}: Props) {
+function ProfilerContextController({children}: Props): React.Node {
   const store = useContext(StoreContext);
   const {selectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);

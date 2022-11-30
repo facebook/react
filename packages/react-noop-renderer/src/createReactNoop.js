@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -49,7 +49,7 @@ type Props = {
   top?: null | number,
   ...
 };
-type Instance = {|
+type Instance = {
   type: string,
   id: number,
   parent: number,
@@ -58,14 +58,14 @@ type Instance = {|
   prop: any,
   hidden: boolean,
   context: HostContext,
-|};
-type TextInstance = {|
+};
+type TextInstance = {
   text: string,
   id: number,
   parent: number,
   hidden: boolean,
   context: HostContext,
-|};
+};
 type HostContext = Object;
 type CreateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
@@ -272,6 +272,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   }
 
   const sharedHostConfig = {
+    supportsSingletons: false,
+
     getRootHostContext() {
       return NO_CONTEXT;
     },
@@ -473,6 +475,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     logRecoverableError() {
       // no-op
     },
+
+    requestPostPaintCallback(callback) {
+      const endTime = Scheduler.unstable_now();
+      callback(endTime);
+    },
+    prepareRendererToRender() {},
+    resetRendererAfterRender() {},
   };
 
   const hostConfig = useMutation
@@ -953,14 +962,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     flushWithHostCounters(
       fn: () => void,
     ):
-      | {|
+      | {
           hostDiffCounter: number,
           hostUpdateCounter: number,
-        |}
-      | {|
+        }
+      | {
           hostDiffCounter: number,
           hostCloneCounter: number,
-        |} {
+        } {
       hostDiffCounter = 0;
       hostUpdateCounter = 0;
       hostCloneCounter = 0;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -69,12 +69,12 @@ import styles from './CanvasPage.css';
 
 const CONTEXT_MENU_ID = 'canvas';
 
-type Props = {|
+type Props = {
   profilerData: TimelineData,
   viewState: ViewState,
-|};
+};
 
-function CanvasPage({profilerData, viewState}: Props) {
+function CanvasPage({profilerData, viewState}: Props): React.Node {
   return (
     <div
       className={styles.CanvasPage}
@@ -145,12 +145,12 @@ const EMPTY_CONTEXT_INFO: ReactEventInfo = {
   userTimingMark: null,
 };
 
-type AutoSizedCanvasProps = {|
+type AutoSizedCanvasProps = {
   data: TimelineData,
   height: number,
   viewState: ViewState,
   width: number,
-|};
+};
 
 function AutoSizedCanvas({
   data,

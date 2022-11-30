@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,6 +15,7 @@ import type {
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
+import type {Container} from './ReactFiberHostConfig';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.new';
@@ -128,7 +129,7 @@ function FiberRootNode(
 }
 
 export function createFiberRoot(
-  containerInfo: any,
+  containerInfo: Container,
   tag: RootTag,
   hydrate: boolean,
   initialChildren: ReactNodeList,
@@ -143,6 +144,7 @@ export function createFiberRoot(
   onRecoverableError: null | ((error: mixed) => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): FiberRoot {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   const root: FiberRoot = (new FiberRootNode(
     containerInfo,
     tag,

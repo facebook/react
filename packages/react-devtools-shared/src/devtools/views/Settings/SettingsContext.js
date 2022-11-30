@@ -1,11 +1,13 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
+
+import type {ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import {
@@ -18,6 +20,7 @@ import {
 import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
+  LOCAL_STORAGE_BROWSER_THEME,
   LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_APPEND_COMPONENT_STACK_KEY,
@@ -34,7 +37,7 @@ import type {BrowserTheme} from '../DevTools';
 export type DisplayDensity = 'comfortable' | 'compact';
 export type Theme = 'auto' | 'light' | 'dark';
 
-type Context = {|
+type Context = {
   displayDensity: DisplayDensity,
   setDisplayDensity(value: DisplayDensity): void,
 
@@ -52,7 +55,7 @@ type Context = {|
   setParseHookNames: (value: boolean) => void,
 
   hideConsoleLogsInStrictMode: boolean,
-  sethideConsoleLogsInStrictMode: (value: boolean) => void,
+  setHideConsoleLogsInStrictMode: (value: boolean) => void,
 
   showInlineWarningsAndErrors: boolean,
   setShowInlineWarningsAndErrors: (value: boolean) => void,
@@ -64,9 +67,11 @@ type Context = {|
 
   traceUpdatesEnabled: boolean,
   setTraceUpdatesEnabled: (value: boolean) => void,
-|};
+};
 
-const SettingsContext = createContext<Context>(((null: any): Context));
+const SettingsContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 SettingsContext.displayName = 'SettingsContext';
 
 function useLocalStorageWithLog<T>(
@@ -87,19 +92,19 @@ function useLocalStorageWithLog<T>(
 
 type DocumentElements = Array<HTMLElement>;
 
-type Props = {|
+type Props = {
   browserTheme: BrowserTheme,
   children: React$Node,
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
-|};
+};
 
 function SettingsContextController({
   browserTheme,
   children,
   componentsPortalContainer,
   profilerPortalContainer,
-}: Props) {
+}: Props): React.Node {
   const bridge = useContext(BridgeContext);
 
   const [
@@ -110,7 +115,7 @@ function SettingsContextController({
     'compact',
   );
   const [theme, setTheme] = useLocalStorageWithLog<Theme>(
-    'React::DevTools::theme',
+    LOCAL_STORAGE_BROWSER_THEME,
     'auto',
   );
   const [
@@ -133,7 +138,7 @@ function SettingsContextController({
   );
   const [
     hideConsoleLogsInStrictMode,
-    sethideConsoleLogsInStrictMode,
+    setHideConsoleLogsInStrictMode,
   ] = useLocalStorageWithLog<boolean>(
     LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
     false,
@@ -240,7 +245,7 @@ function SettingsContextController({
       setTraceUpdatesEnabled,
       setShowInlineWarningsAndErrors,
       showInlineWarningsAndErrors,
-      sethideConsoleLogsInStrictMode,
+      setHideConsoleLogsInStrictMode,
       hideConsoleLogsInStrictMode,
       theme,
       browserTheme,
@@ -259,7 +264,7 @@ function SettingsContextController({
       setTraceUpdatesEnabled,
       setShowInlineWarningsAndErrors,
       showInlineWarningsAndErrors,
-      sethideConsoleLogsInStrictMode,
+      setHideConsoleLogsInStrictMode,
       hideConsoleLogsInStrictMode,
       theme,
       browserTheme,

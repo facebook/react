@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -51,7 +51,7 @@ import type {
   RegExpComponentFilter,
 } from 'react-devtools-shared/src/types';
 
-export default function ComponentsSettings(_: {||}) {
+export default function ComponentsSettings(_: {}): React.Node {
   const store = useContext(StoreContext);
   const {parseHookNames, setParseHookNames} = useContext(SettingsContext);
 
@@ -373,7 +373,7 @@ export default function ComponentsSettings(_: {||}) {
                     <option value={ElementTypeFunction}>function</option>
                     <option value={ElementTypeForwardRef}>forward ref</option>
                     <option value={ElementTypeHostComponent}>
-                      host (e.g. &lt;div&gt;)
+                      dom nodes (e.g. &lt;div&gt;)
                     </option>
                     <option value={ElementTypeMemo}>memo</option>
                     <option value={ElementTypeOtherOrUnknown}>other</option>
@@ -417,10 +417,10 @@ export default function ComponentsSettings(_: {||}) {
   );
 }
 
-type ToggleIconProps = {|
+type ToggleIconProps = {
   isEnabled: boolean,
   isValid: boolean,
-|};
+};
 function ToggleIcon({isEnabled, isValid}: ToggleIconProps) {
   let className;
   if (isValid) {

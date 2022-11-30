@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -67,7 +67,7 @@ export type CanViewElementSource = (
   inspectedElement: InspectedElement,
 ) => boolean;
 
-export type Props = {|
+export type Props = {
   bridge: FrontendBridge,
   browserTheme?: BrowserTheme,
   canViewElementSourceFunction?: ?CanViewElementSource,
@@ -105,7 +105,7 @@ export type Props = {|
   fetchFileWithCaching?: ?FetchFileWithCaching,
   // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
   hookNamesModuleLoaderFunction?: ?HookNamesModuleLoaderFunction,
-|};
+};
 
 const componentsTab = {
   id: ('components': TabID),
@@ -146,7 +146,7 @@ export default function DevTools({
   hideToggleSuspenseAction,
   hideLogAction,
   hideViewSourceAction,
-}: Props) {
+}: Props): React.Node {
   const [currentTab, setTab] = useLocalStorage<TabID>(
     LOCAL_STORAGE_DEFAULT_TAB_KEY,
     defaultTab,

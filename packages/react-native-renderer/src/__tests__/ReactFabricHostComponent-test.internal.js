@@ -1,5 +1,5 @@
 /**
- * (c) Facebook, Inc. and its affiliates. Confidential and proprietary.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * @emails react-core
  * @jest-environment node

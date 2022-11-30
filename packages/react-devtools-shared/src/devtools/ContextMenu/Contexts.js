@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,9 +7,11 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import {createContext} from 'react';
 
-export type ShowFn = ({|data: Object, pageX: number, pageY: number|}) => void;
+export type ShowFn = ({data: Object, pageX: number, pageY: number}) => void;
 export type HideFn = () => void;
 export type OnChangeFn = boolean => void;
 
@@ -38,13 +40,13 @@ function showMenu({
   onChange,
   pageX,
   pageY,
-}: {|
+}: {
   data: Object,
   id: string,
   onChange?: OnChangeFn,
   pageX: number,
   pageY: number,
-|}) {
+}) {
   const showFn = idToShowFnMap.get(id);
   if (typeof showFn === 'function') {
     // Prevent open menus from being left hanging.
@@ -61,7 +63,7 @@ function showMenu({
   }
 }
 
-function registerMenu(id: string, showFn: ShowFn, hideFn: HideFn) {
+function registerMenu(id: string, showFn: ShowFn, hideFn: HideFn): () => void {
   if (idToShowFnMap.has(id)) {
     throw Error(`Context menu with id "${id}" already registered.`);
   }
@@ -75,14 +77,16 @@ function registerMenu(id: string, showFn: ShowFn, hideFn: HideFn) {
   };
 }
 
-export type RegistryContextType = {|
+export type RegistryContextType = {
   hideMenu: typeof hideMenu,
   showMenu: typeof showMenu,
   registerMenu: typeof registerMenu,
-|};
+};
 
-export const RegistryContext = createContext<RegistryContextType>({
-  hideMenu,
-  showMenu,
-  registerMenu,
-});
+export const RegistryContext: ReactContext<RegistryContextType> = createContext<RegistryContextType>(
+  {
+    hideMenu,
+    showMenu,
+    registerMenu,
+  },
+);

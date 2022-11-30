@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,11 +21,11 @@ import type {
   SnapshotNode,
 } from './views/Profiler/types';
 
-export default class ProfilerStore extends EventEmitter<{|
+export default class ProfilerStore extends EventEmitter<{
   isProcessingData: [],
   isProfiling: [],
   profilingData: [],
-|}> {
+}> {
   _bridge: FrontendBridge;
 
   // Suspense cache for lazily calculating derived profiling data.
@@ -201,10 +201,10 @@ export default class ProfilerStore extends EventEmitter<{|
     // We do this to avoid mismatches on e.g. CommitTreeBuilder that would cause errors.
   }
 
-  _takeProfilingSnapshotRecursive = (
+  _takeProfilingSnapshotRecursive: (
     elementID: number,
     profilingSnapshots: Map<number, SnapshotNode>,
-  ) => {
+  ) => void = (elementID, profilingSnapshots) => {
     const element = this._store.getElementByID(elementID);
     if (element !== null) {
       const snapshotNode: SnapshotNode = {
@@ -223,7 +223,7 @@ export default class ProfilerStore extends EventEmitter<{|
     }
   };
 
-  onBridgeOperations = (operations: Array<number>) => {
+  onBridgeOperations: (operations: Array<number>) => void = operations => {
     // The first two values are always rendererID and rootID
     const rendererID = operations[0];
     const rootID = operations[1];
@@ -249,7 +249,9 @@ export default class ProfilerStore extends EventEmitter<{|
     }
   };
 
-  onBridgeProfilingData = (dataBackend: ProfilingDataBackend) => {
+  onBridgeProfilingData: (
+    dataBackend: ProfilingDataBackend,
+  ) => void = dataBackend => {
     if (this._isProfiling) {
       // This should never happen, but if it does- ignore previous profiling data.
       return;
@@ -279,14 +281,14 @@ export default class ProfilerStore extends EventEmitter<{|
     }
   };
 
-  onBridgeShutdown = () => {
+  onBridgeShutdown: () => void = () => {
     this._bridge.removeListener('operations', this.onBridgeOperations);
     this._bridge.removeListener('profilingData', this.onBridgeProfilingData);
     this._bridge.removeListener('profilingStatus', this.onProfilingStatus);
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
   };
 
-  onProfilingStatus = (isProfiling: boolean) => {
+  onProfilingStatus: (isProfiling: boolean) => void = isProfiling => {
     if (isProfiling) {
       this._dataBackends.splice(0);
       this._dataFrontend = null;

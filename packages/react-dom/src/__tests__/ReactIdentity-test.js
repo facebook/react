@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -67,17 +67,18 @@ describe('ReactIdentity', () => {
 
   function renderAComponentWithKeyIntoContainer(key, container) {
     class Wrapper extends React.Component {
+      spanRef = React.createRef();
       render() {
         return (
           <div>
-            <span ref="span" key={key} />
+            <span ref={this.spanRef} key={key} />
           </div>
         );
       }
     }
 
     const instance = ReactDOM.render(<Wrapper />, container);
-    const span = instance.refs.span;
+    const span = instance.spanRef.current;
     expect(span).not.toBe(null);
   }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -39,7 +39,6 @@ import {
   createFiberFromText,
   createFiberFromPortal,
 } from './ReactFiber.new';
-import {emptyRefsObject} from './ReactFiberClassComponent.new';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {getIsHydrating} from './ReactFiberHydrationContext.new';
@@ -80,6 +79,7 @@ if (__DEV__) {
       );
     }
 
+    // $FlowFixMe unable to narrow type from mixed to writable object
     child._store.validated = true;
 
     const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
@@ -95,6 +95,10 @@ if (__DEV__) {
         'more information.',
     );
   };
+}
+
+function isReactClass(type) {
+  return type.prototype && type.prototype.isReactComponent;
 }
 
 function coerceRef(
@@ -120,7 +124,16 @@ function coerceRef(
           element._owner &&
           element._self &&
           element._owner.stateNode !== element._self
-        )
+        ) &&
+        // Will already throw with "Function components cannot have string refs"
+        !(
+          element._owner &&
+          ((element._owner: any): Fiber).tag !== ClassComponent
+        ) &&
+        // Will already warn with "Function components cannot be given refs"
+        !(typeof element.type === 'function' && !isReactClass(element.type)) &&
+        // Will already throw with "Element ref was specified as a string (someStringRef) but no owner was set"
+        element._owner
       ) {
         const componentName =
           getComponentNameFromFiber(returnFiber) || 'Component';
@@ -191,11 +204,7 @@ function coerceRef(
         return current.ref;
       }
       const ref = function(value) {
-        let refs = resolvedInst.refs;
-        if (refs === emptyRefsObject) {
-          // This is a lazy pooled frozen object, so we need to initialize.
-          refs = resolvedInst.refs = {};
-        }
+        const refs = resolvedInst.refs;
         if (value === null) {
           delete refs[stringRef];
         } else {
@@ -227,6 +236,7 @@ function coerceRef(
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+  // $FlowFixMe[method-unbinding]
   const childString = Object.prototype.toString.call(newChild);
 
   throw new Error(
@@ -263,11 +273,18 @@ function resolveLazy(lazyType) {
   return init(payload);
 }
 
+type ChildReconciler = (
+  returnFiber: Fiber,
+  currentFirstChild: Fiber | null,
+  newChild: any,
+  lanes: Lanes,
+) => Fiber | null;
+
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
-function ChildReconciler(shouldTrackSideEffects) {
+function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
   function deleteChild(returnFiber: Fiber, childToDelete: Fiber): void {
     if (!shouldTrackSideEffects) {
       // Noop.
@@ -310,7 +327,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     // instead.
     const existingChildren: Map<string | number, Fiber> = new Map();
 
-    let existingChild = currentFirstChild;
+    let existingChild: null | Fiber = currentFirstChild;
     while (existingChild !== null) {
       if (existingChild.key !== null) {
         existingChildren.set(existingChild.key, existingChild);
@@ -466,7 +483,7 @@ function ChildReconciler(shouldTrackSideEffects) {
   function updateFragment(
     returnFiber: Fiber,
     current: Fiber | null,
-    fragment: Iterable<*>,
+    fragment: Iterable<React$Node>,
     lanes: Lanes,
     key: null | string,
   ): Fiber {
@@ -741,7 +758,7 @@ function ChildReconciler(shouldTrackSideEffects) {
   function reconcileChildrenArray(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
-    newChildren: Array<*>,
+    newChildren: Array<any>,
     lanes: Lanes,
   ): Fiber | null {
     // This algorithm can't optimize by searching from both ends since we
@@ -908,7 +925,7 @@ function ChildReconciler(shouldTrackSideEffects) {
   function reconcileChildrenIterator(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
-    newChildrenIterable: Iterable<*>,
+    newChildrenIterable: Iterable<mixed>,
     lanes: Lanes,
   ): Fiber | null {
     // This is the same implementation as reconcileChildrenArray(),
@@ -1351,8 +1368,10 @@ function ChildReconciler(shouldTrackSideEffects) {
   return reconcileChildFibers;
 }
 
-export const reconcileChildFibers = ChildReconciler(true);
-export const mountChildFibers = ChildReconciler(false);
+export const reconcileChildFibers: ChildReconciler = createChildReconciler(
+  true,
+);
+export const mountChildFibers: ChildReconciler = createChildReconciler(false);
 
 export function cloneChildFibers(
   current: Fiber | null,

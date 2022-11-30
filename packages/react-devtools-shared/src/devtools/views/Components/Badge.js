@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,19 +13,19 @@ import styles from './Badge.css';
 
 import type {ElementType} from 'react-devtools-shared/src/types';
 
-type Props = {|
+type Props = {
   className?: string,
   hocDisplayNames: Array<string> | null,
   type: ElementType,
   children: React$Node,
-|};
+};
 
 export default function Badge({
   className,
   hocDisplayNames,
   type,
   children,
-}: Props) {
+}: Props): React.Node {
   if (hocDisplayNames === null || hocDisplayNames.length === 0) {
     return null;
   }

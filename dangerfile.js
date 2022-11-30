@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -86,8 +86,16 @@ const header = `
 
 function row(result, baseSha, headSha) {
   const diffViewUrl = `https://react-builds.vercel.app/commits/${headSha}/files/${result.path}?compare=${baseSha}`;
-  // prettier-ignore
-  return `| [${result.path}](${diffViewUrl}) | **${change(result.change)}** | ${kbs(result.baseSize)} | ${kbs(result.headSize)} | ${change(result.changeGzip)} | ${kbs(result.baseSizeGzip)} | ${kbs(result.headSizeGzip)}`;
+  const rowArr = [
+    `| [${result.path}](${diffViewUrl})`,
+    `**${change(result.change)}**`,
+    `${kbs(result.baseSize)}`,
+    `${kbs(result.headSize)}`,
+    `${change(result.changeGzip)}`,
+    `${kbs(result.baseSizeGzip)}`,
+    `${kbs(result.headSizeGzip)}`,
+  ];
+  return rowArr.join(' | ');
 }
 
 (async function() {

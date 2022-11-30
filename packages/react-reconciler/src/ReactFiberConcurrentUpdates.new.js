@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {FiberRoot} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {
   UpdateQueue as HookQueue,
   Update as HookUpdate,
@@ -22,6 +22,7 @@ import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 import {
   warnAboutUpdateOnNotYetMountedFiberInDEV,
   throwIfInfiniteUpdateLoopDetected,
+  getWorkInProgressRoot,
 } from './ReactFiberWorkLoop.new';
 import {
   NoLane,
@@ -139,6 +140,18 @@ export function enqueueConcurrentHookUpdateAndEagerlyBailout<S, A>(
   const concurrentQueue: ConcurrentQueue = (queue: any);
   const concurrentUpdate: ConcurrentUpdate = (update: any);
   enqueueUpdate(fiber, concurrentQueue, concurrentUpdate, lane);
+
+  // Usually we can rely on the upcoming render phase to process the concurrent
+  // queue. However, since this is a bail out, we're not scheduling any work
+  // here. So the update we just queued will leak until something else happens
+  // to schedule work (if ever).
+  //
+  // Check if we're currently in the middle of rendering a tree, and if not,
+  // process the queue immediately to prevent a leak.
+  const isConcurrentlyRendering = getWorkInProgressRoot() !== null;
+  if (!isConcurrentlyRendering) {
+    finishQueueingConcurrentUpdates();
+  }
 }
 
 export function enqueueConcurrentClassUpdate<State>(
@@ -220,7 +233,7 @@ function markUpdateLaneFromFiberToRoot(
       const offscreenInstance: OffscreenInstance | null = parent.stateNode;
       if (
         offscreenInstance !== null &&
-        !(offscreenInstance.visibility & OffscreenVisible)
+        !(offscreenInstance._visibility & OffscreenVisible)
       ) {
         isHidden = true;
       }

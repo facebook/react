@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,7 +15,7 @@ import {warnsIfNotActing} from './ReactFiberHostConfig';
 
 const {ReactCurrentActQueue} = ReactSharedInternals;
 
-export function isLegacyActEnvironment(fiber: Fiber) {
+export function isLegacyActEnvironment(fiber: Fiber): boolean {
   if (__DEV__) {
     // Legacy mode. We preserve the behavior of React 17's act. It assumes an
     // act environment whenever `jest` is defined, but you can still turn off
@@ -23,12 +23,12 @@ export function isLegacyActEnvironment(fiber: Fiber) {
     // to false.
 
     const isReactActEnvironmentGlobal =
-      // $FlowExpectedError – Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
+      // $FlowFixMe – Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
       typeof IS_REACT_ACT_ENVIRONMENT !== 'undefined'
         ? IS_REACT_ACT_ENVIRONMENT
         : undefined;
 
-    // $FlowExpectedError - Flow doesn't know about jest
+    // $FlowFixMe - Flow doesn't know about jest
     const jestIsDefined = typeof jest !== 'undefined';
     return (
       warnsIfNotActing && jestIsDefined && isReactActEnvironmentGlobal !== false
@@ -37,10 +37,9 @@ export function isLegacyActEnvironment(fiber: Fiber) {
   return false;
 }
 
-export function isConcurrentActEnvironment() {
+export function isConcurrentActEnvironment(): void | boolean {
   if (__DEV__) {
     const isReactActEnvironmentGlobal =
-      // $FlowExpectedError – Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
       typeof IS_REACT_ACT_ENVIRONMENT !== 'undefined'
         ? IS_REACT_ACT_ENVIRONMENT
         : undefined;

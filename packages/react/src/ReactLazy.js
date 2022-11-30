@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -28,7 +28,7 @@ type PendingPayload = {
 
 type ResolvedPayload<T> = {
   _status: 1,
-  _result: {default: T},
+  _result: {default: T, ...},
 };
 
 type RejectedPayload = {
@@ -43,7 +43,7 @@ type Payload<T> =
   | RejectedPayload;
 
 export type LazyComponent<T, P> = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   _payload: P,
   _init: (payload: P) => T,
 };

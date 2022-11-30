@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,8 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
-import type {BootstrapScriptDescriptor} from './ReactDOMServerFormatConfig';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -23,9 +24,9 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from './ReactDOMServerFormatConfig';
+} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
-function createDrainHandler(destination, request) {
+function createDrainHandler(destination: Destination, request) {
   return () => startFlowing(request, destination);
 }
 
@@ -34,7 +35,7 @@ function createAbortHandler(request, reason) {
   return () => abort(request, new Error(reason));
 }
 
-type Options = {|
+type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
   nonce?: string,
@@ -46,14 +47,15 @@ type Options = {|
   onShellError?: (error: mixed) => void,
   onAllReady?: () => void,
   onError?: (error: mixed) => ?string,
-|};
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+};
 
-type PipeableStream = {|
+type PipeableStream = {
   // Cancel any pending I/O and put anything remaining into
   // client rendered mode.
   abort(reason: mixed): void,
   pipe<T: Writable>(destination: T): T,
-|};
+};
 
 function createRequestImpl(children: ReactNodeList, options: void | Options) {
   return createRequest(
@@ -64,6 +66,7 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
       options ? options.bootstrapScriptContent : undefined,
       options ? options.bootstrapScripts : undefined,
       options ? options.bootstrapModules : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
     ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,

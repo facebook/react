@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,16 +17,20 @@ import type {
   ReactContext,
   ReactProviderType,
   OffscreenMode,
+  Wakeable,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
   SuspenseBoundaryID,
   ResponseState,
   FormatContext,
+  Resources,
+  BoundaryResources,
 } from './ReactServerFormatConfig';
 import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
+import type {ThenableState} from './ReactFizzThenable';
 
 import {
   scheduleWork,
@@ -61,6 +65,15 @@ import {
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
   getChildFormatContext,
+  writeInitialResources,
+  writeImmediateResources,
+  hoistResources,
+  hoistResourcesToRoot,
+  prepareToRender,
+  cleanupAfterRender,
+  setCurrentlyRenderingBoundaryResourcesTarget,
+  createResources,
+  createBoundaryResources,
 } from './ReactServerFormatConfig';
 import {
   constructClassInstance,
@@ -84,10 +97,12 @@ import {
   finishHooks,
   checkDidRenderIdHook,
   resetHooksState,
-  Dispatcher,
+  HooksDispatcher,
   currentResponseState,
   setCurrentResponseState,
+  getThenableStateAfterSuspending,
 } from './ReactFizzHooks';
+import {DefaultCacheDispatcher} from './ReactFizzCache';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
 import {emptyTreeContext, pushTreeContext} from './ReactFizzTreeContext';
 
@@ -118,13 +133,16 @@ import {
   enableScopeAPI,
   enableSuspenseAvoidThisFallbackFizz,
   enableFloat,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
+import {SuspenseException, getSuspendedThenable} from './ReactFizzThenable';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
 type LegacyContext = {
@@ -143,6 +161,7 @@ type SuspenseBoundary = {
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
   byteSize: number, // used to determine whether to inline children boundaries.
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
+  resources: BoundaryResources,
 };
 
 export type Task = {
@@ -155,6 +174,7 @@ export type Task = {
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
   componentStack: null | ComponentStackNode, // DEV-only component stack
+  thenableState: null | ThenableState,
 };
 
 const PENDING = 0;
@@ -194,9 +214,10 @@ export opaque type Request = {
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
+  resources: Resources,
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
   abortableTasks: Set<Task>,
-  pingedTasks: Array<Task>,
+  pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
   // Queues to flush in order of priority
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
@@ -257,6 +278,7 @@ export function createRequest(
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
+  const resources: Resources = createResources();
   const request = {
     destination: null,
     responseState,
@@ -269,6 +291,7 @@ export function createRequest(
     nextSegmentId: 0,
     allPendingTasks: 0,
     pendingRootTasks: 0,
+    resources,
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
@@ -297,6 +320,7 @@ export function createRequest(
   rootSegment.parentFlushed = true;
   const rootTask = createTask(
     request,
+    null,
     children,
     null,
     rootSegment,
@@ -331,11 +355,13 @@ function createSuspenseBoundary(
     byteSize: 0,
     fallbackAbortableTasks,
     errorDigest: null,
+    resources: createBoundaryResources(),
   };
 }
 
 function createTask(
   request: Request,
+  thenableState: ThenableState | null,
   node: ReactNodeList,
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment,
@@ -359,6 +385,7 @@ function createTask(
     legacyContext,
     context,
     treeContext,
+    thenableState,
   }: any);
   if (__DEV__) {
     task.componentStack = null;
@@ -554,6 +581,12 @@ function renderSuspenseBoundary(
   // we're writing to. If something suspends, it'll spawn new suspended task with that context.
   task.blockedBoundary = newBoundary;
   task.blockedSegment = contentRootSegment;
+  if (enableFloat) {
+    setCurrentlyRenderingBoundaryResourcesTarget(
+      request.resources,
+      newBoundary.resources,
+    );
+  }
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
     renderNode(request, task, content);
@@ -564,6 +597,11 @@ function renderSuspenseBoundary(
       contentRootSegment.textEmbedded,
     );
     contentRootSegment.status = COMPLETED;
+    if (enableFloat) {
+      if (newBoundary.pendingTasks === 0) {
+        hoistCompletedBoundaryResources(request, newBoundary);
+      }
+    }
     queueCompletedSegment(newBoundary, contentRootSegment);
     if (newBoundary.pendingTasks === 0) {
       // This must have been the last segment we were waiting on. This boundary is now complete.
@@ -584,6 +622,12 @@ function renderSuspenseBoundary(
     // We don't need to schedule any task because we know the parent has written yet.
     // We do need to fallthrough to create the fallback though.
   } finally {
+    if (enableFloat) {
+      setCurrentlyRenderingBoundaryResourcesTarget(
+        request.resources,
+        parentBoundary ? parentBoundary.resources : null,
+      );
+    }
     task.blockedBoundary = parentBoundary;
     task.blockedSegment = parentSegment;
   }
@@ -592,6 +636,7 @@ function renderSuspenseBoundary(
   // on it yet in case we finish the main content, so we queue for later.
   const suspendedFallbackTask = createTask(
     request,
+    null,
     fallback,
     parentBoundary,
     boundarySegment,
@@ -608,6 +653,19 @@ function renderSuspenseBoundary(
   request.pingedTasks.push(suspendedFallbackTask);
 
   popComponentStackInDEV(task);
+}
+
+function hoistCompletedBoundaryResources(
+  request: Request,
+  completedBoundary: SuspenseBoundary,
+): void {
+  if (request.completedRootSegment !== null || request.pendingRootTasks > 0) {
+    // The Shell has not flushed yet. we can hoist Resources for this boundary
+    // all the way to the Root.
+    hoistResourcesToRoot(request.resources, completedBoundary.resources);
+  }
+  // We don't hoist if the root already flushed because late resources will be hoisted
+  // as boundaries flush
 }
 
 function renderBackupSuspenseBoundary(
@@ -635,6 +693,7 @@ function renderHostElement(
 ): void {
   pushBuiltInComponentStackInDEV(task, type);
   const segment = task.blockedSegment;
+
   const children = pushStartInstance(
     segment.chunks,
     request.preamble,
@@ -642,10 +701,12 @@ function renderHostElement(
     props,
     request.responseState,
     segment.formatContext,
+    segment.lastPushedText,
   );
   segment.lastPushedText = false;
   const prevContext = segment.formatContext;
   segment.formatContext = getChildFormatContext(prevContext, type, props);
+
   // We use the non-destructive form because if something suspends, we still
   // need to pop back up and finish this subtree of HTML.
   renderNode(request, task, children);
@@ -665,12 +726,13 @@ function shouldConstruct(Component) {
 function renderWithHooks<Props, SecondArg>(
   request: Request,
   task: Task,
+  prevThenableState: ThenableState | null,
   Component: (p: Props, arg: SecondArg) => any,
   props: Props,
   secondArg: SecondArg,
 ): any {
   const componentIdentity = {};
-  prepareToUseHooks(task, componentIdentity);
+  prepareToUseHooks(task, componentIdentity, prevThenableState);
   const result = Component(props, secondArg);
   return finishHooks(Component, props, result, secondArg);
 }
@@ -708,13 +770,13 @@ function finishClassComponent(
         childContextTypes,
       );
       task.legacyContext = mergedContext;
-      renderNodeDestructive(request, task, nextChildren);
+      renderNodeDestructive(request, task, null, nextChildren);
       task.legacyContext = previousContext;
       return;
     }
   }
 
-  renderNodeDestructive(request, task, nextChildren);
+  renderNodeDestructive(request, task, null, nextChildren);
 }
 
 function renderClassComponent(
@@ -748,6 +810,7 @@ let hasWarnedAboutUsingContextAsConsumer = false;
 function renderIndeterminateComponent(
   request: Request,
   task: Task,
+  prevThenableState: ThenableState | null,
   Component: any,
   props: any,
 ): void {
@@ -776,7 +839,14 @@ function renderIndeterminateComponent(
     }
   }
 
-  const value = renderWithHooks(request, task, Component, props, legacyContext);
+  const value = renderWithHooks(
+    request,
+    task,
+    prevThenableState,
+    Component,
+    props,
+    legacyContext,
+  );
   const hasId = checkDidRenderIdHook();
 
   if (__DEV__) {
@@ -857,12 +927,12 @@ function renderIndeterminateComponent(
       const index = 0;
       task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
       try {
-        renderNodeDestructive(request, task, value);
+        renderNodeDestructive(request, task, null, value);
       } finally {
         task.treeContext = prevTreeContext;
       }
     } else {
-      renderNodeDestructive(request, task, value);
+      renderNodeDestructive(request, task, null, value);
     }
   }
   popComponentStackInDEV(task);
@@ -942,12 +1012,20 @@ function resolveDefaultProps(Component: any, baseProps: Object): Object {
 function renderForwardRef(
   request: Request,
   task: Task,
+  prevThenableState,
   type: any,
   props: Object,
   ref: any,
 ): void {
   pushFunctionComponentStackInDEV(task, type.render);
-  const children = renderWithHooks(request, task, type.render, props, ref);
+  const children = renderWithHooks(
+    request,
+    task,
+    prevThenableState,
+    type.render,
+    props,
+    ref,
+  );
   const hasId = checkDidRenderIdHook();
   if (hasId) {
     // This component materialized an id. We treat this as its own level, with
@@ -957,12 +1035,12 @@ function renderForwardRef(
     const index = 0;
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
     try {
-      renderNodeDestructive(request, task, children);
+      renderNodeDestructive(request, task, null, children);
     } finally {
       task.treeContext = prevTreeContext;
     }
   } else {
-    renderNodeDestructive(request, task, children);
+    renderNodeDestructive(request, task, null, children);
   }
   popComponentStackInDEV(task);
 }
@@ -970,13 +1048,21 @@ function renderForwardRef(
 function renderMemo(
   request: Request,
   task: Task,
+  prevThenableState: ThenableState | null,
   type: any,
   props: Object,
   ref: any,
 ): void {
   const innerType = type.type;
   const resolvedProps = resolveDefaultProps(innerType, props);
-  renderElement(request, task, innerType, resolvedProps, ref);
+  renderElement(
+    request,
+    task,
+    prevThenableState,
+    innerType,
+    resolvedProps,
+    ref,
+  );
 }
 
 function renderContextConsumer(
@@ -1026,7 +1112,7 @@ function renderContextConsumer(
   const newValue = readContext(context);
   const newChildren = render(newValue);
 
-  renderNodeDestructive(request, task, newChildren);
+  renderNodeDestructive(request, task, null, newChildren);
 }
 
 function renderContextProvider(
@@ -1043,7 +1129,7 @@ function renderContextProvider(
     prevSnapshot = task.context;
   }
   task.context = pushProvider(context, value);
-  renderNodeDestructive(request, task, children);
+  renderNodeDestructive(request, task, null, children);
   task.context = popProvider(context);
   if (__DEV__) {
     if (prevSnapshot !== task.context) {
@@ -1057,6 +1143,7 @@ function renderContextProvider(
 function renderLazyComponent(
   request: Request,
   task: Task,
+  prevThenableState: ThenableState | null,
   lazyComponent: LazyComponentType<any, any>,
   props: Object,
   ref: any,
@@ -1066,7 +1153,14 @@ function renderLazyComponent(
   const init = lazyComponent._init;
   const Component = init(payload);
   const resolvedProps = resolveDefaultProps(Component, props);
-  renderElement(request, task, Component, resolvedProps, ref);
+  renderElement(
+    request,
+    task,
+    prevThenableState,
+    Component,
+    resolvedProps,
+    ref,
+  );
   popComponentStackInDEV(task);
 }
 
@@ -1078,13 +1172,14 @@ function renderOffscreen(request: Request, task: Task, props: Object): void {
   } else {
     // A visible Offscreen boundary is treated exactly like a fragment: a
     // pure indirection.
-    renderNodeDestructive(request, task, props.children);
+    renderNodeDestructive(request, task, null, props.children);
   }
 }
 
 function renderElement(
   request: Request,
   task: Task,
+  prevThenableState: ThenableState | null,
   type: any,
   props: Object,
   ref: any,
@@ -1094,7 +1189,13 @@ function renderElement(
       renderClassComponent(request, task, type, props);
       return;
     } else {
-      renderIndeterminateComponent(request, task, type, props);
+      renderIndeterminateComponent(
+        request,
+        task,
+        prevThenableState,
+        type,
+        props,
+      );
       return;
     }
   }
@@ -1118,7 +1219,7 @@ function renderElement(
     case REACT_STRICT_MODE_TYPE:
     case REACT_PROFILER_TYPE:
     case REACT_FRAGMENT_TYPE: {
-      renderNodeDestructive(request, task, props.children);
+      renderNodeDestructive(request, task, null, props.children);
       return;
     }
     case REACT_OFFSCREEN_TYPE: {
@@ -1128,13 +1229,13 @@ function renderElement(
     case REACT_SUSPENSE_LIST_TYPE: {
       pushBuiltInComponentStackInDEV(task, 'SuspenseList');
       // TODO: SuspenseList should control the boundaries.
-      renderNodeDestructive(request, task, props.children);
+      renderNodeDestructive(request, task, null, props.children);
       popComponentStackInDEV(task);
       return;
     }
     case REACT_SCOPE_TYPE: {
       if (enableScopeAPI) {
-        renderNodeDestructive(request, task, props.children);
+        renderNodeDestructive(request, task, null, props.children);
         return;
       }
       throw new Error('ReactDOMServer does not yet support scope components.');
@@ -1156,11 +1257,11 @@ function renderElement(
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE: {
-        renderForwardRef(request, task, type, props, ref);
+        renderForwardRef(request, task, prevThenableState, type, props, ref);
         return;
       }
       case REACT_MEMO_TYPE: {
-        renderMemo(request, task, type, props, ref);
+        renderMemo(request, task, prevThenableState, type, props, ref);
         return;
       }
       case REACT_PROVIDER_TYPE: {
@@ -1172,7 +1273,7 @@ function renderElement(
         return;
       }
       case REACT_LAZY_TYPE: {
-        renderLazyComponent(request, task, type, props);
+        renderLazyComponent(request, task, prevThenableState, type, props);
         return;
       }
     }
@@ -1237,6 +1338,9 @@ function validateIterable(iterable, iteratorFn: Function): void {
 function renderNodeDestructive(
   request: Request,
   task: Task,
+  // The thenable state reused from the previous attempt, if any. This is almost
+  // always null, except when called by retryTask.
+  prevThenableState: ThenableState | null,
   node: ReactNodeList,
 ): void {
   if (__DEV__) {
@@ -1244,7 +1348,7 @@ function renderNodeDestructive(
     // a component stack at the right place in the tree. We don't do this in renderNode
     // becuase it is not called at every layer of the tree and we may lose frames
     try {
-      return renderNodeDestructiveImpl(request, task, node);
+      return renderNodeDestructiveImpl(request, task, prevThenableState, node);
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // This is a Wakable, noop
@@ -1259,7 +1363,7 @@ function renderNodeDestructive(
       throw x;
     }
   } else {
-    return renderNodeDestructiveImpl(request, task, node);
+    return renderNodeDestructiveImpl(request, task, prevThenableState, node);
   }
 }
 
@@ -1268,6 +1372,7 @@ function renderNodeDestructive(
 function renderNodeDestructiveImpl(
   request: Request,
   task: Task,
+  prevThenableState: ThenableState | null,
   node: ReactNodeList,
 ): void {
   // Stash the node we're working on. We'll pick up from this task in case
@@ -1282,7 +1387,7 @@ function renderNodeDestructiveImpl(
         const type = element.type;
         const props = element.props;
         const ref = element.ref;
-        renderElement(request, task, type, props, ref);
+        renderElement(request, task, prevThenableState, type, props, ref);
         return;
       }
       case REACT_PORTAL_TYPE:
@@ -1316,7 +1421,7 @@ function renderNodeDestructiveImpl(
         } else {
           resolvedNode = init(payload);
         }
-        renderNodeDestructive(request, task, resolvedNode);
+        renderNodeDestructive(request, task, null, resolvedNode);
         return;
       }
     }
@@ -1353,6 +1458,7 @@ function renderNodeDestructiveImpl(
       }
     }
 
+    // $FlowFixMe[method-unbinding]
     const childString = Object.prototype.toString.call(node);
 
     throw new Error(
@@ -1417,7 +1523,8 @@ function renderChildrenArray(request, task, children) {
 function spawnNewSuspendedTask(
   request: Request,
   task: Task,
-  x: Promise<any>,
+  thenableState: ThenableState | null,
+  x: Wakeable,
 ): void {
   // Something suspended, we'll need to create a new segment and resolve it later.
   const segment = task.blockedSegment;
@@ -1437,6 +1544,7 @@ function spawnNewSuspendedTask(
   segment.lastPushedText = false;
   const newTask = createTask(
     request,
+    thenableState,
     task.node,
     task.blockedBoundary,
     newSegment,
@@ -1445,6 +1553,7 @@ function spawnNewSuspendedTask(
     task.context,
     task.treeContext,
   );
+
   if (__DEV__) {
     if (task.componentStack !== null) {
       // We pop one task off the stack because the node that suspended will be tried again,
@@ -1472,11 +1581,26 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
     previousComponentStack = task.componentStack;
   }
   try {
-    return renderNodeDestructive(request, task, node);
-  } catch (x) {
+    return renderNodeDestructive(request, task, null, node);
+  } catch (thrownValue) {
     resetHooksState();
+
+    const x =
+      thrownValue === SuspenseException
+        ? // This is a special type of exception used for Suspense. For historical
+          // reasons, the rest of the Suspense implementation expects the thrown
+          // value to be a thenable, because before `use` existed that was the
+          // (unstable) API for suspending. This implementation detail can change
+          // later, once we deprecate the old API in favor of `use`.
+          getSuspendedThenable()
+        : thrownValue;
+
+    // $FlowFixMe[method-unbinding]
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-      spawnNewSuspendedTask(request, task, x);
+      const wakeable: Wakeable = (x: any);
+      const thenableState = getThenableStateAfterSuspending();
+      spawnNewSuspendedTask(request, task, thenableState, wakeable);
+
       // Restore the context. We assume that this will be restored by the inner
       // functions in case nothing throws so we don't use "finally" here.
       task.blockedSegment.formatContext = previousFormatContext;
@@ -1673,11 +1797,15 @@ function finishedTask(
           queueCompletedSegment(boundary, segment);
         }
       }
+      if (enableFloat) {
+        hoistCompletedBoundaryResources(request, boundary);
+      }
       if (boundary.parentFlushed) {
         // The segment might be part of a segment that didn't flush yet, but if the boundary's
         // parent flushed, we need to schedule the boundary to be emitted.
         request.completedBoundaries.push(boundary);
       }
+
       // We can now cancel any pending task on the fallback since we won't need to show it anymore.
       // This needs to happen after we read the parentFlushed flags because aborting can finish
       // work which can trigger user code, which can start flushing, which can change those flags.
@@ -1714,6 +1842,13 @@ function finishedTask(
 }
 
 function retryTask(request: Request, task: Task): void {
+  if (enableFloat) {
+    const blockedBoundary = task.blockedBoundary;
+    setCurrentlyRenderingBoundaryResourcesTarget(
+      request.resources,
+      blockedBoundary ? blockedBoundary.resources : null,
+    );
+  }
   const segment = task.blockedSegment;
   if (segment.status !== PENDING) {
     // We completed this by other means before we had a chance to retry it.
@@ -1731,7 +1866,14 @@ function retryTask(request: Request, task: Task): void {
   try {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
-    renderNodeDestructive(request, task, task.node);
+
+    // Reset the task's thenable state before continuing, so that if a later
+    // component suspends we can reuse the same task object. If the same
+    // component suspends again, the thenable state will be restored.
+    const prevThenableState = task.thenableState;
+    task.thenableState = null;
+
+    renderNodeDestructive(request, task, prevThenableState, task.node);
     pushSegmentFinale(
       segment.chunks,
       request.responseState,
@@ -1742,18 +1884,34 @@ function retryTask(request: Request, task: Task): void {
     task.abortSet.delete(task);
     segment.status = COMPLETED;
     finishedTask(request, task.blockedBoundary, segment);
-  } catch (x) {
+  } catch (thrownValue) {
     resetHooksState();
+
+    const x =
+      thrownValue === SuspenseException
+        ? // This is a special type of exception used for Suspense. For historical
+          // reasons, the rest of the Suspense implementation expects the thrown
+          // value to be a thenable, because before `use` existed that was the
+          // (unstable) API for suspending. This implementation detail can change
+          // later, once we deprecate the old API in favor of `use`.
+          getSuspendedThenable()
+        : thrownValue;
+
+    // $FlowFixMe[method-unbinding]
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       // Something suspended again, let's pick it back up later.
       const ping = task.ping;
       x.then(ping, ping);
+      task.thenableState = getThenableStateAfterSuspending();
     } else {
       task.abortSet.delete(task);
       segment.status = ERRORED;
       erroredTask(request, task.blockedBoundary, segment, x);
     }
   } finally {
+    if (enableFloat) {
+      setCurrentlyRenderingBoundaryResourcesTarget(request.resources, null);
+    }
     if (__DEV__) {
       currentTaskInDEV = prevTaskInDEV;
     }
@@ -1766,7 +1924,14 @@ export function performWork(request: Request): void {
   }
   const prevContext = getActiveContext();
   const prevDispatcher = ReactCurrentDispatcher.current;
-  ReactCurrentDispatcher.current = Dispatcher;
+  ReactCurrentDispatcher.current = HooksDispatcher;
+  let prevCacheDispatcher;
+  if (enableCache) {
+    prevCacheDispatcher = ReactCurrentCache.current;
+    ReactCurrentCache.current = DefaultCacheDispatcher;
+  }
+
+  const previousHostDispatcher = prepareToRender(request.resources);
   let prevGetCurrentStackImpl;
   if (__DEV__) {
     prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
@@ -1791,10 +1956,15 @@ export function performWork(request: Request): void {
   } finally {
     setCurrentResponseState(prevResponseState);
     ReactCurrentDispatcher.current = prevDispatcher;
+    if (enableCache) {
+      ReactCurrentCache.current = prevCacheDispatcher;
+    }
+    cleanupAfterRender(previousHostDispatcher);
+
     if (__DEV__) {
       ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
     }
-    if (prevDispatcher === Dispatcher) {
+    if (prevDispatcher === HooksDispatcher) {
       // This means that we were in a reentrant work loop. This could happen
       // in a renderer that supports synchronous work like renderToString,
       // when it's called from within another renderer.
@@ -1829,6 +1999,7 @@ function flushSubtree(
       const chunks = segment.chunks;
       let chunkIdx = 0;
       const children = segment.children;
+
       for (let childIdx = 0; childIdx < children.length; childIdx++) {
         const nextChild = children[childIdx];
         // Write all the chunks up until the next child.
@@ -1927,6 +2098,9 @@ function flushSegment(
 
     return writeEndPendingSuspenseBoundary(destination, request.responseState);
   } else {
+    if (enableFloat) {
+      hoistResources(request.resources, boundary.resources);
+    }
     // We can inline this boundary's content as a complete boundary.
     writeStartCompletedSuspenseBoundary(destination, request.responseState);
 
@@ -1946,6 +2120,31 @@ function flushSegment(
       request.responseState,
     );
   }
+}
+
+function flushInitialResources(
+  destination: Destination,
+  resources: Resources,
+  responseState: ResponseState,
+  willFlushAllSegments: boolean,
+): void {
+  writeInitialResources(
+    destination,
+    resources,
+    responseState,
+    willFlushAllSegments,
+  );
+}
+
+function flushImmediateResources(
+  destination: Destination,
+  request: Request,
+): void {
+  writeImmediateResources(
+    destination,
+    request.resources,
+    request.responseState,
+  );
 }
 
 function flushClientRenderedBoundary(
@@ -1983,6 +2182,12 @@ function flushCompletedBoundary(
   destination: Destination,
   boundary: SuspenseBoundary,
 ): boolean {
+  if (enableFloat) {
+    setCurrentlyRenderingBoundaryResourcesTarget(
+      request.resources,
+      boundary.resources,
+    );
+  }
   const completedSegments = boundary.completedSegments;
   let i = 0;
   for (; i < completedSegments.length; i++) {
@@ -1996,6 +2201,7 @@ function flushCompletedBoundary(
     request.responseState,
     boundary.id,
     boundary.rootSegmentID,
+    boundary.resources,
   );
 }
 
@@ -2004,6 +2210,12 @@ function flushPartialBoundary(
   destination: Destination,
   boundary: SuspenseBoundary,
 ): boolean {
+  if (enableFloat) {
+    setCurrentlyRenderingBoundaryResourcesTarget(
+      request.resources,
+      boundary.resources,
+    );
+  }
   const completedSegments = boundary.completedSegments;
   let i = 0;
   for (; i < completedSegments.length; i++) {
@@ -2067,8 +2279,6 @@ function flushCompletedQueues(
     // that item fully and then yield. At that point we remove the already completed
     // items up until the point we completed them.
 
-    // TODO: Emit preloading.
-
     let i;
     const completedRootSegment = request.completedRootSegment;
     if (completedRootSegment !== null) {
@@ -2079,15 +2289,24 @@ function flushCompletedQueues(
             // we expect the preamble to be tiny and will ignore backpressure
             writeChunk(destination, preamble[i]);
           }
+
+          flushInitialResources(
+            destination,
+            request.resources,
+            request.responseState,
+            request.allPendingTasks === 0,
+          );
         }
 
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
         writeCompletedRoot(destination, request.responseState);
       } else {
-        // We haven't flushed the root yet so we don't need to check boundaries further down
+        // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
       }
+    } else if (enableFloat) {
+      flushImmediateResources(destination, request);
     }
 
     // We emit client rendering instructions for already emitted boundaries first.

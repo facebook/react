@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,7 +10,7 @@
 export type Destination = ReadableStreamController;
 
 export type PrecomputedChunk = Uint8Array;
-export type Chunk = Uint8Array;
+export opaque type Chunk = Uint8Array;
 
 export function scheduleWork(callback: () => void) {
   callback();
@@ -20,6 +20,13 @@ export function flushBuffered(destination: Destination) {
   // WHATWG Streams do not yet have a way to flush the underlying
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
+
+// For now we support AsyncLocalStorage as a global for the "browser" builds
+// TODO: Move this to some special WinterCG build.
+export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
+export const requestStorage: AsyncLocalStorage<
+  Map<Function, mixed>,
+> = supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
 
 const VIEW_SIZE = 512;
 let currentView = null;
@@ -39,6 +46,15 @@ export function writeChunk(
   }
 
   if (chunk.length > VIEW_SIZE) {
+    if (__DEV__) {
+      if (precomputedChunkSet.has(chunk)) {
+        console.error(
+          'A large precomputed chunk was passed to writeChunk without being copied.' +
+            ' Large chunks get enqueued directly and are not copied. This is incompatible with precomputed chunks because you cannot enqueue the same precomputed chunk twice.' +
+            ' Use "cloneChunk" to make a copy of this large precomputed chunk before writing it. This is a bug in React.',
+        );
+      }
+    }
     // this chunk may overflow a single view which implies it was not
     // one that is cached by the streaming renderer. We will enqueu
     // it directly and expect it is not re-used
@@ -110,11 +126,28 @@ export function stringToChunk(content: string): Chunk {
   return textEncoder.encode(content);
 }
 
+const precomputedChunkSet: Set<Chunk> = __DEV__ ? new Set() : (null: any);
+
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
-  return textEncoder.encode(content);
+  const precomputedChunk = textEncoder.encode(content);
+
+  if (__DEV__) {
+    precomputedChunkSet.add(precomputedChunk);
+  }
+
+  return precomputedChunk;
+}
+
+export function clonePrecomputedChunk(
+  precomputedChunk: PrecomputedChunk,
+): PrecomputedChunk {
+  return precomputedChunk.length > VIEW_SIZE
+    ? precomputedChunk.slice()
+    : precomputedChunk;
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
+  // $FlowFixMe[method-unbinding]
   if (typeof destination.error === 'function') {
     // $FlowFixMe: This is an Error object or the destination accepts other types.
     destination.error(error);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -378,7 +378,7 @@ describe('ReactComponentLifeCycle', () => {
         }
         // you would *NEVER* do anything like this in real code!
         this.state.hasRenderCompleted = true;
-        return <div ref="theDiv">I am the inner DIV</div>;
+        return <div ref={React.createRef()}>I am the inner DIV</div>;
       }
 
       componentWillUnmount() {
@@ -477,7 +477,9 @@ describe('ReactComponentLifeCycle', () => {
     class Component extends React.Component {
       render() {
         return (
-          <Tooltip ref="tooltip" tooltip={<div>{this.props.tooltipText}</div>}>
+          <Tooltip
+            ref={React.createRef()}
+            tooltip={<div>{this.props.tooltipText}</div>}>
             {this.props.text}
           </Tooltip>
         );

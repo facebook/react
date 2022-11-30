@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,16 +9,16 @@
 
 import type {Writable} from 'stream';
 import {TextEncoder} from 'util';
+import {AsyncLocalStorage} from 'async_hooks';
 
-type MightBeFlushable = {
-  flush?: () => void,
-  ...
-};
+interface MightBeFlushable {
+  flush?: () => void;
+}
 
 export type Destination = Writable & MightBeFlushable;
 
 export type PrecomputedChunk = Uint8Array;
-export type Chunk = string;
+export opaque type Chunk = string;
 
 export function scheduleWork(callback: () => void) {
   setImmediate(callback);
@@ -33,6 +33,11 @@ export function flushBuffered(destination: Destination) {
     destination.flush();
   }
 }
+
+export const supportsRequestStorage = true;
+export const requestStorage: AsyncLocalStorage<
+  Map<Function, mixed>,
+> = new AsyncLocalStorage();
 
 const VIEW_SIZE = 2048;
 let currentView = null;
@@ -73,6 +78,7 @@ function writeStringChunk(destination: Destination, stringChunk: string) {
   if (read < stringChunk.length) {
     writeToDestination(destination, (currentView: any));
     currentView = new Uint8Array(VIEW_SIZE);
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     writtenBytes = textEncoder.encodeInto(stringChunk.slice(read), currentView)
       .written;
   }
@@ -89,6 +95,15 @@ function writeViewChunk(destination: Destination, chunk: PrecomputedChunk) {
     return;
   }
   if (chunk.byteLength > VIEW_SIZE) {
+    if (__DEV__) {
+      if (precomputedChunkSet && precomputedChunkSet.has(chunk)) {
+        console.error(
+          'A large precomputed chunk was passed to writeChunk without being copied.' +
+            ' Large chunks get enqueued directly and are not copied. This is incompatible with precomputed chunks because you cannot enqueue the same precomputed chunk twice.' +
+            ' Use "cloneChunk" to make a copy of this large precomputed chunk before writing it. This is a bug in React.',
+        );
+      }
+    }
     // this chunk may overflow a single view which implies it was not
     // one that is cached by the streaming renderer. We will enqueu
     // it directly and expect it is not re-used
@@ -179,8 +194,26 @@ export function stringToChunk(content: string): Chunk {
   return content;
 }
 
+const precomputedChunkSet = __DEV__ ? new Set() : null;
+
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
-  return textEncoder.encode(content);
+  const precomputedChunk = textEncoder.encode(content);
+
+  if (__DEV__) {
+    if (precomputedChunkSet) {
+      precomputedChunkSet.add(precomputedChunk);
+    }
+  }
+
+  return precomputedChunk;
+}
+
+export function clonePrecomputedChunk(
+  precomputedChunk: PrecomputedChunk,
+): PrecomputedChunk {
+  return precomputedChunk.length > VIEW_SIZE
+    ? precomputedChunk.slice()
+    : precomputedChunk;
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {

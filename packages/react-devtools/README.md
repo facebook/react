@@ -97,7 +97,7 @@ By default DevTools listen to port `8097` on `localhost`. If you need to customi
 
 ![Allow access to file URLs](https://user-images.githubusercontent.com/29597/64646784-95b58080-d3cc-11e9-943d-02474683398a.png)
 
-Or you could develop with a local HTTP server [like `serve`](https://www.npmjs.com/package/serve).
+Or you could develop with a local HTTP server like [`serve`](https://www.npmjs.com/package/serve).
 
 **The React tab won't show up if the site doesn't use React**, or if React can't communicate with the devtools. When the page loads, the devtools sets a global named `__REACT_DEVTOOLS_GLOBAL_HOOK__`, then React communicates with that hook during initialization. You can test this on the [React website](https://reactjs.org/) or by inspecting [Facebook](https://www.facebook.com/).
 
@@ -105,7 +105,12 @@ Or you could develop with a local HTTP server [like `serve`](https://www.npmjs.c
 
 **If your app is inside an iframe, a Chrome extension, React Native, or in another unusual environment**, try [the standalone version instead](https://github.com/facebook/react/tree/main/packages/react-devtools). Chrome apps are currently not inspectable.
 
+**If your Components tab is empty, refer to "Chrome v101 and earlier" section below**, please read the "the issue with Chrome v101 and earlier versions" part below.
+
 **If you still have issues** please [report them](https://github.com/facebook/react/issues/new?labels=Component:%20Developer%20Tools). Don't forget to specify your OS, browser version, extension version, and the exact instructions to reproduce the issue with a screenshot.
+
+### The Issue with Chrome v101 and earlier
+As we migrate to a Chrome Extension Manifest V3, we start to use a new method to hook the DevTools with the inspected page. This new method is more secure, but relies on a new API that's only supported in Chrome v102+. For Chrome v101 or earlier, we use a fallback method, which can cause malfunctions (e.g. empty React component tab) if the JS resources on your page is loaded from cache. Please upgrade to Chrome v102+ to avoid this issue.
 
 ## Local development
 The standalone DevTools app can be built and tested from source following the instructions below.

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -38,23 +38,23 @@ import styles from './OwnersStack.css';
 
 type SelectOwner = (owner: SerializedElement | null) => void;
 
-type ACTION_UPDATE_OWNER_ID = {|
+type ACTION_UPDATE_OWNER_ID = {
   type: 'UPDATE_OWNER_ID',
   ownerID: number | null,
   owners: Array<SerializedElement>,
-|};
-type ACTION_UPDATE_SELECTED_INDEX = {|
+};
+type ACTION_UPDATE_SELECTED_INDEX = {
   type: 'UPDATE_SELECTED_INDEX',
   selectedIndex: number,
-|};
+};
 
 type Action = ACTION_UPDATE_OWNER_ID | ACTION_UPDATE_SELECTED_INDEX;
 
-type State = {|
+type State = {
   ownerID: number | null,
   owners: Array<SerializedElement>,
   selectedIndex: number,
-|};
+};
 
 function dialogReducer(state, action) {
   switch (action.type) {
@@ -77,7 +77,7 @@ function dialogReducer(state, action) {
   }
 }
 
-export default function OwnerStack() {
+export default function OwnerStack(): React.Node {
   const read = useContext(OwnersListContext);
   const {ownerID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);
@@ -282,11 +282,11 @@ function ElementView({isSelected, owner, selectOwner}: ElementViewProps) {
   );
 }
 
-type BackToOwnerButtonProps = {|
+type BackToOwnerButtonProps = {
   owners: Array<SerializedElement>,
   selectedIndex: number,
   selectOwner: SelectOwner,
-|};
+};
 function BackToOwnerButton({
   owners,
   selectedIndex,

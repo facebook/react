@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,18 +19,18 @@ import {
 import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
 
 export const meta = {
-  inspectable: Symbol('inspectable'),
-  inspected: Symbol('inspected'),
-  name: Symbol('name'),
-  preview_long: Symbol('preview_long'),
-  preview_short: Symbol('preview_short'),
-  readonly: Symbol('readonly'),
-  size: Symbol('size'),
-  type: Symbol('type'),
-  unserializable: Symbol('unserializable'),
+  inspectable: (Symbol('inspectable'): symbol),
+  inspected: (Symbol('inspected'): symbol),
+  name: (Symbol('name'): symbol),
+  preview_long: (Symbol('preview_long'): symbol),
+  preview_short: (Symbol('preview_short'): symbol),
+  readonly: (Symbol('readonly'): symbol),
+  size: (Symbol('size'): symbol),
+  type: (Symbol('type'): symbol),
+  unserializable: (Symbol('unserializable'): symbol),
 };
 
-export type Dehydrated = {|
+export type Dehydrated = {
   inspectable: boolean,
   name: string | null,
   preview_long: string | null,
@@ -38,7 +38,7 @@ export type Dehydrated = {|
   readonly?: boolean,
   size?: number,
   type: string,
-|};
+};
 
 // Typed arrays and other complex iteratable objects (e.g. Map, Set, ImmutableJS) need special handling.
 // These objects can't be serialized without losing type information,
@@ -396,7 +396,7 @@ export function hydrate(
       parent[last] = undefined;
     } else {
       // Replace the string keys with Symbols so they're non-enumerable.
-      const replaced: {[key: Symbol]: boolean | string, ...} = {};
+      const replaced: {[key: symbol]: boolean | string, ...} = {};
       replaced[meta.inspectable] = !!value.inspectable;
       replaced[meta.inspected] = false;
       replaced[meta.name] = value.name;

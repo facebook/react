@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,10 +9,10 @@
 
 // Adapted from: https://github.com/facebookarchive/fixed-data-table/blob/main/src/vendor_upstream/dom/normalizeWheel.js
 
-export type NormalizedWheelDelta = {|
+export type NormalizedWheelDelta = {
   deltaX: number,
   deltaY: number,
-|};
+};
 
 // Reasonable defaults
 const LINE_HEIGHT = 40;
@@ -71,17 +71,11 @@ export function normalizeWheel(event: WheelEvent): NormalizedWheelDelta {
   let deltaX = event.deltaX;
   let deltaY = event.deltaY;
 
-  if (
-    // $FlowFixMe DOM_DELTA_LINE missing from WheelEvent
-    event.deltaMode === WheelEvent.DOM_DELTA_LINE
-  ) {
+  if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
     // delta in LINE units
     deltaX *= LINE_HEIGHT;
     deltaY *= LINE_HEIGHT;
-  } else if (
-    // $FlowFixMe DOM_DELTA_PAGE missing from WheelEvent
-    event.deltaMode === WheelEvent.DOM_DELTA_PAGE
-  ) {
+  } else if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
     // delta in PAGE units
     deltaX *= PAGE_HEIGHT;
     deltaY *= PAGE_HEIGHT;

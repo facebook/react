@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -221,7 +221,7 @@ describe('ReactElement.jsx', () => {
     class Parent extends React.Component {
       render() {
         return JSXRuntime.jsx('div', {
-          children: JSXRuntime.jsx(Child, {ref: 'childElement'}),
+          children: JSXRuntime.jsx(Child, {ref: React.createRef()}),
         });
       }
     }
@@ -275,16 +275,19 @@ describe('ReactElement.jsx', () => {
       class Parent extends React.Component {
         render() {
           return JSXRuntime.jsx('div', {
-            children: [JSXRuntime.jsx(Child, {key: '0'})],
+            children: [JSXRuntime.jsx(Child, {key: '0', prop: 'hi'})],
           });
         }
       }
       expect(() =>
         ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
       ).toErrorDev(
-        'Warning: React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
-          'Explicitly pass a key after spreading props in your JSX call. ' +
-          'E.g. <Child {...props} key={key} />',
+        'Warning: A props object containing a "key" prop is being spread into JSX:\n' +
+          '  let props = {key: someKey, prop: ...};\n' +
+          '  <Child {...props} />\n' +
+          'React keys must be passed directly to JSX without using spread:\n' +
+          '  let props = {prop: ...};\n' +
+          '  <Child key={someKey} {...props} />',
       );
     });
   }

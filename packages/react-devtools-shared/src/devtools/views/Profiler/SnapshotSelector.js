@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,9 +18,9 @@ import {StoreContext} from '../context';
 
 import styles from './SnapshotSelector.css';
 
-export type Props = {||};
+export type Props = {};
 
-export default function SnapshotSelector(_: Props) {
+export default function SnapshotSelector(_: Props): React.Node {
   const {
     isCommitFilterEnabled,
     minCommitDuration,
@@ -126,7 +126,10 @@ export default function SnapshotSelector(_: Props) {
         type="text"
         inputMode="numeric"
         pattern="[0-9]*"
-        value={selectedFilteredCommitIndex + 1}
+        value={
+          // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
+          selectedFilteredCommitIndex + 1
+        }
         size={`${numFilteredCommits}`.length}
         onChange={handleCommitInputChange}
         onClick={handleClick}

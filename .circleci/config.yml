@@ -2,7 +2,7 @@ version: 2.1
 
 aliases:
   - &docker
-    - image: cimg/openjdk:17.0.0-node
+    - image: cimg/openjdk:18.0-node
 
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -10,13 +10,93 @@ aliases:
   - &restore_yarn_cache
     restore_cache:
       name: Restore yarn cache
-      key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
+      keys:
+        - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
+        - v1-yarn_cache-{{ arch }}-
+        - v1-yarn_cache-
+
+  - &yarn_install
+    run:
+      name: Install dependencies
+      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+
+  - &yarn_install_retry
+    run:
+      name: Install dependencies (retry)
+      when: on_fail
+      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+
+  - &save_yarn_cache
+    save_cache:
+      name: Save yarn cache
+      key: v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
+      paths:
+        - ~/.cache/yarn
+
+  - &restore_yarn_cache_fixtures_dom
+    restore_cache:
+      name: Restore yarn cache for fixtures/dom
+      keys:
+        - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
+        - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
+        - v1-yarn_cache-{{ arch }}-
+        - v1-yarn_cache-
+
+  - &yarn_install_fixtures_dom
+    run:
+      name: Install dependencies in fixtures/dom
+      working_directory: fixtures/dom
+      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+
+  - &yarn_install_fixtures_dom_retry
+    run:
+      name: Install dependencies in fixtures/dom (retry)
+      when: on_fail
+      working_directory: fixtures/dom
+      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+
+  - &save_yarn_cache_fixtures_dom
+    save_cache:
+      name: Save yarn cache for fixtures/dom
+      key: v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
+      paths:
+        - ~/.cache/yarn
+
+  - &save_node_modules
+    save_cache:
+      name: Save node_modules cache
+      # Cache only for the current revision to prevent cache injections from
+      # malicious PRs.
+      key: v1-node_modules-{{ arch }}-{{ .Revision }}
+      paths:
+        - node_modules
+        - packages/eslint-plugin-react-hooks/node_modules
+        - packages/react-art/node_modules
+        - packages/react-client/node_modules
+        - packages/react-devtools-core/node_modules
+        - packages/react-devtools-extensions/node_modules
+        - packages/react-devtools-inline/node_modules
+        - packages/react-devtools-shared/node_modules
+        - packages/react-devtools-shell/node_modules
+        - packages/react-devtools-timeline/node_modules
+        - packages/react-devtools/node_modules
+        - packages/react-dom/node_modules
+        - packages/react-interactions/node_modules
+        - packages/react-native-renderer/node_modules
+        - packages/react-reconciler/node_modules
+        - packages/react-server-dom-relay/node_modules
+        - packages/react-server-dom-webpack/node_modules
+        - packages/react-server-native-relay/node_modules
+        - packages/react-server/node_modules
+        - packages/react-test-renderer/node_modules
+        - packages/react/node_modules
+        - packages/scheduler/node_modules
 
   - &restore_node_modules
     restore_cache:
       name: Restore node_modules cache
       keys:
-        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
+        - v1-node_modules-{{ arch }}-{{ .Revision }}
 
   - &TEST_PARALLELISM 20
 
@@ -41,30 +121,14 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Nodejs Version
+          name: NodeJS Version
           command: node --version
       - *restore_yarn_cache
-      - run:
-          name: Install Packages
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - save_cache:
-          # Store the yarn cache globally for all lock files with this same
-          # checksum. This will speed up the setup job for all PRs where the
-          # lockfile is the same.
-          name: Save yarn cache for future installs
-          key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
-          paths:
-            - ~/.cache/yarn
-      - save_cache:
-          # Store node_modules for all jobs in this workflow so that they don't
-          # need to each run a yarn install for each job. This will speed up
-          # all jobs run on this branch with the same lockfile.
-          name: Save node_modules cache
-          # This cache key is per branch, a yarn install in setup is required.
-          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
-          paths:
-            - node_modules
+      - *restore_node_modules
+      - *yarn_install
+      - *yarn_install_retry
+      - *save_yarn_cache
+      - *save_node_modules
 
   yarn_lint:
     docker: *docker
@@ -72,7 +136,6 @@ jobs:
 
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
@@ -87,7 +150,6 @@ jobs:
 
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
 
@@ -97,7 +159,6 @@ jobs:
 
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           command: |
@@ -114,7 +175,6 @@ jobs:
     parallelism: 40
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn build-combined
       - persist_to_workspace:
@@ -130,7 +190,6 @@ jobs:
         type: string
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           name: Download artifacts for revision
@@ -148,7 +207,6 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           name: Download artifacts for base revision
@@ -177,7 +235,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
@@ -197,7 +254,6 @@ jobs:
       - attach_workspace:
           at: .
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           command: node ./scripts/tasks/danger
@@ -209,11 +265,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run:
-          name: Install Packages
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run:
           environment:
             RELEASE_CHANNEL: experimental
@@ -228,11 +280,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run:
-          name: Install Packages
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run:
           name: Playwright install deps
           command: |
@@ -254,11 +302,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run:
-          name: Install nested packages from Yarn cache
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
       - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
 
@@ -273,11 +317,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run:
-          name: Install nested packages from Yarn cache
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run:
           name: Playwright install deps
           command: |
@@ -301,7 +341,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn lint-build
 
@@ -312,7 +351,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn check-release-dependencies
 
@@ -323,13 +361,25 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           name: Search build artifacts for unminified errors
           command: |
             yarn extract-errors
             git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
+
+  check_generated_fizz_runtime:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_node_modules
+      - run:
+          name: Confirm generated inline Fizz runtime is up to date
+          command: |
+            yarn generate-inline-fizz-runtime
+            git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
 
   yarn_test:
     docker: *docker
@@ -340,7 +390,6 @@ jobs:
         type: string
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test <<parameters.args>> --ci
 
@@ -355,11 +404,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run:
-          name: Install nested packages from Yarn cache
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run: yarn test --build <<parameters.args>> --ci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
@@ -369,15 +414,17 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
+      - *restore_yarn_cache_fixtures_dom
+      - *yarn_install_fixtures_dom
+      - *yarn_install_fixtures_dom_retry
+      - *save_yarn_cache_fixtures_dom
       - run:
           name: Run DOM fixture tests
           environment:
             RELEASE_CHANNEL: stable
+          working_directory: fixtures/dom
           command: |
-            cd fixtures/dom
-            yarn --frozen-lockfile
             yarn prestart
             yarn test --maxWorkers=2
 
@@ -386,7 +433,6 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           name: Run fuzz tests
@@ -406,7 +452,6 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           name: Run publish script
@@ -425,7 +470,6 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           name: Fetch revisions that contain an intentional fork
@@ -454,13 +498,20 @@ workflows:
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
-      - setup
+      - setup:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
       - yarn_flow:
           requires:
             - setup
       # NOTE: This job is only enabled when we want the forks to be in sync.
       # When the forks intentionally diverge, comment out the job to disable it.
       - sync_reconciler_forks:
+          requires:
+            - setup
+      - check_generated_fizz_runtime:
           requires:
             - setup
       - yarn_lint:
@@ -676,4 +727,3 @@ workflows:
           commit_sha: << pipeline.git.revision >>
           release_channel: experimental
           dist_tag: experimental
-

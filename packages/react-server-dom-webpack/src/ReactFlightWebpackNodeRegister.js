@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,6 @@
 
 const url = require('url');
 
-// $FlowFixMe
 const Module = require('module');
 
 module.exports = function register() {
@@ -52,13 +51,14 @@ module.exports = function register() {
             // we should resolve that with a client reference that unwraps the Promise on
             // the client.
             const then = function then(resolve, reject) {
-              const moduleReference: {[string]: any} = {
+              const moduleReference: {[string]: any, ...} = {
                 $$typeof: MODULE_REFERENCE,
                 filepath: target.filepath,
                 name: '*', // Represents the whole object instead of a particular import.
                 async: true,
               };
               return Promise.resolve(
+                // $FlowFixMe[incompatible-call] found when upgrading Flow
                 resolve(new Proxy(moduleReference, proxyHandlers)),
               );
             };
@@ -91,19 +91,23 @@ module.exports = function register() {
     },
   };
 
+  // $FlowFixMe[prop-missing] found when upgrading Flow
   Module._extensions['.client.js'] = function(module, path) {
     const moduleId = url.pathToFileURL(path).href;
-    const moduleReference: {[string]: any} = {
+    const moduleReference: {[string]: any, ...} = {
       $$typeof: MODULE_REFERENCE,
       filepath: moduleId,
       name: '*', // Represents the whole object instead of a particular import.
       async: false,
     };
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
     module.exports = new Proxy(moduleReference, proxyHandlers);
   };
 
+  // $FlowFixMe[prop-missing] found when upgrading Flow
   const originalResolveFilename = Module._resolveFilename;
 
+  // $FlowFixMe[prop-missing] found when upgrading Flow
   Module._resolveFilename = function(request, parent, isMain, options) {
     const resolved = originalResolveFilename.apply(this, arguments);
     if (resolved.endsWith('.server.js')) {

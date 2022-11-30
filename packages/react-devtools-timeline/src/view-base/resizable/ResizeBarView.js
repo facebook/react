@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,7 +13,7 @@ import type {
   MouseMoveInteraction,
   MouseUpInteraction,
 } from '../useCanvasInteraction';
-import type {Rect} from '../geometry';
+import type {Rect, Size} from '../geometry';
 import type {ViewRefs} from '../Surface';
 
 import {BORDER_SIZE, COLORS} from '../../content-views/constants';
@@ -42,7 +42,7 @@ export class ResizeBarView extends View {
     this._label = label;
   }
 
-  desiredSize() {
+  desiredSize(): Size {
     return this.showLabel
       ? {height: RESIZE_BAR_WITH_LABEL_HEIGHT, width: 0}
       : {height: RESIZE_BAR_HEIGHT, width: 0};
