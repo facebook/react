@@ -7,6 +7,7 @@
 
 import { assertExhaustive, retainWhere } from "../Common/utils";
 import {
+  BlockId,
   HIRFunction,
   Identifier,
   Instruction,
@@ -190,6 +191,6 @@ class ScopeDependenciesVisitor
   enterBlock(): void {}
   visitImplicitTerminal(): void | null {}
   visitCase(test: InstructionValue, block: void): void {}
-  appendBlock(block: void, item: void, label?: string | undefined): void {}
+  appendBlock(block: void, item: void, label?: BlockId | undefined): void {}
   leaveBlock(block: void): void {}
 }

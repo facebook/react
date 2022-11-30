@@ -9,6 +9,7 @@ import * as t from "@babel/types";
 import { assertExhaustive } from "../Common/utils";
 import { invariant } from "../CompilerError";
 import {
+  BlockId,
   GeneratedSource,
   HIRFunction,
   Identifier,
@@ -168,14 +169,16 @@ class CodegenVisitor
     switch (terminal.kind) {
       case "break": {
         if (terminal.label) {
-          return t.breakStatement(t.identifier(terminal.label));
+          return t.breakStatement(t.identifier(codegenLabel(terminal.label)));
         } else {
           return t.breakStatement();
         }
       }
       case "continue": {
         if (terminal.label) {
-          return t.continueStatement(t.identifier(terminal.label));
+          return t.continueStatement(
+            t.identifier(codegenLabel(terminal.label))
+          );
         } else {
           return t.continueStatement();
         }
@@ -223,13 +226,19 @@ class CodegenVisitor
   appendBlock(
     block: t.Statement[],
     item: t.Statement,
-    label?: string | undefined
+    blockId?: BlockId | undefined
   ): void {
     if (item.type === "EmptyStatement") {
       return;
     }
-    if (label !== undefined) {
-      block.push(createLabelledStatement(item.loc, t.identifier(label), item));
+    if (blockId !== undefined) {
+      block.push(
+        createLabelledStatement(
+          item.loc,
+          t.identifier(codegenLabel(blockId)),
+          item
+        )
+      );
     } else {
       block.push(item);
     }
@@ -238,6 +247,10 @@ class CodegenVisitor
     this.depth--;
     return t.blockStatement(block);
   }
+}
+
+function codegenLabel(id: BlockId): string {
+  return `bb${id}`;
 }
 
 function codegenInstructionValue(

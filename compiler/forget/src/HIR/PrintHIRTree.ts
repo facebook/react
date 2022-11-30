@@ -6,6 +6,7 @@
  */
 
 import { assertExhaustive } from "../Common/utils";
+import { BlockId } from "../ControlFlowGraph";
 import {
   HIRFunction,
   Instruction,
@@ -116,13 +117,17 @@ class PrintVisitor implements Visitor<Array<string>, string, string, string> {
       return `${prefix}case ${test}: ${block.trimStart()}`;
     }
   }
-  appendBlock(block: string[], item: string, label?: string | undefined): void {
+  appendBlock(
+    block: string[],
+    item: string,
+    label?: BlockId | undefined
+  ): void {
     const prefix = "  ".repeat(this.depth);
     if (item !== "") {
       block.push(`${prefix}${item.trimStart()}`);
     }
     if (label !== undefined) {
-      block.push(`${prefix}${label}:`);
+      block.push(`${prefix}bb${label}:`);
     }
   }
   leaveBlock(block: string[]): string {

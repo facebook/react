@@ -9,6 +9,7 @@ import invariant from "invariant";
 import { retainWhere } from "../Common/utils";
 import DisjointSet from "./DisjointSet";
 import {
+  BlockId,
   HIRFunction,
   Instruction,
   InstructionId,
@@ -282,7 +283,7 @@ class MergeOverlappingReactiveScopesVisitor
   visitImplicitTerminal(): void | null {}
   visitTerminal(terminal: BlockTerminal<void, void, void, void>): void {}
   visitCase(test: void | null, block: void): void {}
-  appendBlock(block: void, item: void, label?: string | undefined): void {}
+  appendBlock(block: void, item: void, label?: BlockId | undefined): void {}
   leaveBlock(block: void): void {
     this.scopes.pop();
     if (this.scopes.length === 0) {
@@ -381,7 +382,7 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
   // no-ops
   visitValue(value: InstructionValue): void {}
   visitCase(test: void | null, block: void): void {}
-  appendBlock(block: void, item: void, label?: string | undefined): void {}
+  appendBlock(block: void, item: void, label?: BlockId | undefined): void {}
 }
 
 function getInstructionScope(instr: Instruction): ReactiveScope | null {

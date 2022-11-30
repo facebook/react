@@ -138,7 +138,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
               consequent: consequent ?? this.emptyBlock(),
               alternate: alternate,
             }),
-            `bb${fallthroughId}` //
+            fallthroughId
           );
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
         } else {
@@ -217,7 +217,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
               test,
               cases,
             }),
-            `bb${fallthroughId}`
+            fallthroughId
           );
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
         } else {
@@ -290,7 +290,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
               test: testValue,
               loop: loopBody,
             }),
-            `bb${fallthroughId}`
+            fallthroughId
           );
           this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
         } else {
@@ -359,7 +359,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
       case "labeled": {
         return this.visitor.visitTerminal({
           kind: "break",
-          label: `bb${target.block}`,
+          label: target.block,
         });
       }
     }
@@ -375,7 +375,7 @@ class Driver<TBlock, TValue, TItem, TCase> {
       case "labeled": {
         return this.visitor.visitTerminal({
           kind: "continue",
-          label: `bb${target.block}`,
+          label: target.block,
         });
       }
       case "unlabeled": {
@@ -687,7 +687,7 @@ export interface Visitor<TBlock, TValue, TItem, TCase> {
    * Appends an item onto the given block, with an optional label. The label
    * indicates that a break/continue will proceed to code *after* the given item.
    */
-  appendBlock(block: TBlock, item: TItem, label?: string): void;
+  appendBlock(block: TBlock, item: TItem, label?: BlockId): void;
 
   /**
    * Converts the visitor's block representation into the representation of a
@@ -713,5 +713,5 @@ export type BlockTerminal<TBlock, TValue, TItem, TCase> =
       test: TValue;
       loop: TItem;
     }
-  | { kind: "break"; label: string | null }
-  | { kind: "continue"; label: string | null };
+  | { kind: "break"; label: BlockId | null }
+  | { kind: "continue"; label: BlockId | null };
