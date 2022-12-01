@@ -1693,7 +1693,10 @@ function mountLazyComponent(
   const lazyComponent: LazyComponentType<any, any> = elementType;
   const payload = lazyComponent._payload;
   const init = lazyComponent._init;
-  let Component = init(payload);
+  if (payload._status !== Resolved) {
+    throw payload._result;
+  }
+  let Component = payload._result.default;
   // Store the unwrapped component in the type.
   workInProgress.type = Component;
   const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(Component));
