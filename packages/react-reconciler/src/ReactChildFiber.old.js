@@ -1398,7 +1398,6 @@ export function cloneChildFibers(
     );
     newChild.return = workInProgress;
   }
-  newChild.sibling = null;
 }
 
 // Reset a workInProgress child set to prepare it for a second pass.
