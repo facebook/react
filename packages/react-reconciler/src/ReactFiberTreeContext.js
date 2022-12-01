@@ -62,7 +62,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
-import {getIsHydrating} from './ReactFiberHydrationContext.new';
+import {getIsHydrating} from './ReactFiberHydrationContext';
 import {clz32} from './clz32';
 import {Forked, NoFlags} from './ReactFiberFlags';
 

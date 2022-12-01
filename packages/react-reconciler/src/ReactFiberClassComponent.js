@@ -8,8 +8,8 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane.new';
-import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
+import type {Lanes} from './ReactFiberLane';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {Flags} from './ReactFiberFlags';
 
 import {
@@ -26,7 +26,7 @@ import {
   warnAboutDeprecatedLifecycles,
   enableLazyContextPropagation,
 } from 'shared/ReactFeatureFlags';
-import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from './ReactFiberTreeReflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
@@ -36,7 +36,7 @@ import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
-import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
+import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {
   DebugTracingMode,
   NoMode,
@@ -55,27 +55,27 @@ import {
   ForceUpdate,
   initializeUpdateQueue,
   cloneUpdateQueue,
-} from './ReactFiberClassUpdateQueue.new';
-import {NoLanes} from './ReactFiberLane.new';
+} from './ReactFiberClassUpdateQueue';
+import {NoLanes} from './ReactFiberLane';
 import {
   cacheContext,
   getMaskedContext,
   getUnmaskedContext,
   hasContextChanged,
   emptyContextObject,
-} from './ReactFiberContext.new';
-import {readContext, checkIfContextChanged} from './ReactFiberNewContext.new';
+} from './ReactFiberContext';
+import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
 import {
   requestEventTime,
   requestUpdateLane,
   scheduleUpdateOnFiber,
-} from './ReactFiberWorkLoop.new';
+} from './ReactFiberWorkLoop';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 import {
   markForceUpdateScheduled,
   markStateUpdateScheduled,
   setIsStrictModeForDevtools,
-} from './ReactFiberDevToolsHook.new';
+} from './ReactFiberDevToolsHook';
 
 const fakeInternalInstance = {};
 

@@ -8,8 +8,8 @@
  */
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Transition} from './ReactFiberTracingMarkerComponent.new';
-import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
+import type {Transition} from './ReactFiberTracingMarkerComponent';
+import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -24,7 +24,7 @@ import {
   allowConcurrentByDefault,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
-import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
+import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
 import {clz32} from './clz32';
 

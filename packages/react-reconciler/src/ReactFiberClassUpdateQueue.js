@@ -85,7 +85,7 @@
 // resources, but the final state is always the same.
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane.new';
+import type {Lanes, Lane} from './ReactFiberLane';
 
 import {
   NoLane,
@@ -97,11 +97,11 @@ import {
   isTransitionLane,
   intersectLanes,
   markRootEntangled,
-} from './ReactFiberLane.new';
+} from './ReactFiberLane';
 import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
-} from './ReactFiberNewContext.new';
+} from './ReactFiberNewContext';
 import {
   Callback,
   Visibility,
@@ -116,12 +116,12 @@ import {
   markSkippedUpdateLanes,
   isUnsafeClassRenderPhaseUpdate,
   getWorkInProgressRootRenderLanes,
-} from './ReactFiberWorkLoop.new';
+} from './ReactFiberWorkLoop';
 import {
   enqueueConcurrentClassUpdate,
   unsafe_markUpdateLaneFromFiberToRoot,
-} from './ReactFiberConcurrentUpdates.new';
-import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.new';
+} from './ReactFiberConcurrentUpdates';
+import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook';
 
 import assign from 'shared/assign';
 

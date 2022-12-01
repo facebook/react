@@ -8,11 +8,11 @@
  */
 
 import type {CacheDispatcher} from './ReactInternalTypes';
-import type {Cache} from './ReactFiberCacheComponent.new';
+import type {Cache} from './ReactFiberCacheComponent';
 
 import {enableCache} from 'shared/ReactFeatureFlags';
-import {readContext} from './ReactFiberNewContext.new';
-import {CacheContext} from './ReactFiberCacheComponent.new';
+import {readContext} from './ReactFiberNewContext';
+import {CacheContext} from './ReactFiberCacheComponent';
 
 function getCacheSignal(): AbortSignal {
   if (!enableCache) {

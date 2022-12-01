@@ -23,7 +23,7 @@ describe('ReactIncrementalErrorReplay-test', () => {
     // If this is no longer used, you can delete this test file.;
 
     const assignFiberPropertiesInDEV = gate(flags => flags.new)
-      ? require('../ReactFiber.new').assignFiberPropertiesInDEV
+      ? require('../ReactFiber').assignFiberPropertiesInDEV
       : require('../ReactFiber.old').assignFiberPropertiesInDEV;
 
     // Get a real fiber.

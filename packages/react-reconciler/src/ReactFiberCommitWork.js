@@ -16,10 +16,10 @@ import type {
   UpdatePayload,
 } from './ReactFiberHostConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane.new';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import type {UpdateQueue} from './ReactFiberClassUpdateQueue.new';
-import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
+import type {Lanes} from './ReactFiberLane';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
+import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {Wakeable} from 'shared/ReactTypes';
 import {isOffscreenManual} from './ReactFiberOffscreenComponent';
 import type {
@@ -29,13 +29,13 @@ import type {
   OffscreenProps,
 } from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
-import type {Cache} from './ReactFiberCacheComponent.new';
-import type {RootState} from './ReactFiberRoot.new';
+import type {Cache} from './ReactFiberCacheComponent';
+import type {RootState} from './ReactFiberRoot';
 import type {
   Transition,
   TracingMarkerInstance,
   TransitionAbort,
-} from './ReactFiberTracingMarkerComponent.new';
+} from './ReactFiberTracingMarkerComponent';
 
 import {
   enableCreateEventHandleAPI,
@@ -100,7 +100,7 @@ import {
   setCurrentFiber as setCurrentDebugFiberInDEV,
   getCurrentFiber as getCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
+import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {
   isCurrentUpdateNested,
   getCommitTime,
@@ -108,13 +108,13 @@ import {
   startLayoutEffectTimer,
   recordPassiveEffectDuration,
   startPassiveEffectTimer,
-} from './ReactProfilerTimer.new';
+} from './ReactProfilerTimer';
 import {ConcurrentMode, NoMode, ProfileMode} from './ReactTypeOfMode';
 import {
   deferHiddenCallbacks,
   commitHiddenCallbacks,
   commitCallbacks,
-} from './ReactFiberClassUpdateQueue.new';
+} from './ReactFiberClassUpdateQueue';
 import {
   getPublicInstance,
   supportsMutation,
@@ -171,7 +171,7 @@ import {
   CommitContext,
   RenderContext,
   NoContext,
-} from './ReactFiberWorkLoop.new';
+} from './ReactFiberWorkLoop';
 import {
   NoFlags as NoHookEffect,
   HasEffect as HookHasEffect,
@@ -179,7 +179,7 @@ import {
   Insertion as HookInsertion,
   Passive as HookPassive,
 } from './ReactHookEffectTags';
-import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
+import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {doesFiberContain} from './ReactFiberTreeReflection';
 import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
 import {
@@ -193,9 +193,9 @@ import {
   markComponentLayoutEffectUnmountStarted,
   markComponentLayoutEffectUnmountStopped,
   onCommitUnmount,
-} from './ReactFiberDevToolsHook.new';
-import {releaseCache, retainCache} from './ReactFiberCacheComponent.new';
-import {clearTransitionsForLanes} from './ReactFiberLane.new';
+} from './ReactFiberDevToolsHook';
+import {releaseCache, retainCache} from './ReactFiberCacheComponent';
+import {clearTransitionsForLanes} from './ReactFiberLane';
 import {
   OffscreenVisible,
   OffscreenDetached,
@@ -204,7 +204,7 @@ import {
 import {
   TransitionRoot,
   TransitionTracingMarker,
-} from './ReactFiberTracingMarkerComponent.new';
+} from './ReactFiberTracingMarkerComponent';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {

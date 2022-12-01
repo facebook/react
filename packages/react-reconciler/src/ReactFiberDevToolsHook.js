@@ -7,20 +7,17 @@
  * @flow
  */
 
-import type {Lane, Lanes} from './ReactFiberLane.new';
+import type {Lane, Lanes} from './ReactFiberLane';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {ReactNodeList, Wakeable} from 'shared/ReactTypes';
-import type {EventPriority} from './ReactEventPriorities.new';
+import type {EventPriority} from './ReactEventPriorities';
 // import type {DevToolsProfilingHooks} from 'react-devtools-shared/src/backend/types';
 // TODO: This import doesn't work because the DevTools depend on the DOM version of React
 // and to properly type check against DOM React we can't also type check again non-DOM
 // React which this hook might be in.
 type DevToolsProfilingHooks = any;
 
-import {
-  getLabelForLane,
-  TotalLanes,
-} from 'react-reconciler/src/ReactFiberLane.new';
+import {getLabelForLane, TotalLanes} from 'react-reconciler/src/ReactFiberLane';
 import {DidCapture} from './ReactFiberFlags';
 import {
   consoleManagedByDevToolsDuringStrictMode,
@@ -32,7 +29,7 @@ import {
   ContinuousEventPriority,
   DefaultEventPriority,
   IdleEventPriority,
-} from './ReactEventPriorities.new';
+} from './ReactEventPriorities';
 import {
   ImmediatePriority as ImmediateSchedulerPriority,
   UserBlockingPriority as UserBlockingSchedulerPriority,

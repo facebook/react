@@ -85,7 +85,7 @@ describe('updaters', () => {
       () => mockDevToolsHook,
     );
     jest.mock(
-      'react-reconciler/src/ReactFiberDevToolsHook.new',
+      'react-reconciler/src/ReactFiberDevToolsHook',
       () => mockDevToolsHook,
     );
 

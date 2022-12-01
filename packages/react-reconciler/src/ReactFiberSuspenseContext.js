@@ -8,15 +8,12 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {StackCursor} from './ReactFiberStack.new';
-import type {
-  SuspenseState,
-  SuspenseProps,
-} from './ReactFiberSuspenseComponent.new';
+import type {StackCursor} from './ReactFiberStack';
+import type {SuspenseState, SuspenseProps} from './ReactFiberSuspenseComponent';
 
 import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
-import {createCursor, push, pop} from './ReactFiberStack.new';
-import {isCurrentTreeHidden} from './ReactFiberHiddenContext.new';
+import {createCursor, push, pop} from './ReactFiberStack';
+import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
 import {SuspenseComponent, OffscreenComponent} from './ReactWorkTags';
 
 // The Suspense handler is the boundary that should capture if something

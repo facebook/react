@@ -23,7 +23,7 @@ import type {
   HookType,
   MemoCache,
 } from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane.new';
+import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Flags} from './ReactFiberFlags';
 
@@ -72,14 +72,14 @@ import {
   markRootEntangled,
   markRootMutableRead,
   NoTimestamp,
-} from './ReactFiberLane.new';
+} from './ReactFiberLane';
 import {
   ContinuousEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
   higherEventPriority,
-} from './ReactEventPriorities.new';
-import {readContext, checkIfContextChanged} from './ReactFiberNewContext.new';
+} from './ReactEventPriorities';
+import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
 import {HostRoot, CacheComponent} from './ReactWorkTags';
 import {
   LayoutStatic as LayoutStaticEffect,
@@ -105,7 +105,7 @@ import {
   requestEventTime,
   markSkippedUpdateLanes,
   isInvalidExecutionContextForEventFunction,
-} from './ReactFiberWorkLoop.new';
+} from './ReactFiberWorkLoop';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import is from 'shared/objectIs';
@@ -113,38 +113,38 @@ import isArray from 'shared/isArray';
 import {
   markWorkInProgressReceivedUpdate,
   checkIfWorkInProgressReceivedUpdate,
-} from './ReactFiberBeginWork.new';
-import {getIsHydrating} from './ReactFiberHydrationContext.new';
+} from './ReactFiberBeginWork';
+import {getIsHydrating} from './ReactFiberHydrationContext';
 import {
   getWorkInProgressVersion,
   markSourceAsDirty,
   setWorkInProgressVersion,
   warnAboutMultipleRenderersDEV,
-} from './ReactMutableSource.new';
+} from './ReactMutableSource';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {
   markStateUpdateScheduled,
   setIsStrictModeForDevtools,
-} from './ReactFiberDevToolsHook.new';
-import {createCache} from './ReactFiberCacheComponent.new';
+} from './ReactFiberDevToolsHook';
+import {createCache} from './ReactFiberCacheComponent';
 import {
   createUpdate as createLegacyQueueUpdate,
   enqueueUpdate as enqueueLegacyQueueUpdate,
   entangleTransitions as entangleLegacyQueueTransitions,
-} from './ReactFiberClassUpdateQueue.new';
+} from './ReactFiberClassUpdateQueue';
 import {
   enqueueConcurrentHookUpdate,
   enqueueConcurrentHookUpdateAndEagerlyBailout,
   enqueueConcurrentRenderForLane,
-} from './ReactFiberConcurrentUpdates.new';
-import {getTreeId} from './ReactFiberTreeContext.new';
+} from './ReactFiberConcurrentUpdates';
+import {getTreeId} from './ReactFiberTreeContext';
 import {now} from './Scheduler';
 import {
   trackUsedThenable,
   checkIfUseWrappedInTryCatch,
   createThenableState,
-} from './ReactFiberThenable.new';
-import type {ThenableState} from './ReactFiberThenable.new';
+} from './ReactFiberThenable';
+import type {ThenableState} from './ReactFiberThenable';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 

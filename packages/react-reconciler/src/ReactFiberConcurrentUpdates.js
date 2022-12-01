@@ -11,25 +11,20 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {
   UpdateQueue as HookQueue,
   Update as HookUpdate,
-} from './ReactFiberHooks.new';
+} from './ReactFiberHooks';
 import type {
   SharedQueue as ClassQueue,
   Update as ClassUpdate,
-} from './ReactFiberClassUpdateQueue.new';
-import type {Lane, Lanes} from './ReactFiberLane.new';
+} from './ReactFiberClassUpdateQueue';
+import type {Lane, Lanes} from './ReactFiberLane';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 
 import {
   warnAboutUpdateOnNotYetMountedFiberInDEV,
   throwIfInfiniteUpdateLoopDetected,
   getWorkInProgressRoot,
-} from './ReactFiberWorkLoop.new';
-import {
-  NoLane,
-  NoLanes,
-  mergeLanes,
-  markHiddenUpdate,
-} from './ReactFiberLane.new';
+} from './ReactFiberWorkLoop';
+import {NoLane, NoLanes, mergeLanes, markHiddenUpdate} from './ReactFiberLane';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {HostRoot, OffscreenComponent} from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberOffscreenComponent';

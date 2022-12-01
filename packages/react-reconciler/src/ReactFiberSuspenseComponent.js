@@ -10,8 +10,8 @@
 import type {ReactNodeList, Wakeable} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import type {Lane} from './ReactFiberLane.new';
-import type {TreeContext} from './ReactFiberTreeContext.new';
+import type {Lane} from './ReactFiberLane';
+import type {TreeContext} from './ReactFiberTreeContext';
 
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
 import {NoFlags, DidCapture} from './ReactFiberFlags';

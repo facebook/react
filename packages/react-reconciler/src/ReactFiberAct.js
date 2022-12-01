@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber.new';
+import type {Fiber} from './ReactFiber';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 

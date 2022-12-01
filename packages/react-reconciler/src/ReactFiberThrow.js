@@ -8,9 +8,9 @@
  */
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Lane, Lanes} from './ReactFiberLane.new';
+import type {Lane, Lanes} from './ReactFiberLane';
 import type {CapturedValue} from './ReactCapturedValue';
-import type {Update} from './ReactFiberClassUpdateQueue.new';
+import type {Update} from './ReactFiberClassUpdateQueue';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {OffscreenQueue} from './ReactFiberOffscreenComponent';
 
@@ -47,9 +47,9 @@ import {
   CaptureUpdate,
   ForceUpdate,
   enqueueUpdate,
-} from './ReactFiberClassUpdateQueue.new';
-import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading.new';
-import {getSuspenseHandler} from './ReactFiberSuspenseContext.new';
+} from './ReactFiberClassUpdateQueue';
+import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading';
+import {getSuspenseHandler} from './ReactFiberSuspenseContext';
 import {
   renderDidError,
   renderDidSuspendDelayIfPossible,
@@ -58,23 +58,23 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   attachPingListener,
   restorePendingUpdaters,
-} from './ReactFiberWorkLoop.new';
-import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext.new';
+} from './ReactFiberWorkLoop';
+import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
-import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
+import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
   SyncLane,
   NoTimestamp,
   includesSomeLane,
   mergeLanes,
   pickArbitraryLane,
-} from './ReactFiberLane.new';
+} from './ReactFiberLane';
 import {
   getIsHydrating,
   markDidThrowWhileHydratingDEV,
   queueHydrationError,
-} from './ReactFiberHydrationContext.new';
+} from './ReactFiberHydrationContext';
 import {ConcurrentRoot} from './ReactRootTags';
 
 function createRootErrorUpdate(

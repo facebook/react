@@ -25,7 +25,7 @@ ruleTester.run('eslint-rules/no-cross-fork-imports', rule, {
       filename: 'ReactFiberWorkLoop.js',
     },
     {
-      code: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop.new';",
+      code: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop';",
       filename: 'ReactFiberWorkLoop.new.js',
     },
     {
@@ -45,7 +45,7 @@ ruleTester.run('eslint-rules/no-cross-fork-imports', rule, {
   ],
   invalid: [
     {
-      code: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop.new';",
+      code: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop';",
       filename: 'ReactFiberWorkLoop.old.js',
       errors: [
         {
@@ -79,7 +79,7 @@ ruleTester.run('eslint-rules/no-cross-fork-imports', rule, {
             'from the old fork.',
         },
       ],
-      output: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop.new';",
+      output: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop';",
     },
     {
       code:
@@ -92,7 +92,7 @@ ruleTester.run('eslint-rules/no-cross-fork-imports', rule, {
             'from the old fork.',
         },
       ],
-      output: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop.new';",
+      output: "import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop';",
     },
     {
       code: "export {DiscreteEventPriority} from './ReactFiberLane.old.js';",
@@ -104,7 +104,7 @@ ruleTester.run('eslint-rules/no-cross-fork-imports', rule, {
             'from the old fork.',
         },
       ],
-      output: "export {DiscreteEventPriority} from './ReactFiberLane.new';",
+      output: "export {DiscreteEventPriority} from './ReactFiberLane';",
     },
     {
       code: "export {DiscreteEventPriority} from './ReactFiberLane.new.js';",

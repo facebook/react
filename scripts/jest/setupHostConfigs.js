@@ -61,7 +61,7 @@ jest.mock('react/react.shared-subset', () => {
 jest.mock('react-reconciler/src/ReactFiberReconciler', () => {
   return jest.requireActual(
     __VARIANT__
-      ? 'react-reconciler/src/ReactFiberReconciler.new'
+      ? 'react-reconciler/src/ReactFiberReconciler'
       : 'react-reconciler/src/ReactFiberReconciler.old'
   );
 });

@@ -8,8 +8,8 @@
  */
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {RootState} from './ReactFiberRoot.new';
-import type {Lanes, Lane} from './ReactFiberLane.new';
+import type {RootState} from './ReactFiberRoot';
+import type {Lanes, Lane} from './ReactFiberLane';
 import type {
   ReactScopeInstance,
   ReactContext,
@@ -25,11 +25,11 @@ import type {
 import type {
   SuspenseState,
   SuspenseListRenderState,
-} from './ReactFiberSuspenseComponent.new';
+} from './ReactFiberSuspenseComponent';
 import {isOffscreenManual} from './ReactFiberOffscreenComponent';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
-import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
-import type {Cache} from './ReactFiberCacheComponent.new';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
+import type {Cache} from './ReactFiberCacheComponent';
 import {
   enableLegacyHidden,
   enableHostSingletons,
@@ -41,7 +41,7 @@ import {
   enableFloat,
 } from 'shared/ReactFeatureFlags';
 
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
+import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 
 import {now} from './Scheduler';
 
@@ -117,7 +117,7 @@ import {
   popHostContext,
   getHostContext,
   popHostContainer,
-} from './ReactFiberHostContext.new';
+} from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
   popSuspenseListContext,
@@ -127,15 +127,15 @@ import {
   ForceSuspenseFallback,
   setDefaultShallowSuspenseListContext,
   isBadSuspenseFallback,
-} from './ReactFiberSuspenseContext.new';
-import {popHiddenContext} from './ReactFiberHiddenContext.new';
-import {findFirstSuspended} from './ReactFiberSuspenseComponent.new';
+} from './ReactFiberSuspenseContext';
+import {popHiddenContext} from './ReactFiberHiddenContext';
+import {findFirstSuspended} from './ReactFiberSuspenseComponent';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext.new';
-import {popProvider} from './ReactFiberNewContext.new';
+} from './ReactFiberContext';
+import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
@@ -146,31 +146,31 @@ import {
   getIsHydrating,
   hasUnhydratedTailNodes,
   upgradeHydrationErrorsToRecoverable,
-} from './ReactFiberHydrationContext.new';
+} from './ReactFiberHydrationContext';
 import {
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
   getRenderTargetTime,
   getWorkInProgressTransitions,
-} from './ReactFiberWorkLoop.new';
+} from './ReactFiberWorkLoop';
 import {
   OffscreenLane,
   SomeRetryLane,
   NoLanes,
   includesSomeLane,
   mergeLanes,
-} from './ReactFiberLane.new';
-import {resetChildFibers} from './ReactChildFiber.new';
-import {createScopeInstance} from './ReactFiberScope.new';
-import {transferActualDuration} from './ReactProfilerTimer.new';
-import {popCacheProvider} from './ReactFiberCacheComponent.new';
-import {popTreeContext} from './ReactFiberTreeContext.new';
-import {popRootTransition, popTransition} from './ReactFiberTransition.new';
+} from './ReactFiberLane';
+import {resetChildFibers} from './ReactChildFiber';
+import {createScopeInstance} from './ReactFiberScope';
+import {transferActualDuration} from './ReactProfilerTimer';
+import {popCacheProvider} from './ReactFiberCacheComponent';
+import {popTreeContext} from './ReactFiberTreeContext';
+import {popRootTransition, popTransition} from './ReactFiberTransition';
 import {
   popMarkerInstance,
   popRootMarkerInstance,
-} from './ReactFiberTracingMarkerComponent.new';
+} from './ReactFiberTracingMarkerComponent';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into

@@ -13,13 +13,13 @@ import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {Lanes} from './ReactFiberLane.new';
+import type {Lanes} from './ReactFiberLane';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {
   OffscreenProps,
   OffscreenInstance,
 } from './ReactFiberOffscreenComponent';
-import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.new';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import {
   supportsResources,
@@ -72,13 +72,13 @@ import {
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
+import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
   resolveClassForHotReloading,
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
-} from './ReactFiberHotReloading.new';
-import {NoLanes} from './ReactFiberLane.new';
+} from './ReactFiberHotReloading';
+import {NoLanes} from './ReactFiberLane';
 import {
   NoMode,
   ConcurrentMode,
@@ -106,9 +106,9 @@ import {
   REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
-import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent.new';
-import {detachOffscreenInstance} from './ReactFiberCommitWork.new';
-import {getHostContext} from './ReactFiberHostContext.new';
+import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
+import {detachOffscreenInstance} from './ReactFiberCommitWork';
+import {getHostContext} from './ReactFiberHostContext';
 
 export type {Fiber};
 
