@@ -132,7 +132,7 @@ export function inferMutableRanges(func: HIRFunction) {
     // Update mutableRange.end only if the identifiers have actually been
     // mutated.
     const haveIdentifiersBeenMutated = [...aliasSet].some(
-      (id) => id.mutableRange.end > id.mutableRange.start
+      (id) => id.mutableRange.end - id.mutableRange.start > 1
     );
 
     if (haveIdentifiersBeenMutated) {
