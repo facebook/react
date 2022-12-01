@@ -91,12 +91,7 @@ type Temporaries = Map<IdentifierId, t.Expression>;
 
 class CodegenVisitor
   implements
-    Visitor<
-      Array<t.Statement>,
-      t.Expression | t.Statement | t.JSXFragment,
-      t.Statement,
-      t.SwitchCase
-    >
+    Visitor<Array<t.Statement>, t.Expression, t.Statement, t.SwitchCase>
 {
   depth: number = 0;
   temp: Map<IdentifierId, t.Expression> = new Map();
@@ -105,15 +100,10 @@ class CodegenVisitor
     this.depth++;
     return [];
   }
-  visitValue(
-    value: InstructionValue
-  ): t.Expression | t.Statement | t.JSXFragment {
+  visitValue(value: InstructionValue): t.Expression {
     return codegenInstructionValue(this.temp, value);
   }
-  visitInstruction(
-    instr: Instruction,
-    value: t.Expression | t.Statement | t.JSXFragment
-  ): t.Statement {
+  visitInstruction(instr: Instruction, value: t.Expression): t.Statement {
     if (t.isStatement(value)) {
       return value;
     }
@@ -256,7 +246,7 @@ function codegenLabel(id: BlockId): string {
 function codegenInstructionValue(
   temp: Temporaries,
   instrValue: InstructionValue
-): t.Expression | t.JSXFragment | t.Statement {
+): t.Expression {
   let value: t.Expression;
   switch (instrValue.kind) {
     case "ArrayExpression": {
