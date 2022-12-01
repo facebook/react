@@ -224,66 +224,6 @@ const forks = Object.freeze({
     }
   },
 
-  './packages/react-reconciler/src/ReactFiberReconciler.js': (
-    bundleType,
-    entry,
-    dependencies,
-    moduleType,
-    bundle
-  ) => {
-    if (bundle.enableNewReconciler) {
-      switch (bundleType) {
-        case FB_WWW_DEV:
-        case FB_WWW_PROD:
-        case FB_WWW_PROFILING:
-          // Use the forked version of the reconciler
-          return './packages/react-reconciler/src/ReactFiberReconciler.new.js';
-      }
-    }
-    // Otherwise, use the non-forked version.
-    return './packages/react-reconciler/src/ReactFiberReconciler.old.js';
-  },
-
-  './packages/react-reconciler/src/ReactEventPriorities.js': (
-    bundleType,
-    entry,
-    dependencies,
-    moduleType,
-    bundle
-  ) => {
-    if (bundle.enableNewReconciler) {
-      switch (bundleType) {
-        case FB_WWW_DEV:
-        case FB_WWW_PROD:
-        case FB_WWW_PROFILING:
-          // Use the forked version of the reconciler
-          return './packages/react-reconciler/src/ReactEventPriorities.new.js';
-      }
-    }
-    // Otherwise, use the non-forked version.
-    return './packages/react-reconciler/src/ReactEventPriorities.old.js';
-  },
-
-  './packages/react-reconciler/src/ReactFiberHotReloading.js': (
-    bundleType,
-    entry,
-    dependencies,
-    moduleType,
-    bundle
-  ) => {
-    if (bundle.enableNewReconciler) {
-      switch (bundleType) {
-        case FB_WWW_DEV:
-        case FB_WWW_PROD:
-        case FB_WWW_PROFILING:
-          // Use the forked version of the reconciler
-          return './packages/react-reconciler/src/ReactFiberHotReloading.new.js';
-      }
-    }
-    // Otherwise, use the non-forked version.
-    return './packages/react-reconciler/src/ReactFiberHotReloading.old.js';
-  },
-
   // Different dialogs for caught errors.
   './packages/react-reconciler/src/ReactFiberErrorDialog.js': (
     bundleType,
