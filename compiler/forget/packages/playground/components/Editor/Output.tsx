@@ -27,6 +27,8 @@ const {
   inferReferenceEffects,
   inferMutableRanges,
   inferReactiveScopeDependencies,
+  inferReactiveScopeVariables,
+  inferReactiveScopes,
   leaveSSA,
   lower,
   printHIR,
@@ -49,6 +51,8 @@ type CompilerOutput = {
   eliminateRedundantPhiOutput: string;
   inferReferenceEffectsOutput: string;
   inferMutableRangesOutput: string;
+  inferReactiveScopeVariablesOutput: string;
+  inferReactiveScopesOutput: string;
   inferReactiveScopeDependenciesOutput: string;
   leaveSSAOutput: string;
   codegenOutput: string;
@@ -83,6 +87,12 @@ function compile(source: string): CompilerOutput | CompilerError {
     inferMutableRanges(ir);
     const inferMutableRangesOutput = printHIR(ir.body);
 
+    inferReactiveScopeVariables(ir);
+    const inferReactiveScopeVariablesOutput = printHIR(ir.body);
+
+    inferReactiveScopes(ir);
+    const inferReactiveScopesOutput = printHIR(ir.body);
+
     inferReactiveScopeDependencies(ir);
     const inferReactiveScopeDependenciesOutput = printHIR(ir.body);
 
@@ -116,6 +126,8 @@ function compile(source: string): CompilerOutput | CompilerError {
       inferReferenceEffectsOutput,
       inferMutableRangesOutput,
       inferReactiveScopeDependenciesOutput,
+      inferReactiveScopeVariablesOutput,
+      inferReactiveScopesOutput,
       leaveSSAOutput,
       codegenOutput,
       sourceMapUrl,
@@ -169,6 +181,16 @@ function Output({ store, setTabsOpen, tabsOpen }: Props) {
         InferMutableRanges: (
           <TextTabContent
             output={compilerOutput.inferMutableRangesOutput}
+          ></TextTabContent>
+        ),
+        InferReactiveScopeVariables: (
+          <TextTabContent
+            output={compilerOutput.inferReactiveScopeVariablesOutput}
+          ></TextTabContent>
+        ),
+        InferReactiveScopes: (
+          <TextTabContent
+            output={compilerOutput.inferReactiveScopesOutput}
           ></TextTabContent>
         ),
         InferReactiveScopeDependencies: (

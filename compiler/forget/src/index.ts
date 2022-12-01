@@ -31,6 +31,8 @@ import enterSSA from "./HIR/EnterSSA";
 import { Environment } from "./HIR/HIRBuilder";
 import { inferMutableRanges } from "./HIR/InferMutableLifetimes";
 import { inferReactiveScopeDependencies } from "./HIR/InferReactiveScopeDependencies";
+import { inferReactiveScopes } from "./HIR/InferReactiveScopes";
+import { inferReactiveScopeVariables } from "./HIR/InferReactiveScopeVariables";
 import inferReferenceEffects from "./HIR/InferReferenceEffects";
 import leaveSSA from "./HIR/LeaveSSA";
 import printHIR from "./HIR/PrintHIR";
@@ -64,6 +66,8 @@ export const HIR = {
   inferMutableRanges,
   inferReferenceEffects,
   inferReactiveScopeDependencies,
+  inferReactiveScopeVariables,
+  inferReactiveScopes,
   printHIR,
   Environment,
   leaveSSA,

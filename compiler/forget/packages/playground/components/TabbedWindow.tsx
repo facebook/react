@@ -13,6 +13,8 @@ export type TabTypes =
   | "EliminateRedundantPhi"
   | "InferReferenceEffects"
   | "InferMutableRanges"
+  | "InferReactiveScopeVariables"
+  | "InferReactiveScopes"
   | "InferReactiveScopeDependencies"
   | "LeaveSSA"
   | "JS"
