@@ -456,9 +456,6 @@ export function getLanesToRetrySynchronouslyOnError(
   if (everythingButOffscreen !== NoLanes) {
     return everythingButOffscreen;
   }
-  if (everythingButOffscreen & OffscreenLane) {
-    return OffscreenLane;
-  }
   return NoLanes;
 }
 
