@@ -46,6 +46,7 @@ import {pushTreeFork} from './ReactFiberTreeContext.new';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
+let didWarnAboutOneShotIterators;
 let didWarnAboutStringRefs;
 let ownerHasKeyUseWarning;
 let ownerHasFunctionTypeWarning;
@@ -958,6 +959,22 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
           );
         }
         didWarnAboutGenerators = true;
+      } else {
+        // Warn about using one-shot iterators as children
+        const isOneShotIterator =
+          iteratorFn.call(newChildrenIterable) === newChildrenIterable;
+        if (isOneShotIterator) {
+          if (!didWarnAboutOneShotIterators) {
+            console.error(
+              'Using an iterator such as `[].values()` as children is unsupported and will likely yield ' +
+                'unexpected results because enumerating such an iterator mutates it. ' +
+                'You may convert it to an array with `Array.from()` or the ' +
+                '`[...spread]` operator before rendering. Keep in mind that ' +
+                'you might need to polyfill these features for older browsers.',
+            );
+          }
+          didWarnAboutOneShotIterators = true;
+        }
       }
 
       // Warn about using Maps as children

@@ -323,6 +323,29 @@ describe('ReactMultiChild', () => {
     ReactDOM.render(<Foo />, div);
   });
 
+  it('should warn when using one-shot iterators as children', () => {
+    function Foo() {
+      const iterator = [<h1 key="1">Hello</h1>, <h1 key="2">Dave</h1>].values();
+
+      return iterator;
+    }
+
+    const div = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<Foo />, div);
+    }).toErrorDev(
+      'Warning: Using an iterator such as `[].values()` as children is unsupported and will likely yield ' +
+        'unexpected results because enumerating such an iterator mutates it. ' +
+        'You may convert it to an array with `Array.from()` or the ' +
+        '`[...spread]` operator before rendering. Keep in mind that ' +
+        'you might need to polyfill these features for older browsers.\n' +
+        '    in Foo (at **)',
+    );
+
+    // Test de-duplication
+    ReactDOM.render(<Foo />, div);
+  });
+
   it('should not warn for using generators in legacy iterables', () => {
     const fooIterable = {
       '@@iterator': function*() {
