@@ -214,8 +214,8 @@ function unwindInterruptedWork(
   popTreeContext(interruptedWork);
   switch (interruptedWork.tag) {
     case ClassComponent: {
-      const childContextTypes = interruptedWork.type.childContextTypes;
-      if (childContextTypes !== null && childContextTypes !== undefined) {
+      const Component = interruptedWork.type;
+      if (isLegacyContextProvider(Component)) {
         popLegacyContext(interruptedWork);
       }
       break;
