@@ -462,9 +462,12 @@ type FrameAlignedTask = {|
 let currentTask: FrameAlignedTask | null = null;
 function performFrameAlignedWork() {
   if (currentTask != null) {
+    const currentTaskForFlow = currentTask;
     const task = currentTask.task;
-    localCancelAnimationFrame(currentTask.rafNode);
-    Scheduler.unstable_cancelCallback(currentTask.schedulerNode);
+    localCancelAnimationFrame(currentTaskForFlow.rafNode);
+    if (currentTaskForFlow.schedulerNode !== null) {
+      Scheduler.unstable_cancelCallback(currentTaskForFlow.schedulerNode);
+    }
     currentTask = null;
     if (task != null) {
       task();
@@ -498,8 +501,10 @@ export function scheduleFrameAlignedTask(task: any): any {
 }
 
 export function cancelFrameAlignedTask(task: any) {
-  Scheduler.unstable_cancelCallback(task.schedulerNode);
-  task.schedulerNode = null;
+  if (task.schedulerNode) {
+    Scheduler.unstable_cancelCallback(task.schedulerNode);
+    task.schedulerNode = null;
+  }
   // We don't cancel the rAF in case it gets re-used later.
   // But clear the task so if it fires and shouldn't run, it won't.
   task.task = null;

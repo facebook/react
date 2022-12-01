@@ -407,7 +407,12 @@ describe('ReactDOMRoot', () => {
       expect(container.textContent).toEqual('a');
 
       expect(Scheduler).toFlushAndYieldThrough(['b']);
-      if (gate(flags => flags.allowConcurrentByDefault)) {
+      if (
+        gate(
+          flags =>
+            flags.allowConcurrentByDefault && !flags.enableFrameEndScheduling,
+        )
+      ) {
         expect(container.textContent).toEqual('a');
       } else {
         expect(container.textContent).toEqual('b');

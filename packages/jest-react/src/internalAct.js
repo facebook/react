@@ -135,6 +135,11 @@ function flushActWork(resolve, reject) {
       reject(error);
     }
 
+    // Flush scheduled rAF.
+    if (global.flushRequestAnimationFrameQueue) {
+      global.flushRequestAnimationFrameQueue();
+    }
+
     // If Scheduler yields while there's still work, it's so that we can
     // unblock the main thread (e.g. for paint or for microtasks). Yield to
     // the main thread and continue in a new task.
@@ -149,10 +154,6 @@ function flushActWork(resolve, reject) {
   // $FlowFixMe: Flow doesn't know about global Jest object
   jest.runOnlyPendingTimers();
   if (Scheduler.unstable_hasPendingWork()) {
-    // Flush scheduled rAF.
-    if (global.flushRequestAnimationFrameQueue) {
-      global.flushRequestAnimationFrameQueue();
-    }
     // Committing a fallback scheduled additional work. Continue flushing.
     flushActWork(resolve, reject);
     return;

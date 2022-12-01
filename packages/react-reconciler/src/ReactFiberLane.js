@@ -642,7 +642,6 @@ export function markRootUpdated(
 export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
-  root.hasUnknownUpdates = false;
 
   // The suspended lanes are no longer CPU-bound. Clear their expiration times.
   const expirationTimes = root.expirationTimes;
@@ -673,10 +672,6 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
 
   root.pendingLanes = remainingLanes;
-
-  if ((root.pendingLanes & DefaultLane) === NoLane) {
-    root.hasUnknownUpdates = false;
-  }
 
   // Let's try everything again
   root.suspendedLanes = NoLanes;

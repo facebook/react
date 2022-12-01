@@ -562,7 +562,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling
-    it('Unknown update followed by default update is batched, scheduled in a rAF', () => {
+    it('Unknown update followed by default update is batched, scheduled in a rAF', async () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -575,7 +575,7 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      act(() => {
+      await act(async () => {
         root.render(<Counter />);
       });
       expect(Scheduler).toHaveYielded(['Count: 0']);
@@ -634,7 +634,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling
-    it('Should re-use scheduled rAF, not cancel and schedule anew', () => {
+    it('Should re-use scheduled rAF, not cancel and schedule anew', async () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -647,7 +647,7 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      act(() => {
+      await act(async () => {
         root.render(<Counter />);
       });
       expect(Scheduler).toHaveYielded(['Count: 0']);
@@ -672,7 +672,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling
-    it('Default update followed by an unknown update is batched, scheduled in a rAF', () => {
+    it('Default update followed by an unknown update is batched, scheduled in a rAF', async () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -685,7 +685,7 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      act(() => {
+      await act(async () => {
         root.render(<Counter />);
       });
       expect(Scheduler).toHaveYielded(['Count: 0']);
@@ -709,7 +709,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling
-    it('Default update followed by unknown update is batched, scheduled in a task', () => {
+    it('Default update followed by unknown update is batched, scheduled in a task', async () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -722,7 +722,7 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       const root = ReactDOMClient.createRoot(container);
-      act(() => {
+      await act(async () => {
         root.render(<Counter />);
       });
       expect(Scheduler).toHaveYielded(['Count: 0']);
@@ -745,7 +745,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling || !allowConcurrentByDefault
-    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced', () => {
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced', async () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -757,10 +757,8 @@ describe('ReactDOMFiberAsync', () => {
         return <p ref={ref}>Count: {count}</p>;
       }
 
-      const root = ReactDOMClient.createRoot(container, {
-        unstable_concurrentUpdatesByDefault: true,
-      });
-      act(() => {
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
         root.render(<Counter />);
       });
       expect(Scheduler).toHaveYielded(['Count: 0']);
@@ -773,7 +771,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling || !allowConcurrentByDefault
-    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default first', () => {
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default first', async () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -785,10 +783,8 @@ describe('ReactDOMFiberAsync', () => {
         return <p ref={ref}>Count: {count}</p>;
       }
 
-      const root = ReactDOMClient.createRoot(container, {
-        unstable_concurrentUpdatesByDefault: true,
-      });
-      act(() => {
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
         root.render(<Counter />);
       });
       expect(Scheduler).toHaveYielded(['Count: 0']);
@@ -804,7 +800,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate enableFrameEndScheduling || !allowConcurrentByDefault
-    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default after', () => {
+    it('When allowConcurrentByDefault is enabled, unknown updates should not be time sliced event with default after', async () => {
       let setState = null;
       let counterRef = null;
       function Counter() {
@@ -816,10 +812,8 @@ describe('ReactDOMFiberAsync', () => {
         return <p ref={ref}>Count: {count}</p>;
       }
 
-      const root = ReactDOMClient.createRoot(container, {
-        unstable_concurrentUpdatesByDefault: true,
-      });
-      act(() => {
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
         root.render(<Counter />);
       });
       expect(Scheduler).toHaveYielded(['Count: 0']);
@@ -855,10 +849,8 @@ describe('ReactDOMFiberAsync', () => {
         );
       }
 
-      const root = ReactDOMClient.createRoot(container, {
-        unstable_concurrentUpdatesByDefault: true,
-      });
-      act(() => {
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
         root.render(<Counter />);
       });
       expect(Scheduler).toHaveYielded(['Count: 0']);
@@ -867,21 +859,26 @@ describe('ReactDOMFiberAsync', () => {
       setState(1);
 
       // Dispatch a click event on the button.
-      const firstEvent = document.createEvent('Event');
-      firstEvent.initEvent('click', true, true);
-      counterRef.current.dispatchEvent(firstEvent);
+      await act(async () => {
+        const firstEvent = document.createEvent('Event');
+        firstEvent.initEvent('click', true, true);
+        counterRef.current.dispatchEvent(firstEvent);
+      });
 
-      await null;
+      if (gate(flags => flags.enableUnifiedSyncLane)) {
+        expect(Scheduler).toHaveYielded(['Count: 2']);
+        expect(counterRef.current.textContent).toBe('Count: 2');
+      } else {
+        expect(Scheduler).toHaveYielded(['Count: 1']);
+        expect(counterRef.current.textContent).toBe('Count: 1');
 
-      expect(Scheduler).toHaveYielded(['Count: 1']);
-      expect(counterRef.current.textContent).toBe('Count: 1');
-
-      global.flushRequestAnimationFrameQueue();
-      expect(Scheduler).toHaveYielded(['Count: 2']);
-      expect(counterRef.current.textContent).toBe('Count: 2');
+        global.flushRequestAnimationFrameQueue();
+        expect(Scheduler).toHaveYielded(['Count: 2']);
+        expect(counterRef.current.textContent).toBe('Count: 2');
+      }
     });
 
-    // @gate enableFrameEndScheduling
+    // @gate enableFrameEndScheduling && enableUnifiedSyncLane
     it('unknown updates should be rescheduled in rAF after suspending without a boundary', async () => {
       let setState = null;
       let setThrowing = null;
@@ -920,10 +917,8 @@ describe('ReactDOMFiberAsync', () => {
         );
       }
 
-      const root = ReactDOMClient.createRoot(container, {
-        unstable_concurrentUpdatesByDefault: true,
-      });
-      act(() => {
+      const root = ReactDOMClient.createRoot(container);
+      await act(async () => {
         root.render(<Counter />);
       });
       expect(Scheduler).toHaveYielded(['Count: 0']);

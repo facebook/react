@@ -182,10 +182,6 @@ describe('updaters', () => {
     let triggerActiveCascade = null;
     let triggerPassiveCascade = null;
 
-    // TODO: What should we do in tests like this,
-    // where we're simulating default events?
-    window.event = 'test';
-
     const Parent = () => <SchedulingComponent />;
     const SchedulingComponent = () => {
       const [cascade, setCascade] = React.useState(null);
