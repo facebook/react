@@ -8,13 +8,13 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {StackCursor} from './ReactFiberStack.old';
-import type {Lanes} from './ReactFiberLane.old';
+import type {StackCursor} from './ReactFiberStack';
+import type {Lanes} from './ReactFiberLane';
 
-import {createCursor, push, pop} from './ReactFiberStack.old';
+import {createCursor, push, pop} from './ReactFiberStack';
 
-import {getRenderLanes, setRenderLanes} from './ReactFiberWorkLoop.old';
-import {NoLanes, mergeLanes} from './ReactFiberLane.old';
+import {getRenderLanes, setRenderLanes} from './ReactFiberWorkLoop';
+import {NoLanes, mergeLanes} from './ReactFiberLane';
 
 // TODO: Remove `renderLanes` context in favor of hidden context
 type HiddenContext = {

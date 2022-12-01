@@ -19,11 +19,11 @@ import {
   flushSync,
   scheduleUpdateOnFiber,
   flushPassiveEffects,
-} from './ReactFiberWorkLoop.old';
-import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.old';
-import {updateContainer} from './ReactFiberReconciler.old';
-import {emptyContextObject} from './ReactFiberContext.old';
-import {SyncLane, NoTimestamp} from './ReactFiberLane.old';
+} from './ReactFiberWorkLoop';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
+import {updateContainer} from './ReactFiberReconciler';
+import {emptyContextObject} from './ReactFiberContext';
+import {SyncLane, NoTimestamp} from './ReactFiberLane';
 import {
   ClassComponent,
   FunctionComponent,

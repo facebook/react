@@ -23,7 +23,7 @@ import {
   flushSync,
   injectIntoDevTools,
   batchedUpdates,
-} from 'react-reconciler/src/ReactFiberReconciler.old';
+} from 'react-reconciler/src/ReactFiberReconciler';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {
   Fragment,

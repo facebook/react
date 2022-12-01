@@ -11,19 +11,16 @@ import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 
 import type {Wakeable, Thenable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane.old';
-import type {
-  SuspenseProps,
-  SuspenseState,
-} from './ReactFiberSuspenseComponent.old';
-import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
-import type {EventPriority} from './ReactEventPriorities.old';
+import type {Lanes, Lane} from './ReactFiberLane';
+import type {SuspenseProps, SuspenseState} from './ReactFiberSuspenseComponent';
+import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
+import type {EventPriority} from './ReactEventPriorities';
 import type {
   PendingTransitionCallbacks,
   PendingBoundaries,
   Transition,
   TransitionAbort,
-} from './ReactFiberTracingMarkerComponent.old';
+} from './ReactFiberTracingMarkerComponent';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
 
 import {
@@ -64,7 +61,7 @@ import {
   flushSyncCallbacksOnlyInLegacyMode,
   scheduleSyncCallback,
   scheduleLegacySyncCallback,
-} from './ReactFiberSyncTaskQueue.old';
+} from './ReactFiberSyncTaskQueue';
 import {
   logCommitStarted,
   logCommitStopped,
@@ -94,9 +91,9 @@ import {
   createWorkInProgress,
   assignFiberPropertiesInDEV,
   resetWorkInProgress,
-} from './ReactFiber.old';
+} from './ReactFiber';
 import {isRootDehydrated} from './ReactFiberShellHydration';
-import {didSuspendOrErrorWhileHydratingDEV} from './ReactFiberHydrationContext.old';
+import {didSuspendOrErrorWhileHydratingDEV} from './ReactFiberHydrationContext';
 import {
   NoMode,
   ProfileMode,
@@ -165,7 +162,7 @@ import {
   movePendingFibersToMemoized,
   addTransitionToLanesMap,
   getTransitionsForLanes,
-} from './ReactFiberLane.old';
+} from './ReactFiberLane';
 import {
   DiscreteEventPriority,
   ContinuousEventPriority,
@@ -175,23 +172,20 @@ import {
   setCurrentUpdatePriority,
   lowerEventPriority,
   lanesToEventPriority,
-} from './ReactEventPriorities.old';
-import {
-  requestCurrentTransition,
-  NoTransition,
-} from './ReactFiberTransition.old';
+} from './ReactEventPriorities';
+import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {
   SelectiveHydrationException,
   beginWork as originalBeginWork,
   replayFunctionComponent,
-} from './ReactFiberBeginWork.old';
-import {completeWork} from './ReactFiberCompleteWork.old';
-import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork.old';
+} from './ReactFiberBeginWork';
+import {completeWork} from './ReactFiberCompleteWork';
+import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork';
 import {
   throwException,
   createRootErrorUpdate,
   createClassErrorUpdate,
-} from './ReactFiberThrow.old';
+} from './ReactFiberThrow';
 import {
   commitBeforeMutationEffects,
   commitLayoutEffects,
@@ -208,15 +202,15 @@ import {
   invokePassiveEffectMountInDEV,
   invokeLayoutEffectUnmountInDEV,
   invokePassiveEffectUnmountInDEV,
-} from './ReactFiberCommitWork.old';
-import {enqueueUpdate} from './ReactFiberClassUpdateQueue.old';
-import {resetContextDependencies} from './ReactFiberNewContext.old';
+} from './ReactFiberCommitWork';
+import {enqueueUpdate} from './ReactFiberClassUpdateQueue';
+import {resetContextDependencies} from './ReactFiberNewContext';
 import {
   resetHooksAfterThrow,
   resetHooksOnUnwind,
   ContextOnlyDispatcher,
-} from './ReactFiberHooks.old';
-import {DefaultCacheDispatcher} from './ReactFiberCache.old';
+} from './ReactFiberHooks';
+import {DefaultCacheDispatcher} from './ReactFiberCache';
 import {
   createCapturedValueAtFiber,
   type CapturedValue,
@@ -225,7 +219,7 @@ import {
   enqueueConcurrentRenderForLane,
   finishQueueingConcurrentUpdates,
   getConcurrentlyUpdatedLanes,
-} from './ReactFiberConcurrentUpdates.old';
+} from './ReactFiberConcurrentUpdates';
 
 import {
   markNestedUpdateScheduled,
@@ -234,11 +228,11 @@ import {
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDelta,
   syncNestedUpdateFlag,
-} from './ReactProfilerTimer.old';
+} from './ReactProfilerTimer';
 
 // DEV stuff
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
   current as ReactCurrentFiberCurrent,
@@ -266,25 +260,25 @@ import {
   markRenderStopped,
   onCommitRoot as onCommitRootDevTools,
   onPostCommitRoot as onPostCommitRootDevTools,
-} from './ReactFiberDevToolsHook.old';
+} from './ReactFiberDevToolsHook';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
-import {releaseCache} from './ReactFiberCacheComponent.old';
+import {releaseCache} from './ReactFiberCacheComponent';
 import {
   isLegacyActEnvironment,
   isConcurrentActEnvironment,
-} from './ReactFiberAct.old';
-import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent.old';
+} from './ReactFiberAct';
+import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent';
 import {
   SuspenseException,
   getSuspendedThenable,
   isThenableResolved,
-} from './ReactFiberThenable.old';
+} from './ReactFiberThenable';
 import {schedulePostPaintCallback} from './ReactPostPaintCallback';
 import {
   getSuspenseHandler,
   isBadSuspenseFallback,
-} from './ReactFiberSuspenseContext.old';
-import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
+} from './ReactFiberSuspenseContext';
+import {resolveDefaultProps} from './ReactFiberLazyComponent';
 
 const ceil = Math.ceil;
 

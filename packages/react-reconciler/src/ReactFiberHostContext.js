@@ -8,11 +8,11 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {StackCursor} from './ReactFiberStack.old';
+import type {StackCursor} from './ReactFiberStack';
 import type {Container, HostContext} from './ReactFiberHostConfig';
 
 import {getChildHostContext, getRootHostContext} from './ReactFiberHostConfig';
-import {createCursor, push, pop} from './ReactFiberStack.old';
+import {createCursor, push, pop} from './ReactFiberStack';
 
 const contextStackCursor: StackCursor<HostContext | null> = createCursor(null);
 const contextFiberStackCursor: StackCursor<Fiber | null> = createCursor(null);

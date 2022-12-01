@@ -16,13 +16,13 @@ import type {
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {Lanes, Lane} from './ReactFiberLane.old';
+import type {Lanes, Lane} from './ReactFiberLane';
 import type {
   SuspenseState,
   SuspenseListRenderState,
   SuspenseListTailMode,
-} from './ReactFiberSuspenseComponent.old';
-import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
+} from './ReactFiberSuspenseComponent';
+import type {SuspenseContext} from './ReactFiberSuspenseContext';
 import type {
   OffscreenProps,
   OffscreenState,
@@ -34,17 +34,17 @@ import type {
   Cache,
   CacheComponentState,
   SpawnedCachePool,
-} from './ReactFiberCacheComponent.old';
-import type {UpdateQueue} from './ReactFiberClassUpdateQueue.old';
-import type {RootState} from './ReactFiberRoot.old';
-import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old';
+} from './ReactFiberCacheComponent';
+import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
+import type {RootState} from './ReactFiberRoot';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import checkPropTypes from 'shared/checkPropTypes';
 import {
   markComponentRenderStarted,
   markComponentRenderStopped,
   setIsStrictModeForDevtools,
-} from './ReactFiberDevToolsHook.old';
+} from './ReactFiberDevToolsHook';
 import {
   IndeterminateComponent,
   FunctionComponent,
@@ -113,7 +113,7 @@ import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
@@ -123,19 +123,19 @@ import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
   resolveClassForHotReloading,
-} from './ReactFiberHotReloading.old';
+} from './ReactFiberHotReloading';
 
 import {
   mountChildFibers,
   reconcileChildFibers,
   cloneChildFibers,
-} from './ReactChildFiber.old';
+} from './ReactChildFiber';
 import {
   processUpdateQueue,
   cloneUpdateQueue,
   initializeUpdateQueue,
   enqueueCapturedUpdate,
-} from './ReactFiberClassUpdateQueue.old';
+} from './ReactFiberClassUpdateQueue';
 import {
   NoLane,
   NoLanes,
@@ -150,7 +150,7 @@ import {
   mergeLanes,
   getBumpedLaneForHydration,
   pickArbitraryLane,
-} from './ReactFiberLane.old';
+} from './ReactFiberLane';
 import {
   ConcurrentMode,
   NoMode,
@@ -170,8 +170,8 @@ import {
   getResource,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import {shouldError, shouldSuspend} from './ReactFiberReconciler.old';
-import {pushHostContext, pushHostContainer} from './ReactFiberHostContext.old';
+import {shouldError, shouldSuspend} from './ReactFiberReconciler';
+import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
   pushSuspenseListContext,
@@ -184,12 +184,12 @@ import {
   pushOffscreenSuspenseHandler,
   reuseSuspenseHandlerOnStack,
   popSuspenseHandler,
-} from './ReactFiberSuspenseContext.old';
+} from './ReactFiberSuspenseContext';
 import {
   pushHiddenContext,
   reuseHiddenContextOnStack,
-} from './ReactFiberHiddenContext.old';
-import {findFirstSuspended} from './ReactFiberSuspenseComponent.old';
+} from './ReactFiberHiddenContext';
+import {findFirstSuspended} from './ReactFiberSuspenseComponent';
 import {
   pushProvider,
   propagateContextChange,
@@ -199,14 +199,14 @@ import {
   readContext,
   prepareToReadContext,
   scheduleContextWorkOnParentPath,
-} from './ReactFiberNewContext.old';
+} from './ReactFiberNewContext';
 import {
   renderWithHooks,
   checkDidRenderIdHook,
   bailoutHooks,
   replaySuspendedComponentWithHooks,
-} from './ReactFiberHooks.old';
-import {stopProfilerTimerIfRunning} from './ReactProfilerTimer.old';
+} from './ReactFiberHooks';
+import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
   getMaskedContext,
   getUnmaskedContext,
@@ -215,7 +215,7 @@ import {
   isContextProvider as isLegacyContextProvider,
   pushTopLevelContextObject,
   invalidateContextProvider,
-} from './ReactFiberContext.old';
+} from './ReactFiberContext';
 import {
   getIsHydrating,
   enterHydrationState,
@@ -225,15 +225,15 @@ import {
   tryToClaimNextHydratableInstance,
   warnIfHydrating,
   queueHydrationError,
-} from './ReactFiberHydrationContext.old';
+} from './ReactFiberHydrationContext';
 import {
   adoptClassInstance,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
   updateClassInstance,
-} from './ReactFiberClassComponent.old';
-import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
+} from './ReactFiberClassComponent';
+import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {
   resolveLazyComponentTag,
   createFiberFromTypeAndProps,
@@ -241,30 +241,30 @@ import {
   createFiberFromOffscreen,
   createWorkInProgress,
   isSimpleFunctionComponent,
-} from './ReactFiber.old';
+} from './ReactFiber';
 import {
   retryDehydratedSuspenseBoundary,
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
-} from './ReactFiberWorkLoop.old';
-import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates.old';
-import {setWorkInProgressVersion} from './ReactMutableSource.old';
-import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent.old';
+} from './ReactFiberWorkLoop';
+import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
+import {setWorkInProgressVersion} from './ReactMutableSource';
+import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent';
 import {
   createCapturedValue,
   createCapturedValueAtFiber,
   type CapturedValue,
 } from './ReactCapturedValue';
-import {createClassErrorUpdate} from './ReactFiberThrow.old';
+import {createClassErrorUpdate} from './ReactFiberThrow';
 import is from 'shared/objectIs';
 import {
   getForksAtLevel,
   isForkedChild,
   pushTreeId,
   pushMaterializedTreeId,
-} from './ReactFiberTreeContext.old';
+} from './ReactFiberTreeContext';
 import {
   requestCacheFromPool,
   pushRootTransition,
@@ -272,13 +272,13 @@ import {
   pushTransition,
   getOffscreenDeferredCache,
   getPendingTransitions,
-} from './ReactFiberTransition.old';
+} from './ReactFiberTransition';
 import {
   getMarkerInstances,
   pushMarkerInstance,
   pushRootMarkerInstance,
   TransitionTracingMarker,
-} from './ReactFiberTracingMarkerComponent.old';
+} from './ReactFiberTracingMarkerComponent';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 

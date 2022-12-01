@@ -13,12 +13,12 @@ import type {
   ContextDependency,
   Dependencies,
 } from './ReactInternalTypes';
-import type {StackCursor} from './ReactFiberStack.old';
-import type {Lanes} from './ReactFiberLane.old';
-import type {SharedQueue} from './ReactFiberClassUpdateQueue.old';
+import type {StackCursor} from './ReactFiberStack';
+import type {Lanes} from './ReactFiberLane';
+import type {SharedQueue} from './ReactFiberClassUpdateQueue';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
-import {createCursor, push, pop} from './ReactFiberStack.old';
+import {createCursor, push, pop} from './ReactFiberStack';
 import {
   ContextProvider,
   ClassComponent,
@@ -31,7 +31,7 @@ import {
   includesSomeLane,
   mergeLanes,
   pickArbitraryLane,
-} from './ReactFiberLane.old';
+} from './ReactFiberLane';
 import {
   NoFlags,
   DidPropagateContext,
@@ -39,8 +39,8 @@ import {
 } from './ReactFiberFlags';
 
 import is from 'shared/objectIs';
-import {createUpdate, ForceUpdate} from './ReactFiberClassUpdateQueue.old';
-import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
+import {createUpdate, ForceUpdate} from './ReactFiberClassUpdateQueue';
+import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {
   enableLazyContextPropagation,
   enableServerContext,

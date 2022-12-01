@@ -21,7 +21,7 @@ describe('ReactIncrementalErrorReplay-test', () => {
 
     // This is the method we're going to test.
     // If this is no longer used, you can delete this test file.;
-    const {assignFiberPropertiesInDEV} = require('../ReactFiber.old');
+    const {assignFiberPropertiesInDEV} = require('../ReactFiber');
 
     // Get a real fiber.
     const realFiber = ReactTestRenderer.create(<div />).root._currentFiber();

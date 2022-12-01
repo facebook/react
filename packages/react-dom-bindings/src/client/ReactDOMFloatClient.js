@@ -29,7 +29,7 @@ import {
   markNodeAsResource,
 } from './ReactDOMComponentTree';
 import {HTML_NAMESPACE, SVG_NAMESPACE} from '../shared/DOMNamespaces';
-import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext.old';
+import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported

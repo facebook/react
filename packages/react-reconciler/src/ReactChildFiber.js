@@ -10,7 +10,7 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane.old';
+import type {Lanes} from './ReactFiberLane';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -38,11 +38,11 @@ import {
   createFiberFromFragment,
   createFiberFromText,
   createFiberFromPortal,
-} from './ReactFiber.old';
-import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.old';
+} from './ReactFiber';
+import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {StrictLegacyMode} from './ReactTypeOfMode';
-import {getIsHydrating} from './ReactFiberHydrationContext.old';
-import {pushTreeFork} from './ReactFiberTreeContext.old';
+import {getIsHydrating} from './ReactFiberHydrationContext';
+import {pushTreeFork} from './ReactFiberTreeContext';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;

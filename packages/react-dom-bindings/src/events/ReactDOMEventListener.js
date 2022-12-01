@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities.old';
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
@@ -52,7 +52,7 @@ import {
   IdleEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
-} from 'react-reconciler/src/ReactEventPriorities.old';
+} from 'react-reconciler/src/ReactEventPriorities';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 

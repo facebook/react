@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {StackCursor} from './ReactFiberStack.old';
+import type {StackCursor} from './ReactFiberStack';
 
 import {isFiberMounted} from './ReactFiberTreeReflection';
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
@@ -16,7 +16,7 @@ import {ClassComponent, HostRoot} from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import checkPropTypes from 'shared/checkPropTypes';
 
-import {createCursor, push, pop} from './ReactFiberStack.old';
+import {createCursor, push, pop} from './ReactFiberStack';
 
 let warnedAboutMissingGetChildContext;
 

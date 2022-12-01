@@ -37,7 +37,7 @@ import {
   getPublicRootInstance,
   findHostInstance,
   findHostInstanceWithWarning,
-} from 'react-reconciler/src/ReactFiberReconciler.old';
+} from 'react-reconciler/src/ReactFiberReconciler';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactSharedInternals from 'shared/ReactSharedInternals';

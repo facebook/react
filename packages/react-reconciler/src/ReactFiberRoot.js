@@ -14,18 +14,18 @@ import type {
   TransitionTracingCallbacks,
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
-import type {Cache} from './ReactFiberCacheComponent.old';
+import type {Cache} from './ReactFiberCacheComponent';
 import type {Container} from './ReactFiberHostConfig';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
-import {createHostRootFiber} from './ReactFiber.old';
+import {createHostRootFiber} from './ReactFiber';
 import {
   NoLane,
   NoLanes,
   NoTimestamp,
   TotalLanes,
   createLaneMap,
-} from './ReactFiberLane.old';
+} from './ReactFiberLane';
 import {
   enableSuspenseCallback,
   enableCache,
@@ -34,9 +34,9 @@ import {
   enableUpdaterTracking,
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
-import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue.old';
+import {initializeUpdateQueue} from './ReactFiberClassUpdateQueue';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
-import {createCache, retainCache} from './ReactFiberCacheComponent.old';
+import {createCache, retainCache} from './ReactFiberCacheComponent';
 
 export type RootState = {
   element: any,

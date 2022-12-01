@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Lane, Lanes} from './ReactFiberLane.old';
+import type {Lane, Lanes} from './ReactFiberLane';
 
 import {
   NoLane,
@@ -17,7 +17,7 @@ import {
   IdleLane,
   getHighestPriorityLane,
   includesNonIdleWork,
-} from './ReactFiberLane.old';
+} from './ReactFiberLane';
 
 export opaque type EventPriority = Lane;
 

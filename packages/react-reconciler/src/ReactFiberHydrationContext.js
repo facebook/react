@@ -17,8 +17,8 @@ import type {
   Container,
   HostContext,
 } from './ReactFiberHostConfig';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
-import type {TreeContext} from './ReactFiberTreeContext.old';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {TreeContext} from './ReactFiberTreeContext';
 import type {CapturedValue} from './ReactCapturedValue';
 
 import {
@@ -40,7 +40,7 @@ import {enableHostSingletons, enableFloat} from 'shared/ReactFeatureFlags';
 import {
   createFiberFromHostInstanceForDeletion,
   createFiberFromDehydratedFragment,
-} from './ReactFiber.old';
+} from './ReactFiber';
 import {
   shouldSetTextContent,
   supportsHydration,
@@ -74,16 +74,13 @@ import {
   didNotFindHydratableSuspenseInstance,
   resolveSingletonInstance,
 } from './ReactFiberHostConfig';
-import {OffscreenLane} from './ReactFiberLane.old';
+import {OffscreenLane} from './ReactFiberLane';
 import {
   getSuspendedTreeContext,
   restoreSuspendedTreeContext,
-} from './ReactFiberTreeContext.old';
-import {queueRecoverableErrors} from './ReactFiberWorkLoop.old';
-import {
-  getRootHostContainer,
-  getHostContext,
-} from './ReactFiberHostContext.old';
+} from './ReactFiberTreeContext';
+import {queueRecoverableErrors} from './ReactFiberWorkLoop';
+import {getRootHostContainer, getHostContext} from './ReactFiberHostContext';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.

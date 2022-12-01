@@ -9,12 +9,12 @@
 
 import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane.old';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
-import type {Cache} from './ReactFiberCacheComponent.old';
-import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent.old';
+import type {Lanes} from './ReactFiberLane';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {Cache} from './ReactFiberCacheComponent';
+import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
+import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 import {
   ClassComponent,
   HostRoot,
@@ -38,27 +38,27 @@ import {
   enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 
-import {popHostContainer, popHostContext} from './ReactFiberHostContext.old';
+import {popHostContainer, popHostContext} from './ReactFiberHostContext';
 import {
   popSuspenseListContext,
   popSuspenseHandler,
-} from './ReactFiberSuspenseContext.old';
-import {popHiddenContext} from './ReactFiberHiddenContext.old';
-import {resetHydrationState} from './ReactFiberHydrationContext.old';
+} from './ReactFiberSuspenseContext';
+import {popHiddenContext} from './ReactFiberHiddenContext';
+import {resetHydrationState} from './ReactFiberHydrationContext';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext.old';
-import {popProvider} from './ReactFiberNewContext.old';
-import {popCacheProvider} from './ReactFiberCacheComponent.old';
-import {transferActualDuration} from './ReactProfilerTimer.old';
-import {popTreeContext} from './ReactFiberTreeContext.old';
-import {popRootTransition, popTransition} from './ReactFiberTransition.old';
+} from './ReactFiberContext';
+import {popProvider} from './ReactFiberNewContext';
+import {popCacheProvider} from './ReactFiberCacheComponent';
+import {transferActualDuration} from './ReactProfilerTimer';
+import {popTreeContext} from './ReactFiberTreeContext';
+import {popRootTransition, popTransition} from './ReactFiberTransition';
 import {
   popMarkerInstance,
   popRootMarkerInstance,
-} from './ReactFiberTracingMarkerComponent.old';
+} from './ReactFiberTracingMarkerComponent';
 
 function unwindWork(
   current: Fiber | null,

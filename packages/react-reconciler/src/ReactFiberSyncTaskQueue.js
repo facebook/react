@@ -13,7 +13,7 @@ import {
   DiscreteEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
-} from './ReactEventPriorities.old';
+} from './ReactEventPriorities';
 import {ImmediatePriority, scheduleCallback} from './Scheduler';
 
 let syncQueue: Array<SchedulerCallback> | null = null;

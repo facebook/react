@@ -24,7 +24,7 @@ describe('ReactFiberHostContext', () => {
     ReactFiberReconciler = require('react-reconciler');
     ConcurrentRoot = require('react-reconciler/src/ReactRootTags')
       .ConcurrentRoot;
-    DefaultEventPriority = require('react-reconciler/src/ReactEventPriorities.old')
+    DefaultEventPriority = require('react-reconciler/src/ReactEventPriorities')
       .DefaultEventPriority;
   });
 

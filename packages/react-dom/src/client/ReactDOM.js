@@ -43,11 +43,11 @@ import {
   attemptDiscreteHydration,
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
-} from 'react-reconciler/src/ReactFiberReconciler.old';
+} from 'react-reconciler/src/ReactFiberReconciler';
 import {
   runWithPriority,
   getCurrentUpdatePriority,
-} from 'react-reconciler/src/ReactEventPriorities.old';
+} from 'react-reconciler/src/ReactEventPriorities';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';

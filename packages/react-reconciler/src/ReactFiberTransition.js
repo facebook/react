@@ -7,23 +7,23 @@
  * @flow
  */
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane.old';
-import type {StackCursor} from './ReactFiberStack.old';
-import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.old';
-import type {Transition} from './ReactFiberTracingMarkerComponent.old';
+import type {Lanes} from './ReactFiberLane';
+import type {StackCursor} from './ReactFiberStack';
+import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
+import type {Transition} from './ReactFiberTracingMarkerComponent';
 
 import {enableCache, enableTransitionTracing} from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
-import {createCursor, push, pop} from './ReactFiberStack.old';
+import {createCursor, push, pop} from './ReactFiberStack';
 import {
   getWorkInProgressRoot,
   getWorkInProgressTransitions,
-} from './ReactFiberWorkLoop.old';
+} from './ReactFiberWorkLoop';
 import {
   createCache,
   retainCache,
   CacheContext,
-} from './ReactFiberCacheComponent.old';
+} from './ReactFiberCacheComponent';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
