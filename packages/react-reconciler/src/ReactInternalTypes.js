@@ -416,8 +416,6 @@ export type Dispatcher = {
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
   useMemoCache?: (size: number) => Array<any>,
-
-  unstable_isNewReconciler?: boolean,
 };
 
 export type CacheDispatcher = {

@@ -361,9 +361,8 @@ function getPlugins(
       __UMD__: isUMDBundle ? 'true' : 'false',
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
       __EXPERIMENTAL__,
-      // Enable forked reconciler.
-      // NOTE: I did not put much thought into how to configure this.
-      __VARIANT__: bundle.enableNewReconciler === true,
+      // NOTE: Should only be used in test files.
+      __VARIANT__: true,
     }),
     // The CommonJS plugin *only* exists to pull "art" into "react-art".
     // I'm going to port "art" to ES modules to avoid this problem.
