@@ -31,8 +31,6 @@ import type {
   SuspenseInstance,
 } from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
-// Doing this because there's a merge conflict because of the way sync-reconciler-fork
-// is implemented
 import type {
   TracingMarkerInstance,
   Transition,
