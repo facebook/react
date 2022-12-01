@@ -9,12 +9,12 @@
 
 import type {ReactNodeList, OffscreenMode, Wakeable} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane.old';
-import type {SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import type {SpawnedCachePool} from './ReactFiberCacheComponent.old';
 import type {Fiber} from './ReactInternalTypes';
 import type {
   Transition,
   TracingMarkerInstance,
-} from './ReactFiberTracingMarkerComponent.new';
+} from './ReactFiberTracingMarkerComponent.old';
 
 export type OffscreenProps = {
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum

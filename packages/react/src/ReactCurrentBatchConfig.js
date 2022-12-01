@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent.new';
+import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent.old';
 
 type BatchConfig = {
   transition: BatchConfigTransition | null,

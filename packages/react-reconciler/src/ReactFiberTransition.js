@@ -8,7 +8,7 @@
  */
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import type {Transition} from './ReactFiberTracingMarkerComponent.new';
+import type {Transition} from './ReactFiberTracingMarkerComponent.old';
 
 const {ReactCurrentBatchConfig} = ReactSharedInternals;
 

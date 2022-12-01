@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from '../ReactFiber.old';
+import type {Fiber} from '../ReactFiber.new';
 import type {CapturedValue} from '../ReactCapturedValue';
 
 import {ClassComponent} from '../ReactWorkTags';

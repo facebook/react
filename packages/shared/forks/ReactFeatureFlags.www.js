@@ -95,11 +95,6 @@ export const enableComponentStackLocations = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
-// Enable forked reconciler. Piggy-backing on the "variant" global so that we
-// don't have to add another test dimension. The build system will compile this
-// to the correct value.
-export const enableNewReconciler = __VARIANT__;
-
 export const allowConcurrentByDefault = true;
 
 export const deletedTreeCleanUpLevel = 3;
