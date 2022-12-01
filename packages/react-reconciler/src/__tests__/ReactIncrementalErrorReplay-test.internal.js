@@ -12,6 +12,7 @@
 describe('ReactIncrementalErrorReplay-test', () => {
   const React = require('react');
   const ReactTestRenderer = require('react-test-renderer');
+  const {assignFiberPropertiesInDEV} = require('../ReactFiber');
 
   it('copies all keys when stashing potentially failing work', () => {
     // Note: this test is fragile and relies on internals.
@@ -21,10 +22,6 @@ describe('ReactIncrementalErrorReplay-test', () => {
 
     // This is the method we're going to test.
     // If this is no longer used, you can delete this test file.;
-
-    const assignFiberPropertiesInDEV = gate(flags => flags.new)
-      ? require('../ReactFiber').assignFiberPropertiesInDEV
-      : require('../ReactFiber.old').assignFiberPropertiesInDEV;
 
     // Get a real fiber.
     const realFiber = ReactTestRenderer.create(<div />).root._currentFiber();
