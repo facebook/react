@@ -37,7 +37,7 @@ function Component(props) {
 bb0:
   [1] Const mutate items$27_@0 = read props$26.items
   [2] Const mutate maxItems$28_@1 = read props$26.maxItems
-  [3] Const mutate renderedItems$29_@2[3:22] = Array []
+  [3] Const mutate renderedItems$29_@2[3:26] = Array []
   [4] Const mutate seen$30_@3[0:19] = New mutate Set$6_@3()
   [5] Const mutate $31_@4 = 0
   [6] Const mutate max$32_@5[0:7] = Call mutate Math$8_@5.max(read $31_@4, read maxItems$28_@1)
@@ -71,23 +71,23 @@ bb4:
   [19] Const mutate $43_@7 = "div"
   [20] Const mutate $44_@8 = JSX <read $43_@7>{read item$10_@3}</read $43_@7>
   [21] Call mutate renderedItems$29_@2.push(read $44_@8)
-  [22] Const mutate $49_@9 = Binary read renderedItems$29_@2.length >= read max$32_@5
-  [23] If (read $49_@9) then:bb2 else:bb10
+  [22] Const mutate $49_@2[3:26] = Binary read renderedItems$29_@2.length >= read max$32_@5
+  [23] If (read $49_@2) then:bb2 else:bb10
 bb10:
   predecessor blocks: bb4
   [24] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb4 bb1
-  [25] Const mutate count$52_@10 = read renderedItems$29_@2.length
-  [26] Const mutate $53_@11 = "div"
-  [27] Const mutate $54_@12 = "\n      "
-  [28] Const mutate $55_@13 = "h1"
-  [29] Const mutate $56_@14 = " Items"
-  [30] Const mutate $57_@15 = JSX <read $55_@13>{freeze count$52_@10}{read $56_@14}</read $55_@13>
-  [31] Const mutate $58_@16 = "\n      "
-  [32] Const mutate $59_@17 = "\n    "
-  [33] Const mutate $60_@18 = JSX <read $53_@11>{read $54_@12}{read $57_@15}{read $58_@16}{freeze renderedItems$29_@2}{read $59_@17}</read $53_@11>
-  [34] Return read $60_@18
+  [25] Const mutate count$52_@2[3:26] = read renderedItems$29_@2.length
+  [26] Const mutate $53_@9 = "div"
+  [27] Const mutate $54_@10 = "\n      "
+  [28] Const mutate $55_@11 = "h1"
+  [29] Const mutate $56_@12 = " Items"
+  [30] Const mutate $57_@13 = JSX <read $55_@11>{freeze count$52_@2}{read $56_@12}</read $55_@11>
+  [31] Const mutate $58_@14 = "\n      "
+  [32] Const mutate $59_@15 = "\n    "
+  [33] Const mutate $60_@16 = JSX <read $53_@9>{read $54_@10}{read $57_@13}{read $58_@14}{freeze renderedItems$29_@2}{read $59_@15}</read $53_@9>
+  [34] Return read $60_@16
 scope0 [1:2]:
  - read props$26.items
 scope1 [2:3]:
@@ -103,7 +103,7 @@ flowchart TB
     bb0_instrs["
       [1] Const mutate items$27_@0 = read props$26.items
       [2] Const mutate maxItems$28_@1 = read props$26.maxItems
-      [3] Const mutate renderedItems$29_@2[3:22] = Array []
+      [3] Const mutate renderedItems$29_@2[3:26] = Array []
       [4] Const mutate seen$30_@3[0:19] = New mutate Set$6_@3()
       [5] Const mutate $31_@4 = 0
       [6] Const mutate max$32_@5[0:7] = Call mutate Math$8_@5.max(read $31_@4, read maxItems$28_@1)
@@ -144,26 +144,26 @@ flowchart TB
       [19] Const mutate $43_@7 = 'div'
       [20] Const mutate $44_@8 = JSX <read $43_@7>{read item$10_@3}</read $43_@7>
       [21] Call mutate renderedItems$29_@2.push(read $44_@8)
-      [22] Const mutate $49_@9 = Binary read renderedItems$29_@2.length >= read max$32_@5
+      [22] Const mutate $49_@2[3:26] = Binary read renderedItems$29_@2.length >= read max$32_@5
     "]
-    bb4_instrs --> bb4_terminal(["If (read $49_@9)"])
+    bb4_instrs --> bb4_terminal(["If (read $49_@2)"])
   end
   subgraph bb10
     bb10_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [25] Const mutate count$52_@10 = read renderedItems$29_@2.length
-      [26] Const mutate $53_@11 = 'div'
-      [27] Const mutate $54_@12 = '\n      '
-      [28] Const mutate $55_@13 = 'h1'
-      [29] Const mutate $56_@14 = ' Items'
-      [30] Const mutate $57_@15 = JSX <read $55_@13>{freeze count$52_@10}{read $56_@14}</read $55_@13>
-      [31] Const mutate $58_@16 = '\n      '
-      [32] Const mutate $59_@17 = '\n    '
-      [33] Const mutate $60_@18 = JSX <read $53_@11>{read $54_@12}{read $57_@15}{read $58_@16}{freeze renderedItems$29_@2}{read $59_@17}</read $53_@11>
+      [25] Const mutate count$52_@2[3:26] = read renderedItems$29_@2.length
+      [26] Const mutate $53_@9 = 'div'
+      [27] Const mutate $54_@10 = '\n      '
+      [28] Const mutate $55_@11 = 'h1'
+      [29] Const mutate $56_@12 = ' Items'
+      [30] Const mutate $57_@13 = JSX <read $55_@11>{freeze count$52_@2}{read $56_@12}</read $55_@11>
+      [31] Const mutate $58_@14 = '\n      '
+      [32] Const mutate $59_@15 = '\n    '
+      [33] Const mutate $60_@16 = JSX <read $53_@9>{read $54_@10}{read $57_@13}{read $58_@14}{freeze renderedItems$29_@2}{read $59_@15}</read $53_@9>
     "]
-    bb2_instrs --> bb2_terminal(["Return read $60_@18"])
+    bb2_instrs --> bb2_terminal(["Return read $60_@16"])
   end
 
   %% Jumps

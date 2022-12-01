@@ -37,6 +37,65 @@ class AbstractState {
       if (value.kind !== "Primitive") {
         this.aliases.union([lvalue.place.identifier, alias.identifier]);
       }
+      return;
+    }
+
+    // Complex alias:
+    //   lvalue = alias.memberPath;
+    if (alias.memberPath.length > 1) {
+      // TODO(gsn): Handle nested member paths
+      return;
+    }
+
+    let object = this.#values.get(alias.identifier);
+
+    // Don't know what this, let's default to an Object conservatively.
+    if (object === undefined) {
+      object = { kind: "Object", values: new Map() };
+    }
+
+    // We're doing a member lookup on a non object.
+    //
+    //   alias = 1;
+    //   lvalue = alias.memberPath;
+    if (object.kind !== "Object") {
+      // Conservatively type the value as object.
+      //
+      // NOTE(gsn): Should this be an AbstractUnknown rather than an
+      // AbstractObject?
+      this.#values.set(lvalue.place.identifier, {
+        kind: "Object",
+        values: new Map(),
+      });
+      this.aliases.union([lvalue.place.identifier, alias.identifier]);
+      return;
+    }
+
+    let value = object.values.get(alias.memberPath[0]);
+
+    // We don't have a value for this member path.
+    //
+    //   alias = {};
+    //   lvalue = alias.memberPath;
+    if (value === undefined) {
+      // Conservatively type the value as object.
+      this.#values.set(lvalue.place.identifier, {
+        kind: "Object",
+        values: new Map(),
+      });
+      this.aliases.union([lvalue.place.identifier, alias.identifier]);
+      return;
+    }
+
+    // We have a value for this memberPath!
+    //
+    //    alias.memberPath = value;
+    //    lvalue = alias.memberPath;
+    this.#values.set(lvalue.place.identifier, value);
+
+    // No need to alias Primitives.
+    if (value.kind !== "Primitive") {
+      this.aliases.union([lvalue.place.identifier, alias.identifier]);
     }
   }
 
