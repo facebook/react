@@ -175,7 +175,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
   return value;
 }
 
-function printInstructionValue(instrValue: InstructionValue): string {
+export function printInstructionValue(instrValue: InstructionValue): string {
   let value = "";
   switch (instrValue.kind) {
     case "ArrayExpression": {

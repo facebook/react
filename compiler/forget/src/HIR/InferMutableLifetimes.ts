@@ -7,6 +7,7 @@
 
 import invariant from "invariant";
 import { assertExhaustive } from "../Common/utils";
+import { buildAliasSets } from "./BuildAliasSets";
 import DisjointSet from "./DisjointSet";
 import {
   Effect,
@@ -85,8 +86,6 @@ function inferPlace(place: Place, instr: Instruction) {
 }
 
 export function inferMutableRanges(func: HIRFunction) {
-  const aliases = new DisjointSet<Identifier>();
-
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       let start = Number.MAX_SAFE_INTEGER;
@@ -111,20 +110,6 @@ export function inferMutableRanges(func: HIRFunction) {
       }
 
       if (instr.lvalue !== null) {
-        if (instr.value.kind === "Identifier") {
-          // TODO(gsn): Handle complex aliasing.
-          if (
-            instr.value.memberPath === null &&
-            instr.lvalue.place.memberPath === null
-          ) {
-            // direct aliasing: `a = b`;
-            aliases.union([
-              instr.lvalue.place.identifier,
-              instr.value.identifier,
-            ]);
-          }
-        }
-
         if (instr.lvalue.place.memberPath === null) {
           const lvalueId = instr.lvalue.place.identifier;
 
@@ -142,45 +127,22 @@ export function inferMutableRanges(func: HIRFunction) {
     }
   }
 
-  const aliasIds: Map<Identifier, number> = new Map();
-  // Store the mutable range and set of identifiers for each scope
-  const aliasIndentifiers: Map<
-    number,
-    { end: InstructionId; identifiers: Set<Identifier> }
-  > = new Map();
-
-  aliases.forEach((identifier, groupIdentifier) => {
-    let aliasId = aliasIds.get(groupIdentifier);
-    if (aliasId == null) {
-      aliasId = aliasIds.size;
-      aliasIds.set(groupIdentifier, aliasId);
-    }
-
-    let alias = aliasIndentifiers.get(aliasId);
-    if (alias === undefined) {
-      alias = {
-        end: identifier.mutableRange.end,
-        identifiers: new Set(),
-      };
-      aliasIndentifiers.set(aliasId, alias);
-    } else {
-      alias.end = makeInstructionId(
-        Math.max(alias.end, identifier.mutableRange.end)
-      );
-    }
-    alias.identifiers.add(identifier);
-  });
-
-  for (const [_, alias] of aliasIndentifiers) {
+  const aliasSets = buildAliasSets(func);
+  for (const aliasSet of aliasSets) {
     // Update mutableRange.end only if the identifiers have actually been
     // mutated.
-    const haveIdentifiersBeenMutated = [...alias.identifiers].some(
+    const haveIdentifiersBeenMutated = [...aliasSet].some(
       (id) => id.mutableRange.end > id.mutableRange.start
     );
 
     if (haveIdentifiersBeenMutated) {
-      for (const identifier of alias.identifiers) {
-        identifier.mutableRange.end = alias.end;
+      // Find final instruction which mutates this alias set.
+      const mutableRangeEnds = [...aliasSet].map((id) => id.mutableRange.end);
+      const maxMutableRangeEnd = Math.max(...mutableRangeEnds) as InstructionId;
+
+      // Update mutableRange.end for all aliases in this set.
+      for (const alias of aliasSet) {
+        alias.mutableRange.end = maxMutableRangeEnd;
       }
     }
   }
