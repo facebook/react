@@ -48,20 +48,36 @@ jobs:
                 ref: context.sha
               });
               for (const status of res.data) {
-                if (
-                  status.context === 'ci/circleci: process_artifacts_combined' &&
-                  status.state === 'success'
-                ) {
-                  // The status does not include a build ID, but we can extract it
-                  // from the URL. I couldn't find a better way to do this.
-                  const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
-                    status.target_url,
-                  )[1];
-                  console.log(`CircleCI build id found: ${ciBuildId}`);
-                  if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
-                    artifactsUrl =
-                      `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
-                    break spinloop;
+                if (/process_artifacts_combined/.test(status.context)) {
+                  switch (status.state) {
+                    case 'pending': {
+                      console.log(`${status.context} is still pending`);
+                      break;
+                    }
+                    case 'failure':
+                    case 'error': {
+                      throw new Error(`${status.context} has failed or errored`);
+                    }
+                    case 'success': {
+                      // The status does not include a build ID, but we can extract it
+                      // from the URL. I couldn't find a better way to do this.
+                      const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
+                        status.target_url,
+                      )[1];
+                      console.log(`CircleCI build id found: ${ciBuildId}`);
+                      if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
+                        artifactsUrl =
+                          `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
+                        break spinloop;
+                      } else {
+                        throw new Error(`${ciBuildId} isn't a number`);
+                      }
+                      break;
+                    }
+                    default: {
+                      throw new Error(`Unhandled status state: ${status.state}`);
+                      break;
+                    }
                   }
                 }
               }
@@ -69,15 +85,19 @@ jobs:
               console.log("Sleeping for 60s...");
               await sleep(60_000);
             }
-            const res = await fetch(artifactsUrl);
-            const data = await res.json();
-            for (const artifact of data) {
-              if (artifact.path === 'build.tgz') {
-                console.log(`Downloading and unzipping ${artifact.url}`);
-                await execHelper(
-                  `curl -L ${artifact.url} | tar -xvz`
-                );
+            if (artifactsUrl != null) {
+              const res = await fetch(artifactsUrl);
+              const data = await res.json();
+              for (const artifact of data) {
+                if (artifact.path === 'build.tgz') {
+                  console.log(`Downloading and unzipping ${artifact.url}`);
+                  await execHelper(
+                    `curl -L ${artifact.url} | tar -xvz`
+                  );
+                }
               }
+            } else {
+              process.exitCode = 1;
             }
       - name: Move relevant files into compiled
         run: |
