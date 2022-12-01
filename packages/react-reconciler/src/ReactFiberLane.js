@@ -766,14 +766,11 @@ export function getBumpedLaneForHydration(
   const renderLane = getHighestPriorityLane(renderLanes);
 
   let lane;
-  /*
-  TODO: 
   if (enableUnifiedSyncLane) {
     if ((renderLane & SyncUpdateLanes) !== NoLane) {
       lane = SyncHydrationLane;
     }
   }
-  */
   if (!lane) {
     switch (renderLane) {
       case SyncLane:
