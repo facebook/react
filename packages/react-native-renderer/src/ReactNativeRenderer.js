@@ -22,7 +22,7 @@ import {
   updateContainer,
   injectIntoDevTools,
   getPublicRootInstance,
-} from 'react-reconciler/src/ReactFiberReconciler';
+} from 'react-reconciler/src/ReactFiberReconciler.old';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';

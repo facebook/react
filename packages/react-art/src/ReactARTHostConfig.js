@@ -10,7 +10,7 @@ import Mode from 'art/modes/current';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities.old';
 
 const pooledTransform = new Transform();
 

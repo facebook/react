@@ -176,7 +176,10 @@ import {
   lowerEventPriority,
   lanesToEventPriority,
 } from './ReactEventPriorities.old';
-import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
+import {
+  requestCurrentTransition,
+  NoTransition,
+} from './ReactFiberTransition.old';
 import {
   SelectiveHydrationException,
   beginWork as originalBeginWork,

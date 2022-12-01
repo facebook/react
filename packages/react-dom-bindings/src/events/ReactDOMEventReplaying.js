@@ -12,7 +12,7 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities.old';
 
 import {enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay} from 'shared/ReactFeatureFlags';
 import {
@@ -35,7 +35,7 @@ import {
   getClosestInstanceFromNode,
 } from '../client/ReactDOMComponentTree';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
-import {isHigherEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {isHigherEventPriority} from 'react-reconciler/src/ReactEventPriorities.old';
 import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 
 let _attemptSynchronousHydration: (fiber: Object) => void;

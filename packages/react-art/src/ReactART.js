@@ -12,7 +12,7 @@ import {
   createContainer,
   updateContainer,
   injectIntoDevTools,
-} from 'react-reconciler/src/ReactFiberReconciler';
+} from 'react-reconciler/src/ReactFiberReconciler.old';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import FastNoSideEffects from 'art/modes/fast-noSideEffects';
