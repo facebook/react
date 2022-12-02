@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {Container, HostContext} from './ReactFiberHostConfig';
-
 export {
   getCurrentRootHostContainer,
   getHostContext,
