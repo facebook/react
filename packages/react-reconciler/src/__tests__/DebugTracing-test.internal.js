@@ -16,8 +16,9 @@ describe('DebugTracing', () => {
 
   let logs;
 
-  const DEFAULT_LANE_STRING = '0b0000000000000000000000000010000';
-  const RETRY_LANE_STRING = '0b0000000010000000000000000000000';
+  const SYNC_LANE_STRING = '0b0000000000000000000000000000010';
+  const DEFAULT_LANE_STRING = '0b0000000000000000000000000100000';
+  const RETRY_LANE_STRING = '0b0000000100000000000000000000000';
 
   global.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -87,9 +88,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      'group: ⚛️ render (0b0000000000000000000000000000001)',
+      `group: ⚛️ render (${SYNC_LANE_STRING})`,
       'log: ⚛️ Example suspended',
-      'groupEnd: ⚛️ render (0b0000000000000000000000000000001)',
+      `groupEnd: ⚛️ render (${SYNC_LANE_STRING})`,
     ]);
 
     logs.splice(0);
@@ -121,9 +122,9 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      'group: ⚛️ render (0b0000000000000000000000000000001)',
+      `group: ⚛️ render (${SYNC_LANE_STRING})`,
       'log: <Wrapper/>',
-      'groupEnd: ⚛️ render (0b0000000000000000000000000000001)',
+      `groupEnd: ⚛️ render (${SYNC_LANE_STRING})`,
     ]);
 
     logs.splice(0);
@@ -237,7 +238,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([
       `group: ⚛️ commit (${DEFAULT_LANE_STRING})`,
       `group: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
-      'log: ⚛️ Example updated state (0b0000000000000000000000000000001)',
+      `log: ⚛️ Example updated state (${SYNC_LANE_STRING})`,
       `groupEnd: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
       `groupEnd: ⚛️ commit (${DEFAULT_LANE_STRING})`,
     ]);
@@ -295,7 +296,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([
       `group: ⚛️ commit (${DEFAULT_LANE_STRING})`,
       `group: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
-      'log: ⚛️ Example updated state (0b0000000000000000000000000000001)',
+      `log: ⚛️ Example updated state (${SYNC_LANE_STRING})`,
       `groupEnd: ⚛️ layout effects (${DEFAULT_LANE_STRING})`,
       `groupEnd: ⚛️ commit (${DEFAULT_LANE_STRING})`,
     ]);

@@ -169,7 +169,6 @@ const bundles = [
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
     entry: 'react-dom',
     global: 'ReactDOMForked',
-    enableNewReconciler: true,
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: true,
     externals: ['react'],

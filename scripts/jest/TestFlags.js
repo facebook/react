@@ -75,10 +75,6 @@ function getTestFlags() {
   // doesn't exist.
   return new Proxy(
     {
-      // Feature flag aliases
-      old: featureFlags.enableNewReconciler === false,
-      new: featureFlags.enableNewReconciler === true,
-
       channel: releaseChannel,
       modern: releaseChannel === 'modern',
       classic: releaseChannel === 'classic',

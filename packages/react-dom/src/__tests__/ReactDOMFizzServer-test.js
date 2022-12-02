@@ -8,7 +8,12 @@
  */
 
 'use strict';
-import {replaceScriptsAndMove, mergeOptions} from '../test-utils/FizzTestUtils';
+import {
+  replaceScriptsAndMove,
+  mergeOptions,
+  stripExternalRuntimeInNodes,
+  withLoadingReadyState,
+} from '../test-utils/FizzTestUtils';
 
 let JSDOM;
 let Stream;
@@ -31,7 +36,7 @@ let container;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
-const renderOptions = {};
+let renderOptions;
 
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
@@ -89,6 +94,12 @@ describe('ReactDOMFizzServer', () => {
       hasErrored = true;
       fatalError = error;
     });
+
+    renderOptions = {};
+    if (gate(flags => flags.enableFizzExternalRuntime)) {
+      renderOptions.unstable_externalRuntimeSrc =
+        'react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js';
+    }
   });
 
   function expectErrors(errorsArr, toBeDevArr, toBeProdArr) {
@@ -134,10 +145,13 @@ describe('ReactDOMFizzServer', () => {
     fakeBody.innerHTML = bufferedContent;
     const parent =
       container.nodeName === '#document' ? container.body : container;
-    while (fakeBody.firstChild) {
-      const node = fakeBody.firstChild;
-      await replaceScriptsAndMove(window, CSPnonce, node, parent);
-    }
+
+    await withLoadingReadyState(async () => {
+      while (fakeBody.firstChild) {
+        const node = fakeBody.firstChild;
+        await replaceScriptsAndMove(window, CSPnonce, node, parent);
+      }
+    }, document);
   }
 
   async function actIntoEmptyDocument(callback) {
@@ -162,7 +176,9 @@ describe('ReactDOMFizzServer', () => {
     document = jsdom.window.document;
     container = document;
     buffer = '';
-    await replaceScriptsAndMove(window, CSPnonce, document.documentElement);
+    await withLoadingReadyState(async () => {
+      await replaceScriptsAndMove(window, CSPnonce, document.documentElement);
+    }, document);
   }
 
   function getVisibleChildren(element) {
@@ -595,7 +611,12 @@ describe('ReactDOMFizzServer', () => {
     // Because there is no content inside the Suspense boundary that could've
     // been written, we expect to not see any additional partial data flushed
     // yet.
-    expect(container.childNodes.length).toBe(1);
+    expect(
+      stripExternalRuntimeInNodes(
+        container.childNodes,
+        renderOptions.unstable_externalRuntimeSrc,
+      ).length,
+    ).toBe(1);
     await act(async () => {
       resolveElement({default: <Text text="Hello" />});
     });
@@ -3490,7 +3511,10 @@ describe('ReactDOMFizzServer', () => {
       </html>,
     );
     expect(
-      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
+      stripExternalRuntimeInNodes(
+        document.getElementsByTagName('script'),
+        renderOptions.unstable_externalRuntimeSrc,
+      ).map(n => n.outerHTML),
     ).toEqual([
       '<script src="foo" async=""></script>',
       '<script src="bar" async=""></script>',
@@ -3566,7 +3590,9 @@ describe('ReactDOMFizzServer', () => {
         <html>
           <head />
           <body>
-            <div>hello world</div>
+            <Suspense fallback={'loading...'}>
+              <AsyncText text="Hello" />
+            </Suspense>
           </body>
         </html>,
         {
@@ -3576,17 +3602,68 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
 
+    // We want the external runtime to be sent in <head> so the script can be
+    // fetched and executed as early as possible. For SSR pages using Suspense,
+    // this script execution would be render blocking.
+    expect(
+      Array.from(document.head.getElementsByTagName('script')).map(
+        n => n.outerHTML,
+      ),
+    ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
+
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head />
-        <body>
-          <div>hello world</div>
-        </body>
+        <body>loading...</body>
       </html>,
     );
-    expect(
-      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
-    ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
+  });
+
+  // @gate enableFizzExternalRuntime
+  it('does not send script tags for SSR instructions when using the external runtime', async () => {
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <div>
+              <AsyncText text="Hello" />
+            </div>
+          </Suspense>
+        </div>
+      );
+    }
+    await actIntoEmptyDocument(() => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    await act(async () => {
+      resolveText('Hello');
+    });
+
+    // The only script elements sent should be from unstable_externalRuntimeSrc
+    expect(document.getElementsByTagName('script').length).toEqual(1);
+  });
+
+  it('does not send the external runtime for static pages', async () => {
+    await actIntoEmptyDocument(() => {
+      const {pipe} = renderToPipeableStream(
+        <html>
+          <head />
+          <body>
+            <p>hello world!</p>
+          </body>
+        </html>,
+      );
+      pipe(writable);
+    });
+
+    // no scripts should be sent
+    expect(document.getElementsByTagName('script').length).toEqual(0);
+
+    // the html should be as-is
+    expect(document.documentElement.innerHTML).toEqual(
+      '<head></head><body><p>hello world!</p></body>',
+    );
   });
 
   it('#24384: Suspending should halt hydration warnings and not emit any if hydration completes successfully after unsuspending', async () => {
@@ -4527,12 +4604,21 @@ describe('ReactDOMFizzServer', () => {
 
       await act(() => resolveText('Foo'));
 
-      expect(container.firstElementChild.outerHTML).toEqual(
+      const div = stripExternalRuntimeInNodes(
+        container.children,
+        renderOptions.unstable_externalRuntimeSrc,
+      )[0];
+      expect(div.outerHTML).toEqual(
         '<div id="app-div">hello<b>world, Foo</b>!</div>',
       );
-      // there are extra script nodes at the end of container
-      expect(container.childNodes.length).toBe(5);
-      const div = container.childNodes[1];
+      // there may be either:
+      //  - an external runtime script and deleted nodes with data attributes
+      //  - extra script nodes containing fizz instructions at the end of container
+      expect(
+        Array.from(container.childNodes).filter(e => e.tagName !== 'SCRIPT')
+          .length,
+      ).toBe(3);
+
       expect(div.childNodes.length).toBe(3);
       const b = div.childNodes[1];
       expect(b.childNodes.length).toBe(2);
@@ -4582,9 +4668,12 @@ describe('ReactDOMFizzServer', () => {
       );
 
       await act(() => resolveText('ello'));
-      expect(container.firstElementChild.outerHTML).toEqual(
-        '<div id="app-div">helloworld</div>',
-      );
+      expect(
+        stripExternalRuntimeInNodes(
+          container.children,
+          renderOptions.unstable_externalRuntimeSrc,
+        )[0].outerHTML,
+      ).toEqual('<div id="app-div">helloworld</div>');
 
       const errors = [];
       ReactDOMClient.hydrateRoot(container, <App name="Foo" />, {
@@ -4624,9 +4713,12 @@ describe('ReactDOMFizzServer', () => {
 
       await act(() => resolveText('orld'));
 
-      expect(container.firstElementChild.outerHTML).toEqual(
-        '<div id="app-div">h<!-- -->ello<!-- -->world</div>',
-      );
+      expect(
+        stripExternalRuntimeInNodes(
+          container.children,
+          renderOptions.unstable_externalRuntimeSrc,
+        )[0].outerHTML,
+      ).toEqual('<div id="app-div">h<!-- -->ello<!-- -->world</div>');
 
       const errors = [];
       ReactDOMClient.hydrateRoot(container, <App />, {
@@ -4784,7 +4876,12 @@ describe('ReactDOMFizzServer', () => {
         resolveText('second suspended');
       });
 
-      expect(container.firstElementChild.outerHTML).toEqual(
+      expect(
+        stripExternalRuntimeInNodes(
+          container.children,
+          renderOptions.unstable_externalRuntimeSrc,
+        )[0].outerHTML,
+      ).toEqual(
         '<div id="app-div">start<!--$-->firststartfirst suspendedfirstend<!--/$--><!--$-->secondstart<b>second suspended</b><!--/$-->end</div>',
       );
 
@@ -4834,7 +4931,6 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
 
-      // strip inserted external runtime
       expect(container.innerHTML).toEqual(
         '<div><!--$-->hello<!-- -->world<!-- --><!--/$--><!--$-->world<!-- --><!--/$--><!--$-->hello<!-- -->world<!-- --><br><!--/$--><!--$-->world<!-- --><br><!--/$--></div>',
       );
@@ -5462,7 +5558,7 @@ describe('ReactDOMFizzServer', () => {
 
   it('can render scripts with simple children', async () => {
     await actIntoEmptyDocument(async () => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <body>
             <script>{'try { foo() } catch (e) {} ;'}</script>
@@ -5490,7 +5586,7 @@ describe('ReactDOMFizzServer', () => {
 
     try {
       await actIntoEmptyDocument(async () => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <body>
               <script>{2}</script>

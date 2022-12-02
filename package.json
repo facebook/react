@@ -140,8 +140,6 @@
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
     "version-check": "node ./scripts/tasks/version-check.js",
-    "merge-fork": "node ./scripts/merge-fork/merge-fork.js",
-    "replace-fork": "node ./scripts/merge-fork/replace-fork.js",
     "publish-prereleases": "node ./scripts/release/publish-using-ci-workflow.js",
     "download-build": "node ./scripts/release/download-experimental-build.js",
     "download-build-for-head": "node ./scripts/release/download-experimental-build.js --commit=$(git rev-parse HEAD)",

@@ -4,6 +4,21 @@
 
 ---
 
+### 4.27.0
+November 28, 2022
+
+#### Features
+* add support for new host type fibers for server components use cases ([mondaychen](https://github.com/mondaychen) in [#25616](https://github.com/facebook/react/pull/25616))
+* [react devtools] Device storage support ([rbalicki2](https://github.com/rbalicki2) in [#25452](https://github.com/facebook/react/pull/25452))
+* upgrade to Manifest V3 ([mondaychen](https://github.com/mondaychen) in [#25145](https://github.com/facebook/react/pull/25145))
+
+#### Bugfixes
+* bug fix for Hydrating fibers ([mondaychen](https://github.com/mondaychen) in [#25663](https://github.com/facebook/react/pull/25663))
+
+
+
+---
+
 ### 4.26.1
 October 13, 2022
 
