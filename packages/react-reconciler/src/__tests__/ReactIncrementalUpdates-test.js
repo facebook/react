@@ -474,7 +474,7 @@ describe('ReactIncrementalUpdates', () => {
       'An update (setState, replaceState, or forceUpdate) was scheduled ' +
         'from inside an update function. Update functions should be pure, ' +
         'with zero side-effects. Consider using componentDidUpdate or a ' +
-        'callback.',
+        'callback.\n\nPlease update the following component: Foo',
     );
     expect(instance.state).toEqual({a: 'a', b: 'b'});
 
