@@ -462,35 +462,6 @@ jobs:
             cp ./scripts/release/ci-npmrc ~/.npmrc
             scripts/release/publish.js --ci --tags << parameters.dist_tag >>
 
-  # We don't always keep the reconciler forks in sync (otherwise it we wouldn't
-  # have forked it) but during periods when they are meant to be in sync, we
-  # use this job to confirm there are no differences.
-  sync_reconciler_forks:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_node_modules
-      - run:
-          name: Fetch revisions that contain an intentional fork
-          # This will fetch each revision listed in the `forked-revisions` file,
-          # which may be necessary if it's not part of main. For example, it
-          # may have been part of a PR branch that was squashed on merge.
-          command: |
-            cut -d " " -f 1 scripts/merge-fork/forked-revisions | xargs -r git fetch origin
-      - run:
-          name: Revert forked revisions
-          # This will revert the changes without committing. At the end, it's
-          # expected that both forks will be identical.
-          command: |
-            cut -d " " -f 1 scripts/merge-fork/forked-revisions | xargs -r git revert --no-commit
-      - run:
-          name: Confirm reconciler forks are the same
-          command: |
-            yarn replace-fork
-            git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, add the commit SHA to scripts/merge-fork/forked-revisions." && false)
-
-
 workflows:
   version: 2
 
@@ -504,11 +475,6 @@ workflows:
               ignore:
                 - builds/facebook-www
       - yarn_flow:
-          requires:
-            - setup
-      # NOTE: This job is only enabled when we want the forks to be in sync.
-      # When the forks intentionally diverge, comment out the job to disable it.
-      - sync_reconciler_forks:
           requires:
             - setup
       - check_generated_fizz_runtime:

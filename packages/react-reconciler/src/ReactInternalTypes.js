@@ -22,7 +22,7 @@ import type {
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
-import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
+import type {Lane, Lanes, LaneMap} from './ReactFiberLane';
 import type {RootTag} from './ReactRootTags';
 import type {
   Container,
@@ -30,14 +30,12 @@ import type {
   NoTimeout,
   SuspenseInstance,
 } from './ReactFiberHostConfig';
-import type {Cache} from './ReactFiberCacheComponent.old';
-// Doing this because there's a merge conflict because of the way sync-reconciler-fork
-// is implemented
+import type {Cache} from './ReactFiberCacheComponent';
 import type {
   TracingMarkerInstance,
   Transition,
-} from './ReactFiberTracingMarkerComponent.new';
-import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
+} from './ReactFiberTracingMarkerComponent';
+import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -416,8 +414,6 @@ export type Dispatcher = {
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
   useMemoCache?: (size: number) => Array<any>,
-
-  unstable_isNewReconciler?: boolean,
 };
 
 export type CacheDispatcher = {

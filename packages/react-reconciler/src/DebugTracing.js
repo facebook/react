@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Lane, Lanes} from './ReactFiberLane.old';
+import type {Lane, Lanes} from './ReactFiberLane';
 import type {Wakeable} from 'shared/ReactTypes';
 
 import {enableDebugTracing} from 'shared/ReactFeatureFlags';
