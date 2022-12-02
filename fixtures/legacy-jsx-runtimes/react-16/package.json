@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "prop-types": "^15.7.2",
-    "react": "16",
-    "react-dom": "16"
-  }
-}
