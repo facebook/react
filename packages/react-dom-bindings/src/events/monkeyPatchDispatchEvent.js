@@ -16,13 +16,20 @@ function monkeyPatchDispatchEvent(): void {
     return;
   }
   function patchedDispatchEvent(event: Event) {
+    // If a custom event is dispatched inside a discrete event, we want the custom
+    // event to have DiscreteEventPriority instead of DefaultEventPriority
     if (
       !window.eventPriorityOverride &&
       window.event &&
       getEventPriority(window.event.type) === DiscreteEventPriority
     ) {
       window.eventPriorityOverride = DiscreteEventPriority;
-      originalDispatchEvent.call(this, event);
+      try {
+        originalDispatchEvent.call(this, event);
+      } catch (ex) {
+        window.eventPriorityOverride = null;
+        throw ex;
+      }
       window.eventPriorityOverride = null;
     } else {
       originalDispatchEvent.call(this, event);
