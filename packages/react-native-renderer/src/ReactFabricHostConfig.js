@@ -26,7 +26,7 @@ import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
   DefaultEventPriority,
   DiscreteEventPriority,
-} from 'react-reconciler/src/ReactEventPriorities';
+} from 'react-reconciler/src/ReactEventPriorities.old';
 
 // Modules provided by RN:
 import {

@@ -31,13 +31,11 @@ import type {
   SuspenseInstance,
 } from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
-// Doing this because there's a merge conflict because of the way sync-reconciler-fork
-// is implemented
 import type {
   TracingMarkerInstance,
   Transition,
-} from './ReactFiberTracingMarkerComponent.new';
-import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
+} from './ReactFiberTracingMarkerComponent.old';
+import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.old';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -416,8 +414,6 @@ export type Dispatcher = {
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
   useMemoCache?: (size: number) => Array<any>,
-
-  unstable_isNewReconciler?: boolean,
 };
 
 export type CacheDispatcher = {

@@ -112,14 +112,6 @@ module.exports = {
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-args': ERROR,
     'react-internal/no-production-logging': ERROR,
-    'react-internal/no-cross-fork-imports': ERROR,
-    'react-internal/no-cross-fork-types': [
-      ERROR,
-      {
-        old: [],
-        new: [],
-      },
-    ],
   },
 
   overrides: [

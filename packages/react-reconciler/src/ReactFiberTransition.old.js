@@ -25,6 +25,16 @@ import {
   CacheContext,
 } from './ReactFiberCacheComponent.old';
 
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+const {ReactCurrentBatchConfig} = ReactSharedInternals;
+
+export const NoTransition = null;
+
+export function requestCurrentTransition(): Transition | null {
+  return ReactCurrentBatchConfig.transition;
+}
+
 // When retrying a Suspense/Offscreen boundary, we restore the cache that was
 // used during the previous render by placing it here, on the stack.
 const resumedCache: StackCursor<Cache | null> = createCursor(null);

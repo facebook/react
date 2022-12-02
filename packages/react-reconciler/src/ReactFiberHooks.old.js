@@ -31,7 +31,6 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableDebugTracing,
   enableSchedulingProfiler,
-  enableNewReconciler,
   enableCache,
   enableUseRefAccessWarning,
   enableLazyContextPropagation,
@@ -2758,8 +2757,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useMutableSource: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
   useId: throwInvalidHookError,
-
-  unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
   (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
@@ -2793,8 +2790,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useMutableSource: mountMutableSource,
   useSyncExternalStore: mountSyncExternalStore,
   useId: mountId,
-
-  unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
   // $FlowFixMe[escaped-generic] discovered when updating Flow
@@ -2828,8 +2823,6 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useMutableSource: updateMutableSource,
   useSyncExternalStore: updateSyncExternalStore,
   useId: updateId,
-
-  unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
   (HooksDispatcherOnUpdate: Dispatcher).useCacheRefresh = updateRefresh;
@@ -2863,8 +2856,6 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useMutableSource: updateMutableSource,
   useSyncExternalStore: updateSyncExternalStore,
   useId: updateId,
-
-  unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
   (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
@@ -3041,8 +3032,6 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountId();
     },
-
-    unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
@@ -3198,8 +3187,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountId();
     },
-
-    unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
@@ -3355,8 +3342,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateId();
     },
-
-    unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
@@ -3513,8 +3498,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateId();
     },
-
-    unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
@@ -3687,8 +3670,6 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountId();
     },
-
-    unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
@@ -3872,8 +3853,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateId();
     },
-
-    unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
@@ -4058,8 +4037,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateId();
     },
-
-    unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {

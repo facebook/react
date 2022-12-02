@@ -84,10 +84,6 @@ describe('updaters', () => {
       'react-reconciler/src/ReactFiberDevToolsHook.old',
       () => mockDevToolsHook,
     );
-    jest.mock(
-      'react-reconciler/src/ReactFiberDevToolsHook.new',
-      () => mockDevToolsHook,
-    );
 
     React = require('react');
     ReactDOM = require('react-dom');

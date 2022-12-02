@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './src/ReactFiberReconciler';
+export * from './src/ReactFiberReconciler.old';

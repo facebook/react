@@ -58,14 +58,6 @@ jest.mock('react/react.shared-subset', () => {
   return jest.requireActual(resolvedEntryPoint);
 });
 
-jest.mock('react-reconciler/src/ReactFiberReconciler', () => {
-  return jest.requireActual(
-    __VARIANT__
-      ? 'react-reconciler/src/ReactFiberReconciler.new'
-      : 'react-reconciler/src/ReactFiberReconciler.old'
-  );
-});
-
 // When testing the custom renderer code path through `react-reconciler`,
 // turn the export into a function, and use the argument as host config.
 const shimHostConfigPath = 'react-reconciler/src/ReactFiberHostConfig';

@@ -15,5 +15,5 @@ export {
   ContinuousEventPriority,
   DefaultEventPriority,
   IdleEventPriority,
-} from './ReactEventPriorities';
+} from './ReactEventPriorities.old';
 export {ConcurrentRoot, LegacyRoot} from './ReactRootTags';

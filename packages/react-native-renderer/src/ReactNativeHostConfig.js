@@ -24,7 +24,7 @@ import {
 } from './ReactNativeComponentTree';
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities.old';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 

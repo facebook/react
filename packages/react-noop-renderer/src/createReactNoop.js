@@ -18,7 +18,7 @@ import type {
   Fiber,
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
-import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue.new';
+import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
