@@ -38407,7 +38407,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-17f6912a4-20221202";
+var ReactVersion = "18.3.0-www-modern-353c30252-20221202";
 
 function createPortal(
   children,
