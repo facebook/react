@@ -677,15 +677,10 @@ function updateOffscreenComponent(
 ) {
   const nextProps: OffscreenProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
+  const isPendingDetached = (workInProgress.stateNode._pendingVisibility & OffscreenDetached) !== 0;
 
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
-
-  // Offscreen stores pending changes to visibility in `_pendingVisibility`. This is
-  // to support batching of `attach` and `detach` calls.
-  workInProgress.stateNode._visibility &= ~OffscreenDetached;
-  workInProgress.stateNode._visibility |=
-    workInProgress.stateNode._pendingVisibility & OffscreenDetached;
 
   markRef(current, workInProgress);
 
@@ -693,8 +688,7 @@ function updateOffscreenComponent(
     nextProps.mode === 'hidden' ||
     (enableLegacyHidden &&
       nextProps.mode === 'unstable-defer-without-hiding') ||
-    // TODO: remove read from stateNode.
-    workInProgress.stateNode._visibility & OffscreenDetached
+    isPendingDetached
   ) {
     // Rendering a hidden tree.
 

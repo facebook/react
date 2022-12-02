@@ -2879,6 +2879,12 @@ function commitMutationEffectsOnFiber(
       // TODO: Add explicit effect flag to set _current.
       finishedWork.stateNode._current = finishedWork;
 
+      // Offscreen stores pending changes to visibility in `_pendingVisibility`. This is
+      // to support batching of `attach` and `detach` calls.
+      finishedWork.stateNode._visibility &= ~OffscreenDetached;
+      finishedWork.stateNode._visibility |=
+      finishedWork.stateNode._pendingVisibility & OffscreenDetached;
+
       if (flags & Visibility) {
         const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
 
