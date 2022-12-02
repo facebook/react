@@ -677,7 +677,8 @@ function updateOffscreenComponent(
 ) {
   const nextProps: OffscreenProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
-  const isPendingDetached = (workInProgress.stateNode._pendingVisibility & OffscreenDetached) !== 0;
+  const isPendingDetached =
+    (workInProgress.stateNode._pendingVisibility & OffscreenDetached) !== 0;
 
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;

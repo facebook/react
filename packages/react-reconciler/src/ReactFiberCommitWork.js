@@ -2883,7 +2883,7 @@ function commitMutationEffectsOnFiber(
       // to support batching of `attach` and `detach` calls.
       finishedWork.stateNode._visibility &= ~OffscreenDetached;
       finishedWork.stateNode._visibility |=
-      finishedWork.stateNode._pendingVisibility & OffscreenDetached;
+        finishedWork.stateNode._pendingVisibility & OffscreenDetached;
 
       if (flags & Visibility) {
         const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
