@@ -8,7 +8,7 @@
  */
 
 import isArray from 'shared/isArray';
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities.old';
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 export type Type = string;
 export type Props = Object;

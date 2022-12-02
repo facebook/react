@@ -76,7 +76,7 @@ import {
   registerMutableSourceForHydration,
   flushSync,
   isAlreadyRendering,
-} from 'react-reconciler/src/ReactFiberReconciler.old';
+} from 'react-reconciler/src/ReactFiberReconciler';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 
 /* global reportError */

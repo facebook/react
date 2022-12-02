@@ -16,7 +16,7 @@ import type {
   ScheduleRoot,
   FindHostInstancesForRefresh,
   SetRefreshHandler,
-} from 'react-reconciler/src/ReactFiberHotReloading.old';
+} from 'react-reconciler/src/ReactFiberHotReloading';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';

@@ -22,7 +22,7 @@ import {
   updateContainer,
   injectIntoDevTools,
   getPublicRootInstance,
-} from 'react-reconciler/src/ReactFiberReconciler.old';
+} from 'react-reconciler/src/ReactFiberReconciler';
 
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities.old';
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -81,7 +81,7 @@ import {
 } from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities.old';
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 // TODO: Remove this deep import when we delete the legacy root API
 import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
