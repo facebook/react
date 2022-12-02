@@ -7216,10 +7216,10 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
   hook.memoizedState = pushEffect(1 | hookFlags, create, destroy, deps);
 }
 function mountEffect(create, deps) {
-  return mountEffectImpl(4195328, 8, create, deps);
+  mountEffectImpl(4195328, 8, create, deps);
 }
 function updateEffect(create, deps) {
-  return updateEffectImpl(1024, 8, create, deps);
+  updateEffectImpl(1024, 8, create, deps);
 }
 function useEventImpl(payload) {
   currentlyRenderingFiber.flags |= 4;
@@ -7269,12 +7269,7 @@ function imperativeHandleEffect(create, ref) {
 }
 function updateImperativeHandle(ref, create, deps) {
   deps = null !== deps && void 0 !== deps ? deps.concat([ref]) : null;
-  return updateEffectImpl(
-    4,
-    4,
-    imperativeHandleEffect.bind(null, create, ref),
-    deps
-  );
+  updateEffectImpl(4, 4, imperativeHandleEffect.bind(null, create, ref), deps);
 }
 function mountDebugValue() {}
 function updateCallback(callback, deps) {
@@ -7484,7 +7479,7 @@ var HooksDispatcherOnMount = {
   useEffect: mountEffect,
   useImperativeHandle: function(ref, create, deps) {
     deps = null !== deps && void 0 !== deps ? deps.concat([ref]) : null;
-    return mountEffectImpl(
+    mountEffectImpl(
       2097156,
       4,
       imperativeHandleEffect.bind(null, create, ref),
@@ -7495,7 +7490,7 @@ var HooksDispatcherOnMount = {
     return mountEffectImpl(2097156, 4, create, deps);
   },
   useInsertionEffect: function(create, deps) {
-    return mountEffectImpl(4, 2, create, deps);
+    mountEffectImpl(4, 2, create, deps);
   },
   useMemo: function(nextCreate, deps) {
     var hook = mountWorkInProgressHook();
@@ -15114,7 +15109,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1741 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-f0bba2d4f-20221202",
+  version: "18.3.0-www-modern-17f6912a4-20221202",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2129 = {
@@ -15145,7 +15140,7 @@ var internals$jscomp$inline_2129 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-f0bba2d4f-20221202"
+  reconcilerVersion: "18.3.0-next-17f6912a4-20221202"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2130 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15333,4 +15328,4 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-f0bba2d4f-20221202";
+exports.version = "18.3.0-next-17f6912a4-20221202";

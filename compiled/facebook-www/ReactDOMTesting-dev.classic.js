@@ -14326,23 +14326,23 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
 
 function mountEffect(create, deps) {
   if ((currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode) {
-    return mountEffectImpl(
+    mountEffectImpl(
       MountPassiveDev | Passive | PassiveStatic,
       Passive$1,
       create,
       deps
     );
   } else {
-    return mountEffectImpl(Passive | PassiveStatic, Passive$1, create, deps);
+    mountEffectImpl(Passive | PassiveStatic, Passive$1, create, deps);
   }
 }
 
 function updateEffect(create, deps) {
-  return updateEffectImpl(Passive, Passive$1, create, deps);
+  updateEffectImpl(Passive, Passive$1, create, deps);
 }
 
 function mountInsertionEffect(create, deps) {
-  return mountEffectImpl(Update, Insertion, create, deps);
+  mountEffectImpl(Update, Insertion, create, deps);
 }
 
 function updateInsertionEffect(create, deps) {
@@ -14414,7 +14414,7 @@ function mountImperativeHandle(ref, create, deps) {
     fiberFlags |= MountLayoutDev;
   }
 
-  return mountEffectImpl(
+  mountEffectImpl(
     fiberFlags,
     Layout,
     imperativeHandleEffect.bind(null, create, ref),
@@ -14435,7 +14435,7 @@ function updateImperativeHandle(ref, create, deps) {
 
   var effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
-  return updateEffectImpl(
+  updateEffectImpl(
     Update,
     Layout,
     imperativeHandleEffect.bind(null, create, ref),
@@ -31130,7 +31130,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-f0bba2d4f-20221202";
+var ReactVersion = "18.3.0-www-classic-17f6912a4-20221202";
 
 function createPortal(
   children,
