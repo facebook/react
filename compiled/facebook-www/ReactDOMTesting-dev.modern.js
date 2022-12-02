@@ -17648,11 +17648,14 @@ function enqueueUpdate$1(fiber, update, lane) {
       currentlyProcessingQueue === sharedQueue &&
       !didWarnUpdateInsideUpdate
     ) {
+      var componentName = getComponentNameFromFiber(fiber);
+
       error(
         "An update (setState, replaceState, or forceUpdate) was scheduled " +
           "from inside an update function. Update functions should be pure, " +
           "with zero side-effects. Consider using componentDidUpdate or a " +
-          "callback."
+          "callback.\n\nPlease update the following component: %s",
+        componentName
       );
 
       didWarnUpdateInsideUpdate = true;
@@ -38407,7 +38410,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-353c30252-20221202";
+var ReactVersion = "18.3.0-www-modern-500c8aa08-20221202";
 
 function createPortal(
   children,
