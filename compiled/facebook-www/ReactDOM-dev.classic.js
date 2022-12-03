@@ -41040,6 +41040,7 @@ if (replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       if (
         didSuspendOrErrorWhileHydratingDEV() ||
         originalError === SuspenseException ||
+        originalError === SelectiveHydrationException ||
         (originalError !== null &&
           typeof originalError === "object" &&
           typeof originalError.then === "function")
@@ -42579,7 +42580,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-7fab379d8-20221202";
+var ReactVersion = "18.3.0-www-classic-f0534ae94-20221202";
 
 function createPortal(
   children,

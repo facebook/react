@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-7fab379d8-20221202";
+var ReactVersion = "18.3.0-www-modern-f0534ae94-20221202";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -25706,6 +25706,7 @@ if (replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       if (
         didSuspendOrErrorWhileHydratingDEV() ||
         originalError === SuspenseException ||
+        originalError === SelectiveHydrationException ||
         (originalError !== null &&
           typeof originalError === "object" &&
           typeof originalError.then === "function")
