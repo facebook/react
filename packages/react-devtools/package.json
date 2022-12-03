@@ -1,6 +1,6 @@
 {
   "name": "react-devtools",
-  "version": "4.26.1",
+  "version": "4.27.0",
   "description": "Use react-devtools outside of the browser",
   "license": "MIT",
   "repository": {
@@ -26,7 +26,7 @@
     "electron": "^11.1.0",
     "ip": "^1.1.4",
     "minimist": "^1.2.3",
-    "react-devtools-core": "4.26.1",
+    "react-devtools-core": "4.27.0",
     "update-notifier": "^2.1.0"
   }
 }

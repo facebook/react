@@ -8,7 +8,11 @@
  */
 
 'use strict';
-import {replaceScriptsAndMove, mergeOptions} from '../test-utils/FizzTestUtils';
+import {
+  replaceScriptsAndMove,
+  mergeOptions,
+  withLoadingReadyState,
+} from '../test-utils/FizzTestUtils';
 
 let JSDOM;
 let Stream;
@@ -26,7 +30,7 @@ let container;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
-const renderOptions = {};
+let renderOptions;
 
 describe('ReactDOMFloat', () => {
   beforeEach(() => {
@@ -64,6 +68,12 @@ describe('ReactDOMFloat', () => {
       hasErrored = true;
       fatalError = error;
     });
+
+    renderOptions = {};
+    if (gate(flags => flags.enableFizzExternalRuntime)) {
+      renderOptions.unstable_externalRuntimeSrc =
+        'react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js';
+    }
   });
 
   function normalizeCodeLocInfo(str) {
@@ -100,10 +110,17 @@ describe('ReactDOMFloat', () => {
     fakeBody.innerHTML = bufferedContent;
     const parent =
       container.nodeName === '#document' ? container.body : container;
-    while (fakeBody.firstChild) {
-      const node = fakeBody.firstChild;
-      await replaceScriptsAndMove(document.defaultView, CSPnonce, node, parent);
-    }
+    await withLoadingReadyState(async () => {
+      while (fakeBody.firstChild) {
+        const node = fakeBody.firstChild;
+        await replaceScriptsAndMove(
+          document.defaultView,
+          CSPnonce,
+          node,
+          parent,
+        );
+      }
+    }, document);
   }
 
   async function actIntoEmptyDocument(callback) {
@@ -127,7 +144,9 @@ describe('ReactDOMFloat', () => {
     document = jsdom.window.document;
     container = document;
     buffer = '';
-    await replaceScriptsAndMove(jsdom.window, null, document.documentElement);
+    await withLoadingReadyState(async () => {
+      await replaceScriptsAndMove(jsdom.window, null, document.documentElement);
+    }, document);
   }
 
   function getMeaningfulChildren(element) {
@@ -287,7 +306,7 @@ describe('ReactDOMFloat', () => {
   // @gate enableFloat
   it('can hydrate non Resources in head when Resources are also inserted there', async () => {
     await actIntoEmptyDocument(() => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      const {pipe} = renderToPipeableStream(
         <html>
           <head>
             <meta property="foo" content="bar" />
@@ -587,6 +606,39 @@ describe('ReactDOMFloat', () => {
       '<!DOCTYPE html><html><script async="" src="foo"></script><title>foo</title><body>bar',
       '</body></html>',
     ]);
+  });
+
+  it('dedupes if the external runtime is explicitly loaded using preinit', async () => {
+    const unstable_externalRuntimeSrc = 'src-of-external-runtime';
+    function App() {
+      ReactDOM.preinit(unstable_externalRuntimeSrc, {as: 'script'});
+      return (
+        <div>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <AsyncText text="Hello" />
+          </Suspense>
+        </div>
+      );
+    }
+
+    await actIntoEmptyDocument(() => {
+      const {pipe} = renderToPipeableStream(
+        <html>
+          <head />
+          <body>
+            <App />
+          </body>
+        </html>,
+        {
+          unstable_externalRuntimeSrc,
+        },
+      );
+      pipe(writable);
+    });
+
+    expect(
+      Array.from(document.getElementsByTagName('script')).map(n => n.outerHTML),
+    ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
   });
 
   describe('HostResource', () => {
@@ -5392,7 +5444,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('allows resources inside foreignobject within an svg context', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <body>
               <svg>
@@ -5499,7 +5551,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('should support non-title resources in svg context', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <body>
               <svg>
@@ -5632,7 +5684,7 @@ describe('ReactDOMFloat', () => {
     // @gate enableFloat
     it('should not treat title descendants of svg into resources', async () => {
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+        const {pipe} = renderToPipeableStream(
           <html>
             <body>
               <svg>
@@ -5758,7 +5810,7 @@ describe('ReactDOMFloat', () => {
         );
       }
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
 
@@ -5855,7 +5907,7 @@ describe('ReactDOMFloat', () => {
       }
 
       await actIntoEmptyDocument(() => {
-        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
       expect(getMeaningfulChildren(container)).toEqual(

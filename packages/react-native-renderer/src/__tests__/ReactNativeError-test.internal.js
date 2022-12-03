@@ -28,6 +28,8 @@ describe('ReactNativeError', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    require('react-native/Libraries/ReactPrivate/InitializeNativeFabricUIManager');
+
     React = require('react');
     ReactNative = require('react-native-renderer');
     createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')

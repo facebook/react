@@ -7,7 +7,6 @@ const coffee = require('coffee-script');
 
 const tsPreprocessor = require('./typescript/preprocessor');
 const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
-const {getDevToolsPlugins} = require('./devtools/preprocessor.js');
 
 const pathToBabel = path.join(
   require.resolve('@babel/core'),
@@ -25,6 +24,9 @@ const pathToTransformInfiniteLoops = require.resolve(
 );
 const pathToTransformTestGatePragma = require.resolve(
   '../babel/transform-test-gate-pragma'
+);
+const pathToTransformReactVersionPragma = require.resolve(
+  '../babel/transform-react-version-pragma'
 );
 const pathToBabelrc = path.join(__dirname, '..', '..', 'babel.config.js');
 const pathToErrorCodes = require.resolve('../error-codes/codes.json');
@@ -83,8 +85,13 @@ module.exports = {
       const plugins = (isTestFile ? testOnlyPlugins : sourceOnlyPlugins).concat(
         babelOptions.plugins
       );
-      if (isTestFile && isInDevToolsPackages) {
-        plugins.push(...getDevToolsPlugins(filePath));
+      if (
+        isTestFile &&
+        isInDevToolsPackages &&
+        (process.env.REACT_VERSION ||
+          filePath.match(/\/transform-react-version-pragma-test/))
+      ) {
+        plugins.push(pathToTransformReactVersionPragma);
       }
       return babel.transform(
         src,
@@ -103,12 +110,19 @@ module.exports = {
     return src;
   },
 
-  getCacheKey: createCacheKeyFunction([
-    __filename,
-    pathToBabel,
-    pathToBabelrc,
-    pathToTransformInfiniteLoops,
-    pathToTransformTestGatePragma,
-    pathToErrorCodes,
-  ]),
+  getCacheKey: createCacheKeyFunction(
+    [
+      __filename,
+      pathToBabel,
+      pathToBabelrc,
+      pathToTransformInfiniteLoops,
+      pathToTransformTestGatePragma,
+      pathToTransformReactVersionPragma,
+      pathToErrorCodes,
+    ],
+    [
+      (process.env.REACT_VERSION != null).toString(),
+      (process.env.NODE_ENV === 'development').toString(),
+    ]
+  ),
 };

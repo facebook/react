@@ -46,7 +46,6 @@ export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = false;
 export const deletedTreeCleanUpLevel = 3;
 export const enableGetInspectorDataForInstanceInProduction = false;
-export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;

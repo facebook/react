@@ -275,7 +275,7 @@ type PreinitOptions = {
   crossOrigin?: string,
   integrity?: string,
 };
-function preinit(href: string, options: PreinitOptions) {
+function preinit(href: string, options: PreinitOptions): void {
   if (!currentResources) {
     // While we expect that preinit calls are primarily going to be observed
     // during render because effects and events don't run on the server it is
@@ -285,7 +285,17 @@ function preinit(href: string, options: PreinitOptions) {
     // simply return and do not warn.
     return;
   }
-  const resources = currentResources;
+  preinitImpl(currentResources, href, options);
+}
+
+// On the server, preinit may be called outside of render when sending an
+// external SSR runtime as part of the initial resources payload. Since this
+// is an internal React call, we do not need to use the resources stack.
+export function preinitImpl(
+  resources: Resources,
+  href: string,
+  options: PreinitOptions,
+): void {
   if (__DEV__) {
     validatePreinitArguments(href, options);
   }
