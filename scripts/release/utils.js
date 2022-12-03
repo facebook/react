@@ -75,8 +75,7 @@ const getBuildInfo = async () => {
   const commit = await execRead('git show -s --no-show-signature --format=%h', {
     cwd,
   });
-  const checksum = await getChecksumForCurrentRevision(cwd);
-  const dateString = await getDateStringForCommit(commit);
+  const [checksum,dateString] = await Promise.all([getChecksumForCurrentRevision(cwd), getDateStringForCommit(commit)]);
   const version = isExperimental
     ? `0.0.0-experimental-${commit}-${dateString}`
     : `0.0.0-${commit}-${dateString}`;

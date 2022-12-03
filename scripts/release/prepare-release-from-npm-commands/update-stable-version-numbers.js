@@ -76,8 +76,10 @@ const run = async ({cwd, packages, version}, versionsMap) => {
     const packageJSON = await readJson(packageJSONPath);
     packageJSON.version = versionsMap.get(packageName);
 
-    await updateDependencies(packageJSON, 'dependencies');
-    await updateDependencies(packageJSON, 'peerDependencies');
+    await Promise.all([
+      updateDependencies(packageJSON, 'dependencies'),
+      updateDependencies(packageJSON, 'peerDependencies'),
+    ]);
 
     await writeJson(packageJSONPath, packageJSON, {spaces: 2});
   }

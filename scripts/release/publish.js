@@ -44,20 +44,25 @@ const run = async () => {
       }
     });
 
-    await validateTags(params);
-    await confirmSkippedPackages(params);
-    await confirmVersionAndTags(params);
-    await validateSkipPackages(params);
-    await checkNPMPermissions(params);
+    await Promise.all([
+      validateTags(params),
+      confirmSkippedPackages(params),
+      confirmVersionAndTags(params),
+      validateSkipPackages(params),
+      checkNPMPermissions(params),
+    ]);
 
     const packageNames = params.packages;
 
     if (params.ci) {
       let failed = false;
-      for (let i = 0; i < packageNames.length; i++) {
         try {
-          const packageName = packageNames[i];
-          await publishToNPM(params, packageName, null);
+          await Promise.all(
+            packageNames.length.map((_, i) => {
+              const packageName = packageNames[i];
+              return publishToNPM(params, packageName, null);
+            })
+          );
         } catch (error) {
           failed = true;
           console.error(error.message);
@@ -65,7 +70,6 @@ const run = async () => {
           console.log(
             theme.error`Publish failed. Will attempt to publish remaining packages.`
           );
-        }
       }
       if (failed) {
         console.log(theme.error`One or more packages failed to publish.`);

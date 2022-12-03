@@ -43,9 +43,11 @@ const run = async () => {
     };
 
     await confirmAutomatedTesting(params);
-    await copyRepoToTempDirectory(params);
-    await updateVersionNumbers(params);
-    await addBuildInfoJSON(params);
+    await Promise.all([
+      copyRepoToTempDirectory(params),
+      updateVersionNumbers(params),
+      addBuildInfoJSON(params),
+    ]);
     await buildArtifacts(params);
     await npmPackAndUnpack(params);
     await printPrereleaseSummary(params, false);
