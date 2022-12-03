@@ -43,25 +43,19 @@ export function setPointerEvent(bool) {
 const platformGetter = jest.spyOn(global.navigator, 'platform', 'get');
 
 export const platform = {
-  clear() {
-    platformGetter.mockClear();
-  },
-  get() {
-    return global.navigator.platform === 'MacIntel' ? 'mac' : 'windows';
-  },
-  set(name: 'mac' | 'windows') {
+  clear: () => platformGetter.mockClear(),
+  get: () => global.navigator.platform === 'MacIntel' ? 'mac' : 'windows',
+  set: (name: 'mac' | 'windows') => {
     switch (name) {
-      case 'mac': {
+      case 'mac':
         platformGetter.mockReturnValue('MacIntel');
         break;
-      }
-      case 'windows': {
+      case 'windows':
         platformGetter.mockReturnValue('Win32');
         break;
-      }
-      default: {
+      default:
         break;
-      }
     }
   },
 };
+
