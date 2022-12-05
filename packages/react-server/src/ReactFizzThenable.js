@@ -20,7 +20,8 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
-export opaque type ThenableState = Array<Thenable<any>>;
+// TODO: Sparse arrays are bad for performance.
+export opaque type ThenableState = Array<Thenable<any> | void>;
 
 export function createThenableState(): ThenableState {
   // The ThenableState is created the first time a component suspends. If it
@@ -28,27 +29,12 @@ export function createThenableState(): ThenableState {
   return [];
 }
 
-function noop(): void {}
-
 export function trackUsedThenable<T>(
   thenableState: ThenableState,
   thenable: Thenable<T>,
   index: number,
-): T {
-  const previous = thenableState[index];
-  if (previous === undefined) {
-    thenableState.push(thenable);
-  } else {
-    if (previous !== thenable) {
-      // Reuse the previous thenable, and drop the new one. We can assume
-      // they represent the same value, because components are idempotent.
-
-      // Avoid an unhandled rejection errors for the Promises that we'll
-      // intentionally ignore.
-      thenable.then(noop, noop);
-      thenable = previous;
-    }
-  }
+) {
+  thenableState[index] = thenable;
 
   // We use an expando to track the status and result of a thenable so that we
   // can synchronously unwrap the value. Think of this as an extension of the
@@ -57,48 +43,53 @@ export function trackUsedThenable<T>(
   // If the thenable doesn't have a status, set it to "pending" and attach
   // a listener that will update its status and result when it resolves.
   switch (thenable.status) {
-    case 'fulfilled': {
-      const fulfilledValue: T = thenable.value;
-      return fulfilledValue;
-    }
-    case 'rejected': {
-      const rejectedError = thenable.reason;
-      throw rejectedError;
-    }
+    case 'fulfilled':
+    case 'rejected':
+      // A thenable that already resolved shouldn't have been thrown, so this is
+      // unexpected. Suggests a mistake in a userspace data library. Don't track
+      // this thenable, because if we keep trying it will likely infinite loop
+      // without ever resolving.
+      // TODO: Log a warning?
+      break;
     default: {
       if (typeof thenable.status === 'string') {
         // Only instrument the thenable if the status if not defined. If
         // it's defined, but an unknown value, assume it's been instrumented by
         // some custom userspace implementation. We treat it as "pending".
-      } else {
-        const pendingThenable: PendingThenable<mixed> = (thenable: any);
-        pendingThenable.status = 'pending';
-        pendingThenable.then(
-          fulfilledValue => {
-            if (thenable.status === 'pending') {
-              const fulfilledThenable: FulfilledThenable<mixed> = (thenable: any);
-              fulfilledThenable.status = 'fulfilled';
-              fulfilledThenable.value = fulfilledValue;
-            }
-          },
-          (error: mixed) => {
-            if (thenable.status === 'pending') {
-              const rejectedThenable: RejectedThenable<mixed> = (thenable: any);
-              rejectedThenable.status = 'rejected';
-              rejectedThenable.reason = error;
-            }
-          },
-        );
+        break;
       }
-
-      // Suspend.
-      // TODO: Throwing here is an implementation detail that allows us to
-      // unwind the call stack. But we shouldn't allow it to leak into
-      // userspace. Throw an opaque placeholder value instead of the
-      // actual thenable. If it doesn't get captured by the work loop, log
-      // a warning, because that means something in userspace must have
-      // caught it.
-      throw thenable;
+      const pendingThenable: PendingThenable<mixed> = (thenable: any);
+      pendingThenable.status = 'pending';
+      pendingThenable.then(
+        fulfilledValue => {
+          if (thenable.status === 'pending') {
+            const fulfilledThenable: FulfilledThenable<mixed> = (thenable: any);
+            fulfilledThenable.status = 'fulfilled';
+            fulfilledThenable.value = fulfilledValue;
+          }
+        },
+        (error: mixed) => {
+          if (thenable.status === 'pending') {
+            const rejectedThenable: RejectedThenable<mixed> = (thenable: any);
+            rejectedThenable.status = 'rejected';
+            rejectedThenable.reason = error;
+          }
+        },
+      );
+      break;
     }
   }
+}
+
+export function getPreviouslyUsedThenableAtIndex<T>(
+  thenableState: ThenableState | null,
+  index: number,
+): Thenable<T> | null {
+  if (thenableState !== null) {
+    const thenable = thenableState[index];
+    if (thenable !== undefined) {
+      return thenable;
+    }
+  }
+  return null;
 }
