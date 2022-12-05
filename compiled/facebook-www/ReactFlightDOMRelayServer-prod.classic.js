@@ -13,8 +13,8 @@
 "use strict";
 var JSResourceReferenceImpl = require("JSResourceReferenceImpl"),
   ReactFlightDOMRelayServerIntegration = require("ReactFlightDOMRelayServerIntegration"),
-  React = require("react");
-var hasOwnProperty = Object.prototype.hasOwnProperty,
+  React = require("react"),
+  hasOwnProperty = Object.prototype.hasOwnProperty,
   isArrayImpl = Array.isArray;
 function convertModelToJSON(request, parent, key, model) {
   parent = resolveModelToJSON(request, parent, key, model);
@@ -239,6 +239,7 @@ Object.keys(isUnitlessNumber).forEach(function(prop) {
     isUnitlessNumber[prefix] = isUnitlessNumber[prop];
   });
 });
+require("ReactDOMComet");
 var currentActiveSnapshot = null;
 function popToNearestCommonAncestor(prev, next) {
   if (prev !== next) {

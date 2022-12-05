@@ -11,8 +11,7 @@
  */
 
 "use strict";
-var React = require("react"),
-  ReactDOM = require("react-dom");
+var React = require("react");
 function writeChunk(destination, chunk) {
   destination.buffer += chunk;
 }
@@ -633,8 +632,8 @@ function hoistResourcesToRoot(resources, boundaryResources) {
   });
   boundaryResources.clear();
 }
-var ReactDOMCurrentDispatcher =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
+var ReactDOMCurrentDispatcher = require("ReactDOMComet")
+    .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
   scriptRegex = /(<\/|<)(s)(cript)/gi;
 function scriptReplacer(match, prefix, s, suffix) {
   return "" + prefix + ("s" === s ? "\\u0073" : "\\u0053") + suffix;

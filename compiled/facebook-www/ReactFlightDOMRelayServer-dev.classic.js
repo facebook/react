@@ -19,7 +19,6 @@ if (__DEV__) {
 var JSResourceReferenceImpl = require("JSResourceReferenceImpl");
 var ReactFlightDOMRelayServerIntegration = require("ReactFlightDOMRelayServerIntegration");
 var React = require("react");
-var ReactDOM = require("react-dom");
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -720,6 +719,9 @@ Object.keys(isUnitlessNumber).forEach(function(prop) {
     isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
   });
 });
+
+// $FlowIgnore[cannot-resolve-module] provided by www
+var ReactDOM = require("ReactDOMComet");
 
 var ReactDOMSharedInternals =
   ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;

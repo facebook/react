@@ -11,8 +11,7 @@
  */
 
 "use strict";
-var React = require("react"),
-  ReactDOM = require("react-dom");
+var React = require("react");
 function formatProdErrorMessage(code) {
   for (
     var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
@@ -633,8 +632,8 @@ function hoistResourcesToRoot(resources, boundaryResources) {
   });
   boundaryResources.clear();
 }
-var ReactDOMCurrentDispatcher =
-  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher;
+var ReactDOMCurrentDispatcher = require("ReactDOMComet")
+  .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher;
 function createFormatContext(insertionMode, selectedValue, noscriptTagInScope) {
   return {
     insertionMode: insertionMode,
@@ -3621,4 +3620,4 @@ exports.renderToString = function(children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-cd23e40c7-20221205";
+exports.version = "18.3.0-www-classic-2ccfa657d-20221205";

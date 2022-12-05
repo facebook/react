@@ -12571,7 +12571,11 @@ var updatedAncestorInfoDev = function() {};
   };
 }
 
-var ReactDOMSharedInternals = Internals;
+// $FlowIgnore[cannot-resolve-module] provided by www
+var ReactDOM = require("ReactDOMComet");
+
+var ReactDOMSharedInternals =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 function warnOnMissingHrefAndRel(pendingProps, currentProps) {
   {
@@ -38410,7 +38414,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-cd23e40c7-20221205";
+var ReactVersion = "18.3.0-www-modern-2ccfa657d-20221205";
 
 function createPortal(
   children,

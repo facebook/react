@@ -3863,7 +3863,9 @@ function setInitialProperties(domElement, tag, rawProps) {
       "function" === typeof props.onClick && (domElement.onclick = noop);
   }
 }
-var valueStack = [],
+var ReactDOMSharedInternals = require("ReactDOMComet")
+    .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  valueStack = [],
   index = -1;
 function createCursor(defaultValue) {
   return { current: defaultValue };
@@ -3917,7 +3919,7 @@ function popHostContext(fiber) {
   contextFiberStackCursor.current === fiber &&
     (pop(contextStackCursor), pop(contextFiberStackCursor));
 }
-var Dispatcher = Internals.Dispatcher,
+var Dispatcher = ReactDOMSharedInternals.Dispatcher,
   lastCurrentDocument = null,
   previousDispatcher = null,
   ReactDOMClientDispatcher = { preload: preload, preinit: preinit },
@@ -13974,7 +13976,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1686 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-cd23e40c7-20221205",
+  version: "18.3.0-www-modern-2ccfa657d-20221205",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2082 = {
@@ -14005,7 +14007,7 @@ var internals$jscomp$inline_2082 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-cd23e40c7-20221205"
+  reconcilerVersion: "18.3.0-next-2ccfa657d-20221205"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2083 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -14274,11 +14276,11 @@ exports.observeVisibleRects = function(hostRoot, selectors, callback, options) {
   };
 };
 exports.preinit = function() {
-  var dispatcher = Internals.Dispatcher.current;
+  var dispatcher = ReactDOMSharedInternals.Dispatcher.current;
   dispatcher && dispatcher.preinit.apply(this, arguments);
 };
 exports.preload = function() {
-  var dispatcher = Internals.Dispatcher.current;
+  var dispatcher = ReactDOMSharedInternals.Dispatcher.current;
   dispatcher && dispatcher.preload.apply(this, arguments);
 };
 exports.unstable_batchedUpdates = batchedUpdates$1;
@@ -14328,4 +14330,4 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-cd23e40c7-20221205";
+exports.version = "18.3.0-next-2ccfa657d-20221205";
