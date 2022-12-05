@@ -108,6 +108,7 @@ import {
   ShouldCapture,
   DidCapture,
 } from './ReactFiberFlags';
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
@@ -239,11 +240,13 @@ export function enqueueUpdate<State>(
       currentlyProcessingQueue === sharedQueue &&
       !didWarnUpdateInsideUpdate
     ) {
+      const componentName = getComponentNameFromFiber(fiber);
       console.error(
         'An update (setState, replaceState, or forceUpdate) was scheduled ' +
           'from inside an update function. Update functions should be pure, ' +
           'with zero side-effects. Consider using componentDidUpdate or a ' +
-          'callback.',
+          'callback.\n\nPlease update the following component: %s',
+        componentName,
       );
       didWarnUpdateInsideUpdate = true;
     }
