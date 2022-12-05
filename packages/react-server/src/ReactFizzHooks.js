@@ -40,7 +40,11 @@ import {
   enableUseMemoCacheHook,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
-import {REACT_MEMO_CACHE_SENTINEL} from 'shared/ReactSymbols';
+import {
+  REACT_SERVER_CONTEXT_TYPE,
+  REACT_CONTEXT_TYPE,
+  REACT_MEMO_CACHE_SENTINEL,
+} from 'shared/ReactSymbols';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -644,8 +648,12 @@ function use<T>(usable: Usable<T>): T {
           }
         }
       }
-    } else {
-      // TODO: Add support for Context
+    } else if (
+      usable.$$typeof === REACT_CONTEXT_TYPE ||
+      usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
+    ) {
+      const context: ReactContext<T> = (usable: any);
+      return readContext(context);
     }
   }
 
