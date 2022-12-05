@@ -13,6 +13,7 @@ type AbstractPrimitive = {
   value: number | boolean | string | null | undefined;
 };
 
+export type AliasSet = Set<Identifier>;
 class AbstractState {
   aliases = new DisjointSet<Identifier>();
   #values = new Map<Identifier, AbstractValue>();
@@ -135,7 +136,7 @@ class AbstractState {
   }
 }
 
-export function buildAliasSets(func: HIRFunction): Array<Set<Identifier>> {
+export function buildAliasSets(func: HIRFunction): Array<AliasSet> {
   const state = new AbstractState();
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
