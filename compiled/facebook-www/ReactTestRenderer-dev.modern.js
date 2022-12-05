@@ -1152,91 +1152,91 @@ var NoLanes =
 var NoLane =
   /*                          */
   0;
-var SyncHydrationLane =
-  /*               */
-  1;
 var SyncLane =
   /*                        */
-  2;
+  1;
 var InputContinuousHydrationLane =
   /*    */
-  4;
+  2;
 var InputContinuousLane =
   /*             */
-  8;
+  4;
 var DefaultHydrationLane =
   /*            */
-  16;
+  8;
 var DefaultLane =
   /*                     */
-  32;
+  16;
 var TransitionHydrationLane =
   /*                */
-  64;
+  32;
 var TransitionLanes =
   /*                       */
-  8388480;
+  4194240;
 var TransitionLane1 =
   /*                        */
-  128;
+  64;
 var TransitionLane2 =
   /*                        */
-  256;
+  128;
 var TransitionLane3 =
   /*                        */
-  512;
+  256;
 var TransitionLane4 =
   /*                        */
-  1024;
+  512;
 var TransitionLane5 =
   /*                        */
-  2048;
+  1024;
 var TransitionLane6 =
   /*                        */
-  4096;
+  2048;
 var TransitionLane7 =
   /*                        */
-  8192;
+  4096;
 var TransitionLane8 =
   /*                        */
-  16384;
+  8192;
 var TransitionLane9 =
   /*                        */
-  32768;
+  16384;
 var TransitionLane10 =
   /*                       */
-  65536;
+  32768;
 var TransitionLane11 =
   /*                       */
-  131072;
+  65536;
 var TransitionLane12 =
   /*                       */
-  262144;
+  131072;
 var TransitionLane13 =
   /*                       */
-  524288;
+  262144;
 var TransitionLane14 =
   /*                       */
-  1048576;
+  524288;
 var TransitionLane15 =
   /*                       */
-  2097152;
+  1048576;
 var TransitionLane16 =
   /*                       */
-  4194304;
+  2097152;
 var RetryLanes =
   /*                            */
-  125829120;
+  130023424;
 var RetryLane1 =
   /*                             */
-  8388608;
+  4194304;
 var RetryLane2 =
   /*                             */
-  16777216;
+  8388608;
 var RetryLane3 =
   /*                             */
-  33554432;
+  16777216;
 var RetryLane4 =
+  /*                             */
+  33554432;
+var RetryLane5 =
   /*                             */
   67108864;
 var SomeRetryLane = RetryLane1;
@@ -1261,9 +1261,6 @@ var nextRetryLane = RetryLane1;
 
 function getHighestPriorityLanes(lanes) {
   switch (getHighestPriorityLane(lanes)) {
-    case SyncHydrationLane:
-      return SyncHydrationLane;
-
     case SyncLane:
       return SyncLane;
 
@@ -1304,6 +1301,7 @@ function getHighestPriorityLanes(lanes) {
     case RetryLane2:
     case RetryLane3:
     case RetryLane4:
+    case RetryLane5:
       return lanes & RetryLanes;
 
     case SelectiveHydrationLane:
@@ -1464,7 +1462,6 @@ function getMostRecentEventTime(root, lanes) {
 
 function computeExpirationTime(lane, currentTime) {
   switch (lane) {
-    case SyncHydrationLane:
     case SyncLane:
     case InputContinuousHydrationLane:
     case InputContinuousLane:
@@ -1504,6 +1501,7 @@ function computeExpirationTime(lane, currentTime) {
     case RetryLane2:
     case RetryLane3:
     case RetryLane4:
+    case RetryLane5:
       // TODO: Retries should be allowed to expire if they are CPU bound for
       // too long, but when I made this change it caused a spike in browser
       // crashes. There must be some other underlying bug; not super urgent but
@@ -1586,9 +1584,6 @@ function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
 
   return NoLanes;
 }
-function includesSyncLane(lanes) {
-  return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
-}
 function includesNonIdleWork(lanes) {
   return (lanes & NonIdleLanes) !== NoLanes;
 }
@@ -1596,8 +1591,6 @@ function includesOnlyRetries(lanes) {
   return (lanes & RetryLanes) === lanes;
 }
 function includesOnlyNonUrgentLanes(lanes) {
-  // TODO: Should hydration lanes be included here? This function is only
-  // used in `updateDeferredValueImpl`.
   var UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
   return (lanes & UrgentLanes) === NoLanes;
 }
@@ -1835,10 +1828,6 @@ function getBumpedLaneForHydration(root, renderLanes) {
   var lane;
 
   switch (renderLane) {
-    case SyncLane:
-      lane = SyncHydrationLane;
-      break;
-
     case InputContinuousLane:
       lane = InputContinuousHydrationLane;
       break;
@@ -1867,6 +1856,7 @@ function getBumpedLaneForHydration(root, renderLanes) {
     case RetryLane2:
     case RetryLane3:
     case RetryLane4:
+    case RetryLane5:
       lane = TransitionHydrationLane;
       break;
 
@@ -11012,14 +11002,7 @@ function throwException(
   } while (workInProgress !== null);
 }
 
-var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner; // A special exception that's used to unwind the stack when an update flows
-// into a dehydrated boundary.
-
-var SelectiveHydrationException = new Error(
-  "This is not a real error. It's an implementation detail of React's " +
-    "selective hydration feature. If this leaks into userspace, it's a bug in " +
-    "React. Please file an issue."
-);
+var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
 var didReceiveUpdate = false;
 var didWarnAboutBadClass;
 var didWarnAboutModulePatternComponent;
@@ -12978,29 +12961,18 @@ function updateDehydratedSuspenseComponent(
             current,
             attemptHydrationAtLane,
             eventTime
-          ); // Throw a special object that signals to the work loop that it should
-          // interrupt the current render.
-          //
-          // Because we're inside a React-only execution stack, we don't
-          // strictly need to throw here — we could instead modify some internal
-          // work loop state. But using an exception means we don't need to
-          // check for this case on every iteration of the work loop. So doing
-          // it this way moves the check out of the fast path.
-
-          throw SelectiveHydrationException;
+          );
         }
-      } // If we did not selectively hydrate, we'll continue rendering without
-      // hydrating. Mark this tree as suspended to prevent it from committing
-      // outside a transition.
-      //
-      // This path should only happen if the hydration lane already suspended.
-      // Currently, it also happens during sync updates because there is no
-      // hydration lane for sync updates.
+      } // If we have scheduled higher pri work above, this will just abort the render
+      // since we now have higher priority work. We'll try to infinitely suspend until
+      // we yield. TODO: We could probably just force yielding earlier instead.
+
+      renderDidSuspendDelayIfPossible(); // If we rendered synchronously, we won't yield so have to render something.
+      // This will cause us to delete any existing content.
       // TODO: We should ideally have a sync hydration lane that we can apply to do
       // a pass where we hydrate this subtree in place using the previous Context and then
       // reapply the update afterwards.
 
-      renderDidSuspendDelayIfPossible();
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
@@ -19829,8 +19801,7 @@ var SuspendedOnError = 1;
 var SuspendedOnData = 2;
 var SuspendedOnImmediate = 3;
 var SuspendedOnDeprecatedThrowPromise = 4;
-var SuspendedAndReadyToUnwind = 5;
-var SuspendedOnHydration = 6; // When this is true, the work-in-progress fiber just suspended (or errored) and
+var SuspendedAndReadyToUnwind = 5; // When this is true, the work-in-progress fiber just suspended (or errored) and
 // we've yet to unwind the stack. In some cases, we may yield to the main thread
 // after this happens. If the fiber is pinged before we resume, we can retry
 // immediately instead of unwinding the stack.
@@ -20148,7 +20119,7 @@ function ensureRootIsScheduled(root, currentTime) {
       // TODO: Temporary until we confirm this warning is not fired.
       if (
         existingCallbackNode == null &&
-        !includesSyncLane(existingCallbackPriority)
+        existingCallbackPriority !== SyncLane
       ) {
         error(
           "Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue."
@@ -20166,7 +20137,7 @@ function ensureRootIsScheduled(root, currentTime) {
 
   var newCallbackNode;
 
-  if (includesSyncLane(newCallbackPriority)) {
+  if (newCallbackPriority === SyncLane) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     if (root.tag === LegacyRoot) {
@@ -20703,7 +20674,7 @@ function performSyncWorkOnRoot(root) {
   flushPassiveEffects();
   var lanes = getNextLanes(root, NoLanes);
 
-  if (!includesSyncLane(lanes)) {
+  if (!includesSomeLane(lanes, SyncLane)) {
     // There's no remaining sync work left.
     ensureRootIsScheduled(root, now());
     return null;
@@ -20928,17 +20899,6 @@ function handleThrow(root, thrownValue) {
     workInProgressSuspendedReason = shouldAttemptToSuspendUntilDataResolves()
       ? SuspendedOnData
       : SuspendedOnImmediate;
-  } else if (thrownValue === SelectiveHydrationException) {
-    // An update flowed into a dehydrated boundary. Before we can apply the
-    // update, we need to finish hydrating. Interrupt the work-in-progress
-    // render so we can restart at the hydration lane.
-    //
-    // The ideal implementation would be able to switch contexts without
-    // unwinding the current stack.
-    //
-    // We could name this something more general but as of now it's the only
-    // case where we think this should happen.
-    workInProgressSuspendedReason = SuspendedOnHydration;
   } else {
     // This is a regular error.
     var isWakeable =
@@ -21119,7 +21079,7 @@ function renderRootSync(root, lanes) {
     prepareFreshStack(root, lanes);
   }
 
-  outer: do {
+  do {
     try {
       if (
         workInProgressSuspendedReason !== NotSuspended &&
@@ -21135,25 +21095,9 @@ function renderRootSync(root, lanes) {
         // function and fork the behavior some other way.
         var unitOfWork = workInProgress;
         var thrownValue = workInProgressThrownValue;
-
-        switch (workInProgressSuspendedReason) {
-          case SuspendedOnHydration: {
-            // Selective hydration. An update flowed into a dehydrated tree.
-            // Interrupt the current render so the work loop can switch to the
-            // hydration lane.
-            workInProgress = null;
-            workInProgressRootExitStatus = RootDidNotComplete;
-            break outer;
-          }
-
-          default: {
-            // Continue with the normal work loop.
-            workInProgressSuspendedReason = NotSuspended;
-            workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
-            break;
-          }
-        }
+        workInProgressSuspendedReason = NotSuspended;
+        workInProgressThrownValue = null;
+        unwindSuspendedUnitOfWork(unitOfWork, thrownValue); // Continue with the normal work loop.
       }
 
       workLoopSync();
@@ -21280,15 +21224,6 @@ function renderRootConcurrent(root, lanes) {
             workInProgressThrownValue = null;
             unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
             break;
-          }
-
-          case SuspendedOnHydration: {
-            // Selective hydration. An update flowed into a dehydrated tree.
-            // Interrupt the current render so the work loop can switch to the
-            // hydration lane.
-            workInProgress = null;
-            workInProgressRootExitStatus = RootDidNotComplete;
-            break outer;
           }
 
           default: {
@@ -21861,13 +21796,16 @@ function commitRootImpl(
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
 
-  if (includesSyncLane(pendingPassiveEffectsLanes) && root.tag !== LegacyRoot) {
+  if (
+    includesSomeLane(pendingPassiveEffectsLanes, SyncLane) &&
+    root.tag !== LegacyRoot
+  ) {
     flushPassiveEffects();
   } // Read this again, since a passive effect might have updated it
 
   remainingLanes = root.pendingLanes;
 
-  if (includesSyncLane(remainingLanes)) {
+  if (includesSomeLane(remainingLanes, SyncLane)) {
     {
       markNestedUpdateScheduled();
     } // Count the number of times the root synchronously re-renders without
@@ -23837,7 +23775,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-2ccfa657d-20221205";
+var ReactVersion = "18.3.0-www-modern-d807eb52c-20221205";
 
 var didWarnAboutNestedUpdates;
 

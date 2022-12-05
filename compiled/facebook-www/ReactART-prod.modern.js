@@ -275,8 +275,8 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
-var nextTransitionLane = 128,
-  nextRetryLane = 8388608;
+var nextTransitionLane = 64,
+  nextRetryLane = 4194304;
 function getHighestPriorityLanes(lanes) {
   switch (lanes & -lanes) {
     case 1:
@@ -292,7 +292,6 @@ function getHighestPriorityLanes(lanes) {
     case 32:
       return 32;
     case 64:
-      return 64;
     case 128:
     case 256:
     case 512:
@@ -308,13 +307,13 @@ function getHighestPriorityLanes(lanes) {
     case 524288:
     case 1048576:
     case 2097152:
+      return lanes & 4194240;
     case 4194304:
-      return lanes & 8388480;
     case 8388608:
     case 16777216:
     case 33554432:
     case 67108864:
-      return lanes & 125829120;
+      return lanes & 130023424;
     case 134217728:
       return 134217728;
     case 268435456:
@@ -355,12 +354,12 @@ function getNextLanes(root, wipLanes) {
     ((suspendedLanes = nextLanes & -nextLanes),
     (pingedLanes = wipLanes & -wipLanes),
     suspendedLanes >= pingedLanes ||
-      (32 === suspendedLanes && 0 !== (pingedLanes & 8388480)))
+      (16 === suspendedLanes && 0 !== (pingedLanes & 4194240)))
   )
     return wipLanes;
   0 === (root.current.mode & 32) &&
-    0 !== (nextLanes & 8) &&
-    (nextLanes |= pendingLanes & 32);
+    0 !== (nextLanes & 4) &&
+    (nextLanes |= pendingLanes & 16);
   wipLanes = root.entangledLanes;
   if (0 !== wipLanes)
     for (root = root.entanglements, wipLanes &= nextLanes; 0 < wipLanes; )
@@ -375,8 +374,8 @@ function computeExpirationTime(lane, currentTime) {
     case 1:
     case 2:
     case 4:
-    case 8:
       return currentTime + 250;
+    case 8:
     case 16:
     case 32:
     case 64:
@@ -395,8 +394,8 @@ function computeExpirationTime(lane, currentTime) {
     case 524288:
     case 1048576:
     case 2097152:
-    case 4194304:
       return currentTime + 5e3;
+    case 4194304:
     case 8388608:
     case 16777216:
     case 33554432:
@@ -417,12 +416,12 @@ function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
   return 0 !== root ? root : root & 1073741824 ? 1073741824 : 0;
 }
 function includesBlockingLane(root, lanes) {
-  return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
+  return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 30);
 }
 function claimNextTransitionLane() {
   var lane = nextTransitionLane;
   nextTransitionLane <<= 1;
-  0 === (nextTransitionLane & 8388480) && (nextTransitionLane = 128);
+  0 === (nextTransitionLane & 4194240) && (nextTransitionLane = 64);
   return lane;
 }
 function createLaneMap(initial) {
@@ -505,13 +504,13 @@ function clearTransitionsForLanes(root, lanes) {
 var currentUpdatePriority = 0;
 function lanesToEventPriority(lanes) {
   lanes &= -lanes;
-  return 2 < lanes
-    ? 8 < lanes
+  return 1 < lanes
+    ? 4 < lanes
       ? 0 !== (lanes & 268435455)
-        ? 32
+        ? 16
         : 536870912
-      : 8
-    : 2;
+      : 4
+    : 1;
 }
 function shim() {
   throw Error(formatProdErrorMessage(305));
@@ -799,7 +798,7 @@ function flushSyncCallbacks() {
       previousUpdatePriority = currentUpdatePriority;
     try {
       var queue = syncQueue;
-      for (currentUpdatePriority = 2; i < queue.length; i++) {
+      for (currentUpdatePriority = 1; i < queue.length; i++) {
         var callback = queue[i];
         do callback = callback(!0);
         while (null !== callback);
@@ -992,7 +991,7 @@ function enqueueUpdate$1(fiber, update, lane) {
 }
 function entangleTransitions(root, fiber, lane) {
   fiber = fiber.updateQueue;
-  if (null !== fiber && ((fiber = fiber.shared), 0 !== (lane & 8388480))) {
+  if (null !== fiber && ((fiber = fiber.shared), 0 !== (lane & 4194240))) {
     var queueLanes = fiber.lanes;
     queueLanes &= root.pendingLanes;
     lane |= queueLanes;
@@ -2494,8 +2493,8 @@ function checkIfSnapshotChanged(inst) {
   }
 }
 function forceStoreRerender(fiber) {
-  var root = enqueueConcurrentRenderForLane(fiber, 2);
-  null !== root && scheduleUpdateOnFiber(root, fiber, 2, -1);
+  var root = enqueueConcurrentRenderForLane(fiber, 1);
+  null !== root && scheduleUpdateOnFiber(root, fiber, 1, -1);
 }
 function mountState(initialState) {
   var hook = mountWorkInProgressHook();
@@ -2646,7 +2645,7 @@ function updateMemo(nextCreate, deps) {
   return nextCreate;
 }
 function updateDeferredValueImpl(hook, prevValue, value) {
-  if (0 === (renderLanes & 42))
+  if (0 === (renderLanes & 21))
     return (
       hook.baseState && ((hook.baseState = !1), (didReceiveUpdate = !0)),
       (hook.memoizedState = value)
@@ -2661,7 +2660,7 @@ function updateDeferredValueImpl(hook, prevValue, value) {
 function startTransition(setPending, callback, options) {
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
-    0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
+    0 !== previousPriority && 4 > previousPriority ? previousPriority : 4;
   setPending(!0);
   var prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = {};
@@ -2780,7 +2779,7 @@ function enqueueRenderPhaseUpdate(queue, update) {
   queue.pending = update;
 }
 function entangleTransitionUpdate(root, queue, lane) {
-  if (0 !== (lane & 8388480)) {
+  if (0 !== (lane & 4194240)) {
     var queueLanes = queue.lanes;
     queueLanes &= root.pendingLanes;
     lane |= queueLanes;
@@ -3379,7 +3378,6 @@ function pushMarkerInstance(workInProgress, markerInstance) {
         ));
 }
 var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner,
-  SelectiveHydrationException = Error(formatProdErrorMessage(461)),
   didReceiveUpdate = !1;
 function reconcileChildren(current, workInProgress, nextChildren, renderLanes) {
   workInProgress.child =
@@ -3951,7 +3949,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           renderLanes
         )),
         (workInProgress.memoizedState = SUSPENDED_MARKER),
-        (workInProgress.lanes = 8388608),
+        (workInProgress.lanes = 4194304),
         current
       );
     pushPrimaryTreeSuspenseHandler(workInProgress);
@@ -4209,15 +4207,13 @@ function updateDehydratedSuspenseComponent(
     nextProps = workInProgressRoot;
     if (null !== nextProps) {
       switch (renderLanes & -renderLanes) {
-        case 2:
-          didSuspend = 1;
+        case 4:
+          didSuspend = 2;
           break;
-        case 8:
-          didSuspend = 4;
+        case 16:
+          didSuspend = 8;
           break;
-        case 32:
-          didSuspend = 16;
-          break;
+        case 64:
         case 128:
         case 256:
         case 512:
@@ -4238,7 +4234,7 @@ function updateDehydratedSuspenseComponent(
         case 16777216:
         case 33554432:
         case 67108864:
-          didSuspend = 64;
+          didSuspend = 32;
           break;
         case 536870912:
           didSuspend = 268435456;
@@ -4250,11 +4246,11 @@ function updateDehydratedSuspenseComponent(
         0 !== (didSuspend & (nextProps.suspendedLanes | renderLanes))
           ? 0
           : didSuspend;
-      if (0 !== didSuspend && didSuspend !== suspenseState.retryLane)
-        throw ((suspenseState.retryLane = didSuspend),
+      0 !== didSuspend &&
+        didSuspend !== suspenseState.retryLane &&
+        ((suspenseState.retryLane = didSuspend),
         enqueueConcurrentRenderForLane(current, didSuspend),
-        scheduleUpdateOnFiber(nextProps, current, didSuspend, -1),
-        SelectiveHydrationException);
+        scheduleUpdateOnFiber(nextProps, current, didSuspend, -1));
     }
     renderDidSuspendDelayIfPossible();
     return retrySuspenseComponentWithoutHydrating(
@@ -5268,7 +5264,7 @@ function completeWork(current, workInProgress, renderLanes) {
             ((workInProgress.flags |= 64),
             (newProps = !0),
             cutOffTailIfNeeded(instance, !1),
-            (workInProgress.lanes = 8388608));
+            (workInProgress.lanes = 4194304));
         }
       else {
         if (!newProps)
@@ -5296,7 +5292,7 @@ function completeWork(current, workInProgress, renderLanes) {
               ((workInProgress.flags |= 64),
               (newProps = !0),
               cutOffTailIfNeeded(instance, !1),
-              (workInProgress.lanes = 8388608));
+              (workInProgress.lanes = 4194304));
         instance.isBackwards
           ? ((JSCompiler_inline_result.sibling = workInProgress.child),
             (workInProgress.child = JSCompiler_inline_result))
@@ -7429,7 +7425,7 @@ function requestEventTime() {
     : (currentEventTime = now());
 }
 function requestUpdateLane(fiber) {
-  if (0 === (fiber.mode & 1)) return 2;
+  if (0 === (fiber.mode & 1)) return 1;
   if (
     !deferRenderPhaseUpdateToNextBatch &&
     0 !== (executionContext & 2) &&
@@ -7443,7 +7439,7 @@ function requestUpdateLane(fiber) {
       currentEventTransitionLane
     );
   fiber = currentUpdatePriority;
-  return 0 !== fiber ? fiber : 32;
+  return 0 !== fiber ? fiber : 16;
 }
 function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
   2 === workInProgressSuspendedReason &&
@@ -7475,7 +7471,7 @@ function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
         markRootSuspended$1(root, workInProgressRootRenderLanes);
     }
     ensureRootIsScheduled(root, eventTime);
-    2 === lane &&
+    1 === lane &&
       0 === executionContext &&
       0 === (fiber.mode & 1) &&
       ((workInProgressRootRenderTargetTime = now() + 500),
@@ -7488,7 +7484,7 @@ function ensureRootIsScheduled(root, currentTime) {
       suspendedLanes = root.suspendedLanes,
       pingedLanes = root.pingedLanes,
       expirationTimes = root.expirationTimes,
-      lanes = root.pendingLanes & -125829121;
+      lanes = root.pendingLanes & -130023425;
     0 < lanes;
 
   ) {
@@ -7514,7 +7510,7 @@ function ensureRootIsScheduled(root, currentTime) {
     root.callbackPriority !== currentTime)
   ) {
     null != existingCallbackNode && cancelCallback(existingCallbackNode);
-    if (0 !== (currentTime & 3))
+    if (1 === currentTime)
       0 === root.tag
         ? ((existingCallbackNode = performSyncWorkOnRoot.bind(null, root)),
           (includesLegacySyncCallbacks = !0),
@@ -7529,13 +7525,13 @@ function ensureRootIsScheduled(root, currentTime) {
         (existingCallbackNode = null);
     else {
       switch (lanesToEventPriority(suspendedLanes)) {
-        case 2:
+        case 1:
           existingCallbackNode = ImmediatePriority;
           break;
-        case 8:
+        case 4:
           existingCallbackNode = UserBlockingPriority;
           break;
-        case 32:
+        case 16:
           existingCallbackNode = NormalPriority;
           break;
         case 536870912:
@@ -7638,7 +7634,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         case 3:
           markRootSuspended$1(root, lanes);
           if (
-            (lanes & 125829120) === lanes &&
+            (lanes & 130023424) === lanes &&
             ((didTimeout = globalMostRecentFallbackTime + 500 - now()),
             10 < didTimeout)
           ) {
@@ -7669,7 +7665,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           break;
         case 4:
           markRootSuspended$1(root, lanes);
-          if ((lanes & 8388480) === lanes) break;
+          if ((lanes & 4194240) === lanes) break;
           didTimeout = root.eventTimes;
           for (originallyAttemptedLanes = -1; 0 < lanes; )
             (errorRetryLanes$128 = 31 - clz32(lanes)),
@@ -7812,7 +7808,7 @@ function performSyncWorkOnRoot(root) {
   if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
   flushPassiveEffects();
   var lanes = getNextLanes(root, 0);
-  if (0 === (lanes & 3)) return ensureRootIsScheduled(root, now()), null;
+  if (0 === (lanes & 1)) return ensureRootIsScheduled(root, now()), null;
   var exitStatus = renderRootSync(root, lanes);
   if (0 !== root.tag && 2 === exitStatus) {
     var originallyAttemptedLanes = lanes,
@@ -7892,11 +7888,9 @@ function handleThrow(root, thrownValue) {
       : 3;
   } else
     workInProgressSuspendedReason =
-      thrownValue === SelectiveHydrationException
-        ? 6
-        : null !== thrownValue &&
-          "object" === typeof thrownValue &&
-          "function" === typeof thrownValue.then
+      null !== thrownValue &&
+      "object" === typeof thrownValue &&
+      "function" === typeof thrownValue.then
         ? 4
         : 1;
   workInProgressThrownValue = thrownValue;
@@ -7906,7 +7900,7 @@ function handleThrow(root, thrownValue) {
 }
 function shouldAttemptToSuspendUntilDataResolves() {
   if (
-    (workInProgressRootRenderLanes & 125829120) ===
+    (workInProgressRootRenderLanes & 130023424) ===
     workInProgressRootRenderLanes
   )
     return !0;
@@ -7916,7 +7910,7 @@ function shouldAttemptToSuspendUntilDataResolves() {
   )
     return !1;
   if (
-    (workInProgressRootRenderLanes & 8388480) ===
+    (workInProgressRootRenderLanes & 4194240) ===
     workInProgressRootRenderLanes
   ) {
     var suspenseHandler = suspenseHandlerStackCursor.current;
@@ -7956,21 +7950,14 @@ function renderRootSync(root, lanes) {
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes)
     (workInProgressTransitions = getTransitionsForLanes(root, lanes)),
       prepareFreshStack(root, lanes);
-  a: do
+  do
     try {
       if (0 !== workInProgressSuspendedReason && null !== workInProgress) {
         lanes = workInProgress;
         var thrownValue = workInProgressThrownValue;
-        switch (workInProgressSuspendedReason) {
-          case 6:
-            workInProgress = null;
-            workInProgressRootExitStatus = 6;
-            break a;
-          default:
-            (workInProgressSuspendedReason = 0),
-              (workInProgressThrownValue = null),
-              unwindSuspendedUnitOfWork(lanes, thrownValue);
-        }
+        workInProgressSuspendedReason = 0;
+        workInProgressThrownValue = null;
+        unwindSuspendedUnitOfWork(lanes, thrownValue);
       }
       workLoopSync();
       break;
@@ -8040,10 +8027,6 @@ function renderRootConcurrent(root, lanes) {
             workInProgressThrownValue = null;
             unwindSuspendedUnitOfWork(lanes, thrownValue);
             break;
-          case 6:
-            workInProgress = null;
-            workInProgressRootExitStatus = 6;
-            break a;
           default:
             throw Error(formatProdErrorMessage(462));
         }
@@ -8179,11 +8162,11 @@ function unwindSuspendedUnitOfWork(unitOfWork, thrownValue) {
                     if (1 === unitOfWork.tag)
                       if (null === unitOfWork.alternate) unitOfWork.tag = 17;
                       else {
-                        var update = createUpdate(-1, 2);
+                        var update = createUpdate(-1, 1);
                         update.tag = 2;
-                        enqueueUpdate$1(unitOfWork, update, 2);
+                        enqueueUpdate$1(unitOfWork, update, 1);
                       }
-                    unitOfWork.lanes |= 2;
+                    unitOfWork.lanes |= 1;
                   }
                 else
                   (suspenseBoundary.flags |= 32768),
@@ -8322,7 +8305,7 @@ function commitRoot(root, recoverableErrors, transitions) {
     prevTransition = ReactCurrentBatchConfig$2.transition;
   try {
     (ReactCurrentBatchConfig$2.transition = null),
-      (currentUpdatePriority = 2),
+      (currentUpdatePriority = 1),
       commitRootImpl(
         root,
         recoverableErrors,
@@ -8373,7 +8356,7 @@ function commitRootImpl(
     transitions = ReactCurrentBatchConfig$2.transition;
     ReactCurrentBatchConfig$2.transition = null;
     var previousPriority = currentUpdatePriority;
-    currentUpdatePriority = 2;
+    currentUpdatePriority = 1;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
     ReactCurrentOwner$2.current = null;
@@ -8412,11 +8395,11 @@ function commitRootImpl(
     (root = firstUncaughtError),
     (firstUncaughtError = null),
     root);
-  0 !== (pendingPassiveEffectsLanes & 3) &&
+  0 !== (pendingPassiveEffectsLanes & 1) &&
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (remainingLanes & 3)
+  0 !== (remainingLanes & 1)
     ? root === rootWithNestedUpdates
       ? nestedUpdateCount++
       : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -8436,7 +8419,7 @@ function flushPassiveEffects() {
       remainingLanes = pendingPassiveEffectsRemainingLanes;
     pendingPassiveEffectsRemainingLanes = 0;
     var renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
-    renderPriority = 32 > renderPriority ? 32 : renderPriority;
+    renderPriority = 16 > renderPriority ? 16 : renderPriority;
     var prevTransition = ReactCurrentBatchConfig$2.transition,
       previousPriority = currentUpdatePriority;
     try {
@@ -8492,11 +8475,11 @@ function flushPassiveEffectsImpl() {
 }
 function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
   sourceFiber = createCapturedValueAtFiber(error, sourceFiber);
-  sourceFiber = createRootErrorUpdate(rootFiber, sourceFiber, 2);
-  rootFiber = enqueueUpdate$1(rootFiber, sourceFiber, 2);
+  sourceFiber = createRootErrorUpdate(rootFiber, sourceFiber, 1);
+  rootFiber = enqueueUpdate$1(rootFiber, sourceFiber, 1);
   sourceFiber = requestEventTime();
   null !== rootFiber &&
-    (markRootUpdated(rootFiber, 2, sourceFiber),
+    (markRootUpdated(rootFiber, 1, sourceFiber),
     ensureRootIsScheduled(rootFiber, sourceFiber));
 }
 function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
@@ -8530,16 +8513,16 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
           sourceFiber = createClassErrorUpdate(
             nearestMountedAncestor,
             sourceFiber,
-            2
+            1
           );
           nearestMountedAncestor = enqueueUpdate$1(
             nearestMountedAncestor,
             sourceFiber,
-            2
+            1
           );
           sourceFiber = requestEventTime();
           null !== nearestMountedAncestor &&
-            (markRootUpdated(nearestMountedAncestor, 2, sourceFiber),
+            (markRootUpdated(nearestMountedAncestor, 1, sourceFiber),
             ensureRootIsScheduled(nearestMountedAncestor, sourceFiber));
           break;
         }
@@ -8572,7 +8555,7 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
     (workInProgressRootRenderLanes & pingedLanes) === pingedLanes &&
     (4 === workInProgressRootExitStatus ||
     (3 === workInProgressRootExitStatus &&
-      (workInProgressRootRenderLanes & 125829120) ===
+      (workInProgressRootRenderLanes & 130023424) ===
         workInProgressRootRenderLanes &&
       500 > now() - globalMostRecentFallbackTime)
       ? prepareFreshStack(root, 0)
@@ -8582,10 +8565,10 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
 function retryTimedOutBoundary(boundaryFiber, retryLane) {
   0 === retryLane &&
     (0 === (boundaryFiber.mode & 1)
-      ? (retryLane = 2)
+      ? (retryLane = 1)
       : ((retryLane = nextRetryLane),
         (nextRetryLane <<= 1),
-        0 === (nextRetryLane & 125829120) && (nextRetryLane = 8388608)));
+        0 === (nextRetryLane & 130023424) && (nextRetryLane = 4194304)));
   var eventTime = requestEventTime();
   boundaryFiber = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   null !== boundaryFiber &&
@@ -9465,7 +9448,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-2ccfa657d-20221205",
+    version: "18.3.0-www-modern-d807eb52c-20221205",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1327 = {
@@ -9496,7 +9479,7 @@ var internals$jscomp$inline_1327 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-2ccfa657d-20221205"
+  reconcilerVersion: "18.3.0-next-d807eb52c-20221205"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1328 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
