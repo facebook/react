@@ -677,7 +677,7 @@ function updateOffscreenComponent(
 ) {
   const nextProps: OffscreenProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
-  const isPendingDetached =
+  const nextIsDetached =
     (workInProgress.stateNode._pendingVisibility & OffscreenDetached) !== 0;
 
   const prevState: OffscreenState | null =
@@ -689,7 +689,7 @@ function updateOffscreenComponent(
     nextProps.mode === 'hidden' ||
     (enableLegacyHidden &&
       nextProps.mode === 'unstable-defer-without-hiding') ||
-    isPendingDetached
+    nextIsDetached
   ) {
     // Rendering a hidden tree.
 

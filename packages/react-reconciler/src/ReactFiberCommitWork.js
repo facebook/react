@@ -2876,18 +2876,19 @@ function commitMutationEffectsOnFiber(
       }
 
       commitReconciliationEffects(finishedWork);
+
+      const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
+
       // TODO: Add explicit effect flag to set _current.
-      finishedWork.stateNode._current = finishedWork;
+      offscreenInstance._current = finishedWork;
 
       // Offscreen stores pending changes to visibility in `_pendingVisibility`. This is
       // to support batching of `attach` and `detach` calls.
-      finishedWork.stateNode._visibility &= ~OffscreenDetached;
-      finishedWork.stateNode._visibility |=
-        finishedWork.stateNode._pendingVisibility & OffscreenDetached;
+      offscreenInstance._visibility &= ~OffscreenDetached;
+      offscreenInstance._visibility |=
+        offscreenInstance._pendingVisibility & OffscreenDetached;
 
       if (flags & Visibility) {
-        const offscreenInstance: OffscreenInstance = finishedWork.stateNode;
-
         // Track the current state on the Offscreen instance so we can
         // read it during an event
         if (isHidden) {
