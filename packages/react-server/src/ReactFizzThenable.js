@@ -14,6 +14,7 @@
 // instead of "Wakeable". Or some other more appropriate name.
 
 import type {
+  Wakeable,
   Thenable,
   PendingThenable,
   FulfilledThenable,
@@ -29,12 +30,12 @@ export function createThenableState(): ThenableState {
   return [];
 }
 
-export function trackUsedThenable<T>(
-  thenableState: ThenableState,
-  thenable: Thenable<T>,
-  index: number,
-) {
-  thenableState[index] = thenable;
+export function trackSuspendedWakeable(wakeable: Wakeable) {
+  // If this wakeable isn't already a thenable, turn it into one now. Then,
+  // when we resume the work loop, we can check if its status is
+  // still pending.
+  // TODO: Get rid of the Wakeable type? It's superseded by UntrackedThenable.
+  const thenable: Thenable<mixed> = (wakeable: any);
 
   // We use an expando to track the status and result of a thenable so that we
   // can synchronously unwrap the value. Think of this as an extension of the
@@ -79,6 +80,16 @@ export function trackUsedThenable<T>(
       break;
     }
   }
+}
+
+export function trackUsedThenable<T>(
+  thenableState: ThenableState,
+  thenable: Thenable<T>,
+  index: number,
+) {
+  // This is only a separate function from trackSuspendedWakeable for symmetry
+  // with Fiber.
+  thenableState[index] = thenable;
 }
 
 export function getPreviouslyUsedThenableAtIndex<T>(

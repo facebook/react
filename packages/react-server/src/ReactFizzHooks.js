@@ -593,7 +593,6 @@ function use<T>(usable: Usable<T>): T {
       const index = thenableIndexCounter;
       thenableIndexCounter += 1;
 
-      // TODO: Unify this switch statement with the one in trackUsedThenable.
       switch (thenable.status) {
         case 'fulfilled': {
           const fulfilledValue: T = thenable.value;

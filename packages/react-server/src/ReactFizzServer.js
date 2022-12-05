@@ -17,6 +17,7 @@ import type {
   ReactContext,
   ReactProviderType,
   OffscreenMode,
+  Wakeable,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -138,6 +139,7 @@ import {
 import assign from 'shared/assign';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
+import {trackSuspendedWakeable} from './ReactFizzThenable';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
@@ -1552,6 +1554,8 @@ function spawnNewSuspendedTask(
     task.treeContext,
   );
 
+  trackSuspendedWakeable(x);
+
   if (__DEV__) {
     if (task.componentStack !== null) {
       // We pop one task off the stack because the node that suspended will be tried again,
@@ -1875,6 +1879,9 @@ function retryTask(request: Request, task: Task): void {
       // Something suspended again, let's pick it back up later.
       const ping = task.ping;
       x.then(ping, ping);
+
+      const wakeable: Wakeable = x;
+      trackSuspendedWakeable(wakeable);
       task.thenableState = getThenableStateAfterSuspending();
     } else {
       task.abortSet.delete(task);
