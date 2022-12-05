@@ -462,6 +462,7 @@ describe('ReactFlightDOMBrowser', () => {
   });
 
   // @gate enableUseHook
+  // @gate FIXME // Depends on `use` (which was temporarily reverted in Fizz)
   it('should allow an alternative module mapping to be used for SSR', async () => {
     function ClientComponent() {
       return <span>Client Component</span>;

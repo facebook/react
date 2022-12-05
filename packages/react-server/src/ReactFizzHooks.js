@@ -15,27 +15,18 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
-  Thenable,
-  Usable,
 } from 'shared/ReactTypes';
 
 import type {ResponseState} from './ReactServerFormatConfig';
 import type {Task} from './ReactFizzServer';
-import type {ThenableState} from './ReactFizzWakeable';
 
 import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
-import {
-  getPreviouslyUsedThenableAtIndex,
-  createThenableState,
-  trackUsedThenable,
-} from './ReactFizzWakeable';
 
 import {makeId} from './ReactServerFormatConfig';
 
 import {
   enableCache,
-  enableUseHook,
   enableUseEventHook,
   enableUseMemoCacheHook,
 } from 'shared/ReactFeatureFlags';
@@ -71,9 +62,6 @@ let isReRender: boolean = false;
 let didScheduleRenderPhaseUpdate: boolean = false;
 // Counts the number of useId hooks in this component
 let localIdCounter: number = 0;
-// Counts the number of use(thenable) calls in this component
-let thenableIndexCounter: number = 0;
-let thenableState: ThenableState | null = null;
 // Lazily created map of render-phase updates
 let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 // Counter to prevent infinite loops.
@@ -188,11 +176,7 @@ function createWorkInProgressHook(): Hook {
   return workInProgressHook;
 }
 
-export function prepareToUseHooks(
-  task: Task,
-  componentIdentity: Object,
-  prevThenableState: ThenableState | null,
-): void {
+export function prepareToUseHooks(task: Task, componentIdentity: Object): void {
   currentlyRenderingComponent = componentIdentity;
   currentlyRenderingTask = task;
   if (__DEV__) {
@@ -207,8 +191,6 @@ export function prepareToUseHooks(
   // workInProgressHook = null;
 
   localIdCounter = 0;
-  thenableIndexCounter = 0;
-  thenableState = prevThenableState;
 }
 
 export function finishHooks(
@@ -227,7 +209,6 @@ export function finishHooks(
     // restarting until no more updates are scheduled.
     didScheduleRenderPhaseUpdate = false;
     localIdCounter = 0;
-    thenableIndexCounter = 0;
     numberOfReRenders += 1;
 
     // Start over from the beginning of the list
@@ -237,12 +218,6 @@ export function finishHooks(
   }
   resetHooksState();
   return children;
-}
-
-export function getThenableStateAfterSuspending(): null | ThenableState {
-  const state = thenableState;
-  thenableState = null;
-  return state;
 }
 
 export function checkDidRenderIdHook(): boolean {
@@ -578,81 +553,6 @@ function useId(): string {
   return makeId(responseState, treeId, localId);
 }
 
-function use<T>(usable: Usable<T>): T {
-  if (usable !== null && typeof usable === 'object') {
-    // $FlowFixMe[method-unbinding]
-    if (typeof usable.then === 'function') {
-      // This is a thenable.
-      const thenable: Thenable<T> = (usable: any);
-
-      // Track the position of the thenable within this fiber.
-      const index = thenableIndexCounter;
-      thenableIndexCounter += 1;
-
-      switch (thenable.status) {
-        case 'fulfilled': {
-          const fulfilledValue: T = thenable.value;
-          return fulfilledValue;
-        }
-        case 'rejected': {
-          const rejectedError = thenable.reason;
-          throw rejectedError;
-        }
-        default: {
-          const prevThenableAtIndex: Thenable<T> | null = getPreviouslyUsedThenableAtIndex(
-            thenableState,
-            index,
-          );
-          if (prevThenableAtIndex !== null) {
-            if (thenable !== prevThenableAtIndex) {
-              // Avoid an unhandled rejection errors for the Promises that we'll
-              // intentionally ignore.
-              thenable.then(noop, noop);
-            }
-            switch (prevThenableAtIndex.status) {
-              case 'fulfilled': {
-                const fulfilledValue: T = prevThenableAtIndex.value;
-                return fulfilledValue;
-              }
-              case 'rejected': {
-                const rejectedError: mixed = prevThenableAtIndex.reason;
-                throw rejectedError;
-              }
-              default: {
-                // The thenable still hasn't resolved. Suspend with the same
-                // thenable as last time to avoid redundant listeners.
-                throw prevThenableAtIndex;
-              }
-            }
-          } else {
-            // This is the first time something has been used at this index.
-            // Stash the thenable at the current index so we can reuse it during
-            // the next attempt.
-            if (thenableState === null) {
-              thenableState = createThenableState();
-            }
-            trackUsedThenable(thenableState, thenable, index);
-
-            // Suspend.
-            // TODO: Throwing here is an implementation detail that allows us to
-            // unwind the call stack. But we shouldn't allow it to leak into
-            // userspace. Throw an opaque placeholder value instead of the
-            // actual thenable. If it doesn't get captured by the work loop, log
-            // a warning, because that means something in userspace must have
-            // caught it.
-            throw thenable;
-          }
-        }
-      }
-    } else {
-      // TODO: Add support for Context
-    }
-  }
-
-  // eslint-disable-next-line react-internal/safe-string-coercion
-  throw new Error('An unsupported type was passed to use(): ' + String(usable));
-}
-
 function unsupportedRefresh() {
   throw new Error('Cache cannot be refreshed during server rendering.');
 }
@@ -703,9 +603,6 @@ if (enableUseEventHook) {
 }
 if (enableUseMemoCacheHook) {
   HooksDispatcher.useMemoCache = useMemoCache;
-}
-if (enableUseHook) {
-  HooksDispatcher.use = use;
 }
 
 export let currentResponseState: null | ResponseState = (null: any);
