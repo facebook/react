@@ -21,7 +21,7 @@ import type {
 
 import type {ResponseState} from './ReactServerFormatConfig';
 import type {Task} from './ReactFizzServer';
-import type {ThenableState} from './ReactFizzThenable';
+import type {ThenableState} from './ReactFizzWakeable';
 
 import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
@@ -29,7 +29,7 @@ import {
   getPreviouslyUsedThenableAtIndex,
   createThenableState,
   trackUsedThenable,
-} from './ReactFizzThenable';
+} from './ReactFizzWakeable';
 
 import {makeId} from './ReactServerFormatConfig';
 
