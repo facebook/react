@@ -32,6 +32,11 @@ class AbstractState {
       return value;
     }
 
+    if (alias.memberPath.length > 1) {
+      // TODO(gsn): Correctly handle nested member paths when reading values
+      return { kind: "Object", values: new Map() };
+    }
+
     // Complex alias:
     //   read(alias.memberPath);
     let object = this.#values.get(alias.identifier);
@@ -83,22 +88,28 @@ class AbstractState {
     return value;
   }
 
-  // Simple lvalue:
-  //   lvalue = alias;
-  //   lvalue = alias.memberPath;
   alias(lvalue: LValue, alias: Place) {
-    if (alias.memberPath !== null && alias.memberPath.length > 1) {
-      // TODO(gsn): Handle nested member paths
+    // TODO(gsn): Handle aliasing for complex lvalue
+    if (lvalue.place.memberPath !== null) {
       return;
     }
 
-    const value = this.read(alias);
-    this.#values.set(lvalue.place.identifier, value);
+    // Simple lvalue:
+    //   lvalue = alias;
+    //   lvalue = alias.memberPath;
+    this.aliases.union([lvalue.place.identifier, alias.identifier]);
+  }
 
-    // No need to alias Primitives.
-    if (value.kind !== "Primitive") {
-      this.aliases.union([lvalue.place.identifier, alias.identifier]);
+  store(lvalue: LValue, value: AbstractValue) {
+    // TODO(gsn): Handle stores for complex lvalue
+    if (lvalue.place.memberPath !== null) {
+      return;
     }
+
+    // Simple lvalue:
+    //   lvalue = alias;
+    //   lvalue = alias.memberPath;
+    this.#values.set(lvalue.place.identifier, value);
   }
 
   buildAliasSets(): Array<Set<Identifier>> {
@@ -137,9 +148,11 @@ export function buildAliasSets(func: HIRFunction): Array<Set<Identifier>> {
 function inferInstr(instr: Instruction, state: AbstractState) {
   const { lvalue, value: instrValue } = instr;
   let alias: Place | null = null;
+  let value: AbstractValue | null = null;
   switch (instrValue.kind) {
     case "Identifier": {
       alias = instrValue;
+      value = state.read(alias);
       break;
     }
     default:
@@ -147,8 +160,8 @@ function inferInstr(instr: Instruction, state: AbstractState) {
   }
 
   invariant(
-    alias !== null,
-    `expected ${printInstructionValue(instrValue)} to have an alias`
+    value !== null,
+    `expected ${printInstructionValue(instrValue)} to be an alias or value`
   );
 
   // TODO(gsn): handle this.
@@ -156,8 +169,10 @@ function inferInstr(instr: Instruction, state: AbstractState) {
     return;
   }
 
-  // simple aliasing
-  if (lvalue.place.memberPath === null) {
+  // No need to alias Primitives.
+  if (alias !== null && value.kind !== "Primitive") {
     state.alias(lvalue, alias);
   }
+
+  state.store(lvalue, value);
 }
