@@ -1496,10 +1496,12 @@ describe('ReactDOMServerSelectiveHydration', () => {
       // Start rendering. This will force the first boundary to hydrate
       // by scheduling it at one higher pri than Idle.
       expect(Scheduler).toFlushAndYieldThrough([
+        // An update was scheduled to force hydrate the boundary, but React will
+        // continue rendering at Idle until the next time React yields. This is
+        // fine though because it will switch to the hydration level when it
+        // re-enters the work loop.
         'App',
-
-        // Start hydrating A
-        'A',
+        'AA',
       ]);
 
       // Hover over A which (could) schedule at one higher pri than Idle.

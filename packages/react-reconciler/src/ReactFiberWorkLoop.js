@@ -175,7 +175,6 @@ import {
 } from './ReactEventPriorities';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {
-  SelectiveHydrationException,
   beginWork as originalBeginWork,
   replayFunctionComponent,
 } from './ReactFiberBeginWork';
@@ -317,14 +316,13 @@ let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
-opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+opaque type SuspendedReason = 0 | 1 | 2 | 3 | 4 | 5;
 const NotSuspended: SuspendedReason = 0;
 const SuspendedOnError: SuspendedReason = 1;
 const SuspendedOnData: SuspendedReason = 2;
 const SuspendedOnImmediate: SuspendedReason = 3;
 const SuspendedOnDeprecatedThrowPromise: SuspendedReason = 4;
 const SuspendedAndReadyToUnwind: SuspendedReason = 5;
-const SuspendedOnHydration: SuspendedReason = 6;
 
 // When this is true, the work-in-progress fiber just suspended (or errored) and
 // we've yet to unwind the stack. In some cases, we may yield to the main thread
@@ -1799,17 +1797,6 @@ function handleThrow(root, thrownValue): void {
     workInProgressSuspendedReason = shouldAttemptToSuspendUntilDataResolves()
       ? SuspendedOnData
       : SuspendedOnImmediate;
-  } else if (thrownValue === SelectiveHydrationException) {
-    // An update flowed into a dehydrated boundary. Before we can apply the
-    // update, we need to finish hydrating. Interrupt the work-in-progress
-    // render so we can restart at the hydration lane.
-    //
-    // The ideal implementation would be able to switch contexts without
-    // unwinding the current stack.
-    //
-    // We could name this something more general but as of now it's the only
-    // case where we think this should happen.
-    workInProgressSuspendedReason = SuspendedOnHydration;
   } else {
     // This is a regular error.
     const isWakeable =
@@ -2009,9 +1996,6 @@ export function renderHasNotSuspendedYet(): boolean {
   return workInProgressRootExitStatus === RootInProgress;
 }
 
-// TODO: Over time, this function and renderRootConcurrent have become more
-// and more similar. Not sure it makes sense to maintain forked paths. Consider
-// unifying them again.
 function renderRootSync(root: FiberRoot, lanes: Lanes) {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
@@ -2051,7 +2035,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     markRenderStarted(lanes);
   }
 
-  outer: do {
+  do {
     try {
       if (
         workInProgressSuspendedReason !== NotSuspended &&
@@ -2067,23 +2051,11 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
         // function and fork the behavior some other way.
         const unitOfWork = workInProgress;
         const thrownValue = workInProgressThrownValue;
-        switch (workInProgressSuspendedReason) {
-          case SuspendedOnHydration: {
-            // Selective hydration. An update flowed into a dehydrated tree.
-            // Interrupt the current render so the work loop can switch to the
-            // hydration lane.
-            workInProgress = null;
-            workInProgressRootExitStatus = RootDidNotComplete;
-            break outer;
-          }
-          default: {
-            // Continue with the normal work loop.
-            workInProgressSuspendedReason = NotSuspended;
-            workInProgressThrownValue = null;
-            unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
-            break;
-          }
-        }
+        workInProgressSuspendedReason = NotSuspended;
+        workInProgressThrownValue = null;
+        unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
+
+        // Continue with the normal work loop.
       }
       workLoopSync();
       break;
@@ -2240,14 +2212,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             workInProgressThrownValue = null;
             unwindSuspendedUnitOfWork(unitOfWork, thrownValue);
             break;
-          }
-          case SuspendedOnHydration: {
-            // Selective hydration. An update flowed into a dehydrated tree.
-            // Interrupt the current render so the work loop can switch to the
-            // hydration lane.
-            workInProgress = null;
-            workInProgressRootExitStatus = RootDidNotComplete;
-            break outer;
           }
           default: {
             throw new Error(
