@@ -150,6 +150,13 @@ function inferInstr(instr: Instruction, state: AbstractState) {
   let alias: Place | null = null;
   let value: AbstractValue | null = null;
   switch (instrValue.kind) {
+    case "Primitive": {
+      value = {
+        kind: "Primitive",
+        value: instrValue.value,
+      };
+      break;
+    }
     case "Identifier": {
       alias = instrValue;
       value = state.read(alias);
