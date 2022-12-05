@@ -18,22 +18,19 @@ function Component(props) {
 ```
 bb0:
   [1] Const mutate x$7_@0[1:6] = Object {  }
-  [2] Const mutate y$8_@1 = Array []
-  [3] Reassign mutate x$7_@0.y[1:6] = read y$8_@1
-  [4] Const mutate child$9_@2 = JSX <read Component$0 data={freeze y$8_@1} ></read Component$0>
+  [2] Const mutate y$8_@0[1:6] = Array []
+  [3] Reassign mutate x$7_@0.y[1:6] = read y$8_@0
+  [4] Const mutate child$9_@0[1:6] = JSX <read Component$0 data={freeze y$8_@0} ></read Component$0>
   [5] Call mutate x$7_@0.y.push(read props$6.p0)
-  [6] Const mutate $10_@3 = JSX <read Component$0 data={freeze x$7_@0} >{read child$9_@2}</read Component$0>
-  [7] Return read $10_@3
-scope1 [2:3]:
- - mutate x$7_@0.y
-scope2 [4:5]:
+  [6] Const mutate $10_@1 = JSX <read Component$0 data={freeze x$7_@0} >{read child$9_@0}</read Component$0>
+  [7] Return read $10_@1
+scope0 [1:6]:
  - read Component$0
- - freeze y$8_@1
  - read props$6.p0
-scope3 [6:7]:
+scope1 [6:7]:
  - read Component$0
  - freeze x$7_@0
- - read child$9_@2
+ - read child$9_@0
 ```
 
 ### CFG
@@ -44,13 +41,13 @@ flowchart TB
   subgraph bb0
     bb0_instrs["
       [1] Const mutate x$7_@0[1:6] = Object {  }
-      [2] Const mutate y$8_@1 = Array []
-      [3] Reassign mutate x$7_@0.y[1:6] = read y$8_@1
-      [4] Const mutate child$9_@2 = JSX <read Component$0 data={freeze y$8_@1} ></read Component$0>
+      [2] Const mutate y$8_@0[1:6] = Array []
+      [3] Reassign mutate x$7_@0.y[1:6] = read y$8_@0
+      [4] Const mutate child$9_@0[1:6] = JSX <read Component$0 data={freeze y$8_@0} ></read Component$0>
       [5] Call mutate x$7_@0.y.push(read props$6.p0)
-      [6] Const mutate $10_@3 = JSX <read Component$0 data={freeze x$7_@0} >{read child$9_@2}</read Component$0>
+      [6] Const mutate $10_@1 = JSX <read Component$0 data={freeze x$7_@0} >{read child$9_@0}</read Component$0>
     "]
-    bb0_instrs --> bb0_terminal(["Return read $10_@3"])
+    bb0_instrs --> bb0_terminal(["Return read $10_@1"])
   end
 
   %% Jumps
