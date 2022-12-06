@@ -1,5 +1,5 @@
 /**
- * @license React
+ *
  * react-refresh-babel.development.js
  *
  * Copyright (c) Meta Platforms, Inc. and affiliates.
