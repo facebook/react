@@ -1,5 +1,5 @@
 /**
- *
+ * @license React
  * eslint-plugin-react-hooks.development.js
  *
  * Copyright (c) Meta Platforms, Inc. and affiliates.
