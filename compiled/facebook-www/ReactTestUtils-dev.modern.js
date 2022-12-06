@@ -153,7 +153,7 @@ var Placement =
   2;
 var Hydrating =
   /*                    */
-  2048; // You can change the rest (and add more).
+  4096; // You can change the rest (and add more).
 
 var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 function getNearestMountedFiber(fiber) {

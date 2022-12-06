@@ -415,41 +415,47 @@ var Placement =
   2;
 var DidCapture =
   /*                   */
-  64;
+  128;
 var Hydrating =
   /*                    */
-  2048; // You can change the rest (and add more).
+  4096; // You can change the rest (and add more).
 
 var Update =
   /*                       */
   4;
+/* Skipped value:                                 0b000000000000000000000001000; */
+
 var ChildDeletion =
   /*                */
-  8;
+  16;
 var ContentReset =
   /*                 */
-  16;
+  32;
 var Callback =
   /*                     */
-  32;
+  64;
+/* Used by DidCapture:                            0b000000000000000000010000000; */
+
 var ForceClientRender =
   /*            */
-  128;
+  256;
 var Ref =
   /*                          */
-  256;
+  512;
 var Snapshot =
   /*                     */
-  512;
+  1024;
 var Passive =
   /*                      */
-  1024;
+  2048;
+/* Used by Hydrating:                             0b000000000000001000000000000; */
+
 var Visibility =
   /*                   */
-  4096;
+  8192;
 var StoreConsistency =
   /*             */
-  8192;
+  16384;
 var LifecycleEffectMask =
   Passive | Update | Callback | Ref | Snapshot | StoreConsistency; // Union of all commit flags (flags with the lifetime of a particular commit)
 
@@ -459,16 +465,16 @@ var HostEffectMask =
 
 var Incomplete =
   /*                   */
-  16384;
+  32768;
 var ShouldCapture =
   /*                */
-  32768;
+  65536;
 var ForceUpdateForLegacySuspense =
   /* */
-  65536;
+  131072;
 var Forked =
   /*                       */
-  524288; // Static tags describe aspects of a fiber that are not specific to a render,
+  1048576; // Static tags describe aspects of a fiber that are not specific to a render,
 // e.g. a fiber uses a passive effect (even if there are no updates on this particular render).
 // This enables us to defer more work in the unmount case,
 // since we can defer traversing the tree during layout to look for Passive effects,
@@ -476,23 +482,23 @@ var Forked =
 
 var RefStatic =
   /*                    */
-  1048576;
+  2097152;
 var LayoutStatic =
   /*                 */
-  2097152;
+  4194304;
 var PassiveStatic =
   /*                */
-  4194304; // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
+  8388608; // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
 
 var PlacementDEV =
   /*                 */
-  8388608;
+  16777216;
 var MountLayoutDev =
   /*               */
-  16777216;
+  33554432;
 var MountPassiveDev =
   /*              */
-  33554432; // Groups of flags that are used in the commit phase to skip over trees that
+  67108864; // Groups of flags that are used in the commit phase to skip over trees that
 // don't contain effects, by checking subtreeFlags.
 
 var BeforeMutationMask = // TODO: Remove Update flag from before mutation phase by re-landing Visibility
@@ -38790,7 +38796,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-645ae2686-20221206";
+var ReactVersion = "18.3.0-www-classic-d69b2cf82-20221206";
 
 function createPortal(
   children,
