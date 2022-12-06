@@ -23,7 +23,7 @@ bb1:
   predecessor blocks: bb0 bb3
   x$7_@0[0:9]: phi(bb0: x$5_@0, bb3: x$10_@0)
   [3] Const mutate $6_@1 = 10
-  [4] Const mutate $8_@2[4:9] = Binary read x$7_@0 < read $6_@1
+  [4] Const mutate $8_@2[4:6] = Binary read x$7_@0 < read $6_@1
   [5] If (read $8_@2) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
@@ -33,7 +33,7 @@ bb3:
 bb2:
   predecessor blocks: bb1
   [9] Return read x$7_@0
-scope2 [4:9]:
+scope2 [4:6]:
  - read $6_@1
 ```
 
@@ -51,7 +51,7 @@ flowchart TB
   subgraph bb1
     bb1_instrs["
       [3] Const mutate $6_@1 = 10
-      [4] Const mutate $8_@2[4:9] = Binary read x$7_@0 < read $6_@1
+      [4] Const mutate $8_@2[4:6] = Binary read x$7_@0 < read $6_@1
     "]
     bb1_instrs --> bb1_terminal(["If (read $8_@2)"])
   end

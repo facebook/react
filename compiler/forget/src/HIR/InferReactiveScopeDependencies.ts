@@ -189,8 +189,12 @@ class ScopeDependenciesVisitor
   }
 
   enterBlock(): void {}
+  enterValueBlock(): void {}
   visitImplicitTerminal(): void | null {}
   visitCase(test: InstructionValue, block: void): void {}
   appendBlock(block: void, item: void, label?: BlockId | undefined): void {}
   leaveBlock(block: void): void {}
+  leaveValueBlock(block: void, value: InstructionValue): InstructionValue {
+    return value;
+  }
 }

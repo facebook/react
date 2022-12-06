@@ -239,15 +239,20 @@ class Driver<TBlock, TValue, TItem, TCase> {
           testTerminal.kind === "if",
           "Expected while loop test block to end in an if"
         );
-        // const bodyLength = blockValue.length;
+        const testValueBlock = this.visitor.enterValueBlock();
         for (const instr of testBlock.instructions) {
-          this.visitInstr(instr, blockValue);
+          const value = this.visitor.visitValue(instr.value, instr.id);
+          const item = this.visitor.visitInstruction(instr, value);
+          this.visitor.appendBlock(testValueBlock, item);
         }
-        // invariant(
-        //   body.length === bodyLength,
-        //   "Expected test to produce only temporaries"
-        // );
-        const testValue = this.visitPlace(testTerminal.test, terminal.id);
+        const testValueLast = this.visitor.visitValue(
+          testTerminal.test,
+          testTerminal.id
+        );
+        const testValue = this.visitor.leaveValueBlock(
+          testValueBlock,
+          testValueLast
+        );
         const fallthroughId =
           terminal.fallthrough !== null &&
           !this.cx.isScheduled(terminal.fallthrough)
@@ -643,6 +648,10 @@ export interface Visitor<TBlock, TValue, TItem, TCase> {
    * the contents of a block.
    */
   enterBlock(): TBlock;
+
+  enterValueBlock(): TBlock;
+
+  leaveValueBlock(block: TBlock, value: TValue): TValue;
 
   /**
    * Convert an InstructionValue into the visitor's own representation

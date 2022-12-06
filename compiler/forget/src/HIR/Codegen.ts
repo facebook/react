@@ -100,6 +100,10 @@ class CodegenVisitor
     this.depth++;
     return [];
   }
+  enterValueBlock(): t.Statement[] {
+    this.depth++;
+    return [];
+  }
   visitValue(value: InstructionValue): t.Expression {
     return codegenInstructionValue(this.temp, value);
   }
@@ -236,6 +240,25 @@ class CodegenVisitor
   leaveBlock(block: t.Statement[]): t.Statement {
     this.depth--;
     return t.blockStatement(block);
+  }
+  leaveValueBlock(block: t.Statement[], place: t.Expression): t.Expression {
+    this.depth--;
+    if (block.length === 0) {
+      return place;
+    }
+    const expressions = block.map((stmt) => {
+      switch (stmt.type) {
+        case "ExpressionStatement":
+          return stmt.expression;
+        default:
+          todoInvariant(
+            false,
+            `Handle conversion of ${stmt.type} to expression`
+          );
+      }
+    });
+    expressions.push(place);
+    return t.sequenceExpression(expressions);
   }
 }
 

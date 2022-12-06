@@ -32,6 +32,12 @@ class PrintVisitor implements Visitor<Array<string>, string, string, string> {
     this.depth++;
     return [];
   }
+  enterValueBlock(): string[] {
+    return this.enterBlock();
+  }
+  leaveValueBlock(block: string[], value: string): string {
+    return this.leaveBlock(block);
+  }
   visitValue(value: InstructionValue): string {
     return printMixedHIR(value);
   }

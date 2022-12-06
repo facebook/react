@@ -31,7 +31,7 @@ bb1:
   sum$21_@3[0:14]: phi(bb0: sum$16_@3, bb3: sum$22_@3)
   [8] Reassign mutate value$18_@3[0:14] = Call mutate queue$14_@3.pop()
   [9] Const mutate $19_@6 = null
-  [10] Const mutate $20_@7[10:14] = Binary read value$18_@3 != read $19_@6
+  [10] Const mutate $20_@7[10:12] = Binary read value$18_@3 != read $19_@6
   [11] If (read $20_@7) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
@@ -40,7 +40,7 @@ bb3:
 bb2:
   predecessor blocks: bb1
   [14] Return read sum$21_@3
-scope7 [10:14]:
+scope7 [10:12]:
  - read $19_@6
 ```
 
@@ -64,7 +64,7 @@ flowchart TB
     bb1_instrs["
       [8] Reassign mutate value$18_@3[0:14] = Call mutate queue$14_@3.pop()
       [9] Const mutate $19_@6 = null
-      [10] Const mutate $20_@7[10:14] = Binary read value$18_@3 != read $19_@6
+      [10] Const mutate $20_@7[10:12] = Binary read value$18_@3 != read $19_@6
     "]
     bb1_instrs --> bb1_terminal(["If (read $20_@7)"])
   end
@@ -95,8 +95,7 @@ function f$0(reader$1) {
   const queue$2 = [1, 2, 3];
   let value$6 = 0;
   let sum$7 = 0;
-  value$6 = queue$2.pop();
-  bb2: while (value$6 != null) {
+  bb2: while (((value$6 = queue$2.pop()), value$6 != null)) {
     sum$7 = sum$7 + value$6;
   }
 

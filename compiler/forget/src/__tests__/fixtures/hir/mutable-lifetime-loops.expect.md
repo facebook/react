@@ -108,7 +108,7 @@ bb1:
   b$20_@0[0:23]: phi(bb0: b$14_@0, bb4: b$23_@0)
   c$22_@0[0:23]: phi(bb0: c$15_@0, bb4: c$25_@0)
   d$24_@0[0:23]: phi(bb0: d$16_@0, bb4: d$26_@0)
-  [6] Const mutate $17_@1[6:17] = true
+  [6] Const mutate $17_@1[6:8] = true
   [7] If (read $17_@1) then:bb3 else:bb2
 bb3:
   predecessor blocks: bb1
@@ -163,7 +163,7 @@ flowchart TB
   end
   subgraph bb1
     bb1_instrs["
-      [6] Const mutate $17_@1[6:17] = true
+      [6] Const mutate $17_@1[6:8] = true
     "]
     bb1_instrs --> bb1_terminal(["If (read $17_@1)"])
   end

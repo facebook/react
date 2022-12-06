@@ -254,6 +254,12 @@ class MergeOverlappingReactiveScopesVisitor
   enterBlock(): void {
     this.scopes.push(new BlockScope());
   }
+  enterValueBlock(): void {
+    this.enterBlock();
+  }
+  leaveValueBlock(block: void, value: void): void {
+    this.leaveBlock();
+  }
   visitValue(value: InstructionValue, id: InstructionId): void {
     this.visitId(id);
     for (const operand of eachInstructionValueOperand(value)) {
@@ -353,6 +359,14 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
         this.unclosedScopes.push(scope);
       }
     }
+  }
+
+  enterValueBlock(): void {
+    this.enterBlock();
+  }
+
+  leaveValueBlock(block: void, value: void): void {
+    this.leaveBlock();
   }
 
   visitInstruction(instruction: Instruction, value: void): void {
