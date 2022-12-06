@@ -190,6 +190,14 @@ class CodegenVisitor
       case "while": {
         return createWhileStatement(terminal.loc, terminal.test, terminal.loop);
       }
+      case "for": {
+        return t.forStatement(
+          terminal.init as any, // TODO: make sure it's a variable declaration
+          terminal.test,
+          terminal.update,
+          terminal.loop
+        );
+      }
       case "return": {
         const createReturnStatement = withLoc(t.returnStatement);
         if (terminal.value !== null) {

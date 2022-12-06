@@ -311,6 +311,113 @@ class Driver<TBlock, TValue, TItem, TCase> {
         }
         break;
       }
+      case "for": {
+        const loopId =
+          !this.cx.isScheduled(terminal.loop) &&
+          terminal.loop !== terminal.fallthrough
+            ? terminal.loop
+            : null;
+
+        const fallthroughId =
+          terminal.fallthrough !== null &&
+          !this.cx.isScheduled(terminal.fallthrough)
+            ? terminal.fallthrough
+            : null;
+
+        const scheduleId = this.cx.scheduleLoop(
+          terminal.fallthrough,
+          terminal.update,
+          terminal.loop
+        );
+        scheduleIds.push(scheduleId);
+
+        const initBlock = this.cx.ir.blocks.get(terminal.init)!;
+        const initTerminal = initBlock.terminal;
+        invariant(
+          initTerminal.kind === "goto",
+          "Expected for loop init block to end in a goto"
+        );
+
+        let initItem;
+        for (const instr of initBlock.instructions) {
+          const value = this.visitor.visitValue(instr.value, instr.id);
+          initItem = this.visitor.visitInstruction(instr, value);
+        }
+
+        const testBlock = this.cx.ir.blocks.get(terminal.test)!;
+        const testTerminal = testBlock.terminal;
+        invariant(
+          testTerminal.kind === "if",
+          "Expected for loop test block to end in an if"
+        );
+        const testValueBlock = this.visitor.enterValueBlock();
+        for (const instr of testBlock.instructions) {
+          const value = this.visitor.visitValue(instr.value, instr.id);
+          const item = this.visitor.visitInstruction(instr, value);
+          this.visitor.appendBlock(testValueBlock, item);
+        }
+        const testValueLast = this.visitor.visitValue(
+          testTerminal.test,
+          testTerminal.id
+        );
+        const testValue = this.visitor.leaveValueBlock(
+          testValueBlock,
+          testValueLast
+        );
+
+        const updateBlock = this.cx.ir.blocks.get(terminal.update)!;
+        const updateTerminal = updateBlock.terminal;
+        invariant(
+          updateTerminal.kind === "goto",
+          "Expected for loop update block to end in a goto"
+        );
+        let updateValue;
+        for (const instr of updateBlock.instructions) {
+          updateValue = this.visitor.visitValue(instr.value, instr.id);
+        }
+
+        let loopBody: TItem;
+        if (loopId) {
+          loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
+        } else {
+          const break_ = this.visitBreak(terminal.loop);
+          invariant(
+            break_ !== null,
+            "If loop body is already scheduled it must be a break"
+          );
+          const body = this.visitor.enterBlock();
+          this.visitor.appendBlock(body, break_);
+          loopBody = this.visitor.leaveBlock(body);
+        }
+
+        this.cx.unscheduleAll(scheduleIds);
+        if (fallthroughId !== null) {
+          this.visitor.appendBlock(
+            blockValue,
+            this.visitor.visitTerminal({
+              kind: "for",
+              init: initItem as any,
+              test: testValue,
+              update: updateValue as any,
+              loop: loopBody,
+            }),
+            fallthroughId
+          );
+          this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
+        } else {
+          this.visitor.appendBlock(
+            blockValue,
+            this.visitor.visitTerminal({
+              kind: "for",
+              init: initItem as any,
+              test: testValue,
+              update: updateValue as any,
+              loop: loopBody,
+            })
+          );
+        }
+        break;
+      }
       case "goto": {
         this.visitor.visitTerminalId(terminal.id);
         switch (terminal.variant) {
@@ -720,6 +827,13 @@ export type BlockTerminal<TBlock, TValue, TItem, TCase> =
       kind: "while";
       loc: SourceLocation;
       test: TValue;
+      loop: TItem;
+    }
+  | {
+      kind: "for";
+      init: TItem;
+      test: TValue;
+      update: TValue;
       loop: TItem;
     }
   | { kind: "break"; label: BlockId | null }

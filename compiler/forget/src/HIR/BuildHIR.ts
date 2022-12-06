@@ -317,90 +317,77 @@ function lowerStatement(
     }
     case "ForStatement": {
       const stmt = stmtPath as NodePath<t.ForStatement>;
-      /**
-       * The initializer is evaluated once prior to entering the loop.
-       * here we are not concerned about scoping, so we can push the
-       * initializer to the end of of the block leading up to the loop
-       */
-      const init = stmt.get("init");
-      if (init.hasNode()) {
-        // builder.push(init);
-        throw new Error("todo: lower initializer in ForStatement");
-      }
-      //  Block used to evaluate whether to (re)enter or exit the loop
-      const conditionalBlock = builder.reserve();
+
+      const testBlock = builder.reserve();
       //  Block for code following the loop
       const continuationBlock = builder.reserve();
-      /**
-       * Block for the updater, which runs after each iteration (including upon `continue`)
-       * Generally this would increment or decrement the loop index variable
-       */
-      const updateBlock = builder.reserve();
-      const update = stmt.get("update");
-      if (update.hasNode()) {
-        // updateBlock[1].push(stmt.get("update") as any as NodePath<t.Statement>);
-        throw new Error("todo: lower updater for ForStatement");
-      }
-      builder.complete(updateBlock, {
-        kind: "goto",
-        block: conditionalBlock.id,
-        variant: GotoVariant.Break,
-        id: makeInstructionId(0),
+
+      const initBlock = builder.enter((blockId) => {
+        const init = stmt.get("init") as NodePath<t.VariableDeclaration>;
+        todoInvariant(
+          t.isVariableDeclaration(init.node),
+          "handle non variable initialization in for"
+        );
+        lowerStatement(builder, init);
+        return {
+          kind: "goto",
+          block: testBlock.id,
+          variant: GotoVariant.Break,
+          id: makeInstructionId(0),
+        };
       });
-      /**
-       * Construct the loop itself: the loop body wraps around to the update block
-       * and the update block is also set as the `continue` target
-       */
-      const loopBlock = builder.enter((blockId) => {
-        return builder.loop(label, updateBlock.id, continuationBlock.id, () => {
+
+      const updateBlock = builder.enter((blockId) => {
+        const update = stmt.get("update");
+        if (update.hasNode()) {
+          lowerExpressionToVoid(builder, update);
+        }
+        return {
+          kind: "goto",
+          block: testBlock.id,
+          variant: GotoVariant.Break,
+          id: makeInstructionId(0),
+        };
+      });
+
+      const bodyBlock = builder.enter((blockId) => {
+        return builder.loop(label, updateBlock, continuationBlock.id, () => {
           lowerStatement(builder, stmt.get("body"));
           return {
             kind: "goto",
-            block: updateBlock.id,
+            block: updateBlock,
             variant: GotoVariant.Continue,
             id: makeInstructionId(0),
           };
         });
       });
-      //  End the block leading up to the loop, jumping to the conditional block
+
       builder.terminateWithContinuation(
         {
-          kind: "goto",
-          block: conditionalBlock.id,
-          variant: GotoVariant.Break,
+          kind: "for",
+          init: initBlock,
+          test: testBlock.id,
+          update: updateBlock,
+          loop: bodyBlock,
+          fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
         },
-        conditionalBlock
+        testBlock
       );
 
-      let terminal: Terminal;
       const test = stmt.get("test");
-      if (test.hasNode()) {
-        /**
-         * Terminate the conditional block with the test conditional of the for statement:
-         * if the condition is true enter the loop block, else exit to the continuation
-         */
-        terminal = {
+      todoInvariant(test.hasNode(), "ForStatement without test");
+      builder.terminateWithContinuation(
+        {
           kind: "if",
           test: lowerExpressionToPlace(builder, test),
-          consequent: loopBlock,
+          consequent: bodyBlock,
           alternate: continuationBlock.id,
           fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
-        };
-      } else {
-        /**
-         * If there is no test, then the "conditional" block unconditionally re-enters the loop.
-         * this will create an indirection, but `shrink()` will eliminate this in post-processing.
-         */
-        terminal = {
-          kind: "goto",
-          block: loopBlock,
-          variant: GotoVariant.Break,
-          id: makeInstructionId(0),
-        };
-      }
-      builder.terminateWithContinuation(terminal, continuationBlock);
+        },
+        continuationBlock
+      );
       return;
     }
     case "DoWhileStatement": {
@@ -1276,6 +1263,22 @@ function lowerExpressionToPlace(
     lvalue: { place: { ...place }, kind: InstructionKind.Const },
   });
   return place;
+}
+
+function lowerExpressionToVoid(
+  builder: HIRBuilder,
+  exprPath: NodePath<t.Expression>
+): void {
+  const instr = lowerExpression(builder, exprPath);
+  if (instr.kind !== "Identifier") {
+    const exprLoc = exprPath.node.loc ?? GeneratedSource;
+    builder.push({
+      id: makeInstructionId(0),
+      value: instr,
+      loc: exprLoc,
+      lvalue: null,
+    });
+  }
 }
 
 function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {

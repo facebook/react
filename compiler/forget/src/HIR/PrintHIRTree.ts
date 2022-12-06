@@ -94,6 +94,12 @@ class PrintVisitor implements Visitor<Array<string>, string, string, string> {
         value = `While (${terminal.test}) ${terminal.loop.trimStart()}`;
         break;
       }
+      case "for": {
+        value = `For (TODO) (${
+          terminal.test
+        }) (TODO) ${terminal.loop.trimStart()}`;
+        break;
+      }
       case "return": {
         if (terminal.value !== null) {
           value = `Return ${terminal.value}`;

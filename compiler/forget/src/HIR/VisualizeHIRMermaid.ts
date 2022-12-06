@@ -98,6 +98,9 @@ function printTerminalLabel(terminal: Terminal): string {
     case "while":
       buffer.push("While");
       break;
+    case "for":
+      buffer.push("For");
+      break;
     default:
       assertExhaustive(terminal, `unhandled terminal ${terminal}`);
   }
@@ -143,6 +146,14 @@ function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
     }
     case "while": {
       buffer.push(printJumpArrow(blockId, terminal.test, "test"));
+      buffer.push(printJumpArrow(blockId, terminal.loop, "loop"));
+      buffer.push(printJumpArrow(blockId, terminal.fallthrough, "fallthrough"));
+      break;
+    }
+    case "for": {
+      buffer.push(printJumpArrow(blockId, terminal.init, "init"));
+      buffer.push(printJumpArrow(blockId, terminal.test, "test"));
+      buffer.push(printJumpArrow(blockId, terminal.update, "update"));
       buffer.push(printJumpArrow(blockId, terminal.loop, "loop"));
       buffer.push(printJumpArrow(blockId, terminal.fallthrough, "fallthrough"));
       break;

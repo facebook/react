@@ -214,6 +214,22 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
+    case "for": {
+      const init = fn(terminal.init);
+      const test = fn(terminal.test);
+      const update = fn(terminal.update);
+      const loop = fn(terminal.loop);
+      const fallthrough = fn(terminal.fallthrough);
+      return {
+        kind: "for",
+        init,
+        test,
+        update,
+        loop,
+        fallthrough,
+        id: makeInstructionId(0),
+      };
+    }
     default: {
       assertExhaustive(
         terminal,
@@ -255,6 +271,10 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       yield terminal.test;
       break;
     }
+    case "for": {
+      yield terminal.init;
+      break;
+    }
     default: {
       assertExhaustive(
         terminal,
@@ -291,6 +311,7 @@ export function mapTerminalOperands(
       break;
     }
     case "while":
+    case "for":
     case "goto": {
       // no-op
       break;
@@ -328,6 +349,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
       break;
     }
     case "while":
+    case "for":
     case "goto": {
       // no-op
       break;

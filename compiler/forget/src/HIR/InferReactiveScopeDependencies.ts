@@ -102,6 +102,7 @@ class ScopeDependenciesVisitor
     switch (terminal.kind) {
       case "if":
       case "switch":
+      case "for":
       case "while": {
         for (const operand of eachInstructionValueOperand(terminal.test)) {
           this.#addTerminalDependency(operand);

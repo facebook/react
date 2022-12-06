@@ -365,7 +365,8 @@ function shrink(func: HIR): HIR {
     if (target !== null) {
       return target;
     }
-    const block = func.blocks.get(blockId)!;
+    const block = func.blocks.get(blockId);
+    invariant(block != null, "expected block %s to exist", blockId);
     target = getTargetIfIndirection(block);
     if (target !== null) {
       //  the target might also be a simple goto, recurse
@@ -483,6 +484,10 @@ function reversePostorderBlocks(func: HIR): HIR {
       }
       case "while": {
         visit(terminal.test);
+        break;
+      }
+      case "for": {
+        visit(terminal.init);
         break;
       }
       default: {

@@ -109,6 +109,7 @@ export type Terminal =
   | GotoTerminal
   | IfTerminal
   | SwitchTerminal
+  | ForTerminal
   | WhileTerminal;
 
 export type ThrowTerminal = { kind: "throw"; value: Place; id: InstructionId };
@@ -153,6 +154,16 @@ export type WhileTerminal = {
   kind: "while";
   loc: SourceLocation;
   test: BlockId;
+  loop: BlockId;
+  fallthrough: BlockId;
+  id: InstructionId;
+};
+
+export type ForTerminal = {
+  kind: "for";
+  init: BlockId;
+  test: BlockId;
+  update: BlockId;
   loop: BlockId;
   fallthrough: BlockId;
   id: InstructionId;
