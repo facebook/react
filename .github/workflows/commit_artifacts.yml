@@ -99,6 +99,11 @@ jobs:
             } else {
               process.exitCode = 1;
             }
+      - name: Strip @license from eslint plugin and react-refresh
+        run: |
+          sed -i -e 's/ @license React*//' \
+            build/oss-stable/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
+            build/oss-stable/react-refresh/cjs/react-refresh-babel.development.js
       - name: Move relevant files into compiled
         run: |
           mkdir -p ./compiled
