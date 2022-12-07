@@ -195,9 +195,10 @@ export function createResponseState(
   }
   if (enableFizzExternalRuntime) {
     if (!enableFloat) {
-      throw new Error(
-        'enableFizzExternalRuntime without enableFloat is not supported. This should never appear in production, since it means you are using a misconfigured React bundle.',
-      );
+      // TODO: Add back.
+      // throw new Error(
+      //   'enableFizzExternalRuntime without enableFloat is not supported. This should never appear in production, since it means you are using a misconfigured React bundle.',
+      // );
     }
     if (externalRuntimeConfig !== undefined) {
       streamingFormat = DataStreamingFormat;
