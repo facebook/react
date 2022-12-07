@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Instance, Container} from './ReactDOMHostConfig';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
@@ -30,6 +31,7 @@ import {
 } from './ReactDOMComponentTree';
 import {HTML_NAMESPACE, SVG_NAMESPACE} from '../shared/DOMNamespaces';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
+import {concatTitleTextChildren} from '../shared/ReactDOMResources';
 
 // The resource types we support. currently they match the form for the as argument.
 // In the future this may need to change, especially when modules / scripts are supported
@@ -587,29 +589,24 @@ export function getResource(
       return null;
     }
     case 'title': {
-      let child = pendingProps.children;
-      if (Array.isArray(child) && child.length === 1) {
-        child = child[0];
+      const children: ReactNodeList = (pendingProps: any).children;
+      const child = concatTitleTextChildren(children);
+      const headRoot: Document = getDocumentFromRoot(resourceRoot);
+      const headResources = getResourcesFromRoot(headRoot).head;
+      const key = getTitleKey(child);
+      let resource = headResources.get(key);
+      if (!resource) {
+        const titleProps = titlePropsFromRawProps(child, pendingProps);
+        resource = {
+          type: 'title',
+          props: titleProps,
+          count: 0,
+          instance: null,
+          root: headRoot,
+        };
+        headResources.set(key, resource);
       }
-      if (typeof child === 'string' || typeof child === 'number') {
-        const headRoot: Document = getDocumentFromRoot(resourceRoot);
-        const headResources = getResourcesFromRoot(headRoot).head;
-        const key = getTitleKey(child);
-        let resource = headResources.get(key);
-        if (!resource) {
-          const titleProps = titlePropsFromRawProps(child, pendingProps);
-          resource = {
-            type: 'title',
-            props: titleProps,
-            count: 0,
-            instance: null,
-            root: headRoot,
-          };
-          headResources.set(key, resource);
-        }
-        return resource;
-      }
-      return null;
+      return resource;
     }
     case 'link': {
       const {rel} = pendingProps;
