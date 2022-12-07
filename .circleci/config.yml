@@ -52,7 +52,7 @@ commands:
             - v1-yarn_cache-{{ arch }}-
             - v1-yarn_cache-
       - run:
-          name: Install dependencies with retry
+          name: Install dependencies
           command: |
             yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
             if [ $? -ne 0 ]; then
