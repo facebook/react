@@ -2796,7 +2796,7 @@ function setCurrentlyRenderingBoundaryResourcesTarget(
 ) {
   resources.boundaryResources = boundaryResources;
 }
-var ReactDOMServerDispatcher = {
+var ReactDOMServerFloatDispatcher = {
   preload: preload,
   preinit: preinit
 };
@@ -3617,6 +3617,7 @@ var ReactDOMSharedInternals =
   ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 var ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
+var ReactDOMServerDispatcher = ReactDOMServerFloatDispatcher;
 function prepareToRender(resources) {
   prepareToRenderResources(resources);
   var previousHostDispatcher = ReactDOMCurrentDispatcher.current;

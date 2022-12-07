@@ -18,7 +18,7 @@ if (__DEV__) {
 
 var React = require("react");
 
-var ReactVersion = "18.3.0-www-modern-827cbdbcc-20221207";
+var ReactVersion = "18.3.0-www-modern-5dfc485f6-20221207";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -2799,7 +2799,7 @@ function setCurrentlyRenderingBoundaryResourcesTarget(
 ) {
   resources.boundaryResources = boundaryResources;
 }
-var ReactDOMServerDispatcher = {
+var ReactDOMServerFloatDispatcher = {
   preload: preload,
   preinit: preinit
 };
@@ -3620,6 +3620,7 @@ var ReactDOMSharedInternals =
   ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 var ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
+var ReactDOMServerDispatcher = ReactDOMServerFloatDispatcher;
 function prepareToRender(resources) {
   prepareToRenderResources(resources);
   var previousHostDispatcher = ReactDOMCurrentDispatcher.current;

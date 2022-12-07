@@ -298,7 +298,7 @@ var isArrayImpl = Array.isArray,
   assign = Object.assign,
   currentResources = null,
   currentResourcesStack = [],
-  ReactDOMServerDispatcher = { preload: preload, preinit: preinit };
+  ReactDOMServerFloatDispatcher = { preload: preload, preinit: preinit };
 function preload(href, options) {
   if (currentResources) {
     var resources = currentResources;
@@ -3386,7 +3386,7 @@ exports.renderNextChunk = function(stream) {
     currentResourcesStack.push(currentResources);
     currentResources = resources;
     resources = ReactDOMCurrentDispatcher.current;
-    ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
+    ReactDOMCurrentDispatcher.current = ReactDOMServerFloatDispatcher;
     var prevResponseState = currentResponseState;
     currentResponseState = request.responseState;
     try {

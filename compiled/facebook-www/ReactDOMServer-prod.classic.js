@@ -304,7 +304,7 @@ var isArrayImpl = Array.isArray,
   assign = Object.assign,
   currentResources = null,
   currentResourcesStack = [],
-  ReactDOMServerDispatcher = { preload: preload, preinit: preinit };
+  ReactDOMServerFloatDispatcher = { preload: preload, preinit: preinit };
 function preload(href, options) {
   if (currentResources) {
     var resources = currentResources;
@@ -3061,7 +3061,7 @@ function performWork(request$jscomp$1) {
     currentResourcesStack.push(currentResources);
     currentResources = resources;
     resources = ReactDOMCurrentDispatcher.current;
-    ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
+    ReactDOMCurrentDispatcher.current = ReactDOMServerFloatDispatcher;
     var prevResponseState = currentResponseState;
     currentResponseState = request$jscomp$1.responseState;
     try {
@@ -3632,4 +3632,4 @@ exports.renderToString = function(children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-827cbdbcc-20221207";
+exports.version = "18.3.0-www-classic-5dfc485f6-20221207";
