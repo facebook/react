@@ -14620,22 +14620,33 @@ function getResource(type, pendingProps, currentProps) {
     }
 
     case "title": {
-      var child = pendingProps.children;
+      var children = pendingProps.children;
+      var child;
 
-      if (Array.isArray(child) && child.length === 1) {
-        child = child[0];
+      if (Array.isArray(children)) {
+        child = children.length === 1 ? children[0] : null;
+      } else {
+        child = children;
       }
 
-      if (typeof child === "string" || typeof child === "number") {
+      if (
+        typeof child !== "function" &&
+        typeof child !== "symbol" &&
+        child !== null &&
+        child !== undefined
+      ) {
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        var childString = "" + child;
+
         var _headRoot2 = getDocumentFromRoot(resourceRoot);
 
         var _headResources2 = getResourcesFromRoot(_headRoot2).head;
-        var key = getTitleKey(child);
+        var key = getTitleKey(childString);
 
         var _resource3 = _headResources2.get(key);
 
         if (!_resource3) {
-          var titleProps = titlePropsFromRawProps(child, pendingProps);
+          var titleProps = titlePropsFromRawProps(childString, pendingProps);
           _resource3 = {
             type: "title",
             props: titleProps,
@@ -42243,7 +42254,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-d4bc16a7d-20221206";
+var ReactVersion = "18.3.0-www-modern-bfcbf3306-20221207";
 
 function createPortal(
   children,

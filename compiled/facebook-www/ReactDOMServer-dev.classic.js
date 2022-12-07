@@ -18,7 +18,7 @@ if (__DEV__) {
 
 var React = require("react");
 
-var ReactVersion = "18.3.0-www-classic-d4bc16a7d-20221206";
+var ReactVersion = "18.3.0-www-classic-bfcbf3306-20221207";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -3214,20 +3214,30 @@ function resourcesFromElement(type, props) {
 
   switch (type) {
     case "title": {
-      var child = props.children;
+      var children = props.children;
+      var child;
 
-      if (Array.isArray(child) && child.length === 1) {
-        child = child[0];
+      if (Array.isArray(children)) {
+        child = children.length === 1 ? children[0] : null;
+      } else {
+        child = children;
       }
 
-      if (typeof child === "string" || typeof child === "number") {
-        var key = "title::" + child;
+      if (
+        typeof child !== "function" &&
+        typeof child !== "symbol" &&
+        child !== null &&
+        child !== undefined
+      ) {
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        var childString = "" + child;
+        var key = "title::" + childString;
         var resource = resources.headsMap.get(key);
 
         if (!resource) {
           resource = {
             type: "title",
-            props: titlePropsFromRawProps(child, props),
+            props: titlePropsFromRawProps(childString, props),
             flushed: false
           };
           resources.headsMap.set(key, resource);
@@ -4973,13 +4983,20 @@ function pushTitleImpl(target, props, responseState) {
   }
 
   target.push(endOfStartTag);
-  var child =
-    Array.isArray(children) && children.length < 2
-      ? children[0] || null
-      : children;
+  var child = Array.isArray(children)
+    ? children.length < 2
+      ? children[0]
+      : null
+    : children;
 
-  if (typeof child === "string" || typeof child === "number") {
-    target.push(stringToChunk(escapeTextForBrowser(child)));
+  if (
+    typeof child !== "function" &&
+    typeof child !== "symbol" &&
+    child !== null &&
+    child !== undefined
+  ) {
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    target.push(stringToChunk(escapeTextForBrowser("" + child)));
   }
 
   target.push(endTag1, stringToChunk("title"), endTag2);

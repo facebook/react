@@ -455,70 +455,78 @@ function resourcesFromElement(type, props) {
   var resources = currentResources;
   switch (type) {
     case "title":
-      var child = props.children;
-      Array.isArray(child) && 1 === child.length && (child = child[0]);
-      if ("string" === typeof child || "number" === typeof child) {
-        var key = "title::" + child;
+      var children = props.children;
+      children = Array.isArray(children)
+        ? 1 === children.length
+          ? children[0]
+          : null
+        : children;
+      if (
+        "function" !== typeof children &&
+        "symbol" !== typeof children &&
+        null !== children &&
+        void 0 !== children
+      ) {
+        children = "" + children;
+        var key = "title::" + children;
         type = resources.headsMap.get(key);
         type ||
           ((props = assign({}, props)),
-          (props.children = child),
+          (props.children = children),
           (type = { type: "title", props: props, flushed: !1 }),
           resources.headsMap.set(key, type),
           resources.headResources.add(type));
       }
       return !0;
     case "meta":
-      if ("string" === typeof props.charSet) key = "charSet";
+      if ("string" === typeof props.charSet) children = "charSet";
       else if ("string" === typeof props.content)
         if (
           ((type = "::" + props.content), "string" === typeof props.httpEquiv)
         )
-          key = "httpEquiv::" + props.httpEquiv + type;
+          children = "httpEquiv::" + props.httpEquiv + type;
         else if ("string" === typeof props.name)
-          key = "name::" + props.name + type;
+          children = "name::" + props.name + type;
         else if ("string" === typeof props.itemProp)
-          key = "itemProp::" + props.itemProp + type;
+          children = "itemProp::" + props.itemProp + type;
         else if ("string" === typeof props.property) {
           var property = props.property;
-          key = "property::" + property + type;
-          child = property;
+          children = "property::" + property + type;
+          key = property;
           type = property
             .split(":")
             .slice(0, -1)
             .join(":");
           (type = resources.structuredMetaKeys.get(type)) &&
-            (key = type.key + "::child::" + key);
+            (children = type.key + "::child::" + children);
         }
-      key &&
-        !resources.headsMap.has(key) &&
+      children &&
+        !resources.headsMap.has(children) &&
         ((props = {
           type: "meta",
-          key: key,
+          key: children,
           props: assign({}, props),
           flushed: !1
         }),
-        resources.headsMap.set(key, props),
-        "charSet" === key
+        resources.headsMap.set(children, props),
+        "charSet" === children
           ? (resources.charset = props)
-          : (child && resources.structuredMetaKeys.set(child, props),
+          : (key && resources.structuredMetaKeys.set(key, props),
             resources.headResources.add(props)));
       return !0;
     case "base":
       return (
-        (key = props.target),
-        (child = props.href),
-        (key =
+        (children = props.target),
+        (key = props.href),
+        (children =
           "base" +
-          ("string" === typeof child
-            ? '[href="' + child + '"]'
-            : ":not([href])") +
-          ("string" === typeof key
-            ? '[target="' + key + '"]'
+          ("string" === typeof key ? '[href="' + key + '"]' : ":not([href])") +
+          ("string" === typeof children
+            ? '[target="' + children + '"]'
             : ":not([target])")),
-        resources.headsMap.has(key) ||
+        resources.headsMap.has(children) ||
           ((props = { type: "base", props: assign({}, props), flushed: !1 }),
-          resources.headsMap.set(key, props),
+          resources.headsMap.set(children, props),
           resources.bases.add(props)),
         !0
       );
@@ -862,12 +870,16 @@ function pushTitleImpl(target, props, responseState) {
         }
     }
   target.push(">");
-  props =
-    Array.isArray(children) && 2 > children.length
-      ? children[0] || null
-      : children;
-  ("string" !== typeof props && "number" !== typeof props) ||
-    target.push(escapeTextForBrowser(props));
+  props = Array.isArray(children)
+    ? 2 > children.length
+      ? children[0]
+      : null
+    : children;
+  "function" !== typeof props &&
+    "symbol" !== typeof props &&
+    null !== props &&
+    void 0 !== props &&
+    target.push(escapeTextForBrowser("" + props));
   target.push("</", "title", ">");
   return null;
 }
@@ -3620,4 +3632,4 @@ exports.renderToString = function(children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-d4bc16a7d-20221206";
+exports.version = "18.3.0-www-classic-bfcbf3306-20221207";

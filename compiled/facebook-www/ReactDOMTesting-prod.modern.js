@@ -4129,16 +4129,24 @@ function getResource(type, pendingProps) {
         : null;
     case "title":
       return (
-        (href = pendingProps.children),
-        Array.isArray(href) && 1 === href.length && (href = href[0]),
-        "string" === typeof href || "number" === typeof href
-          ? ((resourceRoot = getDocumentFromRoot(resourceRoot)),
-            (headResources = getResourcesFromRoot(resourceRoot).head),
-            (target = "title:" + href),
-            (type = headResources.get(target)),
+        (headResources = pendingProps.children),
+        (headResources = Array.isArray(headResources)
+          ? 1 === headResources.length
+            ? headResources[0]
+            : null
+          : headResources),
+        "function" !== typeof headResources &&
+        "symbol" !== typeof headResources &&
+        null !== headResources &&
+        void 0 !== headResources
+          ? ((headResources = "" + headResources),
+            (resourceRoot = getDocumentFromRoot(resourceRoot)),
+            (target = getResourcesFromRoot(resourceRoot).head),
+            (href = "title:" + headResources),
+            (type = target.get(href)),
             type ||
               ((pendingProps = assign({}, pendingProps)),
-              (pendingProps.children = href),
+              (pendingProps.children = headResources),
               (type = {
                 type: "title",
                 props: pendingProps,
@@ -4146,7 +4154,7 @@ function getResource(type, pendingProps) {
                 instance: null,
                 root: resourceRoot
               }),
-              headResources.set(target, type)),
+              target.set(href, type)),
             type)
           : null
       );
@@ -13957,7 +13965,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1686 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-d4bc16a7d-20221206",
+  version: "18.3.0-www-modern-bfcbf3306-20221207",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2082 = {
@@ -13988,7 +13996,7 @@ var internals$jscomp$inline_2082 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-d4bc16a7d-20221206"
+  reconcilerVersion: "18.3.0-next-bfcbf3306-20221207"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2083 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -14311,4 +14319,4 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-d4bc16a7d-20221206";
+exports.version = "18.3.0-next-bfcbf3306-20221207";
