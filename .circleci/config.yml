@@ -411,14 +411,29 @@ jobs:
 workflows:
   version: 2
 
-  # New workflow that will replace "stable" and "experimental"
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
-      - yarn_flow
-      - check_generated_fizz_runtime
-      - yarn_lint
+      - yarn_flow:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
+      - check_generated_fizz_runtime:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
+      - yarn_lint:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
       - yarn_test:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
           matrix:
             parameters:
               args:
@@ -441,8 +456,16 @@ workflows:
                 # TODO: Test more persistent configurations?
                 - '-r=stable --env=development --persistent'
                 - '-r=experimental --env=development --persistent'
-      - yarn_build_combined
-      - scrape_warning_messages
+      - yarn_build_combined:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
+      - scrape_warning_messages:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
       - process_artifacts_combined:
           requires:
             - scrape_warning_messages
@@ -480,6 +503,7 @@ workflows:
             branches:
               ignore:
                 - main
+                - builds/facebook-www
       - sizebot:
           filters:
             branches:
