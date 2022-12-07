@@ -129,10 +129,9 @@ jobs:
             ./compiled/babel-plugin-react-refresh/index.js
 
           ls -R ./compiled
-      - name: Add REVISION files
+      - name: Add REVISION file
         run: |
           echo ${{ github.sha }} >> ./compiled/facebook-www/REVISION
-          cp ./compiled/facebook-www/REVISION ./compiled/facebook-www/REVISION_TRANSFORMS
       - uses: actions/upload-artifact@v3
         with:
           name: compiled
