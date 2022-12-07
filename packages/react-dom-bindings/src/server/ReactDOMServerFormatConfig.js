@@ -97,6 +97,7 @@ export function prepareToRender(resources: Resources): mixed {
   prepareToRenderResources(resources);
 
   const previousHostDispatcher = ReactDOMCurrentDispatcher.current;
+  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
   return previousHostDispatcher;
 }
 
