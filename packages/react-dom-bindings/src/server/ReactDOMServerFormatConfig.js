@@ -69,7 +69,7 @@ import {
   resourcesFromElement,
   resourcesFromLink,
   resourcesFromScript,
-  ReactDOMServerDispatcher,
+  ReactDOMServerFloatDispatcher,
 } from './ReactDOMFloatServer';
 export {
   createResources,
@@ -89,11 +89,14 @@ import {
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
+const ReactDOMServerDispatcher = enableFloat
+  ? ReactDOMServerFloatDispatcher
+  : {};
+
 export function prepareToRender(resources: Resources): mixed {
   prepareToRenderResources(resources);
 
   const previousHostDispatcher = ReactDOMCurrentDispatcher.current;
-  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
   return previousHostDispatcher;
 }
 

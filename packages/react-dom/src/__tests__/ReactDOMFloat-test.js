@@ -608,6 +608,7 @@ describe('ReactDOMFloat', () => {
     ]);
   });
 
+  // @gate enableFloat
   it('dedupes if the external runtime is explicitly loaded using preinit', async () => {
     const unstable_externalRuntimeSrc = 'src-of-external-runtime';
     function App() {
@@ -5681,7 +5682,6 @@ describe('ReactDOMFloat', () => {
       );
     });
 
-    // @gate enableFloat
     it('should not treat title descendants of svg into resources', async () => {
       await actIntoEmptyDocument(() => {
         const {pipe} = renderToPipeableStream(
