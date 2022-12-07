@@ -126,7 +126,6 @@ import {
   setShallowSuspenseListContext,
   ForceSuspenseFallback,
   setDefaultShallowSuspenseListContext,
-  isBadSuspenseFallback,
 } from './ReactFiberSuspenseContext';
 import {popHiddenContext} from './ReactFiberHiddenContext';
 import {findFirstSuspended} from './ReactFiberSuspenseComponent';
@@ -148,8 +147,6 @@ import {
   upgradeHydrationErrorsToRecoverable,
 } from './ReactFiberHydrationContext';
 import {
-  renderDidSuspend,
-  renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
   getRenderTargetTime,
   getWorkInProgressTransitions,
@@ -1257,24 +1254,6 @@ function completeWork(
         if (nextDidTimeout) {
           const offscreenFiber: Fiber = (workInProgress.child: any);
           offscreenFiber.flags |= Visibility;
-
-          // TODO: This will still suspend a synchronous tree if anything
-          // in the concurrent tree already suspended during this render.
-          // This is a known bug.
-          if ((workInProgress.mode & ConcurrentMode) !== NoMode) {
-            // TODO: Move this back to throwException because this is too late
-            // if this is a large tree which is common for initial loads. We
-            // don't know if we should restart a render or not until we get
-            // this marker, and this is too late.
-            // If this render already had a ping or lower pri updates,
-            // and this is the first time we know we're going to suspend we
-            // should be able to immediately restart from within throwException.
-            if (isBadSuspenseFallback(current, newProps)) {
-              renderDidSuspendDelayIfPossible();
-            } else {
-              renderDidSuspend();
-            }
-          }
         }
       }
 

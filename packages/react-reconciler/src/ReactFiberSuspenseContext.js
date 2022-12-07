@@ -62,6 +62,11 @@ export function isBadSuspenseFallback(
   // Check if this is a "bad" fallback state or a good one. A bad fallback state
   // is one that we only show as a last resort; if this is a transition, we'll
   // block it from displaying, and wait for more data to arrive.
+  // TODO: This is function is only used by the `use` implementation. There's
+  // identical logic in `throwException`, and also in the begin phase of the
+  // Suspense component. Since we're already computing this in the begin phase,
+  // track it on stack instead of re-computing it on demand. Less code, less
+  // duplicated logic, less computation.
   if (current !== null) {
     const prevState: SuspenseState = current.memoizedState;
     const isShowingFallback = prevState !== null;

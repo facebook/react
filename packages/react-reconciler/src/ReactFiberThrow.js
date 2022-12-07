@@ -13,6 +13,7 @@ import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactFiberClassUpdateQueue';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {OffscreenQueue} from './ReactFiberOffscreenComponent';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -39,6 +40,7 @@ import {
   enableDebugTracing,
   enableLazyContextPropagation,
   enableUpdaterTracking,
+  enableSuspenseAvoidThisFallback,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValueAtFiber} from './ReactCapturedValue';
 import {
@@ -58,6 +60,7 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   attachPingListener,
   restorePendingUpdaters,
+  renderDidSuspend,
 } from './ReactFiberWorkLoop';
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext';
 import {logCapturedError} from './ReactFiberErrorLogger';
@@ -349,11 +352,60 @@ function throwException(
       }
     }
 
-    // Schedule the nearest Suspense to re-render the timed out view.
+    // Mark the nearest Suspense boundary to switch to rendering a fallback.
     const suspenseBoundary = getSuspenseHandler();
     if (suspenseBoundary !== null) {
       switch (suspenseBoundary.tag) {
         case SuspenseComponent: {
+          // If this suspense boundary is not already showing a fallback, mark
+          // the in-progress render as suspended. We try to perform this logic
+          // as soon as soon as possible during the render phase, so the work
+          // loop can know things like whether it's OK to switch to other tasks,
+          // or whether it can wait for data to resolve before continuing.
+          // TODO: Most of these checks are already performed when entering a
+          // Suspense boundary. We should track the information on the stack so
+          // we don't have to recompute it on demand. This would also allow us
+          // to unify with `use` which needs to perform this logic even sooner,
+          // before `throwException` is called.
+          if (sourceFiber.mode & ConcurrentMode) {
+            if (getIsHydrating()) {
+              // A dehydrated boundary is considered a fallback state. We don't
+              // have to suspend.
+            } else {
+              const current = suspenseBoundary.alternate;
+              if (current === null) {
+                // This is a new mount. Unless this is an "avoided" fallback
+                // (experimental feature) this should not delay the tree
+                // from appearing.
+                const nextProps = suspenseBoundary.pendingProps;
+                if (
+                  enableSuspenseAvoidThisFallback &&
+                  nextProps.unstable_avoidThisFallback === true
+                ) {
+                  // Experimental feature: Some fallbacks are always bad
+                  renderDidSuspendDelayIfPossible();
+                } else {
+                  // Show a fallback without delaying. The only reason we mark
+                  // this case at all is so we can throttle the appearance of
+                  // new fallbacks. If we did nothing here, all other behavior
+                  // would be the same, except it wouldn't throttle.
+                  renderDidSuspend();
+                }
+              } else {
+                const prevState: SuspenseState = current.memoizedState;
+                if (prevState !== null) {
+                  // This boundary is currently showing a fallback. Don't need
+                  // to suspend.
+                } else {
+                  // This boundary is currently showing content. Switching to a
+                  // fallback will cause that content to disappear. Tell the
+                  // work loop to delay the commit, if possible.
+                  renderDidSuspendDelayIfPossible();
+                }
+              }
+            }
+          }
+
           suspenseBoundary.flags &= ~ForceClientRender;
           markSuspenseBoundaryShouldCapture(
             suspenseBoundary,
