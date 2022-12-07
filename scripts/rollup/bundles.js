@@ -163,6 +163,17 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React DOM - www - Uses forked reconciler *******/
+  {
+    moduleType: RENDERER,
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
+    entry: 'react-dom',
+    global: 'ReactDOMForked',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: true,
+    externals: ['react'],
+  },
+
   /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
