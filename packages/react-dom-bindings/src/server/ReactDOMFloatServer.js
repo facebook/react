@@ -652,17 +652,27 @@ export function resourcesFromElement(type: string, props: Props): boolean {
   const resources = currentResources;
   switch (type) {
     case 'title': {
-      let child = props.children;
-      if (Array.isArray(child) && child.length === 1) {
-        child = child[0];
+      const children = props.children;
+      let child;
+      if (Array.isArray(children)) {
+        child = children.length === 1 ? children[0] : null;
+      } else {
+        child = children;
       }
-      if (typeof child === 'string' || typeof child === 'number') {
-        const key = 'title::' + child;
+      if (
+        typeof child !== 'function' &&
+        typeof child !== 'symbol' &&
+        child !== null &&
+        child !== undefined
+      ) {
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        const childString = '' + (child: any);
+        const key = 'title::' + childString;
         let resource = resources.headsMap.get(key);
         if (!resource) {
           resource = {
             type: 'title',
-            props: titlePropsFromRawProps(child, props),
+            props: titlePropsFromRawProps(childString, props),
             flushed: false,
           };
           resources.headsMap.set(key, resource);

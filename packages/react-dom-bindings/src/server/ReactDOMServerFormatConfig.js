@@ -1473,12 +1473,19 @@ function pushTitleImpl(
   }
   target.push(endOfStartTag);
 
-  const child =
-    Array.isArray(children) && children.length < 2
-      ? children[0] || null
-      : children;
-  if (typeof child === 'string' || typeof child === 'number') {
-    target.push(stringToChunk(escapeTextForBrowser(child)));
+  const child = Array.isArray(children)
+    ? children.length < 2
+      ? children[0]
+      : null
+    : children;
+  if (
+    typeof child !== 'function' &&
+    typeof child !== 'symbol' &&
+    child !== null &&
+    child !== undefined
+  ) {
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    target.push(stringToChunk(escapeTextForBrowser('' + child)));
   }
   target.push(endTag1, stringToChunk('title'), endTag2);
   return null;
