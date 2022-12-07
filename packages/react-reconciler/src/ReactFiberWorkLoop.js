@@ -1859,9 +1859,10 @@ function handleThrow(root, thrownValue): void {
 }
 
 function shouldAttemptToSuspendUntilDataResolves() {
-  // TODO: We should be able to move the
-  // renderDidSuspend/renderDidSuspendDelayIfPossible logic into this function,
-  // instead of repeating it in the complete phase. Or something to that effect.
+  // TODO: This function needs to have parity with
+  // renderDidSuspendDelayIfPossible, but it currently doesn't. (It only affects
+  // the `use` API.) Fix by unifying the logic here with the equivalent checks
+  // in `throwException` and in the begin phase of Suspense.
 
   if (includesOnlyRetries(workInProgressRootRenderLanes)) {
     // We can always wait during a retry.
