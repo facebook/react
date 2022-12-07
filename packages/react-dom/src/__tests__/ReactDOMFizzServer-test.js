@@ -5144,8 +5144,10 @@ describe('ReactDOMFizzServer', () => {
         }
 
         if (gate(flags => flags.enableFloat)) {
-          // invalid titles are not emitted on the server when float is on
-          expect(getVisibleChildren(container)).toEqual(undefined);
+          // object titles are toStringed when float is on
+          expect(getVisibleChildren(container)).toEqual(
+            <title>{'[object Object]'}</title>,
+          );
         } else {
           expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
         }
@@ -5159,8 +5161,10 @@ describe('ReactDOMFizzServer', () => {
         expect(Scheduler).toFlushAndYield([]);
         expect(errors).toEqual([]);
         if (gate(flags => flags.enableFloat)) {
-          // invalid titles are not emitted on the server when float is on
-          expect(getVisibleChildren(container)).toEqual(undefined);
+          // object titles are toStringed when float is on
+          expect(getVisibleChildren(container)).toEqual(
+            <title>{'[object Object]'}</title>,
+          );
         } else {
           expect(getVisibleChildren(container)).toEqual(<title>hello</title>);
         }
