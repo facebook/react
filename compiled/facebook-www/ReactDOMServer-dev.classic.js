@@ -18,7 +18,7 @@ if (__DEV__) {
 
 var React = require("react");
 
-var ReactVersion = "18.3.0-www-classic-819687279-20221208";
+var ReactVersion = "18.3.0-www-classic-1c7055ddb-20221208";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");

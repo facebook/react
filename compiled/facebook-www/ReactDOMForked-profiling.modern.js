@@ -15859,7 +15859,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1815 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-819687279-20221208",
+  version: "18.3.0-www-modern-1c7055ddb-20221208",
   rendererPackageName: "react-dom"
 };
 (function(internals) {
@@ -15904,7 +15904,7 @@ var devToolsConfig$jscomp$inline_1815 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-819687279-20221208"
+  reconcilerVersion: "18.3.0-next-1c7055ddb-20221208"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function(children, container) {
@@ -16079,7 +16079,7 @@ exports.unstable_flushControlled = function(fn) {
   }
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-next-819687279-20221208";
+exports.version = "18.3.0-next-1c7055ddb-20221208";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
