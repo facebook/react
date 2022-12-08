@@ -4218,4 +4218,80 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
     expect(Scheduler).toHaveYielded(['Unmount Child']);
   });
+
+  // @gate enableLegacyCache
+  it(
+    'regression test: pinging synchronously within the render phase ' +
+      'does not unwind the stack',
+    async () => {
+      // This is a regression test that reproduces a very specific scenario that
+      // used to cause a crash.
+      const thenable = {
+        then(resolve) {
+          resolve('hi');
+        },
+        status: 'pending',
+      };
+
+      function ImmediatelyPings() {
+        if (thenable.status === 'pending') {
+          thenable.status = 'fulfilled';
+          throw thenable;
+        }
+        return <Text text="Hi" />;
+      }
+
+      function App({showMore}) {
+        return (
+          <div>
+            <Suspense fallback={<Text text="Loading..." />}>
+              {showMore ? (
+                <>
+                  <AsyncText text="Async" />
+                </>
+              ) : null}
+            </Suspense>
+            {showMore ? (
+              <Suspense>
+                <ImmediatelyPings />
+              </Suspense>
+            ) : null}
+          </div>
+        );
+      }
+
+      // Initial render. This mounts a Suspense boundary, so that in the next
+      // update we can trigger a "suspend with delay" scenario.
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        root.render(<App showMore={false} />);
+      });
+      expect(Scheduler).toHaveYielded([]);
+      expect(root).toMatchRenderedOutput(<div />);
+
+      // Update. This will cause two separate trees to suspend. The first tree
+      // will be inside an already mounted Suspense boundary, so it will trigger
+      // a "suspend with delay". The second tree will be a new Suspense
+      // boundary, but the thenable that is thrown will immediately call its
+      // ping listener.
+      //
+      // Before the bug was fixed, this would lead to a `prepareFreshStack` call
+      // that unwinds the work-in-progress stack. When that code was written, it
+      // was expected that pings always happen from an asynchronous task (or
+      // microtask). But this test shows an example where that's not the case.
+      //
+      // The fix was to check if we're in the render phase before calling
+      // `prepareFreshStack`.
+      await act(async () => {
+        root.render(<App showMore={true} />);
+      });
+      expect(Scheduler).toHaveYielded(['Suspend! [Async]', 'Loading...', 'Hi']);
+      expect(root).toMatchRenderedOutput(
+        <div>
+          <span prop="Loading..." />
+          <span prop="Hi" />
+        </div>,
+      );
+    },
+  );
 });
