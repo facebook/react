@@ -4711,7 +4711,7 @@ describe('ReactDOMFloat', () => {
       expect(() => {
         expect(Scheduler).toFlushWithoutYielding();
       }).toErrorDev([
-        'Warning: A style Resource with href "foo" recieved new props with different values from the props used' +
+        'Warning: A style Resource with href "foo" received new props with different values from the props used' +
           ' when this Resource was first rendered. React will only use the props provided when' +
           ' this resource was first rendered until a new href is provided. Unlike conventional' +
           ' DOM elements, Resources instances do not have a one to one correspondence with Elements' +
@@ -4720,7 +4720,7 @@ describe('ReactDOMFloat', () => {
           '\n  data-something-extra: missing or null in latest props, "extra" in original props' +
           '\n  data-something-new: "new" in latest props, missing or null in original props' +
           '\n  precedence: "fu" in latest props, "foo" in original props',
-        'Warning: A script Resource with src "sfoo" recieved new props with different values from the props used' +
+        'Warning: A script Resource with src "sfoo" received new props with different values from the props used' +
           ' when this Resource was first rendered. React will only use the props provided when' +
           ' this resource was first rendered until a new src is provided. Unlike conventional' +
           ' DOM elements, Resources instances do not have a one to one correspondence with Elements' +

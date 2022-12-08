@@ -548,7 +548,7 @@ export function validateURLKeyedUpdatedProps(
           }
         }
         console.error(
-          'A %s with %s "%s" recieved new props with different values from the props used' +
+          'A %s with %s "%s" received new props with different values from the props used' +
             ' when this Resource was first rendered. React will only use the props provided when' +
             ' this resource was first rendered until a new %s is provided. Unlike conventional' +
             ' DOM elements, Resources instances do not have a one to one correspondence with Elements' +
