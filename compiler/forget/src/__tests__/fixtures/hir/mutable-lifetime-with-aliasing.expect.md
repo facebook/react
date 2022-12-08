@@ -59,7 +59,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function mutate$0(x$1, y$2) {}
+function mutate$0(x$3, y$4) {}
 
 ```
 ## HIR
@@ -73,19 +73,19 @@ bb0:
   [5] Const mutate x$15_@1[0:15] = Object {  }
   [6] Reassign mutate x$15_@1.b[0:15] = read b$12_@1
   [7] Const mutate y$16_@1[0:15] = Call mutate mutate$8_@1(mutate x$15_@1, mutate d$14_@1)
-  [8] If (read a$11_@0) then:bb1 else:bb1
+  [8] If (read a$11_@0) then:bb1 else:bb1 fallthrough=bb1
 bb1:
   predecessor blocks: bb0
-  [9] If (read b$12_@1) then:bb3 else:bb3
+  [9] If (read b$12_@1) then:bb3 else:bb3 fallthrough=bb3
 bb3:
   predecessor blocks: bb1
-  [10] If (read c$13_@2) then:bb5 else:bb5
+  [10] If (read c$13_@2) then:bb5 else:bb5 fallthrough=bb5
 bb5:
   predecessor blocks: bb3
-  [11] If (read d$14_@1) then:bb7 else:bb7
+  [11] If (read d$14_@1) then:bb7 else:bb7 fallthrough=bb7
 bb7:
   predecessor blocks: bb5
-  [12] If (read y$16_@1) then:bb9 else:bb9
+  [12] If (read y$16_@1) then:bb9 else:bb9 fallthrough=bb9
 bb9:
   predecessor blocks: bb7
   [13] Const mutate $17_@3 = null
@@ -148,32 +148,32 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = {};
-  const b$3 = [a$2];
-  const c$4 = {};
-  const d$5 = {
-    c: c$4,
+function Component$0(props$10) {
+  const a$11 = {};
+  const b$12 = [a$11];
+  const c$13 = {};
+  const d$14 = {
+    c: c$13,
   };
-  const x$6 = {};
-  x$6.b = b$3;
-  const y$7 = mutate$8(x$6, d$5);
-  bb1: if (a$2) {
+  const x$15 = {};
+  x$15.b = b$12;
+  const y$16 = mutate$8(x$15, d$14);
+  bb1: if (a$11) {
   }
 
-  bb3: if (b$3) {
+  bb3: if (b$12) {
   }
 
-  bb5: if (c$4) {
+  bb5: if (c$13) {
   }
 
-  bb7: if (d$5) {
+  bb7: if (d$14) {
   }
 
-  bb9: if (y$7) {
+  bb9: if (y$16) {
   }
 
-  mutate$8(x$6, null);
+  mutate$8(x$15, null);
 }
 
 ```

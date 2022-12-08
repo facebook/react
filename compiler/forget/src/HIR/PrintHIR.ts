@@ -128,7 +128,9 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     case "if": {
       value = `[${terminal.id}] If (${printPlace(terminal.test)}) then:bb${
         terminal.consequent
-      } else:bb${terminal.alternate}`;
+      } else:bb${terminal.alternate}${
+        terminal.fallthrough ? ` fallthrough=bb${terminal.fallthrough}` : ""
+      }`;
       break;
     }
     case "throw": {
@@ -157,6 +159,9 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
           output.push(`  Default: bb${case_.block}`);
         }
       });
+      if (terminal.fallthrough) {
+        output.push(`  Fallthrough: bb${terminal.fallthrough}`);
+      }
       value = output;
       break;
     }

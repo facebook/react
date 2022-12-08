@@ -37,7 +37,7 @@ function Component(props) {
 ```
 bb0:
   [1] Let mutate x$7_@0 = undefined
-  [2] If (read props$6.cond) then:bb2 else:bb10
+  [2] If (read props$6.cond) then:bb2 else:bb10 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [3] Const mutate $8_@1 = 2
@@ -48,6 +48,7 @@ bb2:
     Case read $9_@2: bb6
     Case read $8_@1: bb4
     Default: bb4
+    Fallthrough: bb1
 bb8:
   predecessor blocks: bb2
   [7] Reassign mutate x$11_@4[7:17] = read props$6.v0
@@ -62,7 +63,7 @@ bb4:
   [12] Goto bb1
 bb10:
   predecessor blocks: bb0
-  [13] If (read props$6.cond2) then:bb12 else:bb13
+  [13] If (read props$6.cond2) then:bb12 else:bb13 fallthrough=bb1
 bb12:
   predecessor blocks: bb10
   [14] Reassign mutate x$14_@4[7:17] = read props$6.b
@@ -167,17 +168,18 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  let x$2 = undefined;
-  bb1: if (props$1.cond) {
-    switch (props$1.test) {
+function Component$0(props$6) {
+  const x$7 = undefined;
+  let x$11 = undefined;
+  bb1: if (props$6.cond) {
+    switch (props$6.test) {
       case 0: {
-        x$2 = props$1.v0;
+        x$11 = props$6.v0;
         break bb1;
       }
 
       case 1: {
-        x$2 = props$1.v1;
+        x$11 = props$6.v1;
         break bb1;
       }
 
@@ -185,18 +187,18 @@ function Component$0(props$1) {
       }
 
       default: {
-        x$2 = props$1.v2;
+        x$11 = props$6.v2;
       }
     }
   } else {
-    if (props$1.cond2) {
-      x$2 = props$1.b;
+    if (props$6.cond2) {
+      x$11 = props$6.b;
     } else {
-      x$2 = props$1.c;
+      x$11 = props$6.c;
     }
   }
 
-  x$2;
+  x$11;
 }
 
 ```

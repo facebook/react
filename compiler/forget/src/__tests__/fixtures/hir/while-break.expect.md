@@ -18,7 +18,7 @@ bb0:
   [1] While test=bb1 loop=bb2 fallthrough=bb2
 bb1:
   predecessor blocks: bb0
-  [2] If (read a$3) then:bb2 else:bb2
+  [2] If (read a$3) then:bb2 else:bb2 fallthrough=bb2
 bb2:
   predecessor blocks: bb1
   [3] Return read b$4
@@ -52,11 +52,11 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(a$1, b$2) {
-  bb2: while (a$1) {
+function foo$0(a$3, b$4) {
+  bb2: while (a$3) {
     break;
   }
-  return b$2;
+  return b$4;
 }
 
 ```

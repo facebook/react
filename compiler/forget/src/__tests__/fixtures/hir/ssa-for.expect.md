@@ -27,7 +27,7 @@ bb1:
   x$13_@0[0:13]: phi(bb3: x$7_@0, bb4: x$14_@0)
   [5] Const mutate $9_@2 = 10
   [6] Const mutate $11_@3[6:8] = Binary read i$8_@1 < read $9_@2
-  [7] If (read $11_@3) then:bb5 else:bb2
+  [7] If (read $11_@3) then:bb5 else:bb2 fallthrough=bb2
 bb5:
   predecessor blocks: bb1
   [8] Const mutate $12_@4 = 1
@@ -103,12 +103,12 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  let x$1 = 1;
-  bb2: for (let i$2 = 0; i$2 < 10; update$3()) {
-    x$1 = x$1 + 1;
+  let x$7 = 1;
+  bb2: for (const i$8 = 0; i$8 < 10; update$3()) {
+    x$7 = x$7 + 1;
   }
 
-  return x$1;
+  return x$7;
 }
 
 ```

@@ -49,7 +49,7 @@ function log$0() {}
 ```
 bb0:
   [1] Let mutate str$6_@0[1:8] = ""
-  [2] If (read cond$5) then:bb2 else:bb3
+  [2] If (read cond$5) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [3] Let mutate str$7_@1 = "other test"
@@ -110,16 +110,16 @@ flowchart TB
 ## Code
 
 ```javascript
-function Foo$0(cond$1) {
-  let str$2 = "";
-  bb1: if (cond$1) {
-    let str$3 = "other test";
-    log$4(str$3);
+function Foo$0(cond$5) {
+  let str$6 = "";
+  bb1: if (cond$5) {
+    const str$7 = "other test";
+    log$4(str$7);
   } else {
-    str$2 = "fallthrough test";
+    str$6 = "fallthrough test";
   }
 
-  log$4(str$2);
+  log$4(str$6);
 }
 
 ```

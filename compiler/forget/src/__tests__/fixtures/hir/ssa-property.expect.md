@@ -44,10 +44,10 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  const x$1 = [];
-  const y$2 = {};
-  y$2.x = x$1;
-  return y$2;
+  const x$3 = [];
+  const y$4 = {};
+  y$4.x = x$3;
+  return y$4;
 }
 
 ```

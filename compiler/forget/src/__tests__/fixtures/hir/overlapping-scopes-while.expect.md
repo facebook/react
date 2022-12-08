@@ -22,7 +22,7 @@ bb0:
   [3] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
-  [4] If (read c$8) then:bb3 else:bb2
+  [4] If (read c$8) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
   [5] Call mutate y$10_@0.push(read b$7)
@@ -76,12 +76,12 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(a$1, b$2, c$3) {
-  let x$4 = [];
-  let y$5 = [];
-  bb2: while (c$3) {
-    y$5.push(b$2);
-    x$4.push(a$1);
+function foo$0(a$6, b$7, c$8) {
+  const x$9 = [];
+  const y$10 = [];
+  bb2: while (c$8) {
+    y$10.push(b$7);
+    x$9.push(a$6);
   }
 }
 

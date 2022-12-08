@@ -51,10 +51,10 @@ flowchart TB
 
 ```javascript
 function Component$0() {
-  const a$1 = [];
-  const b$2 = a$1;
-  useFreeze$3(a$1);
-  foo$4(b$2);
+  const a$5 = [];
+  const b$6 = a$5;
+  useFreeze$3(a$5);
+  foo$4(b$6);
 }
 
 ```
@@ -109,7 +109,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(x$1) {}
+function foo$0(x$2) {}
 
 ```
       

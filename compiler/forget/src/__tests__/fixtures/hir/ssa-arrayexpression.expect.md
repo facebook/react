@@ -45,11 +45,11 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = 1;
-  const b$3 = 2;
-  const x$4 = [a$2, b$3];
-  return x$4;
+function Component$0(props$5) {
+  const a$6 = 1;
+  const b$7 = 2;
+  const x$8 = [a$6, b$7];
+  return x$8;
 }
 
 ```

@@ -50,11 +50,11 @@ flowchart TB
 
 ```javascript
 function Component$0() {
-  const a$1 = [];
-  useFreeze$2(a$1);
-  useFreeze$2(a$1);
-  call$3(a$1);
-  return a$1;
+  const a$4 = [];
+  useFreeze$2(a$4);
+  useFreeze$2(a$4);
+  call$3(a$4);
+  return a$4;
 }
 
 ```
@@ -82,7 +82,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function useFreeze$0(x$1) {}
+function useFreeze$0(x$2) {}
 
 ```
 ## HIR
@@ -109,7 +109,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function call$0(x$1) {}
+function call$0(x$2) {}
 
 ```
       

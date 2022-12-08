@@ -29,7 +29,7 @@ bb0:
   [1] Const mutate cond$8_@0 = read props$7.cond
   [2] Const mutate x$9_@1 = read props$7.x
   [3] Let mutate a$10_@2 = undefined
-  [4] If (read cond$8_@0) then:bb2 else:bb3
+  [4] If (read cond$8_@0) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [5] Reassign mutate a$11_@3[5:8] = read x$9_@1
@@ -99,20 +99,21 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const cond$2 = props$1.cond;
-  const x$3 = props$1.x;
-  let a$4 = undefined;
-  bb1: if (cond$2) {
-    a$4 = x$3;
+function Component$0(props$7) {
+  const cond$8 = props$7.cond;
+  const x$9 = props$7.x;
+  const a$10 = undefined;
+  let a$11 = undefined;
+  bb1: if (cond$8) {
+    a$11 = x$9;
   } else {
-    a$4 = [];
+    a$11 = [];
   }
 
-  useFreeze$5(a$4);
-  useFreeze$5(a$4);
-  call$6(a$4);
-  return a$4;
+  useFreeze$5(a$11);
+  useFreeze$5(a$11);
+  call$6(a$11);
+  return a$11;
 }
 
 ```
@@ -140,7 +141,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function useFreeze$0(x$1) {}
+function useFreeze$0(x$2) {}
 
 ```
 ## HIR
@@ -167,7 +168,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function call$0(x$1) {}
+function call$0(x$2) {}
 
 ```
       

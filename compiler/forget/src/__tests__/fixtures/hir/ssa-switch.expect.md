@@ -37,6 +37,7 @@ bb0:
     Case read $14_@4: bb5
     Case read $12_@2: bb3
     Default: bb2
+    Fallthrough: bb1
 bb5:
   predecessor blocks: bb0
   [7] Const mutate $15_@5 = 1
@@ -130,24 +131,25 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  let x$1 = 1;
-  bb1: switch (x$1) {
-    case x$1 === 1: {
-      x$1 = x$1 + 1;
+  const x$10 = 1;
+  let x$16 = undefined;
+  bb1: switch (x$10) {
+    case x$10 === 1: {
+      x$16 = x$10 + 1;
       break bb1;
     }
 
-    case x$1 === 2: {
-      x$1 = x$1 + 2;
+    case x$10 === 2: {
+      x$16 = x$10 + 2;
       break bb1;
     }
 
     default: {
-      x$1 = x$1 + 3;
+      x$16 = x$10 + 3;
     }
   }
 
-  let y$9 = x$1;
+  const y$22 = x$16;
 }
 
 ```

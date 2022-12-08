@@ -65,10 +65,10 @@ flowchart TB
 
 ```javascript
 function f$0() {
-  let x$1 = 1;
-  x$1 = x$1 + 1;
-  x$1 = x$1 + 1;
-  x$1 = x$1 >>> 1;
+  const x$5 = 1;
+  const x$7 = x$5 + 1;
+  const x$9 = x$7 + 1;
+  const x$11 = x$9 >>> 1;
 }
 
 ```
@@ -107,9 +107,9 @@ flowchart TB
 ## Code
 
 ```javascript
-function g$0(a$1) {
-  a$1.c.b = a$1.b.c + 1;
-  a$1.c.b = a$1.b.c * 2;
+function g$0(a$4) {
+  a$4.c.b = a$4.b.c + 1;
+  a$4.c.b = a$4.b.c * 2;
 }
 
 ```

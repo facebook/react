@@ -22,10 +22,10 @@ bb0:
   [1] Let mutate x$10_@0[1:8] = Array []
   [2] Const mutate $11_@1 = 1
   [3] Const mutate $12_@2 = Binary read a$8.length === read $11_@1
-  [4] If (read $12_@2) then:bb2 else:bb1
+  [4] If (read $12_@2) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [5] If (read b$9) then:bb4 else:bb1
+  [5] If (read b$9) then:bb4 else:bb1 fallthrough=bb1
 bb4:
   predecessor blocks: bb2
   [6] Call mutate x$10_@0.push(read b$9)
@@ -88,15 +88,15 @@ flowchart TB
 ## Code
 
 ```javascript
-function f$0(a$1, b$2) {
-  let x$3 = [];
-  bb1: if (a$1.length === 1) {
-    if (b$2) {
-      x$3.push(b$2);
+function f$0(a$8, b$9) {
+  const x$10 = [];
+  bb1: if (a$8.length === 1) {
+    if (b$9) {
+      x$10.push(b$9);
     }
   }
 
-  return <div>{x$3}</div>;
+  return <div>{x$10}</div>;
 }
 
 ```

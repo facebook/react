@@ -12,7 +12,7 @@ import enterSSA from "../HIR/EnterSSA";
 import { Environment } from "../HIR/HIRBuilder";
 import { inferMutableRanges } from "../HIR/InferMutableLifetimes";
 import inferReferenceEffects from "../HIR/InferReferenceEffects";
-import leaveSSA from "../HIR/LeaveSSA";
+import { leaveSSA } from "../HIR/LeaveSSA";
 import codegen from "./Codegen";
 import { HIRFunction } from "./HIR";
 import { inferReactiveScopeDependencies } from "./InferReactiveScopeDependencies";

@@ -47,11 +47,11 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(a$1, b$2) {
-  let x$3 = [];
-  let y$4 = [];
-  x$3.push(a$1);
-  y$4.push(b$2);
+function foo$0(a$5, b$6) {
+  const x$7 = [];
+  const y$8 = [];
+  x$7.push(a$5);
+  y$8.push(b$6);
 }
 
 ```

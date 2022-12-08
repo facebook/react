@@ -34,7 +34,7 @@ import { inferReactiveScopeDependencies } from "./HIR/InferReactiveScopeDependen
 import { inferReactiveScopes } from "./HIR/InferReactiveScopes";
 import { inferReactiveScopeVariables } from "./HIR/InferReactiveScopeVariables";
 import inferReferenceEffects from "./HIR/InferReferenceEffects";
-import leaveSSA from "./HIR/LeaveSSA";
+import { leaveSSA } from "./HIR/LeaveSSA";
 import printHIR from "./HIR/PrintHIR";
 
 function parseFunctions(

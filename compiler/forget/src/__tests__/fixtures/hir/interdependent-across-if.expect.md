@@ -114,7 +114,7 @@ function Foo$0() {}
 bb0:
   [1] Const mutate a$9_@0[0:6] = Call mutate compute$3_@0(read props$8.a)
   [2] Const mutate b$10_@0[0:6] = Call mutate compute$3_@0(read props$8.b)
-  [3] If (read props$8.c) then:bb2 else:bb1
+  [3] If (read props$8.c) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [4] Call mutate foo$5_@0(mutate a$9_@0, mutate b$10_@0)
@@ -163,14 +163,14 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = compute$3(props$1.a);
-  const b$4 = compute$3(props$1.b);
-  bb1: if (props$1.c) {
-    foo$5(a$2, b$4);
+function Component$0(props$8) {
+  const a$9 = compute$3(props$8.a);
+  const b$10 = compute$3(props$8.b);
+  bb1: if (props$8.c) {
+    foo$5(a$9, b$10);
   }
 
-  return <Foo$6 a={a$2} b={b$4}></Foo$6>;
+  return <Foo$6 a={a$9} b={b$10}></Foo$6>;
 }
 
 ```

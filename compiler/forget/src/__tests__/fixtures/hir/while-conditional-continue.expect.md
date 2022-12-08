@@ -22,10 +22,10 @@ bb0:
   [1] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb5 bb4
-  [2] If (read a$5) then:bb3 else:bb2
+  [2] If (read a$5) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
-  [3] If (read b$6) then:bb5 else:bb4
+  [3] If (read b$6) then:bb5 else:bb4 fallthrough=bb4
 bb5:
   predecessor blocks: bb3
   [4] Goto(Continue) bb1
@@ -86,15 +86,15 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(a$1, b$2, c$3, d$4) {
-  bb2: while (a$1) {
-    bb4: if (b$2) {
+function foo$0(a$5, b$6, c$7, d$8) {
+  bb2: while (a$5) {
+    bb4: if (b$6) {
       continue;
     }
-    c$3();
+    c$7();
   }
 
-  d$4();
+  d$8();
 }
 
 ```

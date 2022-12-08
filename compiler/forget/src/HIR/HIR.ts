@@ -298,8 +298,6 @@ export type MutableRange = {
  * Represents a user-defined variable (has a name) or a temporary variable (no name).
  */
 export type Identifier = {
-  // the original `id` value prior to entering SSA form
-  preSsaId: IdentifierId | null;
   // unique value to distinguish a variable, since name is not guaranteed to exist or be unique
   id: IdentifierId;
   // null for temporaries. name is primarily used for debugging.

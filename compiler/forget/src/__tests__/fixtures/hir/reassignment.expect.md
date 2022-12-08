@@ -66,15 +66,15 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  let x$2 = [];
-  x$2.push(props$1.p0);
-  let y$3 = x$2;
-  x$2 = [];
-  let _$4 = <Component$0 x={x$2}></Component$0>;
+function Component$0(props$6) {
+  const x$7 = [];
+  x$7.push(props$6.p0);
+  const y$8 = x$7;
+  const x$9 = [];
+  const _$10 = <Component$0 x={x$9}></Component$0>;
 
-  y$3.push(props$1.p1);
-  return <Component$0 x={x$2} y={y$3}></Component$0>;
+  y$8.push(props$6.p1);
+  return <Component$0 x={x$9} y={y$8}></Component$0>;
 }
 
 ```

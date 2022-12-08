@@ -76,10 +76,10 @@ flowchart TB
 ## Code
 
 ```javascript
-function Foo$0(props$1) {
+function Foo$0(props$13) {
   return (
     <>
-      Hello {props$1.greeting}
+      Hello {props$13.greeting}
       {<div>{<>Text</>}</div>}
     </>
   );

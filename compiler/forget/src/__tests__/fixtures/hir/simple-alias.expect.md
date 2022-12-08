@@ -84,14 +84,14 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  let a$1 = {};
-  let b$2 = {};
-  let c$3 = {};
-  a$1 = b$2;
-  b$2 = c$3;
-  c$3 = a$1;
-  mutate$4(a$1, b$2);
-  return c$3;
+  const a$5 = {};
+  const b$6 = {};
+  const c$7 = {};
+  const a$8 = b$6;
+  const b$9 = c$7;
+  const c$10 = a$8;
+  mutate$4(a$8, b$9);
+  return c$10;
 }
 
 ```

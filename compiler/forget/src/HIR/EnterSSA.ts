@@ -51,7 +51,6 @@ class SSABuilder {
   makeId(oldId: Identifier): Identifier {
     return {
       id: this.nextSsaId,
-      preSsaId: oldId.id,
       name: oldId.name,
       mutableRange: {
         start: makeInstructionId(0),

@@ -35,7 +35,7 @@ function foo(a, b, c) {
 ```
 bb0:
   [1] Let mutate x$16_@0[1:5] = Array []
-  [2] If (read a$13) then:bb2 else:bb1
+  [2] If (read a$13) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [3] Call mutate x$16_@0.push(read a$13)
@@ -48,6 +48,7 @@ bb1:
   [8] Switch (read b$14)
     Case read $20_@3: bb5
     Default: bb4
+    Fallthrough: bb3
 bb5:
   predecessor blocks: bb1
   [9] Reassign mutate x$22_@4[9:14] = Array []
@@ -150,31 +151,32 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(a$1, b$2, c$3) {
-  let x$4 = [];
-  bb1: if (a$1) {
-    x$4.push(a$1);
+function foo$0(a$13, b$14, c$15) {
+  const x$16 = [];
+  bb1: if (a$13) {
+    x$16.push(a$13);
   }
 
-  let y$5 = <div>{x$4}</div>;
+  const y$19 = <div>{x$16}</div>;
+  let x$22 = undefined;
 
-  bb3: switch (b$2) {
+  bb3: switch (b$14) {
     case 0: {
-      x$4 = [];
-      x$4.push(b$2);
+      x$22 = [];
+      x$22.push(b$14);
       break bb3;
     }
 
     default: {
-      x$4 = [];
-      x$4.push(c$3);
+      x$22 = [];
+      x$22.push(c$15);
     }
   }
 
   return (
     <div>
-      {y$5}
-      {x$4}
+      {y$19}
+      {x$22}
     </div>
   );
 }

@@ -23,7 +23,7 @@ bb1:
   predecessor blocks: bb0 bb3
   [3] Const mutate $6_@1 = 10
   [4] Const mutate $8_@2[4:6] = Binary read x$5_@0 < read $6_@1
-  [5] If (read $8_@2) then:bb3 else:bb2
+  [5] If (read $8_@2) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
   [6] Const mutate $9_@3 = 1
@@ -82,12 +82,12 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  let x$1 = 1;
-  bb2: while (x$1 < 10) {
-    x$1 + 1;
+  const x$5 = 1;
+  bb2: while (x$5 < 10) {
+    x$5 + 1;
   }
 
-  return x$1;
+  return x$5;
 }
 
 ```

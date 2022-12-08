@@ -27,14 +27,14 @@ bb0:
   [1] Const mutate items$9_@0[1:10] = Array [read z$8]
   [2] Call mutate items$9_@0.push(read x$6)
   [3] Const mutate items2$10_@1[3:7] = Array []
-  [4] If (read x$6) then:bb2 else:bb1
+  [4] If (read x$6) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [5] Call mutate items2$10_@1.push(read y$7)
   [6] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [7] If (read y$7) then:bb4 else:bb3
+  [7] If (read y$7) then:bb4 else:bb3 fallthrough=bb3
 bb4:
   predecessor blocks: bb1
   [8] Call mutate items$9_@0.push(read x$6)
@@ -97,19 +97,19 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(x$1, y$2, z$3) {
-  const items$4 = [z$3];
-  items$4.push(x$1);
-  const items2$5 = [];
-  bb1: if (x$1) {
-    items2$5.push(y$2);
+function foo$0(x$6, y$7, z$8) {
+  const items$9 = [z$8];
+  items$9.push(x$6);
+  const items2$10 = [];
+  bb1: if (x$6) {
+    items2$10.push(y$7);
   }
 
-  bb3: if (y$2) {
-    items$4.push(x$1);
+  bb3: if (y$7) {
+    items$9.push(x$6);
   }
 
-  return items2$5;
+  return items2$10;
 }
 
 ```

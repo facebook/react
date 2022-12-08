@@ -42,6 +42,7 @@ bb0:
     Case read $13_@2: bb6
     Default: bb1
     Case read $12_@1: bb2
+    Fallthrough: bb1
 bb6:
   predecessor blocks: bb0
   [7] Call mutate x$10_@0.push(read props$9.p2)
@@ -121,17 +122,17 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  let x$2 = [];
-  let y$3 = undefined;
-  bb1: switch (props$1.p0) {
+function Component$0(props$9) {
+  const x$10 = [];
+  let y$11 = undefined;
+  bb1: switch (props$9.p0) {
     case 1: {
       break bb1;
     }
 
     case true: {
-      x$2.push(props$1.p2);
-      y$3 = [];
+      x$10.push(props$9.p2);
+      y$11 = [];
       break bb1;
     }
 
@@ -140,13 +141,13 @@ function Component$0(props$1) {
     }
 
     case false: {
-      y$3 = x$2;
+      y$11 = x$10;
     }
   }
 
-  const child$7 = <Component$0 data={x$2}></Component$0>;
-  y$3.push(props$1.p4);
-  return <Component$0 data={y$3}>{child$7}</Component$0>;
+  const child$19 = <Component$0 data={x$10}></Component$0>;
+  y$11.push(props$9.p4);
+  return <Component$0 data={y$11}>{child$19}</Component$0>;
 }
 
 ```

@@ -36,7 +36,7 @@ bb1:
   a$12_@0[0:12]: phi(bb0: a$8_@0, bb3: a$15_@0)
   b$14_@0[0:12]: phi(bb0: b$9_@0, bb3: b$17_@0)
   c$16_@0[0:12]: phi(bb0: c$10_@0, bb3: c$18_@0)
-  [5] If (read cond$7) then:bb3 else:bb2
+  [5] If (read cond$7) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
   [6] Let mutate z$13_@0[0:12] = read a$12_@0
@@ -102,22 +102,22 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(cond$1) {
-  let a$2 = {};
-  let b$3 = {};
-  let c$4 = {};
-  bb2: while (cond$1) {
-    let z$5 = a$2;
-    a$2 = b$3;
-    b$3 = c$4;
-    c$4 = z$5;
-    mutate$6(a$2, b$3);
+function foo$0(cond$7) {
+  let a$8 = {};
+  let b$9 = {};
+  let c$10 = {};
+  bb2: while (cond$7) {
+    const z$13 = a$8;
+    a$8 = b$9;
+    b$9 = c$10;
+    c$10 = z$13;
+    mutate$6(a$8, b$9);
   }
 
-  a$2;
-  b$3;
-  c$4;
-  return a$2;
+  a$8;
+  b$9;
+  c$10;
+  return a$8;
 }
 
 ```
@@ -145,7 +145,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function mutate$0(x$1, y$2) {}
+function mutate$0(x$3, y$4) {}
 
 ```
       

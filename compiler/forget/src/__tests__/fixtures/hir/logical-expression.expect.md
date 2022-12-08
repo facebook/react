@@ -24,7 +24,7 @@ function g() {}
 ```
 bb0:
   [1] Const mutate $5_@0[0:2] = Call mutate f$1_@0()
-  [2] If (read $5_@0) then:bb2 else:bb3
+  [2] If (read $5_@0) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [3] Const mutate $6_@1[0:6] = Call mutate g$4_@1()
@@ -92,7 +92,7 @@ function And$0() {
 ```
 bb0:
   [1] Const mutate $5_@0[0:2] = Call mutate f$1_@0()
-  [2] If (read $5_@0) then:bb2 else:bb3
+  [2] If (read $5_@0) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [3] Const mutate $6_@1[0:6] = read $5_@0
@@ -162,7 +162,7 @@ bb0:
   [1] Const mutate $9_@0[0:2] = Call mutate f$2_@0()
   [2] Const mutate $10_@1 = null
   [3] Const mutate $11_@2 = Binary read $9_@0 != read $10_@1
-  [4] If (read $11_@2) then:bb2 else:bb3
+  [4] If (read $11_@2) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [5] Const mutate $12_@3[0:8] = read $9_@0
@@ -221,7 +221,7 @@ flowchart TB
 ## Code
 
 ```javascript
-function QuestionQuestion$0(props$1) {
+function QuestionQuestion$0(props$8) {
   bb1: if (f$2() != null) {
   } else {
   }

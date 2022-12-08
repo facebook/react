@@ -72,11 +72,11 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = [];
-  const b$3 = {};
-  let c$4 = new Foo$5(a$2, b$3);
-  return c$4;
+function Component$0(props$6) {
+  const a$7 = [];
+  const b$8 = {};
+  const c$9 = new Foo$5(a$7, b$8);
+  return c$9;
 }
 
 ```

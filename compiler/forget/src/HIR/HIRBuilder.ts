@@ -111,7 +111,6 @@ export default class HIRBuilder {
   makeTemporary(): Identifier {
     const id = this.nextIdentifierId;
     return {
-      preSsaId: null,
       id,
       name: null,
       mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) },
@@ -124,7 +123,6 @@ export default class HIRBuilder {
     if (identifier == null) {
       const id = this.nextIdentifierId;
       identifier = {
-        preSsaId: null,
         id,
         name: node.name,
         mutableRange: {

@@ -23,11 +23,11 @@ bb0:
   [2] Goto bb1
 bb1:
   predecessor blocks: bb0 bb4
-  [3] If (read items$5_@0) then:bb3 else:bb2
+  [3] If (read items$5_@0) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
   [4] Let mutate y$7_@1 = 0
-  [5] If (read cond$4) then:bb5 else:bb4
+  [5] If (read cond$4) then:bb5 else:bb4 fallthrough=bb4
 bb5:
   predecessor blocks: bb3
   [6] Reassign mutate y$9_@2 = 1
@@ -88,8 +88,8 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(cond$1) {
-  let items$2 = [];
+function foo$0(cond$4) {
+  const items$5 = [];
 }
 
 ```

@@ -21,7 +21,7 @@ function foo() {
 bb0:
   [1] Let mutate x$5_@0 = 1
   [2] Let mutate y$6_@1 = 2
-  [3] If (read y$6_@1) then:bb2 else:bb3
+  [3] If (read y$6_@1) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [4] Let mutate z$7_@2 = Binary read x$5_@0 + read y$6_@1
@@ -81,12 +81,12 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  let x$1 = 1;
-  let y$2 = 2;
-  bb1: if (y$2) {
-    let z$3 = x$1 + y$2;
+  const x$5 = 1;
+  const y$6 = 2;
+  bb1: if (y$6) {
+    const z$7 = x$5 + y$6;
   } else {
-    let z$4 = x$1;
+    const z$8 = x$5;
   }
 }
 

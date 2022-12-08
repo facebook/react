@@ -51,6 +51,7 @@ bb0:
     Case read $12_@2: bb4
     Case read $11_@1: bb3
     Default: bb2
+    Fallthrough: bb1
 bb10:
   predecessor blocks: bb0
   [9] Reassign mutate y$17_@7 = 0
@@ -159,15 +160,15 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(x$1) {
-  let y$2 = undefined;
-  bb1: switch (x$1) {
+function foo$0(x$9) {
+  const y$10 = undefined;
+  bb1: switch (x$9) {
     case 0: {
-      y$2 = 0;
+      const y$17 = 0;
     }
 
     case 1: {
-      y$2 = 1;
+      const y$18 = 1;
       break bb1;
     }
 
@@ -176,20 +177,20 @@ function foo$0(x$1) {
     }
 
     case 3: {
-      y$2 = 3;
+      const y$19 = 3;
       break bb1;
     }
 
     case 4: {
-      y$2 = 4;
+      const y$20 = 4;
     }
 
     case 5: {
-      y$2 = 5;
+      const y$21 = 5;
     }
 
     default: {
-      y$2 = 0;
+      const y$22 = 0;
     }
   }
 }

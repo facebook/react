@@ -22,11 +22,11 @@ function foo(a, b, c) {
 ```
 bb0:
   [1] Let mutate x$11_@0[1:11] = Array []
-  [2] If (read a$8) then:bb2 else:bb1
+  [2] If (read a$8) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [3] Let mutate y$12_@1[3:7] = Array []
-  [4] If (read b$9) then:bb4 else:bb3
+  [4] If (read b$9) then:bb4 else:bb3 fallthrough=bb3
 bb4:
   predecessor blocks: bb2
   [5] Call mutate y$12_@1.push(read c$10)
@@ -98,19 +98,19 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(a$1, b$2, c$3) {
-  let x$4 = [];
-  bb1: if (a$1) {
-    let y$5 = [];
+function foo$0(a$8, b$9, c$10) {
+  const x$11 = [];
+  bb1: if (a$8) {
+    const y$12 = [];
 
-    bb3: if (b$2) {
-      y$5.push(c$3);
+    bb3: if (b$9) {
+      y$12.push(c$10);
     }
 
-    x$4.push(<div>{y$5}</div>);
+    x$11.push(<div>{y$12}</div>);
   }
 
-  return x$4;
+  return x$11;
 }
 
 ```

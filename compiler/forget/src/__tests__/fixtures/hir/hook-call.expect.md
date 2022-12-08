@@ -121,14 +121,14 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const x$2 = [];
-  const y$3 = useFreeze$4(x$2);
-  foo$5(y$3, x$2);
+function Component$0(props$10) {
+  const x$11 = [];
+  const y$12 = useFreeze$4(x$11);
+  foo$5(y$12, x$11);
   return (
     <Component$0>
-      {x$2}
-      {y$3}
+      {x$11}
+      {y$12}
     </Component$0>
   );
 }

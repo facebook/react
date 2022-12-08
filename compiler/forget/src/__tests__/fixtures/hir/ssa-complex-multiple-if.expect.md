@@ -25,7 +25,7 @@ bb0:
   [2] Let mutate y$8_@1 = 2
   [3] Const mutate $9_@2 = 2
   [4] Const mutate $10_@3 = Binary read y$8_@1 === read $9_@2
-  [5] If (read $10_@3) then:bb2 else:bb1
+  [5] If (read $10_@3) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [6] Reassign mutate x$11_@0[1:14] = 3
@@ -35,7 +35,7 @@ bb1:
   x$17_@0[1:14]: phi(bb2: x$11_@0, bb0: x$7_@0)
   [8] Const mutate $12_@4 = 3
   [9] Const mutate $14_@5 = Binary read y$8_@1 === read $12_@4
-  [10] If (read $14_@5) then:bb4 else:bb3
+  [10] If (read $14_@5) then:bb4 else:bb3 fallthrough=bb3
 bb4:
   predecessor blocks: bb1
   [11] Reassign mutate x$15_@0[1:14] = 5
@@ -107,17 +107,19 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  let x$1 = 1;
-  let y$2 = 2;
-  bb1: if (y$2 === 2) {
-    x$1 = 3;
+  let x$7 = 1;
+  const y$8 = 2;
+  bb1: if (y$8 === 2) {
+    x$7 = 3;
   }
 
-  bb3: if (y$2 === 3) {
-    x$1 = 5;
+  let x$15 = undefined;
+
+  bb3: if (y$8 === 3) {
+    x$15 = 5;
   }
 
-  y$2 = x$1;
+  const y$18 = x$15;
 }
 
 ```

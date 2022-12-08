@@ -26,7 +26,7 @@ bb0:
   [1] Let mutate x$7_@0[1:7] = Array []
   [2] Call mutate x$7_@0.push(read props$6.p0)
   [3] Let mutate y$8_@0[1:7] = read x$7_@0
-  [4] If (read props$6.p1) then:bb2 else:bb1
+  [4] If (read props$6.p1) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [5] Reassign mutate x$9_@0[1:7] = Array []
@@ -88,18 +88,18 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  let x$2 = [];
-  x$2.push(props$1.p0);
-  let y$3 = x$2;
-  bb1: if (props$1.p1) {
-    x$2 = [];
+function Component$0(props$6) {
+  let x$7 = [];
+  x$7.push(props$6.p0);
+  const y$8 = x$7;
+  bb1: if (props$6.p1) {
+    x$7 = [];
   }
 
-  let _$4 = <Component$0 x={x$2}></Component$0>;
+  const _$12 = <Component$0 x={x$7}></Component$0>;
 
-  y$3.push(props$1.p2);
-  return <Component$0 x={x$2} y={y$3}></Component$0>;
+  y$8.push(props$6.p2);
+  return <Component$0 x={x$7} y={y$8}></Component$0>;
 }
 
 ```

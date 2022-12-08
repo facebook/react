@@ -57,13 +57,13 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const x$2 = {};
-  const y$3 = [];
-  x$2.y = y$3;
-  const child$4 = <Component$0 data={y$3}></Component$0>;
-  x$2.y.push(props$1.p0);
-  return <Component$0 data={x$2}>{child$4}</Component$0>;
+function Component$0(props$6) {
+  const x$7 = {};
+  const y$8 = [];
+  x$7.y = y$8;
+  const child$9 = <Component$0 data={y$8}></Component$0>;
+  x$7.y.push(props$6.p0);
+  return <Component$0 data={x$7}>{child$9}</Component$0>;
 }
 
 ```

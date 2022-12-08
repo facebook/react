@@ -27,14 +27,14 @@ bb0:
   [3] Const mutate $9_@1 = "div"
   [4] JSX <read $9_@1>{freeze x$8_@0}</read $9_@1>
   [5] Const mutate y$10_@2[5:12] = Array []
-  [6] If (read x$8_@0.length) then:bb2 else:bb1
+  [6] If (read x$8_@0.length) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [7] Call mutate y$10_@2.push(read x$8_@0)
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
-  [9] If (read b$7) then:bb4 else:bb3
+  [9] If (read b$7) then:bb4 else:bb3 fallthrough=bb3
 bb4:
   predecessor blocks: bb1
   [10] Call mutate y$10_@2.push(read b$7)
@@ -100,17 +100,17 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(a$1, b$2) {
-  const x$3 = [];
-  x$3.push(a$1);
-  <div>{x$3}</div>;
-  const y$5 = [];
-  bb1: if (x$3.length) {
-    y$5.push(x$3);
+function foo$0(a$6, b$7) {
+  const x$8 = [];
+  x$8.push(a$6);
+  <div>{x$8}</div>;
+  const y$10 = [];
+  bb1: if (x$8.length) {
+    y$10.push(x$8);
   }
 
-  bb3: if (b$2) {
-    y$5.push(b$2);
+  bb3: if (b$7) {
+    y$10.push(b$7);
   }
 }
 

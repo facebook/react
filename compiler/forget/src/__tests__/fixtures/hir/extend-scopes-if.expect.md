@@ -24,13 +24,13 @@ function foo(a, b, c) {
 ```
 bb0:
   [1] Let mutate x$10_@0[1:8] = Array []
-  [2] If (read a$7) then:bb2 else:bb1
+  [2] If (read a$7) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] If (read b$8) then:bb4 else:bb1
+  [3] If (read b$8) then:bb4 else:bb1 fallthrough=bb1
 bb4:
   predecessor blocks: bb2
-  [4] If (read c$9) then:bb6 else:bb1
+  [4] If (read c$9) then:bb6 else:bb1 fallthrough=bb1
 bb6:
   predecessor blocks: bb4
   [5] Const mutate $11_@1 = 0
@@ -38,7 +38,7 @@ bb6:
   [7] Goto bb1
 bb1:
   predecessor blocks: bb6 bb4 bb2 bb0
-  [8] If (read a$7.length) then:bb8 else:bb7
+  [8] If (read a$7.length) then:bb8 else:bb7 fallthrough=bb7
 bb8:
   predecessor blocks: bb1
   [9] Return read a$7
@@ -105,18 +105,18 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(a$1, b$2, c$3) {
-  let x$4 = [];
-  bb1: if (a$1) {
-    if (b$2) {
-      if (c$3) {
-        x$4.push(0);
+function foo$0(a$7, b$8, c$9) {
+  const x$10 = [];
+  bb1: if (a$7) {
+    if (b$8) {
+      if (c$9) {
+        x$10.push(0);
       }
     }
   }
 
-  bb7: if (a$1.length) {
-    return a$1;
+  bb7: if (a$7.length) {
+    return a$7;
   }
 
   return null;

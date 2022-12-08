@@ -15,7 +15,7 @@ function foo(x, y) {
 
 ```
 bb0:
-  [1] If (read x$8) then:bb2 else:bb1
+  [1] If (read x$8) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [2] Const mutate $10_@0 = false
@@ -71,11 +71,11 @@ flowchart TB
 ## Code
 
 ```javascript
-function foo$0(x$1, y$2) {
-  bb1: if (x$1) {
-    return foo$0(false, y$2);
+function foo$0(x$8, y$9) {
+  bb1: if (x$8) {
+    return foo$0(false, y$9);
   }
-  return [y$2 * 10];
+  return [y$9 * 10];
 }
 
 ```

@@ -48,61 +48,58 @@ describe("React Forget (HIR version)", () => {
         }
       }
 
-      const ast = parser.parse(input, {
-        sourceFilename: file,
-        plugins: ["typescript", "jsx"],
-      });
-      let items: Array<[string, string, string]> = [];
-      traverse(ast, {
-        FunctionDeclaration: {
-          enter(nodePath) {
-            const { ir } = run(nodePath, {
-              eliminateRedundantPhi: true,
-              inferReferenceEffects: true,
-              inferMutableRanges: true,
-              inferReactiveScopeVariables: true,
-              inferReactiveScopes: true,
-              inferReactiveScopeDependencies: true,
-              leaveSSA: false,
-              codegen: false,
-            });
+      let items: Array<[string, string, string]> | null = null;
+      let error: Error | null = null;
+      try {
+        items = transform(input, file);
+      } catch (e) {
+        error = e;
+      }
+      let outputs: Array<string>;
 
-            // Print the HIR before leaving SSA.
-            const textHIR = printFunction(ir);
-            const visualization = visualizeHIRMermaid(ir);
+      const expectError = file.startsWith("error.");
+      if (expectError) {
+        if (error === null) {
+          throw new Error(
+            `Expected an error to be thrown for fixture: '${file}', remove the 'error.' prefix if an error is not expected.`
+          );
+        } else {
+          outputs = [formatErrorOutput(error)];
+        }
+      } else {
+        if (error !== null) {
+          console.error(error);
+          throw new Error(
+            `Expected fixture '${file}' to succeed but it failed with error: '${error.message}'. See console output for details.`
+          );
+        }
+        if (items === null || items.length === 0) {
+          throw new Error(`Expected at least one output for file '${file}'.`);
+        }
+        outputs = formatOutput(items);
+      }
+      return `
+## Input
 
-            const { ast } = run(nodePath, {
-              eliminateRedundantPhi: true,
-              inferReferenceEffects: true,
-              inferMutableRanges: true,
-              inferReactiveScopeVariables: true,
-              inferReactiveScopes: true,
-              inferReactiveScopeDependencies: true,
-              leaveSSA: true,
-              codegen: true,
-            });
+${wrapWithTripleBackticks(input, "javascript")}
 
-            invariant(
-              ast !== null,
-              "ast is null when codegen option is enabled"
-            );
-            const text = prettier.format(
-              generate(ast).code.replace("\n\n", "\n"),
-              {
-                semi: true,
-                parser: "babel-ts",
-              }
-            );
-            items.push([textHIR, text, visualization]);
-          },
-        },
-      });
-      invariant(
-        items.length > 0,
-        "Visitor failed, check that the input has a function"
-      );
-      const outputs = items.map(([hir, text, visualization]) => {
-        return `
+${outputs.join("\n")}
+      `;
+    }
+  );
+});
+
+function formatErrorOutput(error: Error): string {
+  return `
+## Error
+
+${wrapWithTripleBackticks(error.message)}
+          `;
+}
+
+function formatOutput(items: Array<[string, string, string]>): Array<string> {
+  return items.map(([hir, text, visualization]) => {
+    return `
 ## HIR
 
 ${wrapWithTripleBackticks(hir)}
@@ -115,14 +112,55 @@ ${wrapWithTripleBackticks(visualization, "mermaid")}
 
 ${wrapWithTripleBackticks(text, "javascript")}
         `.trim();
-      });
-      return `
-## Input
+  });
+}
 
-${wrapWithTripleBackticks(input, "javascript")}
+function transform(
+  text: string,
+  file: string
+): Array<[string, string, string]> {
+  const items: Array<[string, string, string]> = [];
+  const ast = parser.parse(text, {
+    sourceFilename: file,
+    plugins: ["typescript", "jsx"],
+  });
+  traverse(ast, {
+    FunctionDeclaration: {
+      enter(nodePath) {
+        const { ir } = run(nodePath, {
+          eliminateRedundantPhi: true,
+          inferReferenceEffects: true,
+          inferMutableRanges: true,
+          inferReactiveScopeVariables: true,
+          inferReactiveScopes: true,
+          inferReactiveScopeDependencies: true,
+          leaveSSA: false,
+          codegen: false,
+        });
 
-${outputs.join("\n")}
-      `;
-    }
-  );
-});
+        // Print the HIR before leaving SSA.
+        const textHIR = printFunction(ir);
+        const visualization = visualizeHIRMermaid(ir);
+
+        const { ast } = run(nodePath, {
+          eliminateRedundantPhi: true,
+          inferReferenceEffects: true,
+          inferMutableRanges: true,
+          inferReactiveScopeVariables: true,
+          inferReactiveScopes: true,
+          inferReactiveScopeDependencies: true,
+          leaveSSA: true,
+          codegen: true,
+        });
+
+        invariant(ast !== null, "ast is null when codegen option is enabled");
+        const text = prettier.format(generate(ast).code.replace("\n\n", "\n"), {
+          semi: true,
+          parser: "babel-ts",
+        });
+        items.push([textHIR, text, visualization]);
+      },
+    },
+  });
+  return items;
+}

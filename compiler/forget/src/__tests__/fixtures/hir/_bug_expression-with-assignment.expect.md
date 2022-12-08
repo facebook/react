@@ -51,9 +51,9 @@ flowchart TB
 
 ```javascript
 function f$0() {
-  let x$1 = 1;
-  x$1 = 2;
-  return x$1 + x$1 + x$1;
+  const x$4 = 1;
+  const x$5 = 2;
+  return x$5 + x$5 + x$5;
 }
 
 ```

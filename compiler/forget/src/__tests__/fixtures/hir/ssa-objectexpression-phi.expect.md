@@ -26,7 +26,7 @@ bb0:
   [2] Let mutate y$7_@0[1:10] = 2
   [3] Const mutate $8_@2 = 1
   [4] Const mutate $9_@3 = Binary read x$6_@0 > read $8_@2
-  [5] If (read $9_@3) then:bb2 else:bb3
+  [5] If (read $9_@3) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [6] Reassign mutate x$10_@0[1:10] = 2
@@ -91,19 +91,19 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  let x$1 = 1;
-  let y$2 = 2;
-  bb1: if (x$1 > 1) {
-    x$1 = 2;
+  let x$6 = 1;
+  let y$7 = 2;
+  bb1: if (x$6 > 1) {
+    x$6 = 2;
   } else {
-    y$2 = 3;
+    y$7 = 3;
   }
 
-  let t$5 = {
-    x: x$1,
-    y: y$2,
+  const t$14 = {
+    x: x$6,
+    y: y$7,
   };
-  return t$5;
+  return t$14;
 }
 
 ```

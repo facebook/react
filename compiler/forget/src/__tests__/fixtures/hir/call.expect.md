@@ -89,14 +89,14 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = [];
-  const b$3 = {};
-  foo$4(a$2, b$3);
-  let _$5 = <div a={a$2}></div>;
+function Component$0(props$9) {
+  const a$10 = [];
+  const b$11 = {};
+  foo$4(a$10, b$11);
+  const _$13 = <div a={a$10}></div>;
 
-  foo$4(b$3);
-  return <div a={a$2} b={b$3}></div>;
+  foo$4(b$11);
+  return <div a={a$10} b={b$11}></div>;
 }
 
 ```

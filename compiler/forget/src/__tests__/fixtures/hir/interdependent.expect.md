@@ -60,11 +60,11 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = compute$3(props$1.a);
-  const b$4 = compute$3(props$1.b);
-  foo$5(a$2, b$4);
-  return <Foo$6 a={a$2} b={b$4}></Foo$6>;
+function Component$0(props$8) {
+  const a$9 = compute$3(props$8.a);
+  const b$10 = compute$3(props$8.b);
+  foo$5(a$9, b$10);
+  return <Foo$6 a={a$9} b={b$10}></Foo$6>;
 }
 
 ```

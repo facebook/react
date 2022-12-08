@@ -47,12 +47,12 @@ flowchart TB
 
 ```javascript
 function foo$0() {
-  const x$1 = [];
-  const y$2 = {
-    x: x$1,
+  const x$4 = [];
+  const y$5 = {
+    x: x$4,
   };
-  y$2.x.push([]);
-  return y$2;
+  y$5.x.push([]);
+  return y$5;
 }
 
 ```

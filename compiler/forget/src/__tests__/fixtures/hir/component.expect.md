@@ -44,12 +44,12 @@ bb0:
   [7] Goto bb1
 bb1:
   predecessor blocks: bb0 bb5 bb10
-  [8] If (read items$27_@0) then:bb3 else:bb2
+  [8] If (read items$27_@0) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
   [9] Const mutate $34_@6 = null
   [10] Const mutate $36_@3[0:19] = Binary read item$10_@3 == read $34_@6
-  [11] If (read $36_@3) then:bb8 else:bb9
+  [11] If (read $36_@3) then:bb8 else:bb9 fallthrough=bb7
 bb8:
   predecessor blocks: bb3
   [12] Const mutate $37_@3[0:19] = read $36_@3
@@ -61,7 +61,7 @@ bb9:
 bb7:
   predecessor blocks: bb8 bb9
   $40_@3[0:19]: phi(bb8: $37_@3, bb9: $39_@3)
-  [16] If (read $40_@3) then:bb5 else:bb4
+  [16] If (read $40_@3) then:bb5 else:bb4 fallthrough=bb4
 bb5:
   predecessor blocks: bb7
   [17] Goto(Continue) bb1
@@ -72,7 +72,7 @@ bb4:
   [20] Const mutate $44_@8 = JSX <read $43_@7>{read item$10_@3}</read $43_@7>
   [21] Call mutate renderedItems$29_@2.push(read $44_@8)
   [22] Const mutate $49_@2[3:26] = Binary read renderedItems$29_@2.length >= read max$32_@5
-  [23] If (read $49_@2) then:bb2 else:bb10
+  [23] If (read $49_@2) then:bb2 else:bb10 fallthrough=bb10
 bb10:
   predecessor blocks: bb4
   [24] Goto(Continue) bb1
@@ -187,12 +187,12 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const items$2 = props$1.items;
-  const maxItems$3 = props$1.maxItems;
-  const renderedItems$4 = [];
-  const seen$5 = new Set$6();
-  const max$7 = Math$8.max(0, maxItems$3);
+function Component$0(props$26) {
+  const items$27 = props$26.items;
+  const maxItems$28 = props$26.maxItems;
+  const renderedItems$29 = [];
+  const seen$30 = new Set$6();
+  const max$32 = Math$8.max(0, maxItems$28);
 }
 
 ```

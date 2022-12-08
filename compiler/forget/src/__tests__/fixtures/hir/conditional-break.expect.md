@@ -80,7 +80,7 @@ function Component(props) {
 bb0:
   [1] Const mutate a_DEBUG$5_@0[1:7] = Array []
   [2] Call mutate a_DEBUG$5_@0.push(read props$4.a)
-  [3] If (read props$4.b) then:bb2 else:bb1
+  [3] If (read props$4.b) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [4] Const mutate $6_@1 = null
@@ -129,15 +129,15 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a_DEBUG$2 = [];
-  a_DEBUG$2.push(props$1.a);
-  bb1: if (props$1.b) {
+function Component$0(props$4) {
+  const a_DEBUG$5 = [];
+  a_DEBUG$5.push(props$4.a);
+  bb1: if (props$4.b) {
     return null;
   }
 
-  a_DEBUG$2.push(props$1.d);
-  return a_DEBUG$2;
+  a_DEBUG$5.push(props$4.d);
+  return a_DEBUG$5;
 }
 
 ```
@@ -147,7 +147,7 @@ function Component$0(props$1) {
 bb0:
   [1] Const mutate a$4_@0[1:7] = Array []
   [2] Call mutate a$4_@0.push(read props$3.a)
-  [3] If (read props$3.b) then:bb2 else:bb1
+  [3] If (read props$3.b) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [4] Call mutate a$4_@0.push(read props$3.c)
@@ -198,15 +198,15 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = [];
-  a$2.push(props$1.a);
-  bb1: if (props$1.b) {
-    a$2.push(props$1.c);
+function Component$0(props$3) {
+  const a$4 = [];
+  a$4.push(props$3.a);
+  bb1: if (props$3.b) {
+    a$4.push(props$3.c);
   }
 
-  a$2.push(props$1.d);
-  return a$2;
+  a$4.push(props$3.d);
+  return a$4;
 }
 
 ```
@@ -216,7 +216,7 @@ function Component$0(props$1) {
 bb0:
   [1] Const mutate a$5_@0[1:8] = Array []
   [2] Call mutate a$5_@0.push(read props$4.a)
-  [3] If (read props$4.b) then:bb2 else:bb1
+  [3] If (read props$4.b) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [4] Call mutate a$5_@0.push(read props$4.c)
@@ -268,16 +268,16 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = [];
-  a$2.push(props$1.a);
-  bb1: if (props$1.b) {
-    a$2.push(props$1.c);
+function Component$0(props$4) {
+  const a$5 = [];
+  a$5.push(props$4.a);
+  bb1: if (props$4.b) {
+    a$5.push(props$4.c);
     return null;
   }
 
-  a$2.push(props$1.d);
-  return a$2;
+  a$5.push(props$4.d);
+  return a$5;
 }
 
 ```
@@ -287,7 +287,7 @@ function Component$0(props$1) {
 bb0:
   [1] Const mutate a$4_@0[1:7] = Array []
   [2] Call mutate a$4_@0.push(read props$3.a)
-  [3] If (read props$3.b) then:bb2 else:bb1
+  [3] If (read props$3.b) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
   [4] Call mutate a$4_@0.push(read props$3.c)
@@ -337,16 +337,16 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = [];
-  a$2.push(props$1.a);
-  bb1: if (props$1.b) {
-    a$2.push(props$1.c);
-    return a$2;
+function Component$0(props$3) {
+  const a$4 = [];
+  a$4.push(props$3.a);
+  bb1: if (props$3.b) {
+    a$4.push(props$3.c);
+    return a$4;
   }
 
-  a$2.push(props$1.d);
-  return a$2;
+  a$4.push(props$3.d);
+  return a$4;
 }
 
 ```
@@ -356,7 +356,7 @@ function Component$0(props$1) {
 bb0:
   [1] Const mutate a$4_@0[1:7] = Array []
   [2] Call mutate a$4_@0.push(read props$3.a)
-  [3] If (read props$3.b) then:bb1 else:bb2
+  [3] If (read props$3.b) then:bb1 else:bb2 fallthrough=bb2
 bb2:
   predecessor blocks: bb0
   [4] Call mutate a$4_@0.push(read props$3.c)
@@ -406,15 +406,15 @@ flowchart TB
 ## Code
 
 ```javascript
-function Component$0(props$1) {
-  const a$2 = [];
-  a$2.push(props$1.a);
-  bb2: if (props$1.b) {
-    a$2.push(props$1.d);
-    return a$2;
+function Component$0(props$3) {
+  const a$4 = [];
+  a$4.push(props$3.a);
+  bb2: if (props$3.b) {
+    a$4.push(props$3.d);
+    return a$4;
   }
 
-  a$2.push(props$1.c);
+  a$4.push(props$3.c);
 }
 
 ```
