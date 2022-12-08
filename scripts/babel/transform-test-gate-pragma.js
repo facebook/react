@@ -2,9 +2,7 @@
 
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
-function transform(babel) {
-  const {types: t} = babel;
-
+function transform({types: t}) {
   // A very stupid subset of pseudo-JavaScript, used to run tests conditionally
   // based on the environment.
   //
