@@ -7,14 +7,10 @@
 
 import invariant from "invariant";
 import { assertExhaustive } from "../Common/utils";
-import { buildAliasSets } from "./BuildAliasSets";
-import DisjointSet from "./DisjointSet";
 import {
   Effect,
   HIRFunction,
-  Identifier,
   Instruction,
-  InstructionId,
   makeInstructionId,
   Place,
 } from "./HIR";
@@ -85,7 +81,10 @@ function inferPlace(place: Place, instr: Instruction) {
   }
 }
 
-export function inferMutableRanges(func: HIRFunction) {
+export function inferMutableLifetimes(
+  func: HIRFunction,
+  inferMutableRangeForFields: boolean
+) {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       let start = Number.MAX_SAFE_INTEGER;
@@ -120,29 +119,9 @@ export function inferMutableRanges(func: HIRFunction) {
           // Let's be optimistic and assume this lvalue is not mutable by
           // default.
           lvalueId.mutableRange.end = makeInstructionId(instr.id + 1);
-        } else {
+        } else if (inferMutableRangeForFields) {
           inferPlace(instr.lvalue.place, instr);
         }
-      }
-    }
-  }
-
-  const aliasSets = buildAliasSets(func);
-  for (const aliasSet of aliasSets) {
-    // Update mutableRange.end only if the identifiers have actually been
-    // mutated.
-    const haveIdentifiersBeenMutated = [...aliasSet].some(
-      (id) => id.mutableRange.end - id.mutableRange.start > 1
-    );
-
-    if (haveIdentifiersBeenMutated) {
-      // Find final instruction which mutates this alias set.
-      const mutableRangeEnds = [...aliasSet].map((id) => id.mutableRange.end);
-      const maxMutableRangeEnd = Math.max(...mutableRangeEnds) as InstructionId;
-
-      // Update mutableRange.end for all aliases in this set.
-      for (const alias of aliasSet) {
-        alias.mutableRange.end = maxMutableRangeEnd;
       }
     }
   }

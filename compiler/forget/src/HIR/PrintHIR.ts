@@ -7,6 +7,7 @@
 
 import generate from "@babel/generator";
 import { assertExhaustive } from "../Common/utils";
+import DisjointSet from "./DisjointSet";
 import {
   GotoVariant,
   HIR,
@@ -22,6 +23,7 @@ import {
   SourceLocation,
   Terminal,
 } from "./HIR";
+import { buildAliasSets } from "./InferAlias";
 
 export type Options = {
   indent: number;
@@ -331,4 +333,15 @@ export function printSourceLocation(loc: SourceLocation): string {
   } else {
     return `${loc.start.line}:${loc.start.column}:${loc.end.line}:${loc.end.column}`;
   }
+}
+
+export function printAliases(aliases: DisjointSet<Identifier>): string {
+  const aliasSets = buildAliasSets(aliases);
+
+  const items = [];
+  for (const aliasSet of aliasSets) {
+    items.push([...aliasSet].map((id) => printIdentifier(id)).join(","));
+  }
+
+  return items.join("\n");
 }

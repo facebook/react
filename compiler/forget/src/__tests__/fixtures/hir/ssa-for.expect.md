@@ -16,7 +16,7 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$7_@0[0:13] = 1
+  [1] Let mutate x$7_@0[1:13] = 1
   [2] For init=bb3 test=bb1 loop=bb5 update=bb4 fallthrough=bb2
 bb3:
   predecessor blocks: bb0
@@ -24,14 +24,14 @@ bb3:
   [4] Goto bb1
 bb1:
   predecessor blocks: bb3 bb4
-  x$13_@0[0:13]: phi(bb3: x$7_@0, bb4: x$14_@0)
+  x$13_@0[1:13]: phi(bb3: x$7_@0, bb4: x$14_@0)
   [5] Const mutate $9_@2 = 10
   [6] Const mutate $11_@3[6:8] = Binary read i$8_@1 < read $9_@2
   [7] If (read $11_@3) then:bb5 else:bb2 fallthrough=bb2
 bb5:
   predecessor blocks: bb1
   [8] Const mutate $12_@4 = 1
-  [9] Reassign mutate x$14_@0[0:13] = Binary read x$13_@0 + read $12_@4
+  [9] Reassign mutate x$14_@0[1:13] = Binary read x$13_@0 + read $12_@4
   [10] Goto(Continue) bb4
 bb4:
   predecessor blocks: bb5
@@ -51,7 +51,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$7_@0[0:13] = 1
+      [1] Let mutate x$7_@0[1:13] = 1
     "]
     bb0_instrs --> bb0_terminal(["For"])
   end
@@ -71,7 +71,7 @@ flowchart TB
   subgraph bb5
     bb5_instrs["
       [8] Const mutate $12_@4 = 1
-      [9] Reassign mutate x$14_@0[0:13] = Binary read x$13_@0 + read $12_@4
+      [9] Reassign mutate x$14_@0[1:13] = Binary read x$13_@0 + read $12_@4
     "]
     bb5_instrs --> bb5_terminal(["Goto"])
   end

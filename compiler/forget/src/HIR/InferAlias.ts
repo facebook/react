@@ -1,6 +1,6 @@
 import invariant from "invariant";
 import DisjointSet from "./DisjointSet";
-import { HIRFunction, Identifier, Instruction, Place, LValue } from "./HIR";
+import { HIRFunction, Identifier, Instruction, LValue, Place } from "./HIR";
 import { printInstructionValue } from "./PrintHIR";
 
 type AbstractValue = AbstractObject | AbstractPrimitive;
@@ -14,6 +14,31 @@ type AbstractPrimitive = {
 };
 
 export type AliasSet = Set<Identifier>;
+
+export function buildAliasSets(
+  aliases: DisjointSet<Identifier>
+): Array<AliasSet> {
+  const aliasIds: Map<Identifier, number> = new Map();
+  const aliasSets: Map<number, Set<Identifier>> = new Map();
+
+  aliases.forEach((identifier, groupIdentifier) => {
+    let aliasId = aliasIds.get(groupIdentifier);
+    if (aliasId == null) {
+      aliasId = aliasIds.size;
+      aliasIds.set(groupIdentifier, aliasId);
+    }
+
+    let aliasSet = aliasSets.get(aliasId);
+    if (aliasSet === undefined) {
+      aliasSet = new Set();
+      aliasSets.set(aliasId, aliasSet);
+    }
+    aliasSet.add(identifier);
+  });
+
+  return [...aliasSets.values()];
+}
+
 class AbstractState {
   aliases = new DisjointSet<Identifier>();
   // NOTE(gsn): Should this be a part of AbstractObject? No, because this has
@@ -132,7 +157,6 @@ class AbstractState {
       }
 
       memberAlias.add(alias.identifier);
-      this.aliases.union([lvalue.place.identifier, alias.identifier]);
       return;
     }
 
@@ -153,38 +177,17 @@ class AbstractState {
     //   lvalue = alias.memberPath;
     this.#values.set(lvalue.place.identifier, value);
   }
-
-  buildAliasSets(): Array<Set<Identifier>> {
-    const aliasIds: Map<Identifier, number> = new Map();
-    const aliasSets: Map<number, Set<Identifier>> = new Map();
-
-    this.aliases.forEach((identifier, groupIdentifier) => {
-      let aliasId = aliasIds.get(groupIdentifier);
-      if (aliasId == null) {
-        aliasId = aliasIds.size;
-        aliasIds.set(groupIdentifier, aliasId);
-      }
-
-      let aliasSet = aliasSets.get(aliasId);
-      if (aliasSet === undefined) {
-        aliasSet = new Set();
-        aliasSets.set(aliasId, aliasSet);
-      }
-      aliasSet.add(identifier);
-    });
-
-    return [...aliasSets.values()];
-  }
 }
 
-export function buildAliasSets(func: HIRFunction): Array<AliasSet> {
+export function inferAliases(func: HIRFunction): DisjointSet<Identifier> {
   const state = new AbstractState();
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       inferInstr(instr, state);
     }
   }
-  return state.buildAliasSets();
+
+  return state.aliases;
 }
 
 function inferInstr(instr: Instruction, state: AbstractState) {

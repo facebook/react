@@ -29,7 +29,7 @@ import codegen from "./HIR/Codegen";
 import { eliminateRedundantPhi } from "./HIR/EliminateRedundantPhi";
 import enterSSA from "./HIR/EnterSSA";
 import { Environment } from "./HIR/HIRBuilder";
-import { inferMutableRanges } from "./HIR/InferMutableLifetimes";
+import { inferMutableRanges } from "./HIR/InferMutableRanges";
 import { inferReactiveScopeDependencies } from "./HIR/InferReactiveScopeDependencies";
 import { inferReactiveScopes } from "./HIR/InferReactiveScopes";
 import { inferReactiveScopeVariables } from "./HIR/InferReactiveScopeVariables";

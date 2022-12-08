@@ -17,24 +17,23 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$5_@0[0:9] = 1
+  [1] Let mutate x$5_@0[1:9] = 1
   [2] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
-  x$7_@0[0:9]: phi(bb0: x$5_@0, bb3: x$10_@0)
+  x$7_@0[1:9]: phi(bb0: x$5_@0, bb3: x$10_@0)
   [3] Const mutate $6_@1 = 10
-  [4] Const mutate $8_@2[4:6] = Binary read x$7_@0 < read $6_@1
-  [5] If (read $8_@2) then:bb3 else:bb2 fallthrough=bb2
+  [4] Const mutate $8_@0[1:9] = Binary read x$7_@0 < read $6_@1
+  [5] If (read $8_@0) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
-  [6] Const mutate $9_@3 = 1
-  [7] Reassign mutate x$10_@0[0:9] = Binary read x$7_@0 + read $9_@3
+  [6] Const mutate $9_@2 = 1
+  [7] Reassign mutate x$10_@0[1:9] = Binary read x$7_@0 + read $9_@2
   [8] Goto(Continue) bb1
 bb2:
   predecessor blocks: bb1
   [9] Return read x$7_@0
-scope2 [4:6]:
- - read $6_@1
+
 ```
 
 ### CFG
@@ -44,21 +43,21 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$5_@0[0:9] = 1
+      [1] Let mutate x$5_@0[1:9] = 1
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end
   subgraph bb1
     bb1_instrs["
       [3] Const mutate $6_@1 = 10
-      [4] Const mutate $8_@2[4:6] = Binary read x$7_@0 < read $6_@1
+      [4] Const mutate $8_@0[1:9] = Binary read x$7_@0 < read $6_@1
     "]
-    bb1_instrs --> bb1_terminal(["If (read $8_@2)"])
+    bb1_instrs --> bb1_terminal(["If (read $8_@0)"])
   end
   subgraph bb3
     bb3_instrs["
-      [6] Const mutate $9_@3 = 1
-      [7] Reassign mutate x$10_@0[0:9] = Binary read x$7_@0 + read $9_@3
+      [6] Const mutate $9_@2 = 1
+      [7] Reassign mutate x$10_@0[1:9] = Binary read x$7_@0 + read $9_@2
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
