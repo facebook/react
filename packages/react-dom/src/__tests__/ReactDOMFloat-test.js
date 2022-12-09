@@ -10,7 +10,6 @@
 'use strict';
 import {
   replaceScriptsAndMove,
-  mergeOptions,
   withLoadingReadyState,
 } from '../test-utils/FizzTestUtils';
 
@@ -251,10 +250,10 @@ describe('ReactDOMFloat', () => {
 
   function renderToPipeableStream(jsx, options) {
     // Merge options with renderOptions, which may contain featureFlag specific behavior
-    return ReactDOMFizzServer.renderToPipeableStream(
-      jsx,
-      mergeOptions(options, renderOptions),
-    );
+    return ReactDOMFizzServer.renderToPipeableStream(jsx, {
+      ...renderOptions,
+      ...options,
+    });
   }
 
   // @gate enableFloat

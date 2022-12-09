@@ -2421,40 +2421,65 @@ export function writeCompletedSegmentInstruction(
   responseState: ResponseState,
   contentSegmentID: number,
 ): boolean {
-  const scriptFormat =
+  if (
     !enableFizzExternalRuntime ||
-    responseState.streamingFormat === ScriptStreamingFormat;
-  if (scriptFormat) {
-    writeChunk(destination, responseState.startInlineScript);
-    if (!responseState.sentCompleteSegmentFunction) {
-      // The first time we write this, we'll need to include the full implementation.
-      responseState.sentCompleteSegmentFunction = true;
-      writeChunk(destination, completeSegmentScript1Full);
-    } else {
-      // Future calls can just reuse the same function.
-      writeChunk(destination, completeSegmentScript1Partial);
-    }
+    responseState.streamingFormat === ScriptStreamingFormat
+  ) {
+    return writeCompletedSegmentInstructionScript(
+      destination,
+      responseState,
+      contentSegmentID,
+    );
   } else {
-    writeChunk(destination, completeSegmentData1);
+    return writeCompletedSegmentInstructionData(
+      destination,
+      responseState,
+      contentSegmentID,
+    );
+  }
+}
+function writeCompletedSegmentInstructionScript(
+  destination: Destination,
+  responseState: ResponseState,
+  contentSegmentID: number,
+): boolean {
+  writeChunk(destination, responseState.startInlineScript);
+  if (!responseState.sentCompleteSegmentFunction) {
+    // The first time we write this, we'll need to include the full implementation.
+    responseState.sentCompleteSegmentFunction = true;
+    writeChunk(destination, completeSegmentScript1Full);
+  } else {
+    // Future calls can just reuse the same function.
+    writeChunk(destination, completeSegmentScript1Partial);
   }
 
   // Write function arguments, which are string literals
   writeChunk(destination, responseState.segmentPrefix);
   const formattedID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, formattedID);
-  if (scriptFormat) {
-    writeChunk(destination, completeSegmentScript2);
-  } else {
-    writeChunk(destination, completeSegmentData2);
-  }
+  writeChunk(destination, completeSegmentScript2);
+
   writeChunk(destination, responseState.placeholderPrefix);
   writeChunk(destination, formattedID);
+  return writeChunkAndReturn(destination, completeSegmentScriptEnd);
+}
 
-  if (scriptFormat) {
-    return writeChunkAndReturn(destination, completeSegmentScriptEnd);
-  } else {
-    return writeChunkAndReturn(destination, completeSegmentDataEnd);
-  }
+function writeCompletedSegmentInstructionData(
+  destination: Destination,
+  responseState: ResponseState,
+  contentSegmentID: number,
+): boolean {
+  writeChunk(destination, completeSegmentData1);
+
+  // Write function arguments, which are string literals
+  writeChunk(destination, responseState.segmentPrefix);
+  const formattedID = stringToChunk(contentSegmentID.toString(16));
+  writeChunk(destination, formattedID);
+  writeChunk(destination, completeSegmentData2);
+
+  writeChunk(destination, responseState.placeholderPrefix);
+  writeChunk(destination, formattedID);
+  return writeChunkAndReturn(destination, completeSegmentDataEnd);
 }
 
 const completeBoundaryScript1Full = stringToPrecomputedChunk(
@@ -2493,42 +2518,61 @@ export function writeCompletedBoundaryInstruction(
   contentSegmentID: number,
   boundaryResources: BoundaryResources,
 ): boolean {
+  if (
+    !enableFizzExternalRuntime ||
+    responseState.streamingFormat === ScriptStreamingFormat
+  ) {
+    return writeCompletedBoundaryInstructionScript(
+      destination,
+      responseState,
+      boundaryID,
+      contentSegmentID,
+      boundaryResources,
+    );
+  } else {
+    return writeCompletedBoundaryInstructionData(
+      destination,
+      responseState,
+      boundaryID,
+      contentSegmentID,
+      boundaryResources,
+    );
+  }
+}
+
+function writeCompletedBoundaryInstructionScript(
+  destination: Destination,
+  responseState: ResponseState,
+  boundaryID: SuspenseBoundaryID,
+  contentSegmentID: number,
+  boundaryResources: BoundaryResources,
+): boolean {
   let hasStyleDependencies;
   if (enableFloat) {
     hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
   }
-  const scriptFormat =
-    !enableFizzExternalRuntime ||
-    responseState.streamingFormat === ScriptStreamingFormat;
-  if (scriptFormat) {
-    writeChunk(destination, responseState.startInlineScript);
-    if (enableFloat && hasStyleDependencies) {
-      if (!responseState.sentCompleteBoundaryFunction) {
-        responseState.sentCompleteBoundaryFunction = true;
-        responseState.sentStyleInsertionFunction = true;
-        writeChunk(
-          destination,
-          clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth),
-        );
-      } else if (!responseState.sentStyleInsertionFunction) {
-        responseState.sentStyleInsertionFunction = true;
-        writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
-      } else {
-        writeChunk(destination, completeBoundaryWithStylesScript1Partial);
-      }
+
+  writeChunk(destination, responseState.startInlineScript);
+  if (enableFloat && hasStyleDependencies) {
+    if (!responseState.sentCompleteBoundaryFunction) {
+      responseState.sentCompleteBoundaryFunction = true;
+      responseState.sentStyleInsertionFunction = true;
+      writeChunk(
+        destination,
+        clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth),
+      );
+    } else if (!responseState.sentStyleInsertionFunction) {
+      responseState.sentStyleInsertionFunction = true;
+      writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
     } else {
-      if (!responseState.sentCompleteBoundaryFunction) {
-        responseState.sentCompleteBoundaryFunction = true;
-        writeChunk(destination, completeBoundaryScript1Full);
-      } else {
-        writeChunk(destination, completeBoundaryScript1Partial);
-      }
+      writeChunk(destination, completeBoundaryWithStylesScript1Partial);
     }
   } else {
-    if (enableFloat && hasStyleDependencies) {
-      writeChunk(destination, completeBoundaryWithStylesData1);
+    if (!responseState.sentCompleteBoundaryFunction) {
+      responseState.sentCompleteBoundaryFunction = true;
+      writeChunk(destination, completeBoundaryScript1Full);
     } else {
-      writeChunk(destination, completeBoundaryData1);
+      writeChunk(destination, completeBoundaryScript1Partial);
     }
   }
 
@@ -2541,37 +2585,61 @@ export function writeCompletedBoundaryInstruction(
   // Write function arguments, which are string and array literals
   const formattedContentID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, boundaryID);
-  if (scriptFormat) {
-    writeChunk(destination, completeBoundaryScript2);
-  } else {
-    writeChunk(destination, completeBoundaryData2);
-  }
+  writeChunk(destination, completeBoundaryScript2);
+
   writeChunk(destination, responseState.segmentPrefix);
   writeChunk(destination, formattedContentID);
+
   if (enableFloat && hasStyleDependencies) {
-    // Script and data writers must format this differently:
     //  - script writer emits an array literal, whose string elements are
     //    escaped for javascript  e.g. ["A", "B"]
+    writeChunk(destination, completeBoundaryScript3a);
+    // boundaryResources encodes an array literal
+    writeStyleResourceDependenciesInJS(destination, boundaryResources);
+  } else {
+    writeChunk(destination, completeBoundaryScript3b);
+  }
+  return writeChunkAndReturn(destination, completeBoundaryScriptEnd);
+}
+
+function writeCompletedBoundaryInstructionData(
+  destination: Destination,
+  responseState: ResponseState,
+  boundaryID: SuspenseBoundaryID,
+  contentSegmentID: number,
+  boundaryResources: BoundaryResources,
+): boolean {
+  let hasStyleDependencies;
+  if (enableFloat) {
+    hasStyleDependencies = hasStyleResourceDependencies(boundaryResources);
+  }
+  if (enableFloat && hasStyleDependencies) {
+    writeChunk(destination, completeBoundaryWithStylesData1);
+  } else {
+    writeChunk(destination, completeBoundaryData1);
+  }
+
+  if (boundaryID === null) {
+    throw new Error(
+      'An ID must have been assigned before we can complete the boundary.',
+    );
+  }
+
+  // Write function arguments, which are string and array literals
+  const formattedContentID = stringToChunk(contentSegmentID.toString(16));
+  writeChunk(destination, boundaryID);
+  writeChunk(destination, completeBoundaryData2);
+
+  writeChunk(destination, responseState.segmentPrefix);
+  writeChunk(destination, formattedContentID);
+
+  if (enableFloat && hasStyleDependencies) {
     //  - data writer emits a string literal, which is escaped as html
     //    e.g. [&#34;A&#34;, &#34;B&#34;]
-    if (scriptFormat) {
-      writeChunk(destination, completeBoundaryScript3a);
-      // boundaryResources encodes an array literal
-      writeStyleResourceDependenciesInJS(destination, boundaryResources);
-    } else {
-      writeChunk(destination, completeBoundaryData3a);
-      writeStyleResourceDependenciesInAttr(destination, boundaryResources);
-    }
-  } else {
-    if (scriptFormat) {
-      writeChunk(destination, completeBoundaryScript3b);
-    }
+    writeChunk(destination, completeBoundaryData3a);
+    writeStyleResourceDependenciesInAttr(destination, boundaryResources);
   }
-  if (scriptFormat) {
-    return writeChunkAndReturn(destination, completeBoundaryScriptEnd);
-  } else {
-    return writeChunkAndReturn(destination, completeBoundaryDataEnd);
-  }
+  return writeChunkAndReturn(destination, completeBoundaryDataEnd);
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
@@ -2598,22 +2666,46 @@ export function writeClientRenderBoundaryInstruction(
   errorMessage?: string,
   errorComponentStack?: string,
 ): boolean {
-  const scriptFormat =
+  if (
     !enableFizzExternalRuntime ||
-    responseState.streamingFormat === ScriptStreamingFormat;
-  if (scriptFormat) {
-    writeChunk(destination, responseState.startInlineScript);
-    if (!responseState.sentClientRenderFunction) {
-      // The first time we write this, we'll need to include the full implementation.
-      responseState.sentClientRenderFunction = true;
-      writeChunk(destination, clientRenderScript1Full);
-    } else {
-      // Future calls can just reuse the same function.
-      writeChunk(destination, clientRenderScript1Partial);
-    }
+    responseState.streamingFormat === ScriptStreamingFormat
+  ) {
+    return writeClientRenderBoundaryInstructionScript(
+      destination,
+      responseState,
+      boundaryID,
+      errorDigest,
+      errorMessage,
+      errorComponentStack,
+    );
   } else {
-    // <template data-rxi="" data-bid="
-    writeChunk(destination, clientRenderData1);
+    return writeClientRenderBoundaryInstructionData(
+      destination,
+      responseState,
+      boundaryID,
+      errorDigest,
+      errorMessage,
+      errorComponentStack,
+    );
+  }
+}
+
+function writeClientRenderBoundaryInstructionScript(
+  destination: Destination,
+  responseState: ResponseState,
+  boundaryID: SuspenseBoundaryID,
+  errorDigest: ?string,
+  errorMessage?: string,
+  errorComponentStack?: string,
+): boolean {
+  writeChunk(destination, responseState.startInlineScript);
+  if (!responseState.sentClientRenderFunction) {
+    // The first time we write this, we'll need to include the full implementation.
+    responseState.sentClientRenderFunction = true;
+    writeChunk(destination, clientRenderScript1Full);
+  } else {
+    // Future calls can just reuse the same function.
+    writeChunk(destination, clientRenderScript1Partial);
   }
 
   if (boundaryID === null) {
@@ -2623,73 +2715,82 @@ export function writeClientRenderBoundaryInstruction(
   }
 
   writeChunk(destination, boundaryID);
-  if (scriptFormat) {
-    // " needs to be inserted for scripts, since ArgInterstitual does not contain
-    // leading or trailing quotes
-    writeChunk(destination, clientRenderScript1A);
-  }
+  // " needs to be inserted for scripts, since ArgInterstitual does not contain
+  // leading or trailing quotes
+  writeChunk(destination, clientRenderScript1A);
 
   if (errorDigest || errorMessage || errorComponentStack) {
-    if (scriptFormat) {
-      // ,"JSONString"
-      writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-      writeChunk(
-        destination,
-        stringToChunk(escapeJSStringsForInstructionScripts(errorDigest || '')),
-      );
-    } else {
-      // " data-dgst="HTMLString
-      writeChunk(destination, clientRenderData2);
-      writeChunk(
-        destination,
-        stringToChunk(escapeTextForBrowser(errorDigest || '')),
-      );
-    }
+    // ,"JSONString"
+    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+    writeChunk(
+      destination,
+      stringToChunk(escapeJSStringsForInstructionScripts(errorDigest || '')),
+    );
   }
   if (errorMessage || errorComponentStack) {
-    if (scriptFormat) {
-      // ,"JSONString"
-      writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-      writeChunk(
-        destination,
-        stringToChunk(escapeJSStringsForInstructionScripts(errorMessage || '')),
-      );
-    } else {
-      // " data-msg="HTMLString
-      writeChunk(destination, clientRenderData3);
-      writeChunk(
-        destination,
-        stringToChunk(escapeTextForBrowser(errorMessage || '')),
-      );
-    }
+    // ,"JSONString"
+    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+    writeChunk(
+      destination,
+      stringToChunk(escapeJSStringsForInstructionScripts(errorMessage || '')),
+    );
   }
   if (errorComponentStack) {
     // ,"JSONString"
-    if (scriptFormat) {
-      writeChunk(destination, clientRenderErrorScriptArgInterstitial);
-      writeChunk(
-        destination,
-        stringToChunk(
-          escapeJSStringsForInstructionScripts(errorComponentStack),
-        ),
-      );
-    } else {
-      // " data-stck="HTMLString
-      writeChunk(destination, clientRenderData4);
-      writeChunk(
-        destination,
-        stringToChunk(escapeTextForBrowser(errorComponentStack)),
-      );
-    }
+    writeChunk(destination, clientRenderErrorScriptArgInterstitial);
+    writeChunk(
+      destination,
+      stringToChunk(escapeJSStringsForInstructionScripts(errorComponentStack)),
+    );
+  }
+  // ></script>
+  return writeChunkAndReturn(destination, clientRenderScriptEnd);
+}
+
+function writeClientRenderBoundaryInstructionData(
+  destination: Destination,
+  responseState: ResponseState,
+  boundaryID: SuspenseBoundaryID,
+  errorDigest: ?string,
+  errorMessage?: string,
+  errorComponentStack?: string,
+): boolean {
+  // <template data-rxi="" data-bid="
+  writeChunk(destination, clientRenderData1);
+
+  if (boundaryID === null) {
+    throw new Error(
+      'An ID must have been assigned before we can complete the boundary.',
+    );
   }
 
-  if (scriptFormat) {
-    // ></script>
-    return writeChunkAndReturn(destination, clientRenderScriptEnd);
-  } else {
-    // "></template>
-    return writeChunkAndReturn(destination, clientRenderDataEnd);
+  writeChunk(destination, boundaryID);
+  if (errorDigest || errorMessage || errorComponentStack) {
+    // " data-dgst="HTMLString
+    writeChunk(destination, clientRenderData2);
+    writeChunk(
+      destination,
+      stringToChunk(escapeTextForBrowser(errorDigest || '')),
+    );
   }
+  if (errorMessage || errorComponentStack) {
+    // " data-msg="HTMLString
+    writeChunk(destination, clientRenderData3);
+    writeChunk(
+      destination,
+      stringToChunk(escapeTextForBrowser(errorMessage || '')),
+    );
+  }
+  if (errorComponentStack) {
+    // " data-stck="HTMLString
+    writeChunk(destination, clientRenderData4);
+    writeChunk(
+      destination,
+      stringToChunk(escapeTextForBrowser(errorComponentStack)),
+    );
+  }
+  // "></template>
+  return writeChunkAndReturn(destination, clientRenderDataEnd);
 }
 
 const regexForJSStringsInInstructionScripts = /[<\u2028\u2029]/g;
