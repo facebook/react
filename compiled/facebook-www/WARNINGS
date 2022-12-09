@@ -294,7 +294,6 @@
 "Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n* Move data fetching code or side effects to componentDidUpdate.\n\nPlease update the following components: %s"
 "Warning: ref.measureLayout must be called with a node handle or a ref to a native component."
 "Warning: ref.measureLayout must be called with a ref to a native component."
-"Warning: setNativeProps is not currently supported in Fabric"
 "We should not be hydrating here. This is a bug in React. Please file a bug."
 "While creating a %s for href \"%s\" a %s for this same href was found. When preloading a stylesheet the \"as\" prop must be of type \"style\". This most likely ocurred by rendering a preload link with an incorrect \"as\" prop or by calling ReactDOM.preload with an incorrect \"as\" option."
 "While creating a %s for href \"%s\" a %s for this same url was found. When preloading a script the \"as\" prop must be of type \"script\". This most likely ocurred by rendering a preload link with an incorrect \"as\" prop or by calling ReactDOM.preload with an incorrect \"as\" option."
