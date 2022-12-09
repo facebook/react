@@ -11,8 +11,11 @@ import {
   HIRFunction,
   Identifier,
   Instruction,
+  InstructionId,
   InstructionKind,
+  makeInstructionId,
   Phi,
+  Place,
 } from "./HIR";
 import { eachInstructionValueOperand, eachTerminalOperand } from "./visitors";
 
@@ -28,6 +31,7 @@ export function leaveSSA(fn: HIRFunction) {
   // Maps identifiers that appear as a phi or phi operand to a single canonical identifier
   // for all instances.
   const variableMapping: Map<Identifier, Identifier> = new Map();
+  const hasDeclaration: Set<Identifier> = new Set();
 
   for (const [, block] of fn.body.blocks) {
     // Identifiers (from phis) that *may* need a new `let` declaration created. If the original
@@ -78,13 +82,28 @@ export function leaveSSA(fn: HIRFunction) {
             canonicalId = operand;
           }
         }
+        canonicalId.mutableRange.start = Math.min(
+          canonicalId.mutableRange.start,
+          terminal.id
+        ) as InstructionId;
         variableMapping.set(phi.id, canonicalId);
-        needsDeclaration.add(canonicalId);
+        if (!hasDeclaration.has(canonicalId)) {
+          needsDeclaration.add(canonicalId);
+        }
       }
+
       // all versions of the variable need to be remapped to the canonical id
+      // also extend the mutable range of the canonical id based on the min/max
+      // of the ranges of its operands
+      let start = canonicalId.mutableRange.start as number;
+      let end = canonicalId.mutableRange.end as number;
       for (const [, operand] of phi.operands) {
+        start = Math.min(start, operand.mutableRange.start);
+        end = Math.max(end, operand.mutableRange.end);
         variableMapping.set(operand, canonicalId);
       }
+      canonicalId.mutableRange.start = makeInstructionId(start);
+      canonicalId.mutableRange.end = makeInstructionId(end);
     }
 
     // Visit instructions and rewrite identifiers based on the variable mapping
@@ -92,9 +111,7 @@ export function leaveSSA(fn: HIRFunction) {
     for (const instr of block.instructions) {
       const { lvalue, value } = instr;
       if (lvalue !== null) {
-        lvalue.place.identifier =
-          variableMapping.get(lvalue.place.identifier) ??
-          lvalue.place.identifier;
+        updatePlace(lvalue.place, variableMapping);
         if (lvalue.place.memberPath === null) {
           if (!variableMapping.has(lvalue.place.identifier)) {
             // This variable does not flow into a phi, therefore there
@@ -109,11 +126,11 @@ export function leaveSSA(fn: HIRFunction) {
             // reassign the variable in the first place.
             needsDeclaration.delete(lvalue.place.identifier);
           }
+          hasDeclaration.add(lvalue.place.identifier);
         }
       }
       for (const operand of eachInstructionValueOperand(value)) {
-        operand.identifier =
-          variableMapping.get(operand.identifier) ?? operand.identifier;
+        updatePlace(operand, variableMapping);
       }
     }
 
@@ -150,4 +167,25 @@ export function leaveSSA(fn: HIRFunction) {
 
     block.phis.clear();
   }
+}
+
+function updatePlace(
+  place: Place,
+  variableMapping: Map<Identifier, Identifier>
+) {
+  const prevIdentifier = place.identifier;
+  const nextIdentifier = variableMapping.get(prevIdentifier);
+  if (nextIdentifier === undefined || nextIdentifier === prevIdentifier) {
+    return;
+  }
+  nextIdentifier.mutableRange.start = makeInstructionId(
+    Math.min(
+      nextIdentifier.mutableRange.start,
+      prevIdentifier.mutableRange.start
+    )
+  );
+  nextIdentifier.mutableRange.end = makeInstructionId(
+    Math.max(nextIdentifier.mutableRange.end, prevIdentifier.mutableRange.end)
+  );
+  place.identifier = nextIdentifier;
 }

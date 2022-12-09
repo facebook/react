@@ -24,19 +24,18 @@ bb0:
   [2] If (read a$7) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Reassign mutate x$13_@0[1:8] = read b$8
+  [3] Reassign mutate x$12_@0[1:8] = read b$8
   [4] Goto bb1
 bb3:
   predecessor blocks: bb0
   [5] If (read c$9) then:bb5 else:bb1 fallthrough=bb1
 bb5:
   predecessor blocks: bb3
-  [6] Reassign mutate x$14_@0[1:8] = read d$10
+  [6] Reassign mutate x$12_@0[1:8] = read d$10
   [7] Goto bb1
 bb1:
   predecessor blocks: bb2 bb5 bb3
-  x$15_@0[1:8]: phi(bb2: x$13_@0, bb5: x$14_@0, bb3: x$12_@0)
-  [8] Return read x$15_@0
+  [8] Return read x$12_@0
 scope0 [1:8]:
  - read b$8
  - read d$10
@@ -57,7 +56,7 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [3] Reassign mutate x$13_@0[1:8] = read b$8
+      [3] Reassign mutate x$12_@0[1:8] = read b$8
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
@@ -66,12 +65,12 @@ flowchart TB
   end
   subgraph bb5
     bb5_instrs["
-      [6] Reassign mutate x$14_@0[1:8] = read d$10
+      [6] Reassign mutate x$12_@0[1:8] = read d$10
     "]
     bb5_instrs --> bb5_terminal(["Goto"])
   end
   subgraph bb1
-    bb1_terminal(["Return read x$15_@0"])
+    bb1_terminal(["Return read x$12_@0"])
   end
 
   %% Jumps

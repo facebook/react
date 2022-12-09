@@ -92,10 +92,10 @@ function cond$0() {}
 
 ```
 bb0:
-  [1] Let mutate a$12_@0[0:18] = Object {  }
-  [2] Let mutate b$13_@0[0:18] = Object {  }
-  [3] Let mutate c$14_@1 = Object {  }
-  [4] Let mutate d$15_@0[0:18] = Object {  }
+  [1] Const mutate a$12_@0[0:18] = Object {  }
+  [2] Const mutate b$13_@0[0:18] = Object {  }
+  [3] Const mutate c$14_@1 = Object {  }
+  [4] Const mutate d$15_@0[0:18] = Object {  }
   [5] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb4
@@ -136,10 +136,10 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate a$12_@0[0:18] = Object {  }
-      [2] Let mutate b$13_@0[0:18] = Object {  }
-      [3] Let mutate c$14_@1 = Object {  }
-      [4] Let mutate d$15_@0[0:18] = Object {  }
+      [1] Const mutate a$12_@0[0:18] = Object {  }
+      [2] Const mutate b$13_@0[0:18] = Object {  }
+      [3] Const mutate c$14_@1 = Object {  }
+      [4] Const mutate d$15_@0[0:18] = Object {  }
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end

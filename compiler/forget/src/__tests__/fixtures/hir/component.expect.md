@@ -49,6 +49,7 @@ bb3:
   predecessor blocks: bb1
   [9] Const mutate $34_@6 = null
   [10] Const mutate $36_@3[0:19] = Binary read item$10_@3 == read $34_@6
+  [11] Let mutate $37_@3[0:19] = undefined
   [11] If (read $36_@3) then:bb8 else:bb9 fallthrough=bb7
 bb8:
   predecessor blocks: bb3
@@ -56,12 +57,11 @@ bb8:
   [13] Goto bb7
 bb9:
   predecessor blocks: bb3
-  [14] Const mutate $39_@3[0:19] = Call mutate seen$30_@3.has(mutate item$10_@3)
+  [14] Const mutate $37_@3[0:19] = Call mutate seen$30_@3.has(mutate item$10_@3)
   [15] Goto bb7
 bb7:
   predecessor blocks: bb8 bb9
-  $40_@3[0:19]: phi(bb8: $37_@3, bb9: $39_@3)
-  [16] If (read $40_@3) then:bb5 else:bb4 fallthrough=bb4
+  [16] If (read $37_@3) then:bb5 else:bb4 fallthrough=bb4
 bb5:
   predecessor blocks: bb7
   [17] Goto(Continue) bb1
@@ -117,6 +117,7 @@ flowchart TB
     bb3_instrs["
       [9] Const mutate $34_@6 = null
       [10] Const mutate $36_@3[0:19] = Binary read item$10_@3 == read $34_@6
+      [11] Let mutate $37_@3[0:19] = undefined
     "]
     bb3_instrs --> bb3_terminal(["If (read $36_@3)"])
   end
@@ -128,12 +129,12 @@ flowchart TB
   end
   subgraph bb9
     bb9_instrs["
-      [14] Const mutate $39_@3[0:19] = Call mutate seen$30_@3.has(mutate item$10_@3)
+      [14] Const mutate $37_@3[0:19] = Call mutate seen$30_@3.has(mutate item$10_@3)
     "]
     bb9_instrs --> bb9_terminal(["Goto"])
   end
   subgraph bb7
-    bb7_terminal(["If (read $40_@3)"])
+    bb7_terminal(["If (read $37_@3)"])
   end
   subgraph bb5
     bb5_terminal(["Goto"])

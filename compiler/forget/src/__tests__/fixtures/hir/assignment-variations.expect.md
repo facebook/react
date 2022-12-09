@@ -20,13 +20,13 @@ function g(a) {
 
 ```
 bb0:
-  [1] Let mutate x$5_@0 = 1
+  [1] Const mutate x$5_@0 = 1
   [2] Const mutate $6_@1 = 1
-  [3] Reassign mutate x$7_@2 = Binary read x$5_@0 + read $6_@1
+  [3] Const mutate x$7_@2 = Binary read x$5_@0 + read $6_@1
   [4] Const mutate $8_@3 = 1
-  [5] Reassign mutate x$9_@4 = Binary read x$7_@2 + read $8_@3
+  [5] Const mutate x$9_@4 = Binary read x$7_@2 + read $8_@3
   [6] Const mutate $10_@5 = 1
-  [7] Reassign mutate x$11_@6 = Binary read x$9_@4 >>> read $10_@5
+  [7] Const mutate x$11_@6 = Binary read x$9_@4 >>> read $10_@5
   [8] Return
 scope2 [3:4]:
  - read x$5_@0
@@ -46,13 +46,13 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$5_@0 = 1
+      [1] Const mutate x$5_@0 = 1
       [2] Const mutate $6_@1 = 1
-      [3] Reassign mutate x$7_@2 = Binary read x$5_@0 + read $6_@1
+      [3] Const mutate x$7_@2 = Binary read x$5_@0 + read $6_@1
       [4] Const mutate $8_@3 = 1
-      [5] Reassign mutate x$9_@4 = Binary read x$7_@2 + read $8_@3
+      [5] Const mutate x$9_@4 = Binary read x$7_@2 + read $8_@3
       [6] Const mutate $10_@5 = 1
-      [7] Reassign mutate x$11_@6 = Binary read x$9_@4 >>> read $10_@5
+      [7] Const mutate x$11_@6 = Binary read x$9_@4 >>> read $10_@5
     "]
     bb0_instrs --> bb0_terminal(["Return"])
   end

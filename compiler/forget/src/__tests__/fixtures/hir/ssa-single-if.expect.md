@@ -17,12 +17,12 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$4_@0 = 1
-  [2] Let mutate y$5_@1 = 2
+  [1] Const mutate x$4_@0 = 1
+  [2] Const mutate y$5_@1 = 2
   [3] If (read y$5_@1) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [4] Let mutate z$6_@2 = Binary read x$4_@0 + read y$5_@1
+  [4] Const mutate z$6_@2 = Binary read x$4_@0 + read y$5_@1
   [5] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
@@ -39,14 +39,14 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$4_@0 = 1
-      [2] Let mutate y$5_@1 = 2
+      [1] Const mutate x$4_@0 = 1
+      [2] Const mutate y$5_@1 = 2
     "]
     bb0_instrs --> bb0_terminal(["If (read y$5_@1)"])
   end
   subgraph bb2
     bb2_instrs["
-      [4] Let mutate z$6_@2 = Binary read x$4_@0 + read y$5_@1
+      [4] Const mutate z$6_@2 = Binary read x$4_@0 + read y$5_@1
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end

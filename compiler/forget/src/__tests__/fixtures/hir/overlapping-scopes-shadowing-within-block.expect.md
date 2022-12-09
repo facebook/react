@@ -21,11 +21,11 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Let mutate x$11_@0[1:11] = Array []
+  [1] Const mutate x$11_@0[1:11] = Array []
   [2] If (read a$8) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Let mutate y$12_@1[3:7] = Array []
+  [3] Const mutate y$12_@1[3:7] = Array []
   [4] If (read b$9) then:bb4 else:bb3 fallthrough=bb3
 bb4:
   predecessor blocks: bb2
@@ -57,13 +57,13 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$11_@0[1:11] = Array []
+      [1] Const mutate x$11_@0[1:11] = Array []
     "]
     bb0_instrs --> bb0_terminal(["If (read a$8)"])
   end
   subgraph bb2
     bb2_instrs["
-      [3] Let mutate y$12_@1[3:7] = Array []
+      [3] Const mutate y$12_@1[3:7] = Array []
     "]
     bb2_instrs --> bb2_terminal(["If (read b$9)"])
   end

@@ -127,22 +127,7 @@ function transform(
   traverse(ast, {
     FunctionDeclaration: {
       enter(nodePath) {
-        const { ir } = run(nodePath, {
-          eliminateRedundantPhi: true,
-          inferReferenceEffects: true,
-          inferMutableRanges: true,
-          inferReactiveScopeVariables: true,
-          inferReactiveScopes: true,
-          inferReactiveScopeDependencies: true,
-          leaveSSA: false,
-          codegen: false,
-        });
-
-        // Print the HIR before leaving SSA.
-        const textHIR = printFunction(ir);
-        const visualization = visualizeHIRMermaid(ir);
-
-        const { ast } = run(nodePath, {
+        const { ir, ast } = run(nodePath, {
           eliminateRedundantPhi: true,
           inferReferenceEffects: true,
           inferMutableRanges: true,
@@ -152,6 +137,9 @@ function transform(
           leaveSSA: true,
           codegen: true,
         });
+
+        const textHIR = printFunction(ir);
+        const visualization = visualizeHIRMermaid(ir);
 
         invariant(ast !== null, "ast is null when codegen option is enabled");
         const text = prettier.format(generate(ast).code.replace("\n\n", "\n"), {

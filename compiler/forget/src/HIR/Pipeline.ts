@@ -51,6 +51,9 @@ export default function (
   if (flags.inferMutableRanges) {
     inferMutableRanges(ir);
   }
+  if (flags.leaveSSA) {
+    leaveSSA(ir);
+  }
   if (flags.inferReactiveScopeVariables) {
     inferReactiveScopeVariables(ir);
   }
@@ -59,9 +62,6 @@ export default function (
   }
   if (flags.inferReactiveScopeDependencies) {
     inferReactiveScopeDependencies(ir);
-  }
-  if (flags.leaveSSA) {
-    leaveSSA(ir);
   }
   if (flags.codegen) {
     return {

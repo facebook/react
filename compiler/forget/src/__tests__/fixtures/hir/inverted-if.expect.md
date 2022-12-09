@@ -18,7 +18,7 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Let mutate y$8_@0[1:6] = Array []
+  [1] Const mutate y$8_@0[1:6] = Array []
   [2] If (read a$5) then:bb3 else:bb1 fallthrough=bb1
 bb3:
   predecessor blocks: bb0
@@ -43,7 +43,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate y$8_@0[1:6] = Array []
+      [1] Const mutate y$8_@0[1:6] = Array []
     "]
     bb0_instrs --> bb0_terminal(["If (read a$5)"])
   end

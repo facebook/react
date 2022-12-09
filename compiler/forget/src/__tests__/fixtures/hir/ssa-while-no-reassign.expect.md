@@ -17,7 +17,7 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$5_@0 = 1
+  [1] Const mutate x$5_@0 = 1
   [2] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
@@ -46,7 +46,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$5_@0 = 1
+      [1] Const mutate x$5_@0 = 1
     "]
     bb0_instrs --> bb0_terminal(["While"])
   end

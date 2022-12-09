@@ -25,12 +25,12 @@ bb0:
   [2] If (read a$6) then:bb2 else:bb3 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
-  [3] Let mutate y$8_@0[0:10] = Object {  }
+  [3] Const mutate y$8_@0[0:10] = Object {  }
   [4] Reassign mutate x$7_@0.y[0:10] = read y$8_@0
   [5] Goto bb1
 bb3:
   predecessor blocks: bb0
-  [6] Let mutate z$9_@0[0:10] = Object {  }
+  [6] Const mutate z$9_@0[0:10] = Object {  }
   [7] Reassign mutate x$7_@0.z[0:10] = read z$9_@0
   [8] Goto bb1
 bb1:
@@ -53,14 +53,14 @@ flowchart TB
   end
   subgraph bb2
     bb2_instrs["
-      [3] Let mutate y$8_@0[0:10] = Object {  }
+      [3] Const mutate y$8_@0[0:10] = Object {  }
       [4] Reassign mutate x$7_@0.y[0:10] = read y$8_@0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [6] Let mutate z$9_@0[0:10] = Object {  }
+      [6] Const mutate z$9_@0[0:10] = Object {  }
       [7] Reassign mutate x$7_@0.z[0:10] = read z$9_@0
     "]
     bb3_instrs --> bb3_terminal(["Goto"])

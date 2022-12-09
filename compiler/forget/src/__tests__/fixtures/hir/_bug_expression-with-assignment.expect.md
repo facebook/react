@@ -15,8 +15,8 @@ function f() {
 
 ```
 bb0:
-  [1] Let mutate x$4_@0 = 1
-  [2] Reassign mutate x$5_@1 = 2
+  [1] Const mutate x$4_@0 = 1
+  [2] Const mutate x$5_@1 = 2
   [3] Const mutate $6_@2 = Binary read x$5_@1 + read x$5_@1
   [4] Const mutate $7_@3 = Binary read $6_@2 + read x$5_@1
   [5] Return read $7_@3
@@ -35,8 +35,8 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$4_@0 = 1
-      [2] Reassign mutate x$5_@1 = 2
+      [1] Const mutate x$4_@0 = 1
+      [2] Const mutate x$5_@1 = 2
       [3] Const mutate $6_@2 = Binary read x$5_@1 + read x$5_@1
       [4] Const mutate $7_@3 = Binary read $6_@2 + read x$5_@1
     "]

@@ -34,7 +34,7 @@ function foo(a, b, c) {
 
 ```
 bb0:
-  [1] Let mutate x$16_@0[1:5] = Array []
+  [1] Const mutate x$16_@0[1:5] = Array []
   [2] If (read a$13) then:bb2 else:bb1 fallthrough=bb1
 bb2:
   predecessor blocks: bb0
@@ -43,30 +43,30 @@ bb2:
 bb1:
   predecessor blocks: bb2 bb0
   [5] Const mutate $17_@1 = "div"
-  [6] Let mutate y$19_@2 = JSX <read $17_@1>{freeze x$16_@0}</read $17_@1>
+  [6] Const mutate y$19_@2 = JSX <read $17_@1>{freeze x$16_@0}</read $17_@1>
   [7] Const mutate $20_@3 = 0
+  [8] Let mutate x$22_@4[8:15] = undefined
   [8] Switch (read b$14)
     Case read $20_@3: bb5
     Default: bb4
     Fallthrough: bb3
 bb5:
   predecessor blocks: bb1
-  [9] Reassign mutate x$22_@4[9:14] = Array []
+  [9] Reassign mutate x$22_@4[8:15] = Array []
   [10] Call mutate x$22_@4.push(read b$14)
   [11] Goto bb3
 bb4:
   predecessor blocks: bb1
-  [12] Reassign mutate x$23_@4[9:14] = Array []
-  [13] Call mutate x$23_@4.push(read c$15)
+  [12] Reassign mutate x$22_@4[8:15] = Array []
+  [13] Call mutate x$22_@4.push(read c$15)
   [14] Goto bb3
 bb3:
   predecessor blocks: bb5 bb4
-  x$30_@4[9:14]: phi(bb5: x$22_@4, bb4: x$23_@4)
   [15] Const mutate $25_@5 = "div"
   [16] Const mutate $26_@6 = "\n      "
   [17] Const mutate $27_@7 = "\n      "
   [18] Const mutate $28_@8 = "\n    "
-  [19] Const mutate $31_@9 = JSX <read $25_@5>{read $26_@6}{read y$19_@2}{read $27_@7}{freeze x$30_@4}{read $28_@8}</read $25_@5>
+  [19] Const mutate $31_@9 = JSX <read $25_@5>{read $26_@6}{read y$19_@2}{read $27_@7}{freeze x$22_@4}{read $28_@8}</read $25_@5>
   [20] Return read $31_@9
 scope0 [1:5]:
  - read a$13
@@ -74,7 +74,7 @@ scope0 [1:5]:
 scope2 [6:7]:
  - read $17_@1
  - freeze x$16_@0
-scope4 [9:14]:
+scope4 [8:15]:
  - read c$15
  - read b$14
  - read b$14
@@ -83,6 +83,7 @@ scope9 [19:20]:
  - read $26_@6
  - read y$19_@2
  - read $27_@7
+ - freeze x$22_@4
  - read $28_@8
 ```
 
@@ -93,7 +94,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$16_@0[1:5] = Array []
+      [1] Const mutate x$16_@0[1:5] = Array []
     "]
     bb0_instrs --> bb0_terminal(["If (read a$13)"])
   end
@@ -106,22 +107,23 @@ flowchart TB
   subgraph bb1
     bb1_instrs["
       [5] Const mutate $17_@1 = 'div'
-      [6] Let mutate y$19_@2 = JSX <read $17_@1>{freeze x$16_@0}</read $17_@1>
+      [6] Const mutate y$19_@2 = JSX <read $17_@1>{freeze x$16_@0}</read $17_@1>
       [7] Const mutate $20_@3 = 0
+      [8] Let mutate x$22_@4[8:15] = undefined
     "]
     bb1_instrs --> bb1_terminal(["Switch (read b$14)"])
   end
   subgraph bb5
     bb5_instrs["
-      [9] Reassign mutate x$22_@4[9:14] = Array []
+      [9] Reassign mutate x$22_@4[8:15] = Array []
       [10] Call mutate x$22_@4.push(read b$14)
     "]
     bb5_instrs --> bb5_terminal(["Goto"])
   end
   subgraph bb4
     bb4_instrs["
-      [12] Reassign mutate x$23_@4[9:14] = Array []
-      [13] Call mutate x$23_@4.push(read c$15)
+      [12] Reassign mutate x$22_@4[8:15] = Array []
+      [13] Call mutate x$22_@4.push(read c$15)
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
@@ -131,7 +133,7 @@ flowchart TB
       [16] Const mutate $26_@6 = '\n      '
       [17] Const mutate $27_@7 = '\n      '
       [18] Const mutate $28_@8 = '\n    '
-      [19] Const mutate $31_@9 = JSX <read $25_@5>{read $26_@6}{read y$19_@2}{read $27_@7}{freeze x$30_@4}{read $28_@8}</read $25_@5>
+      [19] Const mutate $31_@9 = JSX <read $25_@5>{read $26_@6}{read y$19_@2}{read $27_@7}{freeze x$22_@4}{read $28_@8}</read $25_@5>
     "]
     bb3_instrs --> bb3_terminal(["Return read $31_@9"])
   end

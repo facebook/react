@@ -57,7 +57,7 @@ bb0:
 bb2:
   predecessor blocks: bb0
   [6] Const mutate $14_@1 = "div"
-  [7] Let mutate _$15_@2 = JSX <read $14_@1 a={freeze a$11_@0} ></read $14_@1>
+  [7] Const mutate _$15_@2 = JSX <read $14_@1 a={freeze a$11_@0} ></read $14_@1>
   [8] Goto bb1
 bb1:
   predecessor blocks: bb2 bb0
@@ -90,7 +90,7 @@ flowchart TB
   subgraph bb2
     bb2_instrs["
       [6] Const mutate $14_@1 = 'div'
-      [7] Let mutate _$15_@2 = JSX <read $14_@1 a={freeze a$11_@0} ></read $14_@1>
+      [7] Const mutate _$15_@2 = JSX <read $14_@1 a={freeze a$11_@0} ></read $14_@1>
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end

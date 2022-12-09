@@ -19,7 +19,7 @@ function f(a, b) {
 
 ```
 bb0:
-  [1] Let mutate x$10_@0[1:8] = Array []
+  [1] Const mutate x$10_@0[1:8] = Array []
   [2] Const mutate $11_@1 = 1
   [3] Const mutate $12_@2 = Binary read a$8.length === read $11_@1
   [4] If (read $12_@2) then:bb2 else:bb1 fallthrough=bb1
@@ -53,7 +53,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$10_@0[1:8] = Array []
+      [1] Const mutate x$10_@0[1:8] = Array []
       [2] Const mutate $11_@1 = 1
       [3] Const mutate $12_@2 = Binary read a$8.length === read $11_@1
     "]

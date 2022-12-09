@@ -15,8 +15,8 @@ function foo(a, b) {
 
 ```
 bb0:
-  [1] Let mutate x$7_@0[1:5] = Array []
-  [2] Let mutate y$8_@0[1:5] = Array []
+  [1] Const mutate x$7_@0[1:5] = Array []
+  [2] Const mutate y$8_@0[1:5] = Array []
   [3] Call mutate x$7_@0.push(read a$5)
   [4] Call mutate y$8_@0.push(read b$6)
   [5] Return
@@ -32,8 +32,8 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$7_@0[1:5] = Array []
-      [2] Let mutate y$8_@0[1:5] = Array []
+      [1] Const mutate x$7_@0[1:5] = Array []
+      [2] Const mutate y$8_@0[1:5] = Array []
       [3] Call mutate x$7_@0.push(read a$5)
       [4] Call mutate y$8_@0.push(read b$6)
     "]

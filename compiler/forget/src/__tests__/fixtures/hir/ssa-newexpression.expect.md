@@ -46,7 +46,7 @@ function Foo$0() {}
 bb0:
   [1] Const mutate a$7_@0[0:4] = Array []
   [2] Const mutate b$8_@0[0:4] = Object {  }
-  [3] Let mutate c$9_@0[0:4] = New mutate Foo$5_@0(mutate a$7_@0, mutate b$8_@0)
+  [3] Const mutate c$9_@0[0:4] = New mutate Foo$5_@0(mutate a$7_@0, mutate b$8_@0)
   [4] Return freeze c$9_@0
 
 ```
@@ -60,7 +60,7 @@ flowchart TB
     bb0_instrs["
       [1] Const mutate a$7_@0[0:4] = Array []
       [2] Const mutate b$8_@0[0:4] = Object {  }
-      [3] Let mutate c$9_@0[0:4] = New mutate Foo$5_@0(mutate a$7_@0, mutate b$8_@0)
+      [3] Const mutate c$9_@0[0:4] = New mutate Foo$5_@0(mutate a$7_@0, mutate b$8_@0)
     "]
     bb0_instrs --> bb0_terminal(["Return freeze c$9_@0"])
   end

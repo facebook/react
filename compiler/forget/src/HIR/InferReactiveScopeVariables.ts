@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import invariant from "invariant";
 import DisjointSet from "./DisjointSet";
 import {
   HIRFunction,
@@ -68,10 +69,10 @@ export function inferReactiveScopeVariables(fn: HIRFunction) {
   // that mutate together.
   const scopeIdentifiers = new DisjointSet<Identifier>();
   for (const [_, block] of fn.body.blocks) {
-    for (const phi of block.phis) {
-      const operands: Array<Identifier> = [phi.id, ...phi.operands.values()];
-      scopeIdentifiers.union(operands);
-    }
+    invariant(
+      block.phis.size === 0,
+      "Expected phis to be cleared by LeaveSSA pass"
+    );
 
     for (const instr of block.instructions) {
       const operands: Array<Identifier> = [];

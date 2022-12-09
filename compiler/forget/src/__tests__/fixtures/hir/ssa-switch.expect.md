@@ -28,11 +28,12 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$10_@0 = 1
+  [1] Const mutate x$10_@0 = 1
   [2] Const mutate $11_@1 = 2
   [3] Const mutate $12_@2 = Binary read x$10_@0 === read $11_@1
   [4] Const mutate $13_@3 = 1
   [5] Const mutate $14_@4 = Binary read x$10_@0 === read $13_@3
+  [6] Let mutate x$16_@5[6:17] = undefined
   [6] Switch (read x$10_@0)
     Case read $14_@4: bb5
     Case read $12_@2: bb3
@@ -40,23 +41,22 @@ bb0:
     Fallthrough: bb1
 bb5:
   predecessor blocks: bb0
-  [7] Const mutate $15_@5 = 1
-  [8] Reassign mutate x$16_@6[8:17] = Binary read x$10_@0 + read $15_@5
+  [7] Const mutate $15_@6 = 1
+  [8] Reassign mutate x$16_@5[6:17] = Binary read x$10_@0 + read $15_@6
   [9] Goto bb1
 bb3:
   predecessor blocks: bb0
   [10] Const mutate $17_@7 = 2
-  [11] Reassign mutate x$18_@6[8:17] = Binary read x$10_@0 + read $17_@7
+  [11] Reassign mutate x$16_@5[6:17] = Binary read x$10_@0 + read $17_@7
   [12] Goto bb1
 bb2:
   predecessor blocks: bb0
   [13] Const mutate $19_@8 = 3
-  [14] Reassign mutate x$20_@6[8:17] = Binary read x$10_@0 + read $19_@8
+  [14] Reassign mutate x$16_@5[6:17] = Binary read x$10_@0 + read $19_@8
   [15] Goto bb1
 bb1:
   predecessor blocks: bb5 bb3 bb2
-  x$21_@6[8:17]: phi(bb5: x$16_@6, bb3: x$18_@6, bb2: x$20_@6)
-  [16] Let mutate y$22_@6[8:17] = read x$21_@6
+  [16] Const mutate y$22_@5[6:17] = read x$16_@5
   [17] Return
 scope2 [3:4]:
  - read x$10_@0
@@ -64,12 +64,13 @@ scope2 [3:4]:
 scope4 [5:6]:
  - read x$10_@0
  - read $13_@3
-scope6 [8:17]:
+scope5 [6:17]:
  - read x$10_@0
+scope8 [13:14]:
  - read x$10_@0
 scope7 [10:11]:
  - read x$10_@0
-scope5 [7:8]:
+scope6 [7:8]:
  - read x$10_@0
 ```
 
@@ -80,38 +81,39 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$10_@0 = 1
+      [1] Const mutate x$10_@0 = 1
       [2] Const mutate $11_@1 = 2
       [3] Const mutate $12_@2 = Binary read x$10_@0 === read $11_@1
       [4] Const mutate $13_@3 = 1
       [5] Const mutate $14_@4 = Binary read x$10_@0 === read $13_@3
+      [6] Let mutate x$16_@5[6:17] = undefined
     "]
     bb0_instrs --> bb0_terminal(["Switch (read x$10_@0)"])
   end
   subgraph bb5
     bb5_instrs["
-      [7] Const mutate $15_@5 = 1
-      [8] Reassign mutate x$16_@6[8:17] = Binary read x$10_@0 + read $15_@5
+      [7] Const mutate $15_@6 = 1
+      [8] Reassign mutate x$16_@5[6:17] = Binary read x$10_@0 + read $15_@6
     "]
     bb5_instrs --> bb5_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
       [10] Const mutate $17_@7 = 2
-      [11] Reassign mutate x$18_@6[8:17] = Binary read x$10_@0 + read $17_@7
+      [11] Reassign mutate x$16_@5[6:17] = Binary read x$10_@0 + read $17_@7
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
       [13] Const mutate $19_@8 = 3
-      [14] Reassign mutate x$20_@6[8:17] = Binary read x$10_@0 + read $19_@8
+      [14] Reassign mutate x$16_@5[6:17] = Binary read x$10_@0 + read $19_@8
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end
   subgraph bb1
     bb1_instrs["
-      [16] Let mutate y$22_@6[8:17] = read x$21_@6
+      [16] Const mutate y$22_@5[6:17] = read x$16_@5
     "]
     bb1_instrs --> bb1_terminal(["Return"])
   end

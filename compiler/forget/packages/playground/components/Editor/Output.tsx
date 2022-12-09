@@ -87,6 +87,9 @@ function compile(source: string): CompilerOutput | CompilerError {
     inferMutableRanges(ir);
     const inferMutableRangesOutput = printHIR(ir.body);
 
+    leaveSSA(ir);
+    const leaveSSAOutput = printHIR(ir.body);
+
     inferReactiveScopeVariables(ir);
     const inferReactiveScopeVariablesOutput = printHIR(ir.body);
 
@@ -95,9 +98,6 @@ function compile(source: string): CompilerOutput | CompilerError {
 
     inferReactiveScopeDependencies(ir);
     const inferReactiveScopeDependenciesOutput = printHIR(ir.body);
-
-    leaveSSA(ir);
-    const leaveSSAOutput = printHIR(ir.body);
 
     codegen(ir);
     const ast = codegen(ir);
@@ -183,6 +183,11 @@ function Output({ store, setTabsOpen, tabsOpen }: Props) {
             output={compilerOutput.inferMutableRangesOutput}
           ></TextTabContent>
         ),
+        LeaveSSA: (
+          <TextTabContent
+            output={compilerOutput.leaveSSAOutput}
+          ></TextTabContent>
+        ),
         InferReactiveScopeVariables: (
           <TextTabContent
             output={compilerOutput.inferReactiveScopeVariablesOutput}
@@ -196,11 +201,6 @@ function Output({ store, setTabsOpen, tabsOpen }: Props) {
         InferReactiveScopeDependencies: (
           <TextTabContent
             output={compilerOutput.inferReactiveScopeDependenciesOutput}
-          ></TextTabContent>
-        ),
-        LeaveSSA: (
-          <TextTabContent
-            output={compilerOutput.leaveSSAOutput}
           ></TextTabContent>
         ),
         JS: <TextTabContent output={compilerOutput.codegenOutput} />,

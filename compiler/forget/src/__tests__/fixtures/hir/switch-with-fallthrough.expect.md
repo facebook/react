@@ -36,7 +36,7 @@ function foo(x) {
 
 ```
 bb0:
-  [1] Let mutate y$10_@0 = undefined
+  [1] Const mutate y$10_@0 = undefined
   [2] Const mutate $11_@1 = 5
   [3] Const mutate $12_@2 = 4
   [4] Const mutate $13_@3 = 3
@@ -54,27 +54,27 @@ bb0:
     Fallthrough: bb1
 bb10:
   predecessor blocks: bb0
-  [9] Reassign mutate y$17_@7 = 0
+  [9] Const mutate y$17_@7 = 0
   [10] Goto bb9
 bb9:
   predecessor blocks: bb10 bb0
-  [11] Reassign mutate y$18_@8 = 1
+  [11] Const mutate y$18_@8 = 1
   [12] Goto bb1
 bb5:
   predecessor blocks: bb0
-  [13] Reassign mutate y$19_@9 = 3
+  [13] Const mutate y$19_@9 = 3
   [14] Goto bb1
 bb4:
   predecessor blocks: bb0
-  [15] Reassign mutate y$20_@10 = 4
+  [15] Const mutate y$20_@10 = 4
   [16] Goto bb3
 bb3:
   predecessor blocks: bb4 bb0
-  [17] Reassign mutate y$21_@11 = 5
+  [17] Const mutate y$21_@11 = 5
   [18] Goto bb2
 bb2:
   predecessor blocks: bb3 bb0
-  [19] Reassign mutate y$22_@12 = 0
+  [19] Const mutate y$22_@12 = 0
   [20] Goto bb1
 bb1:
   predecessor blocks: bb9 bb0 bb5 bb2
@@ -89,7 +89,7 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate y$10_@0 = undefined
+      [1] Const mutate y$10_@0 = undefined
       [2] Const mutate $11_@1 = 5
       [3] Const mutate $12_@2 = 4
       [4] Const mutate $13_@3 = 3
@@ -101,37 +101,37 @@ flowchart TB
   end
   subgraph bb10
     bb10_instrs["
-      [9] Reassign mutate y$17_@7 = 0
+      [9] Const mutate y$17_@7 = 0
     "]
     bb10_instrs --> bb10_terminal(["Goto"])
   end
   subgraph bb9
     bb9_instrs["
-      [11] Reassign mutate y$18_@8 = 1
+      [11] Const mutate y$18_@8 = 1
     "]
     bb9_instrs --> bb9_terminal(["Goto"])
   end
   subgraph bb5
     bb5_instrs["
-      [13] Reassign mutate y$19_@9 = 3
+      [13] Const mutate y$19_@9 = 3
     "]
     bb5_instrs --> bb5_terminal(["Goto"])
   end
   subgraph bb4
     bb4_instrs["
-      [15] Reassign mutate y$20_@10 = 4
+      [15] Const mutate y$20_@10 = 4
     "]
     bb4_instrs --> bb4_terminal(["Goto"])
   end
   subgraph bb3
     bb3_instrs["
-      [17] Reassign mutate y$21_@11 = 5
+      [17] Const mutate y$21_@11 = 5
     "]
     bb3_instrs --> bb3_terminal(["Goto"])
   end
   subgraph bb2
     bb2_instrs["
-      [19] Reassign mutate y$22_@12 = 0
+      [19] Const mutate y$22_@12 = 0
     "]
     bb2_instrs --> bb2_terminal(["Goto"])
   end

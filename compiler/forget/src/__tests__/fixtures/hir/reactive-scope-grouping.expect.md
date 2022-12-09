@@ -18,9 +18,9 @@ function foo() {
 
 ```
 bb0:
-  [1] Let mutate x$4_@0[1:6] = Object {  }
-  [2] Let mutate y$5_@1[2:5] = Array []
-  [3] Let mutate z$6_@1[2:5] = Object {  }
+  [1] Const mutate x$4_@0[1:6] = Object {  }
+  [2] Const mutate y$5_@1[2:5] = Array []
+  [3] Const mutate z$6_@1[2:5] = Object {  }
   [4] Call mutate y$5_@1.push(mutate z$6_@1)
   [5] Reassign mutate x$4_@0.y[1:6] = read y$5_@1
   [6] Return freeze x$4_@0
@@ -35,9 +35,9 @@ flowchart TB
   %% Basic Blocks
   subgraph bb0
     bb0_instrs["
-      [1] Let mutate x$4_@0[1:6] = Object {  }
-      [2] Let mutate y$5_@1[2:5] = Array []
-      [3] Let mutate z$6_@1[2:5] = Object {  }
+      [1] Const mutate x$4_@0[1:6] = Object {  }
+      [2] Const mutate y$5_@1[2:5] = Array []
+      [3] Const mutate z$6_@1[2:5] = Object {  }
       [4] Call mutate y$5_@1.push(mutate z$6_@1)
       [5] Reassign mutate x$4_@0.y[1:6] = read y$5_@1
     "]
