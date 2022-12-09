@@ -158,8 +158,8 @@ bb1:
   [7] Const mutate $14_@1 = JSX <read Foo$6 a={freeze a$9_@0} b={freeze b$10_@0} ></read Foo$6>
   [8] Return read $14_@1
 scope1 [7:8]:
- - freeze a$9_@0
- - freeze b$10_@0
+  - dependency: freeze a$9_@0
+  - dependency: freeze b$10_@0
 ```
 
 ### CFG

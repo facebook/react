@@ -34,9 +34,9 @@ bb1:
   predecessor blocks: bb3 bb2
   [7] Return read x$11
 scope1 [3:4]:
- - read b$6
+  - dependency: read b$6
 scope2 [5:6]:
- - read c$7
+  - dependency: read c$7
 ```
 
 ### CFG

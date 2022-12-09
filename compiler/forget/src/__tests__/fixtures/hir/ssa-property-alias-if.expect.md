@@ -36,11 +36,11 @@ bb1:
   predecessor blocks: bb2 bb3
   [9] Return freeze x$6_@0
 scope0 [1:9]:
- - read a$5
+  - dependency: read a$5
 scope1 [3:4]:
- - mutate x$6_@0.y
+  - dependency: mutate x$6_@0.y
 scope2 [6:7]:
- - mutate x$6_@0.z
+  - dependency: mutate x$6_@0.z
 ```
 
 ### CFG

@@ -20,8 +20,8 @@ bb0:
   [3] Const mutate x$8_@2 = Array [read a$6_@0, read b$7_@1]
   [4] Return freeze x$8_@2
 scope2 [3:4]:
- - read a$6_@0
- - read b$7_@1
+  - dependency: read a$6_@0
+  - dependency: read b$7_@1
 ```
 
 ### CFG

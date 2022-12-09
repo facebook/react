@@ -43,13 +43,13 @@ bb3:
   predecessor blocks: bb4 bb1
   [10] Return freeze items2$10_@1
 scope0 [1:10]:
- - read z$8
- - read x$6
- - read x$6
- - read y$7
+  - dependency: read z$8
+  - dependency: read x$6
+  - dependency: read x$6
+  - dependency: read y$7
 scope1 [3:7]:
- - read y$7
- - read x$6
+  - dependency: read y$7
+  - dependency: read x$6
 ```
 
 ### CFG

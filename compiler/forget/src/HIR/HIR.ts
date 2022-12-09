@@ -63,7 +63,6 @@ export type HIRFunction = {
   body: HIR;
   generator: boolean;
   async: boolean;
-  extra?: string;
 };
 
 /**

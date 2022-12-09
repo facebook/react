@@ -25,12 +25,12 @@ bb0:
   [6] Const mutate $10_@1 = JSX <read Component$0 data={freeze x$7_@0} >{read child$9_@0}</read Component$0>
   [7] Return read $10_@1
 scope0 [1:6]:
- - read Component$0
- - read props$6.p0
+  - dependency: read Component$0
+  - dependency: read props$6.p0
 scope1 [6:7]:
- - read Component$0
- - freeze x$7_@0
- - read child$9_@0
+  - dependency: read Component$0
+  - dependency: freeze x$7_@0
+  - dependency: read child$9_@0
 ```
 
 ### CFG

@@ -39,9 +39,9 @@ bb1:
   predecessor blocks: bb3 bb0
   [9] Return freeze x$9_@0
 scope0 [1:9]:
- - read c$8
- - read b$7
- - read a$6
+  - dependency: read c$8
+  - dependency: read b$7
+  - dependency: read a$6
 ```
 
 ### CFG

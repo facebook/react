@@ -18,7 +18,6 @@ import {
   ReactiveScope,
 } from "./HIR";
 import { BlockTerminal, Visitor, visitTree } from "./HIRTreeVisitor";
-import { printPlace } from "./PrintHIR";
 import { eachInstructionValueOperand } from "./visitors";
 
 export function inferReactiveScopeDependencies(fn: HIRFunction) {
@@ -26,23 +25,12 @@ export function inferReactiveScopeDependencies(fn: HIRFunction) {
   // that only visits and replacing this usage
   const visitor = new ScopeDependenciesVisitor(fn);
   visitTree(fn, visitor);
-
-  const output = [];
-  for (const scope of visitor.allScopes) {
-    if (scope.dependencies.size > 0) {
-      output.push(
-        `scope${scope.id} [${scope.range.start}:${
-          scope.range.end
-        }]:\n${Array.from(scope.dependencies)
-          .map((p) => " - " + printPlace(p))
-          .join("\n")}`
-      );
-    }
-  }
-  fn.extra = output.join("\n");
 }
 
-function instructionInScope(instrId: InstructionId, scope: ReactiveScope) {
+export function instructionInScope(
+  instrId: InstructionId,
+  scope: ReactiveScope
+) {
   return instrId >= scope.range.start && instrId < scope.range.end;
 }
 
@@ -52,8 +40,6 @@ class ScopeDependenciesVisitor
   #identifiers: Map<Identifier, InstructionId> = new Map();
   // Scopes that are currently active at this point in the traversal
   #activeScopes: Set<ReactiveScope> = new Set();
-  // All scopes encountered during the traversal
-  allScopes: Set<ReactiveScope> = new Set();
 
   get #lastActiveScope(): ReactiveScope | null {
     const scopes = [...this.#activeScopes];
@@ -71,7 +57,6 @@ class ScopeDependenciesVisitor
 
   #recordActiveScope(scope: ReactiveScope) {
     this.#activeScopes.add(scope);
-    this.allScopes.add(scope);
   }
 
   /**

@@ -86,14 +86,14 @@ bb0:
   [7] Const mutate $16_@6 = JSX <read Component$0>{read $13_@3}{read x$11_@0}{read $14_@4}{read y$12_@1}{read $15_@5}</read Component$0>
   [8] Return read $16_@6
 scope1 [2:3]:
- - freeze x$11_@0
+  - dependency: freeze x$11_@0
 scope6 [7:8]:
- - read Component$0
- - read $13_@3
- - read x$11_@0
- - read $14_@4
- - read y$12_@1
- - read $15_@5
+  - dependency: read Component$0
+  - dependency: read $13_@3
+  - dependency: read x$11_@0
+  - dependency: read $14_@4
+  - dependency: read y$12_@1
+  - dependency: read $15_@5
 ```
 
 ### CFG

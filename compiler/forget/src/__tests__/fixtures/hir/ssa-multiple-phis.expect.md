@@ -69,11 +69,11 @@ bb1:
   [20] read x$18_@2
   [21] Return
 scope2 [3:20]:
- - read a$9
- - read b$10
- - read c$11
- - read d$12
- - read $14_@1
+  - dependency: read a$9
+  - dependency: read b$10
+  - dependency: read c$11
+  - dependency: read d$12
+  - dependency: read $14_@1
 ```
 
 ### CFG

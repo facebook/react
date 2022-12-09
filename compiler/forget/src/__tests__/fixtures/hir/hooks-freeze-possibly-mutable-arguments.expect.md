@@ -46,12 +46,12 @@ bb1:
   [11] Call mutate call$6_@4(read a$11_@3)
   [12] Return read a$11_@3
 scope0 [1:2]:
- - read props$7.cond
+  - dependency: read props$7.cond
 scope1 [2:3]:
- - read props$7.x
+  - dependency: read props$7.x
 scope3 [4:9]:
- - read x$9_@1
- - read cond$8_@0
+  - dependency: read x$9_@1
+  - dependency: read cond$8_@0
 ```
 
 ### CFG

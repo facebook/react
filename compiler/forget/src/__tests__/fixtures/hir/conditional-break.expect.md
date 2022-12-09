@@ -90,9 +90,9 @@ bb1:
   [6] Call mutate a_DEBUG$5_@0.push(read props$4.d)
   [7] Return freeze a_DEBUG$5_@0
 scope0 [1:7]:
- - read props$4.a
- - read props$4.b
- - read props$4.d
+  - dependency: read props$4.a
+  - dependency: read props$4.b
+  - dependency: read props$4.d
 ```
 
 ### CFG
@@ -157,10 +157,10 @@ bb1:
   [6] Call mutate a$4_@0.push(read props$3.d)
   [7] Return freeze a$4_@0
 scope0 [1:7]:
- - read props$3.a
- - read props$3.c
- - read props$3.b
- - read props$3.d
+  - dependency: read props$3.a
+  - dependency: read props$3.c
+  - dependency: read props$3.b
+  - dependency: read props$3.d
 ```
 
 ### CFG
@@ -227,10 +227,10 @@ bb1:
   [7] Call mutate a$5_@0.push(read props$4.d)
   [8] Return freeze a$5_@0
 scope0 [1:8]:
- - read props$4.a
- - read props$4.c
- - read props$4.b
- - read props$4.d
+  - dependency: read props$4.a
+  - dependency: read props$4.c
+  - dependency: read props$4.b
+  - dependency: read props$4.d
 ```
 
 ### CFG
@@ -297,10 +297,10 @@ bb1:
   [6] Call mutate a$4_@0.push(read props$3.d)
   [7] Return freeze a$4_@0
 scope0 [1:7]:
- - read props$3.a
- - read props$3.c
- - read props$3.b
- - read props$3.d
+  - dependency: read props$3.a
+  - dependency: read props$3.c
+  - dependency: read props$3.b
+  - dependency: read props$3.d
 ```
 
 ### CFG
@@ -366,9 +366,9 @@ bb1:
   [6] Call mutate a$4_@0.push(read props$3.d)
   [7] Return freeze a$4_@0
 scope0 [1:7]:
- - read props$3.a
- - read props$3.d
- - read props$3.c
+  - dependency: read props$3.a
+  - dependency: read props$3.d
+  - dependency: read props$3.c
 ```
 
 ### CFG

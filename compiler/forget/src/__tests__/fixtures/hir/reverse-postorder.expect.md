@@ -78,14 +78,14 @@ bb1:
   [18] read x$11_@1
   [19] Return
 scope1 [2:18]:
- - read props$6.v2
- - read props$6.v1
- - read props$6.v0
- - read props$6.test
- - read props$6.b
- - read props$6.c
- - read props$6.cond2
- - read props$6.cond
+  - dependency: read props$6.v2
+  - dependency: read props$6.v1
+  - dependency: read props$6.v0
+  - dependency: read props$6.test
+  - dependency: read props$6.b
+  - dependency: read props$6.c
+  - dependency: read props$6.cond2
+  - dependency: read props$6.cond
 ```
 
 ### CFG

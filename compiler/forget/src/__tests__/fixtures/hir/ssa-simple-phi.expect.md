@@ -38,12 +38,12 @@ bb1:
   [9] Const mutate x$11_@4 = read y$8_@3
   [10] Return
 scope2 [3:4]:
- - read y$5_@0
- - read $6_@1
+  - dependency: read y$5_@0
+  - dependency: read $6_@1
 scope3 [4:9]:
- - read $7_@2
+  - dependency: read $7_@2
 scope4 [9:10]:
- - read y$8_@3
+  - dependency: read y$8_@3
 ```
 
 ### CFG

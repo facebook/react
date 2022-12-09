@@ -24,8 +24,8 @@ bb0:
   [4] Call mutate foo$4_@2(read b$6_@1)
   [5] Return
 scope1 [2:3]:
- - read a$5_@0
- - freeze a$5_@0
+  - dependency: read a$5_@0
+  - dependency: freeze a$5_@0
 ```
 
 ### CFG

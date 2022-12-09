@@ -32,19 +32,19 @@ bb0:
   [11] Const mutate $24_@10 = JsxFragment [read $14_@0, read props$13.greeting, read $15_@1, read $16_@2, read $22_@8, read $23_@9]
   [12] Return read $24_@10
 scope6 [7:8]:
- - read $19_@5
+  - dependency: read $19_@5
 scope8 [9:10]:
- - read $17_@3
- - read $18_@4
- - read $20_@6
- - read $21_@7
+  - dependency: read $17_@3
+  - dependency: read $18_@4
+  - dependency: read $20_@6
+  - dependency: read $21_@7
 scope10 [11:12]:
- - read $14_@0
- - read props$13.greeting
- - read $15_@1
- - read $16_@2
- - read $22_@8
- - read $23_@9
+  - dependency: read $14_@0
+  - dependency: read props$13.greeting
+  - dependency: read $15_@1
+  - dependency: read $16_@2
+  - dependency: read $22_@8
+  - dependency: read $23_@9
 ```
 
 ### CFG

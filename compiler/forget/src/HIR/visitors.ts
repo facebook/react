@@ -9,10 +9,13 @@ import { assertExhaustive } from "../Common/utils";
 import {
   BasicBlock,
   BlockId,
+  HIR,
   Instruction,
   InstructionValue,
   makeInstructionId,
   Place,
+  ReactiveScope,
+  ScopeId,
   Terminal,
 } from "./HIR";
 
@@ -374,4 +377,20 @@ export function* eachBlockOperand(block: BasicBlock): Iterable<Place> {
     }
   }
   yield* eachTerminalOperand(block.terminal);
+}
+
+export function* eachReactiveScope(ir: HIR): Iterable<ReactiveScope> {
+  const seenScopes: Set<ScopeId> = new Set();
+  for (const [, block] of ir.blocks) {
+    for (const operand of eachBlockOperand(block)) {
+      const scope = operand.identifier.scope;
+      if (scope != null) {
+        if (seenScopes.has(scope.id)) {
+          continue;
+        }
+        seenScopes.add(scope.id);
+        yield scope;
+      }
+    }
+  }
 }

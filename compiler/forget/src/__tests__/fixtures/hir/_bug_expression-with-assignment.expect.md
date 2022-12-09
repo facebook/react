@@ -21,11 +21,11 @@ bb0:
   [4] Const mutate $7_@3 = Binary read $6_@2 + read x$5_@1
   [5] Return read $7_@3
 scope2 [3:4]:
- - read x$5_@1
- - read x$5_@1
+  - dependency: read x$5_@1
+  - dependency: read x$5_@1
 scope3 [4:5]:
- - read $6_@2
- - read x$5_@1
+  - dependency: read $6_@2
+  - dependency: read x$5_@1
 ```
 
 ### CFG

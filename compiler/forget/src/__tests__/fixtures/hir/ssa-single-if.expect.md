@@ -28,8 +28,8 @@ bb1:
   predecessor blocks: bb2 bb0
   [6] Return
 scope2 [4:5]:
- - read x$4_@0
- - read y$5_@1
+  - dependency: read x$4_@0
+  - dependency: read y$5_@1
 ```
 
 ### CFG

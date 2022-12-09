@@ -69,13 +69,13 @@ bb1:
   predecessor blocks: bb3 bb7
   [20] Return
 scope3 [5:10]:
- - read a$9
- - read b$10
- - read $15_@2
+  - dependency: read a$9
+  - dependency: read b$10
+  - dependency: read $15_@2
 scope5 [13:18]:
- - read c$11
- - read d$12
- - read $19_@4
+  - dependency: read c$11
+  - dependency: read d$12
+  - dependency: read $19_@4
 ```
 
 ### CFG

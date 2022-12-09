@@ -69,22 +69,22 @@ bb3:
   [19] Const mutate $31_@9 = JSX <read $25_@5>{read $26_@6}{read y$19_@2}{read $27_@7}{freeze x$22_@4}{read $28_@8}</read $25_@5>
   [20] Return read $31_@9
 scope0 [1:5]:
- - read a$13
- - read a$13
+  - dependency: read a$13
+  - dependency: read a$13
 scope2 [6:7]:
- - read $17_@1
- - freeze x$16_@0
+  - dependency: read $17_@1
+  - dependency: freeze x$16_@0
 scope4 [8:15]:
- - read c$15
- - read b$14
- - read b$14
+  - dependency: read c$15
+  - dependency: read b$14
+  - dependency: read b$14
 scope9 [19:20]:
- - read $25_@5
- - read $26_@6
- - read y$19_@2
- - read $27_@7
- - freeze x$22_@4
- - read $28_@8
+  - dependency: read $25_@5
+  - dependency: read $26_@6
+  - dependency: read y$19_@2
+  - dependency: read $27_@7
+  - dependency: freeze x$22_@4
+  - dependency: read $28_@8
 ```
 
 ### CFG

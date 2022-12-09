@@ -20,7 +20,7 @@ bb0:
   [3] Reassign mutate y$4_@1.x[2:4] = read x$3_@0
   [4] Return freeze y$4_@1
 scope1 [2:4]:
- - read x$3_@0
+  - dependency: read x$3_@0
 ```
 
 ### CFG

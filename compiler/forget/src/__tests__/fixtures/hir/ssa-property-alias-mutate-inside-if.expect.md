@@ -38,7 +38,7 @@ bb1:
   predecessor blocks: bb2 bb3
   [10] Return freeze x$7_@0
 scope1 [7:8]:
- - mutate x$7_@0.z
+  - dependency: mutate x$7_@0.z
 ```
 
 ### CFG

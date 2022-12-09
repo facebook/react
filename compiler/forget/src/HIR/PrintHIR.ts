@@ -24,6 +24,7 @@ import {
   Terminal,
 } from "./HIR";
 import { buildAliasSets } from "./InferAlias";
+import { eachReactiveScope } from "./visitors";
 
 export type Options = {
   indent: number;
@@ -32,9 +33,7 @@ export type Options = {
 export function printFunction(fn: HIRFunction): string {
   const output = [];
   output.push(printHIR(fn.body));
-  if (fn.extra !== undefined) {
-    output.push(fn.extra);
-  }
+  output.push(printReactiveScopes(fn.body));
   return output.join("\n");
 }
 
@@ -344,4 +343,26 @@ export function printAliases(aliases: DisjointSet<Identifier>): string {
   }
 
   return items.join("\n");
+}
+
+export function printReactiveScopes(ir: HIR) {
+  const output = [];
+  for (const scope of eachReactiveScope(ir)) {
+    let shouldOutput = false;
+    const line = [
+      `scope${scope.id} [${scope.range.start}:${scope.range.end}]:`,
+    ];
+    if (scope.dependencies.size > 0) {
+      shouldOutput = true;
+      line.push(
+        `${Array.from(scope.dependencies)
+          .map((p) => "  - dependency: " + printPlace(p))
+          .join("\n")}`
+      );
+    }
+    if (shouldOutput) {
+      output.push(line.join("\n"));
+    }
+  }
+  return output.join("\n");
 }

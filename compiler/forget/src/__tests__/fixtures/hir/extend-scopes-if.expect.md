@@ -47,9 +47,9 @@ bb7:
   [10] Const mutate $13_@2 = null
   [11] Return read $13_@2
 scope0 [1:8]:
- - read c$9
- - read b$8
- - read a$7
+  - dependency: read c$9
+  - dependency: read b$8
+  - dependency: read a$7
 ```
 
 ### CFG

@@ -89,9 +89,9 @@ bb2:
   [33] Const mutate $60_@18 = JSX <read $53_@11>{read $54_@12}{read $57_@15}{read $58_@16}{freeze renderedItems$29_@2}{read $59_@17}</read $53_@11>
   [34] Return read $60_@18
 scope0 [1:2]:
- - read props$26.items
+  - dependency: read props$26.items
 scope1 [2:3]:
- - read props$26.maxItems
+  - dependency: read props$26.maxItems
 ```
 
 ### CFG

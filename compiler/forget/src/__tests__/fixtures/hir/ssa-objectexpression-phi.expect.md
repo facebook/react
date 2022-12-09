@@ -40,8 +40,8 @@ bb1:
   [10] Const mutate t$14_@3 = Object { x: read x$6_@0, y: read y$7_@0 }
   [11] Return freeze t$14_@3
 scope3 [10:11]:
- - read x$6_@0
- - read y$7_@0
+  - dependency: read x$6_@0
+  - dependency: read y$7_@0
 ```
 
 ### CFG

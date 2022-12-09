@@ -178,8 +178,8 @@ bb1:
   predecessor blocks: bb2 bb3
   [9] Return freeze $12_@3
 scope2 [3:4]:
- - read $9_@0
- - read $10_@1
+  - dependency: read $9_@0
+  - dependency: read $10_@1
 ```
 
 ### CFG

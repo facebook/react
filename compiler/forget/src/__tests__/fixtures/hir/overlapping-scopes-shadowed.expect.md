@@ -21,8 +21,8 @@ bb0:
   [4] Call mutate x$7_@0.push(read a$5)
   [5] Return
 scope1 [2:4]:
- - read b$6
- - read a$5
+  - dependency: read b$6
+  - dependency: read a$5
 ```
 
 ### CFG

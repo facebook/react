@@ -53,19 +53,15 @@ bb1:
   [13] Call read y$10_@1.push(read props$8.p4)
   [14] Const mutate $23_@6 = JSX <read Component$0 data={read y$10_@1} >{read child$19_@5}</read Component$0>
   [15] Return read $23_@6
-scope1 [1:12]:
- - read props$8.p2
- - read props$8.p3
- - read props$8.p0
 scope5 [12:13]:
- - read Component$0
- - freeze x$9_@1
- - read y$10_@1.push
- - read props$8.p4
+  - dependency: read Component$0
+  - dependency: freeze x$9_@1
+  - dependency: read y$10_@1.push
+  - dependency: read props$8.p4
 scope6 [14:15]:
- - read Component$0
- - read y$10_@1
- - read child$19_@5
+  - dependency: read Component$0
+  - dependency: read y$10_@1
+  - dependency: read child$19_@5
 ```
 
 ### CFG

@@ -59,21 +59,21 @@ bb1:
   [16] Const mutate y$22_@9 = read x$16_@5
   [17] Return
 scope2 [3:4]:
- - read x$10_@0
- - read $11_@1
+  - dependency: read x$10_@0
+  - dependency: read $11_@1
 scope4 [5:6]:
- - read x$10_@0
- - read $13_@3
+  - dependency: read x$10_@0
+  - dependency: read $13_@3
 scope5 [6:16]:
- - read x$10_@0
-scope8 [13:14]:
- - read x$10_@0
-scope7 [10:11]:
- - read x$10_@0
+  - dependency: read x$10_@0
 scope6 [7:8]:
- - read x$10_@0
+  - dependency: read x$10_@0
+scope7 [10:11]:
+  - dependency: read x$10_@0
+scope8 [13:14]:
+  - dependency: read x$10_@0
 scope9 [16:17]:
- - read x$16_@5
+  - dependency: read x$16_@5
 ```
 
 ### CFG

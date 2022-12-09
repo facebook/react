@@ -40,7 +40,7 @@ bb2:
   predecessor blocks: bb1
   [13] Return read x$7_@0
 scope3 [6:8]:
- - read $9_@2
+  - dependency: read $9_@2
 ```
 
 ### CFG

@@ -21,9 +21,9 @@ bb0:
   [4] Const mutate b$9_@2 = read a$8_@1
   [5] Return
 scope1 [3:4]:
- - read x$7_@0
+  - dependency: read x$7_@0
 scope2 [4:5]:
- - read a$8_@1
+  - dependency: read a$8_@1
 ```
 
 ### CFG
