@@ -38,7 +38,7 @@ function mockRenderKeys(keyLists) {
 
   const mockContainerTag = 11;
   const MockView = createReactNativeComponentClass('RCTMockView', () => ({
-    validAttributes: {},
+    validAttributes: {foo: true},
     uiViewClassName: 'RCTMockView',
   }));
 
@@ -206,7 +206,7 @@ describe('setNativeProps', () => {
     } = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
 
     const [[fooRef]] = mockRenderKeys([['foo']]);
-    fooRef.setNativeProps({});
+    fooRef.setNativeProps({foo: 'baz'});
 
     expect(UIManager.updateView).not.toBeCalled();
     expect(nativeFabricUIManager.setNativeProps).toHaveBeenCalledTimes(1);
