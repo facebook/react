@@ -42,7 +42,7 @@ expect.extend({
 
 export default function generateTestsFromFixtures(
   fixturesPath: string,
-  transform: (input: string, file: any) => string
+  transform: (input: string, file: any, options: { debug: boolean }) => string
 ) {
   const files = fs.readdirSync(fixturesPath);
   const fixtures = matchInputOutputFixtures(files, fixturesPath);
@@ -87,18 +87,20 @@ export default function generateTestsFromFixtures(
         }
 
         let input: string | null = null;
+        let debug = false;
         if (inputFile != null) {
           input = fs.readFileSync(inputFile, "utf8");
           const lines = input.split("\n");
           if (lines[0]!.indexOf("@only") !== -1) {
             testCommand = test.only;
+            debug = true;
           }
         }
 
         testCommand(basename, () => {
           let receivedOutput;
           if (input !== null) {
-            receivedOutput = transform(input, basename);
+            receivedOutput = transform(input, basename, { debug });
           } else {
             receivedOutput = "<<input deleted>>";
           }

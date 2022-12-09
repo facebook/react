@@ -18,6 +18,8 @@ import { inferMutableRanges } from "./InferMutableRanges";
 import { inferReactiveScopeDependencies } from "./InferReactiveScopeDependencies";
 import { inferReactiveScopes } from "./InferReactiveScopes";
 import { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
+import { log } from "./logger";
+import { printFunction } from "./PrintHIR";
 
 export type CompilerFlags = {
   eliminateRedundantPhi: boolean;
@@ -40,29 +42,48 @@ export default function (
   flags: CompilerFlags
 ): CompilerResult {
   const env = new Environment();
+
   const ir = lower(func, env);
+  logStep("HIR", ir);
+
   enterSSA(ir, env);
+  logStep("SSA", ir);
+
   if (flags.eliminateRedundantPhi) {
     eliminateRedundantPhi(ir);
+    logStep("eliminateRedundantPhi", ir);
   }
+
   if (flags.inferReferenceEffects) {
     inferReferenceEffects(ir);
+    logStep("inferReferenceEffects", ir);
   }
+
   if (flags.inferMutableRanges) {
     inferMutableRanges(ir);
+    logStep("inferMutableRanges", ir);
   }
+
   if (flags.leaveSSA) {
     leaveSSA(ir);
+    logStep("leaveSSA", ir);
   }
+
   if (flags.inferReactiveScopeVariables) {
     inferReactiveScopeVariables(ir);
+    logStep("inferReactiveScopeVariables", ir);
   }
+
   if (flags.inferReactiveScopes) {
     inferReactiveScopes(ir);
+    logStep("inferReactiveScopes", ir);
   }
+
   if (flags.inferReactiveScopeDependencies) {
     inferReactiveScopeDependencies(ir);
+    logStep("inferReactiveScopeDependencies", ir);
   }
+
   if (flags.codegen) {
     return {
       ast: codegen(ir),
@@ -71,4 +92,8 @@ export default function (
   }
 
   return { ast: null, ir: ir };
+}
+
+function logStep(step: string, ir: HIRFunction) {
+  log(() => `${step}:\n${printFunction(ir)}`);
 }

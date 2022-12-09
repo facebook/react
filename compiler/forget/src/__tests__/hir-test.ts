@@ -14,6 +14,7 @@ import { wasmFolder } from "@hpcc-js/wasm";
 import invariant from "invariant";
 import path from "path";
 import prettier from "prettier";
+import { toggleLogging } from "../HIR/logger";
 import run from "../HIR/Pipeline";
 import { printFunction } from "../HIR/PrintHIR";
 import visualizeHIRMermaid from "../HIR/VisualizeHIRMermaid";
@@ -34,7 +35,7 @@ const Pragma_RE = /\/\/\s*@enable\((\w+)\)$/gm;
 describe("React Forget (HIR version)", () => {
   generateTestsFromFixtures(
     path.join(__dirname, "fixtures", "hir"),
-    (input, file) => {
+    (input, file, options) => {
       const matches = input.matchAll(Pragma_RE);
 
       for (const match of matches) {
@@ -50,6 +51,9 @@ describe("React Forget (HIR version)", () => {
 
       let items: Array<[string, string, string]> | null = null;
       let error: Error | null = null;
+      if (options.debug) {
+        toggleLogging(options.debug);
+      }
       try {
         items = transform(input, file);
       } catch (e) {

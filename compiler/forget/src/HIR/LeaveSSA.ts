@@ -78,8 +78,9 @@ export function leaveSSA(fn: HIRFunction) {
         // options we'll choose it and can reuse the declaration.
         canonicalId = phi.id;
         for (const [, operand] of phi.operands) {
-          if (operand.id < canonicalId.id) {
-            canonicalId = operand;
+          let canonicalOperand = variableMapping.get(operand) ?? operand;
+          if (canonicalOperand.id < canonicalId.id) {
+            canonicalId = canonicalOperand;
           }
         }
         canonicalId.mutableRange.start = Math.min(
