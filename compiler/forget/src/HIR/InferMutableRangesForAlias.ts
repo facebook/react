@@ -7,18 +7,25 @@ export function inferMutableRangesForAlias(aliases: DisjointSet<Identifier>) {
   for (const aliasSet of aliasSets) {
     // Update mutableRange.end only if the identifiers have actually been
     // mutated.
-    const haveIdentifiersBeenMutated = [...aliasSet].some(
+    const mutatingIdentifiers = [...aliasSet].filter(
       (id) => id.mutableRange.end - id.mutableRange.start > 1
     );
 
-    if (haveIdentifiersBeenMutated) {
+    if (mutatingIdentifiers.length > 0) {
       // Find final instruction which mutates this alias set.
-      const mutableRangeEnds = [...aliasSet].map((id) => id.mutableRange.end);
-      const maxMutableRangeEnd = Math.max(...mutableRangeEnds) as InstructionId;
+      let lastMutatingInstructionId = 0;
+      for (const id of mutatingIdentifiers) {
+        if (id.mutableRange.end > lastMutatingInstructionId) {
+          lastMutatingInstructionId = id.mutableRange.end;
+        }
+      }
 
-      // Update mutableRange.end for all aliases in this set.
+      // Update mutableRange.end for all aliases in this set ending before the
+      // last mutation.
       for (const alias of aliasSet) {
-        alias.mutableRange.end = maxMutableRangeEnd;
+        if (alias.mutableRange.end < lastMutatingInstructionId) {
+          alias.mutableRange.end = lastMutatingInstructionId as InstructionId;
+        }
       }
     }
   }
