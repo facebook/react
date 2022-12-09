@@ -18,7 +18,10 @@ import type {
   TouchedViewDataAtPoint,
 } from './ReactNativeTypes';
 
-import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
+import {
+  mountSafeCallback_NOT_REALLY_SAFE,
+  warnForStyleProps,
+} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
@@ -52,6 +55,7 @@ const {
   unstable_DefaultEventPriority: FabricDefaultPriority,
   unstable_DiscreteEventPriority: FabricDiscretePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
+  setNativeProps,
 } = nativeFabricUIManager;
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
@@ -208,12 +212,14 @@ class ReactFabricHostComponent {
 
   setNativeProps(nativeProps: Object) {
     if (__DEV__) {
-      console.error(
-        'Warning: setNativeProps is not currently supported in Fabric',
-      );
+      warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
     }
+    const updatePayload = create(nativeProps, this.viewConfig.validAttributes);
 
-    return;
+    const {stateNode} = this._internalInstanceHandle;
+    if (stateNode != null && updatePayload != null) {
+      setNativeProps(stateNode.node, updatePayload);
+    }
   }
 
   // This API (addEventListener, removeEventListener) attempts to adhere to the

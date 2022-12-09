@@ -117,6 +117,8 @@ const RCTFabricUIManager = {
 
   dispatchCommand: jest.fn(),
 
+  setNativeProps: jest.fn(),
+
   sendAccessibilityEvent: jest.fn(),
 
   registerEventHandler: jest.fn(function registerEventHandler(callback) {}),
