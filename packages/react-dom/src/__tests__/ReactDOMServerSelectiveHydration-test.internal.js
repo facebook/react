@@ -1773,6 +1773,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate experimental || www
   it('regression test: can unwind context on selective hydration interruption', async () => {
     const Context = React.createContext('DefaultContext');
 
