@@ -1,0 +1,64 @@
+
+## Input
+
+```javascript
+function component() {
+  let z = [];
+  let y = {};
+  y.z = z;
+  let x = {};
+  x.y = y;
+  mutate(x.y.z);
+}
+
+```
+
+## HIR
+
+```
+bb0:
+  [1] Const mutate z$5_@0[0:7] = Array []
+  [2] Const mutate y$6_@0[0:7] = Object {  }
+  [3] Reassign mutate y$6_@0.z[0:7] = read z$5_@0
+  [4] Const mutate x$7_@0[0:7] = Object {  }
+  [5] Reassign mutate x$7_@0.y[0:7] = read y$6_@0
+  [6] Call mutate mutate$4_@0(mutate x$7_@0.y.z)
+  [7] Return
+
+```
+
+### CFG
+
+```mermaid
+flowchart TB
+  %% Basic Blocks
+  subgraph bb0
+    bb0_instrs["
+      [1] Const mutate z$5_@0[0:7] = Array []
+      [2] Const mutate y$6_@0[0:7] = Object {  }
+      [3] Reassign mutate y$6_@0.z[0:7] = read z$5_@0
+      [4] Const mutate x$7_@0[0:7] = Object {  }
+      [5] Reassign mutate x$7_@0.y[0:7] = read y$6_@0
+      [6] Call mutate mutate$4_@0(mutate x$7_@0.y.z)
+    "]
+    bb0_instrs --> bb0_terminal(["Return"])
+  end
+
+  %% Jumps
+  %% empty
+```
+
+## Code
+
+```javascript
+function component$0() {
+  const z$5 = [];
+  const y$6 = {};
+  y$6.z = z$5;
+  const x$7 = {};
+  x$7.y = y$6;
+  mutate$4(x$7.y.z);
+}
+
+```
+      

@@ -83,4 +83,8 @@ export default class DisjointSet<T> {
       fn(item, group);
     }
   }
+
+  get size(): number {
+    return this.#entries.size;
+  }
 }
