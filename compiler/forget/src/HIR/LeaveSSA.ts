@@ -16,6 +16,7 @@ import {
   makeInstructionId,
   Phi,
   Place,
+  Type,
 } from "./HIR";
 import { eachInstructionValueOperand, eachTerminalOperand } from "./visitors";
 
@@ -153,6 +154,7 @@ export function leaveSSA(fn: HIRFunction) {
             identifier,
             effect: Effect.Mutate,
             loc: GeneratedSource,
+            type: Type.Any,
           },
           kind: InstructionKind.Let,
         },

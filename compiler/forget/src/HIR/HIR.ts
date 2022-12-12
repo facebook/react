@@ -270,6 +270,7 @@ export type Place = {
   memberPath: Array<string> | null;
   effect: Effect;
   loc: SourceLocation;
+  type: Type;
 };
 
 /**
@@ -397,4 +398,8 @@ export function makeInstructionId(id: number): InstructionId {
     "Expected instruction id to be a non-negative integer"
   );
   return id as InstructionId;
+}
+
+export enum Type {
+  Any,
 }
