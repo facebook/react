@@ -25361,14 +25361,12 @@ function updateSimpleMemoComponent(
 function updateOffscreenComponent(current, workInProgress, renderLanes) {
   var nextProps = workInProgress.pendingProps;
   var nextChildren = nextProps.children;
+  var nextIsDetached =
+    (workInProgress.stateNode._pendingVisibility & OffscreenDetached) !== 0;
   var prevState = current !== null ? current.memoizedState : null;
   markRef(current, workInProgress);
 
-  if (
-    nextProps.mode === "hidden" ||
-    enableLegacyHidden || // TODO: remove read from stateNode.
-    workInProgress.stateNode._visibility & OffscreenDetached
-  ) {
+  if (nextProps.mode === "hidden" || enableLegacyHidden || nextIsDetached) {
     // Rendering a hidden tree.
     var didSuspend = (workInProgress.flags & DidCapture) !== NoFlags;
 
@@ -32089,26 +32087,46 @@ function getRetryCache(finishedWork) {
 }
 
 function detachOffscreenInstance(instance) {
-  var currentOffscreenFiber = instance._current;
+  var fiber = instance._current;
 
-  if (currentOffscreenFiber === null) {
+  if (fiber === null) {
     throw new Error(
       "Calling Offscreen.detach before instance handle has been set."
     );
   }
 
-  var executionContext = getExecutionContext();
+  if ((instance._pendingVisibility & OffscreenDetached) !== NoFlags) {
+    // The instance is already detached, this is a noop.
+    return;
+  } // TODO: There is an opportunity to optimise this by not entering commit phase
+  // and unmounting effects directly.
 
-  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    scheduleMicrotask(function() {
-      instance._visibility |= OffscreenDetached;
-      disappearLayoutEffects(currentOffscreenFiber);
-      disconnectPassiveEffect(currentOffscreenFiber);
-    });
-  } else {
-    instance._visibility |= OffscreenDetached;
-    disappearLayoutEffects(currentOffscreenFiber);
-    disconnectPassiveEffect(currentOffscreenFiber);
+  var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+
+  if (root !== null) {
+    instance._pendingVisibility |= OffscreenDetached;
+    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+  }
+}
+function attachOffscreenInstance(instance) {
+  var fiber = instance._current;
+
+  if (fiber === null) {
+    throw new Error(
+      "Calling Offscreen.detach before instance handle has been set."
+    );
+  }
+
+  if ((instance._pendingVisibility & OffscreenDetached) === NoFlags) {
+    // The instance is already attached, this is a noop.
+    return;
+  }
+
+  var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
+
+  if (root !== null) {
+    instance._pendingVisibility &= ~OffscreenDetached;
+    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
   }
 }
 
@@ -32501,14 +32519,19 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         recursivelyTraverseMutationEffects(root, finishedWork);
       }
 
-      commitReconciliationEffects(finishedWork); // TODO: Add explicit effect flag to set _current.
+      commitReconciliationEffects(finishedWork);
+      var offscreenInstance = finishedWork.stateNode; // TODO: Add explicit effect flag to set _current.
 
-      finishedWork.stateNode._current = finishedWork;
+      offscreenInstance._current = finishedWork; // Offscreen stores pending changes to visibility in `_pendingVisibility`. This is
+      // to support batching of `attach` and `detach` calls.
+
+      offscreenInstance._visibility &= ~OffscreenDetached;
+      offscreenInstance._visibility |=
+        offscreenInstance._pendingVisibility & OffscreenDetached;
 
       if (flags & Visibility) {
-        var offscreenInstance = finishedWork.stateNode; // Track the current state on the Offscreen instance so we can
+        // Track the current state on the Offscreen instance so we can
         // read it during an event
-
         if (_isHidden) {
           offscreenInstance._visibility &= ~OffscreenVisible;
         } else {
@@ -35407,9 +35430,6 @@ function flushRoot(root, lanes) {
     }
   }
 }
-function getExecutionContext() {
-  return executionContext;
-}
 function batchedUpdates$1(fn, a) {
   var prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
@@ -38202,12 +38222,16 @@ function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
   fiber.lanes = lanes;
   var primaryChildInstance = {
     _visibility: OffscreenVisible,
+    _pendingVisibility: OffscreenVisible,
     _pendingMarkers: null,
     _retryCache: null,
     _transitions: null,
     _current: null,
     detach: function() {
       return detachOffscreenInstance(primaryChildInstance);
+    },
+    attach: function() {
+      return attachOffscreenInstance(primaryChildInstance);
     }
   };
   fiber.stateNode = primaryChildInstance;
@@ -38369,7 +38393,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-b14d7fa4b-20221209";
+var ReactVersion = "18.3.0-www-modern-996e4c0d5-20221212";
 
 function createPortal(
   children,
