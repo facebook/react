@@ -137,9 +137,13 @@ class CodegenVisitor
   appendValueBlock(block: t.Statement[], item: t.Statement): void {
     this.appendBlock(block, item);
   }
-  leaveValueBlock(block: t.Statement[], place: t.Expression): t.Expression {
+  leaveValueBlock(
+    block: t.Statement[],
+    place: t.Expression | null
+  ): t.Expression {
     this.depth--;
     if (block.length === 0) {
+      invariant(place !== null, "Unexpected empty value block");
       return place;
     }
     const expressions = block.map((stmt) => {
@@ -153,7 +157,9 @@ class CodegenVisitor
           );
       }
     });
-    expressions.push(place);
+    if (place !== null) {
+      expressions.push(place);
+    }
     return t.sequenceExpression(expressions);
   }
 

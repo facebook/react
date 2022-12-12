@@ -21,8 +21,8 @@ bb0:
   [2] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
-  [3] Const mutate $6_@1 = 10
-  [4] Const mutate $8_@0[1:9] = Binary read x$5_@0 < read $6_@1
+  [3] Const mutate $6_@0[1:9] = 10
+  [4] Const mutate $8_@0[1:9] = Binary read x$5_@0 < read $6_@0
   [5] If (read $8_@0) then:bb3 else:bb2 fallthrough=bb2
 bb3:
   predecessor blocks: bb1
@@ -48,8 +48,8 @@ flowchart TB
   end
   subgraph bb1
     bb1_instrs["
-      [3] Const mutate $6_@1 = 10
-      [4] Const mutate $8_@0[1:9] = Binary read x$5_@0 < read $6_@1
+      [3] Const mutate $6_@0[1:9] = 10
+      [4] Const mutate $8_@0[1:9] = Binary read x$5_@0 < read $6_@0
     "]
     bb1_instrs --> bb1_terminal(["If (read $8_@0)"])
   end

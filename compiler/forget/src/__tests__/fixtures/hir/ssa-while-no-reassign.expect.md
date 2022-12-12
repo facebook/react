@@ -21,7 +21,7 @@ bb0:
   [2] While test=bb1 loop=bb3 fallthrough=bb2
 bb1:
   predecessor blocks: bb0 bb3
-  [3] Const mutate $6_@1 = 10
+  [3] Const mutate $6_@1[3:6] = 10
   [4] Const mutate $8_@2[4:6] = Binary read x$5_@0 < read $6_@1
   [5] If (read $8_@2) then:bb3 else:bb2 fallthrough=bb2
 bb3:
@@ -34,7 +34,6 @@ bb2:
   [9] Return read x$5_@0
 scope2 [4:6]:
   - dependency: read x$5_@0
-  - dependency: read $6_@1
 scope3 [6:7]:
   - dependency: read x$5_@0
 ```
@@ -52,7 +51,7 @@ flowchart TB
   end
   subgraph bb1
     bb1_instrs["
-      [3] Const mutate $6_@1 = 10
+      [3] Const mutate $6_@1[3:6] = 10
       [4] Const mutate $8_@2[4:6] = Binary read x$5_@0 < read $6_@1
     "]
     bb1_instrs --> bb1_terminal(["If (read $8_@2)"])

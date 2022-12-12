@@ -62,8 +62,17 @@ export function leaveSSA(fn: HIRFunction) {
       phis.push(...loop.phis);
     }
     if (terminal.kind === "for") {
+      const init = fn.body.blocks.get(terminal.init)!;
+      phis.push(...init.phis);
       const update = fn.body.blocks.get(terminal.update)!;
       phis.push(...update.phis);
+
+      // find declarations in the for init
+      for (const instr of init.instructions) {
+        if (instr.lvalue !== null && instr.lvalue.place.memberPath === null) {
+          hasDeclaration.add(instr.lvalue.place.identifier);
+        }
+      }
     }
 
     // For each phi, determine a canonical identifier to use for versions of the variable

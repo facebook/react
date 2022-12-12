@@ -451,24 +451,27 @@ class Driver<TBlock, TInit, TValueBlock, TValue, TStatement, TCase> {
   ): TValue {
     const valueBlock = this.visitor.enterValueBlock(parent);
     const instructions = [...block.instructions];
-    let lastValue: { value: InstructionValue; id: InstructionId };
+    let lastValue: { value: InstructionValue; id: InstructionId } | null = null;
     if (terminalValue != null) {
       lastValue = terminalValue;
     } else {
-      invariant(instructions.length > 0, "Value block may not be empty");
-      const last = instructions.pop()!;
-      invariant(
-        last.lvalue === null,
-        "Expected value block to end in a value, not an assignment"
-      );
-      lastValue = { value: last.value, id: last.id };
+      if (
+        instructions.length &&
+        instructions[instructions.length - 1].lvalue === null
+      ) {
+        const last = instructions.pop()!;
+        lastValue = { value: last.value, id: last.id };
+      }
     }
     for (const instr of instructions) {
       const value = this.visitor.visitValue(instr.value, instr.id);
       const item = this.visitor.visitInstruction(instr, value);
       this.visitor.appendValueBlock(valueBlock, item);
     }
-    const value = this.visitor.visitValue(lastValue.value, lastValue.id);
+    const value =
+      lastValue !== null
+        ? this.visitor.visitValue(lastValue.value, lastValue.id)
+        : null;
     return this.visitor.leaveValueBlock(valueBlock, value);
   }
 
@@ -817,7 +820,7 @@ export interface Visitor<
    * Converts the visitor's value block (and final value) to the visitor's
    * value representation.
    */
-  leaveValueBlock(block: TValueBlock, value: TValue): TValue;
+  leaveValueBlock(block: TValueBlock, value: TValue | null): TValue;
 
   enterInitBlock(block: TBlock): TValueBlock;
 

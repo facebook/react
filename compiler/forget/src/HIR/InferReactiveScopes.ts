@@ -336,7 +336,10 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
 {
   // For each block scope (outer array) stores a list of ReactiveScopes that start
   // in that block scope.
-  blockScopes: Array<Array<PendingReactiveScope>> = [];
+  blockScopes: Array<{
+    kind: "block" | "value";
+    scopes: Array<PendingReactiveScope>;
+  }> = [];
 
   // ReactiveScopes whose declaring block scope has ended but may still need to
   // be "closed" (ie have their range.end be updated). A given scope can be in
@@ -349,7 +352,10 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
 
   visitId(id: InstructionId) {
     const currentScopes = this.blockScopes[this.blockScopes.length - 1]!;
-    const scopes = [...currentScopes, ...this.unclosedScopes];
+    if (currentScopes.kind === "value") {
+      return;
+    }
+    const scopes = [...currentScopes.scopes, ...this.unclosedScopes];
     for (const pending of scopes) {
       if (!pending.active) {
         continue;
@@ -362,7 +368,7 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
   }
 
   enterBlock(): void {
-    this.blockScopes.push([]);
+    this.blockScopes.push({ kind: "block", scopes: [] });
   }
 
   appendBlock(block: void, item: void, label?: BlockId | undefined): void {}
@@ -370,10 +376,10 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
   leaveBlock(block: void): void {
     const lastScope = this.blockScopes.pop();
     invariant(
-      lastScope !== undefined,
+      lastScope !== undefined && lastScope.kind === "block",
       "Expected enterBlock/leaveBlock to be called 1:1"
     );
-    for (const scope of lastScope) {
+    for (const scope of lastScope.scopes) {
       if (scope.active) {
         this.unclosedScopes.push(scope);
       }
@@ -381,19 +387,30 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
   }
 
   enterValueBlock(): void {
-    this.enterBlock();
+    this.blockScopes.push({ kind: "value", scopes: [] });
   }
   appendValueBlock(block: void, item: void): void {}
   leaveValueBlock(block: void, value: void): void {
-    this.leaveBlock(block);
+    const lastScope = this.blockScopes.pop();
+    invariant(
+      lastScope !== undefined && lastScope.kind === "value",
+      "Expected enterValueBlock/leaveValueBlock to be called 1:1"
+    );
+    for (const scope of lastScope.scopes) {
+      invariant(
+        scope.active,
+        "Value scopes cannot be closed separately from the parent block"
+      );
+      this.unclosedScopes.push(scope);
+    }
   }
 
   enterInitBlock(block: void): void {
-    this.enterBlock();
+    this.enterValueBlock();
   }
   appendInitBlock(block: void, item: void): void {}
   leaveInitBlock(block: void): void {
-    this.leaveBlock(block);
+    this.leaveValueBlock(block);
   }
 
   visitInstruction(instruction: Instruction, value: void): void {
@@ -403,7 +420,7 @@ class AlignReactiveScopesToBlockScopeRangeVisitor
       if (!this.seenScopes.has(scope.id)) {
         const currentScopes = this.blockScopes[this.blockScopes.length - 1]!;
         this.seenScopes.add(scope.id);
-        currentScopes.push({
+        currentScopes.scopes.push({
           active: true,
           scope,
         });

@@ -340,6 +340,7 @@ function lowerStatement(
 
       const updateBlock = builder.enter((blockId) => {
         const update = stmt.get("update");
+        todoInvariant(update.hasNode(), "Handle empty for updater");
         if (update.hasNode()) {
           lowerExpressionToVoid(builder, update);
         }
@@ -1275,20 +1276,21 @@ function lowerExpressionToPlace(
   return place;
 }
 
+/**
+ * Lowers an expression to an instruction with no lvalue
+ */
 function lowerExpressionToVoid(
   builder: HIRBuilder,
   exprPath: NodePath<t.Expression>
 ): void {
   const instr = lowerExpression(builder, exprPath);
-  if (instr.kind !== "Identifier") {
-    const exprLoc = exprPath.node.loc ?? GeneratedSource;
-    builder.push({
-      id: makeInstructionId(0),
-      value: instr,
-      loc: exprLoc,
-      lvalue: null,
-    });
-  }
+  const exprLoc = exprPath.node.loc ?? GeneratedSource;
+  builder.push({
+    id: makeInstructionId(0),
+    value: instr,
+    loc: exprLoc,
+    lvalue: null,
+  });
 }
 
 function lowerLVal(builder: HIRBuilder, exprPath: NodePath<t.LVal>): Place {
